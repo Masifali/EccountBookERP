@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>JV VIEW</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <!-- NProgress -->
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <!-- iCheck -->
+    <link rel="stylesheet" th:href="@{/vendors/iCheck/skins/flat/green.css}">
+    <!-- Datatables -->
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+
+    <!-- Custom Theme Style -->
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- side bar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div">
+        </div>
+        <!-- /side bar and top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <ol class="breadcrumb">
+                            <li><a href="../index">VOUCHERS</a></li>
+                            <li>VIEW VOUCHER</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <form class="form-horizontal form-label-left" id="voucherViewForm"
+                      method="get" th:action="@{/vouchers/edit/__${voucher.id}__}">
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2 class="col-sm-6" style="text-align: center; width:90%"><strong
+                                            th:text="${voucher.company.name}"></strong></h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+
+                                    <input id="voucher_id" th:field="${voucher.id}" type="hidden"/>
+                                    <input id="voucher_posted_status" th:field="${voucher.posted}" type="hidden"/>
+                                    <input id="company" th:value="${voucher.company.id}" type="hidden"/>
+
+                                    <div class="row invoice-info">
+                                        <table class="col-sm-12">
+                                            <tr>
+                                                <td class="col-sm-6"><strong
+                                                        th:text="'VOUCHER TYPE:&emsp;' + ${voucher.voucherType.name}"></strong>
+                                                </td>
+                                                <td class="col-sm-6"><strong
+                                                        th:text="'VOUCHER STATUS:&emsp;' + ${voucher.voucherStatus.name}"></strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="col-sm-6"><strong
+                                                        th:text="'VOUCHER NO.:&emsp;' + ${voucher.voucherCode}"></strong>
+                                                </td>
+                                                <td class="col-sm-6"><strong
+                                                        th:text="'VOUCHER DATE:&emsp;' + ${#dates.format(voucher.voucherDate, 'dd-MM-yyyy')}"></strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="col-sm-6"><strong
+                                                        th:text="'FINANCIAL YEAR:&emsp;' + ${voucher.financialYear.name}"></strong>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <br>
+                                    <div class="row invoice-info">
+                                        <table class="col-sm-12">
+                                            <tr>
+                                                <td class="col-sm-1"><strong>NARRATION:</strong></td>
+                                                <td class="col-sm-11" style="text-transform:uppercase"
+                                                    th:text="${voucher.voucherNarration}"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>ENTRY FORM</h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <table class="table table-striped table-bordered" id="voucher_entry_table">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th th:text="#{branch.label}"></th>
+                                            <th>ACCOUNT</th>
+                                            <th>NARRATION</th>
+
+                                            <!-- <th>REC. BOOK</th>
+                                            <th>REC. NO.</th>
+                                            <th>INVOICE</th> -->
+                                            <th>DOCS.</th>
+                                            <th>DEBIT</th>
+                                            <th>CREDIT</th>
+                                            <th>BOOK NO.</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody>
+                                        <tr th:each="vEntry, rowStat : ${voucher.voucherEntries}">
+                                            <td>
+                                                <span id="serial_no" th:text="${rowStat.count}"></span>
+                                                <input id="voucherEntry_id"
+                                                       th:field="${voucher.voucherEntries[__${rowStat.index}__].id}"
+                                                       type="hidden"/>
+                                            </td>
+                                            <td th:text="${voucher.voucherEntries[__${rowStat.index}__].branch.name}"></td>
+                                            <td id="voucherEntry_account"
+                                                th:text="${voucher.voucherEntries[__${rowStat.index}__].account.formattedCode} + '&emsp;' + ${voucher.voucherEntries[__${rowStat.index}__].account.accountName}"
+                                                th:value="${voucher.voucherEntries[__${rowStat.index}__].account.code}"></td>
+                                            <td style="text-transform:uppercase"
+                                                th:text="${voucher.voucherEntries[__${rowStat.index}__].narration}"></td>
+
+                                            <!-- <td th:text="${voucher.voucherEntries[__${rowStat.index}__].recBookNumber}"></td>
+                                            <td th:text="${voucher.voucherEntries[__${rowStat.index}__].recBookPageNumber}"></td>
+                                            <td><a style="text-decoration: underline;" href="#apply_payment_to_invoices" data-toggle="modal" class="allocate_invoices" th:disabled="${voucher.posted}">ALLOCATE</a></td> -->
+                                            <td><a class="upload_supporting_docs" data-toggle="modal"
+                                                   href="#upload_supporting_docs" style="text-decoration: underline;"
+                                                   th:disabled="${voucher.posted}">UPLOAD</a></td>
+                                            <td id="voucherEntry_debit"
+                                                th:text="${#numbers.formatDecimal(voucher.voucherEntries[__${rowStat.index}__].debit, 2, 'DEFAULT', 2, 'DEFAULT')}"></td>
+                                            <td id="voucherEntry_credit"
+                                                th:text="${#numbers.formatDecimal(voucher.voucherEntries[__${rowStat.index}__].credit, 2, 'DEFAULT', 2, 'DEFAULT')}"></td>
+                                            <td th:text="${voucher.voucherEntries[__${rowStat.index}__].recBookNumber}"></td>
+                                        </tr>
+                                        </tbody>
+
+                                        <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <!-- <th></th> -->
+
+                                            <th><span id="debitTotal"
+                                                      th:text="${#numbers.formatDecimal(#aggregates.sum(voucher.voucherEntries.![debit]), 2, 'DEFAULT', 2, 'DEFAULT')}"></span>
+                                            </th>
+                                            <th><span id="creditTotal"
+                                                      th:text="${#numbers.formatDecimal(#aggregates.sum(voucher.voucherEntries.![credit]), 2, 'DEFAULT', 2, 'DEFAULT')}"></span>
+                                            </th>
+                                            <th></th>
+                                        </tr>
+                                        </tfoot>
+
+                                    </table>
+
+                                    <div class="row" id="voucher_footer">
+                                        <br> <br> <br> <br>
+                                        <div class="col-xs-4">
+                                            <div class="form-group" style="text-align: center;">
+                                                <label class="control-label">
+                                                    <ins style="text-decoration-line:overline;">PREPARED BY</ins>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-4">
+                                            <div class="form-group" style="text-align: center;">
+                                                <label class="control-label">
+                                                    <ins style="text-decoration-line:overline;">RECEIVED BY</ins>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-4">
+                                            <div class="form-group" style="text-align: center;">
+                                                <label class="control-label">
+                                                    <ins style="text-decoration-line:overline;">APPROVED BY</ins>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                            <div class="x_panel">
+                                <div class="x_content">
+                                    <div class="form-group"
+                                         th:if="${#authorization.expression('hasAuthority(''EDIT_VOUCHER'')')}">
+                                        <button class="btn btn-success" id="edit_voucher" style="float: right;"
+                                                th:disabled="${voucher.posted}" type="submit">EDIT VOUCHER(C)
+                                        </button>
+                                    </div>
+                                    <!-- <div class="form-group" sec:authorize="hasAuthority('ADMIN')" th:switch="${voucher.posted}">
+                                        <button th:case="${true}" type="button" id="post_voucher" class="confirm btn btn-success" style="float: right;">UN-POST THIS VOUCHER</button>
+                                        <button th:case="${false}" type="button" id="post_voucher" class="confirm btn btn-success" style="float: right;">POST THIS VOUCHER</button>
+                                    </div> -->
+                                    <input id="editVoucherPr"
+                                           th:value="${#authorization.expression('hasAuthority(''EDIT_VOUCHER'')')}"
+                                           type="hidden"/>
+                                    <input id="voucherPostPr"
+                                           th:value="${#authorization.expression('hasAuthority(''VOUCHER_POST'')')}"
+                                           type="hidden"/>
+                                    <input id="unPoucherPostPr"
+                                           th:value="${#authorization.expression('hasAuthority(''VOUCHER_UN_POST'')')}"
+                                           type="hidden"/>
+
+                                    <div class="form-group"
+                                         th:if="${#authorization.expression('hasAuthority(''VOUCHER_POST'')')}">
+                                        <div class="form-group" th:switch="${voucher.posted}">
+                                            <!-- <button th:case="${true}" type="button" id="post_voucher" class="confirm btn btn-success" style="float: right;">UN-POST THIS VOUCHER</button> -->
+                                            <button class="confirm btn btn-success" id="post_voucher"
+                                                    style="float: right;"
+                                                    th:case="${false}" type="button">POST THIS
+                                                VOUCHER
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group"
+                                         th:if="${#authorization.expression('hasAuthority(''VOUCHER_UN_POST'')')}">
+                                        <div class="form-group" th:switch="${voucher.posted}">
+                                            <button class="confirm btn btn-success" id="post_voucher"
+                                                    style="float: right;"
+                                                    th:case="${true}" type="button">UN-POST THIS
+                                                VOUCHER
+                                            </button>
+                                            <!-- <button th:case="${false}" type="button" id="post_voucher" class="confirm btn btn-success" style="float: right;">POST THIS VOUCHER</button> -->
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                            <div class="x_panel" th:if="${not #lists.isEmpty(revNumbers)}">
+                                <div class="x_title">
+                                    <h2 class="col-sm-6" style="text-align: center; width:90%">
+                                        <strong>MODIFICATIONS</strong></h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <div class="row">
+                                        <table class="col-sm-12" style="text-align: center; width:90%">
+                                            <tr th:each="revNumber, rowStat : ${revNumbers}">
+                                                <td>
+                                                    <strong>
+                                                        <a target="_blank"
+                                                           th:href="@{'/vouchers/' + ${voucher.id} + '/revisions/' + ${revNumber}}"
+                                                           th:text="@{'REVISION ' + ${rowStat.count}}"></a>
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <br>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- modals -->
+
+                <!-- Notification modal -->
+                <div aria-hidden="true" class="modal fade" id="modal_notify" role="dialog" tabindex="-1">
+                    <div class="modal-dialog modal-md">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <button class="close" data-dismiss="modal" type="button"><span
+                                        aria-hidden="true">×</span>
+                                </button>
+                                <h4 class="modal-title" style="color:#069"></h4>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-danger" data-dismiss="modal" type="button">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- APPLY ONE PAYMENT TO MULTIPLE INVOICES -->
+                <div aria-hidden="true" class="modal fade" id="apply_payment_to_invoices" role="dialog" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <button class="close" data-dismiss="modal" type="button"><span
+                                        aria-hidden="true">×</span>
+                                </button>
+                                <h4 class="modal-title">APPLY ONE PAYMENT TO MULTIPLE INVOICES</h4>
+                            </div>
+                            <form class="form-horizontal" id="applyPaymentToInvoices" role="form">
+                                <div class="modal-body">
+
+
+                                    <input id="voucherEntry_id_for_invoice" type="hidden">
+                                    <input id="voucherEntry_amount_for_invoice" type="hidden">
+                                    <input id="voucherEntry_account_name_for_invoice" type="hidden">
+
+                                    <div style="max-height:350px;overflow:auto;">
+                                        <table class="table table-striped table-bordered" id="invoice_entry_table">
+                                            <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>DATE</th>
+                                                <th>INVOICE NO.</th>
+                                                <th>REF NO.</th>
+                                                <th>INVOICE AMOUNT</th>
+                                                <th>AMOUNT DUE</th>
+                                                <th>PAYMENT</th>
+                                                <th>REM. AMOUNT</th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody>
+                                            </tbody>
+
+                                            <tfoot>
+                                            <tr>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th><span id="amountTotal">0.00</span></th>
+                                                <th><span id="amountDueTotal">0.00</span></th>
+                                                <th><span id="paymentTotal">0.00</span></th>
+                                                <th><span id="remAmountDueTotal">0.00</span></th>
+                                            </tr>
+                                            </tfoot>
+
+                                        </table>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12">ACCOUNT</label>
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12" id="account_name_label"
+                                               style="float: right;"></label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12">VOUCHER ENTRY
+                                            AMOUNT</label>
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12"
+                                               id="voucher_entry_amount_label"
+                                               style="float: right;">0.00</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12">TOTAL UN-ALLOCATED
+                                            AMOUNT</label>
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12"
+                                               id="total_un_allocated_amount_label"
+                                               style="float: right;">0.00</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12">OVER PAYMENT</label>
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12" id="over_payment_label"
+                                               style="float: right;">0.00</label>
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-success" th:disabled="${voucher.posted}" type="submit"><i
+                                            class="fa fa-credit-card"></i> SUBMIT
+                                    </button>
+                                    <button class="btn btn-default" data-dismiss="modal" type="button">CLOSE</button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPLOAD SUPPORTING DOCUMENTS -->
+                <div aria-hidden="true" class="modal fade" id="upload_supporting_docs" role="dialog" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <button class="close" data-dismiss="modal" type="button"><span
+                                        aria-hidden="true">×</span></button>
+                                <h4 class="modal-title">LIST OF DOCUMENTS</h4>
+                            </div>
+                            <form class="form-horizontal" enctype="multipart/form-data" id="voucherEntryDocs"
+                                  role="form">
+                                <div class="modal-body">
+
+                                    <div id="msgs"></div>
+                                    <input id="voucherEntry_id_for_doc" type="text">
+
+                                    <div style="max-height:300px;overflow:auto;">
+                                        <table class="table table-striped table-bordered" id="voucher_entry_doc_table">
+                                            <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>FILE NAME</th>
+                                                <!-- <th>TYPE</th> -->
+                                                <th>DESCRIPTION</th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody>
+                                            </tbody>
+
+                                        </table>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-3 col-sm-3 col-xs-12">UPLOAD A
+                                            DOCUMENT</label>
+                                        <div class="col-md-9 col-sm-9 col-xs-12">
+                                            <input class="form-control" id="file" name="file" required="required"
+                                                   th:disabled="${voucher.posted}" type="file">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-3 col-sm-3 col-xs-12">DESCRIPTION</label>
+                                        <div class="col-md-9 col-sm-9 col-xs-12">
+                                            <textarea class="resizable_textarea form-control" id="description"
+                                                      name="description" placeholder="DESCRIPTION"
+                                                      required rows="3" style="text-transform:uppercase"
+                                                      th:disabled="${voucher.posted}"></textarea>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-success" th:disabled="${voucher.posted}" type="submit"><i
+                                            class="fa fa-upload"></i> UPLOAD
+                                    </button>
+                                    <button class="btn btn-default" data-dismiss="modal" type="button">CLOSE</button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <!-- /page content -->
+
+        <!-- footer content -->
+        <footer>
+            <div class="pull-right">
+                Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+            </div>
+            <div class="clearfix"></div>
+        </footer>
+        <!-- /footer content -->
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="../vendors/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap -->
+<script src="../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- FastClick -->
+<script src="../vendors/fastclick/lib/fastclick.js"></script>
+<!-- NProgress -->
+<script src="../vendors/nprogress/nprogress.js"></script>
+<!-- iCheck -->
+<script src="../vendors/iCheck/icheck.min.js"></script>
+<!-- Datatables -->
+<script src="../vendors/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="../vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<script src="../vendors/datatables.net-buttons/js/dataTables.buttons.min.js"></script>
+<script src="../vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js"></script>
+<script src="../vendors/datatables.net-buttons/js/buttons.flash.min.js"></script>
+<script src="../vendors/datatables.net-buttons/js/buttons.html5.min.js"></script>
+<script src="../vendors/datatables.net-buttons/js/buttons.print.min.js"></script>
+<script src="../vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js"></script>
+<script src="../vendors/datatables.net-keytable/js/dataTables.keyTable.min.js"></script>
+<script src="../vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+<script src="../vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js"></script>
+<script src="../vendors/datatables.net-scroller/js/dataTables.scroller.min.js"></script>
+<script src="../vendors/jszip/dist/jszip.min.js"></script>
+<script src="../vendors/pdfmake/build/pdfmake.min.js"></script>
+<script src="../vendors/pdfmake/build/vfs_fonts.js"></script>
+<script src="../vendors/jquery.confirm-master/jquery.confirm.js"></script>
+
+<!-- Datatables -->
+<!-- <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jquery.dataTables.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/dataTables.buttons.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jszip.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/pdfmake.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/vfs_fonts.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.html5.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.print.min.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script src="../build/js/custom.min.js"></script>
+
+<script th:src="@{/build/js/countx_vouchers_view.js}"></script>
+
+</body>
+</html>

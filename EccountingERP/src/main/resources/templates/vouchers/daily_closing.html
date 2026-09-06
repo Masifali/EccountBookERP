@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>Daily Closing</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <!-- NProgress -->
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <!-- iCheck -->
+    <link rel="stylesheet" th:href="@{/vendors/iCheck/skins/flat/green.css}">
+    <!-- Datatables -->
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+    <!-- Select2 -->
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <link rel="stylesheet" th:href="@{/vendors/jquery-confirm-master/css/jquery-confirm.css}">
+
+    <!-- Custom Theme Style -->
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- side bar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div">
+        </div>
+        <!-- /side bar and top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <ol class="breadcrumb">
+                            <li><a href="../index">VOUCHERS</a></li>
+                            <li>NEW CLOSING</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <form class="form-horizontal form-label-left" id="voucherForm" method="post"
+                      th:action="@{/vouchers/dailyClosing}" th:object="${dailyClosing}">
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="x_panel">
+
+                            </div>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <div class="x_content">
+
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="alert alert-danger fade in" th:if="${#fields.hasErrors('*')}">
+                                                <p th:each="err : ${#fields.errors('*')}" th:text="${err}"></p>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">CASH
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <input class="form-control" id="cash" required="required"
+                                                               style="font-weight: bold;"
+                                                               th:field="${dailyClosing.cash}" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">CLOSING
+                                                        DATE.</label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <input class="form-control" id="closingDate"
+                                                               required="required"
+                                                               style="font-weight: bold;"
+                                                               th:field="${dailyClosing.closingDate}" type="date">
+                                                    </div>
+                                                    <input id="dailyClosingId" th:field="${dailyClosing.id}"
+                                                           type="hidden"/>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">STOCK
+                                                        AMOUNT.</label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <input class="form-control" id="stock" required="required"
+                                                               style="font-weight: bold;"
+                                                               th:field="${dailyClosing.stock}" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">PROFIT
+                                                        AMOUNT.</label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <input class="form-control" id="profit" required="required"
+                                                               style="font-weight: bold;"
+                                                               th:field="${dailyClosing.profit}" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">DEBIT
+                                                        AMOUNT.</label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <input class="form-control" id="debit" required="required"
+                                                               style="font-weight: bold;"
+                                                               th:field="${dailyClosing.debit}" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">CREDIT
+                                                        AMOUNT.</label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <input class="form-control" id="credit" required="required"
+                                                               style="font-weight: bold;"
+                                                               th:field="${dailyClosing.credit}" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-12 col-sm-12 col-xs-12" id="diff"
+                                                           style="float: center;">
+                                                        Difference</label>
+                                                </div>
+                                            </div>
+                                            <img id="loading"
+                                                 src="/build/images/pac_man.gif"
+                                                 style="float: right; width: 24px; height: 24px; display: none;">
+
+                                            <div class="col-md-3 col-sm-3 col-xs-12">
+                                                <button class="btn btn-primary" id="searchBtn" type="button">
+                                                    Search
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <div class="x_panel">
+                                        <div class="x_title">
+                                            <h2>CASH DETAILS LIKE (5000,1000,500,100,50,20,10)</h2>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="x_content">
+                                            <table class="table table-striped table-bordered" id="closing_entry_table">
+                                                <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>QTY</th>
+                                                    <th>NOTE</th>
+                                                    <th>AMOUNT</th>
+
+
+                                                </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                <tr th:each="vEntry, rowStat : ${dailyClosing.dailyClosingEntries}">
+                                                    <td>
+                                                        <span class="serial_no" th:text="${rowStat.count}"></span>
+                                                        <input th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].id}"
+                                                               type="hidden"/>
+                                                        <!--  <input th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].sequence}"
+                                                                 type="hidden"/>-->
+                                                        <!--<input class="entryStatus" id="entryStatus"
+                                                               th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].lockLine}"
+                                                               type="hidden"/>-->
+                                                    </td>
+
+
+                                                    <!-- <td><input type="text" class="form-control" style="text-transform:uppercase" required="required" id="voucherEntry_narration" th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].narration}"></td> -->
+                                                    <td><input class="form-control" onfocus="this.select()"
+                                                               required="required" style="font-weight: bold;"
+                                                               th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].qty}"
+                                                               type="number">
+                                                    </td>
+                                                    <!--<td><textarea autocomplete="on" class="form-control" cols="40"
+                                                                  onblur="this.rows=1;"
+                                                                  onfocus="this.rows=5;"
+                                                                  required="required"
+                                                                  rows="1" style="resize: none; text-transform:uppercase"
+                                                                  th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].narration}"></textarea>
+
+                                                    </td>-->
+
+                                                    <td><input class="form-control note" onfocus="this.select()"
+                                                               style="font-weight: bold;"
+                                                               th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].note}"
+                                                               type="number">
+                                                    </td>
+                                                    <!-- <td><input type="text" class="form-control" th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].recBookNumber}"></td>
+                                                    <td><input type="text" class="form-control" th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].recBookPageNumber}"></td> -->
+
+                                                    <td><input class="form-control amount" required="required"
+                                                               step="any"
+                                                               style="font-weight: bold;"
+                                                               th:field="${dailyClosing.dailyClosingEntries[__${rowStat.index}__].amount}"
+                                                               type="text">
+                                                    </td>
+
+
+                                                </tr>
+                                                </tbody>
+
+                                                <tfoot>
+                                                <tr>
+                                                    <th></th>
+
+                                                    <th><span id="qtyTotal">0.00</span></th>
+                                                    <th></th>
+                                                    <th><span id="amountTotal">0.00</span></th>
+
+
+                                                </tr>
+                                                </tfoot>
+
+                                            </table>
+
+                                            <div class="form-group">
+                                                <button class="btn btn-success" id="submitForm" style="float: right;"><i
+                                                        class="fa fa-credit-card"></i> Submit
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- modals -->
+
+                <!-- Notification modal -->
+                <div aria-hidden="true" class="modal fade" id="modal_notify" role="dialog" tabindex="-1">
+                    <div class="modal-dialog modal-md">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <button class="close" data-dismiss="modal" type="button"><span
+                                        aria-hidden="true">×</span>
+                                </button>
+                                <h4 class="modal-title" style="color:#069"></h4>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-danger" data-dismiss="modal" type="button">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- /page content -->
+
+            <!-- footer content -->
+            <footer>
+                <div class="pull-right">
+                    Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+                </div>
+                <div class="clearfix"></div>
+            </footer>
+            <!-- /footer content -->
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- NProgress -->
+<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Datatables -->
+<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+<script th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+<script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+<!-- confirm -->
+<script th:src="@{/vendors/jquery-confirm-master/js/jquery-confirm.js}"></script>
+<!-- Select2 -->
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/vendors/select2-tab-fix-master/src/select2-tab-fix.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script th:src="@{/build/js/countx_daily_closing.js}"></script>
+
+<script>
+    $(".select2_single").select2({
+        dropdownAutoWidth: true,
+        width: '100%'
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccountBookERP - Accounts Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-teal: #0e6863;
+            --primary-teal-dark: #094d49;
+            --primary-teal-light: #14837c;
+            --accent-green: #0a7a72;
+            --star-red: #f43f5e;
+            --star-yellow: #f59e0b;
+            --bg-canvas: #eaeef1;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --header-height: 42px;
+            --sidebar-width: 50px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-dark);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header Bar */
+        .top-header {
+            background-color: var(--primary-teal);
+            color: #ffffff;
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            font-size: 13px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+
+        .header-left-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-arrow-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        .nav-arrow-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .select-box {
+            background: #ffffff;
+            color: #333333;
+            border: 1px solid #b0bec5;
+            padding: 3px 8px;
+            border-radius: 2px;
+            font-size: 12.5px;
+            font-weight: 500;
+            outline: none;
+            width: 175px;
+        }
+
+        .user-info {
+            font-weight: 700;
+            margin-left: 6px;
+            white-space: nowrap;
+        }
+
+        .company-name {
+            font-weight: 700;
+            text-align: center;
+            font-size: 12.5px;
+            margin-left: 12px;
+            white-space: nowrap;
+        }
+
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .clock-display {
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
+        .fy-badge {
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .update-banner {
+            color: #fef08a;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            cursor: pointer;
+        }
+
+        .update-banner:hover {
+            text-decoration: underline;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .win-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+        }
+
+        .win-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* App Body Layout */
+        .app-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-teal-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            gap: 14px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 90;
+        }
+
+        .sidebar-item {
+            width: 38px;
+            height: 38px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .sidebar-item.active {
+            background: white;
+            color: var(--primary-teal);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Main Workspace Viewport */
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background-color: #eef2f5;
+        }
+
+        /* Dashboard Header Panel */
+        .dash-header-panel {
+            background-color: var(--primary-teal);
+            color: white;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dash-breadcrumbs {
+            font-size: 11px;
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 2px;
+        }
+
+        .dash-title {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Merriweather', Georgia, serif;
+            letter-spacing: 0.3px;
+        }
+
+        /* Top 4 Sub-Module Cards Section */
+        .submodules-container {
+            padding: 16px 20px 12px 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 1024px) {
+            .submodules-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .module-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            height: 145px;
+        }
+
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+            border-color: var(--primary-teal-light);
+        }
+
+        .module-card.selected {
+            border: 2px solid var(--primary-teal);
+            box-shadow: 0 0 0 2px rgba(14, 104, 99, 0.3);
+        }
+
+        .module-card-banner {
+            background-color: var(--primary-teal);
+            color: white;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .module-card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            gap: 8px;
+        }
+
+        .module-icon {
+            color: #0d8a80;
+            width: 44px;
+            height: 44px;
+        }
+
+        .module-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+            text-align: center;
+        }
+
+        /* Screen Cards Grid Section */
+        .screens-section {
+            padding: 8px 20px 24px 20px;
+        }
+
+        .screens-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 14px;
+        }
+
+        @media (max-width: 1200px) {
+            .screens-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .screens-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .screen-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            padding: 16px 10px;
+            min-height: 105px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .screen-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-teal-light);
+        }
+
+        .star-icon {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 22px;
+            height: 22px;
+            color: var(--star-red);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .star-icon:hover {
+            transform: translateX(-50%) scale(1.2);
+        }
+
+        .screen-card-title {
+            margin-top: 18px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            text-align: center;
+            line-height: 1.35;
+        }
+
+        /* Modal Details Window */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(2px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 4px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            background-color: var(--primary-teal);
+            color: white;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .form-input {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-teal);
+        }
+
+        .btn-submit {
+            background-color: var(--primary-teal);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-teal-dark);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Header -->
+    <header class="top-header">
+        <div class="header-left-group">
+            <button class="nav-arrow-btn" title="Back">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <button class="nav-arrow-btn" title="Forward">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+
+            <select class="select-box" id="screenSearchSelect">
+                <option value="">...Select Any Value...</option>
+                <option value="Define Bank">Define Bank</option>
+                <option value="Bank Payment Voucher">Bank Payment Voucher</option>
+                <option value="Bank Receipt Voucher">Bank Receipt Voucher</option>
+                <option value="Bank Balance Entry">Bank Balance Entry</option>
+                <option value="Cheque Printing">Cheque Printing</option>
+                <option value="Bank Balances Report">Bank Balances Report</option>
+                <option value="General Ledger Report">General Ledger Report</option>
+            </select>
+
+            <span class="user-info">Numan Rasheed (Admin)</span>
+            <span class="company-name">Golden Ace Rice Mills (Pvt) Ltd.</span>
+        </div>
+
+        <div class="header-right-group">
+            <span class="clock-display" id="liveClock">5:58:48 pm</span>
+            <span class="fy-badge">2026-27</span>
+
+            <div class="update-banner" title="Click to download software update">
+                <span>New Update is Available! Current Version: 0.0.0.0</span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </div>
+
+            <div class="window-controls">
+                <button class="win-btn" title="Minimize">&#9472;</button>
+                <button class="win-btn" title="Maximize">&#9633;</button>
+                <button class="win-btn" title="Close">&#10005;</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Application Shell -->
+    <div class="app-body">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <button class="sidebar-item" title="Navigation Menu">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <button class="sidebar-item active" title="Dashboard Analytics">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            </button>
+            <button class="sidebar-item" title="Home">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            </button>
+            <button class="sidebar-item" title="Favorites">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </button>
+            <button class="sidebar-item" title="History">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </button>
+            <button class="sidebar-item" title="User Rights & Access">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </button>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="workspace">
+            <!-- Header Panel -->
+            <div class="dash-header-panel">
+                <div>
+                    <div class="dash-breadcrumbs">
+                        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        <span>Screens</span>
+                    </div>
+                    <h1 class="dash-title" id="moduleTitle">Accounts</h1>
+                </div>
+            </div>
+
+            <!-- Top Sub-Module Cards (4 Columns) -->
+            <div class="submodules-container">
+                <div class="module-card" data-submodule="Account Definition" onclick="selectSubmodule(this)">
+                    <div class="module-card-banner">8</div>
+                    <div class="module-card-body">
+                        <svg class="module-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M11 11h2M11 15h2M16 11h2M16 15h2M4 7l8-4 8 4"/></svg>
+                        <div class="module-title">Account Definition</div>
+                    </div>
+                </div>
+
+                <div class="module-card" data-submodule="Accounts Transaction" onclick="selectSubmodule(this)">
+                    <div class="module-card-banner">18</div>
+                    <div class="module-card-body">
+                        <svg class="module-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M11 11h2M11 15h2M16 11h2M16 15h2M4 7l8-4 8 4"/></svg>
+                        <div class="module-title">Accounts Transaction</div>
+                    </div>
+                </div>
+
+                <div class="module-card" data-submodule="Account Reports" onclick="selectSubmodule(this)">
+                    <div class="module-card-banner">27</div>
+                    <div class="module-card-body">
+                        <svg class="module-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M11 11h2M11 15h2M16 11h2M16 15h2M4 7l8-4 8 4"/></svg>
+                        <div class="module-title">Account Reports</div>
+                    </div>
+                </div>
+
+                <div class="module-card selected" data-submodule="Banking Managment" onclick="selectSubmodule(this)">
+                    <div class="module-card-banner">7</div>
+                    <div class="module-card-body">
+                        <svg class="module-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M11 11h2M11 15h2M16 11h2M16 15h2M4 7l8-4 8 4"/></svg>
+                        <div class="module-title">Banking Managment</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen Cards Grid Section -->
+            <div class="screens-section">
+                <div class="screens-grid" id="screensGrid">
+                    <!-- Card 1 -->
+                    <div class="screen-card" onclick="openScreenModal('Define Bank')">
+                        <svg class="star-icon" onclick="toggleStar(event, this)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <div class="screen-card-title">Define Bank</div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="screen-card" onclick="openScreenModal('Bank Payment Voucher')">
+                        <svg class="star-icon" onclick="toggleStar(event, this)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <div class="screen-card-title">Bank Payment Voucher</div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="screen-card" onclick="openScreenModal('Bank Receipt Voucher')">
+                        <svg class="star-icon" onclick="toggleStar(event, this)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <div class="screen-card-title">Bank Receipt Voucher</div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div class="screen-card" onclick="openScreenModal('Bank Balance Entry')">
+                        <svg class="star-icon" onclick="toggleStar(event, this)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <div class="screen-card-title">Bank Balance Entry</div>
+                    </div>
+
+                    <!-- Card 5 -->
+                    <div class="screen-card" onclick="openScreenModal('Cheque Printing')">
+                        <svg class="star-icon" onclick="toggleStar(event, this)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <div class="screen-card-title">Cheque Printing</div>
+                    </div>
+
+                    <!-- Card 6 -->
+                    <div class="screen-card" onclick="openScreenModal('Bank Balances Report')">
+                        <svg class="star-icon" onclick="toggleStar(event, this)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <div class="screen-card-title">Bank Balances Report</div>
+                    </div>
+
+                    <!-- Card 7 -->
+                    <div class="screen-card" onclick="openScreenModal('General Ledger Report')">
+                        <svg class="star-icon" onclick="toggleStar(event, this)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <div class="screen-card-title">General Ledger Report</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Popup Dialog for Screen Form -->
+    <div class="modal-overlay" id="screenModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span id="modalTitle">Define Bank</span>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); alert('Saved successfully!'); closeModal();">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Bank Code / ID</label>
+                            <input type="text" class="form-input" value="BNK-2026-001" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bank Name</label>
+                            <input type="text" class="form-input" placeholder="e.g. Meezan Bank Limited" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Account Number</label>
+                            <input type="text" class="form-input" placeholder="e.g. 0102010349281" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Branch Name / Code</label>
+                            <input type="text" class="form-input" placeholder="e.g. Main Branch - Gujranwala">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Save Entry</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Real-Time Clock Handler
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toLowerCase();
+            document.getElementById('liveClock').textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Favorite Star Toggle Handler
+        function toggleStar(event, element) {
+            event.stopPropagation();
+            if (element.getAttribute('fill') === 'currentColor') {
+                element.setAttribute('fill', 'none');
+                element.style.color = 'var(--star-red)';
+            } else {
+                element.setAttribute('fill', 'currentColor');
+                element.style.color = 'var(--star-yellow)';
+            }
+        }
+
+        // Submodule Selection
+        function selectSubmodule(cardElement) {
+            document.querySelectorAll('.module-card').forEach(c => c.classList.remove('selected'));
+            cardElement.classList.add('selected');
+        }
+
+        // Screen Search Filter
+        document.getElementById('screenSearchSelect').addEventListener('change', function(e) {
+            const val = e.target.value;
+            if (val) {
+                openScreenModal(val);
+            }
+        });
+
+        // Open Modal Dialog
+        function openScreenModal(screenTitle) {
+            document.getElementById('modalTitle').textContent = screenTitle;
+            document.getElementById('screenModal').classList.add('active');
+        }
+
+        // Close Modal Dialog
+        function closeModal() {
+            document.getElementById('screenModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

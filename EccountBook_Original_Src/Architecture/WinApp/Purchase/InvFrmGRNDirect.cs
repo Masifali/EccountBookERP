@@ -1,0 +1,6776 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using Architecture.BLL;
+using Architecture.BLL.Inventory;
+using Architecture.BLL.Lab;
+using Architecture.Common;
+using Architecture.Model;
+using Architecture.Model.Inventory;
+using Architecture.WinApp.Account_Definition;
+using Architecture.WinApp.Common;
+using Architecture.WinApp.Contractor_Wages;
+using Architecture.WinApp.Helper;
+using Architecture.WinApp.Inventory_Reports;
+using Architecture.WinApp.Properties;
+using Architecture.WinApp.PurchaseTrading;
+using Infragistics.Win;
+using Infragistics.Win.UltraWinGrid;
+using Janus.Windows.GridEX;
+using grid.User_Conrtols;
+
+namespace Architecture.WinApp.Purchase;
+
+public class InvFrmGRNDirect : Form
+{
+	private Rightsobjects formright = new Rightsobjects();
+
+	private int updateDetailIndex = -1;
+
+	private Attachment AT = new Attachment();
+
+	private int RecId;
+
+	private bool SubsidiaryAccountAllownOnVouchers;
+
+	private bool WagesStatus;
+
+	private bool WagesActiveOrInActive;
+
+	private bool OrderExist;
+
+	private int EmptyBagsWeightCutStatus;
+
+	private string GridIds = "";
+
+	private double JuteBagsCut;
+
+	private double PPBagsCut;
+
+	private double OpenBulkCut;
+
+	private double TermDifference;
+
+	private bool TermOnlyLessWeight;
+
+	private double BillWeightAndStockWeightDifferenceTolerance;
+
+	private bool EmptyBagsWeightCutEditable;
+
+	private bool AddLessWeightEditable;
+
+	private bool EmptyBagsInformationComp;
+
+	private DropDownBind DDL = new DropDownBind();
+
+	private DataTable dtAccount = new DataTable();
+
+	private DataTable dtdetail = new DataTable();
+
+	private DataTable dtEmptyBag = new DataTable();
+
+	private DataTable dtItem = new DataTable();
+
+	private DataTable dtjob = new DataTable();
+
+	private DataTable dtPack = new DataTable();
+
+	private DataTable dtUOM = new DataTable();
+
+	private DataTable dtwh = new DataTable();
+
+	private DataTable dtcity = new DataTable();
+
+	private DataTable dtCrop = new DataTable();
+
+	private DataTable dtEmpType = new DataTable();
+
+	private DataTable dtBagsCondition = new DataTable();
+
+	private DataTable dtSupplier = new DataTable();
+
+	private LoadPurchaseOrder LoadPO;
+
+	private int DefaultDaysToLessFromHistoryFromDate;
+
+	private string AttachmentsValues = "";
+
+	private string CustomAttachmentsValues = "";
+
+	private bool DeductionPolicyForGrnIsOn;
+
+	private UserAccount UserAccount = new UserAccount();
+
+	private IContainer components;
+
+	private Panel panel1;
+
+	private TabControl tabControl1;
+
+	private TabPage tabPage1;
+
+	private TabPage tabPage2;
+
+	private Panel panel2;
+
+	private ToolStrip toolStrip1;
+
+	private ToolStripButton btnNew;
+
+	private ToolStripButton btnUpdate;
+
+	private ToolStripButton btnSave;
+
+	private ToolStripButton BtnPrint;
+
+	private ToolStripButton btnAttachment;
+
+	private Panel panel4;
+
+	private Panel panel5;
+
+	private Label label24;
+
+	private Label label25;
+
+	private TextBox txtremarks;
+
+	private Label label21;
+
+	private Label label19;
+
+	private TextBox txtbltyno;
+
+	private TextBox txtvehno;
+
+	internal UltraCombo CmbTransport;
+
+	private Label label48;
+
+	private Label label26;
+
+	private TextBox txtcarramount;
+
+	private Label label20;
+
+	private TextBox txtsuppwt;
+
+	private Label label6;
+
+	private TextBox txtfctwt;
+
+	private Label label11;
+
+	private TextBox txtwtdiff;
+
+	internal UltraCombo combsupplier;
+
+	private Label label2;
+
+	private DateTimePicker DocDate;
+
+	private TextBox txtdocno;
+
+	private Label label5;
+
+	internal UltraCombo combpckuom;
+
+	internal UltraCombo CmbCity;
+
+	internal UltraCombo combpcktyp;
+
+	internal UltraCombo combitem;
+
+	private TextBox txtgwt;
+
+	private TextBox txtqty;
+
+	private TextBox txtadlswt;
+
+	private TextBox txtstockwt;
+
+	private Label label29;
+
+	private TextBox txtnetwt;
+
+	private Label label46;
+
+	private Label label28;
+
+	private Label label35;
+
+	private Label label43;
+
+	private Label label42;
+
+	private Label label41;
+
+	private Label label40;
+
+	private Label label36;
+
+	private Panel panel7;
+
+	internal GridEX GrdHistory;
+
+	private CtrlGrdBar ctrlGrdBar1;
+
+	private Button btnCancelUpdateDetial;
+
+	private Button btnUpdateDetail;
+
+	private ToolStripButton BtnRefresh;
+
+	private Panel panel10;
+
+	internal GridEX grd;
+
+	private CheckBox ChkBox;
+
+	private ToolStripButton CityDefine;
+
+	private Button Add;
+
+	internal GridEX GrdHistoryDetail;
+
+	private CtrlGrdBar ctrlGrdBar2;
+
+	private ToolStrip toolStrip2;
+
+	internal UltraCombo combvehtyp;
+
+	private ToolStripButton btnDelete;
+
+	private ToolStripButton btnGrnFormHistory;
+
+	private Label label53;
+
+	internal UltraCombo CmbDeliveryTerm;
+
+	private Label label4;
+
+	private Label label33;
+
+	private Label label32;
+
+	private Label label23;
+
+	private Label label15;
+
+	private Label label14;
+
+	private Label label34;
+
+	internal UltraCombo CmbJobLot;
+
+	private Label label1;
+
+	internal UltraCombo CmbWareHouse;
+
+	private Label label3;
+
+	private Label label7;
+
+	private ToolStripSeparator toolStripSeparator5;
+
+	private ToolStripSeparator toolStripSeparator4;
+
+	private ToolStripSeparator toolStripSeparator3;
+
+	private ToolStripSeparator toolStripSeparator2;
+
+	private ToolStripSeparator toolStripSeparator1;
+
+	private Label label9;
+
+	private Label label8;
+
+	private TextBox txtGpNo;
+
+	private Label label22;
+
+	internal UltraCombo combcropyear;
+
+	private TextBox txtebu;
+
+	private TextBox txtEmptyBagsTotal;
+
+	private Label label45;
+
+	private Label label44;
+
+	private ToolStripButton btnNewHistory;
+
+	private ToolStripButton btnRefreshHistory;
+
+	private Panel panel23;
+
+	private RadioButton rdapproveddate;
+
+	private RadioButton rdmodifydate;
+
+	private RadioButton drdocdate;
+
+	private RadioButton rdentrydate;
+
+	private GroupBox groupBox3;
+
+	private RadioButton RadNotReffered;
+
+	private RadioButton RadReffered;
+
+	private Button btnshow;
+
+	private Label label49;
+
+	private RadioButton RadAll;
+
+	private Label label50;
+
+	private Label label51;
+
+	private Label label52;
+
+	private Label label10;
+
+	internal UltraCombo cmbSupplierNameHistory;
+
+	private TextBox txtToDocNoHistory;
+
+	private TextBox txtFromDocNoHistory;
+
+	private DateTimePicker ToDateHistory;
+
+	private DateTimePicker FromDateHistory;
+
+	private Panel panel8;
+
+	private Panel panel11;
+
+	private Label label13;
+
+	private Label label12;
+
+	private Label label16;
+
+	private Label label17;
+
+	private Panel panel14;
+
+	private Label label18;
+
+	private CtrlGrdBar ctrlGrdBar5;
+
+	internal GridEX grdEmptyBags;
+
+	private RadioButton rdSearchByCode;
+
+	private RadioButton rdSearchByName;
+
+	private ToolStripButton BtnShortCutkeys;
+
+	private ToolStripButton BtnLoadOrder;
+
+	private ToolStripSeparator toolStripSeparator6;
+
+	private ToolStripSeparator toolStripSeparator7;
+
+	private Label lblBalwt;
+
+	private TextBox txtBalWeight;
+
+	public InvFrmGRNDirect(UserAccount user)
+	{
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Expected O, but got Unknown
+		InitializeComponent();
+		UserAccount = user;
+	}
+
+	private void InvFrmGRN_Load(object sender, EventArgs e)
+	{
+		try
+		{
+			AutoScroll = true;
+			base.AutoScrollMargin = new Size(20, 20);
+			base.AutoScrollMinSize = new Size(900, 650);
+			GetConfiguration();
+			txtebu.Text = "0";
+			txtadlswt.Text = "0";
+			txtebu.Enabled = false;
+			txtadlswt.Enabled = false;
+			txtEmptyBagsTotal.Enabled = false;
+			if (EmptyBagsWeightCutEditable)
+			{
+				txtebu.Enabled = true;
+				txtEmptyBagsTotal.Enabled = true;
+			}
+			if (AddLessWeightEditable)
+			{
+				txtadlswt.Enabled = true;
+			}
+			formright = CommonServices.SetRightsValueInRightsObject("InvFrmGRNDirect");
+			btnSave.Enabled = formright.DoHaveSaveRight;
+			BtnPrint.Enabled = formright.DoHavePrintRights;
+			btnUpdate.Enabled = formright.DoHaveUpdateRights;
+			ctrlGrdBar1.mGridChooseFielder.Enabled = formright.DoHaveFieldChooserRights;
+			ctrlGrdBar1.mGridSaveLayouts.Enabled = formright.DoHaveSaveLayoutRights;
+			ctrlGrdBar1.mGridPrint.Enabled = formright.DoHaveGridPrintRights;
+			ctrlGrdBar1.mGridExport.Enabled = formright.DoHaveGridExportRights;
+			ctrlGrdBar1.GroupCollaps.Enabled = formright.DoHaveGridGroupCollapseRights;
+			ctrlGrdBar1.GroupExpand.Enabled = formright.DoHaveGridGroupExpandRights;
+			GetConfigurations();
+			dtdetail.Columns.Add("Id", typeof(int));
+			dtdetail.Columns.Add("OrderId", typeof(int));
+			dtdetail.Columns.Add("OrderDetailId", typeof(int));
+			dtdetail.Columns.Add("OrderNo", typeof(int));
+			dtdetail.Columns.Add("WarehouseId", typeof(int));
+			dtdetail.Columns.Add("Warehouse");
+			dtdetail.Columns.Add("ItemId", typeof(int));
+			dtdetail.Columns.Add("ItemCode");
+			dtdetail.Columns.Add("ItemName");
+			dtdetail.Columns.Add("CropYear");
+			dtdetail.Columns.Add("JobLotId", typeof(int));
+			dtdetail.Columns.Add("JobLot");
+			dtdetail.Columns.Add("PackingTypeId", typeof(int));
+			dtdetail.Columns.Add("PackingType");
+			dtdetail.Columns.Add("UOMId", typeof(int));
+			dtdetail.Columns.Add("UOM", typeof(string));
+			dtdetail.Columns.Add("UOMEquivalent", typeof(double));
+			dtdetail.Columns.Add("Qty", typeof(double));
+			dtdetail.Columns.Add("GrossWight", typeof(double));
+			dtdetail.Columns.Add("EbUnit", typeof(double));
+			dtdetail.Columns.Add("EbTotal", typeof(double));
+			dtdetail.Columns.Add("AddLesswt", typeof(double));
+			dtdetail.Columns.Add("NetWeight", typeof(double));
+			dtdetail.Columns.Add("StockWeight", typeof(double));
+			dtdetail.Columns.Add("CityId", typeof(int));
+			dtdetail.Columns.Add("City");
+			grd.DataSource = dtdetail;
+			grd.RetrieveStructure();
+			grdSettings();
+			dtItem.Columns.Add("Id", typeof(int));
+			dtItem.Columns.Add("ItemName");
+			dtItem.Columns.Add("ItemCode");
+			dtjob.Columns.Add("Id", typeof(int));
+			dtjob.Columns.Add("JobLotDescription");
+			dtPack.Columns.Add("Id", typeof(int));
+			dtPack.Columns.Add("PackTypeDesc");
+			dtUOM.Columns.Add("Id", typeof(int));
+			dtUOM.Columns.Add("UOMCode");
+			dtUOM.Columns.Add("Equivalent");
+			dtwh.Columns.Add("Id", typeof(int));
+			dtwh.Columns.Add("WareHouseName");
+			dtcity.Columns.Add("Id", typeof(int));
+			dtcity.Columns.Add("CityName");
+			dtCrop.Columns.Add("Id", typeof(int));
+			dtCrop.Columns.Add("CropYear");
+			dtSupplier.Columns.Add("Id", typeof(int));
+			dtSupplier.Columns.Add("SupplierName");
+			dtSupplier.Columns.Add("GLAccountId", typeof(int));
+			dtAccount.Columns.Add("Id", typeof(int));
+			dtAccount.Columns.Add("AccountTitle");
+			dtAccount.Columns.Add("SupplierCustomerId", typeof(int));
+			EmptyBagsTypeFill();
+			dtEmptyBag.Columns.Add("OrderId", typeof(int));
+			dtEmptyBag.Columns.Add("Type");
+			dtEmptyBag.Columns.Add("ItemId", typeof(int));
+			dtEmptyBag.Columns.Add("Condition");
+			dtEmptyBag.Columns.Add("RecQty", typeof(double));
+			dtEmptyBag.Columns.Add("PurQty", typeof(double));
+			dtEmptyBag.Columns.Add("Remarks");
+			AddRowInvEmptyBagsGrid();
+			grdEmptyBags.RetrieveStructure();
+			grdEmptyBagsSettings();
+			GenerateCode();
+			SupplierNameFilll();
+			TransportFill();
+			VehicleTypesFill();
+			DeliveryTerm();
+			WareHouseFill();
+			JobLotFill();
+			ItemNameFill();
+			PackingTypeFill();
+			CityFill();
+			CropYear();
+			btnSave.Visible = true;
+			btnUpdate.Visible = false;
+			DocDate.Focus();
+			ChkBox.Checked = true;
+			Add.Visible = true;
+			btnUpdateDetail.Visible = false;
+			btnCancelUpdateDetial.Visible = false;
+			DefaultDaysToLessFromHistoryFromDate = Conversion.ToInt((object)GlobalVariables_Helper.GetConfigValueFromGlobal("DefaultDaysToLessFromHistoryFromDate"));
+			HistoryComboFill();
+			FromDateHistory.Value = ((DefaultDaysToLessFromHistoryFromDate > 0) ? DateTime.Now.AddDays(-DefaultDaysToLessFromHistoryFromDate) : DateTime.Now.AddDays(-3.0));
+			ToDateHistory.Value = DateTime.Now;
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GetConfigurations()
+	{
+		try
+		{
+			SubsidiaryAccountAllownOnVouchers = CommonServices.GetERPFeatureById(4);
+			DeductionPolicyForGrnIsOn = Conversion.ToBool((object)GlobalVariables_Helper.GetConfigValueFromGlobal("DeductionPolicyForGrnIsOn"));
+			TermDifference = Conversion.ToDouble((object)GlobalVariables_Helper.GetConfigValueFromGlobal("BillWeightAndStockWeightDifferenceTolerance"));
+			TermOnlyLessWeight = Conversion.ToBool((object)GlobalVariables_Helper.GetConfigValueFromGlobal("GRNAgainstPartyWeightWithTolerance"));
+			WagesActiveOrInActive = GlobalVariables_Helper.GetWagesRefDocumentsStatusById(137);
+			if (!SubsidiaryAccountAllownOnVouchers)
+			{
+				int transporterId = Conversion.ToInt((object)GlobalVariables_Helper.GetConfigValueFromGlobal("FreightInwardAc"));
+				if (transporterId != 0)
+				{
+					CmbTransport.Value = transporterId;
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GetConfiguration()
+	{
+		try
+		{
+			DataTable dtConfiq = CommonServices.GetMultipleConfigurationsByConfigDescriptions("WeightCutForJuteBags,WeightCutForPPBags,WeightCutForOpenBulk,EmptyBagsWeightCutEditableOnGRN,AddLessWeightCutEditableOnGRN,ContractorWagesCompulsoryBeforeInvoices,EmptyBagsInofrmationCompulsoryOnGRN,LabCompulsoryForWeighBridgeAgainstGatePurchase,BillWeightAndStockWeightDifferenceTolerance");
+			if (dtConfiq.Rows.Count <= 0)
+			{
+				return;
+			}
+			for (int i = 0; i < dtConfiq.Rows.Count; i++)
+			{
+				if (Conversion.ToString(dtConfiq.Rows[i]["ConfigDescription"]) == "WeightCutForJuteBags")
+				{
+					JuteBagsCut = Conversion.ToDouble(dtConfiq.Rows[i]["ConfigKey"]);
+				}
+				if (Conversion.ToString(dtConfiq.Rows[i]["ConfigDescription"]) == "WeightCutForPPBags")
+				{
+					PPBagsCut = Conversion.ToDouble(dtConfiq.Rows[i]["ConfigKey"]);
+				}
+				if (Conversion.ToString(dtConfiq.Rows[i]["ConfigDescription"]) == "WeightCutForOpenBulk")
+				{
+					OpenBulkCut = Conversion.ToDouble(dtConfiq.Rows[i]["ConfigKey"]);
+				}
+				if (Conversion.ToString(dtConfiq.Rows[i]["ConfigDescription"]) == "BillWeightAndStockWeightDifferenceTolerance")
+				{
+					BillWeightAndStockWeightDifferenceTolerance = Conversion.ToDouble(dtConfiq.Rows[i]["ConfigKey"]);
+				}
+				if (Conversion.ToString(dtConfiq.Rows[i]["ConfigDescription"]) == "EmptyBagsWeightCutEditableOnGRN")
+				{
+					EmptyBagsWeightCutEditable = Conversion.ToBool(dtConfiq.Rows[i]["ConfigKey"]);
+				}
+				if (Conversion.ToString(dtConfiq.Rows[i]["ConfigDescription"]) == "AddLessWeightCutEditableOnGRN")
+				{
+					AddLessWeightEditable = Conversion.ToBool(dtConfiq.Rows[i]["ConfigKey"]);
+				}
+				if (Conversion.ToString(dtConfiq.Rows[i]["ConfigDescription"]) == "ContractorWagesCompulsoryBeforeInvoices")
+				{
+					WagesStatus = Conversion.ToBool(dtConfiq.Rows[i]["ConfigKey"]);
+				}
+				if (Conversion.ToString(dtConfiq.Rows[i]["ConfigDescription"]) == "EmptyBagsInofrmationCompulsoryOnGRN")
+				{
+					EmptyBagsInformationComp = Conversion.ToBool(dtConfiq.Rows[i]["ConfigKey"]);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GenerateCode()
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Expected O, but got Unknown
+		try
+		{
+			int DocNo = Conversion.ToInt((object)InvGrn.GenerateInvGrnCode(new InvGrn
+			{
+				OrganizationId = UserAccount.OrganizationId,
+				CompanyId = UserAccount.CompanyId,
+				DocumentTypeId = 137,
+				FinancialYearId = clsGlobalVariables.ActiveYr.Id
+			}));
+			txtdocno.Text = DocNo.ToString();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void SupplierNameFilll()
+	{
+		try
+		{
+			int ID = Conversion.ToInt(combsupplier.Value);
+			if (SubsidiaryAccountAllownOnVouchers)
+			{
+				DataTable dt = CommonServices.GetVendorsAndCustomers(1);
+				if (dt.Rows.Count > 0)
+				{
+					dtSupplier.Clear();
+					foreach (DataRow r in dt.Rows)
+					{
+						dtSupplier.Rows.Add(r["Id"], r["CompanyName"], r["GlAccountId"]);
+					}
+				}
+			}
+			else
+			{
+				dtSupplier.Clear();
+				DataTable dt2 = CommonServices.SupplierCustomerGetforComboServiceBind();
+				if (dt2.Rows.Count > 0)
+				{
+					dtSupplier.Clear();
+					foreach (DataRow r2 in dt2.Rows)
+					{
+						dtSupplier.Rows.Add(r2["Id"], r2["CompanyName"], r2["GlAccountId"]);
+					}
+				}
+			}
+			if (dtSupplier.Rows.Count > 0)
+			{
+				DDL.BindDDL(dtSupplier, combsupplier, "Id", "SupplierName", "Supplier Name", ZeroIndex: true);
+				((UltraGridBase)combsupplier).DisplayLayout.Bands[0].Columns[2].Hidden = true;
+				if (ID > 0)
+				{
+					if (dtSupplier.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						combsupplier.Value = ID;
+					}
+					else
+					{
+						((Control)(object)combsupplier).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)combsupplier).Text = string.Empty;
+				((UltraGridBase)combsupplier).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void TransportFill()
+	{
+		try
+		{
+			int ID = Conversion.ToInt(CmbTransport.Value);
+			if (SubsidiaryAccountAllownOnVouchers)
+			{
+				DataTable dt = CommonServices.GetVendorsAndCustomersForTransporter();
+				if (dt.Rows.Count > 0)
+				{
+					dtAccount.Clear();
+					for (int i = 0; i < dt.Rows.Count; i++)
+					{
+						dtAccount.Rows.Add(dt.Rows[i]["GLAccountId"], dt.Rows[i]["CompanyName"], dt.Rows[i]["Id"]);
+					}
+				}
+			}
+			else
+			{
+				DataTable dt2 = CommonServices.CoaAllocationGetAllServiceBind();
+				if (dt2.Rows.Count > 0)
+				{
+					dtAccount.Clear();
+					for (int j = 0; j < dt2.Rows.Count; j++)
+					{
+						if (Convert.ToInt32(dt2.Rows[j]["AccountTypeId"]) != 2 && Convert.ToInt32(dt2.Rows[j]["AccountTypeId"]) != 4 && Convert.ToInt32(dt2.Rows[j]["AccountTypeId"]) != 10 && Convert.ToInt32(dt2.Rows[j]["AccountTypeId"]) != 11 && Convert.ToInt32(dt2.Rows[j]["AccountTypeId"]) != 12 && Convert.ToInt32(dt2.Rows[j]["AccountTypeId"]) != 15)
+						{
+							dtAccount.Rows.Add(dt2.Rows[j]["Id"], dt2.Rows[j]["AccountTitle"], 0);
+						}
+					}
+				}
+			}
+			if (dtAccount.Rows.Count > 0)
+			{
+				DDL.BindDDL(dtAccount, CmbTransport, "Id", "AccountTitle", "Account Title", ZeroIndex: true);
+				if (ID > 0)
+				{
+					if (dtAccount.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						CmbTransport.Value = ID;
+					}
+					else
+					{
+						((Control)(object)CmbTransport).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)CmbTransport).Text = string.Empty;
+				((UltraGridBase)CmbTransport).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void VehicleTypesFill()
+	{
+		try
+		{
+			int ID = Conversion.ToInt(combsupplier.Value);
+			DataTable dtVehicle = VehicleType.GetAll();
+			if (dtVehicle.Rows.Count > 0)
+			{
+				DDL.BindDDLNew(dtVehicle, combvehtyp, "Id", "VehicleDescription", "VehicleDescription", true);
+				if (ID > 0)
+				{
+					if (dtVehicle.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						combvehtyp.Value = ID;
+					}
+					else
+					{
+						((Control)(object)combvehtyp).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)combvehtyp).Text = string.Empty;
+				((UltraGridBase)combvehtyp).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void ItemNameFill()
+	{
+		try
+		{
+			int ID = Conversion.ToInt(combitem.Value);
+			dtItem.Rows.Clear();
+			DataTable dt = CommonServices.ReadAllItems();
+			if (dt.Rows.Count > 0)
+			{
+				for (int i = 0; i < dt.Rows.Count; i++)
+				{
+					dtItem.Rows.Add(dt.Rows[i]["Id"], dt.Rows[i]["ItemName"], dt.Rows[i]["ItemCodeNew"]);
+				}
+			}
+			if (dtItem.Rows.Count > 0)
+			{
+				if (rdSearchByName.Checked)
+				{
+					DDL.BindDDL(dtItem, combitem, "Id", "ItemName", "Item", ZeroIndex: true);
+				}
+				else
+				{
+					DDL.BindDDL(dtItem, combitem, "Id", "ItemCode", "Item", ZeroIndex: true);
+				}
+				if (ID > 0)
+				{
+					if (dtItem.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						combitem.Value = ID;
+					}
+					else
+					{
+						((Control)(object)combitem).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)combitem).Text = string.Empty;
+				((UltraGridBase)combitem).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void PackingTypeFill()
+	{
+		try
+		{
+			int ID = Conversion.ToInt(combpcktyp.Value);
+			DataTable dtpkt = InvPackingType.Getall();
+			if (dtpkt.Rows.Count > 0)
+			{
+				dtPack.Clear();
+				for (int i = 0; i < dtpkt.Rows.Count; i++)
+				{
+					if (Conversion.ToInt(dtpkt.Rows[i]["Id"]) == 1 || Conversion.ToInt(dtpkt.Rows[i]["Id"]) == 2)
+					{
+						dtPack.Rows.Add(dtpkt.Rows[i]["Id"], dtpkt.Rows[i]["PackTypeDesc"]);
+					}
+				}
+			}
+			if (dtPack.Rows.Count > 0)
+			{
+				DDL.BindDDL(dtPack, combpcktyp, "Id", "PackTypeDesc", "PackingType", ZeroIndex: true);
+				((UltraGridBase)combpcktyp).Rows[0].Activate();
+				if (ID > 0)
+				{
+					if (dtPack.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						combpcktyp.Value = ID;
+					}
+					else
+					{
+						((Control)(object)combpcktyp).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)combpcktyp).Text = string.Empty;
+				((UltraGridBase)combpcktyp).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void PackUOMFillWithoutOrder()
+	{
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Expected O, but got Unknown
+		try
+		{
+			string UOMCode = Conversion.ToString((object)((Control)(object)combpckuom).Text);
+			DataTable dt = UOMSchedule.SearchByObject(new UOMSchedule
+			{
+				ItemId = Conversion.ToInt(combitem.Value),
+				OrganizationId = UserAccount.OrganizationId,
+				CompanyId = UserAccount.CompanyId
+			});
+			if (dt.Rows.Count > 0)
+			{
+				dtUOM.Clear();
+				for (int i = 0; i < dt.Rows.Count; i++)
+				{
+					dtUOM.Rows.Add(dt.Rows[i]["Id"], dt.Rows[i]["UOMCode"], dt.Rows[i]["Equivalent"]);
+				}
+				if (dtUOM.Rows.Count > 0)
+				{
+					DDL.BindDDL(dtUOM, combpckuom, "Id", "UOMCode", "UOM", ZeroIndex: true);
+					if (!string.IsNullOrEmpty(UOMCode))
+					{
+						if (dtUOM.AsEnumerable().Any((DataRow row) => row.Field<string>("UOMCode") == UOMCode))
+						{
+							((Control)(object)combpckuom).Text = UOMCode;
+						}
+						else
+						{
+							((Control)(object)combpckuom).Text = string.Empty;
+						}
+					}
+				}
+				else
+				{
+					((Control)(object)combpckuom).Text = string.Empty;
+					((UltraGridBase)combpckuom).DataSource = null;
+				}
+			}
+			else
+			{
+				((Control)(object)combpckuom).Text = string.Empty;
+				((UltraGridBase)combpckuom).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void CityFill()
+	{
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Expected O, but got Unknown
+		try
+		{
+			int ID = Conversion.ToInt(CmbCity.Value);
+			DataTable dt = City.GetAll(new City
+			{
+				OrganizationId = UserAccount.OrganizationId,
+				CompanyId = UserAccount.CompanyId
+			});
+			if (dt.Rows.Count > 0)
+			{
+				DDL.BindDDLNew(dt, CmbCity, "Id", "CityName", "City Name", true);
+				((UltraGridBase)CmbCity).DisplayLayout.AutoFitStyle = (AutoFitStyle)1;
+				if (ID > 0)
+				{
+					if (dt.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						CmbCity.Value = ID;
+					}
+					else
+					{
+						((Control)(object)CmbCity).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)CmbCity).Text = string.Empty;
+				((UltraGridBase)CmbCity).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void CropYear()
+	{
+		try
+		{
+			int ID = Conversion.ToInt(combcropyear.Value);
+			DataTable dtCrop = CommonServices.CropYearGetAllService();
+			if (dtCrop.Rows.Count > 0)
+			{
+				DDL.BindDDLNew(dtCrop, combcropyear, "Id", "CropYear", "Crop Year", true);
+				if (ID > 0)
+				{
+					if (dtCrop.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						combcropyear.Value = ID;
+					}
+					else
+					{
+						((Control)(object)combcropyear).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)combcropyear).Text = string.Empty;
+				((UltraGridBase)combcropyear).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void JobLotFill()
+	{
+		try
+		{
+			int ID = Conversion.ToInt(CmbJobLot.Value);
+			DataTable dt = CommonServices.JobLotGetAllService();
+			if (dt.Rows.Count > 0)
+			{
+				DDL.BindDDLNew(dt, CmbJobLot, "Id", "JobLotDescription", "JobLotDescription", true);
+				if (ID > 0)
+				{
+					if (dt.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						CmbJobLot.Value = ID;
+					}
+					else
+					{
+						((Control)(object)CmbJobLot).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)CmbJobLot).Text = string.Empty;
+				((UltraGridBase)CmbJobLot).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void WareHouseFill()
+	{
+		try
+		{
+			int ID = Conversion.ToInt(CmbWareHouse.Value);
+			DataTable dt = CommonServices.getActiveWareHouse();
+			if (dt.Rows.Count > 0)
+			{
+				DDL.BindDDL(dt, CmbWareHouse, "Id", "WareHouseName", "WareHouseName", ZeroIndex: true);
+				if (ID > 0)
+				{
+					if (dt.AsEnumerable().Any((DataRow row) => row.Field<int>("Id") == ID))
+					{
+						CmbWareHouse.Value = ID;
+					}
+					else
+					{
+						((Control)(object)CmbWareHouse).Text = string.Empty;
+					}
+				}
+			}
+			else
+			{
+				((Control)(object)CmbWareHouse).Text = string.Empty;
+				((UltraGridBase)CmbWareHouse).DataSource = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void combitem_Leave(object sender, EventArgs e)
+	{
+		try
+		{
+			PackUOMFillWithoutOrder();
+			DeductionPolicyForGrn(0.0);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void DeliveryTerm()
+	{
+		try
+		{
+			DataTable dt = new DataTable();
+			dt.Columns.Add("Id");
+			dt.Columns.Add("type");
+			dt.Rows.Add(1, "Load");
+			dt.Rows.Add(2, "Ponch");
+			DDL.BindDDL(dt, CmbDeliveryTerm, "Id", "type", "Delivery Term", ZeroIndex: false);
+			((UltraGridBase)CmbDeliveryTerm).Rows[0].Activate();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void rdSearchByName_CheckedChanged(object sender, EventArgs e)
+	{
+		try
+		{
+			if (dtItem.Rows.Count > 0)
+			{
+				int ItemId = 0;
+				if (Conversion.ToInt(combitem.Value) > 0)
+				{
+					ItemId = Conversion.ToInt(combitem.Value);
+				}
+				if (rdSearchByName.Checked)
+				{
+					DDL.BindDDL(dtItem, combitem, "Id", "ItemName", "Item Name", ZeroIndex: true);
+				}
+				else
+				{
+					DDL.BindDDL(dtItem, combitem, "Id", "ItemCode", "Item Name", ZeroIndex: true);
+				}
+				combitem.Value = ItemId;
+				combitem.Focus();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void combpcktyp_Leave(object sender, EventArgs e)
+	{
+		try
+		{
+			if (!OrderExist)
+			{
+				if (Conversion.ToInt(combpcktyp.Value) == 1)
+				{
+					txtebu.Text = Conversion.ToString((object)JuteBagsCut);
+				}
+				if (Conversion.ToInt(combpcktyp.Value) == 2)
+				{
+					txtebu.Text = Conversion.ToString((object)PPBagsCut);
+				}
+				if (Conversion.ToInt(combpcktyp.Value) == 5)
+				{
+					txtebu.Text = Conversion.ToString((object)OpenBulkCut);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private bool FormValidation()
+	{
+		if (txtdocno.Text.Trim() == "" || txtdocno.Text.Trim() == "0" || txtdocno.Text.Trim() == null)
+		{
+			MessageBox.Show("DocNo Field is Required");
+			txtdocno.Focus();
+			return false;
+		}
+		if (((UltraGridBase)combsupplier).ActiveRow == null || Conversion.ToInt(combsupplier.Value) == 0)
+		{
+			MessageBox.Show("Supplier Field is Required");
+			combsupplier.Focus();
+			return false;
+		}
+		if (((Control)(object)CmbDeliveryTerm).Text.Trim() == "" || ((Control)(object)CmbDeliveryTerm).Text.Trim() == "0" || ((Control)(object)CmbDeliveryTerm).Text.Trim() == null || Conversion.ToInt(CmbDeliveryTerm.Value) == 0)
+		{
+			MessageBox.Show("DeliveryTerm Field is Required");
+			CmbDeliveryTerm.Focus();
+			return false;
+		}
+		if (txtGpNo.Text.Trim() == "" || txtGpNo.Text.Trim() == "0" || txtGpNo.Text.Trim() == null)
+		{
+			MessageBox.Show("Gp No Field is Required");
+			txtGpNo.Focus();
+			return false;
+		}
+		if (((Control)(object)combvehtyp).Text.Trim() == "" || ((Control)(object)combvehtyp).Text.Trim() == "0" || ((Control)(object)combvehtyp).Text.Trim() == null || Conversion.ToInt(combvehtyp.Value) == 0)
+		{
+			MessageBox.Show("Vehicle Type Field is Required");
+			combvehtyp.Focus();
+			return false;
+		}
+		if (txtvehno.Text.Trim() == "" || txtvehno.Text.Trim() == "0" || txtvehno.Text.Trim() == null)
+		{
+			MessageBox.Show("Vehicle No Field is Required");
+			txtvehno.Focus();
+			return false;
+		}
+		if (txtbltyno.Text.Trim() == "" || txtbltyno.Text.Trim() == "0" || txtbltyno.Text.Trim() == null)
+		{
+			MessageBox.Show("Bilty No Field is Required");
+			txtbltyno.Focus();
+			return false;
+		}
+		if (Conversion.ToDouble((object)txtsuppwt.Text.Trim()) == 0.0 || txtsuppwt.Text.Trim() == null)
+		{
+			MessageBox.Show("Supplier Weight Field is Required");
+			txtsuppwt.Focus();
+			return false;
+		}
+		if (Conversion.ToDouble((object)txtfctwt.Text.Trim()) == 0.0 || txtfctwt.Text.Trim() == null)
+		{
+			MessageBox.Show("Factory Weight Field is Required");
+			txtfctwt.Focus();
+			return false;
+		}
+		return true;
+	}
+
+	private bool FormValidationDetail()
+	{
+		if (((Control)(object)CmbDeliveryTerm).Text.Trim() == "" || ((Control)(object)CmbDeliveryTerm).Text.Trim() == "0" || ((Control)(object)CmbDeliveryTerm).Text.Trim() == null || Conversion.ToInt(CmbDeliveryTerm.Value) == 0)
+		{
+			MessageBox.Show("DeliveryTerm Field is Required");
+			CmbDeliveryTerm.Focus();
+			return false;
+		}
+		if (txtsuppwt.Text.Trim() == "" || Conversion.ToDouble((object)txtsuppwt.Text.Trim()) == 0.0)
+		{
+			MessageBox.Show("SupplierWeight Field is Required");
+			txtsuppwt.Focus();
+			return false;
+		}
+		if (txtfctwt.Text.Trim() == "" || Conversion.ToDouble((object)txtfctwt.Text.Trim()) == 0.0)
+		{
+			MessageBox.Show("Factory Weight Field is Required");
+			txtfctwt.Focus();
+			return false;
+		}
+		if (((UltraGridBase)CmbWareHouse).ActiveRow == null || Conversion.ToInt(CmbWareHouse.Value) == 0)
+		{
+			MessageBox.Show("Warehouse Field is Required");
+			CmbWareHouse.Focus();
+			return false;
+		}
+		if (((UltraGridBase)combitem).ActiveRow == null || Conversion.ToInt(combitem.Value) == 0)
+		{
+			MessageBox.Show("Item Name Field is Required");
+			combitem.Focus();
+			return false;
+		}
+		if (((UltraGridBase)combcropyear).ActiveRow == null || Conversion.ToInt(combcropyear.Value) == 0)
+		{
+			MessageBox.Show("Crop Year Field is Required");
+			combcropyear.Focus();
+			return false;
+		}
+		if (((UltraGridBase)CmbJobLot).ActiveRow == null || Conversion.ToInt(CmbJobLot.Value) == 0)
+		{
+			MessageBox.Show("JobLot Field is Required");
+			CmbJobLot.Focus();
+			return false;
+		}
+		if (((UltraGridBase)combpcktyp).ActiveRow == null || Conversion.ToInt(combpcktyp.Value) == 0)
+		{
+			MessageBox.Show("Packing Type Field is Required");
+			combpcktyp.Focus();
+			return false;
+		}
+		if (((UltraGridBase)combpckuom).ActiveRow == null || Conversion.ToInt(combpckuom.Value) == 0)
+		{
+			MessageBox.Show("Pack Unit Field is Required");
+			combpckuom.Focus();
+			return false;
+		}
+		if (txtqty.Text.Trim() == "" || Conversion.ToDouble((object)txtqty.Text.Trim()) == 0.0)
+		{
+			MessageBox.Show("Qty Field is Required");
+			txtqty.Focus();
+			return false;
+		}
+		if (txtgwt.Text.Trim() == "" || Conversion.ToDouble((object)txtgwt.Text.Trim()) == 0.0)
+		{
+			MessageBox.Show("Gross Weight Field is Required");
+			txtgwt.Focus();
+			return false;
+		}
+		if (txtnetwt.Text.Trim() == "" || Conversion.ToDouble((object)txtnetwt.Text.Trim()) == 0.0)
+		{
+			MessageBox.Show("Net Bill Weight Field is Required");
+			txtnetwt.Focus();
+			return false;
+		}
+		if (txtstockwt.Text.Trim() == "" || Conversion.ToDouble((object)txtstockwt.Text.Trim()) == 0.0)
+		{
+			MessageBox.Show("Stock Weight Field is Required");
+			txtstockwt.Focus();
+			return false;
+		}
+		if (((UltraGridBase)CmbCity).ActiveRow == null || Conversion.ToInt(CmbCity.Value) == 0)
+		{
+			MessageBox.Show("City Field is Required");
+			CmbCity.Focus();
+			return false;
+		}
+		return true;
+	}
+
+	private void EnableDisableDeliveryTermSupWtFacWt()
+	{
+		try
+		{
+			int Count = grd.RowCount;
+			((Control)(object)CmbDeliveryTerm).Enabled = Count == 0;
+			txtsuppwt.Enabled = Count == 0;
+			txtfctwt.Enabled = Count == 0;
+			OrderExist = Count != 0 && OrderExist;
+			if (OrderExist)
+			{
+				((Control)(object)combitem).Enabled = false;
+				((Control)(object)combsupplier).Enabled = false;
+			}
+			else
+			{
+				((Control)(object)combitem).Enabled = true;
+				((Control)(object)combsupplier).Enabled = true;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void Add_Click(object sender, EventArgs e)
+	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			if (grd.GetRows().Count() > 0)
+			{
+				GridEXRow r = grd.CurrentRow;
+				if (r != null && (int)r.RowType == 0 && Conversion.ToInt(r.Cells["OrderId"].Value) != 0 && OrderExist)
+				{
+					MessageBox.Show("You cannot add Record because you had add record with Order");
+					return;
+				}
+			}
+			if (FormValidationDetail())
+			{
+				double num = Conversion.ToDouble((object)txtnetwt.Text.Trim());
+				double GrossWeight = Conversion.ToDouble((object)txtgwt.Text.Trim());
+				if (num > GrossWeight)
+				{
+					throw new Exception("NetBillWeight cannot greater than Gross Weight Please check");
+				}
+				dtdetail.Rows.Add(0, 0, 0, 0, Conversion.ToInt(CmbWareHouse.Value), Conversion.ToString((object)((Control)(object)CmbWareHouse).Text.Trim()), Conversion.ToInt(combitem.Value), Conversion.ToString(((UltraDropDownBase)combitem).SelectedRow.Cells["ItemCode"].Value), Conversion.ToString(((UltraDropDownBase)combitem).SelectedRow.Cells["ItemName"].Value), Conversion.ToString((object)((Control)(object)combcropyear).Text.Trim()), Conversion.ToInt(CmbJobLot.Value), Conversion.ToString((object)((Control)(object)CmbJobLot).Text.Trim()), Conversion.ToInt(combpcktyp.Value), Conversion.ToString((object)((Control)(object)combpcktyp).Text), Conversion.ToInt(combpckuom.Value), Conversion.ToString((object)((Control)(object)combpckuom).Text.Trim()), Conversion.ToDouble(((UltraDropDownBase)combpckuom).SelectedRow.Cells["Equivalent"].Value), Conversion.ToDouble((object)txtqty.Text.Trim()), Conversion.ToDouble((object)txtgwt.Text.Trim()), Conversion.ToDouble((object)txtebu.Text.Trim()), Conversion.ToDouble((object)txtEmptyBagsTotal.Text.Trim()), Conversion.ToDouble((object)txtadlswt.Text.Trim()), Conversion.ToDouble((object)txtnetwt.Text.Trim()), Conversion.ToDouble((object)txtstockwt.Text.Trim()), Conversion.ToInt(CmbCity.Value), Conversion.ToString((object)((Control)(object)CmbCity).Text));
+				grd.DataSource = dtdetail;
+				grd.RetrieveStructure();
+				grdSettings();
+				ResetDetial();
+				CalculationPurchaseAgainstWeight();
+				EnableDisableDeliveryTermSupWtFacWt();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void grdSettings()
+	{
+		try
+		{
+			grd.ColumnAutoResize = false;
+			grd.RootTable.Columns["Id"].Visible = false;
+			grd.RootTable.Columns["WarehouseId"].Visible = false;
+			grd.RootTable.Columns["ItemId"].Visible = false;
+			grd.RootTable.Columns["JobLotId"].Visible = false;
+			grd.RootTable.Columns["PackingTypeId"].Visible = false;
+			grd.RootTable.Columns["UOMId"].Visible = false;
+			grd.RootTable.Columns["CityId"].Visible = false;
+			grd.RootTable.Columns["OrderId"].Visible = false;
+			grd.RootTable.Columns["UOMEquivalent"].Visible = false;
+			grd.RootTable.Columns["OrderDetailId"].Visible = false;
+			grd.RootTable.Columns["OrderNo"].Visible = OrderExist;
+			grd.RootTable.Columns["UOM"].TextAlignment = (TextAlignment)3;
+			grd.RootTable.Columns["UOM"].FormatString = "#,##.##";
+			grd.RootTable.Columns["UOM"].TotalFormatString = "#,##.##";
+			grd.RootTable.Columns["Qty"].AggregateFunction = (AggregateFunction)2;
+			grd.RootTable.Columns["Qty"].TextAlignment = (TextAlignment)3;
+			grd.RootTable.Columns["Qty"].FormatString = "#,##.##";
+			grd.RootTable.Columns["Qty"].TotalFormatString = "#,##.##";
+			grd.RootTable.Columns["GrossWight"].AggregateFunction = (AggregateFunction)2;
+			grd.RootTable.Columns["GrossWight"].TextAlignment = (TextAlignment)3;
+			grd.RootTable.Columns["GrossWight"].FormatString = "#,##.##";
+			grd.RootTable.Columns["GrossWight"].TotalFormatString = "#,##.##";
+			grd.RootTable.Columns["AddLesswt"].AggregateFunction = (AggregateFunction)2;
+			grd.RootTable.Columns["AddLesswt"].TextAlignment = (TextAlignment)3;
+			grd.RootTable.Columns["AddLesswt"].FormatString = "#,##.##";
+			grd.RootTable.Columns["AddLesswt"].TotalFormatString = "#,##.##";
+			grd.RootTable.Columns["EbTotal"].AggregateFunction = (AggregateFunction)2;
+			grd.RootTable.Columns["EbTotal"].TextAlignment = (TextAlignment)3;
+			grd.RootTable.Columns["EbTotal"].FormatString = "#,##.##";
+			grd.RootTable.Columns["EbTotal"].TotalFormatString = "#,##.##";
+			grd.RootTable.Columns["EbUnit"].AggregateFunction = (AggregateFunction)2;
+			grd.RootTable.Columns["EbUnit"].TextAlignment = (TextAlignment)3;
+			grd.RootTable.Columns["EbUnit"].FormatString = "#,##.##";
+			grd.RootTable.Columns["EbUnit"].TotalFormatString = "#,##.##";
+			grd.RootTable.Columns["NetWeight"].AggregateFunction = (AggregateFunction)2;
+			grd.RootTable.Columns["NetWeight"].TextAlignment = (TextAlignment)3;
+			grd.RootTable.Columns["NetWeight"].FormatString = "#,##.##";
+			grd.RootTable.Columns["NetWeight"].TotalFormatString = "#,##.##";
+			grd.RootTable.Columns["StockWeight"].AggregateFunction = (AggregateFunction)2;
+			grd.RootTable.Columns["StockWeight"].TextAlignment = (TextAlignment)3;
+			grd.RootTable.Columns["StockWeight"].FormatString = "#,##.##";
+			grd.RootTable.Columns["StockWeight"].TotalFormatString = "#,##.##";
+			CommonServices.GridAutoAdjustmentNew(grd);
+			if (OrderExist)
+			{
+				grd.RootTable.Columns.Add("Add");
+				grd.RootTable.Columns["Add"].Key = "Add";
+				grd.RootTable.Columns["Add"].Caption = "+";
+				grd.RootTable.Columns["Add"].ButtonDisplayMode = (CellButtonDisplayMode)3;
+				grd.RootTable.Columns["Add"].ButtonStyle = (ButtonStyle)5;
+				grd.RootTable.Columns["Add"].ButtonText = "+";
+				grd.RootTable.Columns["Add"].Width = 20;
+			}
+			grd.RootTable.Columns.Add("Delete");
+			grd.RootTable.Columns["Delete"].Key = "Delete";
+			grd.RootTable.Columns["Delete"].Caption = "X";
+			grd.RootTable.Columns["Delete"].ButtonDisplayMode = (CellButtonDisplayMode)3;
+			grd.RootTable.Columns["Delete"].ButtonStyle = (ButtonStyle)5;
+			grd.RootTable.Columns["Delete"].ButtonText = "X";
+			grd.RootTable.Columns["Delete"].Width = 20;
+			grd.RootTable.Columns.Add("Edit");
+			grd.RootTable.Columns["Edit"].Key = "Edit";
+			grd.RootTable.Columns["Edit"].Caption = "Edit";
+			grd.RootTable.Columns["Edit"].ButtonDisplayMode = (CellButtonDisplayMode)3;
+			grd.RootTable.Columns["Edit"].ButtonStyle = (ButtonStyle)5;
+			grd.RootTable.Columns["Edit"].ButtonText = "Edit";
+			grd.RootTable.Columns["Edit"].Width = 50;
+			if (OrderExist)
+			{
+				grd.RootTable.Columns["Delete"].Position = 0;
+				grd.RootTable.Columns["Add"].Position = 1;
+				grd.RootTable.Columns["Edit"].Position = 2;
+				grd.FrozenColumns = 3;
+			}
+			else
+			{
+				grd.RootTable.Columns["Delete"].Position = 0;
+				grd.RootTable.Columns["Edit"].Position = 1;
+				grd.FrozenColumns = 2;
+			}
+			ctrlGrdBar1_Load(null, null);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void grd_ColumnButtonClick(object sender, ColumnActionEventArgs e)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow r = grd.CurrentRow;
+			if (r == null || (int)r.RowType != 0 || r.Cells.Count <= 0)
+			{
+				return;
+			}
+			if (e.Column.Key == "Delete")
+			{
+				if (updateDetailIndex > -1)
+				{
+					throw new Exception("Reset the Detail First...");
+				}
+				if (grd.RowCount == 1 && Conversion.ToInt((object)r.Cells["OrderId"]) > 0)
+				{
+					throw new Exception("You Can Delete All rows in Order Case...Use Reset");
+				}
+				r.Delete();
+				EnableDisableDeliveryTermSupWtFacWt();
+			}
+			if (e.Column.Key == "Edit")
+			{
+				grd_DoubleClick(null, null);
+			}
+			if (e.Column.Key == "Add")
+			{
+				if (!OrderExist)
+				{
+					throw new Exception("You Can add rows in Order Case...Use Detail For Without Order Entry");
+				}
+				DataRow dr = dtdetail.Rows[r.RowIndex];
+				dtdetail.Rows.Add(dr.ItemArray);
+				grd.DataSource = dtdetail;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void grd_DoubleClick(object sender, EventArgs e)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow r = grd.CurrentRow;
+			if (r != null && (int)r.RowType == 0 && r.Cells.Count > 0)
+			{
+				updateDetailIndex = r.RowIndex;
+				CmbWareHouse.Value = r.Cells["WarehouseId"].Value.ToString();
+				combitem.Value = r.Cells["ItemId"].Value.ToString();
+				combitem_Leave(null, null);
+				((Control)(object)combcropyear).Text = r.Cells["CropYear"].Value.ToString();
+				CmbJobLot.Value = r.Cells["JobLotId"].Value.ToString();
+				combpcktyp.Value = r.Cells["PackingTypeId"].Value.ToString();
+				combpckuom.Value = r.Cells["UOMId"].Value.ToString();
+				txtqty.Text = r.Cells["Qty"].Value.ToString();
+				txtgwt.Text = r.Cells["GrossWight"].Value.ToString();
+				txtebu.Text = r.Cells["EbUnit"].Value.ToString();
+				txtEmptyBagsTotal.Text = r.Cells["EbTotal"].Value.ToString();
+				txtadlswt.Text = r.Cells["AddLesswt"].Value.ToString();
+				txtnetwt.Text = r.Cells["NetWeight"].Value.ToString();
+				txtstockwt.Text = r.Cells["StockWeight"].Value.ToString();
+				CmbCity.Value = r.Cells["CityId"].Value.ToString();
+				Add.Visible = false;
+				btnUpdateDetail.Visible = true;
+				btnCancelUpdateDetial.Visible = true;
+				CmbWareHouse.Focus();
+				if (OrderExist)
+				{
+					((Control)(object)combitem).Enabled = false;
+				}
+				else
+				{
+					((Control)(object)combitem).Enabled = true;
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnUpdateDetail_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			if (FormValidationDetail())
+			{
+				double num = Conversion.ToDouble((object)txtnetwt.Text.Trim());
+				double GrossWeight = Conversion.ToDouble((object)txtgwt.Text.Trim());
+				if (num > GrossWeight)
+				{
+					throw new Exception("NetBillWeight cannot greater than Gross Weight Please check");
+				}
+				dtdetail.Rows[updateDetailIndex]["WarehouseId"] = Conversion.ToInt(CmbWareHouse.Value);
+				dtdetail.Rows[updateDetailIndex]["Warehouse"] = Conversion.ToString((object)((Control)(object)CmbWareHouse).Text);
+				dtdetail.Rows[updateDetailIndex]["ItemId"] = Conversion.ToInt(combitem.Value);
+				dtdetail.Rows[updateDetailIndex]["ItemCode"] = Conversion.ToString(((UltraDropDownBase)combitem).SelectedRow.Cells["ItemCode"].Value);
+				dtdetail.Rows[updateDetailIndex]["ItemName"] = Conversion.ToString(((UltraDropDownBase)combitem).SelectedRow.Cells["ItemName"].Value);
+				dtdetail.Rows[updateDetailIndex]["CropYear"] = Conversion.ToString((object)((Control)(object)combcropyear).Text);
+				dtdetail.Rows[updateDetailIndex]["JobLotId"] = Conversion.ToInt(CmbJobLot.Value);
+				dtdetail.Rows[updateDetailIndex]["JobLot"] = Conversion.ToString((object)((Control)(object)CmbJobLot).Text);
+				dtdetail.Rows[updateDetailIndex]["PackingTypeId"] = Conversion.ToInt(combpcktyp.Value);
+				dtdetail.Rows[updateDetailIndex]["PackingType"] = Conversion.ToString((object)((Control)(object)combpcktyp).Text);
+				dtdetail.Rows[updateDetailIndex]["UOMId"] = Conversion.ToInt(combpckuom.Value);
+				dtdetail.Rows[updateDetailIndex]["UOM"] = Conversion.ToString((object)((Control)(object)combpckuom).Text);
+				dtdetail.Rows[updateDetailIndex]["UOMEquivalent"] = Conversion.ToDouble(((UltraDropDownBase)combpckuom).SelectedRow.Cells["Equivalent"].Value);
+				dtdetail.Rows[updateDetailIndex]["Qty"] = Conversion.ToDouble((object)txtqty.Text);
+				dtdetail.Rows[updateDetailIndex]["GrossWight"] = Conversion.ToDouble((object)txtgwt.Text);
+				dtdetail.Rows[updateDetailIndex]["EbUnit"] = Conversion.ToDouble((object)txtebu.Text.Trim());
+				dtdetail.Rows[updateDetailIndex]["EbTotal"] = Conversion.ToDouble((object)txtEmptyBagsTotal.Text.Trim());
+				dtdetail.Rows[updateDetailIndex]["AddLesswt"] = Conversion.ToDouble((object)txtadlswt.Text.Trim());
+				dtdetail.Rows[updateDetailIndex]["NetWeight"] = Conversion.ToDouble((object)txtnetwt.Text);
+				dtdetail.Rows[updateDetailIndex]["StockWeight"] = Conversion.ToDouble((object)txtstockwt.Text);
+				dtdetail.Rows[updateDetailIndex]["CityId"] = Conversion.ToInt(CmbCity.Value);
+				dtdetail.Rows[updateDetailIndex]["City"] = Conversion.ToString((object)((Control)(object)CmbCity).Text);
+				Add.Visible = true;
+				btnUpdateDetail.Visible = false;
+				btnCancelUpdateDetial.Visible = false;
+				ResetDetial();
+				grd.UpdateData();
+				CalculationPurchaseAgainstWeight();
+				EnableDisableDeliveryTermSupWtFacWt();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnCancelUpdateDetial_Click(object sender, EventArgs e)
+	{
+		Add.Visible = true;
+		btnUpdateDetail.Visible = false;
+		btnCancelUpdateDetial.Visible = false;
+		updateDetailIndex = -1;
+	}
+
+	private void EmptyBagsTypeFill()
+	{
+		try
+		{
+			dtEmpType = CommonServices.StaticColumnsService("PurchaseOrderEmptyBagsType");
+			dtBagsCondition = CommonServices.StaticColumnsService("EmptyBagsCondition");
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void grdEmptyBags_ColumnButtonClick(object sender, ColumnActionEventArgs e)
+	{
+		try
+		{
+			if (grdEmptyBags.GetRows().Length == 1 && e.Column.Key == "Add")
+			{
+				AddRowInvEmptyBagsGrid();
+			}
+			grdEmptyBags.UpdateData();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void AddRowInvEmptyBagsGrid()
+	{
+		dtEmptyBag.Rows.Add(0, 0, 0, 0, 0, 0, "");
+		grdEmptyBags.DataSource = dtEmptyBag;
+	}
+
+	private void EmptyBagsGridRefresh()
+	{
+		try
+		{
+			DataTable dt = CommonServices.GetPackingMaterialItemsAllocateToFlow();
+			grdEmptyBags.RootTable.Columns["ItemId"].ColumnType = (ColumnType)0;
+			grdEmptyBags.RootTable.Columns["ItemId"].HasValueList = true;
+			grdEmptyBags.RootTable.Columns["ItemId"].LimitToList = true;
+			grdEmptyBags.RootTable.Columns["ItemId"].EditType = (EditType)4;
+			grdEmptyBags.RootTable.Columns["ItemId"].Caption = "Item Name";
+			grdEmptyBags.RootTable.Columns["ItemId"].ValueList.PopulateValueList((IEnumerable)dt.DefaultView, "ItemId", "ItemName");
+			grdEmptyBags.RootTable.Columns["ItemId"].Width = 250;
+			grdEmptyBags.RootTable.Columns["Type"].ColumnType = (ColumnType)0;
+			grdEmptyBags.RootTable.Columns["Type"].HasValueList = true;
+			grdEmptyBags.RootTable.Columns["Type"].LimitToList = true;
+			grdEmptyBags.RootTable.Columns["Type"].EditType = (EditType)4;
+			grdEmptyBags.RootTable.Columns["Type"].Caption = "EmptyBagsType";
+			grdEmptyBags.RootTable.Columns["Type"].ValueList.PopulateValueList((IEnumerable)dtEmpType.DefaultView, "Id", "Type");
+			grdEmptyBags.RootTable.Columns["Type"].Width = 80;
+			grdEmptyBags.RootTable.Columns["Condition"].ColumnType = (ColumnType)0;
+			grdEmptyBags.RootTable.Columns["Condition"].HasValueList = true;
+			grdEmptyBags.RootTable.Columns["Condition"].LimitToList = true;
+			grdEmptyBags.RootTable.Columns["Condition"].EditType = (EditType)4;
+			grdEmptyBags.RootTable.Columns["Condition"].Caption = "Bags_Condition";
+			grdEmptyBags.RootTable.Columns["Condition"].ValueList.PopulateValueList((IEnumerable)dtBagsCondition.DefaultView, "Id", "Type");
+			grdEmptyBags.RootTable.Columns["Condition"].Width = 60;
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void grdEmptyBagsSettings()
+	{
+		try
+		{
+			EmptyBagsGridRefresh();
+			grdEmptyBags.ColumnAutoResize = false;
+			grdEmptyBags.RootTable.Columns["OrderId"].EditType = (EditType)0;
+			grdEmptyBags.RootTable.Columns["OrderId"].Visible = false;
+			grdEmptyBags.RootTable.Columns["RecQty"].AggregateFunction = (AggregateFunction)2;
+			grdEmptyBags.RootTable.Columns["PurQty"].AggregateFunction = (AggregateFunction)2;
+			CommonServices.GridAutoAdjustmentNew(grdEmptyBags);
+			grdEmptyBags.RootTable.Columns["Condition"].Width = 120;
+			if (grdEmptyBags.GetRows().Length == 1)
+			{
+				grdEmptyBags.RootTable.Columns.Add("Add");
+				grdEmptyBags.RootTable.Columns["Add"].Key = "Add";
+				grdEmptyBags.RootTable.Columns["Add"].Caption = "+";
+				grdEmptyBags.RootTable.Columns["Add"].ButtonDisplayMode = (CellButtonDisplayMode)3;
+				grdEmptyBags.RootTable.Columns["Add"].ButtonStyle = (ButtonStyle)5;
+				grdEmptyBags.RootTable.Columns["Add"].ButtonText = "+";
+				grdEmptyBags.RootTable.Columns["Add"].Width = 20;
+				grdEmptyBags.RootTable.Columns["Add"].Position = 0;
+				grdEmptyBags.FrozenColumns = 1;
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void grdEmptyBags_CellUpdated(object sender, ColumnActionEventArgs e)
+	{
+		try
+		{
+			GridEXRow r = grdEmptyBags.CurrentRow;
+			if (Conversion.ToInt(r.Cells["PurQty"].Value) < 0)
+			{
+				r.BeginEdit();
+				r.Cells["PurQty"].Value = 0.ToString();
+				r.EndEdit();
+				MessageBox.Show("PurQty cannot be less than Zero");
+			}
+			if (Conversion.ToInt(r.Cells["RecQty"].Value) < 0)
+			{
+				r.BeginEdit();
+				r.Cells["RecQty"].Value = 0.ToString();
+				r.EndEdit();
+				MessageBox.Show("RecQty cannot be less than Zero");
+			}
+			if (e.Column.Key == "PurQty" || e.Column.Key == "Type")
+			{
+				EmptyBagsWeightCutStatus = Conversion.ToInt(r.Cells["Type"].Value);
+				if (EmptyBagsWeightCutStatus == 2)
+				{
+					CalculationPurchaseAgainstWeight();
+				}
+			}
+			if ((Conversion.ToInt(r.Cells["Type"].Value) == 4 || Conversion.ToInt(r.Cells["Type"].Value) == 5) && e.Column.Key == "PurQty")
+			{
+				r.BeginEdit();
+				r.Cells["PurQty"].Value = 0.ToString();
+				r.EndEdit();
+				MessageBox.Show("Retained or Returned Stock you cannot be purchase");
+			}
+			if (Conversion.ToInt(r.Cells["Type"].Value) == 2 && e.Column.Key == "RecQty")
+			{
+				r.Cells["RecQty"].Value = 0;
+				MessageBox.Show("You cannot be add value RecQty because EmptyBagsType is Purchase Against Weight");
+			}
+			grdEmptyBags.UpdateData();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+		}
+	}
+
+	private void Insert()
+	{
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Expected O, but got Unknown
+		//IL_03ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b3: Expected O, but got Unknown
+		//IL_0c60: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0c67: Expected O, but got Unknown
+		try
+		{
+			if (!FormValidation())
+			{
+				return;
+			}
+			if (grd.GetRows().Count() == 0)
+			{
+				MessageBox.Show("Grid Record Not Found");
+				return;
+			}
+			InvGrn GRN = new InvGrn();
+			if (RecId > 0)
+			{
+				if (MessageBox.Show("Are you sure to Update?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+				{
+					return;
+				}
+				GRN.Id = RecId;
+			}
+			else if (MessageBox.Show("Are you sure to Save?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+			{
+				return;
+			}
+			if (Conversion.ToDouble((object)txtcarramount.Text.Trim()) > 0.0)
+			{
+				if (((UltraGridBase)CmbTransport).ActiveRow == null || Conversion.ToInt(CmbTransport.Value) == 0)
+				{
+					MessageBox.Show("Transporter Account field required");
+					CmbTransport.Focus();
+					return;
+				}
+				if (!SubsidiaryAccountAllownOnVouchers)
+				{
+					GRN.TransporterId = Conversion.ToInt(CmbTransport.Value);
+					GRN.CarriageAmount = Conversion.ToDouble((object)txtcarramount.Text.Trim());
+					GRN.TransporterSupCustId = 0;
+				}
+				else
+				{
+					GRN.TransporterSupCustId = Conversion.ToInt(((UltraDropDownBase)CmbTransport).SelectedRow.Cells["SupplierCustomerId"].Value);
+					GRN.TransporterId = Conversion.ToInt(CmbTransport.Value);
+					GRN.CarriageAmount = Conversion.ToDouble((object)txtcarramount.Text.Trim());
+				}
+			}
+			GRN.OrganizationId = UserAccount.OrganizationId;
+			GRN.CompanyId = UserAccount.CompanyId;
+			GRN.BranchesId = UserAccount.BranchesId;
+			GRN.ProjectsId = UserAccount.BranchesId;
+			GRN.FinancialYearId = clsGlobalVariables.ActiveYr.Id;
+			GRN.DocumentTypeId = 137;
+			GRN.ScreenName = Conversion.ToString((object)"InvFrmGRNDirect");
+			GRN.EntryDate = DateTime.Now;
+			GRN.ModifyDate = DateTime.Now;
+			GRN.PostDate = DateTime.Now;
+			GRN.EntryUser = UserAccount.ID;
+			GRN.ModifyUser = UserAccount.ID;
+			GRN.PostUser = UserAccount.ID;
+			GRN.DocNo = Convert.ToInt32(txtdocno.Text.Trim());
+			GRN.DocDate = DocDate.Value;
+			GRN.SupplierCustomerId = Conversion.ToInt(combsupplier.Value);
+			GRN.DeliveryTerm = Conversion.ToString((object)((Control)(object)CmbDeliveryTerm).Text.Trim());
+			GRN.RemarksHeader = txtremarks.Text.Trim();
+			GRN.GpNo = Conversion.ToInt((object)txtGpNo.Text.Trim());
+			GRN.VehicleType = Conversion.ToString((object)((Control)(object)combvehtyp).Text);
+			GRN.VehicleNo = Conversion.ToString((object)txtvehno.Text.Trim());
+			GRN.BiltyNo = txtbltyno.Text.Trim();
+			GRN.PartyWeight = Conversion.ToDouble((object)txtsuppwt.Text.Trim());
+			GRN.FactoryWeight = Conversion.ToDouble((object)txtfctwt.Text.Trim());
+			GRN.invGrnDetail = new List<InvGrnDetail>();
+			GRN.InvgrnDetailEmptyBagslist = new List<InvgrnDetailEmptyBags>();
+			double GrossWeight = 0.0;
+			double EmptyBagsRecQty = 0.0;
+			double EmptyBagsPurQty = 0.0;
+			double GrnQty = 0.0;
+			bool OtherThanOpenBulkExist = false;
+			GridEXRow[] rows = grd.GetRows();
+			foreach (GridEXRow r2 in rows)
+			{
+				InvGrnDetail grnDetail = new InvGrnDetail();
+				if (Conversion.ToInt(r2.Cells["WarehouseId"].Value) == 0)
+				{
+					throw new Exception($"Warehouse Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToInt(r2.Cells["ItemId"].Value) == 0)
+				{
+					throw new Exception($"Item Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToString(r2.Cells["CropYear"].Value) == string.Empty)
+				{
+					throw new Exception($"CropYear Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToInt(r2.Cells["JobLotId"].Value) == 0)
+				{
+					throw new Exception($"JobLot Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToInt(r2.Cells["PackingTypeId"].Value) == 0)
+				{
+					throw new Exception($"PackingType Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToInt(r2.Cells["UOMId"].Value) == 0)
+				{
+					throw new Exception($"UOM Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToDouble(r2.Cells["Qty"].Value) == 0.0)
+				{
+					throw new Exception($"Qty Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToDouble(r2.Cells["GrossWight"].Value) == 0.0)
+				{
+					throw new Exception($"GrossWight Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToDouble(r2.Cells["NetWeight"].Value) == 0.0)
+				{
+					throw new Exception($"NetWeight Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				if (Conversion.ToDouble(r2.Cells["StockWeight"].Value) == 0.0)
+				{
+					throw new Exception($"StockWeight Required in Detail in row No : {r2.RowIndex + 1}");
+				}
+				grnDetail.Id = Conversion.ToInt(r2.Cells["Id"].Value);
+				grnDetail.PurchaseOrderId = Conversion.ToInt(r2.Cells["OrderId"].Value);
+				grnDetail.PurchaseOrderDetailId = Conversion.ToInt(r2.Cells["OrderDetailId"].Value);
+				grnDetail.WarehouseId = Conversion.ToInt(r2.Cells["WarehouseId"].Value);
+				grnDetail.ItemId = Conversion.ToInt(r2.Cells["ItemId"].Value);
+				grnDetail.CropYear = Conversion.ToString(r2.Cells["CropYear"].Value);
+				grnDetail.JobLotId = Conversion.ToInt(r2.Cells["JobLotId"].Value);
+				grnDetail.PackingTypeId = Conversion.ToInt(r2.Cells["PackingTypeId"].Value);
+				grnDetail.ItemUomId = Conversion.ToInt(r2.Cells["UOMId"].Value);
+				grnDetail.ItemQty = Conversion.ToDouble(r2.Cells["Qty"].Value);
+				if (grnDetail.PackingTypeId != 5)
+				{
+					OtherThanOpenBulkExist = true;
+					GrnQty += grnDetail.ItemQty;
+				}
+				grnDetail.GrossWeight = Conversion.ToDouble(r2.Cells["GrossWight"].Value);
+				GrossWeight += grnDetail.GrossWeight;
+				grnDetail.EBWPerUnit = Conversion.ToDouble(r2.Cells["EbUnit"].Value);
+				grnDetail.EBWTotal = Conversion.ToDouble(r2.Cells["EbTotal"].Value);
+				grnDetail.AdLsWeight = Conversion.ToDouble(r2.Cells["AddLesswt"].Value);
+				grnDetail.NetBillWeight = Conversion.ToDouble(r2.Cells["NetWeight"].Value);
+				grnDetail.StockWeight = Conversion.ToDouble(r2.Cells["StockWeight"].Value);
+				grnDetail.CityId = Conversion.ToInt(r2.Cells["CityId"].Value);
+				grnDetail.AreaCity = Conversion.ToString((object)r2.Cells["City"].Text);
+				GRN.invGrnDetail.Add(grnDetail);
+			}
+			double SupplierWeight = 0.0;
+			double FactoryWeight = 0.0;
+			if (DeductionPolicyForGrnIsOn && ((Control)(object)CmbDeliveryTerm).Text == "Ponch")
+			{
+				DeductionPolicyForGrn(GrossWeight);
+			}
+			else
+			{
+				if (((Control)(object)CmbDeliveryTerm).Text == "Load" || ((Control)(object)CmbDeliveryTerm).Text == "Load & PartyWeight" || ((Control)(object)CmbDeliveryTerm).Text == "Ponch & PartyWeight")
+				{
+					SupplierWeight = Conversion.ToDouble((object)txtsuppwt.Text.Trim());
+					if (GrossWeight != SupplierWeight)
+					{
+						throw new Exception("GrossWeight and Supplier Weight Must be Equal Due to Delivery term is " + ((Control)(object)CmbDeliveryTerm).Text);
+					}
+				}
+				if (((Control)(object)CmbDeliveryTerm).Text == "Load & FactoryWeight" || ((Control)(object)CmbDeliveryTerm).Text == "Ponch & FactoryWeight")
+				{
+					FactoryWeight = Conversion.ToDouble((object)txtfctwt.Text.Trim());
+					if (GrossWeight != FactoryWeight)
+					{
+						throw new Exception($"GrossWeight must be equal to GRN Weight ( here FactoryWeight = {FactoryWeight}), due to Delivery Term {((Control)(object)CmbDeliveryTerm).Text}");
+					}
+				}
+				if (((Control)(object)CmbDeliveryTerm).Text == "Ponch")
+				{
+					SupplierWeight = Conversion.ToDouble((object)txtsuppwt.Text.Trim());
+					FactoryWeight = Conversion.ToDouble((object)txtfctwt.Text.Trim());
+					if (SupplierWeight > FactoryWeight)
+					{
+						if (GrossWeight != FactoryWeight)
+						{
+							throw new Exception("GrossWeight must be equal to GRN Weight = which is lesser (Supplier Weight or Factory Weight), due to Delivery Term " + ((Control)(object)CmbDeliveryTerm).Text);
+						}
+					}
+					else if (GrossWeight != SupplierWeight)
+					{
+						throw new Exception("GrossWeight must be equal to GRN Weight = which is lesser (Supplier Weight or Factory Weight), due to Delivery Term " + ((Control)(object)CmbDeliveryTerm).Text);
+					}
+				}
+			}
+			if (grdEmptyBags.RowCount > 0)
+			{
+				int EBStatus = 0;
+				rows = grdEmptyBags.GetRows();
+				foreach (GridEXRow item in rows)
+				{
+					if (Conversion.ToInt(item.Cells["Type"].Value) > 0 && Conversion.ToInt(item.Cells["ItemId"].Value) > 0)
+					{
+						if (Conversion.ToInt(item.Cells["ItemId"].Value) == 0)
+						{
+							MessageBox.Show("Please Select Item First");
+							return;
+						}
+						if (Conversion.ToInt(item.Cells["Type"].Value) == 0)
+						{
+							MessageBox.Show("Please Select Type First");
+							return;
+						}
+						if (Conversion.ToInt(item.Cells["Condition"].Value) == 0)
+						{
+							MessageBox.Show("Please Select Bags_Condition First");
+							return;
+						}
+						EmptyBagsRecQty += Conversion.ToDouble(item.Cells["RecQty"].Value);
+						EmptyBagsPurQty += Conversion.ToDouble(item.Cells["PurQty"].Value);
+					}
+				}
+				if (EmptyBagsInformationComp && OtherThanOpenBulkExist)
+				{
+					double EmpBagsQty2 = EmptyBagsRecQty + EmptyBagsPurQty;
+					if (GrnQty != EmpBagsQty2)
+					{
+						throw new Exception($"Empty Bags Qty must be equal to GrnQty\nGrn Qty is {GrnQty} and Empty Bags Qty is {EmpBagsQty2}");
+					}
+				}
+				rows = grdEmptyBags.GetRows();
+				foreach (GridEXRow r in rows)
+				{
+					if (Conversion.ToInt(r.Cells["ItemId"].Value) <= 0 || Conversion.ToInt(r.Cells["Type"].Value) <= 0)
+					{
+						continue;
+					}
+					InvgrnDetailEmptyBags obj = new InvgrnDetailEmptyBags();
+					obj.PurchaseOrderId = Conversion.ToInt(r.Cells["OrderId"].Value);
+					obj.TypeId = Conversion.ToInt(r.Cells["Type"].Value);
+					obj.ItemId = Conversion.ToInt(r.Cells["ItemId"].Value);
+					obj.BagsCondition = Conversion.ToInt(r.Cells["Condition"].Value);
+					obj.ReceivedQty = Conversion.ToDouble(r.Cells["RecQty"].Value);
+					obj.PurchaseQty = Conversion.ToDouble(r.Cells["PurQty"].Value);
+					obj.Remarks = Conversion.ToString(r.Cells["Remarks"].Value);
+					EBStatus = obj.TypeId;
+					if (obj.ReceivedQty > 0.0 || obj.PurchaseQty > 0.0)
+					{
+						GRN.InvgrnDetailEmptyBagslist.Add(obj);
+					}
+					switch (EBStatus)
+					{
+					case 1:
+						if (EmptyBagsRecQty == 0.0 && EmptyBagsPurQty == 0.0)
+						{
+							throw new Exception("Received Qty Or Purchase Qty Required in EmptyBags grid");
+						}
+						break;
+					case 2:
+					case 3:
+						if (EmptyBagsPurQty == 0.0)
+						{
+							throw new Exception("Purchase Qty Required in EmptyBags grid");
+						}
+						break;
+					case 4:
+					case 5:
+						if (EmptyBagsRecQty == 0.0)
+						{
+							throw new Exception("Received Qty Required in EmptyBags grid");
+						}
+						break;
+					}
+					if (EBStatus > 0)
+					{
+						double EmpBagsQty = EmptyBagsRecQty + EmptyBagsPurQty;
+						if (GrnQty != EmpBagsQty)
+						{
+							throw new Exception("Empty Bags Quantity must be equal to GrnQty");
+						}
+					}
+				}
+			}
+			GRN.AttachmentsList = new List<DMSAttachments>();
+			GRN.DeleteAttachmentsList = new List<DMSAttachments>();
+			FormHelper.UpdateAttachmentsForObject<InvGrn>(GRN, base.Name, AT, "AttachmentsList", "DeleteAttachmentsList");
+			GRN.AttachmentsValues = AttachmentsValues;
+			GRN.CustomAttachmentsValues = CustomAttachmentsValues;
+			int success = InvGrn.Save(GRN);
+			if (RecId > 0)
+			{
+				MessageBox.Show("Record Update Successfully [" + GRN.DocNo + "]");
+				FormHelper.DeleteAllAttachmentsFromDb(AT, RecId, 137, base.Name);
+			}
+			else
+			{
+				MessageBox.Show("Record Save Successfully [" + GRN.DocNo + "]");
+			}
+			if (WagesStatus && WagesActiveOrInActive)
+			{
+				frmwagesBillHeader frmwagesBillHeader = new frmwagesBillHeader(UserAccount);
+				frmwagesBillHeader.RefDocTypeId = 137;
+				frmwagesBillHeader.RefDocId = success;
+				frmwagesBillHeader.GrossWeightTotal = GrossWeight;
+				frmwagesBillHeader.ShowDialog();
+				frmwagesBillHeader.BringToFront();
+			}
+			reset();
+			if (ChkBox.Checked)
+			{
+				CommonServices.GrnSlipWithSubReports(success, 137);
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+		}
+	}
+
+	private void btnSave_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			RecId = 0;
+			Insert();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnUpdate_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			if (RecId == 0)
+			{
+				throw new Exception("Record not update because Id not found");
+			}
+			Insert();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+		}
+	}
+
+	public void ReadById(int ID)
+	{
+		try
+		{
+			btnSave.Visible = false;
+			btnUpdate.Visible = true;
+			btnDelete.Visible = true;
+			RecId = ID;
+			InvGrn invGrn = InvGrn.GetByID(RecId);
+			if (invGrn == null || invGrn.invGrnDetail.Count <= 0)
+			{
+				return;
+			}
+			tabControl1.SelectedIndex = 0;
+			txtdocno.Text = invGrn.DocNo.ToString();
+			DocDate.Value = invGrn.DocDate;
+			combsupplier.Value = invGrn.SupplierCustomerId;
+			((Control)(object)combsupplier).Enabled = true;
+			((Control)(object)CmbDeliveryTerm).Text = Conversion.ToString((object)invGrn.DeliveryTerm);
+			CmbTransport.Value = invGrn.TransporterId;
+			txtcarramount.Text = invGrn.CarriageAmount.ToString();
+			txtremarks.Text = Conversion.ToString((object)invGrn.RemarksHeader);
+			txtGpNo.Text = invGrn.GpNo.ToString();
+			((Control)(object)combvehtyp).Text = invGrn.VehicleType;
+			txtvehno.Text = invGrn.VehicleNo;
+			txtbltyno.Text = invGrn.BiltyNo;
+			txtsuppwt.Text = invGrn.PartyWeight.ToString();
+			txtfctwt.Text = invGrn.FactoryWeight.ToString();
+			txtwtdiff.Text = (invGrn.PartyWeight - invGrn.FactoryWeight).ToString();
+			AttachmentsValues = invGrn.AttachmentsValues;
+			CustomAttachmentsValues = invGrn.CustomAttachmentsValues;
+			double GrossWeight = 0.0;
+			dtdetail.Clear();
+			for (int j = 0; j < invGrn.invGrnDetail.Count; j++)
+			{
+				dtdetail.Rows.Add(invGrn.invGrnDetail[j].Id, invGrn.invGrnDetail[j].PurchaseOrderId, invGrn.invGrnDetail[j].PurchaseOrderDetailId, invGrn.invGrnDetail[j].PurchaserOrderNo, invGrn.invGrnDetail[j].WarehouseId, invGrn.invGrnDetail[j].WareHouseCode, invGrn.invGrnDetail[j].ItemId, invGrn.invGrnDetail[j].ItemCode, invGrn.invGrnDetail[j].Item, invGrn.invGrnDetail[j].CropYear, invGrn.invGrnDetail[j].JobLotId, invGrn.invGrnDetail[j].JobLot, invGrn.invGrnDetail[j].PackingTypeId, invGrn.invGrnDetail[j].PackingType, invGrn.invGrnDetail[j].ItemUomId, invGrn.invGrnDetail[j].UOMCode, invGrn.invGrnDetail[j].UOM, invGrn.invGrnDetail[j].ItemQty, invGrn.invGrnDetail[j].GrossWeight, invGrn.invGrnDetail[j].EBWPerUnit, invGrn.invGrnDetail[j].EBWTotal, invGrn.invGrnDetail[j].AdLsWeight, invGrn.invGrnDetail[j].NetBillWeight, invGrn.invGrnDetail[j].StockWeight, invGrn.invGrnDetail[j].CityId, invGrn.invGrnDetail[j].AreaCity);
+				GrossWeight += invGrn.invGrnDetail[j].GrossWeight;
+				if (Conversion.ToInt((object)invGrn.invGrnDetail[j].PurchaseOrderId) > 0)
+				{
+					OrderExist = true;
+					((Control)(object)CmbDeliveryTerm).Enabled = false;
+					((Control)(object)combsupplier).Enabled = false;
+				}
+				else
+				{
+					OrderExist = false;
+					((Control)(object)CmbDeliveryTerm).Enabled = true;
+					((Control)(object)combsupplier).Enabled = true;
+				}
+			}
+			grd.DataSource = dtdetail;
+			grd.RetrieveStructure();
+			grdSettings();
+			dtEmptyBag.Clear();
+			for (int i = 0; i < invGrn.InvgrnDetailEmptyBagslist.Count; i++)
+			{
+				dtEmptyBag.Rows.Add(invGrn.InvgrnDetailEmptyBagslist[i].PurchaseOrderId, invGrn.InvgrnDetailEmptyBagslist[i].TypeId, invGrn.InvgrnDetailEmptyBagslist[i].ItemId, invGrn.InvgrnDetailEmptyBagslist[i].BagsCondition, invGrn.InvgrnDetailEmptyBagslist[i].ReceivedQty, invGrn.InvgrnDetailEmptyBagslist[i].PurchaseQty, invGrn.InvgrnDetailEmptyBagslist[i].Remarks);
+			}
+			if (dtEmptyBag.Rows.Count == 0)
+			{
+				AddRowInvEmptyBagsGrid();
+			}
+			grdEmptyBags.DataSource = dtEmptyBag;
+			grdEmptyBags.RetrieveStructure();
+			grdEmptyBagsSettings();
+			FormHelper.LoadAttachmentsForObject(AT, RecId, base.Name);
+			EnableDisableDeliveryTermSupWtFacWt();
+			DeductionPolicyForGrn(0.0);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnDelete_Click(object sender, EventArgs e)
+	{
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Expected O, but got Unknown
+		try
+		{
+			if (RecId > 0)
+			{
+				if (MessageBox.Show("Are you sure to Delete?", "Confirm", MessageBoxButtons.YesNo) != DialogResult.No)
+				{
+					InvPurchaseInvoice.RemoveByID(new InvPurchaseInvoice
+					{
+						OrganizationId = UserAccount.OrganizationId,
+						CompanyId = UserAccount.CompanyId,
+						DocumentTypeId = 137,
+						Id = RecId,
+						EntryUser = UserAccount.ID
+					});
+					MessageBox.Show("Delete Record Successfully");
+					reset();
+				}
+				return;
+			}
+			throw new Exception("Record Not Found");
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+		}
+	}
+
+	private void reset()
+	{
+		try
+		{
+			AT = new Attachment();
+			Attachment.dtAttachments.Rows.Clear();
+			AttachmentsValues = "";
+			CustomAttachmentsValues = "";
+			RecId = 0;
+			EmptyBagsWeightCutStatus = 0;
+			((Control)(object)combsupplier).Text = string.Empty;
+			((Control)(object)CmbDeliveryTerm).Text = string.Empty;
+			((Control)(object)CmbTransport).Text = string.Empty;
+			txtcarramount.Text = string.Empty;
+			txtGpNo.Text = string.Empty;
+			((UltraGridBase)combvehtyp).Rows[1].Activate();
+			txtvehno.Text = string.Empty;
+			txtbltyno.Text = string.Empty;
+			txtsuppwt.Text = string.Empty;
+			txtfctwt.Text = string.Empty;
+			txtwtdiff.Text = string.Empty;
+			txtremarks.Text = string.Empty;
+			txtebu.Text = string.Empty;
+			txtEmptyBagsTotal.Text = string.Empty;
+			((Control)(object)combsupplier).Enabled = true;
+			((Control)(object)CmbTransport).Enabled = true;
+			txtcarramount.Enabled = true;
+			txtgwt.Enabled = true;
+			((Control)(object)combitem).Text = string.Empty;
+			((Control)(object)combpckuom).Text = string.Empty;
+			txtqty.Text = string.Empty;
+			txtadlswt.Text = string.Empty;
+			txtnetwt.Text = string.Empty;
+			txtstockwt.Text = string.Empty;
+			((Control)(object)CmbCity).Text = string.Empty;
+			updateDetailIndex = -1;
+			OrderExist = false;
+			dtdetail.Clear();
+			grd.DataSource = dtdetail;
+			btnSave.Visible = true;
+			btnUpdate.Visible = false;
+			btnDelete.Visible = false;
+			Add.Visible = true;
+			btnUpdateDetail.Visible = false;
+			btnCancelUpdateDetial.Visible = false;
+			((Control)(object)combitem).Enabled = true;
+			((Control)(object)combsupplier).Enabled = true;
+			((Control)(object)CmbDeliveryTerm).Enabled = true;
+			dtEmptyBag.Rows.Clear();
+			AddRowInvEmptyBagsGrid();
+			grdEmptyBags.RetrieveStructure();
+			grdEmptyBagsSettings();
+			GenerateCode();
+			DocDate.Focus();
+			EnableDisableDeliveryTermSupWtFacWt();
+			if (!SubsidiaryAccountAllownOnVouchers)
+			{
+				int transporterId = Conversion.ToInt((object)GlobalVariables_Helper.GetConfigValueFromGlobal("FreightInwardAc"));
+				if (transporterId != 0)
+				{
+					CmbTransport.Value = transporterId;
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void ResetDetial()
+	{
+		try
+		{
+			((Control)(object)CmbWareHouse).Text = string.Empty;
+			((Control)(object)CmbJobLot).Text = string.Empty;
+			txtqty.Text = string.Empty;
+			txtgwt.Text = string.Empty;
+			txtadlswt.Text = string.Empty;
+			txtnetwt.Text = string.Empty;
+			txtstockwt.Text = string.Empty;
+			((Control)(object)combpckuom).Text = string.Empty;
+			updateDetailIndex = -1;
+			CmbWareHouse.Focus();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnNew_Click(object sender, EventArgs e)
+	{
+		reset();
+	}
+
+	private void btnclose_Click(object sender, EventArgs e)
+	{
+		Close();
+	}
+
+	private void BtnRefresh_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			SupplierNameFilll();
+			TransportFill();
+			VehicleTypesFill();
+			WareHouseFill();
+			ItemNameFill();
+			CropYear();
+			JobLotFill();
+			PackingTypeFill();
+			CityFill();
+			GetConfigurations();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void InvFrmGRNDirect_FormClosing(object sender, FormClosingEventArgs e)
+	{
+		try
+		{
+			HistoryStack.Remove(this);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void DeductionPolicyForGrn(double GrossWeight)
+	{
+		double factoryWeight = Conversion.ToDouble((object)txtfctwt.Text);
+		if (DeductionPolicyForGrnIsOn && ((Control)(object)CmbDeliveryTerm).Text == "Ponch")
+		{
+			int policyId = 0;
+			string policyName = "";
+			double supplierWeight = Conversion.ToDouble((object)txtsuppwt.Text);
+			double diffWeight = factoryWeight - supplierWeight;
+			if (diffWeight > 0.0)
+			{
+				DataTable dt = DeductionPolicyForGrn.GetPolicyForGrn(UserAccount.OrganizationId, UserAccount.CompanyId, clsGlobalVariables.ActiveYr.Id, UserAccount.BranchesId, DocDate.Value, diffWeight);
+				if (dt.Rows.Count > 0)
+				{
+					policyId = Conversion.ToInt(dt.Rows[0]["PolicyTypeId"]);
+					policyName = " Policy is [" + Conversion.ToString(dt.Rows[0]["ConditionDescription"]) + "]";
+				}
+			}
+			double finalBillWt = 0.0;
+			switch (policyId)
+			{
+			case 0:
+			case 1:
+				finalBillWt = factoryWeight;
+				break;
+			case 2:
+				finalBillWt = factoryWeight + diffWeight / 2.0;
+				break;
+			case 3:
+				finalBillWt = supplierWeight;
+				break;
+			}
+			double GrdGrossWeight = GridEX_Helper.GetColumnSum(grd, "GrossWight");
+			if (btnUpdateDetail.Visible)
+			{
+				GrdGrossWeight -= Conversion.ToDouble(dtdetail.Rows[updateDetailIndex]["GrossWight"]);
+			}
+			txtgwt.Text = Conversion.ToString((object)(finalBillWt - GrdGrossWeight));
+			policyId = ((policyId == 0) ? 1 : policyId);
+			if (GrossWeight > 0.0 && GrossWeight != finalBillWt)
+			{
+				throw new Exception($"GrossWeight {GrossWeight} Should Equal To FinalWeight {finalBillWt}...{policyName}");
+			}
+			if (!txtBalWeight.Visible)
+			{
+				lblBalwt.Visible = true;
+				txtBalWeight.Visible = true;
+			}
+		}
+		else if (DeductionPolicyForGrnIsOn)
+		{
+			txtBalWeight.Text = factoryWeight.ToString();
+		}
+	}
+
+	private void TotalWeight()
+	{
+		try
+		{
+			double PackUOM = 0.0;
+			double Qty = 0.0;
+			double GrossWeight = 0.0;
+			if (((Control)(object)combpckuom).Text != string.Empty)
+			{
+				PackUOM = Conversion.ToDouble(((UltraDropDownBase)combpckuom).SelectedRow.Cells["Equivalent"].Value);
+			}
+			if (txtqty.Text != string.Empty)
+			{
+				Qty = Conversion.ToDouble((object)txtqty.Text.ToString());
+			}
+			if (txtgwt.Text != string.Empty)
+			{
+				GrossWeight = Conversion.ToDouble((object)txtgwt.Text.ToString());
+			}
+			txtgwt.Text = ((PackUOM > 0.0) ? (PackUOM * Qty) : 0.0).ToString();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void Total()
+	{
+		try
+		{
+			double FactoryWeight = 0.0;
+			double SupplierWeight = 0.0;
+			double DiffWeight = 0.0;
+			double Qty = 0.0;
+			double GrossWeight = 0.0;
+			double EBUnit = 0.0;
+			double EBTotal = 0.0;
+			double AddLess = 0.0;
+			if (txtfctwt.Text != string.Empty && txtfctwt.Text != null)
+			{
+				FactoryWeight = Conversion.ToDouble((object)txtfctwt.Text.Trim().ToString());
+			}
+			if (txtsuppwt.Text != string.Empty && txtsuppwt.Text != null)
+			{
+				SupplierWeight = Conversion.ToDouble((object)txtsuppwt.Text.Trim().ToString());
+			}
+			if (((Control)(object)combpckuom).Text != string.Empty)
+			{
+				Conversion.ToDouble(((UltraDropDownBase)combpckuom).SelectedRow.Cells["Equivalent"].Value);
+			}
+			if (txtqty.Text != string.Empty && txtqty.Text != null)
+			{
+				Qty = Conversion.ToDouble((object)txtqty.Text.Trim().ToString());
+			}
+			if (txtgwt.Text != string.Empty && txtgwt.Text != null)
+			{
+				GrossWeight = Conversion.ToDouble((object)txtgwt.Text.Trim().ToString());
+			}
+			if (txtebu.Text != string.Empty && txtebu.Text != null)
+			{
+				EBUnit = Conversion.ToDouble((object)txtebu.Text.Trim().ToString());
+			}
+			DiffWeight = SupplierWeight - FactoryWeight;
+			double PurQty = 0.0;
+			double grdQty = 0.0;
+			double TotalPurchaseAgainstWeightAddinBillWeight = 0.0;
+			EBTotal = Conversion.ToDouble((object)txtEmptyBagsTotal.Text);
+			if (EBUnit > 0.0 || EBTotal > 0.0)
+			{
+				if (base.ActiveControl != null && Conversion.ToString(base.ActiveControl.Tag) == "EbUnit")
+				{
+					EBTotal = EBUnit * Qty;
+					txtEmptyBagsTotal.Text = Math.Round(EBTotal, 2).ToString();
+				}
+				else if (base.ActiveControl != null && Conversion.ToString(base.ActiveControl.Tag) == "EbTotal")
+				{
+					EBUnit = EBTotal / Qty;
+					txtebu.Text = Math.Round(EBUnit, 3).ToString();
+				}
+				else
+				{
+					EBTotal = ((EBUnit > 0.0 && Qty > 0.0) ? (EBUnit * Qty) : 0.0);
+					txtEmptyBagsTotal.Text = Math.Round(EBTotal, 2).ToString();
+				}
+			}
+			if (EBUnit > 0.0)
+			{
+				EmptyBagsWeightCutStatus = 0;
+				grdQty = Conversion.ToDouble(grd.GetTotal(grd.RootTable.Columns["Qty"], (AggregateFunction)2));
+				for (int i = 0; i < dtEmptyBag.Rows?.Count; i++)
+				{
+					if (Conversion.ToInt(dtEmptyBag.Rows[i]["Type"]) == 2)
+					{
+						PurQty += Conversion.ToDouble(dtEmptyBag.Rows[i]["PurQty"]);
+					}
+				}
+				if (PurQty > 0.0)
+				{
+					double Updateqty = 0.0;
+					if (btnUpdateDetail.Visible)
+					{
+						Updateqty = Conversion.ToDouble(dtdetail.Rows[updateDetailIndex]["Qty"]);
+					}
+					double num = Math.Abs(PurQty) - (grdQty - Updateqty);
+					EmptyBagsWeightCutStatus = 2;
+					TotalPurchaseAgainstWeightAddinBillWeight = num * EBUnit;
+				}
+			}
+			AddLess = ((!(txtadlswt.Text != string.Empty) || txtadlswt.Text == null) ? 0.0 : Conversion.ToDouble((object)txtadlswt.Text.Trim()));
+			if (txtnetwt.Text != string.Empty && txtnetwt.Text != null)
+			{
+				Conversion.ToDouble((object)txtnetwt.Text.Trim().ToString());
+			}
+			double Weight = 0.0;
+			if (EmptyBagsWeightCutStatus == 2 && TotalPurchaseAgainstWeightAddinBillWeight > 0.0)
+			{
+				Weight = GrossWeight - EBTotal + AddLess + TotalPurchaseAgainstWeightAddinBillWeight;
+			}
+			else if (EmptyBagsWeightCutStatus == 2)
+			{
+				Weight = GrossWeight + AddLess;
+			}
+			else if (EmptyBagsWeightCutStatus != 2)
+			{
+				Weight = GrossWeight - EBTotal + AddLess;
+			}
+			txtnetwt.Text = Math.Round(Weight, 2).ToString();
+			txtstockwt.Text = Math.Round(Weight, 2).ToString();
+			if (!(SupplierWeight > 0.0) || !(FactoryWeight > 0.0) || !(GrossWeight > 0.0))
+			{
+				return;
+			}
+			if (DeductionPolicyForGrnIsOn)
+			{
+				double StockWt = ((Conversion.ToDouble((object)txtBalWeight.Text) > 0.0) ? (FactoryWeight * GrossWeight / Conversion.ToDouble((object)txtBalWeight.Text)) : 0.0);
+				txtstockwt.Text = Math.Round(StockWt, 2).ToString();
+				return;
+			}
+			if (TermOnlyLessWeight)
+			{
+				if (DiffWeight > 0.0 && TermDifference - DiffWeight >= 0.0)
+				{
+					double StockWt2 = FactoryWeight * GrossWeight / SupplierWeight;
+					StockWt2 -= EBTotal;
+					txtstockwt.Text = Math.Round(StockWt2, 2).ToString();
+				}
+				else if (FactoryWeight > SupplierWeight)
+				{
+					double StockWt3 = FactoryWeight * GrossWeight / SupplierWeight;
+					StockWt3 -= EBTotal;
+					txtstockwt.Text = Math.Round(StockWt3, 2).ToString();
+				}
+				else
+				{
+					double StockWt4 = FactoryWeight * GrossWeight / FactoryWeight;
+					StockWt4 -= EBTotal;
+					txtstockwt.Text = Math.Round(StockWt4, 2).ToString();
+				}
+				return;
+			}
+			if (((Control)(object)CmbDeliveryTerm).Text == "Load" || ((Control)(object)CmbDeliveryTerm).Text == "Load & PartyWeight" || ((Control)(object)CmbDeliveryTerm).Text == "Ponch & PartyWeight")
+			{
+				double StockWt8 = FactoryWeight * GrossWeight / SupplierWeight;
+				StockWt8 -= EBTotal;
+				txtstockwt.Text = Math.Round(StockWt8, 2).ToString();
+			}
+			if (((Control)(object)CmbDeliveryTerm).Text == "Ponch")
+			{
+				if (SupplierWeight > FactoryWeight)
+				{
+					double StockWt6 = FactoryWeight * GrossWeight / FactoryWeight;
+					StockWt6 -= EBTotal;
+					txtstockwt.Text = Math.Round(StockWt6, 2).ToString();
+				}
+				else
+				{
+					double StockWt7 = FactoryWeight * GrossWeight / SupplierWeight;
+					StockWt7 -= EBTotal;
+					txtstockwt.Text = Math.Round(StockWt7, 2).ToString();
+				}
+			}
+			if (((Control)(object)CmbDeliveryTerm).Text == "Ponch & FactoryWeight" || ((Control)(object)CmbDeliveryTerm).Text == "Load & FactoryWeight")
+			{
+				double StockWt5 = FactoryWeight * GrossWeight / FactoryWeight;
+				StockWt5 -= EBTotal;
+				txtstockwt.Text = Math.Round(StockWt5, 2).ToString();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void TotalSupplierWeight()
+	{
+		try
+		{
+			if (txtsuppwt.Text != string.Empty && txtfctwt.Text != string.Empty)
+			{
+				double num = Conversion.ToDouble((object)txtsuppwt.Text.Trim());
+				double FactoryWeight = Conversion.ToDouble((object)txtfctwt.Text.Trim());
+				txtwtdiff.Text = (num - FactoryWeight).ToString();
+			}
+			DeductionPolicyForGrn(0.0);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtqty_TextChanged(object sender, EventArgs e)
+	{
+		TotalWeight();
+		Total();
+	}
+
+	private void txtebu_TextChanged(object sender, EventArgs e)
+	{
+		Total();
+	}
+
+	private void combpckuom_Leave(object sender, EventArgs e)
+	{
+		TotalWeight();
+		Total();
+	}
+
+	private void txtgwt_TextChanged(object sender, EventArgs e)
+	{
+		Total();
+	}
+
+	private void txtadlswt_TextChanged(object sender, EventArgs e)
+	{
+		Total();
+	}
+
+	private void txtadlswt_Leave(object sender, EventArgs e)
+	{
+		Total();
+	}
+
+	private void txtsuppwt_TextChanged(object sender, EventArgs e)
+	{
+		try
+		{
+			txtfctwt.Text = Conversion.ToString((object)txtsuppwt.Text.Trim());
+			TotalSupplierWeight();
+			StockWeightUpdateFromGridOnDeliveryTermChange();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtfctwt_TextChanged(object sender, EventArgs e)
+	{
+		try
+		{
+			TotalSupplierWeight();
+			StockWeightUpdateFromGridOnDeliveryTermChange();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtadlswt_TextChanged_1(object sender, EventArgs e)
+	{
+		Total();
+	}
+
+	private void txtEmptyBagsTotal_TextChanged(object sender, EventArgs e)
+	{
+		Total();
+	}
+
+	private void CalculationPurchaseAgainstWeight()
+	{
+		try
+		{
+			grdEmptyBags.UpdateData();
+			double Qty = 0.0;
+			double GrossWeight = 0.0;
+			double EBUnit = 0.0;
+			double EBTotal = 0.0;
+			double AddLess = 0.0;
+			double FactoryWeight = 0.0;
+			double SupplierWeight = 0.0;
+			double DiffWeight = 0.0;
+			if (txtfctwt.Text != string.Empty && txtfctwt.Text != null)
+			{
+				FactoryWeight = Conversion.ToDouble((object)txtfctwt.Text.Trim().ToString());
+			}
+			if (txtsuppwt.Text != string.Empty && txtsuppwt.Text != null)
+			{
+				SupplierWeight = Conversion.ToDouble((object)txtsuppwt.Text.Trim().ToString());
+			}
+			DiffWeight = SupplierWeight - FactoryWeight;
+			double AllocateQty = 0.0;
+			double PurQty = 0.0;
+			double grdQty = 0.0;
+			double EBQtyLessFromBillWeight = 0.0;
+			for (int i = 0; i < dtEmptyBag.Rows?.Count; i++)
+			{
+				if (Conversion.ToInt(dtEmptyBag.Rows[i]["Type"]) == 2)
+				{
+					PurQty += Conversion.ToDouble(dtEmptyBag.Rows[i]["PurQty"]);
+				}
+			}
+			GridEXRow[] rows = grd.GetRows();
+			foreach (GridEXRow item in rows)
+			{
+				double TotalPurchaseAgainstWeightAddinBillWeight = 0.0;
+				item.BeginEdit();
+				Conversion.ToDouble(item.Cells["UOM"].Value);
+				Qty = Conversion.ToDouble(item.Cells["Qty"].Value);
+				GrossWeight = Conversion.ToDouble(item.Cells["GrossWight"].Value);
+				EBUnit = Conversion.ToDouble(item.Cells["EbUnit"].Value);
+				AddLess = Conversion.ToDouble(item.Cells["AddLesswt"].Value);
+				if (EBUnit > 0.0)
+				{
+					grdQty = Conversion.ToDouble(item.Cells["Qty"].Value);
+					if (PurQty > 0.0)
+					{
+						PurQty -= AllocateQty;
+						if (PurQty > grdQty)
+						{
+							EBQtyLessFromBillWeight = grdQty;
+						}
+						else if (grdQty > PurQty)
+						{
+							EBQtyLessFromBillWeight = PurQty;
+						}
+						if (PurQty == grdQty)
+						{
+							EBQtyLessFromBillWeight = grdQty;
+						}
+						if (PurQty > 0.0)
+						{
+							TotalPurchaseAgainstWeightAddinBillWeight = EBQtyLessFromBillWeight * EBUnit;
+						}
+					}
+				}
+				if (EBUnit > 0.0 && Qty > 0.0)
+				{
+					item.Cells["EbTotal"].Value = EBUnit * Qty;
+					EBTotal = Conversion.ToDouble(item.Cells["EbTotal"].Value);
+				}
+				else
+				{
+					item.Cells["EbTotal"].Value = 0;
+					EBTotal = 0.0;
+				}
+				double Weight = 0.0;
+				Weight = GrossWeight - EBTotal + AddLess + TotalPurchaseAgainstWeightAddinBillWeight;
+				item.Cells["NetWeight"].Value = Math.Round(Weight, 2).ToString();
+				if (SupplierWeight > 0.0 && FactoryWeight > 0.0 && GrossWeight > 0.0)
+				{
+					if (DeductionPolicyForGrnIsOn)
+					{
+						double StockWt = ((Conversion.ToDouble((object)txtBalWeight.Text) > 0.0) ? (FactoryWeight * GrossWeight / Conversion.ToDouble((object)txtBalWeight.Text)) : 0.0);
+						item.Cells["StockWeight"].Value = Math.Round(StockWt, 2).ToString();
+					}
+					else if (TermOnlyLessWeight)
+					{
+						if (DiffWeight > 0.0 && TermDifference - DiffWeight >= 0.0)
+						{
+							double StockWt2 = FactoryWeight * GrossWeight / SupplierWeight;
+							StockWt2 -= EBTotal;
+							item.Cells["StockWeight"].Value = Math.Round(StockWt2, 2).ToString();
+						}
+						else if (FactoryWeight > SupplierWeight)
+						{
+							double StockWt3 = FactoryWeight * GrossWeight / SupplierWeight;
+							StockWt3 -= EBTotal;
+							item.Cells["StockWeight"].Value = Math.Round(StockWt3, 2).ToString();
+						}
+						else
+						{
+							double StockWt4 = FactoryWeight * GrossWeight / FactoryWeight;
+							StockWt4 -= EBTotal;
+							item.Cells["StockWeight"].Value = Math.Round(StockWt4, 2).ToString();
+						}
+					}
+					else if (((Control)(object)CmbDeliveryTerm).Text == "Load & FactoryWeight" || ((Control)(object)CmbDeliveryTerm).Text == "Ponch & FactoryWeight")
+					{
+						double StockWt5 = FactoryWeight * GrossWeight / FactoryWeight;
+						StockWt5 -= EBTotal;
+						item.Cells["StockWeight"].Value = Math.Round(StockWt5, 2).ToString();
+					}
+					else if (((Control)(object)CmbDeliveryTerm).Text == "Ponch")
+					{
+						if (SupplierWeight > FactoryWeight)
+						{
+							double StockWt6 = FactoryWeight * GrossWeight / FactoryWeight;
+							StockWt6 -= EBTotal;
+							item.Cells["StockWeight"].Value = Math.Round(StockWt6, 2).ToString();
+						}
+						else
+						{
+							double StockWt7 = FactoryWeight * GrossWeight / SupplierWeight;
+							StockWt7 -= EBTotal;
+							item.Cells["StockWeight"].Value = Math.Round(StockWt7, 2).ToString();
+						}
+					}
+					else
+					{
+						double StockWt8 = FactoryWeight * GrossWeight / SupplierWeight;
+						StockWt8 -= EBTotal;
+						item.Cells["StockWeight"].Value = Math.Round(StockWt8, 2).ToString();
+					}
+				}
+				else
+				{
+					item.Cells["StockWeight"].Value = Math.Round(Weight, 2).ToString();
+				}
+				AllocateQty = EBQtyLessFromBillWeight;
+				item.EndEdit();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void HistoryComboFill()
+	{
+		try
+		{
+			DataTable dtSupplier = new DataTable();
+			dtSupplier.Columns.Add("Id", typeof(int));
+			dtSupplier.Columns.Add("Supplier", typeof(string));
+			DataTable dt = InvGrn.GetDataForDropDownFromGrn(UserAccount.OrganizationId, UserAccount.CompanyId, "137", (string)null, (string)null, 0);
+			if (dt.Rows.Count > 0)
+			{
+				for (int i = 0; i < dt.Rows.Count; i++)
+				{
+					if (Conversion.ToString(dt.Rows[i]["Activity"]) == "Supplier")
+					{
+						dtSupplier.Rows.Add(dt.Rows[i]["Id"], dt.Rows[i]["ReferenceName"]);
+					}
+				}
+			}
+			DDL.BindDDL(dtSupplier, cmbSupplierNameHistory, "Id", "Supplier", "Supplier Name", ZeroIndex: false);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnNewHistory_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			FromDateHistory.Value = DateTime.Now;
+			ToDateHistory.Value = DateTime.Now;
+			txtFromDocNoHistory.Text = string.Empty;
+			txtToDocNoHistory.Text = string.Empty;
+			((Control)(object)cmbSupplierNameHistory).Text = string.Empty;
+			GrdHistory.ClearStructure();
+			GrdHistoryDetail.ClearStructure();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnRefreshHistory_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			HistoryComboFill();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnshow_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			HistoryGridFill();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void HistoryGridFill()
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		try
+		{
+			ReportsParameters grn = new ReportsParameters();
+			grn.OrganizationId = UserAccount.OrganizationId;
+			grn.CompanyId = UserAccount.CompanyId;
+			grn.BranchesId = UserAccount.BranchesId;
+			grn.CanViewAllRecord = formright.DoHaveCanViewAllRecordRights;
+			grn.FinancialYearId = clsGlobalVariables.ActiveYr.Id;
+			grn.DocumentTypeId = 137;
+			if (!grn.CanViewAllRecord)
+			{
+				grn.EntryUser = UserAccount.ID;
+			}
+			if (drdocdate.Checked)
+			{
+				if (FromDateHistory.Checked)
+				{
+					grn.FromDate = FromDateHistory.Value;
+				}
+				if (ToDateHistory.Checked)
+				{
+					grn.ToDate = ToDateHistory.Value;
+				}
+			}
+			else if (rdentrydate.Checked)
+			{
+				if (FromDateHistory.Checked)
+				{
+					grn.EntryDateFrom = FromDateHistory.Value;
+				}
+				if (ToDateHistory.Checked)
+				{
+					grn.EntryDateTo = ToDateHistory.Value;
+				}
+			}
+			else if (rdmodifydate.Checked)
+			{
+				if (FromDateHistory.Checked)
+				{
+					grn.ModifyDateFrom = FromDateHistory.Value;
+				}
+				if (ToDateHistory.Checked)
+				{
+					grn.ModifyDateTo = ToDateHistory.Value;
+				}
+			}
+			else if (rdapproveddate.Checked)
+			{
+				if (FromDateHistory.Checked)
+				{
+					grn.ApprovedDateFrom = FromDateHistory.Value;
+				}
+				if (ToDateHistory.Checked)
+				{
+					grn.ApprovedDateTo = ToDateHistory.Value;
+				}
+			}
+			grn.FromDocNo = Conversion.ToInt((object)txtFromDocNoHistory.Text);
+			grn.ToDocNo = Conversion.ToInt((object)txtToDocNoHistory.Text);
+			grn.SupplierCustomerId = Conversion.ToInt(cmbSupplierNameHistory.Value);
+			if (RadReffered.Checked)
+			{
+				grn.ActionId = 1;
+			}
+			else if (RadNotReffered.Checked)
+			{
+				grn.ActionId = 2;
+			}
+			DataTable dtGridRegister = InvGrn.GetHisoty(grn);
+			if (dtGridRegister.Rows.Count > 0)
+			{
+				DataTable dtcol = new DataTable();
+				dtcol.Columns.Add("RecordNo", typeof(int));
+				dtcol.Columns.Add("Id", typeof(int));
+				dtcol.Columns.Add("InvoiceNo", typeof(string));
+				dtcol.Columns.Add("DocNo", typeof(string));
+				dtcol.Columns.Add("DocDate", typeof(DateTime));
+				dtcol.Columns.Add("DocumentTypeId", typeof(int));
+				dtcol.Columns.Add("DeliveryTerm", typeof(string));
+				dtcol.Columns.Add("SupplierName", typeof(string));
+				dtcol.Columns.Add("GpNo", typeof(string));
+				dtcol.Columns.Add("VehicleNo", typeof(string));
+				dtcol.Columns.Add("BiltyNo", typeof(string));
+				dtcol.Columns.Add("WagesId", typeof(int));
+				dtcol.Columns.Add("WagesNo", typeof(string));
+				dtcol.Columns.Add("FactoryWeight", typeof(double));
+				dtcol.Columns.Add("SuppWeight", typeof(double));
+				dtcol.Columns.Add("Transporter", typeof(string));
+				dtcol.Columns.Add("FrieghtAmount", typeof(double));
+				dtcol.Columns.Add("RemarksHeader", typeof(string));
+				dtcol.Columns.Add("EntryDate", typeof(DateTime));
+				dtcol.Columns.Add("EntryUser", typeof(string));
+				dtcol.Columns.Add("ModifyDate", typeof(DateTime));
+				dtcol.Columns.Add("ModifyUser", typeof(string));
+				dtcol.Columns.Add("ApprovedDate", typeof(DateTime));
+				dtcol.Columns.Add("ApprovedUser", typeof(string));
+				dtcol.Columns.Add("NoOfAttachments", typeof(int));
+				dtcol.Columns.Add("AttachmentsCount", typeof(int));
+				dtcol.Columns.Add("DetailIdsCount", typeof(int));
+				dtcol.Rows.Clear();
+				for (int i = 0; i < dtGridRegister.Rows.Count; i++)
+				{
+					dtcol.Rows.Add(dtGridRegister.Rows[i]["RecordNo"], dtGridRegister.Rows[i]["Id"], dtGridRegister.Rows[i]["InvoiceNo"], dtGridRegister.Rows[i]["DocNo"], dtGridRegister.Rows[i]["DocDate"], dtGridRegister.Rows[i]["DocumentTypeId"], dtGridRegister.Rows[i]["DeliveryTerm"], dtGridRegister.Rows[i]["SupplierName"], dtGridRegister.Rows[i]["GpNo"], dtGridRegister.Rows[i]["VehicleNo"], dtGridRegister.Rows[i]["BiltyNo"], dtGridRegister.Rows[i]["WagesId"], dtGridRegister.Rows[i]["WagesNo"], dtGridRegister.Rows[i]["FactoryWeight"], dtGridRegister.Rows[i]["PartyWeight"], dtGridRegister.Rows[i]["Transporter"], dtGridRegister.Rows[i]["CarriageAmount"], dtGridRegister.Rows[i]["RemarksHeader"], dtGridRegister.Rows[i]["EntryDate"], dtGridRegister.Rows[i]["EntryUser"], dtGridRegister.Rows[i]["ModifyDate"], dtGridRegister.Rows[i]["ModifyUser"], dtGridRegister.Rows[i]["PostDate"], dtGridRegister.Rows[i]["ApprovedUser"], dtGridRegister.Rows[i]["NoOfAttachments"], dtGridRegister.Rows[i]["AttachmentsCount"], dtGridRegister.Rows[i]["DetailIdsCount"]);
+				}
+				GrdHistory.DataSource = dtcol;
+				GrdHistory.RetrieveStructure();
+				HistoryGridSettings();
+			}
+			else
+			{
+				GrdHistory.ClearStructure();
+				GrdHistoryDetail.ClearStructure();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void HistoryGridSettings()
+	{
+		try
+		{
+			GrdHistory.RootTable.Columns["DocumentTypeId"].Visible = false;
+			GrdHistory.RootTable.Columns["RecordNo"].Visible = false;
+			GrdHistory.RootTable.Columns["Id"].Visible = false;
+			GrdHistory.RootTable.Columns["AttachmentsCount"].Visible = false;
+			GrdHistory.RootTable.Columns["WagesId"].Visible = false;
+			GrdHistory.RootTable.Columns["DetailIdsCount"].Visible = false;
+			GrdHistory.RootTable.Columns["EntryDate"].FormatString = "dd-MM-yyyy hh:mm tt";
+			GrdHistory.RootTable.Columns["EntryDate"].Width = 150;
+			GrdHistory.RootTable.Columns["ModifyDate"].FormatString = "dd-MM-yyyy hh:mm tt";
+			GrdHistory.RootTable.Columns["ModifyDate"].Width = 150;
+			GrdHistory.RootTable.Columns["ApprovedDate"].FormatString = "dd-MM-yyyy hh:mm tt";
+			GrdHistory.RootTable.Columns["ApprovedDate"].Width = 150;
+			GrdHistory.RootTable.Columns["NoOfAttachments"].ColumnType = (ColumnType)5;
+			GrdHistory.RootTable.Columns["WagesNo"].ColumnType = (ColumnType)5;
+			GrdHistory.RootTable.Columns["InvoiceNo"].Width = 80;
+			GrdHistory.RootTable.Columns["DocNo"].Width = 60;
+			GrdHistory.RootTable.Columns["DocDate"].Width = 80;
+			GrdHistory.RootTable.Columns["GpNo"].Width = 60;
+			GrdHistory.RootTable.Columns["DeliveryTerm"].Width = 100;
+			GrdHistory.RootTable.Columns["SupplierName"].Width = 150;
+			GrdHistory.RootTable.Columns["VehicleNo"].Width = 70;
+			GrdHistory.RootTable.Columns["BiltyNo"].Width = 70;
+			GrdHistory.RootTable.Columns["WagesNo"].Width = 70;
+			GrdHistory.RootTable.Columns["FactoryWeight"].Width = 80;
+			GrdHistory.RootTable.Columns["SuppWeight"].Width = 80;
+			GrdHistory.RootTable.Columns["FrieghtAmount"].Caption = "Freight Amount";
+			GrdHistory.RootTable.Columns["FactoryWeight"].AggregateFunction = (AggregateFunction)2;
+			GrdHistory.RootTable.Columns["FactoryWeight"].TextAlignment = (TextAlignment)3;
+			GrdHistory.RootTable.Columns["FactoryWeight"].FormatString = "#,##0.####";
+			GrdHistory.RootTable.Columns["FactoryWeight"].TotalFormatString = "#,##0.####";
+			GrdHistory.RootTable.Columns["SuppWeight"].AggregateFunction = (AggregateFunction)2;
+			GrdHistory.RootTable.Columns["SuppWeight"].TextAlignment = (TextAlignment)3;
+			GrdHistory.RootTable.Columns["SuppWeight"].FormatString = "#,##0.####";
+			GrdHistory.RootTable.Columns["SuppWeight"].TotalFormatString = "#,##0.####";
+			GrdHistory.RootTable.Columns["FrieghtAmount"].AggregateFunction = (AggregateFunction)2;
+			GrdHistory.RootTable.Columns["FrieghtAmount"].TextAlignment = (TextAlignment)3;
+			GrdHistory.RootTable.Columns["FrieghtAmount"].FormatString = clsGlobalVariables.stringFormatsingle;
+			GrdHistory.RootTable.Columns["FrieghtAmount"].TotalFormatString = clsGlobalVariables.stringFormatsingle;
+			GrdHistory.RootTable.Columns.Add("Edit");
+			GrdHistory.RootTable.Columns["Edit"].Caption = "Edit";
+			GrdHistory.RootTable.Columns["Edit"].ButtonText = "Edit";
+			GrdHistory.RootTable.Columns["Edit"].ButtonDisplayMode = (CellButtonDisplayMode)3;
+			GrdHistory.RootTable.Columns["Edit"].ButtonStyle = (ButtonStyle)5;
+			GrdHistory.RootTable.Columns["Edit"].Width = 40;
+			GrdHistory.RootTable.Columns.Add("Print");
+			GrdHistory.RootTable.Columns["Print"].Caption = "Print";
+			GrdHistory.RootTable.Columns["Print"].ButtonText = "Print";
+			GrdHistory.RootTable.Columns["Print"].ButtonDisplayMode = (CellButtonDisplayMode)3;
+			GrdHistory.RootTable.Columns["Print"].ButtonStyle = (ButtonStyle)5;
+			GrdHistory.RootTable.Columns["Print"].Width = 40;
+			GrdHistory.RootTable.Columns["Print"].Position = 0;
+			GrdHistory.RootTable.Columns["Edit"].Position = 1;
+			GrdHistory.FrozenColumns = 2;
+			ctrlGrdBar2_Load(null, null);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GrdHistory_DoubleClick(object sender, EventArgs e)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow row = GrdHistory.CurrentRow;
+			if (row != null && (int)row.RowType == 0)
+			{
+				if (Conversion.ToInt(row.Cells["InvoiceNo"].Value) > 0)
+				{
+					MessageBox.Show("This Document is referred in invoice. So you can't update this record.", "Warning Message", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+					return;
+				}
+				RecId = Conversion.ToInt(row.Cells["Id"].Value);
+				ReadById(RecId);
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GrdHistory_ColumnButtonClick(object sender, ColumnActionEventArgs e)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow r = GrdHistory.CurrentRow;
+			if (r == null || (int)r.RowType != 0 || r.Cells.Count <= 0)
+			{
+				return;
+			}
+			if (e.Column.Key == "Edit")
+			{
+				if (Conversion.ToInt(r.Cells["InvoiceNo"].Value) > 0)
+				{
+					MessageBox.Show("This Document is referred in invoice. So you can't update this record.", "Warning Message", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+					return;
+				}
+				reset();
+				RecId = Conversion.ToInt(r.Cells["Id"].Value);
+				ReadById(RecId);
+			}
+			if (e.Column.Key == "Print")
+			{
+				GenerateReport(Conversion.ToInt((object)GrdHistory.CurrentRow.Cells["Id"].Value.ToString()));
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+	{
+		if (tabControl1.SelectedIndex == 1)
+		{
+			FromDateHistory.Focus();
+		}
+		else
+		{
+			DocDate.Focus();
+		}
+	}
+
+	private void GrdHistory_LinkClicked(object sender, ColumnActionEventArgs e)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow r = GrdHistory.CurrentRow;
+			if (r != null && (int)r.RowType == 0)
+			{
+				if (e.Column.Key == "NoOfAttachments")
+				{
+					CommonServices.GetNoofAttachmentsByRefDocumentTypeID(Conversion.ToInt(r.Cells["Id"].Value), 137);
+				}
+				if (e.Column.Key == "WagesNo")
+				{
+					CommonServices.ContractorWagesBill_SlipandRegister_002(Conversion.ToInt(r.Cells["WagesId"].Value));
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GrdHistory_SelectionChanged(object sender, EventArgs e)
+	{
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			if (GrdHistory.CurrentRow == null || (int)GrdHistory.CurrentRow.RowType != 0 || GrdHistory.CurrentRow.Cells.Count <= 0)
+			{
+				return;
+			}
+			bool OrderExist = false;
+			InvGrn invGrn = InvGrn.GetByID(Conversion.ToInt(GrdHistory.CurrentRow.Cells["Id"].Value));
+			DataTable dthistorydetail = new DataTable();
+			dthistorydetail.Columns.Add("OrderId");
+			dthistorydetail.Columns.Add("OrderNo");
+			dthistorydetail.Columns.Add("WareHouse");
+			dthistorydetail.Columns.Add("Item");
+			dthistorydetail.Columns.Add("CropYear");
+			dthistorydetail.Columns.Add("Job/Lot");
+			dthistorydetail.Columns.Add("PackingType");
+			dthistorydetail.Columns.Add("UOM");
+			dthistorydetail.Columns.Add("Qty", typeof(double));
+			dthistorydetail.Columns.Add("GrossWight", typeof(double));
+			dthistorydetail.Columns.Add("EbUnit", typeof(double));
+			dthistorydetail.Columns.Add("EbTotal", typeof(double));
+			dthistorydetail.Columns.Add("AddLesswt", typeof(double));
+			dthistorydetail.Columns.Add("NetWeight", typeof(double));
+			dthistorydetail.Columns.Add("StockWeight", typeof(double));
+			dthistorydetail.Columns.Add("City");
+			dthistorydetail.Clear();
+			for (int i = 0; i < invGrn.invGrnDetail.Count; i++)
+			{
+				dthistorydetail.Rows.Add(invGrn.invGrnDetail[i].PurchaseOrderId, invGrn.invGrnDetail[i].PurchaseOrder, invGrn.invGrnDetail[i].WareHouseCode, invGrn.invGrnDetail[i].Item, invGrn.invGrnDetail[i].CropYear, invGrn.invGrnDetail[i].JobLot, invGrn.invGrnDetail[i].PackingType, invGrn.invGrnDetail[i].UOM, invGrn.invGrnDetail[i].ItemQty, invGrn.invGrnDetail[i].GrossWeight, invGrn.invGrnDetail[i].EBWPerUnit, invGrn.invGrnDetail[i].EBWTotal, invGrn.invGrnDetail[i].AdLsWeight, invGrn.invGrnDetail[i].NetBillWeight, invGrn.invGrnDetail[i].StockWeight, invGrn.invGrnDetail[i].AreaCity);
+				if (invGrn.invGrnDetail[i].PurchaseOrderId > 0)
+				{
+					OrderExist = true;
+				}
+			}
+			GrdHistoryDetail.DataSource = dthistorydetail;
+			GrdHistoryDetail.RetrieveStructure();
+			gridhistorydetail(OrderExist);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void gridhistorydetail(bool OrderExist)
+	{
+		try
+		{
+			GrdHistoryDetail.RootTable.Columns["OrderId"].Visible = false;
+			GrdHistoryDetail.RootTable.Columns["OrderNo"].Visible = OrderExist;
+			GrdHistoryDetail.RootTable.Columns["OrderNo"].ColumnType = (ColumnType)5;
+			GrdHistoryDetail.RootTable.Columns["Qty"].AggregateFunction = (AggregateFunction)2;
+			GrdHistoryDetail.RootTable.Columns["Qty"].TextAlignment = (TextAlignment)3;
+			GrdHistoryDetail.RootTable.Columns["Qty"].FormatString = "#,##0.###";
+			GrdHistoryDetail.RootTable.Columns["Qty"].TotalFormatString = "#,##0.###";
+			GrdHistoryDetail.RootTable.Columns["EbUnit"].AggregateFunction = (AggregateFunction)2;
+			GrdHistoryDetail.RootTable.Columns["EbUnit"].TextAlignment = (TextAlignment)3;
+			GrdHistoryDetail.RootTable.Columns["EbUnit"].FormatString = "#,##0.###";
+			GrdHistoryDetail.RootTable.Columns["EbUnit"].TotalFormatString = "#,##0.###";
+			GrdHistoryDetail.RootTable.Columns["GrossWight"].AggregateFunction = (AggregateFunction)2;
+			GrdHistoryDetail.RootTable.Columns["GrossWight"].TextAlignment = (TextAlignment)3;
+			GrdHistoryDetail.RootTable.Columns["GrossWight"].FormatString = "#,##0.####";
+			GrdHistoryDetail.RootTable.Columns["GrossWight"].TotalFormatString = "#,##0.####";
+			GrdHistoryDetail.RootTable.Columns["EbTotal"].AggregateFunction = (AggregateFunction)2;
+			GrdHistoryDetail.RootTable.Columns["EbTotal"].TextAlignment = (TextAlignment)3;
+			GrdHistoryDetail.RootTable.Columns["EbTotal"].FormatString = "#,##0.###";
+			GrdHistoryDetail.RootTable.Columns["EbTotal"].TotalFormatString = "#,##0.###";
+			GrdHistoryDetail.RootTable.Columns["AddLesswt"].AggregateFunction = (AggregateFunction)2;
+			GrdHistoryDetail.RootTable.Columns["AddLesswt"].TextAlignment = (TextAlignment)3;
+			GrdHistoryDetail.RootTable.Columns["AddLesswt"].FormatString = "#,##0.###";
+			GrdHistoryDetail.RootTable.Columns["AddLesswt"].TotalFormatString = "#,##0.###";
+			GrdHistoryDetail.RootTable.Columns["NetWeight"].AggregateFunction = (AggregateFunction)2;
+			GrdHistoryDetail.RootTable.Columns["NetWeight"].TextAlignment = (TextAlignment)3;
+			GrdHistoryDetail.RootTable.Columns["NetWeight"].FormatString = "#,##0.####";
+			GrdHistoryDetail.RootTable.Columns["NetWeight"].TotalFormatString = "#,##0.####";
+			GrdHistoryDetail.RootTable.Columns["StockWeight"].AggregateFunction = (AggregateFunction)2;
+			GrdHistoryDetail.RootTable.Columns["StockWeight"].TextAlignment = (TextAlignment)3;
+			GrdHistoryDetail.RootTable.Columns["StockWeight"].FormatString = "#,##0.####";
+			GrdHistoryDetail.RootTable.Columns["StockWeight"].TotalFormatString = "#,##0.####";
+			CommonServices.GridAutoAdjustmentNew(GrdHistoryDetail);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GrdHistoryDetail_LinkClicked(object sender, ColumnActionEventArgs e)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow r = GrdHistoryDetail.CurrentRow;
+			if (r == null || (int)r.RowType != 0 || !(e.Column.Key == "OrderNo") || clsGlobalVariables.ScreenViewReights.Count <= 0)
+			{
+				return;
+			}
+			List<tblUserRights> newList = clsGlobalVariables.ScreenViewReights.Where((tblUserRights x) => x.ScreenName.Trim() == "PurchsaeOrder").ToList();
+			if (newList.Count > 0)
+			{
+				if (bool.Parse(newList[0].Value.ToString()))
+				{
+					CommonServices.PurchaseOrderSlipReport203(Conversion.ToInt(r.Cells["OrderId"].Value));
+				}
+				else
+				{
+					MessageBox.Show("Please Check Screen Rights");
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void InvFrmGRN_KeyDown(object sender, KeyEventArgs e)
+	{
+		try
+		{
+			if (e.KeyData == Keys.Return)
+			{
+				SendKeys.Send("{TAB}");
+			}
+			if ((e.Control && e.KeyCode == Keys.E) || e.KeyCode == Keys.Escape)
+			{
+				Close();
+			}
+			if (e.Control && e.KeyCode == Keys.T)
+			{
+				if (tabControl1.SelectedIndex == 1)
+				{
+					tabControl1.SelectedIndex = 0;
+					DocDate.Focus();
+				}
+				else
+				{
+					tabControl1.SelectedIndex = 1;
+					FromDateHistory.Focus();
+				}
+			}
+			if (tabControl1.SelectedIndex == 1)
+			{
+				if (e.Control && e.KeyCode == Keys.Up)
+				{
+					FromDateHistory.Focus();
+				}
+				if (e.Control && e.KeyCode == Keys.Down)
+				{
+					((Control)(object)GrdHistory).Focus();
+				}
+				if (e.Control && e.KeyCode == Keys.S)
+				{
+					btnshow_Click(null, null);
+				}
+				if (e.Control && e.KeyCode == Keys.N)
+				{
+					btnNewHistory_Click(null, null);
+				}
+				if (e.Control && e.KeyCode == Keys.R)
+				{
+					btnRefreshHistory_Click(null, null);
+				}
+				if (e.Control && e.KeyCode == Keys.P)
+				{
+					GenerateReport(Conversion.ToInt(GrdHistory.CurrentRow.Cells["Id"].Value));
+				}
+				if (e.Control && e.KeyCode == Keys.H)
+				{
+					btnGrnFormHistory_Click(null, null);
+				}
+				return;
+			}
+			if (e.Control && e.KeyCode == Keys.N)
+			{
+				btnNew_Click(null, null);
+			}
+			if (BtnPrint.Visible && BtnPrint.Enabled && e.Control && e.KeyCode == Keys.P)
+			{
+				BtnPrint_Click(null, null);
+			}
+			if (btnSave.Visible && btnSave.Enabled && e.Control && e.KeyCode == Keys.S)
+			{
+				btnSave_Click(null, null);
+			}
+			if (btnDelete.Visible && btnDelete.Enabled && e.Control && e.Shift && e.KeyCode == Keys.Delete)
+			{
+				btnDelete_Click(null, null);
+			}
+			if (btnUpdate.Visible && btnUpdate.Enabled && e.Control && e.KeyCode == Keys.U)
+			{
+				btnUpdate_Click(null, null);
+			}
+			if (e.Control && e.KeyCode == Keys.Down)
+			{
+				((Control)(object)grd).Focus();
+			}
+			if (e.Control && e.KeyCode == Keys.Up)
+			{
+				CmbWareHouse.Focus();
+			}
+			if (e.Control && e.KeyCode == Keys.Right)
+			{
+				if (((Control)(object)grd).Focused)
+				{
+					((Control)(object)grdEmptyBags).Focus();
+				}
+				else
+				{
+					((Control)(object)grd).Focus();
+				}
+			}
+			if (e.Control && e.KeyCode == Keys.F5)
+			{
+				DocDate.Focus();
+			}
+			if (e.Control && e.KeyCode == Keys.F10)
+			{
+				AT.Show();
+			}
+			if (e.Control && e.Alt)
+			{
+				BtnShortCutkeys_Click(null, null);
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void grd_KeyDown(object sender, KeyEventArgs e)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow r = grd.CurrentRow;
+			if (r == null || (int)r.RowType != 0 || grd.CurrentColumn == null)
+			{
+				return;
+			}
+			if (e.Control && e.KeyCode == Keys.Space)
+			{
+				if (MessageBox.Show("Are you sure to Delete?", "Confirm", MessageBoxButtons.YesNo) == DialogResult.No)
+				{
+					return;
+				}
+				GridEXRow item = grd.CurrentRow;
+				if (item != null && (int)item.RowType == 0)
+				{
+					item.Delete();
+				}
+			}
+			if (e.Control && e.KeyCode == Keys.Return)
+			{
+				grd_DoubleClick(null, null);
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void BtnShortCutkeys_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			MakeShortCutKeys();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void MakeShortCutKeys()
+	{
+		try
+		{
+			DataTable dt = new DataTable();
+			dt.Columns.Add("KeyCombination");
+			dt.Columns.Add("Description");
+			dt.Rows.Add("Ctrl+S", "For Save");
+			dt.Rows.Add("Ctrl+U", "For Update");
+			dt.Rows.Add("Ctrl+Shift+Delete", "For Delete");
+			dt.Rows.Add("Ctrl+E", "For Close");
+			dt.Rows.Add("Ctrl+R", "For Refresh");
+			dt.Rows.Add("Ctrl+N", "For New");
+			dt.Rows.Add("Ctrl+P", "For Print");
+			dt.Rows.Add("Ctrl+H", "For History Print");
+			dt.Rows.Add("Ctrl+F5", "For Focus on Doc Date");
+			dt.Rows.Add("Ctrl+F10", "For Open Attachments");
+			dt.Rows.Add("Ctrl+T", "For Tab Transfer");
+			dt.Rows.Add("Ctrl+alt", "To Show ShortCut Keys Form");
+			dt.Rows.Add("Ctrl+ArrowDown", "For Focus On Detail Grid");
+			dt.Rows.Add("Ctrl+ArrowUp", "For Focus On warehouse Combo in Detail Box");
+			dt.Rows.Add("Ctrl+ArrowRight", "For Focus From One Grid To Another");
+			dt.Rows.Add("Ctrl+Enter", "For Update Record When Focus On Any Grid ");
+			dt.Rows.Add("Ctrl+Space", "To Call Function's On Button Or Link When Focus On Any Grid ");
+			ShortCutKeyPopUp shortCutKeyPopUp = new ShortCutKeyPopUp(dt);
+			shortCutKeyPopUp.StartPosition = FormStartPosition.CenterScreen;
+			shortCutKeyPopUp.Show();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void grdEmptyBags_KeyDown(object sender, KeyEventArgs e)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow r = grdEmptyBags.CurrentRow;
+			if (r != null && (int)r.RowType == 0 && grdEmptyBags.CurrentColumn != null && e.Control && e.KeyCode == Keys.Space && grdEmptyBags.CurrentColumn.Key == "Add")
+			{
+				if (grdEmptyBags.GetRows().Length == 1)
+				{
+					AddRowInvEmptyBagsGrid();
+				}
+				grdEmptyBags.UpdateData();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GrdHistory_KeyDown(object sender, KeyEventArgs e)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			GridEXRow r = GrdHistory.CurrentRow;
+			if (r == null || (int)r.RowType != 0 || GrdHistory.CurrentColumn == null)
+			{
+				return;
+			}
+			if (e.Control && e.KeyCode == Keys.Space)
+			{
+				if (GrdHistory.CurrentColumn.Key == "Edit")
+				{
+					if (Conversion.ToInt(r.Cells["InvoiceNo"].Value) > 0)
+					{
+						MessageBox.Show("This Document is referred in invoice. So you can't update this record.", "Warning Message", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+						return;
+					}
+					reset();
+					RecId = Conversion.ToInt((object)r.Cells["Id"].Value.ToString());
+					ReadById(RecId);
+				}
+				else if (GrdHistory.CurrentColumn.Key == "Print")
+				{
+					GenerateReport(Conversion.ToInt(r.Cells["Id"].Value));
+				}
+				else if (GrdHistory.CurrentColumn.Key == "OrderNo")
+				{
+					if (clsGlobalVariables.ScreenViewReights.Count > 0)
+					{
+						List<tblUserRights> newList = clsGlobalVariables.ScreenViewReights.Where((tblUserRights x) => x.ScreenName.Trim() == "PurchsaeOrder").ToList();
+						if (newList.Count > 0)
+						{
+							if (!bool.Parse(newList[0].Value.ToString()))
+							{
+								MessageBox.Show("Please Check Screen Rights");
+								return;
+							}
+							CommonServices.PurchaseOrderSlipReport203(Conversion.ToInt(GrdHistory.CurrentRow.Cells["OrderId"].Value));
+						}
+					}
+				}
+				else if (GrdHistory.CurrentColumn.Key == "NoOfAttachments")
+				{
+					if (r != null && (int)r.RowType == 0)
+					{
+						CommonServices.GetNoofAttachmentsByRefDocumentTypeID(Conversion.ToInt(r.Cells["Id"].Value), 137);
+					}
+				}
+				else if (GrdHistory.CurrentColumn.Key == "WagesNo")
+				{
+					CommonServices.ContractorWagesBill_SlipandRegister_002(Conversion.ToInt(r.Cells["WagesId"].Value));
+				}
+			}
+			if (e.Control && e.KeyCode == Keys.Return)
+			{
+				if (Conversion.ToInt(r.Cells["InvoiceNo"].Value) > 0)
+				{
+					MessageBox.Show("This Document is referred in invoice. So you can't update this record.", "Warning Message", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+					return;
+				}
+				reset();
+				RecId = Conversion.ToInt(r.Cells["Id"].Value);
+				ReadById(RecId);
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnAttachment_Click(object sender, EventArgs e)
+	{
+		AT.Show();
+	}
+
+	private void ctrlGrdBar1_Load(object sender, EventArgs e)
+	{
+		try
+		{
+			FileStream fs = CommonServices.GetGridLayout(base.Name, ((Control)(object)grd).Name);
+			if (fs != null)
+			{
+				grd.LoadLayoutFile((Stream)fs);
+				fs.Close();
+				fs.Dispose();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void ctrlGrdBar2_Load(object sender, EventArgs e)
+	{
+		try
+		{
+			FileStream fs = CommonServices.GetGridLayout(base.Name, ((Control)(object)GrdHistory).Name);
+			if (fs != null)
+			{
+				GrdHistory.LoadLayoutFile((Stream)fs);
+				fs.Close();
+				fs.Dispose();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void ctrlGrdBar5_Load(object sender, EventArgs e)
+	{
+		try
+		{
+			FileStream fs = CommonServices.GetGridLayout(base.Name, ((Control)(object)grdEmptyBags).Name);
+			if (fs != null)
+			{
+				grdEmptyBags.LoadLayoutFile((Stream)fs);
+				fs.Close();
+				fs.Dispose();
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void GenerateReport(int PrintId)
+	{
+		try
+		{
+			CommonServices.GrnSlipWithSubReports(PrintId, 137);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void BtnPrint_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			GenerateReport(RecId);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void btnGrnFormHistory_Click(object sender, EventArgs e)
+	{
+		try
+		{
+			frmGRNHistory obj = new frmGRNHistory(UserAccount);
+			if (clsGlobalVariables.ScreenViewReights.Count > 0)
+			{
+				if (bool.Parse(clsGlobalVariables.ScreenViewReights.Where((tblUserRights x) => x.ScreenName.Trim() == "frmGRNHistory").ToList()[0].Value.ToString()))
+				{
+					obj.ShowDialog();
+				}
+				else
+				{
+					MessageBox.Show("Please Check Screen Rights");
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void CityDefine_Click(object sender, EventArgs e)
+	{
+		new DefineCity(UserAccount).Show();
+	}
+
+	private void CmbDeliveryTerm_TextChanged(object sender, EventArgs e)
+	{
+		try
+		{
+			StockWeightUpdateFromGridOnDeliveryTermChange();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void CmbDeliveryTerm_Leave(object sender, EventArgs e)
+	{
+		try
+		{
+			StockWeightUpdateFromGridOnDeliveryTermChange();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void StockWeightUpdateFromGridOnDeliveryTermChange()
+	{
+		try
+		{
+			grd.UpdateData();
+			double SupplierWeight = 0.0;
+			double FactoryWeight = 0.0;
+			double DiffWeight = 0.0;
+			double EBTotal = 0.0;
+			double GrossWeight = 0.0;
+			if (txtfctwt.Text != string.Empty && txtfctwt.Text != null)
+			{
+				FactoryWeight = Conversion.ToDouble((object)txtfctwt.Text.Trim().ToString());
+			}
+			if (txtsuppwt.Text != string.Empty && txtsuppwt.Text != null)
+			{
+				SupplierWeight = Conversion.ToDouble((object)txtsuppwt.Text.Trim().ToString());
+			}
+			DiffWeight = SupplierWeight - FactoryWeight;
+			if (grd.GetRows().Length != 0)
+			{
+				if (!(SupplierWeight > 0.0) || !(FactoryWeight > 0.0))
+				{
+					return;
+				}
+				GridEXRow[] rows = grd.GetRows();
+				foreach (GridEXRow item in rows)
+				{
+					item.BeginEdit();
+					Conversion.ToDouble(item.Cells["UOM"].Value);
+					Conversion.ToDouble(item.Cells["Qty"].Value);
+					GrossWeight = Conversion.ToDouble(item.Cells["GrossWight"].Value);
+					Conversion.ToDouble(item.Cells["EbUnit"].Value);
+					Conversion.ToDouble(item.Cells["AddLesswt"].Value);
+					double Weight = 0.0;
+					if (SupplierWeight > 0.0 && FactoryWeight > 0.0 && GrossWeight > 0.0)
+					{
+						if (TermOnlyLessWeight)
+						{
+							if (DiffWeight > 0.0 && TermDifference - DiffWeight >= 0.0)
+							{
+								double StockWt = FactoryWeight * GrossWeight / SupplierWeight;
+								StockWt -= EBTotal;
+								item.Cells["StockWeight"].Value = Math.Round(StockWt, 2).ToString();
+							}
+							else if (FactoryWeight > SupplierWeight)
+							{
+								double StockWt2 = FactoryWeight * GrossWeight / SupplierWeight;
+								StockWt2 -= EBTotal;
+								item.Cells["StockWeight"].Value = Math.Round(StockWt2, 2).ToString();
+							}
+							else
+							{
+								double StockWt3 = FactoryWeight * GrossWeight / FactoryWeight;
+								StockWt3 -= EBTotal;
+								item.Cells["StockWeight"].Value = Math.Round(StockWt3, 2).ToString();
+							}
+						}
+						else
+						{
+							if (((Control)(object)CmbDeliveryTerm).Text == "Load" || ((Control)(object)CmbDeliveryTerm).Text == "Load & PartyWeight" || ((Control)(object)CmbDeliveryTerm).Text == "Ponch & PartyWeight")
+							{
+								double StockWt7 = FactoryWeight * GrossWeight / SupplierWeight;
+								StockWt7 -= EBTotal;
+								item.Cells["StockWeight"].Value = Math.Round(StockWt7, 2).ToString();
+							}
+							if (((Control)(object)CmbDeliveryTerm).Text == "Ponch")
+							{
+								if (SupplierWeight > FactoryWeight)
+								{
+									double StockWt5 = FactoryWeight * GrossWeight / FactoryWeight;
+									StockWt5 -= EBTotal;
+									item.Cells["StockWeight"].Value = Math.Round(StockWt5, 2).ToString();
+								}
+								else
+								{
+									double StockWt6 = FactoryWeight * GrossWeight / SupplierWeight;
+									StockWt6 -= EBTotal;
+									txtstockwt.Text = Math.Round(StockWt6, 2).ToString();
+								}
+							}
+							if (((Control)(object)CmbDeliveryTerm).Text == "Ponch & FactoryWeight" || ((Control)(object)CmbDeliveryTerm).Text == "Load & FactoryWeight")
+							{
+								double StockWt4 = FactoryWeight * GrossWeight / FactoryWeight;
+								StockWt4 -= EBTotal;
+								txtstockwt.Text = Math.Round(StockWt4, 2).ToString();
+							}
+						}
+					}
+					else
+					{
+						item.Cells["StockWeight"].Value = Math.Round(Weight, 2).ToString();
+					}
+					item.BeginEdit();
+				}
+				return;
+			}
+			if (((Control)(object)CmbDeliveryTerm).Text == "Load")
+			{
+				txtgwt.Text = SupplierWeight.ToString();
+			}
+			if (((Control)(object)CmbDeliveryTerm).Text == "Ponch")
+			{
+				if (SupplierWeight > FactoryWeight)
+				{
+					txtgwt.Text = FactoryWeight.ToString();
+				}
+				else
+				{
+					txtgwt.Text = SupplierWeight.ToString();
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtgwt_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtebu_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtwtcut_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtcarramount_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+	}
+
+	private void txtqty_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtsuppwt_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtfctwt_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtFromDocNoHistory_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextNumberFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtToDocNoHistory_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextNumberFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtebu_KeyPress_1(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtEmptyBagsTotal_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtadlswt_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunctionWithMinus(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtnetwt_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtstockwt_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextdecimelFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void txtGpNo_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		try
+		{
+			CommonServices.OnlytextNumberFunction(sender, e);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void BtnLoadOrder_Click(object sender, EventArgs e)
+	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			if (grd.GetRows().Count() > 0)
+			{
+				GridEXRow r = grd.CurrentRow;
+				if (r != null && (int)r.RowType == 0 && Conversion.ToInt(r.Cells["OrderId"].Value) == 0)
+				{
+					MessageBox.Show("You cannot Load PurchaseOrder because you had add record without Order");
+					return;
+				}
+			}
+			LoadPO = new LoadPurchaseOrder(UserAccount);
+			LoadPO.DocumentTypeId = 41;
+			LoadPO.ShowDialog();
+			LoadPO.BringToFront();
+			LoadInGridDetail();
+			StockWeightUpdateFromGridOnDeliveryTermChange();
+			DeductionPolicyForGrn(0.0);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void LoadInGridDetail()
+	{
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Expected O, but got Unknown
+		try
+		{
+			string POIds = "";
+			int PurchaseOrderId = 0;
+			OrderExist = true;
+			for (int i = 0; i < LoadPO.dtSupply.Rows.Count; i++)
+			{
+				PurchaseOrderId = int.Parse(LoadPO.dtSupply.Rows[0][0].ToString());
+				POIds = POIds + "," + int.Parse(LoadPO.dtSupply.Rows[i][0].ToString());
+			}
+			ReportsParameters obj = new ReportsParameters();
+			obj.OrganizationId = UserAccount.OrganizationId;
+			obj.CompanyId = UserAccount.CompanyId;
+			obj.DocumentTypeId = 41;
+			obj.Ids = POIds;
+			LoadPurchaseOrderDataForInvoice(obj);
+			grd.DataSource = dtdetail;
+			grd.RetrieveStructure();
+			grdSettings();
+			GetEmptyBagsInformationFromOrder(PurchaseOrderId);
+			POIds = "";
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(ex.Message);
+		}
+	}
+
+	private void LoadPurchaseOrderDataForInvoice(ReportsParameters obj)
+	{
+		try
+		{
+			DataTable invGrn = InvPurchaseInvoice.PurchaseOrderLoadForPurchaseInvoice(obj);
+			if (invGrn.Rows.Count <= 0)
+			{
+				return;
+			}
+			if (grd.RowCount > 0 && Conversion.ToInt(combsupplier.Value) != Conversion.ToInt(invGrn.Rows[0]["SupplierCustomerId"]))
+			{
+				throw new Exception("Data against another Supplier Already Exist");
+			}
+			combsupplier.Value = invGrn.Rows[0]["SupplierCustomerId"];
+			txtremarks.Text = invGrn.Rows[0]["RemarksHeader"].ToString();
+			((Control)(object)CmbDeliveryTerm).Text = invGrn.Rows[0]["DeliveryTerm"].ToString();
+			((Control)(object)combsupplier).Enabled = false;
+			((Control)(object)CmbDeliveryTerm).Enabled = false;
+			bool flag = false;
+			for (int i = 0; i < invGrn.Rows.Count; i++)
+			{
+				if (grd.GetRows().Length != 0)
+				{
+					GridEXRow[] rows = grd.GetRows();
+					foreach (GridEXRow obj2 in rows)
+					{
+						if (Conversion.ToInt(obj2.Cells["OrderId"].Value) != Conversion.ToInt(invGrn.Rows[i]["Id"]))
+						{
+							throw new Exception("Data against another OrderNo Already Exist in Detail");
+						}
+						if (Conversion.ToInt(obj2.Cells["OrderDetailId"].Value) == Conversion.ToInt(invGrn.Rows[i]["PODetailId"]))
+						{
+							flag = true;
+							break;
+						}
+					}
+				}
+				if (!flag)
+				{
+					dtdetail.Rows.Add(0, invGrn.Rows[i]["Id"], invGrn.Rows[i]["PODetailId"], invGrn.Rows[i]["OrderNo"], 0, "", invGrn.Rows[i]["ItemId"], invGrn.Rows[i]["ItemCode"], invGrn.Rows[i]["ItemName"], invGrn.Rows[i]["Crop"], invGrn.Rows[i]["JobLotId"], invGrn.Rows[i]["JobLotDescription"], 0, 0, invGrn.Rows[i]["OrderItemUOMId"], invGrn.Rows[i]["PackUom"], invGrn.Rows[i]["UOMCodeItem"], invGrn.Rows[i]["ItemQty"], invGrn.Rows[i]["GrossWeight"], invGrn.Rows[i]["EmptyBags"], invGrn.Rows[i]["EmptyBagsTotal"], 0, Conversion.ToDouble(invGrn.Rows[i]["GrossWeight"]) - Conversion.ToDouble(invGrn.Rows[i]["EmptyBagsTotal"]), Conversion.ToDouble(invGrn.Rows[i]["GrossWeight"]) - Conversion.ToDouble(invGrn.Rows[i]["EmptyBagsTotal"]), 0, 0);
+				}
+				flag = false;
+			}
+		}
+		catch (Exception ex)
+		{
+			throw ex;
+		}
+	}
+
+	private void GetEmptyBagsInformationFromOrder(int PurchaseOrderId)
+	{
+		try
+		{
+			DataTable dtPOEmptyBagsDetail = PurchaseOrder.GetPurchaseOrderEmptyBagsDetailByOrderId(PurchaseOrderId, "");
+			if (dtPOEmptyBagsDetail.Rows.Count <= 0)
+			{
+				return;
+			}
+			dtEmptyBag.Rows.Clear();
+			for (int i = 0; i < dtPOEmptyBagsDetail.Rows.Count; i++)
+			{
+				if (Conversion.ToInt(dtPOEmptyBagsDetail.Rows[i]["Type"]) == 1 && Conversion.ToInt(dtPOEmptyBagsDetail.Rows[i]["PackingTypeId"]) == Conversion.ToInt(combpcktyp.Value))
+				{
+					txtebu.Text = Conversion.ToString(dtPOEmptyBagsDetail.Rows[i]["WeightCut"]);
+					EmptyBagsWeightCutStatus = 1;
+				}
+				if (Conversion.ToInt(dtPOEmptyBagsDetail.Rows[i]["Type"]) == 2 && Conversion.ToInt(dtPOEmptyBagsDetail.Rows[i]["PackingTypeId"]) == Conversion.ToInt(combpcktyp.Value))
+				{
+					txtebu.Text = Conversion.ToString(dtPOEmptyBagsDetail.Rows[i]["WeightCut"]);
+					EmptyBagsWeightCutStatus = 2;
+				}
+				if (Conversion.ToInt(dtPOEmptyBagsDetail.Rows[i]["Type"]) == 3 && Conversion.ToInt(dtPOEmptyBagsDetail.Rows[i]["PackingTypeId"]) == Conversion.ToInt(combpcktyp.Value))
+				{
+					txtebu.Text = Conversion.ToString(dtPOEmptyBagsDetail.Rows[i]["WeightCut"]);
+					EmptyBagsWeightCutStatus = 3;
+				}
+				dtEmptyBag.Rows.Add(dtPOEmptyBagsDetail.Rows[i]["PurchaseOrderId"], dtPOEmptyBagsDetail.Rows[i]["Type"], dtPOEmptyBagsDetail.Rows[i]["ItemId"], "", 0, 0, "");
+			}
+			grdEmptyBags.DataSource = dtEmptyBag;
+			grdEmptyBags.RetrieveStructure();
+			grdEmptyBagsSettings();
+			Total();
+		}
+		catch (Exception ex)
+		{
+			throw ex;
+		}
+	}
+
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing && components != null)
+		{
+			components.Dispose();
+		}
+		base.Dispose(disposing);
+	}
+
+	private void InitializeComponent()
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Expected O, but got Unknown
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Expected O, but got Unknown
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Expected O, but got Unknown
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Expected O, but got Unknown
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Expected O, but got Unknown
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Expected O, but got Unknown
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Expected O, but got Unknown
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Expected O, but got Unknown
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Expected O, but got Unknown
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Expected O, but got Unknown
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Expected O, but got Unknown
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Expected O, but got Unknown
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Expected O, but got Unknown
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Expected O, but got Unknown
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Expected O, but got Unknown
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Expected O, but got Unknown
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Expected O, but got Unknown
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Expected O, but got Unknown
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Expected O, but got Unknown
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Expected O, but got Unknown
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Expected O, but got Unknown
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Expected O, but got Unknown
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Expected O, but got Unknown
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Expected O, but got Unknown
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Expected O, but got Unknown
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Expected O, but got Unknown
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Expected O, but got Unknown
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Expected O, but got Unknown
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Expected O, but got Unknown
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Expected O, but got Unknown
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Expected O, but got Unknown
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Expected O, but got Unknown
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Expected O, but got Unknown
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Expected O, but got Unknown
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Expected O, but got Unknown
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ff: Expected O, but got Unknown
+		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Expected O, but got Unknown
+		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Expected O, but got Unknown
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Expected O, but got Unknown
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011b: Expected O, but got Unknown
+		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Expected O, but got Unknown
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Expected O, but got Unknown
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0130: Expected O, but got Unknown
+		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0137: Expected O, but got Unknown
+		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Expected O, but got Unknown
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Expected O, but got Unknown
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Expected O, but got Unknown
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Expected O, but got Unknown
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015a: Expected O, but got Unknown
+		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0161: Expected O, but got Unknown
+		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Expected O, but got Unknown
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016f: Expected O, but got Unknown
+		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Expected O, but got Unknown
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017d: Expected O, but got Unknown
+		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0184: Expected O, but got Unknown
+		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Expected O, but got Unknown
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0192: Expected O, but got Unknown
+		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Expected O, but got Unknown
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a0: Expected O, but got Unknown
+		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Expected O, but got Unknown
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ae: Expected O, but got Unknown
+		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Expected O, but got Unknown
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bc: Expected O, but got Unknown
+		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c3: Expected O, but got Unknown
+		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ca: Expected O, but got Unknown
+		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d1: Expected O, but got Unknown
+		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d8: Expected O, but got Unknown
+		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01df: Expected O, but got Unknown
+		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Expected O, but got Unknown
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ed: Expected O, but got Unknown
+		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Expected O, but got Unknown
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fb: Expected O, but got Unknown
+		//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0202: Expected O, but got Unknown
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0209: Expected O, but got Unknown
+		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0210: Expected O, but got Unknown
+		//IL_0210: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0217: Expected O, but got Unknown
+		//IL_0217: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021e: Expected O, but got Unknown
+		//IL_021e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0225: Expected O, but got Unknown
+		//IL_0225: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022c: Expected O, but got Unknown
+		//IL_022c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0233: Expected O, but got Unknown
+		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023a: Expected O, but got Unknown
+		//IL_023a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0241: Expected O, but got Unknown
+		//IL_0241: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0248: Expected O, but got Unknown
+		//IL_0248: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024f: Expected O, but got Unknown
+		//IL_024f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0256: Expected O, but got Unknown
+		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025d: Expected O, but got Unknown
+		//IL_025d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0264: Expected O, but got Unknown
+		//IL_0264: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026b: Expected O, but got Unknown
+		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0272: Expected O, but got Unknown
+		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0279: Expected O, but got Unknown
+		//IL_0279: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0280: Expected O, but got Unknown
+		//IL_0280: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0287: Expected O, but got Unknown
+		//IL_0287: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028e: Expected O, but got Unknown
+		//IL_028e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0295: Expected O, but got Unknown
+		//IL_0295: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029c: Expected O, but got Unknown
+		//IL_029c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a3: Expected O, but got Unknown
+		//IL_02a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02aa: Expected O, but got Unknown
+		//IL_02aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b1: Expected O, but got Unknown
+		//IL_02b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b8: Expected O, but got Unknown
+		//IL_02b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02bf: Expected O, but got Unknown
+		//IL_02bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c6: Expected O, but got Unknown
+		//IL_02c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02cd: Expected O, but got Unknown
+		//IL_02cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d4: Expected O, but got Unknown
+		//IL_02d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02db: Expected O, but got Unknown
+		//IL_02db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e2: Expected O, but got Unknown
+		//IL_02e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e9: Expected O, but got Unknown
+		//IL_02e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f0: Expected O, but got Unknown
+		//IL_02f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f7: Expected O, but got Unknown
+		//IL_02f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fe: Expected O, but got Unknown
+		//IL_02fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0305: Expected O, but got Unknown
+		//IL_0305: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030c: Expected O, but got Unknown
+		//IL_030c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0313: Expected O, but got Unknown
+		//IL_0313: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031a: Expected O, but got Unknown
+		//IL_031a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0321: Expected O, but got Unknown
+		//IL_0321: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0328: Expected O, but got Unknown
+		//IL_0328: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032f: Expected O, but got Unknown
+		//IL_032f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0336: Expected O, but got Unknown
+		//IL_0336: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033d: Expected O, but got Unknown
+		//IL_033d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0344: Expected O, but got Unknown
+		//IL_0344: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034b: Expected O, but got Unknown
+		//IL_034b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0352: Expected O, but got Unknown
+		//IL_0352: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0359: Expected O, but got Unknown
+		//IL_0359: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0360: Expected O, but got Unknown
+		//IL_0360: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0367: Expected O, but got Unknown
+		//IL_0367: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036e: Expected O, but got Unknown
+		//IL_036e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0375: Expected O, but got Unknown
+		//IL_0375: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037c: Expected O, but got Unknown
+		//IL_037c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0383: Expected O, but got Unknown
+		//IL_0383: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038a: Expected O, but got Unknown
+		//IL_038a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0391: Expected O, but got Unknown
+		//IL_0391: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0398: Expected O, but got Unknown
+		//IL_0398: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039f: Expected O, but got Unknown
+		//IL_039f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03a6: Expected O, but got Unknown
+		//IL_03b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03be: Expected O, but got Unknown
+		//IL_03be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c5: Expected O, but got Unknown
+		//IL_03c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03cc: Expected O, but got Unknown
+		//IL_03cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03d3: Expected O, but got Unknown
+		//IL_03d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03da: Expected O, but got Unknown
+		//IL_03da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03e1: Expected O, but got Unknown
+		//IL_03e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03e8: Expected O, but got Unknown
+		//IL_03e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ef: Expected O, but got Unknown
+		//IL_03ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f6: Expected O, but got Unknown
+		//IL_03f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03fd: Expected O, but got Unknown
+		//IL_03fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0404: Expected O, but got Unknown
+		//IL_0404: Unknown result type (might be due to invalid IL or missing references)
+		//IL_040b: Expected O, but got Unknown
+		//IL_040b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0412: Expected O, but got Unknown
+		//IL_0412: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0419: Expected O, but got Unknown
+		//IL_043b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0445: Expected O, but got Unknown
+		//IL_0467: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0471: Expected O, but got Unknown
+		//IL_04f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0500: Expected O, but got Unknown
+		//IL_0517: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0521: Expected O, but got Unknown
+		//IL_0543: Unknown result type (might be due to invalid IL or missing references)
+		//IL_054d: Expected O, but got Unknown
+		//IL_054e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0558: Expected O, but got Unknown
+		//IL_0564: Unknown result type (might be due to invalid IL or missing references)
+		//IL_056e: Expected O, but got Unknown
+		//IL_056f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0579: Expected O, but got Unknown
+		//IL_0590: Unknown result type (might be due to invalid IL or missing references)
+		//IL_059a: Expected O, but got Unknown
+		//IL_062a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0634: Expected O, but got Unknown
+		//IL_0635: Unknown result type (might be due to invalid IL or missing references)
+		//IL_063f: Expected O, but got Unknown
+		//IL_064b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0655: Expected O, but got Unknown
+		//IL_06c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06ce: Expected O, but got Unknown
+		//IL_089d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08a7: Expected O, but got Unknown
+		//IL_08df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08e9: Expected O, but got Unknown
+		//IL_09bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_09c5: Expected O, but got Unknown
+		//IL_0f0d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0f17: Expected O, but got Unknown
+		//IL_11ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_11f4: Expected O, but got Unknown
+		//IL_1201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_120b: Expected O, but got Unknown
+		//IL_7397: Unknown result type (might be due to invalid IL or missing references)
+		//IL_73a1: Expected O, but got Unknown
+		//IL_73c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_73cf: Expected O, but got Unknown
+		//IL_77b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_77c3: Expected O, but got Unknown
+		GridEXLayout grd_DesignTimeLayout = new GridEXLayout();
+		GridEXLayout grdEmptyBags_DesignTimeLayout = new GridEXLayout();
+		Appearance appearance12 = new Appearance();
+		Appearance appearance14 = new Appearance();
+		Appearance appearance15 = new Appearance();
+		Appearance appearance16 = new Appearance();
+		Appearance appearance17 = new Appearance();
+		Appearance appearance18 = new Appearance();
+		Appearance appearance19 = new Appearance();
+		Appearance appearance20 = new Appearance();
+		Appearance appearance21 = new Appearance();
+		Appearance appearance22 = new Appearance();
+		Appearance appearance23 = new Appearance();
+		Appearance appearance25 = new Appearance();
+		Appearance appearance129 = new Appearance();
+		Appearance appearance130 = new Appearance();
+		Appearance appearance131 = new Appearance();
+		Appearance appearance132 = new Appearance();
+		Appearance appearance133 = new Appearance();
+		Appearance appearance135 = new Appearance();
+		Appearance appearance136 = new Appearance();
+		Appearance appearance137 = new Appearance();
+		Appearance appearance138 = new Appearance();
+		Appearance appearance139 = new Appearance();
+		Appearance appearance140 = new Appearance();
+		Appearance appearance141 = new Appearance();
+		Appearance appearance75 = new Appearance();
+		Appearance appearance76 = new Appearance();
+		Appearance appearance77 = new Appearance();
+		Appearance appearance78 = new Appearance();
+		Appearance appearance79 = new Appearance();
+		Appearance appearance81 = new Appearance();
+		Appearance appearance82 = new Appearance();
+		Appearance appearance83 = new Appearance();
+		Appearance appearance84 = new Appearance();
+		Appearance appearance85 = new Appearance();
+		Appearance appearance86 = new Appearance();
+		Appearance appearance87 = new Appearance();
+		Appearance appearance101 = new Appearance();
+		Appearance appearance103 = new Appearance();
+		Appearance appearance104 = new Appearance();
+		Appearance appearance105 = new Appearance();
+		Appearance appearance106 = new Appearance();
+		Appearance appearance107 = new Appearance();
+		Appearance appearance108 = new Appearance();
+		Appearance appearance109 = new Appearance();
+		Appearance appearance110 = new Appearance();
+		Appearance appearance111 = new Appearance();
+		Appearance appearance112 = new Appearance();
+		Appearance appearance114 = new Appearance();
+		Appearance appearance88 = new Appearance();
+		Appearance appearance89 = new Appearance();
+		Appearance appearance90 = new Appearance();
+		Appearance appearance92 = new Appearance();
+		Appearance appearance93 = new Appearance();
+		Appearance appearance94 = new Appearance();
+		Appearance appearance95 = new Appearance();
+		Appearance appearance96 = new Appearance();
+		Appearance appearance97 = new Appearance();
+		Appearance appearance98 = new Appearance();
+		Appearance appearance99 = new Appearance();
+		Appearance appearance100 = new Appearance();
+		Appearance appearance26 = new Appearance();
+		Appearance appearance34 = new Appearance();
+		Appearance appearance40 = new Appearance();
+		Appearance appearance41 = new Appearance();
+		Appearance appearance43 = new Appearance();
+		Appearance appearance54 = new Appearance();
+		Appearance appearance65 = new Appearance();
+		Appearance appearance70 = new Appearance();
+		Appearance appearance71 = new Appearance();
+		Appearance appearance72 = new Appearance();
+		Appearance appearance73 = new Appearance();
+		Appearance appearance74 = new Appearance();
+		Appearance appearance115 = new Appearance();
+		Appearance appearance116 = new Appearance();
+		Appearance appearance117 = new Appearance();
+		Appearance appearance118 = new Appearance();
+		Appearance appearance119 = new Appearance();
+		Appearance appearance120 = new Appearance();
+		Appearance appearance121 = new Appearance();
+		Appearance appearance122 = new Appearance();
+		Appearance appearance123 = new Appearance();
+		Appearance appearance125 = new Appearance();
+		Appearance appearance126 = new Appearance();
+		Appearance appearance127 = new Appearance();
+		Appearance appearance42 = new Appearance();
+		Appearance appearance44 = new Appearance();
+		Appearance appearance45 = new Appearance();
+		Appearance appearance46 = new Appearance();
+		Appearance appearance47 = new Appearance();
+		Appearance appearance48 = new Appearance();
+		Appearance appearance49 = new Appearance();
+		Appearance appearance50 = new Appearance();
+		Appearance appearance51 = new Appearance();
+		Appearance appearance52 = new Appearance();
+		Appearance appearance53 = new Appearance();
+		Appearance appearance55 = new Appearance();
+		Appearance appearance27 = new Appearance();
+		Appearance appearance28 = new Appearance();
+		Appearance appearance29 = new Appearance();
+		Appearance appearance30 = new Appearance();
+		Appearance appearance31 = new Appearance();
+		Appearance appearance32 = new Appearance();
+		Appearance appearance33 = new Appearance();
+		Appearance appearance35 = new Appearance();
+		Appearance appearance36 = new Appearance();
+		Appearance appearance37 = new Appearance();
+		Appearance appearance38 = new Appearance();
+		Appearance appearance39 = new Appearance();
+		Appearance appearance56 = new Appearance();
+		Appearance appearance57 = new Appearance();
+		Appearance appearance58 = new Appearance();
+		Appearance appearance59 = new Appearance();
+		Appearance appearance60 = new Appearance();
+		Appearance appearance61 = new Appearance();
+		Appearance appearance62 = new Appearance();
+		Appearance appearance63 = new Appearance();
+		Appearance appearance64 = new Appearance();
+		Appearance appearance66 = new Appearance();
+		Appearance appearance67 = new Appearance();
+		Appearance appearance68 = new Appearance();
+		Appearance appearance142 = new Appearance();
+		Appearance appearance143 = new Appearance();
+		Appearance appearance144 = new Appearance();
+		Appearance appearance3 = new Appearance();
+		Appearance appearance4 = new Appearance();
+		Appearance appearance5 = new Appearance();
+		Appearance appearance6 = new Appearance();
+		Appearance appearance7 = new Appearance();
+		Appearance appearance8 = new Appearance();
+		Appearance appearance9 = new Appearance();
+		Appearance appearance10 = new Appearance();
+		Appearance appearance11 = new Appearance();
+		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Architecture.WinApp.Purchase.InvFrmGRNDirect));
+		GridEXLayout GrdHistory_DesignTimeLayout = new GridEXLayout();
+		GridEXLayout GrdHistoryDetail_DesignTimeLayout = new GridEXLayout();
+		Appearance appearance1 = new Appearance();
+		Appearance appearance69 = new Appearance();
+		Appearance appearance80 = new Appearance();
+		Appearance appearance91 = new Appearance();
+		Appearance appearance102 = new Appearance();
+		Appearance appearance113 = new Appearance();
+		Appearance appearance124 = new Appearance();
+		Appearance appearance128 = new Appearance();
+		Appearance appearance134 = new Appearance();
+		Appearance appearance2 = new Appearance();
+		Appearance appearance13 = new Appearance();
+		Appearance appearance24 = new Appearance();
+		this.panel1 = new System.Windows.Forms.Panel();
+		this.tabControl1 = new System.Windows.Forms.TabControl();
+		this.tabPage1 = new System.Windows.Forms.TabPage();
+		this.grd = new GridEX();
+		this.panel14 = new System.Windows.Forms.Panel();
+		this.label18 = new System.Windows.Forms.Label();
+		this.ctrlGrdBar5 = new grid.User_Conrtols.CtrlGrdBar();
+		this.grdEmptyBags = new GridEX();
+		this.panel10 = new System.Windows.Forms.Panel();
+		this.ctrlGrdBar1 = new grid.User_Conrtols.CtrlGrdBar();
+		this.label17 = new System.Windows.Forms.Label();
+		this.panel5 = new System.Windows.Forms.Panel();
+		this.rdSearchByCode = new System.Windows.Forms.RadioButton();
+		this.rdSearchByName = new System.Windows.Forms.RadioButton();
+		this.Add = new System.Windows.Forms.Button();
+		this.txtebu = new System.Windows.Forms.TextBox();
+		this.txtEmptyBagsTotal = new System.Windows.Forms.TextBox();
+		this.label45 = new System.Windows.Forms.Label();
+		this.label44 = new System.Windows.Forms.Label();
+		this.label22 = new System.Windows.Forms.Label();
+		this.combcropyear = new UltraCombo();
+		this.btnCancelUpdateDetial = new System.Windows.Forms.Button();
+		this.btnUpdateDetail = new System.Windows.Forms.Button();
+		this.combitem = new UltraCombo();
+		this.label36 = new System.Windows.Forms.Label();
+		this.label40 = new System.Windows.Forms.Label();
+		this.label41 = new System.Windows.Forms.Label();
+		this.CmbJobLot = new UltraCombo();
+		this.combpckuom = new UltraCombo();
+		this.label1 = new System.Windows.Forms.Label();
+		this.CmbWareHouse = new UltraCombo();
+		this.CmbCity = new UltraCombo();
+		this.label42 = new System.Windows.Forms.Label();
+		this.label43 = new System.Windows.Forms.Label();
+		this.combpcktyp = new UltraCombo();
+		this.label3 = new System.Windows.Forms.Label();
+		this.label35 = new System.Windows.Forms.Label();
+		this.label28 = new System.Windows.Forms.Label();
+		this.label46 = new System.Windows.Forms.Label();
+		this.txtnetwt = new System.Windows.Forms.TextBox();
+		this.label29 = new System.Windows.Forms.Label();
+		this.txtstockwt = new System.Windows.Forms.TextBox();
+		this.txtadlswt = new System.Windows.Forms.TextBox();
+		this.txtqty = new System.Windows.Forms.TextBox();
+		this.txtgwt = new System.Windows.Forms.TextBox();
+		this.panel4 = new System.Windows.Forms.Panel();
+		this.lblBalwt = new System.Windows.Forms.Label();
+		this.txtBalWeight = new System.Windows.Forms.TextBox();
+		this.CmbDeliveryTerm = new UltraCombo();
+		this.CmbTransport = new UltraCombo();
+		this.txtremarks = new System.Windows.Forms.TextBox();
+		this.combsupplier = new UltraCombo();
+		this.txtdocno = new System.Windows.Forms.TextBox();
+		this.label34 = new System.Windows.Forms.Label();
+		this.label33 = new System.Windows.Forms.Label();
+		this.label32 = new System.Windows.Forms.Label();
+		this.label9 = new System.Windows.Forms.Label();
+		this.label23 = new System.Windows.Forms.Label();
+		this.label15 = new System.Windows.Forms.Label();
+		this.label14 = new System.Windows.Forms.Label();
+		this.label53 = new System.Windows.Forms.Label();
+		this.label4 = new System.Windows.Forms.Label();
+		this.combvehtyp = new UltraCombo();
+		this.label8 = new System.Windows.Forms.Label();
+		this.label25 = new System.Windows.Forms.Label();
+		this.label24 = new System.Windows.Forms.Label();
+		this.label19 = new System.Windows.Forms.Label();
+		this.label48 = new System.Windows.Forms.Label();
+		this.label21 = new System.Windows.Forms.Label();
+		this.label26 = new System.Windows.Forms.Label();
+		this.txtGpNo = new System.Windows.Forms.TextBox();
+		this.txtbltyno = new System.Windows.Forms.TextBox();
+		this.label11 = new System.Windows.Forms.Label();
+		this.txtvehno = new System.Windows.Forms.TextBox();
+		this.txtcarramount = new System.Windows.Forms.TextBox();
+		this.label6 = new System.Windows.Forms.Label();
+		this.label20 = new System.Windows.Forms.Label();
+		this.txtsuppwt = new System.Windows.Forms.TextBox();
+		this.txtfctwt = new System.Windows.Forms.TextBox();
+		this.txtwtdiff = new System.Windows.Forms.TextBox();
+		this.label2 = new System.Windows.Forms.Label();
+		this.DocDate = new System.Windows.Forms.DateTimePicker();
+		this.label5 = new System.Windows.Forms.Label();
+		this.panel2 = new System.Windows.Forms.Panel();
+		this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+		this.btnNew = new System.Windows.Forms.ToolStripButton();
+		this.BtnRefresh = new System.Windows.Forms.ToolStripButton();
+		this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+		this.btnUpdate = new System.Windows.Forms.ToolStripButton();
+		this.btnSave = new System.Windows.Forms.ToolStripButton();
+		this.btnDelete = new System.Windows.Forms.ToolStripButton();
+		this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+		this.btnAttachment = new System.Windows.Forms.ToolStripButton();
+		this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+		this.BtnPrint = new System.Windows.Forms.ToolStripButton();
+		this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+		this.CityDefine = new System.Windows.Forms.ToolStripButton();
+		this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+		this.BtnLoadOrder = new System.Windows.Forms.ToolStripButton();
+		this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+		this.BtnShortCutkeys = new System.Windows.Forms.ToolStripButton();
+		this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+		this.label7 = new System.Windows.Forms.Label();
+		this.ChkBox = new System.Windows.Forms.CheckBox();
+		this.tabPage2 = new System.Windows.Forms.TabPage();
+		this.GrdHistory = new GridEX();
+		this.panel8 = new System.Windows.Forms.Panel();
+		this.label13 = new System.Windows.Forms.Label();
+		this.ctrlGrdBar2 = new grid.User_Conrtols.CtrlGrdBar();
+		this.panel11 = new System.Windows.Forms.Panel();
+		this.label16 = new System.Windows.Forms.Label();
+		this.GrdHistoryDetail = new GridEX();
+		this.panel23 = new System.Windows.Forms.Panel();
+		this.rdapproveddate = new System.Windows.Forms.RadioButton();
+		this.rdmodifydate = new System.Windows.Forms.RadioButton();
+		this.drdocdate = new System.Windows.Forms.RadioButton();
+		this.rdentrydate = new System.Windows.Forms.RadioButton();
+		this.groupBox3 = new System.Windows.Forms.GroupBox();
+		this.txtToDocNoHistory = new System.Windows.Forms.TextBox();
+		this.txtFromDocNoHistory = new System.Windows.Forms.TextBox();
+		this.ToDateHistory = new System.Windows.Forms.DateTimePicker();
+		this.FromDateHistory = new System.Windows.Forms.DateTimePicker();
+		this.RadNotReffered = new System.Windows.Forms.RadioButton();
+		this.RadReffered = new System.Windows.Forms.RadioButton();
+		this.btnshow = new System.Windows.Forms.Button();
+		this.label49 = new System.Windows.Forms.Label();
+		this.RadAll = new System.Windows.Forms.RadioButton();
+		this.label50 = new System.Windows.Forms.Label();
+		this.label51 = new System.Windows.Forms.Label();
+		this.label52 = new System.Windows.Forms.Label();
+		this.label10 = new System.Windows.Forms.Label();
+		this.cmbSupplierNameHistory = new UltraCombo();
+		this.panel7 = new System.Windows.Forms.Panel();
+		this.label12 = new System.Windows.Forms.Label();
+		this.toolStrip2 = new System.Windows.Forms.ToolStrip();
+		this.btnNewHistory = new System.Windows.Forms.ToolStripButton();
+		this.btnRefreshHistory = new System.Windows.Forms.ToolStripButton();
+		this.btnGrnFormHistory = new System.Windows.Forms.ToolStripButton();
+		this.panel1.SuspendLayout();
+		this.tabControl1.SuspendLayout();
+		this.tabPage1.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)this.grd).BeginInit();
+		this.panel14.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)this.grdEmptyBags).BeginInit();
+		this.panel10.SuspendLayout();
+		this.panel5.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)this.combcropyear).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.combitem).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.CmbJobLot).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.combpckuom).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.CmbWareHouse).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.CmbCity).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.combpcktyp).BeginInit();
+		this.panel4.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)this.CmbDeliveryTerm).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.CmbTransport).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.combsupplier).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.combvehtyp).BeginInit();
+		this.panel2.SuspendLayout();
+		this.toolStrip1.SuspendLayout();
+		this.tabPage2.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)this.GrdHistory).BeginInit();
+		this.panel8.SuspendLayout();
+		this.panel11.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)this.GrdHistoryDetail).BeginInit();
+		this.panel23.SuspendLayout();
+		this.groupBox3.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)this.cmbSupplierNameHistory).BeginInit();
+		this.panel7.SuspendLayout();
+		this.toolStrip2.SuspendLayout();
+		base.SuspendLayout();
+		this.panel1.Controls.Add(this.tabControl1);
+		this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+		this.panel1.Location = new System.Drawing.Point(0, 0);
+		this.panel1.Margin = new System.Windows.Forms.Padding(2);
+		this.panel1.Name = "panel1";
+		this.panel1.Size = new System.Drawing.Size(914, 661);
+		this.panel1.TabIndex = 0;
+		this.tabControl1.Alignment = System.Windows.Forms.TabAlignment.Bottom;
+		this.tabControl1.Controls.Add(this.tabPage1);
+		this.tabControl1.Controls.Add(this.tabPage2);
+		this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+		this.tabControl1.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.tabControl1.Location = new System.Drawing.Point(0, 0);
+		this.tabControl1.Margin = new System.Windows.Forms.Padding(2);
+		this.tabControl1.Name = "tabControl1";
+		this.tabControl1.SelectedIndex = 0;
+		this.tabControl1.Size = new System.Drawing.Size(914, 661);
+		this.tabControl1.TabIndex = 0;
+		this.tabControl1.SelectedIndexChanged += new System.EventHandler(tabControl1_SelectedIndexChanged);
+		this.tabPage1.BackColor = System.Drawing.Color.White;
+		this.tabPage1.Controls.Add((System.Windows.Forms.Control)(object)this.grd);
+		this.tabPage1.Controls.Add(this.panel14);
+		this.tabPage1.Controls.Add((System.Windows.Forms.Control)(object)this.grdEmptyBags);
+		this.tabPage1.Controls.Add(this.panel10);
+		this.tabPage1.Controls.Add(this.panel5);
+		this.tabPage1.Controls.Add(this.panel4);
+		this.tabPage1.Controls.Add(this.panel2);
+		this.tabPage1.Location = new System.Drawing.Point(4, 4);
+		this.tabPage1.Margin = new System.Windows.Forms.Padding(2);
+		this.tabPage1.Name = "tabPage1";
+		this.tabPage1.Padding = new System.Windows.Forms.Padding(2);
+		this.tabPage1.Size = new System.Drawing.Size(906, 632);
+		this.tabPage1.TabIndex = 0;
+		this.tabPage1.Text = "Form";
+		this.grd.AllowDelete = (InheritableBoolean)1;
+		this.grd.AllowEdit = (InheritableBoolean)2;
+		((ScrollableBase)this.grd).BackColor = System.Drawing.Color.White;
+		grd_DesignTimeLayout.LayoutString = "<GridEXLayoutData><RootTable><GroupCondition /></RootTable></GridEXLayoutData>";
+		this.grd.DesignTimeLayout = grd_DesignTimeLayout;
+		((System.Windows.Forms.Control)(object)this.grd).Dock = System.Windows.Forms.DockStyle.Fill;
+		this.grd.FilterRowButtonStyle = (FilterRowButtonStyle)1;
+		((System.Windows.Forms.Control)(object)this.grd).Font = new System.Drawing.Font("Verdana", 8.25f);
+		this.grd.GroupByBoxFormatStyle.BackColorGradient = System.Drawing.Color.White;
+		this.grd.GroupByBoxVisible = false;
+		((System.Windows.Forms.Control)(object)this.grd).Location = new System.Drawing.Point(2, 326);
+		((System.Windows.Forms.Control)(object)this.grd).Name = "grd";
+		((ScrollableBase)this.grd).RecordNavigator = true;
+		((System.Windows.Forms.Control)(object)this.grd).Size = new System.Drawing.Size(902, 131);
+		((System.Windows.Forms.Control)(object)this.grd).TabIndex = 2;
+		((System.Windows.Forms.Control)(object)this.grd).TabStop = false;
+		this.grd.TotalRow = (InheritableBoolean)1;
+		this.grd.TotalRowPosition = (TotalRowPosition)1;
+		((ScrollableBase)this.grd).VisualStyle = (VisualStyle)4;
+		this.grd.ColumnButtonClick += new ColumnActionEventHandler(grd_ColumnButtonClick);
+		((System.Windows.Forms.Control)(object)this.grd).DoubleClick += new System.EventHandler(grd_DoubleClick);
+		((System.Windows.Forms.Control)(object)this.grd).KeyDown += new System.Windows.Forms.KeyEventHandler(grd_KeyDown);
+		this.panel14.BackColor = System.Drawing.Color.Teal;
+		this.panel14.Controls.Add(this.label18);
+		this.panel14.Controls.Add(this.ctrlGrdBar5);
+		this.panel14.Dock = System.Windows.Forms.DockStyle.Bottom;
+		this.panel14.Location = new System.Drawing.Point(2, 457);
+		this.panel14.Name = "panel14";
+		this.panel14.Size = new System.Drawing.Size(902, 20);
+		this.panel14.TabIndex = 8;
+		this.label18.AutoSize = true;
+		this.label18.Font = new System.Drawing.Font("Verdana", 9f, System.Drawing.FontStyle.Bold);
+		this.label18.ForeColor = System.Drawing.Color.White;
+		this.label18.Location = new System.Drawing.Point(3, 3);
+		this.label18.Name = "label18";
+		this.label18.Size = new System.Drawing.Size(458, 14);
+		this.label18.TabIndex = 25;
+		this.label18.Text = "This Grid show Empty Bags Info.User Can Add Empty Bags Info Here";
+		this.ctrlGrdBar5.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+		this.ctrlGrdBar5.FormName = this;
+		this.ctrlGrdBar5.Location = new System.Drawing.Point(853, -1);
+		this.ctrlGrdBar5.Margin = new System.Windows.Forms.Padding(4);
+		this.ctrlGrdBar5.MyGrid = this.grdEmptyBags;
+		this.ctrlGrdBar5.Name = "ctrlGrdBar5";
+		this.ctrlGrdBar5.Size = new System.Drawing.Size(45, 21);
+		this.ctrlGrdBar5.TabIndex = 24;
+		this.ctrlGrdBar5.Load += new System.EventHandler(ctrlGrdBar5_Load);
+		((ScrollableBase)this.grdEmptyBags).BackColor = System.Drawing.Color.White;
+		this.grdEmptyBags.ColumnAutoResize = true;
+		grdEmptyBags_DesignTimeLayout.LayoutString = "<GridEXLayoutData><RootTable><GroupCondition /></RootTable></GridEXLayoutData>";
+		this.grdEmptyBags.DesignTimeLayout = grdEmptyBags_DesignTimeLayout;
+		((System.Windows.Forms.Control)(object)this.grdEmptyBags).Dock = System.Windows.Forms.DockStyle.Bottom;
+		((System.Windows.Forms.Control)(object)this.grdEmptyBags).Font = new System.Drawing.Font("Verdana", 8.25f);
+		this.grdEmptyBags.GroupByBoxVisible = false;
+		((System.Windows.Forms.Control)(object)this.grdEmptyBags).Location = new System.Drawing.Point(2, 477);
+		((System.Windows.Forms.Control)(object)this.grdEmptyBags).Name = "grdEmptyBags";
+		((ScrollableBase)this.grdEmptyBags).RecordNavigator = true;
+		((System.Windows.Forms.Control)(object)this.grdEmptyBags).Size = new System.Drawing.Size(902, 153);
+		((System.Windows.Forms.Control)(object)this.grdEmptyBags).TabIndex = 7;
+		this.grdEmptyBags.TotalRow = (InheritableBoolean)1;
+		this.grdEmptyBags.TotalRowPosition = (TotalRowPosition)1;
+		((ScrollableBase)this.grdEmptyBags).VisualStyle = (VisualStyle)4;
+		this.grdEmptyBags.CellUpdated += new ColumnActionEventHandler(grdEmptyBags_CellUpdated);
+		this.grdEmptyBags.ColumnButtonClick += new ColumnActionEventHandler(grdEmptyBags_ColumnButtonClick);
+		((System.Windows.Forms.Control)(object)this.grdEmptyBags).KeyDown += new System.Windows.Forms.KeyEventHandler(grdEmptyBags_KeyDown);
+		this.panel10.BackColor = System.Drawing.Color.Teal;
+		this.panel10.Controls.Add(this.ctrlGrdBar1);
+		this.panel10.Controls.Add(this.label17);
+		this.panel10.Dock = System.Windows.Forms.DockStyle.Top;
+		this.panel10.Location = new System.Drawing.Point(2, 304);
+		this.panel10.Margin = new System.Windows.Forms.Padding(2);
+		this.panel10.Name = "panel10";
+		this.panel10.Size = new System.Drawing.Size(902, 22);
+		this.panel10.TabIndex = 5;
+		this.ctrlGrdBar1.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+		this.ctrlGrdBar1.FormName = this;
+		this.ctrlGrdBar1.Location = new System.Drawing.Point(853, 1);
+		this.ctrlGrdBar1.Margin = new System.Windows.Forms.Padding(4);
+		this.ctrlGrdBar1.MyGrid = this.grd;
+		this.ctrlGrdBar1.Name = "ctrlGrdBar1";
+		this.ctrlGrdBar1.Size = new System.Drawing.Size(45, 21);
+		this.ctrlGrdBar1.TabIndex = 22;
+		this.label17.AutoSize = true;
+		this.label17.Font = new System.Drawing.Font("Tahoma", 12f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label17.ForeColor = System.Drawing.Color.White;
+		this.label17.Location = new System.Drawing.Point(6, 2);
+		this.label17.Name = "label17";
+		this.label17.Size = new System.Drawing.Size(58, 19);
+		this.label17.TabIndex = 0;
+		this.label17.Text = "Detail";
+		this.panel5.Controls.Add(this.rdSearchByCode);
+		this.panel5.Controls.Add(this.rdSearchByName);
+		this.panel5.Controls.Add(this.Add);
+		this.panel5.Controls.Add(this.txtebu);
+		this.panel5.Controls.Add(this.txtEmptyBagsTotal);
+		this.panel5.Controls.Add(this.label45);
+		this.panel5.Controls.Add(this.label44);
+		this.panel5.Controls.Add(this.label22);
+		this.panel5.Controls.Add((System.Windows.Forms.Control)(object)this.combcropyear);
+		this.panel5.Controls.Add(this.btnCancelUpdateDetial);
+		this.panel5.Controls.Add(this.btnUpdateDetail);
+		this.panel5.Controls.Add((System.Windows.Forms.Control)(object)this.combitem);
+		this.panel5.Controls.Add(this.label36);
+		this.panel5.Controls.Add(this.label40);
+		this.panel5.Controls.Add(this.label41);
+		this.panel5.Controls.Add((System.Windows.Forms.Control)(object)this.CmbJobLot);
+		this.panel5.Controls.Add((System.Windows.Forms.Control)(object)this.combpckuom);
+		this.panel5.Controls.Add(this.label1);
+		this.panel5.Controls.Add((System.Windows.Forms.Control)(object)this.CmbWareHouse);
+		this.panel5.Controls.Add((System.Windows.Forms.Control)(object)this.CmbCity);
+		this.panel5.Controls.Add(this.label42);
+		this.panel5.Controls.Add(this.label43);
+		this.panel5.Controls.Add((System.Windows.Forms.Control)(object)this.combpcktyp);
+		this.panel5.Controls.Add(this.label3);
+		this.panel5.Controls.Add(this.label35);
+		this.panel5.Controls.Add(this.label28);
+		this.panel5.Controls.Add(this.label46);
+		this.panel5.Controls.Add(this.txtnetwt);
+		this.panel5.Controls.Add(this.label29);
+		this.panel5.Controls.Add(this.txtstockwt);
+		this.panel5.Controls.Add(this.txtadlswt);
+		this.panel5.Controls.Add(this.txtqty);
+		this.panel5.Controls.Add(this.txtgwt);
+		this.panel5.Dock = System.Windows.Forms.DockStyle.Top;
+		this.panel5.Location = new System.Drawing.Point(2, 201);
+		this.panel5.Margin = new System.Windows.Forms.Padding(2);
+		this.panel5.Name = "panel5";
+		this.panel5.Size = new System.Drawing.Size(902, 103);
+		this.panel5.TabIndex = 1;
+		this.rdSearchByCode.AutoSize = true;
+		this.rdSearchByCode.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.rdSearchByCode.Location = new System.Drawing.Point(282, 5);
+		this.rdSearchByCode.Name = "rdSearchByCode";
+		this.rdSearchByCode.Size = new System.Drawing.Size(52, 19);
+		this.rdSearchByCode.TabIndex = 49;
+		this.rdSearchByCode.TabStop = true;
+		this.rdSearchByCode.Text = "Code";
+		this.rdSearchByCode.UseVisualStyleBackColor = true;
+		this.rdSearchByName.AutoSize = true;
+		this.rdSearchByName.Checked = true;
+		this.rdSearchByName.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.rdSearchByName.Location = new System.Drawing.Point(224, 5);
+		this.rdSearchByName.Name = "rdSearchByName";
+		this.rdSearchByName.Size = new System.Drawing.Size(57, 19);
+		this.rdSearchByName.TabIndex = 48;
+		this.rdSearchByName.TabStop = true;
+		this.rdSearchByName.Text = "Name";
+		this.rdSearchByName.UseVisualStyleBackColor = true;
+		this.rdSearchByName.CheckedChanged += new System.EventHandler(rdSearchByName_CheckedChanged);
+		this.Add.BackColor = System.Drawing.Color.Teal;
+		this.Add.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+		this.Add.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.Add.ForeColor = System.Drawing.Color.White;
+		this.Add.Location = new System.Drawing.Point(732, 71);
+		this.Add.Margin = new System.Windows.Forms.Padding(2);
+		this.Add.Name = "Add";
+		this.Add.Size = new System.Drawing.Size(39, 28);
+		this.Add.TabIndex = 14;
+		this.Add.Text = "+";
+		this.Add.UseVisualStyleBackColor = false;
+		this.Add.Click += new System.EventHandler(Add_Click);
+		this.txtebu.BackColor = System.Drawing.Color.White;
+		this.txtebu.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtebu.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtebu.Location = new System.Drawing.Point(105, 74);
+		this.txtebu.Name = "txtebu";
+		this.txtebu.Size = new System.Drawing.Size(78, 23);
+		this.txtebu.TabIndex = 8;
+		this.txtebu.Tag = "EbUnit";
+		this.txtebu.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+		this.txtebu.TextChanged += new System.EventHandler(txtebu_TextChanged);
+		this.txtebu.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtebu_KeyPress_1);
+		this.txtEmptyBagsTotal.BackColor = System.Drawing.Color.White;
+		this.txtEmptyBagsTotal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtEmptyBagsTotal.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtEmptyBagsTotal.Location = new System.Drawing.Point(186, 74);
+		this.txtEmptyBagsTotal.Name = "txtEmptyBagsTotal";
+		this.txtEmptyBagsTotal.Size = new System.Drawing.Size(78, 23);
+		this.txtEmptyBagsTotal.TabIndex = 9;
+		this.txtEmptyBagsTotal.Tag = "EbTotal";
+		this.txtEmptyBagsTotal.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+		this.txtEmptyBagsTotal.TextChanged += new System.EventHandler(txtEmptyBagsTotal_TextChanged);
+		this.txtEmptyBagsTotal.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtEmptyBagsTotal_KeyPress);
+		this.label45.AutoSize = true;
+		this.label45.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label45.Location = new System.Drawing.Point(186, 56);
+		this.label45.Name = "label45";
+		this.label45.Size = new System.Drawing.Size(52, 15);
+		this.label45.TabIndex = 46;
+		this.label45.Text = "E.b Total";
+		this.label44.AutoSize = true;
+		this.label44.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label44.Location = new System.Drawing.Point(109, 56);
+		this.label44.Name = "label44";
+		this.label44.Size = new System.Drawing.Size(56, 15);
+		this.label44.TabIndex = 47;
+		this.label44.Text = "E.b / Unit";
+		this.label22.AutoSize = true;
+		this.label22.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label22.Location = new System.Drawing.Point(393, 7);
+		this.label22.Name = "label22";
+		this.label22.Size = new System.Drawing.Size(57, 15);
+		this.label22.TabIndex = 43;
+		this.label22.Text = "Crop Year";
+		this.combcropyear.AllowNull = (DefaultableBoolean)1;
+		this.combcropyear.AutoCompleteMode = (AutoCompleteMode)4;
+		this.combcropyear.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.combcropyear.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance12).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance12).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Appearance = (AppearanceBase)(object)appearance12;
+		((UltraGridBase)this.combcropyear).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.combcropyear).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance14).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance14).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance14).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance14).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.combcropyear).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance14;
+		((AppearanceBase)appearance15).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combcropyear).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance15;
+		((SpecialBoxBase)((UltraGridBase)this.combcropyear).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance16).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance16).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance16).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance16).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combcropyear).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance16;
+		((UltraGridBase)this.combcropyear).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.combcropyear).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance17).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance17).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance17;
+		((AppearanceBase)appearance18).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance18).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance18;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance19).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance19;
+		((AppearanceBase)appearance20).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance20).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance20;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance21).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance21).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance21).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance21).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance21).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance21;
+		((AppearanceBase)appearance22).TextHAlignAsString = "Left";
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance22;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance23).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance23).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance23;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance25).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.combcropyear).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance25;
+		((UltraGridBase)this.combcropyear).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.combcropyear).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.combcropyear).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.combcropyear).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.combcropyear.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.combcropyear).Location = new System.Drawing.Point(390, 25);
+		((System.Windows.Forms.Control)(object)this.combcropyear).Name = "combcropyear";
+		((System.Windows.Forms.Control)(object)this.combcropyear).Size = new System.Drawing.Size(90, 26);
+		((System.Windows.Forms.Control)(object)this.combcropyear).TabIndex = 2;
+		this.btnCancelUpdateDetial.BackColor = System.Drawing.Color.Teal;
+		this.btnCancelUpdateDetial.FlatAppearance.BorderSize = 0;
+		this.btnCancelUpdateDetial.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+		this.btnCancelUpdateDetial.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.btnCancelUpdateDetial.ForeColor = System.Drawing.Color.White;
+		this.btnCancelUpdateDetial.Location = new System.Drawing.Point(812, 72);
+		this.btnCancelUpdateDetial.Name = "btnCancelUpdateDetial";
+		this.btnCancelUpdateDetial.Size = new System.Drawing.Size(65, 26);
+		this.btnCancelUpdateDetial.TabIndex = 16;
+		this.btnCancelUpdateDetial.Text = "Cancel";
+		this.btnCancelUpdateDetial.UseVisualStyleBackColor = false;
+		this.btnCancelUpdateDetial.Visible = false;
+		this.btnCancelUpdateDetial.Click += new System.EventHandler(btnCancelUpdateDetial_Click);
+		this.btnUpdateDetail.BackColor = System.Drawing.Color.Teal;
+		this.btnUpdateDetail.FlatAppearance.BorderSize = 0;
+		this.btnUpdateDetail.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+		this.btnUpdateDetail.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.btnUpdateDetail.ForeColor = System.Drawing.Color.White;
+		this.btnUpdateDetail.Location = new System.Drawing.Point(739, 72);
+		this.btnUpdateDetail.Name = "btnUpdateDetail";
+		this.btnUpdateDetail.Size = new System.Drawing.Size(70, 26);
+		this.btnUpdateDetail.TabIndex = 15;
+		this.btnUpdateDetail.Text = "Update";
+		this.btnUpdateDetail.UseVisualStyleBackColor = false;
+		this.btnUpdateDetail.Visible = false;
+		this.btnUpdateDetail.Click += new System.EventHandler(btnUpdateDetail_Click);
+		this.combitem.AllowNull = (DefaultableBoolean)1;
+		this.combitem.AutoCompleteMode = (AutoCompleteMode)4;
+		this.combitem.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.combitem.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance129).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance129).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.combitem).DisplayLayout.Appearance = (AppearanceBase)(object)appearance129;
+		((UltraGridBase)this.combitem).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.combitem).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance130).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance130).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance130).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance130).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.combitem).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance130;
+		((AppearanceBase)appearance131).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combitem).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance131;
+		((SpecialBoxBase)((UltraGridBase)this.combitem).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance132).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance132).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance132).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance132).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combitem).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance132;
+		((UltraGridBase)this.combitem).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.combitem).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance133).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance133).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance133;
+		((AppearanceBase)appearance135).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance135).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance135;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance136).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance136;
+		((AppearanceBase)appearance137).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance137).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance137;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance138).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance138).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance138).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance138).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance138).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance138;
+		((AppearanceBase)appearance139).TextHAlignAsString = "Left";
+		((UltraGridBase)this.combitem).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance139;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance140).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance140).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance140;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance141).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.combitem).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance141;
+		((UltraGridBase)this.combitem).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.combitem).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.combitem).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.combitem).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.combitem.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.combitem).Location = new System.Drawing.Point(186, 25);
+		((System.Windows.Forms.Control)(object)this.combitem).Name = "combitem";
+		((System.Windows.Forms.Control)(object)this.combitem).Size = new System.Drawing.Size(202, 26);
+		((System.Windows.Forms.Control)(object)this.combitem).TabIndex = 1;
+		this.combitem.ValueChanged += new System.EventHandler(combitem_Leave);
+		((System.Windows.Forms.Control)(object)this.combitem).Leave += new System.EventHandler(combitem_Leave);
+		this.label36.AutoSize = true;
+		this.label36.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label36.Location = new System.Drawing.Point(186, 7);
+		this.label36.Name = "label36";
+		this.label36.Size = new System.Drawing.Size(32, 15);
+		this.label36.TabIndex = 8;
+		this.label36.Text = "Item";
+		this.label40.AutoSize = true;
+		this.label40.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label40.Location = new System.Drawing.Point(618, 7);
+		this.label40.Name = "label40";
+		this.label40.Size = new System.Drawing.Size(77, 15);
+		this.label40.TabIndex = 17;
+		this.label40.Text = "Packing Type";
+		this.label41.AutoSize = true;
+		this.label41.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label41.Location = new System.Drawing.Point(793, 7);
+		this.label41.Name = "label41";
+		this.label41.Size = new System.Drawing.Size(26, 15);
+		this.label41.TabIndex = 19;
+		this.label41.Text = "Qty";
+		this.CmbJobLot.AllowNull = (DefaultableBoolean)1;
+		this.CmbJobLot.AutoCompleteMode = (AutoCompleteMode)4;
+		this.CmbJobLot.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.CmbJobLot.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance75).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance75).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Appearance = (AppearanceBase)(object)appearance75;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance76).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance76).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance76).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance76).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.CmbJobLot).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance76;
+		((AppearanceBase)appearance77).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance77;
+		((SpecialBoxBase)((UltraGridBase)this.CmbJobLot).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance78).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance78).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance78).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance78).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance78;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance79).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance79).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance79;
+		((AppearanceBase)appearance81).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance81).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance81;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance82).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance82;
+		((AppearanceBase)appearance83).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance83).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance83;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance84).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance84).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance84).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance84).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance84).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance84;
+		((AppearanceBase)appearance85).TextHAlignAsString = "Left";
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance85;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance86).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance86).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance86;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance87).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance87;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.CmbJobLot).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.CmbJobLot).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.CmbJobLot.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.CmbJobLot).Location = new System.Drawing.Point(482, 25);
+		((System.Windows.Forms.Control)(object)this.CmbJobLot).Name = "CmbJobLot";
+		((System.Windows.Forms.Control)(object)this.CmbJobLot).Size = new System.Drawing.Size(132, 26);
+		((System.Windows.Forms.Control)(object)this.CmbJobLot).TabIndex = 3;
+		this.combpckuom.AllowNull = (DefaultableBoolean)1;
+		this.combpckuom.AutoCompleteMode = (AutoCompleteMode)4;
+		this.combpckuom.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.combpckuom.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance101).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance101).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Appearance = (AppearanceBase)(object)appearance101;
+		((UltraGridBase)this.combpckuom).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.combpckuom).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance103).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance103).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance103).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance103).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.combpckuom).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance103;
+		((AppearanceBase)appearance104).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combpckuom).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance104;
+		((SpecialBoxBase)((UltraGridBase)this.combpckuom).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance105).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance105).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance105).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance105).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combpckuom).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance105;
+		((UltraGridBase)this.combpckuom).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.combpckuom).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance106).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance106).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance106;
+		((AppearanceBase)appearance107).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance107).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance107;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance108).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance108;
+		((AppearanceBase)appearance109).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance109).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance109;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance110).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance110).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance110).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance110).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance110).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance110;
+		((AppearanceBase)appearance111).TextHAlignAsString = "Left";
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance111;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance112).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance112).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance112;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance114).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.combpckuom).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance114;
+		((UltraGridBase)this.combpckuom).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.combpckuom).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.combpckuom).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.combpckuom).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.combpckuom.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.combpckuom).Location = new System.Drawing.Point(723, 25);
+		((System.Windows.Forms.Control)(object)this.combpckuom).Name = "combpckuom";
+		((System.Windows.Forms.Control)(object)this.combpckuom).Size = new System.Drawing.Size(66, 26);
+		((System.Windows.Forms.Control)(object)this.combpckuom).TabIndex = 5;
+		((System.Windows.Forms.Control)(object)this.combpckuom).Leave += new System.EventHandler(combpckuom_Leave);
+		this.label1.AutoSize = true;
+		this.label1.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label1.Location = new System.Drawing.Point(485, 7);
+		this.label1.Name = "label1";
+		this.label1.Size = new System.Drawing.Size(43, 15);
+		this.label1.TabIndex = 21;
+		this.label1.Text = "JobLot";
+		this.CmbWareHouse.AllowNull = (DefaultableBoolean)1;
+		this.CmbWareHouse.AutoCompleteMode = (AutoCompleteMode)4;
+		this.CmbWareHouse.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.CmbWareHouse.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance88).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance88).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Appearance = (AppearanceBase)(object)appearance88;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance89).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance89).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance89).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance89).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.CmbWareHouse).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance89;
+		((AppearanceBase)appearance90).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance90;
+		((SpecialBoxBase)((UltraGridBase)this.CmbWareHouse).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance92).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance92).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance92).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance92).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance92;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance93).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance93).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance93;
+		((AppearanceBase)appearance94).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance94).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance94;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance95).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance95;
+		((AppearanceBase)appearance96).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance96).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance96;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance97).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance97).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance97).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance97).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance97).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance97;
+		((AppearanceBase)appearance98).TextHAlignAsString = "Left";
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance98;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance99).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance99).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance99;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance100).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance100;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.CmbWareHouse).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.CmbWareHouse).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.CmbWareHouse.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.CmbWareHouse).Location = new System.Drawing.Point(4, 25);
+		((System.Windows.Forms.Control)(object)this.CmbWareHouse).Name = "CmbWareHouse";
+		((System.Windows.Forms.Control)(object)this.CmbWareHouse).Size = new System.Drawing.Size(179, 26);
+		((System.Windows.Forms.Control)(object)this.CmbWareHouse).TabIndex = 0;
+		this.CmbCity.AllowNull = (DefaultableBoolean)1;
+		this.CmbCity.AutoCompleteMode = (AutoCompleteMode)4;
+		this.CmbCity.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.CmbCity.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance26).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance26).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Appearance = (AppearanceBase)(object)appearance26;
+		((UltraGridBase)this.CmbCity).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.CmbCity).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance34).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance34).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance34).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance34).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.CmbCity).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance34;
+		((AppearanceBase)appearance40).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbCity).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance40;
+		((SpecialBoxBase)((UltraGridBase)this.CmbCity).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance41).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance41).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance41).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance41).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbCity).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance41;
+		((UltraGridBase)this.CmbCity).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.CmbCity).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance43).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance43).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance43;
+		((AppearanceBase)appearance54).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance54).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance54;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance65).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance65;
+		((AppearanceBase)appearance70).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance70).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance70;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance71).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance71).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance71).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance71).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance71).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance71;
+		((AppearanceBase)appearance72).TextHAlignAsString = "Left";
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance72;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance73).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance73).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance73;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance74).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.CmbCity).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance74;
+		((UltraGridBase)this.CmbCity).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.CmbCity).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.CmbCity).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.CmbCity).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.CmbCity.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.CmbCity).Location = new System.Drawing.Point(569, 72);
+		((System.Windows.Forms.Control)(object)this.CmbCity).Name = "CmbCity";
+		((System.Windows.Forms.Control)(object)this.CmbCity).Size = new System.Drawing.Size(162, 26);
+		((System.Windows.Forms.Control)(object)this.CmbCity).TabIndex = 13;
+		this.label42.AutoSize = true;
+		this.label42.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label42.Location = new System.Drawing.Point(726, 7);
+		this.label42.Name = "label42";
+		this.label42.Size = new System.Drawing.Size(63, 15);
+		this.label42.TabIndex = 21;
+		this.label42.Text = "Pack UOM";
+		this.label43.AutoSize = true;
+		this.label43.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label43.Location = new System.Drawing.Point(4, 56);
+		this.label43.Name = "label43";
+		this.label43.Size = new System.Drawing.Size(78, 15);
+		this.label43.TabIndex = 23;
+		this.label43.Text = "Gross Weight";
+		this.combpcktyp.AllowNull = (DefaultableBoolean)1;
+		this.combpcktyp.AutoCompleteMode = (AutoCompleteMode)4;
+		this.combpcktyp.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.combpcktyp.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance115).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance115).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Appearance = (AppearanceBase)(object)appearance115;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance116).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance116).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance116).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance116).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.combpcktyp).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance116;
+		((AppearanceBase)appearance117).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance117;
+		((SpecialBoxBase)((UltraGridBase)this.combpcktyp).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance118).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance118).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance118).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance118).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance118;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance119).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance119).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance119;
+		((AppearanceBase)appearance120).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance120).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance120;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance121).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance121;
+		((AppearanceBase)appearance122).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance122).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance122;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance123).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance123).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance123).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance123).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance123).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance123;
+		((AppearanceBase)appearance125).TextHAlignAsString = "Left";
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance125;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance126).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance126).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance126;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance127).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance127;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.combpcktyp).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.combpcktyp).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.combpcktyp.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.combpcktyp).Location = new System.Drawing.Point(617, 25);
+		((System.Windows.Forms.Control)(object)this.combpcktyp).Name = "combpcktyp";
+		((System.Windows.Forms.Control)(object)this.combpcktyp).Size = new System.Drawing.Size(103, 26);
+		((System.Windows.Forms.Control)(object)this.combpcktyp).TabIndex = 4;
+		((System.Windows.Forms.Control)(object)this.combpcktyp).Leave += new System.EventHandler(combpcktyp_Leave);
+		this.label3.AutoSize = true;
+		this.label3.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label3.Location = new System.Drawing.Point(4, 7);
+		this.label3.Name = "label3";
+		this.label3.Size = new System.Drawing.Size(67, 15);
+		this.label3.TabIndex = 25;
+		this.label3.Text = "Warehouse";
+		this.label35.AutoSize = true;
+		this.label35.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label35.Location = new System.Drawing.Point(266, 56);
+		this.label35.Name = "label35";
+		this.label35.Size = new System.Drawing.Size(38, 15);
+		this.label35.TabIndex = 25;
+		this.label35.Text = "Ad/Ls";
+		this.label28.AutoSize = true;
+		this.label28.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label28.Location = new System.Drawing.Point(570, 56);
+		this.label28.Name = "label28";
+		this.label28.Size = new System.Drawing.Size(56, 15);
+		this.label28.TabIndex = 25;
+		this.label28.Text = "City/Area";
+		this.label46.AutoSize = true;
+		this.label46.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label46.Location = new System.Drawing.Point(330, 56);
+		this.label46.Name = "label46";
+		this.label46.Size = new System.Drawing.Size(68, 15);
+		this.label46.TabIndex = 25;
+		this.label46.Text = "Net Weight";
+		this.txtnetwt.BackColor = System.Drawing.Color.White;
+		this.txtnetwt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtnetwt.Enabled = false;
+		this.txtnetwt.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtnetwt.Location = new System.Drawing.Point(330, 74);
+		this.txtnetwt.Name = "txtnetwt";
+		this.txtnetwt.Size = new System.Drawing.Size(118, 23);
+		this.txtnetwt.TabIndex = 11;
+		this.txtnetwt.TabStop = false;
+		this.txtnetwt.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtnetwt_KeyPress);
+		this.label29.AutoSize = true;
+		this.label29.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label29.Location = new System.Drawing.Point(449, 56);
+		this.label29.Name = "label29";
+		this.label29.Size = new System.Drawing.Size(79, 15);
+		this.label29.TabIndex = 25;
+		this.label29.Text = "Stock Weight";
+		this.txtstockwt.BackColor = System.Drawing.Color.White;
+		this.txtstockwt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtstockwt.Enabled = false;
+		this.txtstockwt.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtstockwt.Location = new System.Drawing.Point(449, 74);
+		this.txtstockwt.Name = "txtstockwt";
+		this.txtstockwt.Size = new System.Drawing.Size(118, 23);
+		this.txtstockwt.TabIndex = 12;
+		this.txtstockwt.TabStop = false;
+		this.txtstockwt.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtstockwt_KeyPress);
+		this.txtadlswt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtadlswt.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtadlswt.Location = new System.Drawing.Point(266, 74);
+		this.txtadlswt.Name = "txtadlswt";
+		this.txtadlswt.Size = new System.Drawing.Size(62, 23);
+		this.txtadlswt.TabIndex = 10;
+		this.txtadlswt.TextChanged += new System.EventHandler(txtadlswt_TextChanged);
+		this.txtadlswt.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtadlswt_KeyPress);
+		this.txtqty.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtqty.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtqty.Location = new System.Drawing.Point(791, 27);
+		this.txtqty.Name = "txtqty";
+		this.txtqty.Size = new System.Drawing.Size(85, 23);
+		this.txtqty.TabIndex = 6;
+		this.txtqty.TextChanged += new System.EventHandler(txtqty_TextChanged);
+		this.txtqty.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtqty_KeyPress);
+		this.txtgwt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtgwt.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtgwt.Location = new System.Drawing.Point(4, 74);
+		this.txtgwt.Name = "txtgwt";
+		this.txtgwt.Size = new System.Drawing.Size(99, 23);
+		this.txtgwt.TabIndex = 7;
+		this.txtgwt.TextChanged += new System.EventHandler(txtgwt_TextChanged);
+		this.txtgwt.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtgwt_KeyPress);
+		this.panel4.Controls.Add(this.lblBalwt);
+		this.panel4.Controls.Add(this.txtBalWeight);
+		this.panel4.Controls.Add((System.Windows.Forms.Control)(object)this.CmbDeliveryTerm);
+		this.panel4.Controls.Add((System.Windows.Forms.Control)(object)this.CmbTransport);
+		this.panel4.Controls.Add(this.txtremarks);
+		this.panel4.Controls.Add((System.Windows.Forms.Control)(object)this.combsupplier);
+		this.panel4.Controls.Add(this.txtdocno);
+		this.panel4.Controls.Add(this.label34);
+		this.panel4.Controls.Add(this.label33);
+		this.panel4.Controls.Add(this.label32);
+		this.panel4.Controls.Add(this.label9);
+		this.panel4.Controls.Add(this.label23);
+		this.panel4.Controls.Add(this.label15);
+		this.panel4.Controls.Add(this.label14);
+		this.panel4.Controls.Add(this.label53);
+		this.panel4.Controls.Add(this.label4);
+		this.panel4.Controls.Add((System.Windows.Forms.Control)(object)this.combvehtyp);
+		this.panel4.Controls.Add(this.label8);
+		this.panel4.Controls.Add(this.label25);
+		this.panel4.Controls.Add(this.label24);
+		this.panel4.Controls.Add(this.label19);
+		this.panel4.Controls.Add(this.label48);
+		this.panel4.Controls.Add(this.label21);
+		this.panel4.Controls.Add(this.label26);
+		this.panel4.Controls.Add(this.txtGpNo);
+		this.panel4.Controls.Add(this.txtbltyno);
+		this.panel4.Controls.Add(this.label11);
+		this.panel4.Controls.Add(this.txtvehno);
+		this.panel4.Controls.Add(this.txtcarramount);
+		this.panel4.Controls.Add(this.label6);
+		this.panel4.Controls.Add(this.label20);
+		this.panel4.Controls.Add(this.txtsuppwt);
+		this.panel4.Controls.Add(this.txtfctwt);
+		this.panel4.Controls.Add(this.txtwtdiff);
+		this.panel4.Controls.Add(this.label2);
+		this.panel4.Controls.Add(this.DocDate);
+		this.panel4.Controls.Add(this.label5);
+		this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
+		this.panel4.Location = new System.Drawing.Point(2, 55);
+		this.panel4.Margin = new System.Windows.Forms.Padding(2);
+		this.panel4.Name = "panel4";
+		this.panel4.Size = new System.Drawing.Size(902, 146);
+		this.panel4.TabIndex = 0;
+		this.lblBalwt.AutoSize = true;
+		this.lblBalwt.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.lblBalwt.Location = new System.Drawing.Point(650, 120);
+		this.lblBalwt.Name = "lblBalwt";
+		this.lblBalwt.Size = new System.Drawing.Size(73, 15);
+		this.lblBalwt.TabIndex = 585;
+		this.lblBalwt.Text = "GRN Weight";
+		this.txtBalWeight.BackColor = System.Drawing.SystemColors.Menu;
+		this.txtBalWeight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtBalWeight.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtBalWeight.Location = new System.Drawing.Point(741, 116);
+		this.txtBalWeight.Name = "txtBalWeight";
+		this.txtBalWeight.ReadOnly = true;
+		this.txtBalWeight.Size = new System.Drawing.Size(142, 23);
+		this.txtBalWeight.TabIndex = 584;
+		this.txtBalWeight.TabStop = false;
+		this.CmbDeliveryTerm.AllowNull = (DefaultableBoolean)1;
+		this.CmbDeliveryTerm.AutoCompleteMode = (AutoCompleteMode)4;
+		this.CmbDeliveryTerm.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.CmbDeliveryTerm.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance42).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance42).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Appearance = (AppearanceBase)(object)appearance42;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance44).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance44).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance44).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance44).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance44;
+		((AppearanceBase)appearance45).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance45;
+		((SpecialBoxBase)((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance46).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance46).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance46).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance46).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance46;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance47).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance47).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance47;
+		((AppearanceBase)appearance48).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance48).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance48;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance49).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance49;
+		((AppearanceBase)appearance50).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance50).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance50;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance51).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance51).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance51).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance51).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance51).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance51;
+		((AppearanceBase)appearance52).TextHAlignAsString = "Left";
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance52;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance53).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance53).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance53;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance55).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance55;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.CmbDeliveryTerm).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.CmbDeliveryTerm).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.CmbDeliveryTerm.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.CmbDeliveryTerm).Location = new System.Drawing.Point(107, 59);
+		((System.Windows.Forms.Control)(object)this.CmbDeliveryTerm).Name = "CmbDeliveryTerm";
+		((System.Windows.Forms.Control)(object)this.CmbDeliveryTerm).Size = new System.Drawing.Size(283, 26);
+		((System.Windows.Forms.Control)(object)this.CmbDeliveryTerm).TabIndex = 3;
+		((System.Windows.Forms.Control)(object)this.CmbDeliveryTerm).TextChanged += new System.EventHandler(CmbDeliveryTerm_TextChanged);
+		((System.Windows.Forms.Control)(object)this.CmbDeliveryTerm).Leave += new System.EventHandler(CmbDeliveryTerm_Leave);
+		this.CmbTransport.AllowNull = (DefaultableBoolean)1;
+		this.CmbTransport.AutoCompleteMode = (AutoCompleteMode)4;
+		this.CmbTransport.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.CmbTransport.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance27).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance27).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Appearance = (AppearanceBase)(object)appearance27;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance28).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance28).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance28).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance28).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.CmbTransport).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance28;
+		((AppearanceBase)appearance29).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance29;
+		((SpecialBoxBase)((UltraGridBase)this.CmbTransport).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance30).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance30).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance30).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance30).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance30;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance31).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance31).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance31;
+		((AppearanceBase)appearance32).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance32).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance32;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance33).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance33;
+		((AppearanceBase)appearance35).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance35).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance35;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance36).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance36).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance36).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance36).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance36).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance36;
+		((AppearanceBase)appearance37).TextHAlignAsString = "Left";
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance37;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance38).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance38).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance38;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance39).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance39;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.CmbTransport).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.CmbTransport).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.CmbTransport.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.CmbTransport).Location = new System.Drawing.Point(107, 87);
+		((System.Windows.Forms.Control)(object)this.CmbTransport).Name = "CmbTransport";
+		((System.Windows.Forms.Control)(object)this.CmbTransport).Size = new System.Drawing.Size(283, 26);
+		((System.Windows.Forms.Control)(object)this.CmbTransport).TabIndex = 4;
+		this.txtremarks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtremarks.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtremarks.Location = new System.Drawing.Point(107, 116);
+		this.txtremarks.Name = "txtremarks";
+		this.txtremarks.Size = new System.Drawing.Size(532, 23);
+		this.txtremarks.TabIndex = 5;
+		this.combsupplier.AllowNull = (DefaultableBoolean)1;
+		this.combsupplier.AutoCompleteMode = (AutoCompleteMode)4;
+		this.combsupplier.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.combsupplier.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance56).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance56).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Appearance = (AppearanceBase)(object)appearance56;
+		((UltraGridBase)this.combsupplier).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.combsupplier).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance57).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance57).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance57).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance57).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.combsupplier).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance57;
+		((AppearanceBase)appearance58).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combsupplier).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance58;
+		((SpecialBoxBase)((UltraGridBase)this.combsupplier).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance59).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance59).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance59).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance59).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combsupplier).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance59;
+		((UltraGridBase)this.combsupplier).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.combsupplier).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance60).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance60).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance60;
+		((AppearanceBase)appearance61).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance61).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance61;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance62).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance62;
+		((AppearanceBase)appearance63).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance63).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance63;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance64).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance64).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance64).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance64).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance64).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance64;
+		((AppearanceBase)appearance66).TextHAlignAsString = "Left";
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance66;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance67).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance67).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance67;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance68).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.combsupplier).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance68;
+		((UltraGridBase)this.combsupplier).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.combsupplier).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.combsupplier).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.combsupplier).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.combsupplier.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.combsupplier).Location = new System.Drawing.Point(107, 30);
+		((System.Windows.Forms.Control)(object)this.combsupplier).Name = "combsupplier";
+		((System.Windows.Forms.Control)(object)this.combsupplier).Size = new System.Drawing.Size(283, 26);
+		((System.Windows.Forms.Control)(object)this.combsupplier).TabIndex = 2;
+		this.txtdocno.BackColor = System.Drawing.Color.White;
+		this.txtdocno.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtdocno.Enabled = false;
+		this.txtdocno.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtdocno.Location = new System.Drawing.Point(107, 4);
+		this.txtdocno.Name = "txtdocno";
+		this.txtdocno.Size = new System.Drawing.Size(134, 23);
+		this.txtdocno.TabIndex = 0;
+		this.label34.AutoSize = true;
+		this.label34.Font = new System.Drawing.Font("Segoe UI", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label34.ForeColor = System.Drawing.Color.Red;
+		this.label34.Location = new System.Drawing.Point(94, 35);
+		this.label34.Name = "label34";
+		this.label34.Size = new System.Drawing.Size(14, 17);
+		this.label34.TabIndex = 4;
+		this.label34.Text = "*";
+		this.label33.AutoSize = true;
+		this.label33.Font = new System.Drawing.Font("Segoe UI", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label33.ForeColor = System.Drawing.Color.Red;
+		this.label33.Location = new System.Drawing.Point(726, 35);
+		this.label33.Name = "label33";
+		this.label33.Size = new System.Drawing.Size(14, 17);
+		this.label33.TabIndex = 11;
+		this.label33.Text = "*";
+		this.label32.AutoSize = true;
+		this.label32.Font = new System.Drawing.Font("Segoe UI", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label32.ForeColor = System.Drawing.Color.Red;
+		this.label32.Location = new System.Drawing.Point(726, 64);
+		this.label32.Name = "label32";
+		this.label32.Size = new System.Drawing.Size(14, 17);
+		this.label32.TabIndex = 12;
+		this.label32.Text = "*";
+		this.label9.AutoSize = true;
+		this.label9.Font = new System.Drawing.Font("Segoe UI", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label9.ForeColor = System.Drawing.Color.Red;
+		this.label9.Location = new System.Drawing.Point(472, 35);
+		this.label9.Name = "label9";
+		this.label9.Size = new System.Drawing.Size(14, 17);
+		this.label9.TabIndex = 10;
+		this.label9.Text = "*";
+		this.label23.AutoSize = true;
+		this.label23.Font = new System.Drawing.Font("Segoe UI", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label23.ForeColor = System.Drawing.Color.Red;
+		this.label23.Location = new System.Drawing.Point(726, 7);
+		this.label23.Name = "label23";
+		this.label23.Size = new System.Drawing.Size(14, 17);
+		this.label23.TabIndex = 10;
+		this.label23.Text = "*";
+		this.label15.AutoSize = true;
+		this.label15.Font = new System.Drawing.Font("Segoe UI", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label15.ForeColor = System.Drawing.Color.Red;
+		this.label15.Location = new System.Drawing.Point(472, 92);
+		this.label15.Name = "label15";
+		this.label15.Size = new System.Drawing.Size(14, 17);
+		this.label15.TabIndex = 9;
+		this.label15.Text = "*";
+		this.label14.AutoSize = true;
+		this.label14.Font = new System.Drawing.Font("Segoe UI", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label14.ForeColor = System.Drawing.Color.Red;
+		this.label14.Location = new System.Drawing.Point(472, 64);
+		this.label14.Name = "label14";
+		this.label14.Size = new System.Drawing.Size(14, 17);
+		this.label14.TabIndex = 8;
+		this.label14.Text = "*";
+		this.label53.AutoSize = true;
+		this.label53.Font = new System.Drawing.Font("Segoe UI", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label53.ForeColor = System.Drawing.Color.Red;
+		this.label53.Location = new System.Drawing.Point(94, 64);
+		this.label53.Name = "label53";
+		this.label53.Size = new System.Drawing.Size(14, 17);
+		this.label53.TabIndex = 5;
+		this.label53.Text = "*";
+		this.label4.AutoSize = true;
+		this.label4.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label4.Location = new System.Drawing.Point(7, 65);
+		this.label4.Name = "label4";
+		this.label4.Size = new System.Drawing.Size(80, 15);
+		this.label4.TabIndex = 583;
+		this.label4.Text = "Delivery Term";
+		this.combvehtyp.AllowNull = (DefaultableBoolean)1;
+		this.combvehtyp.AutoCompleteMode = (AutoCompleteMode)4;
+		this.combvehtyp.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.combvehtyp.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance142).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance142).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Appearance = (AppearanceBase)(object)appearance142;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance143).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance143).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance143).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance143).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.combvehtyp).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance143;
+		((AppearanceBase)appearance144).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance144;
+		((SpecialBoxBase)((UltraGridBase)this.combvehtyp).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance3).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance3).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance3).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance3).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance3;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance4).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance4).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance4;
+		((AppearanceBase)appearance5).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance5).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance5;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance6).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance6;
+		((AppearanceBase)appearance7).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance7).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance7;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance8).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance8).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance8).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance8).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance8).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance8;
+		((AppearanceBase)appearance9).TextHAlignAsString = "Left";
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance9;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance10).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance10).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance10;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance11).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance11;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.combvehtyp).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.combvehtyp).Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.combvehtyp.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.combvehtyp).Location = new System.Drawing.Point(486, 59);
+		((System.Windows.Forms.Control)(object)this.combvehtyp).Name = "combvehtyp";
+		((System.Windows.Forms.Control)(object)this.combvehtyp).Size = new System.Drawing.Size(153, 26);
+		((System.Windows.Forms.Control)(object)this.combvehtyp).TabIndex = 8;
+		this.label8.AutoSize = true;
+		this.label8.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label8.Location = new System.Drawing.Point(399, 36);
+		this.label8.Name = "label8";
+		this.label8.Size = new System.Drawing.Size(41, 15);
+		this.label8.TabIndex = 3;
+		this.label8.Text = "Gp No";
+		this.label25.AutoSize = true;
+		this.label25.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label25.Location = new System.Drawing.Point(650, 8);
+		this.label25.Name = "label25";
+		this.label25.Size = new System.Drawing.Size(49, 15);
+		this.label25.TabIndex = 3;
+		this.label25.Text = "Bilty No";
+		this.label24.AutoSize = true;
+		this.label24.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label24.Location = new System.Drawing.Point(7, 120);
+		this.label24.Name = "label24";
+		this.label24.Size = new System.Drawing.Size(52, 15);
+		this.label24.TabIndex = 0;
+		this.label24.Text = "Remarks";
+		this.label19.AutoSize = true;
+		this.label19.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label19.Location = new System.Drawing.Point(399, 93);
+		this.label19.Name = "label19";
+		this.label19.Size = new System.Drawing.Size(64, 15);
+		this.label19.TabIndex = 0;
+		this.label19.Text = "Vehicle No";
+		this.label48.AutoSize = true;
+		this.label48.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label48.Location = new System.Drawing.Point(7, 93);
+		this.label48.Name = "label48";
+		this.label48.Size = new System.Drawing.Size(67, 15);
+		this.label48.TabIndex = 8;
+		this.label48.Text = "Transporter";
+		this.label21.AutoSize = true;
+		this.label21.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label21.Location = new System.Drawing.Point(399, 65);
+		this.label21.Name = "label21";
+		this.label21.Size = new System.Drawing.Size(73, 15);
+		this.label21.TabIndex = 8;
+		this.label21.Text = "Vehicle Type";
+		this.label26.AutoSize = true;
+		this.label26.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label26.Location = new System.Drawing.Point(399, 8);
+		this.label26.Name = "label26";
+		this.label26.Size = new System.Drawing.Size(70, 15);
+		this.label26.TabIndex = 8;
+		this.label26.Text = "Freight Amt";
+		this.txtGpNo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtGpNo.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtGpNo.Location = new System.Drawing.Point(486, 32);
+		this.txtGpNo.Name = "txtGpNo";
+		this.txtGpNo.Size = new System.Drawing.Size(153, 23);
+		this.txtGpNo.TabIndex = 7;
+		this.txtGpNo.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtGpNo_KeyPress);
+		this.txtbltyno.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtbltyno.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtbltyno.Location = new System.Drawing.Point(741, 4);
+		this.txtbltyno.Name = "txtbltyno";
+		this.txtbltyno.Size = new System.Drawing.Size(142, 23);
+		this.txtbltyno.TabIndex = 10;
+		this.label11.AutoSize = true;
+		this.label11.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label11.Location = new System.Drawing.Point(650, 93);
+		this.label11.Name = "label11";
+		this.label11.Size = new System.Drawing.Size(69, 15);
+		this.label11.TabIndex = 0;
+		this.label11.Text = "Weight Diff";
+		this.txtvehno.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtvehno.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtvehno.Location = new System.Drawing.Point(486, 89);
+		this.txtvehno.Name = "txtvehno";
+		this.txtvehno.Size = new System.Drawing.Size(153, 23);
+		this.txtvehno.TabIndex = 9;
+		this.txtcarramount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtcarramount.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtcarramount.Location = new System.Drawing.Point(486, 4);
+		this.txtcarramount.Name = "txtcarramount";
+		this.txtcarramount.Size = new System.Drawing.Size(153, 23);
+		this.txtcarramount.TabIndex = 6;
+		this.txtcarramount.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtcarramount_KeyPress);
+		this.label6.AutoSize = true;
+		this.label6.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label6.Location = new System.Drawing.Point(650, 36);
+		this.label6.Name = "label6";
+		this.label6.Size = new System.Drawing.Size(77, 15);
+		this.label6.TabIndex = 0;
+		this.label6.Text = "Supp Weight";
+		this.label20.AutoSize = true;
+		this.label20.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label20.Location = new System.Drawing.Point(650, 65);
+		this.label20.Name = "label20";
+		this.label20.Size = new System.Drawing.Size(71, 15);
+		this.label20.TabIndex = 3;
+		this.label20.Text = "Fact Weight";
+		this.txtsuppwt.BackColor = System.Drawing.Color.White;
+		this.txtsuppwt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtsuppwt.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtsuppwt.Location = new System.Drawing.Point(741, 32);
+		this.txtsuppwt.Name = "txtsuppwt";
+		this.txtsuppwt.Size = new System.Drawing.Size(142, 23);
+		this.txtsuppwt.TabIndex = 11;
+		this.txtsuppwt.TextChanged += new System.EventHandler(txtsuppwt_TextChanged);
+		this.txtsuppwt.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtsuppwt_KeyPress);
+		this.txtfctwt.BackColor = System.Drawing.Color.White;
+		this.txtfctwt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtfctwt.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtfctwt.Location = new System.Drawing.Point(741, 61);
+		this.txtfctwt.Name = "txtfctwt";
+		this.txtfctwt.Size = new System.Drawing.Size(142, 23);
+		this.txtfctwt.TabIndex = 12;
+		this.txtfctwt.TextChanged += new System.EventHandler(txtfctwt_TextChanged);
+		this.txtfctwt.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtfctwt_KeyPress);
+		this.txtwtdiff.BackColor = System.Drawing.Color.White;
+		this.txtwtdiff.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this.txtwtdiff.Enabled = false;
+		this.txtwtdiff.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.txtwtdiff.Location = new System.Drawing.Point(741, 89);
+		this.txtwtdiff.Name = "txtwtdiff";
+		this.txtwtdiff.Size = new System.Drawing.Size(142, 23);
+		this.txtwtdiff.TabIndex = 13;
+		this.txtwtdiff.TabStop = false;
+		this.label2.AutoSize = true;
+		this.label2.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label2.Location = new System.Drawing.Point(7, 36);
+		this.label2.Name = "label2";
+		this.label2.Size = new System.Drawing.Size(86, 15);
+		this.label2.TabIndex = 0;
+		this.label2.Text = "Supplier Name";
+		this.DocDate.CustomFormat = "dd-MMM-yy";
+		this.DocDate.Font = new System.Drawing.Font("Verdana", 9f);
+		this.DocDate.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+		this.DocDate.Location = new System.Drawing.Point(243, 4);
+		this.DocDate.Name = "DocDate";
+		this.DocDate.Size = new System.Drawing.Size(147, 22);
+		this.DocDate.TabIndex = 1;
+		this.DocDate.TabStop = false;
+		this.label5.AutoSize = true;
+		this.label5.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label5.Location = new System.Drawing.Point(7, 8);
+		this.label5.Name = "label5";
+		this.label5.Size = new System.Drawing.Size(88, 15);
+		this.label5.TabIndex = 3;
+		this.label5.Text = "Doc No && Date";
+		this.panel2.BackColor = System.Drawing.Color.Teal;
+		this.panel2.Controls.Add(this.toolStrip1);
+		this.panel2.Controls.Add(this.label7);
+		this.panel2.Controls.Add(this.ChkBox);
+		this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
+		this.panel2.Location = new System.Drawing.Point(2, 2);
+		this.panel2.Margin = new System.Windows.Forms.Padding(2);
+		this.panel2.Name = "panel2";
+		this.panel2.Size = new System.Drawing.Size(902, 53);
+		this.panel2.TabIndex = 3;
+		this.toolStrip1.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+		this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[17]
+		{
+			this.btnNew, this.BtnRefresh, this.toolStripSeparator5, this.btnSave, this.btnUpdate, this.btnDelete, this.toolStripSeparator4, this.btnAttachment, this.toolStripSeparator3, this.BtnPrint,
+			this.toolStripSeparator2, this.CityDefine, this.toolStripSeparator1, this.BtnLoadOrder, this.toolStripSeparator6, this.BtnShortCutkeys, this.toolStripSeparator7
+		});
+		this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+		this.toolStrip1.Name = "toolStrip1";
+		this.toolStrip1.Size = new System.Drawing.Size(902, 27);
+		this.toolStrip1.TabIndex = 0;
+		this.toolStrip1.Text = "toolStrip1";
+		this.btnNew.Image = Architecture.WinApp.Properties.Resources.icons8_add_20;
+		this.btnNew.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.btnNew.Name = "btnNew";
+		this.btnNew.Size = new System.Drawing.Size(59, 24);
+		this.btnNew.Text = "&New";
+		this.btnNew.ToolTipText = "Ctrl_N";
+		this.btnNew.Click += new System.EventHandler(btnNew_Click);
+		this.BtnRefresh.Image = Architecture.WinApp.Properties.Resources.referesf;
+		this.BtnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.BtnRefresh.Name = "BtnRefresh";
+		this.BtnRefresh.Size = new System.Drawing.Size(80, 24);
+		this.BtnRefresh.Text = "&Refresh";
+		this.BtnRefresh.ToolTipText = "Alt_R";
+		this.BtnRefresh.Click += new System.EventHandler(BtnRefresh_Click);
+		this.toolStripSeparator5.Name = "toolStripSeparator5";
+		this.toolStripSeparator5.Size = new System.Drawing.Size(6, 27);
+		this.btnUpdate.Image = Architecture.WinApp.Properties.Resources.icons8_pencil_16;
+		this.btnUpdate.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.btnUpdate.Name = "btnUpdate";
+		this.btnUpdate.Size = new System.Drawing.Size(78, 24);
+		this.btnUpdate.Text = "&Update";
+		this.btnUpdate.ToolTipText = "Ctrl_U";
+		this.btnUpdate.Visible = false;
+		this.btnUpdate.Click += new System.EventHandler(btnUpdate_Click);
+		this.btnSave.Image = Architecture.WinApp.Properties.Resources.icons8_save_16;
+		this.btnSave.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.btnSave.Name = "btnSave";
+		this.btnSave.Size = new System.Drawing.Size(64, 24);
+		this.btnSave.Text = "&Save";
+		this.btnSave.ToolTipText = "Ctrl_S";
+		this.btnSave.Click += new System.EventHandler(btnSave_Click);
+		this.btnDelete.Image = Architecture.WinApp.Properties.Resources.delete_bin_2_line;
+		this.btnDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.btnDelete.Name = "btnDelete";
+		this.btnDelete.Size = new System.Drawing.Size(73, 24);
+		this.btnDelete.Text = "Delete";
+		this.btnDelete.Visible = false;
+		this.btnDelete.Click += new System.EventHandler(btnDelete_Click);
+		this.toolStripSeparator4.Name = "toolStripSeparator4";
+		this.toolStripSeparator4.Size = new System.Drawing.Size(6, 27);
+		this.btnAttachment.Image = Architecture.WinApp.Properties.Resources.icons8_attach_16;
+		this.btnAttachment.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.btnAttachment.Name = "btnAttachment";
+		this.btnAttachment.Size = new System.Drawing.Size(109, 24);
+		this.btnAttachment.Text = "&Attechment";
+		this.btnAttachment.ToolTipText = "Alt_A";
+		this.btnAttachment.Click += new System.EventHandler(btnAttachment_Click);
+		this.toolStripSeparator3.Name = "toolStripSeparator3";
+		this.toolStripSeparator3.Size = new System.Drawing.Size(6, 27);
+		this.BtnPrint.Image = Architecture.WinApp.Properties.Resources.icons8_print_16;
+		this.BtnPrint.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.BtnPrint.Name = "BtnPrint";
+		this.BtnPrint.Size = new System.Drawing.Size(92, 24);
+		this.BtnPrint.Text = "211-Print";
+		this.BtnPrint.ToolTipText = "Ctrl_P";
+		this.BtnPrint.Click += new System.EventHandler(BtnPrint_Click);
+		this.toolStripSeparator2.Name = "toolStripSeparator2";
+		this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
+		this.CityDefine.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.CityDefine.Name = "CityDefine";
+		this.CityDefine.Size = new System.Drawing.Size(37, 24);
+		this.CityDefine.Text = "City";
+		this.CityDefine.Click += new System.EventHandler(CityDefine_Click);
+		this.toolStripSeparator1.Name = "toolStripSeparator1";
+		this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
+		this.BtnLoadOrder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+		this.BtnLoadOrder.Image = (System.Drawing.Image)resources.GetObject("BtnLoadOrder.Image");
+		this.BtnLoadOrder.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.BtnLoadOrder.Name = "BtnLoadOrder";
+		this.BtnLoadOrder.Size = new System.Drawing.Size(83, 24);
+		this.BtnLoadOrder.Text = "Load Order";
+		this.BtnLoadOrder.Click += new System.EventHandler(BtnLoadOrder_Click);
+		this.toolStripSeparator6.Name = "toolStripSeparator6";
+		this.toolStripSeparator6.Size = new System.Drawing.Size(6, 27);
+		this.BtnShortCutkeys.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.BtnShortCutkeys.Image = Architecture.WinApp.Properties.Resources._55download;
+		this.BtnShortCutkeys.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.BtnShortCutkeys.Name = "BtnShortCutkeys";
+		this.BtnShortCutkeys.Size = new System.Drawing.Size(126, 24);
+		this.BtnShortCutkeys.Text = "ShortCut Keys";
+		this.BtnShortCutkeys.Click += new System.EventHandler(BtnShortCutkeys_Click);
+		this.toolStripSeparator7.Name = "toolStripSeparator7";
+		this.toolStripSeparator7.Size = new System.Drawing.Size(6, 27);
+		this.label7.AutoSize = true;
+		this.label7.Font = new System.Drawing.Font("Tahoma", 12f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label7.ForeColor = System.Drawing.Color.White;
+		this.label7.Location = new System.Drawing.Point(1, 30);
+		this.label7.Name = "label7";
+		this.label7.Size = new System.Drawing.Size(357, 19);
+		this.label7.TabIndex = 0;
+		this.label7.Text = "Goods Receiving Notes (without Gatepass)";
+		this.ChkBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+		this.ChkBox.AutoSize = true;
+		this.ChkBox.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.ChkBox.ForeColor = System.Drawing.Color.White;
+		this.ChkBox.Location = new System.Drawing.Point(838, 31);
+		this.ChkBox.Margin = new System.Windows.Forms.Padding(2);
+		this.ChkBox.Name = "ChkBox";
+		this.ChkBox.Size = new System.Drawing.Size(60, 20);
+		this.ChkBox.TabIndex = 0;
+		this.ChkBox.Text = "Print";
+		this.ChkBox.UseVisualStyleBackColor = true;
+		this.tabPage2.Controls.Add((System.Windows.Forms.Control)(object)this.GrdHistory);
+		this.tabPage2.Controls.Add(this.panel8);
+		this.tabPage2.Controls.Add(this.panel11);
+		this.tabPage2.Controls.Add((System.Windows.Forms.Control)(object)this.GrdHistoryDetail);
+		this.tabPage2.Controls.Add(this.panel23);
+		this.tabPage2.Controls.Add(this.panel7);
+		this.tabPage2.Location = new System.Drawing.Point(4, 4);
+		this.tabPage2.Margin = new System.Windows.Forms.Padding(2);
+		this.tabPage2.Name = "tabPage2";
+		this.tabPage2.Padding = new System.Windows.Forms.Padding(2);
+		this.tabPage2.Size = new System.Drawing.Size(906, 632);
+		this.tabPage2.TabIndex = 1;
+		this.tabPage2.Text = "History";
+		this.tabPage2.UseVisualStyleBackColor = true;
+		this.GrdHistory.AllowEdit = (InheritableBoolean)2;
+		GrdHistory_DesignTimeLayout.LayoutString = "<GridEXLayoutData><RootTable><GroupCondition /></RootTable></GridEXLayoutData>";
+		this.GrdHistory.DesignTimeLayout = GrdHistory_DesignTimeLayout;
+		((System.Windows.Forms.Control)(object)this.GrdHistory).Dock = System.Windows.Forms.DockStyle.Fill;
+		this.GrdHistory.DynamicFiltering = true;
+		this.GrdHistory.FilterMode = (FilterMode)2;
+		this.GrdHistory.FilterRowButtonStyle = (FilterRowButtonStyle)3;
+		((System.Windows.Forms.Control)(object)this.GrdHistory).Font = new System.Drawing.Font("Verdana", 8.25f);
+		this.GrdHistory.GroupByBoxVisible = false;
+		((System.Windows.Forms.Control)(object)this.GrdHistory).Location = new System.Drawing.Point(2, 151);
+		((System.Windows.Forms.Control)(object)this.GrdHistory).Name = "GrdHistory";
+		((ScrollableBase)this.GrdHistory).RecordNavigator = true;
+		((System.Windows.Forms.Control)(object)this.GrdHistory).Size = new System.Drawing.Size(902, 297);
+		((System.Windows.Forms.Control)(object)this.GrdHistory).TabIndex = 1;
+		this.GrdHistory.TotalRow = (InheritableBoolean)1;
+		this.GrdHistory.TotalRowPosition = (TotalRowPosition)1;
+		((ScrollableBase)this.GrdHistory).VisualStyle = (VisualStyle)4;
+		this.GrdHistory.ColumnButtonClick += new ColumnActionEventHandler(GrdHistory_ColumnButtonClick);
+		this.GrdHistory.SelectionChanged += new System.EventHandler(GrdHistory_SelectionChanged);
+		this.GrdHistory.LinkClicked += new ColumnActionEventHandler(GrdHistory_LinkClicked);
+		((System.Windows.Forms.Control)(object)this.GrdHistory).DoubleClick += new System.EventHandler(GrdHistory_DoubleClick);
+		((System.Windows.Forms.Control)(object)this.GrdHistory).KeyDown += new System.Windows.Forms.KeyEventHandler(GrdHistory_KeyDown);
+		this.panel8.BackColor = System.Drawing.Color.Teal;
+		this.panel8.Controls.Add(this.label13);
+		this.panel8.Controls.Add(this.ctrlGrdBar2);
+		this.panel8.Dock = System.Windows.Forms.DockStyle.Top;
+		this.panel8.Location = new System.Drawing.Point(2, 127);
+		this.panel8.Margin = new System.Windows.Forms.Padding(2);
+		this.panel8.Name = "panel8";
+		this.panel8.Size = new System.Drawing.Size(902, 24);
+		this.panel8.TabIndex = 53;
+		this.label13.AutoSize = true;
+		this.label13.Font = new System.Drawing.Font("Tahoma", 11f, System.Drawing.FontStyle.Bold);
+		this.label13.ForeColor = System.Drawing.Color.White;
+		this.label13.Location = new System.Drawing.Point(1, 1);
+		this.label13.Name = "label13";
+		this.label13.Size = new System.Drawing.Size(132, 18);
+		this.label13.TabIndex = 25;
+		this.label13.Text = "Filtered Records";
+		this.ctrlGrdBar2.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+		this.ctrlGrdBar2.FormName = this;
+		this.ctrlGrdBar2.Location = new System.Drawing.Point(856, -1);
+		this.ctrlGrdBar2.Margin = new System.Windows.Forms.Padding(4);
+		this.ctrlGrdBar2.MyGrid = this.GrdHistory;
+		this.ctrlGrdBar2.Name = "ctrlGrdBar2";
+		this.ctrlGrdBar2.Size = new System.Drawing.Size(43, 22);
+		this.ctrlGrdBar2.TabIndex = 23;
+		this.panel11.BackColor = System.Drawing.Color.Teal;
+		this.panel11.Controls.Add(this.label16);
+		this.panel11.Dock = System.Windows.Forms.DockStyle.Bottom;
+		this.panel11.Location = new System.Drawing.Point(2, 448);
+		this.panel11.Name = "panel11";
+		this.panel11.Size = new System.Drawing.Size(902, 21);
+		this.panel11.TabIndex = 52;
+		this.label16.AutoSize = true;
+		this.label16.Font = new System.Drawing.Font("Tahoma", 10f, System.Drawing.FontStyle.Bold);
+		this.label16.ForeColor = System.Drawing.Color.White;
+		this.label16.Location = new System.Drawing.Point(1, 1);
+		this.label16.Name = "label16";
+		this.label16.Size = new System.Drawing.Size(230, 17);
+		this.label16.TabIndex = 25;
+		this.label16.Text = "Detail of the Selected above row";
+		this.GrdHistoryDetail.AllowEdit = (InheritableBoolean)2;
+		GrdHistoryDetail_DesignTimeLayout.LayoutString = "<GridEXLayoutData><RootTable><GroupCondition /></RootTable></GridEXLayoutData>";
+		this.GrdHistoryDetail.DesignTimeLayout = GrdHistoryDetail_DesignTimeLayout;
+		((System.Windows.Forms.Control)(object)this.GrdHistoryDetail).Dock = System.Windows.Forms.DockStyle.Bottom;
+		this.GrdHistoryDetail.DynamicFiltering = true;
+		this.GrdHistoryDetail.FilterMode = (FilterMode)2;
+		this.GrdHistoryDetail.FilterRowButtonStyle = (FilterRowButtonStyle)3;
+		((System.Windows.Forms.Control)(object)this.GrdHistoryDetail).Font = new System.Drawing.Font("Verdana", 8.25f);
+		this.GrdHistoryDetail.GroupByBoxVisible = false;
+		((System.Windows.Forms.Control)(object)this.GrdHistoryDetail).Location = new System.Drawing.Point(2, 469);
+		((System.Windows.Forms.Control)(object)this.GrdHistoryDetail).Name = "GrdHistoryDetail";
+		((ScrollableBase)this.GrdHistoryDetail).RecordNavigator = true;
+		((System.Windows.Forms.Control)(object)this.GrdHistoryDetail).Size = new System.Drawing.Size(902, 161);
+		((System.Windows.Forms.Control)(object)this.GrdHistoryDetail).TabIndex = 2;
+		this.GrdHistoryDetail.TotalRow = (InheritableBoolean)1;
+		this.GrdHistoryDetail.TotalRowPosition = (TotalRowPosition)1;
+		((ScrollableBase)this.GrdHistoryDetail).VisualStyle = (VisualStyle)4;
+		this.GrdHistoryDetail.LinkClicked += new ColumnActionEventHandler(GrdHistoryDetail_LinkClicked);
+		this.panel23.Controls.Add(this.rdapproveddate);
+		this.panel23.Controls.Add(this.rdmodifydate);
+		this.panel23.Controls.Add(this.drdocdate);
+		this.panel23.Controls.Add(this.rdentrydate);
+		this.panel23.Controls.Add(this.groupBox3);
+		this.panel23.Dock = System.Windows.Forms.DockStyle.Top;
+		this.panel23.Location = new System.Drawing.Point(2, 53);
+		this.panel23.Name = "panel23";
+		this.panel23.Size = new System.Drawing.Size(902, 74);
+		this.panel23.TabIndex = 0;
+		this.rdapproveddate.AutoSize = true;
+		this.rdapproveddate.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.rdapproveddate.Location = new System.Drawing.Point(794, 38);
+		this.rdapproveddate.Name = "rdapproveddate";
+		this.rdapproveddate.Size = new System.Drawing.Size(105, 19);
+		this.rdapproveddate.TabIndex = 3;
+		this.rdapproveddate.Text = "Approved Date";
+		this.rdapproveddate.UseVisualStyleBackColor = true;
+		this.rdmodifydate.AutoSize = true;
+		this.rdmodifydate.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.rdmodifydate.Location = new System.Drawing.Point(794, 13);
+		this.rdmodifydate.Name = "rdmodifydate";
+		this.rdmodifydate.Size = new System.Drawing.Size(91, 19);
+		this.rdmodifydate.TabIndex = 2;
+		this.rdmodifydate.Text = "Modify Date";
+		this.rdmodifydate.UseVisualStyleBackColor = true;
+		this.drdocdate.AutoSize = true;
+		this.drdocdate.Checked = true;
+		this.drdocdate.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.drdocdate.Location = new System.Drawing.Point(715, 13);
+		this.drdocdate.Name = "drdocdate";
+		this.drdocdate.Size = new System.Drawing.Size(75, 19);
+		this.drdocdate.TabIndex = 0;
+		this.drdocdate.TabStop = true;
+		this.drdocdate.Text = "Doc Date";
+		this.drdocdate.UseVisualStyleBackColor = true;
+		this.rdentrydate.AutoSize = true;
+		this.rdentrydate.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.rdentrydate.Location = new System.Drawing.Point(715, 38);
+		this.rdentrydate.Name = "rdentrydate";
+		this.rdentrydate.Size = new System.Drawing.Size(80, 19);
+		this.rdentrydate.TabIndex = 1;
+		this.rdentrydate.Text = "Entry Date";
+		this.rdentrydate.UseVisualStyleBackColor = true;
+		this.groupBox3.Controls.Add(this.txtToDocNoHistory);
+		this.groupBox3.Controls.Add(this.txtFromDocNoHistory);
+		this.groupBox3.Controls.Add(this.ToDateHistory);
+		this.groupBox3.Controls.Add(this.FromDateHistory);
+		this.groupBox3.Controls.Add(this.RadNotReffered);
+		this.groupBox3.Controls.Add(this.RadReffered);
+		this.groupBox3.Controls.Add(this.btnshow);
+		this.groupBox3.Controls.Add(this.label49);
+		this.groupBox3.Controls.Add(this.RadAll);
+		this.groupBox3.Controls.Add(this.label50);
+		this.groupBox3.Controls.Add(this.label51);
+		this.groupBox3.Controls.Add(this.label52);
+		this.groupBox3.Controls.Add(this.label10);
+		this.groupBox3.Controls.Add((System.Windows.Forms.Control)(object)this.cmbSupplierNameHistory);
+		this.groupBox3.Font = new System.Drawing.Font("Tahoma", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.groupBox3.Location = new System.Drawing.Point(5, 1);
+		this.groupBox3.Name = "groupBox3";
+		this.groupBox3.Size = new System.Drawing.Size(706, 71);
+		this.groupBox3.TabIndex = 0;
+		this.groupBox3.TabStop = false;
+		this.groupBox3.Text = "Filters";
+		this.txtToDocNoHistory.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.txtToDocNoHistory.Location = new System.Drawing.Point(264, 41);
+		this.txtToDocNoHistory.Name = "txtToDocNoHistory";
+		this.txtToDocNoHistory.ShortcutsEnabled = false;
+		this.txtToDocNoHistory.Size = new System.Drawing.Size(73, 23);
+		this.txtToDocNoHistory.TabIndex = 3;
+		this.txtToDocNoHistory.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtToDocNoHistory_KeyPress);
+		this.txtFromDocNoHistory.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.txtFromDocNoHistory.Location = new System.Drawing.Point(264, 15);
+		this.txtFromDocNoHistory.Name = "txtFromDocNoHistory";
+		this.txtFromDocNoHistory.ShortcutsEnabled = false;
+		this.txtFromDocNoHistory.Size = new System.Drawing.Size(73, 23);
+		this.txtFromDocNoHistory.TabIndex = 2;
+		this.txtFromDocNoHistory.KeyPress += new System.Windows.Forms.KeyPressEventHandler(txtFromDocNoHistory_KeyPress);
+		this.ToDateHistory.CalendarFont = new System.Drawing.Font("Microsoft Sans Serif", 12f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.ToDateHistory.CustomFormat = "dd-MMM-yy";
+		this.ToDateHistory.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.ToDateHistory.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+		this.ToDateHistory.Location = new System.Drawing.Point(68, 41);
+		this.ToDateHistory.Margin = new System.Windows.Forms.Padding(4);
+		this.ToDateHistory.Name = "ToDateHistory";
+		this.ToDateHistory.ShowCheckBox = true;
+		this.ToDateHistory.Size = new System.Drawing.Size(131, 23);
+		this.ToDateHistory.TabIndex = 1;
+		this.FromDateHistory.CalendarFont = new System.Drawing.Font("Microsoft Sans Serif", 12f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.FromDateHistory.CustomFormat = "dd-MMM-yy";
+		this.FromDateHistory.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.FromDateHistory.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+		this.FromDateHistory.Location = new System.Drawing.Point(68, 15);
+		this.FromDateHistory.Margin = new System.Windows.Forms.Padding(4);
+		this.FromDateHistory.Name = "FromDateHistory";
+		this.FromDateHistory.ShowCheckBox = true;
+		this.FromDateHistory.Size = new System.Drawing.Size(131, 23);
+		this.FromDateHistory.TabIndex = 0;
+		this.RadNotReffered.AutoSize = true;
+		this.RadNotReffered.Font = new System.Drawing.Font("Segoe UI Semibold", 10f, System.Drawing.FontStyle.Bold);
+		this.RadNotReffered.Location = new System.Drawing.Point(599, 48);
+		this.RadNotReffered.Name = "RadNotReffered";
+		this.RadNotReffered.Size = new System.Drawing.Size(108, 23);
+		this.RadNotReffered.TabIndex = 8;
+		this.RadNotReffered.Text = "Not Reffered";
+		this.RadNotReffered.UseVisualStyleBackColor = true;
+		this.RadReffered.AutoSize = true;
+		this.RadReffered.Font = new System.Drawing.Font("Segoe UI Semibold", 10f, System.Drawing.FontStyle.Bold);
+		this.RadReffered.Location = new System.Drawing.Point(599, 30);
+		this.RadReffered.Name = "RadReffered";
+		this.RadReffered.Size = new System.Drawing.Size(80, 23);
+		this.RadReffered.TabIndex = 7;
+		this.RadReffered.Text = "Reffered";
+		this.RadReffered.UseVisualStyleBackColor = true;
+		this.btnshow.BackColor = System.Drawing.Color.FromArgb(10, 110, 110);
+		this.btnshow.FlatAppearance.BorderSize = 0;
+		this.btnshow.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+		this.btnshow.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.btnshow.ForeColor = System.Drawing.Color.White;
+		this.btnshow.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+		this.btnshow.Location = new System.Drawing.Point(531, 41);
+		this.btnshow.Margin = new System.Windows.Forms.Padding(2);
+		this.btnshow.Name = "btnshow";
+		this.btnshow.Size = new System.Drawing.Size(62, 23);
+		this.btnshow.TabIndex = 5;
+		this.btnshow.Text = "Show";
+		this.btnshow.UseVisualStyleBackColor = false;
+		this.btnshow.Click += new System.EventHandler(btnshow_Click);
+		this.label49.AutoSize = true;
+		this.label49.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label49.Location = new System.Drawing.Point(340, 19);
+		this.label49.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+		this.label49.Name = "label49";
+		this.label49.Size = new System.Drawing.Size(51, 15);
+		this.label49.TabIndex = 142;
+		this.label49.Text = "Supplier";
+		this.RadAll.AutoSize = true;
+		this.RadAll.Checked = true;
+		this.RadAll.Font = new System.Drawing.Font("Segoe UI Semibold", 10f, System.Drawing.FontStyle.Bold);
+		this.RadAll.Location = new System.Drawing.Point(599, 12);
+		this.RadAll.Name = "RadAll";
+		this.RadAll.Size = new System.Drawing.Size(44, 23);
+		this.RadAll.TabIndex = 6;
+		this.RadAll.TabStop = true;
+		this.RadAll.Text = "All";
+		this.RadAll.UseVisualStyleBackColor = true;
+		this.label50.AutoSize = true;
+		this.label50.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label50.Location = new System.Drawing.Point(204, 45);
+		this.label50.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+		this.label50.Name = "label50";
+		this.label50.Size = new System.Drawing.Size(45, 15);
+		this.label50.TabIndex = 141;
+		this.label50.Text = "To Doc";
+		this.label51.AutoSize = true;
+		this.label51.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label51.Location = new System.Drawing.Point(204, 19);
+		this.label51.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+		this.label51.Name = "label51";
+		this.label51.Size = new System.Drawing.Size(60, 15);
+		this.label51.TabIndex = 140;
+		this.label51.Text = "From Doc";
+		this.label52.AutoSize = true;
+		this.label52.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label52.Location = new System.Drawing.Point(5, 45);
+		this.label52.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+		this.label52.Name = "label52";
+		this.label52.Size = new System.Drawing.Size(48, 15);
+		this.label52.TabIndex = 139;
+		this.label52.Text = "To Date";
+		this.label10.AutoSize = true;
+		this.label10.Font = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold);
+		this.label10.Location = new System.Drawing.Point(5, 19);
+		this.label10.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+		this.label10.Name = "label10";
+		this.label10.Size = new System.Drawing.Size(63, 15);
+		this.label10.TabIndex = 13;
+		this.label10.Text = "From Date";
+		this.cmbSupplierNameHistory.AllowNull = (DefaultableBoolean)1;
+		this.cmbSupplierNameHistory.AutoCompleteMode = (AutoCompleteMode)4;
+		this.cmbSupplierNameHistory.AutoSuggestFilterMode = (AutoSuggestFilterMode)2;
+		this.cmbSupplierNameHistory.CheckedListSettings.CheckStateMember = "";
+		((AppearanceBase)appearance1).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance1).BorderColor = System.Drawing.SystemColors.InactiveCaption;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Appearance = (AppearanceBase)(object)appearance1;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.BorderStyle = (UIElementBorderStyle)4;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.CaptionVisible = (DefaultableBoolean)2;
+		((AppearanceBase)appearance69).BackColor = System.Drawing.SystemColors.ActiveBorder;
+		((AppearanceBase)appearance69).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance69).BackGradientStyle = (GradientStyle)2;
+		((AppearanceBase)appearance69).BorderColor = System.Drawing.SystemColors.Window;
+		((SpecialBoxBase)((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.GroupByBox).Appearance = (AppearanceBase)(object)appearance69;
+		((AppearanceBase)appearance80).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.GroupByBox.BandLabelAppearance = (AppearanceBase)(object)appearance80;
+		((SpecialBoxBase)((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.GroupByBox).BorderStyle = (UIElementBorderStyle)4;
+		((AppearanceBase)appearance91).BackColor = System.Drawing.SystemColors.ControlLightLight;
+		((AppearanceBase)appearance91).BackColor2 = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance91).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance91).ForeColor = System.Drawing.SystemColors.GrayText;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.GroupByBox.PromptAppearance = (AppearanceBase)(object)appearance91;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.MaxColScrollRegions = 1;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.MaxRowScrollRegions = 1;
+		((AppearanceBase)appearance102).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance102).ForeColor = System.Drawing.SystemColors.ControlText;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.ActiveCellAppearance = (AppearanceBase)(object)appearance102;
+		((AppearanceBase)appearance113).BackColor = System.Drawing.SystemColors.Highlight;
+		((AppearanceBase)appearance113).ForeColor = System.Drawing.SystemColors.HighlightText;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.ActiveRowAppearance = (AppearanceBase)(object)appearance113;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.BorderStyleCell = (UIElementBorderStyle)2;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.BorderStyleRow = (UIElementBorderStyle)2;
+		((AppearanceBase)appearance124).BackColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.CardAreaAppearance = (AppearanceBase)(object)appearance124;
+		((AppearanceBase)appearance128).BorderColor = System.Drawing.Color.Silver;
+		((AppearanceBase)appearance128).TextTrimming = (TextTrimming)3;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.CellAppearance = (AppearanceBase)(object)appearance128;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.CellClickAction = (CellClickAction)4;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.CellPadding = 0;
+		((AppearanceBase)appearance134).BackColor = System.Drawing.SystemColors.Control;
+		((AppearanceBase)appearance134).BackColor2 = System.Drawing.SystemColors.ControlDark;
+		((AppearanceBase)appearance134).BackGradientAlignment = (GradientAlignment)1;
+		((AppearanceBase)appearance134).BackGradientStyle = (GradientStyle)3;
+		((AppearanceBase)appearance134).BorderColor = System.Drawing.SystemColors.Window;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.GroupByRowAppearance = (AppearanceBase)(object)appearance134;
+		((AppearanceBase)appearance2).TextHAlignAsString = "Left";
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.HeaderAppearance = (AppearanceBase)(object)appearance2;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.HeaderClickAction = (HeaderClickAction)3;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.HeaderStyle = (HeaderStyle)2;
+		((AppearanceBase)appearance13).BackColor = System.Drawing.SystemColors.Window;
+		((AppearanceBase)appearance13).BorderColor = System.Drawing.Color.Silver;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.RowAppearance = (AppearanceBase)(object)appearance13;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.RowSelectors = (DefaultableBoolean)2;
+		((AppearanceBase)appearance24).BackColor = System.Drawing.SystemColors.ControlLight;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.Override.TemplateAddRowAppearance = (AppearanceBase)(object)appearance24;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.ScrollBounds = (ScrollBounds)0;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.ScrollStyle = (ScrollStyle)1;
+		((UltraGridBase)this.cmbSupplierNameHistory).DisplayLayout.ViewStyleBand = (ViewStyleBand)2;
+		((System.Windows.Forms.Control)(object)this.cmbSupplierNameHistory).Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.cmbSupplierNameHistory.LimitToList = true;
+		((System.Windows.Forms.Control)(object)this.cmbSupplierNameHistory).Location = new System.Drawing.Point(392, 13);
+		((System.Windows.Forms.Control)(object)this.cmbSupplierNameHistory).Name = "cmbSupplierNameHistory";
+		((System.Windows.Forms.Control)(object)this.cmbSupplierNameHistory).Size = new System.Drawing.Size(201, 26);
+		((System.Windows.Forms.Control)(object)this.cmbSupplierNameHistory).TabIndex = 4;
+		this.panel7.BackColor = System.Drawing.Color.Teal;
+		this.panel7.Controls.Add(this.label12);
+		this.panel7.Controls.Add(this.toolStrip2);
+		this.panel7.Dock = System.Windows.Forms.DockStyle.Top;
+		this.panel7.Location = new System.Drawing.Point(2, 2);
+		this.panel7.Margin = new System.Windows.Forms.Padding(2);
+		this.panel7.Name = "panel7";
+		this.panel7.Size = new System.Drawing.Size(902, 51);
+		this.panel7.TabIndex = 0;
+		this.label12.AutoSize = true;
+		this.label12.Font = new System.Drawing.Font("Tahoma", 12f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+		this.label12.ForeColor = System.Drawing.Color.White;
+		this.label12.Location = new System.Drawing.Point(4, 29);
+		this.label12.Name = "label12";
+		this.label12.Size = new System.Drawing.Size(263, 19);
+		this.label12.TabIndex = 25;
+		this.label12.Text = "Goods Receiving Notes  History";
+		this.toolStrip2.Font = new System.Drawing.Font("Verdana", 9.75f);
+		this.toolStrip2.ImageScalingSize = new System.Drawing.Size(20, 20);
+		this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[3] { this.btnNewHistory, this.btnRefreshHistory, this.btnGrnFormHistory });
+		this.toolStrip2.Location = new System.Drawing.Point(0, 0);
+		this.toolStrip2.Name = "toolStrip2";
+		this.toolStrip2.Size = new System.Drawing.Size(902, 27);
+		this.toolStrip2.TabIndex = 1;
+		this.toolStrip2.Text = "toolStrip2";
+		this.btnNewHistory.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.btnNewHistory.Image = Architecture.WinApp.Properties.Resources.icons8_add_20;
+		this.btnNewHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.btnNewHistory.Name = "btnNewHistory";
+		this.btnNewHistory.Size = new System.Drawing.Size(68, 24);
+		this.btnNewHistory.Text = "&Reset";
+		this.btnNewHistory.Click += new System.EventHandler(btnNewHistory_Click);
+		this.btnRefreshHistory.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.btnRefreshHistory.Image = Architecture.WinApp.Properties.Resources.referesf;
+		this.btnRefreshHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.btnRefreshHistory.Name = "btnRefreshHistory";
+		this.btnRefreshHistory.Size = new System.Drawing.Size(80, 24);
+		this.btnRefreshHistory.Text = "&Refresh";
+		this.btnRefreshHistory.Click += new System.EventHandler(btnRefreshHistory_Click);
+		this.btnGrnFormHistory.Font = new System.Drawing.Font("Verdana", 9.75f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+		this.btnGrnFormHistory.Image = Architecture.WinApp.Properties.Resources.icons8_print_16;
+		this.btnGrnFormHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
+		this.btnGrnFormHistory.Name = "btnGrnFormHistory";
+		this.btnGrnFormHistory.Size = new System.Drawing.Size(99, 24);
+		this.btnGrnFormHistory.Text = "GrnHistory";
+		this.btnGrnFormHistory.ToolTipText = "Crtl_H";
+		this.btnGrnFormHistory.Click += new System.EventHandler(btnGrnFormHistory_Click);
+		base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 13f);
+		base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+		base.ClientSize = new System.Drawing.Size(914, 661);
+		base.Controls.Add(this.panel1);
+		base.KeyPreview = true;
+		base.Margin = new System.Windows.Forms.Padding(2);
+		base.Name = "InvFrmGRNDirect";
+		this.Text = "   ";
+		base.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+		base.FormClosing += new System.Windows.Forms.FormClosingEventHandler(InvFrmGRNDirect_FormClosing);
+		base.Load += new System.EventHandler(InvFrmGRN_Load);
+		base.KeyDown += new System.Windows.Forms.KeyEventHandler(InvFrmGRN_KeyDown);
+		this.panel1.ResumeLayout(false);
+		this.tabControl1.ResumeLayout(false);
+		this.tabPage1.ResumeLayout(false);
+		((System.ComponentModel.ISupportInitialize)this.grd).EndInit();
+		this.panel14.ResumeLayout(false);
+		this.panel14.PerformLayout();
+		((System.ComponentModel.ISupportInitialize)this.grdEmptyBags).EndInit();
+		this.panel10.ResumeLayout(false);
+		this.panel10.PerformLayout();
+		this.panel5.ResumeLayout(false);
+		this.panel5.PerformLayout();
+		((System.ComponentModel.ISupportInitialize)this.combcropyear).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.combitem).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.CmbJobLot).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.combpckuom).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.CmbWareHouse).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.CmbCity).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.combpcktyp).EndInit();
+		this.panel4.ResumeLayout(false);
+		this.panel4.PerformLayout();
+		((System.ComponentModel.ISupportInitialize)this.CmbDeliveryTerm).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.CmbTransport).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.combsupplier).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.combvehtyp).EndInit();
+		this.panel2.ResumeLayout(false);
+		this.panel2.PerformLayout();
+		this.toolStrip1.ResumeLayout(false);
+		this.toolStrip1.PerformLayout();
+		this.tabPage2.ResumeLayout(false);
+		((System.ComponentModel.ISupportInitialize)this.GrdHistory).EndInit();
+		this.panel8.ResumeLayout(false);
+		this.panel8.PerformLayout();
+		this.panel11.ResumeLayout(false);
+		this.panel11.PerformLayout();
+		((System.ComponentModel.ISupportInitialize)this.GrdHistoryDetail).EndInit();
+		this.panel23.ResumeLayout(false);
+		this.panel23.PerformLayout();
+		this.groupBox3.ResumeLayout(false);
+		this.groupBox3.PerformLayout();
+		((System.ComponentModel.ISupportInitialize)this.cmbSupplierNameHistory).EndInit();
+		this.panel7.ResumeLayout(false);
+		this.panel7.PerformLayout();
+		this.toolStrip2.ResumeLayout(false);
+		this.toolStrip2.PerformLayout();
+		base.ResumeLayout(false);
+	}
+}

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>Chart Of Account Definition</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+    <style>
+        .coa-panel-title { background:#1ABB9C; color:#fff; padding:8px 12px; font-weight:600; font-size:14px; margin:-1px -1px 10px -1px; border-radius:2px 2px 0 0; }
+        .coa-toolbar { margin-bottom:12px; }
+        .coa-toolbar .btn { margin-right:6px; margin-bottom:6px; }
+        .coa-col-title { font-size:12px; font-weight:700; margin:0 0 6px 0; color:#555; background:#EEF3F7; padding:4px 8px; border:1px solid #E6E9ED; }
+        .coa-list { list-style:none; margin:0; padding:0; max-height:150px; overflow-y:auto; border:1px solid #E6E9ED; border-top:none; }
+        .coa-list li { border-bottom:1px solid #E6E9ED; }
+        .coa-list li a.coa-row { display:block; padding:4px 8px; color:#333; text-decoration:none; font-size:12px; }
+        .coa-list li a.coa-row:hover { background:#F2F5F7; }
+        .coa-list li.selected a.coa-row { background:#D9F2EC; font-weight:600; }
+        .coa-list li .coa-code { display:inline-block; min-width:55px; color:#999; font-size:11px; }
+        .coa-actions a { margin-left:6px; color:#999; }
+        .coa-actions a:hover { color:#333; }
+        .coa-empty { color:#9aa3ae; padding:8px; font-size:12px; }
+        .coa-pager { font-size:11px; color:#888; padding:3px 8px; border:1px solid #E6E9ED; border-top:none; background:#FAFBFC; }
+        .coa-field-label { font-size:12px; font-weight:600; color:#555; margin-bottom:2px; }
+        .coa-field-label .req { color:#D9534F; }
+        .coa-field { margin-bottom:8px; }
+        .coa-alloc-table { width:100%; font-size:12px; border-collapse:collapse; }
+        .coa-alloc-table th, .coa-alloc-table td { border:1px solid #E6E9ED; padding:3px 6px; }
+        .coa-alloc-table th { background:#EEF3F7; }
+        .coa-child-grid table { font-size:12px; }
+        .coa-filter-box { background:#FAFBFC; border:1px solid #E6E9ED; padding:8px; margin-top:10px; }
+        .coa-filter-box .coa-col-title { background:#E6E9ED; }
+        fieldset.coa-fieldset { border:1px solid #E6E9ED; padding:10px; margin-bottom:10px; }
+        fieldset.coa-fieldset legend { font-size:12px; font-weight:700; color:#555; width:auto; padding:0 6px; margin-bottom:0; border:none; }
+    </style>
+</head>
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div th:replace="fragments/fixed_sidebar :: div"></div>
+        <div class="right_col" role="main">
+
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel">
+                        <div class="coa-panel-title"><i class="fa fa-sitemap"></i> Chart Of Account Definition</div>
+
+                        <div class="coa-toolbar">
+                            <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${selLevel3})}" class="btn btn-default btn-sm"><i class="fa fa-file-o"></i> New</a>
+                            <a th:href="@{/accounts/chart_of_accounts}" class="btn btn-default btn-sm"><i class="fa fa-refresh"></i> Refresh</a>
+                            <button type="submit" form="coaForm" class="btn btn-success btn-sm"><i class="fa fa-save"></i> Save</button>
+                            <button type="button" class="btn btn-default btn-sm" disabled title="Not implemented in this port"><i class="fa fa-print"></i> 114-Print</button>
+                            <button type="button" class="btn btn-default btn-sm" disabled title="Not implemented in this port - see Company/City master"><i class="fa fa-building-o"></i> Define City</button>
+                            <form th:action="@{/accounts/chart_of_accounts/upload_excel}" method="post" enctype="multipart/form-data" class="form-inline" style="display:inline-block;">
+                                <input type="hidden" name="defaultParentAccountCode" th:value="${selLevel1 != '' ? selLevel1 : '0'}"/>
+                                <input type="file" name="file" accept=".xlsx,.xls" required style="display:inline-block; width:150px;" class="btn btn-default btn-sm"/>
+                                <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-upload"></i> Upload Excel Sheet</button>
+                            </form>
+                        </div>
+
+                        <div th:if="${uploadInserted != null}">
+                            <div class="alert" th:classappend="${uploadFailed != null and uploadFailed > 0} ? 'alert-warning' : 'alert-success'">
+                                Upload Excel Sheet: <strong th:text="${uploadInserted}"></strong> account(s) inserted,
+                                <strong th:text="${uploadFailed}"></strong> failed.
+                            </div>
+                        </div>
+
+                        <form id="coaForm" th:action="@{/accounts/chart_of_accounts/save}" th:object="${accountForm}" method="post">
+                        <input type="hidden" name="level1" th:value="${selLevel1}"/>
+                        <input type="hidden" name="level2" th:value="${selLevel2}"/>
+                        <input type="hidden" name="level3" th:value="${selLevel3}"/>
+                        <input type="hidden" th:field="*{id}"/>
+
+                        <div class="row">
+                            <!-- LEFT: Account Information -->
+                            <div class="col-md-4 col-sm-12 col-xs-12">
+                                <fieldset class="coa-fieldset">
+                                    <legend>Account Information</legend>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Parent Account <span class="req">*</span></div>
+                                        <select class="form-control input-sm" th:field="*{parentAccountCode}">
+                                            <option value="0">0 - (Top Level)</option>
+                                            <option th:each="p : ${allAccounts}" th:value="${p.accountCode}"
+                                                    th:text="${p.accountCode + ' - ' + p.accountTitle}"></option>
+                                        </select>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Account Title <span class="req">*</span></div>
+                                        <input type="text" class="form-control input-sm" th:field="*{accountTitle}" placeholder="Account Title" required/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Title (Other Lingo)</div>
+                                        <input type="text" class="form-control input-sm" th:field="*{accountTitleOtherLingo}" placeholder="e.g. Urdu title"/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Account Type <span class="req">*</span>
+                                            <span style="font-weight:400; color:#999;">(no master table in DB - numeric id)</span></div>
+                                        <input type="number" class="form-control input-sm" th:field="*{accountTypeId}"/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">P.L Notes <span class="req">*</span>
+                                            <span style="font-weight:400; color:#999;">(no master table in DB - numeric id)</span></div>
+                                        <input type="number" class="form-control input-sm" th:field="*{plNoteId}"/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">B.S Notes <span class="req">*</span>
+                                            <span style="font-weight:400; color:#999;">(no master table in DB - numeric id)</span></div>
+                                        <input type="number" class="form-control input-sm" th:field="*{bsNoteId}"/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Sup.Cust Group
+                                            <span style="font-weight:400; color:#999;">(numeric id)</span></div>
+                                        <input type="number" class="form-control input-sm" th:field="*{customerGroupId}"/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Custom Group</div>
+                                        <div style="border:1px solid #ccc; border-radius:3px; max-height:110px; overflow-y:auto; padding:4px 6px; background:#fff;">
+                                            <div th:if="${accountForm.id == null}" class="coa-empty" style="padding:2px 0;">Save the account first to assign custom groups.</div>
+                                            <div th:if="${accountForm.id != null and (customGroupAssignments == null or customGroupAssignments.isEmpty())}" class="coa-empty" style="padding:2px 0;">
+                                                No custom groups defined yet - see <a th:href="@{/accounts/custom_group}">Define Accounts Custom Group</a>.
+                                            </div>
+                                            <form th:if="${accountForm.id != null}" th:each="row : ${customGroupAssignments}"
+                                                  th:action="@{/accounts/chart_of_accounts/customgroup/toggle}" method="post" style="margin:0;">
+                                                <input type="hidden" name="chartofAccountId" th:value="${accountForm.id}"/>
+                                                <input type="hidden" name="lookUpId" th:value="${row.lookUpId}"/>
+                                                <input type="hidden" name="assigned" th:value="${!row.assigned}"/>
+                                                <input type="hidden" name="level1" th:value="${selLevel1}"/>
+                                                <input type="hidden" name="level2" th:value="${selLevel2}"/>
+                                                <input type="hidden" name="level3" th:value="${selLevel3}"/>
+                                                <input type="hidden" name="editCode" th:value="${accountForm.accountCode}"/>
+                                                <label style="font-weight:400; font-size:12px; display:block; margin-bottom:2px;">
+                                                    <input type="checkbox" th:checked="${row.assigned}" onchange="this.form.submit()"/>
+                                                    <span th:text="${row.description}"></span>
+                                                </label>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">City Name
+                                            <span style="font-weight:400; color:#999;">(no City master screen yet - numeric id)</span></div>
+                                        <input type="number" class="form-control input-sm" th:field="*{cityId}"/>
+                                    </div>
+                                </fieldset>
+
+                                <div class="coa-filter-box">
+                                    <div class="coa-col-title">Filter Accounts In Child Grid</div>
+                                    <form th:action="@{/accounts/chart_of_accounts}" method="get" style="margin-top:8px;">
+                                        <input type="hidden" name="level1" th:value="${selLevel1}"/>
+                                        <input type="hidden" name="level2" th:value="${selLevel2}"/>
+                                        <input type="hidden" name="level3" th:value="${selLevel3}"/>
+                                        <input type="hidden" name="editCode" th:value="${accountForm.accountCode}"/>
+                                        <div class="coa-field">
+                                            <div class="coa-field-label">Account Type</div>
+                                            <select class="form-control input-sm" name="filterAccountType" onchange="this.form.submit()">
+                                                <option value="">(All)</option>
+                                                <option th:each="t : ${accountTypeOptions}" th:value="${t}" th:text="${t}"
+                                                        th:selected="${t.toString() == filterAccountType}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="coa-field">
+                                            <div class="coa-field-label">Account Title</div>
+                                            <select class="form-control input-sm" name="filterAccountTitle" onchange="this.form.submit()">
+                                                <option value="">(All)</option>
+                                                <option th:each="ti : ${accountTitleOptions}" th:value="${ti}" th:text="${ti}"
+                                                        th:selected="${ti == filterAccountTitle}"></option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-filter"></i> Apply</button>
+                                        <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${selLevel3},editCode=${accountForm.accountCode})}" class="btn btn-default btn-xs">Clear</a>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- MIDDLE: Group/Detail, Code, Class, Level, Other Code, Phone, Opening, Allocation -->
+                            <div class="col-md-4 col-sm-12 col-xs-12">
+                                <fieldset class="coa-fieldset">
+                                    <legend>&#160;</legend>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Group / Detail <span class="req">*</span></div>
+                                        <select class="form-control input-sm" th:field="*{accountGroup}">
+                                            <option value="Group">Group</option>
+                                            <option value="Detail">Detail</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Account Code</div>
+                                        <input type="text" class="form-control input-sm"
+                                               th:value="${accountForm.accountCode == null ? '(auto-generated on save)' : accountForm.accountCode}" readonly/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Account Class</div>
+                                        <select class="form-control input-sm" th:field="*{accountClass}">
+                                            <option value="">(unset)</option>
+                                            <option value="1">1 - Capital</option>
+                                            <option value="2">2 - Assets</option>
+                                            <option value="3">3 - Liability</option>
+                                            <option value="4">4 - Expense</option>
+                                            <option value="5">5 - Revenue</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Account Level</div>
+                                        <input type="text" class="form-control input-sm"
+                                               th:value="${accountForm.accountLevel == null ? '(auto)' : accountForm.accountLevel}" readonly/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Other Code</div>
+                                        <input type="text" class="form-control input-sm" th:field="*{otherErpCode}"/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Phone No</div>
+                                        <input type="text" class="form-control input-sm" th:field="*{contactNo}"/>
+                                    </div>
+
+                                    <div class="coa-field">
+                                        <div class="coa-field-label">Opening</div>
+                                        <input type="number" step="0.01" class="form-control input-sm" name="openingDebit" th:value="${openingDebit}"/>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success btn-sm"><i class="fa fa-save"></i> Save</button>
+                                </fieldset>
+
+                                <fieldset class="coa-fieldset">
+                                    <legend>Account Allocation To Locations</legend>
+                                    <div th:if="${accountForm.id == null}" class="coa-empty">Save the account first to allocate it to locations.</div>
+                                    <table class="coa-alloc-table" th:if="${accountForm.id != null}">
+                                        <tr><th>Location</th><th style="width:60px;">Value</th></tr>
+                                        <tr th:each="row : ${allocations}">
+                                            <td th:text="${row.companyName}"></td>
+                                            <td style="text-align:center;">
+                                                <form th:action="@{/accounts/chart_of_accounts/allocation/toggle}" method="post" style="margin:0;">
+                                                    <input type="hidden" name="chartofAccountId" th:value="${accountForm.id}"/>
+                                                    <input type="hidden" name="companyId" th:value="${row.companyId}"/>
+                                                    <input type="hidden" name="allocated" th:value="${!row.allocated}"/>
+                                                    <input type="hidden" name="level1" th:value="${selLevel1}"/>
+                                                    <input type="hidden" name="level2" th:value="${selLevel2}"/>
+                                                    <input type="hidden" name="level3" th:value="${selLevel3}"/>
+                                                    <input type="hidden" name="editCode" th:value="${accountForm.accountCode}"/>
+                                                    <input type="checkbox" th:checked="${row.allocated}" onchange="this.form.submit()"/>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${allocations == null or allocations.isEmpty()}">
+                                            <td colspan="2" class="coa-empty">No companies found.</td>
+                                        </tr>
+                                    </table>
+                                </fieldset>
+                            </div>
+
+                            <!-- RIGHT: 1st / 2nd / 3rd Level Accounts, stacked -->
+                            <div class="col-md-4 col-sm-12 col-xs-12">
+                                <div class="coa-col-title">1st Level Accounts</div>
+                                <ul class="coa-list">
+                                    <li th:each="a : ${level1List}" th:classappend="${a.accountCode == selLevel1} ? 'selected'">
+                                        <a class="coa-row" th:href="@{/accounts/chart_of_accounts(level1=${a.accountCode})}">
+                                            <span class="coa-code" th:text="${a.accountCode}"></span>
+                                            <span th:text="${a.accountTitle}"></span>
+                                        </a>
+                                        <span class="coa-actions" style="float:right; margin-top:-22px; margin-right:6px;">
+                                            <a th:href="@{/accounts/chart_of_accounts(level1=${a.accountCode},editCode=${a.accountCode})}" title="Edit"><i class="fa fa-pencil"></i></a>
+                                            <a th:href="@{/accounts/chart_of_accounts/delete/{code}(code=${a.accountCode})}" title="Delete" onclick="return confirm('Delete this account? (only allowed if it has no children)')"><i class="fa fa-trash"></i></a>
+                                        </span>
+                                    </li>
+                                    <li th:if="${level1List == null or level1List.isEmpty()}" class="coa-empty">No 1st level accounts.</li>
+                                </ul>
+                                <div class="coa-pager" th:text="${level1List != null ? level1List.size() + ' account(s)' : '0 account(s)'}"></div>
+
+                                <div class="coa-col-title" style="margin-top:10px;">2nd Level Accounts</div>
+                                <ul class="coa-list">
+                                    <li th:each="a : ${level2List}" th:classappend="${a.accountCode == selLevel2} ? 'selected'">
+                                        <a class="coa-row" th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${a.accountCode})}">
+                                            <span class="coa-code" th:text="${a.accountCode}"></span>
+                                            <span th:text="${a.accountTitle}"></span>
+                                        </a>
+                                        <span class="coa-actions" style="float:right; margin-top:-22px; margin-right:6px;">
+                                            <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${a.accountCode},editCode=${a.accountCode})}" title="Edit"><i class="fa fa-pencil"></i></a>
+                                            <a th:href="@{/accounts/chart_of_accounts/delete/{code}(code=${a.accountCode},level1=${selLevel1})}" title="Delete" onclick="return confirm('Delete this account? (only allowed if it has no children)')"><i class="fa fa-trash"></i></a>
+                                        </span>
+                                    </li>
+                                    <li th:if="${level2List == null or level2List.isEmpty()}" class="coa-empty">
+                                        <span th:if="${selLevel1 == ''}">Select a 1st level account.</span>
+                                        <span th:if="${selLevel1 != ''}">No 2nd level accounts yet.</span>
+                                    </li>
+                                </ul>
+                                <div class="coa-pager" th:text="${level2List != null ? level2List.size() + ' account(s)' : '0 account(s)'}"></div>
+
+                                <div class="coa-col-title" style="margin-top:10px;">3rd Level Accounts</div>
+                                <ul class="coa-list">
+                                    <li th:each="a : ${level3List}" th:classappend="${a.accountCode == selLevel3} ? 'selected'">
+                                        <a class="coa-row" th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${a.accountCode})}">
+                                            <span class="coa-code" th:text="${a.accountCode}"></span>
+                                            <span th:text="${a.accountTitle}"></span>
+                                        </a>
+                                        <span class="coa-actions" style="float:right; margin-top:-22px; margin-right:6px;">
+                                            <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${a.accountCode},editCode=${a.accountCode})}" title="Edit"><i class="fa fa-pencil"></i></a>
+                                            <a th:href="@{/accounts/chart_of_accounts/delete/{code}(code=${a.accountCode},level1=${selLevel1},level2=${selLevel2})}" title="Delete" onclick="return confirm('Delete this account? (only allowed if it has no children)')"><i class="fa fa-trash"></i></a>
+                                        </span>
+                                    </li>
+                                    <li th:if="${level3List == null or level3List.isEmpty()}" class="coa-empty">
+                                        <span th:if="${selLevel2 == ''}">Select a 2nd level account.</span>
+                                        <span th:if="${selLevel2 != ''}">No 3rd level accounts yet.</span>
+                                    </li>
+                                </ul>
+                                <div class="coa-pager" th:text="${level3List != null ? level3List.size() + ' account(s)' : '0 account(s)'}"></div>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM: Child Of Selected Parent -->
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel coa-child-grid">
+                        <div class="coa-panel-title" style="background:#73879C;">Child Of Selected Parent
+                            <span th:if="${selLevel3 != ''}" th:text="'(' + selLevel3 + ')'" style="font-weight:400;"></span>
+                        </div>
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Account Code</th>
+                                    <th>Account Title</th>
+                                    <th>Group</th>
+                                    <th>Account Type</th>
+                                    <th>Other Code</th>
+                                    <th>Phone No</th>
+                                    <th style="width:90px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="a : ${level4List}" th:class="${a.accountCode == accountForm.accountCode} ? 'info'">
+                                    <td th:text="${a.accountCode}"></td>
+                                    <td th:text="${a.accountTitle}"></td>
+                                    <td th:text="${a.accountGroup}"></td>
+                                    <td th:text="${a.accountTypeId}"></td>
+                                    <td th:text="${a.otherErpCode}"></td>
+                                    <td th:text="${a.contactNo}"></td>
+                                    <td>
+                                        <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${selLevel3},editCode=${a.accountCode})}" title="Edit"><i class="fa fa-pencil"></i></a>
+                                        <a th:href="@{/accounts/chart_of_accounts/delete/{code}(code=${a.accountCode},level1=${selLevel1},level2=${selLevel2},level3=${selLevel3})}" title="Delete" onclick="return confirm('Delete this account?')"><i class="fa fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${level4List == null or level4List.isEmpty()}">
+                                    <td colspan="7" class="coa-empty">
+                                        <span th:if="${selLevel3 == ''}">Select a 3rd level account to see its children.</span>
+                                        <span th:if="${selLevel3 != ''}">No child accounts yet (or none match the current filter).</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="coa-pager" th:text="${level4List != null ? level4List.size() + ' account(s)' : '0 account(s)'}"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+</body>
+</html>

@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>COMBINE-VIEW</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <!-- NProgress -->
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <!-- iCheck -->
+    <link rel="stylesheet" th:href="@{/vendors/iCheck/skins/flat/green.css}">
+    <!-- Datatables -->
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+    <!-- Select2 -->
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <!-- confirm -->
+    <link rel="stylesheet" th:href="@{/vendors/jquery-confirm-master/css/jquery-confirm.css}">
+
+    <!-- Custom Theme Style -->
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- side bar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div"></div>
+        <!-- /side bar and top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="x_panel">
+
+                            <div class="x_content">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <form class="form-horizontal form-label-left" id="voucherForm"
+                                              method="get"
+                                              th:action="@{/pjv_sjv_qty/edit/__${pjvVoucher.id}__}"
+                                              th:object="${combination}">
+
+                                            <input id="editVoucher"
+                                                   th:value="${#authorization.expression('hasAuthority(''EDIT_VOUCHER'')')}"
+                                                   type="hidden"/>
+
+                                            <input id="postVoucher"
+                                                   th:value="${#authorization.expression('hasAuthority(''VOUCHER_POST'')')}"
+                                                   type="hidden"/>
+                                            <input id="unPostVoucher"
+                                                   th:value="${#authorization.expression('hasAuthority(''VOUCHER_UN_POST'')')}"
+                                                   type="hidden"/>
+                                            <input id="newPurchaseVoucher"
+                                                   th:value="${#authorization.expression('hasAuthority(''NEW_SALE_VOUCHER'')')}"
+                                                   type="hidden"/>
+                                            <input id="productName"
+                                                   th:value="${pjvVoucher.itemStock.itemStockEntries[__${0}__].itemDef.itemSubCategory.name + '&emsp;' + pjvVoucher.itemStock.itemStockEntries[__${0}__].itemDef.name}"
+                                                   type="hidden"/>
+                                            <input id="partyName" th:value="${pjvVoucher.itemStock.account.accountName}"
+                                                   type="hidden"/>
+                                            <input id="spartyName"
+                                                   th:value="${sjvVoucher.itemStock.account.accountName}"
+                                                   type="hidden"/>
+                                            <input id="voucherDate" th:value="${pjvVoucher.voucherDate}" type="hidden"/>
+                                            <input id="branchName" th:value="${pjvVoucher.itemStock.branch.name}"
+                                                   type="hidden"/>
+                                            <input id="address" th:value="${pjvVoucher.itemStock.branch.address}"
+                                                   type="hidden"/>
+
+                                            <input id="ntnNumber" th:value="${pjvVoucher.itemStock.branch.ntn}"
+                                                   type="hidden"/>
+                                            <input id="proprietorName"
+                                                   th:value="${pjvVoucher.itemStock.branch.proprietorName}"
+                                                   type="hidden"/>
+                                            <input id="proprietorEmail"
+                                                   th:value="${pjvVoucher.itemStock.branch.proprietorEmail}"
+                                                   type="hidden"/>
+                                            <input id="proprietorPhone"
+                                                   th:value="${pjvVoucher.itemStock.branch.proprietorPhone}"
+                                                   type="hidden"/>
+                                            <input id="bookNumber" th:value="${pjvVoucher.bookNumber}" type="hidden"/>
+                                            <input id="voucherCode" th:value="${pjvVoucher.voucherNumber}"
+                                                   type="hidden"/>
+                                            <input id="voucher_id" th:field="${pjvVoucher.id}" type="hidden"/>
+                                            <input id="voucher_posted_status" th:field="${pjvVoucher.posted}"
+                                                   type="hidden"/>
+                                            <input id="bName" th:field="${pjvVoucher.company.name}" type="hidden"/>
+
+                                            <input id="sjvoucher_id" th:field="${sjvVoucher.id}" type="hidden"/>
+                                            <input id="sjpostVoucher"
+                                                   th:value="${#authorization.expression('hasAuthority(''VOUCHER_POST'')')}"
+                                                   type="hidden"/>
+                                            <input id="sjeditVoucher"
+                                                   th:value="${#authorization.expression('hasAuthority(''EDIT_VOUCHER'')')}"
+                                                   type="hidden"/>
+                                            <input id="sjvoucher_posted_status" th:field="${sjvVoucher.posted}"
+                                                   type="hidden"/>
+
+                                            <div class="row invoice-info">
+                                                <div class="col-md-7">
+                                                    <table width="100%">
+                                                        <tbody>
+                                                        <tr style="height: 40px;">
+                                                            <td class="col-md-2"></td>
+                                                            <td class="col-md-2 text-right" style="font-size: 14px;">
+                                                                <strong>COMPANY : </strong></td>
+                                                            <td class="col-md-4" style="font-size: 14px;">
+                                                                <strong th:text="${pjvVoucher.company.name}"></strong>
+                                                            </td>
+                                                            <td class="col-md-2"></td>
+                                                        </tr>
+                                                        <tr style="height: 40px;">
+                                                            <td class="col-md-2"></td>
+                                                            <td class="col-md-2 text-right" style="font-size: 14px;">
+                                                                <strong>BRANCH : </strong></td>
+                                                            <td class="col-md-4" style="font-size: 14px;">
+                                                                <strong th:text="${pjvVoucher.itemStock.branch.name}"></strong>
+                                                            </td>
+                                                            <td class="col-md-2"></td>
+                                                        </tr>
+                                                        <tr style="height: 40px;">
+                                                            <td class="col-md-2"></td>
+                                                            <td class="col-md-2 text-right" style="font-size: 14px;">
+                                                                <strong>ADDRESS : </strong></td>
+                                                            <td class="col-md-4" style="font-size: 14px;">
+                                                                <strong th:text="${pjvVoucher.itemStock.branch.address}"></strong>
+                                                            </td>
+                                                            <td class="col-md-2"></td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <div class="x_panel">
+                                                        <table width="100%">
+                                                            <tbody>
+                                                            <tr style="height: 20px;">
+                                                                <td class="col-md-2 text-right"
+                                                                    style="font-size: 14px;">
+                                                                    <strong>CREATED AT : </strong></td>
+                                                                <td class="col-md-8" style="font-size: 14px;">
+                                                                    <strong th:text="${pjvVoucher.createdAt}"></strong>
+                                                                </td>
+
+                                                            </tr>
+
+                                                            <tr style="height: 20px;">
+
+                                                                <td class="col-md-2 text-right"
+                                                                    style="font-size: 14px;">
+                                                                    <strong>CREATED BY : </strong></td>
+                                                                <td class="col-md-8" style="font-size: 14px;">
+                                                                    <strong th:text="${pjvVoucher.createdBy}"></strong>
+                                                                </td>
+
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="col-md-3">.</td>
+                                                            </tr>
+                                                            <tr style="height: 20px;">
+                                                                <td class="col-md-2 text-right"
+                                                                    style="font-size: 14px;">
+                                                                    <strong>UPDATED AT : </strong></td>
+                                                                <td class="col-md-8" style="font-size: 14px;">
+                                                                    <strong th:text="${pjvVoucher.modifiedAt}"></strong>
+                                                                </td>
+
+                                                            </tr>
+                                                            <tr style="height: 20px;">
+                                                                <td class="col-md-2 text-right"
+                                                                    style="font-size: 14px;">
+                                                                    <strong>UPDATED BY : </strong></td>
+                                                                <td class="col-md-8" style="font-size: 14px;">
+                                                                    <strong th:text="${pjvVoucher.modifiedBy}"></strong>
+                                                                </td>
+
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="row invoice-info" style="margin-top: 30px;">
+                                                <div class="col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="x_panel">
+                                                                <div class="x_title">
+                                                                    <h2>PURCHASE INVOICE</h2>
+                                                                    <div class="clearfix"></div>
+                                                                </div>
+                                                                <div class="x_content">
+                                                                    <table class="col-sm-12 table table-striped">
+                                                                        <thead>
+                                                                        <tr style="height: 40px;">
+                                                                            <td class="col-md-2">VOUCHER NO</td>
+                                                                            <td class="col-md-4"><strong
+                                                                                    th:text="${pjvVoucher.voucherCode}"></strong>
+                                                                            </td>
+                                                                            <td class="col-md-2">VOUCHER DATE</td>
+                                                                            <td class="col-md-4"><strong
+                                                                                    th:text="${#dates.format(pjvVoucher.voucherDate, 'dd-MM-yyyy')}"></strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr style="height: 40px;">
+                                                                            <td class="col-md-2">PARTY NAME</td>
+                                                                            <td class="col-md-10" colspan="3"><strong
+                                                                                    th:text="${pjvVoucher.itemStock.account.formattedCode} + '&emsp;' + ${pjvVoucher.itemStock.account.accountName}"></strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr style="height: 40px;">
+                                                                            <td class="col-md-2">PRODUCT</td>
+                                                                            <td class="col-md-10" colspan="3"><strong
+                                                                                    th:text="${pjvVoucher.itemStock.itemStockEntries[__${0}__].itemDef.itemSubCategory.name + '&emsp;' + pjvVoucher.itemStock.itemStockEntries[__${0}__].itemDef.name}"></strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr style="height: 40px;">
+
+                                                                            <td class="col-md-2">VEHICLE NO</td>
+                                                                            <td class="col-md-4"><strong
+                                                                                    th:text="${pjvVoucher.vehicalNumber}"></strong>
+                                                                            </td>
+                                                                            <td class="col-md-2">BOOK NO</td>
+                                                                            <td class="col-md-4"><strong
+                                                                                    th:text="${pjvVoucher.bookNumber}"></strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                        <tr>
+                                                                            <td colspan="4"
+                                                                                style="back-color: white !important;">
+                                                                                <table class="col-sm-12 table table-striped table-bordered"
+                                                                                       style="margin-top: 25px;">
+                                                                                    <thead>
+                                                                                    <tr>
+                                                                                        <th class="text-right">BAGS</th>
+                                                                                        <th class="text-right">GROSS
+                                                                                            WT(KG)
+                                                                                        </th>
+                                                                                        <th class="text-right">BAG WT
+                                                                                        </th>
+                                                                                        <th class="text-right">
+                                                                                            DEDUCTION
+                                                                                        </th>
+                                                                                        <th class="text-right">NET
+                                                                                            WT(KG)
+                                                                                        </th>
+                                                                                        <th class="text-right">RATE</th>
+                                                                                        <th class="text-right">GROSS
+                                                                                            AMOUNT
+                                                                                        </th>
+                                                                                    </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                    <tr th:each="pjvVoucher.itemStock.itemStockEntry, rowStat : ${pjvVoucher.itemStock.itemStockEntries}">
+                                                                                        <td class="text-right"
+                                                                                            th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].bags}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalKg}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalBagWeightDeduction}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalKatoti}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].safiKg}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].price}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].amount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td colspan="4"
+                                                                                style="back-color: white !important;">
+                                                                                <table class="col-sm-12 table table-striped table-bordered"
+                                                                                       style="margin-top: 25px;">
+                                                                                    <tbody>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">WITH
+                                                                                            HOLDING TAX
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.millTaxRate, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.millTaxAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">SALES TAX
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.bankTaxRate, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.bankTaxAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">BANK TAX
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.silaiRate, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.silaiAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">BARDANA
+                                                                                            etc.
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.bardanaRate, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.bardanaAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">OTHER
+                                                                                            EXPENSES
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.otherExp, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">CARRIAGE
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.freightCharges, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">NET
+                                                                                            PURCHASE
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.netAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </td>
+                                                                        </tr>
+                                                                        </tbody>
+                                                                    </table>
+
+                                                                    <div class="row">
+                                                                        <div class="col-md-12">
+                                                                            <div class="x_content">
+                                                                                <table class="table table-striped table-bordered"
+                                                                                       id="Invoice_pdf">
+                                                                                    <thead style="display: none;">
+                                                                                    <tr>
+                                                                                        <th>VEHICLE NO</th>
+                                                                                        <th>BAGS</th>
+                                                                                        <th>GRASS WT(KG)</th>
+                                                                                        <th>BAG WT</th>
+                                                                                        <th>DEDUCTION</th>
+                                                                                        <th>NET WT(KG)</th>
+                                                                                        <th>RATE</th>
+                                                                                        <th>GROSS AMOUNT</th>
+                                                                                    </tr>
+                                                                                    </thead>
+                                                                                    <tbody style="display: none;">
+                                                                                    <tr th:each="pjvVoucher.itemStock.itemStockEntry, rowStat : ${pjvVoucher.itemStock.itemStockEntries}">
+                                                                                        <td th:text="${pjvVoucher.vehicalNumber}"></td>
+                                                                                        <td th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].bags}"></td>
+                                                                                        <td th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalKg}"></td>
+                                                                                        <td th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalBagWeightDeduction}"></td>
+                                                                                        <td th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalKatoti}"></td>
+                                                                                        <td th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].safiKg}"></td>
+
+                                                                                        <!-- <td
+                                                                                            th:text="${voucher.itemStock.itemStockEntries[__${rowStat.index}__].itemDef.itemSubCategory.name + '&emsp;' + voucher.itemStock.itemStockEntries[__${rowStat.index}__].itemDef.name}"></td>
+                                                                                         <td th:text="${voucher.itemStock.itemStockEntries[__${rowStat.index}__].itemDef.availableQuantity}"></td>
+                                                                                        <td
+                                                                                            th:text="${voucher.itemStock.itemStockEntries[__${rowStat.index}__].itemQuantity}"></td>-->
+                                                                                        <td th:text="${pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].price-5}"></td>
+
+                                                                                        <!-- <td
+                                                                                            th:text="${voucher.itemStock.itemStockEntries[__${rowStat.index}__].safiKg}"></td>
+                                                                                         -->
+
+                                                                                        <td th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].amount-pjvVoucher.itemStock.itemStockEntries[__${0}__].safiKg/40*5, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Commission(@5):</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.itemStockEntries[__${0}__].safiKg/40*5, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Total Amount:</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.itemStockEntries[__${0}__].amount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>W(Tax):</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.millTaxAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Advance(F):</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.freightCharges, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Net Amount:</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.netAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Net Amount:</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(pjvVoucher.itemStock.netAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    </tbody>
+                                                                                    <tfoot style="display: none;">
+                                                                                    <tr>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    </tfoot>
+                                                                                </table>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="x_panel">
+                                                                <div class="x_title">
+                                                                    <h2>SALES INVOICE</h2>
+                                                                    <div class="clearfix"></div>
+                                                                </div>
+                                                                <div class="x_content">
+
+                                                                    <table class="col-sm-12 table table-striped">
+                                                                        <thead>
+                                                                        <tr style="height: 40px;">
+                                                                            <td class="col-md-2">VOUCHER NO</td>
+                                                                            <td class="col-md-4"><strong
+                                                                                    th:text="${sjvVoucher.voucherCode}"></strong>
+                                                                            </td>
+                                                                            <td class="col-md-2">VOUCHER DATE</td>
+                                                                            <td class="col-md-4"><strong
+                                                                                    th:text="${#dates.format(sjvVoucher.voucherDate, 'dd-MM-yyyy')}"></strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr style="height: 40px;">
+                                                                            <td class="col-md-2">PARTY NAME</td>
+                                                                            <td class="col-md-10" colspan="3"><strong
+                                                                                    th:text="${sjvVoucher.itemStock.account.formattedCode} + '&emsp;' + ${sjvVoucher.itemStock.account.accountName}"></strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr style="height: 40px;">
+                                                                            <td class="col-md-2">PRODUCT</td>
+                                                                            <td class="col-md-10" colspan="3"><strong
+                                                                                    th:text="${sjvVoucher.itemStock.itemStockEntries[__${0}__].itemDef.itemSubCategory.name + '&emsp;' + sjvVoucher.itemStock.itemStockEntries[__${0}__].itemDef.name}"></strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr style="height: 40px;">
+
+                                                                            <td class="col-md-2">VEHICLE NO</td>
+                                                                            <td class="col-md-4"><strong
+                                                                                    th:text="${sjvVoucher.vehicalNumber}"></strong>
+                                                                            </td>
+                                                                            <td class="col-md-2">BOOK NO</td>
+                                                                            <td class="col-md-4"><strong
+                                                                                    th:text="${sjvVoucher.bookNumber}"></strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                        <tr>
+                                                                            <td colspan="4"
+                                                                                style="back-color: white !important;">
+                                                                                <table class="col-sm-12 table table-striped table-bordered"
+                                                                                       style="margin-top: 25px;">
+                                                                                    <thead>
+                                                                                    <tr>
+                                                                                        <th class="text-right">BAGS</th>
+                                                                                        <th class="text-right">GROSS
+                                                                                            WT(KG)
+                                                                                        </th>
+                                                                                        <th class="text-right">BAG WT
+                                                                                        </th>
+                                                                                        <th class="text-right">
+                                                                                            DEDUCTION
+                                                                                        </th>
+                                                                                        <th class="text-right">NET
+                                                                                            WT(KG)
+                                                                                        </th>
+                                                                                        <th class="text-right">RATE</th>
+                                                                                        <th class="text-right">GROSS
+                                                                                            AMOUNT
+                                                                                        </th>
+                                                                                    </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                    <tr th:each="sjvVoucher.itemStock.itemStockEntry, rowStat : ${sjvVoucher.itemStock.itemStockEntries}">
+                                                                                        <td class="text-right"
+                                                                                            th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].bags}">
+                                                                                        </th>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalKg}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalBagWeightDeduction}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalKatoti}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__]. safiKg}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].price}"></td>
+                                                                                        <td class="text-right"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].amount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td colspan="4"
+                                                                                style="back-color: white !important;">
+                                                                                <table class="col-sm-12 table table-striped table-bordered"
+                                                                                       style="margin-top: 25px;">
+                                                                                    <tbody>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">WITH
+                                                                                            HOLDING TAX
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.millTaxRate, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.millTaxAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">SALES TAX
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.bankTaxRate, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.bankTaxAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">BANK TAX
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.silaiRate, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.silaiAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">BARDANA
+                                                                                            etc.
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.bardanaRate, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.bardanaAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">OTHER
+                                                                                            EXPENSES
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.otherExp, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">CARRIAGE
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.freightCharges, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="col-md-8">NET SALES
+                                                                                        </td>
+                                                                                        <td class="col-md-2 text-center"></td>
+                                                                                        <td class="col-md-2 text-center"
+                                                                                            th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.netAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </td>
+                                                                        </tr>
+                                                                        </tbody>
+                                                                    </table>
+
+
+                                                                    <div class="row">
+                                                                        <div class="col-md-12">
+                                                                            <div class="x_content">
+                                                                                <table class="table table-striped table-bordered"
+                                                                                       id="Invoices_pdf">
+                                                                                    <thead style="display: none;">
+                                                                                    <tr>
+                                                                                        <th>VEHICLE NO</th>
+                                                                                        <th>BAGS</th>
+                                                                                        <th>GRASS WT(KG)</th>
+                                                                                        <th>BAG WT</th>
+                                                                                        <th>DEDUCTION</th>
+                                                                                        <th>NET WT(KG)</th>
+                                                                                        <th>RATE</th>
+                                                                                        <th>GROSS AMOUNT</th>
+                                                                                    </tr>
+                                                                                    </thead>
+                                                                                    <tbody style="display: none;">
+                                                                                    <tr th:each="sjvVoucher.itemStock.itemStockEntry, rowStat : ${sjvVoucher.itemStock.itemStockEntries}">
+                                                                                        <td th:text="${sjvVoucher.vehicalNumber}"></td>
+                                                                                        <td th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].bags}"></td>
+                                                                                        <td th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalKg}"></td>
+                                                                                        <td th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalBagWeightDeduction}"></td>
+                                                                                        <td th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].totalKatoti}"></td>
+                                                                                        <td th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].safiKg}"></td>
+
+                                                                                        <!-- <td
+                                                                                            th:text="${voucher.itemStock.itemStockEntries[__${rowStat.index}__].itemDef.itemSubCategory.name + '&emsp;' + voucher.itemStock.itemStockEntries[__${rowStat.index}__].itemDef.name}"></td>
+                                                                                         <td th:text="${voucher.itemStock.itemStockEntries[__${rowStat.index}__].itemDef.availableQuantity}"></td>
+                                                                                        <td
+                                                                                            th:text="${voucher.itemStock.itemStockEntries[__${rowStat.index}__].itemQuantity}"></td>-->
+                                                                                        <td th:text="${sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].price}"></td>
+
+                                                                                        <!-- <td
+                                                                                            th:text="${voucher.itemStock.itemStockEntries[__${rowStat.index}__].safiKg}"></td>
+                                                                                         -->
+
+                                                                                        <td th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.itemStockEntries[__${rowStat.index}__].amount-sjvVoucher.itemStock.itemStockEntries[__${0}__].safiKg/40*5, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Commission(@5):</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.itemStockEntries[__${0}__].safiKg/40*5, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Total Amount:</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.itemStockEntries[__${0}__].amount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>W(Tax):</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.millTaxAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Advance(F):</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.freightCharges, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Net Amount:</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.netAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th>_</th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th>Net Amount:</th>
+                                                                                        <td th:text="${#numbers.formatDecimal(sjvVoucher.itemStock.netAmount, 0, 'DEFAULT', 0, 'DEFAULT')}"></td>
+                                                                                    </tr>
+                                                                                    </tbody>
+                                                                                    <tfoot style="display: none;">
+                                                                                    <tr>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                        <th></th>
+                                                                                    </tr>
+                                                                                    </tfoot>
+                                                                                </table>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- footer content -->
+    <footer>
+        <div class="pull-right">Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+        </div>
+        <div class="clearfix"></div>
+    </footer>
+    <!-- /footer content -->
+</div>
+
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- NProgress -->
+<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Datatables -->
+<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+<script th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+<script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+<!-- Select2 -->
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<!-- confirm -->
+<script th:src="@{/vendors/jquery-confirm-master/js/jquery-confirm.js}"></script>
+
+<!-- Datatables -->
+<!-- <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jquery.dataTables.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/dataTables.buttons.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jszip.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/pdfmake.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/vfs_fonts.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.html5.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.print.min.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+</script>
+</body>
+</html>

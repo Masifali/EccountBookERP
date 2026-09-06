@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>M-TECH</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <!-- NProgress -->
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <!-- iCheck -->
+    <link rel="stylesheet" th:href="@{/vendors/iCheck/skins/flat/green.css}">
+    <!-- Datatables -->
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+    <!-- Select2 -->
+    <link rel="stylesheet"
+          th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <link rel="stylesheet" th:href="@{/vendors/jquery-confirm-master/css/jquery-confirm.css}">
+
+    <!-- Custom Theme Style -->
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- side bar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div"></div>
+        <!-- /side bar and top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <ol class="breadcrumb">
+                            <li><a href="../index">HOME</a></li>
+                            <li>UTILITIES</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="x_panel" id="user_panel">
+                            <div class="x_title">
+                                <h2>USER</h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <button class="btn btn-success add-row" data-target="#add_new_user" data-toggle="modal"
+                                        style="float: right;" type="button">ADD NEW
+                                </button>
+                                <table class="table table-striped table-bordered"
+                                       id="user_table" th:object="${users}">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>FIRST NAME</th>
+                                        <th>LAST NAME</th>
+                                        <th>LOGIN</th>
+                                        <th>EMAIL</th>
+                                        <th>IS ADMIN</th>
+                                        <th>ACTIVE</th>
+                                        <th>ACTION</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                    <tr th:each="user : ${users}">
+                                        <td>
+                                            <span class="serial_no"></span>
+                                            <!-- <input type="hidden" id="user_id" th:value="${user.id}" /> -->
+                                            <input class="user_id" th:value="${user.id}" type="hidden"/>
+                                        </td>
+                                        <td th:text="${user.firstName}"></td>
+                                        <td th:text="${user.lastName}"></td>
+                                        <td th:text="${user.login}"></td>
+                                        <td th:text="${user.email}"></td>
+                                        <td th:text="${user.admin} ? 'YES' : 'NO'"></td>
+                                        <td th:text="${user.active} ? 'YES' : 'NO'"></td>
+                                        <td>
+                                            <a class="edit_user" href="javascript:void(0)"
+                                               style="text-decoration: underline;">EDIT</a> /
+                                            <a class="delete_user" href="javascript:void(0)"
+                                               style="text-decoration: underline;">DELETE</a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        </div>
+                        <!-- Panel -->
+
+                        <div class="x_panel" id="company_panel">
+                            <div class="x_title">
+                                <h2>COMPANY</h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <button class="btn btn-success add-row" data-target="#add_new_company"
+                                        data-toggle="modal"
+                                        style="float: right;" type="button">ADD NEW
+                                </button>
+                                <table class="table table-striped table-bordered"
+                                       id="company_table" th:object="${companies}">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>COMPANY</th>
+                                        <th>ADDRESS</th>
+                                        <th>CONTACT NO</th>
+                                        <th>EMAIL</th>
+                                        <th>WEBSITE</th>
+                                        <th>AVGRATE</th>
+                                        <th>BYMAN</th>
+                                        <th>ACTION</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                    <tr th:each="company : ${companies}">
+                                        <td>
+                                            <span class="serial_no"></span>
+                                            <input id="company_id" th:value="${company.id}" type="hidden"/>
+                                        </td>
+                                        <td th:text="${company.name}"></td>
+                                        <td th:text="${company.address}"></td>
+                                        <td th:text="${company.contactNo}"></td>
+                                        <td th:text="${company.email}"></td>
+                                        <td th:text="${company.website}"></td>
+                                        <td th:text="${company.calculateAvgRate}"></td>
+                                        <td th:text="${company.brokeryByMan}"></td>
+                                        <td>
+                                            <a class="edit_company" href="javascript:void(0)"
+                                               style="text-decoration: underline;">EDIT</a> /
+                                            <a class="delete_company" href="javascript:void(0)"
+                                               style="text-decoration: underline;">DELETE</a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        </div>
+                        <!-- Panel -->
+
+                        <div class="x_panel" id="branch_panel">
+                            <div class="x_title">
+                                <h2>BRANCH</h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <button class="btn btn-success add-row" data-target="#add_new_branch"
+                                        data-toggle="modal"
+                                        style="float: right;" type="button">ADD NEW
+                                </button>
+                                <table class="table table-striped table-bordered"
+                                       id="branch_table" th:object="${companies}">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>COMPANY</th>
+                                        <th>BRANCH</th>
+                                        <th>ADDRESS</th>
+                                        <th>CONTACT NO</th>
+                                        <th>EMAIL</th>
+                                        <th>WEBSITE</th>
+                                        <th>PRO NAME</th>
+                                        <th>PRO EMAIL</th>
+                                        <th>PRO PHONE</th>
+                                        <th>NTN NO</th>
+                                        <th>ACTION</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <th:block th:each="company : ${companies}">
+                                        <tr th:each="branch : ${company.branches}">
+                                            <td>
+                                                <span class="serial_no"></span>
+                                                <input id="company_id" th:value="${company.id}" type="hidden"/>
+                                                <input id="branch_id" th:value="${branch.id}" type="hidden"/>
+                                            </td>
+                                            <td th:text="${company.name}"></td>
+                                            <td th:text="${branch.name}"></td>
+                                            <td th:text="${branch.address}"></td>
+                                            <td th:text="${branch.contactNo}"></td>
+                                            <td th:text="${branch.email}"></td>
+                                            <td th:text="${branch.website}"></td>
+                                            <td th:text="${branch.proprietorName}"></td>
+                                            <td th:text="${branch.proprietorEmail}"></td>
+                                            <td th:text="${branch.proprietorPhone}"></td>
+                                            <td th:text="${branch.ntn}"></td>
+                                            <td>
+                                                <a class="edit_branch" href="javascript:void(0)"
+                                                   style="text-decoration: underline;">EDIT</a> /
+                                                <a class="delete_branch" href="javascript:void(0)"
+                                                   style="text-decoration: underline;">DELETE</a>
+                                            </td>
+                                        </tr>
+                                    </th:block>
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        </div>
+                        <!-- Panel -->
+
+                        <div class="x_panel" id="financial_year_panel" style="display:none">
+                            <div class="x_title">
+                                <h2>FINANCIAL YEAR</h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <button class="btn btn-success add-row" data-target="#add_new_financial_year"
+                                        data-toggle="modal" id="getNewFinancialYear" style="float: right;"
+                                        type="button">ADD NEW
+                                </button>
+                                <table class="table table-striped table-bordered"
+                                       id="financial_year_table" th:object="${financialYears}">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>NAME</th>
+                                        <th>FROM DATE</th>
+                                        <th>TO DATE</th>
+                                        <th>ACTIVE MONTHS</th>
+                                        <th>ACTION</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <tr th:each="financialYear : ${financialYears}">
+                                        <td>
+                                            <span class="serial_no"></span>
+                                            <input id="financialYear_id" th:value="${financialYear.id}" type="hidden"/>
+                                        </td>
+                                        <td th:text="${financialYear.name}"></td>
+                                        <td th:text="${#dates.format(financialYear.fromDate, 'dd/MM/yyyy')}"></td>
+                                        <td th:text="${#dates.format(financialYear.toDate, 'dd/MM/yyyy')}"></td>
+                                        <td>
+                                            <th:block
+                                                    th:each="financialYearMonth : ${financialYear.financialYearMonths}">
+                                                <label>
+                                                    <input disabled th:checked="${financialYearMonth.active}"
+                                                           th:id="${financialYearMonth.id}"
+                                                           th:text="'&nbsp;' + ${#strings.toUpperCase(#dates.monthName(financialYearMonth.monthYear))} + '&nbsp;' + ${#dates.format(financialYearMonth.monthYear, 'yyyy')}"
+                                                           th:value="${#dates.format(financialYearMonth.monthYear, 'yyyy-MM')} + '-01'"
+                                                           type="checkbox"/>
+                                                </label>
+                                                <br>
+                                            </th:block>
+                                        </td>
+                                        <td>
+                                            <a class="edit_financialYear" href="javascript:void(0)"
+                                               style="text-decoration: underline;">EDIT</a> /
+                                            <a class="delete_financialYear" href="javascript:void(0)"
+                                               style="text-decoration: underline;">DELETE</a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        </div>
+                        <!-- Panel -->
+
+                    </div>
+                </div>
+
+                <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="add_new_user"
+                     role="dialog"
+                     tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">×</button>
+                                <h4 class="modal-title">ADD/UPDATE USER</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <form class="form-horizontal" id="addUserForm" method="post"
+                                      th:action="@{/utilities/add_or_update_user}" th:object="${user}">
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">FIRST NAME</label>
+                                        <div class="col-lg-10">
+                                            <input th:field="${user.id}" type="hidden"/>
+                                            <input class="form-control" placeholder="FIRST NAME" required
+                                                   th:field="${user.firstName}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">LAST NAME</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="LAST NAME" required
+                                                   th:field="${user.lastName}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">EMAIL</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="EMAIL" required
+                                                   th:field="${user.email}" type="email">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">USERNAME</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="USERNAME" required
+                                                   th:field="${user.login}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">PASSWORD</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="PASSWORD" required
+                                                   th:field="${user.password}" type="password">
+                                            <!-- <label th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="validation-message"></label> -->
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-12 control-label">PERMISSIONS</label>
+                                        <div id="permission">
+                                            <th:block th:each="role, roleStat : *{moduleList}">
+                                                <div class="x_content">
+                                                    <h2 style="text-align: center; color: green;"
+                                                        th:text="${role.moduleName}"></h2>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                                <input th:field="*{moduleList[__${roleStat.index}__].id}"
+                                                       type="hidden"/>
+
+                                                <!-- Bind checkboxes to selectedPermissions -->
+                                                <th:block th:each="label, labelStat : ${role.menu}">
+                                                    <div class="col-sm-6">
+                                                        <input class="checkboxes"
+                                                               th:field="*{selectedPermissions}"
+                                                               th:id="${label.id}"
+                                                               th:value="${label.id}"
+                                                               type="checkbox">
+                                                        <label th:text="${label.screen}"></label>
+                                                    </div>
+                                                </th:block>
+                                            </th:block>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-lg-offset-2 col-lg-10">
+                                            <button class="btn btn-default" data-dismiss="modal" style="float: right;"
+                                                    type="button">CANCEL
+                                            </button>
+                                            <button class="btn btn-success" style="float: right;" type="submit">SAVE
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- USER MODAL END -->
+
+                <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="add_new_company"
+                     role="dialog"
+                     tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">×</button>
+                                <h4 class="modal-title">ADD/UPDATE COMPANY</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <form class="form-horizontal" id="addCompanyForm" method="post"
+                                      th:action="@{/utilities/add_or_update_company}" th:object="${company}">
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">COMPANY NAME</label>
+                                        <div class="col-lg-10">
+                                            <input th:field="${company.id}" type="hidden"/>
+                                            <input class="form-control" placeholder="Company Name" required
+                                                   th:field="${company.name}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">ADDRESS</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Address" required
+                                                   th:field="${company.address}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">CONTACT NO</label>
+                                        <div class="col-lg-8">
+                                            <input class="form-control" placeholder="Contact No" required
+                                                   th:field="${company.contactNo}" type="text">
+
+                                        </div>
+                                        <div class="col-lg-2">
+                                            <a class="btn btn-success" style="float: right;" type="submit">SEARCH</a>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">EMAIL</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Email" required
+                                                   th:field="${company.email}" type="email">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">WEBSITE</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Website" required
+                                                   th:field="${company.website}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">Avg Rate Cal</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="1" required
+                                                   th:field="${company.calculateAvgRate}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">Bro By Man</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="1" required
+                                                   th:field="${company.brokeryByMan}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-offset-2 col-lg-10">
+                                            <button class="btn btn-default" data-dismiss="modal" style="float: right;"
+                                                    type="button">Cancel
+                                            </button>
+                                            <button class="btn btn-success" style="float: right;" type="submit">SAVE
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- COMPANY MODAL END -->
+
+                <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="add_new_branch"
+                     role="dialog"
+                     tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">×</button>
+                                <h4 class="modal-title">ADD/UPDATE BRANCH</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <form class="form-horizontal" id="addBranchForm" method="post"
+                                      th:action="@{/utilities/add_or_update_branch}" th:object="${branch}">
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">COMPANY NAME</label>
+                                        <div class="col-lg-10">
+                                            <input th:field="${company.id}" type="hidden"/>
+                                            <select class="form-control" required="required"
+                                                    th:field="${branch.company}">
+                                                <option th:each="company : ${companies}"
+                                                        th:text="${company.name}" th:value="${company.id}">
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">BRANCH NAME</label>
+                                        <div class="col-lg-10">
+                                            <input th:field="${branch.id}" type="hidden"/>
+                                            <input class="form-control" placeholder="Branch Name" required
+                                                   th:field="${branch.name}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">ADDRESS</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Address" required
+                                                   th:field="${branch.address}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">CONTACT NO</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Contact No" required
+                                                   th:field="${branch.contactNo}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">EMAIL</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Email" required
+                                                   th:field="${branch.email}" type="email">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">WEBSITE</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Website" required
+                                                   th:field="${branch.website}" type="text">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">PRO NAME</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Proprietor Name" required
+                                                   th:field="${branch.proprietorName}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">PRO EMAIL</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Proprietor Email" required
+                                                   th:field="${branch.proprietorEmail}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">PRO PHONE</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="Proprietor Phone" required
+                                                   th:field="${branch.proprietorPhone}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">NTN</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" placeholder="NTN" required
+                                                   th:field="${branch.ntn}" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-offset-2 col-lg-10">
+                                            <button class="btn btn-default" data-dismiss="modal" style="float: right;"
+                                                    type="button">Cancel
+                                            </button>
+                                            <button class="btn btn-success" style="float: right;" type="submit">SAVE
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- BRANCH MODAL END -->
+
+                <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="add_new_financial_year"
+                     role="dialog" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">×</button>
+                                <h4 class="modal-title">ADD/UPDATE FINANCIAL YEAR</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <form class="form-horizontal" id="addFinancialYearForm" method="post"
+                                      th:action="@{/utilities/add_or_update_financial_year}"
+                                      th:object="${financialYear}">
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">FROM DATE</label>
+                                        <div class="col-lg-10">
+                                            <input th:field="${financialYear.id}" type="hidden"/>
+                                            <input class="form-control" readonly required
+                                                   th:field="${financialYear.fromDate}" type="date">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">TO DATE</label>
+                                        <div class="col-lg-10">
+                                            <input class="form-control" readonly required
+                                                   th:field="${financialYear.toDate}" type="date">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">ACTIVE MONTHS</label>
+                                        <div class="col-lg-10">
+                                            <div id="month_checkboxes">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-offset-2 col-lg-10">
+                                            <button class="btn btn-default" data-dismiss="modal" style="float: right;"
+                                                    type="button">Cancel
+                                            </button>
+                                            <button class="btn btn-success" style="float: right;" type="submit">SAVE
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- FINANCIAL YEAR MODAL END -->
+
+            </div>
+            <!-- /page content -->
+
+            <!-- footer content -->
+            <footer>
+                <div class="pull-right">
+                    Gentelella - Bootstrap Admin Template by <a
+                        href="https://colorlib.com">Colorlib</a>
+                </div>
+                <div class="clearfix"></div>
+            </footer>
+            <!-- /footer content -->
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- NProgress -->
+<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Datatables -->
+<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+<!-- <script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script> -->
+<!-- Select2 -->
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<!-- confirm -->
+<script th:src="@{/vendors/jquery-confirm-master/js/jquery-confirm.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script th:src="@{/build/js/countx_utilities.js}"></script>
+
+<script>
+    $(".select2_single").select2({});
+    $("table").DataTable({
+        pageLength: 50,
+    });
+</script>
+
+</body>
+</html>
