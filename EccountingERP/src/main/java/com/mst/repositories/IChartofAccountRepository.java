@@ -23,4 +23,19 @@ public interface IChartofAccountRepository extends JpaRepository<ChartofAccount,
 
 	@Query("select coalesce(max(c.id), 0) from ChartofAccount c")
 	int findMaxId();
+
+	List<ChartofAccount> findByAccountLevelOrderByAccountTitle(Integer accountLevel);
+
+	List<ChartofAccount> findByAccountTitleContainingIgnoreCaseOrAccountCodeContainingIgnoreCaseOrderByAccountTitle(String titleQuery, String codeQuery);
+
+	List<ChartofAccount> findByAccountLevelInOrderByAccountCode(List<Integer> accountLevels);
+
+	@Query(value = "SELECT DISTINCT c.* FROM ChartofAccount c " +
+	       "LEFT JOIN AccountsCustomGroups g ON c.Id = g.ChartOfAccountId " +
+	       "WHERE g.AcLookUpsId = 15 OR c.AccountGroup = 'Detail' " +
+	       "ORDER BY c.AccountTitle", nativeQuery = true)
+	List<ChartofAccount> findBankAccounts();
 }
+
+
+

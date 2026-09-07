@@ -2,6 +2,7 @@ package com.mst.security.filter;
 
 
 import com.mst.repositories.IUserRepository;
+import com.mst.security.CustomUserDetailsService;
 import com.mst.security.JwtUtils;
 import com.mst.services.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -37,7 +38,7 @@ public class ReceiptMangerAuthFilter extends OncePerRequestFilter {
     AuthenticationManager authenticationManager;
     @Autowired
     @Lazy
-    UserService userService;
+    CustomUserDetailsService customUserDetailsService;
     @Autowired
     private IUserRepository userRepository;
     @Autowired
@@ -77,7 +78,7 @@ public class ReceiptMangerAuthFilter extends OncePerRequestFilter {
             if (username != null) {
 
                 if (jwtUtils.validateToken(authToken, username)) {
-                    UserDetails userDetails = userService.loadUserByUsername(username);
+                    UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, userDetails.getPassword(), userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     logger.info("authenticated user " + username + ", setting security context");
@@ -117,7 +118,7 @@ public class ReceiptMangerAuthFilter extends OncePerRequestFilter {
         String jwt = parseJwt(request);
 
         String username = jwtUtils.getUserNameFromJwtToken(jwt);
-        UserDetails userDetails = userService.loadUserByUsername(username);
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
         filterChain.doFilter(request, response);
        /* authentication = authenticationManager.authenticate(new ReceiptAuthToken(username, userDetails.getPassword()));
         filterChain.doFilter(request, response);

@@ -49,14 +49,14 @@ public class ChartofAccount {
 
     @Column(name = "AccountCode", nullable = false, length = 30)
     private String accountCode;
-    @Column(name = "AccountCode", nullable = false, length = 30)
-    private String accountCodsse;
+
     /** "0" for a top-level (root) account - matches the desktop BLL's Save() default. */
     @Column(name = "ParentAccountCode", length = 30)
     private String parentAccountCode = "0";
     /** Numeric id of the parent row (desktop: ParentCodeId), alongside parentAccountCode. */
     @Column(name = "ParentCodeId")
     private Integer parentCodeId;
+
 
     /** "Group" or "Detail" - matches the desktop's AccountGroup values. */
     @Column(name = "AccountGroup", length = 20)

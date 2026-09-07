@@ -11,4 +11,8 @@ public interface ICOAAllocationRepository extends JpaRepository<COAAllocation, I
 	List<COAAllocation> findByChartofAccountId(Integer chartofAccountId);
 
 	COAAllocation findByChartofAccountIdAndCompanyId(Integer chartofAccountId, Integer companyId);
+
+	List<COAAllocation> findByCompanyId(Integer companyId);
+
+	void deleteByCompanyId(Integer companyId);
 }

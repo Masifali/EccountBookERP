@@ -77,16 +77,48 @@ public class ChartofAccountService implements IChartofAccountService {
 
 	@Override
 	public List<ChartofAccount> getRootAccounts() {
-		return chartofAccountRepository.findByParentAccountCodeOrderByAccountTitle("0");
+		List<ChartofAccount> roots = chartofAccountRepository.findByParentAccountCodeOrderByAccountTitle("0");
+		if (roots == null || roots.isEmpty()) {
+			roots = chartofAccountRepository.findByParentAccountCodeOrderByAccountTitle("");
+		}
+		if (roots == null || roots.isEmpty()) {
+			roots = chartofAccountRepository.findByAccountLevelOrderByAccountTitle(1);
+		}
+		return roots;
 	}
 
 	@Override
 	public List<ChartofAccount> getAccountsByParent(String parentAccountCode) {
-		if (!StringUtils.hasText(parentAccountCode)) {
-			parentAccountCode = "0";
+		if (!StringUtils.hasText(parentAccountCode) || "0".equals(parentAccountCode.trim())) {
+			return getRootAccounts();
 		}
-		return chartofAccountRepository.findByParentAccountCodeOrderByAccountTitle(parentAccountCode);
+		final String targetCode = parentAccountCode.trim();
+
+		ChartofAccount parent = chartofAccountRepository.findByAccountCode(targetCode);
+		final Integer parentId = parent != null ? parent.getId() : null;
+		final Integer parentLevel = parent != null ? parent.getAccountLevel() : null;
+
+		List<ChartofAccount> list = chartofAccountRepository.findAllByOrderByAccountCode().stream()
+				.filter(a -> {
+					if (a.getParentAccountCode() != null && targetCode.equalsIgnoreCase(a.getParentAccountCode().trim())) {
+						return true;
+					}
+					if (parentId != null && parentId.equals(a.getParentCodeId())) {
+						return true;
+					}
+					if (parentLevel != null && a.getAccountLevel() != null && a.getAccountLevel() == parentLevel + 1) {
+						if (a.getAccountCode() != null && a.getAccountCode().trim().startsWith(targetCode)) {
+							return true;
+						}
+					}
+					return false;
+				})
+				.collect(Collectors.toList());
+
+		return list != null && !list.isEmpty() ? list : getRootAccounts();
 	}
+
+
 
 	@Override
 	public List<ChartofAccount> getDetailAccounts() {
@@ -246,6 +278,94 @@ public class ChartofAccountService implements IChartofAccountService {
 		}
 	}
 
+	@Autowired
+	private com.mst.repositories.ICityRepository cityRepository;
+
+	@Override
+	public List<ChartofAccount> searchAccounts(String query) {
+		if (!StringUtils.hasText(query)) {
+			return chartofAccountRepository.findAllByOrderByAccountCode().stream()
+					.limit(100)
+					.collect(Collectors.toList());
+		}
+		String q = query.trim();
+		return chartofAccountRepository.findByAccountTitleContainingIgnoreCaseOrAccountCodeContainingIgnoreCaseOrderByAccountTitle(q, q);
+	}
+
+	@Override
+	public List<ChartofAccount> getParentLookup() {
+		return chartofAccountRepository.findAllByOrderByAccountCode().stream()
+				.filter(a -> !"Detail".equalsIgnoreCase(a.getAccountGroup()) || (a.getAccountLevel() != null && a.getAccountLevel() < 4))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public ChartofAccount getNextChildCodeDetails(String parentAccountCode) {
+		ChartofAccount result = new ChartofAccount();
+		if (!StringUtils.hasText(parentAccountCode) || "0".equals(parentAccountCode)) {
+			result.setParentAccountCode("0");
+			result.setAccountLevel(1);
+			result.setAccountGroup("Group");
+			result.setAccountCode(nextChildCode("0"));
+			return result;
+		}
+
+		ChartofAccount parent = chartofAccountRepository.findByAccountCode(parentAccountCode);
+		if (parent != null) {
+			result.setParentAccountCode(parent.getAccountCode());
+			result.setParentCodeId(parent.getId());
+			int lvl = parent.getAccountLevel() != null ? parent.getAccountLevel() + 1 : 1;
+			result.setAccountLevel(lvl);
+			result.setAccountClass(parent.getAccountClass());
+			result.setAccountGroup(lvl < 4 ? "Group" : "Detail");
+			result.setAccountCode(nextChildCode(parent.getAccountCode()));
+		} else {
+			result.setParentAccountCode(parentAccountCode);
+			result.setAccountLevel(1);
+			result.setAccountGroup("Group");
+			result.setAccountCode(nextChildCode(parentAccountCode));
+		}
+		return result;
+	}
+
+	@Override
+	public List<ChartofAccount> getHistoryAccounts(List<Integer> levels, String status, Integer customGroupId) {
+		List<Integer> targetLevels = (levels == null || levels.isEmpty()) ? List.of(1, 2, 3, 4, 5) : levels;
+		List<ChartofAccount> accounts = chartofAccountRepository.findByAccountLevelInOrderByAccountCode(targetLevels);
+
+		if ("Active Only".equalsIgnoreCase(status)) {
+			accounts = accounts.stream().filter(a -> Boolean.TRUE.equals(a.getIsActive())).collect(Collectors.toList());
+		} else if ("InActive".equalsIgnoreCase(status)) {
+			accounts = accounts.stream().filter(a -> Boolean.FALSE.equals(a.getIsActive())).collect(Collectors.toList());
+		}
+
+		return accounts;
+	}
+
+	@Override
+	public List<com.mst.models.City> getAllCities() {
+		return cityRepository.findAllByOrderByCityName();
+	}
+
+	@Override
+	public com.mst.models.City saveCity(String cityName, Integer tehsilId) {
+		if (!StringUtils.hasText(cityName)) {
+			return null;
+		}
+		String name = cityName.trim();
+		com.mst.models.City existing = cityRepository.findByCityNameIgnoreCase(name);
+		if (existing != null) {
+			return existing;
+		}
+		com.mst.models.City city = new com.mst.models.City();
+		city.setId(cityRepository.findMaxId() + 1);
+		city.setCityName(name);
+		city.setTehsilId(tehsilId != null ? tehsilId : 1);
+		city.setOrganizationId(currentUserContext.currentOrganizationId());
+		city.setCompanyId(currentUserContext.currentCompanyId());
+		return cityRepository.save(city);
+	}
+
 	/** See the class-level CODE-GENERATION note above - this is the real desktop default-branch algorithm. */
 	private String nextChildCode(String parentAccountCode) {
 		List<ChartofAccount> siblings = chartofAccountRepository.findByParentAccountCodeOrderByAccountTitle(parentAccountCode);
@@ -281,3 +401,4 @@ public class ChartofAccountService implements IChartofAccountService {
 		return candidate;
 	}
 }
+

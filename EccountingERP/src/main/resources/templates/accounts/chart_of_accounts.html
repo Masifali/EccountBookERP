@@ -1,385 +1,655 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
     <meta charset="utf-8">
-    <meta content="IE=edge" http-equiv="X-UA-Compatible">
-    <meta content="width=device-width, initial-scale=1" name="viewport">
-    <title>Chart Of Account Definition</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chart of Account Definition - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
-    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
     <style>
-        .coa-panel-title { background:#1ABB9C; color:#fff; padding:8px 12px; font-weight:600; font-size:14px; margin:-1px -1px 10px -1px; border-radius:2px 2px 0 0; }
-        .coa-toolbar { margin-bottom:12px; }
-        .coa-toolbar .btn { margin-right:6px; margin-bottom:6px; }
-        .coa-col-title { font-size:12px; font-weight:700; margin:0 0 6px 0; color:#555; background:#EEF3F7; padding:4px 8px; border:1px solid #E6E9ED; }
-        .coa-list { list-style:none; margin:0; padding:0; max-height:150px; overflow-y:auto; border:1px solid #E6E9ED; border-top:none; }
-        .coa-list li { border-bottom:1px solid #E6E9ED; }
-        .coa-list li a.coa-row { display:block; padding:4px 8px; color:#333; text-decoration:none; font-size:12px; }
-        .coa-list li a.coa-row:hover { background:#F2F5F7; }
-        .coa-list li.selected a.coa-row { background:#D9F2EC; font-weight:600; }
-        .coa-list li .coa-code { display:inline-block; min-width:55px; color:#999; font-size:11px; }
-        .coa-actions a { margin-left:6px; color:#999; }
-        .coa-actions a:hover { color:#333; }
-        .coa-empty { color:#9aa3ae; padding:8px; font-size:12px; }
-        .coa-pager { font-size:11px; color:#888; padding:3px 8px; border:1px solid #E6E9ED; border-top:none; background:#FAFBFC; }
-        .coa-field-label { font-size:12px; font-weight:600; color:#555; margin-bottom:2px; }
-        .coa-field-label .req { color:#D9534F; }
-        .coa-field { margin-bottom:8px; }
-        .coa-alloc-table { width:100%; font-size:12px; border-collapse:collapse; }
-        .coa-alloc-table th, .coa-alloc-table td { border:1px solid #E6E9ED; padding:3px 6px; }
-        .coa-alloc-table th { background:#EEF3F7; }
-        .coa-child-grid table { font-size:12px; }
-        .coa-filter-box { background:#FAFBFC; border:1px solid #E6E9ED; padding:8px; margin-top:10px; }
-        .coa-filter-box .coa-col-title { background:#E6E9ED; }
-        fieldset.coa-fieldset { border:1px solid #E6E9ED; padding:10px; margin-bottom:10px; }
-        fieldset.coa-fieldset legend { font-size:12px; font-weight:700; color:#555; width:auto; padding:0 6px; margin-bottom:0; border:none; }
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f3f5;
+            font-size: 11px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Top Header Bar */
+        .erp-header {
+            background-color: #00796B;
+            color: white;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Toolbar Bar */
+        .erp-toolbar {
+            background-color: #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
+            padding: 4px 10px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-erp {
+            background-color: #ffffff;
+            border: 1px solid #94a3b8;
+            border-radius: 3px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+
+        .btn-erp:hover {
+            background-color: #f1f5f9;
+            border-color: #64748b;
+            color: #1e293b;
+            text-decoration: none;
+        }
+
+        .btn-erp-primary {
+            background-color: #00796B;
+            color: white;
+            border: 1px solid #004d40;
+        }
+
+        .btn-erp-primary:hover {
+            background-color: #004d40;
+            color: white;
+        }
+
+        /* Section Cards */
+        .erp-fieldset {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .erp-fieldset legend {
+            font-size: 11px;
+            font-weight: bold;
+            color: #00796B;
+            width: auto;
+            padding: 0 4px;
+            margin-bottom: 4px;
+            border: none;
+        }
+
+        .form-group-erp {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group-erp label {
+            width: 35%;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0;
+            font-size: 11px;
+        }
+
+        .form-group-erp label .req { color: #ef4444; }
+
+        .form-group-erp .form-control-erp {
+            width: 65%;
+        }
+
+        .form-control-erp {
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            padding: 2px 6px;
+            font-size: 11px;
+            height: 24px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+
+        .form-control-erp:focus {
+            border-color: #00796B;
+            outline: none;
+        }
+
+        /* Autocomplete Overlay Popup */
+        .autocomplete-container {
+            position: relative;
+            width: 65%;
+        }
+
+        .autocomplete-container input {
+            width: 100%;
+        }
+
+        .autocomplete-popup {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            background: white;
+            border: 1px solid #00796B;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: 220px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .autocomplete-table {
+            margin: 0;
+            width: 100%;
+        }
+
+        .autocomplete-table th {
+            background-color: #00796B;
+            color: white;
+            font-size: 10px;
+            padding: 3px 6px;
+        }
+
+        .autocomplete-table td {
+            font-size: 11px;
+            padding: 4px 6px;
+            cursor: pointer;
+        }
+
+        .autocomplete-row:hover {
+            background-color: #e0f2f1 !important;
+        }
+
+        /* Stacked Level Header & Table Grids */
+        .coa-level-header {
+            background: #00796B;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 2px 2px 0 0;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .coa-level-table-wrap {
+            max-height: 110px;
+            overflow-y: auto;
+            border: 1px solid #cbd5e1;
+            background: white;
+        }
+
+        /* Data Tables */
+        .erp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .erp-table th {
+            background-color: #00796B;
+            color: white;
+            padding: 4px 6px;
+            text-align: left;
+            border: 1px solid #004d40;
+            font-weight: 600;
+        }
+
+        .erp-table td {
+            padding: 3px 6px;
+            border: 1px solid #cbd5e1;
+            vertical-align: middle;
+        }
+
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr.selected-row { background-color: #b2dfdb !important; font-weight: bold; }
+        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
+
+        /* Paging Footer Bar */
+        .erp-paging-bar {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-top: none;
+            padding: 2px 6px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .btn-page {
+            background: #ffffff;
+            border: 1px solid #94a3b8;
+            padding: 1px 5px;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Bottom Tab Bar */
+        .nav-tabs-erp {
+            border-bottom: 2px solid #00796B;
+            background: #e2e8f0;
+            padding-left: 10px;
+            margin-top: 10px;
+        }
+
+        .nav-tabs-erp > li > a {
+            border-radius: 3px 3px 0 0;
+            font-weight: bold;
+            color: #334155;
+            padding: 6px 16px;
+            font-size: 11px;
+        }
+
+        .nav-tabs-erp > li.active > a, .nav-tabs-erp > li.active > a:focus, .nav-tabs-erp > li.active > a:hover {
+            background-color: #00796B;
+            color: white;
+            border: 1px solid #00796B;
+        }
     </style>
 </head>
-<body class="nav-md">
-<div class="container body">
-    <div class="main_container">
-        <div th:replace="fragments/fixed_sidebar :: div"></div>
-        <div class="right_col" role="main">
+<body>
 
-            <div class="row">
-                <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="x_panel">
-                        <div class="coa-panel-title"><i class="fa fa-sitemap"></i> Chart Of Account Definition</div>
+    <!-- Header Bar -->
+    <div class="erp-header">
+        <div><i class="fa fa-sitemap"></i> Chart of Account Definition</div>
+        <div style="font-size: 11px;"><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts</a></div>
+    </div>
 
-                        <div class="coa-toolbar">
-                            <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${selLevel3})}" class="btn btn-default btn-sm"><i class="fa fa-file-o"></i> New</a>
-                            <a th:href="@{/accounts/chart_of_accounts}" class="btn btn-default btn-sm"><i class="fa fa-refresh"></i> Refresh</a>
-                            <button type="submit" form="coaForm" class="btn btn-success btn-sm"><i class="fa fa-save"></i> Save</button>
-                            <button type="button" class="btn btn-default btn-sm" disabled title="Not implemented in this port"><i class="fa fa-print"></i> 114-Print</button>
-                            <button type="button" class="btn btn-default btn-sm" disabled title="Not implemented in this port - see Company/City master"><i class="fa fa-building-o"></i> Define City</button>
-                            <form th:action="@{/accounts/chart_of_accounts/upload_excel}" method="post" enctype="multipart/form-data" class="form-inline" style="display:inline-block;">
-                                <input type="hidden" name="defaultParentAccountCode" th:value="${selLevel1 != '' ? selLevel1 : '0'}"/>
-                                <input type="file" name="file" accept=".xlsx,.xls" required style="display:inline-block; width:150px;" class="btn btn-default btn-sm"/>
-                                <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-upload"></i> Upload Excel Sheet</button>
-                            </form>
-                        </div>
+    <!-- Toolbar Bar -->
+    <div class="erp-toolbar">
+        <button type="button" id="btnNew" class="btn-erp"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" id="btnRefresh" class="btn-erp"><i class="fa fa-refresh"></i> Refresh (Ctrl+R)</button>
+        <button type="button" id="btnSaveToolbar" onclick="$('#coaForm').submit();" class="btn-erp btn-erp-primary"><i class="fa fa-save"></i> Save (Ctrl+S)</button>
+        <button type="button" id="btnPrint" class="btn-erp"><i class="fa fa-print"></i> 114-Print</button>
+        <button type="button" id="btnDefineCity" class="btn-erp"><i class="fa fa-building-o"></i> Define City</button>
+        <a th:href="@{/accounts/bank-reconciliation-upload-excel}" class="btn-erp"><i class="fa fa-file-excel-o"></i> Upload Excel Sheet</a>
+    </div>
 
-                        <div th:if="${uploadInserted != null}">
-                            <div class="alert" th:classappend="${uploadFailed != null and uploadFailed > 0} ? 'alert-warning' : 'alert-success'">
-                                Upload Excel Sheet: <strong th:text="${uploadInserted}"></strong> account(s) inserted,
-                                <strong th:text="${uploadFailed}"></strong> failed.
-                            </div>
-                        </div>
+    <!-- Main Container -->
+    <div style="padding: 6px 10px;">
 
-                        <form id="coaForm" th:action="@{/accounts/chart_of_accounts/save}" th:object="${accountForm}" method="post">
-                        <input type="hidden" name="level1" th:value="${selLevel1}"/>
-                        <input type="hidden" name="level2" th:value="${selLevel2}"/>
-                        <input type="hidden" name="level3" th:value="${selLevel3}"/>
-                        <input type="hidden" th:field="*{id}"/>
+        <!-- Nav Tabs matching WinForms TabControl (TabForm / TabHistory) -->
+        <ul class="nav nav-tabs" style="margin-bottom: 0; border-bottom: 1px solid #cbd5e1; background: #e2e8f0; padding-left: 5px;">
+            <li class="active"><a href="#tabForm" data-toggle="tab" style="font-weight: bold; color: #00796B;"><i class="fa fa-edit"></i> Account Definition</a></li>
+            <li><a href="#tabHistory" data-toggle="tab" style="font-weight: bold; color: #00796B;"><i class="fa fa-history"></i> Account History Audit</a></li>
+        </ul>
 
-                        <div class="row">
-                            <!-- LEFT: Account Information -->
-                            <div class="col-md-4 col-sm-12 col-xs-12">
-                                <fieldset class="coa-fieldset">
-                                    <legend>Account Information</legend>
+        <!-- Tab Content Panes -->
+        <div class="tab-content" style="background: white; border: 1px solid #cbd5e1; border-top: none; padding: 10px;">
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Parent Account <span class="req">*</span></div>
-                                        <select class="form-control input-sm" th:field="*{parentAccountCode}">
-                                            <option value="0">0 - (Top Level)</option>
-                                            <option th:each="p : ${allAccounts}" th:value="${p.accountCode}"
-                                                    th:text="${p.accountCode + ' - ' + p.accountTitle}"></option>
-                                        </select>
+
+            <!-- FORM TAB -->
+            <div role="tabpanel" class="tab-pane active" id="tabForm">
+                <form id="coaForm">
+                    <input type="hidden" id="accountId" name="id"/>
+
+                    <div class="row">
+                        <!-- LEFT COLUMN: Account Information -->
+                        <div class="col-md-4 col-sm-12">
+                            <div class="erp-fieldset">
+                                <legend>Account Information</legend>
+
+                                <div class="form-group-erp">
+                                    <label>Parent Account <span class="req">*</span></label>
+                                    <select id="parentAccountCode" class="form-control-erp">
+                                        <option value="0">0 - (Top Level / Root)</option>
+                                        <option th:each="p : ${allAccounts}" th:value="${p.accountCode}" th:text="${p.accountCode + ' - ' + p.accountTitle}"></option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group-erp">
+                                    <label>Account Title <span class="req">*</span></label>
+                                    <div class="autocomplete-container">
+                                        <input type="text" id="accountTitleInput" class="form-control-erp" th:value="${accountForm.accountTitle}" placeholder="Account Title" required autocomplete="off"/>
+                                        <div id="accountTitlePopup" class="autocomplete-popup"></div>
                                     </div>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Account Title <span class="req">*</span></div>
-                                        <input type="text" class="form-control input-sm" th:field="*{accountTitle}" placeholder="Account Title" required/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Title (Other Lingo)</label>
+                                    <input type="text" id="accountTitleOtherLingo" class="form-control-erp" th:value="${accountForm.accountTitleOtherLingo}" placeholder="Title in secondary language"/>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Title (Other Lingo)</div>
-                                        <input type="text" class="form-control input-sm" th:field="*{accountTitleOtherLingo}" placeholder="e.g. Urdu title"/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Account Type <span class="req">*</span></label>
+                                    <select id="accountTypeId" class="form-control-erp">
+                                        <option value="">(Select Type)</option>
+                                        <option value="1">Group</option>
+                                        <option value="2">Detail</option>
+                                        <option value="3">Customer</option>
+                                        <option value="22">Supplier</option>
+                                    </select>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Account Type <span class="req">*</span>
-                                            <span style="font-weight:400; color:#999;">(no master table in DB - numeric id)</span></div>
-                                        <input type="number" class="form-control input-sm" th:field="*{accountTypeId}"/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>P/L Notes <span class="req">*</span></label>
+                                    <select id="plNoteId" class="form-control-erp" disabled>
+                                        <option value="">(Select P/L Note)</option>
+                                    </select>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">P.L Notes <span class="req">*</span>
-                                            <span style="font-weight:400; color:#999;">(no master table in DB - numeric id)</span></div>
-                                        <input type="number" class="form-control input-sm" th:field="*{plNoteId}"/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>B/S Notes <span class="req">*</span></label>
+                                    <select id="bsNoteId" class="form-control-erp" disabled>
+                                        <option value="">(Select B/S Note)</option>
+                                    </select>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">B.S Notes <span class="req">*</span>
-                                            <span style="font-weight:400; color:#999;">(no master table in DB - numeric id)</span></div>
-                                        <input type="number" class="form-control input-sm" th:field="*{bsNoteId}"/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Sup/Cust Group</label>
+                                    <select id="customerGroupId" class="form-control-erp">
+                                        <option value="">(Select Group)</option>
+                                    </select>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Sup.Cust Group
-                                            <span style="font-weight:400; color:#999;">(numeric id)</span></div>
-                                        <input type="number" class="form-control input-sm" th:field="*{customerGroupId}"/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Custom Group</label>
+                                    <select id="customGroupId" class="form-control-erp">
+                                        <option value="">(Select Custom Group)</option>
+                                    </select>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Custom Group</div>
-                                        <div style="border:1px solid #ccc; border-radius:3px; max-height:110px; overflow-y:auto; padding:4px 6px; background:#fff;">
-                                            <div th:if="${accountForm.id == null}" class="coa-empty" style="padding:2px 0;">Save the account first to assign custom groups.</div>
-                                            <div th:if="${accountForm.id != null and (customGroupAssignments == null or customGroupAssignments.isEmpty())}" class="coa-empty" style="padding:2px 0;">
-                                                No custom groups defined yet - see <a th:href="@{/accounts/custom_group}">Define Accounts Custom Group</a>.
-                                            </div>
-                                            <form th:if="${accountForm.id != null}" th:each="row : ${customGroupAssignments}"
-                                                  th:action="@{/accounts/chart_of_accounts/customgroup/toggle}" method="post" style="margin:0;">
-                                                <input type="hidden" name="chartofAccountId" th:value="${accountForm.id}"/>
-                                                <input type="hidden" name="lookUpId" th:value="${row.lookUpId}"/>
-                                                <input type="hidden" name="assigned" th:value="${!row.assigned}"/>
-                                                <input type="hidden" name="level1" th:value="${selLevel1}"/>
-                                                <input type="hidden" name="level2" th:value="${selLevel2}"/>
-                                                <input type="hidden" name="level3" th:value="${selLevel3}"/>
-                                                <input type="hidden" name="editCode" th:value="${accountForm.accountCode}"/>
-                                                <label style="font-weight:400; font-size:12px; display:block; margin-bottom:2px;">
-                                                    <input type="checkbox" th:checked="${row.assigned}" onchange="this.form.submit()"/>
-                                                    <span th:text="${row.description}"></span>
-                                                </label>
-                                            </form>
-                                        </div>
-                                    </div>
-
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">City Name
-                                            <span style="font-weight:400; color:#999;">(no City master screen yet - numeric id)</span></div>
-                                        <input type="number" class="form-control input-sm" th:field="*{cityId}"/>
-                                    </div>
-                                </fieldset>
-
-                                <div class="coa-filter-box">
-                                    <div class="coa-col-title">Filter Accounts In Child Grid</div>
-                                    <form th:action="@{/accounts/chart_of_accounts}" method="get" style="margin-top:8px;">
-                                        <input type="hidden" name="level1" th:value="${selLevel1}"/>
-                                        <input type="hidden" name="level2" th:value="${selLevel2}"/>
-                                        <input type="hidden" name="level3" th:value="${selLevel3}"/>
-                                        <input type="hidden" name="editCode" th:value="${accountForm.accountCode}"/>
-                                        <div class="coa-field">
-                                            <div class="coa-field-label">Account Type</div>
-                                            <select class="form-control input-sm" name="filterAccountType" onchange="this.form.submit()">
-                                                <option value="">(All)</option>
-                                                <option th:each="t : ${accountTypeOptions}" th:value="${t}" th:text="${t}"
-                                                        th:selected="${t.toString() == filterAccountType}"></option>
-                                            </select>
-                                        </div>
-                                        <div class="coa-field">
-                                            <div class="coa-field-label">Account Title</div>
-                                            <select class="form-control input-sm" name="filterAccountTitle" onchange="this.form.submit()">
-                                                <option value="">(All)</option>
-                                                <option th:each="ti : ${accountTitleOptions}" th:value="${ti}" th:text="${ti}"
-                                                        th:selected="${ti == filterAccountTitle}"></option>
-                                            </select>
-                                        </div>
-                                        <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-filter"></i> Apply</button>
-                                        <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${selLevel3},editCode=${accountForm.accountCode})}" class="btn btn-default btn-xs">Clear</a>
-                                    </form>
+                                <div class="form-group-erp">
+                                    <label>City Name</label>
+                                    <select id="cityId" class="form-control-erp">
+                                        <option value="">(Select City)</option>
+                                    </select>
                                 </div>
                             </div>
 
-                            <!-- MIDDLE: Group/Detail, Code, Class, Level, Other Code, Phone, Opening, Allocation -->
-                            <div class="col-md-4 col-sm-12 col-xs-12">
-                                <fieldset class="coa-fieldset">
-                                    <legend>&#160;</legend>
-
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Group / Detail <span class="req">*</span></div>
-                                        <select class="form-control input-sm" th:field="*{accountGroup}">
-                                            <option value="Group">Group</option>
-                                            <option value="Detail">Detail</option>
-                                        </select>
+                            <!-- Filter Accounts In Child Grid Fieldset -->
+                            <div class="erp-fieldset">
+                                <legend>Filter Accounts In Child Grid</legend>
+                                <div class="form-group-erp">
+                                    <label>Account Type</label>
+                                    <select id="filterAccountType" class="form-control-erp">
+                                        <option value="">All Types</option>
+                                    </select>
+                                </div>
+                                <div class="form-group-erp">
+                                    <label>Account Title</label>
+                                    <div class="autocomplete-container">
+                                        <input type="text" id="filterAccountTitle" class="form-control-erp" placeholder="Type title to filter..." autocomplete="off"/>
+                                        <div id="filterTitlePopup" class="autocomplete-popup" style="width: 320px;"></div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Account Code</div>
-                                        <input type="text" class="form-control input-sm"
-                                               th:value="${accountForm.accountCode == null ? '(auto-generated on save)' : accountForm.accountCode}" readonly/>
-                                    </div>
+                        <!-- MIDDLE COLUMN: Account Properties & Allocation -->
+                        <div class="col-md-4 col-sm-12">
+                            <div class="erp-fieldset">
+                                <legend>Account Properties</legend>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Account Class</div>
-                                        <select class="form-control input-sm" th:field="*{accountClass}">
-                                            <option value="">(unset)</option>
-                                            <option value="1">1 - Capital</option>
-                                            <option value="2">2 - Assets</option>
-                                            <option value="3">3 - Liability</option>
-                                            <option value="4">4 - Expense</option>
-                                            <option value="5">5 - Revenue</option>
-                                        </select>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Group / Detail <span class="req">*</span></label>
+                                    <select id="accountGroup" class="form-control-erp">
+                                        <option value="Group" th:selected="${accountForm.accountGroup == 'Group'}">Group</option>
+                                        <option value="Detail" th:selected="${accountForm.accountGroup == 'Detail'}">Detail</option>
+                                    </select>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Account Level</div>
-                                        <input type="text" class="form-control input-sm"
-                                               th:value="${accountForm.accountLevel == null ? '(auto)' : accountForm.accountLevel}" readonly/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Account Code</label>
+                                    <input type="text" id="accountCode" class="form-control-erp" th:value="${accountForm.accountCode}" placeholder="(Auto-generated)"/>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Other Code</div>
-                                        <input type="text" class="form-control input-sm" th:field="*{otherErpCode}"/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Account Class</label>
+                                    <select id="accountClass" class="form-control-erp">
+                                        <option value="">(Unset)</option>
+                                        <option value="1" th:selected="${accountForm.accountClass == 1}">1 - Capital</option>
+                                        <option value="2" th:selected="${accountForm.accountClass == 2}">2 - Assets</option>
+                                        <option value="3" th:selected="${accountForm.accountClass == 3}">3 - Liabilities</option>
+                                        <option value="4" th:selected="${accountForm.accountClass == 4}">4 - Expenses</option>
+                                        <option value="5" th:selected="${accountForm.accountClass == 5}">5 - Revenue</option>
+                                    </select>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Phone No</div>
-                                        <input type="text" class="form-control input-sm" th:field="*{contactNo}"/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Account Level</label>
+                                    <input type="number" id="accountLevel" class="form-control-erp" th:value="${accountForm.accountLevel != null ? accountForm.accountLevel : 1}" readonly/>
+                                </div>
 
-                                    <div class="coa-field">
-                                        <div class="coa-field-label">Opening</div>
-                                        <input type="number" step="0.01" class="form-control input-sm" name="openingDebit" th:value="${openingDebit}"/>
-                                    </div>
+                                <div class="form-group-erp">
+                                    <label>Other Code</label>
+                                    <input type="text" id="otherErpCode" class="form-control-erp" th:value="${accountForm.otherErpCode}"/>
+                                </div>
 
-                                    <button type="submit" class="btn btn-success btn-sm"><i class="fa fa-save"></i> Save</button>
-                                </fieldset>
+                                <div class="form-group-erp">
+                                    <label>Phone No</label>
+                                    <input type="text" id="contactNo" class="form-control-erp" th:value="${accountForm.contactNo}"/>
+                                </div>
 
-                                <fieldset class="coa-fieldset">
-                                    <legend>Account Allocation To Locations</legend>
-                                    <div th:if="${accountForm.id == null}" class="coa-empty">Save the account first to allocate it to locations.</div>
-                                    <table class="coa-alloc-table" th:if="${accountForm.id != null}">
-                                        <tr><th>Location</th><th style="width:60px;">Value</th></tr>
-                                        <tr th:each="row : ${allocations}">
-                                            <td th:text="${row.companyName}"></td>
-                                            <td style="text-align:center;">
-                                                <form th:action="@{/accounts/chart_of_accounts/allocation/toggle}" method="post" style="margin:0;">
-                                                    <input type="hidden" name="chartofAccountId" th:value="${accountForm.id}"/>
-                                                    <input type="hidden" name="companyId" th:value="${row.companyId}"/>
-                                                    <input type="hidden" name="allocated" th:value="${!row.allocated}"/>
-                                                    <input type="hidden" name="level1" th:value="${selLevel1}"/>
-                                                    <input type="hidden" name="level2" th:value="${selLevel2}"/>
-                                                    <input type="hidden" name="level3" th:value="${selLevel3}"/>
-                                                    <input type="hidden" name="editCode" th:value="${accountForm.accountCode}"/>
-                                                    <input type="checkbox" th:checked="${row.allocated}" onchange="this.form.submit()"/>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        <tr th:if="${allocations == null or allocations.isEmpty()}">
-                                            <td colspan="2" class="coa-empty">No companies found.</td>
-                                        </tr>
+                                <div class="form-group-erp">
+                                    <label>Opening</label>
+                                    <input type="text" id="openingBalance" class="form-control-erp" placeholder="0.00"/>
+                                </div>
+
+                                <div style="margin-top: 6px;">
+                                    <button type="submit" id="btnSaveCoa" class="btn-erp btn-erp-primary" style="width: 100%; justify-content: center;"><i class="fa fa-save"></i> Save Account Definition</button>
+                                </div>
+                            </div>
+
+                            <!-- Account Allocation To Locations Fieldset -->
+                            <div class="erp-fieldset">
+                                <legend>Account Allocation To Locations</legend>
+                                <div style="max-height: 100px; overflow-y: auto; border: 1px solid #cbd5e1;">
+                                    <table id="grdAllocation" class="erp-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Location</th>
+                                                <th style="width: 50px; text-align: center;">Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>GOLDEN ACE FOODS</td>
+                                                <td style="text-align: center;"><input type="checkbox" checked/></td>
+                                            </tr>
+                                        </tbody>
                                     </table>
-                                </fieldset>
-                            </div>
-
-                            <!-- RIGHT: 1st / 2nd / 3rd Level Accounts, stacked -->
-                            <div class="col-md-4 col-sm-12 col-xs-12">
-                                <div class="coa-col-title">1st Level Accounts</div>
-                                <ul class="coa-list">
-                                    <li th:each="a : ${level1List}" th:classappend="${a.accountCode == selLevel1} ? 'selected'">
-                                        <a class="coa-row" th:href="@{/accounts/chart_of_accounts(level1=${a.accountCode})}">
-                                            <span class="coa-code" th:text="${a.accountCode}"></span>
-                                            <span th:text="${a.accountTitle}"></span>
-                                        </a>
-                                        <span class="coa-actions" style="float:right; margin-top:-22px; margin-right:6px;">
-                                            <a th:href="@{/accounts/chart_of_accounts(level1=${a.accountCode},editCode=${a.accountCode})}" title="Edit"><i class="fa fa-pencil"></i></a>
-                                            <a th:href="@{/accounts/chart_of_accounts/delete/{code}(code=${a.accountCode})}" title="Delete" onclick="return confirm('Delete this account? (only allowed if it has no children)')"><i class="fa fa-trash"></i></a>
-                                        </span>
-                                    </li>
-                                    <li th:if="${level1List == null or level1List.isEmpty()}" class="coa-empty">No 1st level accounts.</li>
-                                </ul>
-                                <div class="coa-pager" th:text="${level1List != null ? level1List.size() + ' account(s)' : '0 account(s)'}"></div>
-
-                                <div class="coa-col-title" style="margin-top:10px;">2nd Level Accounts</div>
-                                <ul class="coa-list">
-                                    <li th:each="a : ${level2List}" th:classappend="${a.accountCode == selLevel2} ? 'selected'">
-                                        <a class="coa-row" th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${a.accountCode})}">
-                                            <span class="coa-code" th:text="${a.accountCode}"></span>
-                                            <span th:text="${a.accountTitle}"></span>
-                                        </a>
-                                        <span class="coa-actions" style="float:right; margin-top:-22px; margin-right:6px;">
-                                            <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${a.accountCode},editCode=${a.accountCode})}" title="Edit"><i class="fa fa-pencil"></i></a>
-                                            <a th:href="@{/accounts/chart_of_accounts/delete/{code}(code=${a.accountCode},level1=${selLevel1})}" title="Delete" onclick="return confirm('Delete this account? (only allowed if it has no children)')"><i class="fa fa-trash"></i></a>
-                                        </span>
-                                    </li>
-                                    <li th:if="${level2List == null or level2List.isEmpty()}" class="coa-empty">
-                                        <span th:if="${selLevel1 == ''}">Select a 1st level account.</span>
-                                        <span th:if="${selLevel1 != ''}">No 2nd level accounts yet.</span>
-                                    </li>
-                                </ul>
-                                <div class="coa-pager" th:text="${level2List != null ? level2List.size() + ' account(s)' : '0 account(s)'}"></div>
-
-                                <div class="coa-col-title" style="margin-top:10px;">3rd Level Accounts</div>
-                                <ul class="coa-list">
-                                    <li th:each="a : ${level3List}" th:classappend="${a.accountCode == selLevel3} ? 'selected'">
-                                        <a class="coa-row" th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${a.accountCode})}">
-                                            <span class="coa-code" th:text="${a.accountCode}"></span>
-                                            <span th:text="${a.accountTitle}"></span>
-                                        </a>
-                                        <span class="coa-actions" style="float:right; margin-top:-22px; margin-right:6px;">
-                                            <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${a.accountCode},editCode=${a.accountCode})}" title="Edit"><i class="fa fa-pencil"></i></a>
-                                            <a th:href="@{/accounts/chart_of_accounts/delete/{code}(code=${a.accountCode},level1=${selLevel1},level2=${selLevel2})}" title="Delete" onclick="return confirm('Delete this account? (only allowed if it has no children)')"><i class="fa fa-trash"></i></a>
-                                        </span>
-                                    </li>
-                                    <li th:if="${level3List == null or level3List.isEmpty()}" class="coa-empty">
-                                        <span th:if="${selLevel2 == ''}">Select a 2nd level account.</span>
-                                        <span th:if="${selLevel2 != ''}">No 3rd level accounts yet.</span>
-                                    </li>
-                                </ul>
-                                <div class="coa-pager" th:text="${level3List != null ? level3List.size() + ' account(s)' : '0 account(s)'}"></div>
+                                </div>
+                                <div id="pagingAlloc"></div>
                             </div>
                         </div>
-                        </form>
+
+                        <!-- RIGHT COLUMN: Stacked Multi-Level Account Tree Grids -->
+                        <div class="col-md-4 col-sm-12">
+
+                            <!-- 1st Level -->
+                            <div class="coa-level-header">1st Level Accounts</div>
+                            <div class="coa-level-table-wrap">
+                                <table id="grdLevel1" class="erp-table">
+                                    <thead><tr><th style="width:30%;">Account Code</th><th>Account Title</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="a : ${level1List}" class="level-row" data-level="1" th:data-code="${a.accountCode}" th:data-id="${a.id}">
+                                            <td style="font-weight:bold; color:#00796B; width:30%;" th:text="${a.accountCode}"></td>
+                                            <td th:text="${a.accountTitle}"></td>
+                                        </tr>
+                                        <tr th:if="${level1List == null or level1List.isEmpty()}">
+                                            <td colspan="2" style="text-align:center; color:#94a3b8; padding:10px;">No 1st Level accounts</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pagingLevel1"></div>
+
+                            <!-- 2nd Level -->
+                            <div class="coa-level-header">2nd Level Account's Of Selected 1st Level</div>
+                            <div class="coa-level-table-wrap">
+                                <table id="grdLevel2" class="erp-table">
+                                    <thead><tr><th style="width:30%;">Account Code</th><th>Account Title</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="a : ${level2List}" class="level-row" data-level="2" th:data-code="${a.accountCode}" th:data-id="${a.id}">
+                                            <td style="font-weight:bold; color:#00796B; width:30%;" th:text="${a.accountCode}"></td>
+                                            <td th:text="${a.accountTitle}"></td>
+                                        </tr>
+                                        <tr th:if="${level2List == null or level2List.isEmpty()}">
+                                            <td colspan="2" style="text-align:center; color:#94a3b8; padding:10px;">Select a 1st level account.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pagingLevel2"></div>
+
+                            <!-- 3rd Level -->
+                            <div class="coa-level-header">3rd Level Account's Of Selected 2nd Level</div>
+                            <div class="coa-level-table-wrap">
+                                <table id="grdLevel3" class="erp-table">
+                                    <thead><tr><th style="width:30%;">Account Code</th><th>Account Title</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="a : ${level3List}" class="level-row" data-level="3" th:data-code="${a.accountCode}" th:data-id="${a.id}">
+                                            <td style="font-weight:bold; color:#00796B; width:30%;" th:text="${a.accountCode}"></td>
+                                            <td th:text="${a.accountTitle}"></td>
+                                        </tr>
+                                        <tr th:if="${level3List == null or level3List.isEmpty()}">
+                                            <td colspan="2" style="text-align:center; color:#94a3b8; padding:10px;">Select a 2nd level account.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pagingLevel3"></div>
+
+                            <!-- 4th Level -->
+                            <div class="coa-level-header">4th Level Account's Of Selected 3rd Level</div>
+                            <div class="coa-level-table-wrap">
+                                <table id="grdLevel4" class="erp-table">
+                                    <thead><tr><th style="width:30%;">Account Code</th><th>Account Title</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="a : ${level4List}" class="level-row" data-level="4" th:data-code="${a.accountCode}" th:data-id="${a.id}">
+                                            <td style="font-weight:bold; color:#00796B; width:30%;" th:text="${a.accountCode}"></td>
+                                            <td th:text="${a.accountTitle}"></td>
+                                        </tr>
+                                        <tr th:if="${level4List == null or level4List.isEmpty()}">
+                                            <td colspan="2" style="text-align:center; color:#94a3b8; padding:10px;">Select a 3rd level account.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pagingLevel4"></div>
+
+                        </div>
                     </div>
-                </div>
-            </div>
+                </form>
 
-            <!-- BOTTOM: Child Of Selected Parent -->
-            <div class="row">
-                <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="x_panel coa-child-grid">
-                        <div class="coa-panel-title" style="background:#73879C;">Child Of Selected Parent
-                            <span th:if="${selLevel3 != ''}" th:text="'(' + selLevel3 + ')'" style="font-weight:400;"></span>
-                        </div>
-                        <table class="table table-striped table-bordered">
+                <!-- BOTTOM PANEL: Child Of Selected Parent Grid -->
+                <div class="erp-fieldset" style="margin-top: 10px;">
+                    <legend><i class="fa fa-sitemap"></i> Child Of Selected Parent</legend>
+                    <div style="overflow-x: auto;">
+                        <table id="grdChildAccounts" class="erp-table">
                             <thead>
                                 <tr>
                                     <th>Account Code</th>
                                     <th>Account Title</th>
-                                    <th>Group</th>
+                                    <th>Group / Detail</th>
                                     <th>Account Type</th>
                                     <th>Other Code</th>
                                     <th>Phone No</th>
-                                    <th style="width:90px;">Actions</th>
+                                    <th style="width: 80px; text-align: center;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="a : ${level4List}" th:class="${a.accountCode == accountForm.accountCode} ? 'info'">
-                                    <td th:text="${a.accountCode}"></td>
-                                    <td th:text="${a.accountTitle}"></td>
-                                    <td th:text="${a.accountGroup}"></td>
-                                    <td th:text="${a.accountTypeId}"></td>
-                                    <td th:text="${a.otherErpCode}"></td>
-                                    <td th:text="${a.contactNo}"></td>
-                                    <td>
-                                        <a th:href="@{/accounts/chart_of_accounts(level1=${selLevel1},level2=${selLevel2},level3=${selLevel3},editCode=${a.accountCode})}" title="Edit"><i class="fa fa-pencil"></i></a>
-                                        <a th:href="@{/accounts/chart_of_accounts/delete/{code}(code=${a.accountCode},level1=${selLevel1},level2=${selLevel2},level3=${selLevel3})}" title="Delete" onclick="return confirm('Delete this account?')"><i class="fa fa-trash"></i></a>
-                                    </td>
-                                </tr>
-                                <tr th:if="${level4List == null or level4List.isEmpty()}">
-                                    <td colspan="7" class="coa-empty">
-                                        <span th:if="${selLevel3 == ''}">Select a 3rd level account to see its children.</span>
-                                        <span th:if="${selLevel3 != ''}">No child accounts yet (or none match the current filter).</span>
-                                    </td>
-                                </tr>
+                                <tr><td colspan="7" style="text-align: center; color: #64748b; padding: 15px;">Select a parent account or search to view child accounts.</td></tr>
                             </tbody>
                         </table>
-                        <div class="coa-pager" th:text="${level4List != null ? level4List.size() + ' account(s)' : '0 account(s)'}"></div>
+                    </div>
+                    <div id="pagingChild"></div>
+                </div>
+            </div>
+
+            <!-- HISTORY TAB -->
+            <div role="tabpanel" class="tab-pane" id="tabHistory">
+                <div class="erp-fieldset">
+                    <legend>History Audit Filters</legend>
+                    <div class="row" style="margin-bottom: 8px;">
+                        <div class="col-md-6">
+                            <label style="font-weight:bold; margin-right: 10px;">Account Levels:</label>
+                            <label class="checkbox-inline"><input type="checkbox" class="chk-history-level" value="1" checked/> 1st</label>
+                            <label class="checkbox-inline"><input type="checkbox" class="chk-history-level" value="2" checked/> 2nd</label>
+                            <label class="checkbox-inline"><input type="checkbox" class="chk-history-level" value="3" checked/> 3rd</label>
+                            <label class="checkbox-inline"><input type="checkbox" class="chk-history-level" value="4" checked/> 4th</label>
+                            <label class="checkbox-inline"><input type="checkbox" class="chk-history-level" value="5" checked/> 5th</label>
+                        </div>
+                        <div class="col-md-6">
+                            <label style="font-weight:bold; margin-right: 10px;">Status:</label>
+                            <label class="radio-inline"><input type="radio" name="radStatus" value="All" checked/> All</label>
+                            <label class="radio-inline"><input type="radio" name="radStatus" value="Active Only"/> Active Only</label>
+                            <label class="radio-inline"><input type="radio" name="radStatus" value="InActive"/> InActive</label>
+                        </div>
                     </div>
                 </div>
+
+                <div style="overflow-x: auto;">
+                    <table id="grdHistory" class="erp-table">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Account Code</th>
+                                <th>Account Title</th>
+                                <th>Other Code</th>
+                                <th>Parent Code</th>
+                                <th>Group</th>
+                                <th>Level</th>
+                                <th>Is Active</th>
+                                <th>Class</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="pagingHistory"></div>
             </div>
 
         </div>
     </div>
-</div>
 
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <!-- Define City Modal -->
+    <div class="modal fade" id="cityModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#00796B; color:white; padding:8px 15px;">
+                    <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                    <h4 class="modal-title" style="font-size:13px; font-weight:bold;">Define City</h4>
+                </div>
+                <div class="modal-body" style="padding:15px;">
+                    <div class="form-group-erp" style="display:block;">
+                        <label style="width:100%; margin-bottom:4px;">City Name <span class="req">*</span></label>
+                        <input type="text" id="newCityName" class="form-control-erp" style="width:100%;" placeholder="Enter City Name"/>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding:8px 15px;">
+                    <button type="button" class="btn-erp" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btnSaveCityModal" class="btn-erp btn-erp-primary">Save City</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/build/js/countx_coa_definition.js}"></script>
 </body>
 </html>

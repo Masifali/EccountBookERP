@@ -26,11 +26,7 @@ public class MyWebAppConfiguration implements WebMvcConfigurer {
                 .addResourceLocations("file:" + absolutePath + "/");
     }
 
-    @Bean
-    public UserService userService() {
 
-        return new UserService();
-    }
 
     @Override
     public void configurePathMatch(PathMatchConfigurer configurer) {

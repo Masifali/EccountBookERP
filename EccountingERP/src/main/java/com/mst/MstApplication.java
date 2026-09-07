@@ -1,7 +1,6 @@
 package com.mst;
 
 
-import com.mst.kanta.SerialPortDataRead;
 import com.mst.repositories.ExtendedRepositoryImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,7 +34,7 @@ public class MstApplication extends SpringBootServletInitializer {
         int[] array = {1, 2, 3, 4, 2, 5, 6, 3};
         System.out.println("Hello Word");
         //new aaa().setVisible(true);
-        SerialPortDataRead.getCommunicationPort();
+        // SerialPortDataRead.getCommunicationPort();
 
 
     }
