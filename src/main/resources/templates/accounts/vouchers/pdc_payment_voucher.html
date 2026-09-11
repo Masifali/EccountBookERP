@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Post Dated Cheque Payment Voucher - WinForms Replica</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
+        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
+        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
+        .win-tab-bar { background: #d1d5db; border-bottom: 1px solid #b0bec5; padding: 2px 8px 0 8px; display: flex; gap: 3px; }
+        .win-tab-btn { background: #e5e7eb; border: 1px solid #9ca3af; border-bottom: none; border-radius: 3px 3px 0 0; padding: 4px 14px; font-size: 11px; font-weight: bold; color: #374151; cursor: pointer; }
+        .win-tab-btn.active { background: #ffffff; color: #00796B; border-color: #b0bec5; border-bottom: 2px solid #ffffff; margin-bottom: -1px; }
+        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 8px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .win-section-header { background-color: #f1f5f9; color: #00796B; font-weight: bold; font-size: 11px; padding: 4px 8px; border-bottom: 1px solid #cbd5e1; border-top: 1px solid #cbd5e1; }
+        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
+        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
+        .win-textarea { border: 1px solid #94a3b8; border-radius: 2px; padding: 4px 6px; font-size: 11px; width: 100%; height: 40px; resize: none; box-sizing: border-box; }
+        .search-popup { position: absolute; z-index: 1050; background: #ffffff; border: 1px solid #00796B; box-shadow: 0 4px 12px rgba(0,0,0,0.18); max-height: 260px; overflow-y: auto; width: 480px; display: none; }
+        .search-popup table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .search-popup th { background-color: #00796B; color: white; padding: 4px 6px; position: sticky; top: 0; font-weight: 600; border: 1px solid #004d40; }
+        .search-popup td { padding: 4px 6px; border: 1px solid #e2e8f0; cursor: pointer; }
+        .search-popup tr:hover { background-color: #e0f2f1; font-weight: 600; }
+        .detail-entry-bar { background-color: #fafafa; border: 1px solid #cbd5e1; padding: 8px; margin: 6px 0; }
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
+        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; }
+        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
+        .totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-money"></i> Post Dated Cheque Payment Voucher</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Toolbar - ditto PostDatedCheqPaymentVouchers.cs's toolstrip (Save_Click/btnUpdate_Click/
+         btnDelete_Click/print flags ChkPrint1). -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="resetForm()"><i class="fa fa-plus text-success"></i> + New</button>
+        <button type="button" class="win-btn" onclick="refreshPage()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+        <button type="button" class="win-btn win-btn-teal" id="btnSaveUpdate" onclick="submitVoucher()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="win-btn"><i class="fa fa-paperclip text-info"></i> Attachment</button>
+        <button type="button" class="win-btn" onclick="printVoucher()"><i class="fa fa-print text-warning"></i> Print Voucher</button>
+        <!-- Desktop's own btnDelete_Click handler body is empty (PostDatedCheqPaymentVouchers.cs
+             line 1509) - PDC Payment has never had a working Delete action on the real application,
+             so this button is disabled here too rather than implementing one desktop itself never had. -->
+        <button type="button" class="win-btn" disabled title="Desktop's own Delete button does nothing on this form (empty btnDelete_Click handler) - preserved as-is, not implemented here either.">
+            <i class="fa fa-trash text-danger"></i> Delete
+        </button>
+    </div>
+
+    <div class="win-tab-bar">
+        <button type="button" class="win-tab-btn active" id="tabBtnForm" onclick="switchTab('form')"><i class="fa fa-edit"></i> Form Tab</button>
+        <button type="button" class="win-tab-btn" id="tabBtnHistory" onclick="switchTab('history')"><i class="fa fa-history"></i> History Tab</button>
+    </div>
+
+    <div id="tabFormContent" class="win-form-card">
+        <form id="formVoucher" onsubmit="event.preventDefault(); submitVoucher();">
+
+            <!-- HEADER SECTION - ditto PostDatedCheqPaymentVouchers.cs's Main group box
+                 (txtDocNo/DocDate/CmbDebitAccount/txtManualNo/txtReceivedBy/txtRmks). -->
+            <div class="win-section-header">Main</div>
+            <div style="padding: 10px;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label">Doc No</label></div>
+                            <div class="col-md-3"><input type="text" id="txtDocNo" class="win-input" style="font-weight: bold;"/></div>
+                            <div class="col-md-2" style="padding-left: 0;"><label class="win-label">Date</label></div>
+                            <div class="col-md-3" style="padding-left: 0;"><input type="date" id="dtpDocDate" class="win-input"/></div>
+                        </div>
+                        <div class="row" style="margin-bottom: 6px; position: relative;">
+                            <div class="col-md-4"><label class="win-label">Debit Account</label></div>
+                            <div class="col-md-8">
+                                <input type="text" id="txtDebitAccSearch" class="win-input" placeholder="Type to search account..." autocomplete="off" onkeyup="onDebitAccSearch(event)" oninput="onDebitAccSearch(event)" onfocus="onDebitAccSearch(event)"/>
+                                <input type="hidden" id="hdnDebitAccId" value="0"/>
+                                <div id="popDebitAcc" class="search-popup"><table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th><th style="width:120px;">Group</th></tr></thead><tbody id="tbodyPopDebitAcc"></tbody></table></div>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label">Manual Bill No</label></div>
+                            <div class="col-md-8"><input type="text" id="txtManualNo" class="win-input"/></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-3"><label class="win-label">Received By</label></div>
+                            <div class="col-md-9"><input type="text" id="txtReceivedBy" class="win-input"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><label class="win-label">Remarks</label></div>
+                            <div class="col-md-9"><textarea id="txtHeaderRemarks" class="win-textarea" placeholder="Enter voucher main remarks..."></textarea></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETAIL SECTION - ditto PostDatedCheqPaymentVouchers.cs's Detail group box
+                 (CmbTransType/CmbCheqPartyAccount/CmbCheqno/txtBankName/CheqDate/CmbCreditAccount/
+                 txtPayTitle/txtAmount, added to the grid via btnplus_Click). -->
+            <div class="win-section-header">Detail</div>
+            <div style="padding: 10px;">
+                <div class="detail-entry-bar">
+                    <div class="row" style="margin-bottom: 6px;">
+                        <div class="col-md-2">
+                            <label class="win-label">Trans Type</label>
+                            <select id="cmbTransType" class="win-input" onchange="onTransTypeChange()">
+                                <option value="PDC">PDC</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" style="position: relative;">
+                            <label class="win-label">Cheq Party Account</label>
+                            <input type="text" id="txtCheqPartySearch" class="win-input" placeholder="Type to search..." autocomplete="off" onkeyup="onCheqPartySearch(event)" oninput="onCheqPartySearch(event)" onfocus="onCheqPartySearch(event)"/>
+                            <input type="hidden" id="hdnCheqPartyId" value="0"/>
+                            <div id="popCheqParty" class="search-popup"><table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th><th style="width:120px;">Group</th></tr></thead><tbody id="tbodyPopCheqParty"></tbody></table></div>
+                        </div>
+                        <div class="col-md-3" style="position: relative;">
+                            <label class="win-label">Credit Account</label>
+                            <input type="text" id="txtCreditAccSearch" class="win-input" placeholder="Type to search..." autocomplete="off" onkeyup="onCreditAccSearch(event)" oninput="onCreditAccSearch(event)" onfocus="onCreditAccSearch(event)"/>
+                            <input type="hidden" id="hdnCreditAccId" value="0"/>
+                            <div id="popCreditAcc" class="search-popup"><table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th><th style="width:120px;">Group</th></tr></thead><tbody id="tbodyPopCreditAcc"></tbody></table></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">Amount *</label>
+                            <input type="number" step="0.01" id="txtAmountDetail" class="win-input" style="text-align: right; font-weight: bold;"/>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 6px;">
+                        <div class="col-md-2">
+                            <label class="win-label" id="lblCheqNo">Cheq No</label>
+                            <input type="text" id="txtCheqNo" class="win-input"/>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label" id="lblBankName">Bank Name</label>
+                            <input type="text" id="txtBankName" class="win-input"/>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Cheque Date</label>
+                            <input type="date" id="dtpCheqDate" class="win-input"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">Pay Title</label>
+                            <input type="text" id="txtPayTitle" class="win-input"/>
+                        </div>
+                        <div class="col-md-3" style="display: flex; align-items: flex-end;">
+                            <button type="button" class="win-btn win-btn-teal" id="btnAddRow" style="width: 100%; height: 25px; justify-content: center;" onclick="addDetailRow()"><i class="fa fa-plus"></i> + Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="max-height: 300px; overflow-y: auto; margin-top: 8px;">
+                    <table class="win-grid-table" id="tblGrid">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px; text-align: center;">Action</th>
+                                <th style="width: 60px;">Trans Type</th>
+                                <th>Cheq Party</th>
+                                <th style="width: 90px;">Cheq No</th>
+                                <th>Bank Name</th>
+                                <th style="width: 90px;">Cheq Date</th>
+                                <th>Credit Account</th>
+                                <th>Pay Title</th>
+                                <th style="width: 110px; text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyGrid"><tr id="trEmptyGrid"><td colspan="9" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr></tbody>
+                    </table>
+                </div>
+
+                <div class="totals-bar"><div>Total Amount (Voucher Amount): <span id="lblTotalAmount">0.00</span></div></div>
+            </div>
+        </form>
+    </div>
+
+    <!-- History Tab - ditto PostDatedCheqPaymentVouchers.cs's gridhistoryfill() -> CommonServices.
+         VoucherFormHistory(canViewAll, "24", 0), which has NO date/doc-no/account/approved-status
+         filter UI at all (unlike CPV/CRV/JV/Contra/Expense/Party Receipt) - it just shows every
+         visible record. HistoryColumns.PDC_PAYMENT: Id,VoucherCode,DocumentTypeId,DocumentTypeCode,
+         VoucherDate,ManualBillNo,AccountTitle,AgainstAccount,Remarks,VoucherAmount,FcyCode,
+         ExchangeRate,FcyAmount,UserName,CheqNo,Attachment - no AccountTypeId/EntryDate/Modify-
+         Approved columns. Backed by GET /accounts/api/vouchers/pdc-payment/history -> EXEC
+         USP_VoucherFormHistory (@DocumentTypeName='24'). -->
+    <div id="tabHistoryContent" class="win-form-card" style="display: none;">
+        <div class="win-section-header">PDC Payment Voucher History</div>
+        <div style="padding: 10px;">
+            <div class="detail-entry-bar">
+                <div class="row">
+                    <div class="col-md-9" style="font-style: italic; color: #64748b; padding-top: 4px;">
+                        Desktop's own History tab for this voucher has no date/doc-no/account/approved-status filters - it always shows every record visible to the current user.
+                    </div>
+                    <div class="col-md-3" style="display: flex; align-items: flex-end; justify-content: flex-end; gap: 6px;">
+                        <button type="button" class="win-btn win-btn-teal" onclick="loadPdcHistory()"><i class="fa fa-refresh"></i> Refresh</button>
+                    </div>
+                </div>
+                <div id="pdcHistTotals" style="margin-top: 6px; font-size: 12px; display: none;">
+                    <b>Total Vouchers:</b> <span id="pdcHistTotalVouchers">0</span> &nbsp;
+                    <b>Approved:</b> <span id="pdcHistTotalApproved">0</span> &nbsp;
+                    <b>Not Approved:</b> <span id="pdcHistTotalUnApproved">0</span>
+                </div>
+            </div>
+            <div style="max-height: 420px; overflow-y: auto; overflow-x: auto; margin-top: 8px;">
+                <table class="win-grid-table" id="tblPdcHistoryGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Edit</th>
+                            <th style="width: 70px;">V.No</th>
+                            <th style="width: 90px;">V.Date</th>
+                            <th style="width: 60px;">V.Type</th>
+                            <th style="width: 100px;">ManualBillNo</th>
+                            <th>Account Title</th>
+                            <th>Against Account</th>
+                            <th style="width: 250px;">Remarks</th>
+                            <th style="width: 100px; text-align: right;">Voucher Amount</th>
+                            <th style="width: 70px;">Fcy Code</th>
+                            <th style="width: 80px; text-align: right;">Exchange Rate</th>
+                            <th style="width: 90px; text-align: right;">Fcy Amount</th>
+                            <th style="width: 90px;">Entry User</th>
+                            <th style="width: 90px;">Cheque No</th>
+                            <th style="width: 70px; text-align: center;">Attachment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyPdcHistoryGrid"><tr><td colspan="15" style="text-align: center; color: #888; padding: 20px;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        let gridItems = [];
+        let editingVoucherId = 0;
+
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            $('#dtpDocDate').val(today);
+            $('#dtpCheqDate').val(today);
+
+            $.get('/accounts/api/vouchers/next-code?documentTypeId=24', function(res) {
+                if (res && res.nextCode) $('#txtDocNo').val(res.nextCode);
+            });
+
+            onTransTypeChange();
+        });
+
+        // Ditto PostDatedCheqPaymentVouchers.cs's FormValidationDetail(): Cheq No and Bank Name are
+        // only required when Trans Type is "PDC" (ChequeView()'s own template-print condition is the
+        // same check). Cheque No itself is desktop's own CmbCheqno.Text - on the real form this combo
+        // is optionally pre-populated from a separate "PDC Inventory" (received post-dated cheques)
+        // subsystem (PdcInventory.GetByType(), tied to Cheq Party Account) so a previously-registered
+        // cheque can be picked and auto-fills Bank Name/Cheque Date/Amount - that inventory master-
+        // data and its lookup screen is the "PDC Transaction" module later in this same task list, not
+        // part of Payment Voucher itself, so here Cheque No is a plain required-if-PDC text field
+        // (exactly the value that ends up in CheqNoDetail either way, whether typed or picked from
+        // that dropdown on desktop).
+        function onTransTypeChange() {
+            const isPdc = $('#cmbTransType').val() === 'PDC';
+            $('#lblCheqNo').text(isPdc ? 'Cheq No *' : 'Cheq No');
+            $('#lblBankName').text(isPdc ? 'Bank Name *' : 'Bank Name');
+        }
+
+        function filterAccList(list, query) {
+            const q = query.toLowerCase();
+            return list.filter(function(a) {
+                return ((a.accountTitle || '').toLowerCase().indexOf(q) >= 0) || ((a.accountCode || '') + '').toLowerCase().indexOf(q) >= 0;
+            }).slice(0, 50);
+        }
+        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+        // Ditto PostDatedCheqPaymentVouchers.cs's DebitAccountFill(): CmbDebitAccount, CmbCreditAccount
+        // and CmbCheqPartyAccount are all bound from the SAME real list -
+        // CommonServices.CoaAllocationGetForComboServiceBind() -> EXEC Sp_COAAllocation_GetAllMethod
+        // (@Activity='COAForCombobindig') - a per-user-scoped Chart of Accounts allocation list. This
+        // port reuses the already-existing, already-verified generic /accounts-search endpoint (same
+        // live Chart-of-Accounts search every other ported voucher's account picker uses) instead of
+        // adding a new COAAllocation-backed endpoint, since true per-user COAAllocation restriction is
+        // not enforced anywhere else in this Java app either - a documented scoping decision, not a
+        // guess.
+        function onDebitAccSearch(e) {
+            const query = $('#txtDebitAccSearch').val().trim();
+            if (query.length < 1) { $('#popDebitAcc').hide(); return; }
+            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
+                let html = '';
+                (data || []).forEach(function(acc) {
+                    const id = acc.id || 0, code = acc.accountCode || '', title = acc.accountTitle || '', parent = acc.parentAccountTitle || 'Detail';
+                    html += '<tr onclick="selectDebitAcc(' + id + ', \'' + escapeQuotes(code) + '\', \'' + escapeQuotes(title) + '\')"><td><strong>' + title + '</strong></td><td>' + code + '</td><td>' + parent + '</td></tr>';
+                });
+                $('#tbodyPopDebitAcc').html(html || '<tr><td colspan="3" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+                $('#popDebitAcc').show();
+            });
+        }
+        function selectDebitAcc(id, code, title) { $('#hdnDebitAccId').val(id); $('#txtDebitAccSearch').val(title + ' [' + code + ']'); $('#popDebitAcc').hide(); }
+
+        function onCheqPartySearch(e) {
+            const query = $('#txtCheqPartySearch').val().trim();
+            if (query.length < 1) { $('#popCheqParty').hide(); return; }
+            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
+                let html = '';
+                (data || []).forEach(function(acc) {
+                    const id = acc.id || 0, code = acc.accountCode || '', title = acc.accountTitle || '', parent = acc.parentAccountTitle || 'Detail';
+                    html += '<tr onclick="selectCheqParty(' + id + ', \'' + escapeQuotes(code) + '\', \'' + escapeQuotes(title) + '\')"><td><strong>' + title + '</strong></td><td>' + code + '</td><td>' + parent + '</td></tr>';
+                });
+                $('#tbodyPopCheqParty').html(html || '<tr><td colspan="3" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+                $('#popCheqParty').show();
+            });
+        }
+        function selectCheqParty(id, code, title) { $('#hdnCheqPartyId').val(id); $('#txtCheqPartySearch').val(title + ' [' + code + ']'); $('#popCheqParty').hide(); }
+
+        function onCreditAccSearch(e) {
+            const query = $('#txtCreditAccSearch').val().trim();
+            if (query.length < 1) { $('#popCreditAcc').hide(); return; }
+            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
+                let html = '';
+                (data || []).forEach(function(acc) {
+                    const id = acc.id || 0, code = acc.accountCode || '', title = acc.accountTitle || '', parent = acc.parentAccountTitle || 'Detail';
+                    html += '<tr onclick="selectCreditAcc(' + id + ', \'' + escapeQuotes(code) + '\', \'' + escapeQuotes(title) + '\')"><td><strong>' + title + '</strong></td><td>' + code + '</td><td>' + parent + '</td></tr>';
+                });
+                $('#tbodyPopCreditAcc').html(html || '<tr><td colspan="3" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+                $('#popCreditAcc').show();
+            });
+        }
+        function selectCreditAcc(id, code, title) { $('#hdnCreditAccId').val(id); $('#txtCreditAccSearch').val(title + ' [' + code + ']'); $('#popCreditAcc').hide(); $('#txtAmountDetail').focus(); }
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#txtDebitAccSearch, #popDebitAcc').length) $('#popDebitAcc').hide();
+            if (!$(e.target).closest('#txtCheqPartySearch, #popCheqParty').length) $('#popCheqParty').hide();
+            if (!$(e.target).closest('#txtCreditAccSearch, #popCreditAcc').length) $('#popCreditAcc').hide();
+        });
+
+        // Ditto PostDatedCheqPaymentVouchers.cs's FormValidationDetail(): CheqPartyAccount and
+        // CreditAccount are always required; CheqNo/BankName only required when TransType=="PDC".
+        function addDetailRow() {
+            const transType = $('#cmbTransType').val();
+            const cheqPartyId = parseInt($('#hdnCheqPartyId').val()) || 0;
+            const cheqPartyTitle = $('#txtCheqPartySearch').val().split(' [')[0];
+            const creditAccId = parseInt($('#hdnCreditAccId').val()) || 0;
+            const creditAccTitle = $('#txtCreditAccSearch').val().split(' [')[0];
+            const cheqNo = $('#txtCheqNo').val().trim();
+            const bankName = $('#txtBankName').val().trim();
+            const cheqDate = $('#dtpCheqDate').val();
+            const payTitle = $('#txtPayTitle').val().trim();
+            const amount = parseFloat($('#txtAmountDetail').val()) || 0.0;
+
+            if (cheqPartyId === 0) { alert('CheqPartyName Field is Required'); $('#txtCheqPartySearch').focus(); return; }
+            if (creditAccId === 0) { alert('Credit Account Filed Requird'); $('#txtCreditAccSearch').focus(); return; }
+            if (transType === 'PDC') {
+                if (cheqNo === '') { alert('Cheq No Filed Requird'); $('#txtCheqNo').focus(); return; }
+                if (bankName === '') { alert('Bank Name Filed Requird'); $('#txtBankName').focus(); return; }
+            }
+            if (amount === 0) { alert('Amount is Required'); $('#txtAmountDetail').focus(); return; }
+
+            gridItems.push({
+                transType: transType, cheqPartyId: cheqPartyId, cheqPartyTitle: cheqPartyTitle,
+                creditAccId: creditAccId, creditAccTitle: creditAccTitle,
+                cheqNo: cheqNo, bankName: bankName, cheqDate: cheqDate, payTitle: payTitle, amount: amount
+            });
+            renderGrid();
+
+            $('#hdnCheqPartyId').val('0'); $('#txtCheqPartySearch').val('');
+            $('#hdnCreditAccId').val('0'); $('#txtCreditAccSearch').val('');
+            $('#txtCheqNo').val(''); $('#txtBankName').val(''); $('#txtPayTitle').val(''); $('#txtAmountDetail').val('');
+            $('#dtpCheqDate').val(new Date().toISOString().split('T')[0]);
+            $('#txtCheqPartySearch').focus();
+        }
+
+        function removeGridItem(index) { gridItems.splice(index, 1); renderGrid(); }
+
+        function renderGrid() {
+            let html = '';
+            let total = 0.0;
+            if (gridItems.length > 0) {
+                gridItems.forEach(function(item, idx) {
+                    total += item.amount;
+                    html += '<tr><td style="text-align:center;"><button type="button" class="btn btn-xs btn-danger" onclick="removeGridItem(' + idx + ')">&times;</button></td>' +
+                        '<td>' + item.transType + '</td><td>' + item.cheqPartyTitle + '</td>' +
+                        '<td>' + (item.cheqNo || '') + '</td><td>' + (item.bankName || '') + '</td>' +
+                        '<td>' + (item.cheqDate || '') + '</td><td><strong>' + item.creditAccTitle + '</strong></td>' +
+                        '<td>' + (item.payTitle || '') + '</td>' +
+                        '<td style="text-align:right; font-weight:bold;">' + item.amount.toFixed(2) + '</td></tr>';
+                });
+            } else {
+                html = '<tr id="trEmptyGrid"><td colspan="9" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr>';
+            }
+            $('#tbodyGrid').html(html);
+            $('#lblTotalAmount').text(total.toFixed(2));
+        }
+
+        // Ditto PostDatedCheqPaymentVouchers.cs's FormValidation(): CmbDebitAccount and DocNo required,
+        // plus "Fields Required" if the grid has no rows. Insert(): vh.ChequeDate is always hardcoded
+        // to DateTime.Today (never a user-editable header field on this form) - reproduced here by
+        // silently sending today's date rather than exposing an extra header control desktop itself
+        // doesn't have.
+        function submitVoucher() {
+            const debitAccId = parseInt($('#hdnDebitAccId').val()) || 0;
+            if (debitAccId === 0) { alert('Account Debit Field is Required'); return; }
+            const docNo = $('#txtDocNo').val().trim();
+            if (docNo === '' || docNo === '0') { alert('DocNo Field is Required'); return; }
+            if (gridItems.length === 0) { alert('Fields Required'); return; }
+
+            const totalAmount = gridItems.reduce(function(s, it) { return s + it.amount; }, 0.0);
+            const todayIso = new Date().toISOString().split('T')[0];
+
+            const payload = {
+                id: editingVoucherId > 0 ? editingVoucherId : null,
+                documentTypeId: 24, // PDC Payment (real DocumentType.Id)
+                voucherCode: parseInt(docNo) || null,
+                voucherDate: $('#dtpDocDate').val(),
+                remarks: $('#txtHeaderRemarks').val().trim(),
+                remarksOtherLingo: $('#txtReceivedBy').val().trim(),
+                manualBillNo: $('#txtManualNo').val().trim(),
+                voucherAmount: totalAmount,
+                chequeDate: todayIso, // vh.ChequeDate = DateTime.Today (desktop's own hardcode)
+                refAccountId: debitAccId,
+                againstAccountId: debitAccId, // stamped on every detail line below (non-mirrored)
+                details: gridItems.map(function(item) {
+                    return {
+                        accountId: item.creditAccId,
+                        debitAmount: 0.0,
+                        creditAmount: item.amount,
+                        refInvoiceNo: item.transType,
+                        supplierCustomerId: item.cheqPartyId,
+                        chequeNoDetail: item.cheqNo || null,
+                        chequeDateDetail: item.cheqDate || null,
+                        paymentType: item.payTitle || null,
+                        commentsOtherLingo: item.bankName || null
+                    };
+                })
+            };
+
+            $.ajax({
+                url: '/accounts/api/vouchers/save', type: 'POST', contentType: 'application/json', data: JSON.stringify(payload),
+                success: function(res) {
+                    alert(res.message || (editingVoucherId > 0 ? 'Voucher Update Successfully...[' + res.voucherCode + ']' : 'Voucher Save Successfully...[' + res.voucherCode + ']'));
+                    resetForm();
+                },
+                error: function(err) { alert('Error saving voucher: ' + (err.responseJSON ? err.responseJSON.message : 'Server error')); }
+            });
+        }
+
+        function resetForm() { window.location.reload(); }
+        function refreshPage() { window.location.reload(); }
+        function printVoucher() { alert('Printing PDC Payment Voucher...'); }
+
+        function switchTab(tab) {
+            if (tab === 'form') {
+                $('#tabBtnForm').addClass('active'); $('#tabBtnHistory').removeClass('active');
+                $('#tabFormContent').show(); $('#tabHistoryContent').hide();
+            } else {
+                $('#tabBtnHistory').addClass('active'); $('#tabBtnForm').removeClass('active');
+                $('#tabFormContent').hide(); $('#tabHistoryContent').show();
+                loadPdcHistory();
+            }
+        }
+
+        function loadPdcHistory() {
+            $.get('/accounts/api/vouchers/pdc-payment/history', function(res) {
+                const tbody = $('#tbodyPdcHistoryGrid');
+                tbody.empty();
+                const rows = (res && res.rows) || [];
+                if (rows.length === 0) { $('#pdcHistTotals').hide(); tbody.append('<tr><td colspan="15" style="text-align: center; color: #888; padding: 20px;">No vouchers found</td></tr>'); return; }
+                $('#pdcHistTotals').show();
+                $('#pdcHistTotalVouchers').text(res.totalVouchers || 0);
+                $('#pdcHistTotalApproved').text(res.totalApprovedVoucher || 0);
+                $('#pdcHistTotalUnApproved').text(res.totalUnApprovedVoucher || 0);
+                rows.forEach(function(v) {
+                    const row = '<tr style="cursor: pointer;" ondblclick="loadPdcVoucherForEdit(' + v.id + ')">' +
+                        '<td style="text-align:center;"><button type="button" class="win-btn win-btn-teal" style="padding: 1px 6px;" onclick="loadPdcVoucherForEdit(' + v.id + ')"><i class="fa fa-edit"></i></button></td>' +
+                        '<td style="font-weight: bold;">' + (v.voucherCode != null ? v.voucherCode : '') + '</td>' +
+                        '<td>' + (v.voucherDate || '') + '</td>' + '<td>' + (v.documentType || '') + '</td>' +
+                        '<td>' + (v.manualBillNo || '') + '</td>' +
+                        '<td>' + (v.accountTitle || '') + '</td>' + '<td>' + (v.againstAccount || '') + '</td>' +
+                        '<td>' + (v.remarks || '') + '</td>' +
+                        '<td style="text-align: right; font-weight: bold;">' + (parseFloat(v.voucherAmount || 0)).toFixed(2) + '</td>' +
+                        '<td>' + (v.fcyCode || '') + '</td>' +
+                        '<td style="text-align: right;">' + (v.exchangeRate != null ? v.exchangeRate : '') + '</td>' +
+                        '<td style="text-align: right;">' + (v.fcyAmount != null ? v.fcyAmount : '') + '</td>' +
+                        '<td>' + (v.entryUser || '') + '</td>' +
+                        '<td>' + (v.chequeNo || '') + '</td>' +
+                        '<td style="text-align: center;">' + (v.attachment && v.attachment > 0 ? v.attachment : '') + '</td></tr>';
+                    tbody.append(row);
+                });
+            }).fail(function() { $('#tbodyPdcHistoryGrid').html('<tr><td colspan="15" style="text-align: center; color: red; padding: 20px;">Error loading PDC Payment History</td></tr>'); });
+        }
+
+        // Ditto PostDatedCheqPaymentVouchers.cs's ReadById(int ID): every detail row is re-shown
+        // (this form has no AccountId==RefAccountId mirror-row filtering, since Save() never creates
+        // a mirrored row here - see saveVoucher()'s non-mirrored AgainstAccountId fallback).
+        function loadPdcVoucherForEdit(id) {
+            $.get('/accounts/api/vouchers/' + id, function(voucher) {
+                if (!voucher || !voucher.header) return;
+                switchTab('form');
+                const header = voucher.header;
+                editingVoucherId = header.id || id;
+                $('#txtDocNo').val(header.voucherCode != null ? header.voucherCode : '');
+                if (header.voucherDate) $('#dtpDocDate').val(header.voucherDate);
+                $('#txtHeaderRemarks').val(header.remarks || '');
+                $('#txtReceivedBy').val(header.remarksOtherLingo || '');
+                $('#txtManualNo').val(header.manualBillNo || '');
+                if (header.refAccountId) { $('#hdnDebitAccId').val(header.refAccountId); $('#txtDebitAccSearch').val('Account #' + header.refAccountId); }
+
+                gridItems = (voucher.details || []).map(function(d) {
+                    return {
+                        transType: d.refInvoiceNo || 'PDC',
+                        cheqPartyId: d.supplierCustomerId || 0,
+                        cheqPartyTitle: 'Account #' + (d.supplierCustomerId || ''),
+                        creditAccId: d.accountId,
+                        creditAccTitle: d.accountTitle || ('Account #' + d.accountId),
+                        cheqNo: d.chequeNoDetail || '',
+                        bankName: d.commentsOtherLingo || '',
+                        cheqDate: d.chequeDateDetail || '',
+                        payTitle: d.paymentType || '',
+                        amount: parseFloat(d.creditAmount || 0)
+                    };
+                });
+                renderGrid();
+                $('#btnSaveUpdate').html('<i class="fa fa-save"></i> Update');
+            }).fail(function() { alert('Could not load PDC Payment Voucher #' + id); });
+        }
+
+        $(document).on('keydown', function(e) {
+            if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); resetForm(); }
+            if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); submitVoucher(); }
+            if (e.ctrlKey && e.keyCode === 82) { e.preventDefault(); refreshPage(); }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+
+====================================================================================================
+CLASS CameraControl.DownloadCommand
+====================================================================================================
+
+; CameraControl.DownloadCommand::.ctor  (rva=0x1a2ac, tiny header, code_size=27, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldsfld System.IntPtr::Zero
+    IL_0006: stfld CameraControl.DownloadCommand::_directoryItem
+    IL_000b: ldarg.0
+    IL_000c: ldarg.1
+    IL_000d: call CameraControl.Command::.ctor
+    IL_0012: ldarg.0
+    IL_0013: ldarg.2
+    IL_0014: ldind.i
+    IL_0015: stfld CameraControl.DownloadCommand::_directoryItem
+    IL_001a: ret
+
+; CameraControl.DownloadCommand::Finalize  (rva=0x1a2c8, fat header, code_size=51, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld CameraControl.DownloadCommand::_directoryItem
+    IL_0006: ldsfld System.IntPtr::Zero
+    IL_000b: call System.IntPtr::op_Inequality
+    IL_0010: brfalse.s IL_0029
+    IL_0012: ldarg.0
+    IL_0013: ldfld CameraControl.DownloadCommand::_directoryItem
+    IL_0018: call EDSDKLib.EDSDK::EdsRelease
+    IL_001d: pop
+    IL_001e: ldarg.0
+    IL_001f: ldsfld System.IntPtr::Zero
+    IL_0024: stfld CameraControl.DownloadCommand::_directoryItem
+    IL_0029: leave.s IL_0032
+    IL_002b: ldarg.0
+    IL_002c: call System.Object::Finalize
+    IL_0031: endfinally
+    IL_0032: ret
+
+; CameraControl.DownloadCommand::Execute  (rva=0x1a318, fat header, code_size=322, max_stack=4, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld CameraControl.Command::_model
+    IL_0006: callvirt CameraControl.CameraModel::get_canDownloadImage
+    IL_000b: brtrue.s IL_000f
+    IL_000d: ldc.i4.1
+    IL_000e: ret
+    IL_000f: ldc.i4.0
+    IL_0010: stloc.0
+    IL_0011: ldsfld System.IntPtr::Zero
+    IL_0016: stloc.1
+    IL_0017: ldarg.0
+    IL_0018: ldfld CameraControl.DownloadCommand::_directoryItem
+    IL_001d: ldloca.s 2
+    IL_001f: call EDSDKLib.EDSDK::EdsGetDirectoryItemInfo
+    IL_0024: stloc.0
+    IL_0025: ldloc.0
+    IL_0026: brtrue.s IL_003c
+    IL_0028: ldc.i4.3
+    IL_0029: ldloc.1
+    IL_002a: newobj CameraControl.CameraEvent::.ctor
+    IL_002f: stloc.3
+    IL_0030: ldarg.0
+    IL_0031: ldfld CameraControl.Command::_model
+    IL_0036: ldloc.3
+    IL_0037: callvirt CameraControl.Observable::NotifyObservers
+    IL_003c: ldloc.0
+    IL_003d: brtrue.s IL_0088
+    IL_003f: ldsfld Architecture.WinApp.Lab.InvLabPurchaseAnalysis::saveDirectory
+    IL_0044: ldstr ldstr "{0}.jpg"
+    IL_0049: call System.Guid::NewGuid
+    IL_004e: box System.Guid
+    IL_0053: call System.String::Format
+    IL_0058: stloc.s 4
+    IL_005a: ldloc.s 4
+    IL_005c: stsfld Architecture.WinApp.Lab.InvLabPurchaseAnalysis::UniqPathAnalysis
+    IL_0061: ldstr ldstr "\\"
+    IL_0066: ldloc.s 4
+    IL_0068: call System.String::Concat
+    IL_006d: stloc.s 5
+    IL_006f: ldloca.s 2
+    IL_0071: ldloc.s 5
+    IL_0073: stfld EdsDirectoryItemInfo::szFileName
+    IL_0078: ldloc.2
+    IL_0079: ldfld EdsDirectoryItemInfo::szFileName
+    IL_007e: ldc.i4.1
+    IL_007f: ldc.i4.2
+    IL_0080: ldloca.s 1
+    IL_0082: call EDSDKLib.EDSDK::EdsCreateFileStream
+    IL_0087: stloc.0
+    IL_0088: ldloc.0
+    IL_0089: brtrue.s IL_00a0
+    IL_008b: ldloc.1
+    IL_008c: ldarg.0
+    IL_008d: ldftn CameraControl.DownloadCommand::ProgressFunc
+    IL_0093: newobj EdsProgressCallback::.ctor
+    IL_0098: ldc.i4.2
+    IL_0099: ldloc.1
+    IL_009a: call EDSDKLib.EDSDK::EdsSetProgressCallback
+    IL_009f: stloc.0
+    IL_00a0: ldloc.0
+    IL_00a1: brtrue.s IL_00b6
+    IL_00a3: ldarg.0
+    IL_00a4: ldfld CameraControl.DownloadCommand::_directoryItem
+    IL_00a9: ldloc.2
+    IL_00aa: ldfld EdsDirectoryItemInfo::Size
+    IL_00af: ldloc.1
+    IL_00b0: call EDSDKLib.EDSDK::EdsDownload
+    IL_00b5: stloc.0
+    IL_00b6: ldloc.0
+    IL_00b7: brtrue.s IL_00c5
+    IL_00b9: ldarg.0
+    IL_00ba: ldfld CameraControl.DownloadCommand::_directoryItem
+    IL_00bf: call EDSDKLib.EDSDK::EdsDownloadComplete
+    IL_00c4: stloc.0
+    IL_00c5: ldarg.0
+    IL_00c6: ldfld CameraControl.DownloadCommand::_directoryItem
+    IL_00cb: ldsfld System.IntPtr::Zero
+    IL_00d0: call System.IntPtr::op_Inequality
+    IL_00d5: brfalse.s IL_00ee
+    IL_00d7: ldarg.0
+    IL_00d8: ldfld CameraControl.DownloadCommand::_directoryItem
+    IL_00dd: call EDSDKLib.EDSDK::EdsRelease
+    IL_00e2: stloc.0
+    IL_00e3: ldarg.0
+    IL_00e4: ldsfld System.IntPtr::Zero
+    IL_00e9: stfld CameraControl.DownloadCommand::_directoryItem
+    IL_00ee: ldloc.1
+    IL_00ef: ldsfld System.IntPtr::Zero
+    IL_00f4: call System.IntPtr::op_Inequality
+    IL_00f9: brfalse.s IL_0108
+    IL_00fb: ldloc.1
+    IL_00fc: call EDSDKLib.EDSDK::EdsRelease
+    IL_0101: stloc.0
+    IL_0102: ldsfld System.IntPtr::Zero
+    IL_0107: stloc.1
+    IL_0108: ldloc.0
+    IL_0109: brtrue.s IL_0121
+    IL_010b: ldc.i4.4
+    IL_010c: ldloc.1
+    IL_010d: newobj CameraControl.CameraEvent::.ctor
+    IL_0112: stloc.s 6
+    IL_0114: ldarg.0
+    IL_0115: ldfld CameraControl.Command::_model
+    IL_011a: ldloc.s 6
+    IL_011c: callvirt CameraControl.Observable::NotifyObservers
+    IL_0121: ldloc.0
+    IL_0122: brfalse.s IL_0140
+    IL_0124: ldc.i4.1
+    IL_0125: ldloc.0
+    IL_0126: conv.u8
+    IL_0127: call System.IntPtr::op_Explicit
+    IL_012c: newobj CameraControl.CameraEvent::.ctor
+    IL_0131: stloc.s 7
+    IL_0133: ldarg.0
+    IL_0134: ldfld CameraControl.Command::_model
+    IL_0139: ldloc.s 7
+    IL_013b: callvirt CameraControl.Observable::NotifyObservers
+    IL_0140: ldc.i4.1
+    IL_0141: ret
+
+; CameraControl.DownloadCommand::ProgressFunc  (rva=0x1a466, tiny header, code_size=39, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.s 11
+    IL_0003: ldarg.1
+    IL_0004: conv.u8
+    IL_0005: call System.IntPtr::op_Explicit
+    IL_000a: newobj CameraControl.CameraEvent::.ctor
+    IL_000f: stfld CameraControl.DownloadCommand::_event
+    IL_0014: ldarg.0
+    IL_0015: ldfld CameraControl.Command::_model
+    IL_001a: ldarg.0
+    IL_001b: ldfld CameraControl.DownloadCommand::_event
+    IL_0020: callvirt CameraControl.Observable::NotifyObservers
+    IL_0025: ldc.i4.0
+    IL_0026: ret

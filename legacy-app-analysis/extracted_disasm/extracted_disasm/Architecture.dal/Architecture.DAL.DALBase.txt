@@ -1,0 +1,59 @@
+
+====================================================================================================
+CLASS Architecture.DAL.DALBase
+====================================================================================================
+
+; Architecture.DAL.DALBase::.ctor  (rva=0x8308, fat header, code_size=64, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ldsfld Architecture.Common.clsGlobalVariables::ServiceConnectionString
+    IL_000b: ldsfld System.String::Empty
+    IL_0010: call System.String::op_Inequality
+    IL_0015: brfalse.s IL_002f
+    IL_0017: ldsfld Architecture.Common.clsGlobalVariables::ServiceConnectionString
+    IL_001c: brfalse.s IL_002f
+    IL_001e: ldarg.0
+    IL_001f: ldsfld Architecture.Common.clsGlobalVariables::ServiceConnectionString
+    IL_0024: newobj Microsoft.Practices.EnterpriseLibrary.Data.Sql.SqlDatabase::.ctor
+    IL_0029: stfld Architecture.DAL.DALBase::sqlDataBase
+    IL_002e: ret
+    IL_002f: ldarg.0
+    IL_0030: call Architecture.Common.Services::GetConnectionString
+    IL_0035: newobj Microsoft.Practices.EnterpriseLibrary.Data.Sql.SqlDatabase::.ctor
+    IL_003a: stfld Architecture.DAL.DALBase::sqlDataBase
+    IL_003f: ret
+
+; Architecture.DAL.DALBase::getTransaction  (rva=0x8354, tiny header, code_size=40, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldfld Architecture.DAL.DALBase::sqlDataBase
+    IL_0007: callvirt Microsoft.Practices.EnterpriseLibrary.Data.Database::CreateConnection
+    IL_000c: stfld Architecture.DAL.DALBase::conn
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.DAL.DALBase::conn
+    IL_0017: callvirt System.Data.Common.DbConnection::Open
+    IL_001c: ldarg.0
+    IL_001d: ldfld Architecture.DAL.DALBase::conn
+    IL_0022: callvirt System.Data.Common.DbConnection::BeginTransaction
+    IL_0027: ret
+
+; Architecture.DAL.DALBase::CloseConnection  (rva=0x837d, tiny header, code_size=33, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.DAL.DALBase::conn
+    IL_0006: brfalse.s IL_0020
+    IL_0008: ldarg.0
+    IL_0009: ldfld Architecture.DAL.DALBase::conn
+    IL_000e: callvirt System.Data.Common.DbConnection::get_State
+    IL_0013: brfalse.s IL_0020
+    IL_0015: ldarg.0
+    IL_0016: ldfld Architecture.DAL.DALBase::conn
+    IL_001b: callvirt System.Data.Common.DbConnection::Close
+    IL_0020: ret
+
+; Architecture.DAL.DALBase::.ctor  (rva=0x839f, tiny header, code_size=14, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ldarg.0
+    IL_0007: ldarg.1
+    IL_0008: stfld Architecture.DAL.DALBase::sqlDataBase
+    IL_000d: ret

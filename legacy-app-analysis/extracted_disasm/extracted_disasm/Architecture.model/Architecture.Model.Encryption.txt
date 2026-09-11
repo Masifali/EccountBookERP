@@ -1,0 +1,260 @@
+
+====================================================================================================
+CLASS Architecture.Model.Encryption
+====================================================================================================
+
+; Architecture.Model.Encryption::EncryptString  (rva=0x5854, fat header, code_size=51, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Text.Encoding::get_UTF8
+    IL_0006: ldstr ldstr "4693024482831831"
+    IL_000b: callvirt System.Text.Encoding::GetBytes
+    IL_0010: call System.Text.Encoding::get_UTF8
+    IL_0015: ldstr ldstr "4693024482831831"
+    IL_001a: callvirt System.Text.Encoding::GetBytes
+    IL_001f: call Architecture.Model.Encryption::EncryptStringToBytes
+    IL_0024: call System.Convert::ToBase64String
+    IL_0029: stloc.0
+    IL_002a: leave.s IL_0031
+    IL_002c: pop
+    IL_002d: ldnull
+    IL_002e: stloc.0
+    IL_002f: leave.s IL_0031
+    IL_0031: ldloc.0
+    IL_0032: ret
+
+; Architecture.Model.Encryption::DecryptString  (rva=0x58a4, fat header, code_size=51, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Convert::FromBase64String
+    IL_0006: call System.Text.Encoding::get_UTF8
+    IL_000b: ldstr ldstr "4693024482831831"
+    IL_0010: callvirt System.Text.Encoding::GetBytes
+    IL_0015: call System.Text.Encoding::get_UTF8
+    IL_001a: ldstr ldstr "4693024482831831"
+    IL_001f: callvirt System.Text.Encoding::GetBytes
+    IL_0024: call Architecture.Model.Encryption::DecryptStringFromBytes
+    IL_0029: stloc.0
+    IL_002a: leave.s IL_0031
+    IL_002c: pop
+    IL_002d: ldnull
+    IL_002e: stloc.0
+    IL_002f: leave.s IL_0031
+    IL_0031: ldloc.0
+    IL_0032: ret
+
+; Architecture.Model.Encryption::EncryptStringToBytes  (rva=0x58f4, fat header, code_size=213, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: brfalse.s IL_000c
+    IL_0003: ldarg.0
+    IL_0004: callvirt System.String::get_Length
+    IL_0009: ldc.i4.0
+    IL_000a: bgt.s IL_0017
+    IL_000c: ldstr ldstr "plainText"
+    IL_0011: newobj System.ArgumentNullException::.ctor
+    IL_0016: throw
+    IL_0017: ldarg.1
+    IL_0018: brfalse.s IL_001e
+    IL_001a: ldarg.1
+    IL_001b: ldlen
+    IL_001c: brtrue.s IL_0029
+    IL_001e: ldstr ldstr "key"
+    IL_0023: newobj System.ArgumentNullException::.ctor
+    IL_0028: throw
+    IL_0029: ldarg.2
+    IL_002a: brfalse.s IL_0030
+    IL_002c: ldarg.2
+    IL_002d: ldlen
+    IL_002e: brtrue.s IL_003b
+    IL_0030: ldstr ldstr "key"
+    IL_0035: newobj System.ArgumentNullException::.ctor
+    IL_003a: throw
+    IL_003b: newobj System.Security.Cryptography.RijndaelManaged::.ctor
+    IL_0040: stloc.1
+    IL_0041: ldloc.1
+    IL_0042: ldc.i4.1
+    IL_0043: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_Mode
+    IL_0048: ldloc.1
+    IL_0049: ldc.i4.2
+    IL_004a: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_Padding
+    IL_004f: ldloc.1
+    IL_0050: ldc.i4 128
+    IL_0055: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_FeedbackSize
+    IL_005a: ldloc.1
+    IL_005b: ldarg.1
+    IL_005c: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_Key
+    IL_0061: ldloc.1
+    IL_0062: ldarg.2
+    IL_0063: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_IV
+    IL_0068: ldloc.1
+    IL_0069: ldloc.1
+    IL_006a: callvirt System.Security.Cryptography.SymmetricAlgorithm::get_Key
+    IL_006f: ldloc.1
+    IL_0070: callvirt System.Security.Cryptography.SymmetricAlgorithm::get_IV
+    IL_0075: callvirt System.Security.Cryptography.SymmetricAlgorithm::CreateEncryptor
+    IL_007a: stloc.2
+    IL_007b: newobj System.IO.MemoryStream::.ctor
+    IL_0080: stloc.3
+    IL_0081: ldloc.3
+    IL_0082: ldloc.2
+    IL_0083: ldc.i4.1
+    IL_0084: newobj System.Security.Cryptography.CryptoStream::.ctor
+    IL_0089: stloc.s 4
+    IL_008b: ldloc.s 4
+    IL_008d: newobj System.IO.StreamWriter::.ctor
+    IL_0092: stloc.s 5
+    IL_0094: ldloc.s 5
+    IL_0096: ldarg.0
+    IL_0097: callvirt System.IO.TextWriter::Write
+    IL_009c: leave.s IL_00aa
+    IL_009e: ldloc.s 5
+    IL_00a0: brfalse.s IL_00a9
+    IL_00a2: ldloc.s 5
+    IL_00a4: callvirt System.IDisposable::Dispose
+    IL_00a9: endfinally
+    IL_00aa: ldloc.3
+    IL_00ab: callvirt System.IO.MemoryStream::ToArray
+    IL_00b0: stloc.0
+    IL_00b1: leave.s IL_00d3
+    IL_00b3: ldloc.s 4
+    IL_00b5: brfalse.s IL_00be
+    IL_00b7: ldloc.s 4
+    IL_00b9: callvirt System.IDisposable::Dispose
+    IL_00be: endfinally
+    IL_00bf: ldloc.3
+    IL_00c0: brfalse.s IL_00c8
+    IL_00c2: ldloc.3
+    IL_00c3: callvirt System.IDisposable::Dispose
+    IL_00c8: endfinally
+    IL_00c9: ldloc.1
+    IL_00ca: brfalse.s IL_00d2
+    IL_00cc: ldloc.1
+    IL_00cd: callvirt System.IDisposable::Dispose
+    IL_00d2: endfinally
+    IL_00d3: ldloc.0
+    IL_00d4: ret
+
+; Architecture.Model.Encryption::DecryptStringFromBytes  (rva=0x5a0c, fat header, code_size=202, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: brfalse.s IL_0007
+    IL_0003: ldarg.0
+    IL_0004: ldlen
+    IL_0005: brtrue.s IL_0012
+    IL_0007: ldstr ldstr "cipherText"
+    IL_000c: newobj System.ArgumentNullException::.ctor
+    IL_0011: throw
+    IL_0012: ldarg.1
+    IL_0013: brfalse.s IL_0019
+    IL_0015: ldarg.1
+    IL_0016: ldlen
+    IL_0017: brtrue.s IL_0024
+    IL_0019: ldstr ldstr "key"
+    IL_001e: newobj System.ArgumentNullException::.ctor
+    IL_0023: throw
+    IL_0024: ldarg.2
+    IL_0025: brfalse.s IL_002b
+    IL_0027: ldarg.2
+    IL_0028: ldlen
+    IL_0029: brtrue.s IL_0036
+    IL_002b: ldstr ldstr "key"
+    IL_0030: newobj System.ArgumentNullException::.ctor
+    IL_0035: throw
+    IL_0036: ldnull
+    IL_0037: stloc.0
+    IL_0038: newobj System.Security.Cryptography.RijndaelManaged::.ctor
+    IL_003d: stloc.1
+    IL_003e: ldloc.1
+    IL_003f: ldc.i4.1
+    IL_0040: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_Mode
+    IL_0045: ldloc.1
+    IL_0046: ldc.i4.2
+    IL_0047: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_Padding
+    IL_004c: ldloc.1
+    IL_004d: ldc.i4 128
+    IL_0052: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_FeedbackSize
+    IL_0057: ldloc.1
+    IL_0058: ldarg.1
+    IL_0059: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_Key
+    IL_005e: ldloc.1
+    IL_005f: ldarg.2
+    IL_0060: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_IV
+    IL_0065: ldloc.1
+    IL_0066: ldloc.1
+    IL_0067: callvirt System.Security.Cryptography.SymmetricAlgorithm::get_Key
+    IL_006c: ldloc.1
+    IL_006d: callvirt System.Security.Cryptography.SymmetricAlgorithm::get_IV
+    IL_0072: callvirt System.Security.Cryptography.SymmetricAlgorithm::CreateDecryptor
+    IL_0077: stloc.2
+    IL_0078: ldarg.0
+    IL_0079: newobj System.IO.MemoryStream::.ctor
+    IL_007e: stloc.3
+    IL_007f: ldloc.3
+    IL_0080: ldloc.2
+    IL_0081: ldc.i4.0
+    IL_0082: newobj System.Security.Cryptography.CryptoStream::.ctor
+    IL_0087: stloc.s 4
+    IL_0089: ldloc.s 4
+    IL_008b: newobj System.IO.StreamReader::.ctor
+    IL_0090: stloc.s 5
+    IL_0092: ldloc.s 5
+    IL_0094: callvirt System.IO.TextReader::ReadToEnd
+    IL_0099: stloc.0
+    IL_009a: leave.s IL_00c8
+    IL_009c: ldloc.s 5
+    IL_009e: brfalse.s IL_00a7
+    IL_00a0: ldloc.s 5
+    IL_00a2: callvirt System.IDisposable::Dispose
+    IL_00a7: endfinally
+    IL_00a8: ldloc.s 4
+    IL_00aa: brfalse.s IL_00b3
+    IL_00ac: ldloc.s 4
+    IL_00ae: callvirt System.IDisposable::Dispose
+    IL_00b3: endfinally
+    IL_00b4: ldloc.3
+    IL_00b5: brfalse.s IL_00bd
+    IL_00b7: ldloc.3
+    IL_00b8: callvirt System.IDisposable::Dispose
+    IL_00bd: endfinally
+    IL_00be: ldloc.1
+    IL_00bf: brfalse.s IL_00c7
+    IL_00c1: ldloc.1
+    IL_00c2: callvirt System.IDisposable::Dispose
+    IL_00c7: endfinally
+    IL_00c8: ldloc.0
+    IL_00c9: ret
+
+; Architecture.Model.Encryption::UserPasswordEncryptString  (rva=0x5b18, fat header, code_size=51, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Text.Encoding::get_UTF8
+    IL_0006: ldstr ldstr "3024482831469469"
+    IL_000b: callvirt System.Text.Encoding::GetBytes
+    IL_0010: call System.Text.Encoding::get_UTF8
+    IL_0015: ldstr ldstr "3024482831469469"
+    IL_001a: callvirt System.Text.Encoding::GetBytes
+    IL_001f: call Architecture.Model.Encryption::EncryptStringToBytes
+    IL_0024: call System.Convert::ToBase64String
+    IL_0029: stloc.0
+    IL_002a: leave.s IL_0031
+    IL_002c: pop
+    IL_002d: ldnull
+    IL_002e: stloc.0
+    IL_002f: leave.s IL_0031
+    IL_0031: ldloc.0
+    IL_0032: ret
+
+; Architecture.Model.Encryption::UserPasswordDecryptString  (rva=0x5b68, fat header, code_size=51, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Convert::FromBase64String
+    IL_0006: call System.Text.Encoding::get_UTF8
+    IL_000b: ldstr ldstr "3024482831469469"
+    IL_0010: callvirt System.Text.Encoding::GetBytes
+    IL_0015: call System.Text.Encoding::get_UTF8
+    IL_001a: ldstr ldstr "3024482831469469"
+    IL_001f: callvirt System.Text.Encoding::GetBytes
+    IL_0024: call Architecture.Model.Encryption::DecryptStringFromBytes
+    IL_0029: stloc.0
+    IL_002a: leave.s IL_0031
+    IL_002c: pop
+    IL_002d: ldnull
+    IL_002e: stloc.0
+    IL_002f: leave.s IL_0031
+    IL_0031: ldloc.0
+    IL_0032: ret

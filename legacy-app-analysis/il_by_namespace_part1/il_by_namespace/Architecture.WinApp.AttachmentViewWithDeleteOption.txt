@@ -1,0 +1,1767 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.AttachmentViewWithDeleteOption
+====================================================================================================
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::.ctor  (rva=0x2b300, fat header, code_size=86, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj Architecture.Model.VPS.ServerCredentials::.ctor
+    IL_0006: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::Sc
+    IL_000b: ldarg.0
+    IL_000c: ldstr ldstr ""
+    IL_0011: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::ScreenName
+    IL_0016: ldarg.0
+    IL_0017: newobj System.Data.DataTable::.ctor
+    IL_001c: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0021: ldarg.0
+    IL_0022: newobj Architecture.Model.UserAccount::.ctor
+    IL_0027: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::UserAccount
+    IL_002c: ldarg.0
+    IL_002d: call System.Windows.Forms.Form::.ctor
+    IL_0032: ldarg.0
+    IL_0033: call Architecture.WinApp.AttachmentViewWithDeleteOption::InitializeComponent
+    IL_0038: ldarg.0
+    IL_0039: ldarg.1
+    IL_003a: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::UserAccount
+    IL_003f: ldarg.0
+    IL_0040: ldarg.2
+    IL_0041: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::DocId
+    IL_0046: ldarg.0
+    IL_0047: ldarg.3
+    IL_0048: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::DocumentTypeId
+    IL_004d: ldarg.0
+    IL_004e: ldarg.s 4
+    IL_0050: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::ScreenName
+    IL_0055: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::Form1_Load  (rva=0x2b364, fat header, code_size=155, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::ShowSaveButton
+    IL_000c: callvirt System.Windows.Forms.Control::set_Visible
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0017: callvirt System.Data.DataTable::get_Columns
+    IL_001c: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0021: brtrue.s IL_0085
+    IL_0023: ldarg.0
+    IL_0024: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0029: callvirt System.Data.DataTable::get_Columns
+    IL_002e: ldstr ldstr "Id"
+    IL_0033: callvirt System.Data.DataColumnCollection::Add
+    IL_0038: pop
+    IL_0039: ldarg.0
+    IL_003a: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_003f: callvirt System.Data.DataTable::get_Columns
+    IL_0044: ldstr ldstr "AttachmentName"
+    IL_0049: callvirt System.Data.DataColumnCollection::Add
+    IL_004e: pop
+    IL_004f: ldarg.0
+    IL_0050: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0055: callvirt System.Data.DataTable::get_Columns
+    IL_005a: ldstr ldstr "CustomName"
+    IL_005f: callvirt System.Data.DataColumnCollection::Add
+    IL_0064: pop
+    IL_0065: ldarg.0
+    IL_0066: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_006b: callvirt System.Data.DataTable::get_Columns
+    IL_0070: ldstr ldstr "EntryDate"
+    IL_0075: ldtoken System.DateTime
+    IL_007a: call System.Type::GetTypeFromHandle
+    IL_007f: callvirt System.Data.DataColumnCollection::Add
+    IL_0084: pop
+    IL_0085: ldarg.0
+    IL_0086: call Architecture.WinApp.AttachmentViewWithDeleteOption::GetSavedAttachmentsAgainstDocument
+    IL_008b: leave.s IL_009a
+    IL_008d: callvirt System.Exception::get_Message
+    IL_0092: call System.Windows.Forms.MessageBox::Show
+    IL_0097: pop
+    IL_0098: leave.s IL_009a
+    IL_009a: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::GetSavedAttachmentsAgainstDocument  (rva=0x2b41c, fat header, code_size=225, max_stack=5, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0006: callvirt System.Data.DataTable::get_Rows
+    IL_000b: callvirt System.Data.DataRowCollection::Clear
+    IL_0010: ldarg.0
+    IL_0011: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_0016: callvirt System.Windows.Forms.Control::get_Controls
+    IL_001b: callvirt ControlCollection::Clear
+    IL_0020: newobj TypeSpec#240::.ctor
+    IL_0025: stloc.0
+    IL_0026: ldarg.0
+    IL_0027: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::DocumentTypeId
+    IL_002c: ldc.i4.0
+    IL_002d: ble.s IL_0043
+    IL_002f: ldarg.0
+    IL_0030: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::DocId
+    IL_0035: ldarg.0
+    IL_0036: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::DocumentTypeId
+    IL_003b: call Architecture.BLL.DMSAttachments::ReadAttachmentsbyRefDocumentTypeId
+    IL_0040: stloc.0
+    IL_0041: br.s IL_0055
+    IL_0043: ldarg.0
+    IL_0044: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::DocId
+    IL_0049: ldarg.0
+    IL_004a: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::ScreenName
+    IL_004f: call Architecture.BLL.DMSAttachments::GetByID
+    IL_0054: stloc.0
+    IL_0055: ldloc.0
+    IL_0056: callvirt TypeSpec#240::get_Count
+    IL_005b: ldc.i4.0
+    IL_005c: ble.s IL_00d3
+    IL_005e: ldloc.0
+    IL_005f: callvirt TypeSpec#240::GetEnumerator
+    IL_0064: stloc.1
+    IL_0065: br.s IL_00b4
+    IL_0067: ldloca.s 1
+    IL_0069: call TypeSpec#250::get_Current
+    IL_006e: stloc.2
+    IL_006f: ldarg.0
+    IL_0070: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0075: callvirt System.Data.DataTable::get_Rows
+    IL_007a: ldc.i4.4
+    IL_007b: newarr System.Object
+    IL_0080: dup
+    IL_0081: ldc.i4.0
+    IL_0082: ldloc.2
+    IL_0083: callvirt Architecture.Model.DMSAttachments::get_Id
+    IL_0088: box System.Int32
+    IL_008d: stelem.ref
+    IL_008e: dup
+    IL_008f: ldc.i4.1
+    IL_0090: ldloc.2
+    IL_0091: callvirt Architecture.Model.DMSAttachments::get_Attachment
+    IL_0096: stelem.ref
+    IL_0097: dup
+    IL_0098: ldc.i4.2
+    IL_0099: ldloc.2
+    IL_009a: callvirt Architecture.Model.DMSAttachments::get_UploadedFileCustomName
+    IL_009f: stelem.ref
+    IL_00a0: dup
+    IL_00a1: ldc.i4.3
+    IL_00a2: ldloc.2
+    IL_00a3: callvirt Architecture.Model.DMSAttachments::get_EntryDate
+    IL_00a8: box System.DateTime
+    IL_00ad: stelem.ref
+    IL_00ae: callvirt System.Data.DataRowCollection::Add
+    IL_00b3: pop
+    IL_00b4: ldloca.s 1
+    IL_00b6: call TypeSpec#250::MoveNext
+    IL_00bb: brtrue.s IL_0067
+    IL_00bd: leave.s IL_00cd
+    IL_00bf: ldloca.s 1
+    IL_00c1: constrained. TypeSpec#250
+    IL_00c7: callvirt System.IDisposable::Dispose
+    IL_00cc: endfinally
+    IL_00cd: ldarg.0
+    IL_00ce: call Architecture.WinApp.AttachmentViewWithDeleteOption::AddAttachmentsToDataTable
+    IL_00d3: leave.s IL_00e0
+    IL_00d5: callvirt System.Exception::get_Message
+    IL_00da: newobj System.Exception::.ctor
+    IL_00df: throw
+    IL_00e0: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::AddAttachmentsToDataTable  (rva=0x2b528, fat header, code_size=1236, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0006: callvirt System.Data.DataTable::get_Rows
+    IL_000b: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0010: ldc.i4.0
+    IL_0011: ble IL_04c6
+    IL_0016: ldarg.0
+    IL_0017: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_001c: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0021: callvirt ControlCollection::Clear
+    IL_0026: ldarg.0
+    IL_0027: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_002c: ldarg.0
+    IL_002d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0032: callvirt System.Data.DataTable::get_Rows
+    IL_0037: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_003c: box System.Int32
+    IL_0041: call Architecture.Common.Conversion::ToString
+    IL_0046: callvirt System.Windows.Forms.Control::set_Text
+    IL_004b: ldstr ldstr ""
+    IL_0050: stloc.0
+    IL_0051: ldsfld Architecture.Common.clsGlobalVariables::AttachmentFolderPath
+    IL_0056: stloc.0
+    IL_0057: ldc.r8 0.0
+    IL_0060: stloc.1
+    IL_0061: ldarg.0
+    IL_0062: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_0067: callvirt System.Windows.Forms.Control::get_Controls
+    IL_006c: callvirt System.Windows.Forms.Layout.ArrangedElementCollection::GetEnumerator
+    IL_0071: stloc.3
+    IL_0072: br.s IL_0096
+    IL_0074: ldloc.3
+    IL_0075: callvirt System.Collections.IEnumerator::get_Current
+    IL_007a: castclass System.Windows.Forms.Control
+    IL_007f: dup
+    IL_0080: ldarg.0
+    IL_0081: ldftn Architecture.WinApp.AttachmentViewWithDeleteOption::UserControl_Click
+    IL_0087: newobj System.EventHandler::.ctor
+    IL_008c: callvirt System.Windows.Forms.Control::remove_Click
+    IL_0091: callvirt System.ComponentModel.Component::Dispose
+    IL_0096: ldloc.3
+    IL_0097: callvirt System.Collections.IEnumerator::MoveNext
+    IL_009c: brtrue.s IL_0074
+    IL_009e: leave.s IL_00b4
+    IL_00a0: ldloc.3
+    IL_00a1: isinst System.IDisposable
+    IL_00a6: stloc.s 4
+    IL_00a8: ldloc.s 4
+    IL_00aa: brfalse.s IL_00b3
+    IL_00ac: ldloc.s 4
+    IL_00ae: callvirt System.IDisposable::Dispose
+    IL_00b3: endfinally
+    IL_00b4: ldarg.0
+    IL_00b5: ldstr ldstr "IsVpsAttachmentsServiceOn"
+    IL_00ba: call Architecture.WinApp.Common.CommonServices::GetConfigurationByOrgCompandConfigDescription
+    IL_00bf: call Architecture.Common.Conversion::ToBool
+    IL_00c4: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::IsVpsAttachmentsServiceOn
+    IL_00c9: ldarg.0
+    IL_00ca: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_00cf: callvirt System.Data.DataTable::get_Rows
+    IL_00d4: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_00d9: newarr Architecture.WinApp.DynamicCards.AttachmentPreviewControl
+    IL_00de: stloc.2
+    IL_00df: ldc.i4.0
+    IL_00e0: stloc.s 5
+    IL_00e2: br IL_04a5
+    IL_00e7: ldarg.0
+    IL_00e8: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_00ed: callvirt System.Data.DataTable::get_Rows
+    IL_00f2: ldloc.s 5
+    IL_00f4: callvirt System.Data.DataRowCollection::get_Item
+    IL_00f9: ldstr ldstr "CustomName"
+    IL_00fe: callvirt System.Data.DataRow::get_Item
+    IL_0103: call Architecture.Common.Conversion::ToString
+    IL_0108: brfalse.s IL_0137
+    IL_010a: ldarg.0
+    IL_010b: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0110: callvirt System.Data.DataTable::get_Rows
+    IL_0115: ldloc.s 5
+    IL_0117: callvirt System.Data.DataRowCollection::get_Item
+    IL_011c: ldstr ldstr "CustomName"
+    IL_0121: callvirt System.Data.DataRow::get_Item
+    IL_0126: call Architecture.Common.Conversion::ToString
+    IL_012b: ldsfld System.String::Empty
+    IL_0130: call System.String::op_Inequality
+    IL_0135: brtrue.s IL_015a
+    IL_0137: ldarg.0
+    IL_0138: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_013d: callvirt System.Data.DataTable::get_Rows
+    IL_0142: ldloc.s 5
+    IL_0144: callvirt System.Data.DataRowCollection::get_Item
+    IL_0149: ldstr ldstr "AttachmentName"
+    IL_014e: callvirt System.Data.DataRow::get_Item
+    IL_0153: call Architecture.Common.Conversion::ToString
+    IL_0158: br.s IL_017b
+    IL_015a: ldarg.0
+    IL_015b: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0160: callvirt System.Data.DataTable::get_Rows
+    IL_0165: ldloc.s 5
+    IL_0167: callvirt System.Data.DataRowCollection::get_Item
+    IL_016c: ldstr ldstr "CustomName"
+    IL_0171: callvirt System.Data.DataRow::get_Item
+    IL_0176: call Architecture.Common.Conversion::ToString
+    IL_017b: stloc.s 6
+    IL_017d: ldloc.2
+    IL_017e: ldloc.s 5
+    IL_0180: newobj Architecture.WinApp.DynamicCards.AttachmentPreviewControl::.ctor
+    IL_0185: stelem.ref
+    IL_0186: ldloc.2
+    IL_0187: ldloc.s 5
+    IL_0189: ldelem.ref
+    IL_018a: ldfld Architecture.WinApp.DynamicCards.AttachmentPreviewControl::btnDelete
+    IL_018f: ldc.i4.1
+    IL_0190: callvirt System.Windows.Forms.Control::set_Visible
+    IL_0195: ldloc.s 6
+    IL_0197: call System.IO.Path::GetFileName
+    IL_019c: stloc.s 7
+    IL_019e: ldstr ldstr ""
+    IL_01a3: stloc.s 8
+    IL_01a5: ldarg.0
+    IL_01a6: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::IsVpsAttachmentsServiceOn
+    IL_01ab: brfalse IL_0373
+    IL_01b0: ldarg.0
+    IL_01b1: call Architecture.WinApp.Common.CommonServices::GetServerCredentials
+    IL_01b6: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::Sc
+    IL_01bb: ldstr ldstr "ftp://"
+    IL_01c0: ldarg.0
+    IL_01c1: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Sc
+    IL_01c6: callvirt Architecture.Model.VPS.ServerCredentials::get_ServerIp
+    IL_01cb: ldstr ldstr "/"
+    IL_01d0: ldloc.s 7
+    IL_01d2: call System.String::Concat
+    IL_01d7: stloc.s 9
+    IL_01d9: ldloc.s 9
+    IL_01db: call System.Net.WebRequest::Create
+    IL_01e0: castclass System.Net.FtpWebRequest
+    IL_01e5: stloc.s 10
+    IL_01e7: ldloc.s 10
+    IL_01e9: ldstr ldstr "RETR"
+    IL_01ee: callvirt System.Net.WebRequest::set_Method
+    IL_01f3: ldloc.s 10
+    IL_01f5: ldc.i4.1
+    IL_01f6: callvirt System.Net.FtpWebRequest::set_UsePassive
+    IL_01fb: ldloc.s 10
+    IL_01fd: ldc.i4.1
+    IL_01fe: callvirt System.Net.FtpWebRequest::set_UseBinary
+    IL_0203: ldloc.s 10
+    IL_0205: ldc.i4.0
+    IL_0206: callvirt System.Net.FtpWebRequest::set_KeepAlive
+    IL_020b: ldloc.s 10
+    IL_020d: ldarg.0
+    IL_020e: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Sc
+    IL_0213: callvirt Architecture.Model.VPS.ServerCredentials::get_UserName
+    IL_0218: ldarg.0
+    IL_0219: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Sc
+    IL_021e: callvirt Architecture.Model.VPS.ServerCredentials::get_Password
+    IL_0223: newobj System.Net.NetworkCredential::.ctor
+    IL_0228: callvirt System.Net.WebRequest::set_Credentials
+    IL_022d: ldloc.s 10
+    IL_022f: callvirt System.Net.WebRequest::GetResponse
+    IL_0234: castclass System.Net.FtpWebResponse
+    IL_0239: stloc.s 11
+    IL_023b: ldloc.s 11
+    IL_023d: callvirt System.Net.WebResponse::GetResponseStream
+    IL_0242: stloc.s 12
+    IL_0244: newobj System.IO.MemoryStream::.ctor
+    IL_0249: stloc.s 13
+    IL_024b: ldloc.s 12
+    IL_024d: ldloc.s 13
+    IL_024f: callvirt System.IO.Stream::CopyTo
+    IL_0254: ldloc.s 13
+    IL_0256: callvirt System.IO.Stream::get_Length
+    IL_025b: conv.r8
+    IL_025c: ldc.r8 1048576.0
+    IL_0265: div
+    IL_0266: stloc.s 14
+    IL_0268: ldloc.1
+    IL_0269: ldloc.s 14
+    IL_026b: add
+    IL_026c: stloc.1
+    IL_026d: ldloc.2
+    IL_026e: ldloc.s 5
+    IL_0270: ldelem.ref
+    IL_0271: ldloca.s 14
+    IL_0273: ldstr ldstr "0.000"
+    IL_0278: call System.Double::ToString
+    IL_027d: ldstr ldstr " Mb"
+    IL_0282: call System.String::Concat
+    IL_0287: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::set_FileSize
+    IL_028c: ldloc.s 10
+    IL_028e: callvirt System.Net.WebRequest::get_RequestUri
+    IL_0293: callvirt System.Uri::get_LocalPath
+    IL_0298: call System.IO.Path::GetFileName
+    IL_029d: call System.IO.Path::GetExtension
+    IL_02a2: dup
+    IL_02a3: brtrue.s IL_02a8
+    IL_02a5: pop
+    IL_02a6: br.s IL_02ae
+    IL_02a8: call System.String::ToUpper
+    IL_02ad: pop
+    IL_02ae: ldloc.s 13
+    IL_02b0: ldc.i4.0
+    IL_02b1: conv.i8
+    IL_02b2: callvirt System.IO.Stream::set_Position
+    IL_02b7: ldloc.s 13
+    IL_02b9: callvirt System.IO.MemoryStream::ToArray
+    IL_02be: stloc.s 15
+    IL_02c0: ldloc.2
+    IL_02c1: ldloc.s 5
+    IL_02c3: ldelem.ref
+    IL_02c4: ldloc.s 15
+    IL_02c6: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::set_memoryStream
+    IL_02cb: leave.s IL_02d9
+    IL_02cd: ldloc.s 13
+    IL_02cf: brfalse.s IL_02d8
+    IL_02d1: ldloc.s 13
+    IL_02d3: callvirt System.IDisposable::Dispose
+    IL_02d8: endfinally
+    IL_02d9: leave.s IL_02e7
+    IL_02db: ldloc.s 12
+    IL_02dd: brfalse.s IL_02e6
+    IL_02df: ldloc.s 12
+    IL_02e1: callvirt System.IDisposable::Dispose
+    IL_02e6: endfinally
+    IL_02e7: leave.s IL_02f5
+    IL_02e9: ldloc.s 11
+    IL_02eb: brfalse.s IL_02f4
+    IL_02ed: ldloc.s 11
+    IL_02ef: callvirt System.IDisposable::Dispose
+    IL_02f4: endfinally
+    IL_02f5: leave.s IL_0363
+    IL_02f7: stloc.s 16
+    IL_02f9: ldloc.s 16
+    IL_02fb: callvirt System.Net.WebException::get_Response
+    IL_0300: isinst System.Net.FtpWebResponse
+    IL_0305: stloc.s 17
+    IL_0307: ldloc.s 17
+    IL_0309: brfalse.s IL_032f
+    IL_030b: ldloc.s 17
+    IL_030d: callvirt System.Net.FtpWebResponse::get_StatusCode
+    IL_0312: ldc.i4 550
+    IL_0317: bne.un.s IL_032f
+    IL_0319: ldstr ldstr "[INFO] Skipping missing FTP file: "
+    IL_031e: ldloc.s 7
+    IL_0320: call System.String::Concat
+    IL_0325: call System.Console::WriteLine
+    IL_032a: leave IL_049f
+    IL_032f: ldstr ldstr "[FTP ERROR] "
+    IL_0334: ldloc.s 16
+    IL_0336: callvirt System.Exception::get_Message
+    IL_033b: call System.String::Concat
+    IL_0340: call System.Console::WriteLine
+    IL_0345: leave IL_049f
+    IL_034a: stloc.s 18
+    IL_034c: ldstr ldstr "Error: "
+    IL_0351: ldloc.s 18
+    IL_0353: callvirt System.Exception::get_Message
+    IL_0358: call System.String::Concat
+    IL_035d: newobj System.Exception::.ctor
+    IL_0362: throw
+    IL_0363: ldloc.2
+    IL_0364: ldloc.s 5
+    IL_0366: ldelem.ref
+    IL_0367: ldstr ldstr ""
+    IL_036c: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::set_path
+    IL_0371: br.s IL_03e5
+    IL_0373: ldloc.0
+    IL_0374: ldloc.s 6
+    IL_0376: call System.IO.Path::Combine
+    IL_037b: stloc.s 8
+    IL_037d: ldloc.2
+    IL_037e: ldloc.s 5
+    IL_0380: ldelem.ref
+    IL_0381: ldloc.s 8
+    IL_0383: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::set_path
+    IL_0388: ldloc.s 8
+    IL_038a: newobj System.IO.FileInfo::.ctor
+    IL_038f: stloc.s 19
+    IL_0391: ldloc.s 19
+    IL_0393: callvirt System.IO.FileSystemInfo::get_Exists
+    IL_0398: brfalse IL_049f
+    IL_039d: ldloc.1
+    IL_039e: ldloc.s 19
+    IL_03a0: callvirt System.IO.FileInfo::get_Length
+    IL_03a5: conv.r8
+    IL_03a6: ldc.r8 1048576.0
+    IL_03af: div
+    IL_03b0: add
+    IL_03b1: stloc.1
+    IL_03b2: ldloc.2
+    IL_03b3: ldloc.s 5
+    IL_03b5: ldelem.ref
+    IL_03b6: ldloc.s 19
+    IL_03b8: callvirt System.IO.FileInfo::get_Length
+    IL_03bd: conv.r8
+    IL_03be: ldc.r8 1048576.0
+    IL_03c7: div
+    IL_03c8: stloc.s 20
+    IL_03ca: ldloca.s 20
+    IL_03cc: ldstr ldstr "0.000"
+    IL_03d1: call System.Double::ToString
+    IL_03d6: ldstr ldstr " Mb"
+    IL_03db: call System.String::Concat
+    IL_03e0: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::set_FileSize
+    IL_03e5: ldloc.2
+    IL_03e6: ldloc.s 5
+    IL_03e8: ldelem.ref
+    IL_03e9: ldarg.0
+    IL_03ea: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_03ef: callvirt System.Data.DataTable::get_Rows
+    IL_03f4: ldloc.s 5
+    IL_03f6: callvirt System.Data.DataRowCollection::get_Item
+    IL_03fb: ldstr ldstr "Id"
+    IL_0400: callvirt System.Data.DataRow::get_Item
+    IL_0405: call Architecture.Common.Conversion::ToInt
+    IL_040a: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::set_AttachmentId
+    IL_040f: ldloc.2
+    IL_0410: ldloc.s 5
+    IL_0412: ldelem.ref
+    IL_0413: ldarg.0
+    IL_0414: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0419: callvirt System.Data.DataTable::get_Rows
+    IL_041e: ldloc.s 5
+    IL_0420: callvirt System.Data.DataRowCollection::get_Item
+    IL_0425: ldstr ldstr "AttachmentName"
+    IL_042a: callvirt System.Data.DataRow::get_Item
+    IL_042f: call Architecture.Common.Conversion::ToString
+    IL_0434: call System.IO.Path::GetFileName
+    IL_0439: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::set_FileName
+    IL_043e: ldloc.2
+    IL_043f: ldloc.s 5
+    IL_0441: ldelem.ref
+    IL_0442: ldarg.0
+    IL_0443: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0448: callvirt System.Data.DataTable::get_Rows
+    IL_044d: ldloc.s 5
+    IL_044f: callvirt System.Data.DataRowCollection::get_Item
+    IL_0454: ldstr ldstr "EntryDate"
+    IL_0459: callvirt System.Data.DataRow::get_Item
+    IL_045e: call Architecture.Common.Conversion::ToDateTime
+    IL_0463: stloc.s 21
+    IL_0465: ldloca.s 21
+    IL_0467: ldstr ldstr "dd-MMM-yyyy hh:mm tt"
+    IL_046c: call System.DateTime::ToString
+    IL_0471: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::set_FileDate
+    IL_0476: ldarg.0
+    IL_0477: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_047c: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0481: ldloc.2
+    IL_0482: ldloc.s 5
+    IL_0484: ldelem.ref
+    IL_0485: callvirt ControlCollection::Add
+    IL_048a: ldloc.2
+    IL_048b: ldloc.s 5
+    IL_048d: ldelem.ref
+    IL_048e: ldarg.0
+    IL_048f: ldftn Architecture.WinApp.AttachmentViewWithDeleteOption::UserControl_Click
+    IL_0495: newobj System.EventHandler::.ctor
+    IL_049a: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::add_UserControlClicked
+    IL_049f: ldloc.s 5
+    IL_04a1: ldc.i4.1
+    IL_04a2: add
+    IL_04a3: stloc.s 5
+    IL_04a5: ldloc.s 5
+    IL_04a7: ldloc.2
+    IL_04a8: ldlen
+    IL_04a9: conv.i4
+    IL_04aa: blt IL_00e7
+    IL_04af: ldarg.0
+    IL_04b0: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_04b5: ldloca.s 1
+    IL_04b7: ldstr ldstr "0.000"
+    IL_04bc: call System.Double::ToString
+    IL_04c1: callvirt System.Windows.Forms.Control::set_Text
+    IL_04c6: leave.s IL_04d3
+    IL_04c8: callvirt System.Exception::get_Message
+    IL_04cd: newobj System.Exception::.ctor
+    IL_04d2: throw
+    IL_04d3: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::UserControl_Click  (rva=0x2bab4, fat header, code_size=862, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj <>c__DisplayClass12_0::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldarg.1
+    IL_0008: castclass Architecture.WinApp.DynamicCards.AttachmentPreviewControl
+    IL_000d: stfld <>c__DisplayClass12_0::obj
+    IL_0012: ldloc.0
+    IL_0013: ldfld <>c__DisplayClass12_0::obj
+    IL_0018: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::get_path
+    IL_001d: stloc.1
+    IL_001e: ldloc.0
+    IL_001f: ldfld <>c__DisplayClass12_0::obj
+    IL_0024: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::get_AttachmentId
+    IL_0029: stloc.2
+    IL_002a: ldloc.0
+    IL_002b: ldfld <>c__DisplayClass12_0::obj
+    IL_0030: callvirt System.Windows.Forms.ContainerControl::get_ActiveControl
+    IL_0035: brfalse IL_0221
+    IL_003a: ldloc.0
+    IL_003b: ldfld <>c__DisplayClass12_0::obj
+    IL_0040: callvirt System.Windows.Forms.ContainerControl::get_ActiveControl
+    IL_0045: callvirt System.Windows.Forms.Control::get_Text
+    IL_004a: ldstr ldstr "Delete"
+    IL_004f: call System.String::op_Equality
+    IL_0054: brfalse IL_0221
+    IL_0059: ldloc.2
+    IL_005a: ldc.i4.0
+    IL_005b: ble IL_01ab
+    IL_0060: ldstr ldstr "Are you sure to delete this attachment? This is permanent delete"
+    IL_0065: ldstr ldstr "Confirm"
+    IL_006a: ldc.i4.4
+    IL_006b: call System.Windows.Forms.MessageBox::Show
+    IL_0070: ldc.i4.7
+    IL_0071: bne.un.s IL_0078
+    IL_0073: leave IL_035d
+    IL_0078: ldloc.2
+    IL_0079: call Architecture.BLL.DMSAttachments::AttachmentDeleteByID
+    IL_007e: ldarg.0
+    IL_007f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::IsVpsAttachmentsServiceOn
+    IL_0084: brtrue IL_0117
+    IL_0089: ldloc.1
+    IL_008a: call System.IO.File::Exists
+    IL_008f: brfalse IL_01ab
+    IL_0094: ldloc.0
+    IL_0095: ldfld <>c__DisplayClass12_0::obj
+    IL_009a: ldfld Architecture.WinApp.DynamicCards.AttachmentPreviewControl::PictureBox
+    IL_009f: ldnull
+    IL_00a0: callvirt System.Windows.Forms.PictureBox::set_Image
+    IL_00a5: ldloc.0
+    IL_00a6: ldfld <>c__DisplayClass12_0::obj
+    IL_00ab: ldfld Architecture.WinApp.DynamicCards.AttachmentPreviewControl::PictureBox
+    IL_00b0: callvirt System.Windows.Forms.Control::Invalidate
+    IL_00b5: ldloc.1
+    IL_00b6: ldc.i4.3
+    IL_00b7: ldc.i4.3
+    IL_00b8: newobj System.IO.FileStream::.ctor
+    IL_00bd: stloc.s 5
+    IL_00bf: ldloc.s 5
+    IL_00c1: callvirt System.IO.Stream::Flush
+    IL_00c6: ldloc.s 5
+    IL_00c8: callvirt System.IO.Stream::Close
+    IL_00cd: ldloc.s 5
+    IL_00cf: callvirt System.IO.Stream::Dispose
+    IL_00d4: leave.s IL_00e2
+    IL_00d6: ldloc.s 5
+    IL_00d8: brfalse.s IL_00e1
+    IL_00da: ldloc.s 5
+    IL_00dc: callvirt System.IDisposable::Dispose
+    IL_00e1: endfinally
+    IL_00e2: ldc.i4.0
+    IL_00e3: stloc.3
+    IL_00e4: ldc.i4.0
+    IL_00e5: stloc.s 4
+    IL_00e7: br.s IL_0107
+    IL_00e9: nop
+    IL_00ea: ldloc.1
+    IL_00eb: call System.IO.File::Delete
+    IL_00f0: ldc.i4.1
+    IL_00f1: stloc.3
+    IL_00f2: leave.s IL_0107
+    IL_00f4: pop
+    IL_00f5: ldloc.s 4
+    IL_00f7: ldc.i4.1
+    IL_00f8: add
+    IL_00f9: stloc.s 4
+    IL_00fb: ldc.i4 500
+    IL_0100: call System.Threading.Thread::Sleep
+    IL_0105: leave.s IL_0107
+    IL_0107: ldloc.3
+    IL_0108: brtrue IL_01ab
+    IL_010d: ldloc.s 4
+    IL_010f: ldc.i4.5
+    IL_0110: blt.s IL_00e9
+    IL_0112: br IL_01ab
+    IL_0117: ldstr ldstr "ftp://"
+    IL_011c: ldarg.0
+    IL_011d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Sc
+    IL_0122: callvirt Architecture.Model.VPS.ServerCredentials::get_ServerIp
+    IL_0127: ldstr ldstr "/"
+    IL_012c: ldloc.1
+    IL_012d: call System.String::Concat
+    IL_0132: stloc.s 6
+    IL_0134: ldloc.s 6
+    IL_0136: call System.Net.WebRequest::Create
+    IL_013b: castclass System.Net.FtpWebRequest
+    IL_0140: dup
+    IL_0141: ldstr ldstr "DELE"
+    IL_0146: callvirt System.Net.WebRequest::set_Method
+    IL_014b: dup
+    IL_014c: ldc.i4.1
+    IL_014d: callvirt System.Net.FtpWebRequest::set_UsePassive
+    IL_0152: dup
+    IL_0153: ldarg.0
+    IL_0154: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Sc
+    IL_0159: callvirt Architecture.Model.VPS.ServerCredentials::get_UserName
+    IL_015e: ldarg.0
+    IL_015f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Sc
+    IL_0164: callvirt Architecture.Model.VPS.ServerCredentials::get_Password
+    IL_0169: newobj System.Net.NetworkCredential::.ctor
+    IL_016e: callvirt System.Net.WebRequest::set_Credentials
+    IL_0173: callvirt System.Net.WebRequest::GetResponse
+    IL_0178: castclass System.Net.FtpWebResponse
+    IL_017d: stloc.s 7
+    IL_017f: ldloc.s 7
+    IL_0181: callvirt System.Net.FtpWebResponse::get_StatusCode
+    IL_0186: ldc.i4 250
+    IL_018b: beq.s IL_0198
+    IL_018d: ldstr ldstr "Failed to delete file from VPS."
+    IL_0192: newobj System.Exception::.ctor
+    IL_0197: throw
+    IL_0198: leave.s IL_01a6
+    IL_019a: ldloc.s 7
+    IL_019c: brfalse.s IL_01a5
+    IL_019e: ldloc.s 7
+    IL_01a0: callvirt System.IDisposable::Dispose
+    IL_01a5: endfinally
+    IL_01a6: leave.s IL_01ab
+    IL_01a8: pop
+    IL_01a9: leave.s IL_01ab
+    IL_01ab: ldloc.0
+    IL_01ac: ldfld <>c__DisplayClass12_0::obj
+    IL_01b1: ldnull
+    IL_01b2: stfld Architecture.WinApp.DynamicCards.AttachmentPreviewControl::PictureBox
+    IL_01b7: ldarg.0
+    IL_01b8: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_01bd: call System.Data.DataTableExtensions::AsEnumerable
+    IL_01c2: ldloc.0
+    IL_01c3: ldftn <>c__DisplayClass12_0::<UserControl_Click>b__0
+    IL_01c9: newobj TypeSpec#251::.ctor
+    IL_01ce: call MethodSpec#21
+    IL_01d3: call MethodSpec#22
+    IL_01d8: callvirt TypeSpec#252::GetEnumerator
+    IL_01dd: stloc.s 8
+    IL_01df: br.s IL_01ed
+    IL_01e1: ldloca.s 8
+    IL_01e3: call TypeSpec#253::get_Current
+    IL_01e8: callvirt System.Data.DataRow::Delete
+    IL_01ed: ldloca.s 8
+    IL_01ef: call TypeSpec#253::MoveNext
+    IL_01f4: brtrue.s IL_01e1
+    IL_01f6: leave.s IL_0206
+    IL_01f8: ldloca.s 8
+    IL_01fa: constrained. TypeSpec#253
+    IL_0200: callvirt System.IDisposable::Dispose
+    IL_0205: endfinally
+    IL_0206: ldarg.0
+    IL_0207: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_020c: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0211: ldloc.0
+    IL_0212: ldfld <>c__DisplayClass12_0::obj
+    IL_0217: callvirt ControlCollection::Remove
+    IL_021c: br IL_0340
+    IL_0221: ldarg.0
+    IL_0222: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::IsVpsAttachmentsServiceOn
+    IL_0227: brtrue.s IL_0240
+    IL_0229: ldloc.1
+    IL_022a: call System.IO.File::Exists
+    IL_022f: brfalse IL_0340
+    IL_0234: ldloc.1
+    IL_0235: call System.Diagnostics.Process::Start
+    IL_023a: pop
+    IL_023b: br IL_0340
+    IL_0240: ldloc.0
+    IL_0241: ldfld <>c__DisplayClass12_0::obj
+    IL_0246: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::get_memoryStream
+    IL_024b: newobj System.IO.MemoryStream::.ctor
+    IL_0250: stloc.s 9
+    IL_0252: newobj <>c__DisplayClass12_1::.ctor
+    IL_0257: stloc.s 10
+    IL_0259: ldloc.s 9
+    IL_025b: ldc.i4.0
+    IL_025c: conv.i8
+    IL_025d: callvirt System.IO.Stream::set_Position
+    IL_0262: ldloc.0
+    IL_0263: ldfld <>c__DisplayClass12_0::obj
+    IL_0268: callvirt Architecture.WinApp.DynamicCards.AttachmentPreviewControl::get_FileName
+    IL_026d: call System.IO.Path::GetExtension
+    IL_0272: callvirt System.String::ToLower
+    IL_0277: stloc.s 11
+    IL_0279: ldloc.s 10
+    IL_027b: call System.IO.Path::GetTempPath
+    IL_0280: call System.IO.Path::GetRandomFileName
+    IL_0285: ldloc.s 11
+    IL_0287: call System.String::Concat
+    IL_028c: call System.IO.Path::Combine
+    IL_0291: stfld <>c__DisplayClass12_1::tempFilePath
+    IL_0296: ldloc.s 10
+    IL_0298: ldfld <>c__DisplayClass12_1::tempFilePath
+    IL_029d: ldc.i4.2
+    IL_029e: ldc.i4.2
+    IL_029f: newobj System.IO.FileStream::.ctor
+    IL_02a4: stloc.s 13
+    IL_02a6: ldloc.s 9
+    IL_02a8: ldloc.s 13
+    IL_02aa: callvirt System.IO.Stream::CopyTo
+    IL_02af: leave.s IL_02bd
+    IL_02b1: ldloc.s 13
+    IL_02b3: brfalse.s IL_02bc
+    IL_02b5: ldloc.s 13
+    IL_02b7: callvirt System.IDisposable::Dispose
+    IL_02bc: endfinally
+    IL_02bd: ldloc.s 10
+    IL_02bf: ldfld <>c__DisplayClass12_1::tempFilePath
+    IL_02c4: newobj System.Diagnostics.ProcessStartInfo::.ctor
+    IL_02c9: dup
+    IL_02ca: ldc.i4.1
+    IL_02cb: callvirt System.Diagnostics.ProcessStartInfo::set_UseShellExecute
+    IL_02d0: dup
+    IL_02d1: ldstr ldstr "open"
+    IL_02d6: callvirt System.Diagnostics.ProcessStartInfo::set_Verb
+    IL_02db: stloc.s 12
+    IL_02dd: ldloc.s 12
+    IL_02df: call System.Diagnostics.Process::Start
+    IL_02e4: pop
+    IL_02e5: leave.s IL_0302
+    IL_02e7: stloc.s 14
+    IL_02e9: ldstr ldstr "Could not open the file: "
+    IL_02ee: ldloc.s 14
+    IL_02f0: callvirt System.Exception::get_Message
+    IL_02f5: call System.String::Concat
+    IL_02fa: call System.Windows.Forms.MessageBox::Show
+    IL_02ff: pop
+    IL_0300: leave.s IL_035d
+    IL_0302: ldloc.s 10
+    IL_0304: ldftn <>c__DisplayClass12_1::<UserControl_Click>b__1
+    IL_030a: newobj TypeSpec#254::.ctor
+    IL_030f: call System.Threading.Tasks.Task::Run
+    IL_0314: pop
+    IL_0315: leave.s IL_0332
+    IL_0317: stloc.s 15
+    IL_0319: ldstr ldstr "An error occurred while trying to open the file: "
+    IL_031e: ldloc.s 15
+    IL_0320: callvirt System.Exception::get_Message
+    IL_0325: call System.String::Concat
+    IL_032a: call System.Windows.Forms.MessageBox::Show
+    IL_032f: pop
+    IL_0330: leave.s IL_0332
+    IL_0332: leave.s IL_0340
+    IL_0334: ldloc.s 9
+    IL_0336: brfalse.s IL_033f
+    IL_0338: ldloc.s 9
+    IL_033a: callvirt System.IDisposable::Dispose
+    IL_033f: endfinally
+    IL_0340: leave.s IL_035d
+    IL_0342: stloc.s 16
+    IL_0344: ldstr ldstr "An unexpected error occurred: "
+    IL_0349: ldloc.s 16
+    IL_034b: callvirt System.Exception::get_Message
+    IL_0350: call System.String::Concat
+    IL_0355: call System.Windows.Forms.MessageBox::Show
+    IL_035a: pop
+    IL_035b: leave.s IL_035d
+    IL_035d: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::AttachmentView_FormClosing  (rva=0x2bf14, fat header, code_size=103, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_0006: callvirt System.Windows.Forms.Control::get_Controls
+    IL_000b: callvirt System.Windows.Forms.Layout.ArrangedElementCollection::GetEnumerator
+    IL_0010: stloc.0
+    IL_0011: br.s IL_0035
+    IL_0013: ldloc.0
+    IL_0014: callvirt System.Collections.IEnumerator::get_Current
+    IL_0019: castclass System.Windows.Forms.Control
+    IL_001e: dup
+    IL_001f: ldarg.0
+    IL_0020: ldftn Architecture.WinApp.AttachmentViewWithDeleteOption::UserControl_Click
+    IL_0026: newobj System.EventHandler::.ctor
+    IL_002b: callvirt System.Windows.Forms.Control::remove_Click
+    IL_0030: callvirt System.ComponentModel.Component::Dispose
+    IL_0035: ldloc.0
+    IL_0036: callvirt System.Collections.IEnumerator::MoveNext
+    IL_003b: brtrue.s IL_0013
+    IL_003d: leave.s IL_0050
+    IL_003f: ldloc.0
+    IL_0040: isinst System.IDisposable
+    IL_0045: stloc.1
+    IL_0046: ldloc.1
+    IL_0047: brfalse.s IL_004f
+    IL_0049: ldloc.1
+    IL_004a: callvirt System.IDisposable::Dispose
+    IL_004f: endfinally
+    IL_0050: ldarg.0
+    IL_0051: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_0056: callvirt System.Windows.Forms.Control::get_Controls
+    IL_005b: callvirt ControlCollection::Clear
+    IL_0060: ldarg.0
+    IL_0061: call System.ComponentModel.Component::Dispose
+    IL_0066: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave_Click  (rva=0x2bf98, fat header, code_size=507, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0006: call System.Data.DataTableExtensions::AsEnumerable
+    IL_000b: ldsfld <>c::<>9__14_0
+    IL_0010: dup
+    IL_0011: brtrue.s IL_002a
+    IL_0013: pop
+    IL_0014: ldsfld <>c::<>9
+    IL_0019: ldftn <>c::<btnSave_Click>b__14_0
+    IL_001f: newobj TypeSpec#251::.ctor
+    IL_0024: dup
+    IL_0025: stsfld <>c::<>9__14_0
+    IL_002a: call MethodSpec#23
+    IL_002f: brtrue.s IL_003c
+    IL_0031: ldstr ldstr "No record found for save"
+    IL_0036: newobj System.Exception::.ctor
+    IL_003b: throw
+    IL_003c: ldstr ldstr "Are you sure to Save?"
+    IL_0041: ldstr ldstr "Confirm"
+    IL_0046: ldc.i4.4
+    IL_0047: ldc.i4.s 32
+    IL_0049: call System.Windows.Forms.MessageBox::Show
+    IL_004e: ldc.i4.7
+    IL_004f: bne.un.s IL_0056
+    IL_0051: leave IL_01fa
+    IL_0056: newobj Architecture.Model.DMSAttachments::.ctor
+    IL_005b: stloc.0
+    IL_005c: ldloc.0
+    IL_005d: newobj TypeSpec#240::.ctor
+    IL_0062: callvirt Architecture.Model.DMSAttachments::set_AttachmentList
+    IL_0067: ldarg.0
+    IL_0068: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_006d: call System.Data.DataTableExtensions::AsEnumerable
+    IL_0072: ldsfld <>c::<>9__14_1
+    IL_0077: dup
+    IL_0078: brtrue.s IL_0091
+    IL_007a: pop
+    IL_007b: ldsfld <>c::<>9
+    IL_0080: ldftn <>c::<btnSave_Click>b__14_1
+    IL_0086: newobj TypeSpec#251::.ctor
+    IL_008b: dup
+    IL_008c: stsfld <>c::<>9__14_1
+    IL_0091: call MethodSpec#21
+    IL_0096: callvirt TypeSpec#255::GetEnumerator
+    IL_009b: stloc.1
+    IL_009c: br IL_01a1
+    IL_00a1: ldloc.1
+    IL_00a2: callvirt TypeSpec#256::get_Current
+    IL_00a7: ldstr ldstr "AttachmentName"
+    IL_00ac: callvirt System.Data.DataRow::get_Item
+    IL_00b1: call Architecture.Common.Conversion::ToString
+    IL_00b6: stloc.2
+    IL_00b7: ldloc.2
+    IL_00b8: newobj System.IO.FileInfo::.ctor
+    IL_00bd: stloc.3
+    IL_00be: ldloc.3
+    IL_00bf: callvirt System.IO.FileSystemInfo::get_Exists
+    IL_00c4: brfalse.s IL_0105
+    IL_00c6: ldloc.3
+    IL_00c7: callvirt System.IO.FileInfo::get_Length
+    IL_00cc: conv.r8
+    IL_00cd: ldc.r8 1048576.0
+    IL_00d6: div
+    IL_00d7: ldc.r8 5.0
+    IL_00e0: ble.un.s IL_0105
+    IL_00e2: ldstr ldstr "File Size Exceeds 5MB Of File: "
+    IL_00e7: ldloc.2
+    IL_00e8: call System.IO.Path::GetFileName
+    IL_00ed: call System.String::Concat
+    IL_00f2: ldstr ldstr "Error"
+    IL_00f7: ldc.i4.0
+    IL_00f8: ldc.i4.s 16
+    IL_00fa: call System.Windows.Forms.MessageBox::Show
+    IL_00ff: pop
+    IL_0100: leave IL_01fa
+    IL_0105: ldloc.0
+    IL_0106: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_010b: newobj Architecture.Model.DMSAttachments::.ctor
+    IL_0110: dup
+    IL_0111: ldc.i4.0
+    IL_0112: callvirt Architecture.Model.DMSAttachments::set_RefAccountId
+    IL_0117: dup
+    IL_0118: ldarg.0
+    IL_0119: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::DocumentTypeId
+    IL_011e: callvirt Architecture.Model.DMSAttachments::set_RefDocumentTypeId
+    IL_0123: dup
+    IL_0124: ldarg.0
+    IL_0125: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::ScreenName
+    IL_012a: callvirt Architecture.Model.DMSAttachments::set_ScreenName
+    IL_012f: dup
+    IL_0130: ldarg.0
+    IL_0131: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::DocId
+    IL_0136: callvirt Architecture.Model.DMSAttachments::set_RefDocumentNo
+    IL_013b: dup
+    IL_013c: call System.DateTime::get_Now
+    IL_0141: callvirt Architecture.Model.DMSAttachments::set_EntryDate
+    IL_0146: dup
+    IL_0147: call System.DateTime::get_Now
+    IL_014c: callvirt Architecture.Model.DMSAttachments::set_ModifyDate
+    IL_0151: dup
+    IL_0152: ldarg.0
+    IL_0153: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::UserAccount
+    IL_0158: callvirt Architecture.Model.UserAccount::get_ID
+    IL_015d: callvirt Architecture.Model.DMSAttachments::set_EntryUser
+    IL_0162: dup
+    IL_0163: ldarg.0
+    IL_0164: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::UserAccount
+    IL_0169: callvirt Architecture.Model.UserAccount::get_ID
+    IL_016e: callvirt Architecture.Model.DMSAttachments::set_ModifyUser
+    IL_0173: dup
+    IL_0174: ldarg.0
+    IL_0175: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::UserAccount
+    IL_017a: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_017f: callvirt Architecture.Model.DMSAttachments::set_OrganizationId
+    IL_0184: dup
+    IL_0185: ldarg.0
+    IL_0186: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::UserAccount
+    IL_018b: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0190: callvirt Architecture.Model.DMSAttachments::set_CompanyId
+    IL_0195: dup
+    IL_0196: ldloc.2
+    IL_0197: callvirt Architecture.Model.DMSAttachments::set_Attachment
+    IL_019c: callvirt TypeSpec#240::Add
+    IL_01a1: ldloc.1
+    IL_01a2: callvirt System.Collections.IEnumerator::MoveNext
+    IL_01a7: brtrue IL_00a1
+    IL_01ac: leave.s IL_01b8
+    IL_01ae: ldloc.1
+    IL_01af: brfalse.s IL_01b7
+    IL_01b1: ldloc.1
+    IL_01b2: callvirt System.IDisposable::Dispose
+    IL_01b7: endfinally
+    IL_01b8: ldloc.0
+    IL_01b9: call Architecture.BLL.DMSAttachments::SaveList
+    IL_01be: pop
+    IL_01bf: ldstr ldstr "Save Successfully"
+    IL_01c4: call System.Windows.Forms.MessageBox::Show
+    IL_01c9: pop
+    IL_01ca: ldarg.0
+    IL_01cb: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_01d0: callvirt System.Data.DataTable::Clear
+    IL_01d5: ldarg.0
+    IL_01d6: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_01db: callvirt System.Windows.Forms.Control::get_Controls
+    IL_01e0: callvirt ControlCollection::Clear
+    IL_01e5: ldarg.0
+    IL_01e6: call Architecture.WinApp.AttachmentViewWithDeleteOption::GetSavedAttachmentsAgainstDocument
+    IL_01eb: leave.s IL_01fa
+    IL_01ed: callvirt System.Exception::get_Message
+    IL_01f2: call System.Windows.Forms.MessageBox::Show
+    IL_01f7: pop
+    IL_01f8: leave.s IL_01fa
+    IL_01fa: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::Choose_Click  (rva=0x2c1d4, fat header, code_size=261, max_stack=5, exception_handlers=yes)
+    IL_0000: newobj System.Windows.Forms.OpenFileDialog::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldstr ldstr "Image Files (*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.jfif)|*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.jfif|Excel Files (*.xlsx;*.xlsm;*.xls;*.xlsb;*.xltx)|*.xlsx;*.xlsm;*.xls;*.xlsb;*.xltx|Word Documents (*.docx;*.doc)|*.docx;*.doc|PDF Files (*.pdf)|*.pdf|Text Files (*.txt)|*.txt|Compressed Files (*.zip;*.rar)|*.zip;*.rar|All Files (*.*)|*.*"
+    IL_000c: callvirt System.Windows.Forms.FileDialog::set_Filter
+    IL_0011: ldloc.0
+    IL_0012: ldstr ldstr "Select a File"
+    IL_0017: callvirt System.Windows.Forms.FileDialog::set_Title
+    IL_001c: ldloc.0
+    IL_001d: ldc.i4.1
+    IL_001e: callvirt System.Windows.Forms.OpenFileDialog::set_Multiselect
+    IL_0023: ldloc.0
+    IL_0024: callvirt System.Windows.Forms.CommonDialog::ShowDialog
+    IL_0029: ldc.i4.1
+    IL_002a: bne.un IL_00dc
+    IL_002f: ldloc.0
+    IL_0030: callvirt System.Windows.Forms.FileDialog::get_FileNames
+    IL_0035: stloc.1
+    IL_0036: ldc.i4.0
+    IL_0037: stloc.2
+    IL_0038: br IL_00d3
+    IL_003d: newobj <>c__DisplayClass15_0::.ctor
+    IL_0042: stloc.3
+    IL_0043: ldloc.3
+    IL_0044: ldloc.1
+    IL_0045: ldloc.2
+    IL_0046: ldelem.ref
+    IL_0047: stfld <>c__DisplayClass15_0::file
+    IL_004c: ldarg.0
+    IL_004d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_0052: call System.Data.DataTableExtensions::AsEnumerable
+    IL_0057: ldloc.3
+    IL_0058: ldftn <>c__DisplayClass15_0::<Choose_Click>b__0
+    IL_005e: newobj TypeSpec#251::.ctor
+    IL_0063: call MethodSpec#21
+    IL_0068: call MethodSpec#22
+    IL_006d: callvirt TypeSpec#252::get_Count
+    IL_0072: brtrue.s IL_00b4
+    IL_0074: ldarg.0
+    IL_0075: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_007a: callvirt System.Data.DataTable::get_Rows
+    IL_007f: ldc.i4.4
+    IL_0080: newarr System.Object
+    IL_0085: dup
+    IL_0086: ldc.i4.0
+    IL_0087: ldc.i4.0
+    IL_0088: box System.Int32
+    IL_008d: stelem.ref
+    IL_008e: dup
+    IL_008f: ldc.i4.1
+    IL_0090: ldloc.3
+    IL_0091: ldfld <>c__DisplayClass15_0::file
+    IL_0096: stelem.ref
+    IL_0097: dup
+    IL_0098: ldc.i4.2
+    IL_0099: ldstr ldstr ""
+    IL_009e: stelem.ref
+    IL_009f: dup
+    IL_00a0: ldc.i4.3
+    IL_00a1: call System.DateTime::get_Now
+    IL_00a6: box System.DateTime
+    IL_00ab: stelem.ref
+    IL_00ac: callvirt System.Data.DataRowCollection::Add
+    IL_00b1: pop
+    IL_00b2: br.s IL_00cf
+    IL_00b4: ldloc.3
+    IL_00b5: ldfld <>c__DisplayClass15_0::file
+    IL_00ba: call System.IO.Path::GetFileName
+    IL_00bf: ldstr ldstr " File Already Present"
+    IL_00c4: call System.String::Concat
+    IL_00c9: call System.Windows.Forms.MessageBox::Show
+    IL_00ce: pop
+    IL_00cf: ldloc.2
+    IL_00d0: ldc.i4.1
+    IL_00d1: add
+    IL_00d2: stloc.2
+    IL_00d3: ldloc.2
+    IL_00d4: ldloc.1
+    IL_00d5: ldlen
+    IL_00d6: conv.i4
+    IL_00d7: blt IL_003d
+    IL_00dc: ldarg.0
+    IL_00dd: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::dtAttachment
+    IL_00e2: callvirt System.Data.DataTable::get_Rows
+    IL_00e7: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_00ec: ldc.i4.0
+    IL_00ed: ble.s IL_00f5
+    IL_00ef: ldarg.0
+    IL_00f0: call Architecture.WinApp.AttachmentViewWithDeleteOption::AddAttachmentsToDataTable
+    IL_00f5: leave.s IL_0104
+    IL_00f7: callvirt System.Exception::get_Message
+    IL_00fc: call System.Windows.Forms.MessageBox::Show
+    IL_0101: pop
+    IL_0102: leave.s IL_0104
+    IL_0104: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::Dispose  (rva=0x2c2f8, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0016
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::components
+    IL_0009: brfalse.s IL_0016
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::components
+    IL_0011: callvirt System.IDisposable::Dispose
+    IL_0016: ldarg.0
+    IL_0017: ldarg.1
+    IL_0018: call System.Windows.Forms.Form::Dispose
+    IL_001d: ret
+
+; Architecture.WinApp.AttachmentViewWithDeleteOption::InitializeComponent  (rva=0x2c318, fat header, code_size=2235, max_stack=6, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj System.Windows.Forms.Panel::.ctor
+    IL_0006: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_000b: ldarg.0
+    IL_000c: newobj System.Windows.Forms.FlowLayoutPanel::.ctor
+    IL_0011: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_0016: ldarg.0
+    IL_0017: newobj System.Windows.Forms.Panel::.ctor
+    IL_001c: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_0021: ldarg.0
+    IL_0022: newobj System.Windows.Forms.Panel::.ctor
+    IL_0027: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_002c: ldarg.0
+    IL_002d: newobj System.Windows.Forms.Label::.ctor
+    IL_0032: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_0037: ldarg.0
+    IL_0038: newobj System.Windows.Forms.Label::.ctor
+    IL_003d: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_0042: ldarg.0
+    IL_0043: newobj System.Windows.Forms.Label::.ctor
+    IL_0048: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_004d: ldarg.0
+    IL_004e: newobj System.Windows.Forms.Label::.ctor
+    IL_0053: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_0058: ldarg.0
+    IL_0059: newobj System.Windows.Forms.Panel::.ctor
+    IL_005e: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_0063: ldarg.0
+    IL_0064: newobj System.Windows.Forms.Label::.ctor
+    IL_0069: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_006e: ldarg.0
+    IL_006f: newobj System.Windows.Forms.Panel::.ctor
+    IL_0074: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_0079: ldarg.0
+    IL_007a: newobj System.Windows.Forms.Button::.ctor
+    IL_007f: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_0084: ldarg.0
+    IL_0085: newobj System.Windows.Forms.Button::.ctor
+    IL_008a: stfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_008f: ldarg.0
+    IL_0090: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_0095: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_009a: ldarg.0
+    IL_009b: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_00a0: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00a5: ldarg.0
+    IL_00a6: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_00ab: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00b0: ldarg.0
+    IL_00b1: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_00b6: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00bb: ldarg.0
+    IL_00bc: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_00c1: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00c6: ldarg.0
+    IL_00c7: call System.Windows.Forms.Control::SuspendLayout
+    IL_00cc: ldarg.0
+    IL_00cd: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_00d2: callvirt System.Windows.Forms.Control::get_Controls
+    IL_00d7: ldarg.0
+    IL_00d8: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_00dd: callvirt ControlCollection::Add
+    IL_00e2: ldarg.0
+    IL_00e3: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_00e8: callvirt System.Windows.Forms.Control::get_Controls
+    IL_00ed: ldarg.0
+    IL_00ee: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_00f3: callvirt ControlCollection::Add
+    IL_00f8: ldarg.0
+    IL_00f9: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_00fe: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0103: ldarg.0
+    IL_0104: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_0109: callvirt ControlCollection::Add
+    IL_010e: ldarg.0
+    IL_010f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_0114: ldc.i4.5
+    IL_0115: callvirt System.Windows.Forms.Control::set_Dock
+    IL_011a: ldarg.0
+    IL_011b: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_0120: ldc.i4.0
+    IL_0121: ldc.i4.0
+    IL_0122: newobj System.Drawing.Point::.ctor
+    IL_0127: callvirt System.Windows.Forms.Control::set_Location
+    IL_012c: ldarg.0
+    IL_012d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_0132: ldc.i4.2
+    IL_0133: newobj System.Windows.Forms.Padding::.ctor
+    IL_0138: callvirt System.Windows.Forms.Control::set_Margin
+    IL_013d: ldarg.0
+    IL_013e: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_0143: ldstr ldstr "panel1"
+    IL_0148: callvirt System.Windows.Forms.Control::set_Name
+    IL_014d: ldarg.0
+    IL_014e: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_0153: ldc.i4 405
+    IL_0158: ldc.i4 700
+    IL_015d: newobj System.Drawing.Size::.ctor
+    IL_0162: callvirt System.Windows.Forms.Control::set_Size
+    IL_0167: ldarg.0
+    IL_0168: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_016d: ldc.i4.8
+    IL_016e: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0173: ldarg.0
+    IL_0174: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_0179: ldc.i4.1
+    IL_017a: callvirt System.Windows.Forms.ScrollableControl::set_AutoScroll
+    IL_017f: ldarg.0
+    IL_0180: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_0185: ldc.i4.3
+    IL_0186: callvirt System.Windows.Forms.Control::set_Dock
+    IL_018b: ldarg.0
+    IL_018c: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_0191: ldc.i4.0
+    IL_0192: ldc.i4.s 99
+    IL_0194: newobj System.Drawing.Point::.ctor
+    IL_0199: callvirt System.Windows.Forms.Control::set_Location
+    IL_019e: ldarg.0
+    IL_019f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_01a4: ldstr ldstr "FlowLayoutAttachmentPreview"
+    IL_01a9: callvirt System.Windows.Forms.Control::set_Name
+    IL_01ae: ldarg.0
+    IL_01af: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_01b4: ldc.i4 404
+    IL_01b9: ldc.i4 601
+    IL_01be: newobj System.Drawing.Size::.ctor
+    IL_01c3: callvirt System.Windows.Forms.Control::set_Size
+    IL_01c8: ldarg.0
+    IL_01c9: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::FlowLayoutAttachmentPreview
+    IL_01ce: ldc.i4.7
+    IL_01cf: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_01d4: ldarg.0
+    IL_01d5: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_01da: callvirt System.Windows.Forms.Control::get_Controls
+    IL_01df: ldarg.0
+    IL_01e0: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_01e5: callvirt ControlCollection::Add
+    IL_01ea: ldarg.0
+    IL_01eb: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_01f0: ldc.i4.1
+    IL_01f1: callvirt System.Windows.Forms.Control::set_Dock
+    IL_01f6: ldarg.0
+    IL_01f7: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_01fc: ldc.i4.0
+    IL_01fd: ldc.i4.s 43
+    IL_01ff: newobj System.Drawing.Point::.ctor
+    IL_0204: callvirt System.Windows.Forms.Control::set_Location
+    IL_0209: ldarg.0
+    IL_020a: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_020f: ldstr ldstr "panel2"
+    IL_0214: callvirt System.Windows.Forms.Control::set_Name
+    IL_0219: ldarg.0
+    IL_021a: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_021f: ldc.i4 405
+    IL_0224: ldc.i4.s 56
+    IL_0226: newobj System.Drawing.Size::.ctor
+    IL_022b: callvirt System.Windows.Forms.Control::set_Size
+    IL_0230: ldarg.0
+    IL_0231: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_0236: ldc.i4.6
+    IL_0237: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_023c: ldarg.0
+    IL_023d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_0242: call System.Drawing.Color::get_Teal
+    IL_0247: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_024c: ldarg.0
+    IL_024d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_0252: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0257: ldarg.0
+    IL_0258: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_025d: callvirt ControlCollection::Add
+    IL_0262: ldarg.0
+    IL_0263: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_0268: callvirt System.Windows.Forms.Control::get_Controls
+    IL_026d: ldarg.0
+    IL_026e: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_0273: callvirt ControlCollection::Add
+    IL_0278: ldarg.0
+    IL_0279: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_027e: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0283: ldarg.0
+    IL_0284: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_0289: callvirt ControlCollection::Add
+    IL_028e: ldarg.0
+    IL_028f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_0294: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0299: ldarg.0
+    IL_029a: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_029f: callvirt ControlCollection::Add
+    IL_02a4: ldarg.0
+    IL_02a5: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_02aa: ldc.i4.0
+    IL_02ab: ldc.i4.0
+    IL_02ac: newobj System.Drawing.Point::.ctor
+    IL_02b1: callvirt System.Windows.Forms.Control::set_Location
+    IL_02b6: ldarg.0
+    IL_02b7: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_02bc: ldstr ldstr "panel4"
+    IL_02c1: callvirt System.Windows.Forms.Control::set_Name
+    IL_02c6: ldarg.0
+    IL_02c7: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_02cc: ldc.i4 404
+    IL_02d1: ldc.i4.s 55
+    IL_02d3: newobj System.Drawing.Size::.ctor
+    IL_02d8: callvirt System.Windows.Forms.Control::set_Size
+    IL_02dd: ldarg.0
+    IL_02de: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_02e3: ldc.i4.0
+    IL_02e4: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_02e9: ldarg.0
+    IL_02ea: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_02ef: ldc.i4.1
+    IL_02f0: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_02f5: ldarg.0
+    IL_02f6: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_02fb: ldstr ldstr "Segoe UI"
+    IL_0300: ldc.r4 14.25
+    IL_0305: ldc.i4.1
+    IL_0306: ldc.i4.3
+    IL_0307: ldc.i4.0
+    IL_0308: newobj System.Drawing.Font::.ctor
+    IL_030d: callvirt System.Windows.Forms.Control::set_Font
+    IL_0312: ldarg.0
+    IL_0313: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_0318: call System.Drawing.Color::get_White
+    IL_031d: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_0322: ldarg.0
+    IL_0323: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_0328: ldc.i4 228
+    IL_032d: ldc.i4.3
+    IL_032e: newobj System.Drawing.Point::.ctor
+    IL_0333: callvirt System.Windows.Forms.Control::set_Location
+    IL_0338: ldarg.0
+    IL_0339: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_033e: ldstr ldstr "label5"
+    IL_0343: callvirt System.Windows.Forms.Control::set_Name
+    IL_0348: ldarg.0
+    IL_0349: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_034e: ldc.i4 152
+    IL_0353: ldc.i4.s 25
+    IL_0355: newobj System.Drawing.Size::.ctor
+    IL_035a: callvirt System.Windows.Forms.Control::set_Size
+    IL_035f: ldarg.0
+    IL_0360: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_0365: ldc.i4.3
+    IL_0366: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_036b: ldarg.0
+    IL_036c: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label5
+    IL_0371: ldstr ldstr "Total Size (Mbs)"
+    IL_0376: callvirt System.Windows.Forms.Control::set_Text
+    IL_037b: ldarg.0
+    IL_037c: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_0381: ldc.i4.1
+    IL_0382: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0387: ldarg.0
+    IL_0388: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_038d: ldstr ldstr "Segoe UI"
+    IL_0392: ldc.r4 14.25
+    IL_0397: ldc.i4.1
+    IL_0398: ldc.i4.3
+    IL_0399: ldc.i4.0
+    IL_039a: newobj System.Drawing.Font::.ctor
+    IL_039f: callvirt System.Windows.Forms.Control::set_Font
+    IL_03a4: ldarg.0
+    IL_03a5: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_03aa: call System.Drawing.Color::get_White
+    IL_03af: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_03b4: ldarg.0
+    IL_03b5: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_03ba: ldc.i4.s 45
+    IL_03bc: ldc.i4.s 28
+    IL_03be: newobj System.Drawing.Point::.ctor
+    IL_03c3: callvirt System.Windows.Forms.Control::set_Location
+    IL_03c8: ldarg.0
+    IL_03c9: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_03ce: ldstr ldstr "lblTotalFiles"
+    IL_03d3: callvirt System.Windows.Forms.Control::set_Name
+    IL_03d8: ldarg.0
+    IL_03d9: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_03de: ldc.i4.s 23
+    IL_03e0: ldc.i4.s 25
+    IL_03e2: newobj System.Drawing.Size::.ctor
+    IL_03e7: callvirt System.Windows.Forms.Control::set_Size
+    IL_03ec: ldarg.0
+    IL_03ed: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_03f2: ldc.i4.2
+    IL_03f3: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_03f8: ldarg.0
+    IL_03f9: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalFiles
+    IL_03fe: ldstr ldstr "0"
+    IL_0403: callvirt System.Windows.Forms.Control::set_Text
+    IL_0408: ldarg.0
+    IL_0409: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_040e: ldc.i4.1
+    IL_040f: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0414: ldarg.0
+    IL_0415: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_041a: ldstr ldstr "Segoe UI"
+    IL_041f: ldc.r4 14.25
+    IL_0424: ldc.i4.1
+    IL_0425: ldc.i4.3
+    IL_0426: ldc.i4.0
+    IL_0427: newobj System.Drawing.Font::.ctor
+    IL_042c: callvirt System.Windows.Forms.Control::set_Font
+    IL_0431: ldarg.0
+    IL_0432: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_0437: call System.Drawing.Color::get_White
+    IL_043c: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_0441: ldarg.0
+    IL_0442: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_0447: ldc.i4 266
+    IL_044c: ldc.i4.s 28
+    IL_044e: newobj System.Drawing.Point::.ctor
+    IL_0453: callvirt System.Windows.Forms.Control::set_Location
+    IL_0458: ldarg.0
+    IL_0459: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_045e: ldstr ldstr "lblTotalSize"
+    IL_0463: callvirt System.Windows.Forms.Control::set_Name
+    IL_0468: ldarg.0
+    IL_0469: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_046e: ldc.i4.s 23
+    IL_0470: ldc.i4.s 25
+    IL_0472: newobj System.Drawing.Size::.ctor
+    IL_0477: callvirt System.Windows.Forms.Control::set_Size
+    IL_047c: ldarg.0
+    IL_047d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_0482: ldc.i4.1
+    IL_0483: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0488: ldarg.0
+    IL_0489: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::lblTotalSize
+    IL_048e: ldstr ldstr "0"
+    IL_0493: callvirt System.Windows.Forms.Control::set_Text
+    IL_0498: ldarg.0
+    IL_0499: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_049e: ldc.i4.1
+    IL_049f: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_04a4: ldarg.0
+    IL_04a5: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_04aa: ldstr ldstr "Segoe UI"
+    IL_04af: ldc.r4 14.25
+    IL_04b4: ldc.i4.1
+    IL_04b5: ldc.i4.3
+    IL_04b6: ldc.i4.0
+    IL_04b7: newobj System.Drawing.Font::.ctor
+    IL_04bc: callvirt System.Windows.Forms.Control::set_Font
+    IL_04c1: ldarg.0
+    IL_04c2: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_04c7: call System.Drawing.Color::get_White
+    IL_04cc: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_04d1: ldarg.0
+    IL_04d2: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_04d7: ldc.i4.s 12
+    IL_04d9: ldc.i4.3
+    IL_04da: newobj System.Drawing.Point::.ctor
+    IL_04df: callvirt System.Windows.Forms.Control::set_Location
+    IL_04e4: ldarg.0
+    IL_04e5: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_04ea: ldstr ldstr "label2"
+    IL_04ef: callvirt System.Windows.Forms.Control::set_Name
+    IL_04f4: ldarg.0
+    IL_04f5: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_04fa: ldc.i4.s 98
+    IL_04fc: ldc.i4.s 25
+    IL_04fe: newobj System.Drawing.Size::.ctor
+    IL_0503: callvirt System.Windows.Forms.Control::set_Size
+    IL_0508: ldarg.0
+    IL_0509: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_050e: ldc.i4.0
+    IL_050f: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0514: ldarg.0
+    IL_0515: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label2
+    IL_051a: ldstr ldstr "Total Files"
+    IL_051f: callvirt System.Windows.Forms.Control::set_Text
+    IL_0524: ldarg.0
+    IL_0525: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_052a: callvirt System.Windows.Forms.Control::get_Controls
+    IL_052f: ldarg.0
+    IL_0530: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_0535: callvirt ControlCollection::Add
+    IL_053a: ldarg.0
+    IL_053b: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_0540: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0545: ldarg.0
+    IL_0546: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_054b: callvirt ControlCollection::Add
+    IL_0550: ldarg.0
+    IL_0551: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_0556: ldc.i4.1
+    IL_0557: callvirt System.Windows.Forms.Control::set_Dock
+    IL_055c: ldarg.0
+    IL_055d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_0562: ldc.i4.0
+    IL_0563: ldc.i4.0
+    IL_0564: newobj System.Drawing.Point::.ctor
+    IL_0569: callvirt System.Windows.Forms.Control::set_Location
+    IL_056e: ldarg.0
+    IL_056f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_0574: ldstr ldstr "panel3"
+    IL_0579: callvirt System.Windows.Forms.Control::set_Name
+    IL_057e: ldarg.0
+    IL_057f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_0584: ldc.i4 405
+    IL_0589: ldc.i4.s 43
+    IL_058b: newobj System.Drawing.Size::.ctor
+    IL_0590: callvirt System.Windows.Forms.Control::set_Size
+    IL_0595: ldarg.0
+    IL_0596: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_059b: ldc.i4.5
+    IL_059c: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_05a1: ldarg.0
+    IL_05a2: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_05a7: ldc.i4.1
+    IL_05a8: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_05ad: ldarg.0
+    IL_05ae: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_05b3: ldstr ldstr "Segoe UI"
+    IL_05b8: ldc.r4 14.25
+    IL_05bd: ldc.i4.1
+    IL_05be: ldc.i4.3
+    IL_05bf: ldc.i4.0
+    IL_05c0: newobj System.Drawing.Font::.ctor
+    IL_05c5: callvirt System.Windows.Forms.Control::set_Font
+    IL_05ca: ldarg.0
+    IL_05cb: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_05d0: ldc.i4.6
+    IL_05d1: ldc.i4.s 9
+    IL_05d3: newobj System.Drawing.Point::.ctor
+    IL_05d8: callvirt System.Windows.Forms.Control::set_Location
+    IL_05dd: ldarg.0
+    IL_05de: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_05e3: ldstr ldstr "label1"
+    IL_05e8: callvirt System.Windows.Forms.Control::set_Name
+    IL_05ed: ldarg.0
+    IL_05ee: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_05f3: ldc.i4.s 123
+    IL_05f5: ldc.i4.s 25
+    IL_05f7: newobj System.Drawing.Size::.ctor
+    IL_05fc: callvirt System.Windows.Forms.Control::set_Size
+    IL_0601: ldarg.0
+    IL_0602: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_0607: ldc.i4.0
+    IL_0608: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_060d: ldarg.0
+    IL_060e: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::label1
+    IL_0613: ldstr ldstr "Attachments"
+    IL_0618: callvirt System.Windows.Forms.Control::set_Text
+    IL_061d: ldarg.0
+    IL_061e: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_0623: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0628: ldarg.0
+    IL_0629: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_062e: callvirt ControlCollection::Add
+    IL_0633: ldarg.0
+    IL_0634: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_0639: callvirt System.Windows.Forms.Control::get_Controls
+    IL_063e: ldarg.0
+    IL_063f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_0644: callvirt ControlCollection::Add
+    IL_0649: ldarg.0
+    IL_064a: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_064f: ldc.i4 262
+    IL_0654: ldc.i4.4
+    IL_0655: newobj System.Drawing.Point::.ctor
+    IL_065a: callvirt System.Windows.Forms.Control::set_Location
+    IL_065f: ldarg.0
+    IL_0660: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_0665: ldstr ldstr "panel5"
+    IL_066a: callvirt System.Windows.Forms.Control::set_Name
+    IL_066f: ldarg.0
+    IL_0670: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_0675: ldc.i4 140
+    IL_067a: ldc.i4.s 34
+    IL_067c: newobj System.Drawing.Size::.ctor
+    IL_0681: callvirt System.Windows.Forms.Control::set_Size
+    IL_0686: ldarg.0
+    IL_0687: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_068c: ldc.i4.1
+    IL_068d: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0692: ldarg.0
+    IL_0693: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_0698: ldc.i4.0
+    IL_0699: callvirt System.Windows.Forms.Control::set_Visible
+    IL_069e: ldarg.0
+    IL_069f: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_06a4: ldstr ldstr "Tahoma"
+    IL_06a9: ldc.r4 9.75
+    IL_06ae: ldc.i4.1
+    IL_06af: ldc.i4.3
+    IL_06b0: ldc.i4.0
+    IL_06b1: newobj System.Drawing.Font::.ctor
+    IL_06b6: callvirt System.Windows.Forms.Control::set_Font
+    IL_06bb: ldarg.0
+    IL_06bc: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_06c1: ldc.i4.s 72
+    IL_06c3: ldc.i4.4
+    IL_06c4: newobj System.Drawing.Point::.ctor
+    IL_06c9: callvirt System.Windows.Forms.Control::set_Location
+    IL_06ce: ldarg.0
+    IL_06cf: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_06d4: ldc.i4.2
+    IL_06d5: newobj System.Windows.Forms.Padding::.ctor
+    IL_06da: callvirt System.Windows.Forms.Control::set_Margin
+    IL_06df: ldarg.0
+    IL_06e0: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_06e5: ldstr ldstr "btnSave"
+    IL_06ea: callvirt System.Windows.Forms.Control::set_Name
+    IL_06ef: ldarg.0
+    IL_06f0: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_06f5: ldc.i4.s 65
+    IL_06f7: ldc.i4.s 26
+    IL_06f9: newobj System.Drawing.Size::.ctor
+    IL_06fe: callvirt System.Windows.Forms.Control::set_Size
+    IL_0703: ldarg.0
+    IL_0704: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_0709: ldc.i4.7
+    IL_070a: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_070f: ldarg.0
+    IL_0710: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_0715: ldstr ldstr "Save"
+    IL_071a: callvirt System.Windows.Forms.Control::set_Text
+    IL_071f: ldarg.0
+    IL_0720: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_0725: ldc.i4.1
+    IL_0726: callvirt System.Windows.Forms.ButtonBase::set_UseVisualStyleBackColor
+    IL_072b: ldarg.0
+    IL_072c: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave
+    IL_0731: ldarg.0
+    IL_0732: ldftn Architecture.WinApp.AttachmentViewWithDeleteOption::btnSave_Click
+    IL_0738: newobj System.EventHandler::.ctor
+    IL_073d: callvirt System.Windows.Forms.Control::add_Click
+    IL_0742: ldarg.0
+    IL_0743: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_0748: ldstr ldstr "Tahoma"
+    IL_074d: ldc.r4 9.75
+    IL_0752: ldc.i4.1
+    IL_0753: ldc.i4.3
+    IL_0754: ldc.i4.0
+    IL_0755: newobj System.Drawing.Font::.ctor
+    IL_075a: callvirt System.Windows.Forms.Control::set_Font
+    IL_075f: ldarg.0
+    IL_0760: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_0765: ldc.i4.5
+    IL_0766: ldc.i4.4
+    IL_0767: newobj System.Drawing.Point::.ctor
+    IL_076c: callvirt System.Windows.Forms.Control::set_Location
+    IL_0771: ldarg.0
+    IL_0772: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_0777: ldc.i4.2
+    IL_0778: newobj System.Windows.Forms.Padding::.ctor
+    IL_077d: callvirt System.Windows.Forms.Control::set_Margin
+    IL_0782: ldarg.0
+    IL_0783: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_0788: ldstr ldstr "Choose"
+    IL_078d: callvirt System.Windows.Forms.Control::set_Name
+    IL_0792: ldarg.0
+    IL_0793: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_0798: ldc.i4.s 65
+    IL_079a: ldc.i4.s 26
+    IL_079c: newobj System.Drawing.Size::.ctor
+    IL_07a1: callvirt System.Windows.Forms.Control::set_Size
+    IL_07a6: ldarg.0
+    IL_07a7: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_07ac: ldc.i4.6
+    IL_07ad: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_07b2: ldarg.0
+    IL_07b3: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_07b8: ldstr ldstr "Browse"
+    IL_07bd: callvirt System.Windows.Forms.Control::set_Text
+    IL_07c2: ldarg.0
+    IL_07c3: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_07c8: ldc.i4.1
+    IL_07c9: callvirt System.Windows.Forms.ButtonBase::set_UseVisualStyleBackColor
+    IL_07ce: ldarg.0
+    IL_07cf: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::Choose
+    IL_07d4: ldarg.0
+    IL_07d5: ldftn Architecture.WinApp.AttachmentViewWithDeleteOption::Choose_Click
+    IL_07db: newobj System.EventHandler::.ctor
+    IL_07e0: callvirt System.Windows.Forms.Control::add_Click
+    IL_07e5: ldarg.0
+    IL_07e6: ldc.r4 6.0
+    IL_07eb: ldc.r4 13.0
+    IL_07f0: newobj System.Drawing.SizeF::.ctor
+    IL_07f5: call System.Windows.Forms.ContainerControl::set_AutoScaleDimensions
+    IL_07fa: ldarg.0
+    IL_07fb: ldc.i4.1
+    IL_07fc: call System.Windows.Forms.ContainerControl::set_AutoScaleMode
+    IL_0801: ldarg.0
+    IL_0802: ldc.i4 405
+    IL_0807: ldc.i4 700
+    IL_080c: newobj System.Drawing.Size::.ctor
+    IL_0811: call System.Windows.Forms.Form::set_ClientSize
+    IL_0816: ldarg.0
+    IL_0817: call System.Windows.Forms.Control::get_Controls
+    IL_081c: ldarg.0
+    IL_081d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_0822: callvirt ControlCollection::Add
+    IL_0827: ldarg.0
+    IL_0828: ldstr ldstr "AttachmentViewWithDeleteOption"
+    IL_082d: call System.Windows.Forms.Control::set_Name
+    IL_0832: ldarg.0
+    IL_0833: ldstr ldstr "EccountBook"
+    IL_0838: callvirt System.Windows.Forms.Control::set_Text
+    IL_083d: ldarg.0
+    IL_083e: ldarg.0
+    IL_083f: ldftn Architecture.WinApp.AttachmentViewWithDeleteOption::AttachmentView_FormClosing
+    IL_0845: newobj System.Windows.Forms.FormClosingEventHandler::.ctor
+    IL_084a: call System.Windows.Forms.Form::add_FormClosing
+    IL_084f: ldarg.0
+    IL_0850: ldarg.0
+    IL_0851: ldftn Architecture.WinApp.AttachmentViewWithDeleteOption::Form1_Load
+    IL_0857: newobj System.EventHandler::.ctor
+    IL_085c: call System.Windows.Forms.Form::add_Load
+    IL_0861: ldarg.0
+    IL_0862: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel1
+    IL_0867: ldc.i4.0
+    IL_0868: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_086d: ldarg.0
+    IL_086e: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel2
+    IL_0873: ldc.i4.0
+    IL_0874: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0879: ldarg.0
+    IL_087a: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_087f: ldc.i4.0
+    IL_0880: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0885: ldarg.0
+    IL_0886: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel4
+    IL_088b: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0890: ldarg.0
+    IL_0891: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_0896: ldc.i4.0
+    IL_0897: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_089c: ldarg.0
+    IL_089d: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel3
+    IL_08a2: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_08a7: ldarg.0
+    IL_08a8: ldfld Architecture.WinApp.AttachmentViewWithDeleteOption::panel5
+    IL_08ad: ldc.i4.0
+    IL_08ae: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_08b3: ldarg.0
+    IL_08b4: ldc.i4.0
+    IL_08b5: call System.Windows.Forms.Control::ResumeLayout
+    IL_08ba: ret

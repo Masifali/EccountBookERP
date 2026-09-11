@@ -1,0 +1,838 @@
+
+====================================================================================================
+CLASS Costura.AssemblyLoader
+====================================================================================================
+
+; Costura.AssemblyLoader::CultureToString  (rva=0x2b8dc87, tiny header, code_size=16, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: brtrue.s IL_0009
+    IL_0003: ldsfld System.String::Empty
+    IL_0008: ret
+    IL_0009: ldarg.0
+    IL_000a: callvirt System.Globalization.CultureInfo::get_Name
+    IL_000f: ret
+
+; Costura.AssemblyLoader::ReadExistingAssembly  (rva=0x2b8dc98, fat header, code_size=100, max_stack=3, exception_handlers=no)
+    IL_0000: call System.AppDomain::get_CurrentDomain
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: callvirt System.AppDomain::GetAssemblies
+    IL_000c: stloc.1
+    IL_000d: ldloc.1
+    IL_000e: stloc.2
+    IL_000f: ldc.i4.0
+    IL_0010: stloc.3
+    IL_0011: br.s IL_005c
+    IL_0013: ldloc.2
+    IL_0014: ldloc.3
+    IL_0015: ldelem.ref
+    IL_0016: stloc.s 4
+    IL_0018: ldloc.s 4
+    IL_001a: callvirt System.Reflection.Assembly::GetName
+    IL_001f: stloc.s 5
+    IL_0021: ldloc.s 5
+    IL_0023: callvirt System.Reflection.AssemblyName::get_Name
+    IL_0028: ldarg.0
+    IL_0029: callvirt System.Reflection.AssemblyName::get_Name
+    IL_002e: ldc.i4.3
+    IL_002f: call System.String::Equals
+    IL_0034: brfalse.s IL_0058
+    IL_0036: ldloc.s 5
+    IL_0038: callvirt System.Reflection.AssemblyName::get_CultureInfo
+    IL_003d: call Costura.AssemblyLoader::CultureToString
+    IL_0042: ldarg.0
+    IL_0043: callvirt System.Reflection.AssemblyName::get_CultureInfo
+    IL_0048: call Costura.AssemblyLoader::CultureToString
+    IL_004d: ldc.i4.3
+    IL_004e: call System.String::Equals
+    IL_0053: brfalse.s IL_0058
+    IL_0055: ldloc.s 4
+    IL_0057: ret
+    IL_0058: ldloc.3
+    IL_0059: ldc.i4.1
+    IL_005a: add
+    IL_005b: stloc.3
+    IL_005c: ldloc.3
+    IL_005d: ldloc.2
+    IL_005e: ldlen
+    IL_005f: conv.i4
+    IL_0060: blt.s IL_0013
+    IL_0062: ldnull
+    IL_0063: ret
+
+; Costura.AssemblyLoader::GetAssemblyResourceName  (rva=0x2b8dd08, fat header, code_size=68, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: callvirt System.Reflection.AssemblyName::get_Name
+    IL_0006: callvirt System.String::ToLowerInvariant
+    IL_000b: stloc.0
+    IL_000c: ldarg.0
+    IL_000d: callvirt System.Reflection.AssemblyName::get_CultureInfo
+    IL_0012: brfalse.s IL_0042
+    IL_0014: ldarg.0
+    IL_0015: callvirt System.Reflection.AssemblyName::get_CultureInfo
+    IL_001a: callvirt System.Globalization.CultureInfo::get_Name
+    IL_001f: call System.String::IsNullOrEmpty
+    IL_0024: brtrue.s IL_0042
+    IL_0026: ldarg.0
+    IL_0027: callvirt System.Reflection.AssemblyName::get_CultureInfo
+    IL_002c: call Costura.AssemblyLoader::CultureToString
+    IL_0031: ldstr ldstr "."
+    IL_0036: ldloc.0
+    IL_0037: call System.String::Concat
+    IL_003c: callvirt System.String::ToLowerInvariant
+    IL_0041: stloc.0
+    IL_0042: ldloc.0
+    IL_0043: ret
+
+; Costura.AssemblyLoader::CopyTo  (rva=0x2b8dd58, fat header, code_size=38, max_stack=4, exception_handlers=no)
+    IL_0000: ldc.i4 81920
+    IL_0005: newarr System.Byte
+    IL_000a: stloc.0
+    IL_000b: br.s IL_0016
+    IL_000d: ldarg.1
+    IL_000e: ldloc.0
+    IL_000f: ldc.i4.0
+    IL_0010: ldloc.1
+    IL_0011: callvirt System.IO.Stream::Write
+    IL_0016: ldarg.0
+    IL_0017: ldloc.0
+    IL_0018: ldc.i4.0
+    IL_0019: ldloc.0
+    IL_001a: ldlen
+    IL_001b: conv.i4
+    IL_001c: callvirt System.IO.Stream::Read
+    IL_0021: dup
+    IL_0022: stloc.1
+    IL_0023: brtrue.s IL_000d
+    IL_0025: ret
+
+; Costura.AssemblyLoader::LoadStream  (rva=0x2b8dd8c, fat header, code_size=92, max_stack=2, exception_handlers=yes)
+    IL_0000: call System.Reflection.Assembly::GetExecutingAssembly
+    IL_0005: stloc.0
+    IL_0006: ldarg.0
+    IL_0007: ldstr ldstr ".compressed"
+    IL_000c: callvirt System.String::EndsWith
+    IL_0011: brfalse.s IL_0051
+    IL_0013: ldloc.0
+    IL_0014: ldarg.0
+    IL_0015: callvirt System.Reflection.Assembly::GetManifestResourceStream
+    IL_001a: stloc.1
+    IL_001b: ldloc.1
+    IL_001c: ldc.i4.0
+    IL_001d: newobj System.IO.Compression.DeflateStream::.ctor
+    IL_0022: stloc.2
+    IL_0023: newobj System.IO.MemoryStream::.ctor
+    IL_0028: stloc.3
+    IL_0029: ldloc.2
+    IL_002a: ldloc.3
+    IL_002b: call Costura.AssemblyLoader::CopyTo
+    IL_0030: ldloc.3
+    IL_0031: ldc.i4.0
+    IL_0032: conv.i8
+    IL_0033: callvirt System.IO.Stream::set_Position
+    IL_0038: ldloc.3
+    IL_0039: stloc.s 4
+    IL_003b: leave.s IL_0059
+    IL_003d: ldloc.2
+    IL_003e: brfalse.s IL_0046
+    IL_0040: ldloc.2
+    IL_0041: callvirt System.IDisposable::Dispose
+    IL_0046: endfinally
+    IL_0047: ldloc.1
+    IL_0048: brfalse.s IL_0050
+    IL_004a: ldloc.1
+    IL_004b: callvirt System.IDisposable::Dispose
+    IL_0050: endfinally
+    IL_0051: ldloc.0
+    IL_0052: ldarg.0
+    IL_0053: callvirt System.Reflection.Assembly::GetManifestResourceStream
+    IL_0058: ret
+    IL_0059: ldloc.s 4
+    IL_005b: ret
+
+; Costura.AssemblyLoader::LoadStream  (rva=0x2b8de10, fat header, code_size=20, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.1
+    IL_0002: ldloca.s 0
+    IL_0004: callvirt TypeSpec#852::TryGetValue
+    IL_0009: brfalse.s IL_0012
+    IL_000b: ldloc.0
+    IL_000c: call Costura.AssemblyLoader::LoadStream
+    IL_0011: ret
+    IL_0012: ldnull
+    IL_0013: ret
+
+; Costura.AssemblyLoader::ReadStream  (rva=0x2b8de30, fat header, code_size=27, max_stack=4, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: callvirt System.IO.Stream::get_Length
+    IL_0006: conv.ovf.i
+    IL_0007: newarr System.Byte
+    IL_000c: stloc.0
+    IL_000d: ldarg.0
+    IL_000e: ldloc.0
+    IL_000f: ldc.i4.0
+    IL_0010: ldloc.0
+    IL_0011: ldlen
+    IL_0012: conv.i4
+    IL_0013: callvirt System.IO.Stream::Read
+    IL_0018: pop
+    IL_0019: ldloc.0
+    IL_001a: ret
+
+; Costura.AssemblyLoader::ReadFromEmbeddedResources  (rva=0x2b8de58, fat header, code_size=97, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.2
+    IL_0001: call Costura.AssemblyLoader::GetAssemblyResourceName
+    IL_0006: stloc.0
+    IL_0007: ldarg.0
+    IL_0008: ldloc.0
+    IL_0009: call Costura.AssemblyLoader::LoadStream
+    IL_000e: stloc.2
+    IL_000f: ldloc.2
+    IL_0010: brtrue.s IL_0016
+    IL_0012: ldnull
+    IL_0013: stloc.3
+    IL_0014: leave.s IL_005f
+    IL_0016: ldloc.2
+    IL_0017: call Costura.AssemblyLoader::ReadStream
+    IL_001c: stloc.1
+    IL_001d: leave.s IL_0029
+    IL_001f: ldloc.2
+    IL_0020: brfalse.s IL_0028
+    IL_0022: ldloc.2
+    IL_0023: callvirt System.IDisposable::Dispose
+    IL_0028: endfinally
+    IL_0029: ldarg.1
+    IL_002a: ldloc.0
+    IL_002b: call Costura.AssemblyLoader::LoadStream
+    IL_0030: stloc.s 4
+    IL_0032: ldloc.s 4
+    IL_0034: brfalse.s IL_004a
+    IL_0036: ldloc.s 4
+    IL_0038: call Costura.AssemblyLoader::ReadStream
+    IL_003d: stloc.s 5
+    IL_003f: ldloc.1
+    IL_0040: ldloc.s 5
+    IL_0042: call System.Reflection.Assembly::Load
+    IL_0047: stloc.3
+    IL_0048: leave.s IL_005f
+    IL_004a: leave.s IL_0058
+    IL_004c: ldloc.s 4
+    IL_004e: brfalse.s IL_0057
+    IL_0050: ldloc.s 4
+    IL_0052: callvirt System.IDisposable::Dispose
+    IL_0057: endfinally
+    IL_0058: ldloc.1
+    IL_0059: call System.Reflection.Assembly::Load
+    IL_005e: ret
+    IL_005f: ldloc.3
+    IL_0060: ret
+
+; Costura.AssemblyLoader::ResolveAssembly  (rva=0x2b8dee4, fat header, code_size=165, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.1
+    IL_0001: callvirt System.ResolveEventArgs::get_Name
+    IL_0006: stloc.0
+    IL_0007: ldloc.0
+    IL_0008: newobj System.Reflection.AssemblyName::.ctor
+    IL_000d: stloc.1
+    IL_000e: ldsfld Costura.AssemblyLoader::nullCacheLock
+    IL_0013: stloc.3
+    IL_0014: ldc.i4.0
+    IL_0015: stloc.s 4
+    IL_0017: ldloc.3
+    IL_0018: ldloca.s 4
+    IL_001a: call System.Threading.Monitor::Enter
+    IL_001f: ldsfld Costura.AssemblyLoader::nullCache
+    IL_0024: ldloc.0
+    IL_0025: callvirt TypeSpec#2295::ContainsKey
+    IL_002a: brfalse.s IL_0031
+    IL_002c: ldnull
+    IL_002d: stloc.s 5
+    IL_002f: leave.s IL_00a2
+    IL_0031: leave.s IL_003e
+    IL_0033: ldloc.s 4
+    IL_0035: brfalse.s IL_003d
+    IL_0037: ldloc.3
+    IL_0038: call System.Threading.Monitor::Exit
+    IL_003d: endfinally
+    IL_003e: ldloc.1
+    IL_003f: call Costura.AssemblyLoader::ReadExistingAssembly
+    IL_0044: stloc.2
+    IL_0045: ldloc.2
+    IL_0046: brfalse.s IL_004a
+    IL_0048: ldloc.2
+    IL_0049: ret
+    IL_004a: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_004f: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_0054: ldloc.1
+    IL_0055: call Costura.AssemblyLoader::ReadFromEmbeddedResources
+    IL_005a: stloc.2
+    IL_005b: ldloc.2
+    IL_005c: brtrue.s IL_00a0
+    IL_005e: ldsfld Costura.AssemblyLoader::nullCacheLock
+    IL_0063: stloc.s 6
+    IL_0065: ldc.i4.0
+    IL_0066: stloc.s 7
+    IL_0068: ldloc.s 6
+    IL_006a: ldloca.s 7
+    IL_006c: call System.Threading.Monitor::Enter
+    IL_0071: ldsfld Costura.AssemblyLoader::nullCache
+    IL_0076: ldloc.0
+    IL_0077: ldc.i4.1
+    IL_0078: callvirt TypeSpec#2295::set_Item
+    IL_007d: leave.s IL_008b
+    IL_007f: ldloc.s 7
+    IL_0081: brfalse.s IL_008a
+    IL_0083: ldloc.s 6
+    IL_0085: call System.Threading.Monitor::Exit
+    IL_008a: endfinally
+    IL_008b: ldloc.1
+    IL_008c: callvirt System.Reflection.AssemblyName::get_Flags
+    IL_0091: ldc.i4 256
+    IL_0096: and
+    IL_0097: brfalse.s IL_00a0
+    IL_0099: ldloc.1
+    IL_009a: call System.Reflection.Assembly::Load
+    IL_009f: stloc.2
+    IL_00a0: ldloc.2
+    IL_00a1: ret
+    IL_00a2: ldloc.s 5
+    IL_00a4: ret
+
+; Costura.AssemblyLoader::.cctor  (rva=0x2b8dfb4, fat header, code_size=2561, max_stack=3, exception_handlers=no)
+    IL_0000: newobj System.Object::.ctor
+    IL_0005: stsfld Costura.AssemblyLoader::nullCacheLock
+    IL_000a: newobj TypeSpec#2295::.ctor
+    IL_000f: stsfld Costura.AssemblyLoader::nullCache
+    IL_0014: newobj TypeSpec#852::.ctor
+    IL_0019: stsfld Costura.AssemblyLoader::assemblyNames
+    IL_001e: newobj TypeSpec#852::.ctor
+    IL_0023: stsfld Costura.AssemblyLoader::symbolNames
+    IL_0028: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_002d: ldstr ldstr "aforge"
+    IL_0032: ldstr ldstr "costura.aforge.dll.compressed"
+    IL_0037: callvirt TypeSpec#852::Add
+    IL_003c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0041: ldstr ldstr "aforge.video.directshow"
+    IL_0046: ldstr ldstr "costura.aforge.video.directshow.dll.compressed"
+    IL_004b: callvirt TypeSpec#852::Add
+    IL_0050: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0055: ldstr ldstr "aforge.video"
+    IL_005a: ldstr ldstr "costura.aforge.video.dll.compressed"
+    IL_005f: callvirt TypeSpec#852::Add
+    IL_0064: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0069: ldstr ldstr "architecture.bll"
+    IL_006e: ldstr ldstr "costura.architecture.bll.dll.compressed"
+    IL_0073: callvirt TypeSpec#852::Add
+    IL_0078: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_007d: ldstr ldstr "architecture.bll"
+    IL_0082: ldstr ldstr "costura.architecture.bll.pdb.compressed"
+    IL_0087: callvirt TypeSpec#852::Add
+    IL_008c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0091: ldstr ldstr "architecture.common"
+    IL_0096: ldstr ldstr "costura.architecture.common.dll.compressed"
+    IL_009b: callvirt TypeSpec#852::Add
+    IL_00a0: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_00a5: ldstr ldstr "architecture.common"
+    IL_00aa: ldstr ldstr "costura.architecture.common.pdb.compressed"
+    IL_00af: callvirt TypeSpec#852::Add
+    IL_00b4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_00b9: ldstr ldstr "architecture.dal"
+    IL_00be: ldstr ldstr "costura.architecture.dal.dll.compressed"
+    IL_00c3: callvirt TypeSpec#852::Add
+    IL_00c8: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_00cd: ldstr ldstr "architecture.dal"
+    IL_00d2: ldstr ldstr "costura.architecture.dal.pdb.compressed"
+    IL_00d7: callvirt TypeSpec#852::Add
+    IL_00dc: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_00e1: ldstr ldstr "architecture.model"
+    IL_00e6: ldstr ldstr "costura.architecture.model.dll.compressed"
+    IL_00eb: callvirt TypeSpec#852::Add
+    IL_00f0: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_00f5: ldstr ldstr "architecture.model"
+    IL_00fa: ldstr ldstr "costura.architecture.model.pdb.compressed"
+    IL_00ff: callvirt TypeSpec#852::Add
+    IL_0104: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0109: ldstr ldstr "architecture.psdsms"
+    IL_010e: ldstr ldstr "costura.architecture.psdsms.exe.compressed"
+    IL_0113: callvirt TypeSpec#852::Add
+    IL_0118: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_011d: ldstr ldstr "architecture.psdsms"
+    IL_0122: ldstr ldstr "costura.architecture.psdsms.pdb.compressed"
+    IL_0127: callvirt TypeSpec#852::Add
+    IL_012c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0131: ldstr ldstr "architecture.reports"
+    IL_0136: ldstr ldstr "costura.architecture.reports.exe.compressed"
+    IL_013b: callvirt TypeSpec#852::Add
+    IL_0140: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_0145: ldstr ldstr "architecture.reports"
+    IL_014a: ldstr ldstr "costura.architecture.reports.pdb.compressed"
+    IL_014f: callvirt TypeSpec#852::Add
+    IL_0154: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0159: ldstr ldstr "architecture.webcamera"
+    IL_015e: ldstr ldstr "costura.architecture.webcamera.dll.compressed"
+    IL_0163: callvirt TypeSpec#852::Add
+    IL_0168: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_016d: ldstr ldstr "architecture.webcamera"
+    IL_0172: ldstr ldstr "costura.architecture.webcamera.pdb.compressed"
+    IL_0177: callvirt TypeSpec#852::Add
+    IL_017c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0181: ldstr ldstr "architecture.webhelper"
+    IL_0186: ldstr ldstr "costura.architecture.webhelper.dll.compressed"
+    IL_018b: callvirt TypeSpec#852::Add
+    IL_0190: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_0195: ldstr ldstr "architecture.webhelper"
+    IL_019a: ldstr ldstr "costura.architecture.webhelper.pdb.compressed"
+    IL_019f: callvirt TypeSpec#852::Add
+    IL_01a4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_01a9: ldstr ldstr "architecture.zktfingerprint"
+    IL_01ae: ldstr ldstr "costura.architecture.zktfingerprint.dll.compressed"
+    IL_01b3: callvirt TypeSpec#852::Add
+    IL_01b8: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_01bd: ldstr ldstr "architecture.zktfingerprint"
+    IL_01c2: ldstr ldstr "costura.architecture.zktfingerprint.pdb.compressed"
+    IL_01c7: callvirt TypeSpec#852::Add
+    IL_01cc: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_01d1: ldstr ldstr "axinterop.wmplib"
+    IL_01d6: ldstr ldstr "costura.axinterop.wmplib.dll.compressed"
+    IL_01db: callvirt TypeSpec#852::Add
+    IL_01e0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_01e5: ldstr ldstr "circularprogressbar"
+    IL_01ea: ldstr ldstr "costura.circularprogressbar.dll.compressed"
+    IL_01ef: callvirt TypeSpec#852::Add
+    IL_01f4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_01f9: ldstr ldstr "crystaldecisions.crystalreports.design"
+    IL_01fe: ldstr ldstr "costura.crystaldecisions.crystalreports.design.dll.compressed"
+    IL_0203: callvirt TypeSpec#852::Add
+    IL_0208: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_020d: ldstr ldstr "crystaldecisions.crystalreports.engine"
+    IL_0212: ldstr ldstr "costura.crystaldecisions.crystalreports.engine.dll.compressed"
+    IL_0217: callvirt TypeSpec#852::Add
+    IL_021c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0221: ldstr ldstr "crystaldecisions.reportappserver.clientdoc"
+    IL_0226: ldstr ldstr "costura.crystaldecisions.reportappserver.clientdoc.dll.compressed"
+    IL_022b: callvirt TypeSpec#852::Add
+    IL_0230: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0235: ldstr ldstr "crystaldecisions.reportappserver.commlayer"
+    IL_023a: ldstr ldstr "costura.crystaldecisions.reportappserver.commlayer.dll.compressed"
+    IL_023f: callvirt TypeSpec#852::Add
+    IL_0244: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0249: ldstr ldstr "crystaldecisions.reportappserver.commoncontrols"
+    IL_024e: ldstr ldstr "costura.crystaldecisions.reportappserver.commoncontrols.dll.compressed"
+    IL_0253: callvirt TypeSpec#852::Add
+    IL_0258: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_025d: ldstr ldstr "crystaldecisions.reportappserver.commonobjectmodel"
+    IL_0262: ldstr ldstr "costura.crystaldecisions.reportappserver.commonobjectmodel.dll.compressed"
+    IL_0267: callvirt TypeSpec#852::Add
+    IL_026c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0271: ldstr ldstr "crystaldecisions.reportappserver.controllers"
+    IL_0276: ldstr ldstr "costura.crystaldecisions.reportappserver.controllers.dll.compressed"
+    IL_027b: callvirt TypeSpec#852::Add
+    IL_0280: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0285: ldstr ldstr "crystaldecisions.reportappserver.cubedefmodel"
+    IL_028a: ldstr ldstr "costura.crystaldecisions.reportappserver.cubedefmodel.dll.compressed"
+    IL_028f: callvirt TypeSpec#852::Add
+    IL_0294: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0299: ldstr ldstr "crystaldecisions.reportappserver.datadefmodel"
+    IL_029e: ldstr ldstr "costura.crystaldecisions.reportappserver.datadefmodel.dll.compressed"
+    IL_02a3: callvirt TypeSpec#852::Add
+    IL_02a8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_02ad: ldstr ldstr "crystaldecisions.reportappserver.datasetconversion"
+    IL_02b2: ldstr ldstr "costura.crystaldecisions.reportappserver.datasetconversion.dll.compressed"
+    IL_02b7: callvirt TypeSpec#852::Add
+    IL_02bc: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_02c1: ldstr ldstr "crystaldecisions.reportappserver.objectfactory"
+    IL_02c6: ldstr ldstr "costura.crystaldecisions.reportappserver.objectfactory.dll.compressed"
+    IL_02cb: callvirt TypeSpec#852::Add
+    IL_02d0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_02d5: ldstr ldstr "crystaldecisions.reportappserver.prompting"
+    IL_02da: ldstr ldstr "costura.crystaldecisions.reportappserver.prompting.dll.compressed"
+    IL_02df: callvirt TypeSpec#852::Add
+    IL_02e4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_02e9: ldstr ldstr "crystaldecisions.reportappserver.reportdefmodel"
+    IL_02ee: ldstr ldstr "costura.crystaldecisions.reportappserver.reportdefmodel.dll.compressed"
+    IL_02f3: callvirt TypeSpec#852::Add
+    IL_02f8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_02fd: ldstr ldstr "crystaldecisions.reportappserver.xmlserialize"
+    IL_0302: ldstr ldstr "costura.crystaldecisions.reportappserver.xmlserialize.dll.compressed"
+    IL_0307: callvirt TypeSpec#852::Add
+    IL_030c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0311: ldstr ldstr "crystaldecisions.reportsource"
+    IL_0316: ldstr ldstr "costura.crystaldecisions.reportsource.dll.compressed"
+    IL_031b: callvirt TypeSpec#852::Add
+    IL_0320: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0325: ldstr ldstr "crystaldecisions.shared"
+    IL_032a: ldstr ldstr "costura.crystaldecisions.shared.dll.compressed"
+    IL_032f: callvirt TypeSpec#852::Add
+    IL_0334: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0339: ldstr ldstr "crystaldecisions.web"
+    IL_033e: ldstr ldstr "costura.crystaldecisions.web.dll.compressed"
+    IL_0343: callvirt TypeSpec#852::Add
+    IL_0348: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_034d: ldstr ldstr "crystaldecisions.windows.forms"
+    IL_0352: ldstr ldstr "costura.crystaldecisions.windows.forms.dll.compressed"
+    IL_0357: callvirt TypeSpec#852::Add
+    IL_035c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0361: ldstr ldstr "dotnetzip"
+    IL_0366: ldstr ldstr "costura.dotnetzip.dll.compressed"
+    IL_036b: callvirt TypeSpec#852::Add
+    IL_0370: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_0375: ldstr ldstr "dotnetzip"
+    IL_037a: ldstr ldstr "costura.dotnetzip.pdb.compressed"
+    IL_037f: callvirt TypeSpec#852::Add
+    IL_0384: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0389: ldstr ldstr "edsdklib"
+    IL_038e: ldstr ldstr "costura.edsdklib.dll.compressed"
+    IL_0393: callvirt TypeSpec#852::Add
+    IL_0398: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_039d: ldstr ldstr "edsdklib"
+    IL_03a2: ldstr ldstr "costura.edsdklib.pdb.compressed"
+    IL_03a7: callvirt TypeSpec#852::Add
+    IL_03ac: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_03b1: ldstr ldstr "epplus"
+    IL_03b6: ldstr ldstr "costura.epplus.dll.compressed"
+    IL_03bb: callvirt TypeSpec#852::Add
+    IL_03c0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_03c5: ldstr ldstr "epplus.interfaces"
+    IL_03ca: ldstr ldstr "costura.epplus.interfaces.dll.compressed"
+    IL_03cf: callvirt TypeSpec#852::Add
+    IL_03d4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_03d9: ldstr ldstr "epplus.system.drawing"
+    IL_03de: ldstr ldstr "costura.epplus.system.drawing.dll.compressed"
+    IL_03e3: callvirt TypeSpec#852::Add
+    IL_03e8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_03ed: ldstr ldstr "exceldatareader.dataset"
+    IL_03f2: ldstr ldstr "costura.exceldatareader.dataset.dll.compressed"
+    IL_03f7: callvirt TypeSpec#852::Add
+    IL_03fc: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_0401: ldstr ldstr "exceldatareader.dataset"
+    IL_0406: ldstr ldstr "costura.exceldatareader.dataset.pdb.compressed"
+    IL_040b: callvirt TypeSpec#852::Add
+    IL_0410: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0415: ldstr ldstr "exceldatareader"
+    IL_041a: ldstr ldstr "costura.exceldatareader.dll.compressed"
+    IL_041f: callvirt TypeSpec#852::Add
+    IL_0424: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_0429: ldstr ldstr "exceldatareader"
+    IL_042e: ldstr ldstr "costura.exceldatareader.pdb.compressed"
+    IL_0433: callvirt TypeSpec#852::Add
+    IL_0438: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_043d: ldstr ldstr "gsmcommserver"
+    IL_0442: ldstr ldstr "costura.gsmcommserver.dll.compressed"
+    IL_0447: callvirt TypeSpec#852::Add
+    IL_044c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0451: ldstr ldstr "gsmcommshared"
+    IL_0456: ldstr ldstr "costura.gsmcommshared.dll.compressed"
+    IL_045b: callvirt TypeSpec#852::Add
+    IL_0460: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0465: ldstr ldstr "gsmcommunication"
+    IL_046a: ldstr ldstr "costura.gsmcommunication.dll.compressed"
+    IL_046f: callvirt TypeSpec#852::Add
+    IL_0474: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0479: ldstr ldstr "icsharpcode.sharpziplib"
+    IL_047e: ldstr ldstr "costura.icsharpcode.sharpziplib.dll.compressed"
+    IL_0483: callvirt TypeSpec#852::Add
+    IL_0488: ldsfld Costura.AssemblyLoader::symbolNames
+    IL_048d: ldstr ldstr "icsharpcode.sharpziplib"
+    IL_0492: ldstr ldstr "costura.icsharpcode.sharpziplib.pdb.compressed"
+    IL_0497: callvirt TypeSpec#852::Add
+    IL_049c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_04a1: ldstr ldstr "infragistics2.documents.v10.1"
+    IL_04a6: ldstr ldstr "costura.infragistics2.documents.v10.1.dll.compressed"
+    IL_04ab: callvirt TypeSpec#852::Add
+    IL_04b0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_04b5: ldstr ldstr "infragistics2.excel.v10.1"
+    IL_04ba: ldstr ldstr "costura.infragistics2.excel.v10.1.dll.compressed"
+    IL_04bf: callvirt TypeSpec#852::Add
+    IL_04c4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_04c9: ldstr ldstr "infragistics2.shared.v10.1"
+    IL_04ce: ldstr ldstr "costura.infragistics2.shared.v10.1.dll.compressed"
+    IL_04d3: callvirt TypeSpec#852::Add
+    IL_04d8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_04dd: ldstr ldstr "infragistics2.win.appstylistsupport.v10.1"
+    IL_04e2: ldstr ldstr "costura.infragistics2.win.appstylistsupport.v10.1.dll.compressed"
+    IL_04e7: callvirt TypeSpec#852::Add
+    IL_04ec: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_04f1: ldstr ldstr "infragistics2.win.misc.v10.1"
+    IL_04f6: ldstr ldstr "costura.infragistics2.win.misc.v10.1.dll.compressed"
+    IL_04fb: callvirt TypeSpec#852::Add
+    IL_0500: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0505: ldstr ldstr "infragistics2.win.supportdialogs.v10.1"
+    IL_050a: ldstr ldstr "costura.infragistics2.win.supportdialogs.v10.1.dll.compressed"
+    IL_050f: callvirt TypeSpec#852::Add
+    IL_0514: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0519: ldstr ldstr "infragistics2.win.ultrachart.v10.1.design"
+    IL_051e: ldstr ldstr "costura.infragistics2.win.ultrachart.v10.1.design.dll.compressed"
+    IL_0523: callvirt TypeSpec#852::Add
+    IL_0528: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_052d: ldstr ldstr "infragistics2.win.ultragauge.v10.1.design"
+    IL_0532: ldstr ldstr "costura.infragistics2.win.ultragauge.v10.1.design.dll.compressed"
+    IL_0537: callvirt TypeSpec#852::Add
+    IL_053c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0541: ldstr ldstr "infragistics2.win.ultrawincalcmanager.v10.1"
+    IL_0546: ldstr ldstr "costura.infragistics2.win.ultrawincalcmanager.v10.1.dll.compressed"
+    IL_054b: callvirt TypeSpec#852::Add
+    IL_0550: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0555: ldstr ldstr "infragistics2.win.ultrawincalcmanager.v10.1.formulabuilder"
+    IL_055a: ldstr ldstr "costura.infragistics2.win.ultrawincalcmanager.v10.1.formulabuilder.dll.compressed"
+    IL_055f: callvirt TypeSpec#852::Add
+    IL_0564: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0569: ldstr ldstr "infragistics2.win.ultrawinchart.v10.1"
+    IL_056e: ldstr ldstr "costura.infragistics2.win.ultrawinchart.v10.1.dll.compressed"
+    IL_0573: callvirt TypeSpec#852::Add
+    IL_0578: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_057d: ldstr ldstr "infragistics2.win.ultrawindatasource.v10.1"
+    IL_0582: ldstr ldstr "costura.infragistics2.win.ultrawindatasource.v10.1.dll.compressed"
+    IL_0587: callvirt TypeSpec#852::Add
+    IL_058c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0591: ldstr ldstr "infragistics2.win.ultrawindock.v10.1"
+    IL_0596: ldstr ldstr "costura.infragistics2.win.ultrawindock.v10.1.dll.compressed"
+    IL_059b: callvirt TypeSpec#852::Add
+    IL_05a0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_05a5: ldstr ldstr "infragistics2.win.ultrawineditors.v10.1"
+    IL_05aa: ldstr ldstr "costura.infragistics2.win.ultrawineditors.v10.1.dll.compressed"
+    IL_05af: callvirt TypeSpec#852::Add
+    IL_05b4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_05b9: ldstr ldstr "infragistics2.win.ultrawinexplorerbar.v10.1"
+    IL_05be: ldstr ldstr "costura.infragistics2.win.ultrawinexplorerbar.v10.1.dll.compressed"
+    IL_05c3: callvirt TypeSpec#852::Add
+    IL_05c8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_05cd: ldstr ldstr "infragistics2.win.ultrawinganttview.v10.1"
+    IL_05d2: ldstr ldstr "costura.infragistics2.win.ultrawinganttview.v10.1.dll.compressed"
+    IL_05d7: callvirt TypeSpec#852::Add
+    IL_05dc: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_05e1: ldstr ldstr "infragistics2.win.ultrawingauge.v10.1"
+    IL_05e6: ldstr ldstr "costura.infragistics2.win.ultrawingauge.v10.1.dll.compressed"
+    IL_05eb: callvirt TypeSpec#852::Add
+    IL_05f0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_05f5: ldstr ldstr "infragistics2.win.ultrawingrid.documentexport.v10.1"
+    IL_05fa: ldstr ldstr "costura.infragistics2.win.ultrawingrid.documentexport.v10.1.dll.compressed"
+    IL_05ff: callvirt TypeSpec#852::Add
+    IL_0604: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0609: ldstr ldstr "infragistics2.win.ultrawingrid.excelexport.v10.1"
+    IL_060e: ldstr ldstr "costura.infragistics2.win.ultrawingrid.excelexport.v10.1.dll.compressed"
+    IL_0613: callvirt TypeSpec#852::Add
+    IL_0618: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_061d: ldstr ldstr "infragistics2.win.ultrawingrid.v10.1"
+    IL_0622: ldstr ldstr "costura.infragistics2.win.ultrawingrid.v10.1.dll.compressed"
+    IL_0627: callvirt TypeSpec#852::Add
+    IL_062c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0631: ldstr ldstr "infragistics2.win.ultrawininkprovider.ink17.v10.1"
+    IL_0636: ldstr ldstr "costura.infragistics2.win.ultrawininkprovider.ink17.v10.1.dll.compressed"
+    IL_063b: callvirt TypeSpec#852::Add
+    IL_0640: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0645: ldstr ldstr "infragistics2.win.ultrawininkprovider.v10.1"
+    IL_064a: ldstr ldstr "costura.infragistics2.win.ultrawininkprovider.v10.1.dll.compressed"
+    IL_064f: callvirt TypeSpec#852::Add
+    IL_0654: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0659: ldstr ldstr "infragistics2.win.ultrawinlistbar.v10.1"
+    IL_065e: ldstr ldstr "costura.infragistics2.win.ultrawinlistbar.v10.1.dll.compressed"
+    IL_0663: callvirt TypeSpec#852::Add
+    IL_0668: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_066d: ldstr ldstr "infragistics2.win.ultrawinlistview.v10.1"
+    IL_0672: ldstr ldstr "costura.infragistics2.win.ultrawinlistview.v10.1.dll.compressed"
+    IL_0677: callvirt TypeSpec#852::Add
+    IL_067c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0681: ldstr ldstr "infragistics2.win.ultrawinmaskededit.v10.1"
+    IL_0686: ldstr ldstr "costura.infragistics2.win.ultrawinmaskededit.v10.1.dll.compressed"
+    IL_068b: callvirt TypeSpec#852::Add
+    IL_0690: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0695: ldstr ldstr "infragistics2.win.ultrawinprintpreviewdialog.v10.1"
+    IL_069a: ldstr ldstr "costura.infragistics2.win.ultrawinprintpreviewdialog.v10.1.dll.compressed"
+    IL_069f: callvirt TypeSpec#852::Add
+    IL_06a4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_06a9: ldstr ldstr "infragistics2.win.ultrawinschedule.v10.1"
+    IL_06ae: ldstr ldstr "costura.infragistics2.win.ultrawinschedule.v10.1.dll.compressed"
+    IL_06b3: callvirt TypeSpec#852::Add
+    IL_06b8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_06bd: ldstr ldstr "infragistics2.win.ultrawinspellchecker.v10.1"
+    IL_06c2: ldstr ldstr "costura.infragistics2.win.ultrawinspellchecker.v10.1.dll.compressed"
+    IL_06c7: callvirt TypeSpec#852::Add
+    IL_06cc: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_06d1: ldstr ldstr "infragistics2.win.ultrawinstatusbar.v10.1"
+    IL_06d6: ldstr ldstr "costura.infragistics2.win.ultrawinstatusbar.v10.1.dll.compressed"
+    IL_06db: callvirt TypeSpec#852::Add
+    IL_06e0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_06e5: ldstr ldstr "infragistics2.win.ultrawintabbedmdi.v10.1"
+    IL_06ea: ldstr ldstr "costura.infragistics2.win.ultrawintabbedmdi.v10.1.dll.compressed"
+    IL_06ef: callvirt TypeSpec#852::Add
+    IL_06f4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_06f9: ldstr ldstr "infragistics2.win.ultrawintabcontrol.v10.1"
+    IL_06fe: ldstr ldstr "costura.infragistics2.win.ultrawintabcontrol.v10.1.dll.compressed"
+    IL_0703: callvirt TypeSpec#852::Add
+    IL_0708: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_070d: ldstr ldstr "infragistics2.win.ultrawintoolbars.v10.1"
+    IL_0712: ldstr ldstr "costura.infragistics2.win.ultrawintoolbars.v10.1.dll.compressed"
+    IL_0717: callvirt TypeSpec#852::Add
+    IL_071c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0721: ldstr ldstr "infragistics2.win.ultrawintree.v10.1"
+    IL_0726: ldstr ldstr "costura.infragistics2.win.ultrawintree.v10.1.dll.compressed"
+    IL_072b: callvirt TypeSpec#852::Add
+    IL_0730: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0735: ldstr ldstr "infragistics2.win.v10.1.design"
+    IL_073a: ldstr ldstr "costura.infragistics2.win.v10.1.design.dll.compressed"
+    IL_073f: callvirt TypeSpec#852::Add
+    IL_0744: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0749: ldstr ldstr "infragistics2.win.v10.1"
+    IL_074e: ldstr ldstr "costura.infragistics2.win.v10.1.dll.compressed"
+    IL_0753: callvirt TypeSpec#852::Add
+    IL_0758: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_075d: ldstr ldstr "interop.zkemkeeper"
+    IL_0762: ldstr ldstr "costura.interop.zkemkeeper.dll.compressed"
+    IL_0767: callvirt TypeSpec#852::Add
+    IL_076c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0771: ldstr ldstr "janus.data.v3"
+    IL_0776: ldstr ldstr "costura.janus.data.v3.dll.compressed"
+    IL_077b: callvirt TypeSpec#852::Add
+    IL_0780: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0785: ldstr ldstr "janus.windows.buttonbar.v3"
+    IL_078a: ldstr ldstr "costura.janus.windows.buttonbar.v3.dll.compressed"
+    IL_078f: callvirt TypeSpec#852::Add
+    IL_0794: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0799: ldstr ldstr "janus.windows.calendarcombo.v3"
+    IL_079e: ldstr ldstr "costura.janus.windows.calendarcombo.v3.dll.compressed"
+    IL_07a3: callvirt TypeSpec#852::Add
+    IL_07a8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_07ad: ldstr ldstr "janus.windows.common.v3"
+    IL_07b2: ldstr ldstr "costura.janus.windows.common.v3.dll.compressed"
+    IL_07b7: callvirt TypeSpec#852::Add
+    IL_07bc: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_07c1: ldstr ldstr "janus.windows.explorerbar.v3"
+    IL_07c6: ldstr ldstr "costura.janus.windows.explorerbar.v3.dll.compressed"
+    IL_07cb: callvirt TypeSpec#852::Add
+    IL_07d0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_07d5: ldstr ldstr "janus.windows.filtereditor.v3"
+    IL_07da: ldstr ldstr "costura.janus.windows.filtereditor.v3.dll.compressed"
+    IL_07df: callvirt TypeSpec#852::Add
+    IL_07e4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_07e9: ldstr ldstr "janus.windows.gridex.v3"
+    IL_07ee: ldstr ldstr "costura.janus.windows.gridex.v3.dll.compressed"
+    IL_07f3: callvirt TypeSpec#852::Add
+    IL_07f8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_07fd: ldstr ldstr "janus.windows.ribbon.v3"
+    IL_0802: ldstr ldstr "costura.janus.windows.ribbon.v3.dll.compressed"
+    IL_0807: callvirt TypeSpec#852::Add
+    IL_080c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0811: ldstr ldstr "janus.windows.schedule.v3"
+    IL_0816: ldstr ldstr "costura.janus.windows.schedule.v3.dll.compressed"
+    IL_081b: callvirt TypeSpec#852::Add
+    IL_0820: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0825: ldstr ldstr "janus.windows.timeline.v3"
+    IL_082a: ldstr ldstr "costura.janus.windows.timeline.v3.dll.compressed"
+    IL_082f: callvirt TypeSpec#852::Add
+    IL_0834: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0839: ldstr ldstr "janus.windows.ui.v3"
+    IL_083e: ldstr ldstr "costura.janus.windows.ui.v3.dll.compressed"
+    IL_0843: callvirt TypeSpec#852::Add
+    IL_0848: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_084d: ldstr ldstr "libzkfpcsharp"
+    IL_0852: ldstr ldstr "costura.libzkfpcsharp.dll.compressed"
+    IL_0857: callvirt TypeSpec#852::Add
+    IL_085c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0861: ldstr ldstr "log4net"
+    IL_0866: ldstr ldstr "costura.log4net.dll.compressed"
+    IL_086b: callvirt TypeSpec#852::Add
+    IL_0870: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0875: ldstr ldstr "microsoft.practices.enterpriselibrary.common"
+    IL_087a: ldstr ldstr "costura.microsoft.practices.enterpriselibrary.common.dll.compressed"
+    IL_087f: callvirt TypeSpec#852::Add
+    IL_0884: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0889: ldstr ldstr "microsoft.practices.enterpriselibrary.data"
+    IL_088e: ldstr ldstr "costura.microsoft.practices.enterpriselibrary.data.dll.compressed"
+    IL_0893: callvirt TypeSpec#852::Add
+    IL_0898: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_089d: ldstr ldstr "newtonsoft.json"
+    IL_08a2: ldstr ldstr "costura.newtonsoft.json.dll.compressed"
+    IL_08a7: callvirt TypeSpec#852::Add
+    IL_08ac: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_08b1: ldstr ldstr "pduconverter"
+    IL_08b6: ldstr ldstr "costura.pduconverter.dll.compressed"
+    IL_08bb: callvirt TypeSpec#852::Add
+    IL_08c0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_08c5: ldstr ldstr "qrcoder"
+    IL_08ca: ldstr ldstr "costura.qrcoder.dll.compressed"
+    IL_08cf: callvirt TypeSpec#852::Add
+    IL_08d4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_08d9: ldstr ldstr "system.buffers"
+    IL_08de: ldstr ldstr "costura.system.buffers.dll.compressed"
+    IL_08e3: callvirt TypeSpec#852::Add
+    IL_08e8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_08ed: ldstr ldstr "system.configuration.configurationmanager"
+    IL_08f2: ldstr ldstr "costura.system.configuration.configurationmanager.dll.compressed"
+    IL_08f7: callvirt TypeSpec#852::Add
+    IL_08fc: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0901: ldstr ldstr "system.data.sqlserverce"
+    IL_0906: ldstr ldstr "costura.system.data.sqlserverce.dll.compressed"
+    IL_090b: callvirt TypeSpec#852::Add
+    IL_0910: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0915: ldstr ldstr "system.memory"
+    IL_091a: ldstr ldstr "costura.system.memory.dll.compressed"
+    IL_091f: callvirt TypeSpec#852::Add
+    IL_0924: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0929: ldstr ldstr "system.net.http.formatting"
+    IL_092e: ldstr ldstr "costura.system.net.http.formatting.dll.compressed"
+    IL_0933: callvirt TypeSpec#852::Add
+    IL_0938: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_093d: ldstr ldstr "system.numerics.vectors"
+    IL_0942: ldstr ldstr "costura.system.numerics.vectors.dll.compressed"
+    IL_0947: callvirt TypeSpec#852::Add
+    IL_094c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0951: ldstr ldstr "system.runtime.compilerservices.unsafe"
+    IL_0956: ldstr ldstr "costura.system.runtime.compilerservices.unsafe.dll.compressed"
+    IL_095b: callvirt TypeSpec#852::Add
+    IL_0960: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0965: ldstr ldstr "system.security.accesscontrol"
+    IL_096a: ldstr ldstr "costura.system.security.accesscontrol.dll.compressed"
+    IL_096f: callvirt TypeSpec#852::Add
+    IL_0974: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_0979: ldstr ldstr "system.security.permissions"
+    IL_097e: ldstr ldstr "costura.system.security.permissions.dll.compressed"
+    IL_0983: callvirt TypeSpec#852::Add
+    IL_0988: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_098d: ldstr ldstr "system.security.principal.windows"
+    IL_0992: ldstr ldstr "costura.system.security.principal.windows.dll.compressed"
+    IL_0997: callvirt TypeSpec#852::Add
+    IL_099c: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_09a1: ldstr ldstr "system.threading.tasks.extensions"
+    IL_09a6: ldstr ldstr "costura.system.threading.tasks.extensions.dll.compressed"
+    IL_09ab: callvirt TypeSpec#852::Add
+    IL_09b0: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_09b5: ldstr ldstr "webcam_capture"
+    IL_09ba: ldstr ldstr "costura.webcam_capture.dll.compressed"
+    IL_09bf: callvirt TypeSpec#852::Add
+    IL_09c4: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_09c9: ldstr ldstr "whatsappapi"
+    IL_09ce: ldstr ldstr "costura.whatsappapi.dll.compressed"
+    IL_09d3: callvirt TypeSpec#852::Add
+    IL_09d8: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_09dd: ldstr ldstr "winformanimation"
+    IL_09e2: ldstr ldstr "costura.winformanimation.dll.compressed"
+    IL_09e7: callvirt TypeSpec#852::Add
+    IL_09ec: ldsfld Costura.AssemblyLoader::assemblyNames
+    IL_09f1: ldstr ldstr "zen.barcode.core"
+    IL_09f6: ldstr ldstr "costura.zen.barcode.core.dll.compressed"
+    IL_09fb: callvirt TypeSpec#852::Add
+    IL_0a00: ret
+
+; Costura.AssemblyLoader::Attach  (rva=0x2b8e9c4, fat header, code_size=58, max_stack=3, exception_handlers=no)
+    IL_0000: ldsflda Costura.AssemblyLoader::isAttached
+    IL_0005: ldc.i4.1
+    IL_0006: call System.Threading.Interlocked::Exchange
+    IL_000b: ldc.i4.1
+    IL_000c: bne.un.s IL_000f
+    IL_000e: ret
+    IL_000f: ldarg.0
+    IL_0010: brfalse.s IL_0039
+    IL_0012: call System.AppDomain::get_CurrentDomain
+    IL_0017: stloc.0
+    IL_0018: ldloc.0
+    IL_0019: ldsfld <>O::<0>__ResolveAssembly
+    IL_001e: dup
+    IL_001f: brtrue.s IL_0034
+    IL_0021: pop
+    IL_0022: ldnull
+    IL_0023: ldftn Costura.AssemblyLoader::ResolveAssembly
+    IL_0029: newobj System.ResolveEventHandler::.ctor
+    IL_002e: dup
+    IL_002f: stsfld <>O::<0>__ResolveAssembly
+    IL_0034: callvirt System.AppDomain::add_AssemblyResolve
+    IL_0039: ret

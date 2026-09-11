@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EccountBookERP - Accounts Dashboard</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .erp-top-header {
+            background-color: #00796B;
+            color: #ffffff;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .erp-top-header .header-item {
+            margin-right: 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        .erp-top-header select {
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #cccccc;
+            border-radius: 2px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 6px;
+        }
+
+        .erp-top-header .company-title {
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .erp-top-header .right-item {
+            margin-left: auto;
+            color: #ffeb3b;
+        }
+
+        .erp-sub-bar {
+            background-color: #b0bec5;
+            height: 24px;
+            padding: 2px 10px;
+            font-size: 11px;
+            color: #37474f;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #90a4ae;
+        }
+
+        .erp-main-canvas {
+            background-color: #00796B;
+            min-height: calc(100vh - 62px);
+            padding: 15px 25px 40px 25px;
+        }
+
+        .erp-page-title {
+            color: #ffffff;
+            font-family: "Times New Roman", Georgia, serif;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .cards-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .erp-card {
+            background: #ffffff;
+            width: 220px;
+            border: 1px solid #b2dfdb;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: #333333;
+            transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            cursor: pointer;
+        }
+
+        .erp-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            text-decoration: none;
+            color: #333333;
+        }
+
+        .erp-card-header-badge {
+            background-color: #00796B;
+            color: #ffffff;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 6px 0;
+        }
+
+        .erp-card-body {
+            padding: 20px 10px 15px 10px;
+            text-align: center;
+        }
+
+        .erp-card-body .bank-icon {
+            font-size: 32px;
+            color: #26a69a;
+            margin-bottom: 12px;
+        }
+
+        .erp-card-body .card-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #111111;
+        }
+
+        .submodules-container {
+            margin-top: 25px;
+            background: #ffffff;
+            border-radius: 2px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .submodules-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00796B;
+            border-bottom: 2px solid #00796B;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .submodule-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 1200px) {
+            .submodule-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .submodule-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .submodule-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .submodule-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #00796B;
+            border-radius: 2px;
+            color: #333;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s ease;
+        }
+
+        .submodule-item:hover {
+            background: #e0f2f1;
+            color: #004d40;
+            text-decoration: none;
+        }
+
+        /* Quick Favorite Report Cards */
+        .favorite-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        @media (max-width: 1200px) { .favorite-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 800px) { .favorite-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .favorite-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            padding: 15px 8px;
+            text-align: center;
+            color: #111111;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: block;
+        }
+
+        .favorite-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: #00796B;
+            border-color: #00796B;
+        }
+
+        .favorite-card i {
+            color: #f43f5e;
+            font-size: 22px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .favorite-card .title {
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="erp-top-header">
+        <div class="header-item">
+            <i class="fa fa-arrow-right" style="margin-right: 8px;"></i>
+            <select>
+                <option>...Select Any Value...</option>
+            </select>
+        </div>
+        <div class="header-item">
+            <i class="fa fa-user" style="margin-right: 6px;"></i>
+            <span>Numan Rasheed (Admin)</span>
+        </div>
+        <div class="header-item company-title">
+            Golden Ace Rice Mills<br><small style="font-weight: normal;">(Pvt) Ltd.</small>
+        </div>
+        <div class="header-item">
+            <i class="fa fa-clock-o" style="margin-right: 6px;"></i>
+            <span id="liveClock">11:05:53 pm</span>
+        </div>
+        <div class="header-item">
+            <span>2026-27</span>
+        </div>
+        <div class="right-item">
+            <i class="fa fa-bell" style="margin-right: 4px;"></i>
+            <span>New Update is Available</span>
+        </div>
+    </div>
+
+    <div class="erp-sub-bar">
+        <i class="fa fa-window-maximize" style="margin-right: 6px;"></i>
+        <span>Screens &gt; Accounts Dashboard</span>
+    </div>
+
+    <div class="erp-main-canvas">
+        <div class="erp-page-title">Accounts Dashboard</div>
+
+        <!-- 4 Main Cards -->
+        <div class="cards-row">
+            <!-- Card 1: Account Definition (8) -->
+            <div class="erp-card" onclick="showCategory('def')">
+                <div class="erp-card-header-badge">8</div>
+                <div class="erp-card-body">
+                    <div class="bank-icon"><i class="fa fa-sitemap"></i></div>
+                    <div class="card-title">Account Definition</div>
+                </div>
+            </div>
+
+            <!-- Card 2: Accounts Transaction (18) -->
+            <div class="erp-card" onclick="showCategory('trans')">
+                <div class="erp-card-header-badge">18</div>
+                <div class="erp-card-body">
+                    <div class="bank-icon"><i class="fa fa-book"></i></div>
+                    <div class="card-title">Accounts Transaction</div>
+                </div>
+            </div>
+
+            <!-- Card 3: Account Reports (27) -->
+            <div class="erp-card" onclick="showCategory('reports')">
+                <div class="erp-card-header-badge">27</div>
+                <div class="erp-card-body">
+                    <div class="bank-icon"><i class="fa fa-line-chart"></i></div>
+                    <div class="card-title">Account Reports</div>
+                </div>
+            </div>
+
+            <!-- Card 4: Banking Management (7) -->
+            <div class="erp-card" onclick="showCategory('banking')">
+                <div class="erp-card-header-badge">7</div>
+                <div class="erp-card-body">
+                    <div class="bank-icon"><i class="fa fa-university"></i></div>
+                    <div class="card-title">Banking Management</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sub-modules section -->
+        <div id="submodulesSection" class="submodules-container">
+            <div id="submodulesTitle" class="submodules-header">Account Definition (8 Modules)</div>
+            <div id="submoduleGrid" class="submodule-grid">
+                <!-- Modules populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Quick Favorite Reports Section (Matching Desktop Screenshot) -->
+        <div class="submodules-container" style="margin-top: 20px;">
+            <div class="submodules-header"><i class="fa fa-star" style="color: #f43f5e; margin-right: 6px;"></i> Quick Favorite Reports & Shortcuts</div>
+            <div class="favorite-grid">
+                <a href="/accounts/reports/voucher-report" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Voucher Report</div>
+                </a>
+                <a href="/accounts/vouchers/voucher-validation" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Voucher Validation Report</div>
+                </a>
+                <a href="/accounts/reports/general-ledger-statement" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Accounts Activity Summary Report</div>
+                </a>
+                <a href="/accounts/reports/bank-balances" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Bank Balances Report</div>
+                </a>
+                <a href="/accounts/reports/bank-balances" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Cash Balances Report</div>
+                </a>
+                <a href="/accounts/reports/general-ledger" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">General Ledger Report</div>
+                </a>
+                <a href="/accounts/reports/customer-ledger" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Customer Ledger Report</div>
+                </a>
+                <a href="/accounts/reports/trial-balance" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Trial Balance</div>
+                </a>
+                <a href="/accounts/reports/selected-trial-balance" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Trial Balance Selected</div>
+                </a>
+                <a href="/accounts/reports/trial-balances-all-level" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Trial Balance All Levels</div>
+                </a>
+                <a href="/accounts/reports/payables-aging" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">1005 Payables Aging</div>
+                </a>
+                <a href="/accounts/reports/payables-payment-schedule" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">1003 Payables PaymentSchedule</div>
+                </a>
+                <a href="/accounts/reports/payables-report" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">1001 Trade Payables</div>
+                </a>
+                <a href="/accounts/reports/payables-aging-new" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Supplier Aging</div>
+                </a>
+                <a href="/accounts/reports/payables-report" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">All Payables</div>
+                </a>
+                <a href="/accounts/reports/receivables-report" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">1006 Receivables</div>
+                </a>
+                <a href="/accounts/reports/receivables-aging-new" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">Customer Aging</div>
+                </a>
+                <a href="/accounts/reports/receivables-report" class="favorite-card">
+                    <i class="fa fa-star-o"></i>
+                    <div class="title">1002 Trade Receivables</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        const categories = {
+            def: {
+                title: "Account Definition (8 Modules)",
+                modules: [
+                    { name: "Bank Reconciliation Upload Excel", url: "/accounts/bank-reconciliation-upload-excel" },
+                    { name: "Define Accounts", url: "/accounts/chart_of_accounts" },
+                    { name: "Define Supplier / Customer", url: "/accounts/supplier" },
+                    { name: "Cheque Book Registration", url: "/accounts/cheque_book" },
+                    { name: "User Chart Of Account Management", url: "/accounts/user-coa-management" },
+                    { name: "Account Allocation", url: "/accounts/allocation" },
+                    { name: "Account Opening Balance", url: "/accounts/opening_balance" },
+                    { name: "Account Custom Group", url: "/accounts/custom_group" }
+                ]
+            },
+            trans: {
+                title: "Accounts Transaction (18 Modules)",
+                modules: [
+                    { name: "Cash Payment Voucher", url: "/accounts/vouchers/cash-payment" },
+                    { name: "Bank Payment Voucher", url: "/accounts/vouchers/bank-payment" },
+                    { name: "Cash Receipt Voucher", url: "/accounts/vouchers/cash-receipt" },
+                    { name: "Bank Receipt Voucher", url: "/accounts/vouchers/bank-receipt" },
+                    { name: "Journal Voucher", url: "/accounts/vouchers/journal" },
+                    { name: "Contra Voucher", url: "/accounts/vouchers/contra" },
+                    { name: "Expense Voucher", url: "/accounts/vouchers/expense" },
+                    { name: "Party Receipt Voucher", url: "/accounts/vouchers/party-receipt" },
+                    { name: "Party Payment Voucher", url: "/accounts/vouchers/party-payment" },
+                    { name: "Post Dated Cheque Payment Vouchers", url: "/accounts/vouchers/pdc-payment" },
+                    { name: "Payment By Invoice Voucher", url: "/accounts/vouchers/payment-by-invoice" },
+                    { name: "Voucher Invoices Adjustment", url: "/accounts/vouchers/invoices-adjustment" },
+                    { name: "Freight Voucher", url: "/accounts/vouchers/freight" },
+                    { name: "Day Book Approval", url: "/accounts/vouchers/day-book-approval" },
+                    { name: "PDC Transaction Payment", url: "/accounts/vouchers/pdc-transaction-payment" },
+                    { name: "Advance Adjustment", url: "/accounts/vouchers/advance-adjustment" },
+                    { name: "Contractor Wages Account", url: "/accounts/vouchers/contractor-wages" },
+                    { name: "Voucher Validation", url: "/accounts/vouchers/voucher-validation" }
+                ]
+            },
+            reports: {
+                title: "Account Reports (27 Modules)",
+                modules: [
+                    { name: "General Ledger Statement", url: "/accounts/reports/general-ledger-statement" },
+                    { name: "General Ledger", url: "/accounts/reports/general-ledger" },
+                    { name: "Day Book", url: "/accounts/reports/day-book" },
+                    { name: "Balance Sheet", url: "/accounts/reports/balance-sheet" },
+                    { name: "Profit & Loss Statement", url: "/accounts/reports/profit-and-loss" },
+                    { name: "Selected Trial Balance", url: "/accounts/reports/selected-trial-balance" },
+                    { name: "Trial Balances All Level", url: "/accounts/reports/trial-balances-all-level" },
+                    { name: "Trial Balance", url: "/accounts/reports/trial-balance" },
+                    { name: "Payables Aging", url: "/accounts/reports/payables-aging" },
+                    { name: "Receivables Aging", url: "/accounts/reports/receivables-aging" },
+                    { name: "Payables Report", url: "/accounts/reports/payables-report" },
+                    { name: "Customer Ledger", url: "/accounts/reports/customer-ledger" },
+                    { name: "Receivables Report", url: "/accounts/reports/receivables-report" },
+                    { name: "Voucher Report", url: "/accounts/reports/voucher-report" },
+                    { name: "Bank Balances", url: "/accounts/reports/bank-balances" },
+                    { name: "Post Dated Cheque Register", url: "/accounts/reports/pdc-register" },
+                    { name: "Post Dated Cheque Information", url: "/accounts/reports/pdc-information" },
+                    { name: "Payables Aging New", url: "/accounts/reports/payables-aging-new" },
+                    { name: "Receivables Aging New", url: "/accounts/reports/receivables-aging-new" },
+                    { name: "Payables Report Invoice Wise", url: "/accounts/reports/payables-report-invoice-wise" },
+                    { name: "Receivables By Due Dates", url: "/accounts/reports/receivables-by-due-dates" },
+                    { name: "Payables And Payment Schedule", url: "/accounts/reports/payables-payment-schedule" },
+                    { name: "Receivables And Receipt Schedule", url: "/accounts/reports/receivables-receipt-schedule" },
+                    { name: "Bills Payables Report", url: "/accounts/reports/bills-payables-report" },
+                    { name: "Party Limits & Balances", url: "/accounts/reports/party-limits-balances" },
+                    { name: "Subsidiary Payables Report", url: "/accounts/reports/subsidiary-payables-report" },
+                    { name: "Chart of Accounts Report", url: "/accounts/reports/chart-of-accounts-report" },
+                    { name: "Account Notes Report", url: "/accounts/reports/account-notes-report" }
+                ]
+            },
+            banking: {
+                title: "Banking Management (7 Modules)",
+                modules: [
+                    { name: "Bank Reconciliation With Vouchers", url: "/accounts/banking/bank-reconciliation" },
+                    { name: "Bank Detail Definition", url: "/accounts/banking/bank-detail-definition" },
+                    { name: "Define Bank", url: "/accounts/banking/define-bank" },
+                    { name: "PDC Management", url: "/accounts/banking/pdc-management" },
+                    { name: "Cheque Printing", url: "/accounts/banking/cheque-printing" },
+                    { name: "Bank Charges", url: "/accounts/banking/bank-charges" },
+                    { name: "Chart of Account Allocate Cost Center", url: "/accounts/banking/coa-allocate-cost-center" }
+                ]
+            }
+        };
+
+        function showCategory(catKey) {
+            const cat = categories[catKey];
+            if (!cat) return;
+
+            document.getElementById('submodulesTitle').innerText = cat.title;
+            const grid = document.getElementById('submoduleGrid');
+            grid.innerHTML = '';
+
+            cat.modules.forEach((m, idx) => {
+                const a = document.createElement('a');
+                a.className = 'submodule-item';
+                a.href = m.url;
+                a.innerHTML = `<i class="fa fa-folder-open"></i> ${idx + 1}. ${m.name}`;
+                grid.appendChild(a);
+            });
+        }
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            const ampm = hours >= 12 ? 'pm' : 'am';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            document.getElementById('liveClock').innerText = `${hours}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        setInterval(updateClock, 1000);
+        showCategory('def');
+    </script>
+</body>
+</html>

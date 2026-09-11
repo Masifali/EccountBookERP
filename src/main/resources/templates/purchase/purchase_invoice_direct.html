@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Invoice Direct - WinForms Replica</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body { font-family: "Verdana", Tahoma, Arial, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font-family: "Verdana", sans-serif; font-size: 11px; color: #000000; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 22px; border-radius: 2px; }
+        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-btn-tool-save { font-weight: bold; color: #004d40; }
+        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 12pt; font-weight: bold; }
+        .win-form-body { background-color: #ffffff; padding: 6px; }
+        .win-group-box { border: 1px solid #d0d0d0; border-radius: 3px; padding: 8px 10px; margin-bottom: 6px; background-color: #ffffff; }
+        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9.75pt; font-weight: bold; color: #000000; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .win-label { font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-size: 9pt; font-weight: 600; color: #000000; white-space: nowrap; }
+        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 9.75pt; height: 25px; border: 1px solid #7a9a9e; padding: 2px 5px; box-sizing: border-box; background-color: #ffffff; color: #000000; border-radius: 0; width: 100%; }
+        .win-textbox:focus, .win-combo:focus, .win-datepicker:focus { border-color: #008080; outline: none; }
+        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 9.75pt; font-weight: bold; border: none; height: 25px; padding: 0 14px; cursor: pointer; }
+        .win-btn-action:hover { background-color: #005959; }
+        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; margin-top: 4px; }
+        .win-grid-scroll { max-height: 280px; overflow-x: auto; overflow-y: auto; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8.25pt; background-color: #ffffff; min-width: 950px; }
+        .win-grid th { background-color: #ece9d8; color: #000000; font-weight: normal; border: 1px solid #aca899; padding: 4px 6px; text-align: left; position: sticky; top: 0; z-index: 5; }
+        .win-grid td { border: 1px solid #e0e0e0; padding: 3px 6px; color: #000000; vertical-align: middle; }
+        .win-totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 11px; padding: 6px 12px; border: 1px solid #008080; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 6px; }
+    </style>
+</head>
+<body>
+
+    <div class="win-tool-strip">
+        <button type="button" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> &New</button>
+        <button type="button" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> &Save</button>
+        <button type="button" class="win-btn-tool" onclick="btnSave_Click()"><i class="fa fa-pencil"></i> &Update</button>
+        <button type="button" class="win-btn-tool" onclick="btnRefresh_Click()"><i class="fa fa-refresh"></i> &Refresh</button>
+        <button type="button" class="win-btn-tool" onclick="window.print()"><i class="fa fa-print"></i> &Print</button>
+        <div style="margin-left: auto;">
+            <a href="/purchase" style="color: #000; text-decoration: none; font-weight: bold; font-size: 10px;">
+                <i class="fa fa-arrow-left"></i> Back to Purchase Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="win-teal-header">
+        <div class="win-teal-header-title">Purchase Invoice Direct</div>
+        <div id="lblVoucherDisplayHeader" style="font-weight: bold; font-size: 11pt; color: #ffeb3b;" th:text="'PID-2026-' + ${nextDocNo}">PID-2026-0001</div>
+    </div>
+
+    <div class="win-form-body">
+        <fieldset class="win-group-box">
+            <legend>Direct Purchase Invoice Information</legend>
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="win-label">Doc No</label>
+                    <input type="text" id="txtDocNo" class="win-textbox" th:value="${nextDocNo}" readonly style="background-color: #f0f0f0; font-weight: bold;"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Doc Date</label>
+                    <input type="date" id="txtDocDate" class="win-datepicker"/>
+                </div>
+                <div class="col-md-4">
+                    <label class="win-label">Supplier / Party</label>
+                    <select id="cmbSupplier" class="win-combo">
+                        <option value="0">-- Select Supplier --</option>
+                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.supplierCode + ' - ' + s.supplierName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Cash / Credit</label>
+                    <select id="cmbPaymentTerms" class="win-combo">
+                        <option value="Cash">Cash Purchase</option>
+                        <option value="Credit">Credit Purchase</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Bill / Memo No</label>
+                    <input type="text" id="txtBillNo" class="win-textbox" placeholder="Bill No"/>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 6px;">
+                <div class="col-md-12">
+                    <label class="win-label">Remarks / Description</label>
+                    <input type="text" id="txtRemarks" class="win-textbox" placeholder="Direct purchase remarks..."/>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box">
+            <legend>Purchased Items Entry</legend>
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="win-label">Item</label>
+                    <select id="cmbItem" class="win-combo" onchange="onItemChange(this.value)">
+                        <option value="0">-- Select Item --</option>
+                        <option th:each="i : ${items}" th:value="${i.id}" th:data-price="${i.purchasePrice}" th:text="${i.itemCode + ' - ' + i.itemName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Warehouse</label>
+                    <select id="cmbWarehouse" class="win-combo">
+                        <option value="0">-- Select Warehouse --</option>
+                        <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.warehouseName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Job / Lot</label>
+                    <select id="cmbJobLot" class="win-combo">
+                        <option value="0">-- Select Job/Lot --</option>
+                        <option th:each="j : ${jobLots}" th:value="${j.id}" th:text="${j.description}"></option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="win-label">Qty</label>
+                    <input type="number" step="0.01" id="txtQty" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Rate</label>
+                    <input type="number" step="0.01" id="txtRate" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Amount</label>
+                    <input type="number" step="0.01" id="txtAmount" class="win-textbox" placeholder="0.00" readonly style="background-color: #f0f0f0; font-weight: bold; text-align: right; color: #008080;"/>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 6px; align-items: center;">
+                <div class="col-md-10">
+                    <label class="win-label">Line Remarks</label>
+                    <input type="text" id="txtLineRemarks" class="win-textbox" placeholder="Line item remarks..."/>
+                </div>
+                <div class="col-md-2" style="margin-top: 16px; text-align: right;">
+                    <button type="button" class="win-btn-action" style="width: 100%;" onclick="btnAddRow_Click()"><i class="fa fa-plus"></i> + Add Item</button>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box">
+            <legend>Items Details Grid</legend>
+            <div class="win-grid-container">
+                <div class="win-grid-scroll">
+                    <table class="win-grid">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px; text-align: center;">Sr #</th>
+                                <th style="width: 120px;">Item Code</th>
+                                <th style="width: 240px;">Item Name</th>
+                                <th style="width: 90px; text-align: right;">Qty</th>
+                                <th style="width: 90px; text-align: right;">Rate</th>
+                                <th style="width: 110px; text-align: right;">Amount</th>
+                                <th style="width: 130px;">Warehouse</th>
+                                <th style="width: 110px;">Job / Lot</th>
+                                <th>Line Remarks</th>
+                                <th style="width: 50px; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grdDetailTbody">
+                            <tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No items added yet. Select an item and click + Add Item.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 8px;">
+                <div class="col-md-4">
+                    <label class="win-label">Discount Amount</label>
+                    <input type="number" step="0.01" id="txtDiscount" class="win-textbox" value="0.00" oninput="calcNetInvoiceTotal()"/>
+                </div>
+                <div class="col-md-4">
+                    <label class="win-label">Tax / Extra Charges</label>
+                    <input type="number" step="0.01" id="txtSalesTax" class="win-textbox" value="0.00" oninput="calcNetInvoiceTotal()"/>
+                </div>
+                <div class="col-md-4">
+                    <label class="win-label">Net Payable Amount</label>
+                    <input type="number" step="0.01" id="txtNetPayable" class="win-textbox" value="0.00" readonly style="background-color: #e0f2f1; font-weight: bold; text-align: right; color: #004d40; font-size: 11pt;"/>
+                </div>
+            </div>
+
+            <div class="win-totals-bar">
+                <div>Total Qty: <span id="lblTotalQty">0.00</span></div>
+                <div>Gross Total Amount: <span id="lblGrossTotal">0.00</span></div>
+            </div>
+        </fieldset>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        let lineItems = [];
+
+        $(document).ready(function() {
+            setWinDefaultDate();
+        });
+
+        function setWinDefaultDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('txtDocDate').value = `${year}-${month}-${day}`;
+        }
+
+        function onItemChange(val) {
+            const opt = $('#cmbItem option:selected');
+            const price = parseFloat(opt.attr('data-price') || '0');
+            if (price > 0) {
+                $('#txtRate').val(price.toFixed(2));
+            }
+            calcLineAmount();
+        }
+
+        function calcLineAmount() {
+            const qty = parseFloat($('#txtQty').val() || '0');
+            const rate = parseFloat($('#txtRate').val() || '0');
+            const amt = qty * rate;
+            $('#txtAmount').val(amt.toFixed(2));
+        }
+
+        function btnAddRow_Click() {
+            const itemId = parseInt($('#cmbItem').val() || '0');
+            const itemCodeText = $('#cmbItem option:selected').text();
+            const parts = itemCodeText.split(' - ');
+            const itemCode = parts[0] || '';
+            const itemName = parts[1] || itemCodeText;
+            const qty = parseFloat($('#txtQty').val() || '0');
+            const rate = parseFloat($('#txtRate').val() || '0');
+            const amount = parseFloat($('#txtAmount').val() || '0');
+            const remarks = $('#txtLineRemarks').val() || '';
+            const whId = parseInt($('#cmbWarehouse').val() || '0');
+            const whName = whId > 0 ? $('#cmbWarehouse option:selected').text() : '';
+            const jobLotId = parseInt($('#cmbJobLot').val() || '0');
+            const jobLotCode = jobLotId > 0 ? $('#cmbJobLot option:selected').text() : '';
+
+            if (itemId <= 0) {
+                alert("Please select a valid Item.");
+                $('#cmbItem').focus();
+                return;
+            }
+            if (qty <= 0) {
+                alert("Quantity must be greater than zero.");
+                $('#txtQty').focus();
+                return;
+            }
+
+            const item = {
+                lineId: lineItems.length + 1,
+                itemId: itemId,
+                itemCode: itemCode,
+                itemName: itemName,
+                quantity: qty,
+                itemRate: rate,
+                amount: amount,
+                warehouseId: whId,
+                warehouseName: whName,
+                jobLotId: jobLotId,
+                jobLotCode: jobLotCode,
+                remarks: remarks
+            };
+
+            lineItems.push(item);
+            renderGrid();
+
+            $('#cmbItem').val('0');
+            $('#txtQty').val('');
+            $('#txtRate').val('');
+            $('#txtAmount').val('');
+            $('#txtLineRemarks').val('');
+        }
+
+        function removeLineItem(idx) {
+            lineItems.splice(idx, 1);
+            lineItems.forEach((item, i) => item.lineId = i + 1);
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const tbody = $('#grdDetailTbody');
+            tbody.empty();
+
+            if (lineItems.length === 0) {
+                tbody.html('<tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No items added yet. Select an item and click + Add Item.</td></tr>');
+                updateTotals(0, 0);
+                return;
+            }
+
+            let grandQty = 0;
+            let grandTotal = 0;
+
+            lineItems.forEach((item, idx) => {
+                grandQty += item.quantity;
+                grandTotal += item.amount;
+
+                tbody.append(`
+                    <tr>
+                        <td style="text-align: center; font-weight: bold;">${item.lineId}</td>
+                        <td><strong style="color: #008080;">${escapeHtml(item.itemCode)}</strong></td>
+                        <td>${escapeHtml(item.itemName)}</td>
+                        <td style="text-align: right;">${item.quantity.toFixed(2)}</td>
+                        <td style="text-align: right;">${item.itemRate.toFixed(2)}</td>
+                        <td style="text-align: right; font-weight: bold;">${item.amount.toFixed(2)}</td>
+                        <td>${escapeHtml(item.warehouseName)}</td>
+                        <td>${escapeHtml(item.jobLotCode)}</td>
+                        <td>${escapeHtml(item.remarks)}</td>
+                        <td style="text-align: center;">
+                            <button type="button" class="btn btn-danger btn-xs" style="padding: 0 5px; font-size: 10px;" onclick="removeLineItem(${idx})">&times;</button>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            updateTotals(grandQty, grandTotal);
+        }
+
+        function updateTotals(qty, total) {
+            $('#lblTotalQty').text(qty.toFixed(2));
+            $('#lblGrossTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            calcNetInvoiceTotal();
+        }
+
+        function calcNetInvoiceTotal() {
+            let gross = 0;
+            lineItems.forEach(i => gross += i.amount);
+            const discount = parseFloat($('#txtDiscount').val() || '0');
+            const salesTax = parseFloat($('#txtSalesTax').val() || '0');
+            const net = Math.max(0, gross + salesTax - discount);
+            $('#txtNetPayable').val(net.toFixed(2));
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function btnSave_Click() {
+            const suppId = parseInt($('#cmbSupplier').val() || '0');
+            if (suppId <= 0) {
+                alert("Please select a valid Supplier.");
+                $('#cmbSupplier').focus();
+                return;
+            }
+            if (lineItems.length === 0) {
+                alert("At least one item is required before saving.");
+                return;
+            }
+
+            const dto = {
+                documentTypeId: 18,
+                docNo: parseInt($('#txtDocNo').val() || '0'),
+                docDate: $('#txtDocDate').val(),
+                supplierId: suppId,
+                remarks: $('#txtRemarks').val() + ($('#txtBillNo').val() ? ' [Bill: ' + $('#txtBillNo').val() + ']' : ''),
+                lineItems: lineItems
+            };
+
+            $.ajax({
+                url: '/api/purchase/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(dto),
+                success: function(res) {
+                    if (res && res.success) {
+                        alert(res.message || "Purchase Invoice Direct saved successfully.");
+                        btnNew_Click();
+                    } else {
+                        alert("Error saving transaction: " + (res.message || "Unknown error"));
+                    }
+                },
+                error: function(xhr) {
+                    alert("Error saving transaction.");
+                }
+            });
+        }
+
+        function btnNew_Click() {
+            lineItems = [];
+            renderGrid();
+            $('#txtRemarks').val('');
+            $('#txtBillNo').val('');
+            $('#txtDiscount').val('0.00');
+            $('#txtSalesTax').val('0.00');
+            $('#txtNetPayable').val('0.00');
+            $('#cmbSupplier').val('0');
+            setWinDefaultDate();
+            $.ajax({
+                url: '/api/purchase/next-code?docType=18',
+                type: 'GET',
+                success: function(res) {
+                    if (res && res.docNo) {
+                        $('#txtDocNo').val(res.docNo);
+                        $('#lblVoucherDisplayHeader').text("PID-2026-" + String(res.docNo).padStart(4, '0'));
+                    }
+                }
+            });
+        }
+
+        function btnRefresh_Click() { btnNew_Click(); }
+    </script>
+</body>
+</html>

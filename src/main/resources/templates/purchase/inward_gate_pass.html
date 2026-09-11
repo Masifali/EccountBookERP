@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inward Gate Pass - Eccounting ERP Desktop Copy</title>
+    <style>
+        :root {
+            --win-bg: #ece9d8;
+            --win-border: #716f64;
+            --header-bg: #005a5b;
+            --toolbar-bg: linear-gradient(to bottom, #ffffff, #e3e3e3);
+            --btn-bg: #f0f0f0;
+            --btn-border: #707070;
+            --btn-hover: #e0e0e0;
+            --input-border: #7f9db9;
+            --grid-header-bg: #d9e6f2;
+            --grid-border: #a0a0a0;
+            --total-bg: #f5f5f5;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            font-size: 11px;
+            background-color: #d4d0c8;
+            margin: 0;
+            padding: 4px;
+            user-select: none;
+        }
+
+        .win-container {
+            width: 1260px;
+            margin: 0 auto;
+            background-color: var(--win-bg);
+            border: 1px solid var(--win-border);
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        /* Top Banner */
+        .top-banner {
+            background-color: var(--header-bg);
+            color: #ffffff;
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* Sub-Header Toolbar */
+        .toolbar {
+            background: var(--toolbar-bg);
+            border-bottom: 1px solid #999;
+            padding: 3px 6px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .tool-btn {
+            height: 24px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-family: Tahoma, sans-serif;
+            background-color: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+            border-radius: 2px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: bold;
+            color: #000;
+        }
+        .tool-btn:hover { background-color: var(--btn-hover); }
+        .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Secondary Teal Bar */
+        .status-strip {
+            background-color: var(--header-bg);
+            color: white;
+            padding: 3px 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .status-strip label { cursor: pointer; display: inline-flex; align-items: center; gap: 3px; font-weight: normal; }
+
+        /* Form Body Layout */
+        .form-body {
+            padding: 6px;
+        }
+
+        .section-box {
+            border: 1px solid #a0a0a0;
+            background-color: #fcfcfc;
+            padding: 6px;
+            margin-bottom: 6px;
+            border-radius: 2px;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #d0d0d0;
+            padding-bottom: 2px;
+        }
+
+        .grid-3col {
+            display: grid;
+            grid-template-columns: 370px 310px 1fr;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+        .form-label {
+            font-size: 11px;
+            color: #000;
+            text-align: right;
+            padding-right: 6px;
+            white-space: nowrap;
+        }
+        .req-star { color: red; margin-left: 2px; }
+
+        .form-control {
+            height: 20px;
+            font-family: Tahoma, sans-serif;
+            font-size: 11px;
+            border: 1px solid var(--input-border);
+            padding: 1px 4px;
+            background-color: #fff;
+        }
+        .form-control[readonly] { background-color: #eef2f5; }
+        select.form-control { height: 21px; }
+
+        /* Factory / Supplier / Difference Table */
+        .wt-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        .wt-table th {
+            background-color: #e3e3e3;
+            border: 1px solid #999;
+            padding: 2px 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .wt-table td {
+            border: 1px solid #ccc;
+            padding: 2px 4px;
+        }
+        .wt-table input {
+            width: 100%;
+            height: 18px;
+            border: 1px solid #7f9db9;
+            font-size: 11px;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        /* Bottom TabControl */
+        .tab-container {
+            border: 1px solid #999;
+            background-color: #fff;
+            margin-top: 4px;
+        }
+        .tab-buttons {
+            display: flex;
+            background-color: var(--win-bg);
+            border-bottom: 1px solid #999;
+        }
+        .tab-btn {
+            padding: 4px 12px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            background-color: #d4d0c8;
+            font-weight: normal;
+        }
+        .tab-btn.active {
+            background-color: #fff;
+            border-color: #999 #999 #fff #999;
+            font-weight: bold;
+            color: #003366;
+        }
+        .tab-content {
+            display: none;
+            padding: 6px;
+        }
+        .tab-content.active { display: block; }
+
+        /* Data Grids */
+        .grid-wrap {
+            overflow-x: auto;
+            max-height: 380px;
+            border: 1px solid #999;
+            background-color: #fff;
+        }
+        .data-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        .data-grid th {
+            background-color: var(--grid-header-bg);
+            border: 1px solid #b0c4de;
+            padding: 4px 6px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .data-grid td {
+            border: 1px solid #e0e0e0;
+            padding: 3px 6px;
+        }
+        .data-grid tr:hover { background-color: #eef6ff; cursor: pointer; }
+        .data-grid tr.selected { background-color: #3399ff; color: #fff; }
+
+        .totals-bar {
+            background-color: #f0f0f0;
+            border-top: 2px solid #005a5b;
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        /* Bottom Mode Tabs (Form / History) */
+        .bottom-mode-bar {
+            display: flex;
+            background-color: #d4d0c8;
+            border-top: 1px solid #999;
+            padding: 2px 6px;
+            gap: 4px;
+        }
+        .mode-btn {
+            padding: 2px 12px;
+            border: 1px solid #888;
+            background: #e0e0e0;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .mode-btn.active { background: #fff; font-weight: bold; color: #003366; }
+
+        /* History Filter Panel matching Desktop Screenshot */
+        .history-filter-box {
+            border: 1px solid #a0a0a0;
+            background-color: #f5f5f5;
+            padding: 6px;
+            margin: 6px;
+            border-radius: 2px;
+        }
+        .grouping-bar {
+            background-color: #e6e6e6;
+            color: #666;
+            font-style: italic;
+            padding: 3px 8px;
+            border: 1px solid #ccc;
+            margin: 0 6px 4px 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="win-container">
+    <!-- Top Banner -->
+    <div class="top-banner">
+        <div id="lblFormHeaderTitle">Inward Gate Pass</div>
+        <div style="font-size: 11px; font-weight: normal;">
+            <span id="txtUserTitle">Numan Rasheed (Admin)</span> |
+            <span>Golden Ace Rice Mills (Pvt) Ltd.</span> |
+            <span id="txtLiveTime">11:14:11 am</span> |
+            <span>2026-27</span>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 1: FORM ENTRY VIEW ================= -->
+    <div id="viewForm">
+        <!-- Toolbar Buttons -->
+        <div class="toolbar">
+            <button id="btnnew" class="tool-btn" onclick="onNewRecord()">+ New</button>
+            <button id="btnRefresh" class="tool-btn" onclick="onRefreshForm()">Refresh</button>
+            <button id="btnsave" class="tool-btn" onclick="onSaveRecord()">Save</button>
+            <button id="btnupdate" class="tool-btn" onclick="onSaveRecord()" style="display:none;">Update</button>
+            <button id="btnAttachment" class="tool-btn" onclick="onOpenAttachments()">Attachment</button>
+            <button id="btndefvehicle" class="tool-btn" onclick="onDefineVehicle()">Define Vehicle</button>
+            <button id="btndefinecity" class="tool-btn" onclick="onDefineCity()">Define City</button>
+            <button id="btnPrint" class="tool-btn" onclick="onPrintReport()">251-Print</button>
+            <button id="btnSlip257" class="tool-btn" onclick="onPrintSlip()">257-GPSlip</button>
+            <button id="btnLabReport653" class="tool-btn" onclick="onLabReport()">653-LabReport</button>
+            <button id="BtnDriverForm" class="tool-btn" onclick="onOpenDriverForm()">Driver Bio</button>
+            <button id="btnShortcutKeys" class="tool-btn" onclick="onShowShortcuts()">Shortcut Keys</button>
+            <button id="btnDelete" class="tool-btn" onclick="onDeleteRecord()" style="margin-left: auto; color: red;">Delete</button>
+        </div>
+
+        <!-- Status Strip -->
+        <div class="status-strip">
+            <span style="font-size: 12px;">Inward Gate Pass</span>
+            <label><input type="radio" name="formMode" value="None" checked> None</label>
+            <label><input type="radio" name="formMode" value="LabAnalysis"> Lab Analysis Form</label>
+            <label><input type="radio" name="formMode" value="WeightBridge"> Weight Bridge Form</label>
+            <label><input type="radio" name="formMode" value="Grn"> Grn Form</label>
+            <label><input type="radio" name="formMode" value="FreightVoucher"> Freight Voucher</label>
+            <label style="margin-left: auto;"><input type="checkbox" id="chkPreview" checked> Preview</label>
+        </div>
+
+        <!-- Main Form Body -->
+        <div class="form-body">
+            <input type="hidden" id="txtId" value="0" />
+            <div class="grid-3col">
+
+                <!-- Column 1: Main Information -->
+                <div class="section-box">
+                    <div class="section-title">Main Information</div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 100px;">G.P Date & No<span class="req-star">*</span></div>
+                        <input type="date" id="txtgpdate" class="form-control" style="width: 120px;" />
+                        <input type="text" id="txtgpno" class="form-control" style="width: 80px; margin-left: 4px;" th:value="${nextDocNo}" readonly />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 100px;">G.P Type & No<span class="req-star">*</span></div>
+                        <select id="cmbgptype" class="form-control" style="width: 120px;" onchange="onGpTypeChange()">
+                            <option value="">-- Select --</option>
+                            <option th:each="g : ${gatePassTypes}" th:value="${g.id}" th:text="${g.name}"></option>
+                        </select>
+                        <input type="text" id="txtgptypeno" class="form-control" style="width: 80px; margin-left: 4px;" th:value="${nextTypeNo}" readonly />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 100px;">Purchase Type<span class="req-star">*</span></div>
+                        <select id="CmbOrderType" class="form-control" style="width: 120px;">
+                            <option value="Purchase Order">Purchase Order</option>
+                            <option value="Direct">Direct</option>
+                            <option value="Sale Return">Sale Return</option>
+                        </select>
+                        <input type="text" id="CmbOrderno" class="form-control" style="width: 80px; margin-left: 4px;" placeholder="PO No" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 100px;">Supplier Name<span class="req-star">*</span></div>
+                        <select id="cmbsupp" class="form-control" style="width: 204px;">
+                            <option value="">-- Select Supplier --</option>
+                            <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 100px;">City Name<span class="req-star">*</span></div>
+                        <select id="cmbcity" class="form-control" style="width: 204px;">
+                            <option value="">-- Select City --</option>
+                            <option th:each="c : ${cities}" th:value="${c.id}" th:text="${c.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 100px;">Item Name<span class="req-star">*</span></div>
+                        <select id="CmbVariety" class="form-control" style="width: 204px;" onchange="onItemChange()">
+                            <option value="">-- Select Item --</option>
+                            <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 100px;">Item Qty<span class="req-star">*</span></div>
+                        <input type="number" id="txtqty" class="form-control" style="width: 65px;" value="0" oninput="calculateWeight()" />
+                        <span class="form-label" style="width: 60px;">Pack Unit</span>
+                        <input type="number" id="txtPackUnit" class="form-control" style="width: 65px;" value="60" oninput="calculateWeight()" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 100px;">Weight<span class="req-star">*</span></div>
+                        <input type="number" id="txtWeight" class="form-control" style="width: 204px; font-weight: bold;" value="0" readonly />
+                    </div>
+                </div>
+
+                <!-- Column 2: Vehicle & Freight -->
+                <div class="section-box">
+                    <div class="section-title">Vehicle & Freight</div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Vehicle Type</div>
+                        <select id="cmbvehicletype" class="form-control" style="width: 170px;">
+                            <option value="">-- Select Vehicle Type --</option>
+                            <option th:each="v : ${vehicleTypes}" th:value="${v.id}" th:text="${v.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Vehicle No<span class="req-star">*</span></div>
+                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. KSS-1933" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Bilty No</div>
+                        <input type="text" id="txtbiltyno" class="form-control" style="width: 170px;" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Bilty Date</div>
+                        <input type="date" id="txtBiltyDate" class="form-control" style="width: 170px;" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Bilty Freight</div>
+                        <input type="number" id="txtfreight" class="form-control" style="width: 170px;" value="0" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Advance By Party</div>
+                        <input type="number" id="txtAdvanceByParty" class="form-control" style="width: 170px;" value="0" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Advance By Factory</div>
+                        <input type="number" id="txtAdvanceByFactory" class="form-control" style="width: 170px;" value="0" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Total Payable Freight</div>
+                        <input type="number" id="txtTotalPayablesFreight" class="form-control" style="width: 170px;" value="0" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Net Paid</div>
+                        <input type="number" id="txtNetPaid" class="form-control" style="width: 170px;" value="0" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 110px;">Remarks Header</div>
+                        <input type="text" id="txtremarks" class="form-control" style="width: 170px;" />
+                    </div>
+                </div>
+
+                <!-- Column 3: Weighbridge & Supplier Weights -->
+                <div class="section-box">
+                    <div class="section-title">Weights & Weighbridge</div>
+                    <table class="wt-table">
+                        <thead>
+                        <tr>
+                            <th>Weight Type</th>
+                            <th>Factory</th>
+                            <th>Supplier</th>
+                            <th>Difference</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td style="font-weight: bold;">Load Weight</td>
+                            <td><input type="number" id="txtFactoryWeight" value="0" oninput="calculateNetWeights()" /></td>
+                            <td><input type="number" id="txtSupplierFirstWeight" value="0" oninput="calculateNetWeights()" /></td>
+                            <td><input type="number" id="txtFirstWtDifference" value="0" readonly /></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">Tare Weight</td>
+                            <td><input type="number" id="txtsecondWeight" value="0" oninput="calculateNetWeights()" /></td>
+                            <td><input type="number" id="txtSupplierSecondWeight" value="0" oninput="calculateNetWeights()" /></td>
+                            <td><input type="number" id="txtSecondWtDifference" value="0" readonly /></td>
+                        </tr>
+                        <tr style="background-color: #eef6ff;">
+                            <td style="font-weight: bold; color: #003366;">Net Weight</td>
+                            <td><input type="number" id="txtFactoryNetWeight" value="0" readonly /></td>
+                            <td><input type="number" id="txtSupplierNetWeight" value="0" readonly /></td>
+                            <td><input type="number" id="txtDifferenceWeight" value="0" readonly style="color: red;" /></td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="form-row" style="margin-top: 4px;">
+                        <div class="form-label" style="width: 90px;">W.B Slip No</div>
+                        <input type="text" id="txtWeighBridgeSlipNo" class="form-control" style="width: 70px;" value="0" />
+                        <span class="form-label" style="width: 50px;">In Time</span>
+                        <input type="datetime-local" id="txtintime" class="form-control" style="width: 150px;" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 90px;">W.B Status</div>
+                        <select id="cmbWeighBridge" class="form-control" style="width: 70px;">
+                            <option value="">-- Select --</option>
+                            <option th:each="w : ${weighBridges}" th:value="${w.id}" th:text="${w.name}"></option>
+                        </select>
+                        <span class="form-label" style="width: 50px;">Out Time</span>
+                        <input type="datetime-local" id="txtouttime" class="form-control" style="width: 150px;" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 90px;">G.P Status</div>
+                        <select id="CmbStatus" class="form-control" style="width: 70px;">
+                            <option value="Open">Open</option>
+                            <option value="Closed">Closed</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                        <span class="form-label" style="width: 70px;">Packing Type</span>
+                        <select id="CmbPackingType" class="form-control" style="width: 130px;">
+                            <option value="">-- Select --</option>
+                            <option th:each="p : ${packingTypes}" th:value="${p.id}" th:text="${p.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label" style="width: 90px;">P.O Excess Wt</div>
+                        <input type="number" id="txtAccessWeight" class="form-control" style="width: 70px;" value="0" />
+                        <span class="form-label" style="width: 70px;">Weight Remarks</span>
+                        <input type="text" id="txtWeightDiffRemarks" class="form-control" style="width: 130px;" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary Info: Lab & Driver Bio -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                <!-- Lab Info -->
+                <div class="section-box">
+                    <div class="section-title">Lab Info</div>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="txtAnaylstName" class="form-control" placeholder="Analyst Name" style="width: 120px;" />
+                        <input type="text" id="txtLabReportNo" class="form-control" placeholder="Report No" style="width: 100px;" />
+                        <input type="text" id="txtReportStatus" class="form-control" placeholder="Report Status" style="width: 110px;" />
+                        <input type="text" id="txtLabRemarks" class="form-control" placeholder="Remarks" style="flex: 1;" />
+                    </div>
+                </div>
+
+                <!-- Driver Info -->
+                <div class="section-box">
+                    <div class="section-title">Driver Information</div>
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                        <input type="text" id="txtCNIC" class="form-control" placeholder="CNIC #" style="width: 110px;" />
+                        <input type="text" id="txtDriverCellNo" class="form-control" placeholder="Driver Cell #" style="width: 100px;" />
+                        <input type="text" id="txtWhatsAppNo" class="form-control" placeholder="WhatsApp #" style="width: 100px;" />
+                        <input type="text" id="txtDriverName" class="form-control" placeholder="Driver Name" style="width: 110px;" />
+                        <input type="text" id="txtFatherName" class="form-control" placeholder="Father Name" style="width: 110px;" />
+                        <input type="text" id="txtFatherCNIC" class="form-control" placeholder="Father CNIC" style="width: 110px;" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Tab Control -->
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <div class="tab-btn active" onclick="switchMainSubTab('tabGridHistory')">GatePass History Open Status</div>
+                    <div class="tab-btn" onclick="switchMainSubTab('tabPoInfo')">Purchase Order Information</div>
+                </div>
+
+                <!-- Tab 1: GatePass History Grid -->
+                <div id="tabGridHistory" class="tab-content active">
+                    <div style="font-weight: bold; color: #005a5b; margin-bottom: 4px;">
+                        This Grid Show the Vehicles Present In The Factory, Pending For Acceptance Or Rejection
+                    </div>
+                    <div class="grid-wrap">
+                        <table class="data-grid" id="grdMainHistory">
+                            <thead>
+                            <tr>
+                                <th>Print</th>
+                                <th>Edit</th>
+                                <th>Gp No</th>
+                                <th>Gp Date</th>
+                                <th>G.Type</th>
+                                <th>Order Type</th>
+                                <th>Supplier Name</th>
+                                <th>Order No</th>
+                                <th>Vehicle Type</th>
+                                <th>Vehicle No</th>
+                                <th>Bilty No</th>
+                                <th>Item Qty</th>
+                                <th>Pack Unit</th>
+                                <th>Weight Comp PO Wt</th>
+                                <th>Supplier Load Wt</th>
+                                <th>Supplier Tare Wt</th>
+                                <th>Supplier Weight</th>
+                                <th>Factory Weight</th>
+                                <th>Difference</th>
+                                <th>Excess Weight</th>
+                                <th>Net Paid</th>
+                                <th>Item Name</th>
+                                <th>City Name</th>
+                            </tr>
+                            </thead>
+                            <tbody id="grdMainHistoryBody">
+                            <tr th:each="row : ${historyList}" th:attr="ondblclick='loadRecordAndEdit(' + ${row.Id} + ')'">
+                                <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='onPrintReport(' + ${row.Id} + ')'">Print</button></td>
+                                <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'">Edit</button></td>
+                                <td th:text="${row.GpSrNo}"></td>
+                                <td th:text="${row.GpDate != null ? #strings.substring(row.GpDate.toString(), 0, 10) : ''}"></td>
+                                <td th:text="${row.GatepassType}"></td>
+                                <td th:text="${row.OrderType != null ? row.OrderType : 'Purchase Order'}"></td>
+                                <td th:text="${row.SupplierName}"></td>
+                                <td th:text="${row.PurchaseOrderId}"></td>
+                                <td th:text="${row.VehicleType}"></td>
+                                <td th:text="${row.VehicleNo}"></td>
+                                <td th:text="${row.BiltyNo}"></td>
+                                <td style="text-align:right;" th:text="${row.ItemQty}"></td>
+                                <td style="text-align:right;" th:text="${row.PackUnit}"></td>
+                                <td style="text-align:right;" th:text="${row.WeightComparedToPoWt}"></td>
+                                <td style="text-align:right;" th:text="${row.SupplierFirstWeight}"></td>
+                                <td style="text-align:right;" th:text="${row.SupplierSecondWeight}"></td>
+                                <td style="text-align:right;" th:text="${row.SupplierWeight}"></td>
+                                <td style="text-align:right;" th:text="${row.FactoryWeight}"></td>
+                                <td style="text-align:right; color:red;" th:text="${row.DifferenceWeight}"></td>
+                                <td style="text-align:right;" th:text="${row.AccessWeight}"></td>
+                                <td style="text-align:right;" th:text="${row.NetPaid}"></td>
+                                <td th:text="${row.VarietyName != null ? row.VarietyName : row.ItemName}"></td>
+                                <td th:text="${row.CityName}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="totals-bar">
+                        <div>Total Records: <span id="lblRecordCount">0</span></div>
+                        <div>Sum Qty: <span id="lblSumQty">0</span> | Sum Supplier Wt: <span id="lblSumSupWt">0</span> | Sum Diff: <span id="lblSumDiff">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Purchase Order Info -->
+                <div id="tabPoInfo" class="tab-content">
+                    <div class="form-row" style="margin-bottom: 6px;">
+                        <span>From Date:</span> <input type="date" id="txtFromPoDate" class="form-control" style="width: 120px; margin: 0 6px;" />
+                        <span>To Date:</span> <input type="date" id="txtToPoDate" class="form-control" style="width: 120px; margin: 0 6px;" />
+                        <button class="tool-btn" onclick="loadPoInfoGrid()">Show PO Info</button>
+                    </div>
+                    <div class="grid-wrap">
+                        <table class="data-grid" id="grdPoInfo">
+                            <thead>
+                            <tr>
+                                <th>PO No</th>
+                                <th>PO Date</th>
+                                <th>Supplier Name</th>
+                                <th>Item Name</th>
+                                <th>Ordered Qty</th>
+                                <th>Received Qty</th>
+                                <th>Balance Qty</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
+                            <tbody id="grdPoInfoBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= VIEW 2: FULL INWARD GATE PASS HISTORY VIEW (MATCHING DESKTOP SCREENSHOT) ================= -->
+    <div id="viewHistory" style="display: none;">
+        <!-- History Toolbar -->
+        <div class="toolbar">
+            <button class="tool-btn" onclick="onSwitchToFormNew()">+ New</button>
+            <button class="tool-btn" onclick="executeFullHistorySearch()">Refresh</button>
+        </div>
+
+        <!-- History Teal Status Strip -->
+        <div class="status-strip" style="background-color: #005a5b;">
+            <span style="font-size: 13px;">Inward Gate Pass History</span>
+        </div>
+
+        <!-- Filters Panel matching desktop screenshot -->
+        <div class="history-filter-box">
+            <div style="font-weight: bold; color: #003366; margin-bottom: 4px;">Filters</div>
+            <div class="form-row" style="gap: 10px; flex-wrap: wrap;">
+                <div>
+                    <span class="form-label">From Date</span><br/>
+                    <input type="date" id="txtHistFromDate" class="form-control" style="width: 120px;" />
+                </div>
+                <div>
+                    <span class="form-label">To Date</span><br/>
+                    <input type="date" id="txtHistToDate" class="form-control" style="width: 120px;" />
+                </div>
+                <div>
+                    <span class="form-label">From Doc No</span><br/>
+                    <input type="number" id="txtHistFromDoc" class="form-control" style="width: 90px;" />
+                </div>
+                <div>
+                    <span class="form-label">To Doc No</span><br/>
+                    <input type="number" id="txtHistToDoc" class="form-control" style="width: 90px;" />
+                </div>
+                <div>
+                    <span class="form-label">Supplier</span><br/>
+                    <select id="cmbHistSupplier" class="form-control" style="width: 220px;">
+                        <option value="">-- Select Supplier --</option>
+                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button class="tool-btn" style="background-color: #005a5b; color: white; height: 22px; padding: 0 16px;" onclick="executeFullHistorySearch()">Show</button>
+                </div>
+                <div style="display: flex; align-items: flex-end; gap: 8px; padding-left: 10px;">
+                    <label><input type="radio" name="histDateFilter" value="docDate" checked> Doc Date</label>
+                    <label><input type="radio" name="histDateFilter" value="entryDate"> Entry Date</label>
+                    <label><input type="radio" name="histDateFilter" value="modifyDate"> Modify Date</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column Grouping Bar -->
+        <div class="grouping-bar">
+            Drag a column header here to group by that column.
+        </div>
+
+        <!-- Full History Grid -->
+        <div style="padding: 0 6px 6px 6px;">
+            <div class="grid-wrap" style="max-height: 480px;">
+                <table class="data-grid" id="grdFullHistory">
+                    <thead>
+                    <tr>
+                        <th>Print</th>
+                        <th>Edit</th>
+                        <th>Gp No</th>
+                        <th>Gp Date</th>
+                        <th>Gp Type</th>
+                        <th>Order Type</th>
+                        <th>Order No</th>
+                        <th>Supplier Name</th>
+                        <th>City Name</th>
+                        <th>Vehicle Type</th>
+                        <th>Vehicle No</th>
+                        <th>Bilty Date</th>
+                        <th>Bilty No</th>
+                        <th>Item Name</th>
+                        <th>Item Qty</th>
+                        <th>Pack Unit</th>
+                        <th>Weight Compared to Po Wt</th>
+                        <th>Supplier Load Weight</th>
+                        <th>Supplier Tare Weight</th>
+                        <th>Supplier Net Weight</th>
+                        <th>Factory Weight</th>
+                        <th>Difference</th>
+                        <th>Excess Weight</th>
+                        <th>Net Paid</th>
+                    </tr>
+                    </thead>
+                    <tbody id="grdFullHistoryBody">
+                    <tr th:each="row : ${historyList}" th:attr="ondblclick='loadRecordAndEdit(' + ${row.Id} + ')'">
+                        <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='onPrintReport(' + ${row.Id} + ')'">Print</button></td>
+                        <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'">Edit</button></td>
+                        <td th:text="${row.GpSrNo}"></td>
+                        <td th:text="${row.GpDate != null ? #strings.substring(row.GpDate.toString(), 0, 10) : ''}"></td>
+                        <td th:text="${row.GatepassType}"></td>
+                        <td th:text="${row.OrderType != null ? row.OrderType : 'Purchase Order'}"></td>
+                        <td th:text="${row.PurchaseOrderId}"></td>
+                        <td th:text="${row.SupplierName}"></td>
+                        <td th:text="${row.CityName}"></td>
+                        <td th:text="${row.VehicleType}"></td>
+                        <td th:text="${row.VehicleNo}"></td>
+                        <td th:text="${row.BiltyDate != null ? #strings.substring(row.BiltyDate.toString(), 0, 10) : ''}"></td>
+                        <td th:text="${row.BiltyNo}"></td>
+                        <td th:text="${row.VarietyName != null ? row.VarietyName : row.ItemName}"></td>
+                        <td style="text-align:right;" th:text="${row.ItemQty}"></td>
+                        <td style="text-align:right;" th:text="${row.PackUnit}"></td>
+                        <td style="text-align:right;" th:text="${row.WeightComparedToPoWt}"></td>
+                        <td style="text-align:right;" th:text="${row.SupplierFirstWeight}"></td>
+                        <td style="text-align:right;" th:text="${row.SupplierSecondWeight}"></td>
+                        <td style="text-align:right;" th:text="${row.SupplierWeight}"></td>
+                        <td style="text-align:right;" th:text="${row.FactoryWeight}"></td>
+                        <td style="text-align:right; color:red;" th:text="${row.DifferenceWeight}"></td>
+                        <td style="text-align:right;" th:text="${row.AccessWeight}"></td>
+                        <td style="text-align:right;" th:text="${row.NetPaid}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Bottom Mode Bar -->
+    <div class="bottom-mode-bar">
+        <button id="btnModeForm" class="mode-btn active" onclick="switchViewMode('Form')">Form</button>
+        <button id="btnModeHistory" class="mode-btn" onclick="switchViewMode('History')">History</button>
+    </div>
+</div>
+
+<script>
+    const context = {
+        documentTypeId: 51,
+        orgId: 1,
+        compId: 1,
+        branchId: 1
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setDefaultDates();
+        if (!document.getElementById('cmbsupp').options.length || document.getElementById('cmbsupp').options.length <= 1) {
+            loadDropdowns();
+        }
+        loadMainHistoryGrid();
+    });
+
+    function setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('txtgpdate').value = today;
+        document.getElementById('txtBiltyDate').value = today;
+        document.getElementById('txtFromPoDate').value = today;
+        document.getElementById('txtToPoDate').value = today;
+
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        const threeDaysAgoIso = threeDaysAgo.toISOString().split('T')[0];
+
+        document.getElementById('txtHistFromDate').value = threeDaysAgoIso;
+        document.getElementById('txtHistToDate').value = today;
+
+        const nowIso = new Date().toISOString().slice(0, 16);
+        document.getElementById('txtintime').value = nowIso;
+        document.getElementById('txtouttime').value = nowIso;
+    }
+
+    function loadDropdowns() {
+        fetch('/api/inward-gate-pass/dropdowns')
+            .then(res => res.json())
+            .then(data => {
+                bindSelect('cmbsupp', data.suppliers, 'id', 'name');
+                bindSelect('cmbcity', data.cities, 'id', 'name');
+                bindSelect('cmbvehicletype', data.vehicleTypes, 'id', 'name');
+                bindSelect('cmbgptype', data.gatePassTypes, 'id', 'name');
+                bindSelect('CmbVariety', data.items, 'id', 'name');
+                bindSelect('cmbWeighBridge', data.weighBridges, 'id', 'name');
+                bindSelect('CmbPackingType', data.packingTypes, 'id', 'name');
+                bindSelect('cmbHistSupplier', data.suppliers, 'id', 'name');
+
+                selectDefaultByText('cmbgptype', ['Rice', 'Paddy']);
+                selectDefaultByText('cmbcity', ['Khudian Khas', 'Khudian']);
+                selectDefaultByText('cmbvehicletype', ['Truck', 'Tractor']);
+                selectDefaultByText('CmbOrderType', ['Purchase Order']);
+                selectDefaultByText('CmbStatus', ['Open']);
+                selectDefaultByText('cmbWeighBridge', ['Auto']);
+            });
+    }
+
+    function bindSelect(elemId, list, valKey, textKey) {
+        const sel = document.getElementById(elemId);
+        sel.innerHTML = '<option value="">-- Select --</option>';
+        if (list) {
+            list.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item[valKey];
+                opt.textContent = item[textKey];
+                sel.appendChild(opt);
+            });
+        }
+    }
+
+    function switchViewMode(mode) {
+        const viewForm = document.getElementById('viewForm');
+        const viewHistory = document.getElementById('viewHistory');
+        const btnForm = document.getElementById('btnModeForm');
+        const btnHist = document.getElementById('btnModeHistory');
+        const lblTitle = document.getElementById('lblFormHeaderTitle');
+
+        if (mode === 'History') {
+            viewForm.style.display = 'none';
+            viewHistory.style.display = 'block';
+            btnForm.classList.remove('active');
+            btnHist.classList.add('active');
+            lblTitle.textContent = 'Inward Gate Pass History';
+            executeFullHistorySearch();
+        } else {
+            viewForm.style.display = 'block';
+            viewHistory.style.display = 'none';
+            btnForm.classList.add('active');
+            btnHist.classList.remove('active');
+            lblTitle.textContent = 'Inward Gate Pass';
+        }
+    }
+
+    function onSwitchToFormNew() {
+        switchViewMode('Form');
+        onNewRecord();
+    }
+
+    function selectDefaultByText(elemId, targetTexts) {
+        const sel = document.getElementById(elemId);
+        if (!sel || sel.options.length <= 1) return;
+        for (let text of targetTexts) {
+            for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].text.toLowerCase().includes(text.toLowerCase())) {
+                    sel.selectedIndex = i;
+                    return;
+                }
+            }
+        }
+        if (sel.options.length > 1) sel.selectedIndex = 1;
+    }
+
+    function onNewRecord() {
+        document.getElementById('txtId').value = '0';
+        document.getElementById('cmbsupp').value = '';
+        document.getElementById('CmbVariety').value = '';
+        document.getElementById('txtvehicleno').value = '';
+        document.getElementById('txtqty').value = '0';
+        document.getElementById('txtPackUnit').value = '60';
+        document.getElementById('txtWeight').value = '0';
+        document.getElementById('txtFactoryWeight').value = '0';
+        document.getElementById('txtSupplierFirstWeight').value = '0';
+        document.getElementById('txtsecondWeight').value = '0';
+        document.getElementById('txtSupplierSecondWeight').value = '0';
+
+        selectDefaultByText('cmbgptype', ['Rice', 'Paddy']);
+        selectDefaultByText('cmbcity', ['Khudian Khas', 'Khudian']);
+        selectDefaultByText('cmbvehicletype', ['Truck', 'Tractor']);
+        selectDefaultByText('CmbOrderType', ['Purchase Order']);
+        selectDefaultByText('CmbStatus', ['Open']);
+        selectDefaultByText('cmbWeighBridge', ['Auto']);
+
+        calculateNetWeights();
+
+        document.getElementById('btnsave').style.display = 'inline-flex';
+        document.getElementById('btnupdate').style.display = 'none';
+
+        fetch('/api/inward-gate-pass/generate-no')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('txtgpno').value = data.gpSrNo || 1;
+                document.getElementById('txtgptypeno').value = data.gpTypeSrNo || 1;
+            });
+    }
+
+    function calculateWeight() {
+        const qty = parseFloat(document.getElementById('txtqty').value) || 0;
+        const packUnit = parseFloat(document.getElementById('txtPackUnit').value) || 0;
+        document.getElementById('txtWeight').value = (qty * packUnit).toFixed(2);
+    }
+
+    function calculateNetWeights() {
+        const factLoad = parseFloat(document.getElementById('txtFactoryWeight').value) || 0;
+        const factTare = parseFloat(document.getElementById('txtsecondWeight').value) || 0;
+        const factNet = Math.max(0, factLoad - factTare);
+        document.getElementById('txtFactoryNetWeight').value = factNet.toFixed(2);
+
+        const supLoad = parseFloat(document.getElementById('txtSupplierFirstWeight').value) || 0;
+        const supTare = parseFloat(document.getElementById('txtSupplierSecondWeight').value) || 0;
+        const supNet = Math.max(0, supLoad - supTare);
+        document.getElementById('txtSupplierNetWeight').value = supNet.toFixed(2);
+
+        document.getElementById('txtFirstWtDifference').value = (supLoad - factLoad).toFixed(2);
+        document.getElementById('txtSecondWtDifference').value = (supTare - factTare).toFixed(2);
+        document.getElementById('txtDifferenceWeight').value = (supNet - factNet).toFixed(2);
+    }
+
+    function onSaveRecord() {
+        const payload = {
+            id: parseInt(document.getElementById('txtId').value) || 0,
+            documentTypeId: context.documentTypeId,
+            gpDate: document.getElementById('txtgpdate').value,
+            gpSrNo: parseInt(document.getElementById('txtgpno').value) || 0,
+            gpTypeSrNo: parseInt(document.getElementById('txtgptypeno').value) || 0,
+            gatepassType: document.getElementById('cmbgptype').options[document.getElementById('cmbgptype').selectedIndex]?.text || 'Paddy',
+            supplierCustomerId: parseInt(document.getElementById('cmbsupp').value) || 0,
+            cityId: parseInt(document.getElementById('cmbcity').value) || 0,
+            itemId: parseInt(document.getElementById('CmbVariety').value) || 0,
+            vehicleNo: document.getElementById('txtvehicleno').value,
+            vehicleType: document.getElementById('cmbvehicletype').value,
+            biltyNo: document.getElementById('txtbiltyno').value,
+            biltyDate: document.getElementById('txtBiltyDate').value,
+            freight: parseFloat(document.getElementById('txtfreight').value) || 0,
+            advanceByParty: parseFloat(document.getElementById('txtAdvanceByParty').value) || 0,
+            advanceByFactory: parseFloat(document.getElementById('txtAdvanceByFactory').value) || 0,
+            netPaid: parseFloat(document.getElementById('txtNetPaid').value) || 0,
+            supplierFirstWeight: parseFloat(document.getElementById('txtSupplierFirstWeight').value) || 0,
+            supplierSecondWeight: parseFloat(document.getElementById('txtSupplierSecondWeight').value) || 0,
+            supplierWeight: parseFloat(document.getElementById('txtSupplierNetWeight').value) || 0,
+            factoryWeight: parseFloat(document.getElementById('txtFactoryNetWeight').value) || 0,
+            differenceWeight: parseFloat(document.getElementById('txtDifferenceWeight').value) || 0,
+            status: document.getElementById('CmbStatus').value || 'Open',
+            packingTypeId: parseInt(document.getElementById('CmbPackingType').value) || 0,
+            packUnit: parseFloat(document.getElementById('txtPackUnit').value) || 60,
+            driverName: document.getElementById('txtDriverName').value,
+            driverCNICNO: document.getElementById('txtCNIC').value,
+            driverMobileNo: document.getElementById('txtDriverCellNo').value,
+            whatsappNo: document.getElementById('txtWhatsAppNo').value,
+            fatherName: document.getElementById('txtFatherName').value,
+            fatherCnicNo: document.getElementById('txtFatherCNIC').value,
+            gatePassInwardDetails: [
+                {
+                    itemId: parseInt(document.getElementById('CmbVariety').value) || 0,
+                    itemQty: parseFloat(document.getElementById('txtqty').value) || 0,
+                    packUnit: parseFloat(document.getElementById('txtPackUnit').value) || 60,
+                    weight: parseFloat(document.getElementById('txtWeight').value) || 0
+                }
+            ]
+        };
+
+        fetch('/api/inward-gate-pass/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    document.getElementById('txtId').value = data.igpId;
+                    document.getElementById('btnsave').style.display = 'none';
+                    document.getElementById('btnupdate').style.display = 'inline-flex';
+                    loadMainHistoryGrid();
+                } else {
+                    alert(data.message);
+                }
+            });
+    }
+
+    function loadMainHistoryGrid() {
+        fetch('/api/inward-gate-pass/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ documentTypeId: 51 })
+        })
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('grdMainHistoryBody');
+                tbody.innerHTML = '';
+                let totalQty = 0, totalSupWt = 0, totalDiff = 0;
+
+                data.forEach(row => {
+                    totalQty += parseFloat(row.ItemQty) || 0;
+                    totalSupWt += parseFloat(row.SupplierWeight) || 0;
+                    totalDiff += parseFloat(row.DifferenceWeight) || 0;
+
+                    const tr = document.createElement('tr');
+                    tr.ondblclick = function() { loadRecordAndEdit(row.Id); };
+                    tr.innerHTML = `
+                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="onPrintReport(${row.Id})">Print</button></td>
+                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="loadRecordAndEdit(${row.Id})">Edit</button></td>
+                    <td>${row.GpSrNo || ''}</td>
+                    <td>${row.GpDate ? row.GpDate.split('T')[0] : ''}</td>
+                    <td>${row.GatepassType || ''}</td>
+                    <td>${row.OrderType || 'Purchase Order'}</td>
+                    <td>${row.SupplierName || ''}</td>
+                    <td>${row.PurchaseOrderId || ''}</td>
+                    <td>${row.VehicleType || ''}</td>
+                    <td>${row.VehicleNo || ''}</td>
+                    <td>${row.BiltyNo || ''}</td>
+                    <td style="text-align:right;">${row.ItemQty || 0}</td>
+                    <td style="text-align:right;">${row.PackUnit || 0}</td>
+                    <td style="text-align:right;">${row.WeightComparedToPoWt || 0}</td>
+                    <td style="text-align:right;">${row.SupplierFirstWeight || 0}</td>
+                    <td style="text-align:right;">${row.SupplierSecondWeight || 0}</td>
+                    <td style="text-align:right;">${row.SupplierWeight || 0}</td>
+                    <td style="text-align:right;">${row.FactoryWeight || 0}</td>
+                    <td style="text-align:right; color:red;">${row.DifferenceWeight || 0}</td>
+                    <td style="text-align:right;">${row.AccessWeight || 0}</td>
+                    <td style="text-align:right;">${row.NetPaid || 0}</td>
+                    <td>${row.VarietyName || row.ItemName || ''}</td>
+                    <td>${row.CityName || ''}</td>
+                `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('lblRecordCount').textContent = data.length;
+                document.getElementById('lblSumQty').textContent = totalQty.toFixed(2);
+                document.getElementById('lblSumSupWt').textContent = totalSupWt.toFixed(2);
+                document.getElementById('lblSumDiff').textContent = totalDiff.toFixed(2);
+            });
+    }
+
+    function executeFullHistorySearch() {
+        const payload = {
+            documentTypeId: 51,
+            fromDate: document.getElementById('txtHistFromDate').value,
+            toDate: document.getElementById('txtHistToDate').value,
+            fromDocNo: document.getElementById('txtHistFromDoc').value,
+            toDocNo: document.getElementById('txtHistToDoc').value,
+            supplierId: document.getElementById('cmbHistSupplier').value
+        };
+
+        fetch('/api/inward-gate-pass/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('grdFullHistoryBody');
+                tbody.innerHTML = '';
+
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.ondblclick = function() { loadRecordAndEdit(row.Id); };
+                    tr.innerHTML = `
+                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="onPrintReport(${row.Id})">Print</button></td>
+                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="loadRecordAndEdit(${row.Id})">Edit</button></td>
+                    <td>${row.GpSrNo || ''}</td>
+                    <td>${row.GpDate ? row.GpDate.split('T')[0] : ''}</td>
+                    <td>${row.GatepassType || ''}</td>
+                    <td>${row.OrderType || 'Purchase Order'}</td>
+                    <td>${row.PurchaseOrderId || ''}</td>
+                    <td>${row.SupplierName || ''}</td>
+                    <td>${row.CityName || ''}</td>
+                    <td>${row.VehicleType || ''}</td>
+                    <td>${row.VehicleNo || ''}</td>
+                    <td>${row.BiltyDate ? row.BiltyDate.split('T')[0] : ''}</td>
+                    <td>${row.BiltyNo || ''}</td>
+                    <td>${row.VarietyName || row.ItemName || ''}</td>
+                    <td style="text-align:right;">${row.ItemQty || 0}</td>
+                    <td style="text-align:right;">${row.PackUnit || 0}</td>
+                    <td style="text-align:right;">${row.WeightComparedToPoWt || 0}</td>
+                    <td style="text-align:right;">${row.SupplierFirstWeight || 0}</td>
+                    <td style="text-align:right;">${row.SupplierSecondWeight || 0}</td>
+                    <td style="text-align:right;">${row.SupplierWeight || 0}</td>
+                    <td style="text-align:right;">${row.FactoryWeight || 0}</td>
+                    <td style="text-align:right; color:red;">${row.DifferenceWeight || 0}</td>
+                    <td style="text-align:right;">${row.AccessWeight || 0}</td>
+                    <td style="text-align:right;">${row.NetPaid || 0}</td>
+                `;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
+    function loadRecordAndEdit(id) {
+        switchViewMode('Form');
+        fetch(`/api/inward-gate-pass/${id}`)
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.header) {
+                    const h = res.header;
+                    document.getElementById('txtId').value = h.Id;
+                    document.getElementById('txtgpno').value = h.GpSrNo || '';
+                    document.getElementById('txtgptypeno').value = h.GpTypeSrNo || '';
+                    document.getElementById('cmbsupp').value = h.SupplierCustomerId || '';
+                    document.getElementById('cmbcity').value = h.CityId || '';
+                    document.getElementById('CmbVariety').value = h.ItemId || '';
+                    document.getElementById('txtvehicleno').value = h.VehicleNo || '';
+                    document.getElementById('cmbvehicletype').value = h.VehicleType || '';
+                    document.getElementById('txtbiltyno').value = h.BiltyNo || '';
+                    document.getElementById('txtfreight').value = h.Freight || 0;
+                    document.getElementById('txtAdvanceByParty').value = h.AdvanceByParty || 0;
+                    document.getElementById('txtAdvanceByFactory').value = h.AdvanceByFactory || 0;
+                    document.getElementById('txtNetPaid').value = h.NetPaid || 0;
+                    document.getElementById('txtSupplierFirstWeight').value = h.SupplierFirstWeight || 0;
+                    document.getElementById('txtSupplierSecondWeight').value = h.SupplierSecondWeight || 0;
+                    document.getElementById('txtFactoryWeight').value = h.FactoryWeight || 0;
+                    document.getElementById('txtDriverName').value = h.DriverName || '';
+                    document.getElementById('txtCNIC').value = h.DriverCNICNO || '';
+                    document.getElementById('txtDriverCellNo').value = h.DriverMobileNo || '';
+
+                    if (res.details && res.details.length > 0) {
+                        document.getElementById('txtqty').value = res.details[0].ItemQty || 0;
+                        document.getElementById('txtPackUnit').value = res.details[0].PackUnit || 60;
+                        calculateWeight();
+                    }
+
+                    calculateNetWeights();
+                    document.getElementById('btnsave').style.display = 'none';
+                    document.getElementById('btnupdate').style.display = 'inline-flex';
+                }
+            });
+    }
+
+    function onDeleteRecord() {
+        const id = parseInt(document.getElementById('txtId').value) || 0;
+        if (id <= 0) {
+            alert('Please select a record to delete.');
+            return;
+        }
+        if (confirm('Are you sure you want to delete this Inward Gate Pass?')) {
+            fetch(`/api/inward-gate-pass/delete/${id}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    onNewRecord();
+                    loadMainHistoryGrid();
+                });
+        }
+    }
+
+    function switchMainSubTab(tabId) {
+        document.querySelectorAll('.tab-container .tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-container .tab-content').forEach(c => c.classList.remove('active'));
+
+        if (tabId === 'tabGridHistory') {
+            document.querySelectorAll('.tab-container .tab-btn')[0].classList.add('active');
+            document.getElementById('tabGridHistory').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-container .tab-btn')[1].classList.add('active');
+            document.getElementById('tabPoInfo').classList.add('active');
+        }
+    }
+
+    function onRefreshForm() { loadMainHistoryGrid(); }
+    function onDefineCity() { alert('Define City form dialog placeholder'); }
+    function onDefineVehicle() { alert('Define Vehicle form dialog placeholder'); }
+    function onOpenDriverForm() { alert('Driver Biodata form dialog placeholder'); }
+    function onOpenAttachments() { alert('Attachments dialog placeholder'); }
+    function onPrintReport(id) { alert('Printing Inward Gate Pass 251-Print' + (id ? ' for ID: ' + id : '')); }
+    function onPrintSlip() { alert('Printing Weighbridge Slip 257-GPSlip...'); }
+    function onLabReport() { alert('Printing Lab Report 653-LabReport...'); }
+    function onShowShortcuts() { alert('Shortcuts:\nF2: New\nF5: Refresh\nCtrl+S: Save\nCtrl+U: Update\nCtrl+D: Delete'); }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,88 @@
+
+====================================================================================================
+CLASS CameraControl.ZoomTrackBar
+====================================================================================================
+
+; CameraControl.ZoomTrackBar::SetActionSource  (rva=0x2202d, tiny header, code_size=9, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.1
+    IL_0002: ldind.ref
+    IL_0003: stfld CameraControl.ZoomTrackBar::_actionSource
+    IL_0008: ret
+
+; CameraControl.ZoomTrackBar::.ctor  (rva=0x22037, tiny header, code_size=25, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call CameraControl.PropertyTrackBar::.ctor
+    IL_0006: ldarg.0
+    IL_0007: ldarg.0
+    IL_0008: ldftn CameraControl.ZoomTrackBar::_MouseUp
+    IL_000e: newobj System.Windows.Forms.MouseEventHandler::.ctor
+    IL_0013: call System.Windows.Forms.Control::add_MouseUp
+    IL_0018: ret
+
+; CameraControl.ZoomTrackBar::OnMouseWheel  (rva=0x22051, tiny header, code_size=13, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: castclass System.Windows.Forms.HandledMouseEventArgs
+    IL_0006: ldc.i4.1
+    IL_0007: callvirt System.Windows.Forms.HandledMouseEventArgs::set_Handled
+    IL_000c: ret
+
+; CameraControl.ZoomTrackBar::_MouseUp  (rva=0x2205f, tiny header, code_size=25, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld CameraControl.ZoomTrackBar::_actionSource
+    IL_0006: ldc.i4.s 22
+    IL_0008: ldarg.0
+    IL_0009: call System.Windows.Forms.TrackBar::get_Value
+    IL_000e: call System.IntPtr::op_Explicit
+    IL_0013: callvirt CameraControl.ActionSource::FireEvent
+    IL_0018: ret
+
+; CameraControl.ZoomTrackBar::Update  (rva=0x2207c, fat header, code_size=106, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: castclass CameraControl.CameraModel
+    IL_0006: stloc.0
+    IL_0007: ldc.i4.0
+    IL_0008: stloc.1
+    IL_0009: ldarg.2
+    IL_000a: callvirt CameraControl.CameraEvent::GetEventType
+    IL_000f: dup
+    IL_0010: stloc.1
+    IL_0011: ldc.i4.7
+    IL_0012: beq.s IL_0018
+    IL_0014: ldloc.1
+    IL_0015: ldc.i4.8
+    IL_0016: bne.un.s IL_0069
+    IL_0018: ldarg.2
+    IL_0019: callvirt CameraControl.CameraEvent::GetArg
+    IL_001e: call System.IntPtr::op_Explicit
+    IL_0023: ldc.i4 1536
+    IL_0028: bne.un.s IL_0069
+    IL_002a: ldloc.0
+    IL_002b: callvirt CameraControl.CameraModel::get_isTypeDS
+    IL_0030: brtrue.s IL_0069
+    IL_0032: ldloc.0
+    IL_0033: callvirt CameraControl.CameraModel::get_Zoom
+    IL_0038: stloc.2
+    IL_0039: ldloc.1
+    IL_003a: ldc.i4.7
+    IL_003b: beq.s IL_0042
+    IL_003d: ldloc.1
+    IL_003e: ldc.i4.8
+    IL_003f: beq.s IL_004a
+    IL_0041: ret
+    IL_0042: ldarg.0
+    IL_0043: ldloc.2
+    IL_0044: call CameraControl.PropertyTrackBar::UpdateProperty
+    IL_0049: ret
+    IL_004a: ldarg.0
+    IL_004b: ldloc.0
+    IL_004c: callvirt CameraControl.CameraModel::get_ZoomDesc
+    IL_0051: stfld CameraControl.ZoomTrackBar::_desc
+    IL_0056: ldarg.0
+    IL_0057: ldarg.0
+    IL_0058: ldflda CameraControl.ZoomTrackBar::_desc
+    IL_005d: call CameraControl.PropertyTrackBar::UpdatePropertyDesc
+    IL_0062: ldarg.0
+    IL_0063: ldloc.2
+    IL_0064: call CameraControl.PropertyTrackBar::UpdateProperty
+    IL_0069: ret

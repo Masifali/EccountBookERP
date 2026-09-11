@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <!--	<link rel="icon" th:href="@{/images/ma_group.png}" type="image/ico" />-->
+
+    <title>MY SHOP</title>
+
+    <!-- Bootstrap -->
+    <link href="/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="/vendors/nprogress/nprogress.css" rel="stylesheet">
+    <!-- iCheck -->
+    <link href="/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+
+    <!-- bootstrap-progressbar -->
+    <link href="/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
+    <!-- JQVMap -->
+    <link href="/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet"/>
+    <!-- bootstrap-daterangepicker -->
+    <link href="/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+
+    <!-- Datatables -->
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+
+    <!-- Custom Theme Style -->
+    <link href="/build/css/custom.min.css" rel="stylesheet">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+
+    <style>
+        .rounded {
+            -webkit-border-radius: 3px !important;
+            -moz-border-radius: 3px !important;
+            border-radius: 3px !important;
+        }
+
+        .mini-stat {
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mini-stat-icon {
+            width: 60px;
+            height: 60px;
+            display: inline-block;
+            line-height: 60px;
+            text-align: center;
+            font-size: 30px;
+            background: none repeat scroll 0% 0% #EEE;
+            border-radius: 100%;
+            float: left;
+            margin-right: 10px;
+            color: #FFF;
+        }
+
+        .mini-stat-info {
+            font-size: 12px;
+            padding-top: 2px;
+        }
+
+        span, p {
+            color: white;
+        }
+
+        .mini-stat-info span {
+            display: block;
+            font-size: 30px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            margin-top: 7px;
+        }
+
+        /* ================ colors =====================*/
+        .bg-facebook {
+            background-color: #3b5998 !important;
+            border: 1px solid #3b5998;
+            color: white;
+        }
+
+        .fg-facebook {
+            color: #3b5998 !important;
+        }
+
+        .bg-twitter {
+            background-color: #00a0d1 !important;
+            border: 1px solid #00a0d1;
+            color: white;
+        }
+
+        .fg-twitter {
+            color: #00a0d1 !important;
+        }
+
+        .bg-googleplus {
+            background-color: #db4a39 !important;
+            border: 1px solid #db4a39;
+            color: white;
+        }
+
+        .fg-googleplus {
+            color: #db4a39 !important;
+        }
+    </style>
+
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- side bar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div">
+        </div>
+        <!-- /side bar and top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+
+            <div th:if="${#authorization.expression('hasAuthority(''DASHBOARD_ADMIN'')')} OR ${#authorization.expression('hasAuthority(''MARKETING_ADMIN'')')}">
+
+                <input id="dashboardAdmin" th:value="${#authorization.expression('hasAuthority(''DASHBOARD_ADMIN'')')}"
+                       type="hidden"/>
+                <input id="marketingAdmin" th:value="${#authorization.expression('hasAuthority(''MARKETING_ADMIN'')')}"
+                       type="hidden"/>
+
+                <div class="row" style="background-color: rgb(232,237,240)">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+
+                        <div class="row"
+                             style="background-color: white; border: 2px black solid; padding: 10px; margin: 5px;">
+                            <div class="col-md-12 col-sm-12 col-xs-12" style="width: 100%;">
+                                <div class="row">
+                                    <div class="col-md-1 col-sm-1 col-xs-1" style="align-items: end;">
+                                        <img style="height: 60px; width: 50px;" th:src="@{/build/images/magroup.png}"/>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="container mt-5">
+                                    <ul class="nav nav-tabs nav-justified" id="myTab" name="myTab">
+                                        <li th:if="${#authorization.expression('hasAuthority(''DASHBOARD_ADMIN'')')}"><a
+                                                data-toggle="tab" href="#first-tab" style="font-size: larger;">BUSINESS
+                                            DASHBOARD</a></li>
+                                        <li th:if="${#authorization.expression('hasAuthority(''DASHBOARD_ADMIN'')')}"><a
+                                                data-toggle="tab" href="#second-tab" style="font-size: larger;">HUMAN
+                                            RESOURCE</a></li>
+                                        <li th:if="${#authorization.expression('hasAuthority(''DASHBOARD_ADMIN'')')} OR ${#authorization.expression('hasAuthority(''MARKETING_ADMIN'')')}">
+                                            <a data-toggle="tab" href="#third-tab" style="font-size: larger;">BUSINESS
+                                                PROMOTER</a></li>
+                                    </ul>
+
+                                    <div class="tab-content">
+                                        <div class="tab-pane fade" id="first-tab">
+                                            <div class="row" style="padding: 10px; margin: 5px;">
+                                                <div class="col-md-12 col-sm-12 col-xs-12" style="padding: 0px;">
+                                                    <!-- TOP ROW START -->
+                                                    <div class="row">
+                                                        <div class="col-md-3 col-sm-3 col-xs-3">
+
+                                                            <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                                <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                     style="background-color: #ddebf7; padding: 0px; border: 1px black solid;">
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(189, 215, 238); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">SALES</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isalesAll"
+                                                                             name="isalesAll"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(189, 215, 238); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: small; color: #73879C !important;">Today</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Kgs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isalesToday"
+                                                                             name="isalesToday"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(221, 235, 247); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Yesterday</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isalesYesterday"
+                                                                             name="isalesYesterday"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(221, 235, 247); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">This Month</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isalesMonthly"
+                                                                             name="isalesMonthly"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(221, 235, 247); width: 100%; padding:0px; margin: 0px;">
+
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">This Year</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isalesYearly"
+                                                                             name="isalesYearly"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="col-md-3 col-sm-3 col-xs-3">
+                                                            <div class="col-md-7 col-sm-7 col-xs-5">
+                                                                <span style="font-weight: bold; font-size: large; color:  #73879C !important;">PROFIT TYPE</span>
+                                                                <img id="profitLoading"
+                                                                     style="float: right; width: 48px; height: 48px;  display: none;float: right"
+                                                                     th:src="@{/build/images/pac_man.gif}"/>
+                                                            </div>
+                                                            <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                 style="padding: 0px; align-contents: end;">
+                                                                <select class="form-control select2_single"
+                                                                        id="profitTypeId"
+                                                                        name="profitTypeId">
+                                                                    <!--                                  <option value="99">ALL</option>-->
+                                                                    <option value="1">ALL</option>
+                                                                    <option value="2">TRADING PROFIT</option>
+                                                                    <!-- <option value="3">SALE PROFIT</option>-->
+                                                                </select>
+                                                            </div>
+                                                            <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                                <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                     style="background-color: #e2efda; padding: 0px; border: 1px black solid;">
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(198, 224, 180); width: 100%; padding:0px; margin: 0px;">
+
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">TOTAL PRO</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isTrafingProfitAll"
+                                                                             name="isTrafingProfitAll"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(198, 224, 180); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: small; color: #73879C !important;">Today</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isTrafingProfitToday"
+                                                                             name="isTrafingProfitToday"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(226, 239, 218); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Yesterday</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isTrafingProfitYesterday"
+                                                                             name="isTrafingProfitYesterday"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(226, 239, 218); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">This Week</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isTrafingProfitWeekly"
+                                                                             name="isTrafingProfitWeekly"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(226, 239, 218); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">This Month</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isTrafingProfitMonthly"
+                                                                             name="isTrafingProfitMonthly"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(226, 239, 218); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">This Year</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isTrafingProfitYearly"
+                                                                             name="isTrafingProfitYearly"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3 col-sm-3 col-xs-3">
+                                                            <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                                <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                     style="background-color: #fce4d6; padding: 0px; border: 1px black solid;">
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(248, 203, 173); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">S. ORDERS</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            NOs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="isalesOrderAll"
+                                                                             name="isalesOrderAll"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(248, 203, 173); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: smaller; color: #73879C !important;">Booked Today</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            WT.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="todayWTSalesOrder"
+                                                                             name="todayWTSalesOrder"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(252, 228, 214); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: smaller; color: #73879C !important;">Completed S. Orders</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            NO's.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="allCompletedSalesOrder"
+                                                                             name="allCompletedSalesOrder"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(252, 228, 214); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: smaller; color: #73879C !important;">Pending S. Orders</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            NO's.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="allPendingSalesOrder"
+                                                                             name="allPendingSalesOrder"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(252, 228, 214); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: smaller; color: #73879C !important;">Completed This Month</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            NO's.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="allMonthlySalesOrder"
+                                                                             name="allMonthlySalesOrder"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3 col-sm-3 col-xs-3">
+                                                            <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                                <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                     style="background-color: #d6dce4; padding: 0px; border: 1px black solid;">
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(172,185,202); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: medium; color: #73879C !important;">LIQUID ASSETS</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="liquidAssets"
+                                                                             name="liquidAssets"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(172, 185, 202); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: small; color: #73879C !important;"></span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: small; color: #73879C !important;"></span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(214, 220, 228); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Cash in Hand</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mCashInHand"
+                                                                             name="mCashInHand"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(214, 220, 228); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Bank</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mCashInBank"
+                                                                             name="mCashInBank"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(214, 220, 228); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Cheques in Hand</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mCheque"
+                                                                             name="mCheque"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- TOP ROW END -->
+
+                                                    <!-- CHART ONE ROW START -->
+
+                                                    <!-- CHART ONE ROW END -->
+
+                                                </div>
+                                            </div>
+
+                                            <div class="row" style="padding: 10px; margin: 5px;">
+                                                <div class="col-md-12 col-sm-12 col-xs-12" style="padding: 0px;">
+                                                    <!-- TOP ROW START -->
+                                                    <div class="row">
+
+                                                        <div class="col-md-4 col-sm-4 col-xs-4">
+
+                                                            <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                                <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                     style="background-color: #ddebf7; padding: 0px; border: 1px black solid;">
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(219, 219, 219); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                        <div class="col-md-7 col-sm-7 col-xs-7"
+                                                                             style="margin-top: 6px;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">SALES TREND</span>
+                                                                        </div>
+
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             style="padding: 0px; align-contents: end;">
+                                                                            <select class="form-control select2_single"
+                                                                                    id="salesTrendFilter"
+                                                                                    name="salesTrendFilter">
+                                                                                <!--                                  <option value="99">ALL</option>-->
+                                                                                <option value="1">WEEK-TO-DATE</option>
+                                                                                <option value="2">MONTH-TO-DATE</option>
+                                                                                <option value="3">YEAR-TO-DATE</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                             style="padding: 5px;">
+                                                                            <canvas id="canvas_salesTrend"></canvas>
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                            <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                                <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                     style="background-color: #ddebf7; padding: 0px; border: 1px black solid;">
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(219, 219, 219); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                        <div class="col-md-7 col-sm-7 col-xs-7"
+                                                                             style="margin-top: 6px;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">PROFITABILITY TREND</span>
+                                                                            <img id="profitabilityLoading"
+                                                                                 style="float: right; width: 48px; height: 48px; display: none;"
+                                                                                 th:src="@{/build/images/pac_man.gif}"/>
+
+                                                                        </div>
+
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             style="padding: 0px; align-contents: end;">
+                                                                            <select class="form-control select2_single"
+                                                                                    id="profitabilityTrendFilter"
+                                                                                    name="profitabilityTrendFilter">
+                                                                                <option value="0">DAILY</option>
+                                                                                <option value="1">MONTHLY</option>
+                                                                                <option value="2">QUARTERLY</option>
+                                                                                <option value="3">YEARLY</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                             style="padding: 5px;">
+                                                                            <canvas id="canvas_profitabilityTrend"></canvas>
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <!--                            <div class="row" style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">-->
+                                                                    <!--                              <div class="col-md-12 col-sm-12 col-xs-12" style="padding: 5px;">-->
+                                                                    <!--                                <canvas id="canvas_profitabilityTrend"></canvas>-->
+                                                                    <!--                              </div>-->
+
+                                                                    <!--                            </div>-->
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-3 col-sm-3 col-xs-3">
+                                                            <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                                <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                     style="background-color: #d6dce4; padding: 0px; border: 1px black solid;">
+
+                                                                    <!-- Current Stock -->
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(219,219,219); width: 100%; height: 33px; padding:0px; margin: 0px;border-bottom: 1px black solid;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">CUR. STOCK</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mStockRate" name="mStockRate"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px; ">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Stock Qty (WT)</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            KGs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mStockWeightage"
+                                                                             name="mStockWeightage"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Today Purchase</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            KGs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mTodayPurchase"
+                                                                             name="mTodayPurchase"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Pending PO's</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            KGs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mPendingPOs" name="mPendingPOs"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <!-- Current Stock -->
+
+                                                                    <!-- RECEIVABLES -->
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(219,219,219); width: 100%; height: 33px; padding:0px; margin: 0px;border-top: 1px black solid; border-bottom: 1px black solid;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">RECEIVABLES</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mReceivables"
+                                                                             name="mReceivables"
+                                                                             style="text-align: right; color: #73879C !important;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px; ">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Today Collection</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mCollection" name="mCollection"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Collection this Month</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mCollectionMonth"
+                                                                             name="mCollectionMonth"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-size: small; color: #73879C !important;">Due in this Month</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <!-- RECEIVABLES -->
+
+                                                                    <!-- PAYABLES -->
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(219,219,219); width: 100%; height: 33px; padding:0px; margin: 0px; border-top: 1px black solid; border-bottom: 1px black solid;">
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">PAYABLES</span>
+                                                                        </div>
+                                                                        <div class="col-md-2 col-sm-2 col-xs-2"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mPayables" name="mPayables"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-weight: bold; font-size: large; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px; ">
+                                                                        <div class="col-md-6 col-sm-6 col-xs-6">
+                                                                            <span style="font-size: small; color: #73879C !important;">Due this Month</span>
+                                                                        </div>
+                                                                        <div class="col-md-1 col-sm-1 col-xs-1"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-6 col-sm-6 col-xs-6">
+                                                                            <span style="font-size: small; color: #73879C !important;">This Month Payments</span>
+                                                                        </div>
+                                                                        <div class="col-md-1 col-sm-1 col-xs-1"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mPaymentMonth"
+                                                                             name="mPaymentMonth"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row"
+                                                                         style="background-color: rgb(242, 242, 242); width: 100%; padding:0px; margin: 0px;">
+                                                                        <div class="col-md-6 col-sm-6 col-xs-6">
+                                                                            <span style="font-size: small; color: #73879C !important;">This Year Payments</span>
+                                                                        </div>
+                                                                        <div class="col-md-1 col-sm-1 col-xs-1"
+                                                                             style="vertical-align: middle; text-align: center; color: #73879C !important;">
+                                                                            Rs.
+                                                                        </div>
+                                                                        <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                             id="mPaymentYear"
+                                                                             name="mPaymentYear"
+                                                                             style="text-align: right;">
+                                                                            <span style="font-size: small; color: #73879C !important;">-</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <!-- PAYABLES -->
+
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- TOP ROW END -->
+                                                </div>
+                                            </div>
+
+                                            <div class="row" style="padding: 10px; margin: 5px;">
+                                                <div class="col-md-12 col-sm-12 col-xs-12" style="padding: 0px;">
+
+                                                    <div class="col-md-3 col-sm-3 col-xs-3">
+
+                                                        <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="background-color: #DBDBDB; padding: 0px; border: 1px black solid;">
+                                                                <div class="row"
+                                                                     style="background-color: rgb(219, 219, 219); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                    <div class="col-md-7 col-sm-7 col-xs-7"
+                                                                         style="margin-top: 6px;">
+                                                                        <span style="font-weight: bold; font-size: small; color: #73879C !important;">TOP Products</span>
+                                                                    </div>
+
+                                                                    <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                         style="padding: 0px; align-contents: end;">
+                                                                        <select class="form-control select2_single"
+                                                                                id="topProductFilter"
+                                                                                name="topProductFilter">
+                                                                            <option value="1">ALL SALES</option>
+                                                                            <option value="2">CREDIT SALES</option>
+                                                                            <option value="3">CASH SALES</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row"
+                                                             style="background-color: rgb(242, 242, 242); width: 103%; margin-left: -10px; border: 1px black solid;">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="width: 100%; padding: 0px; margin: 0px;">
+                                                                <table class="table" id="tblTopProducts"
+                                                                       name="tblTopProducts">
+                                                                    <thead>
+                                                                    <tr style="display: none;">
+                                                                        <th style="min-width: 10%; max-width: 10%; width: 10%;"></th>
+                                                                        <th style="min-width: 50%; max-width: 50%; width: 50%;"></th>
+                                                                        <th style="min-width: 40%; max-width: 40%; width: 40%;"></th>
+                                                                    </tr>
+                                                                    </thead>
+                                                                    <tbody></tbody>
+                                                                    <tfoot>
+                                                                    <tr style="display: none;">
+                                                                        <th></th>
+                                                                        <th></th>
+                                                                        <th></th>
+                                                                    </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-3 col-xs-3">
+
+                                                        <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="background-color: #DBDBDB; padding: 0px; border: 1px black solid;">
+                                                                <div class="row"
+                                                                     style="background-color: rgb(219, 219, 219); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                    <div class="col-md-7 col-sm-7 col-xs-7"
+                                                                         style="margin-top: 6px;">
+                                                                        <span style="font-weight: bold; font-size: small;  color: #73879C !important;">TOP Customers</span>
+                                                                    </div>
+
+                                                                    <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                         style="padding: 0px; align-contents: end;">
+                                                                        <select class="form-control select2_single"
+                                                                                id="topCustomerFilter"
+                                                                                name="topCustomerFilter">
+                                                                            <option value="1">SALES</option>
+                                                                            <option value="2">COLLECTIONS</option>
+                                                                            <option value="3">CL. BALANCES</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row"
+                                                             style="background-color: rgb(242, 242, 242); width: 103%; margin-left: -10px; border: 1px black solid;">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="width: 100%; padding: 0px; margin: 0px;">
+                                                                <table class="table" id="tblTopCustomers"
+                                                                       name="tblTopCustomers">
+                                                                    <thead>
+                                                                    <tr style="display: none;">
+                                                                        <th style="min-width: 5%; max-width: 5%; width: 5%;"></th>
+                                                                        <th style="min-width: 55%; max-width: 55%; width: 55%;"></th>
+                                                                        <th style="min-width: 40%; max-width: 40%; width: 40%;"></th>
+                                                                    </tr>
+                                                                    </thead>
+                                                                    <tbody></tbody>
+                                                                    <tfoot>
+                                                                    <tr style="display: none;">
+                                                                        <th></th>
+                                                                        <th></th>
+                                                                        <th></th>
+                                                                    </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-3 col-xs-3">
+
+                                                        <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="background-color: #DBDBDB; padding: 0px; border: 1px black solid;">
+                                                                <div class="row"
+                                                                     style="background-color: rgb(219, 219, 219); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                    <div class="col-md-7 col-sm-7 col-xs-7"
+                                                                         style="margin-top: 6px;">
+                                                                        <span style="font-weight: bold; font-size: small; color: #73879C !important;">Slow Moving Items</span>
+                                                                    </div>
+
+                                                                    <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                         style="padding: 0px; align-contents: end;">
+                                                                        <select class="form-control select2_single"
+                                                                                id="topSlowMovingFilter"
+                                                                                name="topSlowMovingFilter">
+                                                                            <option value="1">DSI</option>
+                                                                            <option value="2">Days SLS</option>
+                                                                            <option value="3">Inv. Turnover</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row"
+                                                             style="background-color: rgb(242, 242, 242); width: 103%; margin-left: -10px; border: 1px black solid;">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="width: 100%; padding: 0px; margin: 0px;">
+                                                                <table class="table" id="tblSlowMoving"
+                                                                       name="tblSlowMoving">
+                                                                    <thead>
+                                                                    <tr style="display: none;">
+                                                                        <th style="min-width: 10%; max-width: 10%; width: 10%;"></th>
+                                                                        <th style="min-width: 50%; max-width: 50%; width: 50%;"></th>
+                                                                        <th style="min-width: 40%; max-width: 40%; width: 40%;"></th>
+                                                                    </tr>
+                                                                    </thead>
+                                                                    <tbody></tbody>
+                                                                    <tfoot>
+                                                                    <tr style="display: none;">
+                                                                        <th></th>
+                                                                        <th></th>
+                                                                        <th></th>
+                                                                    </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-3 col-xs-3">
+
+                                                        <div class="row" style="padding: 0px 10px 0px 0px;">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="background-color: #DBDBDB; padding: 0px; border: 1px black solid;">
+                                                                <div class="row"
+                                                                     style="background-color: rgb(219, 219, 219); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                    <div class="col-md-7 col-sm-7 col-xs-7"
+                                                                         style="margin-top: 6px;">
+                                                                        <span style="font-weight: bold; font-size: small; color: #73879C !important;">LIQUID ASSERTS DETAIL</span>
+                                                                    </div>
+
+                                                                    <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                         style="padding: 0px; align-contents: end;">
+                                                                        <!--<select class="form-control select2_single"
+                                                                                id="topLongStandFilter"
+                                                                                name="topLongStandFilter">
+                                                                            <option value="1">Rcv. Days</option>
+                                                                            <option value="2">Days SLS</option>
+                                                                            <option value="3">CL. BALANCES</option>
+                                                                        </select>-->
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row"
+                                                             style="background-color: rgb(242, 242, 242); width: 103%; margin-left: -10px; border: 1px black solid;">
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="width: 100%; padding: 0px; margin: 0px;">
+                                                                <table class="table" id="liquidAssetTableId"
+                                                                       name="liquidAssetTableId">
+                                                                    <thead>
+                                                                    <tr style="display: none;">
+                                                                        <th style="min-width: 10%; max-width: 10%; width: 10%;"></th>
+                                                                        <th style="min-width: 50%; max-width: 50%; width: 50%;"></th>
+                                                                        <th style="min-width: 40%; max-width: 40%; width: 40%;"></th>
+                                                                    </tr>
+                                                                    </thead>
+                                                                    <tbody></tbody>
+                                                                    <tfoot>
+                                                                    <tr style="display: none;">
+                                                                        <th></th>
+                                                                        <th></th>
+                                                                        <th></th>
+                                                                    </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- FIRST TAB END -->
+
+                                        <div class="tab-pane fade" id="second-tab">
+                                            <div class="row" style="padding: 10px; margin: 5px;">
+                                                <div class="col-md-12 col-sm-12 col-xs-12" style="padding: 0px;">
+
+                                                    <div class="col-md-4 col-sm-4 col-xs-4">
+
+                                                        <div class="row" style="padding: 0px 10px 0px 0px;">
+
+                                                            <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                 style="background-color: #DBDBDB; padding: 0px; border: 1px black solid;">
+
+                                                                <div class="row"
+                                                                     style="background-color: rgb(219, 219, 219); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+                                                                    <div class="col-md-7 col-sm-7 col-xs-7"
+                                                                         style="font-size: large; margin-top: 6px; padding-bottom: 5px; padding-top: 5px;">
+                                                                        <span style="font-weight: bold; font-size: medium;  color: #73879C !important;">DAILY ATTENDANCE</span>
+                                                                    </div>
+                                                                    <div class="col-md-5 col-sm-5 col-xs-5"
+                                                                         id="lastPooledAttendance"
+                                                                         name="lastPooledAttendance"
+                                                                         style="font-size: large; margin-top: 6px; padding-bottom: 5px; padding-top: 5px;">
+                                                                        <span style="font-size: medium; color: green; float: right;"> - </span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row"
+                                                                     style="background-color: rgb(219, 219, 219); width: 100%; padding:0px; margin: 0px; border-bottom: 1px black solid;">
+
+                                                                    <div class="col-md-12 col-sm-12 col-xs-12"
+                                                                         style="margin-top: 6px; padding-bottom: 5px; padding-top: 5px;">
+
+                                                                        <table class="table"
+                                                                               id="tblDailyAttendance"
+                                                                               name="tblDailyAttendance">
+                                                                            <thead>
+                                                                            <tr>
+                                                                                <!--                                              <th style="width: 5%; min-width: 5%; max-width: 5%;"></th>-->
+                                                                                <th style="width: 10%; min-width: 10%; max-width: 10%;">
+                                                                                    CODE
+                                                                                </th>
+                                                                                <th style="width: 60%; min-width: 60%; max-width: 60%;">
+                                                                                    NAME
+                                                                                </th>
+                                                                                <th style="width: 15%; min-width: 15%; max-width: 15%;">
+                                                                                    ENTRY TIME
+                                                                                </th>
+                                                                                <th style="width: 15%; min-width: 15%; max-width: 15%;">
+                                                                                    STATUS
+                                                                                </th>
+                                                                            </tr>
+                                                                            </thead>
+                                                                            <tbody></tbody>
+                                                                            <tfoot>
+                                                                            <tr>
+                                                                                <!--                                              <th></th>-->
+                                                                                <th></th>
+                                                                                <th></th>
+                                                                                <th></th>
+                                                                                <th></th>
+                                                                            </tr>
+                                                                            </tfoot>
+
+                                                                        </table>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="col-md-8 col-sm-8 col-xs-8">
+                                                        <div class="container bootstrap snippets bootdey">
+                                                            <div class="row">
+
+                                                                <div class="col-md-3 col-sm-6 col-xs-12">
+                                                                    <div class="mini-stat clearfix bg-facebook rounded">
+                                                                        <span class="mini-stat-icon"><i
+                                                                                class="fa fa-users fg-facebook"></i></span>
+                                                                        <div class="mini-stat-info" id="activeEmployee">
+                                                                            <span>-</span>
+                                                                            Active Employees
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- SECOND TAB END -->
+
+                                        <div class="tab-pane fade" id="third-tab">
+                                            <div class="row" style="padding: 10px; margin: 5px;">
+                                                <div class="col-md-12 col-sm-12 col-xs-12" style="padding: 0px;">
+
+                                                    <div class="col-md-8 col-sm-8 col-xs-8">
+                                                        <div class="container bootstrap snippets bootdey">
+                                                            <div class="row">
+
+                                                                <div class="col-md-3 col-sm-6 col-xs-12">
+                                                                    <div class="mini-stat clearfix bg-facebook rounded">
+                                                                        <span class="mini-stat-icon"><i
+                                                                                class="fa fa-phone-square fg-facebook"></i></span>
+                                                                        <div class="mini-stat-info" id="totalCalls">
+                                                                            <span>-</span>
+                                                                            Total Calls Today
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="col-md-3 col-sm-6 col-xs-12">
+                                                                    <div class="mini-stat clearfix bg-googleplus rounded">
+                                                                        <span class="mini-stat-icon"><i
+                                                                                class="fa fa-phone-square fg-googleplus"></i></span>
+                                                                        <div class="mini-stat-info"
+                                                                             id="yesterdayTotalCalls">
+                                                                            <span>-</span>
+                                                                            Total Calls Yesterday
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+
+
+                                                            <div class="row">
+                                                                <div class="col-md-6 col-sm-6 col-xs-6"
+                                                                     style="padding: 0px;">
+                                                                    <table class="table align-middle mb-0 bg-white"
+                                                                           id="tblUserwiseCallLog" style="width: 100%;">
+                                                                        <thead class="bg-light">
+                                                                        <tr>
+                                                                            <th colspan="6"
+                                                                                style="align: center; vertical-align: middle;">
+                                                                                <h4>USER WISE CALL</h4></th>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <th rowspan="2"></th>
+                                                                            <th rowspan="2">USER NAME</th>
+                                                                            <th colspan="2">TODAY</th>
+                                                                            <th colspan="2">YESTERDAY</th>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <th>CALLS</th>
+                                                                            <th>DURATION</th>
+                                                                            <th>CALLS</th>
+                                                                            <th>DURATION</th>
+                                                                        </tr>
+                                                                        </thead>
+                                                                        <tbody>
+
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- THIRD TAB END -->
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <!-- <iframe src="https://darksky.net/forecast/31.5165,74.3295/si12/en" width="100%" height="800"></iframe> -->
+                    <!-- <iframe src="http://www.mairfansolutions.pk/" width="100%" height="800"></iframe>-->
+                </div>
+            </div>
+            <!-- top tiles -->
+            <!-- <div class="row tile_count">
+              <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                <span class="count_top"><i class="fa fa-user"></i> Total Users</span>
+                <div class="count">2500</div>
+                <span class="count_bottom"><i class="green">4% </i> From last Week</span>
+              </div>
+              <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                <span class="count_top"><i class="fa fa-clock-o"></i> Average Time</span>
+                <div class="count">123.50</div>
+                <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>3% </i> From last Week</span>
+              </div>
+              <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                <span class="count_top"><i class="fa fa-user"></i> Total Males</span>
+                <div class="count green">2,500</div>
+                <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+              </div>
+              <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                <span class="count_top"><i class="fa fa-user"></i> Total Females</span>
+                <div class="count">4,567</div>
+                <span class="count_bottom"><i class="red"><i class="fa fa-sort-desc"></i>12% </i> From last Week</span>
+              </div>
+              <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                <span class="count_top"><i class="fa fa-user"></i> Total Collections</span>
+                <div class="count">2,315</div>
+                <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+              </div>
+              <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                <span class="count_top"><i class="fa fa-user"></i> Total Connections</span>
+                <div class="count">7,325</div>
+                <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+              </div>
+            </div>
+            /top tiles
+
+            <div class="row">
+              <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="dashboard_graph">
+
+                  <div class="row x_title">
+                    <div class="col-md-6">
+                      <h3>Network Activities <small>Graph title sub-title</small></h3>
+                    </div>
+                    <div class="col-md-6">
+                      <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
+                        <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                        <span>December 30, 2014 - January 28, 2015</span> <b class="caret"></b>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-9 col-sm-9 col-xs-12">
+                    <div id="chart_plot_01" class="demo-placeholder"></div>
+                  </div>
+                  <div class="col-md-3 col-sm-3 col-xs-12 bg-white">
+                    <div class="x_title">
+                      <h2>Top Campaign Performance</h2>
+                      <div class="clearfix"></div>
+                    </div>
+
+                    <div class="col-md-12 col-sm-12 col-xs-6">
+                      <div>
+                        <p>Facebook Campaign</p>
+                        <div class="">
+                          <div class="progress progress_sm" style="width: 76%;">
+                            <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="80"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <p>Twitter Campaign</p>
+                        <div class="">
+                          <div class="progress progress_sm" style="width: 76%;">
+                            <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="60"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-6">
+                      <div>
+                        <p>Conventional Media</p>
+                        <div class="">
+                          <div class="progress progress_sm" style="width: 76%;">
+                            <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="40"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <p>Bill boards</p>
+                        <div class="">
+                          <div class="progress progress_sm" style="width: 76%;">
+                            <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="50"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div class="clearfix"></div>
+                </div>
+              </div>
+
+            </div>
+            <br />
+
+            <div class="row">
+
+
+              <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_320">
+                  <div class="x_title">
+                    <h2>App Versions</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                      </li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                        <ul class="dropdown-menu" role="menu">
+                          <li><a href="#">Settings 1</a>
+                          </li>
+                          <li><a href="#">Settings 2</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <li><a class="close-link"><i class="fa fa-close"></i></a>
+                      </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                  </div>
+                  <div class="x_content">
+                    <h4>App Usage across versions</h4>
+                    <div class="widget_summary">
+                      <div class="w_left w_25">
+                        <span>0.1.5.2</span>
+                      </div>
+                      <div class="w_center w_55">
+                        <div class="progress">
+                          <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 66%;">
+                            <span class="sr-only">60% Complete</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="w_right w_20">
+                        <span>123k</span>
+                      </div>
+                      <div class="clearfix"></div>
+                    </div>
+
+                    <div class="widget_summary">
+                      <div class="w_left w_25">
+                        <span>0.1.5.3</span>
+                      </div>
+                      <div class="w_center w_55">
+                        <div class="progress">
+                          <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 45%;">
+                            <span class="sr-only">60% Complete</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="w_right w_20">
+                        <span>53k</span>
+                      </div>
+                      <div class="clearfix"></div>
+                    </div>
+                    <div class="widget_summary">
+                      <div class="w_left w_25">
+                        <span>0.1.5.4</span>
+                      </div>
+                      <div class="w_center w_55">
+                        <div class="progress">
+                          <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 25%;">
+                            <span class="sr-only">60% Complete</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="w_right w_20">
+                        <span>23k</span>
+                      </div>
+                      <div class="clearfix"></div>
+                    </div>
+                    <div class="widget_summary">
+                      <div class="w_left w_25">
+                        <span>0.1.5.5</span>
+                      </div>
+                      <div class="w_center w_55">
+                        <div class="progress">
+                          <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 5%;">
+                            <span class="sr-only">60% Complete</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="w_right w_20">
+                        <span>3k</span>
+                      </div>
+                      <div class="clearfix"></div>
+                    </div>
+                    <div class="widget_summary">
+                      <div class="w_left w_25">
+                        <span>0.1.5.6</span>
+                      </div>
+                      <div class="w_center w_55">
+                        <div class="progress">
+                          <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 2%;">
+                            <span class="sr-only">60% Complete</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="w_right w_20">
+                        <span>1k</span>
+                      </div>
+                      <div class="clearfix"></div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_320 overflow_hidden">
+                  <div class="x_title">
+                    <h2>Device Usage</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                      </li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                        <ul class="dropdown-menu" role="menu">
+                          <li><a href="#">Settings 1</a>
+                          </li>
+                          <li><a href="#">Settings 2</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <li><a class="close-link"><i class="fa fa-close"></i></a>
+                      </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                  </div>
+                  <div class="x_content">
+                    <table class="" style="width:100%">
+                      <tr>
+                        <th style="width:37%;">
+                          <p>Top 5</p>
+                        </th>
+                        <th>
+                          <div class="col-lg-7 col-md-7 col-sm-7 col-xs-7">
+                            <p class="">Device</p>
+                          </div>
+                          <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+                            <p class="">Progress</p>
+                          </div>
+                        </th>
+                      </tr>
+                      <tr>
+                        <td>
+                          <canvas class="canvasDoughnut" height="140" width="140" style="margin: 15px 10px 10px 0"></canvas>
+                        </td>
+                        <td>
+                          <table class="tile_info">
+                            <tr>
+                              <td>
+                                <p><i class="fa fa-square blue"></i>IOS </p>
+                              </td>
+                              <td>30%</td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <p><i class="fa fa-square green"></i>Android </p>
+                              </td>
+                              <td>10%</td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <p><i class="fa fa-square purple"></i>Blackberry </p>
+                              </td>
+                              <td>20%</td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <p><i class="fa fa-square aero"></i>Symbian </p>
+                              </td>
+                              <td>15%</td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <p><i class="fa fa-square red"></i>Others </p>
+                              </td>
+                              <td>30%</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_320">
+                  <div class="x_title">
+                    <h2>Quick Settings</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                      </li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                        <ul class="dropdown-menu" role="menu">
+                          <li><a href="#">Settings 1</a>
+                          </li>
+                          <li><a href="#">Settings 2</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <li><a class="close-link"><i class="fa fa-close"></i></a>
+                      </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                  </div>
+                  <div class="x_content">
+                    <div class="dashboard-widget-content">
+                      <ul class="quick-list">
+                        <li><i class="fa fa-calendar-o"></i><a href="#">Settings</a>
+                        </li>
+                        <li><i class="fa fa-bars"></i><a href="#">Subscription</a>
+                        </li>
+                        <li><i class="fa fa-bar-chart"></i><a href="#">Auto Renewal</a> </li>
+                        <li><i class="fa fa-line-chart"></i><a href="#">Achievements</a>
+                        </li>
+                        <li><i class="fa fa-bar-chart"></i><a href="#">Auto Renewal</a> </li>
+                        <li><i class="fa fa-line-chart"></i><a href="#">Achievements</a>
+                        </li>
+                        <li><i class="fa fa-area-chart"></i><a href="#">Logout</a>
+                        </li>
+                      </ul>
+
+                      <div class="sidebar-widget">
+                          <h4>Profile Completion</h4>
+                          <canvas width="150" height="80" id="chart_gauge_01" class="" style="width: 160px; height: 100px;"></canvas>
+                          <div class="goal-wrapper">
+                            <span id="gauge-text" class="gauge-value pull-left">0</span>
+                            <span class="gauge-value pull-left">%</span>
+                            <span id="goal-text" class="goal-value pull-right">100%</span>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+
+            <div class="row">
+              <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel">
+                  <div class="x_title">
+                    <h2>Recent Activities <small>Sessions</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                      </li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                        <ul class="dropdown-menu" role="menu">
+                          <li><a href="#">Settings 1</a>
+                          </li>
+                          <li><a href="#">Settings 2</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <li><a class="close-link"><i class="fa fa-close"></i></a>
+                      </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                  </div>
+                  <div class="x_content">
+                    <div class="dashboard-widget-content">
+
+                      <ul class="list-unstyled timeline widget">
+                        <li>
+                          <div class="block">
+                            <div class="block_content">
+                              <h2 class="title">
+                                                <a>Who Needs Sundance When You’ve Got&nbsp;Crowdfunding?</a>
+                                            </h2>
+                              <div class="byline">
+                                <span>13 hours ago</span> by <a>Jane Smith</a>
+                              </div>
+                              <p class="excerpt">Film festivals used to be do-or-die moments for movie makers. They were where you met the producers that could fund your project, and if the buyers liked your flick, they’d pay to Fast-forward and… <a>Read&nbsp;More</a>
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="block">
+                            <div class="block_content">
+                              <h2 class="title">
+                                                <a>Who Needs Sundance When You’ve Got&nbsp;Crowdfunding?</a>
+                                            </h2>
+                              <div class="byline">
+                                <span>13 hours ago</span> by <a>Jane Smith</a>
+                              </div>
+                              <p class="excerpt">Film festivals used to be do-or-die moments for movie makers. They were where you met the producers that could fund your project, and if the buyers liked your flick, they’d pay to Fast-forward and… <a>Read&nbsp;More</a>
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="block">
+                            <div class="block_content">
+                              <h2 class="title">
+                                                <a>Who Needs Sundance When You’ve Got&nbsp;Crowdfunding?</a>
+                                            </h2>
+                              <div class="byline">
+                                <span>13 hours ago</span> by <a>Jane Smith</a>
+                              </div>
+                              <p class="excerpt">Film festivals used to be do-or-die moments for movie makers. They were where you met the producers that could fund your project, and if the buyers liked your flick, they’d pay to Fast-forward and… <a>Read&nbsp;More</a>
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="block">
+                            <div class="block_content">
+                              <h2 class="title">
+                                                <a>Who Needs Sundance When You’ve Got&nbsp;Crowdfunding?</a>
+                                            </h2>
+                              <div class="byline">
+                                <span>13 hours ago</span> by <a>Jane Smith</a>
+                              </div>
+                              <p class="excerpt">Film festivals used to be do-or-die moments for movie makers. They were where you met the producers that could fund your project, and if the buyers liked your flick, they’d pay to Fast-forward and… <a>Read&nbsp;More</a>
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="col-md-8 col-sm-8 col-xs-12">
+
+
+
+                <div class="row">
+
+                  <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel">
+                      <div class="x_title">
+                        <h2>Visitors location <small>geo-presentation</small></h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                          <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                          </li>
+                          <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                              <li><a href="#">Settings 1</a>
+                              </li>
+                              <li><a href="#">Settings 2</a>
+                              </li>
+                            </ul>
+                          </li>
+                          <li><a class="close-link"><i class="fa fa-close"></i></a>
+                          </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                      </div>
+                      <div class="x_content">
+                        <div class="dashboard-widget-content">
+                          <div class="col-md-4 hidden-small">
+                            <h2 class="line_30">125.7k Views from 60 countries</h2>
+
+                            <table class="countries_list">
+                              <tbody>
+                                <tr>
+                                  <td>United States</td>
+                                  <td class="fs15 fw700 text-right">33%</td>
+                                </tr>
+                                <tr>
+                                  <td>France</td>
+                                  <td class="fs15 fw700 text-right">27%</td>
+                                </tr>
+                                <tr>
+                                  <td>Germany</td>
+                                  <td class="fs15 fw700 text-right">16%</td>
+                                </tr>
+                                <tr>
+                                  <td>Spain</td>
+                                  <td class="fs15 fw700 text-right">11%</td>
+                                </tr>
+                                <tr>
+                                  <td>Britain</td>
+                                  <td class="fs15 fw700 text-right">10%</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          <div id="world-map-gdp" class="col-md-8 col-sm-12 col-xs-12" style="height:230px;"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+                <div class="row">
+
+
+                  Start to do list
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                    <div class="x_panel">
+                      <div class="x_title">
+                        <h2>To Do List <small>Sample tasks</small></h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                          <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                          </li>
+                          <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                              <li><a href="#">Settings 1</a>
+                              </li>
+                              <li><a href="#">Settings 2</a>
+                              </li>
+                            </ul>
+                          </li>
+                          <li><a class="close-link"><i class="fa fa-close"></i></a>
+                          </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                      </div>
+                      <div class="x_content">
+
+                        <div class="">
+                          <ul class="to_do">
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Schedule meeting with new client </p>
+                            </li>
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Create email address for new intern</p>
+                            </li>
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Have IT fix the network printer</p>
+                            </li>
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Copy backups to offsite location</p>
+                            </li>
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Food truck fixie locavors mcsweeney</p>
+                            </li>
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Food truck fixie locavors mcsweeney</p>
+                            </li>
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Create email address for new intern</p>
+                            </li>
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Have IT fix the network printer</p>
+                            </li>
+                            <li>
+                              <p>
+                                <input type="checkbox" class="flat"> Copy backups to offsite location</p>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  End to do list
+
+                  start of weather widget
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                    <div class="x_panel">
+                      <div class="x_title">
+                        <h2>Daily active users <small>Sessions</small></h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                          <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                          </li>
+                          <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                              <li><a href="#">Settings 1</a>
+                              </li>
+                              <li><a href="#">Settings 2</a>
+                              </li>
+                            </ul>
+                          </li>
+                          <li><a class="close-link"><i class="fa fa-close"></i></a>
+                          </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                      </div>
+                      <div class="x_content">
+                        <div class="row">
+                          <div class="col-sm-12">
+                            <div class="temperature"><b>Monday</b>, 07:30 AM
+                              <span>F</span>
+                              <span><b>C</b></span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-sm-4">
+                            <div class="weather-icon">
+                              <canvas height="84" width="84" id="partly-cloudy-day"></canvas>
+                            </div>
+                          </div>
+                          <div class="col-sm-8">
+                            <div class="weather-text">
+                              <h2>Texas <br><i>Partly Cloudy Day</i></h2>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-sm-12">
+                          <div class="weather-text pull-right">
+                            <h3 class="degrees">23</h3>
+                          </div>
+                        </div>
+
+                        <div class="clearfix"></div>
+
+                        <div class="row weather-days">
+                          <div class="col-sm-2">
+                            <div class="daily-weather">
+                              <h2 class="day">Mon</h2>
+                              <h3 class="degrees">25</h3>
+                              <canvas id="clear-day" width="32" height="32"></canvas>
+                              <h5>15 <i>km/h</i></h5>
+                            </div>
+                          </div>
+                          <div class="col-sm-2">
+                            <div class="daily-weather">
+                              <h2 class="day">Tue</h2>
+                              <h3 class="degrees">25</h3>
+                              <canvas height="32" width="32" id="rain"></canvas>
+                              <h5>12 <i>km/h</i></h5>
+                            </div>
+                          </div>
+                          <div class="col-sm-2">
+                            <div class="daily-weather">
+                              <h2 class="day">Wed</h2>
+                              <h3 class="degrees">27</h3>
+                              <canvas height="32" width="32" id="snow"></canvas>
+                              <h5>14 <i>km/h</i></h5>
+                            </div>
+                          </div>
+                          <div class="col-sm-2">
+                            <div class="daily-weather">
+                              <h2 class="day">Thu</h2>
+                              <h3 class="degrees">28</h3>
+                              <canvas height="32" width="32" id="sleet"></canvas>
+                              <h5>15 <i>km/h</i></h5>
+                            </div>
+                          </div>
+                          <div class="col-sm-2">
+                            <div class="daily-weather">
+                              <h2 class="day">Fri</h2>
+                              <h3 class="degrees">28</h3>
+                              <canvas height="32" width="32" id="wind"></canvas>
+                              <h5>11 <i>km/h</i></h5>
+                            </div>
+                          </div>
+                          <div class="col-sm-2">
+                            <div class="daily-weather">
+                              <h2 class="day">Sat</h2>
+                              <h3 class="degrees">26</h3>
+                              <canvas height="32" width="32" id="cloudy"></canvas>
+                              <h5>10 <i>km/h</i></h5>
+                            </div>
+                          </div>
+                          <div class="clearfix"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                  end of weather widget
+                </div>
+              </div>
+            </div> -->
+        </div>
+        <!-- /page content -->
+        <div class="row">
+            <div class="col-md-12">
+                <footer th:replace="fragments/footer :: footer"></footer>
+            </div>
+        </div>
+        <!-- footer content -->
+        <!--        <footer th:replace="fragments/footer :: footer">-->
+        <!--        </footer>-->
+        <!-- <footer>
+          <div class="pull-right">
+            Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+          </div>
+          <div class="clearfix"></div>
+        </footer> -->
+        <!-- /footer content -->
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap -->
+<script src="/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- FastClick -->
+<script src="/vendors/fastclick/lib/fastclick.js"></script>
+<!-- NProgress -->
+<script src="/vendors/nprogress/nprogress.js"></script>
+<!-- Chart.js -->
+<script src="/vendors/Chart.js/dist/Chart.min.js"></script>
+<!-- gauge.js -->
+<script src="/vendors/gauge.js/dist/gauge.min.js"></script>
+<!-- bootstrap-progressbar -->
+<script src="/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+<!-- iCheck -->
+<script src="/vendors/iCheck/icheck.min.js"></script>
+<!-- Skycons -->
+<script src="/vendors/skycons/skycons.js"></script>
+<!-- Flot -->
+<script src="/vendors/Flot/jquery.flot.js"></script>
+<script src="/vendors/Flot/jquery.flot.pie.js"></script>
+<script src="/vendors/Flot/jquery.flot.time.js"></script>
+<script src="/vendors/Flot/jquery.flot.stack.js"></script>
+<script src="/vendors/Flot/jquery.flot.resize.js"></script>
+<!-- Flot plugins -->
+<script src="/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script>
+<script src="/vendors/flot-spline/js/jquery.flot.spline.min.js"></script>
+<script src="/vendors/flot.curvedlines/curvedLines.js"></script>
+<!-- DateJS -->
+<script src="/vendors/DateJS/build/date.js"></script>
+<!-- JQVMap -->
+<script src="/vendors/jqvmap/dist/jquery.vmap.js"></script>
+<script src="/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
+<script src="/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
+<!-- bootstrap-daterangepicker -->
+<script src="/vendors/moment/min/moment.min.js"></script>
+<script src="/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
+
+<!-- Datatables -->
+<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+<!-- <script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script> -->
+
+<!-- Datatables -->
+<!-- <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jquery.dataTables.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/dataTables.buttons.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jszip.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/pdfmake.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/vfs_fonts.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.html5.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.print.min.js}"></script>
+
+
+<!--    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>-->
+
+<!-- Custom Theme Scripts -->
+<script src="/build/js/custom.min.js"></script>
+<script src="/build/js/countx_daily_closing.js"></script>
+<!--<script src="/build/js/countx_index_charts.js"></script>-->
+
+</body>
+</html>
+

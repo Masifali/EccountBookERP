@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>129-Print - Opening Balance Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-size: 11px;
+            margin: 0;
+            padding: 15px;
+        }
+
+        .report-actions {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 8px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .report-card {
+            background: #ffffff;
+            border: 1px solid #94a3b8;
+            padding: 20px;
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .report-header {
+            text-align: center;
+            border-bottom: 2px solid #00796B;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .report-header h2 {
+            margin: 0 0 4px 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #004d40;
+            text-transform: uppercase;
+        }
+
+        .report-header h4 {
+            margin: 0 0 4px 0;
+            font-size: 13px;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .report-header p {
+            margin: 0;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .report-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 11px;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 15px;
+        }
+
+        .report-table th {
+            background-color: #00796B;
+            color: #ffffff;
+            padding: 6px 8px;
+            border: 1px solid #004d40;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .report-table th.num-col, .report-table td.num-col {
+            text-align: right;
+        }
+
+        .report-table td {
+            padding: 5px 8px;
+            border: 1px solid #cbd5e1;
+            vertical-align: middle;
+        }
+
+        .report-table tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .report-table tfoot tr {
+            background-color: #e2e8f0;
+            font-weight: bold;
+        }
+
+        .report-table tfoot td {
+            border-top: 2px solid #00796B;
+            border-bottom: 2px double #00796B;
+            font-size: 11px;
+        }
+
+        .report-footer {
+            margin-top: 25px;
+            padding-top: 10px;
+            border-top: 1px solid #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        @media print {
+            body {
+                background-color: #ffffff;
+                padding: 0;
+                font-size: 10pt;
+            }
+            .report-actions {
+                display: none !important;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .report-table th {
+                background-color: #f1f5f9 !important;
+                color: #000000 !important;
+                border: 1px solid #000000 !important;
+            }
+            .report-table td {
+                border: 1px solid #666666 !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Action Toolbar (Hidden during print) -->
+    <div class="report-actions">
+        <div>
+            <strong style="color: #00796B; font-size: 13px;"><i class="fa fa-print"></i> 129-Print - Account Opening Balance Report</strong>
+        </div>
+        <div>
+            <a th:href="@{/accounts/opening_balance/pdf(organizationId=${organizationId},companyId=${companyId},financialYearId=${financialYearId})}" target="_blank" class="btn btn-sm btn-info" style="margin-right: 6px; background-color: #0284c7; border-color: #0369a1; color: white;"><i class="fa fa-file-pdf-o"></i> Jasper PDF (129-OpeningBalanceRpt.pdf)</a>
+            <button type="button" class="btn btn-sm btn-primary" onclick="window.print();" style="background-color: #00796B; border-color: #004d40;"><i class="fa fa-print"></i> Direct Print / Save PDF</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="window.close();"><i class="fa fa-times"></i> Close</button>
+        </div>
+    </div>
+
+    <!-- Report Card Content matching Crystal Report Layout -->
+    <div class="report-card">
+        <!-- Header -->
+        <div class="report-header">
+            <h2 th:text="${companyName != null ? companyName : 'Golden Ace Rice Mills (Pvt) Ltd.'}">COMPANY NAME</h2>
+            <h4 th:text="${companyAddress != null ? companyAddress : 'Factory / Head Office Address'}">Company Address</h4>
+            <div style="font-size: 14px; font-weight: bold; color: #00796B; margin-top: 6px;">OPENING BALANCE REPORT (129-PRINT)</div>
+        </div>
+
+        <!-- Metadata -->
+        <div class="report-meta">
+            <div>
+                <strong>Organization ID:</strong> <span th:text="${organizationId}">1</span> | 
+                <strong>Company ID:</strong> <span th:text="${companyId}">1</span> | 
+                <strong>Financial Year ID:</strong> <span th:text="${financialYearId}">1</span>
+            </div>
+            <div>
+                <strong>Print Date:</strong> <span th:text="${#temporals.format(#temporals.createNow(), 'dd-MMM-yyyy hh:mm a')}">11-Sep-2026</span>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th style="width: 35px;">Sr#</th>
+                    <th style="width: 110px;">Class Name</th>
+                    <th style="width: 120px;">Account Type</th>
+                    <th style="width: 100px;">Parent Code</th>
+                    <th>Parent Account Title</th>
+                    <th style="width: 100px;">Account Code</th>
+                    <th>Account Title</th>
+                    <th class="num-col" style="width: 120px;">Debit (PKR)</th>
+                    <th class="num-col" style="width: 120px;">Credit (PKR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="row, stat : ${reportData}">
+                    <td style="text-align: center;" th:text="${stat.count}">1</td>
+                    <td th:text="${row['ClassName']}">Assets</td>
+                    <td th:text="${row['AccountType']}">Current Assets</td>
+                    <td th:text="${row['ParentAccountCode']}">101000</td>
+                    <td th:text="${row['ParentTitle']}">Bank Accounts</td>
+                    <td style="font-weight: 600;" th:text="${row['AccountCode']}">101001</td>
+                    <td style="font-weight: 600;" th:text="${row['AccountTitle']}">Cash at Bank</td>
+                    <td class="num-col" th:text="${#numbers.formatDecimal(row['YearObDebit'] != null ? row['YearObDebit'] : 0, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    <td class="num-col" th:text="${#numbers.formatDecimal(row['YearObCredit'] != null ? row['YearObCredit'] : 0, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                </tr>
+                <tr th:if="${reportData == null or reportData.isEmpty()}">
+                    <td colspan="9" style="text-align: center; color: #94a3b8; padding: 25px;">No Opening Balance Records Found.</td>
+                </tr>
+            </tbody>
+            <tfoot th:if="${reportData != null and !reportData.isEmpty()}">
+                <tr>
+                    <td colspan="7" style="text-align: right; text-transform: uppercase;">Total Opening Balance:</td>
+                    <td class="num-col" th:text="${#numbers.formatDecimal(totalDebit != null ? totalDebit : 0, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    <td class="num-col" th:text="${#numbers.formatDecimal(totalCredit != null ? totalCredit : 0, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Footer Remarks -->
+        <div class="report-footer">
+            <div>
+                <strong>Reporting Remarks:</strong> <span th:text="${reportingRemarks != null ? reportingRemarks : 'System Generated Opening Balance Slip'}">System Generated</span>
+            </div>
+            <div>
+                Report Template: <strong>129-OpeningBalanceRpt.rpt</strong> | Page 1 of 1
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

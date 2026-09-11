@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bank Balances - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e2e8f0; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-sub-bar { background-color: #b0bec5; height: 22px; padding: 2px 12px; font-size: 11px; color: #37474f; display: flex; align-items: center; border-bottom: 1px solid #90a4ae; }
+        .erp-toolbar { background-color: #cbd5e1; border-bottom: 1px solid #94a3b8; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
+        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; box-sizing: border-box; background-color: #fff; width: 100%; }
+        .form-control-erp:focus { border-color: #00796B; outline: none; }
+        .erp-grid-container { margin: 10px; background: white; border: 1px solid #94a3b8; border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .erp-grid-header { background-color: #00796B; color: white; font-weight: bold; font-size: 12px; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .grid-scroll-wrapper { max-height: 520px; overflow-x: auto; overflow-y: auto; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 800px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 6px 8px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 5; }
+        .erp-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .report-summary-bar { background: #00796B; color: white; font-weight: bold; font-size: 12px; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #004d40; }
+    </style>
+</head>
+<body>
+    <div class="erp-header">
+        <div><i class="fa fa-university"></i> Bank & Cash Balances Report</div>
+        <div><a href="/accounts/dashboard" style="color: white; text-decoration: none; font-weight: 600;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+    </div>
+    <div class="erp-sub-bar">
+        <i class="fa fa-window-maximize" style="margin-right: 6px;"></i>
+        <span>Screens &gt; Bank & Cash Balances Report</span>
+    </div>
+    <div class="erp-toolbar">
+        <button type="button" class="btn-erp btn-erp-primary" onclick="loadBankBalances()"><i class="fa fa-eye"></i> View Report</button>
+        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp" onclick="alert('Exporting Balances to Excel...')"><i class="fa fa-file-excel-o"></i> Export Excel</button>
+        <button type="button" class="btn-erp" onclick="resetBankFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
+    </div>
+
+    <div class="erp-fieldset">
+        <legend>Report Filter Criteria</legend>
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label-erp">As On Date</label>
+                <input type="date" id="txtAsOnDate" class="form-control-erp"/>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-erp">Account Filter</label>
+                <select id="cmbBankAccount" class="form-control-erp">
+                    <option value="">-- All Bank & Cash Accounts --</option>
+                    <option th:each="ac : ${accountsList}" th:value="${ac.id}" th:text="${ac.accountCode + ' - ' + ac.accountTitle}"></option>
+                </select>
+            </div>
+            <div class="col-md-3" style="margin-top: 18px;">
+                <button type="button" class="btn-erp btn-erp-primary" style="width: 100%; height: 25px;" onclick="loadBankBalances()">
+                    <i class="fa fa-search"></i> Load Balances
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="erp-grid-container">
+        <div class="erp-grid-header">
+            <span><i class="fa fa-table"></i> Bank Balances Data Output</span>
+            <span id="lblStatus">Ready</span>
+        </div>
+        <div class="grid-scroll-wrapper">
+            <table class="erp-table" id="bankTable">
+                <thead>
+                    <tr>
+                        <th style="width: 130px;">Account Code</th>
+                        <th style="width: 320px;">Account Title</th>
+                        <th style="width: 130px; text-align: right;">Total Debit (PKR)</th>
+                        <th style="width: 130px; text-align: right;">Total Credit (PKR)</th>
+                        <th style="width: 140px; text-align: right;">Current Balance (PKR)</th>
+                    </tr>
+                </thead>
+                <tbody id="bankTbody">
+                    <!-- Loaded dynamically via AJAX -->
+                </tbody>
+            </table>
+        </div>
+        <div class="report-summary-bar">
+            <div>Total Accounts: <span id="lblTotalRec">0</span></div>
+            <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
+            <div>Total Credit: <span id="lblTotalCredit">0.00</span></div>
+            <div>Net Balance: <span id="lblNetBal">0.00</span></div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            setInitialBankDate();
+            loadBankBalances();
+        });
+
+        function setInitialBankDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('txtAsOnDate').value = `${year}-${month}-${day}`;
+        }
+
+        function formatCurrency(val) {
+            if (val === null || val === undefined || isNaN(val)) return '0.00';
+            return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function loadBankBalances() {
+            $('#lblStatus').text("Fetching Bank Balances...");
+
+            $.ajax({
+                url: '/accounts/api/reports/bank-balances?isCashOnly=false',
+                type: 'GET',
+                success: function(data) {
+                    renderBankGrid(data);
+                },
+                error: function(err) {
+                    $('#bankTbody').html('<tr><td colspan="5" style="text-align:center; color:red; padding: 20px;">Error loading Bank Balances.</td></tr>');
+                    updateBankTotals(0, 0, 0, 0);
+                }
+            });
+        }
+
+        function renderBankGrid(data) {
+            const tbody = $('#bankTbody');
+            tbody.empty();
+
+            const selId = $('#cmbBankAccount').val();
+            let filtered = data || [];
+            if (selId && parseInt(selId) > 0) {
+                filtered = filtered.filter(x => (x.id || x.ID) == parseInt(selId));
+            }
+
+            if (!filtered || filtered.length === 0) {
+                tbody.html('<tr><td colspan="5" style="text-align:center; padding: 20px; color:#666;">No bank account balances found.</td></tr>');
+                $('#lblStatus').text("Total Accounts: 0");
+                updateBankTotals(0, 0, 0, 0);
+                return;
+            }
+
+            let totalDebit = 0;
+            let totalCredit = 0;
+            let netBal = 0;
+
+            filtered.forEach(r => {
+                const deb = parseFloat(r.TotalDebit || r.totalDebit || 0);
+                const cred = parseFloat(r.TotalCredit || r.totalCredit || 0);
+                const bal = parseFloat(r.Balance || r.balance || (deb - cred));
+                totalDebit += deb;
+                totalCredit += cred;
+                netBal += bal;
+
+                tbody.append(`
+                    <tr>
+                        <td><strong style="color: #00796B;">${r.AccountCode || r.accountCode || ''}</strong></td>
+                        <td>${r.AccountTitle || r.accountTitle || ''}</td>
+                        <td style="text-align: right;">${deb > 0 ? formatCurrency(deb) : '-'}</td>
+                        <td style="text-align: right;">${cred > 0 ? formatCurrency(cred) : '-'}</td>
+                        <td style="text-align: right; font-weight: bold;">${formatCurrency(Math.abs(bal))} ${bal >= 0 ? 'Dr' : 'Cr'}</td>
+                    </tr>
+                `);
+            });
+
+            $('#lblStatus').text(`Total Accounts: ${filtered.length}`);
+            updateBankTotals(filtered.length, totalDebit, totalCredit, netBal);
+        }
+
+        function updateBankTotals(recCount, deb, cred, bal) {
+            $('#lblTotalRec').text(recCount);
+            $('#lblTotalDebit').text(formatCurrency(deb));
+            $('#lblTotalCredit').text(formatCurrency(cred));
+            $('#lblNetBal').text(`${formatCurrency(Math.abs(bal))} ${bal >= 0 ? 'Dr' : 'Cr'}`);
+        }
+
+        function resetBankFilters() {
+            setInitialBankDate();
+            $('#cmbBankAccount').val('');
+            loadBankBalances();
+        }
+    </script>
+</body>
+</html>

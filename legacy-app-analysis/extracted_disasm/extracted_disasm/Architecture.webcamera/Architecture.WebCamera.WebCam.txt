@@ -1,0 +1,103 @@
+
+====================================================================================================
+CLASS Architecture.WebCamera.WebCam
+====================================================================================================
+
+; Architecture.WebCamera.WebCam::InitializeWebCam  (rva=0x2080, fat header, code_size=73, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj WebCam_Capture.WebCamCapture::.ctor
+    IL_0006: stfld Architecture.WebCamera.WebCam::webcam
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_0011: ldc.i4.0
+    IL_0012: conv.i8
+    IL_0013: callvirt WebCam_Capture.WebCamCapture::set_FrameNumber
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_001e: ldarg.0
+    IL_001f: ldfld Architecture.WebCamera.WebCam::FrameNumber
+    IL_0024: callvirt WebCam_Capture.WebCamCapture::set_TimeToCapture_milliseconds
+    IL_0029: ldarg.0
+    IL_002a: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_002f: ldarg.0
+    IL_0030: ldftn Architecture.WebCamera.WebCam::webcam_ImageCaptured
+    IL_0036: newobj WebCamEventHandler::.ctor
+    IL_003b: callvirt WebCam_Capture.WebCamCapture::add_ImageCaptured
+    IL_0040: ldarg.0
+    IL_0041: ldarg.1
+    IL_0042: ldind.ref
+    IL_0043: stfld Architecture.WebCamera.WebCam::_FrameImage
+    IL_0048: ret
+
+; Architecture.WebCamera.WebCam::webcam_ImageCaptured  (rva=0x20d5, tiny header, code_size=37, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.2
+    IL_0001: callvirt WebCam_Capture.WebcamEventArgs::get_WebCamImage
+    IL_0006: brtrue.s IL_0013
+    IL_0008: ldstr ldstr "Object Isnull ImageCapture"
+    IL_000d: newobj System.Exception::.ctor
+    IL_0012: throw
+    IL_0013: ldarg.0
+    IL_0014: ldfld Architecture.WebCamera.WebCam::_FrameImage
+    IL_0019: ldarg.2
+    IL_001a: callvirt WebCam_Capture.WebcamEventArgs::get_WebCamImage
+    IL_001f: callvirt System.Windows.Forms.PictureBox::set_Image
+    IL_0024: ret
+
+; Architecture.WebCamera.WebCam::Start  (rva=0x20fb, tiny header, code_size=50, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_0006: brtrue.s IL_0013
+    IL_0008: ldstr ldstr "Web Cam Object Start Method IsNull"
+    IL_000d: newobj System.Exception::.ctor
+    IL_0012: throw
+    IL_0013: ldarg.0
+    IL_0014: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_0019: ldarg.0
+    IL_001a: ldfld Architecture.WebCamera.WebCam::FrameNumber
+    IL_001f: callvirt WebCam_Capture.WebCamCapture::set_TimeToCapture_milliseconds
+    IL_0024: ldarg.0
+    IL_0025: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_002a: ldc.i4.0
+    IL_002b: conv.i8
+    IL_002c: callvirt WebCam_Capture.WebCamCapture::Start
+    IL_0031: ret
+
+; Architecture.WebCamera.WebCam::Stop  (rva=0x212e, tiny header, code_size=12, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_0006: callvirt WebCam_Capture.WebCamCapture::Stop
+    IL_000b: ret
+
+; Architecture.WebCamera.WebCam::Continue  (rva=0x213b, tiny header, code_size=40, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WebCamera.WebCam::FrameNumber
+    IL_000c: callvirt WebCam_Capture.WebCamCapture::set_TimeToCapture_milliseconds
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_001d: callvirt WebCam_Capture.WebCamCapture::get_FrameNumber
+    IL_0022: callvirt WebCam_Capture.WebCamCapture::Start
+    IL_0027: ret
+
+; Architecture.WebCamera.WebCam::ResolutionSetting  (rva=0x2164, tiny header, code_size=12, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_0006: callvirt WebCam_Capture.WebCamCapture::Config
+    IL_000b: ret
+
+; Architecture.WebCamera.WebCam::AdvanceSetting  (rva=0x2171, tiny header, code_size=12, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WebCamera.WebCam::webcam
+    IL_0006: callvirt WebCam_Capture.WebCamCapture::Config2
+    IL_000b: ret
+
+; Architecture.WebCamera.WebCam::.ctor  (rva=0x217e, tiny header, code_size=15, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.s 30
+    IL_0003: stfld Architecture.WebCamera.WebCam::FrameNumber
+    IL_0008: ldarg.0
+    IL_0009: call System.Object::.ctor
+    IL_000e: ret

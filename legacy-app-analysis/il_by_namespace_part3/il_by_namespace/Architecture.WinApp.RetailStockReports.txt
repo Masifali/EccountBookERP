@@ -1,0 +1,2710 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.RetailStockReports.StockReportyWithFIFO
+====================================================================================================
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::.ctor  (rva=0x57bd68, fat header, code_size=64, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj Architecture.Model.UserAccount::.ctor
+    IL_0006: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::UserAccount
+    IL_000b: ldarg.0
+    IL_000c: newobj Architecture.WinApp.Common.DropDownBind::.ctor
+    IL_0011: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::DDL
+    IL_0016: ldarg.0
+    IL_0017: newobj System.Data.DataTable::.ctor
+    IL_001c: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_0021: ldarg.0
+    IL_0022: newobj System.Data.DataTable::.ctor
+    IL_0027: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtStock
+    IL_002c: ldarg.0
+    IL_002d: call System.Windows.Forms.Form::.ctor
+    IL_0032: ldarg.0
+    IL_0033: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::InitializeComponent
+    IL_0038: ldarg.0
+    IL_0039: ldarg.1
+    IL_003a: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::UserAccount
+    IL_003f: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::frmStockReport_Load  (rva=0x57bdb4, fat header, code_size=114, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.1
+    IL_0002: callvirt System.Windows.Forms.ScrollableControl::set_AutoScroll
+    IL_0007: ldarg.0
+    IL_0008: ldc.i4.s 20
+    IL_000a: ldc.i4.s 20
+    IL_000c: newobj System.Drawing.Size::.ctor
+    IL_0011: call System.Windows.Forms.ScrollableControl::set_AutoScrollMargin
+    IL_0016: ldarg.0
+    IL_0017: ldc.i4 980
+    IL_001c: ldc.i4 600
+    IL_0021: newobj System.Drawing.Size::.ctor
+    IL_0026: call System.Windows.Forms.ScrollableControl::set_AutoScrollMinSize
+    IL_002b: ldarg.0
+    IL_002c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_0031: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_0036: callvirt Architecture.Model.FinancialYear::get_Start_Period
+    IL_003b: box System.DateTime
+    IL_0040: call Architecture.Common.Conversion::ToDateTime
+    IL_0045: callvirt System.Windows.Forms.DateTimePicker::set_Value
+    IL_004a: ldarg.0
+    IL_004b: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::StockComboFill
+    IL_0050: ldarg.0
+    IL_0051: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::GridBind
+    IL_0056: ldarg.0
+    IL_0057: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_005c: callvirt System.Windows.Forms.Control::Focus
+    IL_0061: pop
+    IL_0062: leave.s IL_0071
+    IL_0064: callvirt System.Exception::get_Message
+    IL_0069: call System.Windows.Forms.MessageBox::Show
+    IL_006e: pop
+    IL_006f: leave.s IL_0071
+    IL_0071: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::StockComboFill  (rva=0x57be44, fat header, code_size=615, max_stack=7, exception_handlers=yes)
+    IL_0000: newobj System.Data.DataTable::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: callvirt System.Data.DataTable::get_Columns
+    IL_000c: ldstr ldstr "Id"
+    IL_0011: callvirt System.Data.DataColumnCollection::Add
+    IL_0016: pop
+    IL_0017: ldloc.0
+    IL_0018: callvirt System.Data.DataTable::get_Columns
+    IL_001d: ldstr ldstr "name"
+    IL_0022: callvirt System.Data.DataColumnCollection::Add
+    IL_0027: pop
+    IL_0028: newobj System.Data.DataTable::.ctor
+    IL_002d: stloc.1
+    IL_002e: ldloc.1
+    IL_002f: callvirt System.Data.DataTable::get_Columns
+    IL_0034: ldstr ldstr "Id"
+    IL_0039: callvirt System.Data.DataColumnCollection::Add
+    IL_003e: pop
+    IL_003f: ldloc.1
+    IL_0040: callvirt System.Data.DataTable::get_Columns
+    IL_0045: ldstr ldstr "name"
+    IL_004a: callvirt System.Data.DataColumnCollection::Add
+    IL_004f: pop
+    IL_0050: newobj Architecture.Model.ReportsParameters::.ctor
+    IL_0055: stloc.2
+    IL_0056: ldloc.2
+    IL_0057: ldarg.0
+    IL_0058: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::UserAccount
+    IL_005d: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0062: callvirt Architecture.Model.ReportsParameters::set_OrganizationId
+    IL_0067: ldloc.2
+    IL_0068: ldarg.0
+    IL_0069: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::UserAccount
+    IL_006e: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0073: callvirt Architecture.Model.ReportsParameters::set_CompanyId
+    IL_0078: ldarg.0
+    IL_0079: ldloc.2
+    IL_007a: call Architecture.BLL.Reports.Inventory.StocksReport::StockReportComboByOrganizationAndCompanyId
+    IL_007f: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_0084: ldarg.0
+    IL_0085: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_008a: callvirt System.Data.DataTable::get_Rows
+    IL_008f: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0094: ldc.i4.0
+    IL_0095: ble IL_0257
+    IL_009a: ldc.i4.0
+    IL_009b: stloc.3
+    IL_009c: br IL_019b
+    IL_00a1: ldarg.0
+    IL_00a2: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_00a7: callvirt System.Data.DataTable::get_Rows
+    IL_00ac: ldloc.3
+    IL_00ad: callvirt System.Data.DataRowCollection::get_Item
+    IL_00b2: ldstr ldstr "ActivityType"
+    IL_00b7: callvirt System.Data.DataRow::get_Item
+    IL_00bc: call Architecture.Common.Conversion::ToString
+    IL_00c1: ldstr ldstr "Items"
+    IL_00c6: call System.String::op_Equality
+    IL_00cb: brfalse.s IL_011d
+    IL_00cd: ldloc.0
+    IL_00ce: callvirt System.Data.DataTable::get_Rows
+    IL_00d3: ldc.i4.2
+    IL_00d4: newarr System.Object
+    IL_00d9: dup
+    IL_00da: ldc.i4.0
+    IL_00db: ldarg.0
+    IL_00dc: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_00e1: callvirt System.Data.DataTable::get_Rows
+    IL_00e6: ldloc.3
+    IL_00e7: callvirt System.Data.DataRowCollection::get_Item
+    IL_00ec: ldstr ldstr "Id"
+    IL_00f1: callvirt System.Data.DataRow::get_Item
+    IL_00f6: stelem.ref
+    IL_00f7: dup
+    IL_00f8: ldc.i4.1
+    IL_00f9: ldarg.0
+    IL_00fa: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_00ff: callvirt System.Data.DataTable::get_Rows
+    IL_0104: ldloc.3
+    IL_0105: callvirt System.Data.DataRowCollection::get_Item
+    IL_010a: ldstr ldstr "name"
+    IL_010f: callvirt System.Data.DataRow::get_Item
+    IL_0114: stelem.ref
+    IL_0115: callvirt System.Data.DataRowCollection::Add
+    IL_011a: pop
+    IL_011b: br.s IL_0197
+    IL_011d: ldarg.0
+    IL_011e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_0123: callvirt System.Data.DataTable::get_Rows
+    IL_0128: ldloc.3
+    IL_0129: callvirt System.Data.DataRowCollection::get_Item
+    IL_012e: ldstr ldstr "ActivityType"
+    IL_0133: callvirt System.Data.DataRow::get_Item
+    IL_0138: call Architecture.Common.Conversion::ToString
+    IL_013d: ldstr ldstr "Warehouse"
+    IL_0142: call System.String::op_Equality
+    IL_0147: brfalse.s IL_0197
+    IL_0149: ldloc.1
+    IL_014a: callvirt System.Data.DataTable::get_Rows
+    IL_014f: ldc.i4.2
+    IL_0150: newarr System.Object
+    IL_0155: dup
+    IL_0156: ldc.i4.0
+    IL_0157: ldarg.0
+    IL_0158: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_015d: callvirt System.Data.DataTable::get_Rows
+    IL_0162: ldloc.3
+    IL_0163: callvirt System.Data.DataRowCollection::get_Item
+    IL_0168: ldstr ldstr "Id"
+    IL_016d: callvirt System.Data.DataRow::get_Item
+    IL_0172: stelem.ref
+    IL_0173: dup
+    IL_0174: ldc.i4.1
+    IL_0175: ldarg.0
+    IL_0176: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_017b: callvirt System.Data.DataTable::get_Rows
+    IL_0180: ldloc.3
+    IL_0181: callvirt System.Data.DataRowCollection::get_Item
+    IL_0186: ldstr ldstr "name"
+    IL_018b: callvirt System.Data.DataRow::get_Item
+    IL_0190: stelem.ref
+    IL_0191: callvirt System.Data.DataRowCollection::Add
+    IL_0196: pop
+    IL_0197: ldloc.3
+    IL_0198: ldc.i4.1
+    IL_0199: add
+    IL_019a: stloc.3
+    IL_019b: ldloc.3
+    IL_019c: ldarg.0
+    IL_019d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtBindCombo
+    IL_01a2: callvirt System.Data.DataTable::get_Rows
+    IL_01a7: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_01ac: blt IL_00a1
+    IL_01b1: ldloc.0
+    IL_01b2: callvirt System.Data.DataTable::get_Rows
+    IL_01b7: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_01bc: ldc.i4.0
+    IL_01bd: ble.s IL_0211
+    IL_01bf: ldarg.0
+    IL_01c0: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::DDL
+    IL_01c5: ldloc.0
+    IL_01c6: ldarg.0
+    IL_01c7: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_01cc: ldstr ldstr "Id"
+    IL_01d1: ldstr ldstr "name"
+    IL_01d6: ldstr ldstr "Item Name"
+    IL_01db: ldc.i4.0
+    IL_01dc: newobj TypeSpec#263::.ctor
+    IL_01e1: callvirt Architecture.WinApp.Common.DropDownBind::BindDDLNew
+    IL_01e6: ldarg.0
+    IL_01e7: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_01ec: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_01f1: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Bands
+    IL_01f6: ldc.i4.0
+    IL_01f7: callvirt Infragistics.Win.UltraWinGrid.BandsCollection::get_Item
+    IL_01fc: callvirt Infragistics.Win.UltraWinGrid.UltraGridBand::get_Columns
+    IL_0201: ldc.i4.1
+    IL_0202: callvirt Infragistics.Win.UltraWinGrid.ColumnsCollection::get_Item
+    IL_0207: ldc.i4 325
+    IL_020c: callvirt Infragistics.Win.UltraWinGrid.UltraGridColumn::set_Width
+    IL_0211: ldloc.1
+    IL_0212: callvirt System.Data.DataTable::get_Rows
+    IL_0217: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_021c: ldc.i4.0
+    IL_021d: ble.s IL_0257
+    IL_021f: ldarg.0
+    IL_0220: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::DDL
+    IL_0225: ldloc.1
+    IL_0226: ldarg.0
+    IL_0227: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_022c: ldstr ldstr "Id"
+    IL_0231: ldstr ldstr "name"
+    IL_0236: ldstr ldstr "Warehouse"
+    IL_023b: ldc.i4.0
+    IL_023c: newobj TypeSpec#263::.ctor
+    IL_0241: callvirt Architecture.WinApp.Common.DropDownBind::BindDDLNew
+    IL_0246: ldarg.0
+    IL_0247: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_024c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0251: ldc.i4.1
+    IL_0252: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_AutoFitStyle
+    IL_0257: leave.s IL_0266
+    IL_0259: callvirt System.Exception::get_Message
+    IL_025e: call System.Windows.Forms.MessageBox::Show
+    IL_0263: pop
+    IL_0264: leave.s IL_0266
+    IL_0266: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::GridBind  (rva=0x57c0d4, fat header, code_size=1116, max_stack=6, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtStock
+    IL_0006: callvirt System.Data.DataTable::get_Rows
+    IL_000b: callvirt System.Data.DataRowCollection::Clear
+    IL_0010: newobj Architecture.Model.ReportsParameters::.ctor
+    IL_0015: stloc.0
+    IL_0016: ldloc.0
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0022: callvirt Architecture.Model.ReportsParameters::set_OrganizationId
+    IL_0027: ldloc.0
+    IL_0028: ldarg.0
+    IL_0029: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::UserAccount
+    IL_002e: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0033: callvirt Architecture.Model.ReportsParameters::set_CompanyId
+    IL_0038: ldloc.0
+    IL_0039: ldarg.0
+    IL_003a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_003f: callvirt System.Windows.Forms.DateTimePicker::get_Value
+    IL_0044: box System.DateTime
+    IL_0049: call Architecture.Common.Conversion::ToDateTime
+    IL_004e: callvirt Architecture.Model.ReportsParameters::set_DocDate
+    IL_0053: ldloc.0
+    IL_0054: ldarg.0
+    IL_0055: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_005a: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_005f: call Architecture.Common.Conversion::ToInt
+    IL_0064: callvirt Architecture.Model.ReportsParameters::set_ItemId
+    IL_0069: ldloc.0
+    IL_006a: ldarg.0
+    IL_006b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0070: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0075: call Architecture.Common.Conversion::ToInt
+    IL_007a: callvirt Architecture.Model.ReportsParameters::set_WarehouseId
+    IL_007f: ldarg.0
+    IL_0080: ldloc.0
+    IL_0081: call Architecture.BLL.Reports.Inventory.StocksReport::StockByFiFo
+    IL_0086: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtStock
+    IL_008b: ldarg.0
+    IL_008c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtStock
+    IL_0091: callvirt System.Data.DataTable::get_Rows
+    IL_0096: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_009b: ldc.i4.0
+    IL_009c: ble IL_0441
+    IL_00a1: newobj System.Data.DataTable::.ctor
+    IL_00a6: stloc.1
+    IL_00a7: ldloc.1
+    IL_00a8: callvirt System.Data.DataTable::get_Columns
+    IL_00ad: ldstr ldstr "Id"
+    IL_00b2: ldtoken System.Int32
+    IL_00b7: call System.Type::GetTypeFromHandle
+    IL_00bc: callvirt System.Data.DataColumnCollection::Add
+    IL_00c1: pop
+    IL_00c2: ldloc.1
+    IL_00c3: callvirt System.Data.DataTable::get_Columns
+    IL_00c8: ldstr ldstr "DocDate"
+    IL_00cd: ldtoken System.DateTime
+    IL_00d2: call System.Type::GetTypeFromHandle
+    IL_00d7: callvirt System.Data.DataColumnCollection::Add
+    IL_00dc: pop
+    IL_00dd: ldloc.1
+    IL_00de: callvirt System.Data.DataTable::get_Columns
+    IL_00e3: ldstr ldstr "ItemName"
+    IL_00e8: ldtoken System.String
+    IL_00ed: call System.Type::GetTypeFromHandle
+    IL_00f2: callvirt System.Data.DataColumnCollection::Add
+    IL_00f7: pop
+    IL_00f8: ldloc.1
+    IL_00f9: callvirt System.Data.DataTable::get_Columns
+    IL_00fe: ldstr ldstr "Warehouse"
+    IL_0103: ldtoken System.String
+    IL_0108: call System.Type::GetTypeFromHandle
+    IL_010d: callvirt System.Data.DataColumnCollection::Add
+    IL_0112: pop
+    IL_0113: ldloc.1
+    IL_0114: callvirt System.Data.DataTable::get_Columns
+    IL_0119: ldstr ldstr "PackUom"
+    IL_011e: ldtoken System.String
+    IL_0123: call System.Type::GetTypeFromHandle
+    IL_0128: callvirt System.Data.DataColumnCollection::Add
+    IL_012d: pop
+    IL_012e: ldloc.1
+    IL_012f: callvirt System.Data.DataTable::get_Columns
+    IL_0134: ldstr ldstr "RateUom"
+    IL_0139: ldtoken System.String
+    IL_013e: call System.Type::GetTypeFromHandle
+    IL_0143: callvirt System.Data.DataColumnCollection::Add
+    IL_0148: pop
+    IL_0149: ldloc.1
+    IL_014a: callvirt System.Data.DataTable::get_Columns
+    IL_014f: ldstr ldstr "QtyIn"
+    IL_0154: ldtoken System.Double
+    IL_0159: call System.Type::GetTypeFromHandle
+    IL_015e: callvirt System.Data.DataColumnCollection::Add
+    IL_0163: pop
+    IL_0164: ldloc.1
+    IL_0165: callvirt System.Data.DataTable::get_Columns
+    IL_016a: ldstr ldstr "QtyOut"
+    IL_016f: ldtoken System.Double
+    IL_0174: call System.Type::GetTypeFromHandle
+    IL_0179: callvirt System.Data.DataColumnCollection::Add
+    IL_017e: pop
+    IL_017f: ldloc.1
+    IL_0180: callvirt System.Data.DataTable::get_Columns
+    IL_0185: ldstr ldstr "BalQty"
+    IL_018a: ldtoken System.Double
+    IL_018f: call System.Type::GetTypeFromHandle
+    IL_0194: callvirt System.Data.DataColumnCollection::Add
+    IL_0199: pop
+    IL_019a: ldloc.1
+    IL_019b: callvirt System.Data.DataTable::get_Columns
+    IL_01a0: ldstr ldstr "WeightIn"
+    IL_01a5: ldtoken System.Double
+    IL_01aa: call System.Type::GetTypeFromHandle
+    IL_01af: callvirt System.Data.DataColumnCollection::Add
+    IL_01b4: pop
+    IL_01b5: ldloc.1
+    IL_01b6: callvirt System.Data.DataTable::get_Columns
+    IL_01bb: ldstr ldstr "WeightOut"
+    IL_01c0: ldtoken System.Double
+    IL_01c5: call System.Type::GetTypeFromHandle
+    IL_01ca: callvirt System.Data.DataColumnCollection::Add
+    IL_01cf: pop
+    IL_01d0: ldloc.1
+    IL_01d1: callvirt System.Data.DataTable::get_Columns
+    IL_01d6: ldstr ldstr "BalWeight"
+    IL_01db: ldtoken System.Double
+    IL_01e0: call System.Type::GetTypeFromHandle
+    IL_01e5: callvirt System.Data.DataColumnCollection::Add
+    IL_01ea: pop
+    IL_01eb: ldloc.1
+    IL_01ec: callvirt System.Data.DataTable::get_Columns
+    IL_01f1: ldstr ldstr "AmountIn"
+    IL_01f6: ldtoken System.Double
+    IL_01fb: call System.Type::GetTypeFromHandle
+    IL_0200: callvirt System.Data.DataColumnCollection::Add
+    IL_0205: pop
+    IL_0206: ldloc.1
+    IL_0207: callvirt System.Data.DataTable::get_Columns
+    IL_020c: ldstr ldstr "AmountOut"
+    IL_0211: ldtoken System.Double
+    IL_0216: call System.Type::GetTypeFromHandle
+    IL_021b: callvirt System.Data.DataColumnCollection::Add
+    IL_0220: pop
+    IL_0221: ldloc.1
+    IL_0222: callvirt System.Data.DataTable::get_Columns
+    IL_0227: ldstr ldstr "BalAmount"
+    IL_022c: ldtoken System.Double
+    IL_0231: call System.Type::GetTypeFromHandle
+    IL_0236: callvirt System.Data.DataColumnCollection::Add
+    IL_023b: pop
+    IL_023c: ldloc.1
+    IL_023d: callvirt System.Data.DataTable::get_Columns
+    IL_0242: ldstr ldstr "AvgRate"
+    IL_0247: ldtoken System.Double
+    IL_024c: call System.Type::GetTypeFromHandle
+    IL_0251: callvirt System.Data.DataColumnCollection::Add
+    IL_0256: pop
+    IL_0257: ldarg.0
+    IL_0258: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtStock
+    IL_025d: callvirt System.Data.DataTable::get_Rows
+    IL_0262: callvirt System.Data.InternalDataCollectionBase::GetEnumerator
+    IL_0267: stloc.2
+    IL_0268: br IL_0420
+    IL_026d: ldloc.2
+    IL_026e: callvirt System.Collections.IEnumerator::get_Current
+    IL_0273: castclass System.Data.DataRow
+    IL_0278: stloc.3
+    IL_0279: ldloc.1
+    IL_027a: callvirt System.Data.DataTable::get_Rows
+    IL_027f: ldc.i4.s 16
+    IL_0281: newarr System.Object
+    IL_0286: dup
+    IL_0287: ldc.i4.0
+    IL_0288: ldloc.3
+    IL_0289: ldstr ldstr "Id"
+    IL_028e: callvirt System.Data.DataRow::get_Item
+    IL_0293: call Architecture.Common.Conversion::ToInt
+    IL_0298: box System.Int32
+    IL_029d: stelem.ref
+    IL_029e: dup
+    IL_029f: ldc.i4.1
+    IL_02a0: ldloc.3
+    IL_02a1: ldstr ldstr "DocDate"
+    IL_02a6: callvirt System.Data.DataRow::get_Item
+    IL_02ab: call Architecture.Common.Conversion::ToDateTime
+    IL_02b0: stloc.s 4
+    IL_02b2: ldloca.s 4
+    IL_02b4: call System.DateTime::ToShortDateString
+    IL_02b9: stelem.ref
+    IL_02ba: dup
+    IL_02bb: ldc.i4.2
+    IL_02bc: ldloc.3
+    IL_02bd: ldstr ldstr "ItemName"
+    IL_02c2: callvirt System.Data.DataRow::get_Item
+    IL_02c7: call Architecture.Common.Conversion::ToString
+    IL_02cc: stelem.ref
+    IL_02cd: dup
+    IL_02ce: ldc.i4.3
+    IL_02cf: ldloc.3
+    IL_02d0: ldstr ldstr "WareHouseName"
+    IL_02d5: callvirt System.Data.DataRow::get_Item
+    IL_02da: call Architecture.Common.Conversion::ToString
+    IL_02df: stelem.ref
+    IL_02e0: dup
+    IL_02e1: ldc.i4.4
+    IL_02e2: ldloc.3
+    IL_02e3: ldstr ldstr "PackUom"
+    IL_02e8: callvirt System.Data.DataRow::get_Item
+    IL_02ed: call Architecture.Common.Conversion::ToString
+    IL_02f2: stelem.ref
+    IL_02f3: dup
+    IL_02f4: ldc.i4.5
+    IL_02f5: ldloc.3
+    IL_02f6: ldstr ldstr "RateUom"
+    IL_02fb: callvirt System.Data.DataRow::get_Item
+    IL_0300: call Architecture.Common.Conversion::ToString
+    IL_0305: stelem.ref
+    IL_0306: dup
+    IL_0307: ldc.i4.6
+    IL_0308: ldloc.3
+    IL_0309: ldstr ldstr "QtyIn"
+    IL_030e: callvirt System.Data.DataRow::get_Item
+    IL_0313: call Architecture.Common.Conversion::ToDouble
+    IL_0318: box System.Double
+    IL_031d: stelem.ref
+    IL_031e: dup
+    IL_031f: ldc.i4.7
+    IL_0320: ldloc.3
+    IL_0321: ldstr ldstr "QtyOut"
+    IL_0326: callvirt System.Data.DataRow::get_Item
+    IL_032b: call Architecture.Common.Conversion::ToDouble
+    IL_0330: box System.Double
+    IL_0335: stelem.ref
+    IL_0336: dup
+    IL_0337: ldc.i4.8
+    IL_0338: ldloc.3
+    IL_0339: ldstr ldstr "BalQty"
+    IL_033e: callvirt System.Data.DataRow::get_Item
+    IL_0343: call Architecture.Common.Conversion::ToDouble
+    IL_0348: box System.Double
+    IL_034d: stelem.ref
+    IL_034e: dup
+    IL_034f: ldc.i4.s 9
+    IL_0351: ldloc.3
+    IL_0352: ldstr ldstr "WeightIn"
+    IL_0357: callvirt System.Data.DataRow::get_Item
+    IL_035c: call Architecture.Common.Conversion::ToDouble
+    IL_0361: box System.Double
+    IL_0366: stelem.ref
+    IL_0367: dup
+    IL_0368: ldc.i4.s 10
+    IL_036a: ldloc.3
+    IL_036b: ldstr ldstr "WeightOut"
+    IL_0370: callvirt System.Data.DataRow::get_Item
+    IL_0375: call Architecture.Common.Conversion::ToDouble
+    IL_037a: box System.Double
+    IL_037f: stelem.ref
+    IL_0380: dup
+    IL_0381: ldc.i4.s 11
+    IL_0383: ldloc.3
+    IL_0384: ldstr ldstr "BalWeight"
+    IL_0389: callvirt System.Data.DataRow::get_Item
+    IL_038e: call Architecture.Common.Conversion::ToDouble
+    IL_0393: box System.Double
+    IL_0398: stelem.ref
+    IL_0399: dup
+    IL_039a: ldc.i4.s 12
+    IL_039c: ldloc.3
+    IL_039d: ldstr ldstr "AmountIn"
+    IL_03a2: callvirt System.Data.DataRow::get_Item
+    IL_03a7: call Architecture.Common.Conversion::ToDouble
+    IL_03ac: box System.Double
+    IL_03b1: stelem.ref
+    IL_03b2: dup
+    IL_03b3: ldc.i4.s 13
+    IL_03b5: ldloc.3
+    IL_03b6: ldstr ldstr "AmountOut"
+    IL_03bb: callvirt System.Data.DataRow::get_Item
+    IL_03c0: call Architecture.Common.Conversion::ToDouble
+    IL_03c5: box System.Double
+    IL_03ca: stelem.ref
+    IL_03cb: dup
+    IL_03cc: ldc.i4.s 14
+    IL_03ce: ldloc.3
+    IL_03cf: ldstr ldstr "BalAmount"
+    IL_03d4: callvirt System.Data.DataRow::get_Item
+    IL_03d9: call Architecture.Common.Conversion::ToDouble
+    IL_03de: box System.Double
+    IL_03e3: stelem.ref
+    IL_03e4: dup
+    IL_03e5: ldc.i4.s 15
+    IL_03e7: ldloc.3
+    IL_03e8: ldstr ldstr "AvgRate"
+    IL_03ed: callvirt System.Data.DataRow::get_Item
+    IL_03f2: call Architecture.Common.Conversion::ToDouble
+    IL_03f7: box System.Double
+    IL_03fc: stelem.ref
+    IL_03fd: callvirt System.Data.DataRowCollection::Add
+    IL_0402: pop
+    IL_0403: ldarg.0
+    IL_0404: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0409: ldloc.1
+    IL_040a: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_040f: ldarg.0
+    IL_0410: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0415: callvirt Janus.Windows.GridEX.GridEX::RetrieveStructure
+    IL_041a: ldarg.0
+    IL_041b: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::GridSettings
+    IL_0420: ldloc.2
+    IL_0421: callvirt System.Collections.IEnumerator::MoveNext
+    IL_0426: brtrue IL_026d
+    IL_042b: leave.s IL_044c
+    IL_042d: ldloc.2
+    IL_042e: isinst System.IDisposable
+    IL_0433: stloc.s 5
+    IL_0435: ldloc.s 5
+    IL_0437: brfalse.s IL_0440
+    IL_0439: ldloc.s 5
+    IL_043b: callvirt System.IDisposable::Dispose
+    IL_0440: endfinally
+    IL_0441: ldarg.0
+    IL_0442: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0447: callvirt Janus.Windows.GridEX.GridEX::ClearStructure
+    IL_044c: leave.s IL_045b
+    IL_044e: callvirt System.Exception::get_Message
+    IL_0453: call System.Windows.Forms.MessageBox::Show
+    IL_0458: pop
+    IL_0459: leave.s IL_045b
+    IL_045b: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::GridSettings  (rva=0x57c570, fat header, code_size=1427, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0006: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_000b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0010: ldstr ldstr "Id"
+    IL_0015: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_001a: ldc.i4.0
+    IL_001b: callvirt Janus.Windows.GridEX.GridEXColumn::set_Visible
+    IL_0020: ldarg.0
+    IL_0021: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0026: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_002b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0030: ldstr ldstr "QtyIn"
+    IL_0035: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_003a: ldc.i4.2
+    IL_003b: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_0040: ldarg.0
+    IL_0041: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0046: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_004b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0050: ldstr ldstr "QtyIn"
+    IL_0055: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_005a: ldc.i4.3
+    IL_005b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_0060: ldarg.0
+    IL_0061: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0066: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_006b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0070: ldstr ldstr "QtyIn"
+    IL_0075: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_007a: ldstr ldstr "#,##0.###"
+    IL_007f: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_0084: ldarg.0
+    IL_0085: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_008a: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_008f: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0094: ldstr ldstr "QtyIn"
+    IL_0099: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_009e: ldstr ldstr "#,##0.###"
+    IL_00a3: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_00a8: ldarg.0
+    IL_00a9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_00ae: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00b3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00b8: ldstr ldstr "QtyOut"
+    IL_00bd: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_00c2: ldc.i4.2
+    IL_00c3: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_00c8: ldarg.0
+    IL_00c9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_00ce: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00d3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00d8: ldstr ldstr "QtyOut"
+    IL_00dd: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_00e2: ldc.i4.3
+    IL_00e3: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_00e8: ldarg.0
+    IL_00e9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_00ee: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00f3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00f8: ldstr ldstr "QtyOut"
+    IL_00fd: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0102: ldstr ldstr "#,##0.###"
+    IL_0107: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_010c: ldarg.0
+    IL_010d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0112: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0117: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_011c: ldstr ldstr "QtyOut"
+    IL_0121: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0126: ldstr ldstr "#,##0.###"
+    IL_012b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_0130: ldarg.0
+    IL_0131: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0136: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_013b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0140: ldstr ldstr "BalQty"
+    IL_0145: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_014a: ldc.i4.2
+    IL_014b: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_0150: ldarg.0
+    IL_0151: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0156: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_015b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0160: ldstr ldstr "BalQty"
+    IL_0165: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_016a: ldc.i4.3
+    IL_016b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_0170: ldarg.0
+    IL_0171: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0176: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_017b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0180: ldstr ldstr "BalQty"
+    IL_0185: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_018a: ldstr ldstr "#,##0.###"
+    IL_018f: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_0194: ldarg.0
+    IL_0195: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_019a: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_019f: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01a4: ldstr ldstr "BalQty"
+    IL_01a9: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01ae: ldstr ldstr "#,##0.###"
+    IL_01b3: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_01b8: ldarg.0
+    IL_01b9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_01be: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_01c3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01c8: ldstr ldstr "WeightIn"
+    IL_01cd: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01d2: ldc.i4.2
+    IL_01d3: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_01d8: ldarg.0
+    IL_01d9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_01de: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_01e3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01e8: ldstr ldstr "WeightIn"
+    IL_01ed: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01f2: ldc.i4.3
+    IL_01f3: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_01f8: ldarg.0
+    IL_01f9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_01fe: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0203: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0208: ldstr ldstr "WeightIn"
+    IL_020d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0212: ldstr ldstr "#,##0.###"
+    IL_0217: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_021c: ldarg.0
+    IL_021d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0222: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0227: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_022c: ldstr ldstr "WeightIn"
+    IL_0231: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0236: ldstr ldstr "#,##0.###"
+    IL_023b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_0240: ldarg.0
+    IL_0241: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0246: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_024b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0250: ldstr ldstr "WeightOut"
+    IL_0255: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_025a: ldc.i4.2
+    IL_025b: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_0260: ldarg.0
+    IL_0261: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0266: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_026b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0270: ldstr ldstr "WeightOut"
+    IL_0275: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_027a: ldc.i4.3
+    IL_027b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_0280: ldarg.0
+    IL_0281: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0286: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_028b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0290: ldstr ldstr "WeightOut"
+    IL_0295: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_029a: ldstr ldstr "#,##0.###"
+    IL_029f: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_02a4: ldarg.0
+    IL_02a5: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_02aa: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_02af: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_02b4: ldstr ldstr "WeightOut"
+    IL_02b9: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_02be: ldstr ldstr "#,##0.###"
+    IL_02c3: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_02c8: ldarg.0
+    IL_02c9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_02ce: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_02d3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_02d8: ldstr ldstr "BalWeight"
+    IL_02dd: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_02e2: ldc.i4.2
+    IL_02e3: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_02e8: ldarg.0
+    IL_02e9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_02ee: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_02f3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_02f8: ldstr ldstr "BalWeight"
+    IL_02fd: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0302: ldc.i4.3
+    IL_0303: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_0308: ldarg.0
+    IL_0309: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_030e: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0313: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0318: ldstr ldstr "BalWeight"
+    IL_031d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0322: ldstr ldstr "#,##0.###"
+    IL_0327: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_032c: ldarg.0
+    IL_032d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0332: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0337: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_033c: ldstr ldstr "BalWeight"
+    IL_0341: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0346: ldstr ldstr "#,##0.###"
+    IL_034b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_0350: ldarg.0
+    IL_0351: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0356: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_035b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0360: ldstr ldstr "AmountIn"
+    IL_0365: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_036a: ldc.i4.2
+    IL_036b: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_0370: ldarg.0
+    IL_0371: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0376: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_037b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0380: ldstr ldstr "AmountIn"
+    IL_0385: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_038a: ldc.i4.3
+    IL_038b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_0390: ldarg.0
+    IL_0391: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0396: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_039b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_03a0: ldstr ldstr "AmountIn"
+    IL_03a5: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_03aa: ldstr ldstr "#,##0.###"
+    IL_03af: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_03b4: ldarg.0
+    IL_03b5: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03ba: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_03bf: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_03c4: ldstr ldstr "AmountIn"
+    IL_03c9: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_03ce: ldstr ldstr "#,##0.###"
+    IL_03d3: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_03d8: ldarg.0
+    IL_03d9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03de: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_03e3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_03e8: ldstr ldstr "AmountOut"
+    IL_03ed: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_03f2: ldc.i4.2
+    IL_03f3: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_03f8: ldarg.0
+    IL_03f9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03fe: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0403: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0408: ldstr ldstr "AmountOut"
+    IL_040d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0412: ldc.i4.3
+    IL_0413: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_0418: ldarg.0
+    IL_0419: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_041e: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0423: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0428: ldstr ldstr "AmountOut"
+    IL_042d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0432: ldstr ldstr "#,##0.###"
+    IL_0437: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_043c: ldarg.0
+    IL_043d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0442: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0447: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_044c: ldstr ldstr "AmountOut"
+    IL_0451: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0456: ldstr ldstr "#,##0.###"
+    IL_045b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_0460: ldarg.0
+    IL_0461: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0466: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_046b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0470: ldstr ldstr "BalAmount"
+    IL_0475: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_047a: ldc.i4.2
+    IL_047b: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_0480: ldarg.0
+    IL_0481: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0486: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_048b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0490: ldstr ldstr "BalAmount"
+    IL_0495: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_049a: ldc.i4.3
+    IL_049b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_04a0: ldarg.0
+    IL_04a1: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_04a6: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_04ab: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_04b0: ldstr ldstr "BalAmount"
+    IL_04b5: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_04ba: ldstr ldstr "#,##0.###"
+    IL_04bf: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_04c4: ldarg.0
+    IL_04c5: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_04ca: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_04cf: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_04d4: ldstr ldstr "BalAmount"
+    IL_04d9: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_04de: ldstr ldstr "#,##0.###"
+    IL_04e3: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_04e8: ldarg.0
+    IL_04e9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_04ee: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_04f3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_04f8: ldstr ldstr "AvgRate"
+    IL_04fd: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0502: ldc.i4.3
+    IL_0503: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_0508: ldarg.0
+    IL_0509: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_050e: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0513: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0518: ldstr ldstr "AvgRate"
+    IL_051d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0522: ldc.i4.3
+    IL_0523: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_0528: ldarg.0
+    IL_0529: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_052e: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0533: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0538: ldstr ldstr "AvgRate"
+    IL_053d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0542: ldstr ldstr "#,##0.###"
+    IL_0547: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_054c: ldarg.0
+    IL_054d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0552: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0557: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_055c: ldstr ldstr "AvgRate"
+    IL_0561: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0566: ldstr ldstr "#,##0.###"
+    IL_056b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_0570: ldarg.0
+    IL_0571: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0576: call Architecture.WinApp.Common.CommonServices::GridAutoAdjustmentNew
+    IL_057b: ldarg.0
+    IL_057c: ldnull
+    IL_057d: ldnull
+    IL_057e: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1_Load
+    IL_0583: leave.s IL_0592
+    IL_0585: callvirt System.Exception::get_Message
+    IL_058a: call System.Windows.Forms.MessageBox::Show
+    IL_058f: pop
+    IL_0590: leave.s IL_0592
+    IL_0592: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow_Click  (rva=0x57cb2c, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::GridBind
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm_LinkClicked  (rva=0x18f62, tiny header, code_size=1, max_stack=8, exception_handlers=no)
+    IL_0000: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1_Load  (rva=0x57cb60, fat header, code_size=66, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.Control::get_Name
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_000c: callvirt System.Windows.Forms.Control::get_Name
+    IL_0011: call Architecture.WinApp.Common.CommonServices::GetGridLayout
+    IL_0016: stloc.0
+    IL_0017: ldloc.0
+    IL_0018: brfalse.s IL_0032
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0020: ldloc.0
+    IL_0021: callvirt Janus.Windows.GridEX.GridEX::LoadLayoutFile
+    IL_0026: ldloc.0
+    IL_0027: callvirt System.IO.Stream::Close
+    IL_002c: ldloc.0
+    IL_002d: callvirt System.IO.Stream::Dispose
+    IL_0032: leave.s IL_0041
+    IL_0034: callvirt System.Object::ToString
+    IL_0039: call System.Windows.Forms.MessageBox::Show
+    IL_003e: pop
+    IL_003f: leave.s IL_0041
+    IL_0041: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefresh_Click  (rva=0x57cbc0, fat header, code_size=104, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_0006: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_000b: callvirt Architecture.Model.FinancialYear::get_Start_Period
+    IL_0010: callvirt System.Windows.Forms.DateTimePicker::set_Value
+    IL_0015: ldarg.0
+    IL_0016: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_001b: ldsfld System.String::Empty
+    IL_0020: callvirt System.Windows.Forms.Control::set_Text
+    IL_0025: ldarg.0
+    IL_0026: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_002b: ldsfld System.String::Empty
+    IL_0030: callvirt System.Windows.Forms.Control::set_Text
+    IL_0035: ldarg.0
+    IL_0036: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_003b: ldc.i4.1
+    IL_003c: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0041: ldarg.0
+    IL_0042: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_0047: callvirt System.Windows.Forms.Control::Focus
+    IL_004c: pop
+    IL_004d: ldarg.0
+    IL_004e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0053: callvirt Janus.Windows.GridEX.GridEX::ClearStructure
+    IL_0058: leave.s IL_0067
+    IL_005a: callvirt System.Exception::get_Message
+    IL_005f: call System.Windows.Forms.MessageBox::Show
+    IL_0064: pop
+    IL_0065: leave.s IL_0067
+    IL_0067: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnclose_Click  (rva=0x36198, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.Form::Close
+    IL_0006: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::frmStockReport_FormClosed  (rva=0x57cc44, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.HistoryStack::Remove
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo_Click  (rva=0x57cc78, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::StockComboFill
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::frmStockReport_KeyDown  (rva=0x57ccac, fat header, code_size=148, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.2
+    IL_0001: callvirt System.Windows.Forms.KeyEventArgs::get_KeyData
+    IL_0006: ldc.i4.s 13
+    IL_0008: bne.un.s IL_0014
+    IL_000a: ldstr ldstr "{TAB}"
+    IL_000f: call System.Windows.Forms.SendKeys::Send
+    IL_0014: ldarg.2
+    IL_0015: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_001a: brfalse.s IL_002e
+    IL_001c: ldarg.2
+    IL_001d: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0022: ldc.i4.s 80
+    IL_0024: bne.un.s IL_002e
+    IL_0026: ldarg.0
+    IL_0027: ldnull
+    IL_0028: ldnull
+    IL_0029: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint_Click
+    IL_002e: ldarg.2
+    IL_002f: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0034: brfalse.s IL_0040
+    IL_0036: ldarg.2
+    IL_0037: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_003c: ldc.i4.s 69
+    IL_003e: beq.s IL_004a
+    IL_0040: ldarg.2
+    IL_0041: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0046: ldc.i4.s 27
+    IL_0048: bne.un.s IL_0050
+    IL_004a: ldarg.0
+    IL_004b: call System.Windows.Forms.Form::Close
+    IL_0050: ldarg.2
+    IL_0051: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0056: brfalse.s IL_006a
+    IL_0058: ldarg.2
+    IL_0059: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_005e: ldc.i4.s 78
+    IL_0060: bne.un.s IL_006a
+    IL_0062: ldarg.0
+    IL_0063: ldnull
+    IL_0064: ldnull
+    IL_0065: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefresh_Click
+    IL_006a: ldarg.2
+    IL_006b: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0070: brfalse.s IL_0084
+    IL_0072: ldarg.2
+    IL_0073: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0078: ldc.i4.s 83
+    IL_007a: bne.un.s IL_0084
+    IL_007c: ldarg.0
+    IL_007d: ldnull
+    IL_007e: ldnull
+    IL_007f: call Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow_Click
+    IL_0084: leave.s IL_0093
+    IL_0086: callvirt System.Exception::get_Message
+    IL_008b: call System.Windows.Forms.MessageBox::Show
+    IL_0090: pop
+    IL_0091: leave.s IL_0093
+    IL_0093: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint_Click  (rva=0x57cd5c, fat header, code_size=128, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtStock
+    IL_0006: brfalse.s IL_001a
+    IL_0008: ldarg.0
+    IL_0009: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtStock
+    IL_000e: callvirt System.Data.DataTable::get_Rows
+    IL_0013: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0018: brtrue.s IL_0025
+    IL_001a: ldstr ldstr "No Record Found For Display"
+    IL_001f: newobj System.Exception::.ctor
+    IL_0024: throw
+    IL_0025: newobj Architecture.Reports.Reporting::.ctor
+    IL_002a: dup
+    IL_002b: ldstr ldstr "@CompanyAddress"
+    IL_0030: ldarg.0
+    IL_0031: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::UserAccount
+    IL_0036: callvirt Architecture.Model.UserAccount::get_CompAddress
+    IL_003b: callvirt System.Object::ToString
+    IL_0040: callvirt Architecture.Reports.Reporting::RptPerameter
+    IL_0045: dup
+    IL_0046: ldstr ldstr "@CompanyName"
+    IL_004b: ldarg.0
+    IL_004c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::UserAccount
+    IL_0051: callvirt Architecture.Model.UserAccount::get_CompName
+    IL_0056: callvirt System.Object::ToString
+    IL_005b: callvirt Architecture.Reports.Reporting::RptPerameter
+    IL_0060: ldarg.0
+    IL_0061: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::dtStock
+    IL_0066: ldstr ldstr "390_01_GetStockByFifo.rpt"
+    IL_006b: callvirt Architecture.Reports.Reporting::ShowReportWithDataTable
+    IL_0070: leave.s IL_007f
+    IL_0072: callvirt System.Exception::get_Message
+    IL_0077: call System.Windows.Forms.MessageBox::Show
+    IL_007c: pop
+    IL_007d: leave.s IL_007f
+    IL_007f: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::Dispose  (rva=0x57cdf8, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0016
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::components
+    IL_0009: brfalse.s IL_0016
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::components
+    IL_0011: callvirt System.IDisposable::Dispose
+    IL_0016: ldarg.0
+    IL_0017: ldarg.1
+    IL_0018: call System.Windows.Forms.Form::Dispose
+    IL_001d: ret
+
+; Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::InitializeComponent  (rva=0x57ce18, fat header, code_size=5554, max_stack=6, exception_handlers=no)
+    IL_0000: newobj Infragistics.Win.Appearance::.ctor
+    IL_0005: stloc.0
+    IL_0006: newobj Infragistics.Win.Appearance::.ctor
+    IL_000b: stloc.1
+    IL_000c: newobj Infragistics.Win.Appearance::.ctor
+    IL_0011: stloc.2
+    IL_0012: newobj Infragistics.Win.Appearance::.ctor
+    IL_0017: stloc.3
+    IL_0018: newobj Infragistics.Win.Appearance::.ctor
+    IL_001d: stloc.s 4
+    IL_001f: newobj Infragistics.Win.Appearance::.ctor
+    IL_0024: stloc.s 5
+    IL_0026: newobj Infragistics.Win.Appearance::.ctor
+    IL_002b: stloc.s 6
+    IL_002d: newobj Infragistics.Win.Appearance::.ctor
+    IL_0032: stloc.s 7
+    IL_0034: newobj Infragistics.Win.Appearance::.ctor
+    IL_0039: stloc.s 8
+    IL_003b: newobj Infragistics.Win.Appearance::.ctor
+    IL_0040: stloc.s 9
+    IL_0042: newobj Infragistics.Win.Appearance::.ctor
+    IL_0047: stloc.s 10
+    IL_0049: newobj Infragistics.Win.Appearance::.ctor
+    IL_004e: stloc.s 11
+    IL_0050: newobj Infragistics.Win.Appearance::.ctor
+    IL_0055: stloc.s 12
+    IL_0057: newobj Infragistics.Win.Appearance::.ctor
+    IL_005c: stloc.s 13
+    IL_005e: newobj Infragistics.Win.Appearance::.ctor
+    IL_0063: stloc.s 14
+    IL_0065: newobj Infragistics.Win.Appearance::.ctor
+    IL_006a: stloc.s 15
+    IL_006c: newobj Infragistics.Win.Appearance::.ctor
+    IL_0071: stloc.s 16
+    IL_0073: newobj Infragistics.Win.Appearance::.ctor
+    IL_0078: stloc.s 17
+    IL_007a: newobj Infragistics.Win.Appearance::.ctor
+    IL_007f: stloc.s 18
+    IL_0081: newobj Infragistics.Win.Appearance::.ctor
+    IL_0086: stloc.s 19
+    IL_0088: newobj Infragistics.Win.Appearance::.ctor
+    IL_008d: stloc.s 20
+    IL_008f: newobj Infragistics.Win.Appearance::.ctor
+    IL_0094: stloc.s 21
+    IL_0096: newobj Infragistics.Win.Appearance::.ctor
+    IL_009b: stloc.s 22
+    IL_009d: newobj Infragistics.Win.Appearance::.ctor
+    IL_00a2: stloc.s 23
+    IL_00a4: ldarg.0
+    IL_00a5: newobj System.Windows.Forms.Panel::.ctor
+    IL_00aa: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_00af: ldarg.0
+    IL_00b0: newobj System.Windows.Forms.Panel::.ctor
+    IL_00b5: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_00ba: ldarg.0
+    IL_00bb: newobj Janus.Windows.GridEX.GridEX::.ctor
+    IL_00c0: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_00c5: ldarg.0
+    IL_00c6: newobj System.Windows.Forms.Panel::.ctor
+    IL_00cb: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_00d0: ldarg.0
+    IL_00d1: newobj System.Windows.Forms.Panel::.ctor
+    IL_00d6: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_00db: ldarg.0
+    IL_00dc: newobj grid.User_Conrtols.CtrlGrdBar::.ctor
+    IL_00e1: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_00e6: ldarg.0
+    IL_00e7: newobj System.Windows.Forms.Label::.ctor
+    IL_00ec: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_00f1: ldarg.0
+    IL_00f2: newobj System.Windows.Forms.Label::.ctor
+    IL_00f7: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_00fc: ldarg.0
+    IL_00fd: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_0102: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0107: ldarg.0
+    IL_0108: newobj System.Windows.Forms.Label::.ctor
+    IL_010d: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0112: ldarg.0
+    IL_0113: newobj System.Windows.Forms.Label::.ctor
+    IL_0118: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_011d: ldarg.0
+    IL_011e: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_0123: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0128: ldarg.0
+    IL_0129: newobj System.Windows.Forms.Button::.ctor
+    IL_012e: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_0133: ldarg.0
+    IL_0134: newobj System.Windows.Forms.DateTimePicker::.ctor
+    IL_0139: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_013e: ldarg.0
+    IL_013f: newobj System.Windows.Forms.Panel::.ctor
+    IL_0144: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_0149: ldarg.0
+    IL_014a: newobj System.Windows.Forms.ToolStrip::.ctor
+    IL_014f: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_0154: ldarg.0
+    IL_0155: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_015a: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_015f: ldarg.0
+    IL_0160: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_0165: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_016a: ldarg.0
+    IL_016b: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_0170: stfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_0175: ldarg.0
+    IL_0176: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_017b: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0180: ldarg.0
+    IL_0181: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_0186: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_018b: ldarg.0
+    IL_018c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0191: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_0196: ldarg.0
+    IL_0197: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_019c: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_01a1: ldarg.0
+    IL_01a2: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_01a7: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_01ac: ldarg.0
+    IL_01ad: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_01b2: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_01b7: ldarg.0
+    IL_01b8: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_01bd: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_01c2: ldarg.0
+    IL_01c3: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_01c8: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_01cd: ldarg.0
+    IL_01ce: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_01d3: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_01d8: ldarg.0
+    IL_01d9: call System.Windows.Forms.Control::SuspendLayout
+    IL_01de: ldarg.0
+    IL_01df: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_01e4: callvirt System.Windows.Forms.Control::get_Controls
+    IL_01e9: ldarg.0
+    IL_01ea: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_01ef: callvirt ControlCollection::Add
+    IL_01f4: ldarg.0
+    IL_01f5: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_01fa: callvirt System.Windows.Forms.Control::get_Controls
+    IL_01ff: ldarg.0
+    IL_0200: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_0205: callvirt ControlCollection::Add
+    IL_020a: ldarg.0
+    IL_020b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_0210: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0215: ldarg.0
+    IL_0216: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_021b: callvirt ControlCollection::Add
+    IL_0220: ldarg.0
+    IL_0221: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_0226: ldc.i4.5
+    IL_0227: callvirt System.Windows.Forms.Control::set_Dock
+    IL_022c: ldarg.0
+    IL_022d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_0232: ldc.i4.0
+    IL_0233: ldc.i4.0
+    IL_0234: newobj System.Drawing.Point::.ctor
+    IL_0239: callvirt System.Windows.Forms.Control::set_Location
+    IL_023e: ldarg.0
+    IL_023f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_0244: ldstr ldstr "panel1"
+    IL_0249: callvirt System.Windows.Forms.Control::set_Name
+    IL_024e: ldarg.0
+    IL_024f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_0254: ldc.i4 807
+    IL_0259: ldc.i4 433
+    IL_025e: newobj System.Drawing.Size::.ctor
+    IL_0263: callvirt System.Windows.Forms.Control::set_Size
+    IL_0268: ldarg.0
+    IL_0269: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_026e: ldc.i4.0
+    IL_026f: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0274: ldarg.0
+    IL_0275: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_027a: callvirt System.Windows.Forms.Control::get_Controls
+    IL_027f: ldarg.0
+    IL_0280: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0285: callvirt ControlCollection::Add
+    IL_028a: ldarg.0
+    IL_028b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_0290: ldc.i4.5
+    IL_0291: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0296: ldarg.0
+    IL_0297: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_029c: ldc.i4.0
+    IL_029d: ldc.i4.s 113
+    IL_029f: newobj System.Drawing.Point::.ctor
+    IL_02a4: callvirt System.Windows.Forms.Control::set_Location
+    IL_02a9: ldarg.0
+    IL_02aa: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_02af: ldstr ldstr "panel4"
+    IL_02b4: callvirt System.Windows.Forms.Control::set_Name
+    IL_02b9: ldarg.0
+    IL_02ba: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_02bf: ldc.i4 807
+    IL_02c4: ldc.i4 320
+    IL_02c9: newobj System.Drawing.Size::.ctor
+    IL_02ce: callvirt System.Windows.Forms.Control::set_Size
+    IL_02d3: ldarg.0
+    IL_02d4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_02d9: ldc.i4.2
+    IL_02da: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_02df: ldarg.0
+    IL_02e0: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_02e5: ldc.i4.2
+    IL_02e6: callvirt Janus.Windows.GridEX.GridEX::set_AllowEdit
+    IL_02eb: ldarg.0
+    IL_02ec: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_02f1: call System.Drawing.Color::get_White
+    IL_02f6: callvirt Janus.Windows.GridEX.ScrollableBase::set_BackColor
+    IL_02fb: ldarg.0
+    IL_02fc: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0301: ldc.i4.7
+    IL_0302: callvirt Janus.Windows.GridEX.GridEX::set_DefaultFilterRowComparison
+    IL_0307: ldarg.0
+    IL_0308: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_030d: ldc.i4.5
+    IL_030e: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0313: ldarg.0
+    IL_0314: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0319: ldc.i4.2
+    IL_031a: callvirt Janus.Windows.GridEX.GridEX::set_FilterMode
+    IL_031f: ldarg.0
+    IL_0320: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0325: ldc.i4.3
+    IL_0326: callvirt Janus.Windows.GridEX.GridEX::set_FilterRowButtonStyle
+    IL_032b: ldarg.0
+    IL_032c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0331: ldstr ldstr "Verdana"
+    IL_0336: ldc.r4 8.25
+    IL_033b: newobj System.Drawing.Font::.ctor
+    IL_0340: callvirt System.Windows.Forms.Control::set_Font
+    IL_0345: ldarg.0
+    IL_0346: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_034b: ldc.i4.2
+    IL_034c: callvirt Janus.Windows.GridEX.GridEX::set_GroupTotals
+    IL_0351: ldarg.0
+    IL_0352: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0357: ldc.i4.1
+    IL_0358: callvirt Janus.Windows.GridEX.GridEX::set_Hierarchical
+    IL_035d: ldarg.0
+    IL_035e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0363: ldc.i4.0
+    IL_0364: ldc.i4.0
+    IL_0365: newobj System.Drawing.Point::.ctor
+    IL_036a: callvirt System.Windows.Forms.Control::set_Location
+    IL_036f: ldarg.0
+    IL_0370: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0375: ldstr ldstr "grdfrm"
+    IL_037a: callvirt System.Windows.Forms.Control::set_Name
+    IL_037f: ldarg.0
+    IL_0380: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0385: ldc.i4.1
+    IL_0386: callvirt Janus.Windows.GridEX.ScrollableBase::set_Office2007ColorScheme
+    IL_038b: ldarg.0
+    IL_038c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0391: ldc.i4.0
+    IL_0392: ldc.i4 192
+    IL_0397: ldc.i4 192
+    IL_039c: call System.Drawing.Color::FromArgb
+    IL_03a1: callvirt Janus.Windows.GridEX.ScrollableBase::set_Office2007CustomColor
+    IL_03a6: ldarg.0
+    IL_03a7: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03ac: ldc.i4.1
+    IL_03ad: callvirt Janus.Windows.GridEX.ScrollableBase::set_RecordNavigator
+    IL_03b2: ldarg.0
+    IL_03b3: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03b8: ldc.i4 807
+    IL_03bd: ldc.i4 320
+    IL_03c2: newobj System.Drawing.Size::.ctor
+    IL_03c7: callvirt System.Windows.Forms.Control::set_Size
+    IL_03cc: ldarg.0
+    IL_03cd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03d2: ldc.i4.0
+    IL_03d3: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_03d8: ldarg.0
+    IL_03d9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03de: ldc.i4.1
+    IL_03df: callvirt Janus.Windows.GridEX.GridEX::set_TotalRow
+    IL_03e4: ldarg.0
+    IL_03e5: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03ea: ldc.i4.1
+    IL_03eb: callvirt Janus.Windows.GridEX.GridEX::set_TotalRowPosition
+    IL_03f0: ldarg.0
+    IL_03f1: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_03f6: ldc.i4.4
+    IL_03f7: callvirt Janus.Windows.GridEX.ScrollableBase::set_VisualStyle
+    IL_03fc: ldarg.0
+    IL_03fd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0402: ldarg.0
+    IL_0403: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm_LinkClicked
+    IL_0409: newobj Janus.Windows.GridEX.ColumnActionEventHandler::.ctor
+    IL_040e: callvirt Janus.Windows.GridEX.GridEX::add_LinkClicked
+    IL_0413: ldarg.0
+    IL_0414: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_0419: call System.Drawing.Color::get_White
+    IL_041e: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0423: ldarg.0
+    IL_0424: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_0429: callvirt System.Windows.Forms.Control::get_Controls
+    IL_042e: ldarg.0
+    IL_042f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_0434: callvirt ControlCollection::Add
+    IL_0439: ldarg.0
+    IL_043a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_043f: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0444: ldarg.0
+    IL_0445: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_044a: callvirt ControlCollection::Add
+    IL_044f: ldarg.0
+    IL_0450: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_0455: callvirt System.Windows.Forms.Control::get_Controls
+    IL_045a: ldarg.0
+    IL_045b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0460: callvirt ControlCollection::Add
+    IL_0465: ldarg.0
+    IL_0466: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_046b: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0470: ldarg.0
+    IL_0471: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0476: callvirt ControlCollection::Add
+    IL_047b: ldarg.0
+    IL_047c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_0481: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0486: ldarg.0
+    IL_0487: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_048c: callvirt ControlCollection::Add
+    IL_0491: ldarg.0
+    IL_0492: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_0497: callvirt System.Windows.Forms.Control::get_Controls
+    IL_049c: ldarg.0
+    IL_049d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_04a2: callvirt ControlCollection::Add
+    IL_04a7: ldarg.0
+    IL_04a8: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_04ad: callvirt System.Windows.Forms.Control::get_Controls
+    IL_04b2: ldarg.0
+    IL_04b3: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_04b8: callvirt ControlCollection::Add
+    IL_04bd: ldarg.0
+    IL_04be: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_04c3: callvirt System.Windows.Forms.Control::get_Controls
+    IL_04c8: ldarg.0
+    IL_04c9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_04ce: callvirt ControlCollection::Add
+    IL_04d3: ldarg.0
+    IL_04d4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_04d9: ldc.i4.1
+    IL_04da: callvirt System.Windows.Forms.Control::set_Dock
+    IL_04df: ldarg.0
+    IL_04e0: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_04e5: ldc.i4.0
+    IL_04e6: ldc.i4.s 29
+    IL_04e8: newobj System.Drawing.Point::.ctor
+    IL_04ed: callvirt System.Windows.Forms.Control::set_Location
+    IL_04f2: ldarg.0
+    IL_04f3: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_04f8: ldstr ldstr "panel3"
+    IL_04fd: callvirt System.Windows.Forms.Control::set_Name
+    IL_0502: ldarg.0
+    IL_0503: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_0508: ldc.i4 807
+    IL_050d: ldc.i4.s 84
+    IL_050f: newobj System.Drawing.Size::.ctor
+    IL_0514: callvirt System.Windows.Forms.Control::set_Size
+    IL_0519: ldarg.0
+    IL_051a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_051f: ldc.i4.0
+    IL_0520: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0525: ldarg.0
+    IL_0526: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_052b: ldc.i4.s 10
+    IL_052d: ldc.i4.s 110
+    IL_052f: ldc.i4.s 110
+    IL_0531: call System.Drawing.Color::FromArgb
+    IL_0536: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_053b: ldarg.0
+    IL_053c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_0541: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0546: ldarg.0
+    IL_0547: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_054c: callvirt ControlCollection::Add
+    IL_0551: ldarg.0
+    IL_0552: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_0557: callvirt System.Windows.Forms.Control::get_Controls
+    IL_055c: ldarg.0
+    IL_055d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_0562: callvirt ControlCollection::Add
+    IL_0567: ldarg.0
+    IL_0568: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_056d: ldc.i4.1
+    IL_056e: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0573: ldarg.0
+    IL_0574: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_0579: ldc.i4.0
+    IL_057a: ldc.i4.0
+    IL_057b: newobj System.Drawing.Point::.ctor
+    IL_0580: callvirt System.Windows.Forms.Control::set_Location
+    IL_0585: ldarg.0
+    IL_0586: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_058b: ldc.i4.2
+    IL_058c: newobj System.Windows.Forms.Padding::.ctor
+    IL_0591: callvirt System.Windows.Forms.Control::set_Margin
+    IL_0596: ldarg.0
+    IL_0597: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_059c: ldstr ldstr "panel5"
+    IL_05a1: callvirt System.Windows.Forms.Control::set_Name
+    IL_05a6: ldarg.0
+    IL_05a7: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_05ac: ldc.i4 807
+    IL_05b1: ldc.i4.s 31
+    IL_05b3: newobj System.Drawing.Size::.ctor
+    IL_05b8: callvirt System.Windows.Forms.Control::set_Size
+    IL_05bd: ldarg.0
+    IL_05be: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_05c3: ldc.i4.s 109
+    IL_05c5: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_05ca: ldarg.0
+    IL_05cb: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_05d0: ldc.i4.s 9
+    IL_05d2: callvirt System.Windows.Forms.Control::set_Anchor
+    IL_05d7: ldarg.0
+    IL_05d8: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_05dd: ldarg.0
+    IL_05de: callvirt grid.User_Conrtols.CtrlGrdBar::set_FormName
+    IL_05e3: ldarg.0
+    IL_05e4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_05e9: ldc.i4 760
+    IL_05ee: ldc.i4.3
+    IL_05ef: newobj System.Drawing.Point::.ctor
+    IL_05f4: callvirt System.Windows.Forms.Control::set_Location
+    IL_05f9: ldarg.0
+    IL_05fa: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_05ff: ldc.i4.4
+    IL_0600: newobj System.Windows.Forms.Padding::.ctor
+    IL_0605: callvirt System.Windows.Forms.Control::set_Margin
+    IL_060a: ldarg.0
+    IL_060b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_0610: ldarg.0
+    IL_0611: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_0616: callvirt grid.User_Conrtols.CtrlGrdBar::set_MyGrid
+    IL_061b: ldarg.0
+    IL_061c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_0621: ldstr ldstr "ctrlGrdBar1"
+    IL_0626: callvirt System.Windows.Forms.Control::set_Name
+    IL_062b: ldarg.0
+    IL_062c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_0631: ldc.i4.s 45
+    IL_0633: ldc.i4.s 25
+    IL_0635: newobj System.Drawing.Size::.ctor
+    IL_063a: callvirt System.Windows.Forms.Control::set_Size
+    IL_063f: ldarg.0
+    IL_0640: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_0645: ldc.i4.s 20
+    IL_0647: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_064c: ldarg.0
+    IL_064d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1
+    IL_0652: ldarg.0
+    IL_0653: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::ctrlGrdBar1_Load
+    IL_0659: newobj System.EventHandler::.ctor
+    IL_065e: callvirt System.Windows.Forms.UserControl::add_Load
+    IL_0663: ldarg.0
+    IL_0664: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_0669: ldc.i4.1
+    IL_066a: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_066f: ldarg.0
+    IL_0670: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_0675: ldstr ldstr "Tahoma"
+    IL_067a: ldc.r4 12.0
+    IL_067f: ldc.i4.1
+    IL_0680: ldc.i4.3
+    IL_0681: ldc.i4.0
+    IL_0682: newobj System.Drawing.Font::.ctor
+    IL_0687: callvirt System.Windows.Forms.Control::set_Font
+    IL_068c: ldarg.0
+    IL_068d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_0692: call System.Drawing.Color::get_White
+    IL_0697: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_069c: ldarg.0
+    IL_069d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_06a2: ldc.i4.7
+    IL_06a3: ldc.i4.5
+    IL_06a4: newobj System.Drawing.Point::.ctor
+    IL_06a9: callvirt System.Windows.Forms.Control::set_Location
+    IL_06ae: ldarg.0
+    IL_06af: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_06b4: ldstr ldstr "label23"
+    IL_06b9: callvirt System.Windows.Forms.Control::set_Name
+    IL_06be: ldarg.0
+    IL_06bf: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_06c4: ldc.i4 200
+    IL_06c9: ldc.i4.s 19
+    IL_06cb: newobj System.Drawing.Size::.ctor
+    IL_06d0: callvirt System.Windows.Forms.Control::set_Size
+    IL_06d5: ldarg.0
+    IL_06d6: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_06db: ldc.i4.1
+    IL_06dc: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_06e1: ldarg.0
+    IL_06e2: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label23
+    IL_06e7: ldstr ldstr "Stock Report With FIFO"
+    IL_06ec: callvirt System.Windows.Forms.Control::set_Text
+    IL_06f1: ldarg.0
+    IL_06f2: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_06f7: ldc.i4.1
+    IL_06f8: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_06fd: ldarg.0
+    IL_06fe: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_0703: ldstr ldstr "Segoe UI Semibold"
+    IL_0708: ldc.r4 9.0
+    IL_070d: ldc.i4.1
+    IL_070e: newobj System.Drawing.Font::.ctor
+    IL_0713: callvirt System.Windows.Forms.Control::set_Font
+    IL_0718: ldarg.0
+    IL_0719: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_071e: ldc.i4.s 124
+    IL_0720: ldc.i4.s 34
+    IL_0722: newobj System.Drawing.Point::.ctor
+    IL_0727: callvirt System.Windows.Forms.Control::set_Location
+    IL_072c: ldarg.0
+    IL_072d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_0732: ldstr ldstr "label9"
+    IL_0737: callvirt System.Windows.Forms.Control::set_Name
+    IL_073c: ldarg.0
+    IL_073d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_0742: ldc.i4.s 67
+    IL_0744: ldc.i4.s 15
+    IL_0746: newobj System.Drawing.Size::.ctor
+    IL_074b: callvirt System.Windows.Forms.Control::set_Size
+    IL_0750: ldarg.0
+    IL_0751: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_0756: ldc.i4.s 99
+    IL_0758: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_075d: ldarg.0
+    IL_075e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label9
+    IL_0763: ldstr ldstr "Item Name"
+    IL_0768: callvirt System.Windows.Forms.Control::set_Text
+    IL_076d: ldarg.0
+    IL_076e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0773: ldc.i4.1
+    IL_0774: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_0779: ldarg.0
+    IL_077a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_077f: ldc.i4.4
+    IL_0780: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_0785: ldarg.0
+    IL_0786: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_078b: ldc.i4.2
+    IL_078c: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_0791: ldarg.0
+    IL_0792: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0797: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_079c: ldstr ldstr ""
+    IL_07a1: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_07a6: ldloc.0
+    IL_07a7: call System.Drawing.SystemColors::get_Window
+    IL_07ac: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_07b1: ldloc.0
+    IL_07b2: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_07b7: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_07bc: ldarg.0
+    IL_07bd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_07c2: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_07c7: ldloc.0
+    IL_07c8: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_07cd: ldarg.0
+    IL_07ce: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_07d3: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_07d8: ldc.i4.4
+    IL_07d9: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_07de: ldarg.0
+    IL_07df: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_07e4: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_07e9: ldc.i4.2
+    IL_07ea: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_07ef: ldloc.1
+    IL_07f0: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_07f5: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_07fa: ldloc.1
+    IL_07fb: call System.Drawing.SystemColors::get_ControlDark
+    IL_0800: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0805: ldloc.1
+    IL_0806: ldc.i4.2
+    IL_0807: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_080c: ldloc.1
+    IL_080d: call System.Drawing.SystemColors::get_Window
+    IL_0812: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0817: ldarg.0
+    IL_0818: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_081d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0822: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0827: ldloc.1
+    IL_0828: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_082d: ldloc.2
+    IL_082e: call System.Drawing.SystemColors::get_GrayText
+    IL_0833: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0838: ldarg.0
+    IL_0839: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_083e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0843: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0848: ldloc.2
+    IL_0849: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_084e: ldarg.0
+    IL_084f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0854: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0859: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_085e: ldc.i4.4
+    IL_085f: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_0864: ldloc.3
+    IL_0865: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_086a: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_086f: ldloc.3
+    IL_0870: call System.Drawing.SystemColors::get_Control
+    IL_0875: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_087a: ldloc.3
+    IL_087b: ldc.i4.3
+    IL_087c: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0881: ldloc.3
+    IL_0882: call System.Drawing.SystemColors::get_GrayText
+    IL_0887: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_088c: ldarg.0
+    IL_088d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0892: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0897: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_089c: ldloc.3
+    IL_089d: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_08a2: ldarg.0
+    IL_08a3: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_08a8: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_08ad: ldc.i4.1
+    IL_08ae: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_08b3: ldarg.0
+    IL_08b4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_08b9: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_08be: ldc.i4.1
+    IL_08bf: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_08c4: ldloc.s 4
+    IL_08c6: call System.Drawing.SystemColors::get_Window
+    IL_08cb: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_08d0: ldloc.s 4
+    IL_08d2: call System.Drawing.SystemColors::get_ControlText
+    IL_08d7: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_08dc: ldarg.0
+    IL_08dd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_08e2: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_08e7: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_08ec: ldloc.s 4
+    IL_08ee: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_08f3: ldloc.s 5
+    IL_08f5: call System.Drawing.SystemColors::get_Highlight
+    IL_08fa: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_08ff: ldloc.s 5
+    IL_0901: call System.Drawing.SystemColors::get_HighlightText
+    IL_0906: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_090b: ldarg.0
+    IL_090c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0911: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0916: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_091b: ldloc.s 5
+    IL_091d: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_0922: ldarg.0
+    IL_0923: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0928: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_092d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0932: ldc.i4.2
+    IL_0933: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_0938: ldarg.0
+    IL_0939: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_093e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0943: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0948: ldc.i4.2
+    IL_0949: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_094e: ldloc.s 6
+    IL_0950: call System.Drawing.SystemColors::get_Window
+    IL_0955: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_095a: ldarg.0
+    IL_095b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0960: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0965: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_096a: ldloc.s 6
+    IL_096c: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_0971: ldloc.s 7
+    IL_0973: call System.Drawing.Color::get_Silver
+    IL_0978: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_097d: ldloc.s 7
+    IL_097f: ldc.i4.3
+    IL_0980: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_0985: ldarg.0
+    IL_0986: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_098b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0990: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0995: ldloc.s 7
+    IL_0997: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_099c: ldarg.0
+    IL_099d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_09a2: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09a7: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_09ac: ldc.i4.4
+    IL_09ad: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_09b2: ldarg.0
+    IL_09b3: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_09b8: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09bd: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_09c2: ldc.i4.0
+    IL_09c3: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_09c8: ldloc.s 8
+    IL_09ca: call System.Drawing.SystemColors::get_Control
+    IL_09cf: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_09d4: ldloc.s 8
+    IL_09d6: call System.Drawing.SystemColors::get_ControlDark
+    IL_09db: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_09e0: ldloc.s 8
+    IL_09e2: ldc.i4.1
+    IL_09e3: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_09e8: ldloc.s 8
+    IL_09ea: ldc.i4.3
+    IL_09eb: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_09f0: ldloc.s 8
+    IL_09f2: call System.Drawing.SystemColors::get_Window
+    IL_09f7: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_09fc: ldarg.0
+    IL_09fd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0a02: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a07: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a0c: ldloc.s 8
+    IL_0a0e: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_0a13: ldloc.s 9
+    IL_0a15: ldstr ldstr "Left"
+    IL_0a1a: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_0a1f: ldarg.0
+    IL_0a20: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0a25: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a2a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a2f: ldloc.s 9
+    IL_0a31: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_0a36: ldarg.0
+    IL_0a37: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0a3c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a41: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a46: ldc.i4.3
+    IL_0a47: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_0a4c: ldarg.0
+    IL_0a4d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0a52: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a57: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a5c: ldc.i4.2
+    IL_0a5d: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_0a62: ldloc.s 10
+    IL_0a64: call System.Drawing.SystemColors::get_Window
+    IL_0a69: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0a6e: ldloc.s 10
+    IL_0a70: call System.Drawing.Color::get_Silver
+    IL_0a75: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0a7a: ldarg.0
+    IL_0a7b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0a80: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a85: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a8a: ldloc.s 10
+    IL_0a8c: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_0a91: ldarg.0
+    IL_0a92: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0a97: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a9c: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0aa1: ldc.i4.2
+    IL_0aa2: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_0aa7: ldloc.s 11
+    IL_0aa9: call System.Drawing.SystemColors::get_ControlLight
+    IL_0aae: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0ab3: ldarg.0
+    IL_0ab4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0ab9: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0abe: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ac3: ldloc.s 11
+    IL_0ac5: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_0aca: ldarg.0
+    IL_0acb: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0ad0: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ad5: ldc.i4.0
+    IL_0ad6: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_0adb: ldarg.0
+    IL_0adc: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0ae1: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ae6: ldc.i4.1
+    IL_0ae7: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_0aec: ldarg.0
+    IL_0aed: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0af2: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0af7: ldc.i4.2
+    IL_0af8: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_0afd: ldarg.0
+    IL_0afe: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0b03: ldstr ldstr "Verdana"
+    IL_0b08: ldc.r4 9.75
+    IL_0b0d: ldc.i4.0
+    IL_0b0e: ldc.i4.3
+    IL_0b0f: ldc.i4.0
+    IL_0b10: newobj System.Drawing.Font::.ctor
+    IL_0b15: callvirt System.Windows.Forms.Control::set_Font
+    IL_0b1a: ldarg.0
+    IL_0b1b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0b20: ldc.i4.1
+    IL_0b21: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_LimitToList
+    IL_0b26: ldarg.0
+    IL_0b27: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0b2c: ldc.i4.s 121
+    IL_0b2e: ldc.i4.s 52
+    IL_0b30: newobj System.Drawing.Point::.ctor
+    IL_0b35: callvirt System.Windows.Forms.Control::set_Location
+    IL_0b3a: ldarg.0
+    IL_0b3b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0b40: ldstr ldstr "cmbItem"
+    IL_0b45: callvirt System.Windows.Forms.Control::set_Name
+    IL_0b4a: ldarg.0
+    IL_0b4b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0b50: ldc.i4 285
+    IL_0b55: ldc.i4.s 26
+    IL_0b57: newobj System.Drawing.Size::.ctor
+    IL_0b5c: callvirt System.Windows.Forms.Control::set_Size
+    IL_0b61: ldarg.0
+    IL_0b62: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_0b67: ldc.i4.1
+    IL_0b68: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0b6d: ldarg.0
+    IL_0b6e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0b73: ldc.i4.1
+    IL_0b74: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0b79: ldarg.0
+    IL_0b7a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0b7f: ldstr ldstr "Segoe UI Semibold"
+    IL_0b84: ldc.r4 9.0
+    IL_0b89: ldc.i4.1
+    IL_0b8a: newobj System.Drawing.Font::.ctor
+    IL_0b8f: callvirt System.Windows.Forms.Control::set_Font
+    IL_0b94: ldarg.0
+    IL_0b95: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0b9a: ldc.i4 406
+    IL_0b9f: ldc.i4.s 34
+    IL_0ba1: newobj System.Drawing.Point::.ctor
+    IL_0ba6: callvirt System.Windows.Forms.Control::set_Location
+    IL_0bab: ldarg.0
+    IL_0bac: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0bb1: ldstr ldstr "label6"
+    IL_0bb6: callvirt System.Windows.Forms.Control::set_Name
+    IL_0bbb: ldarg.0
+    IL_0bbc: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0bc1: ldc.i4.s 69
+    IL_0bc3: ldc.i4.s 15
+    IL_0bc5: newobj System.Drawing.Size::.ctor
+    IL_0bca: callvirt System.Windows.Forms.Control::set_Size
+    IL_0bcf: ldarg.0
+    IL_0bd0: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0bd5: ldc.i4.s 95
+    IL_0bd7: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0bdc: ldarg.0
+    IL_0bdd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label6
+    IL_0be2: ldstr ldstr "WareHouse"
+    IL_0be7: callvirt System.Windows.Forms.Control::set_Text
+    IL_0bec: ldarg.0
+    IL_0bed: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_0bf2: ldc.i4.1
+    IL_0bf3: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0bf8: ldarg.0
+    IL_0bf9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_0bfe: ldstr ldstr "Segoe UI Semibold"
+    IL_0c03: ldc.r4 9.0
+    IL_0c08: ldc.i4.1
+    IL_0c09: ldc.i4.3
+    IL_0c0a: ldc.i4.0
+    IL_0c0b: newobj System.Drawing.Font::.ctor
+    IL_0c10: callvirt System.Windows.Forms.Control::set_Font
+    IL_0c15: ldarg.0
+    IL_0c16: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_0c1b: ldc.i4.s 10
+    IL_0c1d: ldc.i4.s 34
+    IL_0c1f: newobj System.Drawing.Point::.ctor
+    IL_0c24: callvirt System.Windows.Forms.Control::set_Location
+    IL_0c29: ldarg.0
+    IL_0c2a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_0c2f: ldstr ldstr "label1"
+    IL_0c34: callvirt System.Windows.Forms.Control::set_Name
+    IL_0c39: ldarg.0
+    IL_0c3a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_0c3f: ldc.i4.s 60
+    IL_0c41: ldc.i4.s 15
+    IL_0c43: newobj System.Drawing.Size::.ctor
+    IL_0c48: callvirt System.Windows.Forms.Control::set_Size
+    IL_0c4d: ldarg.0
+    IL_0c4e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_0c53: ldc.i4.s 90
+    IL_0c55: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0c5a: ldarg.0
+    IL_0c5b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::label1
+    IL_0c60: ldstr ldstr "Date Date"
+    IL_0c65: callvirt System.Windows.Forms.Control::set_Text
+    IL_0c6a: ldarg.0
+    IL_0c6b: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0c70: ldc.i4.1
+    IL_0c71: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_0c76: ldarg.0
+    IL_0c77: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0c7c: ldc.i4.4
+    IL_0c7d: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_0c82: ldarg.0
+    IL_0c83: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0c88: ldc.i4.2
+    IL_0c89: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_0c8e: ldarg.0
+    IL_0c8f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0c94: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_0c99: ldstr ldstr ""
+    IL_0c9e: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_0ca3: ldloc.s 12
+    IL_0ca5: call System.Drawing.SystemColors::get_Window
+    IL_0caa: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0caf: ldloc.s 12
+    IL_0cb1: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_0cb6: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0cbb: ldarg.0
+    IL_0cbc: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0cc1: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0cc6: ldloc.s 12
+    IL_0cc8: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_0ccd: ldarg.0
+    IL_0cce: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0cd3: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0cd8: ldc.i4.4
+    IL_0cd9: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_0cde: ldarg.0
+    IL_0cdf: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0ce4: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ce9: ldc.i4.2
+    IL_0cea: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_0cef: ldloc.s 13
+    IL_0cf1: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_0cf6: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0cfb: ldloc.s 13
+    IL_0cfd: call System.Drawing.SystemColors::get_ControlDark
+    IL_0d02: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0d07: ldloc.s 13
+    IL_0d09: ldc.i4.2
+    IL_0d0a: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0d0f: ldloc.s 13
+    IL_0d11: call System.Drawing.SystemColors::get_Window
+    IL_0d16: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0d1b: ldarg.0
+    IL_0d1c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0d21: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0d26: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0d2b: ldloc.s 13
+    IL_0d2d: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_0d32: ldloc.s 14
+    IL_0d34: call System.Drawing.SystemColors::get_GrayText
+    IL_0d39: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0d3e: ldarg.0
+    IL_0d3f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0d44: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0d49: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0d4e: ldloc.s 14
+    IL_0d50: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_0d55: ldarg.0
+    IL_0d56: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0d5b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0d60: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0d65: ldc.i4.4
+    IL_0d66: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_0d6b: ldloc.s 15
+    IL_0d6d: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_0d72: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0d77: ldloc.s 15
+    IL_0d79: call System.Drawing.SystemColors::get_Control
+    IL_0d7e: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0d83: ldloc.s 15
+    IL_0d85: ldc.i4.3
+    IL_0d86: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0d8b: ldloc.s 15
+    IL_0d8d: call System.Drawing.SystemColors::get_GrayText
+    IL_0d92: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0d97: ldarg.0
+    IL_0d98: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0d9d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0da2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0da7: ldloc.s 15
+    IL_0da9: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_0dae: ldarg.0
+    IL_0daf: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0db4: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0db9: ldc.i4.1
+    IL_0dba: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_0dbf: ldarg.0
+    IL_0dc0: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0dc5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0dca: ldc.i4.1
+    IL_0dcb: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_0dd0: ldloc.s 16
+    IL_0dd2: call System.Drawing.SystemColors::get_Window
+    IL_0dd7: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0ddc: ldloc.s 16
+    IL_0dde: call System.Drawing.SystemColors::get_ControlText
+    IL_0de3: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0de8: ldarg.0
+    IL_0de9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0dee: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0df3: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0df8: ldloc.s 16
+    IL_0dfa: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_0dff: ldloc.s 17
+    IL_0e01: call System.Drawing.SystemColors::get_Highlight
+    IL_0e06: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0e0b: ldloc.s 17
+    IL_0e0d: call System.Drawing.SystemColors::get_HighlightText
+    IL_0e12: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0e17: ldarg.0
+    IL_0e18: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0e1d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e22: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0e27: ldloc.s 17
+    IL_0e29: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_0e2e: ldarg.0
+    IL_0e2f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0e34: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e39: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0e3e: ldc.i4.2
+    IL_0e3f: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_0e44: ldarg.0
+    IL_0e45: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0e4a: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e4f: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0e54: ldc.i4.2
+    IL_0e55: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_0e5a: ldloc.s 18
+    IL_0e5c: call System.Drawing.SystemColors::get_Window
+    IL_0e61: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0e66: ldarg.0
+    IL_0e67: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0e6c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e71: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0e76: ldloc.s 18
+    IL_0e78: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_0e7d: ldloc.s 19
+    IL_0e7f: call System.Drawing.Color::get_Silver
+    IL_0e84: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0e89: ldloc.s 19
+    IL_0e8b: ldc.i4.3
+    IL_0e8c: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_0e91: ldarg.0
+    IL_0e92: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0e97: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e9c: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ea1: ldloc.s 19
+    IL_0ea3: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_0ea8: ldarg.0
+    IL_0ea9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0eae: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0eb3: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0eb8: ldc.i4.4
+    IL_0eb9: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_0ebe: ldarg.0
+    IL_0ebf: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0ec4: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ec9: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ece: ldc.i4.0
+    IL_0ecf: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_0ed4: ldloc.s 20
+    IL_0ed6: call System.Drawing.SystemColors::get_Control
+    IL_0edb: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0ee0: ldloc.s 20
+    IL_0ee2: call System.Drawing.SystemColors::get_ControlDark
+    IL_0ee7: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0eec: ldloc.s 20
+    IL_0eee: ldc.i4.1
+    IL_0eef: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_0ef4: ldloc.s 20
+    IL_0ef6: ldc.i4.3
+    IL_0ef7: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0efc: ldloc.s 20
+    IL_0efe: call System.Drawing.SystemColors::get_Window
+    IL_0f03: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0f08: ldarg.0
+    IL_0f09: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0f0e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f13: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0f18: ldloc.s 20
+    IL_0f1a: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_0f1f: ldloc.s 21
+    IL_0f21: ldstr ldstr "Left"
+    IL_0f26: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_0f2b: ldarg.0
+    IL_0f2c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0f31: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f36: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0f3b: ldloc.s 21
+    IL_0f3d: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_0f42: ldarg.0
+    IL_0f43: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0f48: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f4d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0f52: ldc.i4.3
+    IL_0f53: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_0f58: ldarg.0
+    IL_0f59: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0f5e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f63: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0f68: ldc.i4.2
+    IL_0f69: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_0f6e: ldloc.s 22
+    IL_0f70: call System.Drawing.SystemColors::get_Window
+    IL_0f75: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0f7a: ldloc.s 22
+    IL_0f7c: call System.Drawing.Color::get_Silver
+    IL_0f81: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0f86: ldarg.0
+    IL_0f87: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0f8c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f91: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0f96: ldloc.s 22
+    IL_0f98: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_0f9d: ldarg.0
+    IL_0f9e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0fa3: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0fa8: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0fad: ldc.i4.2
+    IL_0fae: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_0fb3: ldloc.s 23
+    IL_0fb5: call System.Drawing.SystemColors::get_ControlLight
+    IL_0fba: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0fbf: ldarg.0
+    IL_0fc0: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0fc5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0fca: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0fcf: ldloc.s 23
+    IL_0fd1: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_0fd6: ldarg.0
+    IL_0fd7: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0fdc: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0fe1: ldc.i4.0
+    IL_0fe2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_0fe7: ldarg.0
+    IL_0fe8: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0fed: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ff2: ldc.i4.1
+    IL_0ff3: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_0ff8: ldarg.0
+    IL_0ff9: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_0ffe: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1003: ldc.i4.2
+    IL_1004: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_1009: ldarg.0
+    IL_100a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_100f: ldstr ldstr "Verdana"
+    IL_1014: ldc.r4 9.75
+    IL_1019: ldc.i4.0
+    IL_101a: ldc.i4.3
+    IL_101b: ldc.i4.0
+    IL_101c: newobj System.Drawing.Font::.ctor
+    IL_1021: callvirt System.Windows.Forms.Control::set_Font
+    IL_1026: ldarg.0
+    IL_1027: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_102c: ldc.i4.1
+    IL_102d: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_LimitToList
+    IL_1032: ldarg.0
+    IL_1033: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_1038: ldc.i4 409
+    IL_103d: ldc.i4.s 52
+    IL_103f: newobj System.Drawing.Point::.ctor
+    IL_1044: callvirt System.Windows.Forms.Control::set_Location
+    IL_1049: ldarg.0
+    IL_104a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_104f: ldstr ldstr "cmbWareHouse"
+    IL_1054: callvirt System.Windows.Forms.Control::set_Name
+    IL_1059: ldarg.0
+    IL_105a: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_105f: ldc.i4 198
+    IL_1064: ldc.i4.s 26
+    IL_1066: newobj System.Drawing.Size::.ctor
+    IL_106b: callvirt System.Windows.Forms.Control::set_Size
+    IL_1070: ldarg.0
+    IL_1071: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_1076: ldc.i4.3
+    IL_1077: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_107c: ldarg.0
+    IL_107d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_1082: ldc.i4.s 10
+    IL_1084: ldc.i4.s 110
+    IL_1086: ldc.i4.s 110
+    IL_1088: call System.Drawing.Color::FromArgb
+    IL_108d: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_1092: ldarg.0
+    IL_1093: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_1098: callvirt System.Windows.Forms.ButtonBase::get_FlatAppearance
+    IL_109d: ldc.i4.0
+    IL_109e: callvirt System.Windows.Forms.FlatButtonAppearance::set_BorderSize
+    IL_10a3: ldarg.0
+    IL_10a4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_10a9: ldc.i4.0
+    IL_10aa: callvirt System.Windows.Forms.ButtonBase::set_FlatStyle
+    IL_10af: ldarg.0
+    IL_10b0: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_10b5: ldstr ldstr "Verdana"
+    IL_10ba: ldc.r4 9.75
+    IL_10bf: ldc.i4.1
+    IL_10c0: ldc.i4.3
+    IL_10c1: ldc.i4.0
+    IL_10c2: newobj System.Drawing.Font::.ctor
+    IL_10c7: callvirt System.Windows.Forms.Control::set_Font
+    IL_10cc: ldarg.0
+    IL_10cd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_10d2: call System.Drawing.Color::get_White
+    IL_10d7: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_10dc: ldarg.0
+    IL_10dd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_10e2: ldc.i4.s 16
+    IL_10e4: callvirt System.Windows.Forms.ButtonBase::set_ImageAlign
+    IL_10e9: ldarg.0
+    IL_10ea: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_10ef: ldc.i4 612
+    IL_10f4: ldc.i4.s 52
+    IL_10f6: newobj System.Drawing.Point::.ctor
+    IL_10fb: callvirt System.Windows.Forms.Control::set_Location
+    IL_1100: ldarg.0
+    IL_1101: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_1106: ldc.i4.2
+    IL_1107: newobj System.Windows.Forms.Padding::.ctor
+    IL_110c: callvirt System.Windows.Forms.Control::set_Margin
+    IL_1111: ldarg.0
+    IL_1112: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_1117: ldstr ldstr "btnshow"
+    IL_111c: callvirt System.Windows.Forms.Control::set_Name
+    IL_1121: ldarg.0
+    IL_1122: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_1127: ldc.i4.s 60
+    IL_1129: ldc.i4.s 26
+    IL_112b: newobj System.Drawing.Size::.ctor
+    IL_1130: callvirt System.Windows.Forms.Control::set_Size
+    IL_1135: ldarg.0
+    IL_1136: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_113b: ldc.i4.4
+    IL_113c: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1141: ldarg.0
+    IL_1142: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_1147: ldstr ldstr "Show"
+    IL_114c: callvirt System.Windows.Forms.Control::set_Text
+    IL_1151: ldarg.0
+    IL_1152: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_1157: ldc.i4.0
+    IL_1158: callvirt System.Windows.Forms.ButtonBase::set_UseVisualStyleBackColor
+    IL_115d: ldarg.0
+    IL_115e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow
+    IL_1163: ldarg.0
+    IL_1164: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnshow_Click
+    IL_116a: newobj System.EventHandler::.ctor
+    IL_116f: callvirt System.Windows.Forms.Control::add_Click
+    IL_1174: ldarg.0
+    IL_1175: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_117a: ldstr ldstr "dd-MMM-yy"
+    IL_117f: callvirt System.Windows.Forms.DateTimePicker::set_CustomFormat
+    IL_1184: ldarg.0
+    IL_1185: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_118a: ldstr ldstr "Verdana"
+    IL_118f: ldc.r4 9.75
+    IL_1194: ldc.i4.0
+    IL_1195: ldc.i4.3
+    IL_1196: ldc.i4.0
+    IL_1197: newobj System.Drawing.Font::.ctor
+    IL_119c: callvirt System.Windows.Forms.Control::set_Font
+    IL_11a1: ldarg.0
+    IL_11a2: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_11a7: ldc.i4.8
+    IL_11a8: callvirt System.Windows.Forms.DateTimePicker::set_Format
+    IL_11ad: ldarg.0
+    IL_11ae: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_11b3: ldc.i4.s 9
+    IL_11b5: ldc.i4.s 54
+    IL_11b7: newobj System.Drawing.Point::.ctor
+    IL_11bc: callvirt System.Windows.Forms.Control::set_Location
+    IL_11c1: ldarg.0
+    IL_11c2: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_11c7: ldstr ldstr "txtDocDate"
+    IL_11cc: callvirt System.Windows.Forms.Control::set_Name
+    IL_11d1: ldarg.0
+    IL_11d2: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_11d7: ldc.i4.s 110
+    IL_11d9: ldc.i4.s 23
+    IL_11db: newobj System.Drawing.Size::.ctor
+    IL_11e0: callvirt System.Windows.Forms.Control::set_Size
+    IL_11e5: ldarg.0
+    IL_11e6: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::txtDocDate
+    IL_11eb: ldc.i4.0
+    IL_11ec: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_11f1: ldarg.0
+    IL_11f2: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_11f7: callvirt System.Windows.Forms.Control::get_Controls
+    IL_11fc: ldarg.0
+    IL_11fd: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_1202: callvirt ControlCollection::Add
+    IL_1207: ldarg.0
+    IL_1208: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_120d: ldc.i4.1
+    IL_120e: callvirt System.Windows.Forms.Control::set_Dock
+    IL_1213: ldarg.0
+    IL_1214: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_1219: ldc.i4.0
+    IL_121a: ldc.i4.0
+    IL_121b: newobj System.Drawing.Point::.ctor
+    IL_1220: callvirt System.Windows.Forms.Control::set_Location
+    IL_1225: ldarg.0
+    IL_1226: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_122b: ldstr ldstr "panel2"
+    IL_1230: callvirt System.Windows.Forms.Control::set_Name
+    IL_1235: ldarg.0
+    IL_1236: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_123b: ldc.i4 807
+    IL_1240: ldc.i4.s 29
+    IL_1242: newobj System.Drawing.Size::.ctor
+    IL_1247: callvirt System.Windows.Forms.Control::set_Size
+    IL_124c: ldarg.0
+    IL_124d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_1252: ldc.i4.0
+    IL_1253: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1258: ldarg.0
+    IL_1259: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_125e: ldc.i4.5
+    IL_125f: callvirt System.Windows.Forms.Control::set_Dock
+    IL_1264: ldarg.0
+    IL_1265: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_126a: ldc.i4.s 20
+    IL_126c: ldc.i4.s 20
+    IL_126e: newobj System.Drawing.Size::.ctor
+    IL_1273: callvirt System.Windows.Forms.ToolStrip::set_ImageScalingSize
+    IL_1278: ldarg.0
+    IL_1279: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_127e: callvirt System.Windows.Forms.ToolStrip::get_Items
+    IL_1283: ldc.i4.3
+    IL_1284: newarr System.Windows.Forms.ToolStripItem
+    IL_1289: dup
+    IL_128a: ldc.i4.0
+    IL_128b: ldarg.0
+    IL_128c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_1291: stelem.ref
+    IL_1292: dup
+    IL_1293: ldc.i4.1
+    IL_1294: ldarg.0
+    IL_1295: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_129a: stelem.ref
+    IL_129b: dup
+    IL_129c: ldc.i4.2
+    IL_129d: ldarg.0
+    IL_129e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_12a3: stelem.ref
+    IL_12a4: callvirt System.Windows.Forms.ToolStripItemCollection::AddRange
+    IL_12a9: ldarg.0
+    IL_12aa: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_12af: ldc.i4.0
+    IL_12b0: ldc.i4.0
+    IL_12b1: newobj System.Drawing.Point::.ctor
+    IL_12b6: callvirt System.Windows.Forms.Control::set_Location
+    IL_12bb: ldarg.0
+    IL_12bc: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_12c1: ldstr ldstr "toolStrip1"
+    IL_12c6: callvirt System.Windows.Forms.Control::set_Name
+    IL_12cb: ldarg.0
+    IL_12cc: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_12d1: ldc.i4 807
+    IL_12d6: ldc.i4.s 29
+    IL_12d8: newobj System.Drawing.Size::.ctor
+    IL_12dd: callvirt System.Windows.Forms.Control::set_Size
+    IL_12e2: ldarg.0
+    IL_12e3: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_12e8: ldc.i4.1
+    IL_12e9: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_12ee: ldarg.0
+    IL_12ef: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_12f4: ldstr ldstr "toolStrip1"
+    IL_12f9: callvirt System.Windows.Forms.Control::set_Text
+    IL_12fe: ldarg.0
+    IL_12ff: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_1304: ldstr ldstr "Verdana"
+    IL_1309: ldc.r4 9.75
+    IL_130e: ldc.i4.0
+    IL_130f: ldc.i4.3
+    IL_1310: ldc.i4.0
+    IL_1311: newobj System.Drawing.Font::.ctor
+    IL_1316: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_131b: ldarg.0
+    IL_131c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_1321: call Architecture.WinApp.Properties.Resources::get_icons8_add_20
+    IL_1326: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_132b: ldarg.0
+    IL_132c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_1331: call System.Drawing.Color::get_Magenta
+    IL_1336: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_133b: ldarg.0
+    IL_133c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_1341: ldstr ldstr "btnReset"
+    IL_1346: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_134b: ldarg.0
+    IL_134c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_1351: ldc.i4.s 68
+    IL_1353: ldc.i4.s 26
+    IL_1355: newobj System.Drawing.Size::.ctor
+    IL_135a: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_135f: ldarg.0
+    IL_1360: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_1365: ldstr ldstr "&Reset"
+    IL_136a: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_136f: ldarg.0
+    IL_1370: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnReset
+    IL_1375: ldarg.0
+    IL_1376: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefresh_Click
+    IL_137c: newobj System.EventHandler::.ctor
+    IL_1381: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_1386: ldarg.0
+    IL_1387: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_138c: ldstr ldstr "Verdana"
+    IL_1391: ldc.r4 9.75
+    IL_1396: ldc.i4.0
+    IL_1397: ldc.i4.3
+    IL_1398: ldc.i4.0
+    IL_1399: newobj System.Drawing.Font::.ctor
+    IL_139e: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_13a3: ldarg.0
+    IL_13a4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_13a9: call Architecture.WinApp.Properties.Resources::get_referesf
+    IL_13ae: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_13b3: ldarg.0
+    IL_13b4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_13b9: call System.Drawing.Color::get_Magenta
+    IL_13be: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_13c3: ldarg.0
+    IL_13c4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_13c9: ldstr ldstr "btnRefreshCombo"
+    IL_13ce: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_13d3: ldarg.0
+    IL_13d4: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_13d9: ldc.i4.s 80
+    IL_13db: ldc.i4.s 26
+    IL_13dd: newobj System.Drawing.Size::.ctor
+    IL_13e2: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_13e7: ldarg.0
+    IL_13e8: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_13ed: ldstr ldstr "&Refresh"
+    IL_13f2: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_13f7: ldarg.0
+    IL_13f8: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo
+    IL_13fd: ldarg.0
+    IL_13fe: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnRefreshCombo_Click
+    IL_1404: newobj System.EventHandler::.ctor
+    IL_1409: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_140e: ldarg.0
+    IL_140f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_1414: call Architecture.WinApp.Properties.Resources::get_icons8_print_16
+    IL_1419: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_141e: ldarg.0
+    IL_141f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_1424: call System.Drawing.Color::get_Magenta
+    IL_1429: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_142e: ldarg.0
+    IL_142f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_1434: ldstr ldstr "btnPrint"
+    IL_1439: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_143e: ldarg.0
+    IL_143f: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_1444: ldc.i4.s 79
+    IL_1446: ldc.i4.s 26
+    IL_1448: newobj System.Drawing.Size::.ctor
+    IL_144d: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_1452: ldarg.0
+    IL_1453: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_1458: ldstr ldstr "390-&Print"
+    IL_145d: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_1462: ldarg.0
+    IL_1463: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint
+    IL_1468: ldarg.0
+    IL_1469: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::btnPrint_Click
+    IL_146f: newobj System.EventHandler::.ctor
+    IL_1474: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_1479: ldarg.0
+    IL_147a: ldc.r4 6.0
+    IL_147f: ldc.r4 13.0
+    IL_1484: newobj System.Drawing.SizeF::.ctor
+    IL_1489: call System.Windows.Forms.ContainerControl::set_AutoScaleDimensions
+    IL_148e: ldarg.0
+    IL_148f: ldc.i4.1
+    IL_1490: call System.Windows.Forms.ContainerControl::set_AutoScaleMode
+    IL_1495: ldarg.0
+    IL_1496: ldc.i4 807
+    IL_149b: ldc.i4 433
+    IL_14a0: newobj System.Drawing.Size::.ctor
+    IL_14a5: call System.Windows.Forms.Form::set_ClientSize
+    IL_14aa: ldarg.0
+    IL_14ab: call System.Windows.Forms.Control::get_Controls
+    IL_14b0: ldarg.0
+    IL_14b1: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_14b6: callvirt ControlCollection::Add
+    IL_14bb: ldarg.0
+    IL_14bc: ldc.i4.1
+    IL_14bd: call System.Windows.Forms.Form::set_KeyPreview
+    IL_14c2: ldarg.0
+    IL_14c3: ldstr ldstr "StockReportyWithFIFO"
+    IL_14c8: call System.Windows.Forms.Control::set_Name
+    IL_14cd: ldarg.0
+    IL_14ce: ldstr ldstr "EccountBook"
+    IL_14d3: callvirt System.Windows.Forms.Control::set_Text
+    IL_14d8: ldarg.0
+    IL_14d9: ldc.i4.2
+    IL_14da: call System.Windows.Forms.Form::set_WindowState
+    IL_14df: ldarg.0
+    IL_14e0: ldarg.0
+    IL_14e1: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::frmStockReport_FormClosed
+    IL_14e7: newobj System.Windows.Forms.FormClosedEventHandler::.ctor
+    IL_14ec: call System.Windows.Forms.Form::add_FormClosed
+    IL_14f1: ldarg.0
+    IL_14f2: ldarg.0
+    IL_14f3: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::frmStockReport_Load
+    IL_14f9: newobj System.EventHandler::.ctor
+    IL_14fe: call System.Windows.Forms.Form::add_Load
+    IL_1503: ldarg.0
+    IL_1504: ldarg.0
+    IL_1505: ldftn Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::frmStockReport_KeyDown
+    IL_150b: newobj System.Windows.Forms.KeyEventHandler::.ctor
+    IL_1510: call System.Windows.Forms.Control::add_KeyDown
+    IL_1515: ldarg.0
+    IL_1516: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel1
+    IL_151b: ldc.i4.0
+    IL_151c: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1521: ldarg.0
+    IL_1522: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel4
+    IL_1527: ldc.i4.0
+    IL_1528: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_152d: ldarg.0
+    IL_152e: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::grdfrm
+    IL_1533: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_1538: ldarg.0
+    IL_1539: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_153e: ldc.i4.0
+    IL_153f: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1544: ldarg.0
+    IL_1545: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel3
+    IL_154a: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_154f: ldarg.0
+    IL_1550: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_1555: ldc.i4.0
+    IL_1556: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_155b: ldarg.0
+    IL_155c: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel5
+    IL_1561: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_1566: ldarg.0
+    IL_1567: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbItem
+    IL_156c: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_1571: ldarg.0
+    IL_1572: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::cmbWareHouse
+    IL_1577: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_157c: ldarg.0
+    IL_157d: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_1582: ldc.i4.0
+    IL_1583: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1588: ldarg.0
+    IL_1589: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::panel2
+    IL_158e: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_1593: ldarg.0
+    IL_1594: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_1599: ldc.i4.0
+    IL_159a: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_159f: ldarg.0
+    IL_15a0: ldfld Architecture.WinApp.RetailStockReports.StockReportyWithFIFO::toolStrip1
+    IL_15a5: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_15aa: ldarg.0
+    IL_15ab: ldc.i4.0
+    IL_15ac: call System.Windows.Forms.Control::ResumeLayout
+    IL_15b1: ret

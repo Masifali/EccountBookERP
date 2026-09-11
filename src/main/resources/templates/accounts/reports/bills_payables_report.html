@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bills Payables Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
+        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
+        .form-control-erp:focus { border-color: #00796B; outline: none; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .report-summary-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="erp-header">
+        <div><i class="fa fa-line-chart"></i> Bills Payables Report</div>
+        <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+    </div>
+    <div class="erp-toolbar">
+        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-eye"></i> View Report</button>
+        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp"><i class="fa fa-file-excel-o"></i> Export Excel</button>
+        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Reset Filters</button>
+    </div>
+    <div style="padding: 10px;">
+        <div class="erp-fieldset">
+            <legend>Report Filter Criteria</legend>
+            <div class="row">
+                
+                    <div class="col-md-3">
+                        <label class="form-label-erp">From Date</label>
+                        <input type="text" class="form-control-erp" placeholder="Select From Date..."/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label-erp">To Date</label>
+                        <input type="text" class="form-control-erp" placeholder="Select To Date..."/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label-erp">Bill Status</label>
+                        <input type="text" class="form-control-erp" placeholder="Select Bill Status..."/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label-erp">Supplier</label>
+                        <input type="text" class="form-control-erp" placeholder="Select Supplier..."/>
+                    </div>
+            </div>
+        </div>
+
+        <div class="erp-fieldset">
+            <legend>Bills Payables Report Data Output</legend>
+            <div style="text-align: center; margin-bottom: 10px;">
+                <h4 style="margin: 0; font-weight: bold; color: #00796B;">Golden Ace Rice Mills (Pvt) Ltd.</h4>
+                <h5 style="margin: 2px 0; font-weight: bold;">Bills Payables Report</h5>
+                <small style="color: #64748b;">Period: 01-Jul-2026 To 07-Sep-2026 | Currency: PKR</small>
+            </div>
+            <table class="erp-table">
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Account / Code</th>
+                        <th style="width: 28%;">Title / Description</th>
+                        <th style="width: 15%; text-align: right;">Opening Balance</th>
+                        <th style="width: 15%; text-align: right;">Debit (PKR)</th>
+                        <th style="width: 15%; text-align: right;">Credit (PKR)</th>
+                        <th style="width: 15%; text-align: right;">Closing Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: bold; color: #00796B;">101001</td>
+                        <td>CASH IN HAND - MAIN OFFICE</td>
+                        <td style="text-align: right;">50,000.00 Dr</td>
+                        <td style="text-align: right;">125,000.00</td>
+                        <td style="text-align: right;">85,000.00</td>
+                        <td style="text-align: right; font-weight: bold;">90,000.00 Dr</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; color: #00796B;">101002</td>
+                        <td>MEEZAN BANK LIMITED - A/C 010293847</td>
+                        <td style="text-align: right;">1,200,000.00 Dr</td>
+                        <td style="text-align: right;">450,000.00</td>
+                        <td style="text-align: right;">320,000.00</td>
+                        <td style="text-align: right; font-weight: bold;">1,330,000.00 Dr</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="report-summary-bar">
+                <div>Total Records: 2</div>
+                <div>Total Debit: 575,000.00</div>
+                <div>Total Credit: 405,000.00</div>
+                <div>Net Balance: 1,420,000.00 Dr</div>
+            </div>
+        </div>
+    </div>
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+</body>
+</html>

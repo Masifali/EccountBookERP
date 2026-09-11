@@ -1,0 +1,1577 @@
+
+====================================================================================================
+CLASS Architecture.BLL.UserAccount
+====================================================================================================
+
+; Architecture.BLL.UserAccount::Save  (rva=0x16230, fat header, code_size=59, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: callvirt Architecture.Model.UserAccount::get_ID
+    IL_0006: brtrue.s IL_001b
+    IL_0008: newobj Architecture.DAL.UserAccount::.ctor
+    IL_000d: ldarg.0
+    IL_000e: ldstr ldstr "Sp_UserAccount_Insert"
+    IL_0013: call Architecture.DAL.UserAccount::SetData
+    IL_0018: stloc.0
+    IL_0019: leave.s IL_0039
+    IL_001b: newobj Architecture.DAL.UserAccount::.ctor
+    IL_0020: ldarg.0
+    IL_0021: ldstr ldstr "Sp_UserAccount_Update"
+    IL_0026: call Architecture.DAL.UserAccount::SetData
+    IL_002b: stloc.0
+    IL_002c: leave.s IL_0039
+    IL_002e: callvirt System.Exception::get_Message
+    IL_0033: newobj System.Exception::.ctor
+    IL_0038: throw
+    IL_0039: ldloc.0
+    IL_003a: ret
+
+; Architecture.BLL.UserAccount::Login  (rva=0x16288, fat header, code_size=488, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: callvirt Architecture.Model.UserAccount::get_Password
+    IL_0007: call Architecture.Model.Encryption::UserPasswordEncryptString
+    IL_000c: callvirt Architecture.Model.UserAccount::set_Password
+    IL_0011: newobj TypeSpec#10::.ctor
+    IL_0016: stloc.0
+    IL_0017: ldloc.0
+    IL_0018: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_001d: dup
+    IL_001e: ldstr ldstr "@UserName"
+    IL_0023: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0028: dup
+    IL_0029: ldarg.0
+    IL_002a: callvirt Architecture.Model.UserAccount::get_UserName
+    IL_002f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0034: callvirt TypeSpec#10::Add
+    IL_0039: ldloc.0
+    IL_003a: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_003f: dup
+    IL_0040: ldstr ldstr "@Password"
+    IL_0045: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_004a: dup
+    IL_004b: ldarg.0
+    IL_004c: callvirt Architecture.Model.UserAccount::get_Password
+    IL_0051: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0056: callvirt TypeSpec#10::Add
+    IL_005b: ldarg.0
+    IL_005c: callvirt Architecture.Model.UserAccount::get_AppId
+    IL_0061: ldc.i4.0
+    IL_0062: ble.s IL_008b
+    IL_0064: ldloc.0
+    IL_0065: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_006a: dup
+    IL_006b: ldstr ldstr "@AppId"
+    IL_0070: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0075: dup
+    IL_0076: ldarg.0
+    IL_0077: callvirt Architecture.Model.UserAccount::get_AppId
+    IL_007c: box System.Int32
+    IL_0081: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0086: callvirt TypeSpec#10::Add
+    IL_008b: ldarg.2
+    IL_008c: ldc.i4.0
+    IL_008d: ble.s IL_00b1
+    IL_008f: ldloc.0
+    IL_0090: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0095: dup
+    IL_0096: ldstr ldstr "@ValidateVersion"
+    IL_009b: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_00a0: dup
+    IL_00a1: ldarg.2
+    IL_00a2: box System.Int32
+    IL_00a7: callvirt System.Data.Common.DbParameter::set_Value
+    IL_00ac: callvirt TypeSpec#10::Add
+    IL_00b1: ldarg.1
+    IL_00b2: ldc.i4.0
+    IL_00b3: ble.s IL_00d7
+    IL_00b5: ldloc.0
+    IL_00b6: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_00bb: dup
+    IL_00bc: ldstr ldstr "@AppVersion"
+    IL_00c1: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_00c6: dup
+    IL_00c7: ldarg.1
+    IL_00c8: box System.Int32
+    IL_00cd: callvirt System.Data.Common.DbParameter::set_Value
+    IL_00d2: callvirt TypeSpec#10::Add
+    IL_00d7: ldarg.3
+    IL_00d8: call System.String::IsNullOrEmpty
+    IL_00dd: brtrue.s IL_00fc
+    IL_00df: ldloc.0
+    IL_00e0: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_00e5: dup
+    IL_00e6: ldstr ldstr "@DeviceId"
+    IL_00eb: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_00f0: dup
+    IL_00f1: ldarg.3
+    IL_00f2: callvirt System.Data.Common.DbParameter::set_Value
+    IL_00f7: callvirt TypeSpec#10::Add
+    IL_00fc: newobj Architecture.DAL.UserAccount::.ctor
+    IL_0101: ldstr ldstr "Sp_UserAccount_Login"
+    IL_0106: ldloc.0
+    IL_0107: call Architecture.DAL.UserAccount::GetDataAll
+    IL_010c: stloc.1
+    IL_010d: ldloc.1
+    IL_010e: callvirt TypeSpec#70::get_Count
+    IL_0113: brtrue.s IL_0120
+    IL_0115: ldstr ldstr "Invalid UserId or Password"
+    IL_011a: newobj System.Exception::.ctor
+    IL_011f: throw
+    IL_0120: ldloc.1
+    IL_0121: ldc.i4.0
+    IL_0122: callvirt TypeSpec#70::get_Item
+    IL_0127: stsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_012c: ldloc.1
+    IL_012d: ldc.i4.0
+    IL_012e: callvirt TypeSpec#70::get_Item
+    IL_0133: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0138: ldc.i4.0
+    IL_0139: ble.s IL_0159
+    IL_013b: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0140: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0145: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_014a: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_014f: call Architecture.BLL.Authentication.ConfigrationsAllocation::HistoryConfiquration
+    IL_0154: stsfld Architecture.Common.clsGlobalVariables::configrationsAllocation
+    IL_0159: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_015e: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0163: callvirt Architecture.Model.UserAccount::get_ID
+    IL_0168: call Architecture.BLL.UserAccount::GetUserProfileByUserId
+    IL_016d: callvirt Architecture.Model.UserAccount::set_UserProfileList
+    IL_0172: ldloc.1
+    IL_0173: ldc.i4.0
+    IL_0174: callvirt TypeSpec#70::get_Item
+    IL_0179: call Architecture.BLL.UserAccount::CheckTwoWayAuthenticationConfiguration
+    IL_017e: stloc.2
+    IL_017f: ldloc.2
+    IL_0180: ldc.i4.1
+    IL_0181: bne.un.s IL_01b2
+    IL_0183: ldloc.1
+    IL_0184: ldc.i4.0
+    IL_0185: callvirt TypeSpec#70::get_Item
+    IL_018a: callvirt Architecture.Model.UserAccount::get_ID
+    IL_018f: ldnull
+    IL_0190: call Architecture.BLL.UserAccount::setAuthenticationCode
+    IL_0195: stloc.3
+    IL_0196: ldloc.1
+    IL_0197: ldc.i4.0
+    IL_0198: callvirt TypeSpec#70::get_Item
+    IL_019d: ldloc.3
+    IL_019e: callvirt Architecture.Model.UserAccount::set_AuthenticationCode
+    IL_01a3: ldloc.1
+    IL_01a4: ldc.i4.0
+    IL_01a5: callvirt TypeSpec#70::get_Item
+    IL_01aa: ldc.i4.1
+    IL_01ab: callvirt Architecture.Model.UserAccount::set_AuthenticationEnabledForUser
+    IL_01b0: br.s IL_01cf
+    IL_01b2: ldloc.2
+    IL_01b3: brtrue.s IL_01cf
+    IL_01b5: ldloc.1
+    IL_01b6: ldc.i4.0
+    IL_01b7: callvirt TypeSpec#70::get_Item
+    IL_01bc: ldc.i4.0
+    IL_01bd: callvirt Architecture.Model.UserAccount::set_AuthenticationEnabledForUser
+    IL_01c2: ldloc.1
+    IL_01c3: ldc.i4.0
+    IL_01c4: callvirt TypeSpec#70::get_Item
+    IL_01c9: ldc.i4.0
+    IL_01ca: callvirt Architecture.Model.UserAccount::set_AuthenticationCode
+    IL_01cf: ldloc.1
+    IL_01d0: ldc.i4.0
+    IL_01d1: callvirt TypeSpec#70::get_Item
+    IL_01d6: stloc.s 4
+    IL_01d8: leave.s IL_01e5
+    IL_01da: callvirt System.Exception::get_Message
+    IL_01df: newobj System.Exception::.ctor
+    IL_01e4: throw
+    IL_01e5: ldloc.s 4
+    IL_01e7: ret
+
+; Architecture.BLL.UserAccount::AdminLogin  (rva=0x16498, fat header, code_size=129, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: callvirt Architecture.Model.UserAccount::get_Password
+    IL_0007: call Architecture.Model.Encryption::UserPasswordEncryptString
+    IL_000c: callvirt Architecture.Model.UserAccount::set_Password
+    IL_0011: newobj TypeSpec#10::.ctor
+    IL_0016: stloc.0
+    IL_0017: ldloc.0
+    IL_0018: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_001d: dup
+    IL_001e: ldstr ldstr "@UserName"
+    IL_0023: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0028: dup
+    IL_0029: ldarg.0
+    IL_002a: callvirt Architecture.Model.UserAccount::get_UserName
+    IL_002f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0034: callvirt TypeSpec#10::Add
+    IL_0039: ldloc.0
+    IL_003a: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_003f: dup
+    IL_0040: ldstr ldstr "@Password"
+    IL_0045: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_004a: dup
+    IL_004b: ldarg.0
+    IL_004c: callvirt Architecture.Model.UserAccount::get_Password
+    IL_0051: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0056: callvirt TypeSpec#10::Add
+    IL_005b: newobj Architecture.DAL.UserAccount::.ctor
+    IL_0060: ldstr ldstr "[dbo].[USP_AdminLogin]"
+    IL_0065: ldloc.0
+    IL_0066: call Architecture.DAL.UserAccount::GetDataAdminUser
+    IL_006b: ldc.i4.0
+    IL_006c: callvirt TypeSpec#71::get_Item
+    IL_0071: stloc.1
+    IL_0072: leave.s IL_007f
+    IL_0074: callvirt System.Exception::get_Message
+    IL_0079: newobj System.Exception::.ctor
+    IL_007e: throw
+    IL_007f: ldloc.1
+    IL_0080: ret
+
+; Architecture.BLL.UserAccount::PlayIdUpdate  (rva=0x16538, fat header, code_size=127, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.1
+    IL_0001: call Architecture.Model.Encryption::UserPasswordEncryptString
+    IL_0006: starg.s 1
+    IL_0008: newobj TypeSpec#10::.ctor
+    IL_000d: stloc.0
+    IL_000e: ldloc.0
+    IL_000f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0014: dup
+    IL_0015: ldstr ldstr "@UserName"
+    IL_001a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_001f: dup
+    IL_0020: ldarg.0
+    IL_0021: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0026: callvirt TypeSpec#10::Add
+    IL_002b: ldloc.0
+    IL_002c: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0031: dup
+    IL_0032: ldstr ldstr "@Password"
+    IL_0037: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003c: dup
+    IL_003d: ldarg.1
+    IL_003e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0043: callvirt TypeSpec#10::Add
+    IL_0048: ldloc.0
+    IL_0049: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_004e: dup
+    IL_004f: ldstr ldstr "@PlayerId"
+    IL_0054: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0059: dup
+    IL_005a: ldarg.2
+    IL_005b: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0060: callvirt TypeSpec#10::Add
+    IL_0065: ldstr ldstr "Usp_PlayIdUpdate_UserAccount"
+    IL_006a: ldloc.0
+    IL_006b: call MethodSpec#94
+    IL_0070: pop
+    IL_0071: leave.s IL_007e
+    IL_0073: callvirt System.Exception::get_Message
+    IL_0078: newobj System.Exception::.ctor
+    IL_007d: throw
+    IL_007e: ret
+
+; Architecture.BLL.UserAccount::GetByID  (rva=0x165d4, fat header, code_size=111, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Id"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@Activity"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldstr ldstr "ReadById"
+    IL_003f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0044: callvirt TypeSpec#10::Add
+    IL_0049: newobj Architecture.DAL.UserAccount::.ctor
+    IL_004e: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_0053: ldloc.0
+    IL_0054: call Architecture.DAL.UserAccount::GetData
+    IL_0059: ldc.i4.0
+    IL_005a: callvirt TypeSpec#70::get_Item
+    IL_005f: stloc.1
+    IL_0060: leave.s IL_006d
+    IL_0062: callvirt System.Exception::get_Message
+    IL_0067: newobj System.Exception::.ctor
+    IL_006c: throw
+    IL_006d: ldloc.1
+    IL_006e: ret
+
+; Architecture.BLL.UserAccount::GetUserProfileByUserId  (rva=0x16660, fat header, code_size=134, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@UserId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@Activity"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldstr ldstr "GetUserProfileByUserId"
+    IL_003f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0044: callvirt TypeSpec#10::Add
+    IL_0049: newobj Architecture.DAL.UserProfile::.ctor
+    IL_004e: ldstr ldstr "SP_UserProfile_GetAllMethod"
+    IL_0053: ldloc.0
+    IL_0054: call Architecture.DAL.UserProfile::GetData
+    IL_0059: stloc.1
+    IL_005a: ldloc.1
+    IL_005b: brfalse.s IL_0066
+    IL_005d: ldloc.1
+    IL_005e: callvirt TypeSpec#69::get_Count
+    IL_0063: ldc.i4.0
+    IL_0064: bgt.s IL_0069
+    IL_0066: ldnull
+    IL_0067: br.s IL_0076
+    IL_0069: ldloc.1
+    IL_006a: brtrue.s IL_006f
+    IL_006c: ldnull
+    IL_006d: br.s IL_0076
+    IL_006f: ldloc.1
+    IL_0070: ldc.i4.0
+    IL_0071: call TypeSpec#69::get_Item
+    IL_0076: stloc.2
+    IL_0077: leave.s IL_0084
+    IL_0079: callvirt System.Exception::get_Message
+    IL_007e: newobj System.Exception::.ctor
+    IL_0083: throw
+    IL_0084: ldloc.2
+    IL_0085: ret
+
+; Architecture.BLL.UserAccount::ReadByUsername  (rva=0x16704, fat header, code_size=75, max_stack=4, exception_handlers=yes)
+    IL_0000: ldnull
+    IL_0001: stloc.0
+    IL_0002: ldloc.0
+    IL_0003: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0008: dup
+    IL_0009: ldstr ldstr "@UserName"
+    IL_000e: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0013: dup
+    IL_0014: ldarg.0
+    IL_0015: callvirt System.Data.Common.DbParameter::set_Value
+    IL_001a: callvirt TypeSpec#10::Add
+    IL_001f: newobj TypeSpec#70::.ctor
+    IL_0024: pop
+    IL_0025: newobj Architecture.DAL.UserAccount::.ctor
+    IL_002a: ldstr ldstr "Proc_AccountUser_ReadByUsername"
+    IL_002f: ldloc.0
+    IL_0030: call Architecture.DAL.UserAccount::GetData
+    IL_0035: ldc.i4.0
+    IL_0036: callvirt TypeSpec#70::get_Item
+    IL_003b: stloc.1
+    IL_003c: leave.s IL_0049
+    IL_003e: callvirt System.Exception::get_Message
+    IL_0043: newobj System.Exception::.ctor
+    IL_0048: throw
+    IL_0049: ldloc.1
+    IL_004a: ret
+
+; Architecture.BLL.UserAccount::ReadAll  (rva=0x1676c, fat header, code_size=144, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_001e: box System.Int32
+    IL_0023: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0028: callvirt TypeSpec#10::Add
+    IL_002d: ldloc.0
+    IL_002e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0033: dup
+    IL_0034: ldstr ldstr "@CompanyId"
+    IL_0039: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003e: dup
+    IL_003f: ldarg.0
+    IL_0040: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0045: box System.Int32
+    IL_004a: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004f: callvirt TypeSpec#10::Add
+    IL_0054: ldloc.0
+    IL_0055: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_005a: dup
+    IL_005b: ldstr ldstr "@Activity"
+    IL_0060: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0065: dup
+    IL_0066: ldstr ldstr "ReadAll"
+    IL_006b: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0070: callvirt TypeSpec#10::Add
+    IL_0075: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_007a: ldloc.0
+    IL_007b: call MethodSpec#94
+    IL_0080: stloc.1
+    IL_0081: leave.s IL_008e
+    IL_0083: callvirt System.Exception::get_Message
+    IL_0088: newobj System.Exception::.ctor
+    IL_008d: throw
+    IL_008e: ldloc.1
+    IL_008f: ret
+
+; Architecture.BLL.UserAccount::ReadUserByCompanyId  (rva=0x16818, fat header, code_size=137, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@CompanyId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldarg.1
+    IL_0029: brfalse.s IL_004d
+    IL_002b: ldloc.0
+    IL_002c: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0031: dup
+    IL_0032: ldstr ldstr "@ActionId"
+    IL_0037: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003c: dup
+    IL_003d: ldarg.1
+    IL_003e: box System.Int32
+    IL_0043: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0048: callvirt TypeSpec#10::Add
+    IL_004d: ldloc.0
+    IL_004e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0053: dup
+    IL_0054: ldstr ldstr "@Activity"
+    IL_0059: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005e: dup
+    IL_005f: ldstr ldstr "ReadAllUser"
+    IL_0064: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0069: callvirt TypeSpec#10::Add
+    IL_006e: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_0073: ldloc.0
+    IL_0074: call MethodSpec#94
+    IL_0079: stloc.1
+    IL_007a: leave.s IL_0087
+    IL_007c: callvirt System.Exception::get_Message
+    IL_0081: newobj System.Exception::.ctor
+    IL_0086: throw
+    IL_0087: ldloc.1
+    IL_0088: ret
+
+; Architecture.BLL.UserAccount::ReadAllRole  (rva=0x168c0, fat header, code_size=111, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_001e: box System.Int32
+    IL_0023: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0028: callvirt TypeSpec#10::Add
+    IL_002d: ldloc.0
+    IL_002e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0033: dup
+    IL_0034: ldstr ldstr "@CompanyId"
+    IL_0039: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003e: dup
+    IL_003f: ldarg.0
+    IL_0040: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0045: box System.Int32
+    IL_004a: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004f: callvirt TypeSpec#10::Add
+    IL_0054: ldstr ldstr "Sp_AppRoles_GetAllMethod"
+    IL_0059: ldloc.0
+    IL_005a: call MethodSpec#94
+    IL_005f: stloc.1
+    IL_0060: leave.s IL_006d
+    IL_0062: callvirt System.Exception::get_Message
+    IL_0067: newobj System.Exception::.ctor
+    IL_006c: throw
+    IL_006d: ldloc.1
+    IL_006e: ret
+
+; Architecture.BLL.UserAccount::UpdateUserNewPassword  (rva=0x1694c, fat header, code_size=251, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: callvirt Architecture.Model.ReportsParameters::get_OldPassword
+    IL_0007: call Architecture.Model.Encryption::UserPasswordEncryptString
+    IL_000c: callvirt Architecture.Model.ReportsParameters::set_OldPassword
+    IL_0011: ldarg.0
+    IL_0012: ldarg.0
+    IL_0013: callvirt Architecture.Model.ReportsParameters::get_Password
+    IL_0018: call Architecture.Model.Encryption::UserPasswordEncryptString
+    IL_001d: callvirt Architecture.Model.ReportsParameters::set_Password
+    IL_0022: newobj TypeSpec#10::.ctor
+    IL_0027: stloc.0
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@OrganizationId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.0
+    IL_003b: callvirt Architecture.Model.ReportsParameters::get_OrganizationId
+    IL_0040: box System.Int32
+    IL_0045: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004a: callvirt TypeSpec#10::Add
+    IL_004f: ldloc.0
+    IL_0050: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0055: dup
+    IL_0056: ldstr ldstr "@CompanyId"
+    IL_005b: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0060: dup
+    IL_0061: ldarg.0
+    IL_0062: callvirt Architecture.Model.ReportsParameters::get_CompanyId
+    IL_0067: box System.Int32
+    IL_006c: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0071: callvirt TypeSpec#10::Add
+    IL_0076: ldloc.0
+    IL_0077: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_007c: dup
+    IL_007d: ldstr ldstr "@OldPassword"
+    IL_0082: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0087: dup
+    IL_0088: ldarg.0
+    IL_0089: callvirt Architecture.Model.ReportsParameters::get_OldPassword
+    IL_008e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0093: callvirt TypeSpec#10::Add
+    IL_0098: ldloc.0
+    IL_0099: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_009e: dup
+    IL_009f: ldstr ldstr "@Password"
+    IL_00a4: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_00a9: dup
+    IL_00aa: ldarg.0
+    IL_00ab: callvirt Architecture.Model.ReportsParameters::get_Password
+    IL_00b0: callvirt System.Data.Common.DbParameter::set_Value
+    IL_00b5: callvirt TypeSpec#10::Add
+    IL_00ba: ldloc.0
+    IL_00bb: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_00c0: dup
+    IL_00c1: ldstr ldstr "@ID"
+    IL_00c6: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_00cb: dup
+    IL_00cc: ldarg.0
+    IL_00cd: callvirt Architecture.Model.ReportsParameters::get_Id
+    IL_00d2: box System.Int32
+    IL_00d7: callvirt System.Data.Common.DbParameter::set_Value
+    IL_00dc: callvirt TypeSpec#10::Add
+    IL_00e1: ldstr ldstr "Sp_UserAccount_UpdateNewPassword"
+    IL_00e6: ldloc.0
+    IL_00e7: call MethodSpec#94
+    IL_00ec: pop
+    IL_00ed: leave.s IL_00fa
+    IL_00ef: callvirt System.Exception::get_Message
+    IL_00f4: newobj System.Exception::.ctor
+    IL_00f9: throw
+    IL_00fa: ret
+
+; Architecture.BLL.UserAccount::GetAdminUserByOrganizationId  (rva=0x16a64, fat header, code_size=100, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@Activity"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldstr ldstr "GetAdminUserByOrganizationId"
+    IL_003f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0044: callvirt TypeSpec#10::Add
+    IL_0049: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_004e: ldloc.0
+    IL_004f: call MethodSpec#94
+    IL_0054: stloc.1
+    IL_0055: leave.s IL_0062
+    IL_0057: callvirt System.Exception::get_Message
+    IL_005c: newobj System.Exception::.ctor
+    IL_0061: throw
+    IL_0062: ldloc.1
+    IL_0063: ret
+
+; Architecture.BLL.UserAccount::LicenseCheck  (rva=0x16ae4, fat header, code_size=617, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@CompanyId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.1
+    IL_003b: box System.Int32
+    IL_0040: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0045: callvirt TypeSpec#10::Add
+    IL_004a: ldloc.0
+    IL_004b: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0050: dup
+    IL_0051: ldstr ldstr "@Activity"
+    IL_0056: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005b: dup
+    IL_005c: ldstr ldstr "GetLicenseKey"
+    IL_0061: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0066: callvirt TypeSpec#10::Add
+    IL_006b: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_0070: ldloc.0
+    IL_0071: call MethodSpec#95
+    IL_0076: dup
+    IL_0077: callvirt System.Data.DataTable::get_Rows
+    IL_007c: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0081: brtrue.s IL_008e
+    IL_0083: ldstr ldstr "License Not Found!"
+    IL_0088: newobj System.Exception::.ctor
+    IL_008d: throw
+    IL_008e: callvirt System.Data.DataTable::get_Rows
+    IL_0093: ldc.i4.0
+    IL_0094: callvirt System.Data.DataRowCollection::get_Item
+    IL_0099: ldstr ldstr "LicenseKey"
+    IL_009e: callvirt System.Data.DataRow::get_Item
+    IL_00a3: call Architecture.Common.Conversion::ToString
+    IL_00a8: stloc.1
+    IL_00a9: ldloc.1
+    IL_00aa: ldsfld System.String::Empty
+    IL_00af: call System.String::op_Inequality
+    IL_00b4: brfalse.s IL_011e
+    IL_00b6: ldloc.1
+    IL_00b7: call Architecture.Common.LicenseKey::ReturnKey
+    IL_00bc: stloc.1
+    IL_00bd: ldloc.1
+    IL_00be: stloc.3
+    IL_00bf: ldloc.3
+    IL_00c0: ldc.i4.s 40
+    IL_00c2: callvirt System.String::IndexOf
+    IL_00c7: stloc.s 4
+    IL_00c9: ldloc.s 4
+    IL_00cb: ldc.i4.0
+    IL_00cc: blt.s IL_0113
+    IL_00ce: ldloc.3
+    IL_00cf: ldloc.s 4
+    IL_00d1: ldc.i4.1
+    IL_00d2: add
+    IL_00d3: callvirt System.String::Substring
+    IL_00d8: ldloca.s 5
+    IL_00da: call System.DateTime::TryParse
+    IL_00df: brfalse.s IL_0108
+    IL_00e1: call System.DateTime::get_Now
+    IL_00e6: stloc.s 6
+    IL_00e8: ldloca.s 6
+    IL_00ea: call System.DateTime::get_Date
+    IL_00ef: ldloca.s 5
+    IL_00f1: call System.DateTime::get_Date
+    IL_00f6: call System.DateTime::op_GreaterThan
+    IL_00fb: brfalse.s IL_0129
+    IL_00fd: ldstr ldstr "Your License has Expired. Please contact EccountBookERP SupportTeam CellNo: 0304-4059175"
+    IL_0102: newobj System.Exception::.ctor
+    IL_0107: throw
+    IL_0108: ldstr ldstr "Unable to parse license date."
+    IL_010d: newobj System.Exception::.ctor
+    IL_0112: throw
+    IL_0113: ldstr ldstr "Invalid license format. No opening bracket found."
+    IL_0118: newobj System.Exception::.ctor
+    IL_011d: throw
+    IL_011e: ldstr ldstr "Your Licensed has been Expired Please contact EccountBookERP Support Team Cell No : 0304-4059175"
+    IL_0123: newobj System.Exception::.ctor
+    IL_0128: throw
+    IL_0129: newobj TypeSpec#10::.ctor
+    IL_012e: stloc.2
+    IL_012f: ldloc.2
+    IL_0130: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0135: dup
+    IL_0136: ldstr ldstr "@OrganizationId"
+    IL_013b: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0140: dup
+    IL_0141: ldarg.0
+    IL_0142: box System.Int32
+    IL_0147: callvirt System.Data.Common.DbParameter::set_Value
+    IL_014c: callvirt TypeSpec#10::Add
+    IL_0151: ldloc.2
+    IL_0152: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0157: dup
+    IL_0158: ldstr ldstr "@CompanyId"
+    IL_015d: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0162: dup
+    IL_0163: ldarg.1
+    IL_0164: box System.Int32
+    IL_0169: callvirt System.Data.Common.DbParameter::set_Value
+    IL_016e: callvirt TypeSpec#10::Add
+    IL_0173: ldloc.2
+    IL_0174: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0179: dup
+    IL_017a: ldstr ldstr "@LicenseKey"
+    IL_017f: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0184: dup
+    IL_0185: ldloc.1
+    IL_0186: callvirt System.Data.Common.DbParameter::set_Value
+    IL_018b: callvirt TypeSpec#10::Add
+    IL_0190: ldloc.2
+    IL_0191: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0196: dup
+    IL_0197: ldstr ldstr "@UserId"
+    IL_019c: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_01a1: dup
+    IL_01a2: ldarg.2
+    IL_01a3: box System.Int32
+    IL_01a8: callvirt System.Data.Common.DbParameter::set_Value
+    IL_01ad: callvirt TypeSpec#10::Add
+    IL_01b2: ldloc.2
+    IL_01b3: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_01b8: dup
+    IL_01b9: ldstr ldstr "@DeviceId"
+    IL_01be: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_01c3: dup
+    IL_01c4: ldarg.3
+    IL_01c5: callvirt System.Data.Common.DbParameter::set_Value
+    IL_01ca: callvirt TypeSpec#10::Add
+    IL_01cf: ldloc.2
+    IL_01d0: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_01d5: dup
+    IL_01d6: ldstr ldstr "@MachineName"
+    IL_01db: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_01e0: dup
+    IL_01e1: ldarg.s 4
+    IL_01e3: callvirt System.Data.Common.DbParameter::set_Value
+    IL_01e8: callvirt TypeSpec#10::Add
+    IL_01ed: ldloc.2
+    IL_01ee: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_01f3: dup
+    IL_01f4: ldstr ldstr "@IPAddress"
+    IL_01f9: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_01fe: dup
+    IL_01ff: ldarg.s 5
+    IL_0201: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0206: callvirt TypeSpec#10::Add
+    IL_020b: ldloc.2
+    IL_020c: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0211: dup
+    IL_0212: ldstr ldstr "@LoginMacAddress"
+    IL_0217: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_021c: dup
+    IL_021d: ldarg.s 6
+    IL_021f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0224: callvirt TypeSpec#10::Add
+    IL_0229: ldloc.2
+    IL_022a: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_022f: dup
+    IL_0230: ldstr ldstr "@SysDate"
+    IL_0235: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_023a: dup
+    IL_023b: call System.DateTime::get_Now
+    IL_0240: box System.DateTime
+    IL_0245: callvirt System.Data.Common.DbParameter::set_Value
+    IL_024a: callvirt TypeSpec#10::Add
+    IL_024f: ldstr ldstr "GetMaxDate"
+    IL_0254: ldloc.2
+    IL_0255: call MethodSpec#95
+    IL_025a: pop
+    IL_025b: leave.s IL_0268
+    IL_025d: callvirt System.Exception::get_Message
+    IL_0262: newobj System.Exception::.ctor
+    IL_0267: throw
+    IL_0268: ret
+
+; Architecture.BLL.UserAccount::GetLicensCompanyAndExpiryDate  (rva=0x16d78, fat header, code_size=256, max_stack=4, exception_handlers=yes)
+    IL_0000: ldstr ldstr ""
+    IL_0005: stloc.0
+    IL_0006: newobj TypeSpec#10::.ctor
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0012: dup
+    IL_0013: ldstr ldstr "@OrganizationId"
+    IL_0018: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_001d: dup
+    IL_001e: ldarg.0
+    IL_001f: box System.Int32
+    IL_0024: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0029: callvirt TypeSpec#10::Add
+    IL_002e: ldloc.1
+    IL_002f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0034: dup
+    IL_0035: ldstr ldstr "@CompanyId"
+    IL_003a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003f: dup
+    IL_0040: ldarg.1
+    IL_0041: box System.Int32
+    IL_0046: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004b: callvirt TypeSpec#10::Add
+    IL_0050: ldloc.1
+    IL_0051: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0056: dup
+    IL_0057: ldstr ldstr "@Activity"
+    IL_005c: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0061: dup
+    IL_0062: ldstr ldstr "GetLicenseKey"
+    IL_0067: callvirt System.Data.Common.DbParameter::set_Value
+    IL_006c: callvirt TypeSpec#10::Add
+    IL_0071: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_0076: ldloc.1
+    IL_0077: call MethodSpec#95
+    IL_007c: stloc.2
+    IL_007d: ldloc.2
+    IL_007e: callvirt System.Data.DataTable::get_Rows
+    IL_0083: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0088: brtrue.s IL_0095
+    IL_008a: ldstr ldstr "License Not Found!"
+    IL_008f: newobj System.Exception::.ctor
+    IL_0094: throw
+    IL_0095: ldloc.2
+    IL_0096: callvirt System.Data.DataTable::get_Rows
+    IL_009b: ldc.i4.0
+    IL_009c: callvirt System.Data.DataRowCollection::get_Item
+    IL_00a1: ldstr ldstr "LicenseKey"
+    IL_00a6: callvirt System.Data.DataRow::get_Item
+    IL_00ab: call Architecture.Common.Conversion::ToString
+    IL_00b0: stloc.0
+    IL_00b1: ldloc.0
+    IL_00b2: call System.String::IsNullOrEmpty
+    IL_00b7: brtrue.s IL_00c0
+    IL_00b9: ldloc.0
+    IL_00ba: call Architecture.Common.LicenseKey::ReturnKey
+    IL_00bf: stloc.0
+    IL_00c0: newobj TypeSpec#10::.ctor
+    IL_00c5: stloc.3
+    IL_00c6: ldloc.3
+    IL_00c7: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_00cc: dup
+    IL_00cd: ldstr ldstr "@LicenseKey"
+    IL_00d2: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_00d7: dup
+    IL_00d8: ldloc.0
+    IL_00d9: callvirt System.Data.Common.DbParameter::set_Value
+    IL_00de: callvirt TypeSpec#10::Add
+    IL_00e3: ldstr ldstr "USP_GetLicenseExpiryDateByLicense"
+    IL_00e8: ldloc.3
+    IL_00e9: call MethodSpec#95
+    IL_00ee: stloc.s 4
+    IL_00f0: leave.s IL_00fd
+    IL_00f2: callvirt System.Exception::get_Message
+    IL_00f7: newobj System.Exception::.ctor
+    IL_00fc: throw
+    IL_00fd: ldloc.s 4
+    IL_00ff: ret
+
+; Architecture.BLL.UserAccount::setAuthenticationCode  (rva=0x16e94, fat header, code_size=390, max_stack=5, exception_handlers=yes)
+    IL_0000: newobj System.Random::.ctor
+    IL_0005: ldc.i4 100000
+    IL_000a: ldc.i4 999999
+    IL_000f: callvirt System.Random::Next
+    IL_0014: stloc.0
+    IL_0015: ldarg.0
+    IL_0016: call Architecture.BLL.UserProfile::GetUserProfileByUserId
+    IL_001b: stloc.1
+    IL_001c: ldloc.1
+    IL_001d: callvirt System.Data.DataTable::get_Rows
+    IL_0022: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0027: ldc.i4.0
+    IL_0028: bgt.s IL_0035
+    IL_002a: ldstr ldstr "Please add user profile info"
+    IL_002f: newobj System.Exception::.ctor
+    IL_0034: throw
+    IL_0035: ldstr ldstr ""
+    IL_003a: stloc.2
+    IL_003b: ldarg.1
+    IL_003c: brfalse.s IL_004f
+    IL_003e: ldarg.1
+    IL_003f: ldsfld System.String::Empty
+    IL_0044: call System.String::op_Inequality
+    IL_0049: brfalse.s IL_004f
+    IL_004b: ldarg.1
+    IL_004c: stloc.2
+    IL_004d: br.s IL_006b
+    IL_004f: ldloc.1
+    IL_0050: callvirt System.Data.DataTable::get_Rows
+    IL_0055: ldc.i4.0
+    IL_0056: callvirt System.Data.DataRowCollection::get_Item
+    IL_005b: ldstr ldstr "Email"
+    IL_0060: callvirt System.Data.DataRow::get_Item
+    IL_0065: call Architecture.Common.Conversion::ToString
+    IL_006a: stloc.2
+    IL_006b: ldloc.2
+    IL_006c: brfalse.s IL_007b
+    IL_006e: ldloc.2
+    IL_006f: ldsfld System.String::Empty
+    IL_0074: call System.String::op_Equality
+    IL_0079: brfalse.s IL_0086
+    IL_007b: ldstr ldstr "Couldn't Find Email to Send Authentication Code!"
+    IL_0080: newobj System.Exception::.ctor
+    IL_0085: throw
+    IL_0086: ldstr ldstr "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$"
+    IL_008b: stloc.3
+    IL_008c: ldloc.2
+    IL_008d: ldloc.3
+    IL_008e: call System.Text.RegularExpressions.Regex::Match
+    IL_0093: callvirt System.Text.RegularExpressions.Group::get_Success
+    IL_0098: brtrue.s IL_00a5
+    IL_009a: ldstr ldstr "Email is not Valid!"
+    IL_009f: newobj System.Exception::.ctor
+    IL_00a4: throw
+    IL_00a5: newobj Architecture.DAL.SystemUtilities.Email::.ctor
+    IL_00aa: ldloc.1
+    IL_00ab: callvirt System.Data.DataTable::get_Rows
+    IL_00b0: ldc.i4.0
+    IL_00b1: callvirt System.Data.DataRowCollection::get_Item
+    IL_00b6: ldstr ldstr "OrganizationId"
+    IL_00bb: callvirt System.Data.DataRow::get_Item
+    IL_00c0: call Architecture.Common.Conversion::ToInt
+    IL_00c5: ldloc.1
+    IL_00c6: callvirt System.Data.DataTable::get_Rows
+    IL_00cb: ldc.i4.0
+    IL_00cc: callvirt System.Data.DataRowCollection::get_Item
+    IL_00d1: ldstr ldstr "CompanyId"
+    IL_00d6: callvirt System.Data.DataRow::get_Item
+    IL_00db: call Architecture.Common.Conversion::ToInt
+    IL_00e0: ldloc.2
+    IL_00e1: call Architecture.Common.Conversion::ToString
+    IL_00e6: ldloc.0
+    IL_00e7: box System.Int32
+    IL_00ec: call Architecture.Common.Conversion::ToString
+    IL_00f1: call Architecture.DAL.SystemUtilities.Email::SendAuthenticationEmail
+    IL_00f6: pop
+    IL_00f7: newobj TypeSpec#10::.ctor
+    IL_00fc: stloc.s 4
+    IL_00fe: ldloc.s 4
+    IL_0100: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0105: dup
+    IL_0106: ldstr ldstr "@Activity"
+    IL_010b: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0110: dup
+    IL_0111: ldstr ldstr "UpdateAuthenticationCode"
+    IL_0116: callvirt System.Data.Common.DbParameter::set_Value
+    IL_011b: callvirt TypeSpec#10::Add
+    IL_0120: ldloc.s 4
+    IL_0122: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0127: dup
+    IL_0128: ldstr ldstr "@Id"
+    IL_012d: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0132: dup
+    IL_0133: ldarg.0
+    IL_0134: box System.Int32
+    IL_0139: callvirt System.Data.Common.DbParameter::set_Value
+    IL_013e: callvirt TypeSpec#10::Add
+    IL_0143: ldloc.s 4
+    IL_0145: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_014a: dup
+    IL_014b: ldstr ldstr "@AuthenticationCode"
+    IL_0150: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0155: dup
+    IL_0156: ldloc.0
+    IL_0157: box System.Int32
+    IL_015c: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0161: callvirt TypeSpec#10::Add
+    IL_0166: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_016b: ldloc.s 4
+    IL_016d: call MethodSpec#94
+    IL_0172: pop
+    IL_0173: ldloc.0
+    IL_0174: stloc.s 5
+    IL_0176: leave.s IL_0183
+    IL_0178: callvirt System.Exception::get_Message
+    IL_017d: newobj System.Exception::.ctor
+    IL_0182: throw
+    IL_0183: ldloc.s 5
+    IL_0185: ret
+
+; Architecture.BLL.UserAccount::expireAuthenticationCode  (rva=0x17044, fat header, code_size=135, max_stack=4, exception_handlers=yes)
+    IL_0000: ldc.i4.1
+    IL_0001: stloc.0
+    IL_0002: newobj TypeSpec#10::.ctor
+    IL_0007: stloc.1
+    IL_0008: ldloc.1
+    IL_0009: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000e: dup
+    IL_000f: ldstr ldstr "@Activity"
+    IL_0014: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0019: dup
+    IL_001a: ldstr ldstr "UpdateAuthenticationCode"
+    IL_001f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0024: callvirt TypeSpec#10::Add
+    IL_0029: ldloc.1
+    IL_002a: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002f: dup
+    IL_0030: ldstr ldstr "@Id"
+    IL_0035: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003a: dup
+    IL_003b: ldarg.0
+    IL_003c: box System.Int32
+    IL_0041: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0046: callvirt TypeSpec#10::Add
+    IL_004b: ldloc.1
+    IL_004c: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0051: dup
+    IL_0052: ldstr ldstr "@AuthenticationCode"
+    IL_0057: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005c: dup
+    IL_005d: ldloc.0
+    IL_005e: box System.Int32
+    IL_0063: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0068: callvirt TypeSpec#10::Add
+    IL_006d: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_0072: ldloc.1
+    IL_0073: call MethodSpec#94
+    IL_0078: pop
+    IL_0079: leave.s IL_0086
+    IL_007b: callvirt System.Exception::get_Message
+    IL_0080: newobj System.Exception::.ctor
+    IL_0085: throw
+    IL_0086: ret
+
+; Architecture.BLL.UserAccount::VerifyCode  (rva=0x170e8, fat header, code_size=160, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Id"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: callvirt Architecture.Model.UserAccount::get_ID
+    IL_001e: box System.Int32
+    IL_0023: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0028: callvirt TypeSpec#10::Add
+    IL_002d: ldloc.0
+    IL_002e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0033: dup
+    IL_0034: ldstr ldstr "@Activity"
+    IL_0039: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003e: dup
+    IL_003f: ldstr ldstr "ReadAuthenticationCode"
+    IL_0044: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0049: callvirt TypeSpec#10::Add
+    IL_004e: newobj TypeSpec#70::.ctor
+    IL_0053: pop
+    IL_0054: newobj Architecture.DAL.UserAccount::.ctor
+    IL_0059: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_005e: ldloc.0
+    IL_005f: call Architecture.DAL.UserAccount::VerifyCode
+    IL_0064: ldc.i4.0
+    IL_0065: callvirt TypeSpec#70::get_Item
+    IL_006a: callvirt Architecture.Model.UserAccount::get_AuthenticationCode
+    IL_006f: box System.Int32
+    IL_0074: call Architecture.Common.Conversion::ToInt
+    IL_0079: ldarg.0
+    IL_007a: callvirt Architecture.Model.UserAccount::get_AuthenticationCode
+    IL_007f: box System.Int32
+    IL_0084: call Architecture.Common.Conversion::ToInt
+    IL_0089: bne.un.s IL_008f
+    IL_008b: ldc.i4.1
+    IL_008c: stloc.1
+    IL_008d: leave.s IL_009e
+    IL_008f: ldc.i4.0
+    IL_0090: stloc.1
+    IL_0091: leave.s IL_009e
+    IL_0093: callvirt System.Exception::get_Message
+    IL_0098: newobj System.Exception::.ctor
+    IL_009d: throw
+    IL_009e: ldloc.1
+    IL_009f: ret
+
+; Architecture.BLL.UserAccount::SendAuthenticationCodeToUserMobileNumber  (rva=0x171a4, fat header, code_size=83, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0006: call Architecture.BLL.SMS.SmsProvider::ReadByCompanyId
+    IL_000b: stloc.0
+    IL_000c: ldarg.1
+    IL_000d: box System.Int32
+    IL_0012: call Architecture.Common.Conversion::ToString
+    IL_0017: stloc.1
+    IL_0018: newobj TypeSpec#72::.ctor
+    IL_001d: stloc.2
+    IL_001e: ldloc.2
+    IL_001f: ldarg.0
+    IL_0020: callvirt Architecture.Model.UserAccount::get_CellNo
+    IL_0025: callvirt TypeSpec#72::Add
+    IL_002a: ldloc.0
+    IL_002b: callvirt Architecture.Model.SMS.SmsProvider::get_ProviderName
+    IL_0030: ldstr ldstr "LifeTimesSms"
+    IL_0035: call System.String::op_Equality
+    IL_003a: brfalse.s IL_0045
+    IL_003c: ldloc.0
+    IL_003d: ldloc.2
+    IL_003e: ldloc.1
+    IL_003f: call Architecture.BLL.SMS.SmsProvider::SendSmsViaLifeTimeSmsApi
+    IL_0044: pop
+    IL_0045: leave.s IL_0052
+    IL_0047: callvirt System.Exception::get_Message
+    IL_004c: newobj System.Exception::.ctor
+    IL_0051: throw
+    IL_0052: ret
+
+; Architecture.BLL.UserAccount::CheckTwoWayAuthenticationConfiguration  (rva=0x17214, fat header, code_size=215, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Id"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: callvirt Architecture.Model.UserAccount::get_ID
+    IL_001e: box System.Int32
+    IL_0023: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0028: callvirt TypeSpec#10::Add
+    IL_002d: ldloc.0
+    IL_002e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0033: dup
+    IL_0034: ldstr ldstr "@OrganizationId"
+    IL_0039: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003e: dup
+    IL_003f: ldarg.0
+    IL_0040: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0045: box System.Int32
+    IL_004a: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004f: callvirt TypeSpec#10::Add
+    IL_0054: ldloc.0
+    IL_0055: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_005a: dup
+    IL_005b: ldstr ldstr "@CompanyId"
+    IL_0060: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0065: dup
+    IL_0066: ldarg.0
+    IL_0067: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_006c: box System.Int32
+    IL_0071: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0076: callvirt TypeSpec#10::Add
+    IL_007b: ldloc.0
+    IL_007c: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0081: dup
+    IL_0082: ldstr ldstr "@Activity"
+    IL_0087: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_008c: dup
+    IL_008d: ldstr ldstr "CheckTwoWayAuthenticationConfiguration"
+    IL_0092: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0097: callvirt TypeSpec#10::Add
+    IL_009c: newobj TypeSpec#70::.ctor
+    IL_00a1: pop
+    IL_00a2: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_00a7: ldloc.0
+    IL_00a8: call MethodSpec#94
+    IL_00ad: callvirt System.Data.DataTable::get_Rows
+    IL_00b2: ldc.i4.0
+    IL_00b3: callvirt System.Data.DataRowCollection::get_Item
+    IL_00b8: ldstr ldstr "AuthenticationEnabledForUser"
+    IL_00bd: callvirt System.Data.DataRow::get_Item
+    IL_00c2: call Architecture.Common.Conversion::ToInt
+    IL_00c7: stloc.1
+    IL_00c8: leave.s IL_00d5
+    IL_00ca: callvirt System.Exception::get_Message
+    IL_00cf: newobj System.Exception::.ctor
+    IL_00d4: throw
+    IL_00d5: ldloc.1
+    IL_00d6: ret
+
+; Architecture.BLL.UserAccount::CheckIfPasswordIsExpired  (rva=0x17308, fat header, code_size=214, max_stack=4, exception_handlers=yes)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: newobj TypeSpec#10::.ctor
+    IL_0007: stloc.1
+    IL_0008: ldloc.1
+    IL_0009: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000e: dup
+    IL_000f: ldstr ldstr "@OrganizationId"
+    IL_0014: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0019: dup
+    IL_001a: ldarg.0
+    IL_001b: box System.Int32
+    IL_0020: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0025: callvirt TypeSpec#10::Add
+    IL_002a: ldloc.1
+    IL_002b: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0030: dup
+    IL_0031: ldstr ldstr "@CompanyId"
+    IL_0036: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003b: dup
+    IL_003c: ldarg.1
+    IL_003d: box System.Int32
+    IL_0042: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0047: callvirt TypeSpec#10::Add
+    IL_004c: ldloc.1
+    IL_004d: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0052: dup
+    IL_0053: ldstr ldstr "@Id"
+    IL_0058: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005d: dup
+    IL_005e: ldarg.2
+    IL_005f: box System.Int32
+    IL_0064: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0069: callvirt TypeSpec#10::Add
+    IL_006e: ldloc.1
+    IL_006f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0074: dup
+    IL_0075: ldstr ldstr "@Activity"
+    IL_007a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_007f: dup
+    IL_0080: ldstr ldstr "CheckIfPasswordIsExpired"
+    IL_0085: callvirt System.Data.Common.DbParameter::set_Value
+    IL_008a: callvirt TypeSpec#10::Add
+    IL_008f: ldstr ldstr "[dbo].[Sp_UserAccount_GetAllMethod]"
+    IL_0094: ldloc.1
+    IL_0095: call MethodSpec#96
+    IL_009a: stloc.2
+    IL_009b: ldloc.2
+    IL_009c: callvirt System.Data.DataTable::get_Rows
+    IL_00a1: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_00a6: ldc.i4.0
+    IL_00a7: ble.s IL_00c5
+    IL_00a9: ldloc.2
+    IL_00aa: callvirt System.Data.DataTable::get_Rows
+    IL_00af: ldc.i4.0
+    IL_00b0: callvirt System.Data.DataRowCollection::get_Item
+    IL_00b5: ldstr ldstr "ExpiredStatus"
+    IL_00ba: callvirt System.Data.DataRow::get_Item
+    IL_00bf: call Architecture.Common.Conversion::ToBool
+    IL_00c4: stloc.0
+    IL_00c5: ldloc.0
+    IL_00c6: stloc.3
+    IL_00c7: leave.s IL_00d4
+    IL_00c9: callvirt System.Exception::get_Message
+    IL_00ce: newobj System.Exception::.ctor
+    IL_00d3: throw
+    IL_00d4: ldloc.3
+    IL_00d5: ret
+
+; Architecture.BLL.UserAccount::ReadUserDataByUserTypeId  (rva=0x173fc, fat header, code_size=168, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@CompanyId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.1
+    IL_003b: box System.Int32
+    IL_0040: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0045: callvirt TypeSpec#10::Add
+    IL_004a: ldloc.0
+    IL_004b: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0050: dup
+    IL_0051: ldstr ldstr "@UserTypeId"
+    IL_0056: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005b: dup
+    IL_005c: ldarg.2
+    IL_005d: box System.Int32
+    IL_0062: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0067: callvirt TypeSpec#10::Add
+    IL_006c: ldloc.0
+    IL_006d: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0072: dup
+    IL_0073: ldstr ldstr "@Activity"
+    IL_0078: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_007d: dup
+    IL_007e: ldstr ldstr "ReadUserDataByUserTypeId"
+    IL_0083: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0088: callvirt TypeSpec#10::Add
+    IL_008d: ldstr ldstr "[dbo].[Sp_UserAccount_GetAllMethod]"
+    IL_0092: ldloc.0
+    IL_0093: call MethodSpec#96
+    IL_0098: stloc.1
+    IL_0099: leave.s IL_00a6
+    IL_009b: callvirt System.Exception::get_Message
+    IL_00a0: newobj System.Exception::.ctor
+    IL_00a5: throw
+    IL_00a6: ldloc.1
+    IL_00a7: ret
+
+; Architecture.BLL.UserAccount::AllocatedOrUnAllocatedUsersAgainstScreen  (rva=0x174c0, fat header, code_size=278, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@CompanyId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: callvirt Architecture.Model.ReportsParameters::get_CompanyId
+    IL_001e: box System.Int32
+    IL_0023: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0028: callvirt TypeSpec#10::Add
+    IL_002d: ldloc.0
+    IL_002e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0033: dup
+    IL_0034: ldstr ldstr "@ActionId"
+    IL_0039: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003e: dup
+    IL_003f: ldarg.0
+    IL_0040: callvirt Architecture.Model.ReportsParameters::get_ActionId
+    IL_0045: box System.Int32
+    IL_004a: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004f: callvirt TypeSpec#10::Add
+    IL_0054: ldarg.0
+    IL_0055: callvirt Architecture.Model.ReportsParameters::get_ScreenName
+    IL_005a: brfalse.s IL_0090
+    IL_005c: ldarg.0
+    IL_005d: callvirt Architecture.Model.ReportsParameters::get_ScreenName
+    IL_0062: ldsfld System.String::Empty
+    IL_0067: call System.String::op_Inequality
+    IL_006c: brfalse.s IL_0090
+    IL_006e: ldloc.0
+    IL_006f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0074: dup
+    IL_0075: ldstr ldstr "@ScreenName"
+    IL_007a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_007f: dup
+    IL_0080: ldarg.0
+    IL_0081: callvirt Architecture.Model.ReportsParameters::get_ScreenName
+    IL_0086: callvirt System.Data.Common.DbParameter::set_Value
+    IL_008b: callvirt TypeSpec#10::Add
+    IL_0090: ldarg.0
+    IL_0091: callvirt Architecture.Model.ReportsParameters::get_UserId
+    IL_0096: brfalse.s IL_00bf
+    IL_0098: ldloc.0
+    IL_0099: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_009e: dup
+    IL_009f: ldstr ldstr "@UserId"
+    IL_00a4: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_00a9: dup
+    IL_00aa: ldarg.0
+    IL_00ab: callvirt Architecture.Model.ReportsParameters::get_UserId
+    IL_00b0: box System.Int32
+    IL_00b5: callvirt System.Data.Common.DbParameter::set_Value
+    IL_00ba: callvirt TypeSpec#10::Add
+    IL_00bf: ldarg.0
+    IL_00c0: callvirt Architecture.Model.ReportsParameters::get_Activity
+    IL_00c5: brfalse.s IL_00fb
+    IL_00c7: ldarg.0
+    IL_00c8: callvirt Architecture.Model.ReportsParameters::get_Activity
+    IL_00cd: ldsfld System.String::Empty
+    IL_00d2: call System.String::op_Inequality
+    IL_00d7: brfalse.s IL_00fb
+    IL_00d9: ldloc.0
+    IL_00da: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_00df: dup
+    IL_00e0: ldstr ldstr "@RightName"
+    IL_00e5: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_00ea: dup
+    IL_00eb: ldarg.0
+    IL_00ec: callvirt Architecture.Model.ReportsParameters::get_Activity
+    IL_00f1: callvirt System.Data.Common.DbParameter::set_Value
+    IL_00f6: callvirt TypeSpec#10::Add
+    IL_00fb: ldstr ldstr "USP_getUserByScreenName"
+    IL_0100: ldloc.0
+    IL_0101: call MethodSpec#94
+    IL_0106: stloc.1
+    IL_0107: leave.s IL_0114
+    IL_0109: callvirt System.Exception::get_Message
+    IL_010e: newobj System.Exception::.ctor
+    IL_0113: throw
+    IL_0114: ldloc.1
+    IL_0115: ret
+
+; Architecture.BLL.UserAccount::GetUsersForAccountsStatusAllocation  (rva=0x17600, fat header, code_size=101, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@CompanyId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.1
+    IL_003b: box System.Int32
+    IL_0040: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0045: callvirt TypeSpec#10::Add
+    IL_004a: ldstr ldstr "USP_GetUsersForAccountsStatusAllocation"
+    IL_004f: ldloc.0
+    IL_0050: call MethodSpec#94
+    IL_0055: stloc.1
+    IL_0056: leave.s IL_0063
+    IL_0058: callvirt System.Exception::get_Message
+    IL_005d: newobj System.Exception::.ctor
+    IL_0062: throw
+    IL_0063: ldloc.1
+    IL_0064: ret
+
+; Architecture.BLL.UserAccount::GetUsersFromAccountsShowHideStatus  (rva=0x17684, fat header, code_size=101, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@CompanyId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.1
+    IL_003b: box System.Int32
+    IL_0040: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0045: callvirt TypeSpec#10::Add
+    IL_004a: ldstr ldstr "USP_GetUsersFromAccountsShowHideStatus"
+    IL_004f: ldloc.0
+    IL_0050: call MethodSpec#94
+    IL_0055: stloc.1
+    IL_0056: leave.s IL_0063
+    IL_0058: callvirt System.Exception::get_Message
+    IL_005d: newobj System.Exception::.ctor
+    IL_0062: throw
+    IL_0063: ldloc.1
+    IL_0064: ret
+
+; Architecture.BLL.UserAccount::GetUsersWithPlayerId  (rva=0x17708, fat header, code_size=138, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@CompanyId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.1
+    IL_003b: box System.Int32
+    IL_0040: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0045: callvirt TypeSpec#10::Add
+    IL_004a: ldarg.2
+    IL_004b: brfalse.s IL_006f
+    IL_004d: ldloc.0
+    IL_004e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0053: dup
+    IL_0054: ldstr ldstr "@DocumentTypeId"
+    IL_0059: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005e: dup
+    IL_005f: ldarg.2
+    IL_0060: box System.Int32
+    IL_0065: callvirt System.Data.Common.DbParameter::set_Value
+    IL_006a: callvirt TypeSpec#10::Add
+    IL_006f: ldstr ldstr "usp_GetUsersWithPlayerId"
+    IL_0074: ldloc.0
+    IL_0075: call MethodSpec#94
+    IL_007a: stloc.1
+    IL_007b: leave.s IL_0088
+    IL_007d: callvirt System.Exception::get_Message
+    IL_0082: newobj System.Exception::.ctor
+    IL_0087: throw
+    IL_0088: ldloc.1
+    IL_0089: ret
+
+; Architecture.BLL.UserAccount::GetVersion  (rva=0x177b0, fat header, code_size=118, max_stack=4, exception_handlers=yes)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: ldnull
+    IL_0003: stloc.1
+    IL_0004: newobj TypeSpec#10::.ctor
+    IL_0009: stloc.2
+    IL_000a: ldloc.2
+    IL_000b: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0010: dup
+    IL_0011: ldstr ldstr "@userId"
+    IL_0016: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_001b: dup
+    IL_001c: ldarg.0
+    IL_001d: box System.Int32
+    IL_0022: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0027: callvirt TypeSpec#10::Add
+    IL_002c: ldstr ldstr "usp_getAppVersion"
+    IL_0031: ldloc.2
+    IL_0032: call MethodSpec#94
+    IL_0037: stloc.1
+    IL_0038: ldloc.1
+    IL_0039: brfalse.s IL_0065
+    IL_003b: ldloc.1
+    IL_003c: call System.Data.DataTable::get_Rows
+    IL_0041: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0046: ldc.i4.0
+    IL_0047: ble.s IL_0065
+    IL_0049: ldloc.1
+    IL_004a: callvirt System.Data.DataTable::get_Rows
+    IL_004f: ldc.i4.0
+    IL_0050: callvirt System.Data.DataRowCollection::get_Item
+    IL_0055: ldstr ldstr "AppVersion"
+    IL_005a: callvirt System.Data.DataRow::get_Item
+    IL_005f: call Architecture.Common.Conversion::ToInt
+    IL_0064: stloc.0
+    IL_0065: ldloc.0
+    IL_0066: stloc.3
+    IL_0067: leave.s IL_0074
+    IL_0069: callvirt System.Exception::get_Message
+    IL_006e: newobj System.Exception::.ctor
+    IL_0073: throw
+    IL_0074: ldloc.3
+    IL_0075: ret
+
+; Architecture.BLL.UserAccount::.ctor  (rva=0x17844, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret

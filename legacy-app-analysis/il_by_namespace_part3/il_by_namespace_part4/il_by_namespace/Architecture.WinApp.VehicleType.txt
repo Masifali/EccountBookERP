@@ -1,0 +1,1490 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.VehicleType
+====================================================================================================
+
+; Architecture.WinApp.VehicleType::.ctor  (rva=0x977dc, tiny header, code_size=31, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj Architecture.Model.UserAccount::.ctor
+    IL_0006: stfld Architecture.WinApp.VehicleType::UserAccount
+    IL_000b: ldarg.0
+    IL_000c: call System.Windows.Forms.Form::.ctor
+    IL_0011: ldarg.0
+    IL_0012: call Architecture.WinApp.VehicleType::InitializeComponent
+    IL_0017: ldarg.0
+    IL_0018: ldarg.1
+    IL_0019: stfld Architecture.WinApp.VehicleType::UserAccount
+    IL_001e: ret
+
+; Architecture.WinApp.VehicleType::DateLock_Load  (rva=0x977fc, fat header, code_size=101, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.1
+    IL_0002: callvirt System.Windows.Forms.ScrollableControl::set_AutoScroll
+    IL_0007: ldarg.0
+    IL_0008: ldc.i4.s 10
+    IL_000a: ldc.i4.s 10
+    IL_000c: newobj System.Drawing.Size::.ctor
+    IL_0011: call System.Windows.Forms.ScrollableControl::set_AutoScrollMargin
+    IL_0016: ldarg.0
+    IL_0017: ldc.i4 351
+    IL_001c: ldc.i4 408
+    IL_0021: newobj System.Drawing.Size::.ctor
+    IL_0026: call System.Windows.Forms.ScrollableControl::set_AutoScrollMinSize
+    IL_002b: ldarg.0
+    IL_002c: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0031: ldc.i4.1
+    IL_0032: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0037: ldarg.0
+    IL_0038: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_003d: ldc.i4.0
+    IL_003e: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0043: ldarg.0
+    IL_0044: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_0049: callvirt System.Windows.Forms.Control::Focus
+    IL_004e: pop
+    IL_004f: ldarg.0
+    IL_0050: call Architecture.WinApp.VehicleType::BindGrid
+    IL_0055: leave.s IL_0064
+    IL_0057: callvirt System.Exception::get_Message
+    IL_005c: call System.Windows.Forms.MessageBox::Show
+    IL_0061: pop
+    IL_0062: leave.s IL_0064
+    IL_0064: ret
+
+; Architecture.WinApp.VehicleType::FormValidation  (rva=0x97880, tiny header, code_size=27, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_0006: callvirt System.Windows.Forms.Control::get_Text
+    IL_000b: ldsfld System.String::Empty
+    IL_0010: call System.String::op_Equality
+    IL_0015: brfalse.s IL_0019
+    IL_0017: ldc.i4.0
+    IL_0018: ret
+    IL_0019: ldc.i4.1
+    IL_001a: ret
+
+; Architecture.WinApp.VehicleType::Insert  (rva=0x9789c, fat header, code_size=178, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.VehicleType::FormValidation
+    IL_0006: brtrue.s IL_000d
+    IL_0008: leave IL_00b1
+    IL_000d: newobj Architecture.Model.Inventory.VehicleType::.ctor
+    IL_0012: stloc.0
+    IL_0013: ldarg.0
+    IL_0014: ldfld Architecture.WinApp.VehicleType::RecId
+    IL_0019: ldc.i4.0
+    IL_001a: ble.s IL_0041
+    IL_001c: ldstr ldstr "Are you sure to Update?"
+    IL_0021: ldstr ldstr "Confirm"
+    IL_0026: ldc.i4.4
+    IL_0027: ldc.i4.s 32
+    IL_0029: call System.Windows.Forms.MessageBox::Show
+    IL_002e: ldc.i4.7
+    IL_002f: bne.un.s IL_0033
+    IL_0031: leave.s IL_00b1
+    IL_0033: ldloc.0
+    IL_0034: ldarg.0
+    IL_0035: ldfld Architecture.WinApp.VehicleType::RecId
+    IL_003a: callvirt Architecture.Model.Inventory.VehicleType::set_Id
+    IL_003f: br.s IL_0058
+    IL_0041: ldstr ldstr "Are you sure to Save?"
+    IL_0046: ldstr ldstr "Confirm"
+    IL_004b: ldc.i4.4
+    IL_004c: ldc.i4.s 32
+    IL_004e: call System.Windows.Forms.MessageBox::Show
+    IL_0053: ldc.i4.7
+    IL_0054: bne.un.s IL_0058
+    IL_0056: leave.s IL_00b1
+    IL_0058: ldloc.0
+    IL_0059: ldarg.0
+    IL_005a: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_005f: callvirt System.Windows.Forms.Control::get_Text
+    IL_0064: callvirt System.String::Trim
+    IL_0069: callvirt Architecture.Model.Inventory.VehicleType::set_VehicleDescription
+    IL_006e: ldloc.0
+    IL_006f: call Architecture.BLL.Inventory.VehicleType::Save
+    IL_0074: pop
+    IL_0075: ldarg.0
+    IL_0076: ldfld Architecture.WinApp.VehicleType::RecId
+    IL_007b: ldc.i4.0
+    IL_007c: ble.s IL_008b
+    IL_007e: ldstr ldstr "Record Update Successfully"
+    IL_0083: call System.Windows.Forms.MessageBox::Show
+    IL_0088: pop
+    IL_0089: br.s IL_0096
+    IL_008b: ldstr ldstr "Record Save Successfully"
+    IL_0090: call System.Windows.Forms.MessageBox::Show
+    IL_0095: pop
+    IL_0096: ldarg.0
+    IL_0097: call Architecture.WinApp.VehicleType::Reset
+    IL_009c: ldarg.0
+    IL_009d: call Architecture.WinApp.VehicleType::BindGrid
+    IL_00a2: leave.s IL_00b1
+    IL_00a4: callvirt System.Exception::get_Message
+    IL_00a9: call System.Windows.Forms.MessageBox::Show
+    IL_00ae: pop
+    IL_00af: leave.s IL_00b1
+    IL_00b1: ret
+
+; Architecture.WinApp.VehicleType::btnSave_Click  (rva=0x9796c, fat header, code_size=29, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.0
+    IL_0002: stfld Architecture.WinApp.VehicleType::RecId
+    IL_0007: ldarg.0
+    IL_0008: call Architecture.WinApp.VehicleType::Insert
+    IL_000d: leave.s IL_001c
+    IL_000f: callvirt System.Exception::get_Message
+    IL_0014: call System.Windows.Forms.MessageBox::Show
+    IL_0019: pop
+    IL_001a: leave.s IL_001c
+    IL_001c: ret
+
+; Architecture.WinApp.VehicleType::btnUpdate_Click  (rva=0x979a8, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.VehicleType::Insert
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.VehicleType::BindGrid  (rva=0x979dc, fat header, code_size=261, max_stack=6, exception_handlers=yes)
+    IL_0000: call Architecture.BLL.Inventory.VehicleType::GetAll
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: callvirt System.Data.DataTable::get_Rows
+    IL_000c: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0011: ldc.i4.0
+    IL_0012: ble IL_00f5
+    IL_0017: newobj System.Data.DataTable::.ctor
+    IL_001c: stloc.1
+    IL_001d: ldloc.1
+    IL_001e: callvirt System.Data.DataTable::get_Columns
+    IL_0023: ldstr ldstr "Id"
+    IL_0028: ldtoken System.Int32
+    IL_002d: call System.Type::GetTypeFromHandle
+    IL_0032: callvirt System.Data.DataColumnCollection::Add
+    IL_0037: pop
+    IL_0038: ldloc.1
+    IL_0039: callvirt System.Data.DataTable::get_Columns
+    IL_003e: ldstr ldstr "VehicleType"
+    IL_0043: ldtoken System.String
+    IL_0048: call System.Type::GetTypeFromHandle
+    IL_004d: callvirt System.Data.DataColumnCollection::Add
+    IL_0052: pop
+    IL_0053: ldloc.1
+    IL_0054: callvirt System.Data.DataTable::Clear
+    IL_0059: ldc.i4.0
+    IL_005a: stloc.2
+    IL_005b: br.s IL_00a5
+    IL_005d: ldloc.1
+    IL_005e: callvirt System.Data.DataTable::get_Rows
+    IL_0063: ldc.i4.2
+    IL_0064: newarr System.Object
+    IL_0069: dup
+    IL_006a: ldc.i4.0
+    IL_006b: ldloc.0
+    IL_006c: callvirt System.Data.DataTable::get_Rows
+    IL_0071: ldloc.2
+    IL_0072: callvirt System.Data.DataRowCollection::get_Item
+    IL_0077: ldstr ldstr "Id"
+    IL_007c: callvirt System.Data.DataRow::get_Item
+    IL_0081: stelem.ref
+    IL_0082: dup
+    IL_0083: ldc.i4.1
+    IL_0084: ldloc.0
+    IL_0085: callvirt System.Data.DataTable::get_Rows
+    IL_008a: ldloc.2
+    IL_008b: callvirt System.Data.DataRowCollection::get_Item
+    IL_0090: ldstr ldstr "VehicleDescription"
+    IL_0095: callvirt System.Data.DataRow::get_Item
+    IL_009a: stelem.ref
+    IL_009b: callvirt System.Data.DataRowCollection::Add
+    IL_00a0: pop
+    IL_00a1: ldloc.2
+    IL_00a2: ldc.i4.1
+    IL_00a3: add
+    IL_00a4: stloc.2
+    IL_00a5: ldloc.2
+    IL_00a6: ldloc.0
+    IL_00a7: callvirt System.Data.DataTable::get_Rows
+    IL_00ac: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_00b1: blt.s IL_005d
+    IL_00b3: ldarg.0
+    IL_00b4: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_00b9: ldloc.1
+    IL_00ba: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_00bf: ldarg.0
+    IL_00c0: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_00c5: callvirt Janus.Windows.GridEX.GridEX::RetrieveStructure
+    IL_00ca: ldarg.0
+    IL_00cb: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_00d0: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00d5: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00da: ldstr ldstr "Id"
+    IL_00df: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_00e4: ldc.i4.0
+    IL_00e5: callvirt Janus.Windows.GridEX.GridEXColumn::set_Visible
+    IL_00ea: ldarg.0
+    IL_00eb: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_00f0: call Architecture.WinApp.Common.CommonServices::GridAutoAdjustmentNew
+    IL_00f5: leave.s IL_0104
+    IL_00f7: callvirt System.Exception::get_Message
+    IL_00fc: call System.Windows.Forms.MessageBox::Show
+    IL_0101: pop
+    IL_0102: leave.s IL_0104
+    IL_0104: ret
+
+; Architecture.WinApp.VehicleType::grdfrm_DoubleClick  (rva=0x97b00, fat header, code_size=174, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0006: callvirt Janus.Windows.GridEX.GridEX::get_CurrentRow
+    IL_000b: stloc.0
+    IL_000c: ldloc.0
+    IL_000d: brfalse IL_009e
+    IL_0012: ldloc.0
+    IL_0013: callvirt Janus.Windows.GridEX.GridEXRow::get_RowType
+    IL_0018: brtrue IL_009e
+    IL_001d: ldloc.0
+    IL_001e: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0023: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Count
+    IL_0028: ldc.i4.0
+    IL_0029: ble.s IL_009e
+    IL_002b: ldarg.0
+    IL_002c: ldarg.0
+    IL_002d: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0032: callvirt Janus.Windows.GridEX.GridEX::get_CurrentRow
+    IL_0037: callvirt Janus.Windows.GridEX.GridEXRow::get_RowIndex
+    IL_003c: stfld Architecture.WinApp.VehicleType::updateIndex
+    IL_0041: ldarg.0
+    IL_0042: ldloc.0
+    IL_0043: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0048: ldstr ldstr "Id"
+    IL_004d: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0052: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0057: call Architecture.Common.Conversion::ToInt
+    IL_005c: stfld Architecture.WinApp.VehicleType::RecId
+    IL_0061: ldarg.0
+    IL_0062: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_0067: ldloc.0
+    IL_0068: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_006d: ldstr ldstr "VehicleType"
+    IL_0072: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0077: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_007c: call Architecture.Common.Conversion::ToString
+    IL_0081: callvirt System.Windows.Forms.Control::set_Text
+    IL_0086: ldarg.0
+    IL_0087: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_008c: ldc.i4.0
+    IL_008d: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0092: ldarg.0
+    IL_0093: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_0098: ldc.i4.1
+    IL_0099: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_009e: leave.s IL_00ad
+    IL_00a0: callvirt System.Exception::get_Message
+    IL_00a5: call System.Windows.Forms.MessageBox::Show
+    IL_00aa: pop
+    IL_00ab: leave.s IL_00ad
+    IL_00ad: ret
+
+; Architecture.WinApp.VehicleType::refreshToolStripMenuItem_Click  (rva=0x97bcc, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.VehicleType::Reset
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.VehicleType::Reset  (rva=0x97c00, fat header, code_size=68, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_0006: ldsfld System.String::Empty
+    IL_000b: callvirt System.Windows.Forms.Control::set_Text
+    IL_0010: ldarg.0
+    IL_0011: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_0016: callvirt System.Windows.Forms.Control::Focus
+    IL_001b: pop
+    IL_001c: ldarg.0
+    IL_001d: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0022: ldc.i4.1
+    IL_0023: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0028: ldarg.0
+    IL_0029: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_002e: ldc.i4.0
+    IL_002f: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0034: leave.s IL_0043
+    IL_0036: callvirt System.Exception::get_Message
+    IL_003b: call System.Windows.Forms.MessageBox::Show
+    IL_0040: pop
+    IL_0041: leave.s IL_0043
+    IL_0043: ret
+
+; Architecture.WinApp.VehicleType::VehicleType_FormClosing  (rva=0x97c60, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.HistoryStack::Remove
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.VehicleType::VehicleType_KeyDown  (rva=0x97c94, fat header, code_size=338, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.2
+    IL_0001: callvirt System.Windows.Forms.KeyEventArgs::get_KeyData
+    IL_0006: ldc.i4.s 13
+    IL_0008: bne.un.s IL_0014
+    IL_000a: ldstr ldstr "{TAB}"
+    IL_000f: call System.Windows.Forms.SendKeys::Send
+    IL_0014: ldarg.2
+    IL_0015: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_001a: brfalse.s IL_002e
+    IL_001c: ldarg.2
+    IL_001d: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0022: ldc.i4.s 78
+    IL_0024: bne.un.s IL_002e
+    IL_0026: ldarg.0
+    IL_0027: ldnull
+    IL_0028: ldnull
+    IL_0029: call Architecture.WinApp.VehicleType::refreshToolStripMenuItem_Click
+    IL_002e: ldarg.0
+    IL_002f: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0034: callvirt System.Windows.Forms.ToolStripItem::get_Visible
+    IL_0039: brfalse.s IL_0062
+    IL_003b: ldarg.0
+    IL_003c: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0041: callvirt System.Windows.Forms.ToolStripItem::get_Enabled
+    IL_0046: brfalse.s IL_0062
+    IL_0048: ldarg.2
+    IL_0049: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_004e: brfalse.s IL_0062
+    IL_0050: ldarg.2
+    IL_0051: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0056: ldc.i4.s 83
+    IL_0058: bne.un.s IL_0062
+    IL_005a: ldarg.0
+    IL_005b: ldnull
+    IL_005c: ldnull
+    IL_005d: call Architecture.WinApp.VehicleType::btnSave_Click
+    IL_0062: ldarg.0
+    IL_0063: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_0068: callvirt System.Windows.Forms.ToolStripItem::get_Visible
+    IL_006d: brfalse.s IL_0096
+    IL_006f: ldarg.0
+    IL_0070: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_0075: callvirt System.Windows.Forms.ToolStripItem::get_Enabled
+    IL_007a: brfalse.s IL_0096
+    IL_007c: ldarg.2
+    IL_007d: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0082: brfalse.s IL_0096
+    IL_0084: ldarg.2
+    IL_0085: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_008a: ldc.i4.s 85
+    IL_008c: bne.un.s IL_0096
+    IL_008e: ldarg.0
+    IL_008f: ldnull
+    IL_0090: ldnull
+    IL_0091: call Architecture.WinApp.VehicleType::btnUpdate_Click
+    IL_0096: ldarg.2
+    IL_0097: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_009c: brfalse.s IL_00a8
+    IL_009e: ldarg.2
+    IL_009f: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00a4: ldc.i4.s 69
+    IL_00a6: beq.s IL_00b2
+    IL_00a8: ldarg.2
+    IL_00a9: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00ae: ldc.i4.s 27
+    IL_00b0: bne.un.s IL_00b8
+    IL_00b2: ldarg.0
+    IL_00b3: call System.Windows.Forms.Form::Close
+    IL_00b8: ldarg.2
+    IL_00b9: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_00be: brfalse.s IL_00ce
+    IL_00c0: ldarg.2
+    IL_00c1: callvirt System.Windows.Forms.KeyEventArgs::get_Alt
+    IL_00c6: brfalse.s IL_00ce
+    IL_00c8: ldarg.0
+    IL_00c9: call Architecture.WinApp.VehicleType::MakeShortCutKeys
+    IL_00ce: ldarg.2
+    IL_00cf: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_00d4: brfalse.s IL_00ec
+    IL_00d6: ldarg.2
+    IL_00d7: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00dc: ldc.i4.s 40
+    IL_00de: bne.un.s IL_00ec
+    IL_00e0: ldarg.0
+    IL_00e1: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_00e6: callvirt System.Windows.Forms.Control::Focus
+    IL_00eb: pop
+    IL_00ec: ldarg.2
+    IL_00ed: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_00f2: brfalse.s IL_010a
+    IL_00f4: ldarg.2
+    IL_00f5: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00fa: ldc.i4.s 38
+    IL_00fc: bne.un.s IL_010a
+    IL_00fe: ldarg.0
+    IL_00ff: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_0104: callvirt System.Windows.Forms.Control::Focus
+    IL_0109: pop
+    IL_010a: ldarg.2
+    IL_010b: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0110: brfalse.s IL_0128
+    IL_0112: ldarg.2
+    IL_0113: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0118: ldc.i4.s 116
+    IL_011a: bne.un.s IL_0128
+    IL_011c: ldarg.0
+    IL_011d: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_0122: callvirt System.Windows.Forms.Control::Focus
+    IL_0127: pop
+    IL_0128: ldarg.2
+    IL_0129: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_012e: brfalse.s IL_0142
+    IL_0130: ldarg.2
+    IL_0131: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0136: ldc.i4.s 13
+    IL_0138: bne.un.s IL_0142
+    IL_013a: ldarg.0
+    IL_013b: ldnull
+    IL_013c: ldnull
+    IL_013d: call Architecture.WinApp.VehicleType::grdfrm_DoubleClick
+    IL_0142: leave.s IL_0151
+    IL_0144: callvirt System.Exception::get_Message
+    IL_0149: call System.Windows.Forms.MessageBox::Show
+    IL_014e: pop
+    IL_014f: leave.s IL_0151
+    IL_0151: ret
+
+; Architecture.WinApp.VehicleType::MakeShortCutKeys  (rva=0x97e10, fat header, code_size=380, max_stack=5, exception_handlers=yes)
+    IL_0000: newobj System.Data.DataTable::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: callvirt System.Data.DataTable::get_Columns
+    IL_000c: ldstr ldstr "KeyCombination"
+    IL_0011: callvirt System.Data.DataColumnCollection::Add
+    IL_0016: pop
+    IL_0017: ldloc.0
+    IL_0018: callvirt System.Data.DataTable::get_Columns
+    IL_001d: ldstr ldstr "Description"
+    IL_0022: callvirt System.Data.DataColumnCollection::Add
+    IL_0027: pop
+    IL_0028: ldloc.0
+    IL_0029: callvirt System.Data.DataTable::get_Rows
+    IL_002e: ldc.i4.2
+    IL_002f: newarr System.Object
+    IL_0034: dup
+    IL_0035: ldc.i4.0
+    IL_0036: ldstr ldstr "Ctrl+S"
+    IL_003b: stelem.ref
+    IL_003c: dup
+    IL_003d: ldc.i4.1
+    IL_003e: ldstr ldstr "For Save"
+    IL_0043: stelem.ref
+    IL_0044: callvirt System.Data.DataRowCollection::Add
+    IL_0049: pop
+    IL_004a: ldloc.0
+    IL_004b: callvirt System.Data.DataTable::get_Rows
+    IL_0050: ldc.i4.2
+    IL_0051: newarr System.Object
+    IL_0056: dup
+    IL_0057: ldc.i4.0
+    IL_0058: ldstr ldstr "Ctrl+U"
+    IL_005d: stelem.ref
+    IL_005e: dup
+    IL_005f: ldc.i4.1
+    IL_0060: ldstr ldstr "For Update"
+    IL_0065: stelem.ref
+    IL_0066: callvirt System.Data.DataRowCollection::Add
+    IL_006b: pop
+    IL_006c: ldloc.0
+    IL_006d: callvirt System.Data.DataTable::get_Rows
+    IL_0072: ldc.i4.2
+    IL_0073: newarr System.Object
+    IL_0078: dup
+    IL_0079: ldc.i4.0
+    IL_007a: ldstr ldstr "Ctrl+E"
+    IL_007f: stelem.ref
+    IL_0080: dup
+    IL_0081: ldc.i4.1
+    IL_0082: ldstr ldstr "For Close"
+    IL_0087: stelem.ref
+    IL_0088: callvirt System.Data.DataRowCollection::Add
+    IL_008d: pop
+    IL_008e: ldloc.0
+    IL_008f: callvirt System.Data.DataTable::get_Rows
+    IL_0094: ldc.i4.2
+    IL_0095: newarr System.Object
+    IL_009a: dup
+    IL_009b: ldc.i4.0
+    IL_009c: ldstr ldstr "Ctrl+N"
+    IL_00a1: stelem.ref
+    IL_00a2: dup
+    IL_00a3: ldc.i4.1
+    IL_00a4: ldstr ldstr "For New"
+    IL_00a9: stelem.ref
+    IL_00aa: callvirt System.Data.DataRowCollection::Add
+    IL_00af: pop
+    IL_00b0: ldloc.0
+    IL_00b1: callvirt System.Data.DataTable::get_Rows
+    IL_00b6: ldc.i4.2
+    IL_00b7: newarr System.Object
+    IL_00bc: dup
+    IL_00bd: ldc.i4.0
+    IL_00be: ldstr ldstr "Ctrl+F5"
+    IL_00c3: stelem.ref
+    IL_00c4: dup
+    IL_00c5: ldc.i4.1
+    IL_00c6: ldstr ldstr "For Focus on Vehicle Type"
+    IL_00cb: stelem.ref
+    IL_00cc: callvirt System.Data.DataRowCollection::Add
+    IL_00d1: pop
+    IL_00d2: ldloc.0
+    IL_00d3: callvirt System.Data.DataTable::get_Rows
+    IL_00d8: ldc.i4.2
+    IL_00d9: newarr System.Object
+    IL_00de: dup
+    IL_00df: ldc.i4.0
+    IL_00e0: ldstr ldstr "Ctrl+alt"
+    IL_00e5: stelem.ref
+    IL_00e6: dup
+    IL_00e7: ldc.i4.1
+    IL_00e8: ldstr ldstr "To Show ShortCut Keys Form"
+    IL_00ed: stelem.ref
+    IL_00ee: callvirt System.Data.DataRowCollection::Add
+    IL_00f3: pop
+    IL_00f4: ldloc.0
+    IL_00f5: callvirt System.Data.DataTable::get_Rows
+    IL_00fa: ldc.i4.2
+    IL_00fb: newarr System.Object
+    IL_0100: dup
+    IL_0101: ldc.i4.0
+    IL_0102: ldstr ldstr "Ctrl+ArrowDown"
+    IL_0107: stelem.ref
+    IL_0108: dup
+    IL_0109: ldc.i4.1
+    IL_010a: ldstr ldstr "For Focus On Detail Grid"
+    IL_010f: stelem.ref
+    IL_0110: callvirt System.Data.DataRowCollection::Add
+    IL_0115: pop
+    IL_0116: ldloc.0
+    IL_0117: callvirt System.Data.DataTable::get_Rows
+    IL_011c: ldc.i4.2
+    IL_011d: newarr System.Object
+    IL_0122: dup
+    IL_0123: ldc.i4.0
+    IL_0124: ldstr ldstr "Ctrl+ArrowUp"
+    IL_0129: stelem.ref
+    IL_012a: dup
+    IL_012b: ldc.i4.1
+    IL_012c: ldstr ldstr "For Focus On on Vehicle Type"
+    IL_0131: stelem.ref
+    IL_0132: callvirt System.Data.DataRowCollection::Add
+    IL_0137: pop
+    IL_0138: ldloc.0
+    IL_0139: callvirt System.Data.DataTable::get_Rows
+    IL_013e: ldc.i4.2
+    IL_013f: newarr System.Object
+    IL_0144: dup
+    IL_0145: ldc.i4.0
+    IL_0146: ldstr ldstr "Ctrl+Enter"
+    IL_014b: stelem.ref
+    IL_014c: dup
+    IL_014d: ldc.i4.1
+    IL_014e: ldstr ldstr "When Focus On Any Grid For Update Record"
+    IL_0153: stelem.ref
+    IL_0154: callvirt System.Data.DataRowCollection::Add
+    IL_0159: pop
+    IL_015a: ldloc.0
+    IL_015b: newobj Architecture.WinApp.Common.ShortCutKeyPopUp::.ctor
+    IL_0160: dup
+    IL_0161: ldc.i4.1
+    IL_0162: callvirt System.Windows.Forms.Form::set_StartPosition
+    IL_0167: callvirt System.Windows.Forms.Control::Show
+    IL_016c: leave.s IL_017b
+    IL_016e: callvirt System.Exception::get_Message
+    IL_0173: call System.Windows.Forms.MessageBox::Show
+    IL_0178: pop
+    IL_0179: leave.s IL_017b
+    IL_017b: ret
+
+; Architecture.WinApp.VehicleType::btnshortcutkeys_Click  (rva=0x97fb4, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.VehicleType::MakeShortCutKeys
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.VehicleType::ctrlGrdBar1_Load  (rva=0x97fe8, fat header, code_size=66, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.Control::get_Name
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_000c: callvirt System.Windows.Forms.Control::get_Name
+    IL_0011: call Architecture.WinApp.Common.CommonServices::GetGridLayout
+    IL_0016: stloc.0
+    IL_0017: ldloc.0
+    IL_0018: brfalse.s IL_0032
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0020: ldloc.0
+    IL_0021: callvirt Janus.Windows.GridEX.GridEX::LoadLayoutFile
+    IL_0026: ldloc.0
+    IL_0027: callvirt System.IO.Stream::Close
+    IL_002c: ldloc.0
+    IL_002d: callvirt System.IO.Stream::Dispose
+    IL_0032: leave.s IL_0041
+    IL_0034: callvirt System.Object::ToString
+    IL_0039: call System.Windows.Forms.MessageBox::Show
+    IL_003e: pop
+    IL_003f: leave.s IL_0041
+    IL_0041: ret
+
+; Architecture.WinApp.VehicleType::Dispose  (rva=0x98048, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0016
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.WinApp.VehicleType::components
+    IL_0009: brfalse.s IL_0016
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.VehicleType::components
+    IL_0011: callvirt System.IDisposable::Dispose
+    IL_0016: ldarg.0
+    IL_0017: ldarg.1
+    IL_0018: call System.Windows.Forms.Form::Dispose
+    IL_001d: ret
+
+; Architecture.WinApp.VehicleType::InitializeComponent  (rva=0x98068, fat header, code_size=2855, max_stack=6, exception_handlers=no)
+    IL_0000: newobj Janus.Windows.GridEX.GridEXLayout::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldarg.0
+    IL_0007: newobj System.Windows.Forms.Panel::.ctor
+    IL_000c: stfld Architecture.WinApp.VehicleType::panel1
+    IL_0011: ldarg.0
+    IL_0012: newobj System.Windows.Forms.Panel::.ctor
+    IL_0017: stfld Architecture.WinApp.VehicleType::panel6
+    IL_001c: ldarg.0
+    IL_001d: newobj Janus.Windows.GridEX.GridEX::.ctor
+    IL_0022: stfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0027: ldarg.0
+    IL_0028: newobj System.Windows.Forms.Panel::.ctor
+    IL_002d: stfld Architecture.WinApp.VehicleType::panel5
+    IL_0032: ldarg.0
+    IL_0033: newobj grid.User_Conrtols.CtrlGrdBar::.ctor
+    IL_0038: stfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_003d: ldarg.0
+    IL_003e: newobj System.Windows.Forms.Panel::.ctor
+    IL_0043: stfld Architecture.WinApp.VehicleType::panel4
+    IL_0048: ldarg.0
+    IL_0049: newobj System.Windows.Forms.Label::.ctor
+    IL_004e: stfld Architecture.WinApp.VehicleType::label1
+    IL_0053: ldarg.0
+    IL_0054: newobj System.Windows.Forms.TextBox::.ctor
+    IL_0059: stfld Architecture.WinApp.VehicleType::txtDescription
+    IL_005e: ldarg.0
+    IL_005f: newobj System.Windows.Forms.Panel::.ctor
+    IL_0064: stfld Architecture.WinApp.VehicleType::panel3
+    IL_0069: ldarg.0
+    IL_006a: newobj System.Windows.Forms.Label::.ctor
+    IL_006f: stfld Architecture.WinApp.VehicleType::label2
+    IL_0074: ldarg.0
+    IL_0075: newobj System.Windows.Forms.Panel::.ctor
+    IL_007a: stfld Architecture.WinApp.VehicleType::panel2
+    IL_007f: ldarg.0
+    IL_0080: newobj System.Windows.Forms.ToolStrip::.ctor
+    IL_0085: stfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_008a: ldarg.0
+    IL_008b: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_0090: stfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_0095: ldarg.0
+    IL_0096: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_009b: stfld Architecture.WinApp.VehicleType::btnSave
+    IL_00a0: ldarg.0
+    IL_00a1: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_00a6: stfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_00ab: ldarg.0
+    IL_00ac: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_00b1: stfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_00b6: ldarg.0
+    IL_00b7: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_00bc: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00c1: ldarg.0
+    IL_00c2: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_00c7: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00cc: ldarg.0
+    IL_00cd: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_00d2: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_00d7: ldarg.0
+    IL_00d8: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_00dd: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00e2: ldarg.0
+    IL_00e3: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_00e8: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00ed: ldarg.0
+    IL_00ee: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_00f3: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00f8: ldarg.0
+    IL_00f9: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_00fe: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0103: ldarg.0
+    IL_0104: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_0109: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_010e: ldarg.0
+    IL_010f: call System.Windows.Forms.Control::SuspendLayout
+    IL_0114: ldarg.0
+    IL_0115: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_011a: callvirt System.Windows.Forms.Control::get_Controls
+    IL_011f: ldarg.0
+    IL_0120: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_0125: callvirt ControlCollection::Add
+    IL_012a: ldarg.0
+    IL_012b: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_0130: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0135: ldarg.0
+    IL_0136: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_013b: callvirt ControlCollection::Add
+    IL_0140: ldarg.0
+    IL_0141: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_0146: callvirt System.Windows.Forms.Control::get_Controls
+    IL_014b: ldarg.0
+    IL_014c: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_0151: callvirt ControlCollection::Add
+    IL_0156: ldarg.0
+    IL_0157: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_015c: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0161: ldarg.0
+    IL_0162: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_0167: callvirt ControlCollection::Add
+    IL_016c: ldarg.0
+    IL_016d: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_0172: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0177: ldarg.0
+    IL_0178: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_017d: callvirt ControlCollection::Add
+    IL_0182: ldarg.0
+    IL_0183: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_0188: ldc.i4.5
+    IL_0189: callvirt System.Windows.Forms.Control::set_Dock
+    IL_018e: ldarg.0
+    IL_018f: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_0194: ldstr ldstr "Microsoft Sans Serif"
+    IL_0199: ldc.r4 9.75
+    IL_019e: ldc.i4.0
+    IL_019f: ldc.i4.3
+    IL_01a0: ldc.i4.0
+    IL_01a1: newobj System.Drawing.Font::.ctor
+    IL_01a6: callvirt System.Windows.Forms.Control::set_Font
+    IL_01ab: ldarg.0
+    IL_01ac: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_01b1: ldc.i4.0
+    IL_01b2: ldc.i4.0
+    IL_01b3: newobj System.Drawing.Point::.ctor
+    IL_01b8: callvirt System.Windows.Forms.Control::set_Location
+    IL_01bd: ldarg.0
+    IL_01be: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_01c3: ldstr ldstr "panel1"
+    IL_01c8: callvirt System.Windows.Forms.Control::set_Name
+    IL_01cd: ldarg.0
+    IL_01ce: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_01d3: ldc.i4 388
+    IL_01d8: ldc.i4 369
+    IL_01dd: newobj System.Drawing.Size::.ctor
+    IL_01e2: callvirt System.Windows.Forms.Control::set_Size
+    IL_01e7: ldarg.0
+    IL_01e8: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_01ed: ldc.i4.0
+    IL_01ee: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_01f3: ldarg.0
+    IL_01f4: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_01f9: callvirt System.Windows.Forms.Control::get_Controls
+    IL_01fe: ldarg.0
+    IL_01ff: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0204: callvirt ControlCollection::Add
+    IL_0209: ldarg.0
+    IL_020a: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_020f: ldc.i4.5
+    IL_0210: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0215: ldarg.0
+    IL_0216: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_021b: ldc.i4.0
+    IL_021c: ldc.i4.s 108
+    IL_021e: newobj System.Drawing.Point::.ctor
+    IL_0223: callvirt System.Windows.Forms.Control::set_Location
+    IL_0228: ldarg.0
+    IL_0229: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_022e: ldstr ldstr "panel6"
+    IL_0233: callvirt System.Windows.Forms.Control::set_Name
+    IL_0238: ldarg.0
+    IL_0239: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_023e: ldc.i4 388
+    IL_0243: ldc.i4 261
+    IL_0248: newobj System.Drawing.Size::.ctor
+    IL_024d: callvirt System.Windows.Forms.Control::set_Size
+    IL_0252: ldarg.0
+    IL_0253: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_0258: ldc.i4.s 79
+    IL_025a: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_025f: ldarg.0
+    IL_0260: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0265: ldc.i4.2
+    IL_0266: callvirt Janus.Windows.GridEX.GridEX::set_AllowEdit
+    IL_026b: ldloc.0
+    IL_026c: ldstr ldstr "<GridEXLayoutData><RootTable><GroupCondition /></RootTable></GridEXLayoutData>"
+    IL_0271: callvirt Janus.Windows.GridEX.GridEXLayout::set_LayoutString
+    IL_0276: ldarg.0
+    IL_0277: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_027c: ldloc.0
+    IL_027d: callvirt Janus.Windows.GridEX.GridEX::set_DesignTimeLayout
+    IL_0282: ldarg.0
+    IL_0283: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0288: ldc.i4.5
+    IL_0289: callvirt System.Windows.Forms.Control::set_Dock
+    IL_028e: ldarg.0
+    IL_028f: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0294: ldc.i4.2
+    IL_0295: callvirt Janus.Windows.GridEX.GridEX::set_FilterMode
+    IL_029a: ldarg.0
+    IL_029b: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_02a0: ldc.i4.3
+    IL_02a1: callvirt Janus.Windows.GridEX.GridEX::set_FilterRowButtonStyle
+    IL_02a6: ldarg.0
+    IL_02a7: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_02ac: ldstr ldstr "Verdana"
+    IL_02b1: ldc.r4 8.25
+    IL_02b6: newobj System.Drawing.Font::.ctor
+    IL_02bb: callvirt System.Windows.Forms.Control::set_Font
+    IL_02c0: ldarg.0
+    IL_02c1: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_02c6: ldc.i4.2
+    IL_02c7: callvirt Janus.Windows.GridEX.GridEX::set_GroupTotals
+    IL_02cc: ldarg.0
+    IL_02cd: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_02d2: ldc.i4.0
+    IL_02d3: ldc.i4.0
+    IL_02d4: newobj System.Drawing.Point::.ctor
+    IL_02d9: callvirt System.Windows.Forms.Control::set_Location
+    IL_02de: ldarg.0
+    IL_02df: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_02e4: ldstr ldstr "grdfrm"
+    IL_02e9: callvirt System.Windows.Forms.Control::set_Name
+    IL_02ee: ldarg.0
+    IL_02ef: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_02f4: ldc.i4.1
+    IL_02f5: callvirt Janus.Windows.GridEX.ScrollableBase::set_RecordNavigator
+    IL_02fa: ldarg.0
+    IL_02fb: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0300: ldc.i4 388
+    IL_0305: ldc.i4 261
+    IL_030a: newobj System.Drawing.Size::.ctor
+    IL_030f: callvirt System.Windows.Forms.Control::set_Size
+    IL_0314: ldarg.0
+    IL_0315: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_031a: ldc.i4.4
+    IL_031b: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0320: ldarg.0
+    IL_0321: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0326: ldc.i4.1
+    IL_0327: callvirt Janus.Windows.GridEX.GridEX::set_TotalRow
+    IL_032c: ldarg.0
+    IL_032d: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0332: ldc.i4.1
+    IL_0333: callvirt Janus.Windows.GridEX.GridEX::set_TotalRowPosition
+    IL_0338: ldarg.0
+    IL_0339: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_033e: ldc.i4.4
+    IL_033f: callvirt Janus.Windows.GridEX.ScrollableBase::set_VisualStyle
+    IL_0344: ldarg.0
+    IL_0345: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_034a: ldarg.0
+    IL_034b: ldftn Architecture.WinApp.VehicleType::grdfrm_DoubleClick
+    IL_0351: newobj System.EventHandler::.ctor
+    IL_0356: callvirt System.Windows.Forms.Control::add_DoubleClick
+    IL_035b: ldarg.0
+    IL_035c: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_0361: call System.Drawing.Color::get_Teal
+    IL_0366: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_036b: ldarg.0
+    IL_036c: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_0371: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0376: ldarg.0
+    IL_0377: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_037c: callvirt ControlCollection::Add
+    IL_0381: ldarg.0
+    IL_0382: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_0387: ldc.i4.1
+    IL_0388: callvirt System.Windows.Forms.Control::set_Dock
+    IL_038d: ldarg.0
+    IL_038e: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_0393: ldc.i4.0
+    IL_0394: ldc.i4.s 88
+    IL_0396: newobj System.Drawing.Point::.ctor
+    IL_039b: callvirt System.Windows.Forms.Control::set_Location
+    IL_03a0: ldarg.0
+    IL_03a1: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_03a6: ldstr ldstr "panel5"
+    IL_03ab: callvirt System.Windows.Forms.Control::set_Name
+    IL_03b0: ldarg.0
+    IL_03b1: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_03b6: ldc.i4 388
+    IL_03bb: ldc.i4.s 20
+    IL_03bd: newobj System.Drawing.Size::.ctor
+    IL_03c2: callvirt System.Windows.Forms.Control::set_Size
+    IL_03c7: ldarg.0
+    IL_03c8: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_03cd: ldc.i4.s 78
+    IL_03cf: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_03d4: ldarg.0
+    IL_03d5: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_03da: ldc.i4.s 9
+    IL_03dc: callvirt System.Windows.Forms.Control::set_Anchor
+    IL_03e1: ldarg.0
+    IL_03e2: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_03e7: ldarg.0
+    IL_03e8: callvirt grid.User_Conrtols.CtrlGrdBar::set_FormName
+    IL_03ed: ldarg.0
+    IL_03ee: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_03f3: ldc.i4 344
+    IL_03f8: ldc.i4.s -4
+    IL_03fa: newobj System.Drawing.Point::.ctor
+    IL_03ff: callvirt System.Windows.Forms.Control::set_Location
+    IL_0404: ldarg.0
+    IL_0405: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_040a: ldc.i4.5
+    IL_040b: newobj System.Windows.Forms.Padding::.ctor
+    IL_0410: callvirt System.Windows.Forms.Control::set_Margin
+    IL_0415: ldarg.0
+    IL_0416: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_041b: ldarg.0
+    IL_041c: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0421: callvirt grid.User_Conrtols.CtrlGrdBar::set_MyGrid
+    IL_0426: ldarg.0
+    IL_0427: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_042c: ldstr ldstr "ctrlGrdBar1"
+    IL_0431: callvirt System.Windows.Forms.Control::set_Name
+    IL_0436: ldarg.0
+    IL_0437: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_043c: ldc.i4.s 41
+    IL_043e: ldc.i4.s 26
+    IL_0440: newobj System.Drawing.Size::.ctor
+    IL_0445: callvirt System.Windows.Forms.Control::set_Size
+    IL_044a: ldarg.0
+    IL_044b: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_0450: ldc.i4.s 35
+    IL_0452: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0457: ldarg.0
+    IL_0458: ldfld Architecture.WinApp.VehicleType::ctrlGrdBar1
+    IL_045d: ldarg.0
+    IL_045e: ldftn Architecture.WinApp.VehicleType::ctrlGrdBar1_Load
+    IL_0464: newobj System.EventHandler::.ctor
+    IL_0469: callvirt System.Windows.Forms.UserControl::add_Load
+    IL_046e: ldarg.0
+    IL_046f: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_0474: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0479: ldarg.0
+    IL_047a: ldfld Architecture.WinApp.VehicleType::label1
+    IL_047f: callvirt ControlCollection::Add
+    IL_0484: ldarg.0
+    IL_0485: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_048a: callvirt System.Windows.Forms.Control::get_Controls
+    IL_048f: ldarg.0
+    IL_0490: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_0495: callvirt ControlCollection::Add
+    IL_049a: ldarg.0
+    IL_049b: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_04a0: ldc.i4.1
+    IL_04a1: callvirt System.Windows.Forms.Control::set_Dock
+    IL_04a6: ldarg.0
+    IL_04a7: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_04ac: ldc.i4.0
+    IL_04ad: ldc.i4.s 48
+    IL_04af: newobj System.Drawing.Point::.ctor
+    IL_04b4: callvirt System.Windows.Forms.Control::set_Location
+    IL_04b9: ldarg.0
+    IL_04ba: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_04bf: ldstr ldstr "panel4"
+    IL_04c4: callvirt System.Windows.Forms.Control::set_Name
+    IL_04c9: ldarg.0
+    IL_04ca: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_04cf: ldc.i4 388
+    IL_04d4: ldc.i4.s 40
+    IL_04d6: newobj System.Drawing.Size::.ctor
+    IL_04db: callvirt System.Windows.Forms.Control::set_Size
+    IL_04e0: ldarg.0
+    IL_04e1: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_04e6: ldc.i4.6
+    IL_04e7: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_04ec: ldarg.0
+    IL_04ed: ldfld Architecture.WinApp.VehicleType::label1
+    IL_04f2: ldc.i4.1
+    IL_04f3: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_04f8: ldarg.0
+    IL_04f9: ldfld Architecture.WinApp.VehicleType::label1
+    IL_04fe: ldstr ldstr "Segoe UI Semibold"
+    IL_0503: ldc.r4 9.0
+    IL_0508: ldc.i4.1
+    IL_0509: ldc.i4.3
+    IL_050a: ldc.i4.0
+    IL_050b: newobj System.Drawing.Font::.ctor
+    IL_0510: callvirt System.Windows.Forms.Control::set_Font
+    IL_0515: ldarg.0
+    IL_0516: ldfld Architecture.WinApp.VehicleType::label1
+    IL_051b: ldc.i4.6
+    IL_051c: ldc.i4.s 13
+    IL_051e: newobj System.Drawing.Point::.ctor
+    IL_0523: callvirt System.Windows.Forms.Control::set_Location
+    IL_0528: ldarg.0
+    IL_0529: ldfld Architecture.WinApp.VehicleType::label1
+    IL_052e: ldstr ldstr "label1"
+    IL_0533: callvirt System.Windows.Forms.Control::set_Name
+    IL_0538: ldarg.0
+    IL_0539: ldfld Architecture.WinApp.VehicleType::label1
+    IL_053e: ldc.i4.s 73
+    IL_0540: ldc.i4.s 15
+    IL_0542: newobj System.Drawing.Size::.ctor
+    IL_0547: callvirt System.Windows.Forms.Control::set_Size
+    IL_054c: ldarg.0
+    IL_054d: ldfld Architecture.WinApp.VehicleType::label1
+    IL_0552: ldc.i4.s 9
+    IL_0554: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0559: ldarg.0
+    IL_055a: ldfld Architecture.WinApp.VehicleType::label1
+    IL_055f: ldstr ldstr "Vehicle Type"
+    IL_0564: callvirt System.Windows.Forms.Control::set_Text
+    IL_0569: ldarg.0
+    IL_056a: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_056f: ldstr ldstr "Verdana"
+    IL_0574: ldc.r4 9.75
+    IL_0579: ldc.i4.0
+    IL_057a: ldc.i4.3
+    IL_057b: ldc.i4.0
+    IL_057c: newobj System.Drawing.Font::.ctor
+    IL_0581: callvirt System.Windows.Forms.Control::set_Font
+    IL_0586: ldarg.0
+    IL_0587: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_058c: ldc.i4.s 79
+    IL_058e: ldc.i4.s 9
+    IL_0590: newobj System.Drawing.Point::.ctor
+    IL_0595: callvirt System.Windows.Forms.Control::set_Location
+    IL_059a: ldarg.0
+    IL_059b: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_05a0: ldstr ldstr "txtDescription"
+    IL_05a5: callvirt System.Windows.Forms.Control::set_Name
+    IL_05aa: ldarg.0
+    IL_05ab: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_05b0: ldc.i4 297
+    IL_05b5: ldc.i4.s 23
+    IL_05b7: newobj System.Drawing.Size::.ctor
+    IL_05bc: callvirt System.Windows.Forms.Control::set_Size
+    IL_05c1: ldarg.0
+    IL_05c2: ldfld Architecture.WinApp.VehicleType::txtDescription
+    IL_05c7: ldc.i4.0
+    IL_05c8: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_05cd: ldarg.0
+    IL_05ce: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_05d3: call System.Drawing.Color::get_Teal
+    IL_05d8: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_05dd: ldarg.0
+    IL_05de: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_05e3: callvirt System.Windows.Forms.Control::get_Controls
+    IL_05e8: ldarg.0
+    IL_05e9: ldfld Architecture.WinApp.VehicleType::label2
+    IL_05ee: callvirt ControlCollection::Add
+    IL_05f3: ldarg.0
+    IL_05f4: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_05f9: ldc.i4.1
+    IL_05fa: callvirt System.Windows.Forms.Control::set_Dock
+    IL_05ff: ldarg.0
+    IL_0600: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_0605: ldc.i4.0
+    IL_0606: ldc.i4.s 26
+    IL_0608: newobj System.Drawing.Point::.ctor
+    IL_060d: callvirt System.Windows.Forms.Control::set_Location
+    IL_0612: ldarg.0
+    IL_0613: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_0618: ldstr ldstr "panel3"
+    IL_061d: callvirt System.Windows.Forms.Control::set_Name
+    IL_0622: ldarg.0
+    IL_0623: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_0628: ldc.i4 388
+    IL_062d: ldc.i4.s 22
+    IL_062f: newobj System.Drawing.Size::.ctor
+    IL_0634: callvirt System.Windows.Forms.Control::set_Size
+    IL_0639: ldarg.0
+    IL_063a: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_063f: ldc.i4.5
+    IL_0640: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0645: ldarg.0
+    IL_0646: ldfld Architecture.WinApp.VehicleType::label2
+    IL_064b: ldc.i4.1
+    IL_064c: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0651: ldarg.0
+    IL_0652: ldfld Architecture.WinApp.VehicleType::label2
+    IL_0657: ldstr ldstr "Tahoma"
+    IL_065c: ldc.r4 12.0
+    IL_0661: ldc.i4.1
+    IL_0662: ldc.i4.3
+    IL_0663: ldc.i4.0
+    IL_0664: newobj System.Drawing.Font::.ctor
+    IL_0669: callvirt System.Windows.Forms.Control::set_Font
+    IL_066e: ldarg.0
+    IL_066f: ldfld Architecture.WinApp.VehicleType::label2
+    IL_0674: call System.Drawing.Color::get_White
+    IL_0679: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_067e: ldarg.0
+    IL_067f: ldfld Architecture.WinApp.VehicleType::label2
+    IL_0684: ldc.i4.5
+    IL_0685: ldc.i4.1
+    IL_0686: newobj System.Drawing.Point::.ctor
+    IL_068b: callvirt System.Windows.Forms.Control::set_Location
+    IL_0690: ldarg.0
+    IL_0691: ldfld Architecture.WinApp.VehicleType::label2
+    IL_0696: ldstr ldstr "label2"
+    IL_069b: callvirt System.Windows.Forms.Control::set_Name
+    IL_06a0: ldarg.0
+    IL_06a1: ldfld Architecture.WinApp.VehicleType::label2
+    IL_06a6: ldc.i4.s 113
+    IL_06a8: ldc.i4.s 19
+    IL_06aa: newobj System.Drawing.Size::.ctor
+    IL_06af: callvirt System.Windows.Forms.Control::set_Size
+    IL_06b4: ldarg.0
+    IL_06b5: ldfld Architecture.WinApp.VehicleType::label2
+    IL_06ba: ldc.i4.0
+    IL_06bb: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_06c0: ldarg.0
+    IL_06c1: ldfld Architecture.WinApp.VehicleType::label2
+    IL_06c6: ldstr ldstr "Vehicle Type"
+    IL_06cb: callvirt System.Windows.Forms.Control::set_Text
+    IL_06d0: ldarg.0
+    IL_06d1: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_06d6: callvirt System.Windows.Forms.Control::get_Controls
+    IL_06db: ldarg.0
+    IL_06dc: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_06e1: callvirt ControlCollection::Add
+    IL_06e6: ldarg.0
+    IL_06e7: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_06ec: ldc.i4.1
+    IL_06ed: callvirt System.Windows.Forms.Control::set_Dock
+    IL_06f2: ldarg.0
+    IL_06f3: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_06f8: ldc.i4.0
+    IL_06f9: ldc.i4.0
+    IL_06fa: newobj System.Drawing.Point::.ctor
+    IL_06ff: callvirt System.Windows.Forms.Control::set_Location
+    IL_0704: ldarg.0
+    IL_0705: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_070a: ldstr ldstr "panel2"
+    IL_070f: callvirt System.Windows.Forms.Control::set_Name
+    IL_0714: ldarg.0
+    IL_0715: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_071a: ldc.i4 388
+    IL_071f: ldc.i4.s 26
+    IL_0721: newobj System.Drawing.Size::.ctor
+    IL_0726: callvirt System.Windows.Forms.Control::set_Size
+    IL_072b: ldarg.0
+    IL_072c: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_0731: ldc.i4.4
+    IL_0732: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0737: ldarg.0
+    IL_0738: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_073d: callvirt System.Windows.Forms.ToolStrip::get_Items
+    IL_0742: ldc.i4.4
+    IL_0743: newarr System.Windows.Forms.ToolStripItem
+    IL_0748: dup
+    IL_0749: ldc.i4.0
+    IL_074a: ldarg.0
+    IL_074b: ldfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_0750: stelem.ref
+    IL_0751: dup
+    IL_0752: ldc.i4.1
+    IL_0753: ldarg.0
+    IL_0754: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0759: stelem.ref
+    IL_075a: dup
+    IL_075b: ldc.i4.2
+    IL_075c: ldarg.0
+    IL_075d: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_0762: stelem.ref
+    IL_0763: dup
+    IL_0764: ldc.i4.3
+    IL_0765: ldarg.0
+    IL_0766: ldfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_076b: stelem.ref
+    IL_076c: callvirt System.Windows.Forms.ToolStripItemCollection::AddRange
+    IL_0771: ldarg.0
+    IL_0772: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_0777: ldc.i4.0
+    IL_0778: ldc.i4.0
+    IL_0779: newobj System.Drawing.Point::.ctor
+    IL_077e: callvirt System.Windows.Forms.Control::set_Location
+    IL_0783: ldarg.0
+    IL_0784: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_0789: ldstr ldstr "toolStrip1"
+    IL_078e: callvirt System.Windows.Forms.Control::set_Name
+    IL_0793: ldarg.0
+    IL_0794: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_0799: ldc.i4 388
+    IL_079e: ldc.i4.s 25
+    IL_07a0: newobj System.Drawing.Size::.ctor
+    IL_07a5: callvirt System.Windows.Forms.Control::set_Size
+    IL_07aa: ldarg.0
+    IL_07ab: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_07b0: ldc.i4.0
+    IL_07b1: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_07b6: ldarg.0
+    IL_07b7: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_07bc: ldstr ldstr "toolStrip1"
+    IL_07c1: callvirt System.Windows.Forms.Control::set_Text
+    IL_07c6: ldarg.0
+    IL_07c7: ldfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_07cc: ldstr ldstr "Verdana"
+    IL_07d1: ldc.r4 9.75
+    IL_07d6: ldc.i4.0
+    IL_07d7: ldc.i4.3
+    IL_07d8: ldc.i4.0
+    IL_07d9: newobj System.Drawing.Font::.ctor
+    IL_07de: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_07e3: ldarg.0
+    IL_07e4: ldfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_07e9: call Architecture.WinApp.Properties.Resources::get_icons8_add_20
+    IL_07ee: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_07f3: ldarg.0
+    IL_07f4: ldfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_07f9: call System.Drawing.Color::get_Magenta
+    IL_07fe: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_0803: ldarg.0
+    IL_0804: ldfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_0809: ldstr ldstr "refreshToolStripMenuItem"
+    IL_080e: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_0813: ldarg.0
+    IL_0814: ldfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_0819: ldc.i4.s 55
+    IL_081b: ldc.i4.s 22
+    IL_081d: newobj System.Drawing.Size::.ctor
+    IL_0822: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_0827: ldarg.0
+    IL_0828: ldfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_082d: ldstr ldstr "&New"
+    IL_0832: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_0837: ldarg.0
+    IL_0838: ldfld Architecture.WinApp.VehicleType::refreshToolStripMenuItem
+    IL_083d: ldarg.0
+    IL_083e: ldftn Architecture.WinApp.VehicleType::refreshToolStripMenuItem_Click
+    IL_0844: newobj System.EventHandler::.ctor
+    IL_0849: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_084e: ldarg.0
+    IL_084f: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0854: ldstr ldstr "Verdana"
+    IL_0859: ldc.r4 9.75
+    IL_085e: ldc.i4.0
+    IL_085f: ldc.i4.3
+    IL_0860: ldc.i4.0
+    IL_0861: newobj System.Drawing.Font::.ctor
+    IL_0866: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_086b: ldarg.0
+    IL_086c: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0871: call Architecture.WinApp.Properties.Resources::get_icons8_save_16
+    IL_0876: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_087b: ldarg.0
+    IL_087c: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0881: call System.Drawing.Color::get_Magenta
+    IL_0886: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_088b: ldarg.0
+    IL_088c: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_0891: ldstr ldstr "btnSave"
+    IL_0896: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_089b: ldarg.0
+    IL_089c: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_08a1: ldc.i4.s 60
+    IL_08a3: ldc.i4.s 22
+    IL_08a5: newobj System.Drawing.Size::.ctor
+    IL_08aa: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_08af: ldarg.0
+    IL_08b0: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_08b5: ldstr ldstr "Save"
+    IL_08ba: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_08bf: ldarg.0
+    IL_08c0: ldfld Architecture.WinApp.VehicleType::btnSave
+    IL_08c5: ldarg.0
+    IL_08c6: ldftn Architecture.WinApp.VehicleType::btnSave_Click
+    IL_08cc: newobj System.EventHandler::.ctor
+    IL_08d1: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_08d6: ldarg.0
+    IL_08d7: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_08dc: ldstr ldstr "Verdana"
+    IL_08e1: ldc.r4 9.75
+    IL_08e6: ldc.i4.0
+    IL_08e7: ldc.i4.3
+    IL_08e8: ldc.i4.0
+    IL_08e9: newobj System.Drawing.Font::.ctor
+    IL_08ee: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_08f3: ldarg.0
+    IL_08f4: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_08f9: call Architecture.WinApp.Properties.Resources::get_icons8_pencil_16
+    IL_08fe: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_0903: ldarg.0
+    IL_0904: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_0909: call System.Drawing.Color::get_Magenta
+    IL_090e: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_0913: ldarg.0
+    IL_0914: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_0919: ldstr ldstr "btnUpdate"
+    IL_091e: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_0923: ldarg.0
+    IL_0924: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_0929: ldc.i4.s 74
+    IL_092b: ldc.i4.s 22
+    IL_092d: newobj System.Drawing.Size::.ctor
+    IL_0932: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_0937: ldarg.0
+    IL_0938: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_093d: ldstr ldstr "Update"
+    IL_0942: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_0947: ldarg.0
+    IL_0948: ldfld Architecture.WinApp.VehicleType::btnUpdate
+    IL_094d: ldarg.0
+    IL_094e: ldftn Architecture.WinApp.VehicleType::btnUpdate_Click
+    IL_0954: newobj System.EventHandler::.ctor
+    IL_0959: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_095e: ldarg.0
+    IL_095f: ldfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_0964: ldstr ldstr "Verdana"
+    IL_0969: ldc.r4 9.75
+    IL_096e: ldc.i4.0
+    IL_096f: ldc.i4.3
+    IL_0970: ldc.i4.0
+    IL_0971: newobj System.Drawing.Font::.ctor
+    IL_0976: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_097b: ldarg.0
+    IL_097c: ldfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_0981: call Architecture.WinApp.Properties.Resources::get__55download
+    IL_0986: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_098b: ldarg.0
+    IL_098c: ldfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_0991: call System.Drawing.Color::get_Magenta
+    IL_0996: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_099b: ldarg.0
+    IL_099c: ldfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_09a1: ldstr ldstr "btnshortcutkeys"
+    IL_09a6: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_09ab: ldarg.0
+    IL_09ac: ldfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_09b1: ldc.i4.s 122
+    IL_09b3: ldc.i4.s 22
+    IL_09b5: newobj System.Drawing.Size::.ctor
+    IL_09ba: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_09bf: ldarg.0
+    IL_09c0: ldfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_09c5: ldstr ldstr "ShortCut Keys"
+    IL_09ca: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_09cf: ldarg.0
+    IL_09d0: ldfld Architecture.WinApp.VehicleType::btnshortcutkeys
+    IL_09d5: ldarg.0
+    IL_09d6: ldftn Architecture.WinApp.VehicleType::btnshortcutkeys_Click
+    IL_09dc: newobj System.EventHandler::.ctor
+    IL_09e1: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_09e6: ldarg.0
+    IL_09e7: ldc.r4 6.0
+    IL_09ec: ldc.r4 13.0
+    IL_09f1: newobj System.Drawing.SizeF::.ctor
+    IL_09f6: call System.Windows.Forms.ContainerControl::set_AutoScaleDimensions
+    IL_09fb: ldarg.0
+    IL_09fc: ldc.i4.1
+    IL_09fd: call System.Windows.Forms.ContainerControl::set_AutoScaleMode
+    IL_0a02: ldarg.0
+    IL_0a03: call System.Drawing.Color::get_White
+    IL_0a08: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0a0d: ldarg.0
+    IL_0a0e: ldc.i4 388
+    IL_0a13: ldc.i4 369
+    IL_0a18: newobj System.Drawing.Size::.ctor
+    IL_0a1d: call System.Windows.Forms.Form::set_ClientSize
+    IL_0a22: ldarg.0
+    IL_0a23: call System.Windows.Forms.Control::get_Controls
+    IL_0a28: ldarg.0
+    IL_0a29: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_0a2e: callvirt ControlCollection::Add
+    IL_0a33: ldarg.0
+    IL_0a34: ldc.i4.1
+    IL_0a35: call System.Windows.Forms.Form::set_FormBorderStyle
+    IL_0a3a: ldarg.0
+    IL_0a3b: ldc.i4.1
+    IL_0a3c: call System.Windows.Forms.Form::set_KeyPreview
+    IL_0a41: ldarg.0
+    IL_0a42: ldstr ldstr "VehicleType"
+    IL_0a47: call System.Windows.Forms.Control::set_Name
+    IL_0a4c: ldarg.0
+    IL_0a4d: ldc.i4.1
+    IL_0a4e: call System.Windows.Forms.Form::set_StartPosition
+    IL_0a53: ldarg.0
+    IL_0a54: ldstr ldstr "EccountBookERP"
+    IL_0a59: callvirt System.Windows.Forms.Control::set_Text
+    IL_0a5e: ldarg.0
+    IL_0a5f: ldarg.0
+    IL_0a60: ldftn Architecture.WinApp.VehicleType::VehicleType_FormClosing
+    IL_0a66: newobj System.Windows.Forms.FormClosingEventHandler::.ctor
+    IL_0a6b: call System.Windows.Forms.Form::add_FormClosing
+    IL_0a70: ldarg.0
+    IL_0a71: ldarg.0
+    IL_0a72: ldftn Architecture.WinApp.VehicleType::DateLock_Load
+    IL_0a78: newobj System.EventHandler::.ctor
+    IL_0a7d: call System.Windows.Forms.Form::add_Load
+    IL_0a82: ldarg.0
+    IL_0a83: ldarg.0
+    IL_0a84: ldftn Architecture.WinApp.VehicleType::VehicleType_KeyDown
+    IL_0a8a: newobj System.Windows.Forms.KeyEventHandler::.ctor
+    IL_0a8f: call System.Windows.Forms.Control::add_KeyDown
+    IL_0a94: ldarg.0
+    IL_0a95: ldfld Architecture.WinApp.VehicleType::panel1
+    IL_0a9a: ldc.i4.0
+    IL_0a9b: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0aa0: ldarg.0
+    IL_0aa1: ldfld Architecture.WinApp.VehicleType::panel6
+    IL_0aa6: ldc.i4.0
+    IL_0aa7: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0aac: ldarg.0
+    IL_0aad: ldfld Architecture.WinApp.VehicleType::grdfrm
+    IL_0ab2: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_0ab7: ldarg.0
+    IL_0ab8: ldfld Architecture.WinApp.VehicleType::panel5
+    IL_0abd: ldc.i4.0
+    IL_0abe: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0ac3: ldarg.0
+    IL_0ac4: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_0ac9: ldc.i4.0
+    IL_0aca: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0acf: ldarg.0
+    IL_0ad0: ldfld Architecture.WinApp.VehicleType::panel4
+    IL_0ad5: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0ada: ldarg.0
+    IL_0adb: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_0ae0: ldc.i4.0
+    IL_0ae1: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0ae6: ldarg.0
+    IL_0ae7: ldfld Architecture.WinApp.VehicleType::panel3
+    IL_0aec: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0af1: ldarg.0
+    IL_0af2: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_0af7: ldc.i4.0
+    IL_0af8: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0afd: ldarg.0
+    IL_0afe: ldfld Architecture.WinApp.VehicleType::panel2
+    IL_0b03: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0b08: ldarg.0
+    IL_0b09: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_0b0e: ldc.i4.0
+    IL_0b0f: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0b14: ldarg.0
+    IL_0b15: ldfld Architecture.WinApp.VehicleType::toolStrip1
+    IL_0b1a: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0b1f: ldarg.0
+    IL_0b20: ldc.i4.0
+    IL_0b21: call System.Windows.Forms.Control::ResumeLayout
+    IL_0b26: ret

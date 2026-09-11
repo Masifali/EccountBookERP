@@ -1,0 +1,874 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.BackUpDatabaseNew
+====================================================================================================
+
+; Architecture.WinApp.BackUpDatabaseNew::.ctor  (rva=0x5a430, fat header, code_size=123, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj Architecture.Model.UserAccount::.ctor
+    IL_0006: stfld Architecture.WinApp.BackUpDatabaseNew::UserAccount
+    IL_000b: ldarg.0
+    IL_000c: call System.Windows.Forms.Form::.ctor
+    IL_0011: ldarg.0
+    IL_0012: call Architecture.WinApp.BackUpDatabaseNew::InitializeComponent
+    IL_0017: ldarg.0
+    IL_0018: ldarg.1
+    IL_0019: stfld Architecture.WinApp.BackUpDatabaseNew::UserAccount
+    IL_001e: ldarg.0
+    IL_001f: newobj System.ComponentModel.BackgroundWorker::.ctor
+    IL_0024: stfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_0029: ldarg.0
+    IL_002a: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_002f: ldc.i4.1
+    IL_0030: callvirt System.ComponentModel.BackgroundWorker::set_WorkerReportsProgress
+    IL_0035: ldarg.0
+    IL_0036: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_003b: ldarg.0
+    IL_003c: ldftn Architecture.WinApp.BackUpDatabaseNew::BackupWorker_DoWork
+    IL_0042: newobj System.ComponentModel.DoWorkEventHandler::.ctor
+    IL_0047: callvirt System.ComponentModel.BackgroundWorker::add_DoWork
+    IL_004c: ldarg.0
+    IL_004d: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_0052: ldarg.0
+    IL_0053: ldftn Architecture.WinApp.BackUpDatabaseNew::BackupWorker_ProgressChanged
+    IL_0059: newobj System.ComponentModel.ProgressChangedEventHandler::.ctor
+    IL_005e: callvirt System.ComponentModel.BackgroundWorker::add_ProgressChanged
+    IL_0063: ldarg.0
+    IL_0064: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_0069: ldarg.0
+    IL_006a: ldftn Architecture.WinApp.BackUpDatabaseNew::BackupWorker_RunWorkerCompleted
+    IL_0070: newobj System.ComponentModel.RunWorkerCompletedEventHandler::.ctor
+    IL_0075: callvirt System.ComponentModel.BackgroundWorker::add_RunWorkerCompleted
+    IL_007a: ret
+
+; Architecture.WinApp.BackUpDatabaseNew::BackUpDatabase_Load  (rva=0x5a4b8, fat header, code_size=83, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.1
+    IL_0002: callvirt System.Windows.Forms.ScrollableControl::set_AutoScroll
+    IL_0007: ldarg.0
+    IL_0008: ldc.i4.s 10
+    IL_000a: ldc.i4.s 10
+    IL_000c: newobj System.Drawing.Size::.ctor
+    IL_0011: call System.Windows.Forms.ScrollableControl::set_AutoScrollMargin
+    IL_0016: ldarg.0
+    IL_0017: ldc.i4 880
+    IL_001c: ldc.i4 490
+    IL_0021: newobj System.Drawing.Size::.ctor
+    IL_0026: call System.Windows.Forms.ScrollableControl::set_AutoScrollMinSize
+    IL_002b: ldarg.0
+    IL_002c: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0031: ldc.i4.0
+    IL_0032: callvirt System.Windows.Forms.Control::set_Visible
+    IL_0037: ldarg.0
+    IL_0038: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_003d: ldc.i4.0
+    IL_003e: callvirt System.Windows.Forms.Control::set_Visible
+    IL_0043: leave.s IL_0052
+    IL_0045: callvirt System.Exception::get_Message
+    IL_004a: call System.Windows.Forms.MessageBox::Show
+    IL_004f: pop
+    IL_0050: leave.s IL_0052
+    IL_0052: ret
+
+; Architecture.WinApp.BackUpDatabaseNew::BackupWorker_DoWork  (rva=0x5a528, fat header, code_size=162, max_stack=5, exception_handlers=yes)
+    IL_0000: ldsfld System.String::Empty
+    IL_0005: stloc.0
+    IL_0006: ldsfld Architecture.Common.clsGlobalVariables::configrationsAllocation
+    IL_000b: ldsfld <>c::<>9__4_0
+    IL_0010: dup
+    IL_0011: brtrue.s IL_002a
+    IL_0013: pop
+    IL_0014: ldsfld <>c::<>9
+    IL_0019: ldftn <>c::<BackupWorker_DoWork>b__4_0
+    IL_001f: newobj TypeSpec#276::.ctor
+    IL_0024: dup
+    IL_0025: stsfld <>c::<>9__4_0
+    IL_002a: call MethodSpec#40
+    IL_002f: call MethodSpec#41
+    IL_0034: stloc.1
+    IL_0035: ldloc.1
+    IL_0036: callvirt TypeSpec#277::get_Count
+    IL_003b: ldc.i4.0
+    IL_003c: ble.s IL_0052
+    IL_003e: ldloc.1
+    IL_003f: ldc.i4.0
+    IL_0040: callvirt TypeSpec#277::get_Item
+    IL_0045: callvirt Architecture.Model.Authentication.ConfigrationsAllocation::get_ConfigKey
+    IL_004a: callvirt System.Object::ToString
+    IL_004f: stloc.0
+    IL_0050: br.s IL_0058
+    IL_0052: call System.Windows.Forms.Application::get_ExecutablePath
+    IL_0057: stloc.0
+    IL_0058: call Architecture.Common.Services::GetConnectionString
+    IL_005d: ldloc.0
+    IL_005e: ldarg.0
+    IL_005f: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_0064: ldnull
+    IL_0065: ldnull
+    IL_0066: call Architecture.BLL.BackUpLogs::RunDatabaseBackup
+    IL_006b: ldarg.2
+    IL_006c: ldstr ldstr "Database backup completed!"
+    IL_0071: callvirt System.ComponentModel.DoWorkEventArgs::set_Result
+    IL_0076: ldarg.0
+    IL_0077: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_007c: call System.Drawing.Color::get_DarkCyan
+    IL_0081: callvirt CircularProgressBar.CircularProgressBar::set_ProgressColor
+    IL_0086: leave.s IL_00a1
+    IL_0088: stloc.2
+    IL_0089: ldarg.2
+    IL_008a: ldstr ldstr "An error occurred during database backup:
+"
+    IL_008f: ldloc.2
+    IL_0090: callvirt System.Exception::get_Message
+    IL_0095: call System.String::Concat
+    IL_009a: callvirt System.ComponentModel.DoWorkEventArgs::set_Result
+    IL_009f: leave.s IL_00a1
+    IL_00a1: ret
+
+; Architecture.WinApp.BackUpDatabaseNew::BackupWorker_ProgressChanged  (rva=0x5a5e8, fat header, code_size=168, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0006: ldarg.2
+    IL_0007: callvirt System.ComponentModel.ProgressChangedEventArgs::get_ProgressPercentage
+    IL_000c: callvirt System.Windows.Forms.ProgressBar::set_Value
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_0017: ldarg.2
+    IL_0018: callvirt System.ComponentModel.ProgressChangedEventArgs::get_ProgressPercentage
+    IL_001d: stloc.0
+    IL_001e: ldloca.s 0
+    IL_0020: call System.Int32::ToString
+    IL_0025: ldstr ldstr "%"
+    IL_002a: call System.String::Concat
+    IL_002f: callvirt System.Windows.Forms.Control::set_Text
+    IL_0034: ldarg.2
+    IL_0035: callvirt System.ComponentModel.ProgressChangedEventArgs::get_ProgressPercentage
+    IL_003a: ldc.i4.s 25
+    IL_003c: bgt.s IL_0050
+    IL_003e: ldarg.0
+    IL_003f: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0044: call System.Drawing.Color::get_DarkTurquoise
+    IL_0049: callvirt CircularProgressBar.CircularProgressBar::set_ProgressColor
+    IL_004e: br.s IL_0098
+    IL_0050: ldarg.2
+    IL_0051: callvirt System.ComponentModel.ProgressChangedEventArgs::get_ProgressPercentage
+    IL_0056: ldc.i4.s 50
+    IL_0058: bgt.s IL_006c
+    IL_005a: ldarg.0
+    IL_005b: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0060: call System.Drawing.Color::get_DarkTurquoise
+    IL_0065: callvirt CircularProgressBar.CircularProgressBar::set_ProgressColor
+    IL_006a: br.s IL_0098
+    IL_006c: ldarg.2
+    IL_006d: callvirt System.ComponentModel.ProgressChangedEventArgs::get_ProgressPercentage
+    IL_0072: ldc.i4.s 75
+    IL_0074: bgt.s IL_0088
+    IL_0076: ldarg.0
+    IL_0077: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_007c: call System.Drawing.Color::get_DarkTurquoise
+    IL_0081: callvirt CircularProgressBar.CircularProgressBar::set_ProgressColor
+    IL_0086: br.s IL_0098
+    IL_0088: ldarg.0
+    IL_0089: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_008e: call System.Drawing.Color::get_DarkTurquoise
+    IL_0093: callvirt CircularProgressBar.CircularProgressBar::set_ProgressColor
+    IL_0098: leave.s IL_00a7
+    IL_009a: callvirt System.Object::ToString
+    IL_009f: call System.Windows.Forms.MessageBox::Show
+    IL_00a4: pop
+    IL_00a5: leave.s IL_00a7
+    IL_00a7: ret
+
+; Architecture.WinApp.BackUpDatabaseNew::BackupWorker_RunWorkerCompleted  (rva=0x5a6ac, fat header, code_size=127, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.2
+    IL_0001: callvirt System.ComponentModel.AsyncCompletedEventArgs::get_Error
+    IL_0006: brfalse.s IL_001b
+    IL_0008: ldarg.2
+    IL_0009: callvirt System.ComponentModel.AsyncCompletedEventArgs::get_Error
+    IL_000e: callvirt System.Exception::get_Message
+    IL_0013: call System.Windows.Forms.MessageBox::Show
+    IL_0018: pop
+    IL_0019: br.s IL_002c
+    IL_001b: ldarg.2
+    IL_001c: callvirt System.ComponentModel.RunWorkerCompletedEventArgs::get_Result
+    IL_0021: callvirt System.Object::ToString
+    IL_0026: call System.Windows.Forms.MessageBox::Show
+    IL_002b: pop
+    IL_002c: ldarg.0
+    IL_002d: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_0032: ldc.i4.1
+    IL_0033: callvirt System.Windows.Forms.Control::set_Enabled
+    IL_0038: ldarg.0
+    IL_0039: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_003e: callvirt System.Windows.Forms.Control::Hide
+    IL_0043: ldarg.0
+    IL_0044: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0049: call System.Drawing.Color::get_DarkCyan
+    IL_004e: callvirt CircularProgressBar.CircularProgressBar::set_ProgressColor
+    IL_0053: ldarg.0
+    IL_0054: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_0059: ldc.i4.0
+    IL_005a: callvirt System.Windows.Forms.Control::set_Visible
+    IL_005f: ldarg.0
+    IL_0060: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_0065: ldstr ldstr "0"
+    IL_006a: callvirt System.Windows.Forms.Control::set_Text
+    IL_006f: leave.s IL_007e
+    IL_0071: callvirt System.Object::ToString
+    IL_0076: call System.Windows.Forms.MessageBox::Show
+    IL_007b: pop
+    IL_007c: leave.s IL_007e
+    IL_007e: ret
+
+; Architecture.WinApp.BackUpDatabaseNew::btnBackup_Click  (rva=0x5a748, fat header, code_size=78, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_0006: ldc.i4.0
+    IL_0007: callvirt System.Windows.Forms.Control::set_Enabled
+    IL_000c: ldarg.0
+    IL_000d: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0012: callvirt System.Windows.Forms.Control::Show
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_001d: ldc.i4.1
+    IL_001e: callvirt System.Windows.Forms.Control::set_Visible
+    IL_0023: ldarg.0
+    IL_0024: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_0029: ldstr ldstr "0"
+    IL_002e: callvirt System.Windows.Forms.Control::set_Text
+    IL_0033: ldarg.0
+    IL_0034: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_0039: callvirt System.ComponentModel.BackgroundWorker::RunWorkerAsync
+    IL_003e: leave.s IL_004d
+    IL_0040: callvirt System.Object::ToString
+    IL_0045: call System.Windows.Forms.MessageBox::Show
+    IL_004a: pop
+    IL_004b: leave.s IL_004d
+    IL_004d: ret
+
+; Architecture.WinApp.BackUpDatabaseNew::BackUpDatabaseNew_FormClosed  (rva=0x5a7b4, fat header, code_size=57, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_0006: callvirt System.ComponentModel.BackgroundWorker::get_IsBusy
+    IL_000b: brfalse.s IL_0018
+    IL_000d: ldarg.0
+    IL_000e: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_0013: callvirt System.ComponentModel.BackgroundWorker::CancelAsync
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.BackUpDatabaseNew::backupWorker
+    IL_001e: callvirt System.ComponentModel.Component::Dispose
+    IL_0023: ldarg.0
+    IL_0024: call Architecture.WinApp.HistoryStack::Remove
+    IL_0029: leave.s IL_0038
+    IL_002b: callvirt System.Object::ToString
+    IL_0030: call System.Windows.Forms.MessageBox::Show
+    IL_0035: pop
+    IL_0036: leave.s IL_0038
+    IL_0038: ret
+
+; Architecture.WinApp.BackUpDatabaseNew::Dispose  (rva=0x5a80c, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0016
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.WinApp.BackUpDatabaseNew::components
+    IL_0009: brfalse.s IL_0016
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.BackUpDatabaseNew::components
+    IL_0011: callvirt System.IDisposable::Dispose
+    IL_0016: ldarg.0
+    IL_0017: ldarg.1
+    IL_0018: call System.Windows.Forms.Form::Dispose
+    IL_001d: ret
+
+; Architecture.WinApp.BackUpDatabaseNew::InitializeComponent  (rva=0x5a82c, fat header, code_size=2081, max_stack=6, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj System.Windows.Forms.Panel::.ctor
+    IL_0006: stfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_000b: ldarg.0
+    IL_000c: newobj System.Windows.Forms.Label::.ctor
+    IL_0011: stfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_0016: ldarg.0
+    IL_0017: newobj System.Windows.Forms.Label::.ctor
+    IL_001c: stfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_0021: ldarg.0
+    IL_0022: newobj System.Windows.Forms.Label::.ctor
+    IL_0027: stfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_002c: ldarg.0
+    IL_002d: newobj System.Windows.Forms.Label::.ctor
+    IL_0032: stfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_0037: ldarg.0
+    IL_0038: newobj System.Windows.Forms.Label::.ctor
+    IL_003d: stfld Architecture.WinApp.BackUpDatabaseNew::lblOperation
+    IL_0042: ldarg.0
+    IL_0043: newobj System.Windows.Forms.Label::.ctor
+    IL_0048: stfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_004d: ldarg.0
+    IL_004e: newobj System.Windows.Forms.Button::.ctor
+    IL_0053: stfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_0058: ldarg.0
+    IL_0059: newobj CircularProgressBar.CircularProgressBar::.ctor
+    IL_005e: stfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0063: ldarg.0
+    IL_0064: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_0069: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_006e: ldarg.0
+    IL_006f: call System.Windows.Forms.Control::SuspendLayout
+    IL_0074: ldarg.0
+    IL_0075: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_007a: ldc.i4.0
+    IL_007b: ldc.i4 192
+    IL_0080: ldc.i4 192
+    IL_0085: call System.Drawing.Color::FromArgb
+    IL_008a: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_008f: ldarg.0
+    IL_0090: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_0095: callvirt System.Windows.Forms.Control::get_Controls
+    IL_009a: ldarg.0
+    IL_009b: ldfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_00a0: callvirt ControlCollection::Add
+    IL_00a5: ldarg.0
+    IL_00a6: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_00ab: callvirt System.Windows.Forms.Control::get_Controls
+    IL_00b0: ldarg.0
+    IL_00b1: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_00b6: callvirt ControlCollection::Add
+    IL_00bb: ldarg.0
+    IL_00bc: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_00c1: callvirt System.Windows.Forms.Control::get_Controls
+    IL_00c6: ldarg.0
+    IL_00c7: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_00cc: callvirt ControlCollection::Add
+    IL_00d1: ldarg.0
+    IL_00d2: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_00d7: callvirt System.Windows.Forms.Control::get_Controls
+    IL_00dc: ldarg.0
+    IL_00dd: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_00e2: callvirt ControlCollection::Add
+    IL_00e7: ldarg.0
+    IL_00e8: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_00ed: callvirt System.Windows.Forms.Control::get_Controls
+    IL_00f2: ldarg.0
+    IL_00f3: ldfld Architecture.WinApp.BackUpDatabaseNew::lblOperation
+    IL_00f8: callvirt ControlCollection::Add
+    IL_00fd: ldarg.0
+    IL_00fe: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_0103: call System.Windows.Forms.Cursors::get_WaitCursor
+    IL_0108: callvirt System.Windows.Forms.Control::set_Cursor
+    IL_010d: ldarg.0
+    IL_010e: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_0113: ldc.i4.3
+    IL_0114: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0119: ldarg.0
+    IL_011a: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_011f: ldc.i4.0
+    IL_0120: ldc.i4.0
+    IL_0121: newobj System.Drawing.Point::.ctor
+    IL_0126: callvirt System.Windows.Forms.Control::set_Location
+    IL_012b: ldarg.0
+    IL_012c: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_0131: ldstr ldstr "panel1"
+    IL_0136: callvirt System.Windows.Forms.Control::set_Name
+    IL_013b: ldarg.0
+    IL_013c: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_0141: ldc.i4 182
+    IL_0146: ldc.i4 451
+    IL_014b: newobj System.Drawing.Size::.ctor
+    IL_0150: callvirt System.Windows.Forms.Control::set_Size
+    IL_0155: ldarg.0
+    IL_0156: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_015b: ldc.i4.0
+    IL_015c: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0161: ldarg.0
+    IL_0162: ldfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_0167: ldc.i4.2
+    IL_0168: callvirt System.Windows.Forms.Control::set_Dock
+    IL_016d: ldarg.0
+    IL_016e: ldfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_0173: ldstr ldstr "Verdana"
+    IL_0178: ldc.r4 9.75
+    IL_017d: ldc.i4.1
+    IL_017e: ldc.i4.3
+    IL_017f: ldc.i4.0
+    IL_0180: newobj System.Drawing.Font::.ctor
+    IL_0185: callvirt System.Windows.Forms.Control::set_Font
+    IL_018a: ldarg.0
+    IL_018b: ldfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_0190: ldc.i4.0
+    IL_0191: ldc.i4 383
+    IL_0196: newobj System.Drawing.Point::.ctor
+    IL_019b: callvirt System.Windows.Forms.Control::set_Location
+    IL_01a0: ldarg.0
+    IL_01a1: ldfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_01a6: ldstr ldstr "label3"
+    IL_01ab: callvirt System.Windows.Forms.Control::set_Name
+    IL_01b0: ldarg.0
+    IL_01b1: ldfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_01b6: ldc.i4 182
+    IL_01bb: ldc.i4.s 22
+    IL_01bd: newobj System.Drawing.Size::.ctor
+    IL_01c2: callvirt System.Windows.Forms.Control::set_Size
+    IL_01c7: ldarg.0
+    IL_01c8: ldfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_01cd: ldc.i4.4
+    IL_01ce: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_01d3: ldarg.0
+    IL_01d4: ldfld Architecture.WinApp.BackUpDatabaseNew::label3
+    IL_01d9: ldstr ldstr "EccounBookERP Backup"
+    IL_01de: callvirt System.Windows.Forms.Control::set_Text
+    IL_01e3: ldarg.0
+    IL_01e4: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_01e9: ldc.i4.2
+    IL_01ea: callvirt System.Windows.Forms.Control::set_Dock
+    IL_01ef: ldarg.0
+    IL_01f0: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_01f5: ldstr ldstr "Verdana"
+    IL_01fa: ldc.r4 9.75
+    IL_01ff: ldc.i4.1
+    IL_0200: ldc.i4.3
+    IL_0201: ldc.i4.0
+    IL_0202: newobj System.Drawing.Font::.ctor
+    IL_0207: callvirt System.Windows.Forms.Control::set_Font
+    IL_020c: ldarg.0
+    IL_020d: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_0212: ldc.i4.0
+    IL_0213: ldc.i4 405
+    IL_0218: newobj System.Drawing.Point::.ctor
+    IL_021d: callvirt System.Windows.Forms.Control::set_Location
+    IL_0222: ldarg.0
+    IL_0223: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_0228: ldstr ldstr "label4"
+    IL_022d: callvirt System.Windows.Forms.Control::set_Name
+    IL_0232: ldarg.0
+    IL_0233: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_0238: ldc.i4 182
+    IL_023d: ldc.i4.s 46
+    IL_023f: newobj System.Drawing.Size::.ctor
+    IL_0244: callvirt System.Windows.Forms.Control::set_Size
+    IL_0249: ldarg.0
+    IL_024a: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_024f: ldc.i4.4
+    IL_0250: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0255: ldarg.0
+    IL_0256: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_025b: ldstr ldstr "Your Shield in the Digital Realm."
+    IL_0260: callvirt System.Windows.Forms.Control::set_Text
+    IL_0265: ldarg.0
+    IL_0266: ldfld Architecture.WinApp.BackUpDatabaseNew::label4
+    IL_026b: ldc.i4.s 32
+    IL_026d: callvirt System.Windows.Forms.Label::set_TextAlign
+    IL_0272: ldarg.0
+    IL_0273: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_0278: ldc.i4.1
+    IL_0279: callvirt System.Windows.Forms.Control::set_Dock
+    IL_027e: ldarg.0
+    IL_027f: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_0284: ldstr ldstr "Verdana"
+    IL_0289: ldc.r4 9.75
+    IL_028e: ldc.i4.1
+    IL_028f: ldc.i4.3
+    IL_0290: ldc.i4.0
+    IL_0291: newobj System.Drawing.Font::.ctor
+    IL_0296: callvirt System.Windows.Forms.Control::set_Font
+    IL_029b: ldarg.0
+    IL_029c: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_02a1: ldc.i4.0
+    IL_02a2: ldc.i4.s 51
+    IL_02a4: newobj System.Drawing.Point::.ctor
+    IL_02a9: callvirt System.Windows.Forms.Control::set_Location
+    IL_02ae: ldarg.0
+    IL_02af: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_02b4: ldstr ldstr "label2"
+    IL_02b9: callvirt System.Windows.Forms.Control::set_Name
+    IL_02be: ldarg.0
+    IL_02bf: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_02c4: ldc.i4 182
+    IL_02c9: ldc.i4.s 49
+    IL_02cb: newobj System.Drawing.Size::.ctor
+    IL_02d0: callvirt System.Windows.Forms.Control::set_Size
+    IL_02d5: ldarg.0
+    IL_02d6: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_02db: ldc.i4.4
+    IL_02dc: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_02e1: ldarg.0
+    IL_02e2: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_02e7: ldstr ldstr "Secure Your Data, Ensure Success"
+    IL_02ec: callvirt System.Windows.Forms.Control::set_Text
+    IL_02f1: ldarg.0
+    IL_02f2: ldfld Architecture.WinApp.BackUpDatabaseNew::label2
+    IL_02f7: ldc.i4.s 32
+    IL_02f9: callvirt System.Windows.Forms.Label::set_TextAlign
+    IL_02fe: ldarg.0
+    IL_02ff: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_0304: ldc.i4.1
+    IL_0305: callvirt System.Windows.Forms.Control::set_Dock
+    IL_030a: ldarg.0
+    IL_030b: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_0310: ldstr ldstr "Times New Roman"
+    IL_0315: ldc.r4 15.0
+    IL_031a: ldc.i4.1
+    IL_031b: newobj System.Drawing.Font::.ctor
+    IL_0320: callvirt System.Windows.Forms.Control::set_Font
+    IL_0325: ldarg.0
+    IL_0326: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_032b: call System.Drawing.Color::get_White
+    IL_0330: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_0335: ldarg.0
+    IL_0336: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_033b: ldc.i4.0
+    IL_033c: ldc.i4.0
+    IL_033d: newobj System.Drawing.Point::.ctor
+    IL_0342: callvirt System.Windows.Forms.Control::set_Location
+    IL_0347: ldarg.0
+    IL_0348: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_034d: ldstr ldstr "label1"
+    IL_0352: callvirt System.Windows.Forms.Control::set_Name
+    IL_0357: ldarg.0
+    IL_0358: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_035d: ldc.i4 182
+    IL_0362: ldc.i4.s 51
+    IL_0364: newobj System.Drawing.Size::.ctor
+    IL_0369: callvirt System.Windows.Forms.Control::set_Size
+    IL_036e: ldarg.0
+    IL_036f: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_0374: ldc.i4.3
+    IL_0375: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_037a: ldarg.0
+    IL_037b: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_0380: ldstr ldstr "EccountBook ERP"
+    IL_0385: callvirt System.Windows.Forms.Control::set_Text
+    IL_038a: ldarg.0
+    IL_038b: ldfld Architecture.WinApp.BackUpDatabaseNew::label1
+    IL_0390: ldc.i4.s 32
+    IL_0392: callvirt System.Windows.Forms.Label::set_TextAlign
+    IL_0397: ldarg.0
+    IL_0398: ldfld Architecture.WinApp.BackUpDatabaseNew::lblOperation
+    IL_039d: ldc.i4.1
+    IL_039e: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_03a3: ldarg.0
+    IL_03a4: ldfld Architecture.WinApp.BackUpDatabaseNew::lblOperation
+    IL_03a9: ldc.i4.s 27
+    IL_03ab: ldc.i4.s 87
+    IL_03ad: newobj System.Drawing.Point::.ctor
+    IL_03b2: callvirt System.Windows.Forms.Control::set_Location
+    IL_03b7: ldarg.0
+    IL_03b8: ldfld Architecture.WinApp.BackUpDatabaseNew::lblOperation
+    IL_03bd: ldstr ldstr "lblOperation"
+    IL_03c2: callvirt System.Windows.Forms.Control::set_Name
+    IL_03c7: ldarg.0
+    IL_03c8: ldfld Architecture.WinApp.BackUpDatabaseNew::lblOperation
+    IL_03cd: ldc.i4.0
+    IL_03ce: ldc.i4.s 13
+    IL_03d0: newobj System.Drawing.Size::.ctor
+    IL_03d5: callvirt System.Windows.Forms.Control::set_Size
+    IL_03da: ldarg.0
+    IL_03db: ldfld Architecture.WinApp.BackUpDatabaseNew::lblOperation
+    IL_03e0: ldc.i4.2
+    IL_03e1: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_03e6: ldarg.0
+    IL_03e7: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_03ec: ldc.i4.1
+    IL_03ed: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_03f2: ldarg.0
+    IL_03f3: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_03f8: ldstr ldstr "Verdana"
+    IL_03fd: ldc.r4 9.75
+    IL_0402: ldc.i4.1
+    IL_0403: ldc.i4.3
+    IL_0404: ldc.i4.0
+    IL_0405: newobj System.Drawing.Font::.ctor
+    IL_040a: callvirt System.Windows.Forms.Control::set_Font
+    IL_040f: ldarg.0
+    IL_0410: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_0415: ldc.i4 675
+    IL_041a: ldc.i4.s 19
+    IL_041c: newobj System.Drawing.Point::.ctor
+    IL_0421: callvirt System.Windows.Forms.Control::set_Location
+    IL_0426: ldarg.0
+    IL_0427: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_042c: ldstr ldstr "lblPercent"
+    IL_0431: callvirt System.Windows.Forms.Control::set_Name
+    IL_0436: ldarg.0
+    IL_0437: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_043c: ldc.i4.s 37
+    IL_043e: ldc.i4.s 16
+    IL_0440: newobj System.Drawing.Size::.ctor
+    IL_0445: callvirt System.Windows.Forms.Control::set_Size
+    IL_044a: ldarg.0
+    IL_044b: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_0450: ldc.i4.3
+    IL_0451: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0456: ldarg.0
+    IL_0457: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_045c: ldstr ldstr "0 %"
+    IL_0461: callvirt System.Windows.Forms.Control::set_Text
+    IL_0466: ldarg.0
+    IL_0467: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_046c: call System.Drawing.Color::get_Teal
+    IL_0471: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0476: ldarg.0
+    IL_0477: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_047c: ldc.i4.0
+    IL_047d: callvirt System.Windows.Forms.ButtonBase::set_FlatStyle
+    IL_0482: ldarg.0
+    IL_0483: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_0488: ldstr ldstr "Verdana"
+    IL_048d: ldc.r4 11.25
+    IL_0492: ldc.i4.1
+    IL_0493: ldc.i4.3
+    IL_0494: ldc.i4.0
+    IL_0495: newobj System.Drawing.Font::.ctor
+    IL_049a: callvirt System.Windows.Forms.Control::set_Font
+    IL_049f: ldarg.0
+    IL_04a0: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_04a5: call System.Drawing.Color::get_White
+    IL_04aa: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_04af: ldarg.0
+    IL_04b0: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_04b5: ldc.i4 727
+    IL_04ba: ldc.i4.5
+    IL_04bb: newobj System.Drawing.Point::.ctor
+    IL_04c0: callvirt System.Windows.Forms.Control::set_Location
+    IL_04c5: ldarg.0
+    IL_04c6: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_04cb: ldstr ldstr "btnBackup"
+    IL_04d0: callvirt System.Windows.Forms.Control::set_Name
+    IL_04d5: ldarg.0
+    IL_04d6: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_04db: ldc.i4.s 126
+    IL_04dd: ldc.i4.s 37
+    IL_04df: newobj System.Drawing.Size::.ctor
+    IL_04e4: callvirt System.Windows.Forms.Control::set_Size
+    IL_04e9: ldarg.0
+    IL_04ea: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_04ef: ldc.i4.1
+    IL_04f0: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_04f5: ldarg.0
+    IL_04f6: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_04fb: ldstr ldstr "Start BackUp"
+    IL_0500: callvirt System.Windows.Forms.Control::set_Text
+    IL_0505: ldarg.0
+    IL_0506: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_050b: ldc.i4.0
+    IL_050c: callvirt System.Windows.Forms.ButtonBase::set_UseVisualStyleBackColor
+    IL_0511: ldarg.0
+    IL_0512: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_0517: ldarg.0
+    IL_0518: ldftn Architecture.WinApp.BackUpDatabaseNew::btnBackup_Click
+    IL_051e: newobj System.EventHandler::.ctor
+    IL_0523: callvirt System.Windows.Forms.Control::add_Click
+    IL_0528: ldarg.0
+    IL_0529: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_052e: ldc.i4.4
+    IL_052f: callvirt CircularProgressBar.CircularProgressBar::set_AnimationFunction
+    IL_0534: ldarg.0
+    IL_0535: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_053a: ldc.i4 500
+    IL_053f: callvirt CircularProgressBar.CircularProgressBar::set_AnimationSpeed
+    IL_0544: ldarg.0
+    IL_0545: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_054a: call System.Drawing.Color::get_Transparent
+    IL_054f: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0554: ldarg.0
+    IL_0555: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_055a: ldstr ldstr "Microsoft Sans Serif"
+    IL_055f: ldc.r4 72.0
+    IL_0564: ldc.i4.1
+    IL_0565: newobj System.Drawing.Font::.ctor
+    IL_056a: callvirt System.Windows.Forms.Control::set_Font
+    IL_056f: ldarg.0
+    IL_0570: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0575: ldc.i4.s 64
+    IL_0577: ldc.i4.s 64
+    IL_0579: ldc.i4.s 64
+    IL_057b: call System.Drawing.Color::FromArgb
+    IL_0580: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_0585: ldarg.0
+    IL_0586: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_058b: ldc.i4 224
+    IL_0590: ldc.i4 224
+    IL_0595: ldc.i4 224
+    IL_059a: call System.Drawing.Color::FromArgb
+    IL_059f: callvirt CircularProgressBar.CircularProgressBar::set_InnerColor
+    IL_05a4: ldarg.0
+    IL_05a5: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_05aa: ldc.i4.2
+    IL_05ab: callvirt CircularProgressBar.CircularProgressBar::set_InnerMargin
+    IL_05b0: ldarg.0
+    IL_05b1: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_05b6: ldc.i4.m1
+    IL_05b7: callvirt CircularProgressBar.CircularProgressBar::set_InnerWidth
+    IL_05bc: ldarg.0
+    IL_05bd: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_05c2: ldc.i4 182
+    IL_05c7: ldc.i4.0
+    IL_05c8: newobj System.Drawing.Point::.ctor
+    IL_05cd: callvirt System.Windows.Forms.Control::set_Location
+    IL_05d2: ldarg.0
+    IL_05d3: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_05d8: ldc.i4 2000
+    IL_05dd: callvirt System.Windows.Forms.ProgressBar::set_MarqueeAnimationSpeed
+    IL_05e2: ldarg.0
+    IL_05e3: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_05e8: ldstr ldstr "ProgBarDbBack"
+    IL_05ed: callvirt System.Windows.Forms.Control::set_Name
+    IL_05f2: ldarg.0
+    IL_05f3: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_05f8: call System.Drawing.Color::get_DarkCyan
+    IL_05fd: callvirt CircularProgressBar.CircularProgressBar::set_OuterColor
+    IL_0602: ldarg.0
+    IL_0603: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0608: ldc.i4.s -25
+    IL_060a: callvirt CircularProgressBar.CircularProgressBar::set_OuterMargin
+    IL_060f: ldarg.0
+    IL_0610: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0615: ldc.i4.s 26
+    IL_0617: callvirt CircularProgressBar.CircularProgressBar::set_OuterWidth
+    IL_061c: ldarg.0
+    IL_061d: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0622: call System.Drawing.Color::get_DarkTurquoise
+    IL_0627: callvirt CircularProgressBar.CircularProgressBar::set_ProgressColor
+    IL_062c: ldarg.0
+    IL_062d: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0632: ldc.i4.s 25
+    IL_0634: callvirt CircularProgressBar.CircularProgressBar::set_ProgressWidth
+    IL_0639: ldarg.0
+    IL_063a: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_063f: ldstr ldstr "Microsoft Sans Serif"
+    IL_0644: ldc.r4 36.0
+    IL_0649: newobj System.Drawing.Font::.ctor
+    IL_064e: callvirt CircularProgressBar.CircularProgressBar::set_SecondaryFont
+    IL_0653: ldarg.0
+    IL_0654: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0659: ldc.i4 486
+    IL_065e: ldc.i4 445
+    IL_0663: newobj System.Drawing.Size::.ctor
+    IL_0668: callvirt System.Windows.Forms.Control::set_Size
+    IL_066d: ldarg.0
+    IL_066e: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0673: ldc.i4 270
+    IL_0678: callvirt CircularProgressBar.CircularProgressBar::set_StartAngle
+    IL_067d: ldarg.0
+    IL_067e: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0683: ldc.i4 166
+    IL_0688: ldc.i4 166
+    IL_068d: ldc.i4 166
+    IL_0692: call System.Drawing.Color::FromArgb
+    IL_0697: callvirt CircularProgressBar.CircularProgressBar::set_SubscriptColor
+    IL_069c: ldarg.0
+    IL_069d: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_06a2: ldc.i4.s 10
+    IL_06a4: ldc.i4.s -35
+    IL_06a6: ldc.i4.0
+    IL_06a7: ldc.i4.0
+    IL_06a8: newobj System.Windows.Forms.Padding::.ctor
+    IL_06ad: callvirt CircularProgressBar.CircularProgressBar::set_SubscriptMargin
+    IL_06b2: ldarg.0
+    IL_06b3: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_06b8: ldstr ldstr ".23"
+    IL_06bd: callvirt CircularProgressBar.CircularProgressBar::set_SubscriptText
+    IL_06c2: ldarg.0
+    IL_06c3: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_06c8: ldc.i4 166
+    IL_06cd: ldc.i4 166
+    IL_06d2: ldc.i4 166
+    IL_06d7: call System.Drawing.Color::FromArgb
+    IL_06dc: callvirt CircularProgressBar.CircularProgressBar::set_SuperscriptColor
+    IL_06e1: ldarg.0
+    IL_06e2: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_06e7: ldc.i4.s 10
+    IL_06e9: ldc.i4.s 35
+    IL_06eb: ldc.i4.0
+    IL_06ec: ldc.i4.0
+    IL_06ed: newobj System.Windows.Forms.Padding::.ctor
+    IL_06f2: callvirt CircularProgressBar.CircularProgressBar::set_SuperscriptMargin
+    IL_06f7: ldarg.0
+    IL_06f8: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_06fd: ldstr ldstr "°C"
+    IL_0702: callvirt CircularProgressBar.CircularProgressBar::set_SuperscriptText
+    IL_0707: ldarg.0
+    IL_0708: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_070d: ldc.i4.5
+    IL_070e: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0713: ldarg.0
+    IL_0714: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0719: ldc.i4.8
+    IL_071a: ldc.i4.8
+    IL_071b: ldc.i4.0
+    IL_071c: ldc.i4.0
+    IL_071d: newobj System.Windows.Forms.Padding::.ctor
+    IL_0722: callvirt CircularProgressBar.CircularProgressBar::set_TextMargin
+    IL_0727: ldarg.0
+    IL_0728: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_072d: ldc.i4.s 68
+    IL_072f: callvirt System.Windows.Forms.ProgressBar::set_Value
+    IL_0734: ldarg.0
+    IL_0735: ldc.r4 6.0
+    IL_073a: ldc.r4 13.0
+    IL_073f: newobj System.Drawing.SizeF::.ctor
+    IL_0744: call System.Windows.Forms.ContainerControl::set_AutoScaleDimensions
+    IL_0749: ldarg.0
+    IL_074a: ldc.i4.1
+    IL_074b: call System.Windows.Forms.ContainerControl::set_AutoScaleMode
+    IL_0750: ldarg.0
+    IL_0751: ldc.i4 864
+    IL_0756: ldc.i4 451
+    IL_075b: newobj System.Drawing.Size::.ctor
+    IL_0760: call System.Windows.Forms.Form::set_ClientSize
+    IL_0765: ldarg.0
+    IL_0766: call System.Windows.Forms.Control::get_Controls
+    IL_076b: ldarg.0
+    IL_076c: ldfld Architecture.WinApp.BackUpDatabaseNew::ProgBarDbBack
+    IL_0771: callvirt ControlCollection::Add
+    IL_0776: ldarg.0
+    IL_0777: call System.Windows.Forms.Control::get_Controls
+    IL_077c: ldarg.0
+    IL_077d: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_0782: callvirt ControlCollection::Add
+    IL_0787: ldarg.0
+    IL_0788: call System.Windows.Forms.Control::get_Controls
+    IL_078d: ldarg.0
+    IL_078e: ldfld Architecture.WinApp.BackUpDatabaseNew::lblPercent
+    IL_0793: callvirt ControlCollection::Add
+    IL_0798: ldarg.0
+    IL_0799: call System.Windows.Forms.Control::get_Controls
+    IL_079e: ldarg.0
+    IL_079f: ldfld Architecture.WinApp.BackUpDatabaseNew::btnBackup
+    IL_07a4: callvirt ControlCollection::Add
+    IL_07a9: ldarg.0
+    IL_07aa: call System.Windows.Forms.Cursors::get_WaitCursor
+    IL_07af: callvirt System.Windows.Forms.Control::set_Cursor
+    IL_07b4: ldarg.0
+    IL_07b5: ldstr ldstr "BackUpDatabaseNew"
+    IL_07ba: call System.Windows.Forms.Control::set_Name
+    IL_07bf: ldarg.0
+    IL_07c0: ldc.i4.4
+    IL_07c1: call System.Windows.Forms.Form::set_StartPosition
+    IL_07c6: ldarg.0
+    IL_07c7: ldstr ldstr "BackUpDatabase"
+    IL_07cc: callvirt System.Windows.Forms.Control::set_Text
+    IL_07d1: ldarg.0
+    IL_07d2: ldc.i4.2
+    IL_07d3: call System.Windows.Forms.Form::set_WindowState
+    IL_07d8: ldarg.0
+    IL_07d9: ldarg.0
+    IL_07da: ldftn Architecture.WinApp.BackUpDatabaseNew::BackUpDatabaseNew_FormClosed
+    IL_07e0: newobj System.Windows.Forms.FormClosedEventHandler::.ctor
+    IL_07e5: call System.Windows.Forms.Form::add_FormClosed
+    IL_07ea: ldarg.0
+    IL_07eb: ldarg.0
+    IL_07ec: ldftn Architecture.WinApp.BackUpDatabaseNew::BackUpDatabase_Load
+    IL_07f2: newobj System.EventHandler::.ctor
+    IL_07f7: call System.Windows.Forms.Form::add_Load
+    IL_07fc: ldarg.0
+    IL_07fd: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_0802: ldc.i4.0
+    IL_0803: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0808: ldarg.0
+    IL_0809: ldfld Architecture.WinApp.BackUpDatabaseNew::panel1
+    IL_080e: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0813: ldarg.0
+    IL_0814: ldc.i4.0
+    IL_0815: call System.Windows.Forms.Control::ResumeLayout
+    IL_081a: ldarg.0
+    IL_081b: call System.Windows.Forms.Control::PerformLayout
+    IL_0820: ret

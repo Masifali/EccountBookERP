@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trial Balance - WinForms Replica</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
+        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
+        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
+        /* ditto label6 "Trial Balance" panel3 header */
+        .win-header-panel { background-color: #00796B; padding: 5px 10px; }
+        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 15px; font-weight: bold; }
+        .chk-inline { display: inline-flex; align-items: center; gap: 4px; font-weight: bold; }
+        /* ditto groupBox1 "Filters" (585x179) + groupBox2 "Group Accounts Show" (83x179) side by side */
+        .win-groupbox { border: 1px solid #9ca3af; border-radius: 2px; margin: 6px 4px; padding: 10px 10px 8px 10px; position: relative; background: #fff; }
+        .win-groupbox-title { position: absolute; top: -9px; left: 10px; background: #ffffff; padding: 0 6px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 11px; color: #222; }
+        .win-groupbox .row { margin-bottom: 6px; display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+        .filters-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px; align-items: flex-start; }
+        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
+        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
+        .radio-inline-win { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; font-weight: 600; color: #334155; white-space: nowrap; }
+        .chk-inline-win { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; white-space: nowrap; }
+        /* ditto panel7 (teal sorting bar, 1013x28, ForeColor=White) */
+        .sort-bar { background-color: #00796B; color: #ffffff; padding: 5px 10px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .sort-bar .chk-inline-win, .sort-bar .radio-inline-win { color: #ffffff; }
+        .sort-bar .win-btn { padding: 2px 10px; }
+        #lblSortingCritera { font-weight: bold; margin-left: auto; }
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
+        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; position: sticky; top: 0; z-index: 2; }
+        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; }
+        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
+        .grid-group-row td { font-weight: bold; background: #dbe7e5; border-top: 1px solid #00796B; color: #004d40; }
+        .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
+        .grid-scroll { max-height: 460px; overflow: auto; border: 1px solid #cbd5e1; margin: 6px; }
+        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 6px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-balance-scale"></i> Trial Balance</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ditto toolStrip3's real order: Reset | Print | 111A&Print | Level Wise
+         (131-TrialBalance / 135-TrialBalanceUpto5thLevel / Load For Vouchers are all
+         Visible=false on desktop's own toolbar - not shown here either, ditto-copy) -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="resetTB()"><i class="fa fa-plus text-success"></i> Reset</button>
+        <button type="button" class="win-btn win-btn-teal" onclick="executeTB()"><i class="fa fa-eye"></i> Show</button>
+        <div class="dropdown" style="display:inline-block;">
+            <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown" title="Not reproduced in this port"><i class="fa fa-print"></i> Print</button>
+        </div>
+        <button type="button" class="win-btn" disabled title="111A&amp;Print - not reproduced in this port"><i class="fa fa-print"></i> 111A&amp;Print</button>
+        <div class="dropdown" style="display:inline-block;">
+            <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown" title="Not reproduced in this port">Level Wise</button>
+        </div>
+    </div>
+
+    <!-- ditto panel3's label6 "Trial Balance" header -->
+    <div class="win-header-panel"><span class="win-header-title">Trial Balance</span></div>
+
+    <div class="filters-row">
+        <!-- ditto groupBox1 "Filters" -->
+        <div class="win-groupbox" style="flex-basis: 640px;">
+            <span class="win-groupbox-title">Filters</span>
+            <div class="row">
+                <div style="flex:1 1 150px;">
+                    <div class="win-label">From Date</div>
+                    <input type="date" class="win-input" id="fromdate">
+                </div>
+                <div style="flex:1 1 110px;">
+                    <div class="win-label">Cl_Debit</div>
+                    <input type="text" class="win-input" id="txtClosingDebit" value="0" style="text-align:right;">
+                </div>
+                <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="ChkBoxPost"> Include UnPost Voucher</label>
+            </div>
+            <div class="row">
+                <div style="flex:1 1 150px;">
+                    <div class="win-label">To Date</div>
+                    <input type="date" class="win-input" id="todate">
+                </div>
+                <div style="flex:1 1 110px;">
+                    <div class="win-label">Cl_Credit</div>
+                    <input type="text" class="win-input" id="txtClosingCredit" value="0" style="text-align:right;">
+                </div>
+                <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="SkipZero"> Skip Zero</label>
+            </div>
+            <div class="row">
+                <div style="flex:1 1 280px;">
+                    <div class="win-label">Documents Not To Include</div>
+                    <select class="win-input" id="cmbDocumentTypeIds" multiple size="1" style="height:26px;">
+                        <option th:each="dt : ${documentTypesList}" th:value="${dt.Id}" th:text="${dt.DocumentTypeDescription}"></option>
+                    </select>
+                </div>
+                <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="chkSkipCGSAc"> Skip CGS Accounts</label>
+            </div>
+            <div class="row">
+                <div style="flex:1 1 280px;">
+                    <div class="win-label">Group Account</div>
+                    <select class="win-input" id="CmbGroupAccount">
+                        <option value="">--</option>
+                        <option th:each="ga : ${accountGroupsList}" th:value="${ga.Id}" th:text="${ga.AccountGroup}"></option>
+                    </select>
+                </div>
+                <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="chkGroupOnParent" checked> Group On Parent Ac</label>
+            </div>
+            <div class="row">
+                <div style="flex:1 1 280px;">
+                    <div class="win-label">Custom Groups</div>
+                    <select class="win-input" id="CmbCustomeGroups">
+                        <option value="">--</option>
+                        <option th:each="cg : ${customGroupsList}" th:value="${cg.Id}" th:text="${cg.Description}"></option>
+                    </select>
+                </div>
+                <div style="align-self:center;">
+                    <label class="radio-inline-win"><input type="radio" name="rdColumns" id="rdFourColumns" checked> Four Columns</label>
+                    <label class="radio-inline-win"><input type="radio" name="rdColumns" id="rdSixColumns"> Six Columns</label>
+                </div>
+            </div>
+            <div class="row">
+                <div style="flex:1 1 260px;">
+                    <div class="win-label">Branches</div>
+                    <select class="win-input" id="CmbBranches">
+                        <option value="">--</option>
+                        <option th:each="b : ${branchesList}" th:value="${b.Id}" th:text="${b.BranchName}"></option>
+                    </select>
+                </div>
+                <button type="button" class="win-btn win-btn-teal" style="align-self:center;" onclick="executeTB()">Show</button>
+            </div>
+        </div>
+
+        <!-- ditto groupBox2 "Group Accounts Show" (Stock/Sale/CGS, all checked by default -
+             AccountTypeIds 4/10/12 respectively, ditto btnshow_Click's own idsList) -->
+        <div class="win-groupbox" style="flex-basis: 140px;">
+            <span class="win-groupbox-title">Group Accounts Show</span>
+            <label class="chk-inline-win" style="display:block; margin-bottom:6px;"><input type="checkbox" id="chkStockGroupAccountShow" checked> Stock</label>
+            <label class="chk-inline-win" style="display:block; margin-bottom:6px;"><input type="checkbox" id="ChkSaleGroupAccountShow" checked> Sale</label>
+            <label class="chk-inline-win" style="display:block;"><input type="checkbox" id="ChkCGSGroupAccountShow" checked> CGS</label>
+        </div>
+    </div>
+
+    <div class="win-form-card">
+        <!-- ditto panel7's teal sorting bar: Account Code / Account Title / Closing (dynamic
+             sort columns, applied ASC/DESC on top of the fixed ParentAccountTitle ASC sort) -->
+        <div class="sort-bar">
+            <label class="chk-inline-win"><input type="checkbox" id="chkAccountCodeSorting"> Account Code</label>
+            <label class="chk-inline-win"><input type="checkbox" id="chkAccountTitleSorting"> Account Title</label>
+            <label class="chk-inline-win"><input type="checkbox" id="chkClosingSorting"> Closing</label>
+            <button type="button" class="win-btn" onclick="applySorting()">Apply Sorting</button>
+            <label class="radio-inline-win"><input type="radio" name="rdSortDir" id="rdAscending" checked> Ascending</label>
+            <label class="radio-inline-win"><input type="radio" name="rdSortDir" id="rdDescending"> Descending</label>
+            <span id="lblSortingCritera">(ParentAccountTitle ASC)</span>
+        </div>
+        <div class="grid-scroll">
+            <table class="win-grid-table" id="tbTable">
+                <thead>
+                <tr id="tbHeaderRow">
+                    <th>Parent Title</th>
+                    <th>Account Code</th>
+                    <th>Account Title</th>
+                    <th>Account Type</th>
+                    <th style="text-align:right;">Opening</th>
+                    <th style="text-align:right;" class="col-six">Opening Dr</th>
+                    <th style="text-align:right;" class="col-six">Opening Cr</th>
+                    <th style="text-align:right;">Debit</th>
+                    <th style="text-align:right;">Credit</th>
+                    <th style="text-align:right;">Closing</th>
+                    <th style="text-align:right;" class="col-six">Closing Dr</th>
+                    <th style="text-align:right;" class="col-six">Closing Cr</th>
+                </tr>
+                </thead>
+                <tbody id="tbTbody">
+                    <tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>
+                </tbody>
+                <tfoot>
+                <tr class="grid-total-row">
+                    <td colspan="4" style="text-align:right;">Total:</td>
+                    <td style="text-align:right;" id="totOpening">0</td>
+                    <td style="text-align:right;" id="totOpeningDr" class="col-six">0</td>
+                    <td style="text-align:right;" id="totOpeningCr" class="col-six">0</td>
+                    <td style="text-align:right;" id="totDebit">0</td>
+                    <td style="text-align:right;" id="totCredit">0</td>
+                    <td style="text-align:right;" id="totClosing">0</td>
+                    <td style="text-align:right;" id="totClosingDr" class="col-six">0</td>
+                    <td style="text-align:right;" id="totClosingCr" class="col-six">0</td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:inline="javascript">
+        function fmt(v) {
+            const n = parseFloat(v);
+            if (isNaN(n)) return '0';
+            return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        // Real, already-fetched Sp_TrialBalance_Rpt rows - re-sorted/re-rendered client-side by
+        // "Apply Sorting" and the Four/Six Columns radios without a new round trip, ditto desktop's
+        // own dtTrial.DefaultView.Sort re-sort of the already-loaded DataTable.
+        let tbData = [];
+
+        // ditto btnshow_Click's real ReportsParameters build
+        function buildTbRequest() {
+            const docTypeIds = $('#cmbDocumentTypeIds').val() || [];
+            let accountTypeIds = [];
+            if ($('#chkStockGroupAccountShow').is(':checked')) accountTypeIds.push('4');
+            if ($('#ChkSaleGroupAccountShow').is(':checked')) accountTypeIds.push('10');
+            if ($('#ChkCGSGroupAccountShow').is(':checked')) accountTypeIds.push('12');
+            return {
+                fromDate: $('#fromdate').val(),
+                toDate: $('#todate').val(),
+                skipZeroBalance: $('#SkipZero').is(':checked'),
+                closingDebitFilter: parseFloat($('#txtClosingDebit').val() || '0') || 0,
+                closingCreditFilter: parseFloat($('#txtClosingCredit').val() || '0') || 0,
+                includeUnposted: $('#ChkBoxPost').is(':checked'),
+                languageId: null,
+                documentTypeIds: docTypeIds.length ? docTypeIds.join(',') : null,
+                branchesIds: $('#CmbBranches').val() || null,
+                accountTypeIds: accountTypeIds.length ? accountTypeIds.join(',') : null,
+                customGroupId: $('#CmbCustomeGroups').val() || null,
+                groupAccountId: $('#CmbGroupAccount').val() || null,
+                skipCgsAccounts: $('#chkSkipCGSAc').is(':checked')
+            };
+        }
+
+        function executeTB() {
+            $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Loading...</td></tr>');
+            $.ajax({
+                url: '/accounts/api/reports/trial-balance',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(buildTbRequest()),
+                success: function (res) {
+                    if (res && res.success) {
+                        tbData = res.data || [];
+                        renderTb();
+                    } else {
+                        tbData = [];
+                        $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Trial Balance.') + '</td></tr>');
+                    }
+                },
+                error: function () {
+                    tbData = [];
+                    $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">Error executing Trial Balance report.</td></tr>');
+                }
+            });
+        }
+
+        // ditto btnApplySorting_Click / GridSettings' real fixed+dynamic sort: fixed
+        // "ParentAccountTitle ASC" always first, then the checked Account Code / Account Title /
+        // Closing columns appended ASC or DESC per the radio.
+        function applySorting() {
+            const cols = [];
+            if ($('#chkAccountCodeSorting').is(':checked')) cols.push('AccountCode');
+            if ($('#chkAccountTitleSorting').is(':checked')) cols.push('AccountTitle');
+            if ($('#chkClosingSorting').is(':checked')) cols.push('Closing');
+            const dir = $('#rdAscending').is(':checked') ? 'ASC' : 'DESC';
+            const dynamicSort = cols.map(c => c + ' ' + dir).join(', ');
+            const sortExpr = dynamicSort ? ('ParentAccountTitle ASC, ' + dynamicSort) : 'ParentAccountTitle ASC';
+            $('#lblSortingCritera').text('(' + sortExpr + ')');
+            renderTb();
+        }
+
+        function sortedTbData() {
+            const cols = [];
+            if ($('#chkAccountCodeSorting').is(':checked')) cols.push('AccountCode');
+            if ($('#chkAccountTitleSorting').is(':checked')) cols.push('AccountTitle');
+            if ($('#chkClosingSorting').is(':checked')) cols.push('Closing');
+            const asc = $('#rdAscending').is(':checked');
+            const rows = tbData.slice();
+            rows.sort((a, b) => {
+                const pa = (a.ParentAccountTitle || '').toString();
+                const pb = (b.ParentAccountTitle || '').toString();
+                if (pa !== pb) return pa < pb ? -1 : 1;
+                for (const c of cols) {
+                    let va = a[c], vb = b[c];
+                    if (typeof va === 'number' || typeof vb === 'number') { va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; }
+                    else { va = (va || '').toString(); vb = (vb || '').toString(); }
+                    if (va < vb) return asc ? -1 : 1;
+                    if (va > vb) return asc ? 1 : -1;
+                }
+                return 0;
+            });
+            return rows;
+        }
+
+        // ditto GridSettings(): Four Columns hides Opening/ClosingDr/ClosingCr split columns,
+        // showing just Opening/Debit/Credit/Closing; Six Columns shows the full Dr/Cr split.
+        function applyColumnMode() {
+            const six = $('#rdSixColumns').is(':checked');
+            $('.col-six').toggle(six);
+        }
+
+        // ditto chkGroupOnParent.Checked -> grd.RootTable.Groups.Add("ParentTitle") (Infragistics
+        // banded grouping): when checked, the Parent Title column is hidden and a bold group-header
+        // row is inserted before each parent's block instead.
+        function renderTb() {
+            applyColumnMode();
+            const tbody = $('#tbTbody');
+            tbody.empty();
+            const groupOnParent = $('#chkGroupOnParent').is(':checked');
+            $('#tbHeaderRow th:first-child').toggle(!groupOnParent);
+            if (!tbData || tbData.length === 0) {
+                tbody.html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">No records found for the selected criteria.</td></tr>');
+                ['totOpening','totOpeningDr','totOpeningCr','totDebit','totCredit','totClosing','totClosingDr','totClosingCr'].forEach(id => $('#' + id).text('0'));
+                return;
+            }
+            const rows = sortedTbData();
+            const zeroBalVal = parseInt($('#cmbZeroBal').val() || '1');
+            let totOpening = 0, totOpeningDr = 0, totOpeningCr = 0, totDebit = 0, totCredit = 0, totClosing = 0, totClosingDr = 0, totClosingCr = 0;
+            let lastParent = null;
+            let displayedCount = 0;
+
+            rows.forEach(r => {
+                const opening = parseFloat(r.Opening || r.OpeningBalance || 0), openingDr = parseFloat(r.OpeningDr || 0), openingCr = parseFloat(r.OpeningCr || 0);
+                const debit = parseFloat(r.Debit || r.DebitAmount || 0), credit = parseFloat(r.Credit || r.CreditAmount || 0);
+                const closing = parseFloat(r.Closing || r.ClosingBalance || 0), closingDr = parseFloat(r.ClosingDr || 0), closingCr = parseFloat(r.ClosingCr || 0);
+
+                const isZero = (isNaN(opening) || Math.abs(opening) < 0.0001) &&
+                               (isNaN(debit) || Math.abs(debit) < 0.0001) &&
+                               (isNaN(credit) || Math.abs(credit) < 0.0001) &&
+                               (isNaN(closing) || Math.abs(closing) < 0.0001);
+
+                if (zeroBalVal === 1 && isZero) {
+                    return; // Skip zero balance accounts!
+                }
+                if (zeroBalVal === 2 && !isZero) {
+                    return; // Zero balance accounts only!
+                }
+
+                displayedCount++;
+                const parentTitle = r.ParentAccountTitle || '';
+                if (groupOnParent && parentTitle !== lastParent) {
+                    tbody.append('<tr class="grid-group-row"><td colspan="12">' + parentTitle + '</td></tr>');
+                    lastParent = parentTitle;
+                }
+
+                totOpening += opening; totOpeningDr += openingDr; totOpeningCr += openingCr;
+                totDebit += debit; totCredit += credit;
+                totClosing += closing; totClosingDr += closingDr; totClosingCr += closingCr;
+                tbody.append(`
+                    <tr>
+                        <td ${groupOnParent ? 'hidden' : ''}>${parentTitle}</td>
+                        <td>${r.AccountCode || ''}</td>
+                        <td>${r.AccountTitle || ''}</td>
+                        <td>${r.AccountType || ''}</td>
+                        <td style="text-align:right;">${fmt(opening)}</td>
+                        <td style="text-align:right;" class="col-six">${fmt(openingDr)}</td>
+                        <td style="text-align:right;" class="col-six">${fmt(openingCr)}</td>
+                        <td style="text-align:right;">${fmt(debit)}</td>
+                        <td style="text-align:right;">${fmt(credit)}</td>
+                        <td style="text-align:right;">${fmt(closing)}</td>
+                        <td style="text-align:right;" class="col-six">${fmt(closingDr)}</td>
+                        <td style="text-align:right;" class="col-six">${fmt(closingCr)}</td>
+                    </tr>
+                `);
+            });
+
+            if (displayedCount === 0) {
+                tbody.html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">No accounts match the selected zero balance filter option.</td></tr>');
+            }
+
+            $('#lblStatus').text('Total Accounts: ' + displayedCount);
+            $('#totOpening').text(fmt(totOpening));
+            $('#totOpeningDr').text(fmt(totOpeningDr));
+            $('#totOpeningCr').text(fmt(totOpeningCr));
+            $('#totDebit').text(fmt(totDebit));
+            $('#totCredit').text(fmt(totCredit));
+            $('#totClosing').text(fmt(totClosing));
+            $('#totClosingDr').text(fmt(totClosingDr));
+            $('#totClosingCr').text(fmt(totClosingCr));
+            applyColumnMode();
+        }
+
+        function resetTB() {
+            $('#fromdate, #todate').val('');
+            $('#txtClosingDebit, #txtClosingCredit').val('0');
+            $('#ChkBoxPost, #SkipZero, #chkSkipCGSAc').prop('checked', false);
+            $('#chkGroupOnParent').prop('checked', true);
+            $('#cmbDocumentTypeIds').val([]);
+            $('#CmbGroupAccount, #CmbCustomeGroups, #CmbBranches').val('');
+            $('#chkStockGroupAccountShow, #ChkSaleGroupAccountShow, #ChkCGSGroupAccountShow').prop('checked', true);
+            $('#chkAccountCodeSorting, #chkAccountTitleSorting, #chkClosingSorting').prop('checked', false);
+            $('#rdAscending').prop('checked', true);
+            $('#rdFourColumns').prop('checked', true);
+            $('#lblSortingCritera').text('(ParentAccountTitle ASC)');
+            tbData = [];
+            renderTb();
+        }
+
+        $('#rdFourColumns, #rdSixColumns').on('change', applyColumnMode);
+        $('#chkGroupOnParent').on('change', renderTb);
+
+        $(document).ready(function () {
+            applyColumnMode();
+            $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>');
+        });
+    </script>
+</body>
+</html>

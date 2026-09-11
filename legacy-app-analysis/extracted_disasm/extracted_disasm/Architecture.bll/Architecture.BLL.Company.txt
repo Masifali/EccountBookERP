@@ -1,0 +1,366 @@
+
+====================================================================================================
+CLASS Architecture.BLL.Company
+====================================================================================================
+
+; Architecture.BLL.Company::Save  (rva=0xd65c, fat header, code_size=59, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: callvirt Architecture.Model.Company::get_Id
+    IL_0006: brtrue.s IL_001b
+    IL_0008: newobj Architecture.DAL.Company::.ctor
+    IL_000d: ldarg.0
+    IL_000e: ldstr ldstr "Proc_Company_Insert"
+    IL_0013: call Architecture.DAL.Company::SetData
+    IL_0018: stloc.0
+    IL_0019: leave.s IL_0039
+    IL_001b: newobj Architecture.DAL.Company::.ctor
+    IL_0020: ldarg.0
+    IL_0021: ldstr ldstr "Proc_Company_Update"
+    IL_0026: call Architecture.DAL.Company::SetData
+    IL_002b: stloc.0
+    IL_002c: leave.s IL_0039
+    IL_002e: callvirt System.Exception::get_Message
+    IL_0033: newobj System.Exception::.ctor
+    IL_0038: throw
+    IL_0039: ldloc.0
+    IL_003a: ret
+
+; Architecture.BLL.Company::SaveAll  (rva=0xd6b4, fat header, code_size=22, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj Architecture.DAL.Company::.ctor
+    IL_0005: ldarg.0
+    IL_0006: ldstr ldstr "[dbo].[USP_NewCompanyRegister]"
+    IL_000b: call Architecture.DAL.Company::SetDataForAll
+    IL_0010: stloc.0
+    IL_0011: leave.s IL_0014
+    IL_0013: throw
+    IL_0014: ldloc.0
+    IL_0015: ret
+
+; Architecture.BLL.Company::GetAllCompaniesforCombo  (rva=0xd6e8, fat header, code_size=66, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "GetAllCompaniesforCombo"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldstr ldstr "Sp_Company_GetAllMethod"
+    IL_002c: ldloc.0
+    IL_002d: call MethodSpec#45
+    IL_0032: stloc.1
+    IL_0033: leave.s IL_0040
+    IL_0035: callvirt System.Exception::get_Message
+    IL_003a: newobj System.Exception::.ctor
+    IL_003f: throw
+    IL_0040: ldloc.1
+    IL_0041: ret
+
+; Architecture.BLL.Company::GetByID  (rva=0xd748, fat header, code_size=84, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Id"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: newobj TypeSpec#45::.ctor
+    IL_002d: pop
+    IL_002e: newobj Architecture.DAL.Company::.ctor
+    IL_0033: ldstr ldstr "Proc_Company_ReadByID"
+    IL_0038: ldloc.0
+    IL_0039: call Architecture.DAL.Company::GetData
+    IL_003e: ldc.i4.0
+    IL_003f: callvirt TypeSpec#45::get_Item
+    IL_0044: stloc.1
+    IL_0045: leave.s IL_0052
+    IL_0047: callvirt System.Exception::get_Message
+    IL_004c: newobj System.Exception::.ctor
+    IL_0051: throw
+    IL_0052: ldloc.1
+    IL_0053: ret
+
+; Architecture.BLL.Company::GetAll  (rva=0xd7b8, fat header, code_size=157, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrgCompanyTypeId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: callvirt Architecture.Model.Company::get_OrgCompanyTypeId
+    IL_001e: box System.Int32
+    IL_0023: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0028: callvirt TypeSpec#10::Add
+    IL_002d: ldarg.0
+    IL_002e: callvirt Architecture.Model.Company::get_Id
+    IL_0033: brfalse.s IL_005c
+    IL_0035: ldloc.0
+    IL_0036: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_003b: dup
+    IL_003c: ldstr ldstr "@Id"
+    IL_0041: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0046: dup
+    IL_0047: ldarg.0
+    IL_0048: callvirt Architecture.Model.Company::get_Id
+    IL_004d: box System.Int32
+    IL_0052: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0057: callvirt TypeSpec#10::Add
+    IL_005c: ldloc.0
+    IL_005d: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0062: dup
+    IL_0063: ldstr ldstr "@Activity"
+    IL_0068: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_006d: dup
+    IL_006e: ldstr ldstr "ReadByOrganizationId"
+    IL_0073: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0078: callvirt TypeSpec#10::Add
+    IL_007d: newobj Architecture.DAL.Company::.ctor
+    IL_0082: ldstr ldstr "Sp_Company_GetAllMethod"
+    IL_0087: ldloc.0
+    IL_0088: call Architecture.DAL.Company::GetData
+    IL_008d: stloc.1
+    IL_008e: leave.s IL_009b
+    IL_0090: callvirt System.Exception::get_Message
+    IL_0095: newobj System.Exception::.ctor
+    IL_009a: throw
+    IL_009b: ldloc.1
+    IL_009c: ret
+
+; Architecture.BLL.Company::GetAlldt  (rva=0xd874, fat header, code_size=152, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrgCompanyTypeId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: callvirt Architecture.Model.Company::get_OrgCompanyTypeId
+    IL_001e: box System.Int32
+    IL_0023: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0028: callvirt TypeSpec#10::Add
+    IL_002d: ldarg.0
+    IL_002e: callvirt Architecture.Model.Company::get_Id
+    IL_0033: brfalse.s IL_005c
+    IL_0035: ldloc.0
+    IL_0036: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_003b: dup
+    IL_003c: ldstr ldstr "@Id"
+    IL_0041: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0046: dup
+    IL_0047: ldarg.0
+    IL_0048: callvirt Architecture.Model.Company::get_Id
+    IL_004d: box System.Int32
+    IL_0052: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0057: callvirt TypeSpec#10::Add
+    IL_005c: ldloc.0
+    IL_005d: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0062: dup
+    IL_0063: ldstr ldstr "@Activity"
+    IL_0068: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_006d: dup
+    IL_006e: ldstr ldstr "ReadByOrganizationId"
+    IL_0073: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0078: callvirt TypeSpec#10::Add
+    IL_007d: ldstr ldstr "Sp_Company_GetAllMethod"
+    IL_0082: ldloc.0
+    IL_0083: call MethodSpec#45
+    IL_0088: stloc.1
+    IL_0089: leave.s IL_0096
+    IL_008b: callvirt System.Exception::get_Message
+    IL_0090: newobj System.Exception::.ctor
+    IL_0095: throw
+    IL_0096: ldloc.1
+    IL_0097: ret
+
+; Architecture.BLL.Company::GetAllCompanies  (rva=0xd928, fat header, code_size=66, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "ReadAll"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldstr ldstr "Sp_Company_GetAllMethod"
+    IL_002c: ldloc.0
+    IL_002d: call MethodSpec#45
+    IL_0032: stloc.1
+    IL_0033: leave.s IL_0040
+    IL_0035: callvirt System.Exception::get_Message
+    IL_003a: newobj System.Exception::.ctor
+    IL_003f: throw
+    IL_0040: ldloc.1
+    IL_0041: ret
+
+; Architecture.BLL.Company::CompanyHeaderSubReport  (rva=0xd988, fat header, code_size=101, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@CompanyId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.1
+    IL_003b: box System.Int32
+    IL_0040: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0045: callvirt TypeSpec#10::Add
+    IL_004a: ldstr ldstr "Sp_CompanyHeaderSubReport"
+    IL_004f: ldloc.0
+    IL_0050: call MethodSpec#45
+    IL_0055: stloc.1
+    IL_0056: leave.s IL_0063
+    IL_0058: callvirt System.Exception::get_Message
+    IL_005d: newobj System.Exception::.ctor
+    IL_0062: throw
+    IL_0063: ldloc.1
+    IL_0064: ret
+
+; Architecture.BLL.Company::GetCompaniesByTemplateId  (rva=0xda0c, fat header, code_size=67, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@TemplateId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldstr ldstr "USP_Company_ByTemplateId"
+    IL_002d: ldloc.0
+    IL_002e: call MethodSpec#45
+    IL_0033: stloc.1
+    IL_0034: leave.s IL_0041
+    IL_0036: callvirt System.Exception::get_Message
+    IL_003b: newobj System.Exception::.ctor
+    IL_0040: throw
+    IL_0041: ldloc.1
+    IL_0042: ret
+
+; Architecture.BLL.Company::GetHistory  (rva=0xda6c, fat header, code_size=110, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrgCompanyTypeId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: callvirt Architecture.Model.Company::get_OrgCompanyTypeId
+    IL_001e: box System.Int32
+    IL_0023: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0028: callvirt TypeSpec#10::Add
+    IL_002d: ldloc.0
+    IL_002e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0033: dup
+    IL_0034: ldstr ldstr "@Activity"
+    IL_0039: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003e: dup
+    IL_003f: ldstr ldstr "GetHistory"
+    IL_0044: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0049: callvirt TypeSpec#10::Add
+    IL_004e: newobj Architecture.DAL.Company::.ctor
+    IL_0053: ldstr ldstr "Sp_Company_GetAllMethod"
+    IL_0058: ldloc.0
+    IL_0059: call Architecture.DAL.Company::GetData
+    IL_005e: stloc.1
+    IL_005f: leave.s IL_006c
+    IL_0061: callvirt System.Exception::get_Message
+    IL_0066: newobj System.Exception::.ctor
+    IL_006b: throw
+    IL_006c: ldloc.1
+    IL_006d: ret
+
+; Architecture.BLL.Company::FormHistory  (rva=0xdaf8, fat header, code_size=103, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "FormHistory"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldarg.0
+    IL_0028: brfalse.s IL_004c
+    IL_002a: ldloc.0
+    IL_002b: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0030: dup
+    IL_0031: ldstr ldstr "@ORgCompanyTypeId"
+    IL_0036: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003b: dup
+    IL_003c: ldarg.0
+    IL_003d: box System.Int32
+    IL_0042: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0047: callvirt TypeSpec#10::Add
+    IL_004c: ldstr ldstr "Sp_Company_GetAllMethod"
+    IL_0051: ldloc.0
+    IL_0052: call MethodSpec#45
+    IL_0057: stloc.1
+    IL_0058: leave.s IL_0065
+    IL_005a: callvirt System.Exception::get_Message
+    IL_005f: newobj System.Exception::.ctor
+    IL_0064: throw
+    IL_0065: ldloc.1
+    IL_0066: ret
+
+; Architecture.BLL.Company::GetAllScreensAgainstCompanyId  (rva=0xdb7c, fat header, code_size=67, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@CompanyId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldstr ldstr "USP_getScreensFromUserRights"
+    IL_002d: ldloc.0
+    IL_002e: call MethodSpec#45
+    IL_0033: stloc.1
+    IL_0034: leave.s IL_0041
+    IL_0036: callvirt System.Exception::get_Message
+    IL_003b: newobj System.Exception::.ctor
+    IL_0040: throw
+    IL_0041: ldloc.1
+    IL_0042: ret
+
+; Architecture.BLL.Company::.ctor  (rva=0xdbdc, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret

@@ -1,0 +1,4034 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.AcfrmOpeningBalance
+====================================================================================================
+
+; Architecture.WinApp.AcfrmOpeningBalance::.ctor  (rva=0x4cc2c, fat header, code_size=108, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj System.Data.DataTable::.ctor
+    IL_0006: stfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_000b: ldarg.0
+    IL_000c: newobj System.Data.DataTable::.ctor
+    IL_0011: stfld Architecture.WinApp.AcfrmOpeningBalance::dtBranch
+    IL_0016: ldarg.0
+    IL_0017: newobj Architecture.WinApp.Common.DropDownBind::.ctor
+    IL_001c: stfld Architecture.WinApp.AcfrmOpeningBalance::DDL
+    IL_0021: ldarg.0
+    IL_0022: newobj Architecture.WinApp.Common.Rightsobjects::.ctor
+    IL_0027: stfld Architecture.WinApp.AcfrmOpeningBalance::formrights
+    IL_002c: ldarg.0
+    IL_002d: newobj Architecture.Model.UserAccount::.ctor
+    IL_0032: stfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_0037: ldarg.0
+    IL_0038: newobj TypeSpec#273::.ctor
+    IL_003d: stfld Architecture.WinApp.AcfrmOpeningBalance::accOpeningBal
+    IL_0042: ldarg.0
+    IL_0043: call System.Windows.Forms.Form::.ctor
+    IL_0048: ldarg.0
+    IL_0049: call Architecture.WinApp.AcfrmOpeningBalance::InitializeComponent
+    IL_004e: ldarg.0
+    IL_004f: ldarg.1
+    IL_0050: stfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_0055: ldarg.0
+    IL_0056: call Architecture.WinApp.AcfrmOpeningBalance::FindAccountTitle
+    IL_005b: ldarg.0
+    IL_005c: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0061: ldstr ldstr "Update"
+    IL_0066: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_006b: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::AcfrmOpeningBalance_Load  (rva=0x4cca4, fat header, code_size=123, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: call System.Windows.Forms.Control::get_Name
+    IL_0007: call Architecture.WinApp.Common.CommonServices::SetRightsValueInRightsObject
+    IL_000c: stfld Architecture.WinApp.AcfrmOpeningBalance::formrights
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.AcfrmOpeningBalance::formrights
+    IL_001d: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveUpdateRights
+    IL_0022: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_0027: ldarg.0
+    IL_0028: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_002d: ldarg.0
+    IL_002e: ldfld Architecture.WinApp.AcfrmOpeningBalance::formrights
+    IL_0033: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveUpdateRights
+    IL_0038: callvirt System.Windows.Forms.Control::set_Enabled
+    IL_003d: ldarg.0
+    IL_003e: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_0043: ldarg.0
+    IL_0044: ldfld Architecture.WinApp.AcfrmOpeningBalance::formrights
+    IL_0049: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHavePrintRights
+    IL_004e: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_0053: ldarg.0
+    IL_0054: call Architecture.WinApp.AcfrmOpeningBalance::FindAccountTitle
+    IL_0059: ldarg.0
+    IL_005a: call Architecture.WinApp.AcfrmOpeningBalance::fillDataGrid
+    IL_005f: ldarg.0
+    IL_0060: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0065: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_006a: pop
+    IL_006b: leave.s IL_007a
+    IL_006d: callvirt System.Exception::get_Message
+    IL_0072: call System.Windows.Forms.MessageBox::Show
+    IL_0077: pop
+    IL_0078: leave.s IL_007a
+    IL_007a: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::FormValidation  (rva=0x4cd3c, fat header, code_size=211, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0006: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_000b: call Architecture.Common.Conversion::ToInt
+    IL_0010: brtrue.s IL_002b
+    IL_0012: ldstr ldstr "Account Title Field is Required"
+    IL_0017: call System.Windows.Forms.MessageBox::Show
+    IL_001c: pop
+    IL_001d: ldarg.0
+    IL_001e: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0023: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_0028: pop
+    IL_0029: ldc.i4.0
+    IL_002a: ret
+    IL_002b: ldarg.0
+    IL_002c: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0031: callvirt System.Windows.Forms.Control::get_Text
+    IL_0036: callvirt System.String::Trim
+    IL_003b: call Architecture.Common.Conversion::ToDouble
+    IL_0040: ldc.r8 0.0
+    IL_0049: ble.un.s IL_0078
+    IL_004b: ldarg.0
+    IL_004c: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0051: callvirt System.Windows.Forms.Control::get_Text
+    IL_0056: callvirt System.String::Trim
+    IL_005b: call Architecture.Common.Conversion::ToDouble
+    IL_0060: ldc.r8 0.0
+    IL_0069: ble.un.s IL_0078
+    IL_006b: ldstr ldstr "Debit Amount and Credit Amount Both cannot be greater than zero"
+    IL_0070: call System.Windows.Forms.MessageBox::Show
+    IL_0075: pop
+    IL_0076: ldc.i4.0
+    IL_0077: ret
+    IL_0078: ldarg.0
+    IL_0079: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_007e: callvirt System.Windows.Forms.Control::get_Text
+    IL_0083: callvirt System.String::Trim
+    IL_0088: call Architecture.Common.Conversion::ToDouble
+    IL_008d: ldc.r8 0.0
+    IL_0096: bne.un.s IL_00d1
+    IL_0098: ldarg.0
+    IL_0099: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_009e: callvirt System.Windows.Forms.Control::get_Text
+    IL_00a3: callvirt System.String::Trim
+    IL_00a8: call Architecture.Common.Conversion::ToDouble
+    IL_00ad: ldc.r8 0.0
+    IL_00b6: bne.un.s IL_00d1
+    IL_00b8: ldstr ldstr "Credit Or Debit Field is Required"
+    IL_00bd: call System.Windows.Forms.MessageBox::Show
+    IL_00c2: pop
+    IL_00c3: ldarg.0
+    IL_00c4: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_00c9: callvirt System.Windows.Forms.Control::Focus
+    IL_00ce: pop
+    IL_00cf: ldc.i4.0
+    IL_00d0: ret
+    IL_00d1: ldc.i4.1
+    IL_00d2: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::Reset  (rva=0x4ce1c, fat header, code_size=79, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.0
+    IL_0002: stfld Architecture.WinApp.AcfrmOpeningBalance::RId
+    IL_0007: ldarg.0
+    IL_0008: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_000d: ldsfld System.String::Empty
+    IL_0012: callvirt System.Windows.Forms.Control::set_Text
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_001d: callvirt System.Windows.Forms.TextBoxBase::Clear
+    IL_0022: ldarg.0
+    IL_0023: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0028: callvirt System.Windows.Forms.TextBoxBase::Clear
+    IL_002d: ldarg.0
+    IL_002e: call Architecture.WinApp.AcfrmOpeningBalance::fillDataGrid
+    IL_0033: ldarg.0
+    IL_0034: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0039: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_003e: pop
+    IL_003f: leave.s IL_004e
+    IL_0041: callvirt System.Exception::get_Message
+    IL_0046: call System.Windows.Forms.MessageBox::Show
+    IL_004b: pop
+    IL_004c: leave.s IL_004e
+    IL_004e: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::fillDataGrid  (rva=0x4ce88, fat header, code_size=602, max_stack=6, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldarg.0
+    IL_0008: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_000d: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0012: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_0017: ldloc.0
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_001e: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0023: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_0028: ldloc.0
+    IL_0029: ldarg.0
+    IL_002a: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_002f: callvirt Architecture.Model.UserAccount::get_ID
+    IL_0034: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_EntryUser
+    IL_0039: ldloc.0
+    IL_003a: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_003f: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_0044: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_0049: ldarg.0
+    IL_004a: ldloc.0
+    IL_004b: call Architecture.BLL.Accounts.AccountsOpeningBalances::GetAll
+    IL_0050: stfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_0055: ldarg.0
+    IL_0056: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_005b: callvirt System.Data.DataTable::get_Rows
+    IL_0060: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0065: ldc.i4.0
+    IL_0066: ble IL_024a
+    IL_006b: ldarg.0
+    IL_006c: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0071: ldnull
+    IL_0072: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_0077: newobj System.Data.DataTable::.ctor
+    IL_007c: stloc.1
+    IL_007d: ldloc.1
+    IL_007e: callvirt System.Data.DataTable::get_Columns
+    IL_0083: ldstr ldstr "Id"
+    IL_0088: ldtoken System.Int32
+    IL_008d: call System.Type::GetTypeFromHandle
+    IL_0092: callvirt System.Data.DataColumnCollection::Add
+    IL_0097: pop
+    IL_0098: ldloc.1
+    IL_0099: callvirt System.Data.DataTable::get_Columns
+    IL_009e: ldstr ldstr "ChartofAccountId"
+    IL_00a3: ldtoken System.Int32
+    IL_00a8: call System.Type::GetTypeFromHandle
+    IL_00ad: callvirt System.Data.DataColumnCollection::Add
+    IL_00b2: pop
+    IL_00b3: ldloc.1
+    IL_00b4: callvirt System.Data.DataTable::get_Columns
+    IL_00b9: ldstr ldstr "AccountType"
+    IL_00be: callvirt System.Data.DataColumnCollection::Add
+    IL_00c3: pop
+    IL_00c4: ldloc.1
+    IL_00c5: callvirt System.Data.DataTable::get_Columns
+    IL_00ca: ldstr ldstr "ParentAccountTitle"
+    IL_00cf: callvirt System.Data.DataColumnCollection::Add
+    IL_00d4: pop
+    IL_00d5: ldloc.1
+    IL_00d6: callvirt System.Data.DataTable::get_Columns
+    IL_00db: ldstr ldstr "AccountTitle"
+    IL_00e0: callvirt System.Data.DataColumnCollection::Add
+    IL_00e5: pop
+    IL_00e6: ldloc.1
+    IL_00e7: callvirt System.Data.DataTable::get_Columns
+    IL_00ec: ldstr ldstr "DebitBalance"
+    IL_00f1: ldtoken System.Double
+    IL_00f6: call System.Type::GetTypeFromHandle
+    IL_00fb: callvirt System.Data.DataColumnCollection::Add
+    IL_0100: pop
+    IL_0101: ldloc.1
+    IL_0102: callvirt System.Data.DataTable::get_Columns
+    IL_0107: ldstr ldstr "CreditBalance"
+    IL_010c: ldtoken System.Double
+    IL_0111: call System.Type::GetTypeFromHandle
+    IL_0116: callvirt System.Data.DataColumnCollection::Add
+    IL_011b: pop
+    IL_011c: ldarg.0
+    IL_011d: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0122: ldloc.1
+    IL_0123: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_0128: ldc.i4.0
+    IL_0129: stloc.2
+    IL_012a: br IL_0217
+    IL_012f: ldloc.1
+    IL_0130: callvirt System.Data.DataTable::get_Rows
+    IL_0135: ldc.i4.7
+    IL_0136: newarr System.Object
+    IL_013b: dup
+    IL_013c: ldc.i4.0
+    IL_013d: ldarg.0
+    IL_013e: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_0143: callvirt System.Data.DataTable::get_Rows
+    IL_0148: ldloc.2
+    IL_0149: callvirt System.Data.DataRowCollection::get_Item
+    IL_014e: ldstr ldstr "Id"
+    IL_0153: callvirt System.Data.DataRow::get_Item
+    IL_0158: stelem.ref
+    IL_0159: dup
+    IL_015a: ldc.i4.1
+    IL_015b: ldarg.0
+    IL_015c: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_0161: callvirt System.Data.DataTable::get_Rows
+    IL_0166: ldloc.2
+    IL_0167: callvirt System.Data.DataRowCollection::get_Item
+    IL_016c: ldstr ldstr "ChartOfAccountId"
+    IL_0171: callvirt System.Data.DataRow::get_Item
+    IL_0176: stelem.ref
+    IL_0177: dup
+    IL_0178: ldc.i4.2
+    IL_0179: ldarg.0
+    IL_017a: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_017f: callvirt System.Data.DataTable::get_Rows
+    IL_0184: ldloc.2
+    IL_0185: callvirt System.Data.DataRowCollection::get_Item
+    IL_018a: ldstr ldstr "AccountType"
+    IL_018f: callvirt System.Data.DataRow::get_Item
+    IL_0194: stelem.ref
+    IL_0195: dup
+    IL_0196: ldc.i4.3
+    IL_0197: ldarg.0
+    IL_0198: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_019d: callvirt System.Data.DataTable::get_Rows
+    IL_01a2: ldloc.2
+    IL_01a3: callvirt System.Data.DataRowCollection::get_Item
+    IL_01a8: ldstr ldstr "ParentAccountTitle"
+    IL_01ad: callvirt System.Data.DataRow::get_Item
+    IL_01b2: stelem.ref
+    IL_01b3: dup
+    IL_01b4: ldc.i4.4
+    IL_01b5: ldarg.0
+    IL_01b6: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_01bb: callvirt System.Data.DataTable::get_Rows
+    IL_01c0: ldloc.2
+    IL_01c1: callvirt System.Data.DataRowCollection::get_Item
+    IL_01c6: ldstr ldstr "ChartOfAccountTitle"
+    IL_01cb: callvirt System.Data.DataRow::get_Item
+    IL_01d0: stelem.ref
+    IL_01d1: dup
+    IL_01d2: ldc.i4.5
+    IL_01d3: ldarg.0
+    IL_01d4: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_01d9: callvirt System.Data.DataTable::get_Rows
+    IL_01de: ldloc.2
+    IL_01df: callvirt System.Data.DataRowCollection::get_Item
+    IL_01e4: ldstr ldstr "YearObDebit"
+    IL_01e9: callvirt System.Data.DataRow::get_Item
+    IL_01ee: stelem.ref
+    IL_01ef: dup
+    IL_01f0: ldc.i4.6
+    IL_01f1: ldarg.0
+    IL_01f2: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_01f7: callvirt System.Data.DataTable::get_Rows
+    IL_01fc: ldloc.2
+    IL_01fd: callvirt System.Data.DataRowCollection::get_Item
+    IL_0202: ldstr ldstr "YearObCredit"
+    IL_0207: callvirt System.Data.DataRow::get_Item
+    IL_020c: stelem.ref
+    IL_020d: callvirt System.Data.DataRowCollection::Add
+    IL_0212: pop
+    IL_0213: ldloc.2
+    IL_0214: ldc.i4.1
+    IL_0215: add
+    IL_0216: stloc.2
+    IL_0217: ldloc.2
+    IL_0218: ldarg.0
+    IL_0219: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_021e: callvirt System.Data.DataTable::get_Rows
+    IL_0223: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0228: blt IL_012f
+    IL_022d: ldarg.0
+    IL_022e: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0233: ldloc.1
+    IL_0234: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_0239: ldarg.0
+    IL_023a: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_023f: callvirt Janus.Windows.GridEX.GridEX::RetrieveStructure
+    IL_0244: ldarg.0
+    IL_0245: call Architecture.WinApp.AcfrmOpeningBalance::GridSettings
+    IL_024a: leave.s IL_0259
+    IL_024c: callvirt System.Exception::get_Message
+    IL_0251: call System.Windows.Forms.MessageBox::Show
+    IL_0256: pop
+    IL_0257: leave.s IL_0259
+    IL_0259: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::FindAccountTitle  (rva=0x4d10c, fat header, code_size=401, max_stack=7, exception_handlers=yes)
+    IL_0000: newobj <>c__DisplayClass13_0::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldarg.0
+    IL_0008: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_000d: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0012: call Architecture.Common.Conversion::ToInt
+    IL_0017: stfld <>c__DisplayClass13_0::id
+    IL_001c: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_0021: dup
+    IL_0022: ldarg.0
+    IL_0023: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_0028: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_002d: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_0032: dup
+    IL_0033: ldarg.0
+    IL_0034: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_0039: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_003e: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_0043: dup
+    IL_0044: ldarg.0
+    IL_0045: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_004a: callvirt Architecture.Model.UserAccount::get_ID
+    IL_004f: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_EntryUser
+    IL_0054: dup
+    IL_0055: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_005a: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_005f: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_0064: call Architecture.BLL.Accounts.AccountsOpeningBalances::GetAll
+    IL_0069: stloc.1
+    IL_006a: ldloc.1
+    IL_006b: callvirt System.Data.DataTable::get_Rows
+    IL_0070: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0075: ldc.i4.0
+    IL_0076: ble IL_0181
+    IL_007b: newobj System.Data.DataTable::.ctor
+    IL_0080: stloc.2
+    IL_0081: ldloc.2
+    IL_0082: callvirt System.Data.DataTable::get_Columns
+    IL_0087: ldstr ldstr "Id"
+    IL_008c: ldtoken System.Int32
+    IL_0091: call System.Type::GetTypeFromHandle
+    IL_0096: callvirt System.Data.DataColumnCollection::Add
+    IL_009b: pop
+    IL_009c: ldloc.2
+    IL_009d: callvirt System.Data.DataTable::get_Columns
+    IL_00a2: ldstr ldstr "AccountTitle"
+    IL_00a7: callvirt System.Data.DataColumnCollection::Add
+    IL_00ac: pop
+    IL_00ad: ldc.i4.0
+    IL_00ae: stloc.3
+    IL_00af: br.s IL_00f9
+    IL_00b1: ldloc.2
+    IL_00b2: callvirt System.Data.DataTable::get_Rows
+    IL_00b7: ldc.i4.2
+    IL_00b8: newarr System.Object
+    IL_00bd: dup
+    IL_00be: ldc.i4.0
+    IL_00bf: ldloc.1
+    IL_00c0: callvirt System.Data.DataTable::get_Rows
+    IL_00c5: ldloc.3
+    IL_00c6: callvirt System.Data.DataRowCollection::get_Item
+    IL_00cb: ldstr ldstr "Id"
+    IL_00d0: callvirt System.Data.DataRow::get_Item
+    IL_00d5: stelem.ref
+    IL_00d6: dup
+    IL_00d7: ldc.i4.1
+    IL_00d8: ldloc.1
+    IL_00d9: callvirt System.Data.DataTable::get_Rows
+    IL_00de: ldloc.3
+    IL_00df: callvirt System.Data.DataRowCollection::get_Item
+    IL_00e4: ldstr ldstr "ChartOfAccountTitle"
+    IL_00e9: callvirt System.Data.DataRow::get_Item
+    IL_00ee: stelem.ref
+    IL_00ef: callvirt System.Data.DataRowCollection::Add
+    IL_00f4: pop
+    IL_00f5: ldloc.3
+    IL_00f6: ldc.i4.1
+    IL_00f7: add
+    IL_00f8: stloc.3
+    IL_00f9: ldloc.3
+    IL_00fa: ldloc.1
+    IL_00fb: callvirt System.Data.DataTable::get_Rows
+    IL_0100: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0105: blt.s IL_00b1
+    IL_0107: ldloc.2
+    IL_0108: callvirt System.Data.DataTable::get_Rows
+    IL_010d: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0112: ldc.i4.0
+    IL_0113: ble.s IL_0181
+    IL_0115: ldarg.0
+    IL_0116: ldfld Architecture.WinApp.AcfrmOpeningBalance::DDL
+    IL_011b: ldloc.2
+    IL_011c: ldarg.0
+    IL_011d: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0122: ldstr ldstr "Id"
+    IL_0127: ldstr ldstr "AccountTitle"
+    IL_012c: ldstr ldstr "Account Title"
+    IL_0131: ldc.i4.1
+    IL_0132: callvirt Architecture.WinApp.Common.DropDownBind::BindDDL
+    IL_0137: ldloc.0
+    IL_0138: ldfld <>c__DisplayClass13_0::id
+    IL_013d: ldc.i4.0
+    IL_013e: ble.s IL_0181
+    IL_0140: ldloc.2
+    IL_0141: call System.Data.DataTableExtensions::AsEnumerable
+    IL_0146: ldloc.0
+    IL_0147: ldftn <>c__DisplayClass13_0::<FindAccountTitle>b__0
+    IL_014d: newobj TypeSpec#251::.ctor
+    IL_0152: call MethodSpec#23
+    IL_0157: brfalse.s IL_0171
+    IL_0159: ldarg.0
+    IL_015a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_015f: ldloc.0
+    IL_0160: ldfld <>c__DisplayClass13_0::id
+    IL_0165: box System.Int32
+    IL_016a: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_Value
+    IL_016f: br.s IL_0181
+    IL_0171: ldarg.0
+    IL_0172: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0177: ldsfld System.String::Empty
+    IL_017c: callvirt System.Windows.Forms.Control::set_Text
+    IL_0181: leave.s IL_0190
+    IL_0183: callvirt System.Exception::get_Message
+    IL_0188: call System.Windows.Forms.MessageBox::Show
+    IL_018d: pop
+    IL_018e: leave.s IL_0190
+    IL_0190: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::BranchesFill  (rva=0x4d2c8, fat header, code_size=303, max_stack=14, exception_handlers=yes)
+    IL_0000: ldsfld Architecture.Common.clsGlobalVariables::globalBranchesAllocateToUser
+    IL_0005: stloc.0
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.AcfrmOpeningBalance::dtBranch
+    IL_000c: callvirt System.Data.DataTable::get_Columns
+    IL_0011: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0016: brtrue.s IL_0058
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.AcfrmOpeningBalance::dtBranch
+    IL_001e: callvirt System.Data.DataTable::get_Columns
+    IL_0023: ldstr ldstr "Id"
+    IL_0028: ldtoken System.Int32
+    IL_002d: call System.Type::GetTypeFromHandle
+    IL_0032: callvirt System.Data.DataColumnCollection::Add
+    IL_0037: pop
+    IL_0038: ldarg.0
+    IL_0039: ldfld Architecture.WinApp.AcfrmOpeningBalance::dtBranch
+    IL_003e: callvirt System.Data.DataTable::get_Columns
+    IL_0043: ldstr ldstr "BranchName"
+    IL_0048: ldtoken System.String
+    IL_004d: call System.Type::GetTypeFromHandle
+    IL_0052: callvirt System.Data.DataColumnCollection::Add
+    IL_0057: pop
+    IL_0058: ldloc.0
+    IL_0059: callvirt TypeSpec#274::get_Count
+    IL_005e: ldc.i4.0
+    IL_005f: ble.s IL_00ac
+    IL_0061: ldc.i4.0
+    IL_0062: stloc.1
+    IL_0063: br.s IL_00a3
+    IL_0065: ldarg.0
+    IL_0066: ldfld Architecture.WinApp.AcfrmOpeningBalance::dtBranch
+    IL_006b: callvirt System.Data.DataTable::get_Rows
+    IL_0070: ldc.i4.2
+    IL_0071: newarr System.Object
+    IL_0076: dup
+    IL_0077: ldc.i4.0
+    IL_0078: ldloc.0
+    IL_0079: ldloc.1
+    IL_007a: callvirt TypeSpec#274::get_Item
+    IL_007f: callvirt Architecture.Model.Main.getGlobalBranchesAllocateToUser::get_BranchId
+    IL_0084: box System.Int32
+    IL_0089: stelem.ref
+    IL_008a: dup
+    IL_008b: ldc.i4.1
+    IL_008c: ldloc.0
+    IL_008d: ldloc.1
+    IL_008e: callvirt TypeSpec#274::get_Item
+    IL_0093: callvirt Architecture.Model.Main.getGlobalBranchesAllocateToUser::get_BranchName
+    IL_0098: stelem.ref
+    IL_0099: callvirt System.Data.DataRowCollection::Add
+    IL_009e: pop
+    IL_009f: ldloc.1
+    IL_00a0: ldc.i4.1
+    IL_00a1: add
+    IL_00a2: stloc.1
+    IL_00a3: ldloc.1
+    IL_00a4: ldloc.0
+    IL_00a5: callvirt TypeSpec#274::get_Count
+    IL_00aa: blt.s IL_0065
+    IL_00ac: ldarg.0
+    IL_00ad: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_00b2: ldarg.0
+    IL_00b3: ldfld Architecture.WinApp.AcfrmOpeningBalance::dtBranch
+    IL_00b8: ldstr ldstr "Id"
+    IL_00bd: ldstr ldstr "BranchName"
+    IL_00c2: ldstr ldstr "Branch Name"
+    IL_00c7: ldc.i4.1
+    IL_00c8: ldarg.0
+    IL_00c9: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_00ce: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_00d3: call Architecture.Common.Conversion::ToInt
+    IL_00d8: box System.Int32
+    IL_00dd: ldc.i4.0
+    IL_00de: ldnull
+    IL_00df: ldnull
+    IL_00e0: ldc.i4.0
+    IL_00e1: ldc.i4.0
+    IL_00e2: ldstr ldstr ""
+    IL_00e7: ldc.i4 350
+    IL_00ec: call Architecture.WinApp.Common.InfragisticsHelper::BindAndRetainSelection
+    IL_00f1: ldarg.0
+    IL_00f2: ldfld Architecture.WinApp.AcfrmOpeningBalance::dtBranch
+    IL_00f7: callvirt System.Data.DataTable::get_Rows
+    IL_00fc: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0101: ldc.i4.0
+    IL_0102: ble.s IL_011f
+    IL_0104: ldarg.0
+    IL_0105: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_010a: ldarg.0
+    IL_010b: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_0110: callvirt Architecture.Model.UserAccount::get_BranchesId
+    IL_0115: box System.Int32
+    IL_011a: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_Value
+    IL_011f: leave.s IL_012e
+    IL_0121: callvirt System.Exception::get_Message
+    IL_0126: call System.Windows.Forms.MessageBox::Show
+    IL_012b: pop
+    IL_012c: leave.s IL_012e
+    IL_012e: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::BtnNew_Click  (rva=0x4d420, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.AcfrmOpeningBalance::Reset
+    IL_0006: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::BtnEdit_Click  (rva=0x4d428, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.AcfrmOpeningBalance::AllRecordUpdate
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::SingleRecordUpdate  (rva=0x4d45c, fat header, code_size=304, max_stack=2, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldarg.0
+    IL_0007: call Architecture.WinApp.AcfrmOpeningBalance::FormValidation
+    IL_000c: brtrue.s IL_0013
+    IL_000e: leave IL_012f
+    IL_0013: ldarg.0
+    IL_0014: ldfld Architecture.WinApp.AcfrmOpeningBalance::RId
+    IL_0019: brtrue.s IL_0026
+    IL_001b: ldstr ldstr "ChartofAccount Id Not Found"
+    IL_0020: newobj System.Exception::.ctor
+    IL_0025: throw
+    IL_0026: ldloc.0
+    IL_0027: ldarg.0
+    IL_0028: ldfld Architecture.WinApp.AcfrmOpeningBalance::RId
+    IL_002d: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_Id
+    IL_0032: ldloc.0
+    IL_0033: ldarg.0
+    IL_0034: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_0039: callvirt System.Windows.Forms.Control::get_Text
+    IL_003e: call Architecture.Common.Conversion::ToInt
+    IL_0043: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ChartOfAccountId
+    IL_0048: ldloc.0
+    IL_0049: ldarg.0
+    IL_004a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_004f: callvirt System.Windows.Forms.Control::get_Text
+    IL_0054: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ChartOfAccountTitle
+    IL_0059: ldloc.0
+    IL_005a: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_005f: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_0064: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_0069: ldloc.0
+    IL_006a: ldarg.0
+    IL_006b: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0070: callvirt System.Windows.Forms.Control::get_Text
+    IL_0075: call Architecture.Common.Conversion::ToDouble
+    IL_007a: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_YearObCredit
+    IL_007f: ldloc.0
+    IL_0080: ldarg.0
+    IL_0081: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0086: callvirt System.Windows.Forms.Control::get_Text
+    IL_008b: call Architecture.Common.Conversion::ToDouble
+    IL_0090: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_YearObDebit
+    IL_0095: ldloc.0
+    IL_0096: ldarg.0
+    IL_0097: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_009c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_00a1: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_00a6: ldloc.0
+    IL_00a7: ldarg.0
+    IL_00a8: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_00ad: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_00b2: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_00b7: ldloc.0
+    IL_00b8: ldarg.0
+    IL_00b9: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_00be: callvirt Architecture.Model.UserAccount::get_ID
+    IL_00c3: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_EntryUser
+    IL_00c8: ldloc.0
+    IL_00c9: ldarg.0
+    IL_00ca: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_00cf: callvirt Architecture.Model.UserAccount::get_ID
+    IL_00d4: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ModifyUser
+    IL_00d9: ldloc.0
+    IL_00da: call System.DateTime::get_Now
+    IL_00df: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_EntryDate
+    IL_00e4: ldloc.0
+    IL_00e5: call System.DateTime::get_Now
+    IL_00ea: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ModifyDate
+    IL_00ef: ldloc.0
+    IL_00f0: call System.DateTime::get_Now
+    IL_00f5: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostDate
+    IL_00fa: ldloc.0
+    IL_00fb: ldc.i4.0
+    IL_00fc: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostState
+    IL_0101: ldloc.0
+    IL_0102: ldc.i4.0
+    IL_0103: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostUser
+    IL_0108: ldloc.0
+    IL_0109: call Architecture.BLL.Accounts.AccountsOpeningBalances::Save
+    IL_010e: pop
+    IL_010f: ldstr ldstr "Update recored Successfully"
+    IL_0114: call System.Windows.Forms.MessageBox::Show
+    IL_0119: pop
+    IL_011a: ldarg.0
+    IL_011b: call Architecture.WinApp.AcfrmOpeningBalance::Reset
+    IL_0120: leave.s IL_012f
+    IL_0122: callvirt System.Exception::get_Message
+    IL_0127: call System.Windows.Forms.MessageBox::Show
+    IL_012c: pop
+    IL_012d: leave.s IL_012f
+    IL_012f: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::AllRecordUpdate  (rva=0x4d5b4, fat header, code_size=1068, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldarg.0
+    IL_0008: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_000d: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0012: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_0017: ldloc.0
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_001e: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0023: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_0028: ldloc.0
+    IL_0029: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_002e: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_0033: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_0038: ldloc.0
+    IL_0039: newobj TypeSpec#273::.ctor
+    IL_003e: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OpeningBalanceList
+    IL_0043: ldarg.0
+    IL_0044: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0049: callvirt Janus.Windows.GridEX.GridEX::GetRows
+    IL_004e: stloc.1
+    IL_004f: ldc.i4.0
+    IL_0050: stloc.2
+    IL_0051: br IL_03fb
+    IL_0056: ldloc.1
+    IL_0057: ldloc.2
+    IL_0058: ldelem.ref
+    IL_0059: stloc.3
+    IL_005a: ldc.i4.0
+    IL_005b: stloc.s 4
+    IL_005d: br IL_03e0
+    IL_0062: ldarg.0
+    IL_0063: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_0068: callvirt System.Data.DataTable::get_Rows
+    IL_006d: ldloc.s 4
+    IL_006f: callvirt System.Data.DataRowCollection::get_Item
+    IL_0074: ldstr ldstr "Id"
+    IL_0079: callvirt System.Data.DataRow::get_Item
+    IL_007e: call Architecture.Common.Conversion::ToInt
+    IL_0083: ldloc.3
+    IL_0084: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0089: ldstr ldstr "Id"
+    IL_008e: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0093: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0098: callvirt System.Object::ToString
+    IL_009d: call Architecture.Common.Conversion::ToInt
+    IL_00a2: bne.un IL_021e
+    IL_00a7: ldarg.0
+    IL_00a8: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_00ad: callvirt System.Data.DataTable::get_Rows
+    IL_00b2: ldloc.s 4
+    IL_00b4: callvirt System.Data.DataRowCollection::get_Item
+    IL_00b9: ldstr ldstr "YearObDebit"
+    IL_00be: callvirt System.Data.DataRow::get_Item
+    IL_00c3: call Architecture.Common.Conversion::ToDouble
+    IL_00c8: ldloc.3
+    IL_00c9: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_00ce: ldstr ldstr "DebitBalance"
+    IL_00d3: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_00d8: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_00dd: callvirt System.Object::ToString
+    IL_00e2: call System.Convert::ToDouble
+    IL_00e7: beq IL_021e
+    IL_00ec: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_00f1: stloc.s 5
+    IL_00f3: ldloc.s 5
+    IL_00f5: ldloc.3
+    IL_00f6: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_00fb: ldstr ldstr "Id"
+    IL_0100: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0105: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_010a: callvirt System.Object::ToString
+    IL_010f: call System.Int32::Parse
+    IL_0114: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_Id
+    IL_0119: ldloc.s 5
+    IL_011b: ldloc.3
+    IL_011c: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0121: ldstr ldstr "ChartOfAccountId"
+    IL_0126: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_012b: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0130: callvirt System.Object::ToString
+    IL_0135: call System.Int32::Parse
+    IL_013a: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ChartOfAccountId
+    IL_013f: ldloc.s 5
+    IL_0141: ldarg.0
+    IL_0142: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0147: callvirt System.Windows.Forms.Control::get_Text
+    IL_014c: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ChartOfAccountTitle
+    IL_0151: ldloc.s 5
+    IL_0153: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_0158: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_015d: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_0162: ldloc.s 5
+    IL_0164: ldloc.3
+    IL_0165: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_016a: ldstr ldstr "DebitBalance"
+    IL_016f: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0174: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0179: callvirt System.Object::ToString
+    IL_017e: call System.Convert::ToDouble
+    IL_0183: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_YearObDebit
+    IL_0188: ldloc.s 5
+    IL_018a: ldc.i4.0
+    IL_018b: call System.Convert::ToDouble
+    IL_0190: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_YearObCredit
+    IL_0195: ldloc.s 5
+    IL_0197: ldarg.0
+    IL_0198: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_019d: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_01a2: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_01a7: ldloc.s 5
+    IL_01a9: ldarg.0
+    IL_01aa: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_01af: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_01b4: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_01b9: ldloc.s 5
+    IL_01bb: ldarg.0
+    IL_01bc: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_01c1: callvirt Architecture.Model.UserAccount::get_ID
+    IL_01c6: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_EntryUser
+    IL_01cb: ldloc.s 5
+    IL_01cd: ldarg.0
+    IL_01ce: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_01d3: callvirt Architecture.Model.UserAccount::get_ID
+    IL_01d8: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ModifyUser
+    IL_01dd: ldloc.s 5
+    IL_01df: call System.DateTime::get_Now
+    IL_01e4: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_EntryDate
+    IL_01e9: ldloc.s 5
+    IL_01eb: call System.DateTime::get_Now
+    IL_01f0: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ModifyDate
+    IL_01f5: ldloc.s 5
+    IL_01f7: call System.DateTime::get_Now
+    IL_01fc: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostDate
+    IL_0201: ldloc.s 5
+    IL_0203: ldc.i4.0
+    IL_0204: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostState
+    IL_0209: ldloc.s 5
+    IL_020b: ldc.i4.0
+    IL_020c: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostUser
+    IL_0211: ldloc.0
+    IL_0212: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::get_OpeningBalanceList
+    IL_0217: ldloc.s 5
+    IL_0219: callvirt TypeSpec#273::Add
+    IL_021e: ldarg.0
+    IL_021f: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_0224: callvirt System.Data.DataTable::get_Rows
+    IL_0229: ldloc.s 4
+    IL_022b: callvirt System.Data.DataRowCollection::get_Item
+    IL_0230: ldstr ldstr "Id"
+    IL_0235: callvirt System.Data.DataRow::get_Item
+    IL_023a: call Architecture.Common.Conversion::ToInt
+    IL_023f: ldloc.3
+    IL_0240: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0245: ldstr ldstr "Id"
+    IL_024a: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_024f: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0254: callvirt System.Object::ToString
+    IL_0259: call Architecture.Common.Conversion::ToInt
+    IL_025e: bne.un IL_03da
+    IL_0263: ldarg.0
+    IL_0264: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_0269: callvirt System.Data.DataTable::get_Rows
+    IL_026e: ldloc.s 4
+    IL_0270: callvirt System.Data.DataRowCollection::get_Item
+    IL_0275: ldstr ldstr "YearObCredit"
+    IL_027a: callvirt System.Data.DataRow::get_Item
+    IL_027f: call Architecture.Common.Conversion::ToDouble
+    IL_0284: ldloc.3
+    IL_0285: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_028a: ldstr ldstr "CreditBalance"
+    IL_028f: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0294: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0299: callvirt System.Object::ToString
+    IL_029e: call System.Convert::ToDouble
+    IL_02a3: beq IL_03da
+    IL_02a8: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_02ad: stloc.s 6
+    IL_02af: ldloc.s 6
+    IL_02b1: ldloc.3
+    IL_02b2: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_02b7: ldstr ldstr "Id"
+    IL_02bc: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_02c1: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_02c6: callvirt System.Object::ToString
+    IL_02cb: call System.Int32::Parse
+    IL_02d0: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_Id
+    IL_02d5: ldloc.s 6
+    IL_02d7: ldloc.3
+    IL_02d8: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_02dd: ldstr ldstr "ChartOfAccountId"
+    IL_02e2: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_02e7: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_02ec: callvirt System.Object::ToString
+    IL_02f1: call System.Int32::Parse
+    IL_02f6: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ChartOfAccountId
+    IL_02fb: ldloc.s 6
+    IL_02fd: ldarg.0
+    IL_02fe: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0303: callvirt System.Windows.Forms.Control::get_Text
+    IL_0308: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ChartOfAccountTitle
+    IL_030d: ldloc.s 6
+    IL_030f: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_0314: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_0319: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_031e: ldloc.s 6
+    IL_0320: ldc.i4.0
+    IL_0321: call System.Convert::ToDouble
+    IL_0326: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_YearObDebit
+    IL_032b: ldloc.s 6
+    IL_032d: ldloc.3
+    IL_032e: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0333: ldstr ldstr "CreditBalance"
+    IL_0338: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_033d: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0342: callvirt System.Object::ToString
+    IL_0347: call System.Convert::ToDouble
+    IL_034c: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_YearObCredit
+    IL_0351: ldloc.s 6
+    IL_0353: ldarg.0
+    IL_0354: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_0359: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_035e: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_0363: ldloc.s 6
+    IL_0365: ldarg.0
+    IL_0366: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_036b: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0370: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_0375: ldloc.s 6
+    IL_0377: ldarg.0
+    IL_0378: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_037d: callvirt Architecture.Model.UserAccount::get_ID
+    IL_0382: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_EntryUser
+    IL_0387: ldloc.s 6
+    IL_0389: ldarg.0
+    IL_038a: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_038f: callvirt Architecture.Model.UserAccount::get_ID
+    IL_0394: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ModifyUser
+    IL_0399: ldloc.s 6
+    IL_039b: call System.DateTime::get_Now
+    IL_03a0: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_EntryDate
+    IL_03a5: ldloc.s 6
+    IL_03a7: call System.DateTime::get_Now
+    IL_03ac: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_ModifyDate
+    IL_03b1: ldloc.s 6
+    IL_03b3: call System.DateTime::get_Now
+    IL_03b8: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostDate
+    IL_03bd: ldloc.s 6
+    IL_03bf: ldc.i4.0
+    IL_03c0: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostState
+    IL_03c5: ldloc.s 6
+    IL_03c7: ldc.i4.0
+    IL_03c8: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_PostUser
+    IL_03cd: ldloc.0
+    IL_03ce: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::get_OpeningBalanceList
+    IL_03d3: ldloc.s 6
+    IL_03d5: callvirt TypeSpec#273::Add
+    IL_03da: ldloc.s 4
+    IL_03dc: ldc.i4.1
+    IL_03dd: add
+    IL_03de: stloc.s 4
+    IL_03e0: ldloc.s 4
+    IL_03e2: ldarg.0
+    IL_03e3: ldfld Architecture.WinApp.AcfrmOpeningBalance::getlist
+    IL_03e8: callvirt System.Data.DataTable::get_Rows
+    IL_03ed: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_03f2: blt IL_0062
+    IL_03f7: ldloc.2
+    IL_03f8: ldc.i4.1
+    IL_03f9: add
+    IL_03fa: stloc.2
+    IL_03fb: ldloc.2
+    IL_03fc: ldloc.1
+    IL_03fd: ldlen
+    IL_03fe: conv.i4
+    IL_03ff: blt IL_0056
+    IL_0404: ldloc.0
+    IL_0405: call Architecture.BLL.Accounts.AccountsOpeningBalances::SaveAllRecord
+    IL_040a: pop
+    IL_040b: ldstr ldstr "Update recored Successfully"
+    IL_0410: call System.Windows.Forms.MessageBox::Show
+    IL_0415: pop
+    IL_0416: ldarg.0
+    IL_0417: call Architecture.WinApp.AcfrmOpeningBalance::Reset
+    IL_041c: leave.s IL_042b
+    IL_041e: callvirt System.Exception::get_Message
+    IL_0423: call System.Windows.Forms.MessageBox::Show
+    IL_0428: pop
+    IL_0429: leave.s IL_042b
+    IL_042b: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::txtDebit_TextChanged  (rva=0x4da08, fat header, code_size=95, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0006: callvirt System.Windows.Forms.Control::get_Text
+    IL_000b: call Architecture.Common.Conversion::ToDouble
+    IL_0010: ldc.r8 0.0
+    IL_0019: beq.s IL_0048
+    IL_001b: ldarg.0
+    IL_001c: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0021: callvirt System.Windows.Forms.Control::get_Text
+    IL_0026: call Architecture.Common.Conversion::ToDouble
+    IL_002b: ldc.r8 0.0
+    IL_0034: ble.un.s IL_004f
+    IL_0036: ldarg.0
+    IL_0037: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_003c: ldstr ldstr "0"
+    IL_0041: callvirt System.Windows.Forms.Control::set_Text
+    IL_0046: br.s IL_004f
+    IL_0048: ldarg.1
+    IL_0049: ldarg.2
+    IL_004a: call Architecture.WinApp.Common.CommonServices::CommasApplyWhileTypingOnVouchers
+    IL_004f: leave.s IL_005e
+    IL_0051: callvirt System.Exception::get_Message
+    IL_0056: call System.Windows.Forms.MessageBox::Show
+    IL_005b: pop
+    IL_005c: leave.s IL_005e
+    IL_005e: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::txtCredit_TextChanged  (rva=0x4da84, fat header, code_size=95, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0006: callvirt System.Windows.Forms.Control::get_Text
+    IL_000b: call Architecture.Common.Conversion::ToDouble
+    IL_0010: ldc.r8 0.0
+    IL_0019: beq.s IL_0048
+    IL_001b: ldarg.0
+    IL_001c: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0021: callvirt System.Windows.Forms.Control::get_Text
+    IL_0026: call Architecture.Common.Conversion::ToDouble
+    IL_002b: ldc.r8 0.0
+    IL_0034: ble.un.s IL_004f
+    IL_0036: ldarg.0
+    IL_0037: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_003c: ldstr ldstr "0"
+    IL_0041: callvirt System.Windows.Forms.Control::set_Text
+    IL_0046: br.s IL_004f
+    IL_0048: ldarg.1
+    IL_0049: ldarg.2
+    IL_004a: call Architecture.WinApp.Common.CommonServices::CommasApplyWhileTypingOnVouchers
+    IL_004f: leave.s IL_005e
+    IL_0051: callvirt System.Exception::get_Message
+    IL_0056: call System.Windows.Forms.MessageBox::Show
+    IL_005b: pop
+    IL_005c: leave.s IL_005e
+    IL_005e: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle_Leave  (rva=0x4db00, fat header, code_size=325, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0022: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_0027: dup
+    IL_0028: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_002d: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_0032: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_0037: dup
+    IL_0038: ldarg.0
+    IL_0039: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_003e: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0043: call Architecture.Common.Conversion::ToInt
+    IL_0048: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_Id
+    IL_004d: call Architecture.BLL.Accounts.AccountsOpeningBalances::GetById
+    IL_0052: stloc.0
+    IL_0053: ldloc.0
+    IL_0054: callvirt System.Data.DataTable::get_Rows
+    IL_0059: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_005e: ldc.i4.0
+    IL_005f: ble IL_00fe
+    IL_0064: ldarg.0
+    IL_0065: ldloc.0
+    IL_0066: callvirt System.Data.DataTable::get_Rows
+    IL_006b: ldc.i4.0
+    IL_006c: callvirt System.Data.DataRowCollection::get_Item
+    IL_0071: ldstr ldstr "Id"
+    IL_0076: callvirt System.Data.DataRow::get_Item
+    IL_007b: callvirt System.Object::ToString
+    IL_0080: call Architecture.Common.Conversion::ToInt
+    IL_0085: stfld Architecture.WinApp.AcfrmOpeningBalance::RId
+    IL_008a: ldarg.0
+    IL_008b: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_0090: ldloc.0
+    IL_0091: callvirt System.Data.DataTable::get_Rows
+    IL_0096: ldc.i4.0
+    IL_0097: callvirt System.Data.DataRowCollection::get_Item
+    IL_009c: ldstr ldstr "ChartOfAccountId"
+    IL_00a1: callvirt System.Data.DataRow::get_Item
+    IL_00a6: callvirt System.Object::ToString
+    IL_00ab: callvirt System.Windows.Forms.Control::set_Text
+    IL_00b0: ldarg.0
+    IL_00b1: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_00b6: ldloc.0
+    IL_00b7: callvirt System.Data.DataTable::get_Rows
+    IL_00bc: ldc.i4.0
+    IL_00bd: callvirt System.Data.DataRowCollection::get_Item
+    IL_00c2: ldstr ldstr "YearObCredit"
+    IL_00c7: callvirt System.Data.DataRow::get_Item
+    IL_00cc: callvirt System.Object::ToString
+    IL_00d1: callvirt System.Windows.Forms.Control::set_Text
+    IL_00d6: ldarg.0
+    IL_00d7: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_00dc: ldloc.0
+    IL_00dd: callvirt System.Data.DataTable::get_Rows
+    IL_00e2: ldc.i4.0
+    IL_00e3: callvirt System.Data.DataRowCollection::get_Item
+    IL_00e8: ldstr ldstr "YearObDebit"
+    IL_00ed: callvirt System.Data.DataRow::get_Item
+    IL_00f2: callvirt System.Object::ToString
+    IL_00f7: callvirt System.Windows.Forms.Control::set_Text
+    IL_00fc: br.s IL_0135
+    IL_00fe: ldarg.0
+    IL_00ff: ldc.i4.0
+    IL_0100: stfld Architecture.WinApp.AcfrmOpeningBalance::RId
+    IL_0105: ldarg.0
+    IL_0106: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_010b: ldstr ldstr "0"
+    IL_0110: callvirt System.Windows.Forms.Control::set_Text
+    IL_0115: ldarg.0
+    IL_0116: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_011b: ldstr ldstr "0"
+    IL_0120: callvirt System.Windows.Forms.Control::set_Text
+    IL_0125: ldarg.0
+    IL_0126: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_012b: ldstr ldstr "0"
+    IL_0130: callvirt System.Windows.Forms.Control::set_Text
+    IL_0135: leave.s IL_0144
+    IL_0137: callvirt System.Exception::get_Message
+    IL_013c: call System.Windows.Forms.MessageBox::Show
+    IL_0141: pop
+    IL_0142: leave.s IL_0144
+    IL_0144: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_DoubleClick  (rva=0x4dc70, fat header, code_size=396, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0022: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_0027: dup
+    IL_0028: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_002d: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_0032: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_0037: dup
+    IL_0038: ldarg.0
+    IL_0039: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_003e: callvirt Janus.Windows.GridEX.GridEX::get_CurrentRow
+    IL_0043: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0048: ldc.i4.0
+    IL_0049: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_004e: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0053: callvirt System.Object::ToString
+    IL_0058: call Architecture.Common.Conversion::ToInt
+    IL_005d: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_Id
+    IL_0062: call Architecture.BLL.Accounts.AccountsOpeningBalances::GetById
+    IL_0067: stloc.0
+    IL_0068: ldloc.0
+    IL_0069: callvirt System.Data.DataTable::get_Rows
+    IL_006e: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0073: ldc.i4.0
+    IL_0074: ble IL_0145
+    IL_0079: ldarg.0
+    IL_007a: ldloc.0
+    IL_007b: callvirt System.Data.DataTable::get_Rows
+    IL_0080: ldc.i4.0
+    IL_0081: callvirt System.Data.DataRowCollection::get_Item
+    IL_0086: ldstr ldstr "Id"
+    IL_008b: callvirt System.Data.DataRow::get_Item
+    IL_0090: callvirt System.Object::ToString
+    IL_0095: call Architecture.Common.Conversion::ToInt
+    IL_009a: stfld Architecture.WinApp.AcfrmOpeningBalance::RId
+    IL_009f: ldarg.0
+    IL_00a0: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_00a5: ldloc.0
+    IL_00a6: callvirt System.Data.DataTable::get_Rows
+    IL_00ab: ldc.i4.0
+    IL_00ac: callvirt System.Data.DataRowCollection::get_Item
+    IL_00b1: ldstr ldstr "Id"
+    IL_00b6: callvirt System.Data.DataRow::get_Item
+    IL_00bb: callvirt System.Object::ToString
+    IL_00c0: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_Value
+    IL_00c5: ldarg.0
+    IL_00c6: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_00cb: ldloc.0
+    IL_00cc: callvirt System.Data.DataTable::get_Rows
+    IL_00d1: ldc.i4.0
+    IL_00d2: callvirt System.Data.DataRowCollection::get_Item
+    IL_00d7: ldstr ldstr "ChartOfAccountId"
+    IL_00dc: callvirt System.Data.DataRow::get_Item
+    IL_00e1: callvirt System.Object::ToString
+    IL_00e6: callvirt System.Windows.Forms.Control::set_Text
+    IL_00eb: ldarg.0
+    IL_00ec: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_00f1: ldloc.0
+    IL_00f2: callvirt System.Data.DataTable::get_Rows
+    IL_00f7: ldc.i4.0
+    IL_00f8: callvirt System.Data.DataRowCollection::get_Item
+    IL_00fd: ldstr ldstr "YearObDebit"
+    IL_0102: callvirt System.Data.DataRow::get_Item
+    IL_0107: callvirt System.Object::ToString
+    IL_010c: callvirt System.Windows.Forms.Control::set_Text
+    IL_0111: ldarg.0
+    IL_0112: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0117: ldloc.0
+    IL_0118: callvirt System.Data.DataTable::get_Rows
+    IL_011d: ldc.i4.0
+    IL_011e: callvirt System.Data.DataRowCollection::get_Item
+    IL_0123: ldstr ldstr "YearObCredit"
+    IL_0128: callvirt System.Data.DataRow::get_Item
+    IL_012d: callvirt System.Object::ToString
+    IL_0132: callvirt System.Windows.Forms.Control::set_Text
+    IL_0137: ldarg.0
+    IL_0138: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_013d: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_0142: pop
+    IL_0143: br.s IL_017c
+    IL_0145: ldarg.0
+    IL_0146: ldc.i4.0
+    IL_0147: stfld Architecture.WinApp.AcfrmOpeningBalance::RId
+    IL_014c: ldarg.0
+    IL_014d: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0152: ldsfld System.String::Empty
+    IL_0157: callvirt System.Windows.Forms.Control::set_Text
+    IL_015c: ldarg.0
+    IL_015d: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0162: ldsfld System.String::Empty
+    IL_0167: callvirt System.Windows.Forms.Control::set_Text
+    IL_016c: ldarg.0
+    IL_016d: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0172: ldsfld System.String::Empty
+    IL_0177: callvirt System.Windows.Forms.Control::set_Text
+    IL_017c: leave.s IL_018b
+    IL_017e: callvirt System.Exception::get_Message
+    IL_0183: call System.Windows.Forms.MessageBox::Show
+    IL_0188: pop
+    IL_0189: leave.s IL_018b
+    IL_018b: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::GridSettings  (rva=0x4de24, fat header, code_size=691, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0006: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_000b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0010: ldstr ldstr "Id"
+    IL_0015: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_001a: ldc.i4.0
+    IL_001b: callvirt Janus.Windows.GridEX.GridEXColumn::set_Visible
+    IL_0020: ldarg.0
+    IL_0021: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0026: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_002b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0030: ldstr ldstr "ChartOfAccountId"
+    IL_0035: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_003a: ldc.i4.0
+    IL_003b: callvirt Janus.Windows.GridEX.GridEXColumn::set_Visible
+    IL_0040: ldarg.0
+    IL_0041: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0046: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_004b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0050: ldstr ldstr "Id"
+    IL_0055: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_005a: ldc.i4.0
+    IL_005b: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_0060: ldarg.0
+    IL_0061: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0066: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_006b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0070: ldstr ldstr "ChartofAccountId"
+    IL_0075: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_007a: ldc.i4.0
+    IL_007b: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_0080: ldarg.0
+    IL_0081: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0086: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_008b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0090: ldstr ldstr "AccountType"
+    IL_0095: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_009a: ldc.i4.0
+    IL_009b: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_00a0: ldarg.0
+    IL_00a1: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_00a6: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00ab: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00b0: ldstr ldstr "ParentAccountTitle"
+    IL_00b5: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_00ba: ldc.i4.0
+    IL_00bb: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_00c0: ldarg.0
+    IL_00c1: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_00c6: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00cb: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00d0: ldstr ldstr "AccountTitle"
+    IL_00d5: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_00da: ldc.i4.0
+    IL_00db: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_00e0: ldarg.0
+    IL_00e1: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_00e6: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00eb: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00f0: ldstr ldstr "AccountType"
+    IL_00f5: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_00fa: ldc.i4.1
+    IL_00fb: callvirt Janus.Windows.GridEX.GridEXColumn::set_FilterEditType
+    IL_0100: ldarg.0
+    IL_0101: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0106: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_010b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0110: ldstr ldstr "ParentAccountTitle"
+    IL_0115: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_011a: ldc.i4.1
+    IL_011b: callvirt Janus.Windows.GridEX.GridEXColumn::set_FilterEditType
+    IL_0120: ldarg.0
+    IL_0121: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0126: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_012b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0130: ldstr ldstr "AccountTitle"
+    IL_0135: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_013a: ldc.i4.1
+    IL_013b: callvirt Janus.Windows.GridEX.GridEXColumn::set_FilterEditType
+    IL_0140: ldarg.0
+    IL_0141: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0146: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_014b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0150: ldstr ldstr "DebitBalance"
+    IL_0155: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_015a: ldc.i4.1
+    IL_015b: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_0160: ldarg.0
+    IL_0161: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0166: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_016b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0170: ldstr ldstr "CreditBalance"
+    IL_0175: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_017a: ldc.i4.1
+    IL_017b: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_0180: ldarg.0
+    IL_0181: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0186: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_018b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0190: ldstr ldstr "DebitBalance"
+    IL_0195: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_019a: ldc.i4.2
+    IL_019b: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_01a0: ldarg.0
+    IL_01a1: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_01a6: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_01ab: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01b0: ldstr ldstr "DebitBalance"
+    IL_01b5: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01ba: ldc.i4.3
+    IL_01bb: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_01c0: ldarg.0
+    IL_01c1: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_01c6: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_01cb: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01d0: ldstr ldstr "DebitBalance"
+    IL_01d5: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01da: ldsfld Architecture.Common.clsGlobalVariables::stringFormatsingle
+    IL_01df: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_01e4: ldarg.0
+    IL_01e5: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_01ea: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_01ef: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01f4: ldstr ldstr "DebitBalance"
+    IL_01f9: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01fe: ldsfld Architecture.Common.clsGlobalVariables::stringFormatsingle
+    IL_0203: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_0208: ldarg.0
+    IL_0209: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_020e: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0213: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0218: ldstr ldstr "CreditBalance"
+    IL_021d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0222: ldc.i4.2
+    IL_0223: callvirt Janus.Windows.GridEX.GridEXColumn::set_AggregateFunction
+    IL_0228: ldarg.0
+    IL_0229: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_022e: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0233: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0238: ldstr ldstr "CreditBalance"
+    IL_023d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0242: ldc.i4.3
+    IL_0243: callvirt Janus.Windows.GridEX.GridEXColumn::set_TextAlignment
+    IL_0248: ldarg.0
+    IL_0249: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_024e: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0253: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0258: ldstr ldstr "CreditBalance"
+    IL_025d: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0262: ldsfld Architecture.Common.clsGlobalVariables::stringFormatsingle
+    IL_0267: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_026c: ldarg.0
+    IL_026d: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0272: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0277: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_027c: ldstr ldstr "CreditBalance"
+    IL_0281: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0286: ldsfld Architecture.Common.clsGlobalVariables::stringFormatsingle
+    IL_028b: callvirt Janus.Windows.GridEX.GridEXColumn::set_TotalFormatString
+    IL_0290: ldarg.0
+    IL_0291: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0296: call Architecture.WinApp.Common.CommonServices::GridAutoAdjustmentNew
+    IL_029b: ldarg.0
+    IL_029c: ldnull
+    IL_029d: ldnull
+    IL_029e: call Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1_Load
+    IL_02a3: leave.s IL_02b2
+    IL_02a5: callvirt System.Exception::get_Message
+    IL_02aa: call System.Windows.Forms.MessageBox::Show
+    IL_02af: pop
+    IL_02b0: leave.s IL_02b2
+    IL_02b2: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::AcfrmOpeningBalance_KeyPress  (rva=0x4e100, fat header, code_size=332, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.2
+    IL_0001: callvirt System.Windows.Forms.KeyEventArgs::get_KeyData
+    IL_0006: ldc.i4.s 13
+    IL_0008: bne.un.s IL_0014
+    IL_000a: ldstr ldstr "{TAB}"
+    IL_000f: call System.Windows.Forms.SendKeys::Send
+    IL_0014: ldarg.2
+    IL_0015: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_001a: brfalse.s IL_002e
+    IL_001c: ldarg.2
+    IL_001d: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0022: ldc.i4.s 78
+    IL_0024: bne.un.s IL_002e
+    IL_0026: ldarg.0
+    IL_0027: ldnull
+    IL_0028: ldnull
+    IL_0029: call Architecture.WinApp.AcfrmOpeningBalance::BtnNew_Click
+    IL_002e: ldarg.0
+    IL_002f: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0034: callvirt System.Windows.Forms.Control::get_Visible
+    IL_0039: brfalse.s IL_0062
+    IL_003b: ldarg.0
+    IL_003c: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0041: callvirt System.Windows.Forms.Control::get_Enabled
+    IL_0046: brfalse.s IL_0062
+    IL_0048: ldarg.2
+    IL_0049: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_004e: brfalse.s IL_0062
+    IL_0050: ldarg.2
+    IL_0051: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0056: ldc.i4.s 83
+    IL_0058: bne.un.s IL_0062
+    IL_005a: ldarg.0
+    IL_005b: ldnull
+    IL_005c: ldnull
+    IL_005d: call Architecture.WinApp.AcfrmOpeningBalance::button1_Click
+    IL_0062: ldarg.0
+    IL_0063: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0068: callvirt System.Windows.Forms.ToolStripItem::get_Visible
+    IL_006d: brfalse.s IL_0096
+    IL_006f: ldarg.0
+    IL_0070: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0075: callvirt System.Windows.Forms.ToolStripItem::get_Enabled
+    IL_007a: brfalse.s IL_0096
+    IL_007c: ldarg.2
+    IL_007d: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0082: brfalse.s IL_0096
+    IL_0084: ldarg.2
+    IL_0085: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_008a: ldc.i4.s 85
+    IL_008c: bne.un.s IL_0096
+    IL_008e: ldarg.0
+    IL_008f: ldnull
+    IL_0090: ldnull
+    IL_0091: call Architecture.WinApp.AcfrmOpeningBalance::BtnEdit_Click
+    IL_0096: ldarg.2
+    IL_0097: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_009c: brfalse.s IL_00a8
+    IL_009e: ldarg.2
+    IL_009f: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00a4: ldc.i4.s 69
+    IL_00a6: beq.s IL_00b2
+    IL_00a8: ldarg.2
+    IL_00a9: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00ae: ldc.i4.s 27
+    IL_00b0: bne.un.s IL_00b8
+    IL_00b2: ldarg.0
+    IL_00b3: call System.Windows.Forms.Form::Close
+    IL_00b8: ldarg.2
+    IL_00b9: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_00be: brfalse.s IL_00d2
+    IL_00c0: ldarg.2
+    IL_00c1: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00c6: ldc.i4.s 82
+    IL_00c8: bne.un.s IL_00d2
+    IL_00ca: ldarg.0
+    IL_00cb: ldnull
+    IL_00cc: ldnull
+    IL_00cd: call Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1_Click
+    IL_00d2: ldarg.2
+    IL_00d3: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_00d8: brfalse.s IL_00f0
+    IL_00da: ldarg.2
+    IL_00db: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00e0: ldc.i4.s 116
+    IL_00e2: bne.un.s IL_00f0
+    IL_00e4: ldarg.0
+    IL_00e5: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_00ea: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_00ef: pop
+    IL_00f0: ldarg.2
+    IL_00f1: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_00f6: brfalse.s IL_0117
+    IL_00f8: ldarg.2
+    IL_00f9: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_00fe: ldc.i4.s 80
+    IL_0100: bne.un.s IL_0117
+    IL_0102: ldarg.0
+    IL_0103: ldfld Architecture.WinApp.AcfrmOpeningBalance::formrights
+    IL_0108: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHavePrintRights
+    IL_010d: brfalse.s IL_0117
+    IL_010f: ldarg.0
+    IL_0110: ldnull
+    IL_0111: ldnull
+    IL_0112: call Architecture.WinApp.AcfrmOpeningBalance::BtnPrint_Click
+    IL_0117: ldarg.2
+    IL_0118: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_011d: brfalse.s IL_0135
+    IL_011f: ldarg.2
+    IL_0120: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0125: ldc.i4.s 40
+    IL_0127: bne.un.s IL_0135
+    IL_0129: ldarg.0
+    IL_012a: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_012f: callvirt System.Windows.Forms.Control::Focus
+    IL_0134: pop
+    IL_0135: ldarg.2
+    IL_0136: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_013b: brfalse.s IL_014b
+    IL_013d: ldarg.2
+    IL_013e: callvirt System.Windows.Forms.KeyEventArgs::get_Alt
+    IL_0143: brfalse.s IL_014b
+    IL_0145: ldarg.0
+    IL_0146: call Architecture.WinApp.AcfrmOpeningBalance::MakeShortCutKeys
+    IL_014b: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1_Load  (rva=0x4e258, fat header, code_size=66, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.Control::get_Name
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_000c: callvirt System.Windows.Forms.Control::get_Name
+    IL_0011: call Architecture.WinApp.Common.CommonServices::GetGridLayout
+    IL_0016: stloc.0
+    IL_0017: ldloc.0
+    IL_0018: brfalse.s IL_0032
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0020: ldloc.0
+    IL_0021: callvirt Janus.Windows.GridEX.GridEX::LoadLayoutFile
+    IL_0026: ldloc.0
+    IL_0027: callvirt System.IO.Stream::Close
+    IL_002c: ldloc.0
+    IL_002d: callvirt System.IO.Stream::Dispose
+    IL_0032: leave.s IL_0041
+    IL_0034: callvirt System.Exception::get_Message
+    IL_0039: call System.Windows.Forms.MessageBox::Show
+    IL_003e: pop
+    IL_003f: leave.s IL_0041
+    IL_0041: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::btnclose_Click  (rva=0x36198, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.Form::Close
+    IL_0006: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::button1_Click  (rva=0x4e2b8, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.AcfrmOpeningBalance::SingleRecordUpdate
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1_Click  (rva=0x4e2ec, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.AcfrmOpeningBalance::FindAccountTitle
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_CellUpdated  (rva=0x4e320, fat header, code_size=324, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0006: callvirt Janus.Windows.GridEX.GridEX::UpdateData
+    IL_000b: pop
+    IL_000c: ldarg.0
+    IL_000d: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_0012: callvirt Janus.Windows.GridEX.GridEX::get_CurrentRow
+    IL_0017: stloc.0
+    IL_0018: ldarg.2
+    IL_0019: callvirt Janus.Windows.GridEX.ColumnActionEventArgs::get_Column
+    IL_001e: callvirt Janus.Windows.GridEX.GridEXColumn::get_Key
+    IL_0023: ldstr ldstr "DebitBalance"
+    IL_0028: call System.String::op_Equality
+    IL_002d: brfalse.s IL_00a0
+    IL_002f: ldloc.0
+    IL_0030: brfalse.s IL_00a0
+    IL_0032: ldloc.0
+    IL_0033: callvirt Janus.Windows.GridEX.GridEXRow::get_RowType
+    IL_0038: brtrue.s IL_00a0
+    IL_003a: ldloc.0
+    IL_003b: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0040: ldstr ldstr "DebitBalance"
+    IL_0045: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_004a: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_004f: callvirt System.Object::ToString
+    IL_0054: ldsfld System.String::Empty
+    IL_0059: call System.String::op_Inequality
+    IL_005e: brfalse.s IL_00a0
+    IL_0060: ldloc.0
+    IL_0061: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0066: ldstr ldstr "DebitBalance"
+    IL_006b: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0070: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0075: call Architecture.Common.Conversion::ToDouble
+    IL_007a: ldc.r8 0.0
+    IL_0083: ble.un.s IL_00a0
+    IL_0085: ldloc.0
+    IL_0086: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_008b: ldstr ldstr "CreditBalance"
+    IL_0090: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0095: ldc.i4.0
+    IL_0096: box System.Int32
+    IL_009b: callvirt Janus.Windows.GridEX.GridEXCell::set_Value
+    IL_00a0: ldarg.2
+    IL_00a1: callvirt Janus.Windows.GridEX.ColumnActionEventArgs::get_Column
+    IL_00a6: callvirt Janus.Windows.GridEX.GridEXColumn::get_Key
+    IL_00ab: ldstr ldstr "CreditBalance"
+    IL_00b0: call System.String::op_Equality
+    IL_00b5: brfalse.s IL_0128
+    IL_00b7: ldloc.0
+    IL_00b8: brfalse.s IL_0128
+    IL_00ba: ldloc.0
+    IL_00bb: callvirt Janus.Windows.GridEX.GridEXRow::get_RowType
+    IL_00c0: brtrue.s IL_0128
+    IL_00c2: ldloc.0
+    IL_00c3: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_00c8: ldstr ldstr "CreditBalance"
+    IL_00cd: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_00d2: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_00d7: callvirt System.Object::ToString
+    IL_00dc: ldsfld System.String::Empty
+    IL_00e1: call System.String::op_Inequality
+    IL_00e6: brfalse.s IL_0128
+    IL_00e8: ldloc.0
+    IL_00e9: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_00ee: ldstr ldstr "CreditBalance"
+    IL_00f3: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_00f8: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_00fd: call Architecture.Common.Conversion::ToDouble
+    IL_0102: ldc.r8 0.0
+    IL_010b: ble.un.s IL_0128
+    IL_010d: ldloc.0
+    IL_010e: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0113: ldstr ldstr "DebitBalance"
+    IL_0118: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_011d: ldc.i4.0
+    IL_011e: box System.Int32
+    IL_0123: callvirt Janus.Windows.GridEX.GridEXCell::set_Value
+    IL_0128: ldarg.0
+    IL_0129: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_012e: callvirt Janus.Windows.GridEX.GridEX::UpdateData
+    IL_0133: pop
+    IL_0134: leave.s IL_0143
+    IL_0136: callvirt System.Exception::get_Message
+    IL_013b: call System.Windows.Forms.MessageBox::Show
+    IL_0140: pop
+    IL_0141: leave.s IL_0143
+    IL_0143: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::BtnPrint_Click  (rva=0x4e48c, fat header, code_size=176, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.Accounts.AccountsOpeningBalances::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0022: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_CompanyId
+    IL_0027: dup
+    IL_0028: ldsfld Architecture.Common.clsGlobalVariables::ActiveYr
+    IL_002d: callvirt Architecture.Model.FinancialYear::get_Id
+    IL_0032: callvirt Architecture.Model.Accounts.AccountsOpeningBalances::set_FinancialYearId
+    IL_0037: call Architecture.BLL.Reports.Accounts.VoucherReports::OpeningBalanceReport
+    IL_003c: stloc.0
+    IL_003d: ldloc.0
+    IL_003e: callvirt System.Data.DataTable::get_Rows
+    IL_0043: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0048: brfalse.s IL_004d
+    IL_004a: ldloc.0
+    IL_004b: brtrue.s IL_005a
+    IL_004d: ldstr ldstr "Record Not Found For Display"
+    IL_0052: call System.Windows.Forms.MessageBox::Show
+    IL_0057: pop
+    IL_0058: br.s IL_00a0
+    IL_005a: newobj Architecture.Reports.Reporting::.ctor
+    IL_005f: dup
+    IL_0060: ldstr ldstr "CompanyAddress"
+    IL_0065: ldarg.0
+    IL_0066: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_006b: callvirt Architecture.Model.UserAccount::get_CompAddress
+    IL_0070: callvirt System.Object::ToString
+    IL_0075: callvirt Architecture.Reports.Reporting::RptPerameter
+    IL_007a: dup
+    IL_007b: ldstr ldstr "CompanyName"
+    IL_0080: ldarg.0
+    IL_0081: ldfld Architecture.WinApp.AcfrmOpeningBalance::UserAccount
+    IL_0086: callvirt Architecture.Model.UserAccount::get_CompName
+    IL_008b: callvirt System.Object::ToString
+    IL_0090: callvirt Architecture.Reports.Reporting::RptPerameter
+    IL_0095: ldloc.0
+    IL_0096: ldstr ldstr "129-OpeningBalanceRpt.rpt"
+    IL_009b: callvirt Architecture.Reports.Reporting::ShowReportWithDataTable
+    IL_00a0: leave.s IL_00af
+    IL_00a2: callvirt System.Exception::get_Message
+    IL_00a7: call System.Windows.Forms.MessageBox::Show
+    IL_00ac: pop
+    IL_00ad: leave.s IL_00af
+    IL_00af: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::txtDebit_KeyPress  (rva=0x4e558, tiny header, code_size=37, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.2
+    IL_0001: ldarg.2
+    IL_0002: callvirt System.Windows.Forms.KeyPressEventArgs::get_KeyChar
+    IL_0007: call System.Char::IsDigit
+    IL_000c: brtrue.s IL_001e
+    IL_000e: ldarg.2
+    IL_000f: callvirt System.Windows.Forms.KeyPressEventArgs::get_KeyChar
+    IL_0014: call System.Char::IsControl
+    IL_0019: ldc.i4.0
+    IL_001a: ceq
+    IL_001c: br.s IL_001f
+    IL_001e: ldc.i4.0
+    IL_001f: callvirt System.Windows.Forms.KeyPressEventArgs::set_Handled
+    IL_0024: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::txtCredit_KeyPress  (rva=0x4e558, tiny header, code_size=37, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.2
+    IL_0001: ldarg.2
+    IL_0002: callvirt System.Windows.Forms.KeyPressEventArgs::get_KeyChar
+    IL_0007: call System.Char::IsDigit
+    IL_000c: brtrue.s IL_001e
+    IL_000e: ldarg.2
+    IL_000f: callvirt System.Windows.Forms.KeyPressEventArgs::get_KeyChar
+    IL_0014: call System.Char::IsControl
+    IL_0019: ldc.i4.0
+    IL_001a: ceq
+    IL_001c: br.s IL_001f
+    IL_001e: ldc.i4.0
+    IL_001f: callvirt System.Windows.Forms.KeyPressEventArgs::set_Handled
+    IL_0024: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::AcfrmOpeningBalance_FormClosing  (rva=0x4e580, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.HistoryStack::Remove
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_KeyDown  (rva=0x4e5b4, fat header, code_size=85, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.2
+    IL_0001: callvirt System.Windows.Forms.KeyEventArgs::get_KeyData
+    IL_0006: ldc.i4.s 13
+    IL_0008: bne.un.s IL_0014
+    IL_000a: ldstr ldstr "{TAB}"
+    IL_000f: call System.Windows.Forms.SendKeys::Send
+    IL_0014: ldarg.0
+    IL_0015: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_001a: callvirt Janus.Windows.GridEX.GridEX::get_CurrentRow
+    IL_001f: stloc.0
+    IL_0020: ldloc.0
+    IL_0021: brfalse.s IL_0045
+    IL_0023: ldloc.0
+    IL_0024: callvirt Janus.Windows.GridEX.GridEXRow::get_RowType
+    IL_0029: brtrue.s IL_0045
+    IL_002b: ldarg.2
+    IL_002c: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0031: brfalse.s IL_0045
+    IL_0033: ldarg.2
+    IL_0034: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0039: ldc.i4.s 13
+    IL_003b: bne.un.s IL_0045
+    IL_003d: ldarg.0
+    IL_003e: ldnull
+    IL_003f: ldnull
+    IL_0040: call Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_DoubleClick
+    IL_0045: leave.s IL_0054
+    IL_0047: callvirt System.Exception::get_Message
+    IL_004c: call System.Windows.Forms.MessageBox::Show
+    IL_0051: pop
+    IL_0052: leave.s IL_0054
+    IL_0054: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::button1_Leave  (rva=0x4e628, fat header, code_size=51, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.ContainerControl::get_ActiveControl
+    IL_0006: callvirt System.Windows.Forms.Control::get_Name
+    IL_000b: ldstr ldstr "ctrlGrdBar1"
+    IL_0010: call System.String::op_Equality
+    IL_0015: brfalse.s IL_0023
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_001d: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_0022: pop
+    IL_0023: leave.s IL_0032
+    IL_0025: callvirt System.Exception::get_Message
+    IL_002a: call System.Windows.Forms.MessageBox::Show
+    IL_002f: pop
+    IL_0030: leave.s IL_0032
+    IL_0032: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey_Click  (rva=0x4e678, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.AcfrmOpeningBalance::MakeShortCutKeys
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::MakeShortCutKeys  (rva=0x4e6ac, fat header, code_size=448, max_stack=5, exception_handlers=yes)
+    IL_0000: newobj System.Data.DataTable::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: callvirt System.Data.DataTable::get_Columns
+    IL_000c: ldstr ldstr "KeyCombination"
+    IL_0011: callvirt System.Data.DataColumnCollection::Add
+    IL_0016: pop
+    IL_0017: ldloc.0
+    IL_0018: callvirt System.Data.DataTable::get_Columns
+    IL_001d: ldstr ldstr "Description"
+    IL_0022: callvirt System.Data.DataColumnCollection::Add
+    IL_0027: pop
+    IL_0028: ldloc.0
+    IL_0029: callvirt System.Data.DataTable::get_Rows
+    IL_002e: ldc.i4.2
+    IL_002f: newarr System.Object
+    IL_0034: dup
+    IL_0035: ldc.i4.0
+    IL_0036: ldstr ldstr "Ctrl+U"
+    IL_003b: stelem.ref
+    IL_003c: dup
+    IL_003d: ldc.i4.1
+    IL_003e: ldstr ldstr "For Update All"
+    IL_0043: stelem.ref
+    IL_0044: callvirt System.Data.DataRowCollection::Add
+    IL_0049: pop
+    IL_004a: ldloc.0
+    IL_004b: callvirt System.Data.DataTable::get_Rows
+    IL_0050: ldc.i4.2
+    IL_0051: newarr System.Object
+    IL_0056: dup
+    IL_0057: ldc.i4.0
+    IL_0058: ldstr ldstr "Ctrl+S"
+    IL_005d: stelem.ref
+    IL_005e: dup
+    IL_005f: ldc.i4.1
+    IL_0060: ldstr ldstr "For Update Single"
+    IL_0065: stelem.ref
+    IL_0066: callvirt System.Data.DataRowCollection::Add
+    IL_006b: pop
+    IL_006c: ldloc.0
+    IL_006d: callvirt System.Data.DataTable::get_Rows
+    IL_0072: ldc.i4.2
+    IL_0073: newarr System.Object
+    IL_0078: dup
+    IL_0079: ldc.i4.0
+    IL_007a: ldstr ldstr "Ctrl+E"
+    IL_007f: stelem.ref
+    IL_0080: dup
+    IL_0081: ldc.i4.1
+    IL_0082: ldstr ldstr "For Close"
+    IL_0087: stelem.ref
+    IL_0088: callvirt System.Data.DataRowCollection::Add
+    IL_008d: pop
+    IL_008e: ldloc.0
+    IL_008f: callvirt System.Data.DataTable::get_Rows
+    IL_0094: ldc.i4.2
+    IL_0095: newarr System.Object
+    IL_009a: dup
+    IL_009b: ldc.i4.0
+    IL_009c: ldstr ldstr "Ctrl+R"
+    IL_00a1: stelem.ref
+    IL_00a2: dup
+    IL_00a3: ldc.i4.1
+    IL_00a4: ldstr ldstr "For Refresh"
+    IL_00a9: stelem.ref
+    IL_00aa: callvirt System.Data.DataRowCollection::Add
+    IL_00af: pop
+    IL_00b0: ldloc.0
+    IL_00b1: callvirt System.Data.DataTable::get_Rows
+    IL_00b6: ldc.i4.2
+    IL_00b7: newarr System.Object
+    IL_00bc: dup
+    IL_00bd: ldc.i4.0
+    IL_00be: ldstr ldstr "Ctrl+N"
+    IL_00c3: stelem.ref
+    IL_00c4: dup
+    IL_00c5: ldc.i4.1
+    IL_00c6: ldstr ldstr "For New"
+    IL_00cb: stelem.ref
+    IL_00cc: callvirt System.Data.DataRowCollection::Add
+    IL_00d1: pop
+    IL_00d2: ldloc.0
+    IL_00d3: callvirt System.Data.DataTable::get_Rows
+    IL_00d8: ldc.i4.2
+    IL_00d9: newarr System.Object
+    IL_00de: dup
+    IL_00df: ldc.i4.0
+    IL_00e0: ldstr ldstr "Ctrl+P"
+    IL_00e5: stelem.ref
+    IL_00e6: dup
+    IL_00e7: ldc.i4.1
+    IL_00e8: ldstr ldstr "For Print"
+    IL_00ed: stelem.ref
+    IL_00ee: callvirt System.Data.DataRowCollection::Add
+    IL_00f3: pop
+    IL_00f4: ldloc.0
+    IL_00f5: callvirt System.Data.DataTable::get_Rows
+    IL_00fa: ldc.i4.2
+    IL_00fb: newarr System.Object
+    IL_0100: dup
+    IL_0101: ldc.i4.0
+    IL_0102: ldstr ldstr "Ctrl+F5"
+    IL_0107: stelem.ref
+    IL_0108: dup
+    IL_0109: ldc.i4.1
+    IL_010a: ldstr ldstr "For Focus on Account"
+    IL_010f: stelem.ref
+    IL_0110: callvirt System.Data.DataRowCollection::Add
+    IL_0115: pop
+    IL_0116: ldloc.0
+    IL_0117: callvirt System.Data.DataTable::get_Rows
+    IL_011c: ldc.i4.2
+    IL_011d: newarr System.Object
+    IL_0122: dup
+    IL_0123: ldc.i4.0
+    IL_0124: ldstr ldstr "Ctrl+alt"
+    IL_0129: stelem.ref
+    IL_012a: dup
+    IL_012b: ldc.i4.1
+    IL_012c: ldstr ldstr "To Show ShortCut Keys Form"
+    IL_0131: stelem.ref
+    IL_0132: callvirt System.Data.DataRowCollection::Add
+    IL_0137: pop
+    IL_0138: ldloc.0
+    IL_0139: callvirt System.Data.DataTable::get_Rows
+    IL_013e: ldc.i4.2
+    IL_013f: newarr System.Object
+    IL_0144: dup
+    IL_0145: ldc.i4.0
+    IL_0146: ldstr ldstr "Ctrl+ArrowDown"
+    IL_014b: stelem.ref
+    IL_014c: dup
+    IL_014d: ldc.i4.1
+    IL_014e: ldstr ldstr "For Focus On Detail Grid"
+    IL_0153: stelem.ref
+    IL_0154: callvirt System.Data.DataRowCollection::Add
+    IL_0159: pop
+    IL_015a: ldloc.0
+    IL_015b: callvirt System.Data.DataTable::get_Rows
+    IL_0160: ldc.i4.2
+    IL_0161: newarr System.Object
+    IL_0166: dup
+    IL_0167: ldc.i4.0
+    IL_0168: ldstr ldstr "Ctrl+Enter"
+    IL_016d: stelem.ref
+    IL_016e: dup
+    IL_016f: ldc.i4.1
+    IL_0170: ldstr ldstr "When Focus On Any Grid For Update Record"
+    IL_0175: stelem.ref
+    IL_0176: callvirt System.Data.DataRowCollection::Add
+    IL_017b: pop
+    IL_017c: ldloc.0
+    IL_017d: callvirt System.Data.DataTable::get_Rows
+    IL_0182: ldc.i4.2
+    IL_0183: newarr System.Object
+    IL_0188: dup
+    IL_0189: ldc.i4.0
+    IL_018a: ldstr ldstr "Ctrl+Space"
+    IL_018f: stelem.ref
+    IL_0190: dup
+    IL_0191: ldc.i4.1
+    IL_0192: ldstr ldstr "When Focus On Any Grid To Call Function's On Button Or Link"
+    IL_0197: stelem.ref
+    IL_0198: callvirt System.Data.DataRowCollection::Add
+    IL_019d: pop
+    IL_019e: ldloc.0
+    IL_019f: newobj Architecture.WinApp.Common.ShortCutKeyPopUp::.ctor
+    IL_01a4: dup
+    IL_01a5: ldc.i4.1
+    IL_01a6: callvirt System.Windows.Forms.Form::set_StartPosition
+    IL_01ab: callvirt System.Windows.Forms.Control::Show
+    IL_01b0: leave.s IL_01bf
+    IL_01b2: callvirt System.Exception::get_Message
+    IL_01b7: call System.Windows.Forms.MessageBox::Show
+    IL_01bc: pop
+    IL_01bd: leave.s IL_01bf
+    IL_01bf: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_UpdatingCell  (rva=0x4e894, fat header, code_size=81, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.2
+    IL_0001: callvirt Janus.Windows.GridEX.UpdatingCellEventArgs::get_Column
+    IL_0006: callvirt Janus.Windows.GridEX.GridEXColumn::get_Key
+    IL_000b: ldstr ldstr "DebitBalance"
+    IL_0010: call System.String::op_Equality
+    IL_0015: brtrue.s IL_002e
+    IL_0017: ldarg.2
+    IL_0018: callvirt Janus.Windows.GridEX.UpdatingCellEventArgs::get_Column
+    IL_001d: callvirt Janus.Windows.GridEX.GridEXColumn::get_Key
+    IL_0022: ldstr ldstr "CreditBalance"
+    IL_0027: call System.String::op_Equality
+    IL_002c: brfalse.s IL_0041
+    IL_002e: ldarg.2
+    IL_002f: call Architecture.WinApp.Common.CommonServices::IsNumeric
+    IL_0034: brtrue.s IL_0041
+    IL_0036: ldstr ldstr "Please Type Only Numeric Value"
+    IL_003b: newobj System.Exception::.ctor
+    IL_0040: throw
+    IL_0041: leave.s IL_0050
+    IL_0043: callvirt System.Exception::get_Message
+    IL_0048: call System.Windows.Forms.MessageBox::Show
+    IL_004d: pop
+    IL_004e: leave.s IL_0050
+    IL_0050: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::Dispose  (rva=0x4e904, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0016
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.WinApp.AcfrmOpeningBalance::components
+    IL_0009: brfalse.s IL_0016
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.AcfrmOpeningBalance::components
+    IL_0011: callvirt System.IDisposable::Dispose
+    IL_0016: ldarg.0
+    IL_0017: ldarg.1
+    IL_0018: call System.Windows.Forms.Form::Dispose
+    IL_001d: ret
+
+; Architecture.WinApp.AcfrmOpeningBalance::InitializeComponent  (rva=0x4e924, fat header, code_size=6932, max_stack=6, exception_handlers=no)
+    IL_0000: ldtoken Architecture.WinApp.AcfrmOpeningBalance
+    IL_0005: call System.Type::GetTypeFromHandle
+    IL_000a: newobj System.ComponentModel.ComponentResourceManager::.ctor
+    IL_000f: stloc.0
+    IL_0010: newobj Infragistics.Win.Appearance::.ctor
+    IL_0015: stloc.1
+    IL_0016: newobj Infragistics.Win.Appearance::.ctor
+    IL_001b: stloc.2
+    IL_001c: newobj Infragistics.Win.Appearance::.ctor
+    IL_0021: stloc.3
+    IL_0022: newobj Infragistics.Win.Appearance::.ctor
+    IL_0027: stloc.s 4
+    IL_0029: newobj Infragistics.Win.Appearance::.ctor
+    IL_002e: stloc.s 5
+    IL_0030: newobj Infragistics.Win.Appearance::.ctor
+    IL_0035: stloc.s 6
+    IL_0037: newobj Infragistics.Win.Appearance::.ctor
+    IL_003c: stloc.s 7
+    IL_003e: newobj Infragistics.Win.Appearance::.ctor
+    IL_0043: stloc.s 8
+    IL_0045: newobj Infragistics.Win.Appearance::.ctor
+    IL_004a: stloc.s 9
+    IL_004c: newobj Infragistics.Win.Appearance::.ctor
+    IL_0051: stloc.s 10
+    IL_0053: newobj Infragistics.Win.Appearance::.ctor
+    IL_0058: stloc.s 11
+    IL_005a: newobj Infragistics.Win.Appearance::.ctor
+    IL_005f: stloc.s 12
+    IL_0061: newobj Janus.Windows.GridEX.GridEXLayout::.ctor
+    IL_0066: stloc.s 13
+    IL_0068: newobj Infragistics.Win.Appearance::.ctor
+    IL_006d: stloc.s 14
+    IL_006f: newobj Infragistics.Win.Appearance::.ctor
+    IL_0074: stloc.s 15
+    IL_0076: newobj Infragistics.Win.Appearance::.ctor
+    IL_007b: stloc.s 16
+    IL_007d: newobj Infragistics.Win.Appearance::.ctor
+    IL_0082: stloc.s 17
+    IL_0084: newobj Infragistics.Win.Appearance::.ctor
+    IL_0089: stloc.s 18
+    IL_008b: newobj Infragistics.Win.Appearance::.ctor
+    IL_0090: stloc.s 19
+    IL_0092: newobj Infragistics.Win.Appearance::.ctor
+    IL_0097: stloc.s 20
+    IL_0099: newobj Infragistics.Win.Appearance::.ctor
+    IL_009e: stloc.s 21
+    IL_00a0: newobj Infragistics.Win.Appearance::.ctor
+    IL_00a5: stloc.s 22
+    IL_00a7: newobj Infragistics.Win.Appearance::.ctor
+    IL_00ac: stloc.s 23
+    IL_00ae: newobj Infragistics.Win.Appearance::.ctor
+    IL_00b3: stloc.s 24
+    IL_00b5: newobj Infragistics.Win.Appearance::.ctor
+    IL_00ba: stloc.s 25
+    IL_00bc: ldarg.0
+    IL_00bd: newobj System.Windows.Forms.Panel::.ctor
+    IL_00c2: stfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_00c7: ldarg.0
+    IL_00c8: newobj System.Windows.Forms.Label::.ctor
+    IL_00cd: stfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_00d2: ldarg.0
+    IL_00d3: newobj System.Windows.Forms.ToolStrip::.ctor
+    IL_00d8: stfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_00dd: ldarg.0
+    IL_00de: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_00e3: stfld Architecture.WinApp.AcfrmOpeningBalance::BtnNew
+    IL_00e8: ldarg.0
+    IL_00e9: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_00ee: stfld Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1
+    IL_00f3: ldarg.0
+    IL_00f4: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_00f9: stfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_00fe: ldarg.0
+    IL_00ff: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_0104: stfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_0109: ldarg.0
+    IL_010a: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_010f: stfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_0114: ldarg.0
+    IL_0115: newobj System.Windows.Forms.GroupBox::.ctor
+    IL_011a: stfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_011f: ldarg.0
+    IL_0120: newobj System.Windows.Forms.Button::.ctor
+    IL_0125: stfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_012a: ldarg.0
+    IL_012b: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_0130: stfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0135: ldarg.0
+    IL_0136: newobj System.Windows.Forms.TextBox::.ctor
+    IL_013b: stfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0140: ldarg.0
+    IL_0141: newobj System.Windows.Forms.TextBox::.ctor
+    IL_0146: stfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_014b: ldarg.0
+    IL_014c: newobj System.Windows.Forms.Label::.ctor
+    IL_0151: stfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_0156: ldarg.0
+    IL_0157: newobj System.Windows.Forms.Label::.ctor
+    IL_015c: stfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0161: ldarg.0
+    IL_0162: newobj System.Windows.Forms.Label::.ctor
+    IL_0167: stfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_016c: ldarg.0
+    IL_016d: newobj System.Windows.Forms.Label::.ctor
+    IL_0172: stfld Architecture.WinApp.AcfrmOpeningBalance::label7
+    IL_0177: ldarg.0
+    IL_0178: newobj System.Windows.Forms.Label::.ctor
+    IL_017d: stfld Architecture.WinApp.AcfrmOpeningBalance::label4
+    IL_0182: ldarg.0
+    IL_0183: newobj System.Windows.Forms.Label::.ctor
+    IL_0188: stfld Architecture.WinApp.AcfrmOpeningBalance::label1
+    IL_018d: ldarg.0
+    IL_018e: newobj System.Windows.Forms.TextBox::.ctor
+    IL_0193: stfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_0198: ldarg.0
+    IL_0199: newobj System.Windows.Forms.Panel::.ctor
+    IL_019e: stfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_01a3: ldarg.0
+    IL_01a4: newobj System.Windows.Forms.Panel::.ctor
+    IL_01a9: stfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_01ae: ldarg.0
+    IL_01af: newobj System.Windows.Forms.Label::.ctor
+    IL_01b4: stfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_01b9: ldarg.0
+    IL_01ba: newobj grid.User_Conrtols.CtrlGrdBar::.ctor
+    IL_01bf: stfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_01c4: ldarg.0
+    IL_01c5: newobj Janus.Windows.GridEX.GridEX::.ctor
+    IL_01ca: stfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_01cf: ldarg.0
+    IL_01d0: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_01d5: stfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_01da: ldarg.0
+    IL_01db: newobj System.Windows.Forms.Label::.ctor
+    IL_01e0: stfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_01e5: ldarg.0
+    IL_01e6: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_01eb: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_01f0: ldarg.0
+    IL_01f1: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_01f6: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_01fb: ldarg.0
+    IL_01fc: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_0201: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0206: ldarg.0
+    IL_0207: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_020c: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_0211: ldarg.0
+    IL_0212: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_0217: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_021c: ldarg.0
+    IL_021d: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_0222: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0227: ldarg.0
+    IL_0228: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_022d: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_0232: ldarg.0
+    IL_0233: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_0238: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_023d: ldarg.0
+    IL_023e: call System.Windows.Forms.Control::SuspendLayout
+    IL_0243: ldarg.0
+    IL_0244: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_0249: ldc.i4.s 10
+    IL_024b: ldc.i4.s 110
+    IL_024d: ldc.i4.s 110
+    IL_024f: call System.Drawing.Color::FromArgb
+    IL_0254: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0259: ldarg.0
+    IL_025a: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_025f: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0264: ldarg.0
+    IL_0265: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_026a: callvirt ControlCollection::Add
+    IL_026f: ldarg.0
+    IL_0270: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_0275: ldc.i4.1
+    IL_0276: callvirt System.Windows.Forms.Control::set_Dock
+    IL_027b: ldarg.0
+    IL_027c: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_0281: ldc.i4.0
+    IL_0282: ldc.i4.s 27
+    IL_0284: newobj System.Drawing.Point::.ctor
+    IL_0289: callvirt System.Windows.Forms.Control::set_Location
+    IL_028e: ldarg.0
+    IL_028f: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_0294: ldstr ldstr "panel1"
+    IL_0299: callvirt System.Windows.Forms.Control::set_Name
+    IL_029e: ldarg.0
+    IL_029f: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_02a4: ldc.i4 788
+    IL_02a9: ldc.i4.s 29
+    IL_02ab: newobj System.Drawing.Size::.ctor
+    IL_02b0: callvirt System.Windows.Forms.Control::set_Size
+    IL_02b5: ldarg.0
+    IL_02b6: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_02bb: ldc.i4.2
+    IL_02bc: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_02c1: ldarg.0
+    IL_02c2: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_02c7: ldc.i4.1
+    IL_02c8: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_02cd: ldarg.0
+    IL_02ce: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_02d3: ldstr ldstr "Tahoma"
+    IL_02d8: ldc.r4 12.0
+    IL_02dd: ldc.i4.1
+    IL_02de: ldc.i4.3
+    IL_02df: ldc.i4.0
+    IL_02e0: newobj System.Drawing.Font::.ctor
+    IL_02e5: callvirt System.Windows.Forms.Control::set_Font
+    IL_02ea: ldarg.0
+    IL_02eb: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_02f0: call System.Drawing.Color::get_White
+    IL_02f5: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_02fa: ldarg.0
+    IL_02fb: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_0300: ldc.i4.5
+    IL_0301: ldc.i4.5
+    IL_0302: newobj System.Drawing.Point::.ctor
+    IL_0307: callvirt System.Windows.Forms.Control::set_Location
+    IL_030c: ldarg.0
+    IL_030d: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_0312: ldstr ldstr "label10"
+    IL_0317: callvirt System.Windows.Forms.Control::set_Name
+    IL_031c: ldarg.0
+    IL_031d: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_0322: ldc.i4 145
+    IL_0327: ldc.i4.s 19
+    IL_0329: newobj System.Drawing.Size::.ctor
+    IL_032e: callvirt System.Windows.Forms.Control::set_Size
+    IL_0333: ldarg.0
+    IL_0334: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_0339: ldc.i4.0
+    IL_033a: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_033f: ldarg.0
+    IL_0340: ldfld Architecture.WinApp.AcfrmOpeningBalance::label10
+    IL_0345: ldstr ldstr "Opening Balance"
+    IL_034a: callvirt System.Windows.Forms.Control::set_Text
+    IL_034f: ldarg.0
+    IL_0350: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_0355: ldstr ldstr "Verdana"
+    IL_035a: ldc.r4 9.75
+    IL_035f: ldc.i4.0
+    IL_0360: ldc.i4.3
+    IL_0361: ldc.i4.0
+    IL_0362: newobj System.Drawing.Font::.ctor
+    IL_0367: callvirt System.Windows.Forms.Control::set_Font
+    IL_036c: ldarg.0
+    IL_036d: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_0372: ldc.i4.s 20
+    IL_0374: ldc.i4.s 20
+    IL_0376: newobj System.Drawing.Size::.ctor
+    IL_037b: callvirt System.Windows.Forms.ToolStrip::set_ImageScalingSize
+    IL_0380: ldarg.0
+    IL_0381: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_0386: callvirt System.Windows.Forms.ToolStrip::get_Items
+    IL_038b: ldc.i4.5
+    IL_038c: newarr System.Windows.Forms.ToolStripItem
+    IL_0391: dup
+    IL_0392: ldc.i4.0
+    IL_0393: ldarg.0
+    IL_0394: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnNew
+    IL_0399: stelem.ref
+    IL_039a: dup
+    IL_039b: ldc.i4.1
+    IL_039c: ldarg.0
+    IL_039d: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1
+    IL_03a2: stelem.ref
+    IL_03a3: dup
+    IL_03a4: ldc.i4.2
+    IL_03a5: ldarg.0
+    IL_03a6: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_03ab: stelem.ref
+    IL_03ac: dup
+    IL_03ad: ldc.i4.3
+    IL_03ae: ldarg.0
+    IL_03af: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_03b4: stelem.ref
+    IL_03b5: dup
+    IL_03b6: ldc.i4.4
+    IL_03b7: ldarg.0
+    IL_03b8: ldfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_03bd: stelem.ref
+    IL_03be: callvirt System.Windows.Forms.ToolStripItemCollection::AddRange
+    IL_03c3: ldarg.0
+    IL_03c4: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_03c9: ldc.i4.0
+    IL_03ca: ldc.i4.0
+    IL_03cb: newobj System.Drawing.Point::.ctor
+    IL_03d0: callvirt System.Windows.Forms.Control::set_Location
+    IL_03d5: ldarg.0
+    IL_03d6: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_03db: ldstr ldstr "toolStrip2"
+    IL_03e0: callvirt System.Windows.Forms.Control::set_Name
+    IL_03e5: ldarg.0
+    IL_03e6: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_03eb: ldc.i4 788
+    IL_03f0: ldc.i4.s 27
+    IL_03f2: newobj System.Drawing.Size::.ctor
+    IL_03f7: callvirt System.Windows.Forms.Control::set_Size
+    IL_03fc: ldarg.0
+    IL_03fd: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_0402: ldc.i4.3
+    IL_0403: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0408: ldarg.0
+    IL_0409: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_040e: ldstr ldstr "toolStrip2"
+    IL_0413: callvirt System.Windows.Forms.Control::set_Text
+    IL_0418: ldarg.0
+    IL_0419: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnNew
+    IL_041e: call Architecture.WinApp.Properties.Resources::get_icons8_add_17
+    IL_0423: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_0428: ldarg.0
+    IL_0429: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnNew
+    IL_042e: call System.Drawing.Color::get_Magenta
+    IL_0433: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_0438: ldarg.0
+    IL_0439: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnNew
+    IL_043e: ldstr ldstr "BtnNew"
+    IL_0443: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_0448: ldarg.0
+    IL_0449: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnNew
+    IL_044e: ldc.i4.s 59
+    IL_0450: ldc.i4.s 24
+    IL_0452: newobj System.Drawing.Size::.ctor
+    IL_0457: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_045c: ldarg.0
+    IL_045d: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnNew
+    IL_0462: ldstr ldstr "&New"
+    IL_0467: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_046c: ldarg.0
+    IL_046d: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnNew
+    IL_0472: ldarg.0
+    IL_0473: ldftn Architecture.WinApp.AcfrmOpeningBalance::BtnNew_Click
+    IL_0479: newobj System.EventHandler::.ctor
+    IL_047e: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_0483: ldarg.0
+    IL_0484: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1
+    IL_0489: call Architecture.WinApp.Properties.Resources::get_referesf
+    IL_048e: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_0493: ldarg.0
+    IL_0494: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1
+    IL_0499: call System.Drawing.Color::get_Magenta
+    IL_049e: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_04a3: ldarg.0
+    IL_04a4: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1
+    IL_04a9: ldstr ldstr "toolStripButton1"
+    IL_04ae: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_04b3: ldarg.0
+    IL_04b4: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1
+    IL_04b9: ldc.i4.s 80
+    IL_04bb: ldc.i4.s 24
+    IL_04bd: newobj System.Drawing.Size::.ctor
+    IL_04c2: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_04c7: ldarg.0
+    IL_04c8: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1
+    IL_04cd: ldstr ldstr "Refresh"
+    IL_04d2: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_04d7: ldarg.0
+    IL_04d8: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1
+    IL_04dd: ldarg.0
+    IL_04de: ldftn Architecture.WinApp.AcfrmOpeningBalance::toolStripButton1_Click
+    IL_04e4: newobj System.EventHandler::.ctor
+    IL_04e9: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_04ee: ldarg.0
+    IL_04ef: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_04f4: call Architecture.WinApp.Properties.Resources::get_icons8_pencil_16
+    IL_04f9: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_04fe: ldarg.0
+    IL_04ff: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0504: call System.Drawing.Color::get_Magenta
+    IL_0509: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_050e: ldarg.0
+    IL_050f: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0514: ldstr ldstr "BtnEdit"
+    IL_0519: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_051e: ldarg.0
+    IL_051f: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0524: ldc.i4.s 98
+    IL_0526: ldc.i4.s 24
+    IL_0528: newobj System.Drawing.Size::.ctor
+    IL_052d: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_0532: ldarg.0
+    IL_0533: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0538: ldstr ldstr "&Update All"
+    IL_053d: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_0542: ldarg.0
+    IL_0543: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnEdit
+    IL_0548: ldarg.0
+    IL_0549: ldftn Architecture.WinApp.AcfrmOpeningBalance::BtnEdit_Click
+    IL_054f: newobj System.EventHandler::.ctor
+    IL_0554: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_0559: ldarg.0
+    IL_055a: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_055f: call Architecture.WinApp.Properties.Resources::get_icons8_print_16
+    IL_0564: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_0569: ldarg.0
+    IL_056a: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_056f: call System.Drawing.Color::get_Magenta
+    IL_0574: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_0579: ldarg.0
+    IL_057a: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_057f: ldstr ldstr "BtnPrint"
+    IL_0584: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_0589: ldarg.0
+    IL_058a: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_058f: ldc.i4.s 92
+    IL_0591: ldc.i4.s 24
+    IL_0593: newobj System.Drawing.Size::.ctor
+    IL_0598: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_059d: ldarg.0
+    IL_059e: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_05a3: ldstr ldstr "129-Print"
+    IL_05a8: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_05ad: ldarg.0
+    IL_05ae: ldfld Architecture.WinApp.AcfrmOpeningBalance::BtnPrint
+    IL_05b3: ldarg.0
+    IL_05b4: ldftn Architecture.WinApp.AcfrmOpeningBalance::BtnPrint_Click
+    IL_05ba: newobj System.EventHandler::.ctor
+    IL_05bf: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_05c4: ldarg.0
+    IL_05c5: ldfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_05ca: ldc.i4.1
+    IL_05cb: callvirt System.Windows.Forms.ToolStripItem::set_DisplayStyle
+    IL_05d0: ldarg.0
+    IL_05d1: ldfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_05d6: ldloc.0
+    IL_05d7: ldstr ldstr "btnShortCutKey.Image"
+    IL_05dc: callvirt System.Resources.ResourceManager::GetObject
+    IL_05e1: castclass System.Drawing.Image
+    IL_05e6: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_05eb: ldarg.0
+    IL_05ec: ldfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_05f1: call System.Drawing.Color::get_Magenta
+    IL_05f6: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_05fb: ldarg.0
+    IL_05fc: ldfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_0601: ldstr ldstr "btnShortCutKey"
+    IL_0606: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_060b: ldarg.0
+    IL_060c: ldfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_0611: ldc.i4.s 106
+    IL_0613: ldc.i4.s 24
+    IL_0615: newobj System.Drawing.Size::.ctor
+    IL_061a: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_061f: ldarg.0
+    IL_0620: ldfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_0625: ldstr ldstr "ShortCut Keys"
+    IL_062a: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_062f: ldarg.0
+    IL_0630: ldfld Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey
+    IL_0635: ldarg.0
+    IL_0636: ldftn Architecture.WinApp.AcfrmOpeningBalance::btnShortCutKey_Click
+    IL_063c: newobj System.EventHandler::.ctor
+    IL_0641: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_0646: ldarg.0
+    IL_0647: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_064c: call System.Drawing.Color::get_White
+    IL_0651: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0656: ldarg.0
+    IL_0657: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_065c: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0661: ldarg.0
+    IL_0662: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_0667: callvirt ControlCollection::Add
+    IL_066c: ldarg.0
+    IL_066d: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_0672: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0677: ldarg.0
+    IL_0678: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_067d: callvirt ControlCollection::Add
+    IL_0682: ldarg.0
+    IL_0683: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_0688: callvirt System.Windows.Forms.Control::get_Controls
+    IL_068d: ldarg.0
+    IL_068e: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_0693: callvirt ControlCollection::Add
+    IL_0698: ldarg.0
+    IL_0699: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_069e: callvirt System.Windows.Forms.Control::get_Controls
+    IL_06a3: ldarg.0
+    IL_06a4: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_06a9: callvirt ControlCollection::Add
+    IL_06ae: ldarg.0
+    IL_06af: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_06b4: callvirt System.Windows.Forms.Control::get_Controls
+    IL_06b9: ldarg.0
+    IL_06ba: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_06bf: callvirt ControlCollection::Add
+    IL_06c4: ldarg.0
+    IL_06c5: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_06ca: callvirt System.Windows.Forms.Control::get_Controls
+    IL_06cf: ldarg.0
+    IL_06d0: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_06d5: callvirt ControlCollection::Add
+    IL_06da: ldarg.0
+    IL_06db: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_06e0: callvirt System.Windows.Forms.Control::get_Controls
+    IL_06e5: ldarg.0
+    IL_06e6: ldfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_06eb: callvirt ControlCollection::Add
+    IL_06f0: ldarg.0
+    IL_06f1: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_06f6: callvirt System.Windows.Forms.Control::get_Controls
+    IL_06fb: ldarg.0
+    IL_06fc: ldfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0701: callvirt ControlCollection::Add
+    IL_0706: ldarg.0
+    IL_0707: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_070c: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0711: ldarg.0
+    IL_0712: ldfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_0717: callvirt ControlCollection::Add
+    IL_071c: ldarg.0
+    IL_071d: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_0722: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0727: ldarg.0
+    IL_0728: ldfld Architecture.WinApp.AcfrmOpeningBalance::label7
+    IL_072d: callvirt ControlCollection::Add
+    IL_0732: ldarg.0
+    IL_0733: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_0738: callvirt System.Windows.Forms.Control::get_Controls
+    IL_073d: ldarg.0
+    IL_073e: ldfld Architecture.WinApp.AcfrmOpeningBalance::label4
+    IL_0743: callvirt ControlCollection::Add
+    IL_0748: ldarg.0
+    IL_0749: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_074e: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0753: ldarg.0
+    IL_0754: ldfld Architecture.WinApp.AcfrmOpeningBalance::label1
+    IL_0759: callvirt ControlCollection::Add
+    IL_075e: ldarg.0
+    IL_075f: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_0764: ldstr ldstr "Tahoma"
+    IL_0769: ldc.r4 9.75
+    IL_076e: ldc.i4.1
+    IL_076f: ldc.i4.3
+    IL_0770: ldc.i4.0
+    IL_0771: newobj System.Drawing.Font::.ctor
+    IL_0776: callvirt System.Windows.Forms.Control::set_Font
+    IL_077b: ldarg.0
+    IL_077c: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_0781: ldc.i4.5
+    IL_0782: ldc.i4.4
+    IL_0783: newobj System.Drawing.Point::.ctor
+    IL_0788: callvirt System.Windows.Forms.Control::set_Location
+    IL_078d: ldarg.0
+    IL_078e: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_0793: ldstr ldstr "groupBox1"
+    IL_0798: callvirt System.Windows.Forms.Control::set_Name
+    IL_079d: ldarg.0
+    IL_079e: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_07a3: ldc.i4 596
+    IL_07a8: ldc.i4.s 95
+    IL_07aa: newobj System.Drawing.Size::.ctor
+    IL_07af: callvirt System.Windows.Forms.Control::set_Size
+    IL_07b4: ldarg.0
+    IL_07b5: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_07ba: ldc.i4.4
+    IL_07bb: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_07c0: ldarg.0
+    IL_07c1: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_07c6: ldc.i4.0
+    IL_07c7: callvirt System.Windows.Forms.GroupBox::set_TabStop
+    IL_07cc: ldarg.0
+    IL_07cd: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_07d2: ldstr ldstr "Information"
+    IL_07d7: callvirt System.Windows.Forms.Control::set_Text
+    IL_07dc: ldarg.0
+    IL_07dd: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_07e2: call System.Drawing.Color::get_Teal
+    IL_07e7: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_07ec: ldarg.0
+    IL_07ed: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_07f2: ldc.i4.0
+    IL_07f3: callvirt System.Windows.Forms.ButtonBase::set_FlatStyle
+    IL_07f8: ldarg.0
+    IL_07f9: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_07fe: call System.Drawing.Color::get_White
+    IL_0803: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_0808: ldarg.0
+    IL_0809: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_080e: ldc.i4 468
+    IL_0813: ldc.i4.s 64
+    IL_0815: newobj System.Drawing.Point::.ctor
+    IL_081a: callvirt System.Windows.Forms.Control::set_Location
+    IL_081f: ldarg.0
+    IL_0820: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0825: ldstr ldstr "button1"
+    IL_082a: callvirt System.Windows.Forms.Control::set_Name
+    IL_082f: ldarg.0
+    IL_0830: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0835: ldc.i4.s 108
+    IL_0837: ldc.i4.s 26
+    IL_0839: newobj System.Drawing.Size::.ctor
+    IL_083e: callvirt System.Windows.Forms.Control::set_Size
+    IL_0843: ldarg.0
+    IL_0844: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0849: ldc.i4.3
+    IL_084a: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_084f: ldarg.0
+    IL_0850: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0855: ldstr ldstr "Update Single"
+    IL_085a: callvirt System.Windows.Forms.Control::set_Text
+    IL_085f: ldarg.0
+    IL_0860: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0865: ldc.i4.2
+    IL_0866: callvirt System.Windows.Forms.ButtonBase::set_TextAlign
+    IL_086b: ldarg.0
+    IL_086c: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0871: ldc.i4.0
+    IL_0872: callvirt System.Windows.Forms.ButtonBase::set_UseVisualStyleBackColor
+    IL_0877: ldarg.0
+    IL_0878: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_087d: ldarg.0
+    IL_087e: ldftn Architecture.WinApp.AcfrmOpeningBalance::button1_Click
+    IL_0884: newobj System.EventHandler::.ctor
+    IL_0889: callvirt System.Windows.Forms.Control::add_Click
+    IL_088e: ldarg.0
+    IL_088f: ldfld Architecture.WinApp.AcfrmOpeningBalance::button1
+    IL_0894: ldarg.0
+    IL_0895: ldftn Architecture.WinApp.AcfrmOpeningBalance::button1_Leave
+    IL_089b: newobj System.EventHandler::.ctor
+    IL_08a0: callvirt System.Windows.Forms.Control::add_Leave
+    IL_08a5: ldarg.0
+    IL_08a6: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_08ab: ldc.i4.1
+    IL_08ac: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_08b1: ldarg.0
+    IL_08b2: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_08b7: ldc.i4.4
+    IL_08b8: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_08bd: ldarg.0
+    IL_08be: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_08c3: ldc.i4.2
+    IL_08c4: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_08c9: ldarg.0
+    IL_08ca: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_08cf: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_08d4: ldstr ldstr ""
+    IL_08d9: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_08de: ldloc.1
+    IL_08df: call System.Drawing.SystemColors::get_Window
+    IL_08e4: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_08e9: ldloc.1
+    IL_08ea: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_08ef: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_08f4: ldarg.0
+    IL_08f5: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_08fa: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_08ff: ldloc.1
+    IL_0900: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_0905: ldarg.0
+    IL_0906: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_090b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0910: ldc.i4.4
+    IL_0911: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_0916: ldarg.0
+    IL_0917: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_091c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0921: ldc.i4.2
+    IL_0922: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_0927: ldloc.2
+    IL_0928: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_092d: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0932: ldloc.2
+    IL_0933: call System.Drawing.SystemColors::get_ControlDark
+    IL_0938: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_093d: ldloc.2
+    IL_093e: ldc.i4.2
+    IL_093f: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0944: ldloc.2
+    IL_0945: call System.Drawing.SystemColors::get_Window
+    IL_094a: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_094f: ldarg.0
+    IL_0950: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0955: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_095a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_095f: ldloc.2
+    IL_0960: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_0965: ldloc.3
+    IL_0966: call System.Drawing.SystemColors::get_GrayText
+    IL_096b: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0970: ldarg.0
+    IL_0971: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0976: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_097b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0980: ldloc.3
+    IL_0981: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_0986: ldarg.0
+    IL_0987: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_098c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0991: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0996: ldc.i4.4
+    IL_0997: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_099c: ldloc.s 4
+    IL_099e: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_09a3: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_09a8: ldloc.s 4
+    IL_09aa: call System.Drawing.SystemColors::get_Control
+    IL_09af: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_09b4: ldloc.s 4
+    IL_09b6: ldc.i4.3
+    IL_09b7: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_09bc: ldloc.s 4
+    IL_09be: call System.Drawing.SystemColors::get_GrayText
+    IL_09c3: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_09c8: ldarg.0
+    IL_09c9: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_09ce: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09d3: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_09d8: ldloc.s 4
+    IL_09da: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_09df: ldarg.0
+    IL_09e0: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_09e5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09ea: ldc.i4.1
+    IL_09eb: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_09f0: ldarg.0
+    IL_09f1: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_09f6: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09fb: ldc.i4.1
+    IL_09fc: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_0a01: ldloc.s 5
+    IL_0a03: call System.Drawing.SystemColors::get_Window
+    IL_0a08: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0a0d: ldloc.s 5
+    IL_0a0f: call System.Drawing.SystemColors::get_ControlText
+    IL_0a14: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0a19: ldarg.0
+    IL_0a1a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0a1f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a24: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a29: ldloc.s 5
+    IL_0a2b: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_0a30: ldloc.s 6
+    IL_0a32: call System.Drawing.SystemColors::get_Highlight
+    IL_0a37: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0a3c: ldloc.s 6
+    IL_0a3e: call System.Drawing.SystemColors::get_HighlightText
+    IL_0a43: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0a48: ldarg.0
+    IL_0a49: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0a4e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a53: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a58: ldloc.s 6
+    IL_0a5a: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_0a5f: ldarg.0
+    IL_0a60: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0a65: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a6a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a6f: ldc.i4.2
+    IL_0a70: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_0a75: ldarg.0
+    IL_0a76: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0a7b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a80: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a85: ldc.i4.2
+    IL_0a86: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_0a8b: ldloc.s 7
+    IL_0a8d: call System.Drawing.SystemColors::get_Window
+    IL_0a92: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0a97: ldarg.0
+    IL_0a98: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0a9d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0aa2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0aa7: ldloc.s 7
+    IL_0aa9: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_0aae: ldloc.s 8
+    IL_0ab0: call System.Drawing.Color::get_Silver
+    IL_0ab5: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0aba: ldloc.s 8
+    IL_0abc: ldc.i4.3
+    IL_0abd: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_0ac2: ldarg.0
+    IL_0ac3: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0ac8: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0acd: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ad2: ldloc.s 8
+    IL_0ad4: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_0ad9: ldarg.0
+    IL_0ada: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0adf: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ae4: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ae9: ldc.i4.4
+    IL_0aea: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_0aef: ldarg.0
+    IL_0af0: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0af5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0afa: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0aff: ldc.i4.0
+    IL_0b00: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_0b05: ldloc.s 9
+    IL_0b07: call System.Drawing.SystemColors::get_Control
+    IL_0b0c: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0b11: ldloc.s 9
+    IL_0b13: call System.Drawing.SystemColors::get_ControlDark
+    IL_0b18: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0b1d: ldloc.s 9
+    IL_0b1f: ldc.i4.1
+    IL_0b20: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_0b25: ldloc.s 9
+    IL_0b27: ldc.i4.3
+    IL_0b28: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0b2d: ldloc.s 9
+    IL_0b2f: call System.Drawing.SystemColors::get_Window
+    IL_0b34: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0b39: ldarg.0
+    IL_0b3a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0b3f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0b44: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0b49: ldloc.s 9
+    IL_0b4b: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_0b50: ldloc.s 10
+    IL_0b52: ldstr ldstr "Left"
+    IL_0b57: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_0b5c: ldarg.0
+    IL_0b5d: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0b62: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0b67: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0b6c: ldloc.s 10
+    IL_0b6e: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_0b73: ldarg.0
+    IL_0b74: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0b79: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0b7e: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0b83: ldc.i4.3
+    IL_0b84: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_0b89: ldarg.0
+    IL_0b8a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0b8f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0b94: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0b99: ldc.i4.2
+    IL_0b9a: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_0b9f: ldloc.s 11
+    IL_0ba1: call System.Drawing.SystemColors::get_Window
+    IL_0ba6: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0bab: ldloc.s 11
+    IL_0bad: call System.Drawing.Color::get_Silver
+    IL_0bb2: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0bb7: ldarg.0
+    IL_0bb8: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0bbd: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0bc2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0bc7: ldloc.s 11
+    IL_0bc9: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_0bce: ldarg.0
+    IL_0bcf: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0bd4: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0bd9: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0bde: ldc.i4.2
+    IL_0bdf: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_0be4: ldloc.s 12
+    IL_0be6: call System.Drawing.SystemColors::get_ControlLight
+    IL_0beb: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0bf0: ldarg.0
+    IL_0bf1: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0bf6: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0bfb: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0c00: ldloc.s 12
+    IL_0c02: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_0c07: ldarg.0
+    IL_0c08: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0c0d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c12: ldc.i4.0
+    IL_0c13: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_0c18: ldarg.0
+    IL_0c19: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0c1e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c23: ldc.i4.1
+    IL_0c24: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_0c29: ldarg.0
+    IL_0c2a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0c2f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c34: ldc.i4.2
+    IL_0c35: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_0c3a: ldarg.0
+    IL_0c3b: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0c40: ldstr ldstr "Verdana"
+    IL_0c45: ldc.r4 9.75
+    IL_0c4a: ldc.i4.0
+    IL_0c4b: ldc.i4.3
+    IL_0c4c: ldc.i4.0
+    IL_0c4d: newobj System.Drawing.Font::.ctor
+    IL_0c52: callvirt System.Windows.Forms.Control::set_Font
+    IL_0c57: ldarg.0
+    IL_0c58: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0c5d: ldc.i4.1
+    IL_0c5e: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_LimitToList
+    IL_0c63: ldarg.0
+    IL_0c64: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0c69: ldc.i4.s 111
+    IL_0c6b: ldc.i4.s 38
+    IL_0c6d: newobj System.Drawing.Point::.ctor
+    IL_0c72: callvirt System.Windows.Forms.Control::set_Location
+    IL_0c77: ldarg.0
+    IL_0c78: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0c7d: ldstr ldstr "cmbAccountTitle"
+    IL_0c82: callvirt System.Windows.Forms.Control::set_Name
+    IL_0c87: ldarg.0
+    IL_0c88: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0c8d: ldc.i4 353
+    IL_0c92: ldc.i4.s 26
+    IL_0c94: newobj System.Drawing.Size::.ctor
+    IL_0c99: callvirt System.Windows.Forms.Control::set_Size
+    IL_0c9e: ldarg.0
+    IL_0c9f: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0ca4: ldc.i4.0
+    IL_0ca5: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0caa: ldarg.0
+    IL_0cab: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_0cb0: ldarg.0
+    IL_0cb1: ldftn Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle_Leave
+    IL_0cb7: newobj System.EventHandler::.ctor
+    IL_0cbc: callvirt System.Windows.Forms.Control::add_Leave
+    IL_0cc1: ldarg.0
+    IL_0cc2: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0cc7: ldc.i4.1
+    IL_0cc8: callvirt System.Windows.Forms.TextBoxBase::set_BorderStyle
+    IL_0ccd: ldarg.0
+    IL_0cce: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0cd3: ldstr ldstr "Verdana"
+    IL_0cd8: ldc.r4 9.75
+    IL_0cdd: ldc.i4.0
+    IL_0cde: ldc.i4.3
+    IL_0cdf: ldc.i4.0
+    IL_0ce0: newobj System.Drawing.Font::.ctor
+    IL_0ce5: callvirt System.Windows.Forms.Control::set_Font
+    IL_0cea: ldarg.0
+    IL_0ceb: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0cf0: ldc.i4 334
+    IL_0cf5: ldc.i4.s 66
+    IL_0cf7: newobj System.Drawing.Point::.ctor
+    IL_0cfc: callvirt System.Windows.Forms.Control::set_Location
+    IL_0d01: ldarg.0
+    IL_0d02: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0d07: ldstr ldstr "txtCredit"
+    IL_0d0c: callvirt System.Windows.Forms.Control::set_Name
+    IL_0d11: ldarg.0
+    IL_0d12: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0d17: ldc.i4 130
+    IL_0d1c: ldc.i4.s 23
+    IL_0d1e: newobj System.Drawing.Size::.ctor
+    IL_0d23: callvirt System.Windows.Forms.Control::set_Size
+    IL_0d28: ldarg.0
+    IL_0d29: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0d2e: ldc.i4.2
+    IL_0d2f: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0d34: ldarg.0
+    IL_0d35: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0d3a: ldarg.0
+    IL_0d3b: ldftn Architecture.WinApp.AcfrmOpeningBalance::txtCredit_TextChanged
+    IL_0d41: newobj System.EventHandler::.ctor
+    IL_0d46: callvirt System.Windows.Forms.Control::add_TextChanged
+    IL_0d4b: ldarg.0
+    IL_0d4c: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtCredit
+    IL_0d51: ldarg.0
+    IL_0d52: ldftn Architecture.WinApp.AcfrmOpeningBalance::txtCredit_KeyPress
+    IL_0d58: newobj System.Windows.Forms.KeyPressEventHandler::.ctor
+    IL_0d5d: callvirt System.Windows.Forms.Control::add_KeyPress
+    IL_0d62: ldarg.0
+    IL_0d63: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0d68: ldc.i4.1
+    IL_0d69: callvirt System.Windows.Forms.TextBoxBase::set_BorderStyle
+    IL_0d6e: ldarg.0
+    IL_0d6f: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0d74: ldstr ldstr "Verdana"
+    IL_0d79: ldc.r4 9.75
+    IL_0d7e: ldc.i4.0
+    IL_0d7f: ldc.i4.3
+    IL_0d80: ldc.i4.0
+    IL_0d81: newobj System.Drawing.Font::.ctor
+    IL_0d86: callvirt System.Windows.Forms.Control::set_Font
+    IL_0d8b: ldarg.0
+    IL_0d8c: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0d91: ldc.i4.s 111
+    IL_0d93: ldc.i4.s 66
+    IL_0d95: newobj System.Drawing.Point::.ctor
+    IL_0d9a: callvirt System.Windows.Forms.Control::set_Location
+    IL_0d9f: ldarg.0
+    IL_0da0: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0da5: ldstr ldstr "txtDebit"
+    IL_0daa: callvirt System.Windows.Forms.Control::set_Name
+    IL_0daf: ldarg.0
+    IL_0db0: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0db5: ldc.i4 130
+    IL_0dba: ldc.i4.s 23
+    IL_0dbc: newobj System.Drawing.Size::.ctor
+    IL_0dc1: callvirt System.Windows.Forms.Control::set_Size
+    IL_0dc6: ldarg.0
+    IL_0dc7: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0dcc: ldc.i4.1
+    IL_0dcd: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0dd2: ldarg.0
+    IL_0dd3: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0dd8: ldarg.0
+    IL_0dd9: ldftn Architecture.WinApp.AcfrmOpeningBalance::txtDebit_TextChanged
+    IL_0ddf: newobj System.EventHandler::.ctor
+    IL_0de4: callvirt System.Windows.Forms.Control::add_TextChanged
+    IL_0de9: ldarg.0
+    IL_0dea: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtDebit
+    IL_0def: ldarg.0
+    IL_0df0: ldftn Architecture.WinApp.AcfrmOpeningBalance::txtDebit_KeyPress
+    IL_0df6: newobj System.Windows.Forms.KeyPressEventHandler::.ctor
+    IL_0dfb: callvirt System.Windows.Forms.Control::add_KeyPress
+    IL_0e00: ldarg.0
+    IL_0e01: ldfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_0e06: ldc.i4.1
+    IL_0e07: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0e0c: ldarg.0
+    IL_0e0d: ldfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_0e12: ldstr ldstr "Segoe UI Semibold"
+    IL_0e17: ldc.r4 9.0
+    IL_0e1c: ldc.i4.1
+    IL_0e1d: ldc.i4.3
+    IL_0e1e: ldc.i4.0
+    IL_0e1f: newobj System.Drawing.Font::.ctor
+    IL_0e24: callvirt System.Windows.Forms.Control::set_Font
+    IL_0e29: ldarg.0
+    IL_0e2a: ldfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_0e2f: ldc.i4 245
+    IL_0e34: ldc.i4.s 70
+    IL_0e36: newobj System.Drawing.Point::.ctor
+    IL_0e3b: callvirt System.Windows.Forms.Control::set_Location
+    IL_0e40: ldarg.0
+    IL_0e41: ldfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_0e46: ldstr ldstr "label9"
+    IL_0e4b: callvirt System.Windows.Forms.Control::set_Name
+    IL_0e50: ldarg.0
+    IL_0e51: ldfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_0e56: ldc.i4.s 85
+    IL_0e58: ldc.i4.s 15
+    IL_0e5a: newobj System.Drawing.Size::.ctor
+    IL_0e5f: callvirt System.Windows.Forms.Control::set_Size
+    IL_0e64: ldarg.0
+    IL_0e65: ldfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_0e6a: ldc.i4.1
+    IL_0e6b: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0e70: ldarg.0
+    IL_0e71: ldfld Architecture.WinApp.AcfrmOpeningBalance::label9
+    IL_0e76: ldstr ldstr "Credit Amount"
+    IL_0e7b: callvirt System.Windows.Forms.Control::set_Text
+    IL_0e80: ldarg.0
+    IL_0e81: ldfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0e86: ldc.i4.1
+    IL_0e87: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0e8c: ldarg.0
+    IL_0e8d: ldfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0e92: ldstr ldstr "Segoe UI Semibold"
+    IL_0e97: ldc.r4 9.0
+    IL_0e9c: ldc.i4.1
+    IL_0e9d: ldc.i4.3
+    IL_0e9e: ldc.i4.0
+    IL_0e9f: newobj System.Drawing.Font::.ctor
+    IL_0ea4: callvirt System.Windows.Forms.Control::set_Font
+    IL_0ea9: ldarg.0
+    IL_0eaa: ldfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0eaf: ldc.i4.s 28
+    IL_0eb1: ldc.i4.s 44
+    IL_0eb3: newobj System.Drawing.Point::.ctor
+    IL_0eb8: callvirt System.Windows.Forms.Control::set_Location
+    IL_0ebd: ldarg.0
+    IL_0ebe: ldfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0ec3: ldstr ldstr "label6"
+    IL_0ec8: callvirt System.Windows.Forms.Control::set_Name
+    IL_0ecd: ldarg.0
+    IL_0ece: ldfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0ed3: ldc.i4.s 80
+    IL_0ed5: ldc.i4.s 15
+    IL_0ed7: newobj System.Drawing.Size::.ctor
+    IL_0edc: callvirt System.Windows.Forms.Control::set_Size
+    IL_0ee1: ldarg.0
+    IL_0ee2: ldfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0ee7: ldc.i4.1
+    IL_0ee8: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0eed: ldarg.0
+    IL_0eee: ldfld Architecture.WinApp.AcfrmOpeningBalance::label6
+    IL_0ef3: ldstr ldstr "Account_Title"
+    IL_0ef8: callvirt System.Windows.Forms.Control::set_Text
+    IL_0efd: ldarg.0
+    IL_0efe: ldfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_0f03: ldc.i4.1
+    IL_0f04: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0f09: ldarg.0
+    IL_0f0a: ldfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_0f0f: ldstr ldstr "Segoe UI Semibold"
+    IL_0f14: ldc.r4 9.0
+    IL_0f19: ldc.i4.1
+    IL_0f1a: ldc.i4.3
+    IL_0f1b: ldc.i4.0
+    IL_0f1c: newobj System.Drawing.Font::.ctor
+    IL_0f21: callvirt System.Windows.Forms.Control::set_Font
+    IL_0f26: ldarg.0
+    IL_0f27: ldfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_0f2c: ldc.i4.s 28
+    IL_0f2e: ldc.i4.s 70
+    IL_0f30: newobj System.Drawing.Point::.ctor
+    IL_0f35: callvirt System.Windows.Forms.Control::set_Location
+    IL_0f3a: ldarg.0
+    IL_0f3b: ldfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_0f40: ldstr ldstr "label8"
+    IL_0f45: callvirt System.Windows.Forms.Control::set_Name
+    IL_0f4a: ldarg.0
+    IL_0f4b: ldfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_0f50: ldc.i4.s 83
+    IL_0f52: ldc.i4.s 15
+    IL_0f54: newobj System.Drawing.Size::.ctor
+    IL_0f59: callvirt System.Windows.Forms.Control::set_Size
+    IL_0f5e: ldarg.0
+    IL_0f5f: ldfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_0f64: ldc.i4.1
+    IL_0f65: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0f6a: ldarg.0
+    IL_0f6b: ldfld Architecture.WinApp.AcfrmOpeningBalance::label8
+    IL_0f70: ldstr ldstr "Debit Amount"
+    IL_0f75: callvirt System.Windows.Forms.Control::set_Text
+    IL_0f7a: ldarg.0
+    IL_0f7b: ldfld Architecture.WinApp.AcfrmOpeningBalance::label7
+    IL_0f80: ldc.i4.1
+    IL_0f81: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0f86: ldarg.0
+    IL_0f87: ldfld Architecture.WinApp.AcfrmOpeningBalance::label7
+    IL_0f8c: ldstr ldstr "Segoe UI"
+    IL_0f91: ldc.r4 9.75
+    IL_0f96: ldc.i4.1
+    IL_0f97: ldc.i4.3
+    IL_0f98: ldc.i4.0
+    IL_0f99: newobj System.Drawing.Font::.ctor
+    IL_0f9e: callvirt System.Windows.Forms.Control::set_Font
+    IL_0fa3: ldarg.0
+    IL_0fa4: ldfld Architecture.WinApp.AcfrmOpeningBalance::label7
+    IL_0fa9: ldc.i4.s 17
+    IL_0fab: ldc.i4.s 89
+    IL_0fad: newobj System.Drawing.Point::.ctor
+    IL_0fb2: callvirt System.Windows.Forms.Control::set_Location
+    IL_0fb7: ldarg.0
+    IL_0fb8: ldfld Architecture.WinApp.AcfrmOpeningBalance::label7
+    IL_0fbd: ldstr ldstr "label7"
+    IL_0fc2: callvirt System.Windows.Forms.Control::set_Name
+    IL_0fc7: ldarg.0
+    IL_0fc8: ldfld Architecture.WinApp.AcfrmOpeningBalance::label7
+    IL_0fcd: ldc.i4.0
+    IL_0fce: ldc.i4.s 17
+    IL_0fd0: newobj System.Drawing.Size::.ctor
+    IL_0fd5: callvirt System.Windows.Forms.Control::set_Size
+    IL_0fda: ldarg.0
+    IL_0fdb: ldfld Architecture.WinApp.AcfrmOpeningBalance::label7
+    IL_0fe0: ldc.i4.0
+    IL_0fe1: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0fe6: ldarg.0
+    IL_0fe7: ldfld Architecture.WinApp.AcfrmOpeningBalance::label4
+    IL_0fec: ldc.i4.1
+    IL_0fed: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0ff2: ldarg.0
+    IL_0ff3: ldfld Architecture.WinApp.AcfrmOpeningBalance::label4
+    IL_0ff8: ldstr ldstr "Segoe UI"
+    IL_0ffd: ldc.r4 9.75
+    IL_1002: ldc.i4.1
+    IL_1003: ldc.i4.3
+    IL_1004: ldc.i4.0
+    IL_1005: newobj System.Drawing.Font::.ctor
+    IL_100a: callvirt System.Windows.Forms.Control::set_Font
+    IL_100f: ldarg.0
+    IL_1010: ldfld Architecture.WinApp.AcfrmOpeningBalance::label4
+    IL_1015: ldc.i4.s 17
+    IL_1017: ldc.i4.s 55
+    IL_1019: newobj System.Drawing.Point::.ctor
+    IL_101e: callvirt System.Windows.Forms.Control::set_Location
+    IL_1023: ldarg.0
+    IL_1024: ldfld Architecture.WinApp.AcfrmOpeningBalance::label4
+    IL_1029: ldstr ldstr "label4"
+    IL_102e: callvirt System.Windows.Forms.Control::set_Name
+    IL_1033: ldarg.0
+    IL_1034: ldfld Architecture.WinApp.AcfrmOpeningBalance::label4
+    IL_1039: ldc.i4.0
+    IL_103a: ldc.i4.s 17
+    IL_103c: newobj System.Drawing.Size::.ctor
+    IL_1041: callvirt System.Windows.Forms.Control::set_Size
+    IL_1046: ldarg.0
+    IL_1047: ldfld Architecture.WinApp.AcfrmOpeningBalance::label4
+    IL_104c: ldc.i4.0
+    IL_104d: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1052: ldarg.0
+    IL_1053: ldfld Architecture.WinApp.AcfrmOpeningBalance::label1
+    IL_1058: ldc.i4.1
+    IL_1059: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_105e: ldarg.0
+    IL_105f: ldfld Architecture.WinApp.AcfrmOpeningBalance::label1
+    IL_1064: ldstr ldstr "Segoe UI"
+    IL_1069: ldc.r4 9.75
+    IL_106e: ldc.i4.1
+    IL_106f: ldc.i4.3
+    IL_1070: ldc.i4.0
+    IL_1071: newobj System.Drawing.Font::.ctor
+    IL_1076: callvirt System.Windows.Forms.Control::set_Font
+    IL_107b: ldarg.0
+    IL_107c: ldfld Architecture.WinApp.AcfrmOpeningBalance::label1
+    IL_1081: ldc.i4.s 17
+    IL_1083: ldc.i4.s 23
+    IL_1085: newobj System.Drawing.Point::.ctor
+    IL_108a: callvirt System.Windows.Forms.Control::set_Location
+    IL_108f: ldarg.0
+    IL_1090: ldfld Architecture.WinApp.AcfrmOpeningBalance::label1
+    IL_1095: ldstr ldstr "label1"
+    IL_109a: callvirt System.Windows.Forms.Control::set_Name
+    IL_109f: ldarg.0
+    IL_10a0: ldfld Architecture.WinApp.AcfrmOpeningBalance::label1
+    IL_10a5: ldc.i4.0
+    IL_10a6: ldc.i4.s 17
+    IL_10a8: newobj System.Drawing.Size::.ctor
+    IL_10ad: callvirt System.Windows.Forms.Control::set_Size
+    IL_10b2: ldarg.0
+    IL_10b3: ldfld Architecture.WinApp.AcfrmOpeningBalance::label1
+    IL_10b8: ldc.i4.0
+    IL_10b9: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_10be: ldarg.0
+    IL_10bf: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_10c4: ldstr ldstr "Calibri"
+    IL_10c9: ldc.r4 9.0
+    IL_10ce: ldc.i4.0
+    IL_10cf: ldc.i4.3
+    IL_10d0: ldc.i4.0
+    IL_10d1: newobj System.Drawing.Font::.ctor
+    IL_10d6: callvirt System.Windows.Forms.Control::set_Font
+    IL_10db: ldarg.0
+    IL_10dc: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_10e1: ldc.i4 374
+    IL_10e6: ldc.i4 131
+    IL_10eb: newobj System.Drawing.Point::.ctor
+    IL_10f0: callvirt System.Windows.Forms.Control::set_Location
+    IL_10f5: ldarg.0
+    IL_10f6: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_10fb: ldstr ldstr "txtAcId"
+    IL_1100: callvirt System.Windows.Forms.Control::set_Name
+    IL_1105: ldarg.0
+    IL_1106: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_110b: ldc.i4.s 58
+    IL_110d: ldc.i4.s 22
+    IL_110f: newobj System.Drawing.Size::.ctor
+    IL_1114: callvirt System.Windows.Forms.Control::set_Size
+    IL_1119: ldarg.0
+    IL_111a: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_111f: ldc.i4.5
+    IL_1120: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1125: ldarg.0
+    IL_1126: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_112b: ldc.i4.0
+    IL_112c: callvirt System.Windows.Forms.Control::set_Visible
+    IL_1131: ldarg.0
+    IL_1132: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_1137: call System.Drawing.Color::get_White
+    IL_113c: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_1141: ldarg.0
+    IL_1142: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_1147: callvirt System.Windows.Forms.Control::get_Controls
+    IL_114c: ldarg.0
+    IL_114d: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_1152: callvirt ControlCollection::Add
+    IL_1157: ldarg.0
+    IL_1158: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_115d: callvirt System.Windows.Forms.Control::get_Controls
+    IL_1162: ldarg.0
+    IL_1163: ldfld Architecture.WinApp.AcfrmOpeningBalance::txtAcId
+    IL_1168: callvirt ControlCollection::Add
+    IL_116d: ldarg.0
+    IL_116e: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_1173: ldc.i4.1
+    IL_1174: callvirt System.Windows.Forms.Control::set_Dock
+    IL_1179: ldarg.0
+    IL_117a: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_117f: ldc.i4.0
+    IL_1180: ldc.i4.s 56
+    IL_1182: newobj System.Drawing.Point::.ctor
+    IL_1187: callvirt System.Windows.Forms.Control::set_Location
+    IL_118c: ldarg.0
+    IL_118d: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_1192: ldc.i4.2
+    IL_1193: newobj System.Windows.Forms.Padding::.ctor
+    IL_1198: callvirt System.Windows.Forms.Control::set_Margin
+    IL_119d: ldarg.0
+    IL_119e: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_11a3: ldstr ldstr "panel2"
+    IL_11a8: callvirt System.Windows.Forms.Control::set_Name
+    IL_11ad: ldarg.0
+    IL_11ae: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_11b3: ldc.i4 788
+    IL_11b8: ldc.i4.s 103
+    IL_11ba: newobj System.Drawing.Size::.ctor
+    IL_11bf: callvirt System.Windows.Forms.Control::set_Size
+    IL_11c4: ldarg.0
+    IL_11c5: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_11ca: ldc.i4.8
+    IL_11cb: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_11d0: ldarg.0
+    IL_11d1: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_11d6: call System.Drawing.Color::get_Teal
+    IL_11db: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_11e0: ldarg.0
+    IL_11e1: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_11e6: callvirt System.Windows.Forms.Control::get_Controls
+    IL_11eb: ldarg.0
+    IL_11ec: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_11f1: callvirt ControlCollection::Add
+    IL_11f6: ldarg.0
+    IL_11f7: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_11fc: callvirt System.Windows.Forms.Control::get_Controls
+    IL_1201: ldarg.0
+    IL_1202: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_1207: callvirt ControlCollection::Add
+    IL_120c: ldarg.0
+    IL_120d: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_1212: ldc.i4.1
+    IL_1213: callvirt System.Windows.Forms.Control::set_Dock
+    IL_1218: ldarg.0
+    IL_1219: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_121e: ldc.i4.0
+    IL_121f: ldc.i4 159
+    IL_1224: newobj System.Drawing.Point::.ctor
+    IL_1229: callvirt System.Windows.Forms.Control::set_Location
+    IL_122e: ldarg.0
+    IL_122f: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_1234: ldc.i4.2
+    IL_1235: newobj System.Windows.Forms.Padding::.ctor
+    IL_123a: callvirt System.Windows.Forms.Control::set_Margin
+    IL_123f: ldarg.0
+    IL_1240: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_1245: ldstr ldstr "panel3"
+    IL_124a: callvirt System.Windows.Forms.Control::set_Name
+    IL_124f: ldarg.0
+    IL_1250: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_1255: ldc.i4 788
+    IL_125a: ldc.i4.s 29
+    IL_125c: newobj System.Drawing.Size::.ctor
+    IL_1261: callvirt System.Windows.Forms.Control::set_Size
+    IL_1266: ldarg.0
+    IL_1267: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_126c: ldc.i4.s 9
+    IL_126e: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1273: ldarg.0
+    IL_1274: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_1279: ldc.i4.1
+    IL_127a: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_127f: ldarg.0
+    IL_1280: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_1285: ldstr ldstr "Tahoma"
+    IL_128a: ldc.r4 12.0
+    IL_128f: ldc.i4.1
+    IL_1290: ldc.i4.3
+    IL_1291: ldc.i4.0
+    IL_1292: newobj System.Drawing.Font::.ctor
+    IL_1297: callvirt System.Windows.Forms.Control::set_Font
+    IL_129c: ldarg.0
+    IL_129d: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_12a2: call System.Drawing.Color::get_White
+    IL_12a7: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_12ac: ldarg.0
+    IL_12ad: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_12b2: ldc.i4.5
+    IL_12b3: ldc.i4.5
+    IL_12b4: newobj System.Drawing.Point::.ctor
+    IL_12b9: callvirt System.Windows.Forms.Control::set_Location
+    IL_12be: ldarg.0
+    IL_12bf: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_12c4: ldstr ldstr "label2"
+    IL_12c9: callvirt System.Windows.Forms.Control::set_Name
+    IL_12ce: ldarg.0
+    IL_12cf: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_12d4: ldc.i4.s 67
+    IL_12d6: ldc.i4.s 19
+    IL_12d8: newobj System.Drawing.Size::.ctor
+    IL_12dd: callvirt System.Windows.Forms.Control::set_Size
+    IL_12e2: ldarg.0
+    IL_12e3: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_12e8: ldc.i4.s 21
+    IL_12ea: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_12ef: ldarg.0
+    IL_12f0: ldfld Architecture.WinApp.AcfrmOpeningBalance::label2
+    IL_12f5: ldstr ldstr "History"
+    IL_12fa: callvirt System.Windows.Forms.Control::set_Text
+    IL_12ff: ldarg.0
+    IL_1300: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_1305: ldc.i4.s 9
+    IL_1307: callvirt System.Windows.Forms.Control::set_Anchor
+    IL_130c: ldarg.0
+    IL_130d: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_1312: ldarg.0
+    IL_1313: callvirt grid.User_Conrtols.CtrlGrdBar::set_FormName
+    IL_1318: ldarg.0
+    IL_1319: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_131e: ldc.i4 747
+    IL_1323: ldc.i4.4
+    IL_1324: newobj System.Drawing.Point::.ctor
+    IL_1329: callvirt System.Windows.Forms.Control::set_Location
+    IL_132e: ldarg.0
+    IL_132f: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_1334: ldc.i4.4
+    IL_1335: newobj System.Windows.Forms.Padding::.ctor
+    IL_133a: callvirt System.Windows.Forms.Control::set_Margin
+    IL_133f: ldarg.0
+    IL_1340: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_1345: ldarg.0
+    IL_1346: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_134b: callvirt grid.User_Conrtols.CtrlGrdBar::set_MyGrid
+    IL_1350: ldarg.0
+    IL_1351: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_1356: ldstr ldstr "ctrlGrdBar1"
+    IL_135b: callvirt System.Windows.Forms.Control::set_Name
+    IL_1360: ldarg.0
+    IL_1361: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_1366: ldc.i4.s 38
+    IL_1368: ldc.i4.s 21
+    IL_136a: newobj System.Drawing.Size::.ctor
+    IL_136f: callvirt System.Windows.Forms.Control::set_Size
+    IL_1374: ldarg.0
+    IL_1375: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_137a: ldc.i4.s 20
+    IL_137c: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1381: ldarg.0
+    IL_1382: ldfld Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1
+    IL_1387: ldarg.0
+    IL_1388: ldftn Architecture.WinApp.AcfrmOpeningBalance::ctrlGrdBar1_Load
+    IL_138e: newobj System.EventHandler::.ctor
+    IL_1393: callvirt System.Windows.Forms.UserControl::add_Load
+    IL_1398: ldarg.0
+    IL_1399: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_139e: ldc.i4.7
+    IL_139f: callvirt Janus.Windows.GridEX.GridEX::set_DefaultFilterRowComparison
+    IL_13a4: ldloc.s 13
+    IL_13a6: ldstr ldstr "<GridEXLayoutData><RootTable><GroupCondition /></RootTable></GridEXLayoutData>"
+    IL_13ab: callvirt Janus.Windows.GridEX.GridEXLayout::set_LayoutString
+    IL_13b0: ldarg.0
+    IL_13b1: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_13b6: ldloc.s 13
+    IL_13b8: callvirt Janus.Windows.GridEX.GridEX::set_DesignTimeLayout
+    IL_13bd: ldarg.0
+    IL_13be: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_13c3: ldc.i4.5
+    IL_13c4: callvirt System.Windows.Forms.Control::set_Dock
+    IL_13c9: ldarg.0
+    IL_13ca: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_13cf: ldc.i4.1
+    IL_13d0: callvirt Janus.Windows.GridEX.GridEX::set_DynamicFiltering
+    IL_13d5: ldarg.0
+    IL_13d6: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_13db: ldc.i4.2
+    IL_13dc: callvirt Janus.Windows.GridEX.GridEX::set_FilterMode
+    IL_13e1: ldarg.0
+    IL_13e2: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_13e7: ldc.i4.3
+    IL_13e8: callvirt Janus.Windows.GridEX.GridEX::set_FilterRowButtonStyle
+    IL_13ed: ldarg.0
+    IL_13ee: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_13f3: ldstr ldstr "Verdana"
+    IL_13f8: ldc.r4 8.25
+    IL_13fd: newobj System.Drawing.Font::.ctor
+    IL_1402: callvirt System.Windows.Forms.Control::set_Font
+    IL_1407: ldarg.0
+    IL_1408: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_140d: ldc.i4.0
+    IL_140e: callvirt Janus.Windows.GridEX.GridEX::set_GroupByBoxVisible
+    IL_1413: ldarg.0
+    IL_1414: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_1419: ldc.i4.0
+    IL_141a: ldc.i4 188
+    IL_141f: newobj System.Drawing.Point::.ctor
+    IL_1424: callvirt System.Windows.Forms.Control::set_Location
+    IL_1429: ldarg.0
+    IL_142a: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_142f: ldstr ldstr "dgvOpeningBalance"
+    IL_1434: callvirt System.Windows.Forms.Control::set_Name
+    IL_1439: ldarg.0
+    IL_143a: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_143f: ldc.i4.1
+    IL_1440: callvirt Janus.Windows.GridEX.ScrollableBase::set_RecordNavigator
+    IL_1445: ldarg.0
+    IL_1446: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_144b: ldc.i4 788
+    IL_1450: ldc.i4 419
+    IL_1455: newobj System.Drawing.Size::.ctor
+    IL_145a: callvirt System.Windows.Forms.Control::set_Size
+    IL_145f: ldarg.0
+    IL_1460: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_1465: ldc.i4.4
+    IL_1466: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_146b: ldarg.0
+    IL_146c: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_1471: ldc.i4.1
+    IL_1472: callvirt Janus.Windows.GridEX.GridEX::set_TotalRow
+    IL_1477: ldarg.0
+    IL_1478: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_147d: ldc.i4.1
+    IL_147e: callvirt Janus.Windows.GridEX.GridEX::set_TotalRowPosition
+    IL_1483: ldarg.0
+    IL_1484: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_1489: ldc.i4.4
+    IL_148a: callvirt Janus.Windows.GridEX.ScrollableBase::set_VisualStyle
+    IL_148f: ldarg.0
+    IL_1490: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_1495: ldarg.0
+    IL_1496: ldftn Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_CellUpdated
+    IL_149c: newobj Janus.Windows.GridEX.ColumnActionEventHandler::.ctor
+    IL_14a1: callvirt Janus.Windows.GridEX.GridEX::add_CellUpdated
+    IL_14a6: ldarg.0
+    IL_14a7: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_14ac: ldarg.0
+    IL_14ad: ldftn Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_UpdatingCell
+    IL_14b3: newobj Janus.Windows.GridEX.UpdatingCellEventHandler::.ctor
+    IL_14b8: callvirt Janus.Windows.GridEX.GridEX::add_UpdatingCell
+    IL_14bd: ldarg.0
+    IL_14be: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_14c3: ldarg.0
+    IL_14c4: ldftn Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_DoubleClick
+    IL_14ca: newobj System.EventHandler::.ctor
+    IL_14cf: callvirt System.Windows.Forms.Control::add_DoubleClick
+    IL_14d4: ldarg.0
+    IL_14d5: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_14da: ldarg.0
+    IL_14db: ldftn Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance_KeyDown
+    IL_14e1: newobj System.Windows.Forms.KeyEventHandler::.ctor
+    IL_14e6: callvirt System.Windows.Forms.Control::add_KeyDown
+    IL_14eb: ldarg.0
+    IL_14ec: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_14f1: ldc.i4.1
+    IL_14f2: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_14f7: ldarg.0
+    IL_14f8: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_14fd: ldc.i4.4
+    IL_14fe: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_1503: ldarg.0
+    IL_1504: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1509: ldc.i4.2
+    IL_150a: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_150f: ldarg.0
+    IL_1510: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1515: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_151a: ldstr ldstr ""
+    IL_151f: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_1524: ldloc.s 14
+    IL_1526: call System.Drawing.SystemColors::get_Window
+    IL_152b: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_1530: ldloc.s 14
+    IL_1532: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_1537: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_153c: ldarg.0
+    IL_153d: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1542: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1547: ldloc.s 14
+    IL_1549: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_154e: ldarg.0
+    IL_154f: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1554: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1559: ldc.i4.4
+    IL_155a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_155f: ldarg.0
+    IL_1560: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1565: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_156a: ldc.i4.2
+    IL_156b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_1570: ldloc.s 15
+    IL_1572: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_1577: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_157c: ldloc.s 15
+    IL_157e: call System.Drawing.SystemColors::get_ControlDark
+    IL_1583: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_1588: ldloc.s 15
+    IL_158a: ldc.i4.2
+    IL_158b: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_1590: ldloc.s 15
+    IL_1592: call System.Drawing.SystemColors::get_Window
+    IL_1597: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_159c: ldarg.0
+    IL_159d: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_15a2: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_15a7: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_15ac: ldloc.s 15
+    IL_15ae: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_15b3: ldloc.s 16
+    IL_15b5: call System.Drawing.SystemColors::get_GrayText
+    IL_15ba: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_15bf: ldarg.0
+    IL_15c0: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_15c5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_15ca: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_15cf: ldloc.s 16
+    IL_15d1: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_15d6: ldarg.0
+    IL_15d7: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_15dc: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_15e1: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_15e6: ldc.i4.4
+    IL_15e7: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_15ec: ldloc.s 17
+    IL_15ee: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_15f3: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_15f8: ldloc.s 17
+    IL_15fa: call System.Drawing.SystemColors::get_Control
+    IL_15ff: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_1604: ldloc.s 17
+    IL_1606: ldc.i4.3
+    IL_1607: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_160c: ldloc.s 17
+    IL_160e: call System.Drawing.SystemColors::get_GrayText
+    IL_1613: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_1618: ldarg.0
+    IL_1619: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_161e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1623: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_1628: ldloc.s 17
+    IL_162a: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_162f: ldarg.0
+    IL_1630: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1635: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_163a: ldc.i4.1
+    IL_163b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_1640: ldarg.0
+    IL_1641: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1646: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_164b: ldc.i4.1
+    IL_164c: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_1651: ldloc.s 18
+    IL_1653: call System.Drawing.SystemColors::get_Window
+    IL_1658: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_165d: ldloc.s 18
+    IL_165f: call System.Drawing.SystemColors::get_ControlText
+    IL_1664: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_1669: ldarg.0
+    IL_166a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_166f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1674: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1679: ldloc.s 18
+    IL_167b: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_1680: ldloc.s 19
+    IL_1682: call System.Drawing.SystemColors::get_Highlight
+    IL_1687: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_168c: ldloc.s 19
+    IL_168e: call System.Drawing.SystemColors::get_HighlightText
+    IL_1693: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_1698: ldarg.0
+    IL_1699: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_169e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_16a3: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_16a8: ldloc.s 19
+    IL_16aa: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_16af: ldarg.0
+    IL_16b0: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_16b5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_16ba: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_16bf: ldc.i4.2
+    IL_16c0: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_16c5: ldarg.0
+    IL_16c6: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_16cb: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_16d0: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_16d5: ldc.i4.2
+    IL_16d6: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_16db: ldloc.s 20
+    IL_16dd: call System.Drawing.SystemColors::get_Window
+    IL_16e2: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_16e7: ldarg.0
+    IL_16e8: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_16ed: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_16f2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_16f7: ldloc.s 20
+    IL_16f9: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_16fe: ldloc.s 21
+    IL_1700: call System.Drawing.Color::get_Silver
+    IL_1705: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_170a: ldloc.s 21
+    IL_170c: ldc.i4.3
+    IL_170d: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_1712: ldarg.0
+    IL_1713: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1718: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_171d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1722: ldloc.s 21
+    IL_1724: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_1729: ldarg.0
+    IL_172a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_172f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1734: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1739: ldc.i4.4
+    IL_173a: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_173f: ldarg.0
+    IL_1740: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1745: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_174a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_174f: ldc.i4.0
+    IL_1750: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_1755: ldloc.s 22
+    IL_1757: call System.Drawing.SystemColors::get_Control
+    IL_175c: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_1761: ldloc.s 22
+    IL_1763: call System.Drawing.SystemColors::get_ControlDark
+    IL_1768: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_176d: ldloc.s 22
+    IL_176f: ldc.i4.1
+    IL_1770: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_1775: ldloc.s 22
+    IL_1777: ldc.i4.3
+    IL_1778: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_177d: ldloc.s 22
+    IL_177f: call System.Drawing.SystemColors::get_Window
+    IL_1784: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_1789: ldarg.0
+    IL_178a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_178f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1794: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1799: ldloc.s 22
+    IL_179b: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_17a0: ldloc.s 23
+    IL_17a2: ldstr ldstr "Left"
+    IL_17a7: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_17ac: ldarg.0
+    IL_17ad: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_17b2: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_17b7: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_17bc: ldloc.s 23
+    IL_17be: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_17c3: ldarg.0
+    IL_17c4: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_17c9: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_17ce: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_17d3: ldc.i4.3
+    IL_17d4: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_17d9: ldarg.0
+    IL_17da: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_17df: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_17e4: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_17e9: ldc.i4.2
+    IL_17ea: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_17ef: ldloc.s 24
+    IL_17f1: call System.Drawing.SystemColors::get_Window
+    IL_17f6: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_17fb: ldloc.s 24
+    IL_17fd: call System.Drawing.Color::get_Silver
+    IL_1802: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_1807: ldarg.0
+    IL_1808: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_180d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1812: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1817: ldloc.s 24
+    IL_1819: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_181e: ldarg.0
+    IL_181f: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1824: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1829: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_182e: ldc.i4.2
+    IL_182f: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_1834: ldloc.s 25
+    IL_1836: call System.Drawing.SystemColors::get_ControlLight
+    IL_183b: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_1840: ldarg.0
+    IL_1841: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1846: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_184b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1850: ldloc.s 25
+    IL_1852: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_1857: ldarg.0
+    IL_1858: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_185d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1862: ldc.i4.0
+    IL_1863: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_1868: ldarg.0
+    IL_1869: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_186e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1873: ldc.i4.1
+    IL_1874: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_1879: ldarg.0
+    IL_187a: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_187f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1884: ldc.i4.2
+    IL_1885: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_188a: ldarg.0
+    IL_188b: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1890: ldstr ldstr "Verdana"
+    IL_1895: ldc.r4 9.75
+    IL_189a: ldc.i4.0
+    IL_189b: ldc.i4.3
+    IL_189c: ldc.i4.0
+    IL_189d: newobj System.Drawing.Font::.ctor
+    IL_18a2: callvirt System.Windows.Forms.Control::set_Font
+    IL_18a7: ldarg.0
+    IL_18a8: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_18ad: ldc.i4.s 111
+    IL_18af: ldc.i4.s 11
+    IL_18b1: newobj System.Drawing.Point::.ctor
+    IL_18b6: callvirt System.Windows.Forms.Control::set_Location
+    IL_18bb: ldarg.0
+    IL_18bc: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_18c1: ldstr ldstr "cmbBranchName"
+    IL_18c6: callvirt System.Windows.Forms.Control::set_Name
+    IL_18cb: ldarg.0
+    IL_18cc: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_18d1: ldc.i4 353
+    IL_18d6: ldc.i4.s 26
+    IL_18d8: newobj System.Drawing.Size::.ctor
+    IL_18dd: callvirt System.Windows.Forms.Control::set_Size
+    IL_18e2: ldarg.0
+    IL_18e3: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_18e8: ldc.i4 593
+    IL_18ed: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_18f2: ldarg.0
+    IL_18f3: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_18f8: ldc.i4.0
+    IL_18f9: callvirt System.Windows.Forms.Control::set_Visible
+    IL_18fe: ldarg.0
+    IL_18ff: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_1904: ldc.i4.1
+    IL_1905: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_190a: ldarg.0
+    IL_190b: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_1910: ldstr ldstr "Segoe UI Semibold"
+    IL_1915: ldc.r4 9.0
+    IL_191a: ldc.i4.1
+    IL_191b: ldc.i4.3
+    IL_191c: ldc.i4.0
+    IL_191d: newobj System.Drawing.Font::.ctor
+    IL_1922: callvirt System.Windows.Forms.Control::set_Font
+    IL_1927: ldarg.0
+    IL_1928: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_192d: ldc.i4.s 28
+    IL_192f: ldc.i4.s 17
+    IL_1931: newobj System.Drawing.Point::.ctor
+    IL_1936: callvirt System.Windows.Forms.Control::set_Location
+    IL_193b: ldarg.0
+    IL_193c: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_1941: ldstr ldstr "lblBranch"
+    IL_1946: callvirt System.Windows.Forms.Control::set_Name
+    IL_194b: ldarg.0
+    IL_194c: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_1951: ldc.i4.s 79
+    IL_1953: ldc.i4.s 15
+    IL_1955: newobj System.Drawing.Size::.ctor
+    IL_195a: callvirt System.Windows.Forms.Control::set_Size
+    IL_195f: ldarg.0
+    IL_1960: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_1965: ldc.i4 594
+    IL_196a: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_196f: ldarg.0
+    IL_1970: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_1975: ldstr ldstr "Branch Name"
+    IL_197a: callvirt System.Windows.Forms.Control::set_Text
+    IL_197f: ldarg.0
+    IL_1980: ldfld Architecture.WinApp.AcfrmOpeningBalance::lblBranch
+    IL_1985: ldc.i4.0
+    IL_1986: callvirt System.Windows.Forms.Control::set_Visible
+    IL_198b: ldarg.0
+    IL_198c: ldc.r4 6.0
+    IL_1991: ldc.r4 13.0
+    IL_1996: newobj System.Drawing.SizeF::.ctor
+    IL_199b: call System.Windows.Forms.ContainerControl::set_AutoScaleDimensions
+    IL_19a0: ldarg.0
+    IL_19a1: ldc.i4.1
+    IL_19a2: call System.Windows.Forms.ContainerControl::set_AutoScaleMode
+    IL_19a7: ldarg.0
+    IL_19a8: ldc.i4 788
+    IL_19ad: ldc.i4 607
+    IL_19b2: newobj System.Drawing.Size::.ctor
+    IL_19b7: call System.Windows.Forms.Form::set_ClientSize
+    IL_19bc: ldarg.0
+    IL_19bd: call System.Windows.Forms.Control::get_Controls
+    IL_19c2: ldarg.0
+    IL_19c3: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_19c8: callvirt ControlCollection::Add
+    IL_19cd: ldarg.0
+    IL_19ce: call System.Windows.Forms.Control::get_Controls
+    IL_19d3: ldarg.0
+    IL_19d4: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_19d9: callvirt ControlCollection::Add
+    IL_19de: ldarg.0
+    IL_19df: call System.Windows.Forms.Control::get_Controls
+    IL_19e4: ldarg.0
+    IL_19e5: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_19ea: callvirt ControlCollection::Add
+    IL_19ef: ldarg.0
+    IL_19f0: call System.Windows.Forms.Control::get_Controls
+    IL_19f5: ldarg.0
+    IL_19f6: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_19fb: callvirt ControlCollection::Add
+    IL_1a00: ldarg.0
+    IL_1a01: call System.Windows.Forms.Control::get_Controls
+    IL_1a06: ldarg.0
+    IL_1a07: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_1a0c: callvirt ControlCollection::Add
+    IL_1a11: ldarg.0
+    IL_1a12: ldc.i4.1
+    IL_1a13: callvirt System.Windows.Forms.Control::set_DoubleBuffered
+    IL_1a18: ldarg.0
+    IL_1a19: ldc.i4.1
+    IL_1a1a: call System.Windows.Forms.Form::set_KeyPreview
+    IL_1a1f: ldarg.0
+    IL_1a20: ldstr ldstr "AcfrmOpeningBalance"
+    IL_1a25: call System.Windows.Forms.Control::set_Name
+    IL_1a2a: ldarg.0
+    IL_1a2b: ldstr ldstr "Opening Balance"
+    IL_1a30: callvirt System.Windows.Forms.Control::set_Text
+    IL_1a35: ldarg.0
+    IL_1a36: ldc.i4.2
+    IL_1a37: call System.Windows.Forms.Form::set_WindowState
+    IL_1a3c: ldarg.0
+    IL_1a3d: ldarg.0
+    IL_1a3e: ldftn Architecture.WinApp.AcfrmOpeningBalance::AcfrmOpeningBalance_FormClosing
+    IL_1a44: newobj System.Windows.Forms.FormClosingEventHandler::.ctor
+    IL_1a49: call System.Windows.Forms.Form::add_FormClosing
+    IL_1a4e: ldarg.0
+    IL_1a4f: ldarg.0
+    IL_1a50: ldftn Architecture.WinApp.AcfrmOpeningBalance::AcfrmOpeningBalance_Load
+    IL_1a56: newobj System.EventHandler::.ctor
+    IL_1a5b: call System.Windows.Forms.Form::add_Load
+    IL_1a60: ldarg.0
+    IL_1a61: ldarg.0
+    IL_1a62: ldftn Architecture.WinApp.AcfrmOpeningBalance::AcfrmOpeningBalance_KeyPress
+    IL_1a68: newobj System.Windows.Forms.KeyEventHandler::.ctor
+    IL_1a6d: call System.Windows.Forms.Control::add_KeyDown
+    IL_1a72: ldarg.0
+    IL_1a73: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_1a78: ldc.i4.0
+    IL_1a79: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1a7e: ldarg.0
+    IL_1a7f: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel1
+    IL_1a84: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_1a89: ldarg.0
+    IL_1a8a: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_1a8f: ldc.i4.0
+    IL_1a90: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1a95: ldarg.0
+    IL_1a96: ldfld Architecture.WinApp.AcfrmOpeningBalance::toolStrip2
+    IL_1a9b: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_1aa0: ldarg.0
+    IL_1aa1: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_1aa6: ldc.i4.0
+    IL_1aa7: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1aac: ldarg.0
+    IL_1aad: ldfld Architecture.WinApp.AcfrmOpeningBalance::groupBox1
+    IL_1ab2: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_1ab7: ldarg.0
+    IL_1ab8: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbAccountTitle
+    IL_1abd: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_1ac2: ldarg.0
+    IL_1ac3: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_1ac8: ldc.i4.0
+    IL_1ac9: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1ace: ldarg.0
+    IL_1acf: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel2
+    IL_1ad4: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_1ad9: ldarg.0
+    IL_1ada: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_1adf: ldc.i4.0
+    IL_1ae0: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1ae5: ldarg.0
+    IL_1ae6: ldfld Architecture.WinApp.AcfrmOpeningBalance::panel3
+    IL_1aeb: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_1af0: ldarg.0
+    IL_1af1: ldfld Architecture.WinApp.AcfrmOpeningBalance::dgvOpeningBalance
+    IL_1af6: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_1afb: ldarg.0
+    IL_1afc: ldfld Architecture.WinApp.AcfrmOpeningBalance::cmbBranchName
+    IL_1b01: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_1b06: ldarg.0
+    IL_1b07: ldc.i4.0
+    IL_1b08: call System.Windows.Forms.Control::ResumeLayout
+    IL_1b0d: ldarg.0
+    IL_1b0e: call System.Windows.Forms.Control::PerformLayout
+    IL_1b13: ret

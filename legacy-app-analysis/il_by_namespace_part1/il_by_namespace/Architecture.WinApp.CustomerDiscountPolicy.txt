@@ -1,0 +1,3610 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.CustomerDiscountPolicy
+====================================================================================================
+
+; Architecture.WinApp.CustomerDiscountPolicy::.ctor  (rva=0xc4064, fat header, code_size=75, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj Architecture.WinApp.Common.DropDownBind::.ctor
+    IL_0006: stfld Architecture.WinApp.CustomerDiscountPolicy::DDL
+    IL_000b: ldarg.0
+    IL_000c: newobj System.Data.DataTable::.ctor
+    IL_0011: stfld Architecture.WinApp.CustomerDiscountPolicy::lstUOM
+    IL_0016: ldarg.0
+    IL_0017: newobj System.Data.DataTable::.ctor
+    IL_001c: stfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_0021: ldarg.0
+    IL_0022: newobj Architecture.WinApp.Common.Rightsobjects::.ctor
+    IL_0027: stfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_002c: ldarg.0
+    IL_002d: newobj Architecture.Model.UserAccount::.ctor
+    IL_0032: stfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_0037: ldarg.0
+    IL_0038: call System.Windows.Forms.Form::.ctor
+    IL_003d: ldarg.0
+    IL_003e: call Architecture.WinApp.CustomerDiscountPolicy::InitializeComponent
+    IL_0043: ldarg.0
+    IL_0044: ldarg.1
+    IL_0045: stfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_004a: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::FormValidation  (rva=0xc40bc, fat header, code_size=131, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0006: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_ActiveRow
+    IL_000b: brtrue.s IL_0026
+    IL_000d: ldstr ldstr "Customer Name Field is Required"
+    IL_0012: call System.Windows.Forms.MessageBox::Show
+    IL_0017: pop
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_001e: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_0023: pop
+    IL_0024: ldc.i4.0
+    IL_0025: ret
+    IL_0026: ldarg.0
+    IL_0027: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_002c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_ActiveRow
+    IL_0031: brtrue.s IL_004c
+    IL_0033: ldstr ldstr "Discount Type Field is Required"
+    IL_0038: call System.Windows.Forms.MessageBox::Show
+    IL_003d: pop
+    IL_003e: ldarg.0
+    IL_003f: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_0044: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_0049: pop
+    IL_004a: ldc.i4.0
+    IL_004b: ret
+    IL_004c: ldarg.0
+    IL_004d: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_0052: callvirt System.Windows.Forms.Control::get_Text
+    IL_0057: callvirt System.String::Trim
+    IL_005c: ldstr ldstr ""
+    IL_0061: call System.String::op_Equality
+    IL_0066: brfalse.s IL_0081
+    IL_0068: ldstr ldstr "Discount Rate Field is Required"
+    IL_006d: call System.Windows.Forms.MessageBox::Show
+    IL_0072: pop
+    IL_0073: ldarg.0
+    IL_0074: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_0079: callvirt System.Windows.Forms.Control::Focus
+    IL_007e: pop
+    IL_007f: ldc.i4.0
+    IL_0080: ret
+    IL_0081: ldc.i4.1
+    IL_0082: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::BtnSave_Click  (rva=0xc414c, fat header, code_size=29, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.0
+    IL_0002: stfld Architecture.WinApp.CustomerDiscountPolicy::RId
+    IL_0007: ldarg.0
+    IL_0008: call Architecture.WinApp.CustomerDiscountPolicy::Insert
+    IL_000d: leave.s IL_001c
+    IL_000f: callvirt System.Exception::get_Message
+    IL_0014: call System.Windows.Forms.MessageBox::Show
+    IL_0019: pop
+    IL_001a: leave.s IL_001c
+    IL_001c: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::Insert  (rva=0xc4188, fat header, code_size=409, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.CustomerDiscountPolicy::FormValidation
+    IL_0006: brtrue.s IL_000d
+    IL_0008: leave IL_0198
+    IL_000d: ldarg.0
+    IL_000e: ldfld Architecture.WinApp.CustomerDiscountPolicy::RId
+    IL_0013: ldc.i4.0
+    IL_0014: ble.s IL_002e
+    IL_0016: ldstr ldstr "Are you sure to Update?"
+    IL_001b: ldstr ldstr "Confirm"
+    IL_0020: ldc.i4.4
+    IL_0021: call System.Windows.Forms.MessageBox::Show
+    IL_0026: ldc.i4.7
+    IL_0027: bne.un.s IL_0046
+    IL_0029: leave IL_0198
+    IL_002e: ldstr ldstr "Are you sure to Save?"
+    IL_0033: ldstr ldstr "Confirm"
+    IL_0038: ldc.i4.4
+    IL_0039: call System.Windows.Forms.MessageBox::Show
+    IL_003e: ldc.i4.7
+    IL_003f: bne.un.s IL_0046
+    IL_0041: leave IL_0198
+    IL_0046: newobj Architecture.Model.Inventory.CustomerDiscountPolicy::.ctor
+    IL_004b: dup
+    IL_004c: newobj TypeSpec#325::.ctor
+    IL_0051: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_CustomerDiscountPolicieslist
+    IL_0056: newobj Architecture.Model.Inventory.CustomerDiscountPolicy::.ctor
+    IL_005b: stloc.0
+    IL_005c: ldloc.0
+    IL_005d: ldarg.0
+    IL_005e: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_0063: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0068: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_OrganizationId
+    IL_006d: ldloc.0
+    IL_006e: ldarg.0
+    IL_006f: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_0074: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0079: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_CompanyId
+    IL_007e: ldloc.0
+    IL_007f: ldarg.0
+    IL_0080: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_0085: callvirt Architecture.Model.UserAccount::get_ID
+    IL_008a: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_EntryUserId
+    IL_008f: ldloc.0
+    IL_0090: ldarg.0
+    IL_0091: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_0096: callvirt Architecture.Model.UserAccount::get_ID
+    IL_009b: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_ModifyUserId
+    IL_00a0: ldloc.0
+    IL_00a1: ldarg.0
+    IL_00a2: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_00a7: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_00ac: call Architecture.Common.Conversion::ToInt
+    IL_00b1: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_CustomerId
+    IL_00b6: ldloc.0
+    IL_00b7: ldarg.0
+    IL_00b8: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_00bd: callvirt System.Windows.Forms.DateTimePicker::get_Value
+    IL_00c2: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_EffectiveDate
+    IL_00c7: ldloc.0
+    IL_00c8: ldstr ldstr "Percent"
+    IL_00cd: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_DiscountType
+    IL_00d2: ldloc.0
+    IL_00d3: ldarg.0
+    IL_00d4: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_00d9: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_00de: call Architecture.Common.Conversion::ToInt
+    IL_00e3: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_DiscountTypeId
+    IL_00e8: ldloc.0
+    IL_00e9: ldarg.0
+    IL_00ea: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_00ef: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_00f4: call Architecture.Common.Conversion::ToInt
+    IL_00f9: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_DiscountItemId
+    IL_00fe: ldloc.0
+    IL_00ff: ldarg.0
+    IL_0100: ldfld Architecture.WinApp.CustomerDiscountPolicy::RId
+    IL_0105: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_Id
+    IL_010a: ldarg.0
+    IL_010b: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_0110: callvirt System.Windows.Forms.CheckBox::get_Checked
+    IL_0115: brfalse.s IL_0120
+    IL_0117: ldloc.0
+    IL_0118: ldc.i4.1
+    IL_0119: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_IsActive
+    IL_011e: br.s IL_0127
+    IL_0120: ldloc.0
+    IL_0121: ldc.i4.0
+    IL_0122: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_IsActive
+    IL_0127: ldloc.0
+    IL_0128: ldarg.0
+    IL_0129: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_012e: callvirt System.Windows.Forms.Control::get_Text
+    IL_0133: callvirt System.String::Trim
+    IL_0138: call Architecture.Common.Conversion::ToDouble
+    IL_013d: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::set_DiscountRate
+    IL_0142: dup
+    IL_0143: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::get_CustomerDiscountPolicieslist
+    IL_0148: ldloc.0
+    IL_0149: callvirt TypeSpec#325::Add
+    IL_014e: call Architecture.BLL.Inventory.CustomerDiscountPolicy::Save
+    IL_0153: pop
+    IL_0154: ldarg.0
+    IL_0155: ldfld Architecture.WinApp.CustomerDiscountPolicy::RId
+    IL_015a: ldc.i4.0
+    IL_015b: ble.s IL_016a
+    IL_015d: ldstr ldstr "Data Update Successfully...."
+    IL_0162: call System.Windows.Forms.MessageBox::Show
+    IL_0167: pop
+    IL_0168: br.s IL_0175
+    IL_016a: ldstr ldstr "Data Save Successfully...."
+    IL_016f: call System.Windows.Forms.MessageBox::Show
+    IL_0174: pop
+    IL_0175: ldarg.0
+    IL_0176: call Architecture.WinApp.CustomerDiscountPolicy::GridFill
+    IL_017b: ldarg.0
+    IL_017c: call Architecture.WinApp.CustomerDiscountPolicy::reset
+    IL_0181: leave.s IL_0198
+    IL_0183: callvirt System.Exception::get_Message
+    IL_0188: ldstr ldstr "ErrorMessage"
+    IL_018d: ldc.i4.0
+    IL_018e: ldc.i4.s 16
+    IL_0190: call System.Windows.Forms.MessageBox::Show
+    IL_0195: pop
+    IL_0196: leave.s IL_0198
+    IL_0198: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::BtnEdit_Click  (rva=0xc434c, fat header, code_size=41, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.CustomerDiscountPolicy::RId
+    IL_0006: brtrue.s IL_0013
+    IL_0008: ldstr ldstr "Record not update because Id not found"
+    IL_000d: newobj System.Exception::.ctor
+    IL_0012: throw
+    IL_0013: ldarg.0
+    IL_0014: call Architecture.WinApp.CustomerDiscountPolicy::Insert
+    IL_0019: leave.s IL_0028
+    IL_001b: callvirt System.Exception::get_Message
+    IL_0020: call System.Windows.Forms.MessageBox::Show
+    IL_0025: pop
+    IL_0026: leave.s IL_0028
+    IL_0028: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::ReadById  (rva=0xc4394, fat header, code_size=288, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0007: callvirt Janus.Windows.GridEX.GridEX::get_CurrentRow
+    IL_000c: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0011: ldstr ldstr "Id"
+    IL_0016: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_001b: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0020: call Architecture.Common.Conversion::ToInt
+    IL_0025: stfld Architecture.WinApp.CustomerDiscountPolicy::RId
+    IL_002a: ldarg.0
+    IL_002b: ldfld Architecture.WinApp.CustomerDiscountPolicy::RId
+    IL_0030: call Architecture.BLL.Inventory.CustomerDiscountPolicy::GetByID
+    IL_0035: stloc.0
+    IL_0036: ldarg.0
+    IL_0037: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_003c: ldloc.0
+    IL_003d: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::get_CustomerId
+    IL_0042: box System.Int32
+    IL_0047: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_Value
+    IL_004c: ldarg.0
+    IL_004d: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_0052: ldloc.0
+    IL_0053: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::get_EffectiveDate
+    IL_0058: box System.DateTime
+    IL_005d: call Architecture.Common.Conversion::ToDateTime
+    IL_0062: callvirt System.Windows.Forms.DateTimePicker::set_Value
+    IL_0067: ldarg.0
+    IL_0068: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_006d: ldloc.0
+    IL_006e: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::get_DiscountTypeId
+    IL_0073: box System.Int32
+    IL_0078: call Architecture.Common.Conversion::ToInt
+    IL_007d: box System.Int32
+    IL_0082: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_Value
+    IL_0087: ldarg.0
+    IL_0088: ldnull
+    IL_0089: ldnull
+    IL_008a: call Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType_Leave
+    IL_008f: ldarg.0
+    IL_0090: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_0095: ldloc.0
+    IL_0096: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::get_DiscountRate
+    IL_009b: box System.Double
+    IL_00a0: call Architecture.Common.Conversion::ToString
+    IL_00a5: callvirt System.Windows.Forms.Control::set_Text
+    IL_00aa: ldarg.0
+    IL_00ab: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_00b0: ldloc.0
+    IL_00b1: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::get_DiscountItemId
+    IL_00b6: box System.Int32
+    IL_00bb: call Architecture.Common.Conversion::ToInt
+    IL_00c0: box System.Int32
+    IL_00c5: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_Value
+    IL_00ca: ldloc.0
+    IL_00cb: callvirt Architecture.Model.Inventory.CustomerDiscountPolicy::get_IsActive
+    IL_00d0: brfalse.s IL_00e0
+    IL_00d2: ldarg.0
+    IL_00d3: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_00d8: ldc.i4.1
+    IL_00d9: callvirt System.Windows.Forms.CheckBox::set_Checked
+    IL_00de: br.s IL_00ec
+    IL_00e0: ldarg.0
+    IL_00e1: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_00e6: ldc.i4.0
+    IL_00e7: callvirt System.Windows.Forms.CheckBox::set_Checked
+    IL_00ec: ldarg.0
+    IL_00ed: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_00f2: ldc.i4.0
+    IL_00f3: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_00f8: ldarg.0
+    IL_00f9: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_00fe: ldc.i4.1
+    IL_00ff: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0104: ldarg.0
+    IL_0105: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_010a: callvirt System.Windows.Forms.Control::Focus
+    IL_010f: pop
+    IL_0110: leave.s IL_011f
+    IL_0112: callvirt System.Exception::get_Message
+    IL_0117: call System.Windows.Forms.MessageBox::Show
+    IL_011c: pop
+    IL_011d: leave.s IL_011f
+    IL_011f: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::DiscountTypeFill  (rva=0xc44dc, fat header, code_size=114, max_stack=7, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.Inventory.InvAllocateDiscItemToDiscType::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.Inventory.InvAllocateDiscItemToDiscType::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0022: callvirt Architecture.Model.Inventory.InvAllocateDiscItemToDiscType::set_CompanyId
+    IL_0027: call Architecture.BLL.Inventory.InvAllocateDiscItemToDiscType::GetDiscountTypes
+    IL_002c: stloc.0
+    IL_002d: ldloc.0
+    IL_002e: callvirt System.Data.DataTable::get_Rows
+    IL_0033: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0038: ldc.i4.0
+    IL_0039: ble.s IL_0062
+    IL_003b: ldarg.0
+    IL_003c: ldfld Architecture.WinApp.CustomerDiscountPolicy::DDL
+    IL_0041: ldloc.0
+    IL_0042: ldarg.0
+    IL_0043: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_0048: ldstr ldstr "Id"
+    IL_004d: ldstr ldstr "DiscountTypeCode"
+    IL_0052: ldstr ldstr "Discount Type"
+    IL_0057: ldc.i4.0
+    IL_0058: newobj TypeSpec#263::.ctor
+    IL_005d: callvirt Architecture.WinApp.Common.DropDownBind::BindDDLNew
+    IL_0062: leave.s IL_0071
+    IL_0064: callvirt System.Exception::get_Message
+    IL_0069: call System.Windows.Forms.MessageBox::Show
+    IL_006e: pop
+    IL_006f: leave.s IL_0071
+    IL_0071: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::CustomerBind  (rva=0xc456c, fat header, code_size=76, max_stack=7, exception_handlers=yes)
+    IL_0000: ldstr ldstr ""
+    IL_0005: ldc.i4.0
+    IL_0006: call Architecture.WinApp.Common.CommonServices::GetSupplierustomerByCustomerGroupId
+    IL_000b: stloc.0
+    IL_000c: ldloc.0
+    IL_000d: callvirt System.Data.DataTable::get_Rows
+    IL_0012: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0017: ldc.i4.0
+    IL_0018: ble.s IL_003c
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.CustomerDiscountPolicy::DDL
+    IL_0020: ldloc.0
+    IL_0021: ldarg.0
+    IL_0022: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0027: ldstr ldstr "Id"
+    IL_002c: ldstr ldstr "CompanyName"
+    IL_0031: ldstr ldstr "Customer Name"
+    IL_0036: ldc.i4.0
+    IL_0037: callvirt Architecture.WinApp.Common.DropDownBind::BindDDL
+    IL_003c: leave.s IL_004b
+    IL_003e: callvirt System.Exception::get_Message
+    IL_0043: call System.Windows.Forms.MessageBox::Show
+    IL_0048: pop
+    IL_0049: leave.s IL_004b
+    IL_004b: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::FillDiscountItems  (rva=0xc45d4, fat header, code_size=281, max_stack=7, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.Inventory.InvAllocateDiscItemToDiscType::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.Inventory.InvAllocateDiscItemToDiscType::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0022: callvirt Architecture.Model.Inventory.InvAllocateDiscItemToDiscType::set_CompanyId
+    IL_0027: dup
+    IL_0028: ldarg.0
+    IL_0029: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_002e: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0033: call Architecture.Common.Conversion::ToInt
+    IL_0038: callvirt Architecture.Model.Inventory.InvAllocateDiscItemToDiscType::set_DiscountTypeId
+    IL_003d: call Architecture.BLL.Inventory.InvAllocateDiscItemToDiscType::GetDiscountItemsFromAllocation
+    IL_0042: stloc.0
+    IL_0043: ldloc.0
+    IL_0044: callvirt System.Data.DataTable::get_Rows
+    IL_0049: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_004e: ldc.i4.0
+    IL_004f: ble IL_00ed
+    IL_0054: ldarg.0
+    IL_0055: ldfld Architecture.WinApp.CustomerDiscountPolicy::DDL
+    IL_005a: ldloc.0
+    IL_005b: ldarg.0
+    IL_005c: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0061: ldstr ldstr "DiscountItemId"
+    IL_0066: ldstr ldstr "DiscountItemName"
+    IL_006b: ldstr ldstr "Discount Item"
+    IL_0070: ldc.i4.0
+    IL_0071: callvirt Architecture.WinApp.Common.DropDownBind::BindDDL
+    IL_0076: ldarg.0
+    IL_0077: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_007c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0081: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Bands
+    IL_0086: ldc.i4.0
+    IL_0087: callvirt Infragistics.Win.UltraWinGrid.BandsCollection::get_Item
+    IL_008c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBand::get_Columns
+    IL_0091: ldc.i4.0
+    IL_0092: callvirt Infragistics.Win.UltraWinGrid.ColumnsCollection::get_Item
+    IL_0097: ldc.i4.1
+    IL_0098: callvirt Infragistics.Win.UltraWinGrid.UltraGridColumn::set_Hidden
+    IL_009d: ldarg.0
+    IL_009e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_00a3: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_00a8: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Bands
+    IL_00ad: ldc.i4.0
+    IL_00ae: callvirt Infragistics.Win.UltraWinGrid.BandsCollection::get_Item
+    IL_00b3: callvirt Infragistics.Win.UltraWinGrid.UltraGridBand::get_Columns
+    IL_00b8: ldc.i4.1
+    IL_00b9: callvirt Infragistics.Win.UltraWinGrid.ColumnsCollection::get_Item
+    IL_00be: ldc.i4.1
+    IL_00bf: callvirt Infragistics.Win.UltraWinGrid.UltraGridColumn::set_Hidden
+    IL_00c4: ldarg.0
+    IL_00c5: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_00ca: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_00cf: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Bands
+    IL_00d4: ldc.i4.0
+    IL_00d5: callvirt Infragistics.Win.UltraWinGrid.BandsCollection::get_Item
+    IL_00da: callvirt Infragistics.Win.UltraWinGrid.UltraGridBand::get_Columns
+    IL_00df: ldc.i4.4
+    IL_00e0: callvirt Infragistics.Win.UltraWinGrid.ColumnsCollection::get_Item
+    IL_00e5: ldc.i4.1
+    IL_00e6: callvirt Infragistics.Win.UltraWinGrid.UltraGridColumn::set_Hidden
+    IL_00eb: br.s IL_0109
+    IL_00ed: ldarg.0
+    IL_00ee: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_00f3: ldsfld System.String::Empty
+    IL_00f8: callvirt System.Windows.Forms.Control::set_Text
+    IL_00fd: ldarg.0
+    IL_00fe: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0103: ldnull
+    IL_0104: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::set_DataSource
+    IL_0109: leave.s IL_0118
+    IL_010b: callvirt System.Exception::get_Message
+    IL_0110: call System.Windows.Forms.MessageBox::Show
+    IL_0115: pop
+    IL_0116: leave.s IL_0118
+    IL_0118: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType_Leave  (rva=0xc4718, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.CustomerDiscountPolicy::FillDiscountItems
+    IL_0006: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem_TextChanged  (rva=0xc4720, fat header, code_size=97, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0006: callvirt System.Windows.Forms.Control::get_Enabled
+    IL_000b: brfalse.s IL_0051
+    IL_000d: ldarg.0
+    IL_000e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0013: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_ActiveRow
+    IL_0018: brfalse.s IL_0051
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_0020: ldarg.0
+    IL_0021: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0026: callvirt Infragistics.Win.UltraWinGrid.UltraDropDownBase::get_SelectedRow
+    IL_002b: callvirt Infragistics.Win.UltraWinGrid.UltraGridRow::get_Cells
+    IL_0030: ldc.i4.3
+    IL_0031: callvirt Infragistics.Win.UltraWinGrid.CellsCollection::get_Item
+    IL_0036: callvirt Infragistics.Win.UltraWinGrid.UltraGridCell::get_Value
+    IL_003b: call Architecture.Common.Conversion::ToString
+    IL_0040: callvirt System.Windows.Forms.Control::set_Text
+    IL_0045: ldarg.0
+    IL_0046: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_004b: ldc.i4.0
+    IL_004c: callvirt System.Windows.Forms.Control::set_Enabled
+    IL_0051: leave.s IL_0060
+    IL_0053: callvirt System.Object::ToString
+    IL_0058: call System.Windows.Forms.MessageBox::Show
+    IL_005d: pop
+    IL_005e: leave.s IL_0060
+    IL_0060: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::GridFill  (rva=0xc47a0, fat header, code_size=517, max_stack=6, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.ReportsParameters::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.ReportsParameters::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0022: callvirt Architecture.Model.ReportsParameters::set_CompanyId
+    IL_0027: call Architecture.BLL.Inventory.CustomerDiscountPolicy::FormHistory
+    IL_002c: stloc.0
+    IL_002d: ldloc.0
+    IL_002e: callvirt System.Data.DataTable::get_Rows
+    IL_0033: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0038: ldc.i4.0
+    IL_0039: ble IL_01f5
+    IL_003e: ldarg.0
+    IL_003f: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_0044: callvirt System.Data.DataTable::Clear
+    IL_0049: ldc.i4.0
+    IL_004a: stloc.1
+    IL_004b: br IL_01c2
+    IL_0050: ldarg.0
+    IL_0051: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_0056: callvirt System.Data.DataTable::get_Rows
+    IL_005b: ldc.i4.s 13
+    IL_005d: newarr System.Object
+    IL_0062: dup
+    IL_0063: ldc.i4.0
+    IL_0064: ldloc.0
+    IL_0065: callvirt System.Data.DataTable::get_Rows
+    IL_006a: ldloc.1
+    IL_006b: callvirt System.Data.DataRowCollection::get_Item
+    IL_0070: ldstr ldstr "Id"
+    IL_0075: callvirt System.Data.DataRow::get_Item
+    IL_007a: stelem.ref
+    IL_007b: dup
+    IL_007c: ldc.i4.1
+    IL_007d: ldloc.0
+    IL_007e: callvirt System.Data.DataTable::get_Rows
+    IL_0083: ldloc.1
+    IL_0084: callvirt System.Data.DataRowCollection::get_Item
+    IL_0089: ldstr ldstr "EffectiveDate"
+    IL_008e: callvirt System.Data.DataRow::get_Item
+    IL_0093: call Architecture.Common.Conversion::ToDateTime
+    IL_0098: stloc.2
+    IL_0099: ldloca.s 2
+    IL_009b: call System.DateTime::ToShortDateString
+    IL_00a0: stelem.ref
+    IL_00a1: dup
+    IL_00a2: ldc.i4.2
+    IL_00a3: ldloc.0
+    IL_00a4: callvirt System.Data.DataTable::get_Rows
+    IL_00a9: ldloc.1
+    IL_00aa: callvirt System.Data.DataRowCollection::get_Item
+    IL_00af: ldstr ldstr "CustomerId"
+    IL_00b4: callvirt System.Data.DataRow::get_Item
+    IL_00b9: stelem.ref
+    IL_00ba: dup
+    IL_00bb: ldc.i4.3
+    IL_00bc: ldloc.0
+    IL_00bd: callvirt System.Data.DataTable::get_Rows
+    IL_00c2: ldloc.1
+    IL_00c3: callvirt System.Data.DataRowCollection::get_Item
+    IL_00c8: ldstr ldstr "CustomerName"
+    IL_00cd: callvirt System.Data.DataRow::get_Item
+    IL_00d2: stelem.ref
+    IL_00d3: dup
+    IL_00d4: ldc.i4.4
+    IL_00d5: ldloc.0
+    IL_00d6: callvirt System.Data.DataTable::get_Rows
+    IL_00db: ldloc.1
+    IL_00dc: callvirt System.Data.DataRowCollection::get_Item
+    IL_00e1: ldstr ldstr "DiscountTypeCode"
+    IL_00e6: callvirt System.Data.DataRow::get_Item
+    IL_00eb: stelem.ref
+    IL_00ec: dup
+    IL_00ed: ldc.i4.5
+    IL_00ee: ldloc.0
+    IL_00ef: callvirt System.Data.DataTable::get_Rows
+    IL_00f4: ldloc.1
+    IL_00f5: callvirt System.Data.DataRowCollection::get_Item
+    IL_00fa: ldstr ldstr "DiscountItemName"
+    IL_00ff: callvirt System.Data.DataRow::get_Item
+    IL_0104: stelem.ref
+    IL_0105: dup
+    IL_0106: ldc.i4.6
+    IL_0107: ldloc.0
+    IL_0108: callvirt System.Data.DataTable::get_Rows
+    IL_010d: ldloc.1
+    IL_010e: callvirt System.Data.DataRowCollection::get_Item
+    IL_0113: ldstr ldstr "DiscountRate"
+    IL_0118: callvirt System.Data.DataRow::get_Item
+    IL_011d: stelem.ref
+    IL_011e: dup
+    IL_011f: ldc.i4.7
+    IL_0120: ldloc.0
+    IL_0121: callvirt System.Data.DataTable::get_Rows
+    IL_0126: ldloc.1
+    IL_0127: callvirt System.Data.DataRowCollection::get_Item
+    IL_012c: ldstr ldstr "DiscPerncentage"
+    IL_0131: callvirt System.Data.DataRow::get_Item
+    IL_0136: stelem.ref
+    IL_0137: dup
+    IL_0138: ldc.i4.8
+    IL_0139: ldloc.0
+    IL_013a: callvirt System.Data.DataTable::get_Rows
+    IL_013f: ldloc.1
+    IL_0140: callvirt System.Data.DataRowCollection::get_Item
+    IL_0145: ldstr ldstr "IsActive"
+    IL_014a: callvirt System.Data.DataRow::get_Item
+    IL_014f: stelem.ref
+    IL_0150: dup
+    IL_0151: ldc.i4.s 9
+    IL_0153: ldloc.0
+    IL_0154: callvirt System.Data.DataTable::get_Rows
+    IL_0159: ldloc.1
+    IL_015a: callvirt System.Data.DataRowCollection::get_Item
+    IL_015f: ldstr ldstr "EntryUser"
+    IL_0164: callvirt System.Data.DataRow::get_Item
+    IL_0169: stelem.ref
+    IL_016a: dup
+    IL_016b: ldc.i4.s 10
+    IL_016d: ldloc.0
+    IL_016e: callvirt System.Data.DataTable::get_Rows
+    IL_0173: ldloc.1
+    IL_0174: callvirt System.Data.DataRowCollection::get_Item
+    IL_0179: ldstr ldstr "EntryDate"
+    IL_017e: callvirt System.Data.DataRow::get_Item
+    IL_0183: stelem.ref
+    IL_0184: dup
+    IL_0185: ldc.i4.s 11
+    IL_0187: ldloc.0
+    IL_0188: callvirt System.Data.DataTable::get_Rows
+    IL_018d: ldloc.1
+    IL_018e: callvirt System.Data.DataRowCollection::get_Item
+    IL_0193: ldstr ldstr "ModifyUser"
+    IL_0198: callvirt System.Data.DataRow::get_Item
+    IL_019d: stelem.ref
+    IL_019e: dup
+    IL_019f: ldc.i4.s 12
+    IL_01a1: ldloc.0
+    IL_01a2: callvirt System.Data.DataTable::get_Rows
+    IL_01a7: ldloc.1
+    IL_01a8: callvirt System.Data.DataRowCollection::get_Item
+    IL_01ad: ldstr ldstr "ModifyDate"
+    IL_01b2: callvirt System.Data.DataRow::get_Item
+    IL_01b7: stelem.ref
+    IL_01b8: callvirt System.Data.DataRowCollection::Add
+    IL_01bd: pop
+    IL_01be: ldloc.1
+    IL_01bf: ldc.i4.1
+    IL_01c0: add
+    IL_01c1: stloc.1
+    IL_01c2: ldloc.1
+    IL_01c3: ldloc.0
+    IL_01c4: callvirt System.Data.DataTable::get_Rows
+    IL_01c9: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_01ce: blt IL_0050
+    IL_01d3: ldarg.0
+    IL_01d4: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_01d9: ldarg.0
+    IL_01da: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_01df: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_01e4: ldarg.0
+    IL_01e5: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_01ea: callvirt Janus.Windows.GridEX.GridEX::RetrieveStructure
+    IL_01ef: ldarg.0
+    IL_01f0: call Architecture.WinApp.CustomerDiscountPolicy::GrdSetting
+    IL_01f5: leave.s IL_0204
+    IL_01f7: callvirt System.Exception::get_Message
+    IL_01fc: call System.Windows.Forms.MessageBox::Show
+    IL_0201: pop
+    IL_0202: leave.s IL_0204
+    IL_0204: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::GrdSetting  (rva=0xc49d0, fat header, code_size=485, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0006: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_000b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0010: ldstr ldstr "Id"
+    IL_0015: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_001a: ldc.i4.0
+    IL_001b: callvirt Janus.Windows.GridEX.GridEXColumn::set_Visible
+    IL_0020: ldarg.0
+    IL_0021: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0026: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_002b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0030: ldstr ldstr "CustomerId"
+    IL_0035: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_003a: ldc.i4.0
+    IL_003b: callvirt Janus.Windows.GridEX.GridEXColumn::set_Visible
+    IL_0040: ldarg.0
+    IL_0041: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0046: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_004b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0050: ldstr ldstr "Item%"
+    IL_0055: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_005a: ldc.i4.0
+    IL_005b: callvirt Janus.Windows.GridEX.GridEXColumn::set_Visible
+    IL_0060: ldarg.0
+    IL_0061: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0066: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_006b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0070: ldstr ldstr "EntryDate"
+    IL_0075: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_007a: ldstr ldstr "dd-MMM-yyyy hh:mm tt"
+    IL_007f: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_0084: ldarg.0
+    IL_0085: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_008a: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_008f: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0094: ldstr ldstr "ModifyDate"
+    IL_0099: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_009e: ldstr ldstr "dd-MMM-yyyy hh:mm tt"
+    IL_00a3: callvirt Janus.Windows.GridEX.GridEXColumn::set_FormatString
+    IL_00a8: ldarg.0
+    IL_00a9: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_00ae: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00b3: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00b8: ldstr ldstr "Edit"
+    IL_00bd: callvirt Janus.Windows.GridEX.GridEXColumnCollection::Add
+    IL_00c2: pop
+    IL_00c3: ldarg.0
+    IL_00c4: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_00c9: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00ce: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00d3: ldstr ldstr "Edit"
+    IL_00d8: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_00dd: ldstr ldstr "Edit"
+    IL_00e2: callvirt Janus.Windows.GridEX.GridEXColumn::set_Key
+    IL_00e7: ldarg.0
+    IL_00e8: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_00ed: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_00f2: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_00f7: ldstr ldstr "Edit"
+    IL_00fc: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0101: ldstr ldstr "Edit"
+    IL_0106: callvirt Janus.Windows.GridEX.GridEXColumn::set_Caption
+    IL_010b: ldarg.0
+    IL_010c: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0111: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0116: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_011b: ldstr ldstr "Edit"
+    IL_0120: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0125: ldc.i4.3
+    IL_0126: callvirt Janus.Windows.GridEX.GridEXColumn::set_ButtonDisplayMode
+    IL_012b: ldarg.0
+    IL_012c: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0131: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0136: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_013b: ldstr ldstr "Edit"
+    IL_0140: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0145: ldc.i4.5
+    IL_0146: callvirt Janus.Windows.GridEX.GridEXColumn::set_ButtonStyle
+    IL_014b: ldarg.0
+    IL_014c: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0151: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0156: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_015b: ldstr ldstr "Edit"
+    IL_0160: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0165: ldstr ldstr "Edit"
+    IL_016a: callvirt Janus.Windows.GridEX.GridEXColumn::set_ButtonText
+    IL_016f: ldarg.0
+    IL_0170: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0175: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_017a: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_017f: ldstr ldstr "Edit"
+    IL_0184: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0189: ldc.i4.s 40
+    IL_018b: callvirt Janus.Windows.GridEX.GridEXColumn::set_Width
+    IL_0190: ldarg.0
+    IL_0191: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0196: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_019b: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01a0: ldstr ldstr "Edit"
+    IL_01a5: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01aa: ldc.i4.0
+    IL_01ab: callvirt Janus.Windows.GridEX.GridEXColumn::set_Position
+    IL_01b0: ldarg.0
+    IL_01b1: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_01b6: ldc.i4.1
+    IL_01b7: callvirt Janus.Windows.GridEX.GridEX::set_FrozenColumns
+    IL_01bc: ldarg.0
+    IL_01bd: ldfld Architecture.WinApp.CustomerDiscountPolicy::AryColWidth
+    IL_01c2: ldarg.0
+    IL_01c3: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_01c8: call Architecture.WinApp.Common.CommonServices::GridAutoAdjustment
+    IL_01cd: ldarg.0
+    IL_01ce: ldnull
+    IL_01cf: ldnull
+    IL_01d0: call Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1_Load
+    IL_01d5: leave.s IL_01e4
+    IL_01d7: callvirt System.Exception::get_Message
+    IL_01dc: call System.Windows.Forms.MessageBox::Show
+    IL_01e1: pop
+    IL_01e2: leave.s IL_01e4
+    IL_01e4: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::grd_DoubleClick  (rva=0xc4be0, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.CustomerDiscountPolicy::ReadById
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::grd_ColumnButtonClick  (rva=0xc4c14, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.2
+    IL_0001: callvirt Janus.Windows.GridEX.ColumnActionEventArgs::get_Column
+    IL_0006: callvirt Janus.Windows.GridEX.GridEXColumn::get_Key
+    IL_000b: ldstr ldstr "Edit"
+    IL_0010: call System.String::op_Equality
+    IL_0015: brfalse.s IL_001d
+    IL_0017: ldarg.0
+    IL_0018: call Architecture.WinApp.CustomerDiscountPolicy::ReadById
+    IL_001d: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::InvfrmPriceSchedule_Load  (rva=0xc4c34, fat header, code_size=604, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: call System.Windows.Forms.Control::get_Name
+    IL_0007: call Architecture.WinApp.Common.CommonServices::SetRightsValueInRightsObject
+    IL_000c: stfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_001d: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveSaveRight
+    IL_0022: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_0027: ldarg.0
+    IL_0028: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_002d: ldarg.0
+    IL_002e: ldfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_0033: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveUpdateRights
+    IL_0038: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_003d: ldarg.0
+    IL_003e: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0043: ldfld grid.User_Conrtols.CtrlGrdBar::mGridSaveLayouts
+    IL_0048: ldarg.0
+    IL_0049: ldfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_004e: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveSaveLayoutRights
+    IL_0053: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_0058: ldarg.0
+    IL_0059: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_005e: ldfld grid.User_Conrtols.CtrlGrdBar::mGridPrint
+    IL_0063: ldarg.0
+    IL_0064: ldfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_0069: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveGridPrintRights
+    IL_006e: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_0073: ldarg.0
+    IL_0074: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0079: ldfld grid.User_Conrtols.CtrlGrdBar::mGridExport
+    IL_007e: ldarg.0
+    IL_007f: ldfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_0084: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveGridExportRights
+    IL_0089: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_008e: ldarg.0
+    IL_008f: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0094: ldfld grid.User_Conrtols.CtrlGrdBar::GroupCollaps
+    IL_0099: ldarg.0
+    IL_009a: ldfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_009f: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveGridGroupCollapseRights
+    IL_00a4: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_00a9: ldarg.0
+    IL_00aa: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_00af: ldfld grid.User_Conrtols.CtrlGrdBar::GroupExpand
+    IL_00b4: ldarg.0
+    IL_00b5: ldfld Architecture.WinApp.CustomerDiscountPolicy::formrights
+    IL_00ba: callvirt Architecture.WinApp.Common.Rightsobjects::get_DoHaveGridGroupExpandRights
+    IL_00bf: callvirt System.Windows.Forms.ToolStripItem::set_Enabled
+    IL_00c4: ldarg.0
+    IL_00c5: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_00ca: callvirt System.Data.DataTable::get_Columns
+    IL_00cf: ldstr ldstr "Id"
+    IL_00d4: callvirt System.Data.DataColumnCollection::Add
+    IL_00d9: pop
+    IL_00da: ldarg.0
+    IL_00db: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_00e0: callvirt System.Data.DataTable::get_Columns
+    IL_00e5: ldstr ldstr "EffectedDate"
+    IL_00ea: ldtoken System.DateTime
+    IL_00ef: call System.Type::GetTypeFromHandle
+    IL_00f4: callvirt System.Data.DataColumnCollection::Add
+    IL_00f9: pop
+    IL_00fa: ldarg.0
+    IL_00fb: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_0100: callvirt System.Data.DataTable::get_Columns
+    IL_0105: ldstr ldstr "CustomerId"
+    IL_010a: callvirt System.Data.DataColumnCollection::Add
+    IL_010f: pop
+    IL_0110: ldarg.0
+    IL_0111: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_0116: callvirt System.Data.DataTable::get_Columns
+    IL_011b: ldstr ldstr "CustomerName"
+    IL_0120: callvirt System.Data.DataColumnCollection::Add
+    IL_0125: pop
+    IL_0126: ldarg.0
+    IL_0127: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_012c: callvirt System.Data.DataTable::get_Columns
+    IL_0131: ldstr ldstr "DiscountType"
+    IL_0136: callvirt System.Data.DataColumnCollection::Add
+    IL_013b: pop
+    IL_013c: ldarg.0
+    IL_013d: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_0142: callvirt System.Data.DataTable::get_Columns
+    IL_0147: ldstr ldstr "DiscountItem"
+    IL_014c: callvirt System.Data.DataColumnCollection::Add
+    IL_0151: pop
+    IL_0152: ldarg.0
+    IL_0153: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_0158: callvirt System.Data.DataTable::get_Columns
+    IL_015d: ldstr ldstr "Discount%"
+    IL_0162: callvirt System.Data.DataColumnCollection::Add
+    IL_0167: pop
+    IL_0168: ldarg.0
+    IL_0169: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_016e: callvirt System.Data.DataTable::get_Columns
+    IL_0173: ldstr ldstr "Item%"
+    IL_0178: callvirt System.Data.DataColumnCollection::Add
+    IL_017d: pop
+    IL_017e: ldarg.0
+    IL_017f: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_0184: callvirt System.Data.DataTable::get_Columns
+    IL_0189: ldstr ldstr "IsActive"
+    IL_018e: callvirt System.Data.DataColumnCollection::Add
+    IL_0193: pop
+    IL_0194: ldarg.0
+    IL_0195: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_019a: callvirt System.Data.DataTable::get_Columns
+    IL_019f: ldstr ldstr "EntryUser"
+    IL_01a4: callvirt System.Data.DataColumnCollection::Add
+    IL_01a9: pop
+    IL_01aa: ldarg.0
+    IL_01ab: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_01b0: callvirt System.Data.DataTable::get_Columns
+    IL_01b5: ldstr ldstr "EntryDate"
+    IL_01ba: ldtoken System.DateTime
+    IL_01bf: call System.Type::GetTypeFromHandle
+    IL_01c4: callvirt System.Data.DataColumnCollection::Add
+    IL_01c9: pop
+    IL_01ca: ldarg.0
+    IL_01cb: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_01d0: callvirt System.Data.DataTable::get_Columns
+    IL_01d5: ldstr ldstr "ModifyUser"
+    IL_01da: callvirt System.Data.DataColumnCollection::Add
+    IL_01df: pop
+    IL_01e0: ldarg.0
+    IL_01e1: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_01e6: callvirt System.Data.DataTable::get_Columns
+    IL_01eb: ldstr ldstr "ModifyDate"
+    IL_01f0: ldtoken System.DateTime
+    IL_01f5: call System.Type::GetTypeFromHandle
+    IL_01fa: callvirt System.Data.DataColumnCollection::Add
+    IL_01ff: pop
+    IL_0200: ldarg.0
+    IL_0201: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0206: ldarg.0
+    IL_0207: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtGrid
+    IL_020c: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_0211: ldarg.0
+    IL_0212: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0217: callvirt Janus.Windows.GridEX.GridEX::RetrieveStructure
+    IL_021c: ldarg.0
+    IL_021d: call Architecture.WinApp.CustomerDiscountPolicy::GrdSetting
+    IL_0222: ldarg.0
+    IL_0223: call Architecture.WinApp.CustomerDiscountPolicy::GridFill
+    IL_0228: ldarg.0
+    IL_0229: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_022e: ldc.i4.0
+    IL_022f: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0234: ldarg.0
+    IL_0235: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_023a: callvirt System.Windows.Forms.Control::Focus
+    IL_023f: pop
+    IL_0240: ldarg.0
+    IL_0241: call Architecture.WinApp.CustomerDiscountPolicy::DiscountTypeFill
+    IL_0246: ldarg.0
+    IL_0247: call Architecture.WinApp.CustomerDiscountPolicy::CustomerBind
+    IL_024c: leave.s IL_025b
+    IL_024e: callvirt System.Exception::get_Message
+    IL_0253: call System.Windows.Forms.MessageBox::Show
+    IL_0258: pop
+    IL_0259: leave.s IL_025b
+    IL_025b: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::BtnNew_Click  (rva=0xc4eb8, fat header, code_size=40, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.CustomerDiscountPolicy::reset
+    IL_0006: ldarg.0
+    IL_0007: call Architecture.WinApp.CustomerDiscountPolicy::GridFill
+    IL_000c: ldarg.0
+    IL_000d: call Architecture.WinApp.CustomerDiscountPolicy::DiscountTypeFill
+    IL_0012: ldarg.0
+    IL_0013: call Architecture.WinApp.CustomerDiscountPolicy::CustomerBind
+    IL_0018: leave.s IL_0027
+    IL_001a: callvirt System.Exception::get_Message
+    IL_001f: call System.Windows.Forms.MessageBox::Show
+    IL_0024: pop
+    IL_0025: leave.s IL_0027
+    IL_0027: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::reset  (rva=0xc4efc, fat header, code_size=123, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0006: ldsfld System.String::Empty
+    IL_000b: callvirt System.Windows.Forms.Control::set_Text
+    IL_0010: ldarg.0
+    IL_0011: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_0016: ldsfld System.String::Empty
+    IL_001b: callvirt System.Windows.Forms.Control::set_Text
+    IL_0020: ldarg.0
+    IL_0021: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0026: ldsfld System.String::Empty
+    IL_002b: callvirt System.Windows.Forms.Control::set_Text
+    IL_0030: ldarg.0
+    IL_0031: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_0036: callvirt System.Windows.Forms.TextBoxBase::Clear
+    IL_003b: ldarg.0
+    IL_003c: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_0041: ldc.i4.1
+    IL_0042: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0047: ldarg.0
+    IL_0048: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_004d: ldc.i4.0
+    IL_004e: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0053: ldarg.0
+    IL_0054: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_0059: callvirt System.Windows.Forms.Control::Focus
+    IL_005e: pop
+    IL_005f: ldarg.0
+    IL_0060: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_0065: ldc.i4.1
+    IL_0066: callvirt System.Windows.Forms.CheckBox::set_Checked
+    IL_006b: leave.s IL_007a
+    IL_006d: callvirt System.Exception::get_Message
+    IL_0072: call System.Windows.Forms.MessageBox::Show
+    IL_0077: pop
+    IL_0078: leave.s IL_007a
+    IL_007a: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::InvfrmPriceSchedule_KeyDown  (rva=0xc4f94, fat header, code_size=180, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.2
+    IL_0001: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0006: brfalse.s IL_001a
+    IL_0008: ldarg.2
+    IL_0009: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_000e: ldc.i4.s 78
+    IL_0010: bne.un.s IL_001a
+    IL_0012: ldarg.0
+    IL_0013: ldnull
+    IL_0014: ldnull
+    IL_0015: call Architecture.WinApp.CustomerDiscountPolicy::BtnNew_Click
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_0020: callvirt System.Windows.Forms.ToolStripItem::get_Visible
+    IL_0025: brfalse.s IL_004e
+    IL_0027: ldarg.0
+    IL_0028: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_002d: callvirt System.Windows.Forms.ToolStripItem::get_Enabled
+    IL_0032: brfalse.s IL_004e
+    IL_0034: ldarg.2
+    IL_0035: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_003a: brfalse.s IL_004e
+    IL_003c: ldarg.2
+    IL_003d: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0042: ldc.i4.s 83
+    IL_0044: bne.un.s IL_004e
+    IL_0046: ldarg.0
+    IL_0047: ldnull
+    IL_0048: ldnull
+    IL_0049: call Architecture.WinApp.CustomerDiscountPolicy::BtnSave_Click
+    IL_004e: ldarg.0
+    IL_004f: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_0054: callvirt System.Windows.Forms.ToolStripItem::get_Visible
+    IL_0059: brfalse.s IL_0082
+    IL_005b: ldarg.0
+    IL_005c: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_0061: callvirt System.Windows.Forms.ToolStripItem::get_Enabled
+    IL_0066: brfalse.s IL_0082
+    IL_0068: ldarg.2
+    IL_0069: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_006e: brfalse.s IL_0082
+    IL_0070: ldarg.2
+    IL_0071: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0076: ldc.i4.s 85
+    IL_0078: bne.un.s IL_0082
+    IL_007a: ldarg.0
+    IL_007b: ldnull
+    IL_007c: ldnull
+    IL_007d: call Architecture.WinApp.CustomerDiscountPolicy::BtnEdit_Click
+    IL_0082: ldarg.2
+    IL_0083: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0088: brfalse.s IL_0094
+    IL_008a: ldarg.2
+    IL_008b: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0090: ldc.i4.s 69
+    IL_0092: beq.s IL_009e
+    IL_0094: ldarg.2
+    IL_0095: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_009a: ldc.i4.s 27
+    IL_009c: bne.un.s IL_00a4
+    IL_009e: ldarg.0
+    IL_009f: call System.Windows.Forms.Form::Close
+    IL_00a4: leave.s IL_00b3
+    IL_00a6: callvirt System.Exception::get_Message
+    IL_00ab: call System.Windows.Forms.MessageBox::Show
+    IL_00b0: pop
+    IL_00b1: leave.s IL_00b3
+    IL_00b3: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1_Load  (rva=0xc5064, fat header, code_size=66, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.Control::get_Name
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_000c: callvirt System.Windows.Forms.Control::get_Name
+    IL_0011: call Architecture.WinApp.Common.CommonServices::GetGridLayout
+    IL_0016: stloc.0
+    IL_0017: ldloc.0
+    IL_0018: brfalse.s IL_0032
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0020: ldloc.0
+    IL_0021: callvirt Janus.Windows.GridEX.GridEX::LoadLayoutFile
+    IL_0026: ldloc.0
+    IL_0027: callvirt System.IO.Stream::Close
+    IL_002c: ldloc.0
+    IL_002d: callvirt System.IO.Stream::Dispose
+    IL_0032: leave.s IL_0041
+    IL_0034: callvirt System.Object::ToString
+    IL_0039: call System.Windows.Forms.MessageBox::Show
+    IL_003e: pop
+    IL_003f: leave.s IL_0041
+    IL_0041: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::txtDiscountRate_KeyPress  (rva=0xc50c4, tiny header, code_size=8, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: ldarg.2
+    IL_0002: call Architecture.WinApp.Common.CommonServices::OnlytextdecimelFunction
+    IL_0007: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType_Click  (rva=0xc50d0, fat header, code_size=32, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_0006: newobj Architecture.WinApp.Inventory_Definition.InvAllocateBrandItemToDiscType::.ctor
+    IL_000b: callvirt System.Windows.Forms.Control::Show
+    IL_0010: leave.s IL_001f
+    IL_0012: callvirt System.Exception::get_Message
+    IL_0017: call System.Windows.Forms.MessageBox::Show
+    IL_001c: pop
+    IL_001d: leave.s IL_001f
+    IL_001f: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType_Click  (rva=0xc510c, fat header, code_size=32, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.CustomerDiscountPolicy::UserAccount
+    IL_0006: newobj Architecture.WinApp.Inventory_Definition.InvAllocateDiscItemToDiscType::.ctor
+    IL_000b: callvirt System.Windows.Forms.Control::Show
+    IL_0010: leave.s IL_001f
+    IL_0012: callvirt System.Object::ToString
+    IL_0017: call System.Windows.Forms.MessageBox::Show
+    IL_001c: pop
+    IL_001d: leave.s IL_001f
+    IL_001f: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem_Leave  (rva=0xc5148, fat header, code_size=97, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0006: callvirt System.Windows.Forms.Control::get_Enabled
+    IL_000b: brfalse.s IL_0051
+    IL_000d: ldarg.0
+    IL_000e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0013: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_ActiveRow
+    IL_0018: brfalse.s IL_0051
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_0020: ldarg.0
+    IL_0021: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0026: callvirt Infragistics.Win.UltraWinGrid.UltraDropDownBase::get_SelectedRow
+    IL_002b: callvirt Infragistics.Win.UltraWinGrid.UltraGridRow::get_Cells
+    IL_0030: ldc.i4.3
+    IL_0031: callvirt Infragistics.Win.UltraWinGrid.CellsCollection::get_Item
+    IL_0036: callvirt Infragistics.Win.UltraWinGrid.UltraGridCell::get_Value
+    IL_003b: call Architecture.Common.Conversion::ToString
+    IL_0040: callvirt System.Windows.Forms.Control::set_Text
+    IL_0045: ldarg.0
+    IL_0046: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_004b: ldc.i4.0
+    IL_004c: callvirt System.Windows.Forms.Control::set_Enabled
+    IL_0051: leave.s IL_0060
+    IL_0053: callvirt System.Object::ToString
+    IL_0058: call System.Windows.Forms.MessageBox::Show
+    IL_005d: pop
+    IL_005e: leave.s IL_0060
+    IL_0060: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::CustomerDiscountPolicy_FormClosing  (rva=0xc51c8, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.HistoryStack::Remove
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::Dispose  (rva=0xc51fc, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0016
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.WinApp.CustomerDiscountPolicy::components
+    IL_0009: brfalse.s IL_0016
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.CustomerDiscountPolicy::components
+    IL_0011: callvirt System.IDisposable::Dispose
+    IL_0016: ldarg.0
+    IL_0017: ldarg.1
+    IL_0018: call System.Windows.Forms.Form::Dispose
+    IL_001d: ret
+
+; Architecture.WinApp.CustomerDiscountPolicy::InitializeComponent  (rva=0xc521c, fat header, code_size=8400, max_stack=6, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj System.ComponentModel.Container::.ctor
+    IL_0006: stfld Architecture.WinApp.CustomerDiscountPolicy::components
+    IL_000b: newobj Janus.Windows.GridEX.GridEXLayout::.ctor
+    IL_0010: stloc.0
+    IL_0011: newobj Infragistics.Win.Appearance::.ctor
+    IL_0016: stloc.1
+    IL_0017: newobj Infragistics.Win.Appearance::.ctor
+    IL_001c: stloc.2
+    IL_001d: newobj Infragistics.Win.Appearance::.ctor
+    IL_0022: stloc.3
+    IL_0023: newobj Infragistics.Win.Appearance::.ctor
+    IL_0028: stloc.s 4
+    IL_002a: newobj Infragistics.Win.Appearance::.ctor
+    IL_002f: stloc.s 5
+    IL_0031: newobj Infragistics.Win.Appearance::.ctor
+    IL_0036: stloc.s 6
+    IL_0038: newobj Infragistics.Win.Appearance::.ctor
+    IL_003d: stloc.s 7
+    IL_003f: newobj Infragistics.Win.Appearance::.ctor
+    IL_0044: stloc.s 8
+    IL_0046: newobj Infragistics.Win.Appearance::.ctor
+    IL_004b: stloc.s 9
+    IL_004d: newobj Infragistics.Win.Appearance::.ctor
+    IL_0052: stloc.s 10
+    IL_0054: newobj Infragistics.Win.Appearance::.ctor
+    IL_0059: stloc.s 11
+    IL_005b: newobj Infragistics.Win.Appearance::.ctor
+    IL_0060: stloc.s 12
+    IL_0062: newobj Infragistics.Win.Appearance::.ctor
+    IL_0067: stloc.s 13
+    IL_0069: newobj Infragistics.Win.Appearance::.ctor
+    IL_006e: stloc.s 14
+    IL_0070: newobj Infragistics.Win.Appearance::.ctor
+    IL_0075: stloc.s 15
+    IL_0077: newobj Infragistics.Win.Appearance::.ctor
+    IL_007c: stloc.s 16
+    IL_007e: newobj Infragistics.Win.Appearance::.ctor
+    IL_0083: stloc.s 17
+    IL_0085: newobj Infragistics.Win.Appearance::.ctor
+    IL_008a: stloc.s 18
+    IL_008c: newobj Infragistics.Win.Appearance::.ctor
+    IL_0091: stloc.s 19
+    IL_0093: newobj Infragistics.Win.Appearance::.ctor
+    IL_0098: stloc.s 20
+    IL_009a: newobj Infragistics.Win.Appearance::.ctor
+    IL_009f: stloc.s 21
+    IL_00a1: newobj Infragistics.Win.Appearance::.ctor
+    IL_00a6: stloc.s 22
+    IL_00a8: newobj Infragistics.Win.Appearance::.ctor
+    IL_00ad: stloc.s 23
+    IL_00af: newobj Infragistics.Win.Appearance::.ctor
+    IL_00b4: stloc.s 24
+    IL_00b6: newobj Infragistics.Win.Appearance::.ctor
+    IL_00bb: stloc.s 25
+    IL_00bd: newobj Infragistics.Win.Appearance::.ctor
+    IL_00c2: stloc.s 26
+    IL_00c4: newobj Infragistics.Win.Appearance::.ctor
+    IL_00c9: stloc.s 27
+    IL_00cb: newobj Infragistics.Win.Appearance::.ctor
+    IL_00d0: stloc.s 28
+    IL_00d2: newobj Infragistics.Win.Appearance::.ctor
+    IL_00d7: stloc.s 29
+    IL_00d9: newobj Infragistics.Win.Appearance::.ctor
+    IL_00de: stloc.s 30
+    IL_00e0: newobj Infragistics.Win.Appearance::.ctor
+    IL_00e5: stloc.s 31
+    IL_00e7: newobj Infragistics.Win.Appearance::.ctor
+    IL_00ec: stloc.s 32
+    IL_00ee: newobj Infragistics.Win.Appearance::.ctor
+    IL_00f3: stloc.s 33
+    IL_00f5: newobj Infragistics.Win.Appearance::.ctor
+    IL_00fa: stloc.s 34
+    IL_00fc: newobj Infragistics.Win.Appearance::.ctor
+    IL_0101: stloc.s 35
+    IL_0103: newobj Infragistics.Win.Appearance::.ctor
+    IL_0108: stloc.s 36
+    IL_010a: ldtoken Architecture.WinApp.CustomerDiscountPolicy
+    IL_010f: call System.Type::GetTypeFromHandle
+    IL_0114: newobj System.ComponentModel.ComponentResourceManager::.ctor
+    IL_0119: stloc.s 37
+    IL_011b: ldarg.0
+    IL_011c: newobj System.Windows.Forms.Panel::.ctor
+    IL_0121: stfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_0126: ldarg.0
+    IL_0127: newobj System.Windows.Forms.Panel::.ctor
+    IL_012c: stfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_0131: ldarg.0
+    IL_0132: newobj Janus.Windows.GridEX.GridEX::.ctor
+    IL_0137: stfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_013c: ldarg.0
+    IL_013d: newobj System.Windows.Forms.Panel::.ctor
+    IL_0142: stfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_0147: ldarg.0
+    IL_0148: newobj grid.User_Conrtols.CtrlGrdBar::.ctor
+    IL_014d: stfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0152: ldarg.0
+    IL_0153: newobj System.Windows.Forms.Label::.ctor
+    IL_0158: stfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_015d: ldarg.0
+    IL_015e: newobj System.Windows.Forms.Panel::.ctor
+    IL_0163: stfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_0168: ldarg.0
+    IL_0169: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_016e: stfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0173: ldarg.0
+    IL_0174: newobj System.Windows.Forms.Label::.ctor
+    IL_0179: stfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_017e: ldarg.0
+    IL_017f: newobj System.Windows.Forms.Label::.ctor
+    IL_0184: stfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0189: ldarg.0
+    IL_018a: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_018f: stfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0194: ldarg.0
+    IL_0195: newobj System.Windows.Forms.Label::.ctor
+    IL_019a: stfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_019f: ldarg.0
+    IL_01a0: newobj System.Windows.Forms.Label::.ctor
+    IL_01a5: stfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_01aa: ldarg.0
+    IL_01ab: newobj System.Windows.Forms.TextBox::.ctor
+    IL_01b0: stfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_01b5: ldarg.0
+    IL_01b6: newobj System.Windows.Forms.CheckBox::.ctor
+    IL_01bb: stfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_01c0: ldarg.0
+    IL_01c1: newobj System.Windows.Forms.Label::.ctor
+    IL_01c6: stfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_01cb: ldarg.0
+    IL_01cc: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_01d1: stfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_01d6: ldarg.0
+    IL_01d7: newobj System.Windows.Forms.DateTimePicker::.ctor
+    IL_01dc: stfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_01e1: ldarg.0
+    IL_01e2: newobj System.Windows.Forms.Panel::.ctor
+    IL_01e7: stfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_01ec: ldarg.0
+    IL_01ed: newobj System.Windows.Forms.Label::.ctor
+    IL_01f2: stfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_01f7: ldarg.0
+    IL_01f8: newobj System.Windows.Forms.Panel::.ctor
+    IL_01fd: stfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_0202: ldarg.0
+    IL_0203: newobj System.Windows.Forms.ToolStrip::.ctor
+    IL_0208: stfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_020d: ldarg.0
+    IL_020e: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_0213: stfld Architecture.WinApp.CustomerDiscountPolicy::BtnNew
+    IL_0218: ldarg.0
+    IL_0219: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_021e: stfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_0223: ldarg.0
+    IL_0224: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_0229: stfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_022e: ldarg.0
+    IL_022f: newobj System.Windows.Forms.ToolStripSeparator::.ctor
+    IL_0234: stfld Architecture.WinApp.CustomerDiscountPolicy::toolStripSeparator1
+    IL_0239: ldarg.0
+    IL_023a: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_023f: stfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_0244: ldarg.0
+    IL_0245: newobj System.Windows.Forms.ToolStripSeparator::.ctor
+    IL_024a: stfld Architecture.WinApp.CustomerDiscountPolicy::toolStripSeparator2
+    IL_024f: ldarg.0
+    IL_0250: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_0255: stfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_025a: ldarg.0
+    IL_025b: ldarg.0
+    IL_025c: ldfld Architecture.WinApp.CustomerDiscountPolicy::components
+    IL_0261: newobj System.Windows.Forms.BindingNavigator::.ctor
+    IL_0266: stfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_026b: ldarg.0
+    IL_026c: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_0271: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0276: ldarg.0
+    IL_0277: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_027c: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0281: ldarg.0
+    IL_0282: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0287: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_028c: ldarg.0
+    IL_028d: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_0292: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0297: ldarg.0
+    IL_0298: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_029d: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_02a2: ldarg.0
+    IL_02a3: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_02a8: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_02ad: ldarg.0
+    IL_02ae: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_02b3: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_02b8: ldarg.0
+    IL_02b9: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_02be: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_02c3: ldarg.0
+    IL_02c4: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_02c9: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_02ce: ldarg.0
+    IL_02cf: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_02d4: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_02d9: ldarg.0
+    IL_02da: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_02df: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_02e4: ldarg.0
+    IL_02e5: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_02ea: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_02ef: ldarg.0
+    IL_02f0: call System.Windows.Forms.Control::SuspendLayout
+    IL_02f5: ldarg.0
+    IL_02f6: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_02fb: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0300: ldarg.0
+    IL_0301: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_0306: callvirt ControlCollection::Add
+    IL_030b: ldarg.0
+    IL_030c: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_0311: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0316: ldarg.0
+    IL_0317: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_031c: callvirt ControlCollection::Add
+    IL_0321: ldarg.0
+    IL_0322: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_0327: callvirt System.Windows.Forms.Control::get_Controls
+    IL_032c: ldarg.0
+    IL_032d: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_0332: callvirt ControlCollection::Add
+    IL_0337: ldarg.0
+    IL_0338: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_033d: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0342: ldarg.0
+    IL_0343: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_0348: callvirt ControlCollection::Add
+    IL_034d: ldarg.0
+    IL_034e: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_0353: ldc.i4.5
+    IL_0354: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0359: ldarg.0
+    IL_035a: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_035f: ldc.i4.0
+    IL_0360: ldc.i4.0
+    IL_0361: newobj System.Drawing.Point::.ctor
+    IL_0366: callvirt System.Windows.Forms.Control::set_Location
+    IL_036b: ldarg.0
+    IL_036c: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_0371: ldc.i4.2
+    IL_0372: newobj System.Windows.Forms.Padding::.ctor
+    IL_0377: callvirt System.Windows.Forms.Control::set_Margin
+    IL_037c: ldarg.0
+    IL_037d: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_0382: ldstr ldstr "panel1"
+    IL_0387: callvirt System.Windows.Forms.Control::set_Name
+    IL_038c: ldarg.0
+    IL_038d: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_0392: ldc.i4 1042
+    IL_0397: ldc.i4 694
+    IL_039c: newobj System.Drawing.Size::.ctor
+    IL_03a1: callvirt System.Windows.Forms.Control::set_Size
+    IL_03a6: ldarg.0
+    IL_03a7: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_03ac: ldc.i4.0
+    IL_03ad: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_03b2: ldarg.0
+    IL_03b3: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_03b8: callvirt System.Windows.Forms.Control::get_Controls
+    IL_03bd: ldarg.0
+    IL_03be: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_03c3: callvirt ControlCollection::Add
+    IL_03c8: ldarg.0
+    IL_03c9: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_03ce: callvirt System.Windows.Forms.Control::get_Controls
+    IL_03d3: ldarg.0
+    IL_03d4: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_03d9: callvirt ControlCollection::Add
+    IL_03de: ldarg.0
+    IL_03df: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_03e4: ldc.i4.5
+    IL_03e5: callvirt System.Windows.Forms.Control::set_Dock
+    IL_03ea: ldarg.0
+    IL_03eb: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_03f0: ldc.i4.0
+    IL_03f1: ldc.i4 153
+    IL_03f6: newobj System.Drawing.Point::.ctor
+    IL_03fb: callvirt System.Windows.Forms.Control::set_Location
+    IL_0400: ldarg.0
+    IL_0401: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_0406: ldstr ldstr "panel5"
+    IL_040b: callvirt System.Windows.Forms.Control::set_Name
+    IL_0410: ldarg.0
+    IL_0411: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_0416: ldc.i4 1042
+    IL_041b: ldc.i4 541
+    IL_0420: newobj System.Drawing.Size::.ctor
+    IL_0425: callvirt System.Windows.Forms.Control::set_Size
+    IL_042a: ldarg.0
+    IL_042b: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_0430: ldc.i4.3
+    IL_0431: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0436: ldarg.0
+    IL_0437: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_043c: ldc.i4.2
+    IL_043d: callvirt Janus.Windows.GridEX.GridEX::set_AllowEdit
+    IL_0442: ldarg.0
+    IL_0443: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0448: call System.Drawing.Color::get_White
+    IL_044d: callvirt Janus.Windows.GridEX.ScrollableBase::set_BackColor
+    IL_0452: ldloc.0
+    IL_0453: ldstr ldstr "<GridEXLayoutData><RootTable><GroupCondition /></RootTable></GridEXLayoutData>"
+    IL_0458: callvirt Janus.Windows.GridEX.GridEXLayout::set_LayoutString
+    IL_045d: ldarg.0
+    IL_045e: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0463: ldloc.0
+    IL_0464: callvirt Janus.Windows.GridEX.GridEX::set_DesignTimeLayout
+    IL_0469: ldarg.0
+    IL_046a: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_046f: ldc.i4.5
+    IL_0470: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0475: ldarg.0
+    IL_0476: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_047b: ldc.i4.2
+    IL_047c: callvirt Janus.Windows.GridEX.GridEX::set_FilterMode
+    IL_0481: ldarg.0
+    IL_0482: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0487: ldc.i4.3
+    IL_0488: callvirt Janus.Windows.GridEX.GridEX::set_FilterRowButtonStyle
+    IL_048d: ldarg.0
+    IL_048e: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0493: ldstr ldstr "Verdana"
+    IL_0498: ldc.r4 8.25
+    IL_049d: newobj System.Drawing.Font::.ctor
+    IL_04a2: callvirt System.Windows.Forms.Control::set_Font
+    IL_04a7: ldarg.0
+    IL_04a8: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_04ad: ldc.i4.2
+    IL_04ae: callvirt Janus.Windows.GridEX.GridEX::set_GroupTotals
+    IL_04b3: ldarg.0
+    IL_04b4: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_04b9: ldc.i4.0
+    IL_04ba: ldc.i4.s 27
+    IL_04bc: newobj System.Drawing.Point::.ctor
+    IL_04c1: callvirt System.Windows.Forms.Control::set_Location
+    IL_04c6: ldarg.0
+    IL_04c7: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_04cc: ldstr ldstr "grd"
+    IL_04d1: callvirt System.Windows.Forms.Control::set_Name
+    IL_04d6: ldarg.0
+    IL_04d7: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_04dc: ldc.i4.1
+    IL_04dd: callvirt Janus.Windows.GridEX.ScrollableBase::set_RecordNavigator
+    IL_04e2: ldarg.0
+    IL_04e3: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_04e8: ldc.i4 1042
+    IL_04ed: ldc.i4 514
+    IL_04f2: newobj System.Drawing.Size::.ctor
+    IL_04f7: callvirt System.Windows.Forms.Control::set_Size
+    IL_04fc: ldarg.0
+    IL_04fd: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0502: ldc.i4.0
+    IL_0503: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0508: ldarg.0
+    IL_0509: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_050e: ldc.i4.1
+    IL_050f: callvirt Janus.Windows.GridEX.GridEX::set_TotalRow
+    IL_0514: ldarg.0
+    IL_0515: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_051a: ldc.i4.1
+    IL_051b: callvirt Janus.Windows.GridEX.GridEX::set_TotalRowPosition
+    IL_0520: ldarg.0
+    IL_0521: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0526: ldc.i4.4
+    IL_0527: callvirt Janus.Windows.GridEX.ScrollableBase::set_VisualStyle
+    IL_052c: ldarg.0
+    IL_052d: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0532: ldarg.0
+    IL_0533: ldftn Architecture.WinApp.CustomerDiscountPolicy::grd_ColumnButtonClick
+    IL_0539: newobj Janus.Windows.GridEX.ColumnActionEventHandler::.ctor
+    IL_053e: callvirt Janus.Windows.GridEX.GridEX::add_ColumnButtonClick
+    IL_0543: ldarg.0
+    IL_0544: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_0549: ldarg.0
+    IL_054a: ldftn Architecture.WinApp.CustomerDiscountPolicy::grd_DoubleClick
+    IL_0550: newobj System.EventHandler::.ctor
+    IL_0555: callvirt System.Windows.Forms.Control::add_DoubleClick
+    IL_055a: ldarg.0
+    IL_055b: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_0560: ldc.i4.s 10
+    IL_0562: ldc.i4.s 110
+    IL_0564: ldc.i4.s 110
+    IL_0566: call System.Drawing.Color::FromArgb
+    IL_056b: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0570: ldarg.0
+    IL_0571: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_0576: callvirt System.Windows.Forms.Control::get_Controls
+    IL_057b: ldarg.0
+    IL_057c: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0581: callvirt ControlCollection::Add
+    IL_0586: ldarg.0
+    IL_0587: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_058c: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0591: ldarg.0
+    IL_0592: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_0597: callvirt ControlCollection::Add
+    IL_059c: ldarg.0
+    IL_059d: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_05a2: ldc.i4.1
+    IL_05a3: callvirt System.Windows.Forms.Control::set_Dock
+    IL_05a8: ldarg.0
+    IL_05a9: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_05ae: ldc.i4.0
+    IL_05af: ldc.i4.0
+    IL_05b0: newobj System.Drawing.Point::.ctor
+    IL_05b5: callvirt System.Windows.Forms.Control::set_Location
+    IL_05ba: ldarg.0
+    IL_05bb: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_05c0: ldc.i4.2
+    IL_05c1: newobj System.Windows.Forms.Padding::.ctor
+    IL_05c6: callvirt System.Windows.Forms.Control::set_Margin
+    IL_05cb: ldarg.0
+    IL_05cc: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_05d1: ldstr ldstr "panel6"
+    IL_05d6: callvirt System.Windows.Forms.Control::set_Name
+    IL_05db: ldarg.0
+    IL_05dc: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_05e1: ldc.i4 1042
+    IL_05e6: ldc.i4.s 27
+    IL_05e8: newobj System.Drawing.Size::.ctor
+    IL_05ed: callvirt System.Windows.Forms.Control::set_Size
+    IL_05f2: ldarg.0
+    IL_05f3: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_05f8: ldc.i4.2
+    IL_05f9: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_05fe: ldarg.0
+    IL_05ff: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0604: ldc.i4.s 9
+    IL_0606: callvirt System.Windows.Forms.Control::set_Anchor
+    IL_060b: ldarg.0
+    IL_060c: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0611: ldarg.0
+    IL_0612: callvirt grid.User_Conrtols.CtrlGrdBar::set_FormName
+    IL_0617: ldarg.0
+    IL_0618: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_061d: ldc.i4 996
+    IL_0622: ldc.i4.m1
+    IL_0623: newobj System.Drawing.Point::.ctor
+    IL_0628: callvirt System.Windows.Forms.Control::set_Location
+    IL_062d: ldarg.0
+    IL_062e: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0633: ldc.i4.4
+    IL_0634: newobj System.Windows.Forms.Padding::.ctor
+    IL_0639: callvirt System.Windows.Forms.Control::set_Margin
+    IL_063e: ldarg.0
+    IL_063f: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0644: ldarg.0
+    IL_0645: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_064a: callvirt grid.User_Conrtols.CtrlGrdBar::set_MyGrid
+    IL_064f: ldarg.0
+    IL_0650: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0655: ldstr ldstr "ctrlGrdBar1"
+    IL_065a: callvirt System.Windows.Forms.Control::set_Name
+    IL_065f: ldarg.0
+    IL_0660: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0665: ldc.i4.s 43
+    IL_0667: ldc.i4.s 28
+    IL_0669: newobj System.Drawing.Size::.ctor
+    IL_066e: callvirt System.Windows.Forms.Control::set_Size
+    IL_0673: ldarg.0
+    IL_0674: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0679: ldc.i4.0
+    IL_067a: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_067f: ldarg.0
+    IL_0680: ldfld Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1
+    IL_0685: ldarg.0
+    IL_0686: ldftn Architecture.WinApp.CustomerDiscountPolicy::ctrlGrdBar1_Load
+    IL_068c: newobj System.EventHandler::.ctor
+    IL_0691: callvirt System.Windows.Forms.UserControl::add_Load
+    IL_0696: ldarg.0
+    IL_0697: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_069c: ldc.i4.1
+    IL_069d: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_06a2: ldarg.0
+    IL_06a3: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_06a8: ldc.i4.s 10
+    IL_06aa: ldc.i4.s 110
+    IL_06ac: ldc.i4.s 110
+    IL_06ae: call System.Drawing.Color::FromArgb
+    IL_06b3: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_06b8: ldarg.0
+    IL_06b9: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_06be: ldstr ldstr "Tahoma"
+    IL_06c3: ldc.r4 12.0
+    IL_06c8: ldc.i4.1
+    IL_06c9: ldc.i4.3
+    IL_06ca: ldc.i4.0
+    IL_06cb: newobj System.Drawing.Font::.ctor
+    IL_06d0: callvirt System.Windows.Forms.Control::set_Font
+    IL_06d5: ldarg.0
+    IL_06d6: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_06db: call System.Drawing.Color::get_White
+    IL_06e0: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_06e5: ldarg.0
+    IL_06e6: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_06eb: ldc.i4.8
+    IL_06ec: ldc.i4.3
+    IL_06ed: newobj System.Drawing.Point::.ctor
+    IL_06f2: callvirt System.Windows.Forms.Control::set_Location
+    IL_06f7: ldarg.0
+    IL_06f8: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_06fd: ldstr ldstr "label5"
+    IL_0702: callvirt System.Windows.Forms.Control::set_Name
+    IL_0707: ldarg.0
+    IL_0708: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_070d: ldc.i4.s 67
+    IL_070f: ldc.i4.s 19
+    IL_0711: newobj System.Drawing.Size::.ctor
+    IL_0716: callvirt System.Windows.Forms.Control::set_Size
+    IL_071b: ldarg.0
+    IL_071c: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_0721: ldc.i4.0
+    IL_0722: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0727: ldarg.0
+    IL_0728: ldfld Architecture.WinApp.CustomerDiscountPolicy::label5
+    IL_072d: ldstr ldstr "History"
+    IL_0732: callvirt System.Windows.Forms.Control::set_Text
+    IL_0737: ldarg.0
+    IL_0738: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_073d: call System.Drawing.Color::get_White
+    IL_0742: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0747: ldarg.0
+    IL_0748: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_074d: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0752: ldarg.0
+    IL_0753: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0758: callvirt ControlCollection::Add
+    IL_075d: ldarg.0
+    IL_075e: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_0763: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0768: ldarg.0
+    IL_0769: ldfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_076e: callvirt ControlCollection::Add
+    IL_0773: ldarg.0
+    IL_0774: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_0779: callvirt System.Windows.Forms.Control::get_Controls
+    IL_077e: ldarg.0
+    IL_077f: ldfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0784: callvirt ControlCollection::Add
+    IL_0789: ldarg.0
+    IL_078a: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_078f: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0794: ldarg.0
+    IL_0795: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_079a: callvirt ControlCollection::Add
+    IL_079f: ldarg.0
+    IL_07a0: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_07a5: callvirt System.Windows.Forms.Control::get_Controls
+    IL_07aa: ldarg.0
+    IL_07ab: ldfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_07b0: callvirt ControlCollection::Add
+    IL_07b5: ldarg.0
+    IL_07b6: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_07bb: callvirt System.Windows.Forms.Control::get_Controls
+    IL_07c0: ldarg.0
+    IL_07c1: ldfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_07c6: callvirt ControlCollection::Add
+    IL_07cb: ldarg.0
+    IL_07cc: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_07d1: callvirt System.Windows.Forms.Control::get_Controls
+    IL_07d6: ldarg.0
+    IL_07d7: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_07dc: callvirt ControlCollection::Add
+    IL_07e1: ldarg.0
+    IL_07e2: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_07e7: callvirt System.Windows.Forms.Control::get_Controls
+    IL_07ec: ldarg.0
+    IL_07ed: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_07f2: callvirt ControlCollection::Add
+    IL_07f7: ldarg.0
+    IL_07f8: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_07fd: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0802: ldarg.0
+    IL_0803: ldfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_0808: callvirt ControlCollection::Add
+    IL_080d: ldarg.0
+    IL_080e: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_0813: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0818: ldarg.0
+    IL_0819: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_081e: callvirt ControlCollection::Add
+    IL_0823: ldarg.0
+    IL_0824: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_0829: callvirt System.Windows.Forms.Control::get_Controls
+    IL_082e: ldarg.0
+    IL_082f: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_0834: callvirt ControlCollection::Add
+    IL_0839: ldarg.0
+    IL_083a: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_083f: ldc.i4.1
+    IL_0840: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0845: ldarg.0
+    IL_0846: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_084b: ldc.i4.0
+    IL_084c: ldc.i4.s 61
+    IL_084e: newobj System.Drawing.Point::.ctor
+    IL_0853: callvirt System.Windows.Forms.Control::set_Location
+    IL_0858: ldarg.0
+    IL_0859: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_085e: ldc.i4.2
+    IL_085f: newobj System.Windows.Forms.Padding::.ctor
+    IL_0864: callvirt System.Windows.Forms.Control::set_Margin
+    IL_0869: ldarg.0
+    IL_086a: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_086f: ldstr ldstr "panel4"
+    IL_0874: callvirt System.Windows.Forms.Control::set_Name
+    IL_0879: ldarg.0
+    IL_087a: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_087f: ldc.i4 1042
+    IL_0884: ldc.i4.s 92
+    IL_0886: newobj System.Drawing.Size::.ctor
+    IL_088b: callvirt System.Windows.Forms.Control::set_Size
+    IL_0890: ldarg.0
+    IL_0891: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_0896: ldc.i4.2
+    IL_0897: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_089c: ldarg.0
+    IL_089d: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_08a2: ldc.i4.1
+    IL_08a3: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_08a8: ldarg.0
+    IL_08a9: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_08ae: ldc.i4.4
+    IL_08af: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_08b4: ldarg.0
+    IL_08b5: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_08ba: ldc.i4.2
+    IL_08bb: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_08c0: ldarg.0
+    IL_08c1: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_08c6: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_08cb: ldstr ldstr ""
+    IL_08d0: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_08d5: ldloc.1
+    IL_08d6: call System.Drawing.SystemColors::get_Window
+    IL_08db: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_08e0: ldloc.1
+    IL_08e1: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_08e6: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_08eb: ldarg.0
+    IL_08ec: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_08f1: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_08f6: ldloc.1
+    IL_08f7: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_08fc: ldarg.0
+    IL_08fd: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0902: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0907: ldc.i4.4
+    IL_0908: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_090d: ldarg.0
+    IL_090e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0913: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0918: ldc.i4.2
+    IL_0919: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_091e: ldloc.2
+    IL_091f: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_0924: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0929: ldloc.2
+    IL_092a: call System.Drawing.SystemColors::get_ControlDark
+    IL_092f: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0934: ldloc.2
+    IL_0935: ldc.i4.2
+    IL_0936: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_093b: ldloc.2
+    IL_093c: call System.Drawing.SystemColors::get_Window
+    IL_0941: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0946: ldarg.0
+    IL_0947: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_094c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0951: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0956: ldloc.2
+    IL_0957: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_095c: ldloc.3
+    IL_095d: call System.Drawing.SystemColors::get_GrayText
+    IL_0962: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0967: ldarg.0
+    IL_0968: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_096d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0972: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0977: ldloc.3
+    IL_0978: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_097d: ldarg.0
+    IL_097e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0983: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0988: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_098d: ldc.i4.4
+    IL_098e: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_0993: ldloc.s 4
+    IL_0995: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_099a: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_099f: ldloc.s 4
+    IL_09a1: call System.Drawing.SystemColors::get_Control
+    IL_09a6: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_09ab: ldloc.s 4
+    IL_09ad: ldc.i4.3
+    IL_09ae: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_09b3: ldloc.s 4
+    IL_09b5: call System.Drawing.SystemColors::get_GrayText
+    IL_09ba: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_09bf: ldarg.0
+    IL_09c0: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_09c5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09ca: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_09cf: ldloc.s 4
+    IL_09d1: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_09d6: ldarg.0
+    IL_09d7: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_09dc: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09e1: ldc.i4.1
+    IL_09e2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_09e7: ldarg.0
+    IL_09e8: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_09ed: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09f2: ldc.i4.1
+    IL_09f3: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_09f8: ldloc.s 5
+    IL_09fa: call System.Drawing.SystemColors::get_Window
+    IL_09ff: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0a04: ldloc.s 5
+    IL_0a06: call System.Drawing.SystemColors::get_ControlText
+    IL_0a0b: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0a10: ldarg.0
+    IL_0a11: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0a16: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a1b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a20: ldloc.s 5
+    IL_0a22: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_0a27: ldloc.s 6
+    IL_0a29: call System.Drawing.SystemColors::get_Highlight
+    IL_0a2e: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0a33: ldloc.s 6
+    IL_0a35: call System.Drawing.SystemColors::get_HighlightText
+    IL_0a3a: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0a3f: ldarg.0
+    IL_0a40: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0a45: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a4a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a4f: ldloc.s 6
+    IL_0a51: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_0a56: ldarg.0
+    IL_0a57: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0a5c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a61: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a66: ldc.i4.2
+    IL_0a67: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_0a6c: ldarg.0
+    IL_0a6d: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0a72: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a77: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a7c: ldc.i4.2
+    IL_0a7d: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_0a82: ldloc.s 7
+    IL_0a84: call System.Drawing.SystemColors::get_Window
+    IL_0a89: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0a8e: ldarg.0
+    IL_0a8f: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0a94: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a99: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a9e: ldloc.s 7
+    IL_0aa0: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_0aa5: ldloc.s 8
+    IL_0aa7: call System.Drawing.Color::get_Silver
+    IL_0aac: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0ab1: ldloc.s 8
+    IL_0ab3: ldc.i4.3
+    IL_0ab4: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_0ab9: ldarg.0
+    IL_0aba: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0abf: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ac4: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ac9: ldloc.s 8
+    IL_0acb: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_0ad0: ldarg.0
+    IL_0ad1: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0ad6: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0adb: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ae0: ldc.i4.4
+    IL_0ae1: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_0ae6: ldarg.0
+    IL_0ae7: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0aec: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0af1: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0af6: ldc.i4.0
+    IL_0af7: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_0afc: ldloc.s 9
+    IL_0afe: call System.Drawing.SystemColors::get_Control
+    IL_0b03: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0b08: ldloc.s 9
+    IL_0b0a: call System.Drawing.SystemColors::get_ControlDark
+    IL_0b0f: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0b14: ldloc.s 9
+    IL_0b16: ldc.i4.1
+    IL_0b17: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_0b1c: ldloc.s 9
+    IL_0b1e: ldc.i4.3
+    IL_0b1f: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0b24: ldloc.s 9
+    IL_0b26: call System.Drawing.SystemColors::get_Window
+    IL_0b2b: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0b30: ldarg.0
+    IL_0b31: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0b36: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0b3b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0b40: ldloc.s 9
+    IL_0b42: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_0b47: ldloc.s 10
+    IL_0b49: ldstr ldstr "Left"
+    IL_0b4e: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_0b53: ldarg.0
+    IL_0b54: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0b59: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0b5e: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0b63: ldloc.s 10
+    IL_0b65: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_0b6a: ldarg.0
+    IL_0b6b: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0b70: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0b75: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0b7a: ldc.i4.3
+    IL_0b7b: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_0b80: ldarg.0
+    IL_0b81: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0b86: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0b8b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0b90: ldc.i4.2
+    IL_0b91: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_0b96: ldloc.s 11
+    IL_0b98: call System.Drawing.SystemColors::get_Window
+    IL_0b9d: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0ba2: ldloc.s 11
+    IL_0ba4: call System.Drawing.Color::get_Silver
+    IL_0ba9: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0bae: ldarg.0
+    IL_0baf: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0bb4: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0bb9: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0bbe: ldloc.s 11
+    IL_0bc0: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_0bc5: ldarg.0
+    IL_0bc6: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0bcb: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0bd0: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0bd5: ldc.i4.2
+    IL_0bd6: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_0bdb: ldloc.s 12
+    IL_0bdd: call System.Drawing.SystemColors::get_ControlLight
+    IL_0be2: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0be7: ldarg.0
+    IL_0be8: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0bed: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0bf2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0bf7: ldloc.s 12
+    IL_0bf9: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_0bfe: ldarg.0
+    IL_0bff: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c04: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c09: ldc.i4.0
+    IL_0c0a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_0c0f: ldarg.0
+    IL_0c10: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c15: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c1a: ldc.i4.1
+    IL_0c1b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_0c20: ldarg.0
+    IL_0c21: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c26: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c2b: ldc.i4.2
+    IL_0c2c: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_0c31: ldarg.0
+    IL_0c32: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c37: ldstr ldstr "Verdana"
+    IL_0c3c: ldc.r4 9.75
+    IL_0c41: ldc.i4.0
+    IL_0c42: ldc.i4.3
+    IL_0c43: ldc.i4.0
+    IL_0c44: newobj System.Drawing.Font::.ctor
+    IL_0c49: callvirt System.Windows.Forms.Control::set_Font
+    IL_0c4e: ldarg.0
+    IL_0c4f: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c54: ldc.i4.1
+    IL_0c55: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_LimitToList
+    IL_0c5a: ldarg.0
+    IL_0c5b: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c60: ldc.i4 435
+    IL_0c65: ldc.i4.s 35
+    IL_0c67: newobj System.Drawing.Point::.ctor
+    IL_0c6c: callvirt System.Windows.Forms.Control::set_Location
+    IL_0c71: ldarg.0
+    IL_0c72: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c77: ldstr ldstr "cmbDiscItem"
+    IL_0c7c: callvirt System.Windows.Forms.Control::set_Name
+    IL_0c81: ldarg.0
+    IL_0c82: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c87: ldc.i4 220
+    IL_0c8c: ldc.i4.s 26
+    IL_0c8e: newobj System.Drawing.Size::.ctor
+    IL_0c93: callvirt System.Windows.Forms.Control::set_Size
+    IL_0c98: ldarg.0
+    IL_0c99: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0c9e: ldc.i4.3
+    IL_0c9f: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0ca4: ldarg.0
+    IL_0ca5: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0caa: ldarg.0
+    IL_0cab: ldftn Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem_TextChanged
+    IL_0cb1: newobj System.EventHandler::.ctor
+    IL_0cb6: callvirt System.Windows.Forms.Control::add_TextChanged
+    IL_0cbb: ldarg.0
+    IL_0cbc: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_0cc1: ldarg.0
+    IL_0cc2: ldftn Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem_Leave
+    IL_0cc8: newobj System.EventHandler::.ctor
+    IL_0ccd: callvirt System.Windows.Forms.Control::add_Leave
+    IL_0cd2: ldarg.0
+    IL_0cd3: ldfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_0cd8: ldc.i4.1
+    IL_0cd9: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0cde: ldarg.0
+    IL_0cdf: ldfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_0ce4: ldstr ldstr "Segoe UI Semibold"
+    IL_0ce9: ldc.r4 9.0
+    IL_0cee: ldc.i4.1
+    IL_0cef: ldc.i4.3
+    IL_0cf0: ldc.i4.0
+    IL_0cf1: newobj System.Drawing.Font::.ctor
+    IL_0cf6: callvirt System.Windows.Forms.Control::set_Font
+    IL_0cfb: ldarg.0
+    IL_0cfc: ldfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_0d01: ldc.i4 341
+    IL_0d06: ldc.i4.s 39
+    IL_0d08: newobj System.Drawing.Point::.ctor
+    IL_0d0d: callvirt System.Windows.Forms.Control::set_Location
+    IL_0d12: ldarg.0
+    IL_0d13: ldfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_0d18: ldstr ldstr "label1"
+    IL_0d1d: callvirt System.Windows.Forms.Control::set_Name
+    IL_0d22: ldarg.0
+    IL_0d23: ldfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_0d28: ldc.i4.s 83
+    IL_0d2a: ldc.i4.s 15
+    IL_0d2c: newobj System.Drawing.Size::.ctor
+    IL_0d31: callvirt System.Windows.Forms.Control::set_Size
+    IL_0d36: ldarg.0
+    IL_0d37: ldfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_0d3c: ldc.i4.s 21
+    IL_0d3e: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0d43: ldarg.0
+    IL_0d44: ldfld Architecture.WinApp.CustomerDiscountPolicy::label1
+    IL_0d49: ldstr ldstr "Discount Item"
+    IL_0d4e: callvirt System.Windows.Forms.Control::set_Text
+    IL_0d53: ldarg.0
+    IL_0d54: ldfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0d59: ldc.i4.1
+    IL_0d5a: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0d5f: ldarg.0
+    IL_0d60: ldfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0d65: ldstr ldstr "Segoe UI Semibold"
+    IL_0d6a: ldc.r4 9.0
+    IL_0d6f: ldc.i4.1
+    IL_0d70: ldc.i4.3
+    IL_0d71: ldc.i4.0
+    IL_0d72: newobj System.Drawing.Font::.ctor
+    IL_0d77: callvirt System.Windows.Forms.Control::set_Font
+    IL_0d7c: ldarg.0
+    IL_0d7d: ldfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0d82: ldc.i4.s 9
+    IL_0d84: ldc.i4.s 12
+    IL_0d86: newobj System.Drawing.Point::.ctor
+    IL_0d8b: callvirt System.Windows.Forms.Control::set_Location
+    IL_0d90: ldarg.0
+    IL_0d91: ldfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0d96: ldstr ldstr "label6"
+    IL_0d9b: callvirt System.Windows.Forms.Control::set_Name
+    IL_0da0: ldarg.0
+    IL_0da1: ldfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0da6: ldc.i4.s 78
+    IL_0da8: ldc.i4.s 15
+    IL_0daa: newobj System.Drawing.Size::.ctor
+    IL_0daf: callvirt System.Windows.Forms.Control::set_Size
+    IL_0db4: ldarg.0
+    IL_0db5: ldfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0dba: ldc.i4.s 17
+    IL_0dbc: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0dc1: ldarg.0
+    IL_0dc2: ldfld Architecture.WinApp.CustomerDiscountPolicy::label6
+    IL_0dc7: ldstr ldstr "Effected Date"
+    IL_0dcc: callvirt System.Windows.Forms.Control::set_Text
+    IL_0dd1: ldarg.0
+    IL_0dd2: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0dd7: ldc.i4.1
+    IL_0dd8: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_0ddd: ldarg.0
+    IL_0dde: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0de3: ldc.i4.4
+    IL_0de4: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_0de9: ldarg.0
+    IL_0dea: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0def: ldc.i4.2
+    IL_0df0: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_0df5: ldarg.0
+    IL_0df6: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0dfb: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_0e00: ldstr ldstr ""
+    IL_0e05: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_0e0a: ldloc.s 13
+    IL_0e0c: call System.Drawing.SystemColors::get_Window
+    IL_0e11: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0e16: ldloc.s 13
+    IL_0e18: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_0e1d: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0e22: ldarg.0
+    IL_0e23: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0e28: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e2d: ldloc.s 13
+    IL_0e2f: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_0e34: ldarg.0
+    IL_0e35: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0e3a: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e3f: ldc.i4.4
+    IL_0e40: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_0e45: ldarg.0
+    IL_0e46: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0e4b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e50: ldc.i4.2
+    IL_0e51: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_0e56: ldloc.s 14
+    IL_0e58: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_0e5d: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0e62: ldloc.s 14
+    IL_0e64: call System.Drawing.SystemColors::get_ControlDark
+    IL_0e69: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0e6e: ldloc.s 14
+    IL_0e70: ldc.i4.2
+    IL_0e71: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0e76: ldloc.s 14
+    IL_0e78: call System.Drawing.SystemColors::get_Window
+    IL_0e7d: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0e82: ldarg.0
+    IL_0e83: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0e88: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e8d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0e92: ldloc.s 14
+    IL_0e94: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_0e99: ldloc.s 15
+    IL_0e9b: call System.Drawing.SystemColors::get_GrayText
+    IL_0ea0: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0ea5: ldarg.0
+    IL_0ea6: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0eab: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0eb0: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0eb5: ldloc.s 15
+    IL_0eb7: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_0ebc: ldarg.0
+    IL_0ebd: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0ec2: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ec7: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0ecc: ldc.i4.4
+    IL_0ecd: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_0ed2: ldloc.s 16
+    IL_0ed4: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_0ed9: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0ede: ldloc.s 16
+    IL_0ee0: call System.Drawing.SystemColors::get_Control
+    IL_0ee5: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0eea: ldloc.s 16
+    IL_0eec: ldc.i4.3
+    IL_0eed: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0ef2: ldloc.s 16
+    IL_0ef4: call System.Drawing.SystemColors::get_GrayText
+    IL_0ef9: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0efe: ldarg.0
+    IL_0eff: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0f04: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f09: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0f0e: ldloc.s 16
+    IL_0f10: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_0f15: ldarg.0
+    IL_0f16: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0f1b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f20: ldc.i4.1
+    IL_0f21: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_0f26: ldarg.0
+    IL_0f27: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0f2c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f31: ldc.i4.1
+    IL_0f32: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_0f37: ldloc.s 17
+    IL_0f39: call System.Drawing.SystemColors::get_Window
+    IL_0f3e: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0f43: ldloc.s 17
+    IL_0f45: call System.Drawing.SystemColors::get_ControlText
+    IL_0f4a: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0f4f: ldarg.0
+    IL_0f50: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0f55: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f5a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0f5f: ldloc.s 17
+    IL_0f61: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_0f66: ldloc.s 18
+    IL_0f68: call System.Drawing.SystemColors::get_Highlight
+    IL_0f6d: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0f72: ldloc.s 18
+    IL_0f74: call System.Drawing.SystemColors::get_HighlightText
+    IL_0f79: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0f7e: ldarg.0
+    IL_0f7f: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0f84: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f89: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0f8e: ldloc.s 18
+    IL_0f90: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_0f95: ldarg.0
+    IL_0f96: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0f9b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0fa0: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0fa5: ldc.i4.2
+    IL_0fa6: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_0fab: ldarg.0
+    IL_0fac: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0fb1: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0fb6: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0fbb: ldc.i4.2
+    IL_0fbc: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_0fc1: ldloc.s 19
+    IL_0fc3: call System.Drawing.SystemColors::get_Window
+    IL_0fc8: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0fcd: ldarg.0
+    IL_0fce: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0fd3: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0fd8: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0fdd: ldloc.s 19
+    IL_0fdf: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_0fe4: ldloc.s 20
+    IL_0fe6: call System.Drawing.Color::get_Silver
+    IL_0feb: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0ff0: ldloc.s 20
+    IL_0ff2: ldc.i4.3
+    IL_0ff3: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_0ff8: ldarg.0
+    IL_0ff9: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_0ffe: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1003: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1008: ldloc.s 20
+    IL_100a: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_100f: ldarg.0
+    IL_1010: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_1015: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_101a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_101f: ldc.i4.4
+    IL_1020: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_1025: ldarg.0
+    IL_1026: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_102b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1030: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1035: ldc.i4.0
+    IL_1036: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_103b: ldloc.s 21
+    IL_103d: call System.Drawing.SystemColors::get_Control
+    IL_1042: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_1047: ldloc.s 21
+    IL_1049: call System.Drawing.SystemColors::get_ControlDark
+    IL_104e: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_1053: ldloc.s 21
+    IL_1055: ldc.i4.1
+    IL_1056: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_105b: ldloc.s 21
+    IL_105d: ldc.i4.3
+    IL_105e: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_1063: ldloc.s 21
+    IL_1065: call System.Drawing.SystemColors::get_Window
+    IL_106a: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_106f: ldarg.0
+    IL_1070: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_1075: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_107a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_107f: ldloc.s 21
+    IL_1081: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_1086: ldloc.s 22
+    IL_1088: ldstr ldstr "Left"
+    IL_108d: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_1092: ldarg.0
+    IL_1093: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_1098: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_109d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_10a2: ldloc.s 22
+    IL_10a4: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_10a9: ldarg.0
+    IL_10aa: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_10af: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_10b4: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_10b9: ldc.i4.3
+    IL_10ba: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_10bf: ldarg.0
+    IL_10c0: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_10c5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_10ca: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_10cf: ldc.i4.2
+    IL_10d0: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_10d5: ldloc.s 23
+    IL_10d7: call System.Drawing.SystemColors::get_Window
+    IL_10dc: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_10e1: ldloc.s 23
+    IL_10e3: call System.Drawing.Color::get_Silver
+    IL_10e8: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_10ed: ldarg.0
+    IL_10ee: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_10f3: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_10f8: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_10fd: ldloc.s 23
+    IL_10ff: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_1104: ldarg.0
+    IL_1105: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_110a: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_110f: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1114: ldc.i4.2
+    IL_1115: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_111a: ldloc.s 24
+    IL_111c: call System.Drawing.SystemColors::get_ControlLight
+    IL_1121: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_1126: ldarg.0
+    IL_1127: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_112c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1131: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1136: ldloc.s 24
+    IL_1138: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_113d: ldarg.0
+    IL_113e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_1143: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1148: ldc.i4.0
+    IL_1149: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_114e: ldarg.0
+    IL_114f: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_1154: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1159: ldc.i4.1
+    IL_115a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_115f: ldarg.0
+    IL_1160: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_1165: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_116a: ldc.i4.2
+    IL_116b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_1170: ldarg.0
+    IL_1171: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_1176: ldstr ldstr "Verdana"
+    IL_117b: ldc.r4 9.75
+    IL_1180: ldc.i4.0
+    IL_1181: ldc.i4.3
+    IL_1182: ldc.i4.0
+    IL_1183: newobj System.Drawing.Font::.ctor
+    IL_1188: callvirt System.Windows.Forms.Control::set_Font
+    IL_118d: ldarg.0
+    IL_118e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_1193: ldc.i4.1
+    IL_1194: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_LimitToList
+    IL_1199: ldarg.0
+    IL_119a: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_119f: ldc.i4 435
+    IL_11a4: ldc.i4.8
+    IL_11a5: newobj System.Drawing.Point::.ctor
+    IL_11aa: callvirt System.Windows.Forms.Control::set_Location
+    IL_11af: ldarg.0
+    IL_11b0: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_11b5: ldstr ldstr "cmbCustomer"
+    IL_11ba: callvirt System.Windows.Forms.Control::set_Name
+    IL_11bf: ldarg.0
+    IL_11c0: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_11c5: ldc.i4 220
+    IL_11ca: ldc.i4.s 26
+    IL_11cc: newobj System.Drawing.Size::.ctor
+    IL_11d1: callvirt System.Windows.Forms.Control::set_Size
+    IL_11d6: ldarg.0
+    IL_11d7: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_11dc: ldc.i4.1
+    IL_11dd: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_11e2: ldarg.0
+    IL_11e3: ldfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_11e8: ldc.i4.1
+    IL_11e9: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_11ee: ldarg.0
+    IL_11ef: ldfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_11f4: ldstr ldstr "Segoe UI Semibold"
+    IL_11f9: ldc.r4 9.0
+    IL_11fe: ldc.i4.1
+    IL_11ff: ldc.i4.3
+    IL_1200: ldc.i4.0
+    IL_1201: newobj System.Drawing.Font::.ctor
+    IL_1206: callvirt System.Windows.Forms.Control::set_Font
+    IL_120b: ldarg.0
+    IL_120c: ldfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_1211: ldc.i4.s 9
+    IL_1213: ldc.i4.s 39
+    IL_1215: newobj System.Drawing.Point::.ctor
+    IL_121a: callvirt System.Windows.Forms.Control::set_Location
+    IL_121f: ldarg.0
+    IL_1220: ldfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_1225: ldstr ldstr "label3"
+    IL_122a: callvirt System.Windows.Forms.Control::set_Name
+    IL_122f: ldarg.0
+    IL_1230: ldfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_1235: ldc.i4.s 83
+    IL_1237: ldc.i4.s 15
+    IL_1239: newobj System.Drawing.Size::.ctor
+    IL_123e: callvirt System.Windows.Forms.Control::set_Size
+    IL_1243: ldarg.0
+    IL_1244: ldfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_1249: ldc.i4.s 17
+    IL_124b: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1250: ldarg.0
+    IL_1251: ldfld Architecture.WinApp.CustomerDiscountPolicy::label3
+    IL_1256: ldstr ldstr "Discount Type"
+    IL_125b: callvirt System.Windows.Forms.Control::set_Text
+    IL_1260: ldarg.0
+    IL_1261: ldfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_1266: ldc.i4.1
+    IL_1267: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_126c: ldarg.0
+    IL_126d: ldfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_1272: ldstr ldstr "Segoe UI Semibold"
+    IL_1277: ldc.r4 9.0
+    IL_127c: ldc.i4.1
+    IL_127d: ldc.i4.3
+    IL_127e: ldc.i4.0
+    IL_127f: newobj System.Drawing.Font::.ctor
+    IL_1284: callvirt System.Windows.Forms.Control::set_Font
+    IL_1289: ldarg.0
+    IL_128a: ldfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_128f: ldc.i4 341
+    IL_1294: ldc.i4.s 12
+    IL_1296: newobj System.Drawing.Point::.ctor
+    IL_129b: callvirt System.Windows.Forms.Control::set_Location
+    IL_12a0: ldarg.0
+    IL_12a1: ldfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_12a6: ldstr ldstr "label2"
+    IL_12ab: callvirt System.Windows.Forms.Control::set_Name
+    IL_12b0: ldarg.0
+    IL_12b1: ldfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_12b6: ldc.i4.s 93
+    IL_12b8: ldc.i4.s 15
+    IL_12ba: newobj System.Drawing.Size::.ctor
+    IL_12bf: callvirt System.Windows.Forms.Control::set_Size
+    IL_12c4: ldarg.0
+    IL_12c5: ldfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_12ca: ldc.i4.s 19
+    IL_12cc: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_12d1: ldarg.0
+    IL_12d2: ldfld Architecture.WinApp.CustomerDiscountPolicy::label2
+    IL_12d7: ldstr ldstr "Customer Name"
+    IL_12dc: callvirt System.Windows.Forms.Control::set_Text
+    IL_12e1: ldarg.0
+    IL_12e2: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_12e7: ldc.i4.1
+    IL_12e8: callvirt System.Windows.Forms.TextBoxBase::set_BorderStyle
+    IL_12ed: ldarg.0
+    IL_12ee: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_12f3: ldc.i4.0
+    IL_12f4: callvirt System.Windows.Forms.Control::set_Enabled
+    IL_12f9: ldarg.0
+    IL_12fa: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_12ff: ldstr ldstr "Verdana"
+    IL_1304: ldc.r4 9.75
+    IL_1309: ldc.i4.0
+    IL_130a: ldc.i4.3
+    IL_130b: ldc.i4.0
+    IL_130c: newobj System.Drawing.Font::.ctor
+    IL_1311: callvirt System.Windows.Forms.Control::set_Font
+    IL_1316: ldarg.0
+    IL_1317: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_131c: ldc.i4.s 98
+    IL_131e: ldc.i4.s 64
+    IL_1320: newobj System.Drawing.Point::.ctor
+    IL_1325: callvirt System.Windows.Forms.Control::set_Location
+    IL_132a: ldarg.0
+    IL_132b: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_1330: ldstr ldstr "txtDiscountPercentage"
+    IL_1335: callvirt System.Windows.Forms.Control::set_Name
+    IL_133a: ldarg.0
+    IL_133b: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_1340: ldc.i4 220
+    IL_1345: ldc.i4.s 23
+    IL_1347: newobj System.Drawing.Size::.ctor
+    IL_134c: callvirt System.Windows.Forms.Control::set_Size
+    IL_1351: ldarg.0
+    IL_1352: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_1357: ldc.i4.4
+    IL_1358: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_135d: ldarg.0
+    IL_135e: ldfld Architecture.WinApp.CustomerDiscountPolicy::txtDiscountPercentage
+    IL_1363: ldarg.0
+    IL_1364: ldftn Architecture.WinApp.CustomerDiscountPolicy::txtDiscountRate_KeyPress
+    IL_136a: newobj System.Windows.Forms.KeyPressEventHandler::.ctor
+    IL_136f: callvirt System.Windows.Forms.Control::add_KeyPress
+    IL_1374: ldarg.0
+    IL_1375: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_137a: ldc.i4.1
+    IL_137b: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_1380: ldarg.0
+    IL_1381: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_1386: ldstr ldstr "Segoe UI Semibold"
+    IL_138b: ldc.r4 9.0
+    IL_1390: ldc.i4.1
+    IL_1391: ldc.i4.3
+    IL_1392: ldc.i4.0
+    IL_1393: newobj System.Drawing.Font::.ctor
+    IL_1398: callvirt System.Windows.Forms.Control::set_Font
+    IL_139d: ldarg.0
+    IL_139e: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_13a3: ldc.i4 344
+    IL_13a8: ldc.i4.s 67
+    IL_13aa: newobj System.Drawing.Point::.ctor
+    IL_13af: callvirt System.Windows.Forms.Control::set_Location
+    IL_13b4: ldarg.0
+    IL_13b5: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_13ba: ldstr ldstr "chkIsActive"
+    IL_13bf: callvirt System.Windows.Forms.Control::set_Name
+    IL_13c4: ldarg.0
+    IL_13c5: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_13ca: ldc.i4.s 71
+    IL_13cc: ldc.i4.s 19
+    IL_13ce: newobj System.Drawing.Size::.ctor
+    IL_13d3: callvirt System.Windows.Forms.Control::set_Size
+    IL_13d8: ldarg.0
+    IL_13d9: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_13de: ldc.i4.5
+    IL_13df: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_13e4: ldarg.0
+    IL_13e5: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_13ea: ldstr ldstr "Is Active"
+    IL_13ef: callvirt System.Windows.Forms.Control::set_Text
+    IL_13f4: ldarg.0
+    IL_13f5: ldfld Architecture.WinApp.CustomerDiscountPolicy::chkIsActive
+    IL_13fa: ldc.i4.1
+    IL_13fb: callvirt System.Windows.Forms.ButtonBase::set_UseVisualStyleBackColor
+    IL_1400: ldarg.0
+    IL_1401: ldfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_1406: ldc.i4.1
+    IL_1407: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_140c: ldarg.0
+    IL_140d: ldfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_1412: ldstr ldstr "Segoe UI Semibold"
+    IL_1417: ldc.r4 9.0
+    IL_141c: ldc.i4.1
+    IL_141d: ldc.i4.3
+    IL_141e: ldc.i4.0
+    IL_141f: newobj System.Drawing.Font::.ctor
+    IL_1424: callvirt System.Windows.Forms.Control::set_Font
+    IL_1429: ldarg.0
+    IL_142a: ldfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_142f: ldc.i4.s 9
+    IL_1431: ldc.i4.s 67
+    IL_1433: newobj System.Drawing.Point::.ctor
+    IL_1438: callvirt System.Windows.Forms.Control::set_Location
+    IL_143d: ldarg.0
+    IL_143e: ldfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_1443: ldstr ldstr "label4"
+    IL_1448: callvirt System.Windows.Forms.Control::set_Name
+    IL_144d: ldarg.0
+    IL_144e: ldfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_1453: ldc.i4.s 68
+    IL_1455: ldc.i4.s 15
+    IL_1457: newobj System.Drawing.Size::.ctor
+    IL_145c: callvirt System.Windows.Forms.Control::set_Size
+    IL_1461: ldarg.0
+    IL_1462: ldfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_1467: ldc.i4.s 15
+    IL_1469: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_146e: ldarg.0
+    IL_146f: ldfld Architecture.WinApp.CustomerDiscountPolicy::label4
+    IL_1474: ldstr ldstr "Discount %"
+    IL_1479: callvirt System.Windows.Forms.Control::set_Text
+    IL_147e: ldarg.0
+    IL_147f: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1484: ldc.i4.1
+    IL_1485: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_148a: ldarg.0
+    IL_148b: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1490: ldc.i4.4
+    IL_1491: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_1496: ldarg.0
+    IL_1497: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_149c: ldc.i4.2
+    IL_149d: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_14a2: ldarg.0
+    IL_14a3: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_14a8: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_14ad: ldstr ldstr ""
+    IL_14b2: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_14b7: ldloc.s 25
+    IL_14b9: call System.Drawing.SystemColors::get_Window
+    IL_14be: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_14c3: ldloc.s 25
+    IL_14c5: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_14ca: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_14cf: ldarg.0
+    IL_14d0: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_14d5: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_14da: ldloc.s 25
+    IL_14dc: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_14e1: ldarg.0
+    IL_14e2: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_14e7: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_14ec: ldc.i4.4
+    IL_14ed: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_14f2: ldarg.0
+    IL_14f3: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_14f8: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_14fd: ldc.i4.2
+    IL_14fe: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_1503: ldloc.s 26
+    IL_1505: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_150a: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_150f: ldloc.s 26
+    IL_1511: call System.Drawing.SystemColors::get_ControlDark
+    IL_1516: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_151b: ldloc.s 26
+    IL_151d: ldc.i4.2
+    IL_151e: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_1523: ldloc.s 26
+    IL_1525: call System.Drawing.SystemColors::get_Window
+    IL_152a: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_152f: ldarg.0
+    IL_1530: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1535: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_153a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_153f: ldloc.s 26
+    IL_1541: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_1546: ldloc.s 27
+    IL_1548: call System.Drawing.SystemColors::get_GrayText
+    IL_154d: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_1552: ldarg.0
+    IL_1553: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1558: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_155d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_1562: ldloc.s 27
+    IL_1564: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_1569: ldarg.0
+    IL_156a: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_156f: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1574: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_1579: ldc.i4.4
+    IL_157a: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_157f: ldloc.s 28
+    IL_1581: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_1586: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_158b: ldloc.s 28
+    IL_158d: call System.Drawing.SystemColors::get_Control
+    IL_1592: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_1597: ldloc.s 28
+    IL_1599: ldc.i4.3
+    IL_159a: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_159f: ldloc.s 28
+    IL_15a1: call System.Drawing.SystemColors::get_GrayText
+    IL_15a6: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_15ab: ldarg.0
+    IL_15ac: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_15b1: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_15b6: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_15bb: ldloc.s 28
+    IL_15bd: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_15c2: ldarg.0
+    IL_15c3: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_15c8: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_15cd: ldc.i4.1
+    IL_15ce: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_15d3: ldarg.0
+    IL_15d4: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_15d9: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_15de: ldc.i4.1
+    IL_15df: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_15e4: ldloc.s 29
+    IL_15e6: call System.Drawing.SystemColors::get_Window
+    IL_15eb: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_15f0: ldloc.s 29
+    IL_15f2: call System.Drawing.SystemColors::get_ControlText
+    IL_15f7: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_15fc: ldarg.0
+    IL_15fd: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1602: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1607: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_160c: ldloc.s 29
+    IL_160e: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_1613: ldloc.s 30
+    IL_1615: call System.Drawing.SystemColors::get_Highlight
+    IL_161a: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_161f: ldloc.s 30
+    IL_1621: call System.Drawing.SystemColors::get_HighlightText
+    IL_1626: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_162b: ldarg.0
+    IL_162c: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1631: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1636: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_163b: ldloc.s 30
+    IL_163d: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_1642: ldarg.0
+    IL_1643: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1648: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_164d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1652: ldc.i4.2
+    IL_1653: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_1658: ldarg.0
+    IL_1659: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_165e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1663: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1668: ldc.i4.2
+    IL_1669: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_166e: ldloc.s 31
+    IL_1670: call System.Drawing.SystemColors::get_Window
+    IL_1675: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_167a: ldarg.0
+    IL_167b: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1680: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1685: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_168a: ldloc.s 31
+    IL_168c: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_1691: ldloc.s 32
+    IL_1693: call System.Drawing.Color::get_Silver
+    IL_1698: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_169d: ldloc.s 32
+    IL_169f: ldc.i4.3
+    IL_16a0: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_16a5: ldarg.0
+    IL_16a6: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_16ab: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_16b0: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_16b5: ldloc.s 32
+    IL_16b7: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_16bc: ldarg.0
+    IL_16bd: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_16c2: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_16c7: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_16cc: ldc.i4.4
+    IL_16cd: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_16d2: ldarg.0
+    IL_16d3: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_16d8: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_16dd: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_16e2: ldc.i4.0
+    IL_16e3: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_16e8: ldloc.s 33
+    IL_16ea: call System.Drawing.SystemColors::get_Control
+    IL_16ef: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_16f4: ldloc.s 33
+    IL_16f6: call System.Drawing.SystemColors::get_ControlDark
+    IL_16fb: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_1700: ldloc.s 33
+    IL_1702: ldc.i4.1
+    IL_1703: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_1708: ldloc.s 33
+    IL_170a: ldc.i4.3
+    IL_170b: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_1710: ldloc.s 33
+    IL_1712: call System.Drawing.SystemColors::get_Window
+    IL_1717: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_171c: ldarg.0
+    IL_171d: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1722: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1727: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_172c: ldloc.s 33
+    IL_172e: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_1733: ldloc.s 34
+    IL_1735: ldstr ldstr "Left"
+    IL_173a: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_173f: ldarg.0
+    IL_1740: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1745: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_174a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_174f: ldloc.s 34
+    IL_1751: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_1756: ldarg.0
+    IL_1757: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_175c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1761: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_1766: ldc.i4.3
+    IL_1767: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_176c: ldarg.0
+    IL_176d: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1772: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1777: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_177c: ldc.i4.2
+    IL_177d: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_1782: ldloc.s 35
+    IL_1784: call System.Drawing.SystemColors::get_Window
+    IL_1789: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_178e: ldloc.s 35
+    IL_1790: call System.Drawing.Color::get_Silver
+    IL_1795: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_179a: ldarg.0
+    IL_179b: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_17a0: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_17a5: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_17aa: ldloc.s 35
+    IL_17ac: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_17b1: ldarg.0
+    IL_17b2: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_17b7: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_17bc: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_17c1: ldc.i4.2
+    IL_17c2: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_17c7: ldloc.s 36
+    IL_17c9: call System.Drawing.SystemColors::get_ControlLight
+    IL_17ce: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_17d3: ldarg.0
+    IL_17d4: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_17d9: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_17de: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_17e3: ldloc.s 36
+    IL_17e5: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_17ea: ldarg.0
+    IL_17eb: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_17f0: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_17f5: ldc.i4.0
+    IL_17f6: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_17fb: ldarg.0
+    IL_17fc: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1801: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1806: ldc.i4.1
+    IL_1807: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_180c: ldarg.0
+    IL_180d: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1812: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_1817: ldc.i4.2
+    IL_1818: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_181d: ldarg.0
+    IL_181e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1823: ldstr ldstr "Verdana"
+    IL_1828: ldc.r4 9.75
+    IL_182d: ldc.i4.0
+    IL_182e: ldc.i4.3
+    IL_182f: ldc.i4.0
+    IL_1830: newobj System.Drawing.Font::.ctor
+    IL_1835: callvirt System.Windows.Forms.Control::set_Font
+    IL_183a: ldarg.0
+    IL_183b: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1840: ldc.i4.1
+    IL_1841: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_LimitToList
+    IL_1846: ldarg.0
+    IL_1847: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_184c: ldc.i4.s 98
+    IL_184e: ldc.i4.s 35
+    IL_1850: newobj System.Drawing.Point::.ctor
+    IL_1855: callvirt System.Windows.Forms.Control::set_Location
+    IL_185a: ldarg.0
+    IL_185b: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1860: ldstr ldstr "cmbDiscountType"
+    IL_1865: callvirt System.Windows.Forms.Control::set_Name
+    IL_186a: ldarg.0
+    IL_186b: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1870: ldc.i4 220
+    IL_1875: ldc.i4.s 26
+    IL_1877: newobj System.Drawing.Size::.ctor
+    IL_187c: callvirt System.Windows.Forms.Control::set_Size
+    IL_1881: ldarg.0
+    IL_1882: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1887: ldc.i4.2
+    IL_1888: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_188d: ldarg.0
+    IL_188e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_1893: ldarg.0
+    IL_1894: ldftn Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType_Leave
+    IL_189a: newobj System.EventHandler::.ctor
+    IL_189f: callvirt System.Windows.Forms.Control::add_Leave
+    IL_18a4: ldarg.0
+    IL_18a5: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_18aa: ldstr ldstr "dd-MMM-yyyy"
+    IL_18af: callvirt System.Windows.Forms.DateTimePicker::set_CustomFormat
+    IL_18b4: ldarg.0
+    IL_18b5: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_18ba: ldstr ldstr "Verdana"
+    IL_18bf: ldc.r4 9.75
+    IL_18c4: ldc.i4.0
+    IL_18c5: ldc.i4.3
+    IL_18c6: ldc.i4.0
+    IL_18c7: newobj System.Drawing.Font::.ctor
+    IL_18cc: callvirt System.Windows.Forms.Control::set_Font
+    IL_18d1: ldarg.0
+    IL_18d2: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_18d7: ldc.i4.8
+    IL_18d8: callvirt System.Windows.Forms.DateTimePicker::set_Format
+    IL_18dd: ldarg.0
+    IL_18de: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_18e3: ldc.i4.s 98
+    IL_18e5: ldc.i4.s 9
+    IL_18e7: newobj System.Drawing.Point::.ctor
+    IL_18ec: callvirt System.Windows.Forms.Control::set_Location
+    IL_18f1: ldarg.0
+    IL_18f2: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_18f7: ldstr ldstr "dtpEffectedDate"
+    IL_18fc: callvirt System.Windows.Forms.Control::set_Name
+    IL_1901: ldarg.0
+    IL_1902: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_1907: ldc.i4 220
+    IL_190c: ldc.i4.s 23
+    IL_190e: newobj System.Drawing.Size::.ctor
+    IL_1913: callvirt System.Windows.Forms.Control::set_Size
+    IL_1918: ldarg.0
+    IL_1919: ldfld Architecture.WinApp.CustomerDiscountPolicy::dtpEffectedDate
+    IL_191e: ldc.i4.0
+    IL_191f: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1924: ldarg.0
+    IL_1925: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_192a: ldc.i4.s 10
+    IL_192c: ldc.i4.s 110
+    IL_192e: ldc.i4.s 110
+    IL_1930: call System.Drawing.Color::FromArgb
+    IL_1935: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_193a: ldarg.0
+    IL_193b: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_1940: callvirt System.Windows.Forms.Control::get_Controls
+    IL_1945: ldarg.0
+    IL_1946: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_194b: callvirt ControlCollection::Add
+    IL_1950: ldarg.0
+    IL_1951: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_1956: ldc.i4.1
+    IL_1957: callvirt System.Windows.Forms.Control::set_Dock
+    IL_195c: ldarg.0
+    IL_195d: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_1962: ldc.i4.0
+    IL_1963: ldc.i4.s 34
+    IL_1965: newobj System.Drawing.Point::.ctor
+    IL_196a: callvirt System.Windows.Forms.Control::set_Location
+    IL_196f: ldarg.0
+    IL_1970: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_1975: ldc.i4.2
+    IL_1976: newobj System.Windows.Forms.Padding::.ctor
+    IL_197b: callvirt System.Windows.Forms.Control::set_Margin
+    IL_1980: ldarg.0
+    IL_1981: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_1986: ldstr ldstr "panel3"
+    IL_198b: callvirt System.Windows.Forms.Control::set_Name
+    IL_1990: ldarg.0
+    IL_1991: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_1996: ldc.i4 1042
+    IL_199b: ldc.i4.s 27
+    IL_199d: newobj System.Drawing.Size::.ctor
+    IL_19a2: callvirt System.Windows.Forms.Control::set_Size
+    IL_19a7: ldarg.0
+    IL_19a8: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_19ad: ldc.i4.1
+    IL_19ae: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_19b3: ldarg.0
+    IL_19b4: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_19b9: ldc.i4.1
+    IL_19ba: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_19bf: ldarg.0
+    IL_19c0: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_19c5: ldc.i4.s 10
+    IL_19c7: ldc.i4.s 110
+    IL_19c9: ldc.i4.s 110
+    IL_19cb: call System.Drawing.Color::FromArgb
+    IL_19d0: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_19d5: ldarg.0
+    IL_19d6: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_19db: ldstr ldstr "Tahoma"
+    IL_19e0: ldc.r4 12.0
+    IL_19e5: ldc.i4.1
+    IL_19e6: ldc.i4.3
+    IL_19e7: ldc.i4.0
+    IL_19e8: newobj System.Drawing.Font::.ctor
+    IL_19ed: callvirt System.Windows.Forms.Control::set_Font
+    IL_19f2: ldarg.0
+    IL_19f3: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_19f8: call System.Drawing.Color::get_White
+    IL_19fd: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_1a02: ldarg.0
+    IL_1a03: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_1a08: ldc.i4.8
+    IL_1a09: ldc.i4.3
+    IL_1a0a: newobj System.Drawing.Point::.ctor
+    IL_1a0f: callvirt System.Windows.Forms.Control::set_Location
+    IL_1a14: ldarg.0
+    IL_1a15: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_1a1a: ldstr ldstr "label13"
+    IL_1a1f: callvirt System.Windows.Forms.Control::set_Name
+    IL_1a24: ldarg.0
+    IL_1a25: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_1a2a: ldc.i4 215
+    IL_1a2f: ldc.i4.s 19
+    IL_1a31: newobj System.Drawing.Size::.ctor
+    IL_1a36: callvirt System.Windows.Forms.Control::set_Size
+    IL_1a3b: ldarg.0
+    IL_1a3c: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_1a41: ldc.i4.0
+    IL_1a42: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1a47: ldarg.0
+    IL_1a48: ldfld Architecture.WinApp.CustomerDiscountPolicy::label13
+    IL_1a4d: ldstr ldstr "Customer Discount Policy"
+    IL_1a52: callvirt System.Windows.Forms.Control::set_Text
+    IL_1a57: ldarg.0
+    IL_1a58: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_1a5d: call System.Drawing.Color::get_White
+    IL_1a62: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_1a67: ldarg.0
+    IL_1a68: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_1a6d: callvirt System.Windows.Forms.Control::get_Controls
+    IL_1a72: ldarg.0
+    IL_1a73: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1a78: callvirt ControlCollection::Add
+    IL_1a7d: ldarg.0
+    IL_1a7e: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_1a83: ldc.i4.1
+    IL_1a84: callvirt System.Windows.Forms.Control::set_Dock
+    IL_1a89: ldarg.0
+    IL_1a8a: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_1a8f: ldc.i4.0
+    IL_1a90: ldc.i4.0
+    IL_1a91: newobj System.Drawing.Point::.ctor
+    IL_1a96: callvirt System.Windows.Forms.Control::set_Location
+    IL_1a9b: ldarg.0
+    IL_1a9c: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_1aa1: ldc.i4.2
+    IL_1aa2: newobj System.Windows.Forms.Padding::.ctor
+    IL_1aa7: callvirt System.Windows.Forms.Control::set_Margin
+    IL_1aac: ldarg.0
+    IL_1aad: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_1ab2: ldstr ldstr "panel2"
+    IL_1ab7: callvirt System.Windows.Forms.Control::set_Name
+    IL_1abc: ldarg.0
+    IL_1abd: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_1ac2: ldc.i4 1042
+    IL_1ac7: ldc.i4.s 34
+    IL_1ac9: newobj System.Drawing.Size::.ctor
+    IL_1ace: callvirt System.Windows.Forms.Control::set_Size
+    IL_1ad3: ldarg.0
+    IL_1ad4: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_1ad9: ldc.i4.0
+    IL_1ada: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1adf: ldarg.0
+    IL_1ae0: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1ae5: ldc.i4.0
+    IL_1ae6: callvirt System.Windows.Forms.Control::set_Dock
+    IL_1aeb: ldarg.0
+    IL_1aec: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1af1: ldc.i4.s 20
+    IL_1af3: ldc.i4.s 20
+    IL_1af5: newobj System.Drawing.Size::.ctor
+    IL_1afa: callvirt System.Windows.Forms.ToolStrip::set_ImageScalingSize
+    IL_1aff: ldarg.0
+    IL_1b00: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1b05: callvirt System.Windows.Forms.ToolStrip::get_Items
+    IL_1b0a: ldc.i4.7
+    IL_1b0b: newarr System.Windows.Forms.ToolStripItem
+    IL_1b10: dup
+    IL_1b11: ldc.i4.0
+    IL_1b12: ldarg.0
+    IL_1b13: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnNew
+    IL_1b18: stelem.ref
+    IL_1b19: dup
+    IL_1b1a: ldc.i4.1
+    IL_1b1b: ldarg.0
+    IL_1b1c: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_1b21: stelem.ref
+    IL_1b22: dup
+    IL_1b23: ldc.i4.2
+    IL_1b24: ldarg.0
+    IL_1b25: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_1b2a: stelem.ref
+    IL_1b2b: dup
+    IL_1b2c: ldc.i4.3
+    IL_1b2d: ldarg.0
+    IL_1b2e: ldfld Architecture.WinApp.CustomerDiscountPolicy::toolStripSeparator1
+    IL_1b33: stelem.ref
+    IL_1b34: dup
+    IL_1b35: ldc.i4.4
+    IL_1b36: ldarg.0
+    IL_1b37: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_1b3c: stelem.ref
+    IL_1b3d: dup
+    IL_1b3e: ldc.i4.5
+    IL_1b3f: ldarg.0
+    IL_1b40: ldfld Architecture.WinApp.CustomerDiscountPolicy::toolStripSeparator2
+    IL_1b45: stelem.ref
+    IL_1b46: dup
+    IL_1b47: ldc.i4.6
+    IL_1b48: ldarg.0
+    IL_1b49: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_1b4e: stelem.ref
+    IL_1b4f: callvirt System.Windows.Forms.ToolStripItemCollection::AddRange
+    IL_1b54: ldarg.0
+    IL_1b55: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1b5a: ldc.i4.1
+    IL_1b5b: ldc.i4.4
+    IL_1b5c: newobj System.Drawing.Point::.ctor
+    IL_1b61: callvirt System.Windows.Forms.Control::set_Location
+    IL_1b66: ldarg.0
+    IL_1b67: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1b6c: ldstr ldstr "tsPriceSchedule"
+    IL_1b71: callvirt System.Windows.Forms.Control::set_Name
+    IL_1b76: ldarg.0
+    IL_1b77: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1b7c: ldc.i4 606
+    IL_1b81: ldc.i4.s 27
+    IL_1b83: newobj System.Drawing.Size::.ctor
+    IL_1b88: callvirt System.Windows.Forms.Control::set_Size
+    IL_1b8d: ldarg.0
+    IL_1b8e: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1b93: ldc.i4.3
+    IL_1b94: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1b99: ldarg.0
+    IL_1b9a: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_1b9f: ldstr ldstr "toolStrip1"
+    IL_1ba4: callvirt System.Windows.Forms.Control::set_Text
+    IL_1ba9: ldarg.0
+    IL_1baa: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnNew
+    IL_1baf: ldloc.s 37
+    IL_1bb1: ldstr ldstr "BtnNew.Image"
+    IL_1bb6: callvirt System.Resources.ResourceManager::GetObject
+    IL_1bbb: castclass System.Drawing.Image
+    IL_1bc0: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_1bc5: ldarg.0
+    IL_1bc6: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnNew
+    IL_1bcb: call System.Drawing.Color::get_Magenta
+    IL_1bd0: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_1bd5: ldarg.0
+    IL_1bd6: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnNew
+    IL_1bdb: ldstr ldstr "BtnNew"
+    IL_1be0: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_1be5: ldarg.0
+    IL_1be6: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnNew
+    IL_1beb: ldc.i4.s 55
+    IL_1bed: ldc.i4.s 24
+    IL_1bef: newobj System.Drawing.Size::.ctor
+    IL_1bf4: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_1bf9: ldarg.0
+    IL_1bfa: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnNew
+    IL_1bff: ldstr ldstr "&New"
+    IL_1c04: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_1c09: ldarg.0
+    IL_1c0a: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnNew
+    IL_1c0f: ldarg.0
+    IL_1c10: ldftn Architecture.WinApp.CustomerDiscountPolicy::BtnNew_Click
+    IL_1c16: newobj System.EventHandler::.ctor
+    IL_1c1b: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_1c20: ldarg.0
+    IL_1c21: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_1c26: ldloc.s 37
+    IL_1c28: ldstr ldstr "BtnEdit.Image"
+    IL_1c2d: callvirt System.Resources.ResourceManager::GetObject
+    IL_1c32: castclass System.Drawing.Image
+    IL_1c37: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_1c3c: ldarg.0
+    IL_1c3d: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_1c42: call System.Drawing.Color::get_Magenta
+    IL_1c47: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_1c4c: ldarg.0
+    IL_1c4d: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_1c52: ldstr ldstr "BtnEdit"
+    IL_1c57: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_1c5c: ldarg.0
+    IL_1c5d: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_1c62: ldc.i4.s 69
+    IL_1c64: ldc.i4.s 24
+    IL_1c66: newobj System.Drawing.Size::.ctor
+    IL_1c6b: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_1c70: ldarg.0
+    IL_1c71: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_1c76: ldstr ldstr "&Update"
+    IL_1c7b: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_1c80: ldarg.0
+    IL_1c81: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnEdit
+    IL_1c86: ldarg.0
+    IL_1c87: ldftn Architecture.WinApp.CustomerDiscountPolicy::BtnEdit_Click
+    IL_1c8d: newobj System.EventHandler::.ctor
+    IL_1c92: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_1c97: ldarg.0
+    IL_1c98: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_1c9d: ldloc.s 37
+    IL_1c9f: ldstr ldstr "BtnSave.Image"
+    IL_1ca4: callvirt System.Resources.ResourceManager::GetObject
+    IL_1ca9: castclass System.Drawing.Image
+    IL_1cae: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_1cb3: ldarg.0
+    IL_1cb4: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_1cb9: call System.Drawing.Color::get_Magenta
+    IL_1cbe: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_1cc3: ldarg.0
+    IL_1cc4: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_1cc9: ldstr ldstr "BtnSave"
+    IL_1cce: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_1cd3: ldarg.0
+    IL_1cd4: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_1cd9: ldc.i4.s 55
+    IL_1cdb: ldc.i4.s 24
+    IL_1cdd: newobj System.Drawing.Size::.ctor
+    IL_1ce2: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_1ce7: ldarg.0
+    IL_1ce8: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_1ced: ldstr ldstr "&Save"
+    IL_1cf2: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_1cf7: ldarg.0
+    IL_1cf8: ldfld Architecture.WinApp.CustomerDiscountPolicy::BtnSave
+    IL_1cfd: ldarg.0
+    IL_1cfe: ldftn Architecture.WinApp.CustomerDiscountPolicy::BtnSave_Click
+    IL_1d04: newobj System.EventHandler::.ctor
+    IL_1d09: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_1d0e: ldarg.0
+    IL_1d0f: ldfld Architecture.WinApp.CustomerDiscountPolicy::toolStripSeparator1
+    IL_1d14: ldstr ldstr "toolStripSeparator1"
+    IL_1d19: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_1d1e: ldarg.0
+    IL_1d1f: ldfld Architecture.WinApp.CustomerDiscountPolicy::toolStripSeparator1
+    IL_1d24: ldc.i4.6
+    IL_1d25: ldc.i4.s 27
+    IL_1d27: newobj System.Drawing.Size::.ctor
+    IL_1d2c: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_1d31: ldarg.0
+    IL_1d32: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_1d37: ldc.i4.1
+    IL_1d38: callvirt System.Windows.Forms.ToolStripItem::set_DisplayStyle
+    IL_1d3d: ldarg.0
+    IL_1d3e: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_1d43: ldloc.s 37
+    IL_1d45: ldstr ldstr "btnAllocateBrandToType.Image"
+    IL_1d4a: callvirt System.Resources.ResourceManager::GetObject
+    IL_1d4f: castclass System.Drawing.Image
+    IL_1d54: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_1d59: ldarg.0
+    IL_1d5a: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_1d5f: call System.Drawing.Color::get_Magenta
+    IL_1d64: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_1d69: ldarg.0
+    IL_1d6a: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_1d6f: ldstr ldstr "btnAllocateBrandToType"
+    IL_1d74: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_1d79: ldarg.0
+    IL_1d7a: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_1d7f: ldc.i4 180
+    IL_1d84: ldc.i4.s 24
+    IL_1d86: newobj System.Drawing.Size::.ctor
+    IL_1d8b: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_1d90: ldarg.0
+    IL_1d91: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_1d96: ldstr ldstr "Allocate Brand To Discount Type"
+    IL_1d9b: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_1da0: ldarg.0
+    IL_1da1: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType
+    IL_1da6: ldarg.0
+    IL_1da7: ldftn Architecture.WinApp.CustomerDiscountPolicy::btnAllocateBrandToType_Click
+    IL_1dad: newobj System.EventHandler::.ctor
+    IL_1db2: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_1db7: ldarg.0
+    IL_1db8: ldfld Architecture.WinApp.CustomerDiscountPolicy::toolStripSeparator2
+    IL_1dbd: ldstr ldstr "toolStripSeparator2"
+    IL_1dc2: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_1dc7: ldarg.0
+    IL_1dc8: ldfld Architecture.WinApp.CustomerDiscountPolicy::toolStripSeparator2
+    IL_1dcd: ldc.i4.6
+    IL_1dce: ldc.i4.s 27
+    IL_1dd0: newobj System.Drawing.Size::.ctor
+    IL_1dd5: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_1dda: ldarg.0
+    IL_1ddb: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_1de0: ldc.i4.1
+    IL_1de1: callvirt System.Windows.Forms.ToolStripItem::set_DisplayStyle
+    IL_1de6: ldarg.0
+    IL_1de7: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_1dec: ldloc.s 37
+    IL_1dee: ldstr ldstr "btnAllocateDiscountItemToType.Image"
+    IL_1df3: callvirt System.Resources.ResourceManager::GetObject
+    IL_1df8: castclass System.Drawing.Image
+    IL_1dfd: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_1e02: ldarg.0
+    IL_1e03: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_1e08: call System.Drawing.Color::get_Magenta
+    IL_1e0d: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_1e12: ldarg.0
+    IL_1e13: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_1e18: ldstr ldstr "btnAllocateDiscountItemToType"
+    IL_1e1d: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_1e22: ldarg.0
+    IL_1e23: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_1e28: ldc.i4 223
+    IL_1e2d: ldc.i4.s 24
+    IL_1e2f: newobj System.Drawing.Size::.ctor
+    IL_1e34: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_1e39: ldarg.0
+    IL_1e3a: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_1e3f: ldstr ldstr "Allocate Discount Item To Discount Type"
+    IL_1e44: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_1e49: ldarg.0
+    IL_1e4a: ldfld Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType
+    IL_1e4f: ldarg.0
+    IL_1e50: ldftn Architecture.WinApp.CustomerDiscountPolicy::btnAllocateDiscountItemToType_Click
+    IL_1e56: newobj System.EventHandler::.ctor
+    IL_1e5b: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_1e60: ldarg.0
+    IL_1e61: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1e66: ldstr ldstr "New item selection"
+    IL_1e6b: callvirt System.Windows.Forms.Control::set_AccessibleName
+    IL_1e70: ldarg.0
+    IL_1e71: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1e76: ldc.i4.s 56
+    IL_1e78: callvirt System.Windows.Forms.Control::set_AccessibleRole
+    IL_1e7d: ldarg.0
+    IL_1e7e: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1e83: ldnull
+    IL_1e84: callvirt System.Windows.Forms.BindingNavigator::set_AddNewItem
+    IL_1e89: ldarg.0
+    IL_1e8a: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1e8f: ldc.i4.0
+    IL_1e90: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_1e95: ldarg.0
+    IL_1e96: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1e9b: ldc.i4.0
+    IL_1e9c: callvirt System.Windows.Forms.ToolStrip::set_CanOverflow
+    IL_1ea1: ldarg.0
+    IL_1ea2: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1ea7: ldnull
+    IL_1ea8: callvirt System.Windows.Forms.BindingNavigator::set_CountItem
+    IL_1ead: ldarg.0
+    IL_1eae: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1eb3: ldnull
+    IL_1eb4: callvirt System.Windows.Forms.BindingNavigator::set_DeleteItem
+    IL_1eb9: ldarg.0
+    IL_1eba: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1ebf: ldc.i4.0
+    IL_1ec0: callvirt System.Windows.Forms.Control::set_Dock
+    IL_1ec5: ldarg.0
+    IL_1ec6: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1ecb: ldc.i4.0
+    IL_1ecc: callvirt System.Windows.Forms.ToolStrip::set_GripStyle
+    IL_1ed1: ldarg.0
+    IL_1ed2: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1ed7: ldc.i4.s 20
+    IL_1ed9: ldc.i4.s 20
+    IL_1edb: newobj System.Drawing.Size::.ctor
+    IL_1ee0: callvirt System.Windows.Forms.ToolStrip::set_ImageScalingSize
+    IL_1ee5: ldarg.0
+    IL_1ee6: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1eeb: ldc.i4 283
+    IL_1ef0: ldc.i4.1
+    IL_1ef1: newobj System.Drawing.Point::.ctor
+    IL_1ef6: callvirt System.Windows.Forms.Control::set_Location
+    IL_1efb: ldarg.0
+    IL_1efc: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1f01: ldnull
+    IL_1f02: callvirt System.Windows.Forms.BindingNavigator::set_MoveFirstItem
+    IL_1f07: ldarg.0
+    IL_1f08: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1f0d: ldnull
+    IL_1f0e: callvirt System.Windows.Forms.BindingNavigator::set_MoveLastItem
+    IL_1f13: ldarg.0
+    IL_1f14: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1f19: ldnull
+    IL_1f1a: callvirt System.Windows.Forms.BindingNavigator::set_MoveNextItem
+    IL_1f1f: ldarg.0
+    IL_1f20: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1f25: ldnull
+    IL_1f26: callvirt System.Windows.Forms.BindingNavigator::set_MovePreviousItem
+    IL_1f2b: ldarg.0
+    IL_1f2c: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1f31: ldstr ldstr "miniToolStrip"
+    IL_1f36: callvirt System.Windows.Forms.Control::set_Name
+    IL_1f3b: ldarg.0
+    IL_1f3c: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1f41: ldnull
+    IL_1f42: callvirt System.Windows.Forms.BindingNavigator::set_PositionItem
+    IL_1f47: ldarg.0
+    IL_1f48: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1f4d: ldc.i4 1623
+    IL_1f52: ldc.i4.s 27
+    IL_1f54: newobj System.Drawing.Size::.ctor
+    IL_1f59: callvirt System.Windows.Forms.Control::set_Size
+    IL_1f5e: ldarg.0
+    IL_1f5f: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_1f64: ldc.i4.7
+    IL_1f65: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_1f6a: ldarg.0
+    IL_1f6b: ldc.r4 6.0
+    IL_1f70: ldc.r4 13.0
+    IL_1f75: newobj System.Drawing.SizeF::.ctor
+    IL_1f7a: call System.Windows.Forms.ContainerControl::set_AutoScaleDimensions
+    IL_1f7f: ldarg.0
+    IL_1f80: ldc.i4.1
+    IL_1f81: call System.Windows.Forms.ContainerControl::set_AutoScaleMode
+    IL_1f86: ldarg.0
+    IL_1f87: ldc.i4 1042
+    IL_1f8c: ldc.i4 694
+    IL_1f91: newobj System.Drawing.Size::.ctor
+    IL_1f96: call System.Windows.Forms.Form::set_ClientSize
+    IL_1f9b: ldarg.0
+    IL_1f9c: call System.Windows.Forms.Control::get_Controls
+    IL_1fa1: ldarg.0
+    IL_1fa2: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_1fa7: callvirt ControlCollection::Add
+    IL_1fac: ldarg.0
+    IL_1fad: ldc.i4.1
+    IL_1fae: call System.Windows.Forms.Form::set_KeyPreview
+    IL_1fb3: ldarg.0
+    IL_1fb4: ldstr ldstr "CustomerDiscountPolicy"
+    IL_1fb9: call System.Windows.Forms.Control::set_Name
+    IL_1fbe: ldarg.0
+    IL_1fbf: ldstr ldstr "EccountBook"
+    IL_1fc4: callvirt System.Windows.Forms.Control::set_Text
+    IL_1fc9: ldarg.0
+    IL_1fca: ldc.i4.2
+    IL_1fcb: call System.Windows.Forms.Form::set_WindowState
+    IL_1fd0: ldarg.0
+    IL_1fd1: ldarg.0
+    IL_1fd2: ldftn Architecture.WinApp.CustomerDiscountPolicy::CustomerDiscountPolicy_FormClosing
+    IL_1fd8: newobj System.Windows.Forms.FormClosingEventHandler::.ctor
+    IL_1fdd: call System.Windows.Forms.Form::add_FormClosing
+    IL_1fe2: ldarg.0
+    IL_1fe3: ldarg.0
+    IL_1fe4: ldftn Architecture.WinApp.CustomerDiscountPolicy::InvfrmPriceSchedule_Load
+    IL_1fea: newobj System.EventHandler::.ctor
+    IL_1fef: call System.Windows.Forms.Form::add_Load
+    IL_1ff4: ldarg.0
+    IL_1ff5: ldarg.0
+    IL_1ff6: ldftn Architecture.WinApp.CustomerDiscountPolicy::InvfrmPriceSchedule_KeyDown
+    IL_1ffc: newobj System.Windows.Forms.KeyEventHandler::.ctor
+    IL_2001: call System.Windows.Forms.Control::add_KeyDown
+    IL_2006: ldarg.0
+    IL_2007: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel1
+    IL_200c: ldc.i4.0
+    IL_200d: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_2012: ldarg.0
+    IL_2013: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel5
+    IL_2018: ldc.i4.0
+    IL_2019: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_201e: ldarg.0
+    IL_201f: ldfld Architecture.WinApp.CustomerDiscountPolicy::grd
+    IL_2024: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_2029: ldarg.0
+    IL_202a: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_202f: ldc.i4.0
+    IL_2030: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_2035: ldarg.0
+    IL_2036: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel6
+    IL_203b: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_2040: ldarg.0
+    IL_2041: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_2046: ldc.i4.0
+    IL_2047: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_204c: ldarg.0
+    IL_204d: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel4
+    IL_2052: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_2057: ldarg.0
+    IL_2058: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscItem
+    IL_205d: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_2062: ldarg.0
+    IL_2063: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbCustomer
+    IL_2068: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_206d: ldarg.0
+    IL_206e: ldfld Architecture.WinApp.CustomerDiscountPolicy::cmbDiscountType
+    IL_2073: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_2078: ldarg.0
+    IL_2079: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_207e: ldc.i4.0
+    IL_207f: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_2084: ldarg.0
+    IL_2085: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel3
+    IL_208a: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_208f: ldarg.0
+    IL_2090: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_2095: ldc.i4.0
+    IL_2096: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_209b: ldarg.0
+    IL_209c: ldfld Architecture.WinApp.CustomerDiscountPolicy::panel2
+    IL_20a1: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_20a6: ldarg.0
+    IL_20a7: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_20ac: ldc.i4.0
+    IL_20ad: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_20b2: ldarg.0
+    IL_20b3: ldfld Architecture.WinApp.CustomerDiscountPolicy::tsPriceSchedule
+    IL_20b8: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_20bd: ldarg.0
+    IL_20be: ldfld Architecture.WinApp.CustomerDiscountPolicy::miniToolStrip
+    IL_20c3: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_20c8: ldarg.0
+    IL_20c9: ldc.i4.0
+    IL_20ca: call System.Windows.Forms.Control::ResumeLayout
+    IL_20cf: ret

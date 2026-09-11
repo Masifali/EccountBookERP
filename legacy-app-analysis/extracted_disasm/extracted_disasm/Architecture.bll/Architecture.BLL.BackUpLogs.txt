@@ -1,0 +1,527 @@
+
+====================================================================================================
+CLASS Architecture.BLL.BackUpLogs
+====================================================================================================
+
+; Architecture.BLL.BackUpLogs::Save  (rva=0x4100, fat header, code_size=43, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.DateTime::get_Now
+    IL_0006: callvirt Architecture.Model.BackUpLogs::set_EntryDate
+    IL_000b: newobj Architecture.DAL.BackUpLogs::.ctor
+    IL_0010: ldarg.0
+    IL_0011: ldstr ldstr "USP_BackUpLogs_Insert"
+    IL_0016: call Architecture.DAL.BackUpLogs::SetData
+    IL_001b: stloc.0
+    IL_001c: leave.s IL_0029
+    IL_001e: callvirt System.Exception::get_Message
+    IL_0023: newobj System.Exception::.ctor
+    IL_0028: throw
+    IL_0029: ldloc.0
+    IL_002a: ret
+
+; Architecture.BLL.BackUpLogs::BackUpLogsExists  (rva=0x4148, fat header, code_size=80, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@BackupTypeId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldstr ldstr "USP_BackUpLogsExistsOrNot"
+    IL_002d: ldloc.0
+    IL_002e: call MethodSpec#17
+    IL_0033: callvirt System.Data.DataTable::get_Rows
+    IL_0038: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_003d: ldc.i4.0
+    IL_003e: cgt
+    IL_0040: stloc.1
+    IL_0041: leave.s IL_004e
+    IL_0043: callvirt System.Exception::get_Message
+    IL_0048: newobj System.Exception::.ctor
+    IL_004d: throw
+    IL_004e: ldloc.1
+    IL_004f: ret
+
+; Architecture.BLL.BackUpLogs::RunDatabaseBackup  (rva=0x41b4, fat header, code_size=363, max_stack=7, exception_handlers=yes)
+    IL_0000: ldarg.1
+    IL_0001: call System.String::IsNullOrEmpty
+    IL_0006: brtrue.s IL_0010
+    IL_0008: ldarg.1
+    IL_0009: call System.IO.Directory::Exists
+    IL_000e: brtrue.s IL_001b
+    IL_0010: ldstr ldstr "Database BackUp Folder path does not exists on the current network."
+    IL_0015: newobj System.Exception::.ctor
+    IL_001a: throw
+    IL_001b: ldarg.0
+    IL_001c: newobj System.Data.SqlClient.SqlConnection::.ctor
+    IL_0021: stloc.0
+    IL_0022: ldloc.0
+    IL_0023: callvirt System.Data.Common.DbConnection::Open
+    IL_0028: ldloc.0
+    IL_0029: callvirt System.Data.Common.DbConnection::get_Database
+    IL_002e: callvirt System.Object::ToString
+    IL_0033: stloc.1
+    IL_0034: ldstr ldstr "scs@_2024"
+    IL_0039: stloc.2
+    IL_003a: newobj Architecture.Model.BackUpLogs::.ctor
+    IL_003f: stloc.3
+    IL_0040: ldloc.3
+    IL_0041: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0046: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_004b: callvirt Architecture.Model.BackUpLogs::set_OrganizationId
+    IL_0050: ldloc.3
+    IL_0051: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0056: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_005b: callvirt Architecture.Model.BackUpLogs::set_CompanyId
+    IL_0060: ldloc.3
+    IL_0061: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0066: callvirt Architecture.Model.UserAccount::get_ID
+    IL_006b: callvirt Architecture.Model.BackUpLogs::set_EntryUserId
+    IL_0070: ldloc.3
+    IL_0071: ldc.i4.1
+    IL_0072: callvirt Architecture.Model.BackUpLogs::set_BackupTypeId
+    IL_0077: ldloc.3
+    IL_0078: ldstr ldstr "Database"
+    IL_007d: callvirt Architecture.Model.BackUpLogs::set_BackupType
+    IL_0082: ldloc.3
+    IL_0083: ldc.i4.1
+    IL_0084: callvirt Architecture.Model.BackUpLogs::set_BackupStatus
+    IL_0089: ldloc.3
+    IL_008a: call System.DateTime::get_Now
+    IL_008f: callvirt Architecture.Model.BackUpLogs::set_BackupStartTime
+    IL_0094: ldarg.1
+    IL_0095: stsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_009a: ldloc.3
+    IL_009b: ldarg.1
+    IL_009c: callvirt Architecture.Model.BackUpLogs::set_BackupLocation
+    IL_00a1: ldarg.0
+    IL_00a2: ldloc.1
+    IL_00a3: ldsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_00a8: call Architecture.BLL.BackUpLogs::BackupDatabase
+    IL_00ad: ldloc.3
+    IL_00ae: call System.DateTime::get_Now
+    IL_00b3: callvirt Architecture.Model.BackUpLogs::set_BackupEndTime
+    IL_00b8: ldarg.2
+    IL_00b9: brfalse.s IL_00c3
+    IL_00bb: ldarg.2
+    IL_00bc: ldc.i4.s 25
+    IL_00be: call System.ComponentModel.BackgroundWorker::ReportProgress
+    IL_00c3: ldloc.3
+    IL_00c4: call System.DateTime::get_Now
+    IL_00c9: callvirt Architecture.Model.BackUpLogs::set_ZipAndEncryptStartTime
+    IL_00ce: ldc.i4.1
+    IL_00cf: newarr System.String
+    IL_00d4: dup
+    IL_00d5: ldc.i4.0
+    IL_00d6: ldstr ldstr "{0}\\{1}_BackUp_{2:yyyyMMdd_HHmm}.zip"
+    IL_00db: ldarg.1
+    IL_00dc: ldloc.1
+    IL_00dd: call System.DateTime::get_Now
+    IL_00e2: box System.DateTime
+    IL_00e7: call System.String::Format
+    IL_00ec: stelem.ref
+    IL_00ed: call System.IO.Path::Combine
+    IL_00f2: stloc.s 4
+    IL_00f4: ldsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_00f9: ldloc.s 4
+    IL_00fb: ldloc.2
+    IL_00fc: call Architecture.BLL.BackUpLogs::ZipAndEncrypt
+    IL_0101: ldloc.3
+    IL_0102: call System.DateTime::get_Now
+    IL_0107: callvirt Architecture.Model.BackUpLogs::set_ZipAndEncryptEndTime
+    IL_010c: ldarg.2
+    IL_010d: brfalse.s IL_0117
+    IL_010f: ldarg.2
+    IL_0110: ldc.i4.s 50
+    IL_0112: call System.ComponentModel.BackgroundWorker::ReportProgress
+    IL_0117: ldloc.3
+    IL_0118: ldarg.1
+    IL_0119: call Architecture.BLL.BackUpLogs::DeleteOldBackups
+    IL_011e: callvirt Architecture.Model.BackUpLogs::set_OldDeletedFileCount
+    IL_0123: ldarg.2
+    IL_0124: brfalse.s IL_012e
+    IL_0126: ldarg.2
+    IL_0127: ldc.i4.s 75
+    IL_0129: call System.ComponentModel.BackgroundWorker::ReportProgress
+    IL_012e: ldarg.2
+    IL_012f: brfalse.s IL_0139
+    IL_0131: ldarg.2
+    IL_0132: ldc.i4.s 100
+    IL_0134: call System.ComponentModel.BackgroundWorker::ReportProgress
+    IL_0139: ldloc.3
+    IL_013a: call Architecture.BLL.BackUpLogs::Save
+    IL_013f: pop
+    IL_0140: ldloc.s 4
+    IL_0142: ldarg.3
+    IL_0143: call Architecture.BLL.BackUpLogs::CopyBackupToNetwork
+    IL_0148: ldloc.s 4
+    IL_014a: ldarg.s 4
+    IL_014c: call Architecture.BLL.BackUpLogs::CopyBackupToNetwork
+    IL_0151: leave.s IL_015d
+    IL_0153: ldloc.0
+    IL_0154: brfalse.s IL_015c
+    IL_0156: ldloc.0
+    IL_0157: callvirt System.IDisposable::Dispose
+    IL_015c: endfinally
+    IL_015d: leave.s IL_016a
+    IL_015f: callvirt System.Exception::get_Message
+    IL_0164: newobj System.Exception::.ctor
+    IL_0169: throw
+    IL_016a: ret
+
+; Architecture.BLL.BackUpLogs::SendBackupByEmail  (rva=0x4360, fat header, code_size=162, max_stack=4, exception_handlers=yes)
+    IL_0000: ldstr ldstr "your-email@gmail.com"
+    IL_0005: stloc.0
+    IL_0006: ldstr ldstr "recipient-email@gmail.com"
+    IL_000b: stloc.1
+    IL_000c: ldstr ldstr "Database Backup"
+    IL_0011: stloc.2
+    IL_0012: ldstr ldstr "Please find the attached database backup file."
+    IL_0017: stloc.3
+    IL_0018: ldstr ldstr "smtp.gmail.com"
+    IL_001d: ldc.i4 587
+    IL_0022: newobj System.Net.Mail.SmtpClient::.ctor
+    IL_0027: dup
+    IL_0028: ldloc.0
+    IL_0029: ldstr ldstr "your-email-password"
+    IL_002e: newobj System.Net.NetworkCredential::.ctor
+    IL_0033: callvirt System.Net.Mail.SmtpClient::set_Credentials
+    IL_0038: dup
+    IL_0039: ldc.i4.1
+    IL_003a: callvirt System.Net.Mail.SmtpClient::set_EnableSsl
+    IL_003f: newobj System.Net.Mail.MailMessage::.ctor
+    IL_0044: dup
+    IL_0045: ldloc.0
+    IL_0046: newobj System.Net.Mail.MailAddress::.ctor
+    IL_004b: callvirt System.Net.Mail.MailMessage::set_From
+    IL_0050: dup
+    IL_0051: ldloc.2
+    IL_0052: callvirt System.Net.Mail.MailMessage::set_Subject
+    IL_0057: dup
+    IL_0058: ldloc.3
+    IL_0059: callvirt System.Net.Mail.MailMessage::set_Body
+    IL_005e: stloc.s 4
+    IL_0060: ldloc.s 4
+    IL_0062: callvirt System.Net.Mail.MailMessage::get_To
+    IL_0067: ldloc.1
+    IL_0068: callvirt System.Net.Mail.MailAddressCollection::Add
+    IL_006d: ldloc.s 4
+    IL_006f: callvirt System.Net.Mail.MailMessage::get_Attachments
+    IL_0074: ldarg.0
+    IL_0075: newobj System.Net.Mail.Attachment::.ctor
+    IL_007a: callvirt TypeSpec#19::Add
+    IL_007f: ldloc.s 4
+    IL_0081: callvirt System.Net.Mail.SmtpClient::Send
+    IL_0086: leave.s IL_00a1
+    IL_0088: stloc.s 5
+    IL_008a: ldstr ldstr "Error sending email: "
+    IL_008f: ldloc.s 5
+    IL_0091: callvirt System.Exception::get_Message
+    IL_0096: call System.String::Concat
+    IL_009b: newobj System.Exception::.ctor
+    IL_00a0: throw
+    IL_00a1: ret
+
+; Architecture.BLL.BackUpLogs::CopyBackupToNetwork  (rva=0x4420, fat header, code_size=102, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.1
+    IL_0001: call System.String::IsNullOrEmpty
+    IL_0006: brtrue.s IL_0015
+    IL_0008: ldarg.1
+    IL_0009: call System.IO.Path::GetDirectoryName
+    IL_000e: call System.IO.Directory::Exists
+    IL_0013: brtrue.s IL_0025
+    IL_0015: ldarg.1
+    IL_0016: ldstr ldstr " path does not exist or is inaccessible."
+    IL_001b: call System.String::Concat
+    IL_0020: call System.Console::WriteLine
+    IL_0025: ldarg.0
+    IL_0026: call System.IO.Path::GetFileName
+    IL_002b: stloc.0
+    IL_002c: ldarg.1
+    IL_002d: ldloc.0
+    IL_002e: call System.IO.Path::Combine
+    IL_0033: stloc.1
+    IL_0034: ldarg.0
+    IL_0035: ldloc.1
+    IL_0036: ldc.i4.1
+    IL_0037: call System.IO.File::Copy
+    IL_003c: ldstr ldstr "Backup file copied to network path: "
+    IL_0041: ldloc.1
+    IL_0042: call System.String::Concat
+    IL_0047: call System.Console::WriteLine
+    IL_004c: leave.s IL_0065
+    IL_004e: stloc.2
+    IL_004f: ldstr ldstr "Error copying backup to network path: "
+    IL_0054: ldloc.2
+    IL_0055: callvirt System.Exception::get_Message
+    IL_005a: call System.String::Concat
+    IL_005f: newobj System.Exception::.ctor
+    IL_0064: throw
+    IL_0065: ret
+
+; Architecture.BLL.BackUpLogs::RunLayoutBackup  (rva=0x44a4, fat header, code_size=239, max_stack=6, exception_handlers=yes)
+    IL_0000: ldstr ldstr "scs@2023"
+    IL_0005: stloc.0
+    IL_0006: newobj Architecture.Model.BackUpLogs::.ctor
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0012: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0017: callvirt Architecture.Model.BackUpLogs::set_OrganizationId
+    IL_001c: ldloc.1
+    IL_001d: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0022: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0027: callvirt Architecture.Model.BackUpLogs::set_CompanyId
+    IL_002c: ldloc.1
+    IL_002d: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0032: callvirt Architecture.Model.UserAccount::get_ID
+    IL_0037: callvirt Architecture.Model.BackUpLogs::set_EntryUserId
+    IL_003c: ldloc.1
+    IL_003d: ldc.i4.2
+    IL_003e: callvirt Architecture.Model.BackUpLogs::set_BackupTypeId
+    IL_0043: ldloc.1
+    IL_0044: ldstr ldstr "Layout"
+    IL_0049: callvirt Architecture.Model.BackUpLogs::set_BackupType
+    IL_004e: ldloc.1
+    IL_004f: ldc.i4.1
+    IL_0050: callvirt Architecture.Model.BackUpLogs::set_BackupStatus
+    IL_0055: ldloc.1
+    IL_0056: call System.DateTime::get_Now
+    IL_005b: callvirt Architecture.Model.BackUpLogs::set_BackupStartTime
+    IL_0060: ldarg.1
+    IL_0061: stsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_0066: ldloc.1
+    IL_0067: ldarg.1
+    IL_0068: callvirt Architecture.Model.BackUpLogs::set_BackupLocation
+    IL_006d: ldarg.0
+    IL_006e: ldstr ldstr "Layout"
+    IL_0073: ldsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_0078: call Architecture.BLL.BackUpLogs::BackupDatabase
+    IL_007d: ldloc.1
+    IL_007e: call System.DateTime::get_Now
+    IL_0083: callvirt Architecture.Model.BackUpLogs::set_BackupEndTime
+    IL_0088: ldloc.1
+    IL_0089: call System.DateTime::get_Now
+    IL_008e: callvirt Architecture.Model.BackUpLogs::set_ZipAndEncryptStartTime
+    IL_0093: ldc.i4.1
+    IL_0094: newarr System.String
+    IL_0099: dup
+    IL_009a: ldc.i4.0
+    IL_009b: ldstr ldstr "{0}\\Layout_BackUp_{1:yyyyMMdd_HHmm}.zip"
+    IL_00a0: ldarg.1
+    IL_00a1: call System.DateTime::get_Now
+    IL_00a6: box System.DateTime
+    IL_00ab: call System.String::Format
+    IL_00b0: stelem.ref
+    IL_00b1: call System.IO.Path::Combine
+    IL_00b6: stloc.2
+    IL_00b7: ldsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_00bc: ldloc.2
+    IL_00bd: ldloc.0
+    IL_00be: call Architecture.BLL.BackUpLogs::ZipAndEncrypt
+    IL_00c3: ldloc.1
+    IL_00c4: call System.DateTime::get_Now
+    IL_00c9: callvirt Architecture.Model.BackUpLogs::set_ZipAndEncryptEndTime
+    IL_00ce: ldloc.1
+    IL_00cf: ldarg.1
+    IL_00d0: call Architecture.BLL.BackUpLogs::DeleteOldBackups
+    IL_00d5: callvirt Architecture.Model.BackUpLogs::set_OldDeletedFileCount
+    IL_00da: ldloc.1
+    IL_00db: call Architecture.BLL.BackUpLogs::Save
+    IL_00e0: pop
+    IL_00e1: leave.s IL_00ee
+    IL_00e3: callvirt System.Exception::get_Message
+    IL_00e8: newobj System.Exception::.ctor
+    IL_00ed: throw
+    IL_00ee: ret
+
+; Architecture.BLL.BackUpLogs::BackupDatabase  (rva=0x45b0, fat header, code_size=151, max_stack=7, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: newobj System.Data.SqlClient.SqlConnectionStringBuilder::.ctor
+    IL_0006: callvirt System.Data.SqlClient.SqlConnectionStringBuilder::get_DataSource
+    IL_000b: pop
+    IL_000c: ldarg.0
+    IL_000d: newobj System.Data.SqlClient.SqlConnection::.ctor
+    IL_0012: stloc.0
+    IL_0013: ldloc.0
+    IL_0014: callvirt System.Data.Common.DbConnection::Open
+    IL_0019: ldc.i4.1
+    IL_001a: newarr System.String
+    IL_001f: dup
+    IL_0020: ldc.i4.0
+    IL_0021: ldstr ldstr "{0}\\{1}_BackUp_{2:yyyyMMdd_HHmm}.bak"
+    IL_0026: ldarg.2
+    IL_0027: ldarg.1
+    IL_0028: call System.DateTime::get_Now
+    IL_002d: box System.DateTime
+    IL_0032: call System.String::Format
+    IL_0037: stelem.ref
+    IL_0038: call System.IO.Path::Combine
+    IL_003d: stsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_0042: ldc.i4.5
+    IL_0043: newarr System.String
+    IL_0048: dup
+    IL_0049: ldc.i4.0
+    IL_004a: ldstr ldstr "BACKUP DATABASE ["
+    IL_004f: stelem.ref
+    IL_0050: dup
+    IL_0051: ldc.i4.1
+    IL_0052: ldarg.1
+    IL_0053: stelem.ref
+    IL_0054: dup
+    IL_0055: ldc.i4.2
+    IL_0056: ldstr ldstr "] TO DISK='"
+    IL_005b: stelem.ref
+    IL_005c: dup
+    IL_005d: ldc.i4.3
+    IL_005e: ldsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_0063: stelem.ref
+    IL_0064: dup
+    IL_0065: ldc.i4.4
+    IL_0066: ldstr ldstr "' WITH FORMAT"
+    IL_006b: stelem.ref
+    IL_006c: call System.String::Concat
+    IL_0071: ldloc.0
+    IL_0072: newobj System.Data.SqlClient.SqlCommand::.ctor
+    IL_0077: callvirt System.Data.Common.DbCommand::ExecuteNonQuery
+    IL_007c: pop
+    IL_007d: leave.s IL_0089
+    IL_007f: ldloc.0
+    IL_0080: brfalse.s IL_0088
+    IL_0082: ldloc.0
+    IL_0083: callvirt System.IDisposable::Dispose
+    IL_0088: endfinally
+    IL_0089: leave.s IL_0096
+    IL_008b: callvirt System.Exception::get_Message
+    IL_0090: newobj System.Exception::.ctor
+    IL_0095: throw
+    IL_0096: ret
+
+; Architecture.BLL.BackUpLogs::ZipAndEncrypt  (rva=0x4670, fat header, code_size=131, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.IO.File::OpenRead
+    IL_0006: stloc.0
+    IL_0007: ldarg.1
+    IL_0008: ldc.i4.2
+    IL_0009: newobj System.IO.FileStream::.ctor
+    IL_000e: stloc.1
+    IL_000f: ldloc.1
+    IL_0010: newobj ICSharpCode.SharpZipLib.Zip.ZipOutputStream::.ctor
+    IL_0015: stloc.2
+    IL_0016: ldloc.2
+    IL_0017: ldarg.2
+    IL_0018: callvirt ICSharpCode.SharpZipLib.Zip.ZipOutputStream::set_Password
+    IL_001d: ldarg.0
+    IL_001e: call System.IO.Path::GetFileName
+    IL_0023: newobj ICSharpCode.SharpZipLib.Zip.ZipEntry::.ctor
+    IL_0028: stloc.3
+    IL_0029: ldloc.2
+    IL_002a: ldloc.3
+    IL_002b: callvirt ICSharpCode.SharpZipLib.Zip.ZipOutputStream::PutNextEntry
+    IL_0030: ldc.i4 4096
+    IL_0035: newarr System.Byte
+    IL_003a: stloc.s 4
+    IL_003c: ldloc.0
+    IL_003d: ldloc.2
+    IL_003e: ldloc.s 4
+    IL_0040: call ICSharpCode.SharpZipLib.Core.StreamUtils::Copy
+    IL_0045: ldloc.2
+    IL_0046: callvirt ICSharpCode.SharpZipLib.Zip.ZipOutputStream::CloseEntry
+    IL_004b: leave.s IL_0057
+    IL_004d: ldloc.2
+    IL_004e: brfalse.s IL_0056
+    IL_0050: ldloc.2
+    IL_0051: callvirt System.IDisposable::Dispose
+    IL_0056: endfinally
+    IL_0057: leave.s IL_0063
+    IL_0059: ldloc.1
+    IL_005a: brfalse.s IL_0062
+    IL_005c: ldloc.1
+    IL_005d: callvirt System.IDisposable::Dispose
+    IL_0062: endfinally
+    IL_0063: leave.s IL_006f
+    IL_0065: ldloc.0
+    IL_0066: brfalse.s IL_006e
+    IL_0068: ldloc.0
+    IL_0069: callvirt System.IDisposable::Dispose
+    IL_006e: endfinally
+    IL_006f: ldarg.0
+    IL_0070: call System.IO.File::Delete
+    IL_0075: leave.s IL_0082
+    IL_0077: callvirt System.Exception::get_Message
+    IL_007c: newobj System.Exception::.ctor
+    IL_0081: throw
+    IL_0082: ret
+
+; Architecture.BLL.BackUpLogs::DeleteOldBackups  (rva=0x4734, fat header, code_size=136, max_stack=3, exception_handlers=yes)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: ldarg.0
+    IL_0003: newobj System.IO.DirectoryInfo::.ctor
+    IL_0008: callvirt System.IO.DirectoryInfo::GetFiles
+    IL_000d: stloc.1
+    IL_000e: ldc.i4.0
+    IL_000f: stloc.2
+    IL_0010: br.s IL_0071
+    IL_0012: ldloc.1
+    IL_0013: ldloc.2
+    IL_0014: ldelem.ref
+    IL_0015: stloc.3
+    IL_0016: ldloc.3
+    IL_0017: callvirt System.IO.FileSystemInfo::get_Name
+    IL_001c: ldstr ldstr "BackUp"
+    IL_0021: callvirt System.String::Contains
+    IL_0026: brfalse.s IL_006d
+    IL_0028: ldloc.3
+    IL_0029: callvirt System.IO.FileSystemInfo::get_Extension
+    IL_002e: callvirt System.String::ToLower
+    IL_0033: ldstr ldstr ".zip"
+    IL_0038: call System.String::op_Equality
+    IL_003d: brfalse.s IL_006d
+    IL_003f: ldloc.3
+    IL_0040: callvirt System.IO.FileSystemInfo::get_CreationTime
+    IL_0045: call System.DateTime::get_Now
+    IL_004a: stloc.s 4
+    IL_004c: ldloca.s 4
+    IL_004e: ldc.r8 -7.0
+    IL_0057: call System.DateTime::AddDays
+    IL_005c: call System.DateTime::op_LessThan
+    IL_0061: brfalse.s IL_006d
+    IL_0063: ldloc.0
+    IL_0064: ldc.i4.1
+    IL_0065: add
+    IL_0066: stloc.0
+    IL_0067: ldloc.3
+    IL_0068: callvirt System.IO.FileSystemInfo::Delete
+    IL_006d: ldloc.2
+    IL_006e: ldc.i4.1
+    IL_006f: add
+    IL_0070: stloc.2
+    IL_0071: ldloc.2
+    IL_0072: ldloc.1
+    IL_0073: ldlen
+    IL_0074: conv.i4
+    IL_0075: blt.s IL_0012
+    IL_0077: ldloc.0
+    IL_0078: stloc.2
+    IL_0079: leave.s IL_0086
+    IL_007b: callvirt System.Exception::get_Message
+    IL_0080: newobj System.Exception::.ctor
+    IL_0085: throw
+    IL_0086: ldloc.2
+    IL_0087: ret
+
+; Architecture.BLL.BackUpLogs::.ctor  (rva=0x47d8, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+; Architecture.BLL.BackUpLogs::.cctor  (rva=0x47e0, tiny header, code_size=11, max_stack=8, exception_handlers=no)
+    IL_0000: ldstr ldstr ""
+    IL_0005: stsfld Architecture.BLL.BackUpLogs::BackUpFolderPath
+    IL_000a: ret

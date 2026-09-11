@@ -1,0 +1,1086 @@
+
+====================================================================================================
+CLASS Architecture.BLL.SMS.SmsProvider
+====================================================================================================
+
+; Architecture.BLL.SMS.SmsProvider::ReadByCompanyId  (rva=0x1ba0c, fat header, code_size=111, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@CompanyId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@Activity"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldstr ldstr "ReadByCompanyId"
+    IL_003f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0044: callvirt TypeSpec#10::Add
+    IL_0049: newobj Architecture.DAL.SMS.SmsProvider::.ctor
+    IL_004e: ldstr ldstr "Sp_SmsProvider_GetAllMethod"
+    IL_0053: ldloc.0
+    IL_0054: call Architecture.DAL.SMS.SmsProvider::GetData
+    IL_0059: ldc.i4.0
+    IL_005a: callvirt TypeSpec#84::get_Item
+    IL_005f: stloc.1
+    IL_0060: leave.s IL_006d
+    IL_0062: callvirt System.Exception::get_Message
+    IL_0067: newobj System.Exception::.ctor
+    IL_006c: throw
+    IL_006d: ldloc.1
+    IL_006e: ret
+
+; Architecture.BLL.SMS.SmsProvider::SendSmsViaLifeTimeSmsApi  (rva=0x1ba98, fat header, code_size=485, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: callvirt Architecture.Model.SMS.SmsProvider::get_ProviderApi
+    IL_0006: callvirt System.String::get_Length
+    IL_000b: ldc.i4.0
+    IL_000c: bgt.s IL_0019
+    IL_000e: ldstr ldstr "Provider Api Not Found!"
+    IL_0013: newobj System.Exception::.ctor
+    IL_0018: throw
+    IL_0019: ldarg.0
+    IL_001a: callvirt Architecture.Model.SMS.SmsProvider::get_ProviderApiToken
+    IL_001f: callvirt System.String::get_Length
+    IL_0024: ldc.i4.0
+    IL_0025: bgt.s IL_0032
+    IL_0027: ldstr ldstr "Provider Api Token Not Found!"
+    IL_002c: newobj System.Exception::.ctor
+    IL_0031: throw
+    IL_0032: ldarg.1
+    IL_0033: callvirt TypeSpec#72::get_Count
+    IL_0038: ldc.i4.0
+    IL_0039: bgt.s IL_0046
+    IL_003b: ldstr ldstr "No Number Found to Send Sms"
+    IL_0040: newobj System.Exception::.ctor
+    IL_0045: throw
+    IL_0046: ldarg.0
+    IL_0047: callvirt Architecture.Model.SMS.SmsProvider::get_ProviderApiMasking
+    IL_004c: callvirt System.String::get_Length
+    IL_0051: ldc.i4.0
+    IL_0052: bgt.s IL_005f
+    IL_0054: ldstr ldstr "Sms Mask Not Found!"
+    IL_0059: newobj System.Exception::.ctor
+    IL_005e: throw
+    IL_005f: ldarg.2
+    IL_0060: callvirt System.String::get_Length
+    IL_0065: ldc.i4.0
+    IL_0066: bgt.s IL_0073
+    IL_0068: ldstr ldstr "Sms Message Not Found!"
+    IL_006d: newobj System.Exception::.ctor
+    IL_0072: throw
+    IL_0073: ldarg.1
+    IL_0074: callvirt TypeSpec#72::get_Count
+    IL_0079: ldc.i4.s 50
+    IL_007b: ble.s IL_0088
+    IL_007d: ldstr ldstr "You can only send SMS to 50 Numbers at once!"
+    IL_0082: newobj System.Exception::.ctor
+    IL_0087: throw
+    IL_0088: ldstr ldstr ","
+    IL_008d: ldarg.1
+    IL_008e: callvirt TypeSpec#72::ToArray
+    IL_0093: call System.String::Join
+    IL_0098: pop
+    IL_0099: ldstr ldstr "7e18ee7c42458b82f5237543f627a03eb1e9636708"
+    IL_009e: stloc.0
+    IL_009f: ldstr ldstr "EccountBookCloudERP"
+    IL_00a4: stloc.1
+    IL_00a5: ldstr ldstr "923175404113"
+    IL_00aa: stloc.2
+    IL_00ab: ldstr ldstr "SMS Alert"
+    IL_00b0: stloc.3
+    IL_00b1: ldstr ldstr "unicode"
+    IL_00b6: stloc.s 4
+    IL_00b8: ldstr ldstr "Aoa"
+    IL_00bd: ldarg.2
+    IL_00be: call System.String::Concat
+    IL_00c3: stloc.s 5
+    IL_00c5: ldstr ldstr "http://lifetimesms.com/json"
+    IL_00ca: call System.Net.WebRequest::Create
+    IL_00cf: castclass System.Net.HttpWebRequest
+    IL_00d4: stloc.s 6
+    IL_00d6: ldloc.s 6
+    IL_00d8: ldstr ldstr "application/json"
+    IL_00dd: callvirt System.Net.HttpWebRequest::set_Accept
+    IL_00e2: ldloc.s 6
+    IL_00e4: ldstr ldstr " application/x-www-form-urlencoded"
+    IL_00e9: callvirt System.Net.WebRequest::set_ContentType
+    IL_00ee: ldloc.s 6
+    IL_00f0: ldstr ldstr "POST"
+    IL_00f5: callvirt System.Net.WebRequest::set_Method
+    IL_00fa: ldloc.s 6
+    IL_00fc: callvirt System.Net.WebRequest::GetRequestStream
+    IL_0101: newobj System.IO.StreamWriter::.ctor
+    IL_0106: stloc.s 8
+    IL_0108: ldc.i4.s 12
+    IL_010a: newarr System.String
+    IL_010f: dup
+    IL_0110: ldc.i4.0
+    IL_0111: ldstr ldstr "api_token="
+    IL_0116: stelem.ref
+    IL_0117: dup
+    IL_0118: ldc.i4.1
+    IL_0119: ldloc.0
+    IL_011a: stelem.ref
+    IL_011b: dup
+    IL_011c: ldc.i4.2
+    IL_011d: ldstr ldstr "&api_secret="
+    IL_0122: stelem.ref
+    IL_0123: dup
+    IL_0124: ldc.i4.3
+    IL_0125: ldloc.1
+    IL_0126: stelem.ref
+    IL_0127: dup
+    IL_0128: ldc.i4.4
+    IL_0129: ldstr ldstr "&to="
+    IL_012e: stelem.ref
+    IL_012f: dup
+    IL_0130: ldc.i4.5
+    IL_0131: ldloc.2
+    IL_0132: stelem.ref
+    IL_0133: dup
+    IL_0134: ldc.i4.6
+    IL_0135: ldstr ldstr "&from="
+    IL_013a: stelem.ref
+    IL_013b: dup
+    IL_013c: ldc.i4.7
+    IL_013d: ldloc.3
+    IL_013e: stelem.ref
+    IL_013f: dup
+    IL_0140: ldc.i4.8
+    IL_0141: ldstr ldstr "&type="
+    IL_0146: stelem.ref
+    IL_0147: dup
+    IL_0148: ldc.i4.s 9
+    IL_014a: ldloc.s 4
+    IL_014c: stelem.ref
+    IL_014d: dup
+    IL_014e: ldc.i4.s 10
+    IL_0150: ldstr ldstr "&message="
+    IL_0155: stelem.ref
+    IL_0156: dup
+    IL_0157: ldc.i4.s 11
+    IL_0159: ldloc.s 5
+    IL_015b: stelem.ref
+    IL_015c: call System.String::Concat
+    IL_0161: stloc.s 9
+    IL_0163: ldloc.s 8
+    IL_0165: ldloc.s 9
+    IL_0167: callvirt System.IO.TextWriter::Write
+    IL_016c: ldloc.s 8
+    IL_016e: callvirt System.IO.TextWriter::Flush
+    IL_0173: ldloc.s 8
+    IL_0175: callvirt System.IO.TextWriter::Close
+    IL_017a: leave.s IL_0188
+    IL_017c: ldloc.s 8
+    IL_017e: brfalse.s IL_0187
+    IL_0180: ldloc.s 8
+    IL_0182: callvirt System.IDisposable::Dispose
+    IL_0187: endfinally
+    IL_0188: ldloc.s 6
+    IL_018a: callvirt System.Net.WebRequest::GetResponse
+    IL_018f: castclass System.Net.HttpWebResponse
+    IL_0194: ldstr ldstr ""
+    IL_0199: stloc.s 7
+    IL_019b: callvirt System.Net.WebResponse::GetResponseStream
+    IL_01a0: newobj System.IO.StreamReader::.ctor
+    IL_01a5: stloc.s 10
+    IL_01a7: ldloc.s 10
+    IL_01a9: callvirt System.IO.TextReader::ReadToEnd
+    IL_01ae: callvirt System.Object::ToString
+    IL_01b3: stloc.s 7
+    IL_01b5: leave.s IL_01c3
+    IL_01b7: ldloc.s 10
+    IL_01b9: brfalse.s IL_01c2
+    IL_01bb: ldloc.s 10
+    IL_01bd: callvirt System.IDisposable::Dispose
+    IL_01c2: endfinally
+    IL_01c3: ldloc.s 7
+    IL_01c5: stloc.s 11
+    IL_01c7: leave.s IL_01e2
+    IL_01c9: stloc.s 12
+    IL_01cb: ldstr ldstr "LifeTimeSmsApi : "
+    IL_01d0: ldloc.s 12
+    IL_01d2: callvirt System.Exception::get_Message
+    IL_01d7: call System.String::Concat
+    IL_01dc: newobj System.Exception::.ctor
+    IL_01e1: throw
+    IL_01e2: ldloc.s 11
+    IL_01e4: ret
+
+; Architecture.BLL.SMS.SmsProvider::.ctor  (rva=0x1bcd8, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.BLL.SMS.MessageBody
+====================================================================================================
+
+; Architecture.BLL.SMS.MessageBody::Save  (rva=0x1bce0, fat header, code_size=59, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: callvirt Architecture.Model.SMS.MessageBody::get_Id
+    IL_0006: brtrue.s IL_001b
+    IL_0008: newobj Architecture.DAL.SMS.MessageBody::.ctor
+    IL_000d: ldarg.0
+    IL_000e: ldstr ldstr "Sp_InsertMessageBody"
+    IL_0013: call Architecture.DAL.SMS.MessageBody::SetData
+    IL_0018: stloc.0
+    IL_0019: leave.s IL_0039
+    IL_001b: newobj Architecture.DAL.SMS.MessageBody::.ctor
+    IL_0020: ldarg.0
+    IL_0021: ldstr ldstr "Sp_UpdateMessageBody"
+    IL_0026: call Architecture.DAL.SMS.MessageBody::SetData
+    IL_002b: stloc.0
+    IL_002c: leave.s IL_0039
+    IL_002e: callvirt System.Exception::get_Message
+    IL_0033: newobj System.Exception::.ctor
+    IL_0038: throw
+    IL_0039: ldloc.0
+    IL_003a: ret
+
+; Architecture.BLL.SMS.MessageBody::GetMessageBody  (rva=0x1bd38, fat header, code_size=268, max_stack=4, exception_handlers=yes)
+    IL_0000: ldnull
+    IL_0001: stloc.0
+    IL_0002: newobj TypeSpec#85::.ctor
+    IL_0007: stloc.1
+    IL_0008: newobj TypeSpec#10::.ctor
+    IL_000d: stloc.2
+    IL_000e: ldloc.2
+    IL_000f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0014: dup
+    IL_0015: ldstr ldstr "@ScreenName"
+    IL_001a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_001f: dup
+    IL_0020: ldarg.0
+    IL_0021: callvirt Architecture.Model.SMS.MessageBody::get_ScreenName
+    IL_0026: callvirt System.Data.Common.DbParameter::set_Value
+    IL_002b: callvirt TypeSpec#10::Add
+    IL_0030: ldloc.2
+    IL_0031: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0036: dup
+    IL_0037: ldstr ldstr "@OrganizationId"
+    IL_003c: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0041: dup
+    IL_0042: ldarg.0
+    IL_0043: callvirt Architecture.Model.SMS.MessageBody::get_OrganizationId
+    IL_0048: box System.Int32
+    IL_004d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0052: callvirt TypeSpec#10::Add
+    IL_0057: ldloc.2
+    IL_0058: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_005d: dup
+    IL_005e: ldstr ldstr "@CompanyId"
+    IL_0063: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0068: dup
+    IL_0069: ldarg.0
+    IL_006a: callvirt Architecture.Model.SMS.MessageBody::get_CompanyId
+    IL_006f: box System.Int32
+    IL_0074: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0079: callvirt TypeSpec#10::Add
+    IL_007e: ldstr ldstr "Sp_GetMessageBody"
+    IL_0083: ldloc.2
+    IL_0084: call MethodSpec#112
+    IL_0089: stloc.0
+    IL_008a: ldc.i4.0
+    IL_008b: stloc.3
+    IL_008c: br.s IL_00e5
+    IL_008e: newobj Architecture.Model.SMS.MessageBody::.ctor
+    IL_0093: stloc.s 4
+    IL_0095: ldloc.s 4
+    IL_0097: ldloc.0
+    IL_0098: callvirt System.Data.DataTable::get_Rows
+    IL_009d: ldloc.3
+    IL_009e: callvirt System.Data.DataRowCollection::get_Item
+    IL_00a3: ldstr ldstr "GroupId"
+    IL_00a8: callvirt System.Data.DataRow::get_Item
+    IL_00ad: call System.Convert::ToInt32
+    IL_00b2: callvirt Architecture.Model.SMS.MessageBody::set_GroupId
+    IL_00b7: ldloc.s 4
+    IL_00b9: ldloc.0
+    IL_00ba: callvirt System.Data.DataTable::get_Rows
+    IL_00bf: ldloc.3
+    IL_00c0: callvirt System.Data.DataRowCollection::get_Item
+    IL_00c5: ldstr ldstr "SMSBody"
+    IL_00ca: callvirt System.Data.DataRow::get_Item
+    IL_00cf: call System.Convert::ToString
+    IL_00d4: callvirt Architecture.Model.SMS.MessageBody::set_SMSBody
+    IL_00d9: ldloc.1
+    IL_00da: ldloc.s 4
+    IL_00dc: callvirt TypeSpec#85::Add
+    IL_00e1: ldloc.3
+    IL_00e2: ldc.i4.1
+    IL_00e3: add
+    IL_00e4: stloc.3
+    IL_00e5: ldloc.3
+    IL_00e6: ldloc.0
+    IL_00e7: callvirt System.Data.DataTable::get_Rows
+    IL_00ec: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_00f1: blt.s IL_008e
+    IL_00f3: ldloc.1
+    IL_00f4: ldc.i4.0
+    IL_00f5: callvirt TypeSpec#85::get_Item
+    IL_00fa: stloc.s 5
+    IL_00fc: leave.s IL_0109
+    IL_00fe: callvirt System.Exception::get_Message
+    IL_0103: newobj System.Exception::.ctor
+    IL_0108: throw
+    IL_0109: ldloc.s 5
+    IL_010b: ret
+
+; Architecture.BLL.SMS.MessageBody::GetMessageBodytable  (rva=0x1be60, fat header, code_size=159, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#85::.ctor
+    IL_0005: pop
+    IL_0006: newobj TypeSpec#10::.ctor
+    IL_000b: stloc.0
+    IL_000c: ldarg.0
+    IL_000d: callvirt Architecture.Model.SMS.MessageBody::get_ScreenName
+    IL_0012: brfalse.s IL_0036
+    IL_0014: ldloc.0
+    IL_0015: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_001a: dup
+    IL_001b: ldstr ldstr "@ScreenName"
+    IL_0020: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0025: dup
+    IL_0026: ldarg.0
+    IL_0027: callvirt Architecture.Model.SMS.MessageBody::get_ScreenName
+    IL_002c: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0031: callvirt TypeSpec#10::Add
+    IL_0036: ldloc.0
+    IL_0037: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_003c: dup
+    IL_003d: ldstr ldstr "@OrganizationId"
+    IL_0042: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0047: dup
+    IL_0048: ldarg.0
+    IL_0049: callvirt Architecture.Model.SMS.MessageBody::get_OrganizationId
+    IL_004e: box System.Int32
+    IL_0053: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0058: callvirt TypeSpec#10::Add
+    IL_005d: ldloc.0
+    IL_005e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0063: dup
+    IL_0064: ldstr ldstr "@CompanyId"
+    IL_0069: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_006e: dup
+    IL_006f: ldarg.0
+    IL_0070: callvirt Architecture.Model.SMS.MessageBody::get_CompanyId
+    IL_0075: box System.Int32
+    IL_007a: callvirt System.Data.Common.DbParameter::set_Value
+    IL_007f: callvirt TypeSpec#10::Add
+    IL_0084: ldstr ldstr "Sp_GetMessageBody"
+    IL_0089: ldloc.0
+    IL_008a: call MethodSpec#112
+    IL_008f: stloc.1
+    IL_0090: leave.s IL_009d
+    IL_0092: callvirt System.Exception::get_Message
+    IL_0097: newobj System.Exception::.ctor
+    IL_009c: throw
+    IL_009d: ldloc.1
+    IL_009e: ret
+
+; Architecture.BLL.SMS.MessageBody::GetScreenName  (rva=0x1bf1c, fat header, code_size=80, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldarg.0
+    IL_0007: callvirt Architecture.Model.ReportsParameters::get_IsCreateSMSTemplate
+    IL_000c: brfalse.s IL_0035
+    IL_000e: ldloc.0
+    IL_000f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0014: dup
+    IL_0015: ldstr ldstr "@IsCreateSMSTemplate"
+    IL_001a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_001f: dup
+    IL_0020: ldarg.0
+    IL_0021: callvirt Architecture.Model.ReportsParameters::get_IsCreateSMSTemplate
+    IL_0026: box System.Boolean
+    IL_002b: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0030: callvirt TypeSpec#10::Add
+    IL_0035: ldstr ldstr "Sp_GetScreenName"
+    IL_003a: ldloc.0
+    IL_003b: call MethodSpec#112
+    IL_0040: stloc.1
+    IL_0041: leave.s IL_004e
+    IL_0043: callvirt System.Exception::get_Message
+    IL_0048: newobj System.Exception::.ctor
+    IL_004d: throw
+    IL_004e: ldloc.1
+    IL_004f: ret
+
+; Architecture.BLL.SMS.MessageBody::.ctor  (rva=0x1bf88, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.BLL.SMS.SMSContacts
+====================================================================================================
+
+; Architecture.BLL.SMS.SMSContacts::Save  (rva=0x1bf90, fat header, code_size=59, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: callvirt Architecture.Model.SMS.SMSContacts::get_Id
+    IL_0006: brtrue.s IL_001b
+    IL_0008: newobj Architecture.DAL.SMS.SMSContacts::.ctor
+    IL_000d: ldarg.0
+    IL_000e: ldstr ldstr "Sp_tblSMSContacts_Insert"
+    IL_0013: call Architecture.DAL.SMS.SMSContacts::SetData
+    IL_0018: stloc.0
+    IL_0019: leave.s IL_0039
+    IL_001b: newobj Architecture.DAL.SMS.SMSContacts::.ctor
+    IL_0020: ldarg.0
+    IL_0021: ldstr ldstr "Sp_tblSMSContacts_Update"
+    IL_0026: call Architecture.DAL.SMS.SMSContacts::SetData
+    IL_002b: stloc.0
+    IL_002c: leave.s IL_0039
+    IL_002e: callvirt System.Exception::get_Message
+    IL_0033: newobj System.Exception::.ctor
+    IL_0038: throw
+    IL_0039: ldloc.0
+    IL_003a: ret
+
+; Architecture.BLL.SMS.SMSContacts::GetAll  (rva=0x1bfe8, fat header, code_size=144, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "ReadAll"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldloc.0
+    IL_0028: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002d: dup
+    IL_002e: ldstr ldstr "@OrganizationId"
+    IL_0033: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0038: dup
+    IL_0039: ldarg.0
+    IL_003a: callvirt Architecture.Model.SMS.SMSContacts::get_OrganizationId
+    IL_003f: box System.Int32
+    IL_0044: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0049: callvirt TypeSpec#10::Add
+    IL_004e: ldloc.0
+    IL_004f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0054: dup
+    IL_0055: ldstr ldstr "@CompanyId"
+    IL_005a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005f: dup
+    IL_0060: ldarg.0
+    IL_0061: callvirt Architecture.Model.SMS.SMSContacts::get_CompanyId
+    IL_0066: box System.Int32
+    IL_006b: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0070: callvirt TypeSpec#10::Add
+    IL_0075: ldstr ldstr "Sp_tblSMSContacts_GetAllMethod"
+    IL_007a: ldloc.0
+    IL_007b: call MethodSpec#113
+    IL_0080: stloc.1
+    IL_0081: leave.s IL_008e
+    IL_0083: callvirt System.Exception::get_Message
+    IL_0088: newobj System.Exception::.ctor
+    IL_008d: throw
+    IL_008e: ldloc.1
+    IL_008f: ret
+
+; Architecture.BLL.SMS.SMSContacts::DeleteSMSContacts  (rva=0x1c094, fat header, code_size=182, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "DeleteByOrganizationCompanyId"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldloc.0
+    IL_0028: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002d: dup
+    IL_002e: ldstr ldstr "@OrganizationId"
+    IL_0033: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0038: dup
+    IL_0039: ldarg.0
+    IL_003a: callvirt Architecture.Model.SMS.SMSContacts::get_OrganizationId
+    IL_003f: box System.Int32
+    IL_0044: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0049: callvirt TypeSpec#10::Add
+    IL_004e: ldloc.0
+    IL_004f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0054: dup
+    IL_0055: ldstr ldstr "@CompanyId"
+    IL_005a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005f: dup
+    IL_0060: ldarg.0
+    IL_0061: callvirt Architecture.Model.SMS.SMSContacts::get_CompanyId
+    IL_0066: box System.Int32
+    IL_006b: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0070: callvirt TypeSpec#10::Add
+    IL_0075: ldloc.0
+    IL_0076: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_007b: dup
+    IL_007c: ldstr ldstr "@Id"
+    IL_0081: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0086: dup
+    IL_0087: ldarg.0
+    IL_0088: callvirt Architecture.Model.SMS.SMSContacts::get_Id
+    IL_008d: box System.Int32
+    IL_0092: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0097: callvirt TypeSpec#10::Add
+    IL_009c: ldstr ldstr "Sp_tblSMSContacts_GetAllMethod"
+    IL_00a1: ldloc.0
+    IL_00a2: call MethodSpec#113
+    IL_00a7: pop
+    IL_00a8: leave.s IL_00b5
+    IL_00aa: callvirt System.Exception::get_Message
+    IL_00af: newobj System.Exception::.ctor
+    IL_00b4: throw
+    IL_00b5: ret
+
+; Architecture.BLL.SMS.SMSContacts::.ctor  (rva=0x1c168, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.BLL.SMS.SmsHistory
+====================================================================================================
+
+; Architecture.BLL.SMS.SmsHistory::Save  (rva=0x1c170, fat header, code_size=59, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: callvirt Architecture.Model.SMS.SmsHistory::get_Id
+    IL_0006: brtrue.s IL_001b
+    IL_0008: newobj Architecture.DAL.SMS.SmsHistory::.ctor
+    IL_000d: ldarg.0
+    IL_000e: ldstr ldstr "Sp_SMSHistory_Insert"
+    IL_0013: call Architecture.DAL.SMS.SmsHistory::SetData
+    IL_0018: stloc.0
+    IL_0019: leave.s IL_0039
+    IL_001b: newobj Architecture.DAL.SMS.SmsHistory::.ctor
+    IL_0020: ldarg.0
+    IL_0021: ldstr ldstr "Sp_SMSHistory_Update"
+    IL_0026: call Architecture.DAL.SMS.SmsHistory::SetData
+    IL_002b: stloc.0
+    IL_002c: leave.s IL_0039
+    IL_002e: callvirt System.Exception::get_Message
+    IL_0033: newobj System.Exception::.ctor
+    IL_0038: throw
+    IL_0039: ldloc.0
+    IL_003a: ret
+
+; Architecture.BLL.SMS.SmsHistory::SmsStatusUpdate  (rva=0x1c1c8, fat header, code_size=25, max_stack=2, exception_handlers=yes)
+    IL_0000: newobj Architecture.DAL.SMS.SmsHistory::.ctor
+    IL_0005: ldarg.0
+    IL_0006: call Architecture.DAL.SMS.SmsHistory::SmsStatusUpdate
+    IL_000b: leave.s IL_0018
+    IL_000d: callvirt System.Exception::get_Message
+    IL_0012: newobj System.Exception::.ctor
+    IL_0017: throw
+    IL_0018: ret
+
+; Architecture.BLL.SMS.SmsHistory::getSmsHistory  (rva=0x1c200, fat header, code_size=183, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@CompanyId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.1
+    IL_003b: box System.Int32
+    IL_0040: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0045: callvirt TypeSpec#10::Add
+    IL_004a: ldarg.2
+    IL_004b: brfalse.s IL_006f
+    IL_004d: ldloc.0
+    IL_004e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0053: dup
+    IL_0054: ldstr ldstr "@SupplierCustomerId"
+    IL_0059: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005e: dup
+    IL_005f: ldarg.2
+    IL_0060: box System.Int32
+    IL_0065: callvirt System.Data.Common.DbParameter::set_Value
+    IL_006a: callvirt TypeSpec#10::Add
+    IL_006f: ldarg.3
+    IL_0070: brfalse.s IL_009c
+    IL_0072: ldarg.3
+    IL_0073: ldsfld System.String::Empty
+    IL_0078: call System.String::op_Inequality
+    IL_007d: brfalse.s IL_009c
+    IL_007f: ldloc.0
+    IL_0080: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0085: dup
+    IL_0086: ldstr ldstr "@ScreenName"
+    IL_008b: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0090: dup
+    IL_0091: ldarg.3
+    IL_0092: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0097: callvirt TypeSpec#10::Add
+    IL_009c: ldstr ldstr "usp_getSmsHistory"
+    IL_00a1: ldloc.0
+    IL_00a2: call MethodSpec#112
+    IL_00a7: stloc.1
+    IL_00a8: leave.s IL_00b5
+    IL_00aa: callvirt System.Exception::get_Message
+    IL_00af: newobj System.Exception::.ctor
+    IL_00b4: throw
+    IL_00b5: ldloc.1
+    IL_00b6: ret
+
+; Architecture.BLL.SMS.SmsHistory::getNotificationDataByGroupId  (rva=0x1c2d4, fat header, code_size=138, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@OrganizationId"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldarg.0
+    IL_0019: box System.Int32
+    IL_001e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0023: callvirt TypeSpec#10::Add
+    IL_0028: ldloc.0
+    IL_0029: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002e: dup
+    IL_002f: ldstr ldstr "@CompanyId"
+    IL_0034: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0039: dup
+    IL_003a: ldarg.1
+    IL_003b: box System.Int32
+    IL_0040: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0045: callvirt TypeSpec#10::Add
+    IL_004a: ldarg.2
+    IL_004b: brfalse.s IL_006f
+    IL_004d: ldloc.0
+    IL_004e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0053: dup
+    IL_0054: ldstr ldstr "@GroupId"
+    IL_0059: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005e: dup
+    IL_005f: ldarg.2
+    IL_0060: box System.Int32
+    IL_0065: callvirt System.Data.Common.DbParameter::set_Value
+    IL_006a: callvirt TypeSpec#10::Add
+    IL_006f: ldstr ldstr "usp_getNotificationDataByGroupId"
+    IL_0074: ldloc.0
+    IL_0075: call MethodSpec#112
+    IL_007a: stloc.1
+    IL_007b: leave.s IL_0088
+    IL_007d: callvirt System.Exception::get_Message
+    IL_0082: newobj System.Exception::.ctor
+    IL_0087: throw
+    IL_0088: ldloc.1
+    IL_0089: ret
+
+; Architecture.BLL.SMS.SmsHistory::.ctor  (rva=0x1c37c, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.BLL.SMS.SmsScreenParameterList
+====================================================================================================
+
+; Architecture.BLL.SMS.SmsScreenParameterList::Save  (rva=0x1c384, fat header, code_size=32, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj Architecture.DAL.SMS.SmsScreenParameterList::.ctor
+    IL_0005: ldarg.0
+    IL_0006: ldstr ldstr "Sp_SmsScreenParameterList_Insert"
+    IL_000b: call Architecture.DAL.SMS.SmsScreenParameterList::SetData
+    IL_0010: stloc.0
+    IL_0011: leave.s IL_001e
+    IL_0013: callvirt System.Exception::get_Message
+    IL_0018: newobj System.Exception::.ctor
+    IL_001d: throw
+    IL_001e: ldloc.0
+    IL_001f: ret
+
+; Architecture.BLL.SMS.SmsScreenParameterList::GetParameter  (rva=0x1c3c0, fat header, code_size=75, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldarg.0
+    IL_0007: callvirt Architecture.Model.SMS.SmsScreenParameterList::get_ScreenId
+    IL_000c: brfalse.s IL_0030
+    IL_000e: ldloc.0
+    IL_000f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0014: dup
+    IL_0015: ldstr ldstr "@ScreenId"
+    IL_001a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_001f: dup
+    IL_0020: ldarg.0
+    IL_0021: callvirt Architecture.Model.SMS.SmsScreenParameterList::get_ScreenId
+    IL_0026: callvirt System.Data.Common.DbParameter::set_Value
+    IL_002b: callvirt TypeSpec#10::Add
+    IL_0030: ldstr ldstr "Sp_SmsScreenParameterList_GetAllMethod"
+    IL_0035: ldloc.0
+    IL_0036: call MethodSpec#114
+    IL_003b: stloc.1
+    IL_003c: leave.s IL_0049
+    IL_003e: callvirt System.Exception::get_Message
+    IL_0043: newobj System.Exception::.ctor
+    IL_0048: throw
+    IL_0049: ldloc.1
+    IL_004a: ret
+
+; Architecture.BLL.SMS.SmsScreenParameterList::.ctor  (rva=0x1c428, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.BLL.SMS.SMSTemplateConfigurations
+====================================================================================================
+
+; Architecture.BLL.SMS.SMSTemplateConfigurations::GetScreensActiveUsers  (rva=0x1c430, fat header, code_size=178, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "GetMessageActiveReceivers"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldloc.0
+    IL_0028: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002d: dup
+    IL_002e: ldstr ldstr "@ScreenName"
+    IL_0033: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0038: dup
+    IL_0039: ldarg.0
+    IL_003a: callvirt Architecture.Model.ReportsParameters::get_ScreenName
+    IL_003f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0044: callvirt TypeSpec#10::Add
+    IL_0049: ldloc.0
+    IL_004a: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_004f: dup
+    IL_0050: ldstr ldstr "@OrganizationId"
+    IL_0055: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005a: dup
+    IL_005b: ldarg.0
+    IL_005c: callvirt Architecture.Model.ReportsParameters::get_OrganizationId
+    IL_0061: box System.Int32
+    IL_0066: callvirt System.Data.Common.DbParameter::set_Value
+    IL_006b: callvirt TypeSpec#10::Add
+    IL_0070: ldloc.0
+    IL_0071: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0076: dup
+    IL_0077: ldstr ldstr "@CompanyId"
+    IL_007c: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0081: dup
+    IL_0082: ldarg.0
+    IL_0083: callvirt Architecture.Model.ReportsParameters::get_CompanyId
+    IL_0088: box System.Int32
+    IL_008d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0092: callvirt TypeSpec#10::Add
+    IL_0097: ldstr ldstr "Sp_SMS_GetAllMethod"
+    IL_009c: ldloc.0
+    IL_009d: call MethodSpec#115
+    IL_00a2: stloc.1
+    IL_00a3: leave.s IL_00b0
+    IL_00a5: callvirt System.Exception::get_Message
+    IL_00aa: newobj System.Exception::.ctor
+    IL_00af: throw
+    IL_00b0: ldloc.1
+    IL_00b1: ret
+
+; Architecture.BLL.SMS.SMSTemplateConfigurations::GetScreens  (rva=0x1c500, fat header, code_size=100, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "GetScreensByModuleId"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldloc.0
+    IL_0028: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002d: dup
+    IL_002e: ldstr ldstr "@ModuleId"
+    IL_0033: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0038: dup
+    IL_0039: ldarg.0
+    IL_003a: box System.Int32
+    IL_003f: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0044: callvirt TypeSpec#10::Add
+    IL_0049: ldstr ldstr "Sp_ScreenDefinition_GetAllMethod"
+    IL_004e: ldloc.0
+    IL_004f: call MethodSpec#91
+    IL_0054: stloc.1
+    IL_0055: leave.s IL_0062
+    IL_0057: callvirt System.Exception::get_Message
+    IL_005c: newobj System.Exception::.ctor
+    IL_0061: throw
+    IL_0062: ldloc.1
+    IL_0063: ret
+
+; Architecture.BLL.SMS.SMSTemplateConfigurations::.ctor  (rva=0x1c580, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.BLL.SMS.tblAllocateTemplateToGroup
+====================================================================================================
+
+; Architecture.BLL.SMS.tblAllocateTemplateToGroup::Save  (rva=0x1c588, fat header, code_size=32, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj Architecture.DAL.SMS.tblAllocateTemplateToGroup::.ctor
+    IL_0005: ldarg.0
+    IL_0006: ldstr ldstr "Sp_tblAllocateTemplateToGroup_Insert"
+    IL_000b: call Architecture.DAL.SMS.tblAllocateTemplateToGroup::SetData
+    IL_0010: stloc.0
+    IL_0011: leave.s IL_001e
+    IL_0013: callvirt System.Exception::get_Message
+    IL_0018: newobj System.Exception::.ctor
+    IL_001d: throw
+    IL_001e: ldloc.0
+    IL_001f: ret
+
+; Architecture.BLL.SMS.tblAllocateTemplateToGroup::GetTemplate  (rva=0x1c5c4, fat header, code_size=186, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "GetMessageBody"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldarg.0
+    IL_0028: callvirt Architecture.Model.SMS.tblAllocateTemplateToGroup::get_ScreenName
+    IL_002d: brfalse.s IL_0051
+    IL_002f: ldloc.0
+    IL_0030: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0035: dup
+    IL_0036: ldstr ldstr "@ScreenName"
+    IL_003b: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0040: dup
+    IL_0041: ldarg.0
+    IL_0042: callvirt Architecture.Model.SMS.tblAllocateTemplateToGroup::get_ScreenName
+    IL_0047: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004c: callvirt TypeSpec#10::Add
+    IL_0051: ldloc.0
+    IL_0052: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0057: dup
+    IL_0058: ldstr ldstr "@OrganizationId"
+    IL_005d: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0062: dup
+    IL_0063: ldarg.0
+    IL_0064: callvirt Architecture.Model.SMS.tblAllocateTemplateToGroup::get_OrganizationId
+    IL_0069: box System.Int32
+    IL_006e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0073: callvirt TypeSpec#10::Add
+    IL_0078: ldloc.0
+    IL_0079: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_007e: dup
+    IL_007f: ldstr ldstr "@CompanyId"
+    IL_0084: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0089: dup
+    IL_008a: ldarg.0
+    IL_008b: callvirt Architecture.Model.SMS.tblAllocateTemplateToGroup::get_CompanyId
+    IL_0090: box System.Int32
+    IL_0095: callvirt System.Data.Common.DbParameter::set_Value
+    IL_009a: callvirt TypeSpec#10::Add
+    IL_009f: ldstr ldstr "Sp_SMS_GetAllMethod"
+    IL_00a4: ldloc.0
+    IL_00a5: call MethodSpec#112
+    IL_00aa: stloc.1
+    IL_00ab: leave.s IL_00b8
+    IL_00ad: callvirt System.Exception::get_Message
+    IL_00b2: newobj System.Exception::.ctor
+    IL_00b7: throw
+    IL_00b8: ldloc.1
+    IL_00b9: ret
+
+; Architecture.BLL.SMS.tblAllocateTemplateToGroup::.ctor  (rva=0x1c69c, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.BLL.SMS.tblReceiverGroup
+====================================================================================================
+
+; Architecture.BLL.SMS.tblReceiverGroup::GetAll  (rva=0x1c6a4, fat header, code_size=162, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "GetMessageBody"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldloc.0
+    IL_0028: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002d: dup
+    IL_002e: ldstr ldstr "@OrganizationId"
+    IL_0033: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0038: dup
+    IL_0039: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_003e: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0043: box System.Int32
+    IL_0048: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004d: callvirt TypeSpec#10::Add
+    IL_0052: ldloc.0
+    IL_0053: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0058: dup
+    IL_0059: ldstr ldstr "@CompanyId"
+    IL_005e: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0063: dup
+    IL_0064: ldsfld Architecture.Common.clsGlobalVariables::UserAccount
+    IL_0069: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_006e: box System.Int32
+    IL_0073: call Architecture.Common.Conversion::ToInt
+    IL_0078: box System.Int32
+    IL_007d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0082: callvirt TypeSpec#10::Add
+    IL_0087: ldstr ldstr "Sp_SMS_GetAllMethod"
+    IL_008c: ldloc.0
+    IL_008d: call MethodSpec#116
+    IL_0092: stloc.1
+    IL_0093: leave.s IL_00a0
+    IL_0095: callvirt System.Exception::get_Message
+    IL_009a: newobj System.Exception::.ctor
+    IL_009f: throw
+    IL_00a0: ldloc.1
+    IL_00a1: ret
+
+; Architecture.BLL.SMS.tblReceiverGroup::GetAllGroup  (rva=0x1c764, fat header, code_size=144, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "ReadAll"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldloc.0
+    IL_0028: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_002d: dup
+    IL_002e: ldstr ldstr "@OrganizationId"
+    IL_0033: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0038: dup
+    IL_0039: ldarg.0
+    IL_003a: callvirt Architecture.Model.SMS.tblReceiverGroup::get_OrganizationId
+    IL_003f: box System.Int32
+    IL_0044: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0049: callvirt TypeSpec#10::Add
+    IL_004e: ldloc.0
+    IL_004f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0054: dup
+    IL_0055: ldstr ldstr "@CompanyId"
+    IL_005a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_005f: dup
+    IL_0060: ldarg.0
+    IL_0061: callvirt Architecture.Model.SMS.tblReceiverGroup::get_CompanyId
+    IL_0066: box System.Int32
+    IL_006b: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0070: callvirt TypeSpec#10::Add
+    IL_0075: ldstr ldstr "Sp_tblReceiverGroup_GetAllMethod"
+    IL_007a: ldloc.0
+    IL_007b: call MethodSpec#116
+    IL_0080: stloc.1
+    IL_0081: leave.s IL_008e
+    IL_0083: callvirt System.Exception::get_Message
+    IL_0088: newobj System.Exception::.ctor
+    IL_008d: throw
+    IL_008e: ldloc.1
+    IL_008f: ret
+
+; Architecture.BLL.SMS.tblReceiverGroup::GetAllocateGroup  (rva=0x1c810, fat header, code_size=186, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#10::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_000c: dup
+    IL_000d: ldstr ldstr "@Activity"
+    IL_0012: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0017: dup
+    IL_0018: ldstr ldstr "ReadAllocateGrouptoScreen"
+    IL_001d: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0022: callvirt TypeSpec#10::Add
+    IL_0027: ldarg.0
+    IL_0028: callvirt Architecture.Model.SMS.tblReceiverGroup::get_ScreenName
+    IL_002d: brfalse.s IL_0051
+    IL_002f: ldloc.0
+    IL_0030: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0035: dup
+    IL_0036: ldstr ldstr "@ScreenName"
+    IL_003b: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0040: dup
+    IL_0041: ldarg.0
+    IL_0042: callvirt Architecture.Model.SMS.tblReceiverGroup::get_ScreenName
+    IL_0047: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004c: callvirt TypeSpec#10::Add
+    IL_0051: ldloc.0
+    IL_0052: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0057: dup
+    IL_0058: ldstr ldstr "@OrganizationId"
+    IL_005d: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0062: dup
+    IL_0063: ldarg.0
+    IL_0064: callvirt Architecture.Model.SMS.tblReceiverGroup::get_OrganizationId
+    IL_0069: box System.Int32
+    IL_006e: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0073: callvirt TypeSpec#10::Add
+    IL_0078: ldloc.0
+    IL_0079: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_007e: dup
+    IL_007f: ldstr ldstr "@CompanyId"
+    IL_0084: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0089: dup
+    IL_008a: ldarg.0
+    IL_008b: callvirt Architecture.Model.SMS.tblReceiverGroup::get_CompanyId
+    IL_0090: box System.Int32
+    IL_0095: callvirt System.Data.Common.DbParameter::set_Value
+    IL_009a: callvirt TypeSpec#10::Add
+    IL_009f: ldstr ldstr "Sp_tblReceiverGroup_GetAllMethod"
+    IL_00a4: ldloc.0
+    IL_00a5: call MethodSpec#116
+    IL_00aa: stloc.1
+    IL_00ab: leave.s IL_00b8
+    IL_00ad: callvirt System.Exception::get_Message
+    IL_00b2: newobj System.Exception::.ctor
+    IL_00b7: throw
+    IL_00b8: ldloc.1
+    IL_00b9: ret
+
+; Architecture.BLL.SMS.tblReceiverGroup::.ctor  (rva=0x1c8e8, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret

@@ -1,0 +1,1376 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.BlockListVehicles
+====================================================================================================
+
+; Architecture.WinApp.BlockListVehicles::.ctor  (rva=0x878cd, tiny header, code_size=31, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj Architecture.Model.UserAccount::.ctor
+    IL_0006: stfld Architecture.WinApp.BlockListVehicles::UserAccount
+    IL_000b: ldarg.0
+    IL_000c: call System.Windows.Forms.Form::.ctor
+    IL_0011: ldarg.0
+    IL_0012: call Architecture.WinApp.BlockListVehicles::InitializeComponent
+    IL_0017: ldarg.0
+    IL_0018: ldarg.1
+    IL_0019: stfld Architecture.WinApp.BlockListVehicles::UserAccount
+    IL_001e: ret
+
+; Architecture.WinApp.BlockListVehicles::DefineCropYear_Load  (rva=0x878ed, tiny header, code_size=31, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0006: callvirt System.Windows.Forms.Control::Focus
+    IL_000b: pop
+    IL_000c: ldarg.0
+    IL_000d: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_0012: ldc.i4.0
+    IL_0013: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0018: ldarg.0
+    IL_0019: call Architecture.WinApp.BlockListVehicles::BindHistory
+    IL_001e: ret
+
+; Architecture.WinApp.BlockListVehicles::btnsave_Click  (rva=0x87910, fat header, code_size=297, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.BlockListVehicles::FormValidation
+    IL_0006: brtrue.s IL_000d
+    IL_0008: leave IL_0128
+    IL_000d: ldarg.0
+    IL_000e: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0013: callvirt Janus.Windows.GridEX.GridEX::get_RowCount
+    IL_0018: ldc.i4.0
+    IL_0019: ble.s IL_0085
+    IL_001b: ldarg.0
+    IL_001c: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0021: callvirt Janus.Windows.GridEX.GridEX::GetRows
+    IL_0026: stloc.1
+    IL_0027: ldc.i4.0
+    IL_0028: stloc.2
+    IL_0029: br.s IL_007f
+    IL_002b: ldloc.1
+    IL_002c: ldloc.2
+    IL_002d: ldelem.ref
+    IL_002e: stloc.3
+    IL_002f: ldloc.3
+    IL_0030: callvirt Janus.Windows.GridEX.GridEXRow::get_RowType
+    IL_0035: brtrue.s IL_007b
+    IL_0037: ldarg.0
+    IL_0038: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_003d: callvirt System.Windows.Forms.Control::get_Text
+    IL_0042: ldloc.3
+    IL_0043: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0048: ldstr ldstr "VehicleNo"
+    IL_004d: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0052: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0057: call Architecture.Common.Conversion::ToString
+    IL_005c: call System.String::op_Equality
+    IL_0061: brfalse.s IL_007b
+    IL_0063: ldstr ldstr "Vehicle No Is Already Present"
+    IL_0068: ldstr ldstr "Warning Message"
+    IL_006d: ldc.i4.0
+    IL_006e: ldc.i4.s 48
+    IL_0070: call System.Windows.Forms.MessageBox::Show
+    IL_0075: pop
+    IL_0076: leave IL_0128
+    IL_007b: ldloc.2
+    IL_007c: ldc.i4.1
+    IL_007d: add
+    IL_007e: stloc.2
+    IL_007f: ldloc.2
+    IL_0080: ldloc.1
+    IL_0081: ldlen
+    IL_0082: conv.i4
+    IL_0083: blt.s IL_002b
+    IL_0085: newobj Architecture.Model.BlockListVehicles::.ctor
+    IL_008a: dup
+    IL_008b: ldc.i4.0
+    IL_008c: callvirt Architecture.Model.BlockListVehicles::set_Id
+    IL_0091: dup
+    IL_0092: ldarg.0
+    IL_0093: ldfld Architecture.WinApp.BlockListVehicles::UserAccount
+    IL_0098: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_009d: callvirt Architecture.Model.BlockListVehicles::set_OrganizationId
+    IL_00a2: dup
+    IL_00a3: ldarg.0
+    IL_00a4: ldfld Architecture.WinApp.BlockListVehicles::UserAccount
+    IL_00a9: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_00ae: callvirt Architecture.Model.BlockListVehicles::set_CompanyId
+    IL_00b3: dup
+    IL_00b4: ldarg.0
+    IL_00b5: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_00ba: callvirt System.Windows.Forms.Control::get_Text
+    IL_00bf: call Architecture.Common.Conversion::ToString
+    IL_00c4: callvirt Architecture.Model.BlockListVehicles::set_VehicleNo
+    IL_00c9: dup
+    IL_00ca: ldarg.0
+    IL_00cb: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_00d0: callvirt System.Windows.Forms.Control::get_Text
+    IL_00d5: call Architecture.Common.Conversion::ToString
+    IL_00da: callvirt Architecture.Model.BlockListVehicles::set_Remarks
+    IL_00df: call Architecture.BLL.BlockListVehicles::Save
+    IL_00e4: stloc.0
+    IL_00e5: ldloc.0
+    IL_00e6: ldc.i4.1
+    IL_00e7: blt.s IL_0105
+    IL_00e9: ldstr ldstr "Record Save Successfully...["
+    IL_00ee: ldloca.s 0
+    IL_00f0: call System.Int32::ToString
+    IL_00f5: ldstr ldstr "]"
+    IL_00fa: call System.String::Concat
+    IL_00ff: call System.Windows.Forms.MessageBox::Show
+    IL_0104: pop
+    IL_0105: ldarg.0
+    IL_0106: call Architecture.WinApp.BlockListVehicles::BindHistory
+    IL_010b: ldarg.0
+    IL_010c: call Architecture.WinApp.BlockListVehicles::formReFresh
+    IL_0111: leave.s IL_0128
+    IL_0113: callvirt System.Exception::get_Message
+    IL_0118: ldstr ldstr "Error Message"
+    IL_011d: ldc.i4.0
+    IL_011e: ldc.i4.s 16
+    IL_0120: call System.Windows.Forms.MessageBox::Show
+    IL_0125: pop
+    IL_0126: leave.s IL_0128
+    IL_0128: ret
+
+; Architecture.WinApp.BlockListVehicles::BindHistory  (rva=0x87a64, fat header, code_size=354, max_stack=6, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.BlockListVehicles::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.BlockListVehicles::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.BlockListVehicles::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.BlockListVehicles::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0022: callvirt Architecture.Model.BlockListVehicles::set_CompanyId
+    IL_0027: call Architecture.BLL.BlockListVehicles::GetAll
+    IL_002c: stloc.0
+    IL_002d: ldloc.0
+    IL_002e: callvirt System.Data.DataTable::get_Rows
+    IL_0033: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0038: ldc.i4.0
+    IL_0039: ble IL_0147
+    IL_003e: newobj System.Data.DataTable::.ctor
+    IL_0043: stloc.1
+    IL_0044: ldloc.1
+    IL_0045: callvirt System.Data.DataTable::get_Columns
+    IL_004a: ldstr ldstr "Id"
+    IL_004f: callvirt System.Data.DataColumnCollection::Add
+    IL_0054: pop
+    IL_0055: ldloc.1
+    IL_0056: callvirt System.Data.DataTable::get_Columns
+    IL_005b: ldstr ldstr "VehicleNo"
+    IL_0060: callvirt System.Data.DataColumnCollection::Add
+    IL_0065: pop
+    IL_0066: ldloc.1
+    IL_0067: callvirt System.Data.DataTable::get_Columns
+    IL_006c: ldstr ldstr "Remarks"
+    IL_0071: callvirt System.Data.DataColumnCollection::Add
+    IL_0076: pop
+    IL_0077: ldc.i4.0
+    IL_0078: stloc.2
+    IL_0079: br.s IL_00dc
+    IL_007b: ldloc.1
+    IL_007c: callvirt System.Data.DataTable::get_Rows
+    IL_0081: ldc.i4.3
+    IL_0082: newarr System.Object
+    IL_0087: dup
+    IL_0088: ldc.i4.0
+    IL_0089: ldloc.0
+    IL_008a: callvirt System.Data.DataTable::get_Rows
+    IL_008f: ldloc.2
+    IL_0090: callvirt System.Data.DataRowCollection::get_Item
+    IL_0095: ldstr ldstr "Id"
+    IL_009a: callvirt System.Data.DataRow::get_Item
+    IL_009f: stelem.ref
+    IL_00a0: dup
+    IL_00a1: ldc.i4.1
+    IL_00a2: ldloc.0
+    IL_00a3: callvirt System.Data.DataTable::get_Rows
+    IL_00a8: ldloc.2
+    IL_00a9: callvirt System.Data.DataRowCollection::get_Item
+    IL_00ae: ldstr ldstr "VehicleNo"
+    IL_00b3: callvirt System.Data.DataRow::get_Item
+    IL_00b8: stelem.ref
+    IL_00b9: dup
+    IL_00ba: ldc.i4.2
+    IL_00bb: ldloc.0
+    IL_00bc: callvirt System.Data.DataTable::get_Rows
+    IL_00c1: ldloc.2
+    IL_00c2: callvirt System.Data.DataRowCollection::get_Item
+    IL_00c7: ldstr ldstr "Remarks"
+    IL_00cc: callvirt System.Data.DataRow::get_Item
+    IL_00d1: stelem.ref
+    IL_00d2: callvirt System.Data.DataRowCollection::Add
+    IL_00d7: pop
+    IL_00d8: ldloc.2
+    IL_00d9: ldc.i4.1
+    IL_00da: add
+    IL_00db: stloc.2
+    IL_00dc: ldloc.2
+    IL_00dd: ldloc.0
+    IL_00de: callvirt System.Data.DataTable::get_Rows
+    IL_00e3: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_00e8: blt.s IL_007b
+    IL_00ea: ldarg.0
+    IL_00eb: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_00f0: ldloc.1
+    IL_00f1: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_00f6: ldarg.0
+    IL_00f7: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_00fc: callvirt Janus.Windows.GridEX.GridEX::RetrieveStructure
+    IL_0101: ldarg.0
+    IL_0102: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0107: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_010c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0111: ldstr ldstr "Id"
+    IL_0116: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_011b: ldc.i4.0
+    IL_011c: callvirt Janus.Windows.GridEX.GridEXColumn::set_Visible
+    IL_0121: ldarg.0
+    IL_0122: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0127: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_012c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0131: ldstr ldstr "Remarks"
+    IL_0136: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_013b: ldc.i4 400
+    IL_0140: callvirt Janus.Windows.GridEX.GridEXColumn::set_Width
+    IL_0145: br.s IL_0152
+    IL_0147: ldarg.0
+    IL_0148: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_014d: callvirt Janus.Windows.GridEX.GridEX::ClearStructure
+    IL_0152: leave.s IL_0161
+    IL_0154: callvirt System.Exception::get_Message
+    IL_0159: call System.Windows.Forms.MessageBox::Show
+    IL_015e: pop
+    IL_015f: leave.s IL_0161
+    IL_0161: ret
+
+; Architecture.WinApp.BlockListVehicles::grdcropyear_DoubleClick  (rva=0x87bf0, fat header, code_size=146, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0006: ldc.i4.0
+    IL_0007: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_000c: ldarg.0
+    IL_000d: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_0012: ldc.i4.1
+    IL_0013: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0018: ldarg.0
+    IL_0019: ldc.i4.1
+    IL_001a: stfld Architecture.WinApp.BlockListVehicles::UpdateMood
+    IL_001f: newobj Architecture.Model.BlockListVehicles::.ctor
+    IL_0024: stloc.0
+    IL_0025: ldarg.0
+    IL_0026: ldarg.0
+    IL_0027: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_002c: callvirt Janus.Windows.GridEX.GridEX::get_CurrentRow
+    IL_0031: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0036: ldstr ldstr "Id"
+    IL_003b: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0040: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0045: callvirt System.Object::ToString
+    IL_004a: call Architecture.Common.Conversion::ToInt
+    IL_004f: stfld Architecture.WinApp.BlockListVehicles::RecId
+    IL_0054: ldarg.0
+    IL_0055: ldfld Architecture.WinApp.BlockListVehicles::RecId
+    IL_005a: call Architecture.BLL.BlockListVehicles::GetByID
+    IL_005f: stloc.0
+    IL_0060: ldarg.0
+    IL_0061: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0066: ldloc.0
+    IL_0067: callvirt Architecture.Model.BlockListVehicles::get_VehicleNo
+    IL_006c: callvirt System.Windows.Forms.Control::set_Text
+    IL_0071: ldarg.0
+    IL_0072: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_0077: ldloc.0
+    IL_0078: callvirt Architecture.Model.BlockListVehicles::get_Remarks
+    IL_007d: callvirt System.Windows.Forms.Control::set_Text
+    IL_0082: leave.s IL_0091
+    IL_0084: callvirt System.Exception::get_Message
+    IL_0089: call System.Windows.Forms.MessageBox::Show
+    IL_008e: pop
+    IL_008f: leave.s IL_0091
+    IL_0091: ret
+
+; Architecture.WinApp.BlockListVehicles::FormValidation  (rva=0x87ca0, tiny header, code_size=55, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0006: callvirt System.Windows.Forms.Control::get_Text
+    IL_000b: callvirt System.String::Trim
+    IL_0010: ldsfld System.String::Empty
+    IL_0015: call System.String::op_Equality
+    IL_001a: brfalse.s IL_0035
+    IL_001c: ldstr ldstr "Vehicle No Field is Required"
+    IL_0021: call System.Windows.Forms.MessageBox::Show
+    IL_0026: pop
+    IL_0027: ldarg.0
+    IL_0028: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_002d: callvirt System.Windows.Forms.Control::Focus
+    IL_0032: pop
+    IL_0033: ldc.i4.0
+    IL_0034: ret
+    IL_0035: ldc.i4.1
+    IL_0036: ret
+
+; Architecture.WinApp.BlockListVehicles::btnUpdate_Click  (rva=0x87cd8, fat header, code_size=347, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.BlockListVehicles::FormValidation
+    IL_0006: brtrue.s IL_000d
+    IL_0008: leave IL_015a
+    IL_000d: ldarg.0
+    IL_000e: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0013: callvirt Janus.Windows.GridEX.GridEX::get_RowCount
+    IL_0018: ldc.i4.0
+    IL_0019: ble IL_00a2
+    IL_001e: ldarg.0
+    IL_001f: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0024: callvirt Janus.Windows.GridEX.GridEX::GetRows
+    IL_0029: stloc.1
+    IL_002a: ldc.i4.0
+    IL_002b: stloc.2
+    IL_002c: br.s IL_009c
+    IL_002e: ldloc.1
+    IL_002f: ldloc.2
+    IL_0030: ldelem.ref
+    IL_0031: stloc.3
+    IL_0032: ldloc.3
+    IL_0033: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0038: ldstr ldstr "Id"
+    IL_003d: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_0042: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0047: call Architecture.Common.Conversion::ToInt
+    IL_004c: ldarg.0
+    IL_004d: ldfld Architecture.WinApp.BlockListVehicles::RecId
+    IL_0052: beq.s IL_0098
+    IL_0054: ldarg.0
+    IL_0055: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_005a: callvirt System.Windows.Forms.Control::get_Text
+    IL_005f: ldloc.3
+    IL_0060: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0065: ldstr ldstr "VehicleNo"
+    IL_006a: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_006f: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0074: call Architecture.Common.Conversion::ToString
+    IL_0079: call System.String::op_Equality
+    IL_007e: brfalse.s IL_0098
+    IL_0080: ldstr ldstr "Vehicle No Is Already Present"
+    IL_0085: ldstr ldstr "Warning Message"
+    IL_008a: ldc.i4.0
+    IL_008b: ldc.i4.s 48
+    IL_008d: call System.Windows.Forms.MessageBox::Show
+    IL_0092: pop
+    IL_0093: leave IL_015a
+    IL_0098: ldloc.2
+    IL_0099: ldc.i4.1
+    IL_009a: add
+    IL_009b: stloc.2
+    IL_009c: ldloc.2
+    IL_009d: ldloc.1
+    IL_009e: ldlen
+    IL_009f: conv.i4
+    IL_00a0: blt.s IL_002e
+    IL_00a2: newobj Architecture.Model.BlockListVehicles::.ctor
+    IL_00a7: dup
+    IL_00a8: ldarg.0
+    IL_00a9: ldfld Architecture.WinApp.BlockListVehicles::RecId
+    IL_00ae: callvirt Architecture.Model.BlockListVehicles::set_Id
+    IL_00b3: dup
+    IL_00b4: ldarg.0
+    IL_00b5: ldfld Architecture.WinApp.BlockListVehicles::UserAccount
+    IL_00ba: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_00bf: callvirt Architecture.Model.BlockListVehicles::set_OrganizationId
+    IL_00c4: dup
+    IL_00c5: ldarg.0
+    IL_00c6: ldfld Architecture.WinApp.BlockListVehicles::UserAccount
+    IL_00cb: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_00d0: callvirt Architecture.Model.BlockListVehicles::set_CompanyId
+    IL_00d5: dup
+    IL_00d6: ldarg.0
+    IL_00d7: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_00dc: callvirt System.Windows.Forms.Control::get_Text
+    IL_00e1: call Architecture.Common.Conversion::ToString
+    IL_00e6: callvirt Architecture.Model.BlockListVehicles::set_VehicleNo
+    IL_00eb: dup
+    IL_00ec: ldarg.0
+    IL_00ed: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_00f2: callvirt System.Windows.Forms.Control::get_Text
+    IL_00f7: call Architecture.Common.Conversion::ToString
+    IL_00fc: callvirt Architecture.Model.BlockListVehicles::set_Remarks
+    IL_0101: call Architecture.BLL.BlockListVehicles::Save
+    IL_0106: stloc.0
+    IL_0107: ldloc.0
+    IL_0108: ldc.i4.1
+    IL_0109: blt.s IL_013f
+    IL_010b: ldstr ldstr "Record Update Successfully...["
+    IL_0110: ldloca.s 0
+    IL_0112: call System.Int32::ToString
+    IL_0117: ldstr ldstr "]"
+    IL_011c: call System.String::Concat
+    IL_0121: call System.Windows.Forms.MessageBox::Show
+    IL_0126: pop
+    IL_0127: ldarg.0
+    IL_0128: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_012d: ldc.i4.1
+    IL_012e: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0133: ldarg.0
+    IL_0134: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_0139: ldc.i4.0
+    IL_013a: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_013f: ldarg.0
+    IL_0140: call Architecture.WinApp.BlockListVehicles::BindHistory
+    IL_0145: ldarg.0
+    IL_0146: call Architecture.WinApp.BlockListVehicles::formReFresh
+    IL_014b: leave.s IL_015a
+    IL_014d: callvirt System.Exception::get_Message
+    IL_0152: call System.Windows.Forms.MessageBox::Show
+    IL_0157: pop
+    IL_0158: leave.s IL_015a
+    IL_015a: ret
+
+; Architecture.WinApp.BlockListVehicles::formReFresh  (rva=0x87e5c, fat header, code_size=64, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0006: ldsfld System.String::Empty
+    IL_000b: callvirt System.Windows.Forms.Control::set_Text
+    IL_0010: ldarg.0
+    IL_0011: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_0016: callvirt System.Windows.Forms.TextBoxBase::Clear
+    IL_001b: ldarg.0
+    IL_001c: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0021: callvirt System.Windows.Forms.Control::Focus
+    IL_0026: pop
+    IL_0027: ldarg.0
+    IL_0028: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_002d: ldc.i4.1
+    IL_002e: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0033: ldarg.0
+    IL_0034: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_0039: ldc.i4.0
+    IL_003a: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_003f: ret
+
+; Architecture.WinApp.BlockListVehicles::btnclose_Click  (rva=0x36198, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.Form::Close
+    IL_0006: ret
+
+; Architecture.WinApp.BlockListVehicles::btnnew_Click  (rva=0x87ea8, tiny header, code_size=31, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.BlockListVehicles::formReFresh
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_000c: ldc.i4.0
+    IL_000d: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_0012: ldarg.0
+    IL_0013: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0018: ldc.i4.1
+    IL_0019: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_001e: ret
+
+; Architecture.WinApp.BlockListVehicles::DefineCropYear_KeyDown  (rva=0x87ec8, fat header, code_size=129, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.2
+    IL_0001: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0006: brfalse.s IL_001a
+    IL_0008: ldarg.2
+    IL_0009: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_000e: ldc.i4.s 78
+    IL_0010: bne.un.s IL_001a
+    IL_0012: ldarg.0
+    IL_0013: ldnull
+    IL_0014: ldnull
+    IL_0015: call Architecture.WinApp.BlockListVehicles::btnnew_Click
+    IL_001a: ldarg.2
+    IL_001b: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0020: brfalse.s IL_003c
+    IL_0022: ldarg.2
+    IL_0023: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0028: ldc.i4.s 83
+    IL_002a: bne.un.s IL_003c
+    IL_002c: ldarg.0
+    IL_002d: ldfld Architecture.WinApp.BlockListVehicles::UpdateMood
+    IL_0032: brtrue.s IL_003c
+    IL_0034: ldarg.0
+    IL_0035: ldnull
+    IL_0036: ldnull
+    IL_0037: call Architecture.WinApp.BlockListVehicles::btnsave_Click
+    IL_003c: ldarg.2
+    IL_003d: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0042: brfalse.s IL_005e
+    IL_0044: ldarg.2
+    IL_0045: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_004a: ldc.i4.s 85
+    IL_004c: bne.un.s IL_005e
+    IL_004e: ldarg.0
+    IL_004f: ldfld Architecture.WinApp.BlockListVehicles::UpdateMood
+    IL_0054: brfalse.s IL_005e
+    IL_0056: ldarg.0
+    IL_0057: ldnull
+    IL_0058: ldnull
+    IL_0059: call Architecture.WinApp.BlockListVehicles::btnUpdate_Click
+    IL_005e: ldarg.2
+    IL_005f: callvirt System.Windows.Forms.KeyEventArgs::get_Control
+    IL_0064: brfalse.s IL_0070
+    IL_0066: ldarg.2
+    IL_0067: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_006c: ldc.i4.s 69
+    IL_006e: beq.s IL_007a
+    IL_0070: ldarg.2
+    IL_0071: callvirt System.Windows.Forms.KeyEventArgs::get_KeyCode
+    IL_0076: ldc.i4.s 27
+    IL_0078: bne.un.s IL_0080
+    IL_007a: ldarg.0
+    IL_007b: call System.Windows.Forms.Form::Close
+    IL_0080: ret
+
+; Architecture.WinApp.BlockListVehicles::Dispose  (rva=0x87f55, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0016
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.WinApp.BlockListVehicles::components
+    IL_0009: brfalse.s IL_0016
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.BlockListVehicles::components
+    IL_0011: callvirt System.IDisposable::Dispose
+    IL_0016: ldarg.0
+    IL_0017: ldarg.1
+    IL_0018: call System.Windows.Forms.Form::Dispose
+    IL_001d: ret
+
+; Architecture.WinApp.BlockListVehicles::InitializeComponent  (rva=0x87f74, fat header, code_size=2884, max_stack=6, exception_handlers=no)
+    IL_0000: newobj Janus.Windows.GridEX.GridEXLayout::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldarg.0
+    IL_0007: newobj System.Windows.Forms.Panel::.ctor
+    IL_000c: stfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_0011: ldarg.0
+    IL_0012: newobj Janus.Windows.GridEX.GridEX::.ctor
+    IL_0017: stfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_001c: ldarg.0
+    IL_001d: newobj System.Windows.Forms.Panel::.ctor
+    IL_0022: stfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_0027: ldarg.0
+    IL_0028: newobj System.Windows.Forms.Label::.ctor
+    IL_002d: stfld Architecture.WinApp.BlockListVehicles::label1
+    IL_0032: ldarg.0
+    IL_0033: newobj System.Windows.Forms.TextBox::.ctor
+    IL_0038: stfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_003d: ldarg.0
+    IL_003e: newobj System.Windows.Forms.Label::.ctor
+    IL_0043: stfld Architecture.WinApp.BlockListVehicles::label2
+    IL_0048: ldarg.0
+    IL_0049: newobj System.Windows.Forms.TextBox::.ctor
+    IL_004e: stfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0053: ldarg.0
+    IL_0054: newobj System.Windows.Forms.ToolStrip::.ctor
+    IL_0059: stfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_005e: ldarg.0
+    IL_005f: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_0064: stfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_0069: ldarg.0
+    IL_006a: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_006f: stfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_0074: ldarg.0
+    IL_0075: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_007a: stfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_007f: ldarg.0
+    IL_0080: newobj System.Windows.Forms.Label::.ctor
+    IL_0085: stfld Architecture.WinApp.BlockListVehicles::label23
+    IL_008a: ldarg.0
+    IL_008b: newobj System.Windows.Forms.Panel::.ctor
+    IL_0090: stfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_0095: ldarg.0
+    IL_0096: newobj System.Windows.Forms.Panel::.ctor
+    IL_009b: stfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_00a0: ldarg.0
+    IL_00a1: newobj System.Windows.Forms.Panel::.ctor
+    IL_00a6: stfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_00ab: ldarg.0
+    IL_00ac: newobj System.Windows.Forms.Panel::.ctor
+    IL_00b1: stfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_00b6: ldarg.0
+    IL_00b7: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_00bc: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00c1: ldarg.0
+    IL_00c2: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_00c7: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_00cc: ldarg.0
+    IL_00cd: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_00d2: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00d7: ldarg.0
+    IL_00d8: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_00dd: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00e2: ldarg.0
+    IL_00e3: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_00e8: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00ed: ldarg.0
+    IL_00ee: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_00f3: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_00f8: ldarg.0
+    IL_00f9: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_00fe: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0103: ldarg.0
+    IL_0104: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_0109: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_010e: ldarg.0
+    IL_010f: call System.Windows.Forms.Control::SuspendLayout
+    IL_0114: ldarg.0
+    IL_0115: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_011a: callvirt System.Windows.Forms.Control::get_Controls
+    IL_011f: ldarg.0
+    IL_0120: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0125: callvirt ControlCollection::Add
+    IL_012a: ldarg.0
+    IL_012b: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_0130: ldc.i4.5
+    IL_0131: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0136: ldarg.0
+    IL_0137: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_013c: ldc.i4.0
+    IL_013d: ldc.i4.s 119
+    IL_013f: newobj System.Drawing.Point::.ctor
+    IL_0144: callvirt System.Windows.Forms.Control::set_Location
+    IL_0149: ldarg.0
+    IL_014a: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_014f: ldstr ldstr "panel4"
+    IL_0154: callvirt System.Windows.Forms.Control::set_Name
+    IL_0159: ldarg.0
+    IL_015a: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_015f: ldc.i4 761
+    IL_0164: ldc.i4 331
+    IL_0169: newobj System.Drawing.Size::.ctor
+    IL_016e: callvirt System.Windows.Forms.Control::set_Size
+    IL_0173: ldarg.0
+    IL_0174: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_0179: ldc.i4.3
+    IL_017a: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_017f: ldarg.0
+    IL_0180: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0185: ldc.i4.2
+    IL_0186: callvirt Janus.Windows.GridEX.GridEX::set_AllowEdit
+    IL_018b: ldloc.0
+    IL_018c: ldstr ldstr "<GridEXLayoutData><RootTable><GroupCondition /></RootTable></GridEXLayoutData>"
+    IL_0191: callvirt Janus.Windows.GridEX.GridEXLayout::set_LayoutString
+    IL_0196: ldarg.0
+    IL_0197: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_019c: ldloc.0
+    IL_019d: callvirt Janus.Windows.GridEX.GridEX::set_DesignTimeLayout
+    IL_01a2: ldarg.0
+    IL_01a3: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_01a8: ldc.i4.5
+    IL_01a9: callvirt System.Windows.Forms.Control::set_Dock
+    IL_01ae: ldarg.0
+    IL_01af: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_01b4: ldc.i4.2
+    IL_01b5: callvirt Janus.Windows.GridEX.GridEX::set_FilterMode
+    IL_01ba: ldarg.0
+    IL_01bb: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_01c0: ldc.i4.3
+    IL_01c1: callvirt Janus.Windows.GridEX.GridEX::set_FilterRowButtonStyle
+    IL_01c6: ldarg.0
+    IL_01c7: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_01cc: ldstr ldstr "Verdana"
+    IL_01d1: ldc.r4 8.25
+    IL_01d6: newobj System.Drawing.Font::.ctor
+    IL_01db: callvirt System.Windows.Forms.Control::set_Font
+    IL_01e0: ldarg.0
+    IL_01e1: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_01e6: ldc.i4.0
+    IL_01e7: callvirt Janus.Windows.GridEX.GridEX::set_GroupByBoxVisible
+    IL_01ec: ldarg.0
+    IL_01ed: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_01f2: ldc.i4.0
+    IL_01f3: ldc.i4.0
+    IL_01f4: newobj System.Drawing.Point::.ctor
+    IL_01f9: callvirt System.Windows.Forms.Control::set_Location
+    IL_01fe: ldarg.0
+    IL_01ff: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0204: ldstr ldstr "GridHistory"
+    IL_0209: callvirt System.Windows.Forms.Control::set_Name
+    IL_020e: ldarg.0
+    IL_020f: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0214: ldc.i4.1
+    IL_0215: callvirt Janus.Windows.GridEX.ScrollableBase::set_RecordNavigator
+    IL_021a: ldarg.0
+    IL_021b: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0220: ldc.i4 761
+    IL_0225: ldc.i4 331
+    IL_022a: newobj System.Drawing.Size::.ctor
+    IL_022f: callvirt System.Windows.Forms.Control::set_Size
+    IL_0234: ldarg.0
+    IL_0235: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_023a: ldc.i4.2
+    IL_023b: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0240: ldarg.0
+    IL_0241: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0246: ldc.i4.1
+    IL_0247: callvirt Janus.Windows.GridEX.GridEX::set_TotalRow
+    IL_024c: ldarg.0
+    IL_024d: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0252: ldc.i4.1
+    IL_0253: callvirt Janus.Windows.GridEX.GridEX::set_TotalRowPosition
+    IL_0258: ldarg.0
+    IL_0259: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_025e: ldc.i4.4
+    IL_025f: callvirt Janus.Windows.GridEX.ScrollableBase::set_VisualStyle
+    IL_0264: ldarg.0
+    IL_0265: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_026a: ldarg.0
+    IL_026b: ldftn Architecture.WinApp.BlockListVehicles::grdcropyear_DoubleClick
+    IL_0271: newobj System.EventHandler::.ctor
+    IL_0276: callvirt System.Windows.Forms.Control::add_DoubleClick
+    IL_027b: ldarg.0
+    IL_027c: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_0281: call System.Drawing.Color::get_White
+    IL_0286: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_028b: ldarg.0
+    IL_028c: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_0291: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0296: ldarg.0
+    IL_0297: ldfld Architecture.WinApp.BlockListVehicles::label1
+    IL_029c: callvirt ControlCollection::Add
+    IL_02a1: ldarg.0
+    IL_02a2: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_02a7: callvirt System.Windows.Forms.Control::get_Controls
+    IL_02ac: ldarg.0
+    IL_02ad: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_02b2: callvirt ControlCollection::Add
+    IL_02b7: ldarg.0
+    IL_02b8: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_02bd: callvirt System.Windows.Forms.Control::get_Controls
+    IL_02c2: ldarg.0
+    IL_02c3: ldfld Architecture.WinApp.BlockListVehicles::label2
+    IL_02c8: callvirt ControlCollection::Add
+    IL_02cd: ldarg.0
+    IL_02ce: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_02d3: callvirt System.Windows.Forms.Control::get_Controls
+    IL_02d8: ldarg.0
+    IL_02d9: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_02de: callvirt ControlCollection::Add
+    IL_02e3: ldarg.0
+    IL_02e4: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_02e9: ldc.i4.1
+    IL_02ea: callvirt System.Windows.Forms.Control::set_Dock
+    IL_02ef: ldarg.0
+    IL_02f0: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_02f5: ldc.i4.0
+    IL_02f6: ldc.i4.s 73
+    IL_02f8: newobj System.Drawing.Point::.ctor
+    IL_02fd: callvirt System.Windows.Forms.Control::set_Location
+    IL_0302: ldarg.0
+    IL_0303: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_0308: ldstr ldstr "panel5"
+    IL_030d: callvirt System.Windows.Forms.Control::set_Name
+    IL_0312: ldarg.0
+    IL_0313: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_0318: ldc.i4 761
+    IL_031d: ldc.i4.s 46
+    IL_031f: newobj System.Drawing.Size::.ctor
+    IL_0324: callvirt System.Windows.Forms.Control::set_Size
+    IL_0329: ldarg.0
+    IL_032a: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_032f: ldc.i4.2
+    IL_0330: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0335: ldarg.0
+    IL_0336: ldfld Architecture.WinApp.BlockListVehicles::label1
+    IL_033b: ldc.i4.1
+    IL_033c: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0341: ldarg.0
+    IL_0342: ldfld Architecture.WinApp.BlockListVehicles::label1
+    IL_0347: ldstr ldstr "Microsoft Sans Serif"
+    IL_034c: ldc.r4 9.75
+    IL_0351: ldc.i4.0
+    IL_0352: ldc.i4.3
+    IL_0353: ldc.i4.0
+    IL_0354: newobj System.Drawing.Font::.ctor
+    IL_0359: callvirt System.Windows.Forms.Control::set_Font
+    IL_035e: ldarg.0
+    IL_035f: ldfld Architecture.WinApp.BlockListVehicles::label1
+    IL_0364: ldc.i4 252
+    IL_0369: ldc.i4.s 15
+    IL_036b: newobj System.Drawing.Point::.ctor
+    IL_0370: callvirt System.Windows.Forms.Control::set_Location
+    IL_0375: ldarg.0
+    IL_0376: ldfld Architecture.WinApp.BlockListVehicles::label1
+    IL_037b: ldstr ldstr "label1"
+    IL_0380: callvirt System.Windows.Forms.Control::set_Name
+    IL_0385: ldarg.0
+    IL_0386: ldfld Architecture.WinApp.BlockListVehicles::label1
+    IL_038b: ldc.i4.s 63
+    IL_038d: ldc.i4.s 16
+    IL_038f: newobj System.Drawing.Size::.ctor
+    IL_0394: callvirt System.Windows.Forms.Control::set_Size
+    IL_0399: ldarg.0
+    IL_039a: ldfld Architecture.WinApp.BlockListVehicles::label1
+    IL_039f: ldc.i4.3
+    IL_03a0: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_03a5: ldarg.0
+    IL_03a6: ldfld Architecture.WinApp.BlockListVehicles::label1
+    IL_03ab: ldstr ldstr "Remarks"
+    IL_03b0: callvirt System.Windows.Forms.Control::set_Text
+    IL_03b5: ldarg.0
+    IL_03b6: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_03bb: ldc.i4.1
+    IL_03bc: callvirt System.Windows.Forms.TextBoxBase::set_BorderStyle
+    IL_03c1: ldarg.0
+    IL_03c2: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_03c7: ldstr ldstr "Microsoft Sans Serif"
+    IL_03cc: ldc.r4 9.75
+    IL_03d1: ldc.i4.0
+    IL_03d2: ldc.i4.3
+    IL_03d3: ldc.i4.0
+    IL_03d4: newobj System.Drawing.Font::.ctor
+    IL_03d9: callvirt System.Windows.Forms.Control::set_Font
+    IL_03de: ldarg.0
+    IL_03df: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_03e4: ldc.i4 315
+    IL_03e9: ldc.i4.s 12
+    IL_03eb: newobj System.Drawing.Point::.ctor
+    IL_03f0: callvirt System.Windows.Forms.Control::set_Location
+    IL_03f5: ldarg.0
+    IL_03f6: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_03fb: ldc.i4.1
+    IL_03fc: callvirt System.Windows.Forms.TextBoxBase::set_Multiline
+    IL_0401: ldarg.0
+    IL_0402: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_0407: ldstr ldstr "txtRemarks"
+    IL_040c: callvirt System.Windows.Forms.Control::set_Name
+    IL_0411: ldarg.0
+    IL_0412: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_0417: ldc.i4 361
+    IL_041c: ldc.i4.s 22
+    IL_041e: newobj System.Drawing.Size::.ctor
+    IL_0423: callvirt System.Windows.Forms.Control::set_Size
+    IL_0428: ldarg.0
+    IL_0429: ldfld Architecture.WinApp.BlockListVehicles::txtRemarks
+    IL_042e: ldc.i4.2
+    IL_042f: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0434: ldarg.0
+    IL_0435: ldfld Architecture.WinApp.BlockListVehicles::label2
+    IL_043a: ldc.i4.1
+    IL_043b: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0440: ldarg.0
+    IL_0441: ldfld Architecture.WinApp.BlockListVehicles::label2
+    IL_0446: ldstr ldstr "Microsoft Sans Serif"
+    IL_044b: ldc.r4 9.75
+    IL_0450: ldc.i4.0
+    IL_0451: ldc.i4.3
+    IL_0452: ldc.i4.0
+    IL_0453: newobj System.Drawing.Font::.ctor
+    IL_0458: callvirt System.Windows.Forms.Control::set_Font
+    IL_045d: ldarg.0
+    IL_045e: ldfld Architecture.WinApp.BlockListVehicles::label2
+    IL_0463: ldc.i4.s 11
+    IL_0465: ldc.i4.s 15
+    IL_0467: newobj System.Drawing.Point::.ctor
+    IL_046c: callvirt System.Windows.Forms.Control::set_Location
+    IL_0471: ldarg.0
+    IL_0472: ldfld Architecture.WinApp.BlockListVehicles::label2
+    IL_0477: ldstr ldstr "label2"
+    IL_047c: callvirt System.Windows.Forms.Control::set_Name
+    IL_0481: ldarg.0
+    IL_0482: ldfld Architecture.WinApp.BlockListVehicles::label2
+    IL_0487: ldc.i4.s 77
+    IL_0489: ldc.i4.s 16
+    IL_048b: newobj System.Drawing.Size::.ctor
+    IL_0490: callvirt System.Windows.Forms.Control::set_Size
+    IL_0495: ldarg.0
+    IL_0496: ldfld Architecture.WinApp.BlockListVehicles::label2
+    IL_049b: ldc.i4.1
+    IL_049c: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_04a1: ldarg.0
+    IL_04a2: ldfld Architecture.WinApp.BlockListVehicles::label2
+    IL_04a7: ldstr ldstr "Vehicle No."
+    IL_04ac: callvirt System.Windows.Forms.Control::set_Text
+    IL_04b1: ldarg.0
+    IL_04b2: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_04b7: ldc.i4.1
+    IL_04b8: callvirt System.Windows.Forms.TextBoxBase::set_BorderStyle
+    IL_04bd: ldarg.0
+    IL_04be: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_04c3: ldstr ldstr "Microsoft Sans Serif"
+    IL_04c8: ldc.r4 9.75
+    IL_04cd: ldc.i4.0
+    IL_04ce: ldc.i4.3
+    IL_04cf: ldc.i4.0
+    IL_04d0: newobj System.Drawing.Font::.ctor
+    IL_04d5: callvirt System.Windows.Forms.Control::set_Font
+    IL_04da: ldarg.0
+    IL_04db: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_04e0: ldc.i4.s 89
+    IL_04e2: ldc.i4.s 12
+    IL_04e4: newobj System.Drawing.Point::.ctor
+    IL_04e9: callvirt System.Windows.Forms.Control::set_Location
+    IL_04ee: ldarg.0
+    IL_04ef: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_04f4: ldc.i4.1
+    IL_04f5: callvirt System.Windows.Forms.TextBoxBase::set_Multiline
+    IL_04fa: ldarg.0
+    IL_04fb: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0500: ldstr ldstr "txtVehicleNo"
+    IL_0505: callvirt System.Windows.Forms.Control::set_Name
+    IL_050a: ldarg.0
+    IL_050b: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0510: ldc.i4 158
+    IL_0515: ldc.i4.s 22
+    IL_0517: newobj System.Drawing.Size::.ctor
+    IL_051c: callvirt System.Windows.Forms.Control::set_Size
+    IL_0521: ldarg.0
+    IL_0522: ldfld Architecture.WinApp.BlockListVehicles::txtVehicleNo
+    IL_0527: ldc.i4.0
+    IL_0528: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_052d: ldarg.0
+    IL_052e: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_0533: ldstr ldstr "Segoe UI"
+    IL_0538: ldc.r4 9.75
+    IL_053d: ldc.i4.0
+    IL_053e: ldc.i4.3
+    IL_053f: ldc.i4.0
+    IL_0540: newobj System.Drawing.Font::.ctor
+    IL_0545: callvirt System.Windows.Forms.Control::set_Font
+    IL_054a: ldarg.0
+    IL_054b: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_0550: ldc.i4.s 20
+    IL_0552: ldc.i4.s 20
+    IL_0554: newobj System.Drawing.Size::.ctor
+    IL_0559: callvirt System.Windows.Forms.ToolStrip::set_ImageScalingSize
+    IL_055e: ldarg.0
+    IL_055f: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_0564: callvirt System.Windows.Forms.ToolStrip::get_Items
+    IL_0569: ldc.i4.3
+    IL_056a: newarr System.Windows.Forms.ToolStripItem
+    IL_056f: dup
+    IL_0570: ldc.i4.0
+    IL_0571: ldarg.0
+    IL_0572: ldfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_0577: stelem.ref
+    IL_0578: dup
+    IL_0579: ldc.i4.1
+    IL_057a: ldarg.0
+    IL_057b: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_0580: stelem.ref
+    IL_0581: dup
+    IL_0582: ldc.i4.2
+    IL_0583: ldarg.0
+    IL_0584: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0589: stelem.ref
+    IL_058a: callvirt System.Windows.Forms.ToolStripItemCollection::AddRange
+    IL_058f: ldarg.0
+    IL_0590: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_0595: ldc.i4.0
+    IL_0596: ldc.i4.0
+    IL_0597: newobj System.Drawing.Point::.ctor
+    IL_059c: callvirt System.Windows.Forms.Control::set_Location
+    IL_05a1: ldarg.0
+    IL_05a2: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_05a7: ldstr ldstr "toolStrip1"
+    IL_05ac: callvirt System.Windows.Forms.Control::set_Name
+    IL_05b1: ldarg.0
+    IL_05b2: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_05b7: ldc.i4 761
+    IL_05bc: ldc.i4.s 27
+    IL_05be: newobj System.Drawing.Size::.ctor
+    IL_05c3: callvirt System.Windows.Forms.Control::set_Size
+    IL_05c8: ldarg.0
+    IL_05c9: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_05ce: ldc.i4.3
+    IL_05cf: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_05d4: ldarg.0
+    IL_05d5: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_05da: ldstr ldstr "toolStrip1"
+    IL_05df: callvirt System.Windows.Forms.Control::set_Text
+    IL_05e4: ldarg.0
+    IL_05e5: ldfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_05ea: ldstr ldstr "Segoe UI"
+    IL_05ef: ldc.r4 9.0
+    IL_05f4: ldc.i4.0
+    IL_05f5: ldc.i4.3
+    IL_05f6: ldc.i4.0
+    IL_05f7: newobj System.Drawing.Font::.ctor
+    IL_05fc: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_0601: ldarg.0
+    IL_0602: ldfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_0607: call Architecture.WinApp.Properties.Resources::get_icons8_add_17
+    IL_060c: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_0611: ldarg.0
+    IL_0612: ldfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_0617: call System.Drawing.Color::get_Magenta
+    IL_061c: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_0621: ldarg.0
+    IL_0622: ldfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_0627: ldstr ldstr "btnnew"
+    IL_062c: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_0631: ldarg.0
+    IL_0632: ldfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_0637: ldc.i4.s 55
+    IL_0639: ldc.i4.s 24
+    IL_063b: newobj System.Drawing.Size::.ctor
+    IL_0640: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_0645: ldarg.0
+    IL_0646: ldfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_064b: ldstr ldstr "&New"
+    IL_0650: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_0655: ldarg.0
+    IL_0656: ldfld Architecture.WinApp.BlockListVehicles::btnnew
+    IL_065b: ldarg.0
+    IL_065c: ldftn Architecture.WinApp.BlockListVehicles::btnnew_Click
+    IL_0662: newobj System.EventHandler::.ctor
+    IL_0667: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_066c: ldarg.0
+    IL_066d: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_0672: ldstr ldstr "Segoe UI"
+    IL_0677: ldc.r4 9.0
+    IL_067c: ldc.i4.0
+    IL_067d: ldc.i4.3
+    IL_067e: ldc.i4.0
+    IL_067f: newobj System.Drawing.Font::.ctor
+    IL_0684: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_0689: ldarg.0
+    IL_068a: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_068f: call Architecture.WinApp.Properties.Resources::get_icons8_pencil_16
+    IL_0694: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_0699: ldarg.0
+    IL_069a: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_069f: call System.Drawing.Color::get_Magenta
+    IL_06a4: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_06a9: ldarg.0
+    IL_06aa: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_06af: ldstr ldstr "btnUpdate"
+    IL_06b4: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_06b9: ldarg.0
+    IL_06ba: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_06bf: ldc.i4.s 69
+    IL_06c1: ldc.i4.s 24
+    IL_06c3: newobj System.Drawing.Size::.ctor
+    IL_06c8: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_06cd: ldarg.0
+    IL_06ce: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_06d3: ldstr ldstr "&Update"
+    IL_06d8: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_06dd: ldarg.0
+    IL_06de: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_06e3: ldc.i4.0
+    IL_06e4: callvirt System.Windows.Forms.ToolStripItem::set_Visible
+    IL_06e9: ldarg.0
+    IL_06ea: ldfld Architecture.WinApp.BlockListVehicles::btnUpdate
+    IL_06ef: ldarg.0
+    IL_06f0: ldftn Architecture.WinApp.BlockListVehicles::btnUpdate_Click
+    IL_06f6: newobj System.EventHandler::.ctor
+    IL_06fb: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_0700: ldarg.0
+    IL_0701: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0706: ldstr ldstr "Segoe UI"
+    IL_070b: ldc.r4 9.0
+    IL_0710: ldc.i4.0
+    IL_0711: ldc.i4.3
+    IL_0712: ldc.i4.0
+    IL_0713: newobj System.Drawing.Font::.ctor
+    IL_0718: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_071d: ldarg.0
+    IL_071e: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0723: call Architecture.WinApp.Properties.Resources::get_icons8_save_16
+    IL_0728: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_072d: ldarg.0
+    IL_072e: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0733: call System.Drawing.Color::get_Magenta
+    IL_0738: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_073d: ldarg.0
+    IL_073e: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0743: ldstr ldstr "btnsave"
+    IL_0748: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_074d: ldarg.0
+    IL_074e: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0753: ldc.i4.s 55
+    IL_0755: ldc.i4.s 24
+    IL_0757: newobj System.Drawing.Size::.ctor
+    IL_075c: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_0761: ldarg.0
+    IL_0762: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0767: ldstr ldstr "&Save"
+    IL_076c: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_0771: ldarg.0
+    IL_0772: ldfld Architecture.WinApp.BlockListVehicles::btnsave
+    IL_0777: ldarg.0
+    IL_0778: ldftn Architecture.WinApp.BlockListVehicles::btnsave_Click
+    IL_077e: newobj System.EventHandler::.ctor
+    IL_0783: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_0788: ldarg.0
+    IL_0789: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_078e: ldc.i4.1
+    IL_078f: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0794: ldarg.0
+    IL_0795: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_079a: ldc.i4.s 10
+    IL_079c: ldc.i4.s 110
+    IL_079e: ldc.i4.s 110
+    IL_07a0: call System.Drawing.Color::FromArgb
+    IL_07a5: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_07aa: ldarg.0
+    IL_07ab: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_07b0: ldstr ldstr "Microsoft Sans Serif"
+    IL_07b5: ldc.r4 13.800000190734863
+    IL_07ba: ldc.i4.0
+    IL_07bb: ldc.i4.3
+    IL_07bc: ldc.i4.0
+    IL_07bd: newobj System.Drawing.Font::.ctor
+    IL_07c2: callvirt System.Windows.Forms.Control::set_Font
+    IL_07c7: ldarg.0
+    IL_07c8: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_07cd: call System.Drawing.Color::get_White
+    IL_07d2: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_07d7: ldarg.0
+    IL_07d8: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_07dd: ldc.i4.s 9
+    IL_07df: ldc.i4.s 12
+    IL_07e1: newobj System.Drawing.Point::.ctor
+    IL_07e6: callvirt System.Windows.Forms.Control::set_Location
+    IL_07eb: ldarg.0
+    IL_07ec: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_07f1: ldstr ldstr "label23"
+    IL_07f6: callvirt System.Windows.Forms.Control::set_Name
+    IL_07fb: ldarg.0
+    IL_07fc: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_0801: ldc.i4 166
+    IL_0806: ldc.i4.s 24
+    IL_0808: newobj System.Drawing.Size::.ctor
+    IL_080d: callvirt System.Windows.Forms.Control::set_Size
+    IL_0812: ldarg.0
+    IL_0813: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_0818: ldc.i4.s 25
+    IL_081a: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_081f: ldarg.0
+    IL_0820: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_0825: ldstr ldstr "Block List Vehicles"
+    IL_082a: callvirt System.Windows.Forms.Control::set_Text
+    IL_082f: ldarg.0
+    IL_0830: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_0835: ldc.i4.s 10
+    IL_0837: ldc.i4.s 110
+    IL_0839: ldc.i4.s 110
+    IL_083b: call System.Drawing.Color::FromArgb
+    IL_0840: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0845: ldarg.0
+    IL_0846: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_084b: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0850: ldarg.0
+    IL_0851: ldfld Architecture.WinApp.BlockListVehicles::label23
+    IL_0856: callvirt ControlCollection::Add
+    IL_085b: ldarg.0
+    IL_085c: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_0861: ldc.i4.1
+    IL_0862: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0867: ldarg.0
+    IL_0868: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_086d: ldc.i4.0
+    IL_086e: ldc.i4.0
+    IL_086f: newobj System.Drawing.Point::.ctor
+    IL_0874: callvirt System.Windows.Forms.Control::set_Location
+    IL_0879: ldarg.0
+    IL_087a: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_087f: ldstr ldstr "panel6"
+    IL_0884: callvirt System.Windows.Forms.Control::set_Name
+    IL_0889: ldarg.0
+    IL_088a: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_088f: ldc.i4 761
+    IL_0894: ldc.i4.s 46
+    IL_0896: newobj System.Drawing.Size::.ctor
+    IL_089b: callvirt System.Windows.Forms.Control::set_Size
+    IL_08a0: ldarg.0
+    IL_08a1: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_08a6: ldc.i4.6
+    IL_08a7: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_08ac: ldarg.0
+    IL_08ad: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_08b2: callvirt System.Windows.Forms.Control::get_Controls
+    IL_08b7: ldarg.0
+    IL_08b8: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_08bd: callvirt ControlCollection::Add
+    IL_08c2: ldarg.0
+    IL_08c3: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_08c8: ldc.i4.1
+    IL_08c9: callvirt System.Windows.Forms.Control::set_Dock
+    IL_08ce: ldarg.0
+    IL_08cf: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_08d4: ldc.i4.0
+    IL_08d5: ldc.i4.s 27
+    IL_08d7: newobj System.Drawing.Point::.ctor
+    IL_08dc: callvirt System.Windows.Forms.Control::set_Location
+    IL_08e1: ldarg.0
+    IL_08e2: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_08e7: ldstr ldstr "panel3"
+    IL_08ec: callvirt System.Windows.Forms.Control::set_Name
+    IL_08f1: ldarg.0
+    IL_08f2: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_08f7: ldc.i4 761
+    IL_08fc: ldc.i4.s 46
+    IL_08fe: newobj System.Drawing.Size::.ctor
+    IL_0903: callvirt System.Windows.Forms.Control::set_Size
+    IL_0908: ldarg.0
+    IL_0909: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_090e: ldc.i4.2
+    IL_090f: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0914: ldarg.0
+    IL_0915: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_091a: callvirt System.Windows.Forms.Control::get_Controls
+    IL_091f: ldarg.0
+    IL_0920: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_0925: callvirt ControlCollection::Add
+    IL_092a: ldarg.0
+    IL_092b: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_0930: ldc.i4.1
+    IL_0931: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0936: ldarg.0
+    IL_0937: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_093c: ldc.i4.0
+    IL_093d: ldc.i4.0
+    IL_093e: newobj System.Drawing.Point::.ctor
+    IL_0943: callvirt System.Windows.Forms.Control::set_Location
+    IL_0948: ldarg.0
+    IL_0949: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_094e: ldstr ldstr "panel2"
+    IL_0953: callvirt System.Windows.Forms.Control::set_Name
+    IL_0958: ldarg.0
+    IL_0959: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_095e: ldc.i4 761
+    IL_0963: ldc.i4.s 27
+    IL_0965: newobj System.Drawing.Size::.ctor
+    IL_096a: callvirt System.Windows.Forms.Control::set_Size
+    IL_096f: ldarg.0
+    IL_0970: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_0975: ldc.i4.0
+    IL_0976: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_097b: ldarg.0
+    IL_097c: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_0981: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0986: ldarg.0
+    IL_0987: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_098c: callvirt ControlCollection::Add
+    IL_0991: ldarg.0
+    IL_0992: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_0997: callvirt System.Windows.Forms.Control::get_Controls
+    IL_099c: ldarg.0
+    IL_099d: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_09a2: callvirt ControlCollection::Add
+    IL_09a7: ldarg.0
+    IL_09a8: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_09ad: callvirt System.Windows.Forms.Control::get_Controls
+    IL_09b2: ldarg.0
+    IL_09b3: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_09b8: callvirt ControlCollection::Add
+    IL_09bd: ldarg.0
+    IL_09be: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_09c3: callvirt System.Windows.Forms.Control::get_Controls
+    IL_09c8: ldarg.0
+    IL_09c9: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_09ce: callvirt ControlCollection::Add
+    IL_09d3: ldarg.0
+    IL_09d4: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_09d9: ldc.i4.5
+    IL_09da: callvirt System.Windows.Forms.Control::set_Dock
+    IL_09df: ldarg.0
+    IL_09e0: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_09e5: ldc.i4.0
+    IL_09e6: ldc.i4.0
+    IL_09e7: newobj System.Drawing.Point::.ctor
+    IL_09ec: callvirt System.Windows.Forms.Control::set_Location
+    IL_09f1: ldarg.0
+    IL_09f2: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_09f7: ldstr ldstr "panel1"
+    IL_09fc: callvirt System.Windows.Forms.Control::set_Name
+    IL_0a01: ldarg.0
+    IL_0a02: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_0a07: ldc.i4 761
+    IL_0a0c: ldc.i4 450
+    IL_0a11: newobj System.Drawing.Size::.ctor
+    IL_0a16: callvirt System.Windows.Forms.Control::set_Size
+    IL_0a1b: ldarg.0
+    IL_0a1c: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_0a21: ldc.i4.1
+    IL_0a22: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0a27: ldarg.0
+    IL_0a28: ldc.r4 6.0
+    IL_0a2d: ldc.r4 13.0
+    IL_0a32: newobj System.Drawing.SizeF::.ctor
+    IL_0a37: call System.Windows.Forms.ContainerControl::set_AutoScaleDimensions
+    IL_0a3c: ldarg.0
+    IL_0a3d: ldc.i4.1
+    IL_0a3e: call System.Windows.Forms.ContainerControl::set_AutoScaleMode
+    IL_0a43: ldarg.0
+    IL_0a44: ldc.i4 761
+    IL_0a49: ldc.i4 450
+    IL_0a4e: newobj System.Drawing.Size::.ctor
+    IL_0a53: call System.Windows.Forms.Form::set_ClientSize
+    IL_0a58: ldarg.0
+    IL_0a59: call System.Windows.Forms.Control::get_Controls
+    IL_0a5e: ldarg.0
+    IL_0a5f: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_0a64: callvirt ControlCollection::Add
+    IL_0a69: ldarg.0
+    IL_0a6a: ldc.i4.1
+    IL_0a6b: call System.Windows.Forms.Form::set_KeyPreview
+    IL_0a70: ldarg.0
+    IL_0a71: ldstr ldstr "BlockListVehicles"
+    IL_0a76: call System.Windows.Forms.Control::set_Name
+    IL_0a7b: ldarg.0
+    IL_0a7c: ldstr ldstr "Block List Vehicles"
+    IL_0a81: callvirt System.Windows.Forms.Control::set_Text
+    IL_0a86: ldarg.0
+    IL_0a87: ldc.i4.2
+    IL_0a88: call System.Windows.Forms.Form::set_WindowState
+    IL_0a8d: ldarg.0
+    IL_0a8e: ldarg.0
+    IL_0a8f: ldftn Architecture.WinApp.BlockListVehicles::DefineCropYear_Load
+    IL_0a95: newobj System.EventHandler::.ctor
+    IL_0a9a: call System.Windows.Forms.Form::add_Load
+    IL_0a9f: ldarg.0
+    IL_0aa0: ldarg.0
+    IL_0aa1: ldftn Architecture.WinApp.BlockListVehicles::DefineCropYear_KeyDown
+    IL_0aa7: newobj System.Windows.Forms.KeyEventHandler::.ctor
+    IL_0aac: call System.Windows.Forms.Control::add_KeyDown
+    IL_0ab1: ldarg.0
+    IL_0ab2: ldfld Architecture.WinApp.BlockListVehicles::panel4
+    IL_0ab7: ldc.i4.0
+    IL_0ab8: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0abd: ldarg.0
+    IL_0abe: ldfld Architecture.WinApp.BlockListVehicles::GridHistory
+    IL_0ac3: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_0ac8: ldarg.0
+    IL_0ac9: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_0ace: ldc.i4.0
+    IL_0acf: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0ad4: ldarg.0
+    IL_0ad5: ldfld Architecture.WinApp.BlockListVehicles::panel5
+    IL_0ada: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0adf: ldarg.0
+    IL_0ae0: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_0ae5: ldc.i4.0
+    IL_0ae6: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0aeb: ldarg.0
+    IL_0aec: ldfld Architecture.WinApp.BlockListVehicles::toolStrip1
+    IL_0af1: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0af6: ldarg.0
+    IL_0af7: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_0afc: ldc.i4.0
+    IL_0afd: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0b02: ldarg.0
+    IL_0b03: ldfld Architecture.WinApp.BlockListVehicles::panel6
+    IL_0b08: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0b0d: ldarg.0
+    IL_0b0e: ldfld Architecture.WinApp.BlockListVehicles::panel3
+    IL_0b13: ldc.i4.0
+    IL_0b14: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0b19: ldarg.0
+    IL_0b1a: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_0b1f: ldc.i4.0
+    IL_0b20: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0b25: ldarg.0
+    IL_0b26: ldfld Architecture.WinApp.BlockListVehicles::panel2
+    IL_0b2b: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_0b30: ldarg.0
+    IL_0b31: ldfld Architecture.WinApp.BlockListVehicles::panel1
+    IL_0b36: ldc.i4.0
+    IL_0b37: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_0b3c: ldarg.0
+    IL_0b3d: ldc.i4.0
+    IL_0b3e: call System.Windows.Forms.Control::ResumeLayout
+    IL_0b43: ret

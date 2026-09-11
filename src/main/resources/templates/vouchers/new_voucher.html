@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>JV NEW</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <!-- NProgress -->
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <!-- iCheck -->
+    <link rel="stylesheet" th:href="@{/vendors/iCheck/skins/flat/green.css}">
+    <!-- Datatables -->
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+    <!-- Select2 -->
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <link rel="stylesheet" th:href="@{/vendors/jquery-confirm-master/css/jquery-confirm.css}">
+
+    <!-- Custom Theme Style -->
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- side bar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div">
+        </div>
+        <!-- /side bar and top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <ol class="breadcrumb">
+                            <li><a href="../index">VOUCHERS</a></li>
+                            <li>NEW VOUCHER</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <form class="form-horizontal form-label-left" id="voucherForm" method="post"
+                      th:action="@{/vouchers/add_or_update_voucher}" th:object="${voucher}">
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>NEW VOUCHER</h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="alert alert-danger fade in" th:if="${#fields.hasErrors('*')}">
+                                            <p th:each="err : ${#fields.errors('*')}" th:text="${err}"></p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">COMPANY</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control" required="required"
+                                                            th:attr="style='pointer-events:'+${disableEditControls=='true'? 'none' : ''}"
+                                                            th:field="${voucher.company.id}">
+                                                        <option value="0"></option>
+                                                        <option th:each="company : ${companies}"
+                                                                th:text="${company.name}"
+                                                                th:value="${company.id}">
+                                                        </option>
+                                                    </select>
+                                                    <input id="voucher_id" th:field="${voucher.id}" type="hidden"/>
+                                                    <input id="pvtvoucher" th:field="${voucher.ptvNumber}"
+                                                           type="hidden"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">VOUCHER
+                                                    TYPE</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control" required="required"
+                                                            th:attr="style='pointer-events:'+${disableEditControls=='true'? 'none' : ''}"
+                                                            th:field="${voucher.voucherType.id}">
+                                                        <option value=""></option>
+                                                        <option th:each="voucherType : ${voucherTypes}"
+                                                                th:text="${voucherType.name}"
+                                                                th:value="${voucherType.id}">
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">VOUCHER
+                                                    STATUS</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control" required="required"
+                                                            th:attr="style='pointer-events:'+${disableEditControls=='true'? 'none' : ''}"
+                                                            th:field="${voucher.voucherStatus.id}">
+                                                        <option value=""></option>
+                                                        <option th:each="voucherStatus : ${voucherStatuses}"
+                                                                th:text="${voucherStatus.name}"
+                                                                th:value="${voucherStatus.id}">
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">FINANCIAL
+                                                    YEAR</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control" required="required"
+                                                            th:attr="style='pointer-events:'+${disableEditControls=='true'? 'none' : ''}"
+                                                            th:field="${voucher.financialYear.id}">
+                                                        <option value="0"></option>
+                                                        <option th:attr="data-value=${financialYear.fromDate} + '|' + ${financialYear.toDate}"
+                                                                th:each="financialYear : ${financialYears}"
+                                                                th:text="${financialYear.name}"
+                                                                th:value="${financialYear.id}">
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">VOUCHER
+                                                    DATE</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <input class="form-control" id="voucherDate" required="required"
+                                                           th:field="${voucher.voucherDate}" type="date">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">VOUCHER
+                                                    NO.</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <input class="form-control" readonly required="required"
+                                                           th:field="${voucher.voucherCode}" type="text">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="form-group">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">NARRATION</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                <textarea class="resizable_textarea form-control"
+                                                          placeholder="NARRATION"
+                                                          rows="3" style="text-transform:uppercase"
+                                                          th:field="${voucher.voucherNarration}"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">PAYMENT
+                                                    TYPE</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control" required="required"
+                                                            th:field="${voucher.paymentType}">
+                                                        <option value="0">All</option>
+                                                        <option value="cash">CASH</option>
+                                                        <option value="routine">ROUTINE</option>
+                                                        <option value="percentage">PERCENTAGE</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6 col-sm-6 col-xs-12" style="margin-top: 10px;">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">FINANCING LOAN</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control select2_single" name="loan" id="loan">
+                                                        <option value="">Select Financing Loan...</option>
+                                                        <option th:each="l : ${activeLoans}" th:value="${l.id}" th:text="${l.loanNo}" th:selected="${voucher.loan != null && voucher.loan.id == l.id}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group"
+                                         th:if="${#authorization.expression('hasAuthority(''DOWNLOAD_BACKUP'')')}">
+                                        <a class="btn btn-success" id="edit_voucher"
+                                           style="float: left;" th:href="@{/utilities/downlaod_back_up}">DOWNLOAD BACK
+                                            UP</a>
+
+                                        <a class="btn btn-success" id="auditDb"
+                                           style="float: left;" th:href="@{/utilities/downlaod_back_up_audit}">DOWNLOAD
+                                            BACK
+                                            UP AUTHID</a>
+                                        <label class="control-label col-md-3 col-sm-3 col-xs-12" id="diff"
+                                               style="float: right;">
+                                            ss</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>ENTRY FORM</h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <div class="row" id="chequeBookInfoBox" style="display: none; margin-bottom: 15px; padding: 10px; background: #eef7f5; border: 1px solid #cce8e1; border-radius: 5px;">
+                                        <div class="col-md-4 col-sm-4 col-xs-12">
+                                            <strong>Active Checkbook:</strong> <span id="cbInfoName" style="color: #26B99A; font-weight: bold;">-</span>
+                                        </div>
+                                        <div class="col-md-4 col-sm-4 col-xs-12">
+                                            <strong>Last Used Cheque:</strong> <span id="cbInfoLastUsed" style="font-weight: bold;">-</span>
+                                        </div>
+                                        <div class="col-md-4 col-sm-4 col-xs-12">
+                                            <strong>Next Expected Cheque:</strong> <span id="cbInfoNextExpected" style="color: #26B99A; font-weight: bold;">-</span>
+                                        </div>
+                                    </div>
+                                    <table class="table table-striped table-bordered" id="voucher_entry_table">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>UNIT</th>
+                                            <th>ACCOUNT</th>
+                                            <th>REMARKS</th>
+                                            <th>CHEQUE NO</th>
+                                            <th>DEBIT(بنام)</th>
+                                            <th>CREDIT(جمع)</th>
+                                            <th>BOOK NO</th>
+                                            <th>ADD/DELETE</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody>
+                                        <tr th:each="vEntry, rowStat : ${voucher.voucherEntries}">
+                                            <td>
+                                                <span class="serial_no" th:text="${rowStat.count}"></span>
+                                                <input th:field="${voucher.voucherEntries[__${rowStat.index}__].id}"
+                                                       type="hidden"/>
+                                                <input th:field="${voucher.voucherEntries[__${rowStat.index}__].sequence}"
+                                                       type="hidden"/>
+                                                <input class="entryStatus" id="entryStatus"
+                                                       th:field="${voucher.voucherEntries[__${rowStat.index}__].lockLine}"
+                                                       type="hidden"/>
+                                            </td>
+                                            <td>
+                                                <select class="form-control voucherEntry_branch" required="required"
+                                                        th:field="${voucher.voucherEntries[__${rowStat.index}__].branch}">
+                                                    <option value="0"></option>
+                                                    <option th:each="companyBranch : ${voucher.company.branches}"
+                                                            th:if="${voucher.company}"
+                                                            th:text="${companyBranch.name}"
+                                                            th:value="${companyBranch.id}">
+                                                    </option>
+                                                    <option th:each="companyBranch : ${companyBranches}"
+                                                            th:if="${companyBranches}"
+                                                            th:text="${companyBranch.name}"
+                                                            th:value="${companyBranch.id}">
+                                                    </option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-control select2_single voucherEntry_account"
+                                                        required="required"
+                                                        th:field="${voucher.voucherEntries[__${rowStat.index}__].account.code}">
+                                                    <option value="0"></option>
+                                                    <option th:each="account : ${accounts}"
+                                                            th:text="${account.formattedCode} + '&emsp;' + ${account.accountName}"
+                                                            th:value="${account.code}">
+                                                    </option>
+                                                </select>
+                                            </td>
+                                            <!-- <td><input type="text" class="form-control" style="text-transform:uppercase" required="required" id="voucherEntry_narration" th:field="${voucher.voucherEntries[__${rowStat.index}__].narration}"></td> -->
+                                            <td><input class="form-control" required="required"
+                                                       th:field="${voucher.voucherEntries[__${rowStat.index}__].narration}"
+                                                       type="text">
+                                            </td>
+                                            <!--<td><textarea autocomplete="on" class="form-control" cols="40"
+                                                          onblur="this.rows=1;"
+                                                          onfocus="this.rows=5;"
+                                                          required="required"
+                                                          rows="1" style="resize: none; text-transform:uppercase"
+                                                          th:field="${voucher.voucherEntries[__${rowStat.index}__].narration}"></textarea>
+
+                                            </td>-->
+
+                                            <td><input class="form-control chequeNumber" readonly="readonly"
+                                                       th:field="${voucher.voucherEntries[__${rowStat.index}__].chequeNumber}"
+                                                       type="text">
+                                            </td>
+                                            <!-- <td><input type="text" class="form-control" th:field="${voucher.voucherEntries[__${rowStat.index}__].recBookNumber}"></td>
+                                            <td><input type="text" class="form-control" th:field="${voucher.voucherEntries[__${rowStat.index}__].recBookPageNumber}"></td> -->
+
+                                            <td><input class="form-control voucherEntry_debit" required="required"
+                                                       step="any"
+                                                       th:field="${voucher.voucherEntries[__${rowStat.index}__].recBookPageNumber}"
+                                                       type="text">
+                                            </td>
+                                            <td><input class="form-control voucherEntry_credit" required="required"
+                                                       step="any"
+                                                       th:field="${voucher.voucherEntries[__${rowStat.index}__].invoiceNumber}"
+                                                       type="text">
+                                            </td>
+                                            <td><input class="form-control "
+                                                       th:field="${voucher.voucherEntries[__${rowStat.index}__].recBookNumber}"
+                                                       type="text">
+                                            </td>
+                                            <td>
+                                                <a class="entry_add" href="javascript:void(0)"
+                                                   style="text-decoration: underline;"
+                                                   th:if="${rowStat.count > 1}">ADD/</a>
+                                                <a class="entry_delete" href="javascript:void(0)"
+                                                   style="text-decoration: underline;"
+                                                   th:if="${rowStat.count > 1}">DELETE</a>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+
+                                        <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th><span id="debitTotal">0.00</span></th>
+                                            <th><span id="creditTotal">0.00</span></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                        </tfoot>
+
+                                    </table>
+
+                                    <div class="form-group">
+                                        <button class="btn btn-success" id="submitForm" style="float: right;"><i
+                                                class="fa fa-credit-card"></i> Submit
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- modals -->
+
+                <!-- Notification modal -->
+                <div aria-hidden="true" class="modal fade" id="modal_notify" role="dialog" tabindex="-1">
+                    <div class="modal-dialog modal-md">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button class="close" data-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title" style="color:#069"></h4>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-danger" data-dismiss="modal" type="button">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════
+                     CANCEL CHEQUE MODAL
+                     Shown when user clicks ↻ Next on a BPV row
+                ══════════════════════════════════════════ -->
+                <div class="modal fade" id="cancelChequeModal" tabindex="-1" role="dialog" aria-labelledby="cancelChequeModalLabel">
+                    <div class="modal-dialog" role="document" style="max-width:440px;">
+                        <div class="modal-content" style="border:none; border-radius:7px; box-shadow:0 12px 40px rgba(0,0,0,.22);">
+
+                            <!-- Header -->
+                            <div style="background:#d68910; color:#fff; padding:14px 20px; border-radius:7px 7px 0 0; display:flex; align-items:center; gap:10px;">
+                                <i class="fa fa-times-circle" style="font-size:20px;"></i>
+                                <h4 id="cancelChequeModalLabel" style="margin:0; font-size:15px; font-weight:700; flex:1;">Cancel Cheque</h4>
+                                <button type="button" class="close" data-dismiss="modal" style="color:#fff; opacity:.8; font-size:22px; margin:0;">&times;</button>
+                            </div>
+
+                            <!-- Body -->
+                            <div class="modal-body" style="padding:20px 24px;">
+
+                                <!-- Info row -->
+                                <div style="background:#fef5e7; border:1px solid #fad5a5; border-radius:6px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+                                    <i class="fa fa-exclamation-triangle" style="color:#d68910; font-size:22px; flex-shrink:0;"></i>
+                                    <div>
+                                        <div style="font-size:12px; color:#6b7c8f; text-transform:uppercase; letter-spacing:.4px; font-weight:700;">Cheque to be Cancelled</div>
+                                        <div style="font-size:24px; font-weight:700; font-family:monospace; color:#2A3F54;" id="cancelChequeNoDisplay">—</div>
+                                        <div style="font-size:11px; color:#9aa3ae; margin-top:2px;" id="cancelChequeBookName"></div>
+                                    </div>
+                                </div>
+
+                                <p style="font-size:12px; color:#6b7c8f; margin-bottom:14px;">
+                                    This cheque will be <strong style="color:#d68910;">permanently marked as CANCELLED</strong>
+                                    in the database and will appear in the Cancelled &amp; Voided Cheques Report.
+                                    The next available cheque number will then be auto-filled.
+                                </p>
+
+                                <!-- Reason -->
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label style="font-size:11px; font-weight:700; color:#6b7c8f; text-transform:uppercase; letter-spacing:.4px;">Reason / Notes</label>
+                                    <input type="text" id="cancelChequeReason" class="form-control"
+                                           placeholder="e.g. Skipped, Wrong number, Damaged…"
+                                           maxlength="200"
+                                           style="border-radius:5px; font-size:13px; border-color:#dde3ec;"/>
+                                    <span style="font-size:10px; color:#9aa3ae;">Leave blank to record as &ldquo;CANCELLED&rdquo;.</span>
+                                </div>
+
+                                <!-- Error message area -->
+                                <div id="cancelChequeError" style="display:none; margin-top:12px;"
+                                     class="alert alert-danger" role="alert"></div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="padding:12px 20px; border-top:1px solid #eaeef3; display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+                                <button type="button" class="btn btn-default btn-sm" data-dismiss="modal" id="cancelChequeModalClose">
+                                    <i class="fa fa-times"></i> Keep Cheque
+                                </button>
+                                <button type="button" class="btn btn-warning btn-sm" id="cancelChequeConfirmBtn" style="min-width:130px;">
+                                    <i class="fa fa-times-circle"></i> Cancel &amp; Use Next
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- /CANCEL CHEQUE MODAL -->
+
+            </div>
+            <!-- /page content -->
+
+            <!-- footer content -->
+            <footer>
+                <div class="pull-right">
+                    Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+                </div>
+                <div class="clearfix"></div>
+            </footer>
+            <!-- /footer content -->
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- NProgress -->
+<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Datatables -->
+<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+<script th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+<script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+<!-- confirm -->
+<script th:src="@{/vendors/jquery-confirm-master/js/jquery-confirm.js}"></script>
+<!-- Select2 -->
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/vendors/select2-tab-fix-master/src/select2-tab-fix.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script th:src="@{/build/js/countx_vouchers.js}"></script>
+
+<script>
+    $(".select2_single").select2({
+        dropdownAutoWidth: true,
+        width: '100%'
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+
+====================================================================================================
+CLASS Architecture.Common.LicenseKey
+====================================================================================================
+
+; Architecture.Common.LicenseKey::ReturnKey  (rva=0x2d40, fat header, code_size=186, max_stack=4, exception_handlers=yes)
+    IL_0000: ldstr ldstr "AMIR2SPSCS44602"
+    IL_0005: stloc.0
+    IL_0006: ldarg.0
+    IL_0007: call System.Convert::FromBase64String
+    IL_000c: stloc.1
+    IL_000d: call System.Security.Cryptography.Aes::Create
+    IL_0012: stloc.2
+    IL_0013: ldloc.0
+    IL_0014: ldc.i4.s 13
+    IL_0016: newarr System.Byte
+    IL_001b: dup
+    IL_001c: ldtoken <PrivateImplementationDetails>::3162D5D5638BBF501FD80751C66291086C7C28542CB28AF9CB08EF20770ADDB2
+    IL_0021: call System.Runtime.CompilerServices.RuntimeHelpers::InitializeArray
+    IL_0026: newobj System.Security.Cryptography.Rfc2898DeriveBytes::.ctor
+    IL_002b: stloc.3
+    IL_002c: ldloc.2
+    IL_002d: ldloc.3
+    IL_002e: ldc.i4.s 32
+    IL_0030: callvirt System.Security.Cryptography.DeriveBytes::GetBytes
+    IL_0035: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_Key
+    IL_003a: ldloc.2
+    IL_003b: ldloc.3
+    IL_003c: ldc.i4.s 16
+    IL_003e: callvirt System.Security.Cryptography.DeriveBytes::GetBytes
+    IL_0043: callvirt System.Security.Cryptography.SymmetricAlgorithm::set_IV
+    IL_0048: newobj System.IO.MemoryStream::.ctor
+    IL_004d: stloc.s 4
+    IL_004f: ldloc.s 4
+    IL_0051: ldloc.2
+    IL_0052: callvirt System.Security.Cryptography.SymmetricAlgorithm::CreateDecryptor
+    IL_0057: ldc.i4.1
+    IL_0058: newobj System.Security.Cryptography.CryptoStream::.ctor
+    IL_005d: stloc.s 5
+    IL_005f: ldloc.s 5
+    IL_0061: ldloc.1
+    IL_0062: ldc.i4.0
+    IL_0063: ldloc.1
+    IL_0064: ldlen
+    IL_0065: conv.i4
+    IL_0066: callvirt System.IO.Stream::Write
+    IL_006b: ldloc.s 5
+    IL_006d: callvirt System.IO.Stream::Close
+    IL_0072: leave.s IL_0080
+    IL_0074: ldloc.s 5
+    IL_0076: brfalse.s IL_007f
+    IL_0078: ldloc.s 5
+    IL_007a: callvirt System.IDisposable::Dispose
+    IL_007f: endfinally
+    IL_0080: call System.Text.Encoding::get_Unicode
+    IL_0085: ldloc.s 4
+    IL_0087: callvirt System.IO.MemoryStream::ToArray
+    IL_008c: callvirt System.Text.Encoding::GetString
+    IL_0091: stloc.s 6
+    IL_0093: leave.s IL_00b7
+    IL_0095: ldloc.s 4
+    IL_0097: brfalse.s IL_00a0
+    IL_0099: ldloc.s 4
+    IL_009b: callvirt System.IDisposable::Dispose
+    IL_00a0: endfinally
+    IL_00a1: ldloc.2
+    IL_00a2: brfalse.s IL_00aa
+    IL_00a4: ldloc.2
+    IL_00a5: callvirt System.IDisposable::Dispose
+    IL_00aa: endfinally
+    IL_00ab: pop
+    IL_00ac: ldstr ldstr "License Key Not Match..."
+    IL_00b1: newobj System.Exception::.ctor
+    IL_00b6: throw
+    IL_00b7: ldloc.s 6
+    IL_00b9: ret
+
+; Architecture.Common.LicenseKey::.ctor  (rva=0x2e3c, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret

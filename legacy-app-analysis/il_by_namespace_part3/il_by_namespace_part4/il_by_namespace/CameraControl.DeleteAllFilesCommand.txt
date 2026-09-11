@@ -1,0 +1,178 @@
+
+====================================================================================================
+CLASS CameraControl.DeleteAllFilesCommand
+====================================================================================================
+
+; CameraControl.DeleteAllFilesCommand::.ctor  (rva=0x19dff, tiny header, code_size=16, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.1
+    IL_0002: call CameraControl.Command::.ctor
+    IL_0007: ldarg.0
+    IL_0008: ldarg.2
+    IL_0009: ldind.i
+    IL_000a: stfld CameraControl.DeleteAllFilesCommand::_volume
+    IL_000f: ret
+
+; CameraControl.DeleteAllFilesCommand::Execute  (rva=0x19e10, fat header, code_size=250, max_stack=7, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld CameraControl.Command::_model
+    IL_0006: callvirt CameraControl.CameraModel::get_Camera
+    IL_000b: stloc.0
+    IL_000c: ldsfld System.IntPtr::Zero
+    IL_0011: stloc.1
+    IL_0012: ldarg.0
+    IL_0013: ldflda CameraControl.Command::_model
+    IL_0018: ldarg.0
+    IL_0019: ldflda CameraControl.DeleteAllFilesCommand::_volume
+    IL_001e: newobj CameraControl.FileCounterCommand::.ctor
+    IL_0023: stloc.2
+    IL_0024: newobj TypeSpec#233::.ctor
+    IL_0029: stsfld CameraControl.DeleteAllFilesCommand::_imageItems
+    IL_002e: ldsfld CameraControl.DeleteAllFilesCommand::_currentFileNum
+    IL_0033: brtrue IL_00ed
+    IL_0038: ldc.i4.0
+    IL_0039: stloc.3
+    IL_003a: ldc.i4.0
+    IL_003b: stloc.s 4
+    IL_003d: ldarg.0
+    IL_003e: ldc.i4.s 9
+    IL_0040: ldloc.s 4
+    IL_0042: call System.IntPtr::op_Explicit
+    IL_0047: newobj CameraControl.CameraEvent::.ctor
+    IL_004c: stfld CameraControl.DeleteAllFilesCommand::_event
+    IL_0051: ldarg.0
+    IL_0052: ldfld CameraControl.Command::_model
+    IL_0057: ldarg.0
+    IL_0058: ldfld CameraControl.DeleteAllFilesCommand::_event
+    IL_005d: callvirt CameraControl.Observable::NotifyObservers
+    IL_0062: ldloc.2
+    IL_0063: ldloc.0
+    IL_0064: ldloca.s 1
+    IL_0066: ldloca.s 3
+    IL_0068: callvirt CameraControl.FileCounterCommand::CountDirectory
+    IL_006d: pop
+    IL_006e: ldloc.3
+    IL_006f: newobj FileNumber::.ctor
+    IL_0074: stsfld CameraControl.DeleteAllFilesCommand::_fileNumber
+    IL_0079: ldsflda CameraControl.DeleteAllFilesCommand::_fileNumber
+    IL_007e: ldloc.1
+    IL_007f: stfld FileNumber::DcimItem
+    IL_0084: ldloc.2
+    IL_0085: ldloc.0
+    IL_0086: ldloca.s 1
+    IL_0088: ldloca.s 3
+    IL_008a: ldloca.s 4
+    IL_008c: ldsflda CameraControl.DeleteAllFilesCommand::_fileNumber
+    IL_0091: ldsflda CameraControl.DeleteAllFilesCommand::_imageItems
+    IL_0096: callvirt CameraControl.FileCounterCommand::CountImages
+    IL_009b: brfalse.s IL_009f
+    IL_009d: ldc.i4.0
+    IL_009e: ret
+    IL_009f: ldarg.0
+    IL_00a0: ldc.i4.s 9
+    IL_00a2: ldloc.s 4
+    IL_00a4: call System.IntPtr::op_Explicit
+    IL_00a9: newobj CameraControl.CameraEvent::.ctor
+    IL_00ae: stfld CameraControl.DeleteAllFilesCommand::_event
+    IL_00b3: ldarg.0
+    IL_00b4: ldfld CameraControl.Command::_model
+    IL_00b9: ldarg.0
+    IL_00ba: ldfld CameraControl.DeleteAllFilesCommand::_event
+    IL_00bf: callvirt CameraControl.Observable::NotifyObservers
+    IL_00c4: ldloc.s 4
+    IL_00c6: brtrue.s IL_00ed
+    IL_00c8: ldarg.0
+    IL_00c9: ldc.i4.s 10
+    IL_00cb: ldloc.s 4
+    IL_00cd: call System.IntPtr::op_Explicit
+    IL_00d2: newobj CameraControl.CameraEvent::.ctor
+    IL_00d7: stfld CameraControl.DeleteAllFilesCommand::_event
+    IL_00dc: ldarg.0
+    IL_00dd: ldfld CameraControl.Command::_model
+    IL_00e2: ldarg.0
+    IL_00e3: ldfld CameraControl.DeleteAllFilesCommand::_event
+    IL_00e8: callvirt CameraControl.Observable::NotifyObservers
+    IL_00ed: ldarg.0
+    IL_00ee: ldloc.0
+    IL_00ef: call CameraControl.DeleteAllFilesCommand::DeleteFileByDirectory
+    IL_00f4: brfalse.s IL_00f8
+    IL_00f6: ldc.i4.0
+    IL_00f7: ret
+    IL_00f8: ldc.i4.1
+    IL_00f9: ret
+
+; CameraControl.DeleteAllFilesCommand::DeleteFileByDirectory  (rva=0x19f18, fat header, code_size=210, max_stack=3, exception_handlers=no)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: ldc.i4.0
+    IL_0003: stloc.0
+    IL_0004: br IL_009b
+    IL_0009: ldsfld CameraControl.DeleteAllFilesCommand::_imageItems
+    IL_000e: ldloc.0
+    IL_000f: callvirt TypeSpec#233::get_Item
+    IL_0014: call EDSDKLib.EDSDK::EdsDeleteDirectoryItem
+    IL_0019: stloc.1
+    IL_001a: ldloc.1
+    IL_001b: brfalse.s IL_001f
+    IL_001d: ldloc.1
+    IL_001e: ret
+    IL_001f: ldsfld CameraControl.DeleteAllFilesCommand::_imageItems
+    IL_0024: ldloc.0
+    IL_0025: callvirt TypeSpec#233::get_Item
+    IL_002a: call EDSDKLib.EDSDK::EdsRelease
+    IL_002f: pop
+    IL_0030: ldarg.0
+    IL_0031: ldfld CameraControl.Command::_model
+    IL_0036: ldfld CameraControl.CameraModel::_ExecuteStatus
+    IL_003b: ldc.i4.3
+    IL_003c: bne.un.s IL_0074
+    IL_003e: ldarg.0
+    IL_003f: ldc.i4.s 10
+    IL_0041: ldloc.0
+    IL_0042: call System.IntPtr::op_Explicit
+    IL_0047: newobj CameraControl.CameraEvent::.ctor
+    IL_004c: stfld CameraControl.DeleteAllFilesCommand::_event
+    IL_0051: ldarg.0
+    IL_0052: ldfld CameraControl.Command::_model
+    IL_0057: ldarg.0
+    IL_0058: ldfld CameraControl.DeleteAllFilesCommand::_event
+    IL_005d: callvirt CameraControl.Observable::NotifyObservers
+    IL_0062: ldc.i4.0
+    IL_0063: stsfld CameraControl.DeleteAllFilesCommand::_currentFileNum
+    IL_0068: ldsfld CameraControl.DeleteAllFilesCommand::_imageItems
+    IL_006d: callvirt TypeSpec#233::Clear
+    IL_0072: ldc.i4.0
+    IL_0073: ret
+    IL_0074: ldarg.0
+    IL_0075: ldc.i4.6
+    IL_0076: ldloc.0
+    IL_0077: call System.IntPtr::op_Explicit
+    IL_007c: newobj CameraControl.CameraEvent::.ctor
+    IL_0081: stfld CameraControl.DeleteAllFilesCommand::_event
+    IL_0086: ldarg.0
+    IL_0087: ldfld CameraControl.Command::_model
+    IL_008c: ldarg.0
+    IL_008d: ldfld CameraControl.DeleteAllFilesCommand::_event
+    IL_0092: callvirt CameraControl.Observable::NotifyObservers
+    IL_0097: ldloc.0
+    IL_0098: ldc.i4.1
+    IL_0099: add
+    IL_009a: stloc.0
+    IL_009b: ldloc.0
+    IL_009c: ldsfld CameraControl.DeleteAllFilesCommand::_imageItems
+    IL_00a1: callvirt TypeSpec#233::get_Count
+    IL_00a6: blt IL_0009
+    IL_00ab: ldarg.0
+    IL_00ac: ldc.i4.s 10
+    IL_00ae: ldarg.1
+    IL_00af: newobj CameraControl.CameraEvent::.ctor
+    IL_00b4: stfld CameraControl.DeleteAllFilesCommand::_event
+    IL_00b9: ldarg.0
+    IL_00ba: ldfld CameraControl.Command::_model
+    IL_00bf: ldarg.0
+    IL_00c0: ldfld CameraControl.DeleteAllFilesCommand::_event
+    IL_00c5: callvirt CameraControl.Observable::NotifyObservers
+    IL_00ca: ldc.i4.0
+    IL_00cb: stsfld CameraControl.DeleteAllFilesCommand::_currentFileNum
+    IL_00d0: ldc.i4.0
+    IL_00d1: ret

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payment By Invoice Voucher - WinForms Replica</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .win-tab-bar { background: #d1d5db; border-bottom: 1px solid #b0bec5; padding: 2px 8px 0 8px; display: flex; gap: 3px; }
+        .win-tab-btn { background: #e5e7eb; border: 1px solid #9ca3af; border-bottom: none; border-radius: 3px 3px 0 0; padding: 4px 14px; font-size: 11px; font-weight: bold; color: #374151; cursor: pointer; }
+        .win-tab-btn.active { background: #ffffff; color: #00796B; border-color: #b0bec5; border-bottom: 2px solid #ffffff; margin-bottom: -1px; }
+        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
+        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
+        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
+        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 8px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .win-section-header { background-color: #f1f5f9; color: #00796B; font-weight: bold; font-size: 11px; padding: 4px 8px; border-bottom: 1px solid #cbd5e1; border-top: 1px solid #cbd5e1; }
+        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
+        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
+        .win-input[readonly] { background: #f1f5f9; }
+        .win-textarea { border: 1px solid #94a3b8; border-radius: 2px; padding: 4px 6px; font-size: 11px; width: 100%; height: 36px; resize: none; box-sizing: border-box; }
+        .search-popup { position: absolute; z-index: 1050; background: #ffffff; border: 1px solid #00796B; box-shadow: 0 4px 12px rgba(0,0,0,0.18); max-height: 260px; overflow-y: auto; width: 480px; display: none; }
+        .search-popup table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .search-popup th { background-color: #00796B; color: white; padding: 4px 6px; position: sticky; top: 0; font-weight: 600; border: 1px solid #004d40; }
+        .search-popup td { padding: 4px 6px; border: 1px solid #e2e8f0; cursor: pointer; }
+        .search-popup tr:hover { background-color: #e0f2f1; font-weight: 600; }
+        .detail-entry-bar { background-color: #fafafa; border: 1px solid #cbd5e1; padding: 8px; margin: 6px 0; }
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
+        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; }
+        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
+        .totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .wht-bar { background: #fff8e1; border: 1px solid #f0c14b; border-radius: 2px; padding: 8px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-book"></i> Payment By Invoice Voucher</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Toolbar - ditto PaymentByInvoiceVoucherNew.cs's real ribbon. This form is NOT a separate
+         DocumentType: it saves into the SAME DocumentTypeId=1 (CPV) / 2 (BPV) VoucherHead/
+         VoucherDetail rows as the regular Cash/Bank Payment Voucher forms (verified from Save_Click/
+         Update_Click's own "vh.DocumentTypeId = Convert.ToInt32(combvtype.Value)") - it is simply an
+         alternate entry screen that ties each detail line to a specific outstanding invoice/balance
+         instead of a free-text account line. -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="resetForm()"><i class="fa fa-plus text-success"></i> + New</button>
+        <button type="button" class="win-btn" onclick="refreshPage()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+        <button type="button" class="win-btn win-btn-teal" id="btnSaveUpdate" onclick="submitVoucher()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="win-btn" onclick="printVoucher()"><i class="fa fa-print text-warning"></i> Print Voucher</button>
+    </div>
+
+    <div class="win-tab-bar">
+        <button type="button" class="win-tab-btn active" id="tabBtnForm" onclick="switchTab('form')"><i class="fa fa-edit"></i> Form Tab</button>
+        <button type="button" class="win-tab-btn" id="tabBtnHistory" onclick="switchTab('history')"><i class="fa fa-history"></i> History Tab</button>
+    </div>
+
+    <div id="tabFormContent" class="win-form-card">
+        <form id="formVoucher" onsubmit="event.preventDefault(); submitVoucher();">
+
+            <!-- HEADER SECTION - ditto PaymentByInvoiceVoucherNew.cs's FormValidation(): Account
+                 (Credit Account)/Company/Branch/Project/Voucher Type are all real required fields. -->
+            <div class="win-section-header">Voucher Header Information</div>
+            <div style="padding: 10px;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label">Voucher Type *</label></div>
+                            <div class="col-md-8">
+                                <select id="cmbVoucherType" class="win-input" onchange="onVoucherTypeChange()">
+                                    <option value="1">CPV - Cash Payment Voucher</option>
+                                    <option value="2">BPV - Bank Payment Voucher</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label">Voucher No</label></div>
+                            <div class="col-md-4"><input type="text" id="txtVoucherNo" class="win-input" readonly style="font-weight: bold;"/></div>
+                            <div class="col-md-2" style="padding-left: 0;"><label class="win-label">Date</label></div>
+                            <div class="col-md-2" style="padding-left: 0;"><input type="date" id="dtpVoucherDate" class="win-input"/></div>
+                        </div>
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label" id="lblCreditAccount">Cash Account *</label></div>
+                            <div class="col-md-8"><select id="cmbCreditAccount" class="win-input"><option value="0">-- Select --</option></select></div>
+                        </div>
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label">Company</label></div>
+                            <div class="col-md-8"><select id="cmbCompany" class="win-input" disabled><option value="0">-- Current Company --</option></select></div>
+                        </div>
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label">Branch *</label></div>
+                            <div class="col-md-8"><select id="cmbBranch" class="win-input"><option value="0">-- Select --</option></select></div>
+                        </div>
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label">Cost Center (Project) *</label></div>
+                            <div class="col-md-8"><select id="cmbProject" class="win-input"><option value="0">-- Select --</option></select></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <!-- Cheque fields - ditto PaymentByInvoiceVoucherNew.cs's own CmbVoucherType==2
+                             visibility: header-level (one cheque per whole voucher, unlike Bank Payment
+                             Voucher's own per-line cheque fields), shown only for BPV. Real desktop's
+                             CmbCheqNo is a dropdown of the bank's own outstanding cheque-book cheques
+                             (CheqBookHeader.OutstandingCheqNo, gated by a "CheqBook Enabled" config flag)
+                             - that cheque-book subsystem isn't built anywhere else in this Java app yet,
+                             so Cheque No is a plain optional text field here instead (same scoping
+                             decision already made for Bank Payment Voucher's own ChequeBookCompulsoryOnBpv
+                             flag). -->
+                        <div id="chequeFieldsWrap" style="display:none;">
+                            <div class="row" style="margin-bottom: 6px;">
+                                <div class="col-md-4"><label class="win-label">Cheque No</label></div>
+                                <div class="col-md-4"><input type="text" id="txtChequeNo" class="win-input"/></div>
+                                <div class="col-md-2" style="padding-left:0;"><label class="win-label">Cheque Date</label></div>
+                                <div class="col-md-2" style="padding-left:0;"><input type="date" id="dtpChequeDate" class="win-input"/></div>
+                            </div>
+                            <div class="row" style="margin-bottom: 6px;">
+                                <div class="col-md-4"><label class="win-label">Payee Title</label></div>
+                                <div class="col-md-8"><input type="text" id="txtPayTitle" class="win-input"/></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><label class="win-label">Remarks</label></div>
+                            <div class="col-md-8"><textarea id="txtHeaderRemarks" class="win-textarea" placeholder="Enter voucher main remarks..."></textarea></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETAIL SECTION - ditto PaymentByInvoiceVoucherNew.cs's Add_Click_1()/grdSettings():
+                 Account Title picks the party/payable account; Invoice No is populated from that
+                 account's own outstanding invoices (GetInvoiceNoByPaymentByInvoice); selecting an
+                 Invoice auto-fills its Invoice/Paid/Balance amounts (GetInvoiceWiseBalanceAmount);
+                 Amount must not exceed the Balance Amount; every line in the grid must share the
+                 SAME Account Title and no invoice may be added twice (both real desktop checks,
+                 replicated client-side). -->
+            <div class="win-section-header">Transaction Details Grid</div>
+            <div style="padding: 10px;">
+                <div class="detail-entry-bar">
+                    <div class="row" style="margin-bottom: 6px;">
+                        <div class="col-md-4" style="position: relative;">
+                            <label class="win-label">Account Title *</label>
+                            <input type="text" id="txtAccountSearch" class="win-input" placeholder="Type to search account title or code..." autocomplete="off" onkeyup="onAccountSearch()" onfocus="onAccountSearch()"/>
+                            <input type="hidden" id="hdnAccountId" value="0"/>
+                            <input type="hidden" id="hdnAccountCode" value=""/>
+                            <input type="hidden" id="hdnAccountTitle" value=""/>
+                            <div id="popAccounts" class="search-popup">
+                                <table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th><th style="width:110px;">Group</th></tr></thead><tbody id="tbodyPopAccounts"></tbody></table>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">Invoice No *</label>
+                            <select id="cmbInvoiceNo" class="win-input" onchange="onInvoiceChange()" disabled><option value="0">-- Select Account First --</option></select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Job/Lot *</label>
+                            <select id="cmbJobLot" class="win-input"><option value="0">-- Select --</option></select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Amount *</label>
+                            <input type="number" step="0.01" id="txtAmount" class="win-input" style="text-align: right; font-weight: bold;"/>
+                        </div>
+                        <div class="col-md-1" style="display: flex; align-items: flex-end;">
+                            <button type="button" id="btnAddRow" class="win-btn win-btn-teal" style="width: 100%; height: 25px; justify-content: center;" onclick="addDetailRow()"><i class="fa fa-plus"></i> Add</button>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 6px;">
+                        <div class="col-md-3">
+                            <label class="win-label">Invoice Amount</label>
+                            <input type="text" id="txtInvoiceAmount" class="win-input" readonly value="0"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">Total Paid Amount</label>
+                            <input type="text" id="txtTotalPaidAmount" class="win-input" readonly value="0"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">Balance Amount</label>
+                            <input type="text" id="txtBalanceAmount" class="win-input" readonly value="0" style="font-weight:bold;"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-11">
+                            <label class="win-label">Particulars / Line Remarks</label>
+                            <input type="text" id="txtLineRemarks" class="win-input" placeholder="Enter line remarks..."/>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="max-height: 300px; overflow-y: auto; margin-top: 8px;">
+                    <table class="win-grid-table" id="tblGrid">
+                        <thead>
+                            <tr>
+                                <th style="width: 30px; text-align: center;">X</th>
+                                <th>Account Title</th>
+                                <th style="width: 90px;">Invoice No</th>
+                                <th style="width: 100px; text-align: right;">Invoice Amt</th>
+                                <th style="width: 100px; text-align: right;">Paid Amt</th>
+                                <th style="width: 100px; text-align: right;">Balance Amt</th>
+                                <th style="width: 90px;">Job/Lot</th>
+                                <th>Remarks</th>
+                                <th style="width: 110px; text-align: right;">Amount</th>
+                                <th style="width: 80px; text-align: right;">WHT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyGrid"><tr id="trEmptyGrid"><td colspan="10" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr></tbody>
+                    </table>
+                </div>
+
+                <!-- WHT bar - ditto PaymentByInvoiceVoucherNew.cs's checkBox1_CheckedChanged()/Total()/
+                     WHTTaxPropotion(): a single gross-up formula (taxAmount = GridTotal/(100-rate)*rate),
+                     no Excluded/Included toggle on this form (unlike CPV/BPV's own WHT bar). Real
+                     desktop also auto-fills Tax %/the default WHT Credit Account from a date-effective
+                     "Tax Schedule" master table (TaxScheduleMain.ReadTaxSchedule) keyed by Tax Type +
+                     voucher date - not implemented here (same deferred subsystem already flagged for
+                     CPV/BPV); Tax % is entered directly instead. -->
+                <div class="wht-bar">
+                    <div class="row" style="margin-bottom: 6px;">
+                        <div class="col-md-3">
+                            <label style="font-weight: bold; cursor: pointer;"><input type="checkbox" id="chkWht" onchange="onWhtToggle()"/> Apply Withholding Tax (WHT)</label>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">Tax Type</label>
+                            <select id="cmbTaxType" class="win-input" disabled onchange="recalcTotals()"><option value="0">-- Select --</option></select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Tax %</label>
+                            <input type="number" step="0.01" id="txtTaxPercent" class="win-input" value="0" disabled oninput="recalcTotals()"/>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 6px;">
+                        <div class="col-md-4" style="position: relative;">
+                            <label class="win-label">WHT Debit Ac (Against Account)</label>
+                            <input type="text" id="txtWhtDebitAccSearch" class="win-input" placeholder="Type to search..." autocomplete="off" disabled onkeyup="onWhtDebitAccSearch()" onfocus="onWhtDebitAccSearch()"/>
+                            <input type="hidden" id="hdnWhtDebitAccId" value="0"/>
+                            <div id="popWhtDebitAcc" class="search-popup"><table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th></tr></thead><tbody id="tbodyPopWhtDebitAcc"></tbody></table></div>
+                        </div>
+                        <div class="col-md-4" style="position: relative;">
+                            <label class="win-label">WHT Credit Account (WithHolding Ac)</label>
+                            <input type="text" id="txtWhtCreditAccSearch" class="win-input" placeholder="Type to search..." autocomplete="off" disabled onkeyup="onWhtCreditAccSearch()" onfocus="onWhtCreditAccSearch()"/>
+                            <input type="hidden" id="hdnWhtCreditAccId" value="0"/>
+                            <div id="popWhtCreditAcc" class="search-popup"><table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th></tr></thead><tbody id="tbodyPopWhtCreditAcc"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="totals-bar">
+                    <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
+                    <div>Tax Amount: <span id="lblTaxAmount">0.00</span></div>
+                    <div>Total Amount: <span id="lblTotalAmount">0.00</span></div>
+                    <div>Difference: <span id="lblDiff">0.00</span></div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- History Tab - ditto PaymentByInvoiceVoucherNew.cs's HistoryFill(): real
+         Sp_Vouchers_GetMethods @Activity='PaymentByInvoiceVoucherNewHistory' call, showing every
+         CPV+BPV voucher (DocumentTypeId 1 or 2) regardless of which screen created it - desktop's
+         own HistoryFill() always passes DocumentTypeId=1, which that BLL method maps to the fixed
+         "1,2" filter, and has no other filter-form UI, so this tab has none either (ditto PDC
+         Payment's own no-filter History pattern). -->
+    <div id="tabHistoryContent" class="win-form-card" style="display: none;">
+        <div class="win-section-header">Payment By Invoice History (CPV + BPV)</div>
+        <div style="padding: 10px;">
+            <div style="max-height: 460px; overflow-y: auto; overflow-x: auto;">
+                <table class="win-grid-table" id="tblHistoryGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Edit</th>
+                            <th style="width: 70px;">V.No</th>
+                            <th style="width: 60px;">V.Type</th>
+                            <th style="width: 90px;">V.Date</th>
+                            <th>Account Title</th>
+                            <th style="width: 350px;">Remarks</th>
+                            <th style="width: 100px; text-align: right;">Voucher Amount</th>
+                            <th style="width: 90px;">Cheque No</th>
+                            <th style="width: 90px;">User</th>
+                            <th style="width: 70px; text-align: center;">Attachment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyHistoryGrid"><tr><td colspan="10" style="text-align: center; color: #888; padding: 20px;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        let gridItems = [];
+        let editingVoucherId = 0;
+        let whtAccountList = [];
+        let currentInvoiceList = [];
+
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            $('#dtpVoucherDate').val(today);
+            $('#dtpChequeDate').val(today);
+
+            loadNextVoucherNo();
+            onVoucherTypeChange();
+
+            $.get('/accounts/api/vouchers/payment-by-invoice/companies', function(list) {
+                let opt = '';
+                (list || []).forEach(function(c) {
+                    const id = c.Id || c.id, name = c.CompName || c.compName || ('Company ' + id);
+                    opt += '<option value="' + id + '">' + $('<div>').text(name).html() + '</option>';
+                });
+                $('#cmbCompany').html(opt || '<option value="0">-- Current Company --</option>');
+            }).fail(function() {});
+
+            $.get('/accounts/api/vouchers/payment-by-invoice/branches', function(list) {
+                let opt = '<option value="0">-- Select --</option>';
+                (list || []).forEach(function(b) {
+                    const id = b.Id || b.id, name = b.BranchName || b.branchName || ('Branch ' + id);
+                    opt += '<option value="' + id + '">' + $('<div>').text(name).html() + '</option>';
+                });
+                $('#cmbBranch').html(opt);
+            });
+
+            $.get('/accounts/api/vouchers/projects', function(list) {
+                let opt = '<option value="0">-- Select --</option>';
+                (list || []).forEach(function(p) {
+                    const id = p.Id || p.id, name = p.ProjectName || p.projectName || ('Project ' + id);
+                    opt += '<option value="' + id + '">' + $('<div>').text(name).html() + '</option>';
+                });
+                $('#cmbProject').html(opt);
+            });
+
+            $.get('/accounts/api/vouchers/tax-types', function(list) {
+                let opt = '<option value="0">-- Select --</option>';
+                (list || []).forEach(function(t) {
+                    const id = t.Id || t.id, name = t.TaxName || t.taxName || ('Tax ' + id);
+                    opt += '<option value="' + id + '">' + $('<div>').text(name).html() + '</option>';
+                });
+                $('#cmbTaxType').html(opt);
+            });
+
+            $.get('/api/configurations/global-accounts?with=2,11,15', function(list) { whtAccountList = list || []; });
+
+            $.get('/api/configurations/job-lots', function(list) {
+                let opt = '<option value="0">-- Select --</option>';
+                (list || []).forEach(function(j) {
+                    const id = j.Id || j.id, name = j.JobLotName || j.jobLotName || j.Name || j.name || ('Job/Lot ' + id);
+                    opt += '<option value="' + id + '">' + $('<div>').text(name).html() + '</option>';
+                });
+                $('#cmbJobLot').html(opt);
+            }).fail(function() {});
+        });
+
+        // Ditto VoucherNofill()/AccountTitleFill(): Voucher No and the Credit Account list both
+        // depend on which of CPV(1)/BPV(2) is selected (Credit Account -> cash accounts for CPV,
+        // bank accounts for BPV).
+        function loadNextVoucherNo() {
+            const docTypeId = parseInt($('#cmbVoucherType').val()) || 1;
+            $.get('/accounts/api/vouchers/next-code?documentTypeId=' + docTypeId, function(res) {
+                if (res && res.nextCode) $('#txtVoucherNo').val(res.nextCode);
+            });
+        }
+        function onVoucherTypeChange() {
+            const docTypeId = parseInt($('#cmbVoucherType').val()) || 1;
+            const isBpv = docTypeId === 2;
+            $('#lblCreditAccount').text(isBpv ? 'Bank Account *' : 'Cash Account *');
+            $('#chequeFieldsWrap').toggle(isBpv);
+            $.get('/accounts/api/vouchers/cash-bank-accounts?type=' + (isBpv ? 'bank' : 'cash'), function(accounts) {
+                let opt = '<option value="0">-- Select --</option>';
+                (accounts || []).forEach(function(acc) {
+                    const id = acc.id || acc.Id, title = acc.accountTitle || acc.AccountTitle || '';
+                    opt += '<option value="' + id + '">' + $('<div>').text(title).html() + '</option>';
+                });
+                $('#cmbCreditAccount').html(opt);
+            });
+            if (!editingVoucherId) loadNextVoucherNo();
+        }
+
+        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+        function filterAccList(list, query) {
+            const q = query.toLowerCase();
+            return list.filter(function(a) {
+                return ((a.accountTitle || '').toLowerCase().indexOf(q) >= 0) || ((a.accountCode || '') + '').toLowerCase().indexOf(q) >= 0;
+            }).slice(0, 50);
+        }
+
+        // Ditto Add_Click_1()'s own single-account-per-voucher constraint: once a grid line exists,
+        // the Account Title field is locked to that same account (real desktop throws "You cannot
+        // entered another Party!" otherwise).
+        function onAccountSearch() {
+            const query = $('#txtAccountSearch').val().trim();
+            if (query.length < 1) { $('#popAccounts').hide(); return; }
+            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
+                let html = '';
+                (data || []).forEach(function(acc) {
+                    const id = acc.id || 0, code = acc.accountCode || '', title = acc.accountTitle || '', parent = acc.parentAccountTitle || 'Detail';
+                    html += '<tr onclick="selectAccount(' + id + ', \'' + escapeQuotes(code) + '\', \'' + escapeQuotes(title) + '\')"><td><strong>' + title + '</strong></td><td>' + code + '</td><td>' + parent + '</td></tr>';
+                });
+                $('#tbodyPopAccounts').html(html || '<tr><td colspan="3" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+                $('#popAccounts').show();
+            });
+        }
+        function selectAccount(id, code, title) {
+            if (gridItems.length > 0 && gridItems[0].accountId !== id) {
+                alert("You cannot entered another Party!\nThis voucher already has detail lines for a different Account Title.");
+                return;
+            }
+            $('#hdnAccountId').val(id); $('#hdnAccountCode').val(code); $('#hdnAccountTitle').val(title);
+            $('#txtAccountSearch').val(title + ' [' + code + ']'); $('#popAccounts').hide();
+            loadInvoicesForAccount(id);
+        }
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#txtAccountSearch, #popAccounts').length) $('#popAccounts').hide();
+            if (!$(e.target).closest('#txtWhtDebitAccSearch, #popWhtDebitAcc').length) $('#popWhtDebitAcc').hide();
+            if (!$(e.target).closest('#txtWhtCreditAccSearch, #popWhtCreditAcc').length) $('#popWhtCreditAcc').hide();
+        });
+
+        // Ditto InvoiceNoFill(): real Sp_Vouchers_GetMethods @Activity='GetInvoiceNoByPaymentByInvoice'
+        // call, populated per selected Account Title.
+        function loadInvoicesForAccount(accountId) {
+            $('#cmbInvoiceNo').prop('disabled', true).html('<option value="0">Loading...</option>');
+            $.get('/accounts/api/vouchers/payment-by-invoice/invoices?accountId=' + accountId, function(list) {
+                currentInvoiceList = list || [];
+                let opt = '<option value="0">-- Select --</option>';
+                currentInvoiceList.forEach(function(inv) {
+                    const id = inv.Id || inv.id, code = inv.VoucherCode || inv.voucherCode || ('Invoice ' + id);
+                    opt += '<option value="' + id + '">' + $('<div>').text(code).html() + '</option>';
+                });
+                $('#cmbInvoiceNo').html(opt).prop('disabled', false);
+            }).fail(function() {
+                $('#cmbInvoiceNo').html('<option value="0">-- Select --</option>').prop('disabled', false);
+            });
+        }
+
+        // Ditto GetInvoiceBalanceAmount(): real Sp_Vouchers_GetMethods
+        // @Activity='GetInvoiceWiseBalanceAmount' call, auto-filling Invoice/Paid/Balance amounts.
+        function onInvoiceChange() {
+            const accountId = parseInt($('#hdnAccountId').val()) || 0;
+            const invoiceId = parseInt($('#cmbInvoiceNo').val()) || 0;
+            if (accountId === 0 || invoiceId === 0) {
+                $('#txtInvoiceAmount').val('0'); $('#txtTotalPaidAmount').val('0'); $('#txtBalanceAmount').val('0');
+                return;
+            }
+            $.get('/accounts/api/vouchers/payment-by-invoice/invoice-balance?accountId=' + accountId + '&invoiceId=' + invoiceId, function(res) {
+                const row = (res && res.length > 0) ? res[0] : null;
+                const invAmt = row ? parseFloat(row.InvoiceAmount || row.invoiceAmount || 0) : 0;
+                const paidAmt = row ? parseFloat(row.TotalPaidAmount || row.totalPaidAmount || 0) : 0;
+                const balAmt = row ? parseFloat(row.BalanceAmount || row.balanceAmount || 0) : 0;
+                $('#txtInvoiceAmount').val(invAmt.toFixed(0));
+                $('#txtTotalPaidAmount').val(paidAmt.toFixed(0));
+                $('#txtBalanceAmount').val(balAmt.toFixed(0));
+            }).fail(function() {
+                $('#txtInvoiceAmount').val('0'); $('#txtTotalPaidAmount').val('0'); $('#txtBalanceAmount').val('0');
+            });
+        }
+
+        function onWhtDebitAccSearch() {
+            const q = $('#txtWhtDebitAccSearch').val().trim();
+            if (q.length < 1) { $('#popWhtDebitAcc').hide(); return; }
+            const rows = filterAccList(whtAccountList, q);
+            let html = rows.map(function(a) {
+                return '<tr onclick="selectWhtDebitAcc(' + a.id + ', \'' + escapeQuotes(a.accountCode) + '\', \'' + escapeQuotes(a.accountTitle) + '\')"><td><strong>' + a.accountTitle + '</strong></td><td>' + a.accountCode + '</td></tr>';
+            }).join('');
+            $('#tbodyPopWhtDebitAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+            $('#popWhtDebitAcc').show();
+        }
+        function selectWhtDebitAcc(id, code, title) { $('#hdnWhtDebitAccId').val(id); $('#txtWhtDebitAccSearch').val(title + ' [' + code + ']'); $('#popWhtDebitAcc').hide(); }
+        function onWhtCreditAccSearch() {
+            const q = $('#txtWhtCreditAccSearch').val().trim();
+            if (q.length < 1) { $('#popWhtCreditAcc').hide(); return; }
+            const rows = filterAccList(whtAccountList, q);
+            let html = rows.map(function(a) {
+                return '<tr onclick="selectWhtCreditAcc(' + a.id + ', \'' + escapeQuotes(a.accountCode) + '\', \'' + escapeQuotes(a.accountTitle) + '\')"><td><strong>' + a.accountTitle + '</strong></td><td>' + a.accountCode + '</td></tr>';
+            }).join('');
+            $('#tbodyPopWhtCreditAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+            $('#popWhtCreditAcc').show();
+        }
+        function selectWhtCreditAcc(id, code, title) { $('#hdnWhtCreditAccId').val(id); $('#txtWhtCreditAccSearch').val(title + ' [' + code + ']'); $('#popWhtCreditAcc').hide(); }
+
+        // Ditto checkBox1_CheckedChanged(): enables/disables WHT Debit Ac/WHT Credit Account/Tax
+        // Type/Tax %, and recomputes totals + per-line WHT preview.
+        function onWhtToggle() {
+            const on = $('#chkWht').is(':checked');
+            $('#cmbTaxType, #txtTaxPercent, #txtWhtDebitAccSearch, #txtWhtCreditAccSearch').prop('disabled', !on);
+            if (!on) { $('#txtTaxPercent').val('0'); }
+            recalcTotals();
+        }
+
+        // Ditto Add_Click_1(): Invoice No, Amount, Account Title, Job/Lot required; Amount must not
+        // exceed Balance Amount; the SAME invoice cannot be added twice.
+        function addDetailRow() {
+            const accountId = parseInt($('#hdnAccountId').val()) || 0;
+            const accountTitle = $('#hdnAccountTitle').val();
+            const invoiceId = parseInt($('#cmbInvoiceNo').val()) || 0;
+            const invoiceText = $('#cmbInvoiceNo option:selected').text();
+            const jobLotId = parseInt($('#cmbJobLot').val()) || 0;
+            const jobLotText = $('#cmbJobLot option:selected').text();
+            const amount = parseFloat($('#txtAmount').val()) || 0.0;
+            const remarks = $('#txtLineRemarks').val().trim();
+            const invoiceAmount = parseFloat($('#txtInvoiceAmount').val()) || 0.0;
+            const totalPaidAmount = parseFloat($('#txtTotalPaidAmount').val()) || 0.0;
+            const balanceAmount = parseFloat($('#txtBalanceAmount').val()) || 0.0;
+
+            if (accountId === 0) { alert('Account Title Field Required'); return; }
+            if (invoiceId === 0) { alert('InvoiceNo Field Required'); return; }
+            if (jobLotId === 0) { alert('Job/Lot Field Required'); return; }
+            if (amount <= 0) { alert('Amount Field Required'); $('#txtAmount').focus(); return; }
+            if (amount > balanceAmount) { alert('Debit Amount not greater than Balance Amount!'); return; }
+            if (gridItems.some(function(it) { return it.invoiceId === invoiceId; })) {
+                alert('InvoiceNo Already add in grid please check!'); return;
+            }
+
+            const invMeta = currentInvoiceList.find(function(i) { return (i.Id || i.id) === invoiceId; }) || {};
+            const refDocumentTypeId = invMeta.DocumentTypeId || invMeta.documentTypeId || null;
+
+            gridItems.push({
+                accountId: accountId, accountTitle: accountTitle,
+                invoiceId: invoiceId, invoiceNo: invoiceText, refDocumentTypeId: refDocumentTypeId,
+                jobLotId: jobLotId, jobLot: jobLotText, remarks: remarks,
+                invoiceAmount: invoiceAmount, totalPaidAmount: totalPaidAmount, balanceAmount: balanceAmount,
+                amount: amount, wht: 0
+            });
+            renderGrid();
+
+            $('#cmbInvoiceNo').val('0');
+            $('#txtInvoiceAmount').val('0'); $('#txtTotalPaidAmount').val('0'); $('#txtBalanceAmount').val('0');
+            $('#txtAmount').val(''); $('#txtLineRemarks').val('');
+        }
+
+        function removeGridItem(index) { gridItems.splice(index, 1); renderGrid(); }
+
+        // Ditto Total()/WHTTaxPropotion(): a single gross-up formula per line
+        // (WHT = Amount/(100-rate)*rate), summed into the header Tax Amount; no Excluded/Included
+        // toggle on this form (unlike CPV/BPV's own WHT bar).
+        function recalcTotals() {
+            const whtOn = $('#chkWht').is(':checked');
+            const rate = whtOn ? (parseFloat($('#txtTaxPercent').val()) || 0) : 0;
+            let baseAmount = 0.0, taxAmount = 0.0;
+            gridItems.forEach(function(it) {
+                baseAmount += it.amount;
+                it.wht = (whtOn && rate > 0 && rate < 100) ? Math.round((it.amount / (100 - rate) * rate) * 100) / 100 : 0;
+                taxAmount += it.wht;
+            });
+            const totalAmount = Math.round((baseAmount + taxAmount) * 100) / 100;
+            $('#lblTotalDebit').text(baseAmount.toFixed(2));
+            $('#lblTaxAmount').text(taxAmount.toFixed(2));
+            $('#lblTotalAmount').text(totalAmount.toFixed(2));
+            $('#lblDiff').text('0.00');
+            renderGridRows();
+            return { baseAmount: baseAmount, taxAmount: taxAmount, totalAmount: totalAmount };
+        }
+
+        function renderGrid() { recalcTotals(); }
+        function renderGridRows() {
+            let html = '';
+            if (gridItems.length > 0) {
+                gridItems.forEach(function(item, idx) {
+                    html += '<tr><td style="text-align:center;"><button type="button" class="btn btn-xs btn-danger" onclick="removeGridItem(' + idx + ')">&times;</button></td>' +
+                        '<td><strong>' + item.accountTitle + '</strong></td><td>' + item.invoiceNo + '</td>' +
+                        '<td style="text-align:right;">' + item.invoiceAmount.toFixed(0) + '</td>' +
+                        '<td style="text-align:right;">' + item.totalPaidAmount.toFixed(0) + '</td>' +
+                        '<td style="text-align:right;">' + item.balanceAmount.toFixed(0) + '</td>' +
+                        '<td>' + (item.jobLot || '') + '</td><td>' + (item.remarks || '') + '</td>' +
+                        '<td style="text-align:right; font-weight:bold;">' + item.amount.toFixed(2) + '</td>' +
+                        '<td style="text-align:right;">' + (item.wht || 0).toFixed(2) + '</td></tr>';
+                });
+            } else {
+                html = '<tr id="trEmptyGrid"><td colspan="10" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr>';
+            }
+            $('#tbodyGrid').html(html);
+        }
+
+        // Ditto FormValidation(): Account(Credit Account)/Company/Branch/Project/Voucher Type
+        // required; ditto Save_Click's own WHT pre-checks: Against Account/WithHolding Account/
+        // TaxType required when WHT checked.
+        function submitVoucher() {
+            if (gridItems.length === 0) { alert('Grid Record not found'); return; }
+            const docTypeId = parseInt($('#cmbVoucherType').val()) || 0;
+            const creditAccountId = parseInt($('#cmbCreditAccount').val()) || 0;
+            if (creditAccountId === 0) { alert('Account Field is Required'); return; }
+            const branchId = parseInt($('#cmbBranch').val()) || 0;
+            if (branchId === 0) { alert('Branch Name Field is Required'); return; }
+            const projectId = parseInt($('#cmbProject').val()) || 0;
+            if (projectId === 0) { alert('Project Name Field is Required'); return; }
+
+            const whtOn = $('#chkWht').is(':checked');
+            let taxTypeId = 0, taxTypeName = '', whtDebitAccId = 0, whtCreditAccId = 0;
+            if (whtOn) {
+                whtDebitAccId = parseInt($('#hdnWhtDebitAccId').val()) || 0;
+                if (whtDebitAccId === 0) { alert('Against Account Field is Required'); return; }
+                whtCreditAccId = parseInt($('#hdnWhtCreditAccId').val()) || 0;
+                if (whtCreditAccId === 0) { alert('WithHolding Account Field is Required'); return; }
+                taxTypeId = parseInt($('#cmbTaxType').val()) || 0;
+                taxTypeName = $('#cmbTaxType option:selected').text();
+                if (taxTypeId === 0) { alert('TaxType Field is Required'); return; }
+            }
+
+            const totals = recalcTotals();
+
+            const payload = {
+                id: editingVoucherId > 0 ? editingVoucherId : null,
+                documentTypeId: docTypeId, // 1 = CPV, 2 = BPV (same DocumentTypeId space as the regular forms)
+                voucherCode: parseInt($('#txtVoucherNo').val()) || null,
+                voucherDate: $('#dtpVoucherDate').val(),
+                refAccountId: creditAccountId,
+                branchId: branchId,
+                projectId: projectId,
+                remarks: $('#txtHeaderRemarks').val().trim(),
+                voucherAmount: totals.totalAmount,
+                chequeNo: docTypeId === 2 ? ($('#txtChequeNo').val() || null) : null,
+                chequeDate: docTypeId === 2 ? ($('#dtpChequeDate').val() || null) : null,
+                payTitle: docTypeId === 2 ? ($('#txtPayTitle').val() || null) : null,
+                // Payment By Invoice never mirrors a second GL row per line (ditto Insert(): each line
+                // just carries AgainstAccountId=creditAccount as a reference column) - no
+                // mirrorCreditToRefAccount here, ditto PDC Payment's own single-entry style.
+                includeWht: whtOn,
+                refDocNoId: whtOn ? whtDebitAccId : null,
+                againstAccountId: whtOn ? whtCreditAccId : null,
+                taxTypeId: whtOn ? taxTypeId : null,
+                taxTypeName: whtOn ? taxTypeName : null,
+                taxPercent: whtOn ? (parseFloat($('#txtTaxPercent').val()) || 0) : null,
+                taxAmount: whtOn ? totals.taxAmount : null,
+                postSingleWhtDebitRow: true,
+                details: gridItems.map(function(item) {
+                    return {
+                        accountId: item.accountId, comments: item.remarks,
+                        debitAmount: item.amount, creditAmount: 0.0,
+                        jobLotId: item.jobLotId || null,
+                        refInvoiceNo: item.invoiceNo || null,
+                        orderNo: item.invoiceId || null,
+                        documentTypeIdRef: item.refDocumentTypeId || null,
+                        qtyIn: item.invoiceAmount || 0.0,
+                        qtyOut: item.totalPaidAmount || 0.0,
+                        itemAmount: item.balanceAmount || 0.0,
+                        whtHolding: item.wht || 0.0,
+                        lineAgainstAccountId: creditAccountId
+                    };
+                })
+            };
+
+            $.ajax({
+                url: '/accounts/api/vouchers/save', type: 'POST', contentType: 'application/json', data: JSON.stringify(payload),
+                success: function(res) {
+                    alert(res.message || (editingVoucherId > 0 ? 'Voucher Update Successfully...[' + res.voucherCode + ']' : 'Voucher Save Successfully...[' + res.voucherCode + ']'));
+                    resetForm();
+                },
+                error: function(err) { alert('Error saving voucher: ' + (err.responseJSON ? err.responseJSON.message : 'Server error')); }
+            });
+        }
+
+        function resetForm() { window.location.reload(); }
+        function refreshPage() { window.location.reload(); }
+        function printVoucher() { alert('Printing Payment By Invoice Voucher...'); }
+
+        function switchTab(tab) {
+            if (tab === 'form') {
+                $('#tabBtnForm').addClass('active'); $('#tabBtnHistory').removeClass('active');
+                $('#tabFormContent').show(); $('#tabHistoryContent').hide();
+            } else {
+                $('#tabBtnHistory').addClass('active'); $('#tabBtnForm').removeClass('active');
+                $('#tabFormContent').hide(); $('#tabHistoryContent').show();
+                loadHistory();
+            }
+        }
+
+        function loadHistory() {
+            $.get('/accounts/api/vouchers/payment-by-invoice/history', function(res) {
+                const tbody = $('#tbodyHistoryGrid');
+                tbody.empty();
+                const rows = (res && res.rows) || [];
+                if (rows.length === 0) { tbody.append('<tr><td colspan="10" style="text-align: center; color: #888; padding: 20px;">No vouchers found</td></tr>'); return; }
+                rows.forEach(function(v) {
+                    const id = v.Id || v.id;
+                    const row = '<tr style="cursor: pointer;" ondblclick="loadVoucherForEdit(' + id + ')">' +
+                        '<td style="text-align:center;"><button type="button" class="win-btn win-btn-teal" style="padding: 1px 6px;" onclick="loadVoucherForEdit(' + id + ')"><i class="fa fa-edit"></i></button></td>' +
+                        '<td style="font-weight: bold;">' + (v.VoucherCode != null ? v.VoucherCode : (v.voucherCode != null ? v.voucherCode : '')) + '</td>' +
+                        '<td>' + (v.DocumentTypeCode || v.documentTypeCode || '') + '</td>' +
+                        '<td>' + (v.VoucherDate || v.voucherDate || '') + '</td>' +
+                        '<td>' + (v.AccountTitle || v.accountTitle || '') + '</td>' +
+                        '<td>' + (v.Remarks || v.remarks || '') + '</td>' +
+                        '<td style="text-align: right; font-weight: bold;">' + (parseFloat(v.VoucherAmount || v.voucherAmount || 0)).toFixed(2) + '</td>' +
+                        '<td>' + (v.CheqNo || v.cheqNo || '') + '</td>' +
+                        '<td>' + (v.UserName || v.userName || '') + '</td>' +
+                        '<td style="text-align: center;">' + (v.Attachment && v.Attachment > 0 ? v.Attachment : '') + '</td></tr>';
+                    tbody.append(row);
+                });
+            }).fail(function() { $('#tbodyHistoryGrid').html('<tr><td colspan="10" style="text-align: center; color: red; padding: 20px;">Error loading History</td></tr>'); });
+        }
+
+        // Ditto HistoryGridFill(): re-loads the header and every real (non-taxable) detail row for
+        // edit. Note: real desktop's own WHT bar re-population is gated on DebitAmount/CreditAmount
+        // being >0 on the single tax row, which - since Insert() only ever sets DebitAmount on that
+        // row - means desktop itself never actually restores WHT Credit Account/Tax Type/Tax % on
+        // Edit (a real, pre-existing desktop quirk). This port instead reads those values directly
+        // off the tax row's own TaxTypeId/TaxPrcnt/TaxesTotalAmount columns, which is more correct
+        // without changing anything about what gets saved.
+        function loadVoucherForEdit(id) {
+            $.get('/accounts/api/vouchers/' + id, function(voucher) {
+                if (!voucher || !voucher.header) return;
+                switchTab('form');
+                const header = voucher.header;
+                editingVoucherId = header.id || id;
+                const docTypeId = (header.documentType && header.documentType.id) || header.documentTypeId || 1;
+                $('#cmbVoucherType').val(docTypeId);
+                onVoucherTypeChange();
+                $('#txtVoucherNo').val(header.voucherCode != null ? header.voucherCode : '');
+                if (header.voucherDate) $('#dtpVoucherDate').val(header.voucherDate);
+                $('#txtHeaderRemarks').val(header.remarks || '');
+                setTimeout(function() {
+                    if (header.refAccountId) $('#cmbCreditAccount').val(header.refAccountId);
+                }, 400);
+                if (header.branchId) $('#cmbBranch').val(header.branchId);
+                if (header.projectId) $('#cmbProject').val(header.projectId);
+                if (header.chequeNo) $('#txtChequeNo').val(header.chequeNo);
+                if (header.payTitle) $('#txtPayTitle').val(header.payTitle);
+
+                const refAccountId = header.refAccountId;
+                const details = (voucher.details || []).filter(function(d) { return d.isTaxable !== 'True'; });
+                gridItems = details.map(function(d) {
+                    return {
+                        accountId: d.accountId, accountTitle: d.accountTitle || '',
+                        invoiceId: d.orderNo || 0, invoiceNo: d.refInvoiceNo || '', refDocumentTypeId: d.documentTypeIdRef || null,
+                        jobLotId: d.jobLotId || null, jobLot: '', remarks: d.comments || '',
+                        invoiceAmount: parseFloat(d.qtyIn || 0), totalPaidAmount: parseFloat(d.qtyOut || 0), balanceAmount: parseFloat(d.itemAmount || 0),
+                        amount: parseFloat(d.debitAmount || 0), wht: parseFloat(d.whtHolding || 0)
+                    };
+                });
+                if (gridItems.length > 0) {
+                    $('#hdnAccountId').val(gridItems[0].accountId);
+                    $('#txtAccountSearch').val(gridItems[0].accountTitle);
+                }
+
+                const taxRow = (voucher.details || []).find(function(d) { return d.isTaxable === 'True'; });
+                if (taxRow) {
+                    $('#chkWht').prop('checked', true);
+                    onWhtToggle();
+                    $('#cmbTaxType').val(taxRow.taxTypeId || 0);
+                    $('#txtTaxPercent').val(taxRow.taxPrcnt || 0);
+                    if (taxRow.accountId) { $('#hdnWhtDebitAccId').val(taxRow.accountId); $('#txtWhtDebitAccSearch').val('Account #' + taxRow.accountId); }
+                    if (taxRow.againstAccountId) { $('#hdnWhtCreditAccId').val(taxRow.againstAccountId); $('#txtWhtCreditAccSearch').val('Account #' + taxRow.againstAccountId); }
+                }
+
+                renderGrid();
+                $('#btnSaveUpdate').html('<i class="fa fa-save"></i> Update');
+            }).fail(function() { alert('Could not load Payment By Invoice Voucher #' + id); });
+        }
+
+        $(document).on('keydown', function(e) {
+            if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); resetForm(); }
+            if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); submitVoucher(); }
+            if (e.ctrlKey && e.keyCode === 82) { e.preventDefault(); refreshPage(); }
+        });
+    </script>
+</body>
+</html>

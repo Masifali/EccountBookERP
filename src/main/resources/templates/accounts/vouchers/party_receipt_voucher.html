@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Party Receipt Voucher - WinForms Replica</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
+        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
+        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
+        .win-tab-bar { background: #d1d5db; border-bottom: 1px solid #b0bec5; padding: 2px 8px 0 8px; display: flex; gap: 3px; }
+        .win-tab-btn { background: #e5e7eb; border: 1px solid #9ca3af; border-bottom: none; border-radius: 3px 3px 0 0; padding: 4px 14px; font-size: 11px; font-weight: bold; color: #374151; cursor: pointer; }
+        .win-tab-btn.active { background: #ffffff; color: #00796B; border-color: #b0bec5; border-bottom: 2px solid #ffffff; margin-bottom: -1px; }
+        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 8px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .win-section-header { background-color: #f1f5f9; color: #00796B; font-weight: bold; font-size: 11px; padding: 4px 8px; border-bottom: 1px solid #cbd5e1; border-top: 1px solid #cbd5e1; }
+        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
+        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
+        .win-textarea { border: 1px solid #94a3b8; border-radius: 2px; padding: 4px 6px; font-size: 11px; width: 100%; height: 40px; resize: none; box-sizing: border-box; }
+        .search-popup { position: absolute; z-index: 1050; background: #ffffff; border: 1px solid #00796B; box-shadow: 0 4px 12px rgba(0,0,0,0.18); max-height: 260px; overflow-y: auto; width: 480px; display: none; }
+        .search-popup table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .search-popup th { background-color: #00796B; color: white; padding: 4px 6px; position: sticky; top: 0; font-weight: 600; border: 1px solid #004d40; }
+        .search-popup td { padding: 4px 6px; border: 1px solid #e2e8f0; cursor: pointer; }
+        .search-popup tr:hover { background-color: #e0f2f1; font-weight: 600; }
+        .detail-entry-bar { background-color: #fafafa; border: 1px solid #cbd5e1; padding: 8px; margin: 6px 0; }
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
+        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; }
+        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
+        .totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-money"></i> Party Receipt Voucher</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Toolbar - ditto frmPartyReceiptVoucher.cs's toolstrip (btnsave/btnUpdate/btnSaveAs/
+         btnDelete/btnAttachment/CHKPREVIEW-Print/chkUrdu-Urdu Print) -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="resetForm()"><i class="fa fa-plus text-success"></i> + New</button>
+        <button type="button" class="win-btn" onclick="refreshPage()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+        <button type="button" class="win-btn win-btn-teal" id="btnSaveUpdate" onclick="submitVoucher()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="win-btn"><i class="fa fa-paperclip text-info"></i> Attachment</button>
+        <button type="button" class="win-btn" onclick="printVoucher()"><i class="fa fa-print text-warning"></i> 102-Print</button>
+        <!-- Desktop's own btnDelete_Click handler body is empty (frmPartyReceiptVoucher.cs line
+             2191) - Party Receipt Voucher has never had a working Delete action on the real
+             application, so this button is disabled here too rather than implementing one desktop
+             itself never had. -->
+        <button type="button" class="win-btn" disabled title="Desktop's own Delete button does nothing on this form (empty btnDelete_Click handler) - preserved as-is, not implemented here either.">
+            <i class="fa fa-trash text-danger"></i> Delete
+        </button>
+    </div>
+
+    <div class="win-tab-bar">
+        <button type="button" class="win-tab-btn active" id="tabBtnForm" onclick="switchTab('form')"><i class="fa fa-edit"></i> Form Tab</button>
+        <button type="button" class="win-tab-btn" id="tabBtnHistory" onclick="switchTab('history')"><i class="fa fa-history"></i> History Tab</button>
+    </div>
+
+    <div id="tabFormContent" class="win-form-card">
+        <form id="formVoucher" onsubmit="event.preventDefault(); submitVoucher();">
+
+            <!-- HEADER SECTION - ditto frmPartyReceiptVoucher.cs's Main group box -->
+            <div class="win-section-header">Main</div>
+            <div style="padding: 10px;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-4"><label class="win-label">Doc No</label></div>
+                            <div class="col-md-3"><input type="text" id="txtDocNo" class="win-input" style="font-weight: bold;"/></div>
+                            <div class="col-md-2" style="padding-left: 0;"><label class="win-label">Date</label></div>
+                            <div class="col-md-3" style="padding-left: 0;"><input type="date" id="dtpDocDate" class="win-input"/></div>
+                        </div>
+                        <div class="row" style="margin-bottom: 6px; position: relative;">
+                            <div class="col-md-4"><label class="win-label">Account</label></div>
+                            <div class="col-md-8">
+                                <input type="text" id="txtAccSearch" class="win-input" placeholder="Type to search account (Cash/Bank/Assets/Liabilities)..." autocomplete="off" onkeyup="onAccSearch(event)" oninput="onAccSearch(event)" onfocus="onAccSearch(event)"/>
+                                <input type="hidden" id="hdnAccId" value="0"/>
+                                <div id="popAcc" class="search-popup"><table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th></tr></thead><tbody id="tbodyPopAcc"></tbody></table></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row" style="margin-bottom: 6px;">
+                            <div class="col-md-3"><label class="win-label">Fcy Code</label></div>
+                            <div class="col-md-3"><select id="cmbCurrency" class="win-input" onchange="onCurrencyChange()"></select></div>
+                            <div class="col-md-3" style="padding-left:0;"><label class="win-label">Exchange Rate</label></div>
+                            <div class="col-md-3" style="padding-left:0;"><input type="number" step="0.0001" id="txtExchangeRate" class="win-input" onchange="recalcFcyAmount()"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><label class="win-label">Remarks</label></div>
+                            <div class="col-md-9"><textarea id="txtHeaderRemarks" class="win-textarea" placeholder="Enter voucher main remarks..."></textarea></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETAIL SECTION - ditto frmPartyReceiptVoucher.cs's Detail group box -->
+            <div class="win-section-header">Detail</div>
+            <div style="padding: 10px;">
+                <div class="detail-entry-bar">
+                    <div class="row" style="margin-bottom: 6px;">
+                        <div class="col-md-4" style="position: relative;">
+                            <label class="win-label">Account (Cash/Bank/Assets/Liabilities)</label>
+                            <input type="text" id="txtDetailAccSearch" class="win-input" placeholder="Type to search..." autocomplete="off" onkeyup="onDetailAccSearch(event)" oninput="onDetailAccSearch(event)" onfocus="onDetailAccSearch(event)"/>
+                            <input type="hidden" id="hdnDetailAccId" value="0"/>
+                            <div id="popDetailAcc" class="search-popup"><table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th></tr></thead><tbody id="tbodyPopDetailAcc"></tbody></table></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Job/Lot *</label>
+                            <select id="cmbJobLot" class="win-input"><option value="0">-- Select --</option></select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Cheque No</label>
+                            <input type="text" id="txtChequeNo" class="win-input"/>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Amount *</label>
+                            <input type="number" step="0.01" id="txtAmountDetail" class="win-input" style="text-align: right; font-weight: bold;"/>
+                        </div>
+                        <div class="col-md-2" style="display: flex; align-items: flex-end;">
+                            <button type="button" class="win-btn win-btn-teal" id="btnAddRow" style="width: 100%; height: 25px; justify-content: center;" onclick="addDetailRow()"><i class="fa fa-plus"></i> + Add</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12"><label class="win-label">Remarks *</label><input type="text" id="txtRemarksDetail" class="win-input" placeholder="Required - enter line item remarks..."/></div>
+                    </div>
+                </div>
+
+                <div style="max-height: 300px; overflow-y: auto; margin-top: 8px;">
+                    <table class="win-grid-table" id="tblGrid">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px; text-align: center;">Action</th>
+                                <th style="width: 90px;">Account Code</th>
+                                <th>Account Title</th>
+                                <th style="width: 100px;">Job/Lot</th>
+                                <th style="width: 90px;">Cheque No</th>
+                                <th>Remarks</th>
+                                <th style="width: 110px; text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyGrid"><tr id="trEmptyGrid"><td colspan="7" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr></tbody>
+                    </table>
+                </div>
+
+                <div class="totals-bar"><div>Total Amount (Voucher Amount): <span id="lblTotalDebit">0.00</span></div></div>
+            </div>
+        </form>
+    </div>
+
+    <!-- History Tab - ditto frmPartyReceiptVoucher.cs's HistoryGridFill()/dtHistory: Id,
+         DocumentTypeId, VoucherDate, VoucherCode, DocumentType, AccountTitle, VoucherAmount,
+         Remarks, EntryUser, Attachment only (HistoryColumns.PARTY_RECEIPT_PAYMENT - no Fcy trio, no
+         EntryDate, no Modify/Approved, no ChequeNo/ManualBillNo/AgainstAccount) - backed by
+         GET /accounts/api/vouchers/party-receipt/history -> EXEC USP_VoucherFormHistory
+         (@DocumentTypeName='34'). -->
+    <div id="tabHistoryContent" class="win-form-card" style="display: none;">
+        <div class="win-section-header">Party Receipt Voucher History</div>
+        <div style="padding: 10px;">
+            <div class="detail-entry-bar">
+                <div class="row" style="margin-bottom: 6px;">
+                    <div class="col-md-3">
+                        <label class="win-label">Date Type</label><br/>
+                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="prvHistDateType" value="docdate" checked onchange="loadPrvHistory()"/> Doc Date</label>
+                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="prvHistDateType" value="entrydate" onchange="loadPrvHistory()"/> Entry Date</label>
+                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="prvHistDateType" value="modifydate" onchange="loadPrvHistory()"/> Modify Date</label>
+                        <label style="font-weight: normal;"><input type="radio" name="prvHistDateType" value="approveddate" onchange="loadPrvHistory()"/> Approved Date</label>
+                    </div>
+                    <div class="col-md-2"><label class="win-label">From Date</label><input type="date" id="dtpPrvHistFrom" class="win-input"/></div>
+                    <div class="col-md-2"><label class="win-label">To Date</label><input type="date" id="dtpPrvHistTo" class="win-input"/></div>
+                    <div class="col-md-2"><label class="win-label">From Doc No</label><input type="number" id="txtFromDocNoPrv" class="win-input"/></div>
+                    <div class="col-md-2"><label class="win-label">To Doc No</label><input type="number" id="txtToDocNoPrv" class="win-input"/></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4"><label class="win-label">Account Title</label><select id="cmbAccountTitlePrv" class="win-input"><option value="0">-- All Accounts --</option></select></div>
+                    <div class="col-md-3">
+                        <label class="win-label">Approved Status</label>
+                        <select id="cmbApprovedStatusPrv" class="win-input" onchange="loadPrvHistory()">
+                            <option value="notapproved" selected>Not Apporved</option>
+                            <option value="approved">Approved</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5" style="display: flex; align-items: flex-end; gap: 6px;">
+                        <button type="button" class="win-btn win-btn-teal" onclick="loadPrvHistory()"><i class="fa fa-search"></i> Search History</button>
+                        <button type="button" class="win-btn" onclick="resetPrvHistory()"><i class="fa fa-undo"></i> Reset</button>
+                        <div id="prvHistTotals" style="margin-left: 12px; font-size: 12px; display: none;">
+                            <b>Total Vouchers:</b> <span id="prvHistTotalVouchers">0</span> &nbsp;
+                            <b>Approved:</b> <span id="prvHistTotalApproved">0</span> &nbsp;
+                            <b>Not Approved:</b> <span id="prvHistTotalUnApproved">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="max-height: 420px; overflow-y: auto; overflow-x: auto; margin-top: 8px;">
+                <table class="win-grid-table" id="tblPrvHistoryGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Edit</th>
+                            <th style="width: 70px;">V.No</th>
+                            <th style="width: 90px;">V.Date</th>
+                            <th style="width: 60px;">V.Type</th>
+                            <th>Account Title</th>
+                            <th style="width: 350px;">Remarks</th>
+                            <th style="width: 100px; text-align: right;">Voucher Amount</th>
+                            <th style="width: 90px;">Entry User</th>
+                            <th style="width: 70px; text-align: center;">Attachment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyPrvHistoryGrid"><tr><td colspan="9" style="text-align: center; color: #888; padding: 20px;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        let gridItems = [];
+        let editingVoucherId = 0;
+        let baseCurrencyId = 0;
+        let baseCurrencyRate = 1;
+        let headerAccountList = [];
+        let detailAccountList = [];
+
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            $('#dtpDocDate').val(today);
+
+            $.get('/accounts/api/vouchers/next-code?documentTypeId=34', function(res) {
+                if (res && res.nextCode) $('#txtDocNo').val(res.nextCode);
+            });
+
+            // Ditto frmPartyReceiptVoucher.cs's AccountsBind(): cmbAccount (header "Account") is
+            // filtered to AccountTypeId in {3,6,8}; cmbAccountDetail (grid) to {2,15,3,6,8} - both
+            // real EXEC USP_GETAllAccountsFromCustomGroups-backed lists (ConfigurationServiceImpl.
+            // getGlobalAccounts(), already used elsewhere in this codebase).
+            $.get('/api/configurations/global-accounts?with=3,6,8', function(list) { headerAccountList = list || []; });
+            $.get('/api/configurations/global-accounts?with=2,15,3,6,8', function(list) { detailAccountList = list || []; });
+
+            $.get('/api/configurations/currencies', function(list) {
+                let opt = '';
+                (list || []).forEach(function(c) { opt += '<option value="' + (c.Id || c.id) + '">' + $('<div>').text(c.CurrencyCode || c.currencyCode || '').html() + '</option>'; });
+                $('#cmbCurrency').html(opt);
+                $.get('/api/configurations/by-key?configDescription=Base Currency', function(cfg) {
+                    if (cfg && cfg.configKey) { baseCurrencyId = parseInt(cfg.configKey) || 0; if (baseCurrencyId > 0) $('#cmbCurrency').val(baseCurrencyId); }
+                    $.get('/api/configurations/by-key?configDescription=BaseCurrencyRate', function(cfg2) {
+                        if (cfg2 && cfg2.configKey) baseCurrencyRate = parseFloat(cfg2.configKey) || 1;
+                        onCurrencyChange();
+                    }).fail(function() { onCurrencyChange(); });
+                }).fail(function() { onCurrencyChange(); });
+            });
+
+            $.get('/api/configurations/job-lots', function(list) {
+                let opt = '<option value="0">-- Select --</option>';
+                (list || []).forEach(function(j) {
+                    const id = j.Id || j.id;
+                    const name = j.JobLotName || j.jobLotName || j.Name || j.name || ('Job/Lot ' + id);
+                    opt += '<option value="' + id + '">' + $('<div>').text(name).html() + '</option>';
+                });
+                $('#cmbJobLot').html(opt);
+            }).fail(function() {});
+        });
+
+        function onCurrencyChange() {
+            const cur = parseInt($('#cmbCurrency').val()) || 0;
+            if (baseCurrencyId > 0 && cur === baseCurrencyId) $('#txtExchangeRate').val(baseCurrencyRate.toString());
+            recalcFcyAmount();
+        }
+        function recalcFcyAmount() {
+            const total = parseFloat($('#lblTotalDebit').text()) || 0;
+            const rate = parseFloat($('#txtExchangeRate').val()) || 0;
+            $('#txtFcyAmount').val(rate > 0 ? (total / rate).toFixed(2) : '0.00');
+        }
+
+        function filterAccList(list, query) {
+            const q = query.toLowerCase();
+            return list.filter(function(a) {
+                return ((a.accountTitle || '').toLowerCase().indexOf(q) >= 0) || ((a.accountCode || '') + '').toLowerCase().indexOf(q) >= 0;
+            }).slice(0, 50);
+        }
+
+        function onAccSearch(e) {
+            const q = $('#txtAccSearch').val().trim();
+            if (q.length < 1) { $('#popAcc').hide(); return; }
+            const rows = filterAccList(headerAccountList, q);
+            let html = rows.map(function(a) {
+                return '<tr onclick="selectAcc(' + a.id + ', \'' + escapeQuotes(a.accountCode) + '\', \'' + escapeQuotes(a.accountTitle) + '\')"><td><strong>' + a.accountTitle + '</strong></td><td>' + a.accountCode + '</td></tr>';
+            }).join('');
+            $('#tbodyPopAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+            $('#popAcc').show();
+        }
+        function selectAcc(id, code, title) { $('#hdnAccId').val(id); $('#txtAccSearch').val(title + ' [' + code + ']'); $('#popAcc').hide(); }
+
+        function onDetailAccSearch(e) {
+            const q = $('#txtDetailAccSearch').val().trim();
+            if (q.length < 1) { $('#popDetailAcc').hide(); return; }
+            const rows = filterAccList(detailAccountList, q);
+            let html = rows.map(function(a) {
+                return '<tr onclick="selectDetailAcc(' + a.id + ', \'' + escapeQuotes(a.accountCode) + '\', \'' + escapeQuotes(a.accountTitle) + '\')"><td><strong>' + a.accountTitle + '</strong></td><td>' + a.accountCode + '</td></tr>';
+            }).join('');
+            $('#tbodyPopDetailAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+            $('#popDetailAcc').show();
+        }
+        function selectDetailAcc(id, code, title) { $('#hdnDetailAccId').val(id); $('#txtDetailAccSearch').val(title + ' [' + code + ']'); $('#popDetailAcc').hide(); $('#txtAmountDetail').focus(); }
+        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#txtAccSearch, #popAcc').length) $('#popAcc').hide();
+            if (!$(e.target).closest('#txtDetailAccSearch, #popDetailAcc').length) $('#popDetailAcc').hide();
+        });
+
+        // Ditto frmPartyReceiptVoucher.cs's FormDetailValidation(): Account, Job/Lot, Amount>0,
+        // Remarks are ALL required per detail line (unlike Expense Voucher, where line remarks are
+        // optional).
+        function addDetailRow() {
+            const accId = parseInt($('#hdnDetailAccId').val()) || 0;
+            const accTitle = $('#txtDetailAccSearch').val().split(' [')[0];
+            const accCode = (($('#txtDetailAccSearch').val().match(/\[(.*)\]/) || [])[1]) || '';
+            const jobLotId = parseInt($('#cmbJobLot').val()) || 0;
+            const jobLot = $('#cmbJobLot option:selected').text();
+            const chequeNo = $('#txtChequeNo').val().trim();
+            const remarks = $('#txtRemarksDetail').val().trim();
+            const amount = parseFloat($('#txtAmountDetail').val()) || 0.0;
+
+            if (accId === 0) { alert('Account  Field Required'); $('#txtDetailAccSearch').focus(); return; }
+            if (jobLotId === 0) { alert('JobLot  Field Required'); return; }
+            if (amount === 0) { alert('Amount  Field Required'); $('#txtAmountDetail').focus(); return; }
+            if (remarks === '') { alert('Remarks  Field Required'); $('#txtRemarksDetail').focus(); return; }
+
+            gridItems.push({ chartOfAccountId: accId, accountCode: accCode, accountTitle: accTitle, jobLotId: jobLotId, jobLot: jobLot, chequeNo: chequeNo, remarks: remarks, amount: amount });
+            renderGrid();
+
+            $('#hdnDetailAccId').val('0'); $('#txtDetailAccSearch').val(''); $('#txtChequeNo').val(''); $('#txtRemarksDetail').val(''); $('#txtAmountDetail').val('');
+            $('#txtDetailAccSearch').focus();
+        }
+
+        function removeGridItem(index) { gridItems.splice(index, 1); renderGrid(); }
+
+        function renderGrid() {
+            let html = '';
+            let total = 0.0;
+            if (gridItems.length > 0) {
+                gridItems.forEach(function(item, idx) {
+                    total += item.amount;
+                    html += '<tr><td style="text-align:center;"><button type="button" class="btn btn-xs btn-danger" onclick="removeGridItem(' + idx + ')">&times;</button></td>' +
+                        '<td>' + item.accountCode + '</td><td><strong>' + item.accountTitle + '</strong></td>' +
+                        '<td>' + (item.jobLot || '') + '</td><td>' + (item.chequeNo || '') + '</td><td>' + (item.remarks || '') + '</td>' +
+                        '<td style="text-align:right; font-weight:bold;">' + item.amount.toFixed(2) + '</td></tr>';
+                });
+            } else {
+                html = '<tr id="trEmptyGrid"><td colspan="7" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr>';
+            }
+            $('#tbodyGrid').html(html);
+            $('#lblTotalDebit').text(total.toFixed(2));
+            recalcFcyAmount();
+        }
+
+        // Ditto frmPartyReceiptVoucher.cs's FormValidation(): DocNo and Account (header) required.
+        function submitVoucher() {
+            if (gridItems.length === 0) { alert('Grid Record not found'); return; }
+            const docNo = $('#txtDocNo').val().trim();
+            if (docNo === '' || docNo === '0') { alert('DocNo  Field Required'); return; }
+            const refAccountId = parseInt($('#hdnAccId').val()) || 0;
+            if (refAccountId === 0) { alert('Account  Field Required'); return; }
+
+            const totalAmount = parseFloat($('#lblTotalDebit').text()) || 0.0;
+            const multiCurrencyId = parseInt($('#cmbCurrency').val()) || null;
+            const exchangeRate = parseFloat($('#txtExchangeRate').val()) || null;
+            const fcAmount = parseFloat($('#txtFcyAmount').val()) || null;
+
+            const payload = {
+                id: editingVoucherId > 0 ? editingVoucherId : null,
+                documentTypeId: 34, // Party Receipt Voucher (real DocumentType.Id)
+                voucherCode: parseInt(docNo) || null,
+                voucherDate: $('#dtpDocDate').val(),
+                refAccountId: refAccountId,
+                multiCurrencyId: multiCurrencyId,
+                exchangeCurrencyRate: exchangeRate,
+                fcAmount: fcAmount,
+                remarks: $('#txtHeaderRemarks').val().trim(),
+                voucherAmount: totalAmount,
+                // Real desktop double-entry: ditto frmPartyReceiptVoucher.cs's Insert() "detail"/
+                // "vd1" pair - grid account is debited (money/asset received), header Account is
+                // credited (the party/customer whose balance is reduced).
+                mirrorCreditToRefAccount: true,
+                details: gridItems.map(function(item) {
+                    return { accountId: item.chartOfAccountId, comments: item.remarks, debitAmount: item.amount, creditAmount: 0.0, jobLotId: item.jobLotId || null, chequeNoDetail: item.chequeNo || null };
+                })
+            };
+
+            $.ajax({
+                url: '/accounts/api/vouchers/save', type: 'POST', contentType: 'application/json', data: JSON.stringify(payload),
+                success: function(res) {
+                    alert(res.message || (editingVoucherId > 0 ? 'Record Update Successfully' + res.voucherCode : 'Record Save Successfully' + res.voucherCode));
+                    resetForm();
+                },
+                error: function(err) { alert('Error saving voucher: ' + (err.responseJSON ? err.responseJSON.message : 'Server error')); }
+            });
+        }
+
+        function resetForm() { window.location.reload(); }
+        function refreshPage() { window.location.reload(); }
+        function printVoucher() { alert('Printing Party Receipt Voucher (102-Print)...'); }
+
+        function switchTab(tab) {
+            if (tab === 'form') {
+                $('#tabBtnForm').addClass('active'); $('#tabBtnHistory').removeClass('active');
+                $('#tabFormContent').show(); $('#tabHistoryContent').hide();
+            } else {
+                $('#tabBtnHistory').addClass('active'); $('#tabBtnForm').removeClass('active');
+                $('#tabFormContent').hide(); $('#tabHistoryContent').show();
+                if (!prvHistoryAccountsLoaded) loadPrvHistoryAccounts();
+                loadPrvHistory();
+            }
+        }
+
+        let prvHistoryAccountsLoaded = false;
+        function loadPrvHistoryAccounts() {
+            $.get('/accounts/api/vouchers/party-receipt/history/accounts', function(accounts) {
+                const sel = $('#cmbAccountTitlePrv');
+                sel.find('option:not(:first)').remove();
+                (accounts || []).forEach(function(a) { sel.append('<option value="' + a.Id + '">' + $('<div>').text(a.name).html() + '</option>'); });
+                prvHistoryAccountsLoaded = true;
+            });
+        }
+        function resetPrvHistory() {
+            $('input[name="prvHistDateType"][value="docdate"]').prop('checked', true);
+            $('#dtpPrvHistFrom').val(''); $('#dtpPrvHistTo').val('');
+            $('#txtFromDocNoPrv').val(''); $('#txtToDocNoPrv').val('');
+            $('#cmbAccountTitlePrv').val('0'); $('#cmbApprovedStatusPrv').val('notapproved');
+            loadPrvHistory();
+        }
+        function loadPrvHistory() {
+            const dateType = $('input[name="prvHistDateType"]:checked').val();
+            const params = {
+                dateType: dateType, fromDate: $('#dtpPrvHistFrom').val(), toDate: $('#dtpPrvHistTo').val(),
+                fromDocNo: $('#txtFromDocNoPrv').val(), toDocNo: $('#txtToDocNoPrv').val(),
+                accountId: $('#cmbAccountTitlePrv').val(), approvedStatus: $('#cmbApprovedStatusPrv').val()
+            };
+            $.get('/accounts/api/vouchers/party-receipt/history', params, function(res) {
+                const tbody = $('#tbodyPrvHistoryGrid');
+                tbody.empty();
+                const rows = (res && res.rows) || [];
+                if (rows.length === 0) { $('#prvHistTotals').hide(); tbody.append('<tr><td colspan="9" style="text-align: center; color: #888; padding: 20px;">No vouchers found</td></tr>'); return; }
+                $('#prvHistTotals').show();
+                $('#prvHistTotalVouchers').text(res.totalVouchers || 0);
+                $('#prvHistTotalApproved').text(res.totalApprovedVoucher || 0);
+                $('#prvHistTotalUnApproved').text(res.totalUnApprovedVoucher || 0);
+                rows.forEach(function(v) {
+                    const row = '<tr style="cursor: pointer;" ondblclick="loadPrvVoucherForEdit(' + v.id + ')">' +
+                        '<td style="text-align:center;"><button type="button" class="win-btn win-btn-teal" style="padding: 1px 6px;" onclick="loadPrvVoucherForEdit(' + v.id + ')"><i class="fa fa-edit"></i></button></td>' +
+                        '<td style="font-weight: bold;">' + (v.voucherCode != null ? v.voucherCode : '') + '</td>' +
+                        '<td>' + (v.voucherDate || '') + '</td>' + '<td>' + (v.documentType || '') + '</td>' +
+                        '<td>' + (v.accountTitle || '') + '</td>' + '<td>' + (v.remarks || '') + '</td>' +
+                        '<td style="text-align: right; font-weight: bold;">' + (parseFloat(v.voucherAmount || 0)).toFixed(2) + '</td>' +
+                        '<td>' + (v.entryUser || '') + '</td>' +
+                        '<td style="text-align: center;">' + (v.attachment && v.attachment > 0 ? v.attachment : '') + '</td></tr>';
+                    tbody.append(row);
+                });
+            }).fail(function() { $('#tbodyPrvHistoryGrid').html('<tr><td colspan="9" style="text-align: center; color: red; padding: 20px;">Error loading Party Receipt History</td></tr>'); });
+        }
+
+        // Ditto frmPartyReceiptVoucher.cs's ReadById(int ID): filters reloaded detail rows to
+        // AccountId != RefAccountId (never re-shows the auto-mirrored credit-to-Account row).
+        function loadPrvVoucherForEdit(id) {
+            $.get('/accounts/api/vouchers/' + id, function(voucher) {
+                if (!voucher || !voucher.header) return;
+                switchTab('form');
+                const header = voucher.header;
+                editingVoucherId = header.id || id;
+                $('#txtDocNo').val(header.voucherCode != null ? header.voucherCode : '');
+                if (header.voucherDate) $('#dtpDocDate').val(header.voucherDate);
+                $('#txtHeaderRemarks').val(header.remarks || '');
+                if (header.refAccountId) { $('#hdnAccId').val(header.refAccountId); $('#txtAccSearch').val('Account #' + header.refAccountId); }
+                if (header.multiCurrencyId) $('#cmbCurrency').val(header.multiCurrencyId);
+                if (header.exchangeCurrencyRate) $('#txtExchangeRate').val(header.exchangeCurrencyRate);
+                if (header.fcAmount) $('#txtFcyAmount').val(header.fcAmount);
+
+                const refAccountId = header.refAccountId;
+                const details = (voucher.details || []).filter(function(d) { return d.accountId !== refAccountId; });
+                gridItems = details.map(function(d) {
+                    return { chartOfAccountId: d.accountId, accountCode: d.accountCode || '', accountTitle: d.accountTitle || '', jobLotId: null, jobLot: '', chequeNo: '', remarks: d.comments || '', amount: parseFloat(d.debitAmount || 0) };
+                });
+                renderGrid();
+                $('#btnSaveUpdate').html('<i class="fa fa-save"></i> Update');
+            }).fail(function() { alert('Could not load Party Receipt Voucher #' + id); });
+        }
+
+        $(document).on('keydown', function(e) {
+            if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); resetForm(); }
+            if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); submitVoucher(); }
+            if (e.ctrlKey && e.keyCode === 82) { e.preventDefault(); refreshPage(); }
+        });
+    </script>
+</body>
+</html>

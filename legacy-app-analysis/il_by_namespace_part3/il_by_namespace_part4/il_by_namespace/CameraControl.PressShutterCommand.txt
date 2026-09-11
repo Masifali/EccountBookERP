@@ -1,0 +1,70 @@
+
+====================================================================================================
+CLASS CameraControl.PressShutterCommand
+====================================================================================================
+
+; CameraControl.PressShutterCommand::.ctor  (rva=0x1b3cf, tiny header, code_size=15, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.1
+    IL_0002: call CameraControl.Command::.ctor
+    IL_0007: ldarg.0
+    IL_0008: ldarg.2
+    IL_0009: stfld CameraControl.PressShutterCommand::_status
+    IL_000e: ret
+
+; CameraControl.PressShutterCommand::Execute  (rva=0x1b3e0, fat header, code_size=140, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld CameraControl.Command::_model
+    IL_0006: callvirt CameraControl.CameraModel::get_Camera
+    IL_000b: ldc.i4.4
+    IL_000c: ldarg.0
+    IL_000d: ldfld CameraControl.PressShutterCommand::_status
+    IL_0012: call EDSDKLib.EDSDK::EdsSendCommand
+    IL_0017: stloc.0
+    IL_0018: ldloc.0
+    IL_0019: brfalse.s IL_0059
+    IL_001b: ldloc.0
+    IL_001c: ldc.i4 129
+    IL_0021: bne.un.s IL_003d
+    IL_0023: ldc.i4.2
+    IL_0024: ldsfld System.IntPtr::Zero
+    IL_0029: newobj CameraControl.CameraEvent::.ctor
+    IL_002e: stloc.1
+    IL_002f: ldarg.0
+    IL_0030: ldfld CameraControl.Command::_model
+    IL_0035: ldloc.1
+    IL_0036: callvirt CameraControl.Observable::NotifyObservers
+    IL_003b: ldc.i4.1
+    IL_003c: ret
+    IL_003d: ldc.i4.1
+    IL_003e: ldloc.0
+    IL_003f: conv.u8
+    IL_0040: call System.IntPtr::op_Explicit
+    IL_0045: newobj CameraControl.CameraEvent::.ctor
+    IL_004a: stloc.2
+    IL_004b: ldarg.0
+    IL_004c: ldfld CameraControl.Command::_model
+    IL_0051: ldloc.2
+    IL_0052: callvirt CameraControl.Observable::NotifyObservers
+    IL_0057: ldc.i4.1
+    IL_0058: ret
+    IL_0059: ldarg.0
+    IL_005a: ldfld CameraControl.PressShutterCommand::_status
+    IL_005f: ldc.i4.3
+    IL_0060: bne.un.s IL_008a
+    IL_0062: ldarg.0
+    IL_0063: ldfld CameraControl.Command::_model
+    IL_0068: callvirt CameraControl.CameraModel::get_DriveMode
+    IL_006d: ldc.i4.1
+    IL_006e: beq.s IL_008a
+    IL_0070: ldarg.0
+    IL_0071: ldfld CameraControl.Command::_model
+    IL_0076: callvirt CameraControl.CameraModel::get_DriveMode
+    IL_007b: ldc.i4.4
+    IL_007c: beq.s IL_008a
+    IL_007e: ldarg.0
+    IL_007f: ldfld CameraControl.Command::_model
+    IL_0084: ldc.i4.1
+    IL_0085: callvirt CameraControl.CameraModel::set_canDownloadImage
+    IL_008a: ldc.i4.1
+    IL_008b: ret

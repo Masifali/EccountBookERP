@@ -1,0 +1,317 @@
+
+====================================================================================================
+CLASS Architecture.PSDSMS.SQLCompact40
+====================================================================================================
+
+; Architecture.PSDSMS.SQLCompact40::.ctor  (rva=0x29b3f, tiny header, code_size=35, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldsfld System.String::Empty
+    IL_0006: stfld Architecture.PSDSMS.SQLCompact40::_dbCon
+    IL_000b: ldarg.0
+    IL_000c: call System.Object::.ctor
+    IL_0011: ldarg.0
+    IL_0012: ldstr ldstr "Datasource=\"data.sdf\"; Password=\"Admin123#\""
+    IL_0017: stfld Architecture.PSDSMS.SQLCompact40::_dbCon
+    IL_001c: ldarg.0
+    IL_001d: call Architecture.PSDSMS.SQLCompact40::Init
+    IL_0022: ret
+
+; Architecture.PSDSMS.SQLCompact40::get_Instance  (rva=0x29b63, tiny header, code_size=23, max_stack=8, exception_handlers=no)
+    IL_0000: ldsfld Architecture.PSDSMS.SQLCompact40::sQLCompact40
+    IL_0005: brtrue.s IL_0011
+    IL_0007: newobj Architecture.PSDSMS.SQLCompact40::.ctor
+    IL_000c: stsfld Architecture.PSDSMS.SQLCompact40::sQLCompact40
+    IL_0011: ldsfld Architecture.PSDSMS.SQLCompact40::sQLCompact40
+    IL_0016: ret
+
+; Architecture.PSDSMS.SQLCompact40::Init  (rva=0x29b7b, tiny header, code_size=13, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.PSDSMS.SQLCompact40::CreateDatabase
+    IL_0006: ldarg.0
+    IL_0007: call Architecture.PSDSMS.SQLCompact40::CreateTable
+    IL_000c: ret
+
+; Architecture.PSDSMS.SQLCompact40::CreateDatabase  (rva=0x29b8c, fat header, code_size=47, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldfld Architecture.PSDSMS.SQLCompact40::_dbCon
+    IL_0007: newobj System.Data.SqlServerCe.SqlCeEngine::.ctor
+    IL_000c: stfld Architecture.PSDSMS.SQLCompact40::en
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.PSDSMS.SQLCompact40::en
+    IL_0017: callvirt System.Data.SqlServerCe.SqlCeEngine::Verify
+    IL_001c: brtrue.s IL_0029
+    IL_001e: ldarg.0
+    IL_001f: ldfld Architecture.PSDSMS.SQLCompact40::en
+    IL_0024: callvirt System.Data.SqlServerCe.SqlCeEngine::CreateDatabase
+    IL_0029: leave.s IL_002e
+    IL_002b: pop
+    IL_002c: leave.s IL_002e
+    IL_002e: ret
+
+; Architecture.PSDSMS.SQLCompact40::CreateTable  (rva=0x29bd8, fat header, code_size=173, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldfld Architecture.PSDSMS.SQLCompact40::_dbCon
+    IL_0007: newobj System.Data.SqlServerCe.SqlCeConnection::.ctor
+    IL_000c: stfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0017: callvirt System.Data.Common.DbConnection::Close
+    IL_001c: ldarg.0
+    IL_001d: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0022: callvirt System.Data.Common.DbConnection::get_State
+    IL_0027: brtrue.s IL_0034
+    IL_0029: ldarg.0
+    IL_002a: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_002f: callvirt System.Data.Common.DbConnection::Open
+    IL_0034: ldarg.0
+    IL_0035: ldstr ldstr "SELECT COUNT(*) AS ID FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Messages'"
+    IL_003a: ldarg.0
+    IL_003b: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0040: newobj System.Data.SqlServerCe.SqlCeCommand::.ctor
+    IL_0045: stfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_004a: ldarg.0
+    IL_004b: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0050: callvirt System.Data.Common.DbCommand::ExecuteScalar
+    IL_0055: ldarg.0
+    IL_0056: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_005b: callvirt System.Data.Common.DbConnection::Close
+    IL_0060: unbox.any System.Int32
+    IL_0065: brtrue.s IL_00ac
+    IL_0067: ldarg.0
+    IL_0068: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_006d: callvirt System.Data.Common.DbConnection::get_State
+    IL_0072: brtrue.s IL_007f
+    IL_0074: ldarg.0
+    IL_0075: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_007a: callvirt System.Data.Common.DbConnection::Open
+    IL_007f: ldarg.0
+    IL_0080: ldstr ldstr "CREATE TABLE Messages(
+                                         ID INT PRIMARY KEY IDENTITY(1,1),
+                                         MessageId INT DEFAULT((1)),
+                                         MessageLogDate NVARCHAR(500) DEFAULT(''),
+                                         MessageTExt NVARCHAR(3000) DEFAULT(''),
+                                         Mobile NVARCHAR(30) DEFAULT(''),
+                                         PassCode NVARCHAR(30) DEFAULT(''),
+                                         Status NVARCHAR(50) DEFAULT(''))"
+    IL_0085: ldarg.0
+    IL_0086: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_008b: newobj System.Data.SqlServerCe.SqlCeCommand::.ctor
+    IL_0090: stfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0095: ldarg.0
+    IL_0096: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_009b: callvirt System.Data.Common.DbCommand::ExecuteNonQuery
+    IL_00a0: pop
+    IL_00a1: ldarg.0
+    IL_00a2: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_00a7: callvirt System.Data.Common.DbConnection::Close
+    IL_00ac: ret
+
+; Architecture.PSDSMS.SQLCompact40::AlterTable  (rva=0x29c94, fat header, code_size=126, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldfld Architecture.PSDSMS.SQLCompact40::_dbCon
+    IL_0007: newobj System.Data.SqlServerCe.SqlCeConnection::.ctor
+    IL_000c: stfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0017: callvirt System.Data.Common.DbConnection::Close
+    IL_001c: ldarg.0
+    IL_001d: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0022: callvirt System.Data.Common.DbConnection::get_State
+    IL_0027: brtrue.s IL_0034
+    IL_0029: ldarg.0
+    IL_002a: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_002f: callvirt System.Data.Common.DbConnection::Open
+    IL_0034: ldarg.0
+    IL_0035: ldstr ldstr "ALTER TABLE USERS 
+                                             ADD AccountId INT"
+    IL_003a: ldarg.0
+    IL_003b: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0040: newobj System.Data.SqlServerCe.SqlCeCommand::.ctor
+    IL_0045: stfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_004a: ldarg.0
+    IL_004b: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0050: callvirt System.Data.Common.DbCommand::ExecuteNonQuery
+    IL_0055: pop
+    IL_0056: ldarg.0
+    IL_0057: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_005c: callvirt System.Data.Common.DbConnection::Close
+    IL_0061: leave.s IL_007d
+    IL_0063: pop
+    IL_0064: leave.s IL_007d
+    IL_0066: ldarg.0
+    IL_0067: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_006c: callvirt System.Data.SqlServerCe.SqlCeConnection::Dispose
+    IL_0071: ldarg.0
+    IL_0072: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0077: callvirt System.ComponentModel.Component::Dispose
+    IL_007c: endfinally
+    IL_007d: ret
+
+; Architecture.PSDSMS.SQLCompact40::ExecuteNonQuery  (rva=0x29d3c, fat header, code_size=143, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldfld Architecture.PSDSMS.SQLCompact40::_dbCon
+    IL_0007: newobj System.Data.SqlServerCe.SqlCeConnection::.ctor
+    IL_000c: stfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0017: callvirt System.Data.Common.DbConnection::Close
+    IL_001c: ldarg.0
+    IL_001d: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0022: callvirt System.Data.Common.DbConnection::get_State
+    IL_0027: brtrue.s IL_0034
+    IL_0029: ldarg.0
+    IL_002a: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_002f: callvirt System.Data.Common.DbConnection::Open
+    IL_0034: ldarg.0
+    IL_0035: newobj System.Data.SqlServerCe.SqlCeCommand::.ctor
+    IL_003a: stfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_003f: ldarg.0
+    IL_0040: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0045: ldarg.0
+    IL_0046: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_004b: callvirt System.Data.SqlServerCe.SqlCeCommand::set_Connection
+    IL_0050: ldarg.0
+    IL_0051: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0056: ldarg.1
+    IL_0057: callvirt System.Data.Common.DbCommand::set_CommandText
+    IL_005c: ldarg.0
+    IL_005d: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0062: callvirt System.Data.Common.DbCommand::ExecuteNonQuery
+    IL_0067: ldarg.0
+    IL_0068: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_006d: callvirt System.Data.Common.DbConnection::Close
+    IL_0072: stloc.0
+    IL_0073: leave.s IL_008d
+    IL_0075: throw
+    IL_0076: ldarg.0
+    IL_0077: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_007c: callvirt System.Data.SqlServerCe.SqlCeConnection::Dispose
+    IL_0081: ldarg.0
+    IL_0082: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0087: callvirt System.ComponentModel.Component::Dispose
+    IL_008c: endfinally
+    IL_008d: ldloc.0
+    IL_008e: ret
+
+; Architecture.PSDSMS.SQLCompact40::ExecuteScalar  (rva=0x29df4, fat header, code_size=161, max_stack=2, exception_handlers=yes)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: ldarg.0
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.PSDSMS.SQLCompact40::_dbCon
+    IL_0009: newobj System.Data.SqlServerCe.SqlCeConnection::.ctor
+    IL_000e: stfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0013: ldarg.0
+    IL_0014: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0019: callvirt System.Data.Common.DbConnection::Close
+    IL_001e: ldarg.0
+    IL_001f: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0024: callvirt System.Data.Common.DbConnection::get_State
+    IL_0029: brtrue.s IL_0036
+    IL_002b: ldarg.0
+    IL_002c: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0031: callvirt System.Data.Common.DbConnection::Open
+    IL_0036: ldarg.0
+    IL_0037: newobj System.Data.SqlServerCe.SqlCeCommand::.ctor
+    IL_003c: stfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0041: ldarg.0
+    IL_0042: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0047: ldarg.0
+    IL_0048: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_004d: callvirt System.Data.SqlServerCe.SqlCeCommand::set_Connection
+    IL_0052: ldarg.0
+    IL_0053: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0058: ldarg.1
+    IL_0059: callvirt System.Data.Common.DbCommand::set_CommandText
+    IL_005e: ldarg.0
+    IL_005f: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0064: callvirt System.Data.Common.DbCommand::ExecuteScalar
+    IL_0069: stloc.1
+    IL_006a: ldloc.1
+    IL_006b: brfalse.s IL_0076
+    IL_006d: ldloc.1
+    IL_006e: unbox.any System.Int32
+    IL_0073: stloc.0
+    IL_0074: br.s IL_0078
+    IL_0076: ldc.i4.0
+    IL_0077: stloc.0
+    IL_0078: ldarg.0
+    IL_0079: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_007e: callvirt System.Data.Common.DbConnection::Close
+    IL_0083: ldloc.0
+    IL_0084: stloc.2
+    IL_0085: leave.s IL_009f
+    IL_0087: throw
+    IL_0088: ldarg.0
+    IL_0089: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_008e: callvirt System.Data.SqlServerCe.SqlCeConnection::Dispose
+    IL_0093: ldarg.0
+    IL_0094: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0099: callvirt System.ComponentModel.Component::Dispose
+    IL_009e: endfinally
+    IL_009f: ldloc.2
+    IL_00a0: ret
+
+; Architecture.PSDSMS.SQLCompact40::GetDataTable  (rva=0x29ec0, fat header, code_size=172, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldfld Architecture.PSDSMS.SQLCompact40::_dbCon
+    IL_0007: newobj System.Data.SqlServerCe.SqlCeConnection::.ctor
+    IL_000c: stfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0017: callvirt System.Data.Common.DbConnection::Close
+    IL_001c: ldarg.0
+    IL_001d: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0022: callvirt System.Data.Common.DbConnection::get_State
+    IL_0027: brtrue.s IL_0034
+    IL_0029: ldarg.0
+    IL_002a: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_002f: callvirt System.Data.Common.DbConnection::Open
+    IL_0034: ldarg.0
+    IL_0035: newobj System.Data.SqlServerCe.SqlCeCommand::.ctor
+    IL_003a: stfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_003f: newobj System.Data.SqlServerCe.SqlCeDataAdapter::.ctor
+    IL_0044: stloc.0
+    IL_0045: newobj System.Data.DataTable::.ctor
+    IL_004a: stloc.1
+    IL_004b: ldarg.0
+    IL_004c: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0051: ldarg.0
+    IL_0052: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0057: callvirt System.Data.SqlServerCe.SqlCeCommand::set_Connection
+    IL_005c: ldarg.0
+    IL_005d: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0062: ldarg.1
+    IL_0063: callvirt System.Data.Common.DbCommand::set_CommandText
+    IL_0068: ldloc.0
+    IL_0069: ldarg.0
+    IL_006a: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_006f: callvirt System.Data.SqlServerCe.SqlCeDataAdapter::set_SelectCommand
+    IL_0074: ldloc.0
+    IL_0075: ldloc.1
+    IL_0076: callvirt System.Data.Common.DbDataAdapter::Fill
+    IL_007b: pop
+    IL_007c: ldloc.1
+    IL_007d: callvirt System.Data.DataTable::AcceptChanges
+    IL_0082: ldarg.0
+    IL_0083: ldfld Architecture.PSDSMS.SQLCompact40::con
+    IL_0088: callvirt System.Data.Common.DbConnection::Close
+    IL_008d: ldloc.1
+    IL_008e: stloc.2
+    IL_008f: leave.s IL_00aa
+    IL_0091: throw
+    IL_0092: ldarg.0
+    IL_0093: ldfld Architecture.PSDSMS.SQLCompact40::cmd
+    IL_0098: callvirt System.ComponentModel.Component::Dispose
+    IL_009d: ldloc.0
+    IL_009e: callvirt System.Data.SqlServerCe.SqlCeDataAdapter::Dispose
+    IL_00a3: ldloc.1
+    IL_00a4: callvirt System.ComponentModel.MarshalByValueComponent::Dispose
+    IL_00a9: endfinally
+    IL_00aa: ldloc.2
+    IL_00ab: ret

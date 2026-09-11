@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>ITEMS</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <!-- NProgress -->
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <!-- iCheck -->
+    <link rel="stylesheet" th:href="@{/vendors/iCheck/skins/flat/green.css}">
+    <!-- Datatables -->
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+    <!-- Select2 -->
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <!-- confirmation -->
+    <link rel="stylesheet" th:href="@{/vendors/jquery-confirm-master/css/jquery-confirm.css}">
+
+    <!-- Custom Theme Style -->
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- sidebar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div">
+        </div>
+        <!-- /sidebar and top navigation -->
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <ol class="breadcrumb">
+                            <li><a href="../index">STOCK</a></li>
+                            <li>STOCK OPENING FORM</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>ITEM CATEGORY</h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <button class="btn btn-success add-row" data-target="#add_item_category"
+                                        data-toggle="modal"
+                                        id="addItemCategory" style="float: right;" type="button">ADD NEW
+                                </button>
+                                <table class="table table-striped table-bordered" id="item_category_table">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>CATEGORY</th>
+                                        <th>ACTION</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <tr th:each="itemCategory : ${itemCategories}">
+                                        <td>
+                                            <span id="serial_no"></span>
+                                            <input class="itemCategory_id" th:value="${itemCategory.id}" type="hidden"/>
+                                            <input class="itemCategory_name" th:value="${itemCategory.name}"
+                                                   type="hidden"/>
+                                        </td>
+                                        <td th:text="${itemCategory.formattedCode} + '&emsp;' + ${itemCategory.name}"></td>
+                                        <td>
+                                            <a class="item_category_edit" href="javascript:void(0)"
+                                               style="text-decoration: underline;">EDIT</a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>ITEM SUB CATEGORY</h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <button class="btn btn-success add-row" data-target="#add_item_sub_category"
+                                        data-toggle="modal" id="addItemSubCategorySub" style="float: right;"
+                                        type="button">ADD NEW
+                                </button>
+                                <table class="table table-striped table-bordered" id="item_sub_category_table">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>CATEGORY</th>
+                                        <th>SUB CATEGORY</th>
+                                        <th>ACTION</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <tr th:each="itemSubCategory : ${itemSubCategories}">
+                                        <td>
+                                            <span id="serial_no"></span>
+                                            <input class="itemCategory_id" th:value="${itemSubCategory.itemCategory.id}"
+                                                   type="hidden"/>
+                                            <input class="itemSubCategory_id" th:value="${itemSubCategory.id}"
+                                                   type="hidden"/>
+                                            <input class="itemSubCategory_name" th:value="${itemSubCategory.name}"
+                                                   type="hidden"/>
+                                        </td>
+                                        <td th:text="${itemSubCategory.itemCategory.formattedCode} + '&emsp;' + ${itemSubCategory.itemCategory.name}"></td>
+                                        <td th:text="${itemSubCategory.formattedCode} + '&emsp;' + ${itemSubCategory.name}"></td>
+                                        <td>
+                                            <a class="item_sub_category_edit" href="javascript:void(0)"
+                                               style="text-decoration: underline;">EDIT</a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+
+                                    <tfoot>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </tfoot>
+
+                                </table>
+
+                            </div>
+                        </div>
+
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>ITEM DEFINITION</h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <button class="btn btn-success" id="submitAllRates" type="button">SUBMIT ALL RATES
+                                </button>
+                                <button class="btn btn-success add-row" data-target="#add_item_def" data-toggle="modal"
+                                        id="addItemDef" style="float: right;" type="button">ADD NEW
+                                </button>
+                                <table class="table table-striped table-bordered" id="stock_opening_table">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>CATEGORY</th>
+                                        <th>SUB CATEGORY</th>
+                                        <th>ITEM CODE</th>
+                                        <th>ITEM NAME</th>
+                                        <th>RATE</th>
+                                        <th>UNIT VALUE</th>
+                                        <th>CONV VALUE</th>
+                                        <th>PRICING BY</th>
+                                        <th>S PRICE</th>
+                                        <th>ACCOUNT DETAIL</th>
+                                        <th>SAME ACCOUNT</th>
+                                        <th>ACTION</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <tr th:each="itemDef : ${itemDefs}">
+                                        <td>
+                                            <span id="serial_no"></span>
+                                            <input class="itemDef_id" name="itemDef_id" th:value="${itemDef.id}"
+                                                   type="hidden"/>
+                                            <input class="itemDef_name" th:value="${itemDef.name}" type="hidden"/>
+                                            <input class="itemDef_formattedCode" th:value="${itemDef.formattedCode}"
+                                                   type="hidden"/>
+                                            <input class="itemSubCategory_id" th:value="${itemDef.itemSubCategory.id}"
+                                                   type="hidden"/>
+                                        </td>
+                                        <td th:text="${itemDef.itemSubCategory.itemCategory.formattedCode} + '&emsp;' + ${itemDef.itemSubCategory.itemCategory.name}"></td>
+                                        <td th:text="${itemDef.itemSubCategory.formattedCode} + '&emsp;' + ${itemDef.itemSubCategory.name}"></td>
+                                        <td style="text-transform:uppercase" th:text="${itemDef.formattedCode}"></td>
+                                        <td style="text-transform:uppercase"
+                                            th:text="${itemDef.itemSubCategory.name} + ' ' + ${itemDef.name}"></td>
+                                        <td><input class="standardRate form-control" step="any"
+                                                   th:value="${itemDef.standardRate}"
+                                                   type="number"><span style="display: none;"
+                                                                       th:text="${itemDef.standardRate}"></span>
+                                        </td>
+                                        <td th:text="${itemDef.weightParBag}"></td>
+                                        <td th:text="${itemDef.conversionValue}"></td>
+                                        <td th:text="${itemDef.pricingRule}"></td>
+                                        <td th:text="${itemDef.saleRate}"></td>
+                                        <td th:text="${itemDef.itemExpAccounts}"></td>
+                                        <td th:text="${itemDef.sameExpAccounts}"></td>
+
+                                        <td>
+                                            <a class="item_def_edit" href="javascript:void(0)"
+                                               style="text-decoration: underline;">EDIT</a> |
+
+                                            <a class="item_def_add_recipe"
+                                               style="text-decoration: underline; color: green; font-weight: bolder;"
+                                               target="_blank" th:href="@{'/stocks/recipe_form/' + ${itemDef.id}}"
+                                               th:if="${itemDef.recipe == false}">ADD
+                                                RECIPE</a>
+
+                                            <a class="item_def_edit_recipe"
+                                               style="text-decoration: underline; color: yellowgreen; font-weight: bold;"
+                                               target="_blank" th:href="@{'/stocks/recipe_edit/' + ${itemDef.id}}"
+                                               th:if="${itemDef.recipe == true}">EDIT
+                                                RECIPE</a>
+
+                                        </td>
+                                    </tr>
+                                    </tbody>
+
+                                    <tfoot>
+                                    <tr>
+
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </tfoot>
+
+                                </table>
+
+                                <!-- <div class="form-group">
+                                    <button type="submit" class="btn btn-success" style="float: right;"><i class="fa fa-credit-card"></i> Submit</button>
+                                </div> -->
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- modals -->
+
+                <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="add_item_category"
+                     role="dialog" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">×</button>
+                                <h4 class="modal-title">ADD/UPDATE ITEM CATEGORY</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <form class="form-horizontal" id="addItemCategoryForm"
+                                      method="post" th:action="@{/stocks/add_or_update_item_category}"
+                                      th:object="${itemCategory}">
+
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">ITEM CATEGORY NAME</label>
+                                        <div class="col-lg-9">
+                                            <input th:field="${itemCategory.id}" type="hidden">
+                                            <input class="form-control" required="required"
+                                                   style="text-transform:uppercase"
+                                                   th:field="${itemCategory.name}" type="text">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-lg-offset-2 col-lg-10">
+                                            <button class="btn btn-default" data-dismiss="modal" style="float: right;"
+                                                    type="button">CANCEL
+                                            </button>
+                                            <button class="btn btn-success" style="float: right;" type="submit">SAVE
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- ITEM CATEGORY MODAL END -->
+
+                <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="add_item_sub_category"
+                     role="dialog" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">×</button>
+                                <h4 class="modal-title">ADD/UPDATE ITEM SUB CATEGORY</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <form class="form-horizontal" id="addItemSubCategoryForm"
+                                      method="post"
+                                      th:action="@{/stocks/add_or_update_item_sub_category}"
+                                      th:object="${itemSubCategory}">
+
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">CATEGORY</label>
+                                        <div class="col-lg-9">
+                                            <select class="form-control" required="required"
+                                                    th:field="${itemSubCategory.itemCategory}">
+                                                <option value="-1"></option>
+                                                <option th:each="itemCategory : ${itemCategories}"
+                                                        th:if="${itemCategories}"
+                                                        th:text="${itemCategory.formattedCode} + '&emsp;' + ${itemCategory.name}"
+                                                        th:value="${itemCategory.id}">
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">SUB CATEGORY NAME</label>
+                                        <div class="col-lg-9">
+                                            <input th:field="${itemSubCategory.id}" type="hidden">
+                                            <input class="form-control" required="required"
+                                                   style="text-transform:uppercase"
+                                                   th:field="${itemSubCategory.name}" type="text">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-lg-offset-2 col-lg-10">
+                                            <button class="btn btn-default" data-dismiss="modal" style="float: right;"
+                                                    type="button">CANCEL
+                                            </button>
+                                            <button class="btn btn-success" style="float: right;" type="submit">SAVE
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- ITEM SUB CATEGORY MODAL END -->
+
+                <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="add_item_def"
+                     role="dialog"
+                     tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">×</button>
+                                <h4 class="modal-title">ADD/UPDATE ITEM DEF</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <form class="form-horizontal" id="stockOpeningForm"
+                                      method="post" th:action="@{/stocks/add_or_update_item_def}"
+                                      th:object="${itemDef}">
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">SUB CATEGORY</label>
+                                        <div class="col-lg-9">
+                                            <select class="form-control asifselect2_single" required="required"
+                                                    th:field="${itemDef.itemSubCategory}">
+                                                <option value="-1"></option>
+                                                <option th:each="itemSubCategory : ${itemSubCategories}"
+                                                        th:if="${itemSubCategories}"
+                                                        th:text="${itemSubCategory.formattedCode} + '&emsp;' + ${itemSubCategory.name}"
+                                                        th:value="${itemSubCategory.id}">
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">ITEM CODE</label>
+                                        <div class="col-lg-9">
+                                            <input th:field="${itemDef.id}" type="hidden">
+                                            <input class="form-control" readonly th:field="${itemDef.formattedCode}"
+                                                   type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">ITEM NAME</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" required="required"
+                                                   style="text-transform:uppercase"
+                                                   th:field="${itemDef.name}" type="text">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">STANDARD RATE</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.standardRate}"
+                                                   type="number">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">WEIGHT PAR BAG</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.weightParBag}"
+                                                   type="number">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">UNIT NAME</label>
+                                        <div class="col-lg-3">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.unitName}"
+                                                   type="text">
+                                        </div>
+                                        <label class="col-lg-3 control-label">UNIT VALUE</label>
+                                        <div class="col-lg-3">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.unitValue}"
+                                                   type="number">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">CONV NAME</label>
+                                        <div class="col-lg-3">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.conversionName}"
+                                                   type="text">
+                                        </div>
+                                        <label class="col-lg-3 control-label">CONV VALUE</label>
+                                        <div class="col-lg-3">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.conversionValue}"
+                                                   type="number">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">PRICING BY</label>
+                                        <div class="col-lg-9">
+                                            <select class="form-control" required="required"
+                                                    th:field="${itemDef.pricingRule}">
+                                                <option value="QUANTITY">QUANTITY</option>
+                                                <option value="KG">KG</option>
+
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">SALE PRICE</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.saleRate}"
+                                                   type="number">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">ACCOUNT DETAILS</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.itemExpAccounts}"
+                                                   type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-3 control-label">SAME ACCOUNT </label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" required step="any"
+                                                   th:field="${itemDef.sameExpAccounts}"
+                                                   type="text">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-lg-offset-2 col-lg-10">
+                                            <button class="btn btn-default" data-dismiss="modal" style="float: right;"
+                                                    type="button">CANCEL
+                                            </button>
+                                            <button class="btn btn-success" style="float: right;" type="submit">SAVE
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- ITEM MODAL END -->
+
+            </div>
+            <!-- /page content -->
+
+            <!-- footer content -->
+            <footer>
+                <div class="pull-right">
+                    Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+                </div>
+                <div class="clearfix"></div>
+            </footer>
+            <!-- /footer content -->
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- NProgress -->
+<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Datatables -->
+<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+<script th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+<script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+<!-- Select2 -->
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<!-- confirm -->
+<script src="../vendors/jquery-confirm-master/js/jquery-confirm.js"></script>
+
+<!-- Datatables -->
+<!-- <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jquery.dataTables.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/dataTables.buttons.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jszip.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/pdfmake.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/vfs_fonts.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.html5.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.print.min.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script th:src="@{/build/js/countx_stock_opening_form.js}"></script>
+
+<script>
+    $(".select2_single").select2({
+        dropdownAutoWidth: true,
+        width: '100%'
+    });
+    $(".asifselect2_single").select2({
+        width: '100%',
+        dropdownParent: $("#add_item_def"),
+    });
+</script>
+
+</body>
+</html>

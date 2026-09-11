@@ -1,0 +1,68 @@
+
+====================================================================================================
+CLASS CameraControl.SetRollPitchCommand
+====================================================================================================
+
+; CameraControl.SetRollPitchCommand::.ctor  (rva=0x1b5e9, tiny header, code_size=15, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.1
+    IL_0002: call CameraControl.Command::.ctor
+    IL_0007: ldarg.0
+    IL_0008: ldarg.2
+    IL_0009: stfld CameraControl.SetRollPitchCommand::_status
+    IL_000e: ret
+
+; CameraControl.SetRollPitchCommand::Execute  (rva=0x1b5fc, fat header, code_size=142, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld CameraControl.Command::_model
+    IL_0006: callvirt CameraControl.CameraModel::get_RollPitch
+    IL_000b: stloc.0
+    IL_000c: ldarg.0
+    IL_000d: ldfld CameraControl.Command::_model
+    IL_0012: callvirt CameraControl.CameraModel::get_isEvfEnable
+    IL_0017: brtrue.s IL_001b
+    IL_0019: ldc.i4.1
+    IL_001a: ret
+    IL_001b: ldarg.0
+    IL_001c: ldfld CameraControl.Command::_model
+    IL_0021: callvirt CameraControl.CameraModel::get_Camera
+    IL_0026: ldc.i4 265
+    IL_002b: ldloc.0
+    IL_002c: call EDSDKLib.EDSDK::EdsSendCommand
+    IL_0031: stloc.1
+    IL_0032: ldloc.0
+    IL_0033: ldc.i4.1
+    IL_0034: bne.un.s IL_004d
+    IL_0036: ldarg.0
+    IL_0037: ldfld CameraControl.Command::_model
+    IL_003c: ldc.i4.s 12
+    IL_003e: ldsfld System.IntPtr::Zero
+    IL_0043: newobj CameraControl.CameraEvent::.ctor
+    IL_0048: callvirt CameraControl.Observable::NotifyObservers
+    IL_004d: ldloc.1
+    IL_004e: brfalse.s IL_008c
+    IL_0050: ldloc.1
+    IL_0051: ldc.i4 129
+    IL_0056: bne.un.s IL_0072
+    IL_0058: ldc.i4.2
+    IL_0059: ldsfld System.IntPtr::Zero
+    IL_005e: newobj CameraControl.CameraEvent::.ctor
+    IL_0063: stloc.2
+    IL_0064: ldarg.0
+    IL_0065: ldfld CameraControl.Command::_model
+    IL_006a: ldloc.2
+    IL_006b: callvirt CameraControl.Observable::NotifyObservers
+    IL_0070: ldc.i4.0
+    IL_0071: ret
+    IL_0072: ldc.i4.1
+    IL_0073: ldloc.1
+    IL_0074: conv.u8
+    IL_0075: call System.IntPtr::op_Explicit
+    IL_007a: newobj CameraControl.CameraEvent::.ctor
+    IL_007f: stloc.3
+    IL_0080: ldarg.0
+    IL_0081: ldfld CameraControl.Command::_model
+    IL_0086: ldloc.3
+    IL_0087: callvirt CameraControl.Observable::NotifyObservers
+    IL_008c: ldc.i4.1
+    IL_008d: ret

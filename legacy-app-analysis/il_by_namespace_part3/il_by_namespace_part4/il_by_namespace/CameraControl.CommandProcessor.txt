@@ -1,0 +1,73 @@
+
+====================================================================================================
+CLASS CameraControl.CommandProcessor
+====================================================================================================
+
+; CameraControl.CommandProcessor::Start  (rva=0x289b2, tiny header, code_size=31, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.1
+    IL_0002: stfld CameraControl.CommandProcessor::_running
+    IL_0007: ldarg.0
+    IL_0008: ldarg.0
+    IL_0009: ldftn CameraControl.CommandProcessor::<Start>b__3_0
+    IL_000f: newobj System.Action::.ctor
+    IL_0014: call System.Threading.Tasks.Task::Run
+    IL_0019: stfld CameraControl.CommandProcessor::_task
+    IL_001e: ret
+
+; CameraControl.CommandProcessor::Stop  (rva=0x289d4, fat header, code_size=35, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.0
+    IL_0002: stfld CameraControl.CommandProcessor::_running
+    IL_0007: ldarg.0
+    IL_0008: ldfld CameraControl.CommandProcessor::_task
+    IL_000d: callvirt System.Threading.Tasks.Task::Wait
+    IL_0012: leave.s IL_0017
+    IL_0014: pop
+    IL_0015: leave.s IL_0017
+    IL_0017: ldarg.0
+    IL_0018: ldfld CameraControl.CommandProcessor::_task
+    IL_001d: callvirt System.Threading.Tasks.Task::Dispose
+    IL_0022: ret
+
+; CameraControl.CommandProcessor::PostCommand  (rva=0x28a14, tiny header, code_size=13, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld CameraControl.CommandProcessor::_commandQueue
+    IL_0006: ldarg.1
+    IL_0007: callvirt TypeSpec#237::Enqueue
+    IL_000c: ret
+
+; CameraControl.CommandProcessor::.ctor  (rva=0x28a22, tiny header, code_size=18, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj TypeSpec#237::.ctor
+    IL_0006: stfld CameraControl.CommandProcessor::_commandQueue
+    IL_000b: ldarg.0
+    IL_000c: call System.Object::.ctor
+    IL_0011: ret
+
+; CameraControl.CommandProcessor::<Start>b__3_0  (rva=0x28a38, fat header, code_size=66, max_stack=2, exception_handlers=no)
+    IL_0000: br.s IL_0039
+    IL_0002: ldc.i4.1
+    IL_0003: call System.Threading.Thread::Sleep
+    IL_0008: ldnull
+    IL_0009: stloc.0
+    IL_000a: ldarg.0
+    IL_000b: ldfld CameraControl.CommandProcessor::_commandQueue
+    IL_0010: ldloca.s 0
+    IL_0012: callvirt TypeSpec#237::TryDequeue
+    IL_0017: pop
+    IL_0018: ldloc.0
+    IL_0019: brfalse.s IL_0039
+    IL_001b: ldloc.0
+    IL_001c: callvirt CameraControl.Command::Execute
+    IL_0021: brtrue.s IL_0039
+    IL_0023: ldc.i4 500
+    IL_0028: call System.Threading.Thread::Sleep
+    IL_002d: ldarg.0
+    IL_002e: ldfld CameraControl.CommandProcessor::_commandQueue
+    IL_0033: ldloc.0
+    IL_0034: callvirt TypeSpec#237::Enqueue
+    IL_0039: ldarg.0
+    IL_003a: ldfld CameraControl.CommandProcessor::_running
+    IL_003f: brtrue.s IL_0002
+    IL_0041: ret

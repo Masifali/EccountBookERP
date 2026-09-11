@@ -1,0 +1,735 @@
+
+====================================================================================================
+CLASS Architecture.ZKTFingerPrint.FPUtility
+====================================================================================================
+
+; Architecture.ZKTFingerPrint.FPUtility::SendMessage -- no method body (abstract, extern/P-Invoke, or runtime-implemented)
+
+; Architecture.ZKTFingerPrint.FPUtility::Intilize  (rva=0x2598, fat header, code_size=114, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.1
+    IL_0002: stfld Architecture.ZKTFingerPrint.FPUtility::picFPImg
+    IL_0007: newobj TypeSpec#1::.ctor
+    IL_000c: stloc.0
+    IL_000d: ldsfld libzkfpcsharp.zkfperrdef::ZKFP_ERR_OK
+    IL_0012: stloc.1
+    IL_0013: call libzkfpcsharp.zkfp2::Init
+    IL_0018: dup
+    IL_0019: stloc.1
+    IL_001a: ldsfld libzkfpcsharp.zkfperrdef::ZKFP_ERR_OK
+    IL_001f: bne.un.s IL_0056
+    IL_0021: call libzkfpcsharp.zkfp2::GetDeviceCount
+    IL_0026: stloc.2
+    IL_0027: ldloc.2
+    IL_0028: ldc.i4.0
+    IL_0029: ble.s IL_0045
+    IL_002b: ldc.i4.0
+    IL_002c: stloc.3
+    IL_002d: br.s IL_0040
+    IL_002f: ldloc.0
+    IL_0030: ldloca.s 3
+    IL_0032: call System.Int32::ToString
+    IL_0037: callvirt TypeSpec#1::Add
+    IL_003c: ldloc.3
+    IL_003d: ldc.i4.1
+    IL_003e: add
+    IL_003f: stloc.3
+    IL_0040: ldloc.3
+    IL_0041: ldloc.2
+    IL_0042: blt.s IL_002f
+    IL_0044: ret
+    IL_0045: call libzkfpcsharp.zkfp2::Terminate
+    IL_004a: pop
+    IL_004b: ldstr ldstr "No device connected!"
+    IL_0050: newobj System.Exception::.ctor
+    IL_0055: throw
+    IL_0056: ldstr ldstr "Initialize fail, ret="
+    IL_005b: ldloca.s 1
+    IL_005d: call System.Int32::ToString
+    IL_0062: ldstr ldstr " !"
+    IL_0067: call System.String::Concat
+    IL_006c: newobj System.Exception::.ctor
+    IL_0071: throw
+
+; Architecture.ZKTFingerPrint.FPUtility::Connect  (rva=0x2618, fat header, code_size=316, max_stack=4, exception_handlers=no)
+    IL_0000: ldsfld libzkfpcsharp.zkfp::ZKFP_ERR_OK
+    IL_0005: pop
+    IL_0006: ldsfld System.IntPtr::Zero
+    IL_000b: ldarg.0
+    IL_000c: ldarg.1
+    IL_000d: call libzkfpcsharp.zkfp2::OpenDevice
+    IL_0012: dup
+    IL_0013: stloc.2
+    IL_0014: stfld Architecture.ZKTFingerPrint.FPUtility::mDevHandle
+    IL_0019: ldloc.2
+    IL_001a: call System.IntPtr::op_Equality
+    IL_001f: brfalse.s IL_002c
+    IL_0021: ldstr ldstr "OpenDevice fail"
+    IL_0026: newobj System.Exception::.ctor
+    IL_002b: throw
+    IL_002c: ldsfld System.IntPtr::Zero
+    IL_0031: ldarg.0
+    IL_0032: call libzkfpcsharp.zkfp2::DBInit
+    IL_0037: dup
+    IL_0038: stloc.2
+    IL_0039: stfld Architecture.ZKTFingerPrint.FPUtility::mDBHandle
+    IL_003e: ldloc.2
+    IL_003f: call System.IntPtr::op_Equality
+    IL_0044: brfalse.s IL_0068
+    IL_0046: ldarg.0
+    IL_0047: ldfld Architecture.ZKTFingerPrint.FPUtility::mDevHandle
+    IL_004c: call libzkfpcsharp.zkfp2::CloseDevice
+    IL_0051: pop
+    IL_0052: ldarg.0
+    IL_0053: ldsfld System.IntPtr::Zero
+    IL_0058: stfld Architecture.ZKTFingerPrint.FPUtility::mDevHandle
+    IL_005d: ldstr ldstr "Init DB fail"
+    IL_0062: newobj System.Exception::.ctor
+    IL_0067: throw
+    IL_0068: ldarg.0
+    IL_0069: ldc.i4.0
+    IL_006a: stfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_006f: ldarg.0
+    IL_0070: ldc.i4.0
+    IL_0071: stfld Architecture.ZKTFingerPrint.FPUtility::cbRegTmp
+    IL_0076: ldarg.0
+    IL_0077: ldc.i4.1
+    IL_0078: stfld Architecture.ZKTFingerPrint.FPUtility::iFid
+    IL_007d: ldc.i4.0
+    IL_007e: stloc.3
+    IL_007f: br.s IL_0097
+    IL_0081: ldarg.0
+    IL_0082: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmps
+    IL_0087: ldloc.3
+    IL_0088: ldc.i4 2048
+    IL_008d: newarr System.Byte
+    IL_0092: stelem.ref
+    IL_0093: ldloc.3
+    IL_0094: ldc.i4.1
+    IL_0095: add
+    IL_0096: stloc.3
+    IL_0097: ldloc.3
+    IL_0098: ldc.i4.3
+    IL_0099: blt.s IL_0081
+    IL_009b: ldc.i4.4
+    IL_009c: newarr System.Byte
+    IL_00a1: stloc.0
+    IL_00a2: ldc.i4.4
+    IL_00a3: stloc.1
+    IL_00a4: ldarg.0
+    IL_00a5: ldfld Architecture.ZKTFingerPrint.FPUtility::mDevHandle
+    IL_00aa: ldc.i4.1
+    IL_00ab: ldloc.0
+    IL_00ac: ldloca.s 1
+    IL_00ae: call libzkfpcsharp.zkfp2::GetParameters
+    IL_00b3: pop
+    IL_00b4: ldloc.0
+    IL_00b5: ldarg.0
+    IL_00b6: ldflda Architecture.ZKTFingerPrint.FPUtility::mfpWidth
+    IL_00bb: call libzkfpcsharp.zkfp2::ByteArray2Int
+    IL_00c0: pop
+    IL_00c1: ldc.i4.4
+    IL_00c2: stloc.1
+    IL_00c3: ldarg.0
+    IL_00c4: ldfld Architecture.ZKTFingerPrint.FPUtility::mDevHandle
+    IL_00c9: ldc.i4.2
+    IL_00ca: ldloc.0
+    IL_00cb: ldloca.s 1
+    IL_00cd: call libzkfpcsharp.zkfp2::GetParameters
+    IL_00d2: pop
+    IL_00d3: ldloc.0
+    IL_00d4: ldarg.0
+    IL_00d5: ldflda Architecture.ZKTFingerPrint.FPUtility::mfpHeight
+    IL_00da: call libzkfpcsharp.zkfp2::ByteArray2Int
+    IL_00df: pop
+    IL_00e0: ldarg.0
+    IL_00e1: ldarg.0
+    IL_00e2: ldfld Architecture.ZKTFingerPrint.FPUtility::mfpWidth
+    IL_00e7: ldarg.0
+    IL_00e8: ldfld Architecture.ZKTFingerPrint.FPUtility::mfpHeight
+    IL_00ed: mul
+    IL_00ee: newarr System.Byte
+    IL_00f3: stfld Architecture.ZKTFingerPrint.FPUtility::FPBuffer
+    IL_00f8: ldc.i4.4
+    IL_00f9: stloc.1
+    IL_00fa: ldarg.0
+    IL_00fb: ldfld Architecture.ZKTFingerPrint.FPUtility::mDevHandle
+    IL_0100: ldc.i4.3
+    IL_0101: ldloc.0
+    IL_0102: ldloca.s 1
+    IL_0104: call libzkfpcsharp.zkfp2::GetParameters
+    IL_0109: pop
+    IL_010a: ldloc.0
+    IL_010b: ldarg.0
+    IL_010c: ldflda Architecture.ZKTFingerPrint.FPUtility::mfpDpi
+    IL_0111: call libzkfpcsharp.zkfp2::ByteArray2Int
+    IL_0116: pop
+    IL_0117: ldarg.0
+    IL_0118: ldftn Architecture.ZKTFingerPrint.FPUtility::DoCapture
+    IL_011e: newobj System.Threading.ThreadStart::.ctor
+    IL_0123: newobj System.Threading.Thread::.ctor
+    IL_0128: dup
+    IL_0129: ldc.i4.1
+    IL_012a: callvirt System.Threading.Thread::set_IsBackground
+    IL_012f: callvirt System.Threading.Thread::Start
+    IL_0134: ldarg.0
+    IL_0135: ldc.i4.0
+    IL_0136: stfld Architecture.ZKTFingerPrint.FPUtility::bIsTimeToDie
+    IL_013b: ret
+
+; Architecture.ZKTFingerPrint.FPUtility::DoCapture  (rva=0x2760, fat header, code_size=95, max_stack=4, exception_handlers=no)
+    IL_0000: br.s IL_0056
+    IL_0002: ldarg.0
+    IL_0003: ldc.i4 2048
+    IL_0008: stfld Architecture.ZKTFingerPrint.FPUtility::cbCapTmp
+    IL_000d: ldarg.0
+    IL_000e: ldfld Architecture.ZKTFingerPrint.FPUtility::mDevHandle
+    IL_0013: ldarg.0
+    IL_0014: ldfld Architecture.ZKTFingerPrint.FPUtility::FPBuffer
+    IL_0019: ldarg.0
+    IL_001a: ldfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_001f: ldarg.0
+    IL_0020: ldflda Architecture.ZKTFingerPrint.FPUtility::cbCapTmp
+    IL_0025: call libzkfpcsharp.zkfp2::AcquireFingerprint
+    IL_002a: ldsfld libzkfpcsharp.zkfp::ZKFP_ERR_OK
+    IL_002f: bne.un.s IL_004c
+    IL_0031: ldarg.0
+    IL_0032: ldfld Architecture.ZKTFingerPrint.FPUtility::FormHandle
+    IL_0037: ldc.i4 1030
+    IL_003c: ldsfld System.IntPtr::Zero
+    IL_0041: ldsfld System.IntPtr::Zero
+    IL_0046: call Architecture.ZKTFingerPrint.FPUtility::SendMessage
+    IL_004b: pop
+    IL_004c: ldc.i4 200
+    IL_0051: call System.Threading.Thread::Sleep
+    IL_0056: ldarg.0
+    IL_0057: ldfld Architecture.ZKTFingerPrint.FPUtility::bIsTimeToDie
+    IL_005c: brfalse.s IL_0002
+    IL_005e: ret
+
+; Architecture.ZKTFingerPrint.FPUtility::DefWndProc  (rva=0x27cc, fat header, code_size=652, max_stack=7, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: call System.Windows.Forms.Message::get_Msg
+    IL_0006: ldc.i4 1030
+    IL_000b: bne.un IL_0284
+    IL_0010: newobj System.IO.MemoryStream::.ctor
+    IL_0015: stloc.0
+    IL_0016: ldarg.0
+    IL_0017: ldfld Architecture.ZKTFingerPrint.FPUtility::FPBuffer
+    IL_001c: ldarg.0
+    IL_001d: ldfld Architecture.ZKTFingerPrint.FPUtility::mfpWidth
+    IL_0022: ldarg.0
+    IL_0023: ldfld Architecture.ZKTFingerPrint.FPUtility::mfpHeight
+    IL_0028: ldloca.s 0
+    IL_002a: call Architecture.ZKTFingerPrint.BitmapFormat::GetBitmap
+    IL_002f: ldloc.0
+    IL_0030: newobj System.Drawing.Bitmap::.ctor
+    IL_0035: stloc.1
+    IL_0036: ldarg.0
+    IL_0037: ldfld Architecture.ZKTFingerPrint.FPUtility::picFPImg
+    IL_003c: ldloc.1
+    IL_003d: callvirt System.Windows.Forms.PictureBox::set_Image
+    IL_0042: ldarg.0
+    IL_0043: ldfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_0048: ldarg.0
+    IL_0049: ldfld Architecture.ZKTFingerPrint.FPUtility::cbCapTmp
+    IL_004e: call libzkfpcsharp.zkfp2::BlobToBase64
+    IL_0053: pop
+    IL_0054: ldarg.0
+    IL_0055: ldfld Architecture.ZKTFingerPrint.FPUtility::IsRegister
+    IL_005a: brfalse IL_01e3
+    IL_005f: ldsfld libzkfpcsharp.zkfp::ZKFP_ERR_OK
+    IL_0064: stloc.2
+    IL_0065: ldc.i4.0
+    IL_0066: stloc.3
+    IL_0067: ldc.i4.0
+    IL_0068: stloc.s 4
+    IL_006a: ldarg.0
+    IL_006b: ldfld Architecture.ZKTFingerPrint.FPUtility::mDBHandle
+    IL_0070: ldarg.0
+    IL_0071: ldfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_0076: ldloca.s 3
+    IL_0078: ldloca.s 4
+    IL_007a: call libzkfpcsharp.zkfp2::DBIdentify
+    IL_007f: stloc.2
+    IL_0080: ldsfld libzkfpcsharp.zkfp::ZKFP_ERR_OK
+    IL_0085: ldloc.2
+    IL_0086: bne.un.s IL_00a4
+    IL_0088: ldstr ldstr "This finger was already register by "
+    IL_008d: ldloca.s 3
+    IL_008f: call System.Int32::ToString
+    IL_0094: ldstr ldstr "!
+"
+    IL_0099: call System.String::Concat
+    IL_009e: newobj System.Exception::.ctor
+    IL_00a3: throw
+    IL_00a4: ldarg.0
+    IL_00a5: ldfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_00aa: ldc.i4.0
+    IL_00ab: ble.s IL_00db
+    IL_00ad: ldarg.0
+    IL_00ae: ldfld Architecture.ZKTFingerPrint.FPUtility::mDBHandle
+    IL_00b3: ldarg.0
+    IL_00b4: ldfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_00b9: ldarg.0
+    IL_00ba: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmps
+    IL_00bf: ldarg.0
+    IL_00c0: ldfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_00c5: ldc.i4.1
+    IL_00c6: sub
+    IL_00c7: ldelem.ref
+    IL_00c8: call libzkfpcsharp.zkfp2::DBMatch
+    IL_00cd: ldc.i4.0
+    IL_00ce: bgt.s IL_00db
+    IL_00d0: ldstr ldstr "Please press the same finger 3 times for the enrollment.
+"
+    IL_00d5: newobj System.Exception::.ctor
+    IL_00da: throw
+    IL_00db: ldarg.0
+    IL_00dc: ldfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_00e1: ldarg.0
+    IL_00e2: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmps
+    IL_00e7: ldarg.0
+    IL_00e8: ldfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_00ed: ldelem.ref
+    IL_00ee: ldarg.0
+    IL_00ef: ldfld Architecture.ZKTFingerPrint.FPUtility::cbCapTmp
+    IL_00f4: call System.Array::Copy
+    IL_00f9: ldarg.0
+    IL_00fa: ldfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_00ff: ldarg.0
+    IL_0100: ldfld Architecture.ZKTFingerPrint.FPUtility::cbCapTmp
+    IL_0105: call libzkfpcsharp.zkfp2::BlobToBase64
+    IL_010a: call libzkfpcsharp.zkfp2::Base64ToBlob
+    IL_010f: pop
+    IL_0110: ldarg.0
+    IL_0111: ldarg.0
+    IL_0112: ldfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_0117: ldc.i4.1
+    IL_0118: add
+    IL_0119: stfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_011e: ldarg.0
+    IL_011f: ldfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_0124: ldc.i4.3
+    IL_0125: blt IL_01bd
+    IL_012a: ldarg.0
+    IL_012b: ldc.i4.0
+    IL_012c: stfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_0131: ldsfld libzkfpcsharp.zkfp::ZKFP_ERR_OK
+    IL_0136: ldarg.0
+    IL_0137: ldfld Architecture.ZKTFingerPrint.FPUtility::mDBHandle
+    IL_013c: ldarg.0
+    IL_013d: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmps
+    IL_0142: ldc.i4.0
+    IL_0143: ldelem.ref
+    IL_0144: ldarg.0
+    IL_0145: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmps
+    IL_014a: ldc.i4.1
+    IL_014b: ldelem.ref
+    IL_014c: ldarg.0
+    IL_014d: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmps
+    IL_0152: ldc.i4.2
+    IL_0153: ldelem.ref
+    IL_0154: ldarg.0
+    IL_0155: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmp
+    IL_015a: ldarg.0
+    IL_015b: ldflda Architecture.ZKTFingerPrint.FPUtility::cbRegTmp
+    IL_0160: call libzkfpcsharp.zkfp2::DBMerge
+    IL_0165: dup
+    IL_0166: stloc.2
+    IL_0167: bne.un.s IL_0199
+    IL_0169: ldsfld libzkfpcsharp.zkfp::ZKFP_ERR_OK
+    IL_016e: ldarg.0
+    IL_016f: ldfld Architecture.ZKTFingerPrint.FPUtility::mDBHandle
+    IL_0174: ldarg.0
+    IL_0175: ldfld Architecture.ZKTFingerPrint.FPUtility::iFid
+    IL_017a: ldarg.0
+    IL_017b: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmp
+    IL_0180: call libzkfpcsharp.zkfp2::DBAdd
+    IL_0185: dup
+    IL_0186: stloc.2
+    IL_0187: bne.un.s IL_0199
+    IL_0189: ldarg.0
+    IL_018a: ldarg.0
+    IL_018b: ldfld Architecture.ZKTFingerPrint.FPUtility::iFid
+    IL_0190: ldc.i4.1
+    IL_0191: add
+    IL_0192: stfld Architecture.ZKTFingerPrint.FPUtility::iFid
+    IL_0197: br.s IL_01b5
+    IL_0199: ldstr ldstr "enroll fail, error code="
+    IL_019e: ldloca.s 2
+    IL_01a0: call System.Int32::ToString
+    IL_01a5: ldstr ldstr "
+"
+    IL_01aa: call System.String::Concat
+    IL_01af: newobj System.Exception::.ctor
+    IL_01b4: throw
+    IL_01b5: ldarg.0
+    IL_01b6: ldc.i4.0
+    IL_01b7: stfld Architecture.ZKTFingerPrint.FPUtility::IsRegister
+    IL_01bc: ret
+    IL_01bd: ldstr ldstr "You need to press the "
+    IL_01c2: ldc.i4.3
+    IL_01c3: ldarg.0
+    IL_01c4: ldfld Architecture.ZKTFingerPrint.FPUtility::RegisterCount
+    IL_01c9: sub
+    IL_01ca: stloc.s 5
+    IL_01cc: ldloca.s 5
+    IL_01ce: call System.Int32::ToString
+    IL_01d3: ldstr ldstr " times fingerprint
+"
+    IL_01d8: call System.String::Concat
+    IL_01dd: newobj System.Exception::.ctor
+    IL_01e2: throw
+    IL_01e3: ldarg.0
+    IL_01e4: ldfld Architecture.ZKTFingerPrint.FPUtility::cbRegTmp
+    IL_01e9: ldc.i4.0
+    IL_01ea: bgt.s IL_01f7
+    IL_01ec: ldstr ldstr "Please register your finger first!
+"
+    IL_01f1: newobj System.Exception::.ctor
+    IL_01f6: throw
+    IL_01f7: ldarg.0
+    IL_01f8: ldfld Architecture.ZKTFingerPrint.FPUtility::bIdentify
+    IL_01fd: brfalse.s IL_0249
+    IL_01ff: ldsfld libzkfpcsharp.zkfp::ZKFP_ERR_OK
+    IL_0204: stloc.s 6
+    IL_0206: ldc.i4.0
+    IL_0207: stloc.s 7
+    IL_0209: ldc.i4.0
+    IL_020a: stloc.s 8
+    IL_020c: ldarg.0
+    IL_020d: ldfld Architecture.ZKTFingerPrint.FPUtility::mDBHandle
+    IL_0212: ldarg.0
+    IL_0213: ldfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_0218: ldloca.s 7
+    IL_021a: ldloca.s 8
+    IL_021c: call libzkfpcsharp.zkfp2::DBIdentify
+    IL_0221: stloc.s 6
+    IL_0223: ldsfld libzkfpcsharp.zkfp::ZKFP_ERR_OK
+    IL_0228: ldloc.s 6
+    IL_022a: bne.un.s IL_022d
+    IL_022c: ret
+    IL_022d: ldstr ldstr "Identify fail, ret= "
+    IL_0232: ldloca.s 6
+    IL_0234: call System.Int32::ToString
+    IL_0239: ldstr ldstr "
+"
+    IL_023e: call System.String::Concat
+    IL_0243: newobj System.Exception::.ctor
+    IL_0248: throw
+    IL_0249: ldarg.0
+    IL_024a: ldfld Architecture.ZKTFingerPrint.FPUtility::mDBHandle
+    IL_024f: ldarg.0
+    IL_0250: ldfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_0255: ldarg.0
+    IL_0256: ldfld Architecture.ZKTFingerPrint.FPUtility::RegTmp
+    IL_025b: call libzkfpcsharp.zkfp2::DBMatch
+    IL_0260: stloc.s 9
+    IL_0262: ldc.i4.0
+    IL_0263: ldloc.s 9
+    IL_0265: bge.s IL_0268
+    IL_0267: ret
+    IL_0268: ldstr ldstr "Match finger fail, ret= "
+    IL_026d: ldloca.s 9
+    IL_026f: call System.Int32::ToString
+    IL_0274: ldstr ldstr "
+"
+    IL_0279: call System.String::Concat
+    IL_027e: newobj System.Exception::.ctor
+    IL_0283: throw
+    IL_0284: ldarg.0
+    IL_0285: ldarg.1
+    IL_0286: call System.Windows.Forms.Form::DefWndProc
+    IL_028b: ret
+
+; Architecture.ZKTFingerPrint.FPUtility::Disconnect  (rva=0x2a64, tiny header, code_size=14, max_stack=8, exception_handlers=no)
+    IL_0000: call libzkfpcsharp.zkfp2::Terminate
+    IL_0005: pop
+    IL_0006: ldarg.0
+    IL_0007: ldc.i4.0
+    IL_0008: stfld Architecture.ZKTFingerPrint.FPUtility::cbRegTmp
+    IL_000d: ret
+
+; Architecture.ZKTFingerPrint.FPUtility::CaptureBmp  (rva=0x2a74, fat header, code_size=643, max_stack=6, exception_handlers=yes)
+    IL_0000: ldarg.1
+    IL_0001: stloc.0
+    IL_0002: ldloc.0
+    IL_0003: ldstr ldstr ""
+    IL_0008: call System.String::op_Inequality
+    IL_000d: brfalse IL_0282
+    IL_0012: ldloc.0
+    IL_0013: brfalse IL_0282
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.ZKTFingerPrint.FPUtility::picFPImg
+    IL_001e: callvirt System.Windows.Forms.PictureBox::get_Image
+    IL_0023: brfalse IL_0282
+    IL_0028: ldarg.0
+    IL_0029: ldfld Architecture.ZKTFingerPrint.FPUtility::picFPImg
+    IL_002e: callvirt System.Windows.Forms.PictureBox::get_Image
+    IL_0033: callvirt System.Drawing.Image::get_Width
+    IL_0038: ldarg.0
+    IL_0039: ldfld Architecture.ZKTFingerPrint.FPUtility::picFPImg
+    IL_003e: callvirt System.Windows.Forms.PictureBox::get_Image
+    IL_0043: callvirt System.Drawing.Image::get_Height
+    IL_0048: ldc.i4 137224
+    IL_004d: newobj System.Drawing.Bitmap::.ctor
+    IL_0052: stloc.1
+    IL_0053: ldloc.1
+    IL_0054: call System.Drawing.Graphics::FromImage
+    IL_0059: stloc.s 14
+    IL_005b: ldloc.s 14
+    IL_005d: ldarg.0
+    IL_005e: ldfld Architecture.ZKTFingerPrint.FPUtility::picFPImg
+    IL_0063: callvirt System.Windows.Forms.PictureBox::get_Image
+    IL_0068: ldc.i4.0
+    IL_0069: ldc.i4.0
+    IL_006a: ldloc.1
+    IL_006b: callvirt System.Drawing.Image::get_Width
+    IL_0070: ldloc.1
+    IL_0071: callvirt System.Drawing.Image::get_Height
+    IL_0076: callvirt System.Drawing.Graphics::DrawImage
+    IL_007b: leave.s IL_0089
+    IL_007d: ldloc.s 14
+    IL_007f: brfalse.s IL_0088
+    IL_0081: ldloc.s 14
+    IL_0083: callvirt System.IDisposable::Dispose
+    IL_0088: endfinally
+    IL_0089: ldloca.s 2
+    IL_008b: ldc.i4.0
+    IL_008c: ldc.i4.0
+    IL_008d: ldloc.1
+    IL_008e: callvirt System.Drawing.Image::get_Width
+    IL_0093: ldloc.1
+    IL_0094: callvirt System.Drawing.Image::get_Height
+    IL_0099: call System.Drawing.Rectangle::.ctor
+    IL_009e: ldloc.1
+    IL_009f: ldloc.2
+    IL_00a0: ldc.i4.3
+    IL_00a1: ldloc.1
+    IL_00a2: callvirt System.Drawing.Image::get_PixelFormat
+    IL_00a7: callvirt System.Drawing.Bitmap::LockBits
+    IL_00ac: stloc.3
+    IL_00ad: ldloc.3
+    IL_00ae: callvirt System.Drawing.Imaging.BitmapData::get_Scan0
+    IL_00b3: ldloc.3
+    IL_00b4: callvirt System.Drawing.Imaging.BitmapData::get_Stride
+    IL_00b9: ldloc.3
+    IL_00ba: callvirt System.Drawing.Imaging.BitmapData::get_Height
+    IL_00bf: mul
+    IL_00c0: stloc.s 4
+    IL_00c2: ldloc.s 4
+    IL_00c4: newarr System.Byte
+    IL_00c9: stloc.s 5
+    IL_00cb: ldloc.s 5
+    IL_00cd: ldc.i4.0
+    IL_00ce: ldloc.s 4
+    IL_00d0: call System.Runtime.InteropServices.Marshal::Copy
+    IL_00d5: ldloca.s 6
+    IL_00d7: ldc.i4.0
+    IL_00d8: ldc.i4.0
+    IL_00d9: ldloc.1
+    IL_00da: callvirt System.Drawing.Image::get_Width
+    IL_00df: ldloc.1
+    IL_00e0: callvirt System.Drawing.Image::get_Height
+    IL_00e5: call System.Drawing.Rectangle::.ctor
+    IL_00ea: ldloc.1
+    IL_00eb: callvirt System.Drawing.Image::get_Width
+    IL_00f0: ldloc.1
+    IL_00f1: callvirt System.Drawing.Image::get_Height
+    IL_00f6: ldc.i4 198659
+    IL_00fb: newobj System.Drawing.Bitmap::.ctor
+    IL_0100: stloc.s 7
+    IL_0102: ldloc.s 7
+    IL_0104: ldloc.s 6
+    IL_0106: ldc.i4.3
+    IL_0107: ldloc.s 7
+    IL_0109: callvirt System.Drawing.Image::get_PixelFormat
+    IL_010e: callvirt System.Drawing.Bitmap::LockBits
+    IL_0113: stloc.s 8
+    IL_0115: ldloc.s 8
+    IL_0117: callvirt System.Drawing.Imaging.BitmapData::get_Scan0
+    IL_011c: stloc.s 9
+    IL_011e: ldloc.s 8
+    IL_0120: callvirt System.Drawing.Imaging.BitmapData::get_Stride
+    IL_0125: ldloc.s 8
+    IL_0127: callvirt System.Drawing.Imaging.BitmapData::get_Height
+    IL_012c: mul
+    IL_012d: stloc.s 10
+    IL_012f: ldloc.s 10
+    IL_0131: newarr System.Byte
+    IL_0136: stloc.s 11
+    IL_0138: ldloc.s 9
+    IL_013a: ldloc.s 11
+    IL_013c: ldc.i4.0
+    IL_013d: ldloc.s 10
+    IL_013f: call System.Runtime.InteropServices.Marshal::Copy
+    IL_0144: ldc.r8 0.0
+    IL_014d: stloc.s 12
+    IL_014f: ldc.i4.0
+    IL_0150: stloc.s 15
+    IL_0152: br IL_01df
+    IL_0157: ldc.i4.0
+    IL_0158: stloc.s 16
+    IL_015a: br.s IL_01cd
+    IL_015c: ldloc.s 5
+    IL_015e: ldloc.s 15
+    IL_0160: ldloc.3
+    IL_0161: callvirt System.Drawing.Imaging.BitmapData::get_Stride
+    IL_0166: mul
+    IL_0167: ldloc.s 16
+    IL_0169: add
+    IL_016a: ldc.i4.2
+    IL_016b: add
+    IL_016c: ldelem.u1
+    IL_016d: conv.r8
+    IL_016e: ldc.r8 0.299
+    IL_0177: mul
+    IL_0178: ldloc.s 5
+    IL_017a: ldloc.s 15
+    IL_017c: ldloc.3
+    IL_017d: callvirt System.Drawing.Imaging.BitmapData::get_Stride
+    IL_0182: mul
+    IL_0183: ldloc.s 16
+    IL_0185: add
+    IL_0186: ldc.i4.1
+    IL_0187: add
+    IL_0188: ldelem.u1
+    IL_0189: conv.r8
+    IL_018a: ldc.r8 0.578
+    IL_0193: mul
+    IL_0194: add
+    IL_0195: ldloc.s 5
+    IL_0197: ldloc.s 15
+    IL_0199: ldloc.3
+    IL_019a: callvirt System.Drawing.Imaging.BitmapData::get_Stride
+    IL_019f: mul
+    IL_01a0: ldloc.s 16
+    IL_01a2: add
+    IL_01a3: ldelem.u1
+    IL_01a4: conv.r8
+    IL_01a5: ldc.r8 0.114
+    IL_01ae: mul
+    IL_01af: add
+    IL_01b0: stloc.s 12
+    IL_01b2: ldloc.s 11
+    IL_01b4: ldloc.s 15
+    IL_01b6: ldloc.s 8
+    IL_01b8: callvirt System.Drawing.Imaging.BitmapData::get_Stride
+    IL_01bd: mul
+    IL_01be: ldloc.s 16
+    IL_01c0: ldc.i4.3
+    IL_01c1: div
+    IL_01c2: add
+    IL_01c3: ldloc.s 12
+    IL_01c5: conv.u1
+    IL_01c6: stelem.i1
+    IL_01c7: ldloc.s 16
+    IL_01c9: ldc.i4.3
+    IL_01ca: add
+    IL_01cb: stloc.s 16
+    IL_01cd: ldloc.s 16
+    IL_01cf: ldloc.3
+    IL_01d0: callvirt System.Drawing.Imaging.BitmapData::get_Width
+    IL_01d5: ldc.i4.3
+    IL_01d6: mul
+    IL_01d7: blt.s IL_015c
+    IL_01d9: ldloc.s 15
+    IL_01db: ldc.i4.1
+    IL_01dc: add
+    IL_01dd: stloc.s 15
+    IL_01df: ldloc.s 15
+    IL_01e1: ldloc.3
+    IL_01e2: callvirt System.Drawing.Imaging.BitmapData::get_Height
+    IL_01e7: blt IL_0157
+    IL_01ec: ldloc.s 11
+    IL_01ee: ldc.i4.0
+    IL_01ef: ldloc.s 9
+    IL_01f1: ldloc.s 10
+    IL_01f3: call System.Runtime.InteropServices.Marshal::Copy
+    IL_01f8: ldloc.1
+    IL_01f9: ldloc.3
+    IL_01fa: callvirt System.Drawing.Bitmap::UnlockBits
+    IL_01ff: ldc.i4.1
+    IL_0200: ldc.i4.1
+    IL_0201: ldc.i4 198659
+    IL_0206: newobj System.Drawing.Bitmap::.ctor
+    IL_020b: stloc.s 17
+    IL_020d: ldloc.s 17
+    IL_020f: callvirt System.Drawing.Image::get_Palette
+    IL_0214: stloc.s 13
+    IL_0216: leave.s IL_0224
+    IL_0218: ldloc.s 17
+    IL_021a: brfalse.s IL_0223
+    IL_021c: ldloc.s 17
+    IL_021e: callvirt System.IDisposable::Dispose
+    IL_0223: endfinally
+    IL_0224: ldc.i4.0
+    IL_0225: stloc.s 18
+    IL_0227: br.s IL_0248
+    IL_0229: ldloc.s 13
+    IL_022b: callvirt System.Drawing.Imaging.ColorPalette::get_Entries
+    IL_0230: ldloc.s 18
+    IL_0232: ldloc.s 18
+    IL_0234: ldloc.s 18
+    IL_0236: ldloc.s 18
+    IL_0238: call System.Drawing.Color::FromArgb
+    IL_023d: stelem System.Drawing.Color
+    IL_0242: ldloc.s 18
+    IL_0244: ldc.i4.1
+    IL_0245: add
+    IL_0246: stloc.s 18
+    IL_0248: ldloc.s 18
+    IL_024a: ldc.i4 256
+    IL_024f: blt.s IL_0229
+    IL_0251: ldloc.s 7
+    IL_0253: ldloc.s 13
+    IL_0255: callvirt System.Drawing.Image::set_Palette
+    IL_025a: ldloc.s 7
+    IL_025c: ldloc.s 8
+    IL_025e: callvirt System.Drawing.Bitmap::UnlockBits
+    IL_0263: ldloc.s 7
+    IL_0265: ldloc.0
+    IL_0266: ldarg.0
+    IL_0267: ldfld Architecture.ZKTFingerPrint.FPUtility::picFPImg
+    IL_026c: callvirt System.Windows.Forms.PictureBox::get_Image
+    IL_0271: callvirt System.Drawing.Image::get_RawFormat
+    IL_0276: callvirt System.Drawing.Image::Save
+    IL_027b: ldloc.s 7
+    IL_027d: callvirt System.Drawing.Image::Dispose
+    IL_0282: ret
+
+; Architecture.ZKTFingerPrint.FPUtility::.ctor  (rva=0x2d20, fat header, code_size=109, max_stack=2, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldsfld System.IntPtr::Zero
+    IL_0006: stfld Architecture.ZKTFingerPrint.FPUtility::mDevHandle
+    IL_000b: ldarg.0
+    IL_000c: ldsfld System.IntPtr::Zero
+    IL_0011: stfld Architecture.ZKTFingerPrint.FPUtility::mDBHandle
+    IL_0016: ldarg.0
+    IL_0017: ldsfld System.IntPtr::Zero
+    IL_001c: stfld Architecture.ZKTFingerPrint.FPUtility::FormHandle
+    IL_0021: ldarg.0
+    IL_0022: ldc.i4.1
+    IL_0023: stfld Architecture.ZKTFingerPrint.FPUtility::bIdentify
+    IL_0028: ldarg.0
+    IL_0029: ldc.i4.3
+    IL_002a: newarr TypeSpec#2
+    IL_002f: stfld Architecture.ZKTFingerPrint.FPUtility::RegTmps
+    IL_0034: ldarg.0
+    IL_0035: ldc.i4 2048
+    IL_003a: newarr System.Byte
+    IL_003f: stfld Architecture.ZKTFingerPrint.FPUtility::RegTmp
+    IL_0044: ldarg.0
+    IL_0045: ldc.i4 2048
+    IL_004a: newarr System.Byte
+    IL_004f: stfld Architecture.ZKTFingerPrint.FPUtility::CapTmp
+    IL_0054: ldarg.0
+    IL_0055: ldc.i4 2048
+    IL_005a: stfld Architecture.ZKTFingerPrint.FPUtility::cbCapTmp
+    IL_005f: ldarg.0
+    IL_0060: ldc.i4.1
+    IL_0061: stfld Architecture.ZKTFingerPrint.FPUtility::iFid
+    IL_0066: ldarg.0
+    IL_0067: call System.Windows.Forms.Form::.ctor
+    IL_006c: ret

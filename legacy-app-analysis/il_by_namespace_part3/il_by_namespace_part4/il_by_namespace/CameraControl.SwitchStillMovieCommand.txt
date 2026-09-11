@@ -1,0 +1,104 @@
+
+====================================================================================================
+CLASS CameraControl.SwitchStillMovieCommand
+====================================================================================================
+
+; CameraControl.SwitchStillMovieCommand::.ctor  (rva=0x1b74e, tiny header, code_size=15, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.1
+    IL_0002: call CameraControl.Command::.ctor
+    IL_0007: ldarg.0
+    IL_0008: ldarg.2
+    IL_0009: stfld CameraControl.SwitchStillMovieCommand::_status
+    IL_000e: ret
+
+; CameraControl.SwitchStillMovieCommand::Execute  (rva=0x1b760, fat header, code_size=240, max_stack=5, exception_handlers=no)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: ldarg.0
+    IL_0003: ldfld CameraControl.Command::_model
+    IL_0008: callvirt CameraControl.CameraModel::get_FixedMovie
+    IL_000d: brtrue.s IL_001e
+    IL_000f: ldarg.0
+    IL_0010: ldfld CameraControl.SwitchStillMovieCommand::_status
+    IL_0015: ldc.i4 264
+    IL_001a: bne.un.s IL_001e
+    IL_001c: ldc.i4.1
+    IL_001d: ret
+    IL_001e: ldarg.0
+    IL_001f: ldfld CameraControl.SwitchStillMovieCommand::_status
+    IL_0024: ldc.i4 263
+    IL_0029: bne.un.s IL_0048
+    IL_002b: ldarg.0
+    IL_002c: ldfld CameraControl.Command::_model
+    IL_0031: callvirt CameraControl.CameraModel::get_Camera
+    IL_0036: ldc.i4.s 11
+    IL_0038: ldc.i4.0
+    IL_0039: ldc.i4.4
+    IL_003a: ldc.i4.1
+    IL_003b: box System.UInt32
+    IL_0040: call EDSDKLib.EDSDK::EdsSetPropertyData
+    IL_0045: stloc.0
+    IL_0046: br.s IL_0095
+    IL_0048: ldarg.0
+    IL_0049: ldfld CameraControl.Command::_model
+    IL_004e: callvirt CameraControl.CameraModel::get_Camera
+    IL_0053: ldc.i4.s 11
+    IL_0055: ldc.i4.0
+    IL_0056: ldc.i4.4
+    IL_0057: ldc.i4.2
+    IL_0058: box System.UInt32
+    IL_005d: call EDSDKLib.EDSDK::EdsSetPropertyData
+    IL_0062: stloc.0
+    IL_0063: ldloca.s 1
+    IL_0065: ldc.i4 2147483647
+    IL_006a: stfld EdsCapacity::NumberOfFreeClusters
+    IL_006f: ldloca.s 1
+    IL_0071: ldc.i4 4096
+    IL_0076: stfld EdsCapacity::BytesPerSector
+    IL_007b: ldloca.s 1
+    IL_007d: ldc.i4.1
+    IL_007e: stfld EdsCapacity::Reset
+    IL_0083: ldarg.0
+    IL_0084: ldfld CameraControl.Command::_model
+    IL_0089: callvirt CameraControl.CameraModel::get_Camera
+    IL_008e: ldloc.1
+    IL_008f: call EDSDKLib.EDSDK::EdsSetCapacity
+    IL_0094: stloc.0
+    IL_0095: ldarg.0
+    IL_0096: ldfld CameraControl.Command::_model
+    IL_009b: callvirt CameraControl.CameraModel::get_Camera
+    IL_00a0: ldarg.0
+    IL_00a1: ldfld CameraControl.SwitchStillMovieCommand::_status
+    IL_00a6: ldc.i4.0
+    IL_00a7: call EDSDKLib.EDSDK::EdsSendCommand
+    IL_00ac: stloc.0
+    IL_00ad: ldloc.0
+    IL_00ae: brfalse.s IL_00ee
+    IL_00b0: ldloc.0
+    IL_00b1: ldc.i4 129
+    IL_00b6: bne.un.s IL_00d2
+    IL_00b8: ldc.i4.2
+    IL_00b9: ldsfld System.IntPtr::Zero
+    IL_00be: newobj CameraControl.CameraEvent::.ctor
+    IL_00c3: stloc.2
+    IL_00c4: ldarg.0
+    IL_00c5: ldfld CameraControl.Command::_model
+    IL_00ca: ldloc.2
+    IL_00cb: callvirt CameraControl.Observable::NotifyObservers
+    IL_00d0: ldc.i4.1
+    IL_00d1: ret
+    IL_00d2: ldc.i4.1
+    IL_00d3: ldloc.0
+    IL_00d4: conv.u8
+    IL_00d5: call System.IntPtr::op_Explicit
+    IL_00da: newobj CameraControl.CameraEvent::.ctor
+    IL_00df: stloc.3
+    IL_00e0: ldarg.0
+    IL_00e1: ldfld CameraControl.Command::_model
+    IL_00e6: ldloc.3
+    IL_00e7: callvirt CameraControl.Observable::NotifyObservers
+    IL_00ec: ldc.i4.1
+    IL_00ed: ret
+    IL_00ee: ldc.i4.1
+    IL_00ef: ret

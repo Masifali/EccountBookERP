@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>M-TECH</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <!-- NProgress -->
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <!-- iCheck -->
+    <link rel="stylesheet" th:href="@{/vendors/iCheck/skins/flat/green.css}">
+    <!-- Datatables -->
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link
+            rel="stylesheet"
+            th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+    <!-- Select2 -->
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <link rel="stylesheet"
+          th:href="@{/vendors/script/jquery-ui-1.10.3.custom/css/hot-sneaks/jquery-ui-1.10.3.custom.css}">
+    <!-- Custom Theme Style -->
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- side bar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div"></div>
+        <!-- /side bar and top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <ol class="breadcrumb">
+                            <li><a href="../index">REPORTS</a></li>
+                            <li>MILL RATES REPORT</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>MILL RATES REPORT FILTER </h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <form action="#" class="form-horizontal form-label-left"
+                                      id="gPReportForm" method="post"
+                                      th:action="@{/stock/mill-rates-view}"
+                                      th:object="${filterRequest}">
+
+                                    <div class="row">
+
+                                        <div class="col-md-4 col-sm-4 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">MILL</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control select2_single itemCategory"
+                                                            required="required" th:field="*{millId}">
+                                                        <option value="0">ALL</option>
+                                                        <option th:each="mill : ${mills}"
+                                                                th:if="${mills}"
+                                                                th:text="${mill.accountName}"
+                                                                th:value="${mill.id}">
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4 col-sm-4 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">ITEM</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control select2_single itemDef"
+                                                            th:field="*{itemDefId}">
+                                                        <option value="0">ALL</option>
+                                                        <th:block
+                                                                th:each="itemSubCategory : ${itemSubCategories}">
+                                                            <option
+                                                                    th:each="itemDef : ${itemSubCategory.itemDefs}"
+                                                                    th:text="${itemDef.formattedCode + '&emsp;' + itemDef.itemSubCategory.name + ' ' + itemDef.name}"
+                                                                    th:value="${itemDef.id}">
+                                                            </option>
+                                                        </th:block>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4 col-sm-4 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-4 col-sm-4 col-xs-12">FROM
+                                                    DATE</label>
+                                                <div class="col-md-8 col-sm-8 col-xs-12">
+                                                    <input class="form-control" th:field="*{fromDate}"
+                                                           type="date">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="form-group">
+                                                <button class="btn btn-success" id="submitGLForm" style="float: right;"
+                                                        type="submit">SEARCH
+                                                </button>
+                                                <button class="btn btn-success" id="downloadMillRate"
+                                                        style="float: left;"
+                                                        type="button">Download_Mill_Rate
+                                                </button>
+                                                <img id="loading" style="display:none; float: right;"
+                                                     th:src="@{/build/images/pac_man.gif}"></img>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </form>
+                            </div>
+
+                        </div>
+
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>RATES ENTRIES LIST</h2>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <table class="table table-striped table-bordered" id="gl_report_datatable">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>DATE</th>
+                                        <th>ITEM NAME</th>
+                                        <th>MILL NAME</th>
+                                        <th>RATE</th>
+                                        <th>CASH RATE</th>
+                                        <th>REMARKS</th>
+                                        <th>ACTION</th>
+
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            <!--Model entryEdit  - -->
+            <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="editMillRateModel"
+                 role="dialog"
+                 style="float:left" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" class="close" data-dismiss="modal" type="button">×</button>
+                            <h4 class="modal-title">ADD/UPDATE MILL RATE ENTRY</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal" id="millRateForm"
+                                  method="post"
+                                  th:action="@{/stock/update-mill-rate-entry}"
+                                  th:object="${millRate}">
+
+                                <div class="form-group">
+
+
+                                    <label class="col-lg-1 control-label">ITEM</label>
+                                    <div class="col-lg-6">
+                                        <!--<input th:field="${purchaseOrderEntry.itemDef}" type="hidden"/>-->
+                                        <input th:field="${millRate.id}" type="hidden"/>
+
+                                        <select class="form-control   asifselect2_single"
+                                                th:field="${millRate.itemDef}">
+                                            <option value="-1"></option>
+                                            <th:block
+                                                    th:each="itemSubCategory : ${itemSubCategories}">
+                                                <option
+                                                        th:each="itemDef : ${itemSubCategory.itemDefs}"
+                                                        th:text="${itemDef.formattedCode + '&emsp;' + itemDef.itemSubCategory.name + ' ' + itemDef.name}"
+                                                        th:value="${itemDef.id}">
+                                                </option>
+                                            </th:block>
+                                        </select>
+                                    </div>
+                                    <label class="col-lg-3 control-label" id="salam" style="color:red">السلام
+                                        عليكم</label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-lg-1 control-label">MILL </label>
+                                    <div class="col-lg-11">
+                                        <!-- <input th:field="${purchaseOrderEntry.millKhata.id}" type="hidden">-->
+                                        <select class="form-control asifselect2_single millKhata"
+                                                required="required"
+                                                style="width:'100%'" th:field="${millRate.mill.id}">
+                                            <option value="0">SELECTE MILL</option>
+                                            <option
+                                                    th:each="mill : ${mills}"
+                                                    th:text="${mill.accountName}"
+                                                    th:value="${mill.id}">
+                                            </option>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+
+                                    <label class="col-lg-3 control-label">RATE</label>
+                                    <div class="col-lg-3">
+                                        <input class="form-control" required="required"
+                                               th:field="${millRate.rate}"
+                                               type="number">
+                                    </div>
+
+                                    <label class="col-lg-3 control-label">CashRate</label>
+                                    <div class="col-lg-3">
+                                        <input class="form-control" required="required"
+                                               th:field="${millRate.cashRate}"
+                                               type="number">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+
+                                    <label class="col-lg-3 control-label">Remarks</label>
+                                    <div class="col-lg-3">
+                                        <input class="form-control"
+                                               th:field="${millRate.remarks}"
+                                               type="text">
+                                    </div>
+
+                                    <label class="col-lg-3 control-label">Date</label>
+                                    <div class="col-lg-3">
+                                        <input class="form-control" required="required"
+                                               th:field="${millRate.entryDate}"
+                                               type="date">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="col-lg-offset-2 col-lg-10" style="float: center;">
+                                        <button class="btn btn-default" data-dismiss="modal" style="float: right;"
+                                                type="button">CANCEL
+                                        </button>
+                                        <button class="btn btn-success" id="saved" style="float: right;"
+                                                type="submit">SAVE
+                                        </button>
+                                        <button class="btn btn-success" id="deleteEntry" style="float: left;"
+                                                type="button">DELETE
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
+            <!--END Model entryEdit  - -->
+        </div>
+        <!-- /page content -->
+
+        <!-- footer content -->
+        <footer>
+            <div class="pull-right">
+                Gentelella - Bootstrap Admin Template by <a
+                    href="https://colorlib.com">Colorlib</a>
+            </div>
+            <div class="clearfix"></div>
+        </footer>
+        <!-- /footer content -->
+    </div>
+</div>
+
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- NProgress -->
+<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Datatables -->
+<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+<script
+        th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+<!-- <script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script> -->
+
+<!-- Datatables -->
+<!-- <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jquery.dataTables.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/dataTables.buttons.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/jszip.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/pdfmake.min.js}"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/vfs_fonts.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.html5.min.js}"></script>
+<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js"></script> -->
+<script th:src="@{/vendors/ctx-datatables/buttons.print.min.js}"></script>
+<script th:src="@{/vendors/script/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js}"></script>
+<!-- Select2 -->
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<!-- Select2 -->
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script th:src="@{/build/js/stock/mill_rate_view.js}"></script>
+
+
+<script>
+
+
+    $(".select2_single").select2({
+        width: '100%',
+    });
+    $(".asifselect2_single").select2({
+        width: '100%',
+        dropdownParent: $("#editMillRateModel"),
+    });
+    $(".select2_single").select2({});
+    $(".asifselect2_single").select2({
+        width: '100%',
+        dropdownParent: $("#editMillRateModel"),
+    });
+
+</script>
+
+</body>
+</html>

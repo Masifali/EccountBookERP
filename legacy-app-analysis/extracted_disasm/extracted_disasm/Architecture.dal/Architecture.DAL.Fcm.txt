@@ -1,0 +1,788 @@
+
+====================================================================================================
+CLASS Architecture.DAL.Fcm.CreditFacilityType
+====================================================================================================
+
+; Architecture.DAL.Fcm.CreditFacilityType::SetData  (rva=0x282c8, fat header, code_size=65, max_stack=4, exception_handlers=yes)
+    IL_0000: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_0005: stloc.1
+    IL_0006: ldloc.1
+    IL_0007: callvirt System.Data.Common.DbConnection::Open
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.SqlClient.SqlConnection::BeginTransaction
+    IL_0012: stloc.2
+    IL_0013: ldloc.2
+    IL_0014: ldarg.1
+    IL_0015: ldarg.2
+    IL_0016: ldstr ldstr ""
+    IL_001b: call MethodSpec#655
+    IL_0020: call System.Convert::ToInt32
+    IL_0025: stloc.0
+    IL_0026: ldloc.2
+    IL_0027: callvirt System.Data.Common.DbTransaction::Commit
+    IL_002c: leave.s IL_003f
+    IL_002e: ldloc.2
+    IL_002f: callvirt System.Data.Common.DbTransaction::Rollback
+    IL_0034: throw
+    IL_0035: ldloc.1
+    IL_0036: brfalse.s IL_003e
+    IL_0038: ldloc.1
+    IL_0039: callvirt System.IDisposable::Dispose
+    IL_003e: endfinally
+    IL_003f: ldloc.0
+    IL_0040: ret
+
+; Architecture.DAL.Fcm.CreditFacilityType::GetDate  (rva=0x28334, fat header, code_size=46, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#551::.ctor
+    IL_0005: stloc.0
+    IL_0006: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.Common.DbConnection::Open
+    IL_0012: ldloc.1
+    IL_0013: ldarg.1
+    IL_0014: ldarg.2
+    IL_0015: call MethodSpec#656
+    IL_001a: stloc.0
+    IL_001b: leave.s IL_0027
+    IL_001d: ldloc.1
+    IL_001e: brfalse.s IL_0026
+    IL_0020: ldloc.1
+    IL_0021: callvirt System.IDisposable::Dispose
+    IL_0026: endfinally
+    IL_0027: leave.s IL_002c
+    IL_0029: pop
+    IL_002a: rethrow
+    IL_002c: ldloc.0
+    IL_002d: ret
+
+; Architecture.DAL.Fcm.CreditFacilityType::.ctor  (rva=0x2838c, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.DAL.Fcm.LoanAgreementHeader
+====================================================================================================
+
+; Architecture.DAL.Fcm.LoanAgreementHeader::SetData  (rva=0x28394, fat header, code_size=849, max_stack=6, exception_handlers=yes)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: newobj TypeSpec#78::.ctor
+    IL_0007: stloc.1
+    IL_0008: ldstr ldstr ""
+    IL_000d: stloc.2
+    IL_000e: newobj Architecture.Model.VPS.ServerCredentials::.ctor
+    IL_0013: stloc.3
+    IL_0014: ldarg.1
+    IL_0015: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_OrganizationId
+    IL_001a: ldarg.1
+    IL_001b: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_CompanyId
+    IL_0020: ldstr ldstr "IsVpsAttachmentsServiceOn"
+    IL_0025: call Architecture.DAL.Common.CommonServices::GetConfigurationFromAllocation
+    IL_002a: call Architecture.Common.Conversion::ToBool
+    IL_002f: stloc.s 4
+    IL_0031: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_0036: stloc.s 5
+    IL_0038: ldloc.s 5
+    IL_003a: callvirt System.Data.Common.DbConnection::Open
+    IL_003f: ldloc.s 5
+    IL_0041: callvirt System.Data.SqlClient.SqlConnection::BeginTransaction
+    IL_0046: stloc.s 6
+    IL_0048: ldloc.s 4
+    IL_004a: brfalse.s IL_0054
+    IL_004c: call Architecture.DAL.Common.CommonServices::GetServerCredentials
+    IL_0051: stloc.3
+    IL_0052: br.s IL_0095
+    IL_0054: ldarg.1
+    IL_0055: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_OrganizationId
+    IL_005a: ldarg.1
+    IL_005b: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_CompanyId
+    IL_0060: ldstr ldstr "Attachment Folder Path"
+    IL_0065: call Architecture.DAL.Common.CommonServices::GetConfigurationFromAllocation
+    IL_006a: stloc.2
+    IL_006b: ldarg.1
+    IL_006c: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_AttachmentsList
+    IL_0071: dup
+    IL_0072: brtrue.s IL_0078
+    IL_0074: pop
+    IL_0075: ldc.i4.0
+    IL_0076: br.s IL_0080
+    IL_0078: call TypeSpec#79::get_Count
+    IL_007d: ldc.i4.0
+    IL_007e: cgt
+    IL_0080: brfalse.s IL_0095
+    IL_0082: ldloc.2
+    IL_0083: call System.IO.Directory::Exists
+    IL_0088: brtrue.s IL_0095
+    IL_008a: ldstr ldstr "Attachment Folder Path Not Configure Properly"
+    IL_008f: newobj System.Exception::.ctor
+    IL_0094: throw
+    IL_0095: ldarg.1
+    IL_0096: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_AttachmentsList
+    IL_009b: dup
+    IL_009c: brtrue.s IL_00a2
+    IL_009e: pop
+    IL_009f: ldc.i4.0
+    IL_00a0: br.s IL_00aa
+    IL_00a2: call TypeSpec#79::get_Count
+    IL_00a7: ldc.i4.0
+    IL_00a8: cgt
+    IL_00aa: brfalse IL_0139
+    IL_00af: ldarg.1
+    IL_00b0: ldloc.3
+    IL_00b1: ldloc.s 4
+    IL_00b3: ldloc.2
+    IL_00b4: ldarg.1
+    IL_00b5: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_AttachmentsList
+    IL_00ba: ldloc.1
+    IL_00bb: call Architecture.DAL.Common.CommonServices::CommonMethodForAttachmentsToPhysicallySave
+    IL_00c0: callvirt Architecture.Model.Fcm.LoanAgreementHeader::set_AttachmentsList
+    IL_00c5: ldarg.1
+    IL_00c6: ldstr ldstr ","
+    IL_00cb: ldarg.1
+    IL_00cc: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_AttachmentsList
+    IL_00d1: ldsfld <>c::<>9__0_0
+    IL_00d6: dup
+    IL_00d7: brtrue.s IL_00f0
+    IL_00d9: pop
+    IL_00da: ldsfld <>c::<>9
+    IL_00df: ldftn <>c::<SetData>b__0_0
+    IL_00e5: newobj TypeSpec#178::.ctor
+    IL_00ea: dup
+    IL_00eb: stsfld <>c::<>9__0_0
+    IL_00f0: call MethodSpec#234
+    IL_00f5: call System.String::Join
+    IL_00fa: callvirt Architecture.Model.Fcm.LoanAgreementHeader::set_AttachmentsValues
+    IL_00ff: ldarg.1
+    IL_0100: ldstr ldstr ","
+    IL_0105: ldarg.1
+    IL_0106: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_AttachmentsList
+    IL_010b: ldsfld <>c::<>9__0_1
+    IL_0110: dup
+    IL_0111: brtrue.s IL_012a
+    IL_0113: pop
+    IL_0114: ldsfld <>c::<>9
+    IL_0119: ldftn <>c::<SetData>b__0_1
+    IL_011f: newobj TypeSpec#178::.ctor
+    IL_0124: dup
+    IL_0125: stsfld <>c::<>9__0_1
+    IL_012a: call MethodSpec#234
+    IL_012f: call System.String::Join
+    IL_0134: callvirt Architecture.Model.Fcm.LoanAgreementHeader::set_CustomAttachmentsValues
+    IL_0139: ldloc.s 6
+    IL_013b: ldarg.1
+    IL_013c: ldarg.2
+    IL_013d: ldstr ldstr ""
+    IL_0142: call MethodSpec#657
+    IL_0147: call System.Convert::ToInt32
+    IL_014c: stloc.0
+    IL_014d: ldloc.0
+    IL_014e: ldc.i4.0
+    IL_014f: ble.s IL_0160
+    IL_0151: ldarg.1
+    IL_0152: ldloc.0
+    IL_0153: call System.Convert::ToInt32
+    IL_0158: conv.i8
+    IL_0159: callvirt Architecture.Model.Fcm.LoanAgreementHeader::set_Id
+    IL_015e: br.s IL_0171
+    IL_0160: ldarg.1
+    IL_0161: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_Id
+    IL_0166: box System.Int64
+    IL_016b: call Architecture.Common.Conversion::ToInt
+    IL_0170: stloc.0
+    IL_0171: ldarg.1
+    IL_0172: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_LoanAgreementDetailsList
+    IL_0177: callvirt TypeSpec#552::GetEnumerator
+    IL_017c: stloc.s 7
+    IL_017e: br.s IL_01af
+    IL_0180: ldloca.s 7
+    IL_0182: call TypeSpec#553::get_Current
+    IL_0187: stloc.s 8
+    IL_0189: ldloc.s 8
+    IL_018b: ldarg.1
+    IL_018c: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_Id
+    IL_0191: callvirt Architecture.Model.Fcm.LoanAgreementDetail::set_LoanAgreementHeaderId
+    IL_0196: ldloc.s 6
+    IL_0198: ldloc.s 8
+    IL_019a: ldstr ldstr "[Fcm].[USP_LoanAgreementDetail_Insert]"
+    IL_019f: ldstr ldstr ""
+    IL_01a4: call MethodSpec#658
+    IL_01a9: call System.Convert::ToInt32
+    IL_01ae: pop
+    IL_01af: ldloca.s 7
+    IL_01b1: call TypeSpec#553::MoveNext
+    IL_01b6: brtrue.s IL_0180
+    IL_01b8: leave.s IL_01c8
+    IL_01ba: ldloca.s 7
+    IL_01bc: constrained. TypeSpec#553
+    IL_01c2: callvirt System.IDisposable::Dispose
+    IL_01c7: endfinally
+    IL_01c8: ldarg.1
+    IL_01c9: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_AttachmentsList
+    IL_01ce: dup
+    IL_01cf: brtrue.s IL_01d5
+    IL_01d1: pop
+    IL_01d2: ldc.i4.0
+    IL_01d3: br.s IL_01dd
+    IL_01d5: call TypeSpec#79::get_Count
+    IL_01da: ldc.i4.0
+    IL_01db: cgt
+    IL_01dd: brfalse IL_0300
+    IL_01e2: newobj TypeSpec#16::.ctor
+    IL_01e7: dup
+    IL_01e8: ldstr ldstr "@ScreenName"
+    IL_01ed: ldarg.1
+    IL_01ee: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_AttachmentsList
+    IL_01f3: ldc.i4.0
+    IL_01f4: callvirt TypeSpec#79::get_Item
+    IL_01f9: callvirt Architecture.Model.DMSAttachments::get_ScreenName
+    IL_01fe: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0203: callvirt TypeSpec#16::Add
+    IL_0208: dup
+    IL_0209: ldstr ldstr "@Id"
+    IL_020e: ldloc.0
+    IL_020f: box System.Int32
+    IL_0214: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0219: callvirt TypeSpec#16::Add
+    IL_021e: dup
+    IL_021f: ldstr ldstr "@Activity"
+    IL_0224: ldstr ldstr "DeleteById"
+    IL_0229: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_022e: callvirt TypeSpec#16::Add
+    IL_0233: stloc.s 9
+    IL_0235: newobj Architecture.DAL.DMSAttachment::.ctor
+    IL_023a: ldstr ldstr "Sp_DMSAttachments_GetAllMethod"
+    IL_023f: ldloc.s 9
+    IL_0241: call Architecture.DAL.DMSAttachment::GetData
+    IL_0246: pop
+    IL_0247: ldarg.1
+    IL_0248: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_AttachmentsList
+    IL_024d: callvirt TypeSpec#79::GetEnumerator
+    IL_0252: stloc.s 10
+    IL_0254: br IL_02e4
+    IL_0259: ldloca.s 10
+    IL_025b: call TypeSpec#82::get_Current
+    IL_0260: stloc.s 11
+    IL_0262: ldloc.s 11
+    IL_0264: ldarg.1
+    IL_0265: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_EntryUserId
+    IL_026a: callvirt Architecture.Model.DMSAttachments::set_RefAccountId
+    IL_026f: ldloc.s 11
+    IL_0271: ldarg.1
+    IL_0272: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_DocumentTypeId
+    IL_0277: callvirt Architecture.Model.DMSAttachments::set_RefDocumentTypeId
+    IL_027c: ldloc.s 11
+    IL_027e: ldloc.0
+    IL_027f: callvirt Architecture.Model.DMSAttachments::set_RefDocumentNo
+    IL_0284: ldloc.s 11
+    IL_0286: ldarg.1
+    IL_0287: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_EntryUserId
+    IL_028c: callvirt Architecture.Model.DMSAttachments::set_EntryUser
+    IL_0291: ldloc.s 11
+    IL_0293: ldarg.1
+    IL_0294: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_ModifyUserId
+    IL_0299: callvirt Architecture.Model.DMSAttachments::set_ModifyUser
+    IL_029e: ldloc.s 11
+    IL_02a0: call System.DateTime::get_Now
+    IL_02a5: callvirt Architecture.Model.DMSAttachments::set_EntryDate
+    IL_02aa: ldloc.s 11
+    IL_02ac: call System.DateTime::get_Now
+    IL_02b1: callvirt Architecture.Model.DMSAttachments::set_ModifyDate
+    IL_02b6: ldloc.s 11
+    IL_02b8: ldarg.1
+    IL_02b9: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_OrganizationId
+    IL_02be: callvirt Architecture.Model.DMSAttachments::set_OrganizationId
+    IL_02c3: ldloc.s 11
+    IL_02c5: ldarg.1
+    IL_02c6: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_CompanyId
+    IL_02cb: callvirt Architecture.Model.DMSAttachments::set_CompanyId
+    IL_02d0: ldloc.s 6
+    IL_02d2: ldloc.s 11
+    IL_02d4: ldstr ldstr "Proc_DMSAttachments_Insert"
+    IL_02d9: ldstr ldstr ""
+    IL_02de: call MethodSpec#94
+    IL_02e3: pop
+    IL_02e4: ldloca.s 10
+    IL_02e6: call TypeSpec#82::MoveNext
+    IL_02eb: brtrue IL_0259
+    IL_02f0: leave.s IL_0300
+    IL_02f2: ldloca.s 10
+    IL_02f4: constrained. TypeSpec#82
+    IL_02fa: callvirt System.IDisposable::Dispose
+    IL_02ff: endfinally
+    IL_0300: ldarg.1
+    IL_0301: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_DeleteAttachmentsList
+    IL_0306: dup
+    IL_0307: brtrue.s IL_030d
+    IL_0309: pop
+    IL_030a: ldc.i4.0
+    IL_030b: br.s IL_0315
+    IL_030d: call TypeSpec#79::get_Count
+    IL_0312: ldc.i4.0
+    IL_0313: cgt
+    IL_0315: brfalse.s IL_0326
+    IL_0317: ldloc.3
+    IL_0318: ldloc.s 4
+    IL_031a: ldloc.2
+    IL_031b: ldarg.1
+    IL_031c: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_DeleteAttachmentsList
+    IL_0321: call Architecture.DAL.Common.CommonServices::DeleteAttachmentsPhysically
+    IL_0326: ldloc.s 6
+    IL_0328: callvirt System.Data.Common.DbTransaction::Commit
+    IL_032d: leave.s IL_034f
+    IL_032f: pop
+    IL_0330: ldloc.s 6
+    IL_0332: callvirt System.Data.Common.DbTransaction::Rollback
+    IL_0337: ldloc.3
+    IL_0338: ldloc.s 4
+    IL_033a: ldloc.2
+    IL_033b: ldloc.1
+    IL_033c: call Architecture.DAL.Common.CommonServices::DeleteAttachmentsPhysicallyInException
+    IL_0341: rethrow
+    IL_0343: ldloc.s 5
+    IL_0345: brfalse.s IL_034e
+    IL_0347: ldloc.s 5
+    IL_0349: callvirt System.IDisposable::Dispose
+    IL_034e: endfinally
+    IL_034f: ldloc.0
+    IL_0350: ret
+
+; Architecture.DAL.Fcm.LoanAgreementHeader::GetData  (rva=0x28758, fat header, code_size=194, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#554::.ctor
+    IL_0005: stloc.0
+    IL_0006: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.Common.DbConnection::Open
+    IL_0012: ldloc.1
+    IL_0013: ldarg.1
+    IL_0014: ldarg.2
+    IL_0015: call MethodSpec#659
+    IL_001a: stloc.0
+    IL_001b: leave.s IL_0027
+    IL_001d: ldloc.1
+    IL_001e: brfalse.s IL_0026
+    IL_0020: ldloc.1
+    IL_0021: callvirt System.IDisposable::Dispose
+    IL_0026: endfinally
+    IL_0027: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_002c: stloc.2
+    IL_002d: ldloc.2
+    IL_002e: callvirt System.Data.Common.DbConnection::Open
+    IL_0033: ldloc.0
+    IL_0034: brfalse.s IL_00af
+    IL_0036: ldloc.0
+    IL_0037: callvirt TypeSpec#554::GetEnumerator
+    IL_003c: stloc.3
+    IL_003d: br.s IL_0096
+    IL_003f: ldloca.s 3
+    IL_0041: call TypeSpec#555::get_Current
+    IL_0046: stloc.s 4
+    IL_0048: newobj TypeSpec#16::.ctor
+    IL_004d: stloc.s 5
+    IL_004f: ldloc.s 5
+    IL_0051: ldstr ldstr "@Id"
+    IL_0056: ldloc.s 4
+    IL_0058: callvirt Architecture.Model.Fcm.LoanAgreementHeader::get_Id
+    IL_005d: box System.Int64
+    IL_0062: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0067: callvirt TypeSpec#16::Add
+    IL_006c: ldloc.s 5
+    IL_006e: ldstr ldstr "@Activity"
+    IL_0073: ldstr ldstr "ReadByHeaderId"
+    IL_0078: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_007d: callvirt TypeSpec#16::Add
+    IL_0082: ldloc.s 4
+    IL_0084: ldloc.2
+    IL_0085: ldstr ldstr "[Fcm].[USP_LoanAgreementHeader_GetAllMethod]"
+    IL_008a: ldloc.s 5
+    IL_008c: call MethodSpec#660
+    IL_0091: callvirt Architecture.Model.Fcm.LoanAgreementHeader::set_LoanAgreementDetailsList
+    IL_0096: ldloca.s 3
+    IL_0098: call TypeSpec#555::MoveNext
+    IL_009d: brtrue.s IL_003f
+    IL_009f: leave.s IL_00af
+    IL_00a1: ldloca.s 3
+    IL_00a3: constrained. TypeSpec#555
+    IL_00a9: callvirt System.IDisposable::Dispose
+    IL_00ae: endfinally
+    IL_00af: leave.s IL_00bb
+    IL_00b1: ldloc.2
+    IL_00b2: brfalse.s IL_00ba
+    IL_00b4: ldloc.2
+    IL_00b5: callvirt System.IDisposable::Dispose
+    IL_00ba: endfinally
+    IL_00bb: leave.s IL_00c0
+    IL_00bd: pop
+    IL_00be: rethrow
+    IL_00c0: ldloc.0
+    IL_00c1: ret
+
+; Architecture.DAL.Fcm.LoanAgreementHeader::.ctor  (rva=0x2885c, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret
+
+====================================================================================================
+CLASS Architecture.DAL.Fcm.LoanRegistrationHeader
+====================================================================================================
+
+; Architecture.DAL.Fcm.LoanRegistrationHeader::SetData  (rva=0x28864, fat header, code_size=849, max_stack=6, exception_handlers=yes)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: newobj TypeSpec#78::.ctor
+    IL_0007: stloc.1
+    IL_0008: ldstr ldstr ""
+    IL_000d: stloc.2
+    IL_000e: newobj Architecture.Model.VPS.ServerCredentials::.ctor
+    IL_0013: stloc.3
+    IL_0014: ldarg.1
+    IL_0015: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_OrganizationId
+    IL_001a: ldarg.1
+    IL_001b: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_CompanyId
+    IL_0020: ldstr ldstr "IsVpsAttachmentsServiceOn"
+    IL_0025: call Architecture.DAL.Common.CommonServices::GetConfigurationFromAllocation
+    IL_002a: call Architecture.Common.Conversion::ToBool
+    IL_002f: stloc.s 4
+    IL_0031: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_0036: stloc.s 5
+    IL_0038: ldloc.s 5
+    IL_003a: callvirt System.Data.Common.DbConnection::Open
+    IL_003f: ldloc.s 5
+    IL_0041: callvirt System.Data.SqlClient.SqlConnection::BeginTransaction
+    IL_0046: stloc.s 6
+    IL_0048: ldloc.s 4
+    IL_004a: brfalse.s IL_0054
+    IL_004c: call Architecture.DAL.Common.CommonServices::GetServerCredentials
+    IL_0051: stloc.3
+    IL_0052: br.s IL_0095
+    IL_0054: ldarg.1
+    IL_0055: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_OrganizationId
+    IL_005a: ldarg.1
+    IL_005b: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_CompanyId
+    IL_0060: ldstr ldstr "Attachment Folder Path"
+    IL_0065: call Architecture.DAL.Common.CommonServices::GetConfigurationFromAllocation
+    IL_006a: stloc.2
+    IL_006b: ldarg.1
+    IL_006c: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_AttachmentsList
+    IL_0071: dup
+    IL_0072: brtrue.s IL_0078
+    IL_0074: pop
+    IL_0075: ldc.i4.0
+    IL_0076: br.s IL_0080
+    IL_0078: call TypeSpec#79::get_Count
+    IL_007d: ldc.i4.0
+    IL_007e: cgt
+    IL_0080: brfalse.s IL_0095
+    IL_0082: ldloc.2
+    IL_0083: call System.IO.Directory::Exists
+    IL_0088: brtrue.s IL_0095
+    IL_008a: ldstr ldstr "Attachment Folder Path Not Configure Properly"
+    IL_008f: newobj System.Exception::.ctor
+    IL_0094: throw
+    IL_0095: ldarg.1
+    IL_0096: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_AttachmentsList
+    IL_009b: dup
+    IL_009c: brtrue.s IL_00a2
+    IL_009e: pop
+    IL_009f: ldc.i4.0
+    IL_00a0: br.s IL_00aa
+    IL_00a2: call TypeSpec#79::get_Count
+    IL_00a7: ldc.i4.0
+    IL_00a8: cgt
+    IL_00aa: brfalse IL_0139
+    IL_00af: ldarg.1
+    IL_00b0: ldloc.3
+    IL_00b1: ldloc.s 4
+    IL_00b3: ldloc.2
+    IL_00b4: ldarg.1
+    IL_00b5: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_AttachmentsList
+    IL_00ba: ldloc.1
+    IL_00bb: call Architecture.DAL.Common.CommonServices::CommonMethodForAttachmentsToPhysicallySave
+    IL_00c0: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::set_AttachmentsList
+    IL_00c5: ldarg.1
+    IL_00c6: ldstr ldstr ","
+    IL_00cb: ldarg.1
+    IL_00cc: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_AttachmentsList
+    IL_00d1: ldsfld <>c::<>9__0_0
+    IL_00d6: dup
+    IL_00d7: brtrue.s IL_00f0
+    IL_00d9: pop
+    IL_00da: ldsfld <>c::<>9
+    IL_00df: ldftn <>c::<SetData>b__0_0
+    IL_00e5: newobj TypeSpec#178::.ctor
+    IL_00ea: dup
+    IL_00eb: stsfld <>c::<>9__0_0
+    IL_00f0: call MethodSpec#234
+    IL_00f5: call System.String::Join
+    IL_00fa: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::set_AttachmentsValues
+    IL_00ff: ldarg.1
+    IL_0100: ldstr ldstr ","
+    IL_0105: ldarg.1
+    IL_0106: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_AttachmentsList
+    IL_010b: ldsfld <>c::<>9__0_1
+    IL_0110: dup
+    IL_0111: brtrue.s IL_012a
+    IL_0113: pop
+    IL_0114: ldsfld <>c::<>9
+    IL_0119: ldftn <>c::<SetData>b__0_1
+    IL_011f: newobj TypeSpec#178::.ctor
+    IL_0124: dup
+    IL_0125: stsfld <>c::<>9__0_1
+    IL_012a: call MethodSpec#234
+    IL_012f: call System.String::Join
+    IL_0134: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::set_CustomAttachmentsValues
+    IL_0139: ldloc.s 6
+    IL_013b: ldarg.1
+    IL_013c: ldarg.2
+    IL_013d: ldstr ldstr ""
+    IL_0142: call MethodSpec#661
+    IL_0147: call System.Convert::ToInt32
+    IL_014c: stloc.0
+    IL_014d: ldloc.0
+    IL_014e: ldc.i4.0
+    IL_014f: ble.s IL_0160
+    IL_0151: ldarg.1
+    IL_0152: ldloc.0
+    IL_0153: call System.Convert::ToInt32
+    IL_0158: conv.i8
+    IL_0159: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::set_Id
+    IL_015e: br.s IL_0171
+    IL_0160: ldarg.1
+    IL_0161: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_Id
+    IL_0166: box System.Int64
+    IL_016b: call Architecture.Common.Conversion::ToInt
+    IL_0170: stloc.0
+    IL_0171: ldarg.1
+    IL_0172: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_FcmLoanRegistrationDetails
+    IL_0177: callvirt TypeSpec#556::GetEnumerator
+    IL_017c: stloc.s 7
+    IL_017e: br.s IL_01af
+    IL_0180: ldloca.s 7
+    IL_0182: call TypeSpec#557::get_Current
+    IL_0187: stloc.s 8
+    IL_0189: ldloc.s 8
+    IL_018b: ldarg.1
+    IL_018c: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_Id
+    IL_0191: callvirt Architecture.Model.Fcm.LoanRegistrationDetail::set_LoanRegistrationHeaderId
+    IL_0196: ldloc.s 6
+    IL_0198: ldloc.s 8
+    IL_019a: ldstr ldstr "[Fcm].[USP_LoanRegistrationDetail_Insert]"
+    IL_019f: ldstr ldstr ""
+    IL_01a4: call MethodSpec#662
+    IL_01a9: call System.Convert::ToInt32
+    IL_01ae: pop
+    IL_01af: ldloca.s 7
+    IL_01b1: call TypeSpec#557::MoveNext
+    IL_01b6: brtrue.s IL_0180
+    IL_01b8: leave.s IL_01c8
+    IL_01ba: ldloca.s 7
+    IL_01bc: constrained. TypeSpec#557
+    IL_01c2: callvirt System.IDisposable::Dispose
+    IL_01c7: endfinally
+    IL_01c8: ldarg.1
+    IL_01c9: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_AttachmentsList
+    IL_01ce: dup
+    IL_01cf: brtrue.s IL_01d5
+    IL_01d1: pop
+    IL_01d2: ldc.i4.0
+    IL_01d3: br.s IL_01dd
+    IL_01d5: call TypeSpec#79::get_Count
+    IL_01da: ldc.i4.0
+    IL_01db: cgt
+    IL_01dd: brfalse IL_0300
+    IL_01e2: newobj TypeSpec#16::.ctor
+    IL_01e7: dup
+    IL_01e8: ldstr ldstr "@ScreenName"
+    IL_01ed: ldarg.1
+    IL_01ee: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_AttachmentsList
+    IL_01f3: ldc.i4.0
+    IL_01f4: callvirt TypeSpec#79::get_Item
+    IL_01f9: callvirt Architecture.Model.DMSAttachments::get_ScreenName
+    IL_01fe: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0203: callvirt TypeSpec#16::Add
+    IL_0208: dup
+    IL_0209: ldstr ldstr "@Id"
+    IL_020e: ldloc.0
+    IL_020f: box System.Int32
+    IL_0214: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0219: callvirt TypeSpec#16::Add
+    IL_021e: dup
+    IL_021f: ldstr ldstr "@Activity"
+    IL_0224: ldstr ldstr "DeleteById"
+    IL_0229: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_022e: callvirt TypeSpec#16::Add
+    IL_0233: stloc.s 9
+    IL_0235: newobj Architecture.DAL.DMSAttachment::.ctor
+    IL_023a: ldstr ldstr "Sp_DMSAttachments_GetAllMethod"
+    IL_023f: ldloc.s 9
+    IL_0241: call Architecture.DAL.DMSAttachment::GetData
+    IL_0246: pop
+    IL_0247: ldarg.1
+    IL_0248: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_AttachmentsList
+    IL_024d: callvirt TypeSpec#79::GetEnumerator
+    IL_0252: stloc.s 10
+    IL_0254: br IL_02e4
+    IL_0259: ldloca.s 10
+    IL_025b: call TypeSpec#82::get_Current
+    IL_0260: stloc.s 11
+    IL_0262: ldloc.s 11
+    IL_0264: ldarg.1
+    IL_0265: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_EntryUserId
+    IL_026a: callvirt Architecture.Model.DMSAttachments::set_RefAccountId
+    IL_026f: ldloc.s 11
+    IL_0271: ldarg.1
+    IL_0272: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_DocumentTypeId
+    IL_0277: callvirt Architecture.Model.DMSAttachments::set_RefDocumentTypeId
+    IL_027c: ldloc.s 11
+    IL_027e: ldloc.0
+    IL_027f: callvirt Architecture.Model.DMSAttachments::set_RefDocumentNo
+    IL_0284: ldloc.s 11
+    IL_0286: ldarg.1
+    IL_0287: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_EntryUserId
+    IL_028c: callvirt Architecture.Model.DMSAttachments::set_EntryUser
+    IL_0291: ldloc.s 11
+    IL_0293: ldarg.1
+    IL_0294: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_ModifyUserId
+    IL_0299: callvirt Architecture.Model.DMSAttachments::set_ModifyUser
+    IL_029e: ldloc.s 11
+    IL_02a0: call System.DateTime::get_Now
+    IL_02a5: callvirt Architecture.Model.DMSAttachments::set_EntryDate
+    IL_02aa: ldloc.s 11
+    IL_02ac: call System.DateTime::get_Now
+    IL_02b1: callvirt Architecture.Model.DMSAttachments::set_ModifyDate
+    IL_02b6: ldloc.s 11
+    IL_02b8: ldarg.1
+    IL_02b9: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_OrganizationId
+    IL_02be: callvirt Architecture.Model.DMSAttachments::set_OrganizationId
+    IL_02c3: ldloc.s 11
+    IL_02c5: ldarg.1
+    IL_02c6: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_CompanyId
+    IL_02cb: callvirt Architecture.Model.DMSAttachments::set_CompanyId
+    IL_02d0: ldloc.s 6
+    IL_02d2: ldloc.s 11
+    IL_02d4: ldstr ldstr "Proc_DMSAttachments_Insert"
+    IL_02d9: ldstr ldstr ""
+    IL_02de: call MethodSpec#94
+    IL_02e3: pop
+    IL_02e4: ldloca.s 10
+    IL_02e6: call TypeSpec#82::MoveNext
+    IL_02eb: brtrue IL_0259
+    IL_02f0: leave.s IL_0300
+    IL_02f2: ldloca.s 10
+    IL_02f4: constrained. TypeSpec#82
+    IL_02fa: callvirt System.IDisposable::Dispose
+    IL_02ff: endfinally
+    IL_0300: ldarg.1
+    IL_0301: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_DeleteAttachmentsList
+    IL_0306: dup
+    IL_0307: brtrue.s IL_030d
+    IL_0309: pop
+    IL_030a: ldc.i4.0
+    IL_030b: br.s IL_0315
+    IL_030d: call TypeSpec#79::get_Count
+    IL_0312: ldc.i4.0
+    IL_0313: cgt
+    IL_0315: brfalse.s IL_0326
+    IL_0317: ldloc.3
+    IL_0318: ldloc.s 4
+    IL_031a: ldloc.2
+    IL_031b: ldarg.1
+    IL_031c: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_DeleteAttachmentsList
+    IL_0321: call Architecture.DAL.Common.CommonServices::DeleteAttachmentsPhysically
+    IL_0326: ldloc.s 6
+    IL_0328: callvirt System.Data.Common.DbTransaction::Commit
+    IL_032d: leave.s IL_034f
+    IL_032f: pop
+    IL_0330: ldloc.s 6
+    IL_0332: callvirt System.Data.Common.DbTransaction::Rollback
+    IL_0337: ldloc.3
+    IL_0338: ldloc.s 4
+    IL_033a: ldloc.2
+    IL_033b: ldloc.1
+    IL_033c: call Architecture.DAL.Common.CommonServices::DeleteAttachmentsPhysicallyInException
+    IL_0341: rethrow
+    IL_0343: ldloc.s 5
+    IL_0345: brfalse.s IL_034e
+    IL_0347: ldloc.s 5
+    IL_0349: callvirt System.IDisposable::Dispose
+    IL_034e: endfinally
+    IL_034f: ldloc.0
+    IL_0350: ret
+
+; Architecture.DAL.Fcm.LoanRegistrationHeader::GetData  (rva=0x28c28, fat header, code_size=194, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#558::.ctor
+    IL_0005: stloc.0
+    IL_0006: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.Common.DbConnection::Open
+    IL_0012: ldloc.1
+    IL_0013: ldarg.1
+    IL_0014: ldarg.2
+    IL_0015: call MethodSpec#663
+    IL_001a: stloc.0
+    IL_001b: leave.s IL_0027
+    IL_001d: ldloc.1
+    IL_001e: brfalse.s IL_0026
+    IL_0020: ldloc.1
+    IL_0021: callvirt System.IDisposable::Dispose
+    IL_0026: endfinally
+    IL_0027: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_002c: stloc.2
+    IL_002d: ldloc.2
+    IL_002e: callvirt System.Data.Common.DbConnection::Open
+    IL_0033: ldloc.0
+    IL_0034: brfalse.s IL_00af
+    IL_0036: ldloc.0
+    IL_0037: callvirt TypeSpec#558::GetEnumerator
+    IL_003c: stloc.3
+    IL_003d: br.s IL_0096
+    IL_003f: ldloca.s 3
+    IL_0041: call TypeSpec#559::get_Current
+    IL_0046: stloc.s 4
+    IL_0048: newobj TypeSpec#16::.ctor
+    IL_004d: stloc.s 5
+    IL_004f: ldloc.s 5
+    IL_0051: ldstr ldstr "@Id"
+    IL_0056: ldloc.s 4
+    IL_0058: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::get_Id
+    IL_005d: box System.Int64
+    IL_0062: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0067: callvirt TypeSpec#16::Add
+    IL_006c: ldloc.s 5
+    IL_006e: ldstr ldstr "@Activity"
+    IL_0073: ldstr ldstr "ReadByHeaderId"
+    IL_0078: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_007d: callvirt TypeSpec#16::Add
+    IL_0082: ldloc.s 4
+    IL_0084: ldloc.2
+    IL_0085: ldstr ldstr "[Fcm].[USP_LoanRegistrationHeader_GetAllMethod]"
+    IL_008a: ldloc.s 5
+    IL_008c: call MethodSpec#664
+    IL_0091: callvirt Architecture.Model.Fcm.LoanRegistrationHeader::set_FcmLoanRegistrationDetails
+    IL_0096: ldloca.s 3
+    IL_0098: call TypeSpec#559::MoveNext
+    IL_009d: brtrue.s IL_003f
+    IL_009f: leave.s IL_00af
+    IL_00a1: ldloca.s 3
+    IL_00a3: constrained. TypeSpec#559
+    IL_00a9: callvirt System.IDisposable::Dispose
+    IL_00ae: endfinally
+    IL_00af: leave.s IL_00bb
+    IL_00b1: ldloc.2
+    IL_00b2: brfalse.s IL_00ba
+    IL_00b4: ldloc.2
+    IL_00b5: callvirt System.IDisposable::Dispose
+    IL_00ba: endfinally
+    IL_00bb: leave.s IL_00c0
+    IL_00bd: pop
+    IL_00be: rethrow
+    IL_00c0: ldloc.0
+    IL_00c1: ret
+
+; Architecture.DAL.Fcm.LoanRegistrationHeader::.ctor  (rva=0x28d2c, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret

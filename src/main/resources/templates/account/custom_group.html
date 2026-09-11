@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>Account Custom Group - EccountBookERP</title>
+
+    <!-- Bootstrap & Core CSS -->
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 12px;
+            color: #333;
+        }
+        .right_col {
+            padding: 10px 15px !important;
+            background: #eef2f5 !important;
+        }
+        /* Top Banner */
+        .panel-header-banner {
+            background-color: #008080;
+            color: #ffffff;
+            padding: 5px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 2px 2px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        /* Main Container 2-Column Split */
+        .acg-main-split {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .acg-left-panel {
+            width: 380px;
+            flex-shrink: 0;
+            background: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+        }
+        .acg-right-panel {
+            flex-grow: 1;
+            background: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Toolbars */
+        .acg-toolbar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 4px 8px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .acg-tb-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease-in-out;
+        }
+        .acg-tb-btn:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+        .acg-tb-btn-primary {
+            background: #008080;
+            color: #fff;
+            border-color: #006666;
+        }
+        .acg-tb-btn-primary:hover {
+            background: #006666;
+            color: #fff;
+        }
+        /* Form Inputs */
+        .acg-form-box {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+        .acg-form-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .acg-form-row:last-child {
+            margin-bottom: 0;
+        }
+        .acg-form-label {
+            font-weight: 600;
+            font-size: 11px;
+            color: #444;
+            min-width: 90px;
+            margin-bottom: 0;
+        }
+        .acg-input {
+            height: 26px;
+            padding: 2px 6px;
+            font-size: 11px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            width: 100%;
+        }
+        .acg-input:focus {
+            border-color: #008080;
+            outline: none;
+            box-shadow: 0 0 3px rgba(0,128,128,0.3);
+        }
+        .acg-btn {
+            height: 26px;
+            padding: 0 10px;
+            font-size: 11px;
+            font-weight: bold;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        .acg-btn-teal {
+            background-color: #008080;
+            color: #ffffff;
+        }
+        .acg-btn-teal:hover {
+            background-color: #006666;
+            color: #ffffff;
+        }
+        /* Tables & Grids */
+        .acg-grid-container {
+            padding: 8px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .acg-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: #ffffff;
+        }
+        .acg-table th {
+            background-color: #eef2f5;
+            color: #333333;
+            font-weight: 700;
+            padding: 5px 8px;
+            border: 1px solid #d0d7de;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .acg-table td {
+            padding: 4px 8px;
+            border: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+        .acg-table tbody tr {
+            cursor: pointer;
+        }
+        .acg-table tbody tr:hover {
+            background-color: #f0f7f7;
+        }
+        .acg-table tbody tr.selected {
+            background-color: #d1ecf1 !important;
+            font-weight: 600;
+        }
+        /* Twin Grids Split */
+        .acg-twin-grids {
+            display: flex;
+            gap: 10px;
+            padding: 8px;
+            flex-grow: 1;
+            height: 480px;
+        }
+        .acg-grid-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #cccccc;
+            border-radius: 2px;
+            background: #ffffff;
+        }
+        .acg-grid-box-header {
+            background-color: #008080;
+            color: #ffffff;
+            padding: 4px 8px;
+            font-weight: bold;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .acg-grid-box-body {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .acg-search-box {
+            padding: 4px 8px;
+            background: #f4f6f9;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .acg-icon-btn {
+            background: #ffffff;
+            color: #008080;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 2px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .acg-icon-btn:hover {
+            background: #e6f2f2;
+        }
+        .acg-icon-btn-danger {
+            color: #dc3545;
+        }
+        .acg-icon-btn-danger:hover {
+            background: #f8d7da;
+        }
+    </style>
+</head>
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <!-- Sidebar Navigation Fragment -->
+        <div th:replace="fragments/fixed_sidebar :: div"></div>
+
+        <!-- Main Content Area -->
+        <div class="right_col" role="main">
+            
+            <!-- Banner Header -->
+            <div class="panel-header-banner">
+                <span><i class="fa fa-object-group"></i> Account Custom Group</span>
+                <span style="font-size: 11px; font-weight: normal;">Module 8 &bull; Dit-to Copy Desktop WinForms</span>
+            </div>
+
+            <div class="acg-main-split">
+                
+                <!-- ================= LEFT PANEL: GROUP DEFINITION ================= -->
+                <div class="acg-left-panel">
+                    
+                    <!-- Left Toolbar (toolStrip1) -->
+                    <div class="acg-toolbar">
+                        <button type="button" class="acg-tb-btn" onclick="resetLeftForm()">
+                            <i class="fa fa-plus text-primary"></i> Reset
+                        </button>
+                        <button type="button" class="acg-tb-btn" onclick="submitSaveGroup()">
+                            <i class="fa fa-save text-success"></i> <span id="lblToolbarSave">Save</span>
+                        </button>
+                        <button type="button" class="acg-tb-btn" onclick="openShortcutsModal()">
+                            <i class="fa fa-keyboard-o text-info"></i> ShortCut Keys
+                        </button>
+                    </div>
+
+                    <!-- Input Form (panel4) -->
+                    <div class="acg-form-box">
+                        <form id="formLeftGroup" onsubmit="event.preventDefault(); submitSaveGroup();">
+                            <input type="hidden" id="txtRecId" value="0"/>
+                            <div class="acg-form-row">
+                                <label class="acg-form-label" for="txtGroupName">Group Name</label>
+                                <input type="text" id="txtGroupName" class="acg-input" placeholder="Enter Group Name" required autocomplete="off"/>
+                                <button type="submit" id="btnAdd" class="acg-btn acg-btn-teal">Add</button>
+                                <button type="button" id="btnClear" class="acg-btn acg-btn-teal" onclick="resetLeftForm()">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Search Filter for Left Grid -->
+                    <div class="acg-search-box">
+                        <input type="text" id="txtFilterLeftGrid" class="acg-input" placeholder="Search Custom Groups..." onkeyup="filterLeftGrid()"/>
+                    </div>
+
+                    <!-- Left Custom Groups Grid (grdLookUp) -->
+                    <div class="acg-grid-container" style="max-height: 480px;">
+                        <table class="acg-table" id="tblGroups">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">ID</th>
+                                    <th>Description</th>
+                                    <th style="width: 50px; text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyGroups">
+                                <tr th:each="g : ${groups}" th:data-id="${g.id}" th:data-name="${g.acLookUpsDescription}" onclick="selectGroupRow(this)" ondblclick="editGroupRow(this)">
+                                    <td th:text="${g.id}">1</td>
+                                    <td th:text="${g.acLookUpsDescription}">Group Description</td>
+                                    <td style="text-align: center;">
+                                        <button type="button" class="acg-icon-btn acg-icon-btn-danger" title="Delete" th:attr="onclick='deleteGroup(' + ${g.id} + ', event)'">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr th:if="${groups == null or groups.isEmpty()}" id="trNoGroups">
+                                    <td colspan="3" style="text-align:center; color:#888; padding: 15px;">No custom groups created yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <!-- ================= RIGHT PANEL: ACCOUNT ALLOCATION ================= -->
+                <div class="acg-right-panel">
+                    
+                    <!-- Right Toolbar (toolStrip2) -->
+                    <div class="acg-toolbar">
+                        <button type="button" class="acg-tb-btn" onclick="resetRightFilters()">
+                            <i class="fa fa-refresh text-warning"></i> Reset
+                        </button>
+                        <button type="button" class="acg-tb-btn" onclick="refreshAllData()">
+                            <i class="fa fa-sync text-info"></i> Refresh
+                        </button>
+                        <button type="button" class="acg-tb-btn acg-tb-btn-primary" onclick="doAllocate()">
+                            <i class="fa fa-arrow-right"></i> Allocate
+                        </button>
+                        <button type="button" class="acg-tb-btn" style="color: #dc3545;" onclick="doUnallocate()">
+                            <i class="fa fa-trash"></i> Un-Allocate
+                        </button>
+                        <a href="/accounts/supplier" class="acg-tb-btn" style="text-decoration: none;">
+                            <i class="fa fa-users text-primary"></i> Party Custom Group
+                        </a>
+                    </div>
+
+                    <!-- Filter Control Panel (panel6) -->
+                    <div class="acg-form-box">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                            <div style="flex: 1 1 180px; min-width: 170px; display: flex; align-items: center; gap: 6px;">
+                                <label class="acg-form-label" style="min-width: 70px; margin: 0;">Group Name</label>
+                                <select id="cmbGroupName" class="acg-input" style="flex: 1;" onchange="onGroupNameChange()">
+                                    <option value="0">-- Select Group --</option>
+                                    <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.acLookUpsDescription}"></option>
+                                </select>
+                            </div>
+                            <div style="flex: 1 1 180px; min-width: 170px; display: flex; align-items: center; gap: 6px;">
+                                <label class="acg-form-label" style="min-width: 80px; margin: 0;">Account Types</label>
+                                <select id="cmbAccountTypes" class="acg-input" style="flex: 1;" onchange="onAccountTypeChange()">
+                                    <option value="0">-- All Types --</option>
+                                    <option th:each="t : ${accountTypes}" th:value="${t.id}" th:text="${t.accountType}"></option>
+                                </select>
+                            </div>
+                            <div style="flex: 1.5 1 240px; min-width: 210px; display: flex; align-items: center; gap: 6px;">
+                                <label class="acg-form-label" style="min-width: 85px; margin: 0;">Parent Account</label>
+                                <select id="cmbParentAccount" class="acg-input" style="flex: 1;">
+                                    <option value="0">-- All Parent Accounts --</option>
+                                    <option th:each="p : ${parentAccounts}" th:value="${p.id}" th:text="${p.accountTitle + ' (' + p.accountCode + ')'}"></option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">
+                                <button type="button" id="btnShow" class="acg-btn acg-btn-teal" style="min-width: 60px;" onclick="executeShow()">Show</button>
+                                <button type="button" id="btnAcClear" class="acg-btn acg-btn-teal" style="min-width: 60px;" onclick="resetRightFilters()">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Twin Allocation Side-By-Side Grids -->
+                    <div class="acg-twin-grids">
+                        
+                        <!-- Left Allocation Grid: Unallocated / Available Accounts (grdAllocated) -->
+                        <div class="acg-grid-box">
+                            <div class="acg-grid-box-header">
+                                <span>Available Accounts (Unallocated)</span>
+                                <button type="button" class="acg-icon-btn" title="Allocate Selected Accounts" onclick="doAllocate()">
+                                    <i class="fa fa-arrow-right"></i>
+                                </button>
+                            </div>
+                            <div class="acg-search-box">
+                                <input type="text" id="txtFilterUnalloc" class="acg-input" placeholder="Search accounts..." onkeyup="filterTable('tblUnalloc', this.value)"/>
+                            </div>
+                            <div class="acg-grid-box-body">
+                                <table class="acg-table" id="tblUnalloc">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30px; text-align: center;"><input type="checkbox" id="chkSelectAllUnalloc" onclick="toggleSelectAll('tblUnalloc', this.checked)"/></th>
+                                            <th style="width: 90px;">Account Code</th>
+                                            <th>Account Title</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyUnalloc">
+                                        <tr><td colspan="3" style="text-align:center; color:#888; padding: 20px;">Select Group Name and click Show</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right Allocation Grid: Allocated Accounts (grdUnAllocated) -->
+                        <div class="acg-grid-box">
+                            <div class="acg-grid-box-header" style="background-color: #008080;">
+                                <span>Allocated Accounts In Group</span>
+                                <button type="button" class="acg-icon-btn acg-icon-btn-danger" title="Un-Allocate Selected Accounts" onclick="doUnallocate()">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="acg-search-box">
+                                <input type="text" id="txtFilterAlloc" class="acg-input" placeholder="Search allocated accounts..." onkeyup="filterTable('tblAlloc', this.value)"/>
+                            </div>
+                            <div class="acg-grid-box-body">
+                                <table class="acg-table" id="tblAlloc">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30px; text-align: center;"><input type="checkbox" id="chkSelectAllAlloc" onclick="toggleSelectAll('tblAlloc', this.checked)"/></th>
+                                            <th style="width: 90px;">Account Code</th>
+                                            <th>Account Title</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyAlloc">
+                                        <tr><td colspan="3" style="text-align:center; color:#888; padding: 20px;">Select Group Name and click Show</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Shortcut Keys Modal -->
+<div class="modal fade" id="modalShortcuts" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #008080; color: #fff; padding: 8px 12px;">
+                <button type="button" class="close" data-dismiss="modal" style="color: #fff;"><span>&times;</span></button>
+                <h5 class="modal-title" style="font-weight: bold; font-size: 13px;"><i class="fa fa-keyboard-o"></i> Keyboard Shortcuts</h5>
+            </div>
+            <div class="modal-body" style="padding: 10px; font-size: 11px;">
+                <table class="table table-bordered table-striped" style="margin-bottom: 0;">
+                    <thead>
+                        <tr style="background: #eef2f5;">
+                            <th>Key Combination</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>Ctrl + S</code></td><td>Save Group Name</td></tr>
+                        <tr><td><code>Ctrl + U</code></td><td>Update Group Name</td></tr>
+                        <tr><td><code>Ctrl + A</code></td><td>Allocate Accounts</td></tr>
+                        <tr><td><code>Ctrl + Delete</code></td><td>Un-Allocate Accounts</td></tr>
+                        <tr><td><code>Ctrl + R</code></td><td>Refresh Form Data</td></tr>
+                        <tr><td><code>Ctrl + N</code></td><td>Reset Inputs / New</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<script>
+    let activeGroupId = 0;
+
+    // Reset Left Form (btnClear_Click / Reset)
+    function resetLeftForm() {
+        $('#txtRecId').val('0');
+        $('#txtGroupName').val('');
+        $('#btnAdd').text('Add');
+        $('#lblToolbarSave').text('Save');
+        $('#tblGroups tbody tr').removeClass('selected');
+        $('#txtGroupName').focus();
+    }
+
+    // Submit Save/Update Group
+    function submitSaveGroup() {
+        const id = parseInt($('#txtRecId').val()) || 0;
+        const name = $('#txtGroupName').val().trim();
+        if (!name) {
+            alert('Group Name Required');
+            $('#txtGroupName').focus();
+            return;
+        }
+
+        $.ajax({
+            url: '/accounts/custom_group/save',
+            type: 'POST',
+            data: { id: id, acLookUpsDescription: name },
+            success: function (res) {
+                if (res.success) {
+                    alert(res.message);
+                    resetLeftForm();
+                    refreshAllData();
+                } else {
+                    alert(res.message || 'Error saving group');
+                }
+            },
+            error: function () {
+                alert('Server error saving group.');
+            }
+        });
+    }
+
+    // Double-click row on left grid to edit (grdLookUp_DoubleClick)
+    function editGroupRow(tr) {
+        const id = $(tr).attr('data-id');
+        const name = $(tr).attr('data-name');
+        $('#txtRecId').val(id);
+        $('#txtGroupName').val(name);
+        $('#btnAdd').text('Update');
+        $('#lblToolbarSave').text('Update');
+        $('#txtGroupName').focus();
+    }
+
+    // Click row on left grid
+    function selectGroupRow(tr) {
+        $('#tblGroups tbody tr').removeClass('selected');
+        $(tr).addClass('selected');
+        const id = $(tr).attr('data-id');
+        if (id) {
+            $('#cmbGroupName').val(id);
+            onGroupNameChange();
+        }
+    }
+
+    // Delete group
+    function deleteGroup(id, event) {
+        if (event) event.stopPropagation();
+        if (!confirm('Are you sure you want to delete this custom group?')) return;
+
+        $.ajax({
+            url: '/accounts/custom_group/delete-group/' + id,
+            type: 'POST',
+            success: function (res) {
+                if (res.success) {
+                    alert(res.message);
+                    resetLeftForm();
+                    refreshAllData();
+                } else {
+                    alert(res.message || 'Error deleting group');
+                }
+            },
+            error: function () {
+                alert('Server error deleting group.');
+            }
+        });
+    }
+
+    // Account Types change -> reload Parent Account dropdown
+    function onAccountTypeChange() {
+        const accountTypeId = parseInt($('#cmbAccountTypes').val()) || 0;
+        $.get('/accounts/custom_group/parent-accounts?accountTypeId=' + accountTypeId, function (parents) {
+            let html = '<option value="0">-- All Parent Accounts --</option>';
+            if (parents && parents.length > 0) {
+                parents.forEach(p => {
+                    html += `<option value="${p.id}">${p.accountTitle} (${p.accountCode})</option>`;
+                });
+            }
+            $('#cmbParentAccount').html(html);
+        });
+    }
+
+    // Group Name dropdown change
+    function onGroupNameChange() {
+        activeGroupId = parseInt($('#cmbGroupName').val()) || 0;
+        if (activeGroupId > 0) {
+            executeShow();
+        } else {
+            clearGrids();
+        }
+    }
+
+    // Execute Show Button Click (BtnShow_Click)
+    function executeShow() {
+        const groupId = parseInt($('#cmbGroupName').val()) || 0;
+        if (groupId === 0) {
+            alert('Please select a Group Name first.');
+            return;
+        }
+        activeGroupId = groupId;
+        const accountTypeId = parseInt($('#cmbAccountTypes').val()) || 0;
+        const parentAccountId = parseInt($('#cmbParentAccount').val()) || 0;
+
+        $('#tbodyUnalloc').html('<tr><td colspan="3" style="text-align:center; color:#888; padding:15px;"><i class="fa fa-spinner fa-spin"></i> Loading available accounts...</td></tr>');
+        $('#tbodyAlloc').html('<tr><td colspan="3" style="text-align:center; color:#888; padding:15px;"><i class="fa fa-spinner fa-spin"></i> Loading allocated accounts...</td></tr>');
+
+        $.get(`/accounts/custom_group/show?groupId=${groupId}&accountTypeId=${accountTypeId}&parentAccountId=${parentAccountId}`, function (res) {
+            renderUnallocGrid(res.unallocated || []);
+            renderAllocGrid(res.allocated || []);
+        });
+    }
+
+    function renderUnallocGrid(list) {
+        let html = '';
+        if (list && list.length > 0) {
+            list.forEach(item => {
+                const coaId = item.ChartOfAccountId || item.chartOfAccountId || item.Id || item.id;
+                const code = item.AccountCode || item.accountCode || '';
+                const title = item.AccountTitle || item.accountTitle || '';
+                html += `<tr>
+                            <td style="text-align:center;"><input type="checkbox" class="chk-unalloc" value="${coaId}"/></td>
+                            <td>${code}</td>
+                            <td><strong>${title}</strong></td>
+                         </tr>`;
+            });
+        } else {
+            html = '<tr><td colspan="3" style="text-align:center; color:#888; padding:15px;">No unallocated accounts match</td></tr>';
+        }
+        $('#tbodyUnalloc').html(html);
+        $('#chkSelectAllUnalloc').prop('checked', false);
+    }
+
+    function renderAllocGrid(list) {
+        let html = '';
+        if (list && list.length > 0) {
+            list.forEach(item => {
+                const coaId = item.ChartOfAccountId || item.chartOfAccountId || item.Id || item.id;
+                const code = item.AccountCode || item.accountCode || '';
+                const title = item.AccountTitle || item.accountTitle || '';
+                html += `<tr>
+                            <td style="text-align:center;"><input type="checkbox" class="chk-alloc" value="${coaId}"/></td>
+                            <td>${code}</td>
+                            <td><strong>${title}</strong></td>
+                         </tr>`;
+            });
+        } else {
+            html = '<tr><td colspan="3" style="text-align:center; color:#888; padding:15px;">No accounts allocated to this group</td></tr>';
+        }
+        $('#tbodyAlloc').html(html);
+        $('#chkSelectAllAlloc').prop('checked', false);
+    }
+
+    // Allocate Click (btnAddAc_Click)
+    function doAllocate() {
+        const groupId = parseInt($('#cmbGroupName').val()) || 0;
+        if (groupId === 0) {
+            alert('Please select a Group Name first.');
+            return;
+        }
+        const selectedIds = [];
+        $('.chk-unalloc:checked').each(function () {
+            selectedIds.push(parseInt($(this).val()));
+        });
+        if (selectedIds.length === 0) {
+            alert('Checked row first');
+            return;
+        }
+
+        $.ajax({
+            url: '/accounts/custom_group/allocate?groupId=' + groupId,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(selectedIds),
+            success: function (res) {
+                if (res.success) {
+                    alert(res.message || 'Saved Successfully');
+                    executeShow();
+                } else {
+                    alert(res.message || 'Error allocating accounts');
+                }
+            },
+            error: function () {
+                alert('Server error during allocation.');
+            }
+        });
+    }
+
+    // Un-Allocate Click (btnDelete_Click)
+    function doUnallocate() {
+        const groupId = parseInt($('#cmbGroupName').val()) || 0;
+        if (groupId === 0) {
+            alert('Please select a Group Name first.');
+            return;
+        }
+        const selectedIds = [];
+        $('.chk-alloc:checked').each(function () {
+            selectedIds.push(parseInt($(this).val()));
+        });
+        if (selectedIds.length === 0) {
+            alert('Checked row first');
+            return;
+        }
+
+        $.ajax({
+            url: '/accounts/custom_group/unallocate?groupId=' + groupId,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(selectedIds),
+            success: function (res) {
+                if (res.success) {
+                    alert(res.message || 'Record Remove successfully');
+                    executeShow();
+                } else {
+                    alert(res.message || 'Error removing allocation');
+                }
+            },
+            error: function () {
+                alert('Server error during un-allocation.');
+            }
+        });
+    }
+
+    // Reset Right Filters (btnAcClear_Click)
+    function resetRightFilters() {
+        $('#cmbAccountTypes').val('0');
+        $('#cmbGroupName').val('0');
+        $('#cmbParentAccount').val('0');
+        clearGrids();
+    }
+
+    function clearGrids() {
+        $('#tbodyUnalloc').html('<tr><td colspan="3" style="text-align:center; color:#888; padding:20px;">Select Group Name and click Show</td></tr>');
+        $('#tbodyAlloc').html('<tr><td colspan="3" style="text-align:center; color:#888; padding:20px;">Select Group Name and click Show</td></tr>');
+        $('#chkSelectAllUnalloc').prop('checked', false);
+        $('#chkSelectAllAlloc').prop('checked', false);
+    }
+
+    // Refresh All (BtnRefresh_Click)
+    function refreshAllData() {
+        window.location.reload();
+    }
+
+    function toggleSelectAll(tableId, checked) {
+        $(`#${tableId} tbody input[type="checkbox"]`).prop('checked', checked);
+    }
+
+    function filterTable(tableId, query) {
+        const q = query.toLowerCase();
+        $(`#${tableId} tbody tr`).each(function () {
+            const text = $(this).text().toLowerCase();
+            $(this).toggle(text.indexOf(q) > -1);
+        });
+    }
+
+    function filterLeftGrid() {
+        filterTable('tblGroups', $('#txtFilterLeftGrid').val());
+    }
+
+    function openShortcutsModal() {
+        $('#modalShortcuts').modal('show');
+    }
+
+    // Keyboard Shortcuts Listener
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && e.keyCode === 83) { // Ctrl+S
+            e.preventDefault();
+            submitSaveGroup();
+        }
+        if (e.ctrlKey && e.keyCode === 85) { // Ctrl+U
+            e.preventDefault();
+            submitSaveGroup();
+        }
+        if (e.ctrlKey && e.keyCode === 65) { // Ctrl+A
+            e.preventDefault();
+            doAllocate();
+        }
+        if (e.ctrlKey && e.keyCode === 46) { // Ctrl+Delete
+            e.preventDefault();
+            doUnallocate();
+        }
+        if (e.ctrlKey && e.keyCode === 82) { // Ctrl+R
+            e.preventDefault();
+            refreshAllData();
+        }
+        if (e.ctrlKey && e.keyCode === 78) { // Ctrl+N
+            e.preventDefault();
+            resetLeftForm();
+        }
+    });
+</script>
+</body>
+</html>

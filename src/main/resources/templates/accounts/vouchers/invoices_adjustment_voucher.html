@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payment Adjustment Voucher - WinForms Replica</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        /* ditto panel11 (the teal header strip inside the form, distinct from win-title-bar
+           above which stands in for the outer app chrome): label17 "Payment Adjustment
+           Voucher" on the left, BtnAutoUtilizedAllRowsOfPendingGrid + ChkPrintslip on the right */
+        .win-header-panel { background-color: #00796B; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 15px; font-weight: bold; }
+        .win-header-panel .win-btn-highlight { background: #00c0c0; color: #400000; border: none; font-family: Verdana, sans-serif; font-weight: bold; }
+        .win-header-panel .win-btn-highlight:hover { background: #00a8a8; color: #400000; }
+        .chk-inline { display: inline-flex; align-items: center; gap: 4px; font-weight: bold; color: #ffffff; font-size: 12px; }
+        /* ditto groupBox2 "Main" */
+        .win-groupbox { border: 1px solid #9ca3af; border-radius: 2px; margin: 6px 8px; padding: 10px 10px 8px 10px; position: relative; }
+        .win-groupbox-title { position: absolute; top: -9px; left: 10px; background: #ffffff; padding: 0 6px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 11px; color: #222; }
+        .win-groupbox .row { margin-bottom: 6px; }
+        .win-detail-bar { background-color: #00796B; color: #ffffff; font-weight: bold; padding: 4px 10px; display: flex; justify-content: space-between; align-items: center; }
+        .win-detail-bar .win-btn { background: #ffffff; }
+        .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
+        .win-tab-bar { background: #d1d5db; border-bottom: 1px solid #b0bec5; padding: 2px 8px 0 8px; display: flex; gap: 3px; }
+        .win-tab-btn { background: #e5e7eb; border: 1px solid #9ca3af; border-bottom: none; border-radius: 3px 3px 0 0; padding: 4px 14px; font-size: 11px; font-weight: bold; color: #374151; cursor: pointer; }
+        .win-tab-btn.active { background: #ffffff; color: #00796B; border-color: #b0bec5; border-bottom: 2px solid #ffffff; margin-bottom: -1px; }
+        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
+        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
+        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
+        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 8px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .win-section-header { background-color: #f1f5f9; color: #00796B; font-weight: bold; font-size: 11px; padding: 4px 8px; border-bottom: 1px solid #cbd5e1; border-top: 1px solid #cbd5e1; }
+        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
+        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
+        .win-input[readonly] { background: #f1f5f9; }
+        .win-textarea { border: 1px solid #94a3b8; border-radius: 2px; padding: 4px 6px; font-size: 11px; width: 100%; height: 40px; resize: none; box-sizing: border-box; }
+        .search-popup { position: absolute; z-index: 1050; background: #ffffff; border: 1px solid #00796B; box-shadow: 0 4px 12px rgba(0,0,0,0.18); max-height: 260px; overflow-y: auto; width: 480px; display: none; }
+        .search-popup table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .search-popup th { background-color: #00796B; color: white; padding: 4px 6px; position: sticky; top: 0; font-weight: 600; border: 1px solid #004d40; }
+        .search-popup td { padding: 4px 6px; border: 1px solid #e2e8f0; cursor: pointer; }
+        .search-popup tr:hover { background-color: #e0f2f1; font-weight: 600; }
+        .detail-entry-bar { background-color: #fafafa; border: 1px solid #cbd5e1; padding: 8px; margin: 6px 0; }
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
+        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; }
+        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
+        .totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .grid-scroll { max-height: 220px; overflow-y: auto; border: 1px solid #cbd5e1; }
+        .radio-inline-win { display: inline-flex; align-items: center; gap: 4px; margin-right: 14px; font-weight: 600; color: #334155; }
+        .amount-input { text-align: right; border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 4px; font-size: 11px; width: 100%; box-sizing: border-box; }
+        .amount-input[readonly] { background: #f1f5f9; }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-exchange"></i> Payment Adjustment Voucher</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ditto toolStrip1's real button order: New, Refresh | Save, Update, Delete | Attachment |
+         901-Print (btnSlip) | ShortCut Keys (btnshortcutkeys) -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="resetForm()"><i class="fa fa-plus text-success"></i> New</button>
+        <button type="button" class="win-btn" onclick="btnRefresh()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+        <button type="button" class="win-btn win-btn-teal" id="btnSave" onclick="submitVoucher()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="win-btn win-btn-teal" id="btnUpdate" hidden onclick="submitVoucher()"><i class="fa fa-save"></i> Update</button>
+        <button type="button" class="win-btn" id="btnDelete" hidden onclick="deleteVoucher()"><i class="fa fa-trash text-danger"></i> Delete</button>
+        <button type="button" class="win-btn"><i class="fa fa-paperclip text-info"></i> Attachment</button>
+        <button type="button" class="win-btn" disabled title="Slip printing is not reproduced in this port (out of scope, same as every other voucher's print button)"><i class="fa fa-print"></i> 901-Print</button>
+        <button type="button" class="win-btn" disabled title="Not reproduced in this port"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    </div>
+
+    <!-- ditto panel11: label17 "Payment Adjustment Voucher" (left) + BtnAutoUtilizedAllRowsOfPendingGrid
+         "Auto Utilize All Pending Vouchers" + ChkPrintslip "Print Slip" (right) -->
+    <div class="win-header-panel">
+        <span class="win-header-title">Payment Adjustment Voucher</span>
+        <div style="display:flex;align-items:center;gap:14px;">
+            <button type="button" class="win-btn win-btn-highlight" onclick="autoUtilizeAllSelected()"><i class="fa fa-magic"></i> Auto Utilize All Pending Vouchers</button>
+            <label class="chk-inline"><input type="checkbox" id="chkPrintSlip" checked> Print Slip</label>
+        </div>
+    </div>
+
+    <!-- ditto the outer tabControl: tabPage1 "Form" / tabPage2 "History" -->
+    <div class="win-tab-bar">
+        <button type="button" class="win-tab-btn active" id="tabBtnForm" onclick="switchTab('form')"><i class="fa fa-edit"></i> Form</button>
+        <button type="button" class="win-tab-btn" id="tabBtnHistory" onclick="switchTab('history')"><i class="fa fa-history"></i> History</button>
+    </div>
+
+    <!-- ===================== FORM (tabPage1) ===================== -->
+    <div id="tabFormContent">
+
+        <!-- ditto groupBox2 "Main": row1 = Voucher No,Date / Payment Type / Party City,Cell;
+             row2 = Voucher Amount / Party Name (CmbSupplier) / Party Name (CmbAccountFilter)+Show -->
+        <div class="win-groupbox">
+            <span class="win-groupbox-title">Main</span>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="win-label">Voucher No,Date</div>
+                    <div style="display:flex;gap:4px;">
+                        <select class="win-input" id="cmbVoucherNo" style="width:52%;" disabled>
+                            <option value="">--</option>
+                        </select>
+                        <input type="text" class="win-input" id="txtVoucherDate" readonly style="width:48%;">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="win-label">Payment Type</div>
+                    <select class="win-input" id="cmbPaymentTypeDisplay" disabled>
+                        <option value="">--</option>
+                    </select>
+                </div>
+                <div class="col-md-1"></div>
+                <div class="col-md-3">
+                    <div class="win-label">Party City / Cell</div>
+                    <div style="display:flex;gap:4px;">
+                        <input type="text" class="win-input" id="txtPartyCity" readonly>
+                        <input type="text" class="win-input" id="txtPartyCellNo" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="win-label">Voucher Amount</div>
+                    <input type="text" class="win-input" id="txtVoucherAmount" readonly>
+                </div>
+                <div class="col-md-3">
+                    <div class="win-label">Party Name</div>
+                    <select class="win-input" id="cmbSupplier" onchange="onSupplierChange()">
+                        <option value="">-- Load a voucher first --</option>
+                    </select>
+                </div>
+                <div class="col-md-1"></div>
+                <div class="col-md-3">
+                    <div class="win-label">Party Name</div>
+                    <select class="win-input" id="cmbAccountFilter" onchange="onAccountFilterChange()">
+                        <option value="">-- All Parties --</option>
+                    </select>
+                </div>
+                <div class="col-md-1" style="display:flex;align-items:flex-end;">
+                    <button type="button" class="win-btn win-btn-teal" style="width:100%;" onclick="btnShowRecords()">Show</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ditto tabPage3 "Detail": BtnAutoUtilize "Auto Utilize Voucher Amount" in its own
+             teal bar directly above the adjustment grid -->
+        <div class="win-form-card">
+            <div class="win-detail-bar">
+                <span>Detail</span>
+                <button type="button" class="win-btn" onclick="autoUtilizeGrid()"><i class="fa fa-magic"></i> Auto Utilize Voucher Amount</button>
+            </div>
+            <div style="padding:8px;">
+                <div class="grid-scroll">
+                    <table class="win-grid-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice Type</th>
+                                <th>Invoice No</th>
+                                <th>Invoice Date</th>
+                                <th>Invoice Due Date</th>
+                                <th style="text-align:right;">Invoice Amount</th>
+                                <th style="text-align:right;">Available Invoice Am...</th>
+                                <th style="text-align:right;">Adjustment Amount</th>
+                                <th style="text-align:right;">Balance Amount</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailGridBody"></tbody>
+                        <tfoot>
+                            <tr class="grid-total-row">
+                                <td colspan="4" style="text-align:right;">Totals:</td>
+                                <td id="totInvoiceAmount" style="text-align:right;">0.00</td>
+                                <td id="totAvailableAmount" style="text-align:right;">0.00</td>
+                                <td id="totAdjustmentAmount" style="text-align:right;">0.00</td>
+                                <td id="totBalanceAmount" style="text-align:right;">0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="totals-bar">
+                    <div>Voucher Amount: <span id="lblVoucherAmountTotal">0.00</span></div>
+                    <div>Total Adjustment: <span id="lblTotalAdjustment">0.00</span></div>
+                    <div>Difference: <span id="lblDiffAmount">0.00</span></div>
+                    <div style="font-weight:normal;font-size:11px;">(select a row and press Ctrl+Space to delete it - ditto desktop's own grd_KeyDown shortcut, there is no visible Delete button on this grid in real desktop either)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ditto label58 "Pending Vouchers For Adjustment" -->
+        <div class="win-form-card">
+            <div class="win-detail-bar">
+                <span><i class="fa fa-list"></i> Pending Vouchers For Adjustment</span>
+            </div>
+            <div class="grid-scroll" style="margin-top:0;">
+                <table class="win-grid-table">
+                    <thead>
+                        <tr>
+                            <th id="thSelect" style="width:32px;" hidden>Sel</th>
+                            <th style="width:60px;">Load</th>
+                            <th>Payment Type</th>
+                            <th>V.Type</th>
+                            <th>Voucher Date</th>
+                            <th>Voucher Code</th>
+                            <th>Account Code</th>
+                            <th>Account Title</th>
+                            <th style="text-align:right;">Amount</th>
+                            <th>Voucher Remarks</th>
+                            <th style="text-align:center;">No Of Attachments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingGridBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== HISTORY TAB ===================== -->
+    <div id="tabHistoryContent" class="win-form-card" hidden>
+        <div class="win-section-header"><i class="fa fa-filter"></i> History Filters</div>
+        <div style="padding:8px;">
+            <div class="row" style="align-items:flex-end;">
+                <div class="col-md-5">
+                    <div class="win-label">Date Type</div>
+                    <label class="radio-inline-win"><input type="radio" name="histDateType" value="docdate" checked> Voucher Date</label>
+                    <label class="radio-inline-win"><input type="radio" name="histDateType" value="entrydate"> Entry Date</label>
+                    <label class="radio-inline-win"><input type="radio" name="histDateType" value="modifydate"> Modify Date</label>
+                </div>
+                <div class="col-md-2">
+                    <div class="win-label">From Date</div>
+                    <input type="date" class="win-input" id="txtHistFromDate">
+                </div>
+                <div class="col-md-2">
+                    <div class="win-label">To Date</div>
+                    <input type="date" class="win-input" id="txtHistToDate">
+                </div>
+                <div class="col-md-1">
+                    <div class="win-label">Doc No From</div>
+                    <input type="number" class="win-input" id="txtHistFromDocNo">
+                </div>
+                <div class="col-md-1">
+                    <div class="win-label">Doc No To</div>
+                    <input type="number" class="win-input" id="txtHistToDocNo">
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="win-btn win-btn-teal" onclick="btnShowHistory()"><i class="fa fa-search"></i> Show</button>
+                </div>
+            </div>
+            <div class="row" style="margin-top:6px;">
+                <div class="col-md-4">
+                    <div class="win-label">Party Filter</div>
+                    <select class="win-input" id="cmbCustomerHistory">
+                        <option value="">-- All Parties --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="win-section-header"><i class="fa fa-history"></i> History Records</div>
+        <div style="padding:8px;">
+            <div class="grid-scroll" style="max-height:400px;">
+                <table class="win-grid-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">Edit</th>
+                            <th>Voucher No</th>
+                            <th>Voucher Date</th>
+                            <th style="text-align:right;">Voucher Amount</th>
+                            <th>Account Title</th>
+                            <th>Payment Type</th>
+                            <th>Invoice Type</th>
+                            <th>Invoice No(s)</th>
+                            <th>Invoice Date(s)</th>
+                            <th style="text-align:right;">Adjustment Amount</th>
+                            <th>Party Name</th>
+                            <th>Entry Date</th>
+                            <th>Entry User</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyGridBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        // ================================================================================
+        // Voucher Invoices Adjustment - ditto Architecture.WinApp.Account_Definition.
+        // AdjustmentVouchers.frmInvoicesAdjustmentVoucher.cs (TransactionTypeId = 1, hardcoded
+        // in the real desktop constructor - this screen adjusts outstanding Payment vouchers
+        // (CPV/BPV/JV/Bill Payables/etc, DocumentTypeId 1,2 plus others) against outstanding
+        // Purchase Invoices. The FCY/Export-Receipts variants of this same BLL/table
+        // (TransactionTypeId 2 and 3, served by frmReceiptInvoicesAdjustmentVoucher.cs and
+        // frmExportReceiptInvoicesAdjustmentVoucher.cs) are separate desktop forms, out of
+        // scope for this module.
+        // ================================================================================
+
+        var API = '/accounts/api/vouchers/invoices-adjustment';
+        var pendingRows = [];       // raw rows from /outstanding
+        var detailRows = [];        // current invoice-adjustment grid rows
+        var removedLineIds = [];    // ids of existing detail rows removed from the grid this session
+        var recId = 0;              // 0 = new voucher; >0 = editing (mirrors desktop's RecId == VoucherHeadId)
+        var currentVoucherHeadId = 0;
+        var currentPaymentTypeId = 0;
+        var currentVoucherCode = null;
+        var currentVoucherDate = null;
+        var currentVoucherAmount = 0;
+        var currentSupplierRows = []; // dtSupplier equivalent - parties sharing this voucher+paymentType
+
+        $(function () {
+            loadPendingVouchers();
+        });
+
+        function switchTab(tab) {
+            $('#tabBtnForm').toggleClass('active', tab === 'form');
+            $('#tabBtnHistory').toggleClass('active', tab === 'history');
+            $('#tabFormContent').prop('hidden', tab !== 'form');
+            $('#tabHistoryContent').prop('hidden', tab !== 'history');
+            if (tab === 'history') {
+                loadHistoryPartyDropdown();
+                btnShowHistory();
+            }
+        }
+
+        function fmt(n) {
+            n = parseFloat(n || 0);
+            return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // ---------------------------------------------------------------------------
+        // Pending / Outstanding Vouchers grid - ditto FillGrdPendingOrders()/
+        // grdPendingOrdersSetting(). Loaded once on page open (Vouchers_OutstandingForAdjustment,
+        // AccountId=0 -> every outstanding voucher); re-filtered per-account via btnShowRecords_Click.
+        // ---------------------------------------------------------------------------
+        function loadPendingVouchers() {
+            $.get(API + '/outstanding', function (rows) {
+                pendingRows = rows || [];
+                renderPendingGrid(pendingRows, false);
+                populateAccountFilter(pendingRows);
+            }).fail(function () { pendingRows = []; renderPendingGrid([], false); });
+        }
+
+        function populateAccountFilter(rows) {
+            var seen = {};
+            var html = '<option value="">-- All Parties --</option>';
+            rows.forEach(function (r) {
+                var key = r.SupplierCustomerId || r.supplierCustomerId;
+                var accId = r.AccountId || r.accountId;
+                if (!key || seen[key]) return;
+                seen[key] = true;
+                var name = r.PartyName || r.partyName || ('Account #' + accId);
+                html += '<option value="' + key + '" data-account-id="' + accId + '">' + name + '</option>';
+            });
+            $('#cmbAccountFilter').html(html);
+        }
+
+        function renderPendingGrid(rows, withCheckbox) {
+            $('#thSelect').prop('hidden', !withCheckbox);
+            var html = '';
+            rows.forEach(function (r, idx) {
+                var attach = (r.NoOfAttachments || r.noOfAttachments || 0);
+                html += '<tr>' +
+                    (withCheckbox ? '<td style="text-align:center;"><input type="checkbox" class="pendingSelect" data-idx="' + idx + '"></td>' : '') +
+                    '<td><button type="button" class="win-btn" onclick="loadPendingRow(' + idx + ')">Load</button></td>' +
+                    '<td>' + (r.PaymentType || r.paymentType || '') + '</td>' +
+                    '<td>' + (r.DocumentType || r.documentType || '') + '</td>' +
+                    '<td>' + fmtDate(r.VoucherDate || r.voucherDate) + '</td>' +
+                    '<td>' + (r.VoucherCode || r.voucherCode || '') + '</td>' +
+                    '<td>' + (r.AccountCode || r.accountCode || '') + '</td>' +
+                    '<td>' + (r.AccountTitle || r.accountTitle || '') + '</td>' +
+                    '<td style="text-align:right;">' + fmt(r.Amount || r.amount) + '</td>' +
+                    '<td>' + (r.VoucherRemarks || r.voucherRemarks || r.Remarks || r.remarks || '') + '</td>' +
+                    '<td style="text-align:center;">' + (attach > 0 ? attach : '') + '</td>' +
+                    '</tr>';
+            });
+            $('#pendingGridBody').html(html || '<tr><td colspan="11" style="text-align:center;color:#888;">No outstanding vouchers found.</td></tr>');
+            $('#pendingGridBody').data('rows', withCheckbox ? rows : null);
+        }
+
+        // ditto btnShowRecords_Click(): real desktop behavior is two-fold when a party is
+        // chosen - (1) filter the Pending Vouchers grid down to that party's own rows and turn
+        // on the bulk-select checkbox column (grdPendingOrdersSetting(addcheckBox: true)), AND
+        // (2) directly call LoadInvoiceData(accountId) to preview that party's outstanding
+        // invoices in the Detail grid - this does NOT touch the Voucher No/Payment Type/Party
+        // header fields at all (those are only ever set via the per-row "Load" button, or by the
+        // bulk Auto-Utilize-All loop below). With no party chosen, Show restores the unfiltered
+        // Pending list (no checkboxes) and clears the Detail grid, ditto the real else-branch.
+        function btnShowRecords() {
+            var partyKey = $('#cmbAccountFilter').val();
+            if (!partyKey) {
+                renderPendingGrid(pendingRows, false);
+                detailRows = [];
+                renderDetailGrid();
+                return;
+            }
+            var filtered = pendingRows.filter(function (r) {
+                return String(r.SupplierCustomerId || r.supplierCustomerId) === String(partyKey);
+            });
+            if (filtered.length === 0) {
+                alert('No pending vouchers found for the selected account.');
+            }
+            renderPendingGrid(filtered, true);
+            detailRows = [];
+            $.get(API + '/purchase-invoices', { supplierCustomerId: partyKey }, function (invoices) {
+                mergeInvoiceRowsIntoGrid(invoices || []);
+            });
+        }
+
+        function onAccountFilterChange() { /* selection only takes effect on Show, ditto desktop */ }
+
+        // ditto grdPendingOrders_ColumnButtonClick("Load") -> BindVoucherFromPending +
+        // BindPaymentTypeFromPending + SupplierdtFromPendingGrid + BindPartyName.
+        function loadPendingRow(idx) {
+            if (($('#btnSave').prop('hidden')) ) {
+                alert('Please Reset the Form First to Load New Data');
+                return;
+            }
+            var r = pendingRows[idx];
+            if (!r) return;
+            currentVoucherHeadId = r.Id || r.id;
+            currentPaymentTypeId = r.PaymentTypeId || r.paymentTypeId;
+            currentVoucherCode = r.VoucherCode || r.voucherCode;
+            currentVoucherDate = r.VoucherDate || r.voucherDate;
+            currentVoucherAmount = parseFloat(r.VoucherAmount || r.voucherAmount || 0);
+
+            $('#cmbVoucherNo').html('<option value="' + currentVoucherHeadId + '">' + currentVoucherCode + '</option>');
+            $('#txtVoucherDate').val(fmtDate(currentVoucherDate));
+            $('#txtVoucherAmount').val(fmt(currentVoucherAmount));
+            $('#cmbPaymentTypeDisplay').html('<option value="' + currentPaymentTypeId + '">' + (r.PaymentType || r.paymentType || '') + '</option>');
+
+            // SupplierdtFromPendingGrid: every distinct party sharing this exact voucher+paymentType
+            var supplierId = r.SupplierCustomerId || r.supplierCustomerId;
+            var byKey = {};
+            pendingRows.forEach(function (rr) {
+                if ((rr.Id || rr.id) === currentVoucherHeadId && (rr.PaymentTypeId || rr.paymentTypeId) === currentPaymentTypeId) {
+                    var sid = rr.SupplierCustomerId || rr.supplierCustomerId;
+                    if (!byKey[sid]) byKey[sid] = rr;
+                }
+            });
+            currentSupplierRows = Object.values(byKey);
+            var html = '<option value="">-- Select Party --</option>';
+            currentSupplierRows.forEach(function (rr) {
+                var sid = rr.SupplierCustomerId || rr.supplierCustomerId;
+                html += '<option value="' + sid + '" data-account-id="' + (rr.AccountId || rr.accountId) + '">' + (rr.PartyName || rr.partyName) + '</option>';
+            });
+            $('#cmbSupplier').html(html);
+            if (currentSupplierRows.length === 1) {
+                $('#cmbSupplier').val(currentSupplierRows[0].SupplierCustomerId || currentSupplierRows[0].supplierCustomerId);
+                onSupplierChange();
+            }
+            switchTab('form');
+        }
+
+        // ditto BindPartyName()/BindCustomerCity()/comsupplier_ValueChanged() -> BindGridData()
+        // -> LoadInvoiceData(supplierId) -> PurchaseInvoice_GetDataForAdjustment.
+        function onSupplierChange() {
+            var sid = $('#cmbSupplier').val();
+            var row = currentSupplierRows.find(function (rr) { return String(rr.SupplierCustomerId || rr.supplierCustomerId) === String(sid); });
+            $('#txtPartyCity').val(row ? (row.PartyCity || row.CityName || row.cityName || '') : '');
+            $('#txtPartyCellNo').val(row ? (row.PartyCellNo || row.MobilePersonal || row.mobilePersonal || '') : '');
+            if (!sid) { return; }
+            var accountId = row ? (row.AccountId || row.accountId) : null;
+            $.get(API + '/purchase-invoices', { supplierCustomerId: sid, partyGlId: accountId }, function (invoices) {
+                mergeInvoiceRowsIntoGrid(invoices || []);
+            });
+        }
+
+        // ditto LoadDetailDataFromInvoice(): merge freshly-fetched outstanding invoice balances
+        // into the existing grid without wiping out any AdjustmentAmount already typed, and
+        // without duplicating an invoice already present.
+        function mergeInvoiceRowsIntoGrid(invoices) {
+            var existingByInvoiceId = {};
+            detailRows.forEach(function (d) { existingByInvoiceId[d.invoiceId] = d; });
+            invoices.forEach(function (inv) {
+                var invoiceId = inv.Id || inv.id;
+                var billAmount = parseFloat(inv.BillAmount || inv.billAmount || 0);
+                var availableAmount = parseFloat(inv.AvailableBillAmount || inv.availableBillAmount || 0);
+                if (existingByInvoiceId[invoiceId]) {
+                    var item = existingByInvoiceId[invoiceId];
+                    item.invoiceAmount = billAmount;
+                    availableAmount += parseFloat(item.adjustmentAmount || 0);
+                    item.availableAmount = availableAmount;
+                    item.balanceAmount = availableAmount - parseFloat(item.adjustmentAmount || 0);
+                } else {
+                    detailRows.push({
+                        id: 0,
+                        refDocumentTypeId: inv.DocumentTypeId || inv.documentTypeId,
+                        refDocumentType: inv.DocumentType || inv.documentType,
+                        invoiceId: invoiceId,
+                        invoiceNo: inv.InvoiceNo || inv.invoiceNo,
+                        invoiceDate: inv.InvoiceDate || inv.invoiceDate,
+                        invoiceDueDate: inv.InvoiceDueDate || inv.invoiceDueDate,
+                        invoiceAmount: billAmount,
+                        availableAmount: availableAmount,
+                        adjustmentAmount: 0,
+                        balanceAmount: availableAmount,
+                        remarks: ''
+                    });
+                }
+            });
+            renderDetailGrid();
+        }
+
+        // ditto grdSettings(): no visible Delete button column in the real Detail grid at all -
+        // desktop only deletes a row via the grid's own Ctrl+Space keyboard shortcut
+        // (grd_KeyDown: e.Control && e.KeyCode==Keys.Space && grd.CurrentColumn.Key=="Delete").
+        // Reproduced the same way: every row is keyboard-focusable and Ctrl+Space on it deletes it.
+        function renderDetailGrid() {
+            var html = '';
+            detailRows.forEach(function (d, idx) {
+                html += '<tr tabindex="0" onkeydown="detailRowKeyDown(event,' + idx + ')" title="Ctrl+Space to delete this row (ditto desktop)">' +
+                    '<td>' + (d.refDocumentType || '') + '</td>' +
+                    '<td>' + (d.invoiceNo || '') + '</td>' +
+                    '<td>' + fmtDate(d.invoiceDate) + '</td>' +
+                    '<td>' + fmtDate(d.invoiceDueDate) + '</td>' +
+                    '<td style="text-align:right;">' + fmt(d.invoiceAmount) + '</td>' +
+                    '<td style="text-align:right;">' + fmt(d.availableAmount) + '</td>' +
+                    '<td><input type="number" step="0.01" class="amount-input" value="' + (d.adjustmentAmount || 0) + '" onchange="onAdjustmentAmountChange(' + idx + ', this.value)"></td>' +
+                    '<td style="text-align:right;">' + fmt(d.balanceAmount) + '</td>' +
+                    '<td><input type="text" class="win-input" value="' + (d.remarks || '') + '" onchange="detailRows[' + idx + '].remarks = this.value"></td>' +
+                    '</tr>';
+            });
+            $('#detailGridBody').html(html || '<tr><td colspan="9" style="text-align:center;color:#888;">Select a party to load its outstanding invoices.</td></tr>');
+            recalcTotals();
+        }
+
+        function detailRowKeyDown(e, idx) {
+            if (e.ctrlKey && e.code === 'Space') {
+                e.preventDefault();
+                deleteDetailRow(idx);
+            }
+        }
+
+        // ditto grd_CellUpdated(): AdjustmentAmount can never exceed AvailableInvoiceAmount.
+        function onAdjustmentAmountChange(idx, value) {
+            var d = detailRows[idx];
+            var amt = parseFloat(value || 0);
+            var avail = parseFloat(d.availableAmount || 0);
+            if (amt > avail) {
+                amt = avail;
+                alert('AdjustmentAmount can not be greater than AvailableInvoiceAmount');
+            }
+            d.adjustmentAmount = amt;
+            d.balanceAmount = avail - amt;
+            renderDetailGrid();
+        }
+
+        // ditto DeleteDetailRow(): a row that already carries a real saved Id is queued for
+        // ActionTypeId=3 deletion on the next Save; a brand-new (never-saved) row is just
+        // dropped from the grid with no server call at all.
+        function deleteDetailRow(idx) {
+            var d = detailRows[idx];
+            if (d.id && d.id > 0) {
+                if (!confirm('Are you sure to Delete?')) return;
+                removedLineIds.push(d.id);
+            }
+            detailRows.splice(idx, 1);
+            renderDetailGrid();
+        }
+
+        function recalcTotals() {
+            var total = 0, totInvoice = 0, totAvailable = 0, totBalance = 0;
+            detailRows.forEach(function (d) {
+                total += parseFloat(d.adjustmentAmount || 0);
+                totInvoice += parseFloat(d.invoiceAmount || 0);
+                totAvailable += parseFloat(d.availableAmount || 0);
+                totBalance += parseFloat(d.balanceAmount || 0);
+            });
+            $('#lblVoucherAmountTotal').text(fmt(currentVoucherAmount));
+            $('#lblTotalAdjustment').text(fmt(total));
+            $('#lblDiffAmount').text(fmt(currentVoucherAmount - total));
+            // ditto the grid's own footer row (the "0 0 0 0" summary desktop shows directly
+            // beneath the Invoice Amount/Available Amount/Adjustment Amount/Balance Amount columns)
+            $('#totInvoiceAmount').text(fmt(totInvoice));
+            $('#totAvailableAmount').text(fmt(totAvailable));
+            $('#totAdjustmentAmount').text(fmt(total));
+            $('#totBalanceAmount').text(fmt(totBalance));
+        }
+
+        // ditto TotalAmountAutoUtilizeInGrid(): fills AdjustmentAmount down the grid (earliest
+        // due date first, since PurchaseInvoice_GetDataForAdjustment already orders by due date)
+        // until the voucher amount is fully consumed; if the voucher amount is smaller than what
+        // is already entered, it zeroes out rows from the end until it fits.
+        function autoUtilizeGrid() {
+            var totalGridAmount = 0;
+            detailRows.forEach(function (d) { totalGridAmount += parseFloat(d.adjustmentAmount || 0); });
+            var remaining = currentVoucherAmount;
+            if (remaining >= totalGridAmount) {
+                remaining -= totalGridAmount;
+                detailRows.forEach(function (d) {
+                    if (parseFloat(d.adjustmentAmount || 0) !== 0) return;
+                    var avail = parseFloat(d.availableAmount || 0);
+                    var bal = parseFloat(d.balanceAmount || 0);
+                    var apply = Math.min(remaining, Math.min(bal, avail));
+                    if (apply < 0) apply = 0;
+                    d.adjustmentAmount = apply;
+                    d.balanceAmount = avail - apply;
+                    remaining -= apply;
+                });
+            } else {
+                var utilized = 0;
+                detailRows.forEach(function (d) {
+                    if (utilized >= currentVoucherAmount) {
+                        d.adjustmentAmount = 0;
+                        d.balanceAmount = parseFloat(d.invoiceAmount || 0);
+                    }
+                    utilized += parseFloat(d.adjustmentAmount || 0);
+                });
+            }
+            renderDetailGrid();
+        }
+
+        // ditto BtnAutoUtilizedAllRowsOfPendingGrid_Click(): sequentially Load + auto-utilize +
+        // Save(Auto=true) every checked row in the filtered Pending Vouchers grid.
+        function autoUtilizeAllSelected() {
+            if (($('#btnSave').prop('hidden'))) { alert('Please Reset the Form First to Load New Data'); return; }
+            var partyKey = $('#cmbAccountFilter').val();
+            if (!partyKey) { alert('Please select an account first.'); $('#cmbAccountFilter').focus(); return; }
+            var rows = $('#pendingGridBody').data('rows');
+            if (!rows || rows.length === 0) { alert('Pending Vouchers Detail have no Records...'); return; }
+            var checkedIdx = [];
+            $('.pendingSelect:checked').each(function () { checkedIdx.push(parseInt($(this).data('idx'), 10)); });
+            if (checkedIdx.length === 0) { alert('Please Select Any row First.Press show Button If \'Select\' Button not Appear'); return; }
+            if (!confirm('Auto-utilize and save ' + checkedIdx.length + ' selected voucher(s) now?')) return;
+
+            var origPendingRows = pendingRows;
+            pendingRows = rows;
+            var chain = Promise.resolve();
+            checkedIdx.forEach(function (idx) {
+                chain = chain.then(function () {
+                    return new Promise(function (resolve) {
+                        resetForm(true);
+                        loadPendingRow(idx);
+                        setTimeout(function () {
+                            var sid = currentSupplierRows.length > 0 ? (currentSupplierRows[0].SupplierCustomerId || currentSupplierRows[0].supplierCustomerId) : null;
+                            if (sid) { $('#cmbSupplier').val(sid); onSupplierChange(); }
+                            setTimeout(function () {
+                                autoUtilizeGrid();
+                                submitVoucher(true).then(resolve).catch(resolve);
+                            }, 400);
+                        }, 300);
+                    });
+                });
+            });
+            chain.then(function () {
+                pendingRows = origPendingRows;
+                resetForm();
+                loadPendingVouchers();
+            });
+        }
+
+        function fmtDate(d) {
+            if (!d) return '';
+            var dt = new Date(d);
+            if (isNaN(dt.getTime())) return d;
+            var dd = String(dt.getDate()).padStart(2, '0');
+            var mm = String(dt.getMonth() + 1).padStart(2, '0');
+            return dd + '-' + mm + '-' + dt.getFullYear();
+        }
+
+        // ---------------------------------------------------------------------------
+        // Save / Update - ditto Insert()/FormValidation(). Builds the same per-line
+        // payload the real Insert() sends to USP_VoucherInvoicesAdjustment_InsertUpdateDelete,
+        // once per qualifying detail row (Id>0 OR AdjustmentAmount>0), plus any removed
+        // (already-saved) rows collected this editing session.
+        // ---------------------------------------------------------------------------
+        function submitVoucher(auto) {
+            if (!currentVoucherHeadId) { if (!auto) alert('Voucher No Field is Required'); return Promise.reject(); }
+            if (!currentVoucherAmount) { if (!auto) alert('VoucherAmount Field is Required'); return Promise.reject(); }
+            if (!currentPaymentTypeId) { if (!auto) alert('Payment Type Field is Required'); return Promise.reject(); }
+            var sid = $('#cmbSupplier').val();
+            if (!sid) { if (!auto) alert('Party Field is Required'); return Promise.reject(); }
+            var row = currentSupplierRows.find(function (rr) { return String(rr.SupplierCustomerId || rr.supplierCustomerId) === String(sid); });
+            var partyGlId = row ? (row.AccountId || row.accountId) : null;
+
+            var qualifying = detailRows.filter(function (d) { return (d.id && d.id > 0) || parseFloat(d.adjustmentAmount || 0) > 0; });
+            if (qualifying.length === 0) { if (!auto) alert('At least enter one row in detail'); return Promise.reject(); }
+
+            var totalAdjustment = 0;
+            qualifying.forEach(function (d) { totalAdjustment += parseFloat(d.adjustmentAmount || 0); });
+            if (currentPaymentTypeId === 1) {
+                if (Math.round(totalAdjustment) > Math.round(currentVoucherAmount)) {
+                    if (!auto) alert('Total adjustment Amount ' + Math.round(totalAdjustment) + ' In Grid cannot be greater then to voucher amount ' + Math.round(currentVoucherAmount));
+                    return Promise.reject();
+                }
+            } else {
+                if (Math.round(totalAdjustment) !== Math.round(currentVoucherAmount)) {
+                    if (!auto) alert('Total adjustment Amount ' + Math.round(totalAdjustment) + ' In Grid Should be equal to voucher amount ' + Math.round(currentVoucherAmount));
+                    return Promise.reject();
+                }
+            }
+
+            if (!auto && !confirm(recId > 0 ? 'Are you sure to Update?' : 'Are you sure to Save?')) return Promise.reject();
+
+            var payload = {
+                recId: recId,
+                voucherHeadId: currentVoucherHeadId,
+                voucherCode: currentVoucherCode,
+                voucherDate: currentVoucherDate,
+                voucherAmount: currentVoucherAmount,
+                paymentTypeId: currentPaymentTypeId,
+                supplierCustomerId: sid,
+                partyGlId: partyGlId,
+                lines: qualifying.map(function (d) {
+                    return {
+                        id: recId > 0 ? d.id : 0,
+                        refDocumentTypeId: d.refDocumentTypeId,
+                        refDocNoId: d.invoiceId,
+                        invoiceAmount: d.invoiceAmount,
+                        adjustmentAmount: d.adjustmentAmount,
+                        remarks: d.remarks
+                    };
+                }),
+                removedLineIds: removedLineIds
+            };
+
+            return $.ajax({
+                url: API + '/save', method: 'POST', contentType: 'application/json', data: JSON.stringify(payload)
+            }).then(function (res) {
+                if (!auto) {
+                    alert(res.message || 'Saved Successfully');
+                    resetForm();
+                    loadPendingVouchers();
+                }
+                return res;
+            }).catch(function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Error saving voucher';
+                if (!auto) alert(msg); else console.error(msg);
+                throw xhr;
+            });
+        }
+
+        // ditto btnDelete_Click(): marks every currently-loaded saved detail row ActionTypeId=3.
+        function deleteVoucher() {
+            if (!recId) { alert('Record Id not found for deletion...'); return; }
+            if (!confirm('Are you sure to Delete?')) return;
+            var sid = $('#cmbSupplier').val();
+            var row = currentSupplierRows.find(function (rr) { return String(rr.SupplierCustomerId || rr.supplierCustomerId) === String(sid); });
+            var payload = {
+                recId: recId,
+                voucherHeadId: currentVoucherHeadId,
+                voucherCode: currentVoucherCode,
+                voucherDate: currentVoucherDate,
+                voucherAmount: currentVoucherAmount,
+                paymentTypeId: currentPaymentTypeId,
+                supplierCustomerId: sid,
+                partyGlId: row ? (row.AccountId || row.accountId) : null,
+                lines: detailRows.map(function (d) { return { id: d.id }; })
+            };
+            $.ajax({ url: API + '/delete', method: 'POST', contentType: 'application/json', data: JSON.stringify(payload) })
+                .done(function (res) {
+                    alert(res.message || 'Deleted Successfully');
+                    resetForm();
+                    loadPendingVouchers();
+                })
+                .fail(function (xhr) { alert((xhr.responseJSON && xhr.responseJSON.message) || 'Error deleting voucher'); });
+        }
+
+        function btnRefresh() {
+            loadPendingVouchers();
+        }
+
+        // ditto Reset()
+        function resetForm(silent) {
+            recId = 0;
+            currentVoucherHeadId = 0;
+            currentPaymentTypeId = 0;
+            currentVoucherCode = null;
+            currentVoucherDate = null;
+            currentVoucherAmount = 0;
+            currentSupplierRows = [];
+            detailRows = [];
+            removedLineIds = [];
+            $('#cmbVoucherNo').html('<option value="">--</option>');
+            $('#txtVoucherDate').val('');
+            $('#txtVoucherAmount').val('');
+            $('#cmbPaymentTypeDisplay').html('<option value="">--</option>');
+            $('#cmbSupplier').html('<option value="">-- Load a voucher first --</option>');
+            $('#txtPartyCity').val('');
+            $('#txtPartyCellNo').val('');
+            $('#btnSave').prop('hidden', false);
+            $('#btnUpdate').prop('hidden', true);
+            $('#btnDelete').prop('hidden', true);
+            renderDetailGrid();
+            if (!silent) { $('#cmbAccountFilter').val(''); }
+        }
+
+        // ---------------------------------------------------------------------------
+        // History tab - ditto HistoryComboBind()/ParameterFill()/FillHistory()/
+        // grdHistorySetting(). USP_VoucherInvoicesAdjustment_FormHistory has no
+        // Approved-status filter and (a real, confirmed desktop quirk) no EntryUser
+        // restriction parameter either, despite the desktop UI reading a "can view all"
+        // right for this screen - the underlying stored procedure simply does not accept
+        // that filter, so every user sees every party's history here regardless.
+        // ---------------------------------------------------------------------------
+        function loadHistoryPartyDropdown() {
+            if ($('#cmbCustomerHistory option').length > 1) return;
+            $.get(API + '/party-dropdown', function (rows) {
+                var html = '<option value="">-- All Parties --</option>';
+                (rows || []).forEach(function (r) {
+                    html += '<option value="' + (r.SupplierCustomerId || r.supplierCustomerId) + '" data-account-id="' + (r.AccountId || r.accountId) + '">' + (r.PartyName || r.partyName || r.AccountTitle || r.accountTitle) + '</option>';
+                });
+                $('#cmbCustomerHistory').html(html);
+            });
+        }
+
+        function btnShowHistory() {
+            var dateType = $('input[name=histDateType]:checked').val();
+            var params = {
+                dateType: dateType,
+                fromDate: $('#txtHistFromDate').val() || null,
+                toDate: $('#txtHistToDate').val() || null,
+                fromDocNo: $('#txtHistFromDocNo').val() || null,
+                toDocNo: $('#txtHistToDocNo').val() || null
+            };
+            var sid = $('#cmbCustomerHistory').val();
+            if (sid) {
+                params.supplierCustomerId = sid;
+                params.partyGlId = $('#cmbCustomerHistory option:selected').data('account-id');
+            }
+            $.get(API + '/history', params, function (rows) {
+                renderHistoryGrid(rows || []);
+            }).fail(function () { renderHistoryGrid([]); });
+        }
+
+        function renderHistoryGrid(rows) {
+            var html = '';
+            rows.forEach(function (r, idx) {
+                html += '<tr>' +
+                    '<td style="text-align:center;"><button type="button" class="win-btn" onclick="editFromHistory(' + idx + ')">Edit</button></td>' +
+                    '<td>' + (r.VoucherCode || r.voucherCode || '') + '</td>' +
+                    '<td>' + fmtDate(r.VoucherDate || r.voucherDate) + '</td>' +
+                    '<td style="text-align:right;">' + fmt(r.VoucherAmount || r.voucherAmount) + '</td>' +
+                    '<td>' + (r.AccountTitle || r.accountTitle || r.PartyGlAccountTitle || r.partyGlAccountTitle || '') + '</td>' +
+                    '<td>' + (r.PaymentType || r.paymentType || '') + '</td>' +
+                    '<td>' + (r.RefDocumentType || r.refDocumentType || '') + '</td>' +
+                    '<td>' + (r.InvoiceNos || r.invoiceNos || '') + '</td>' +
+                    '<td>' + (r.InvoiceDates || r.invoiceDates || '') + '</td>' +
+                    '<td style="text-align:right;">' + fmt(r.AdjustmentAmount || r.adjustmentAmount) + '</td>' +
+                    '<td>' + (r.PartyName || r.partyName || '') + '</td>' +
+                    '<td>' + fmtDate(r.EntryDate || r.entryDate) + '</td>' +
+                    '<td>' + (r.EntryUserName || r.entryUserName || '') + '</td>' +
+                    '<td>' + (r.VoucherRemarks || r.voucherRemarks || r.Remarks || r.remarks || '') + '</td>' +
+                    '</tr>';
+            });
+            $('#historyGridBody').data('rows', rows);
+            $('#historyGridBody').html(html || '<tr><td colspan="14" style="text-align:center;color:#888;">No records found.</td></tr>');
+        }
+
+        // ditto grdHistory_DoubleClick()/ReadById(): reload the full saved voucher back
+        // into the Form tab for editing, keyed by VoucherHeadId+PaymentTypeId+
+        // SupplierCustomerId+PartyGlId exactly as desktop's ReadById() signature requires.
+        function editFromHistory(idx) {
+            var rows = $('#historyGridBody').data('rows') || [];
+            var r = rows[idx];
+            if (!r) return;
+            var voucherHeadId = r.VoucherHeadId || r.voucherHeadId;
+            var paymentTypeId = r.PaymentTypeId || r.paymentTypeId;
+            var supplierCustomerId = r.SupplierCustomerId || r.supplierCustomerId;
+            var partyGlId = r.PartyGlId || r.partyGlId;
+            $.get(API + '/by-voucher-head', {
+                voucherHeadId: voucherHeadId, paymentTypeId: paymentTypeId,
+                supplierCustomerId: supplierCustomerId, partyGlId: partyGlId
+            }, function (res) {
+                var data = (res && res.rows) || [];
+                if (data.length === 0) { alert('No detail rows found for this voucher.'); return; }
+                var first = data[0];
+                resetForm(true);
+                recId = voucherHeadId;
+                currentVoucherHeadId = voucherHeadId;
+                currentPaymentTypeId = paymentTypeId;
+                currentVoucherCode = first.VoucherCode || first.voucherCode;
+                currentVoucherDate = first.VoucherDate || first.voucherDate;
+                currentVoucherAmount = parseFloat(first.VoucherAmount || first.voucherAmount || 0);
+                $('#cmbVoucherNo').html('<option value="' + voucherHeadId + '">' + currentVoucherCode + '</option>');
+                $('#txtVoucherDate').val(fmtDate(currentVoucherDate));
+                $('#txtVoucherAmount').val(fmt(currentVoucherAmount));
+                $('#cmbPaymentTypeDisplay').html('<option value="' + paymentTypeId + '">' + (first.PaymentType || first.paymentType || '') + '</option>');
+                currentSupplierRows = [{
+                    SupplierCustomerId: supplierCustomerId, AccountId: partyGlId,
+                    PartyName: first.PartyName || first.partyName,
+                    PartyCity: first.PartyCityName || first.partyCityName,
+                    MobilePersonal: first.MobilePersonal || first.mobilePersonal
+                }];
+                $('#cmbSupplier').html('<option value="' + supplierCustomerId + '">' + (first.PartyName || first.partyName) + '</option>');
+                $('#txtPartyCity').val(first.PartyCityName || first.partyCityName || '');
+                $('#txtPartyCellNo').val(first.MobilePersonal || first.mobilePersonal || '');
+
+                detailRows = data.map(function (d) {
+                    var invoiceAmount = parseFloat(d.InvoiceAmount || d.invoiceAmount || 0);
+                    var adjustmentAmount = paymentTypeId === 1
+                        ? parseFloat(d.AdvanceAmount || d.advanceAmount || 0)
+                        : parseFloat(d.AdjustmentAmount || d.adjustmentAmount || 0);
+                    return {
+                        id: d.Id || d.id,
+                        refDocumentTypeId: d.RefDocumentTypeId || d.refDocumentTypeId,
+                        refDocumentType: d.RefDocumentType || d.refDocumentType,
+                        invoiceId: d.RefDocNoId || d.refDocNoId,
+                        invoiceNo: d.RefDocNo || d.refDocNo,
+                        invoiceDate: d.RefDocDate || d.refDocDate,
+                        invoiceDueDate: d.DueDate || d.dueDate,
+                        invoiceAmount: invoiceAmount,
+                        availableAmount: invoiceAmount,
+                        adjustmentAmount: adjustmentAmount,
+                        balanceAmount: invoiceAmount - adjustmentAmount,
+                        remarks: d.Remarks || d.remarks || ''
+                    };
+                });
+                renderDetailGrid();
+
+                $('#btnSave').prop('hidden', true);
+                $('#btnUpdate').prop('hidden', false);
+                $('#btnDelete').prop('hidden', false);
+                switchTab('form');
+            }).fail(function () { alert('Unable to load this voucher.'); });
+        }
+    </script>
+</body>
+</html>

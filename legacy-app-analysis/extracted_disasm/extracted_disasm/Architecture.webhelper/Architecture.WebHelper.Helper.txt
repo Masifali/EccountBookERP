@@ -1,0 +1,341 @@
+
+====================================================================================================
+CLASS Architecture.WebHelper.Helper.LogHelper
+====================================================================================================
+
+; Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive  (rva=0x3f3cc, fat header, code_size=78, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0012
+    IL_0003: ldstr ldstr "C:\\ReportLog.txt"
+    IL_0008: ldsfld System.String::Empty
+    IL_000d: call System.IO.File::WriteAllText
+    IL_0012: ldstr ldstr "C:\\ReportLog.txt"
+    IL_0017: ldc.i4.1
+    IL_0018: newobj System.IO.StreamWriter::.ctor
+    IL_001d: stloc.0
+    IL_001e: ldloc.0
+    IL_001f: call System.DateTime::get_Now
+    IL_0024: stloc.1
+    IL_0025: ldloca.s 1
+    IL_0027: call System.DateTime::ToString
+    IL_002c: ldstr ldstr "----"
+    IL_0031: ldarg.0
+    IL_0032: call System.String::Concat
+    IL_0037: callvirt System.IO.TextWriter::WriteLine
+    IL_003c: leave.s IL_0048
+    IL_003e: ldloc.0
+    IL_003f: brfalse.s IL_0047
+    IL_0041: ldloc.0
+    IL_0042: callvirt System.IDisposable::Dispose
+    IL_0047: endfinally
+    IL_0048: leave.s IL_004d
+    IL_004a: pop
+    IL_004b: leave.s IL_004d
+    IL_004d: ret
+
+====================================================================================================
+CLASS Architecture.WebHelper.Helper.ReportHelper
+====================================================================================================
+
+; Architecture.WebHelper.Helper.ReportHelper::GetStreamForFile  (rva=0x3f444, fat header, code_size=404, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj CrystalDecisions.CrystalReports.Engine.ReportDocument::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldstr ldstr "Method intilize"
+    IL_000b: ldc.i4.0
+    IL_000c: call Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive
+    IL_0011: ldstr ldstr "Report Path is : "
+    IL_0016: ldarg.1
+    IL_0017: call System.String::Concat
+    IL_001c: ldc.i4.0
+    IL_001d: call Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive
+    IL_0022: ldstr ldstr "Total Record found : "
+    IL_0027: ldarg.0
+    IL_0028: callvirt System.Data.DataTable::get_Rows
+    IL_002d: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0032: stloc.2
+    IL_0033: ldloca.s 2
+    IL_0035: call System.Int32::ToString
+    IL_003a: call System.String::Concat
+    IL_003f: ldc.i4.0
+    IL_0040: call Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive
+    IL_0045: ldloc.0
+    IL_0046: callvirt System.ComponentModel.Component::Dispose
+    IL_004b: ldloc.0
+    IL_004c: callvirt CrystalDecisions.CrystalReports.Engine.ReportDocument::Close
+    IL_0051: newobj CrystalDecisions.CrystalReports.Engine.ReportDocument::.ctor
+    IL_0056: stloc.0
+    IL_0057: ldloc.0
+    IL_0058: ldarg.1
+    IL_0059: callvirt CrystalDecisions.CrystalReports.Engine.ReportDocument::Load
+    IL_005e: ldstr ldstr "Report successfully loaded"
+    IL_0063: ldc.i4.0
+    IL_0064: call Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive
+    IL_0069: ldarg.0
+    IL_006a: brfalse.s IL_0073
+    IL_006c: ldloc.0
+    IL_006d: ldarg.0
+    IL_006e: callvirt CrystalDecisions.CrystalReports.Engine.ReportDocument::SetDataSource
+    IL_0073: ldarg.2
+    IL_0074: brfalse.s IL_00ce
+    IL_0076: ldarg.2
+    IL_0077: callvirt TypeSpec#2::get_Count
+    IL_007c: ldc.i4.0
+    IL_007d: ble.s IL_00ce
+    IL_007f: ldstr ldstr "Sub Report Intilize"
+    IL_0084: ldc.i4.0
+    IL_0085: call Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive
+    IL_008a: ldarg.2
+    IL_008b: callvirt TypeSpec#2::GetEnumerator
+    IL_0090: stloc.3
+    IL_0091: br.s IL_00b5
+    IL_0093: ldloca.s 3
+    IL_0095: call TypeSpec#10::get_Current
+    IL_009a: stloc.s 4
+    IL_009c: ldloc.0
+    IL_009d: ldloc.s 4
+    IL_009f: callvirt Architecture.WebHelper.Entity.SubReportObject::get_SubReportName
+    IL_00a4: callvirt CrystalDecisions.CrystalReports.Engine.ReportDocument::OpenSubreport
+    IL_00a9: ldloc.s 4
+    IL_00ab: callvirt Architecture.WebHelper.Entity.SubReportObject::get_dtSubReport
+    IL_00b0: callvirt CrystalDecisions.CrystalReports.Engine.ReportDocument::SetDataSource
+    IL_00b5: ldloca.s 3
+    IL_00b7: call TypeSpec#10::MoveNext
+    IL_00bc: brtrue.s IL_0093
+    IL_00be: leave.s IL_00ce
+    IL_00c0: ldloca.s 3
+    IL_00c2: constrained. TypeSpec#10
+    IL_00c8: callvirt System.IDisposable::Dispose
+    IL_00cd: endfinally
+    IL_00ce: ldarg.s 4
+    IL_00d0: callvirt System.Data.DataTable::get_Rows
+    IL_00d5: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_00da: ldc.i4.0
+    IL_00db: ble.s IL_0147
+    IL_00dd: ldarg.s 4
+    IL_00df: brfalse.s IL_0147
+    IL_00e1: ldstr ldstr "Report Parameters Initilize"
+    IL_00e6: ldc.i4.0
+    IL_00e7: call Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive
+    IL_00ec: ldc.i4.0
+    IL_00ed: stloc.s 5
+    IL_00ef: br.s IL_0137
+    IL_00f1: ldloc.0
+    IL_00f2: ldarg.s 4
+    IL_00f4: callvirt System.Data.DataTable::get_Rows
+    IL_00f9: ldloc.s 5
+    IL_00fb: callvirt System.Data.DataRowCollection::get_Item
+    IL_0100: ldstr ldstr "Perameter"
+    IL_0105: callvirt System.Data.DataRow::get_Item
+    IL_010a: call Architecture.Common.Conversion::ToString
+    IL_010f: ldarg.s 4
+    IL_0111: callvirt System.Data.DataTable::get_Rows
+    IL_0116: ldloc.s 5
+    IL_0118: callvirt System.Data.DataRowCollection::get_Item
+    IL_011d: ldstr ldstr "value"
+    IL_0122: callvirt System.Data.DataRow::get_Item
+    IL_0127: call Architecture.Common.Conversion::ToString
+    IL_012c: callvirt CrystalDecisions.CrystalReports.Engine.ReportDocument::SetParameterValue
+    IL_0131: ldloc.s 5
+    IL_0133: ldc.i4.1
+    IL_0134: add
+    IL_0135: stloc.s 5
+    IL_0137: ldloc.s 5
+    IL_0139: ldarg.s 4
+    IL_013b: callvirt System.Data.DataTable::get_Rows
+    IL_0140: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0145: blt.s IL_00f1
+    IL_0147: ldloc.0
+    IL_0148: ldc.i4.5
+    IL_0149: callvirt CrystalDecisions.CrystalReports.Engine.ReportDocument::ExportToStream
+    IL_014e: stloc.1
+    IL_014f: ldloc.1
+    IL_0150: ldc.i4.0
+    IL_0151: conv.i8
+    IL_0152: ldc.i4.0
+    IL_0153: callvirt System.IO.Stream::Seek
+    IL_0158: pop
+    IL_0159: ldloc.0
+    IL_015a: callvirt System.ComponentModel.Component::Dispose
+    IL_015f: ldloc.0
+    IL_0160: callvirt CrystalDecisions.CrystalReports.Engine.ReportDocument::Close
+    IL_0165: ldstr ldstr "Method Completed"
+    IL_016a: ldc.i4.0
+    IL_016b: call Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive
+    IL_0170: ldloc.1
+    IL_0171: stloc.s 6
+    IL_0173: leave.s IL_0191
+    IL_0175: stloc.s 7
+    IL_0177: ldstr ldstr "error has occured "
+    IL_017c: ldloc.s 7
+    IL_017e: callvirt System.Exception::get_Message
+    IL_0183: call System.String::Concat
+    IL_0188: ldc.i4.0
+    IL_0189: call Architecture.WebHelper.Helper.LogHelper::Reportlogwriteondrive
+    IL_018e: ldloc.s 7
+    IL_0190: throw
+    IL_0191: ldloc.s 6
+    IL_0193: ret
+
+; Architecture.WebHelper.Helper.ReportHelper::SavePdf  (rva=0x3f618, fat header, code_size=35, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.1
+    IL_0001: ldc.i4.2
+    IL_0002: ldc.i4.2
+    IL_0003: newobj System.IO.FileStream::.ctor
+    IL_0008: stloc.0
+    IL_0009: ldarg.0
+    IL_000a: ldloc.0
+    IL_000b: callvirt System.IO.Stream::CopyTo
+    IL_0010: ldloc.0
+    IL_0011: callvirt System.IO.Stream::Dispose
+    IL_0016: ldarg.1
+    IL_0017: call System.IO.File::Exists
+    IL_001c: pop
+    IL_001d: leave.s IL_0022
+    IL_001f: pop
+    IL_0020: rethrow
+    IL_0022: ret
+
+; Architecture.WebHelper.Helper.ReportHelper::GetConfigurationFromAllocation  (rva=0x3f658, fat header, code_size=213, max_stack=4, exception_handlers=yes)
+    IL_0000: ldstr ldstr ""
+    IL_0005: stloc.0
+    IL_0006: newobj TypeSpec#4::.ctor
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0012: dup
+    IL_0013: ldstr ldstr "@OrganizationId"
+    IL_0018: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_001d: dup
+    IL_001e: ldarg.0
+    IL_001f: box System.Int32
+    IL_0024: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0029: callvirt TypeSpec#4::Add
+    IL_002e: ldloc.1
+    IL_002f: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0034: dup
+    IL_0035: ldstr ldstr "@CompanyId"
+    IL_003a: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_003f: dup
+    IL_0040: ldarg.1
+    IL_0041: box System.Int32
+    IL_0046: callvirt System.Data.Common.DbParameter::set_Value
+    IL_004b: callvirt TypeSpec#4::Add
+    IL_0050: ldloc.1
+    IL_0051: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0056: dup
+    IL_0057: ldstr ldstr "@ConfigDescription"
+    IL_005c: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_0061: dup
+    IL_0062: ldarg.2
+    IL_0063: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0068: callvirt TypeSpec#4::Add
+    IL_006d: ldloc.1
+    IL_006e: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0073: dup
+    IL_0074: ldstr ldstr "@Activity"
+    IL_0079: callvirt System.Data.Common.DbParameter::set_ParameterName
+    IL_007e: dup
+    IL_007f: ldstr ldstr "GetConfigurationByOrgCompandConfigDescription"
+    IL_0084: callvirt System.Data.Common.DbParameter::set_Value
+    IL_0089: callvirt TypeSpec#4::Add
+    IL_008e: ldstr ldstr "Sp_ConfigrationsAllocation_GetAllMethod"
+    IL_0093: ldloc.1
+    IL_0094: call MethodSpec#30
+    IL_0099: stloc.2
+    IL_009a: ldloc.2
+    IL_009b: callvirt System.Data.DataTable::get_Rows
+    IL_00a0: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_00a5: ldc.i4.0
+    IL_00a6: ble.s IL_00c4
+    IL_00a8: ldloc.2
+    IL_00a9: callvirt System.Data.DataTable::get_Rows
+    IL_00ae: ldc.i4.0
+    IL_00af: callvirt System.Data.DataRowCollection::get_Item
+    IL_00b4: ldstr ldstr "ConfigKey"
+    IL_00b9: callvirt System.Data.DataRow::get_Item
+    IL_00be: call Architecture.Common.Conversion::ToString
+    IL_00c3: stloc.0
+    IL_00c4: ldloc.0
+    IL_00c5: stloc.3
+    IL_00c6: leave.s IL_00d3
+    IL_00c8: callvirt System.Exception::get_Message
+    IL_00cd: newobj System.Exception::.ctor
+    IL_00d2: throw
+    IL_00d3: ldloc.3
+    IL_00d4: ret
+
+; Architecture.WebHelper.Helper.ReportHelper::ReplaceCompLogoColumn  (rva=0x3f74c, fat header, code_size=230, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: brfalse.s IL_0013
+    IL_0003: ldarg.1
+    IL_0004: brfalse.s IL_0013
+    IL_0006: ldarg.1
+    IL_0007: callvirt System.Data.DataTable::get_Rows
+    IL_000c: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0011: brtrue.s IL_0018
+    IL_0013: leave IL_00e5
+    IL_0018: ldarg.0
+    IL_0019: callvirt System.Data.DataTable::get_Columns
+    IL_001e: ldstr ldstr "CompLogoImage"
+    IL_0023: callvirt System.Data.DataColumnCollection::Contains
+    IL_0028: brfalse.s IL_0044
+    IL_002a: ldarg.0
+    IL_002b: callvirt System.Data.DataTable::get_Columns
+    IL_0030: ldstr ldstr "CompLogoImage"
+    IL_0035: callvirt System.Data.DataColumnCollection::get_Item
+    IL_003a: ldstr ldstr "CompLogoImage2"
+    IL_003f: callvirt System.Data.DataColumn::set_ColumnName
+    IL_0044: ldarg.0
+    IL_0045: callvirt System.Data.DataTable::get_Columns
+    IL_004a: ldstr ldstr "CompLogoImage"
+    IL_004f: callvirt System.Data.DataColumnCollection::Contains
+    IL_0054: brtrue.s IL_0071
+    IL_0056: ldarg.0
+    IL_0057: callvirt System.Data.DataTable::get_Columns
+    IL_005c: ldstr ldstr "CompLogoImage"
+    IL_0061: ldtoken TypeSpec#3
+    IL_0066: call System.Type::GetTypeFromHandle
+    IL_006b: callvirt System.Data.DataColumnCollection::Add
+    IL_0070: pop
+    IL_0071: ldarg.1
+    IL_0072: callvirt System.Data.DataTable::get_Rows
+    IL_0077: ldc.i4.0
+    IL_0078: callvirt System.Data.DataRowCollection::get_Item
+    IL_007d: ldc.i4.0
+    IL_007e: callvirt System.Data.DataRow::get_Item
+    IL_0083: stloc.0
+    IL_0084: ldarg.0
+    IL_0085: callvirt System.Data.DataTable::get_Rows
+    IL_008a: callvirt System.Data.InternalDataCollectionBase::GetEnumerator
+    IL_008f: stloc.1
+    IL_0090: br.s IL_00b3
+    IL_0092: ldloc.1
+    IL_0093: callvirt System.Collections.IEnumerator::get_Current
+    IL_0098: castclass System.Data.DataRow
+    IL_009d: ldstr ldstr "CompLogoImage"
+    IL_00a2: ldloc.0
+    IL_00a3: ldsfld System.DBNull::Value
+    IL_00a8: bne.un.s IL_00ad
+    IL_00aa: ldnull
+    IL_00ab: br.s IL_00ae
+    IL_00ad: ldloc.0
+    IL_00ae: callvirt System.Data.DataRow::set_Item
+    IL_00b3: ldloc.1
+    IL_00b4: callvirt System.Collections.IEnumerator::MoveNext
+    IL_00b9: brtrue.s IL_0092
+    IL_00bb: leave.s IL_00ce
+    IL_00bd: ldloc.1
+    IL_00be: isinst System.IDisposable
+    IL_00c3: stloc.2
+    IL_00c4: ldloc.2
+    IL_00c5: brfalse.s IL_00cd
+    IL_00c7: ldloc.2
+    IL_00c8: callvirt System.IDisposable::Dispose
+    IL_00cd: endfinally
+    IL_00ce: leave.s IL_00e5
+    IL_00d0: callvirt System.Exception::get_Message
+    IL_00d5: ldstr ldstr " Exception from adding comp logo from dataset"
+    IL_00da: call System.String::Concat
+    IL_00df: newobj System.Exception::.ctor
+    IL_00e4: throw
+    IL_00e5: ret

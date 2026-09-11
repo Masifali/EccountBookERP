@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Party Payment Voucher - WinForms Replica</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body {
+            font-family: "Verdana", Tahoma, Arial, sans-serif;
+            background-color: #d4d0c8; /* WinForms Control background */
+            font-size: 11px;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        /* ToolStrip Toolbar */
+        .win-tool-strip {
+            background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%);
+            border-bottom: 1px solid #999999;
+            height: 27px;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            gap: 2px;
+        }
+
+        .win-btn-tool {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 2px 7px;
+            font-family: "Verdana", sans-serif;
+            font-size: 11px;
+            color: #000000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            height: 22px;
+            border-radius: 2px;
+        }
+
+        .win-btn-tool:hover {
+            background-color: #ffe4a0;
+            border-color: #e59d00;
+        }
+
+        .win-btn-tool-save {
+            font-weight: bold;
+            color: #004d40;
+        }
+
+        /* Teal Header Panel */
+        .win-teal-header {
+            background-color: #008080; /* Teal */
+            color: #ffffff;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+        }
+
+        .win-teal-header-title {
+            font-family: "Tahoma", sans-serif;
+            font-size: 12pt;
+            font-weight: bold;
+        }
+
+        /* Form Area */
+        .win-form-body {
+            background-color: #ffffff;
+            padding: 6px;
+        }
+
+        /* GroupBox */
+        .win-group-box {
+            border: 1px solid #d0d0d0;
+            border-radius: 3px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            background-color: #ffffff;
+        }
+
+        .win-group-box legend {
+            font-family: "Tahoma", sans-serif;
+            font-size: 9.75pt;
+            font-weight: bold;
+            color: #000000;
+            width: auto;
+            padding: 0 4px;
+            margin-bottom: 4px;
+            border: none;
+        }
+
+        .win-label {
+            font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+            font-size: 9pt;
+            font-weight: 600;
+            color: #000000;
+            white-space: nowrap;
+        }
+
+        .win-textbox, .win-combo, .win-datepicker {
+            font-family: "Verdana", sans-serif;
+            font-size: 9.75pt;
+            height: 25px;
+            border: 1px solid #7a9a9e;
+            padding: 2px 5px;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            color: #000000;
+            border-radius: 0;
+            width: 100%;
+        }
+
+        .win-textbox:focus, .win-combo:focus, .win-datepicker:focus {
+            border-color: #008080;
+            outline: none;
+        }
+
+        .win-btn-action {
+            background-color: #008080;
+            color: #ffffff;
+            font-family: "Verdana", sans-serif;
+            font-size: 9.75pt;
+            font-weight: bold;
+            border: none;
+            height: 25px;
+            padding: 0 14px;
+            cursor: pointer;
+        }
+
+        .win-btn-action:hover {
+            background-color: #005959;
+        }
+
+        /* Searchable Account Select Container & Popup */
+        .dr-select-container, .cr-select-container {
+            position: relative;
+        }
+
+        .account-search-popup {
+            position: absolute;
+            top: 27px;
+            left: 0;
+            width: 100%;
+            min-width: 450px;
+            background: #ffffff;
+            border: 1px solid #008080;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            z-index: 1000;
+            display: none;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .account-search-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .account-search-table th {
+            background-color: #008080;
+            color: #ffffff;
+            padding: 4px 6px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .account-search-table td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+
+        .account-search-table tr:hover, .account-search-table tr.selected {
+            background-color: #ffe4a0;
+        }
+
+        /* Transaction Grid */
+        .win-grid-container {
+            border: 1px solid #7a9a9e;
+            background-color: #ffffff;
+            margin-top: 4px;
+        }
+
+        .win-grid-scroll {
+            max-height: 320px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .win-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: "Verdana", sans-serif;
+            font-size: 8.25pt;
+            background-color: #ffffff;
+            min-width: 1050px;
+        }
+
+        .win-grid th {
+            background-color: #ece9d8;
+            color: #000000;
+            font-weight: normal;
+            border: 1px solid #aca899;
+            padding: 4px 6px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .win-grid td {
+            border: 1px solid #e0e0e0;
+            padding: 3px 6px;
+            color: #000000;
+            vertical-align: middle;
+        }
+
+        .win-totals-bar {
+            background: #e0f2f1;
+            font-weight: bold;
+            color: #004d40;
+            font-size: 12px;
+            padding: 8px 14px;
+            border: 1px solid #008080;
+            border-radius: 2px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
+        .win-checkbox {
+            font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+            font-size: 9pt;
+            font-weight: 600;
+            color: #000000;
+            cursor: pointer;
+        }
+
+        .win-checkbox input {
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top ToolStrip Buttons matching frmPartyPaymentVoucher.cs -->
+    <div class="win-tool-strip">
+        <button type="button" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> &New</button>
+        <button type="button" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> &Save</button>
+        <button type="button" class="win-btn-tool" onclick="btnSave_Click()"><i class="fa fa-pencil"></i> &Update</button>
+        <button type="button" class="win-btn-tool" onclick="alert('SaveAs feature triggered')"><i class="fa fa-files-o"></i> SaveAs</button>
+        <button type="button" class="win-btn-tool" onclick="btnRefresh_Click()"><i class="fa fa-refresh"></i> &Refresh</button>
+        <button type="button" class="win-btn-tool" onclick="openAttachments()"><i class="fa fa-paperclip"></i> &Attachments</button>
+        <button type="button" class="win-btn-tool" onclick="printReport('102B')"><i class="fa fa-print"></i> Summary_Print-102B</button>
+        <button type="button" class="win-btn-tool" onclick="printReport('102')"><i class="fa fa-print"></i> 102-Print</button>
+        <button type="button" class="win-btn-tool" onclick="alert('Shortcut Keys: Ctrl+N (New), Ctrl+S (Save), Escape (Close)')"><i class="fa fa-keyboard-o"></i> Shortcut Keys</button>
+        <select id="tsSummaryPrint" class="win-combo" style="width: 140px; height: 21px; font-size: 8pt; display: inline-block;" onchange="handleSummaryReports(this.value)">
+            <option value="">Summary Reports...</option>
+            <option value="party_summary">Party Payment Summary</option>
+            <option value="ledger_extract">Ledger Extract</option>
+        </select>
+
+        <div style="margin-left: auto;">
+            <a href="/accounts/dashboard" style="color: #000; text-decoration: none; font-weight: bold; font-size: 10px;">
+                <i class="fa fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Title Panel (Teal) -->
+    <div class="win-teal-header">
+        <div class="win-teal-header-title">Party Payment Voucher</div>
+        <div id="lblVoucherDisplayHeader" style="font-weight: bold; font-size: 11pt; color: #ffeb3b;" th:text="${nextVoucherDisplay}">PPV-2026-0001</div>
+    </div>
+
+    <!-- Form Tab & History Tab Bar -->
+    <div style="background: #e0e0e0; border-bottom: 1px solid #999999; padding: 4px 8px; display: flex; gap: 6px;">
+        <button type="button" class="win-btn-tool" id="ppvTabBtnForm" onclick="switchTab('form')" style="background: #ffffff; font-weight: bold; border: 1px solid #999;"><i class="fa fa-edit"></i> Form Tab</button>
+        <button type="button" class="win-btn-tool" id="ppvTabBtnHistory" onclick="switchTab('history')" style="border: 1px solid transparent;"><i class="fa fa-history"></i> History Tab</button>
+    </div>
+
+    <!-- Main Section -->
+    <div id="tabFormContent" class="win-form-body">
+        <!-- Header GroupBox -->
+        <fieldset class="win-group-box">
+            <legend>Voucher Header Information</legend>
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="win-label">Doc No</label>
+                    <input type="text" id="txtDocNo" class="win-textbox" th:value="${nextVoucherCode}" readonly style="background-color: #f0f0f0; font-weight: bold;"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Document Date</label>
+                    <input type="date" id="txtDocDate" class="win-datepicker"/>
+                </div>
+                <div class="col-md-5 dr-select-container">
+                    <label class="win-label">Account Title (Dr) [Searchable]</label>
+                    <input type="text" id="cmbAccountInput" class="win-textbox" placeholder="Type to search debit account title or code..." autocomplete="off" onfocus="showDrSearchPopup()" oninput="filterDrAccounts(this.value)"/>
+                    <input type="hidden" id="cmbAccountVal"/>
+                    <input type="hidden" id="cmbAccountCode"/>
+                    <input type="hidden" id="cmbAccountTitle"/>
+                    <input type="hidden" id="cmbAccountTypeId"/>
+
+                    <div class="account-search-popup" id="drSearchPopup">
+                        <table class="account-search-table">
+                            <thead>
+                                <tr>
+                                    <th>Account Title</th>
+                                    <th>Account Code</th>
+                                    <th>Type ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drSearchTbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-3" style="margin-top: 18px;">
+                    <span class="win-checkbox" style="margin-right: 12px;">
+                        <input type="checkbox" id="CHKPREVIEW" checked/> Preview-I
+                    </span>
+                    <span class="win-checkbox">
+                        <input type="checkbox" id="chkPreview102B"/> Preview-II
+                    </span>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 6px;">
+                <div class="col-md-12">
+                    <label class="win-label">Remarks / Narration</label>
+                    <input type="text" id="txtRemarks" class="win-textbox" placeholder="Enter voucher remarks / transaction description..."/>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Detail Line Entry Section -->
+        <fieldset class="win-group-box">
+            <legend>Detail Transaction Entry</legend>
+            <div class="row">
+                <!-- Searchable Account Title (Cr) -->
+                <div class="col-md-4 cr-select-container">
+                    <label class="win-label">Account Title (Cr) [Searchable]</label>
+                    <input type="text" id="cmbAccountDetailInput" class="win-textbox" placeholder="Type to search credit account title or code..." autocomplete="off" onfocus="showCrSearchPopup()" oninput="filterCrAccounts(this.value)"/>
+                    <input type="hidden" id="cmbAccountDetailVal"/>
+                    <input type="hidden" id="cmbAccountDetailCode"/>
+                    <input type="hidden" id="cmbAccountDetailTitle"/>
+                    <input type="hidden" id="cmbAccountDetailTypeId"/>
+
+                    <div class="account-search-popup" id="crSearchPopup">
+                        <table class="account-search-table">
+                            <thead>
+                                <tr>
+                                    <th>Account Title</th>
+                                    <th>Account Code</th>
+                                    <th>Type ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crSearchTbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="win-label">Job / Lot</label>
+                    <select id="cmbJobLotFile" class="win-combo">
+                        <option value="0">General</option>
+                        <option th:each="j : ${jobLotsList}" th:value="${j.id}" th:text="${j.description}"></option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="win-label">Cheque Date</label>
+                    <input type="date" id="CheqDate" class="win-datepicker"/>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="win-label">Cheque No</label>
+                    <input type="text" id="CmbCheqNo" class="win-textbox" placeholder="Cheque No"/>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="win-label">Cr Amount</label>
+                    <input type="number" step="0.01" id="txtAmountDetail" class="win-textbox" placeholder="0.00" style="text-align: right; font-weight: bold; color: #008080;"/>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 6px; align-items: center;">
+                <div class="col-md-10">
+                    <label class="win-label">Particulars / Line Remarks</label>
+                    <input type="text" id="txtRemarksDetail" class="win-textbox" placeholder="Line transaction particulars..."/>
+                </div>
+                <div class="col-md-2" style="margin-top: 16px; text-align: right;">
+                    <button type="button" class="win-btn-action" style="width: 100%;" onclick="btnAddRow_Click()"><i class="fa fa-plus"></i> + Add</button>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Transaction Details Grid -->
+        <fieldset class="win-group-box">
+            <legend>Transaction Details Grid</legend>
+            <div class="win-grid-container">
+                <div class="win-grid-scroll">
+                    <table class="win-grid" id="grdDetail">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px; text-align: center;">Sr #</th>
+                                <th style="width: 110px;">Account Code</th>
+                                <th style="width: 220px;">Account Title</th>
+                                <th style="width: 250px;">Particulars / Line Remarks</th>
+                                <th style="width: 110px;">Job / Lot</th>
+                                <th style="width: 95px;">Cheque Date</th>
+                                <th style="width: 100px;">Cheque No</th>
+                                <th style="width: 110px; text-align: right;">Debit Amount</th>
+                                <th style="width: 110px; text-align: right;">Credit Amount</th>
+                                <th style="width: 50px; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grdDetailTbody">
+                            <!-- Items added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Dynamic Totals Bar -->
+            <div class="win-totals-bar">
+                <div>Total Debit: <span id="lblTotalDebit" style="color: #00796B;">0.00</span></div>
+                <div>Total Credit: <span id="lblTotalCredit" style="color: #00796B;">0.00</span></div>
+                <div>Difference: <span id="lblDiff" style="color: #00796B;">0.00</span></div>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- History Tab Panel - real ditto-copy of frmPartyPaymentVoucher.cs's HistoryGridFill() /
+         DataGridHistory, backed by GET /accounts/api/vouchers/party-payment/history -> EXEC
+         USP_VoucherFormHistory (@DocumentTypeName='35'). Row double-click reuses this page's own
+         real loadVoucher(id) -> GET /accounts/api/party-payment/{id} (PartyPaymentVoucherService's
+         own real VoucherHead/VoucherDetail read), NOT the generic /accounts/api/vouchers/{id} used
+         by the other voucher forms - Party Payment has its own dedicated save/read pipeline and must
+         not borrow another voucher's data mapping. -->
+    <div id="tabHistoryContent" class="win-form-body" style="display: none;">
+        <fieldset class="win-group-box">
+            <legend>Party Payment History</legend>
+            <div class="row" style="margin-bottom: 6px;">
+                <div class="col-md-3">
+                    <label class="win-label">Date Type</label><br/>
+                    <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="ppvHistDateType" value="docdate" checked onchange="loadPartyPaymentHistory()"/> Doc Date</label>
+                    <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="ppvHistDateType" value="entrydate" onchange="loadPartyPaymentHistory()"/> Entry Date</label>
+                    <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="ppvHistDateType" value="modifydate" onchange="loadPartyPaymentHistory()"/> Modify Date</label>
+                    <label style="font-weight: normal;"><input type="radio" name="ppvHistDateType" value="approveddate" onchange="loadPartyPaymentHistory()"/> Approved Date</label>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">From Date</label>
+                    <input type="date" id="dtpPpvHistFrom" class="win-datepicker"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">To Date</label>
+                    <input type="date" id="dtpPpvHistTo" class="win-datepicker"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">From Doc No</label>
+                    <input type="number" id="txtFromDocNoPpv" class="win-textbox"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">To Doc No</label>
+                    <input type="number" id="txtToDocNoPpv" class="win-textbox"/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="win-label">Account Title</label>
+                    <select id="cmbAccountTitlePpv" class="win-combo"><option value="0">-- All Accounts --</option></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="win-label">Approved Status</label>
+                    <select id="cmbApprovedStatusPpv" class="win-combo" onchange="loadPartyPaymentHistory()">
+                        <option value="notapproved" selected>Not Apporved</option>
+                        <option value="approved">Approved</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
+                <div class="col-md-5" style="display: flex; align-items: flex-end; gap: 6px;">
+                    <button type="button" class="win-btn-action" onclick="loadPartyPaymentHistory()"><i class="fa fa-search"></i> Search History</button>
+                    <button type="button" class="win-btn-action" onclick="resetPartyPaymentHistory()"><i class="fa fa-undo"></i> Reset</button>
+                    <div id="ppvHistTotals" style="margin-left: 12px; font-size: 11px; display: none;">
+                        <b>Total Vouchers:</b> <span id="ppvHistTotalVouchers">0</span> &nbsp;
+                        <b>Approved:</b> <span id="ppvHistTotalApproved">0</span> &nbsp;
+                        <b>Not Approved:</b> <span id="ppvHistTotalUnApproved">0</span>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box">
+            <legend>History Records</legend>
+            <div class="win-grid-container">
+                <div class="win-grid-scroll" style="max-height: 420px;">
+                    <table class="win-grid" id="tblPpvHistoryGrid">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">Edit</th>
+                                <th style="width: 70px;">V.No</th>
+                                <th style="width: 90px;">V.Date</th>
+                                <th style="width: 60px;">V.Type</th>
+                                <th>Account Title</th>
+                                <th style="width: 300px;">Remarks</th>
+                                <th style="width: 100px; text-align: right;">Voucher Amount</th>
+                                <th style="width: 90px;">Entry User</th>
+                                <th style="width: 70px; text-align: center;">Attachment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPpvHistoryGrid">
+                            <tr>
+                                <td colspan="9" style="text-align: center; color: #888; padding: 20px;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- Attachments Modal -->
+    <div class="modal fade" id="attachmentsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="border-radius: 0;">
+                <div class="modal-header" style="background-color: #008080; color: white;">
+                    <h5 class="modal-title"><i class="fa fa-paperclip"></i> Voucher Attachments</h5>
+                    <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="file" id="attachmentFileInput" class="form-control" style="font-size: 11px; margin-bottom: 10px;"/>
+                    <div id="attachmentsList" style="font-size: 11px; color: #555;">No attachments uploaded yet.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" style="font-size: 11px;">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadAttachment()" style="font-size: 11px; background-color: #008080; border-color: #008080;">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        let lineItems = [];
+        let allDrAccounts = [];
+        let allCrAccounts = [];
+        let drHighlightedIndex = -1;
+        let crHighlightedIndex = -1;
+
+        $(document).ready(function() {
+            setWinDefaultDate();
+            loadDrAccounts('');
+            loadCrAccounts('');
+
+            // Hide Dr & Cr search popups when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.dr-select-container').length) {
+                    $('#drSearchPopup').hide();
+                    validateDrAccountInput();
+                }
+                if (!$(e.target).closest('.cr-select-container').length) {
+                    $('#crSearchPopup').hide();
+                    validateCrAccountInput();
+                }
+            });
+
+            // Keyboard navigation for Dr Account Input
+            $('#cmbAccountInput').on('keydown', function(e) {
+                const rows = $('#drSearchTbody tr');
+                if ($('#drSearchPopup').is(':visible') && rows.length > 0) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        drHighlightedIndex = Math.min(drHighlightedIndex + 1, rows.length - 1);
+                        updateTableHighlight(rows, drHighlightedIndex);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        drHighlightedIndex = Math.max(drHighlightedIndex - 1, 0);
+                        updateTableHighlight(rows, drHighlightedIndex);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (drHighlightedIndex >= 0 && drHighlightedIndex < rows.length) {
+                            $(rows[drHighlightedIndex]).trigger('click');
+                        }
+                    } else if (e.key === 'Escape') {
+                        $('#drSearchPopup').hide();
+                    }
+                }
+            });
+
+            // Keyboard navigation for Cr Account Input
+            $('#cmbAccountDetailInput').on('keydown', function(e) {
+                const rows = $('#crSearchTbody tr');
+                if ($('#crSearchPopup').is(':visible') && rows.length > 0) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        crHighlightedIndex = Math.min(crHighlightedIndex + 1, rows.length - 1);
+                        updateTableHighlight(rows, crHighlightedIndex);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        crHighlightedIndex = Math.max(crHighlightedIndex - 1, 0);
+                        updateTableHighlight(rows, crHighlightedIndex);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (crHighlightedIndex >= 0 && crHighlightedIndex < rows.length) {
+                            $(rows[crHighlightedIndex]).trigger('click');
+                        }
+                    } else if (e.key === 'Escape') {
+                        $('#crSearchPopup').hide();
+                    }
+                }
+            });
+        });
+
+        function updateTableHighlight(rows, index) {
+            rows.removeClass('selected');
+            if (index >= 0 && index < rows.length) {
+                const selectedRow = $(rows[index]);
+                selectedRow.addClass('selected');
+                selectedRow[0].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        function setWinDefaultDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            document.getElementById('txtDocDate').value = formattedDate;
+            const cheqDateElem = document.getElementById('CheqDate');
+            if (cheqDateElem) {
+                cheqDateElem.value = formattedDate;
+            }
+        }
+
+        // --- Dr Accounts Search ---
+        function loadDrAccounts(q) {
+            $.ajax({
+                url: '/accounts/api/party-payment/dr-accounts?q=' + encodeURIComponent(q),
+                type: 'GET',
+                success: function(data) {
+                    allDrAccounts = data || [];
+                    renderDrSearchTable(allDrAccounts);
+                }
+            });
+        }
+
+        function renderDrSearchTable(list) {
+            const tbody = $('#drSearchTbody');
+            tbody.empty();
+            drHighlightedIndex = -1;
+
+            if (!list || list.length === 0) {
+                tbody.html('<tr><td colspan="3" style="text-align:center; color:#777; padding: 10px;">No matching accounts found.</td></tr>');
+                return;
+            }
+
+            list.forEach(ac => {
+                tbody.append(`
+                    <tr onclick="selectDrAccount(${ac.id}, '${escapeHtml(ac.accountCode)}', '${escapeHtml(ac.accountTitle)}', ${ac.accountTypeId || 0})">
+                        <td><strong>${escapeHtml(ac.accountTitle)}</strong></td>
+                        <td>${escapeHtml(ac.accountCode)}</td>
+                        <td>${ac.accountTypeId || ''}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        function showDrSearchPopup() {
+            $('#drSearchPopup').show();
+            filterDrAccounts($('#cmbAccountInput').val() || '');
+        }
+
+        function filterDrAccounts(q) {
+            showDrSearchPopup();
+            loadDrAccounts(q);
+        }
+
+        function selectDrAccount(id, code, title, typeId) {
+            $('#cmbAccountVal').val(id);
+            $('#cmbAccountCode').val(code);
+            $('#cmbAccountTitle').val(title);
+            $('#cmbAccountTypeId').val(typeId);
+            $('#cmbAccountInput').val(`${code} - ${title}`);
+            $('#drSearchPopup').hide();
+        }
+
+        function validateDrAccountInput() {
+            const id = $('#cmbAccountVal').val();
+            const code = $('#cmbAccountCode').val();
+            const title = $('#cmbAccountTitle').val();
+            const inputVal = $('#cmbAccountInput').val().trim();
+
+            if (!id || parseInt(id) <= 0 || !title) {
+                $('#cmbAccountVal').val('');
+                $('#cmbAccountCode').val('');
+                $('#cmbAccountTitle').val('');
+                $('#cmbAccountTypeId').val('');
+                $('#cmbAccountInput').val('');
+            } else {
+                const expected = `${code} - ${title}`;
+                if (inputVal !== expected && inputVal !== title && inputVal !== code) {
+                    $('#cmbAccountInput').val(expected);
+                }
+            }
+        }
+
+        // --- Cr Accounts Search ---
+        function loadCrAccounts(q) {
+            $.ajax({
+                url: '/accounts/api/party-payment/cr-accounts?q=' + encodeURIComponent(q),
+                type: 'GET',
+                success: function(data) {
+                    allCrAccounts = data || [];
+                    renderCrSearchTable(allCrAccounts);
+                }
+            });
+        }
+
+        function renderCrSearchTable(list) {
+            const tbody = $('#crSearchTbody');
+            tbody.empty();
+            crHighlightedIndex = -1;
+
+            if (!list || list.length === 0) {
+                tbody.html('<tr><td colspan="3" style="text-align:center; color:#777; padding: 10px;">No matching accounts found.</td></tr>');
+                return;
+            }
+
+            list.forEach(ac => {
+                tbody.append(`
+                    <tr onclick="selectCrAccount(${ac.id}, '${escapeHtml(ac.accountCode)}', '${escapeHtml(ac.accountTitle)}', ${ac.accountTypeId || 0})">
+                        <td><strong>${escapeHtml(ac.accountTitle)}</strong></td>
+                        <td>${escapeHtml(ac.accountCode)}</td>
+                        <td>${ac.accountTypeId || ''}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        function showCrSearchPopup() {
+            $('#crSearchPopup').show();
+            filterCrAccounts($('#cmbAccountDetailInput').val() || '');
+        }
+
+        function filterCrAccounts(q) {
+            showCrSearchPopup();
+            loadCrAccounts(q);
+        }
+
+        function selectCrAccount(id, code, title, typeId) {
+            $('#cmbAccountDetailVal').val(id);
+            $('#cmbAccountDetailCode').val(code);
+            $('#cmbAccountDetailTitle').val(title);
+            $('#cmbAccountDetailTypeId').val(typeId);
+            $('#cmbAccountDetailInput').val(`${code} - ${title}`);
+            $('#crSearchPopup').hide();
+        }
+
+        function validateCrAccountInput() {
+            const id = $('#cmbAccountDetailVal').val();
+            const code = $('#cmbAccountDetailCode').val();
+            const title = $('#cmbAccountDetailTitle').val();
+            const inputVal = $('#cmbAccountDetailInput').val().trim();
+
+            if (!id || parseInt(id) <= 0 || !title) {
+                $('#cmbAccountDetailVal').val('');
+                $('#cmbAccountDetailCode').val('');
+                $('#cmbAccountDetailTitle').val('');
+                $('#cmbAccountDetailTypeId').val('');
+                $('#cmbAccountDetailInput').val('');
+            } else {
+                const expected = `${code} - ${title}`;
+                if (inputVal !== expected && inputVal !== title && inputVal !== code) {
+                    $('#cmbAccountDetailInput').val(expected);
+                }
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function formatCurrency(val) {
+            if (val === null || val === undefined || isNaN(val)) return '0.00';
+            return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function btnAddRow_Click() {
+            const acId = $('#cmbAccountDetailVal').val();
+            const acCode = $('#cmbAccountDetailCode').val();
+            const acTitle = $('#cmbAccountDetailTitle').val();
+            const acTypeId = $('#cmbAccountDetailTypeId').val();
+            const amount = parseFloat($('#txtAmountDetail').val() || '0');
+            const remarks = $('#txtRemarksDetail').val() || '';
+            const jobLotId = $('#cmbJobLotFile').val() ? parseInt($('#cmbJobLotFile').val()) : 0;
+            const jobLotDesc = $('#cmbJobLotFile option:selected').text();
+            const chqDate = $('#CheqDate').val() || '';
+            const chqNo = $('#CmbCheqNo').val() || '';
+
+            if (!acId || parseInt(acId) <= 0 || !acTitle) {
+                alert("Please select a valid Account Title (Cr).");
+                $('#cmbAccountDetailInput').focus();
+                return;
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Credit Amount must be greater than zero.");
+                $('#txtAmountDetail').focus();
+                return;
+            }
+
+            const item = {
+                lineId: lineItems.length + 1,
+                accountId: parseInt(acId),
+                accountCode: acCode,
+                accountTitle: acTitle,
+                accountTypeId: parseInt(acTypeId || 0),
+                amount: amount,
+                remarks: remarks,
+                jobLotId: jobLotId,
+                jobLotDescription: jobLotId > 0 ? jobLotDesc : '',
+                chequeDate: chqDate,
+                chequeNo: chqNo
+            };
+
+            lineItems.push(item);
+            renderGrid();
+
+            // Reset detail entry fields
+            $('#cmbAccountDetailVal').val('');
+            $('#cmbAccountDetailCode').val('');
+            $('#cmbAccountDetailTitle').val('');
+            $('#cmbAccountDetailTypeId').val('');
+            $('#cmbAccountDetailInput').val('');
+            $('#txtAmountDetail').val('');
+            $('#txtRemarksDetail').val('');
+            $('#CmbCheqNo').val('');
+            setWinDefaultDate();
+        }
+
+        function removeLineItem(idx) {
+            lineItems.splice(idx, 1);
+            // Re-index Sr #
+            lineItems.forEach((item, i) => item.lineId = i + 1);
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const tbody = $('#grdDetailTbody');
+            tbody.empty();
+
+            if (lineItems.length === 0) {
+                tbody.html('<tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No transaction detail rows added yet. Select Credit Account and click + Add.</td></tr>');
+                updateTotals(0, 0);
+                return;
+            }
+
+            let grandDebit = 0;
+            let grandCredit = 0;
+
+            lineItems.forEach((item, idx) => {
+                const cred = parseFloat(item.amount || 0);
+                grandCredit += cred;
+                grandDebit += cred; // Balanced ledger entry
+
+                tbody.append(`
+                    <tr>
+                        <td style="text-align: center; font-weight: bold;">${item.lineId}</td>
+                        <td><strong style="color: #008080;">${escapeHtml(item.accountCode)}</strong></td>
+                        <td>${escapeHtml(item.accountTitle)}</td>
+                        <td>${escapeHtml(item.remarks)}</td>
+                        <td>${escapeHtml(item.jobLotDescription)}</td>
+                        <td>${escapeHtml(item.chequeDate)}</td>
+                        <td>${escapeHtml(item.chequeNo)}</td>
+                        <td style="text-align: right;">${formatCurrency(cred)}</td>
+                        <td style="text-align: right;">${formatCurrency(cred)}</td>
+                        <td style="text-align: center;">
+                            <button type="button" class="btn btn-danger btn-xs" style="padding: 0 5px; font-size: 10px;" onclick="removeLineItem(${idx})">&times;</button>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            updateTotals(grandDebit, grandCredit);
+        }
+
+        function updateTotals(deb, cred) {
+            $('#lblTotalDebit').text(formatCurrency(deb));
+            $('#lblTotalCredit').text(formatCurrency(cred));
+            const diff = Math.abs(deb - cred);
+            $('#lblDiff').text(formatCurrency(diff));
+        }
+
+        function btnSave_Click() {
+            const refAcId = $('#cmbAccountVal').val();
+            if (!refAcId || parseInt(refAcId) <= 0) {
+                alert("Please select a valid Debit Account (Account Title Dr).");
+                $('#cmbAccountInput').focus();
+                return;
+            }
+
+            if (lineItems.length === 0) {
+                alert("At least one transaction line item is required before saving.");
+                return;
+            }
+
+            const dto = {
+                voucherCode: parseInt($('#txtDocNo').val() || '0'),
+                voucherDate: $('#txtDocDate').val(),
+                refAccountId: parseInt(refAcId),
+                remarks: $('#txtRemarks').val(),
+                preview1: $('#CHKPREVIEW').is(':checked'),
+                preview2: $('#chkPreview102B').is(':checked'),
+                lineItems: lineItems
+            };
+
+            $.ajax({
+                url: '/accounts/api/party-payment/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(dto),
+                success: function(res) {
+                    if (res && res.success) {
+                        alert(res.message || "Record Saved Successfully " + res.voucherCode);
+                        if (res.voucherCodeDisplay) {
+                            $('#lblVoucherDisplayHeader').text(res.voucherCodeDisplay);
+                        }
+                        btnNew_Click();
+                    } else {
+                        alert("Error saving voucher: " + (res.message || "Unknown error"));
+                    }
+                },
+                error: function(xhr) {
+                    const err = xhr.responseJSON ? xhr.responseJSON.message : "Database Error";
+                    alert(err);
+                }
+            });
+        }
+
+        function btnNew_Click() {
+            lineItems = [];
+            renderGrid();
+            $('#txtRemarks').val('');
+            
+            // Clear Dr Account fields
+            $('#cmbAccountVal').val('');
+            $('#cmbAccountCode').val('');
+            $('#cmbAccountTitle').val('');
+            $('#cmbAccountTypeId').val('');
+            $('#cmbAccountInput').val('');
+
+            // Clear Cr Account fields
+            $('#cmbAccountDetailVal').val('');
+            $('#cmbAccountDetailCode').val('');
+            $('#cmbAccountDetailTitle').val('');
+            $('#cmbAccountDetailTypeId').val('');
+            $('#cmbAccountDetailInput').val('');
+            $('#txtAmountDetail').val('');
+            $('#txtRemarksDetail').val('');
+            $('#CmbCheqNo').val('');
+            $('#CheqDate').val('');
+
+            setWinDefaultDate();
+
+            $.ajax({
+                url: '/accounts/api/party-payment/next-code',
+                type: 'GET',
+                success: function(res) {
+                    if (res && res.voucherCode) {
+                        $('#txtDocNo').val(res.voucherCode);
+                        $('#lblVoucherDisplayHeader').text(res.voucherCodeDisplay);
+                    }
+                }
+            });
+        }
+
+        function loadVoucher(id) {
+            if (!id || id <= 0) return;
+            $.ajax({
+                url: '/accounts/api/party-payment/' + id,
+                type: 'GET',
+                success: function(data) {
+                    if (data) {
+                        $('#txtDocNo').val(data.voucherCode || id);
+                        if (data.voucherDate) $('#txtDocDate').val(data.voucherDate);
+                        $('#txtRemarks').val(data.remarks || '');
+                        
+                        if (data.refAccountId) {
+                            selectDrAccount(data.refAccountId, data.refAccountCode || '', data.refAccountTitle || '', data.refAccountTypeId || 0);
+                        }
+
+                        if (data.lineItems && Array.isArray(data.lineItems)) {
+                            lineItems = data.lineItems.map((item, idx) => ({
+                                lineId: idx + 1,
+                                accountId: item.accountId,
+                                accountCode: item.accountCode || '',
+                                accountTitle: item.accountTitle || '',
+                                accountTypeId: item.accountTypeId || 0,
+                                amount: parseFloat(item.amount || 0),
+                                remarks: item.remarks || '',
+                                jobLotId: item.jobLotId || 0,
+                                jobLotDescription: item.jobLotDescription || '',
+                                chequeDate: item.chequeDate || '',
+                                chequeNo: item.chequeNo || ''
+                            }));
+                            renderGrid();
+                        }
+                    }
+                },
+                error: function() {
+                    alert("Unable to load voucher record.");
+                }
+            });
+        }
+
+        function btnRefresh_Click() {
+            btnNew_Click();
+        }
+
+        function printReport(rptType) {
+            alert(`Generating Party Payment Voucher Report (${rptType})...`);
+            window.print();
+        }
+
+        function handleSummaryReports(val) {
+            if (!val) return;
+            alert(`Opening Summary Report: ${val}`);
+            $('#tsSummaryPrint').val('');
+        }
+
+        function openAttachments() {
+            $('#attachmentsModal').modal('show');
+        }
+
+        function uploadAttachment() {
+            alert("Attachment uploaded successfully.");
+            $('#attachmentsModal').modal('hide');
+        }
+
+        function switchTab(tab) {
+            if (tab === 'form') {
+                $('#ppvTabBtnForm').css({ background: '#ffffff', border: '1px solid #999' });
+                $('#ppvTabBtnHistory').css({ background: 'transparent', border: '1px solid transparent' });
+                $('#tabFormContent').show();
+                $('#tabHistoryContent').hide();
+            } else {
+                $('#ppvTabBtnHistory').css({ background: '#ffffff', border: '1px solid #999' });
+                $('#ppvTabBtnForm').css({ background: 'transparent', border: '1px solid transparent' });
+                $('#tabFormContent').hide();
+                $('#tabHistoryContent').show();
+                if (!ppvHistoryAccountsLoaded) {
+                    loadPartyPaymentHistoryAccounts();
+                }
+                loadPartyPaymentHistory();
+            }
+        }
+
+        // ====================================================================================
+        // Party Payment History - real ditto-copy of frmPartyPaymentVoucher.cs's HistoryGridFill() /
+        // DataGridHistory, backed by GET /accounts/api/vouchers/party-payment/history -> EXEC
+        // USP_VoucherFormHistory (@DocumentTypeName='35'). See VoucherService.getPartyPaymentHistory().
+        // ====================================================================================
+        let ppvHistoryAccountsLoaded = false;
+
+        function loadPartyPaymentHistoryAccounts() {
+            $.get('/accounts/api/vouchers/party-payment/history/accounts', function(accounts) {
+                const sel = $('#cmbAccountTitlePpv');
+                sel.find('option:not(:first)').remove();
+                (accounts || []).forEach(function(a) {
+                    sel.append('<option value="' + a.Id + '">' + $('<div>').text(a.name).html() + '</option>');
+                });
+                ppvHistoryAccountsLoaded = true;
+            });
+        }
+
+        function resetPartyPaymentHistory() {
+            $('input[name="ppvHistDateType"][value="docdate"]').prop('checked', true);
+            $('#dtpPpvHistFrom').val('');
+            $('#dtpPpvHistTo').val('');
+            $('#txtFromDocNoPpv').val('');
+            $('#txtToDocNoPpv').val('');
+            $('#cmbAccountTitlePpv').val('0');
+            $('#cmbApprovedStatusPpv').val('notapproved');
+            loadPartyPaymentHistory();
+        }
+
+        function loadPartyPaymentHistory() {
+            const dateType = $('input[name="ppvHistDateType"]:checked').val();
+            const params = {
+                dateType: dateType,
+                fromDate: $('#dtpPpvHistFrom').val(),
+                toDate: $('#dtpPpvHistTo').val(),
+                fromDocNo: $('#txtFromDocNoPpv').val(),
+                toDocNo: $('#txtToDocNoPpv').val(),
+                accountId: $('#cmbAccountTitlePpv').val(),
+                approvedStatus: $('#cmbApprovedStatusPpv').val()
+            };
+            $.get('/accounts/api/vouchers/party-payment/history', params, function(res) {
+                const tbody = $('#tbodyPpvHistoryGrid');
+                tbody.empty();
+                const rows = (res && res.rows) || [];
+
+                if (rows.length === 0) {
+                    $('#ppvHistTotals').hide();
+                    tbody.append('<tr><td colspan="9" style="text-align: center; color: #888; padding: 20px;">No vouchers found</td></tr>');
+                    return;
+                }
+
+                $('#ppvHistTotals').show();
+                $('#ppvHistTotalVouchers').text(res.totalVouchers || 0);
+                $('#ppvHistTotalApproved').text(res.totalApprovedVoucher || 0);
+                $('#ppvHistTotalUnApproved').text(res.totalUnApprovedVoucher || 0);
+
+                rows.forEach(function(v) {
+                    const row = '<tr style="cursor: pointer;" ondblclick="loadPartyPaymentVoucherForEdit(' + v.id + ')">' +
+                        '<td style="text-align:center;"><button type="button" class="win-btn-action" style="padding: 1px 6px;" onclick="loadPartyPaymentVoucherForEdit(' + v.id + ')"><i class="fa fa-edit"></i></button></td>' +
+                        '<td style="font-weight: bold;">' + (v.voucherCode != null ? v.voucherCode : '') + '</td>' +
+                        '<td>' + (v.voucherDate || '') + '</td>' +
+                        '<td>' + (v.documentType || '') + '</td>' +
+                        '<td>' + (v.accountTitle || '') + '</td>' +
+                        '<td>' + (v.remarks || '') + '</td>' +
+                        '<td style="text-align: right; font-weight: bold;">' + (parseFloat(v.voucherAmount || 0)).toFixed(2) + '</td>' +
+                        '<td>' + (v.entryUser || '') + '</td>' +
+                        '<td style="text-align: center;">' + (v.attachment && v.attachment > 0 ? v.attachment : '') + '</td>' +
+                        '</tr>';
+                    tbody.append(row);
+                });
+            }).fail(function() {
+                $('#tbodyPpvHistoryGrid').html('<tr><td colspan="9" style="text-align: center; color: red; padding: 20px;">Error loading Party Payment History</td></tr>');
+            });
+        }
+
+        // Loads the voucher via this page's OWN real /accounts/api/party-payment/{id} endpoint (its
+        // own PartyPaymentVoucherService.getVoucherById()), never the generic /accounts/api/vouchers/{id}
+        // used by other voucher forms - Party Payment has its own dedicated read pipeline/DTO shape.
+        // NOTE: btnSave_Click()'s payload has no voucher id field yet (PartyPaymentVoucherService.
+        // saveVoucher() always INSERTs), so re-saving a loaded voucher currently creates a new voucher
+        // rather than updating this one - a pre-existing gap in the Party Payment save pipeline, not
+        // something this History work changes.
+        function loadPartyPaymentVoucherForEdit(id) {
+            switchTab('form');
+            loadVoucher(id);
+        }
+    </script>
+</body>
+</html>

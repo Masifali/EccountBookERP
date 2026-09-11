@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Define Supplier / Customer - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e2e8f0; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-sub-bar { background-color: #b0bec5; height: 22px; padding: 2px 12px; font-size: 11px; color: #37474f; display: flex; align-items: center; border-bottom: 1px solid #90a4ae; }
+        .erp-toolbar { background-color: #cbd5e1; border-bottom: 1px solid #94a3b8; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; color: #0f172a; }
+        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .btn-erp-danger { background-color: #dc2626; color: white; border: 1px solid #991b1b; }
+        .btn-erp-danger:hover { background-color: #b91c1c; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; box-sizing: border-box; background-color: #fff; width: 100%; }
+        .form-control-erp:focus { border-color: #00796B; outline: none; box-shadow: 0 0 0 1px #00796B; }
+        .profile-pic-box { width: 110px; height: 110px; border: 1px dashed #94a3b8; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f8fafc; overflow: hidden; margin: 0 auto 6px auto; position: relative; }
+        .profile-pic-box img { max-width: 100%; max-height: 100%; object-fit: cover; }
+        .erp-grid-container { margin: 10px; background: white; border: 1px solid #94a3b8; border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .erp-grid-header { background-color: #00796B; color: white; font-weight: bold; font-size: 12px; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .grid-scroll-wrapper { max-height: 280px; overflow-y: auto; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 8px; text-align: left; border: 1px solid #004d40; font-weight: 600; sticky: top; }
+        .erp-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
+        .modal-header-erp { background-color: #00796B; color: white; padding: 8px 14px; }
+        .modal-title-erp { font-size: 13px; font-weight: bold; margin: 0; }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="erp-header">
+        <div><i class="fa fa-address-book"></i> Define Supplier / Customer (Party Master)</div>
+        <div><a href="/accounts/dashboard" style="color: white; text-decoration: none; font-weight: 600;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+    </div>
+    <div class="erp-sub-bar">
+        <i class="fa fa-window-maximize" style="margin-right: 6px;"></i>
+        <span>Screens &gt; Define Supplier / Customer</span>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="erp-toolbar">
+        <button type="button" class="btn-erp" onclick="newParty()"><i class="fa fa-plus-circle"></i> New</button>
+        <button type="button" class="btn-erp btn-erp-primary" onclick="saveParty()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="btn-erp" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="btn-erp" onclick="openBankDetailsModal()"><i class="fa fa-university"></i> Bank Detail</button>
+        <button type="button" class="btn-erp" onclick="openShipToModal()"><i class="fa fa-truck"></i> ShipToAddress</button>
+        <button type="button" class="btn-erp" onclick="openPartyLimitsModal()"><i class="fa fa-balance-scale"></i> PartyLimits</button>
+        <button type="button" class="btn-erp" onclick="openMultiLingoModal()"><i class="fa fa-language"></i> Party Multi</button>
+        <button type="button" class="btn-erp" onclick="alert('Language toggle active')"><i class="fa fa-globe"></i> Language</button>
+    </div>
+
+    <!-- Main Entry Form -->
+    <form th:action="@{/accounts/supplier/save}" th:object="${party}" method="post" id="partyForm" enctype="multipart/form-data">
+        <input type="hidden" th:field="*{id}" id="partyId"/>
+        <input type="hidden" th:field="*{pictureUrl}" id="pictureUrl"/>
+
+        <div class="erp-fieldset">
+            <legend>Party Definition Details</legend>
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-md-5">
+                    <div class="row style-row">
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Party Type *</label>
+                            <select class="form-control-erp" th:field="*{customerTypeId}" id="customerTypeId" onchange="onPartyTypeChanged(this.value)" required>
+                                <option value="">-- Select --</option>
+                                <option th:each="t : ${types}" th:value="${t.id}" th:text="${t.supplierCustomerType}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Party Code</label>
+                            <input type="text" class="form-control-erp" th:field="*{supCustCode}" id="supCustCode" readonly style="background-color: #f1f5f9; font-weight: bold;"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Manual Code</label>
+                            <input type="text" class="form-control-erp" th:field="*{manualPartyCode}" id="manualPartyCode" placeholder="Ref Code..."/>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-8">
+                            <label class="form-label-erp">Company / Business Name *</label>
+                            <input type="text" class="form-control-erp" th:field="*{companyName}" id="companyName" required placeholder="Full Name / Company Title..."/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Alias / Nick Name</label>
+                            <input type="text" class="form-control-erp" th:field="*{nickName}" id="nickName"/>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-6">
+                            <label class="form-label-erp">GL Ledger Account</label>
+                            <select class="form-control-erp" th:field="*{glAccountId}" id="glAccountId">
+                                <option value="">-- Select GL Account --</option>
+                                <option th:each="a : ${glAccounts}" th:value="${a.id}" th:text="${a.accountCode + ' - ' + a.accountTitle}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-erp">Advance GL Account</label>
+                            <select class="form-control-erp" th:field="*{advanceGlAcId}" id="advanceGlAcId">
+                                <option value="">-- Select Advance GL --</option>
+                                <option th:each="a : ${glAccounts}" th:value="${a.id}" th:text="${a.accountCode + ' - ' + a.accountTitle}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-6">
+                            <label class="form-label-erp">Party Group</label>
+                            <select class="form-control-erp" th:field="*{customerGroupId}" id="customerGroupId">
+                                <option value="">-- Select Group --</option>
+                                <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.description}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-erp">Entity Classification</label>
+                            <select class="form-control-erp" th:field="*{companyIndividuals}" id="companyIndividuals">
+                                <option value="Company">Company / Firm</option>
+                                <option value="Individual">Individual / Person</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Sub Party?</label>
+                            <div style="margin-top: 3px;">
+                                <input type="checkbox" th:field="*{isSubSupCust}" id="isSubSupCust" onchange="toggleParentParty(this.checked)"/>
+                                <label for="isSubSupCust" style="font-weight: normal; cursor: pointer;">Is Sub Party</label>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label-erp">Parent Party Name</label>
+                            <select class="form-control-erp" th:field="*{parentsSupCustId}" id="parentsSupCustId" disabled>
+                                <option value="">-- Select Parent Party --</option>
+                                <option th:each="p : ${parties}" th:value="${p.id}" th:text="${p.companyName}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-4">
+                            <label class="form-label-erp">NTN #</label>
+                            <input type="text" class="form-control-erp" th:field="*{ntnNo}" id="ntnNo"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">STRN #</label>
+                            <input type="text" class="form-control-erp" th:field="*{strnNo}" id="strnNo"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">FTN #</label>
+                            <input type="text" class="form-control-erp" th:field="*{ftnNo}" id="ftnNo"/>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-6">
+                            <label class="form-label-erp">CNIC Number</label>
+                            <input type="text" class="form-control-erp" th:field="*{cnic}" id="cnic" placeholder="xxxxx-xxxxxxx-x"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-erp">CNIC Expiry Date</label>
+                            <input type="date" class="form-control-erp" th:field="*{cnicExpiryDate}" id="cnicExpiryDate"/>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-6">
+                            <label class="form-label-erp">Address Line 1</label>
+                            <input type="text" class="form-control-erp" th:field="*{address1}" id="address1"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-erp">Address Line 2</label>
+                            <input type="text" class="form-control-erp" th:field="*{address2}" id="address2"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-md-5">
+                    <div class="row style-row">
+                        <div class="col-md-3">
+                            <label class="form-label-erp">Title</label>
+                            <select class="form-control-erp" th:field="*{title}" id="title">
+                                <option value="Mr.">Mr.</option>
+                                <option value="Ms.">Ms.</option>
+                                <option value="Mrs.">Mrs.</option>
+                                <option value="M/S">M/S</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">First Name</label>
+                            <input type="text" class="form-control-erp" th:field="*{firstName}" id="firstName"/>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label-erp">Last Name</label>
+                            <input type="text" class="form-control-erp" th:field="*{lastName}" id="lastName"/>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Phone (Landline)</label>
+                            <input type="text" class="form-control-erp" th:field="*{phone}" id="phone"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Office Mobile</label>
+                            <input type="text" class="form-control-erp" th:field="*{mobileOffice}" id="mobileOffice"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Personal Mobile</label>
+                            <input type="text" class="form-control-erp" th:field="*{mobilePersonal}" id="mobilePersonal"/>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-4">
+                            <label class="form-label-erp">WhatsApp #</label>
+                            <input type="text" class="form-control-erp" th:field="*{whatsAppNo}" id="whatsAppNo"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Email Address</label>
+                            <input type="email" class="form-control-erp" th:field="*{email}" id="email"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Website URL</label>
+                            <input type="text" class="form-control-erp" th:field="*{webPage}" id="webPage"/>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Town</label>
+                            <input type="text" class="form-control-erp" th:field="*{town}" id="town"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Zip Code</label>
+                            <input type="text" class="form-control-erp" th:field="*{zipCode}" id="zipCode"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-erp">Active Status</label>
+                            <select class="form-control-erp" th:field="*{status}" id="status">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row style-row" style="margin-top: 6px;">
+                        <div class="col-md-6">
+                            <label class="form-label-erp">Credit Limit (PKR)</label>
+                            <input type="number" step="0.01" class="form-control-erp" th:field="*{creditLimit}" id="creditLimit"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-erp">Reporting Title</label>
+                            <input type="text" class="form-control-erp" th:field="*{reportingTitle}" id="reportingTitle"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Picture Column -->
+                <div class="col-md-2" style="text-align: center;">
+                    <label class="form-label-erp">Party Profile Picture</label>
+                    <div class="profile-pic-box">
+                        <img id="partyPicPreview" src="/build/images/user.png" alt="Profile Picture"/>
+                    </div>
+                    <input type="file" id="filePicInput" style="display: none;" onchange="previewImage(this)"/>
+                    <button type="button" class="btn-erp" style="width: 100%; justify-content: center;" onclick="$('#filePicInput').click()"><i class="fa fa-camera"></i> Upload Picture</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Party Listing Grid -->
+    <div class="erp-grid-container">
+        <div class="erp-grid-header">
+            <span><i class="fa fa-list"></i> Existing Defined Parties</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="txtSearchParty" class="form-control-erp" placeholder="Search party name or code..." onkeyup="filterPartyGrid(this.value)" style="width: 200px; color: #333;"/>
+                <span>Total: <strong th:text="${parties != null ? parties.size() : 0}">0</strong></span>
+            </div>
+        </div>
+        <div class="grid-scroll-wrapper">
+            <table class="erp-table" id="partyTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th style="width: 90px;">Type</th>
+                        <th style="width: 100px;">Party Code</th>
+                        <th>Company / Business Name</th>
+                        <th style="width: 120px;">Phone / WhatsApp</th>
+                        <th style="width: 110px;">CNIC #</th>
+                        <th style="width: 80px;">Status</th>
+                        <th style="width: 70px; text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="partyTbody">
+                    <tr th:each="p, stat : ${parties}" th:data-id="${p.id}">
+                        <td th:text="${stat.index + 1}"></td>
+                        <td>
+                            <span th:each="t : ${types}" th:if="${t.id == p.customerTypeId}" th:text="${t.supplierCustomerType}"></span>
+                        </td>
+                        <td style="font-weight: bold; color: #00796B;" th:text="${p.supCustCode}"></td>
+                        <td th:text="${p.companyName}"></td>
+                        <td th:text="${p.mobilePersonal ?: p.whatsAppNo}"></td>
+                        <td th:text="${p.cnic}"></td>
+                        <td>
+                            <span class="badge" th:classappend="${p.status ? 'bg-green' : 'bg-red'}" th:text="${p.status ? 'Active' : 'Inactive'}"></span>
+                        </td>
+                        <td style="text-align: center;">
+                            <a href="javascript:void(0)" title="Edit Party" th:attr="onclick='loadPartyForEdit(' + ${p.id} + ')'" style="color: #00796B; font-weight: bold; margin-right: 8px;"><i class="fa fa-pencil"></i></a>
+                            <a th:href="@{'/accounts/supplier/delete/' + ${p.id}}" title="Delete Party" onclick="return confirm('Are you sure you want to delete this party?')" style="color: #dc2626;"><i class="fa fa-trash"></i></a>
+                        </td>
+                    </tr>
+                    <tr th:if="${parties == null or parties.isEmpty()}">
+                        <td colspan="8" style="text-align: center; color: #888; padding: 20px;">No defined parties found. Click New to add.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal 1: Bank Details -->
+    <div class="modal fade" id="modalBankDetails" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header modal-header-erp">
+                    <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
+                    <h4 class="modal-title modal-title-erp"><i class="fa fa-university"></i> Party Bank Account Details</h4>
+                </div>
+                <div class="modal-body" style="padding: 10px;">
+                    <div style="margin-bottom: 8px; text-align: right;">
+                        <button type="button" class="btn-erp" onclick="addBankRow()"><i class="fa fa-plus"></i> Add Bank Row</button>
+                    </div>
+                    <table class="erp-table" id="bankTable">
+                        <thead>
+                            <tr>
+                                <th>Account Title</th>
+                                <th>Account Number</th>
+                                <th>Branch Code</th>
+                                <th>City / Country</th>
+                                <th style="width: 40px;">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bankTbody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer" style="padding: 8px 14px;">
+                    <button type="button" class="btn-erp btn-erp-primary" onclick="saveBankDetailsModal()"><i class="fa fa-save"></i> Save Bank Details</button>
+                    <button type="button" class="btn-erp" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: ShipToAddress -->
+    <div class="modal fade" id="modalShipToAddress" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header modal-header-erp">
+                    <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
+                    <h4 class="modal-title modal-title-erp"><i class="fa fa-truck"></i> Ship To Delivery Addresses</h4>
+                </div>
+                <div class="modal-body" style="padding: 10px;">
+                    <div style="margin-bottom: 8px; text-align: right;">
+                        <button type="button" class="btn-erp" onclick="addShipToRow()"><i class="fa fa-plus"></i> Add Address Row</button>
+                    </div>
+                    <table class="erp-table" id="shipToTable">
+                        <thead>
+                            <tr>
+                                <th>Address Title</th>
+                                <th>Contact Person</th>
+                                <th>Phone / Mobile</th>
+                                <th>WhatsApp</th>
+                                <th>Delivery Address</th>
+                                <th style="width: 40px;">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shipToTbody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer" style="padding: 8px 14px;">
+                    <button type="button" class="btn-erp btn-erp-primary" onclick="saveShipToModal()"><i class="fa fa-save"></i> Save ShipTo Addresses</button>
+                    <button type="button" class="btn-erp" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Party Limits -->
+    <div class="modal fade" id="modalPartyLimits" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header modal-header-erp">
+                    <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
+                    <h4 class="modal-title modal-title-erp"><i class="fa fa-balance-scale"></i> Party Limits &amp; Overdue Controls</h4>
+                </div>
+                <div class="modal-body" style="padding: 15px;">
+                    <div class="form-group">
+                        <label class="form-label-erp">Credit Limit (PKR)</label>
+                        <input type="number" step="0.01" id="modalCreditLimit" class="form-control-erp"/>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label class="form-label-erp">Allowed Credit Days</label>
+                        <input type="number" id="modalCreditDays" class="form-control-erp" value="30"/>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <input type="checkbox" id="modalStopSupply"/>
+                        <label for="modalStopSupply" style="font-weight: 600; margin-left: 4px;">Stop Supply on Overdue Invoices</label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 8px 14px;">
+                    <button type="button" class="btn-erp btn-erp-primary" onclick="savePartyLimitsModal()"><i class="fa fa-save"></i> Apply Limits</button>
+                    <button type="button" class="btn-erp" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Party Multi Language -->
+    <div class="modal fade" id="modalMultiLanguage" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header modal-header-erp">
+                    <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
+                    <h4 class="modal-title modal-title-erp"><i class="fa fa-language"></i> Party Multi-Language Names</h4>
+                </div>
+                <div class="modal-body" style="padding: 10px;">
+                    <div style="margin-bottom: 8px; text-align: right;">
+                        <button type="button" class="btn-erp" onclick="addMultiLingoRow()"><i class="fa fa-plus"></i> Add Language Row</button>
+                    </div>
+                    <table class="erp-table">
+                        <thead>
+                            <tr>
+                                <th>Language ID</th>
+                                <th>Translated Party Name</th>
+                                <th style="width: 40px;">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="multiLingoTbody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer" style="padding: 8px 14px;">
+                    <button type="button" class="btn-erp btn-erp-primary" onclick="saveMultiLingoModal()"><i class="fa fa-save"></i> Save Languages</button>
+                    <button type="button" class="btn-erp" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        let currentPartyBankDetails = [];
+        let currentPartyShipToAddresses = [];
+        let currentPartyMultiLingo = [];
+
+        $(document).ready(function() {
+            toggleParentParty($('#isSubSupCust').is(':checked'));
+        });
+
+        function newParty() {
+            $('#partyId').val('');
+            $('#partyForm')[0].reset();
+            $('#partyPicPreview').attr('src', '/build/images/user.png');
+            $('#pictureUrl').val('');
+            currentPartyBankDetails = [];
+            currentPartyShipToAddresses = [];
+            currentPartyMultiLingo = [];
+            toggleParentParty(false);
+            if ($('#customerTypeId').val()) {
+                onPartyTypeChanged($('#customerTypeId').val());
+            }
+        }
+
+        function onPartyTypeChanged(typeId) {
+            if (!typeId) return;
+            $.get('/accounts/api/parties/next-code', { customerTypeId: typeId }, function(res) {
+                if (res && res.code) {
+                    $('#supCustCode').val(res.code);
+                }
+            });
+        }
+
+        function toggleParentParty(isSub) {
+            $('#parentsSupCustId').prop('disabled', !isSub);
+            if (!isSub) $('#parentsSupCustId').val('');
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#partyPicPreview').attr('src', e.target.result);
+                    $('#pictureUrl').val(e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveParty() {
+            if (!$('#customerTypeId').val()) {
+                alert('Please select Party Type.');
+                $('#customerTypeId').focus();
+                return;
+            }
+            if (!$('#companyName').val() || !$('#companyName').val().trim()) {
+                alert('Please enter Company / Business Name.');
+                $('#companyName').focus();
+                return;
+            }
+            $('#partyForm').submit();
+        }
+
+        function loadPartyForEdit(id) {
+            $.get('/accounts/api/parties/' + id, function(res) {
+                if (!res || !res.party) return;
+                const p = res.party;
+                $('#partyId').val(p.id);
+                $('#customerTypeId').val(p.customerTypeId);
+                $('#supCustCode').val(p.supCustCode || '');
+                $('#manualPartyCode').val(p.manualPartyCode || '');
+                $('#companyName').val(p.companyName || '');
+                $('#nickName').val(p.nickName || '');
+                $('#glAccountId').val(p.glAccountId || '');
+                $('#advanceGlAcId').val(p.advanceGlAcId || '');
+                $('#customerGroupId').val(p.customerGroupId || '');
+                $('#companyIndividuals').val(p.companyIndividuals || 'Company');
+                $('#isSubSupCust').prop('checked', !!p.isSubSupCust);
+                toggleParentParty(!!p.isSubSupCust);
+                $('#parentsSupCustId').val(p.parentsSupCustId || '');
+                $('#ntnNo').val(p.ntnNo || '');
+                $('#strnNo').val(p.strnNo || '');
+                $('#ftnNo').val(p.ftnNo || '');
+                $('#cnic').val(p.cnic || '');
+                if (p.cnicExpiryDate) {
+                    $('#cnicExpiryDate').val(p.cnicExpiryDate.split('T')[0]);
+                } else {
+                    $('#cnicExpiryDate').val('');
+                }
+                $('#address1').val(p.address1 || '');
+                $('#address2').val(p.address2 || '');
+                $('#title').val(p.title || 'Mr.');
+                $('#firstName').val(p.firstName || '');
+                $('#lastName').val(p.lastName || '');
+                $('#phone').val(p.phone || '');
+                $('#mobileOffice').val(p.mobileOffice || '');
+                $('#mobilePersonal').val(p.mobilePersonal || '');
+                $('#whatsAppNo').val(p.whatsAppNo || '');
+                $('#email').val(p.email || '');
+                $('#webPage').val(p.webPage || '');
+                $('#town').val(p.town || '');
+                $('#zipCode').val(p.zipCode || '');
+                $('#status').val(p.status !== undefined ? String(p.status) : 'true');
+                $('#creditLimit').val(p.creditLimit || '');
+                $('#reportingTitle').val(p.reportingTitle || '');
+
+                if (p.pictureUrl) {
+                    $('#partyPicPreview').attr('src', p.pictureUrl);
+                    $('#pictureUrl').val(p.pictureUrl);
+                } else {
+                    $('#partyPicPreview').attr('src', '/build/images/user.png');
+                    $('#pictureUrl').val('');
+                }
+
+                currentPartyBankDetails = res.bankDetails || [];
+                currentPartyShipToAddresses = res.shipToAddresses || [];
+                currentPartyMultiLingo = res.multiLingoNames || [];
+
+                $('html, body').animate({ scrollTop: 0 }, 'fast');
+            });
+        }
+
+        function filterPartyGrid(query) {
+            const q = (query || '').toLowerCase().trim();
+            $('#partyTbody tr').each(function() {
+                const text = $(this).text().toLowerCase();
+                if (!q || text.indexOf(q) !== -1) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        // Sub-Form Modals
+        function openBankDetailsModal() {
+            renderBankTbody();
+            $('#modalBankDetails').modal('show');
+        }
+
+        function addBankRow() {
+            currentPartyBankDetails.push({ acTitle: '', acNumber: '', branchCode: '' });
+            renderBankTbody();
+        }
+
+        function renderBankTbody() {
+            const tbody = $('#bankTbody');
+            tbody.empty();
+            if (currentPartyBankDetails.length === 0) {
+                tbody.append('<tr><td colspan="5" style="text-align:center; color:#888;">No bank details added. Click Add Bank Row.</td></tr>');
+                return;
+            }
+            currentPartyBankDetails.forEach((b, idx) => {
+                tbody.append(`
+                    <tr>
+                        <td><input type="text" class="form-control-erp" value="${b.acTitle || ''}" onchange="currentPartyBankDetails[${idx}].acTitle = this.value"/></td>
+                        <td><input type="text" class="form-control-erp" value="${b.acNumber || ''}" onchange="currentPartyBankDetails[${idx}].acNumber = this.value"/></td>
+                        <td><input type="text" class="form-control-erp" value="${b.branchCode || ''}" onchange="currentPartyBankDetails[${idx}].branchCode = this.value"/></td>
+                        <td><input type="text" class="form-control-erp" placeholder="City..." value="${b.cityId || ''}" onchange="currentPartyBankDetails[${idx}].cityId = this.value"/></td>
+                        <td style="text-align:center;"><a href="javascript:void(0)" onclick="removeBankRow(${idx})" style="color:red;"><i class="fa fa-times"></i></a></td>
+                    </tr>
+                `);
+            });
+        }
+
+        function removeBankRow(idx) {
+            currentPartyBankDetails.splice(idx, 1);
+            renderBankTbody();
+        }
+
+        function saveBankDetailsModal() {
+            const partyId = $('#partyId').val();
+            if (!partyId) {
+                $('#modalBankDetails').modal('hide');
+                return;
+            }
+            $.ajax({
+                url: '/accounts/api/parties/' + partyId + '/bank-details',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(currentPartyBankDetails),
+                success: function(res) {
+                    currentPartyBankDetails = res || [];
+                    alert('Bank details saved successfully.');
+                    $('#modalBankDetails').modal('hide');
+                }
+            });
+        }
+
+        function openShipToModal() {
+            renderShipToTbody();
+            $('#modalShipToAddress').modal('show');
+        }
+
+        function addShipToRow() {
+            currentPartyShipToAddresses.push({ addressTitle: '', contactPerson: '', phoneNo: '', whatsAppNo: '', addressLine1: '' });
+            renderShipToTbody();
+        }
+
+        function renderShipToTbody() {
+            const tbody = $('#shipToTbody');
+            tbody.empty();
+            if (currentPartyShipToAddresses.length === 0) {
+                tbody.append('<tr><td colspan="6" style="text-align:center; color:#888;">No delivery addresses added. Click Add Address Row.</td></tr>');
+                return;
+            }
+            currentPartyShipToAddresses.forEach((a, idx) => {
+                tbody.append(`
+                    <tr>
+                        <td><input type="text" class="form-control-erp" value="${a.addressTitle || ''}" onchange="currentPartyShipToAddresses[${idx}].addressTitle = this.value"/></td>
+                        <td><input type="text" class="form-control-erp" value="${a.contactPerson || ''}" onchange="currentPartyShipToAddresses[${idx}].contactPerson = this.value"/></td>
+                        <td><input type="text" class="form-control-erp" value="${a.phoneNo || ''}" onchange="currentPartyShipToAddresses[${idx}].phoneNo = this.value"/></td>
+                        <td><input type="text" class="form-control-erp" value="${a.whatsAppNo || ''}" onchange="currentPartyShipToAddresses[${idx}].whatsAppNo = this.value"/></td>
+                        <td><input type="text" class="form-control-erp" value="${a.addressLine1 || ''}" onchange="currentPartyShipToAddresses[${idx}].addressLine1 = this.value"/></td>
+                        <td style="text-align:center;"><a href="javascript:void(0)" onclick="removeShipToRow(${idx})" style="color:red;"><i class="fa fa-times"></i></a></td>
+                    </tr>
+                `);
+            });
+        }
+
+        function removeShipToRow(idx) {
+            currentPartyShipToAddresses.splice(idx, 1);
+            renderShipToTbody();
+        }
+
+        function saveShipToModal() {
+            const partyId = $('#partyId').val();
+            if (!partyId) {
+                $('#modalShipToAddress').modal('hide');
+                return;
+            }
+            $.ajax({
+                url: '/accounts/api/parties/' + partyId + '/ship-to',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(currentPartyShipToAddresses),
+                success: function(res) {
+                    currentPartyShipToAddresses = res || [];
+                    alert('ShipTo addresses saved successfully.');
+                    $('#modalShipToAddress').modal('hide');
+                }
+            });
+        }
+
+        function openPartyLimitsModal() {
+            $('#modalCreditLimit').val($('#creditLimit').val());
+            $('#modalPartyLimits').modal('show');
+        }
+
+        function savePartyLimitsModal() {
+            $('#creditLimit').val($('#modalCreditLimit').val());
+            alert('Party limits updated on entry form. Click Save to persist.');
+            $('#modalPartyLimits').modal('hide');
+        }
+
+        function openMultiLingoModal() {
+            renderMultiLingoTbody();
+            $('#modalMultiLanguage').modal('show');
+        }
+
+        function addMultiLingoRow() {
+            currentPartyMultiLingo.push({ multiLanguagesId: 1, partyName: '' });
+            renderMultiLingoTbody();
+        }
+
+        function renderMultiLingoTbody() {
+            const tbody = $('#multiLingoTbody');
+            tbody.empty();
+            if (currentPartyMultiLingo.length === 0) {
+                tbody.append('<tr><td colspan="3" style="text-align:center; color:#888;">No translations added. Click Add Language Row.</td></tr>');
+                return;
+            }
+            currentPartyMultiLingo.forEach((m, idx) => {
+                tbody.append(`
+                    <tr>
+                        <td><input type="number" class="form-control-erp" value="${m.multiLanguagesId || 1}" onchange="currentPartyMultiLingo[${idx}].multiLanguagesId = parseInt(this.value)"/></td>
+                        <td><input type="text" class="form-control-erp" value="${m.partyName || ''}" onchange="currentPartyMultiLingo[${idx}].partyName = this.value"/></td>
+                        <td style="text-align:center;"><a href="javascript:void(0)" onclick="removeMultiLingoRow(${idx})" style="color:red;"><i class="fa fa-times"></i></a></td>
+                    </tr>
+                `);
+            });
+        }
+
+        function removeMultiLingoRow(idx) {
+            currentPartyMultiLingo.splice(idx, 1);
+            renderMultiLingoTbody();
+        }
+
+        function saveMultiLingoModal() {
+            const partyId = $('#partyId').val();
+            if (!partyId) {
+                $('#modalMultiLanguage').modal('hide');
+                return;
+            }
+            $.ajax({
+                url: '/accounts/api/parties/' + partyId + '/multi-lingo',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(currentPartyMultiLingo),
+                success: function(res) {
+                    currentPartyMultiLingo = res || [];
+                    alert('Multi-language party names saved successfully.');
+                    $('#modalMultiLanguage').modal('hide');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

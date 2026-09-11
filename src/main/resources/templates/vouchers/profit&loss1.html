@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<!-- Meta, title, CSS, favicons, etc. -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<title>M-TECH</title>
+	
+	<!-- Bootstrap -->
+	<link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}"
+		rel="stylesheet">
+	<!-- Font Awesome -->
+	<link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}"
+		rel="stylesheet">
+	<!-- NProgress -->
+	<link th:href="@{/vendors/nprogress/nprogress.css}" rel="stylesheet">
+	<!-- iCheck -->
+	<link th:href="@{/vendors/iCheck/skins/flat/green.css}" rel="stylesheet">
+	<!-- Datatables -->
+	<link
+		th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}"
+		rel="stylesheet">
+	<link
+		th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}"
+		rel="stylesheet">
+	<link
+		th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}"
+		rel="stylesheet">
+	<link
+		th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}"
+		rel="stylesheet">
+	<link
+		th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}"
+		rel="stylesheet">
+	<!-- Select2 -->
+	<link th:href="@{/vendors/select2/dist/css/select2.min.css}"
+		rel="stylesheet">
+	
+	<!-- Custom Theme Style -->
+	<link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+	<!-- Customization -->
+	<link th:href="@{/build/css/countx_custom.css}" rel="stylesheet">
+
+</head>
+
+<body class="nav-sm">
+	<div class="container body">
+		<div class="main_container">
+
+			<!-- side bar and top navigation -->
+			<div th:replace="fragments/fixed_sidebar :: div"></div>
+			<!-- /side bar and top navigation -->
+
+			<!-- page content -->
+			<div class="right_col" role="main">
+				<div class="">
+
+					<div class="row">
+						<div class="col-md-12">
+							<ol class="breadcrumb">
+								<li><a href="../index">Profit & Loss</a></li>
+								<li>Profit & Loss</li>
+							</ol>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-md-12 col-sm-12 col-xs-12">
+							<div class="x_panel">
+								<div class="x_title">
+									<h2>Profit & Loss Filter</h2>
+									<div class="clearfix"></div>
+								</div>
+								<div class="x_content">
+									<form action="#" class="form-horizontal form-label-left"
+										th:object="${stockLedgerReportRequest}" id="glReportForm"
+										th:action="@{/reports/profit&loss}" method="post">
+										
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">COMPANY</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<select class="form-control" required="required"
+															th:field="*{companyId}">
+															<option value="0">ALL</option>
+															<option th:each="company : ${companies}"
+																th:value="${company.id}" th:text="${company.name}">
+															</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">BRANCH</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<select class="form-control" th:field="*{branchId}">
+															<option value="0">ALL</option>
+															<option th:if="${companyBranches}"
+																th:each="companyBranch : ${companyBranches}"
+																th:value="${companyBranch.id}"
+																th:text="${companyBranch.name}"></option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">VOUCHER
+														STATUS</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<select class="form-control" th:field="*{voucherStatusId}">
+															<option value="0">BOTH</option>
+															<option th:each="voucherStatus : ${voucherStatuses}"
+																th:value="${voucherStatus.id}"
+																th:text="${voucherStatus.name}"></option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">FINANCIAL
+														YEAR</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<select class="form-control" required="required"
+															th:field="*{financialYearId}">
+															<option th:attr="data-value=${financialYears[0].fromDate} + '|' + ${financialYears[#lists.size(financialYears)-1].toDate}" value="0">ALL</option>
+															<option th:each="financialYear : ${financialYears}"
+																th:value="${financialYear.id}"
+																th:attr="data-value=${financialYear.fromDate} + '|' + ${financialYear.toDate}"
+																th:text="${financialYear.name}"></option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">FROM
+														DATE</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<input class="form-control" type="date"
+															th:field="*{fromDate}">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">TO
+														DATE</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<input class="form-control" type="date"
+															th:field="*{toDate}">
+													</div>
+												</div>
+											</div>
+										</div>
+										
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">ITEM CATEGORY</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<select class="form-control select2_single itemCategory" required="required" th:field="*{itemCategoryId}">
+							                          		<option value="0">ALL</option>
+															<option th:if="${itemCategories}"
+																th:each="itemCategory : ${itemCategories}"
+																th:value="${itemCategory.id}"
+																th:text="${itemCategory.name}">
+															</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">ITEM DEF</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<select class="form-control select2_single itemDef" th:field="*{itemDefId}">
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>
+										
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">ACCOUNT</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<select class="form-control select2_single" required
+															th:field="*{accountCode}">
+															<option value="0">ALL</option>
+															<option th:each="account : ${accounts}"
+																th:value="${account.code}"
+																th:text="${account.formattedCode} + '&emsp;' + ${account.accountName}">
+															</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<label class="control-label col-md-3 col-sm-3 col-xs-12">SEARCH
+														BY DATE</label>
+													<div class="col-md-9 col-sm-9 col-xs-12">
+														<select class="form-control" id="search_by_date" th:field="*{serchByDate}">
+															<!-- <option value="0"></option> -->
+															<option value="1">VOUCHER DATE</option>
+															<option value="2">CREATED DATE</option>
+															<option value="3">UPDATED DATE</option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="col-md-6 col-sm-6 col-xs-12"></div>
+											<div class="col-md-6 col-sm-6 col-xs-12">
+												<div class="form-group">
+													<button id="submitGLForm" type="submit" class="btn btn-success"
+														style="float: right;">SEARCH</button>
+													<img id="loading" th:src="@{/build/images/pac_man.gif}" style="display:none; float: right;"></img>
+												</div>
+											</div>
+										</div>
+										
+									</form>
+								</div>
+							</div>
+
+							<div class="x_panel">
+								<div class="x_title">
+									<h2>Profit & Loss List</h2>
+									<div class="clearfix"></div>
+								</div>
+								<div class="x_content">
+									<table id="gl_report_datatable"
+										class="table table-striped table-bordered">
+										<thead>
+											<tr>
+												<th>#</th>
+												<th>DATE</th>
+												<th>MODIFY DATE</th>
+												<th>INVOICE</th>
+												<th>BOOK NO</th>
+												 <th style="width: 10px;">PARTY NAME</th>
+												<th>TRUCK NO</th>
+												<th style="width: 10px;">PRODUCT,BAGS,NET(W),RATE,MT,BT,FR,SILAI,BAR,OTHER</th>
+												<th>AMOUNT</th>
+												<th>REMARKS</th>
+											</tr>
+										</thead>
+
+										<tbody>
+										</tbody>
+										
+										<tfoot>
+					                        <tr>
+					                        <th></th>
+					                          <th></th>
+					                          <th></th>
+					                          <th></th>
+					                          <th></th>
+					                         
+					                          <th></th>
+				                              
+					                          <th></th>
+				                              <th><span id ="des">0.0</span></th>
+					                          <th></th>
+					                          <th><span id ="rem">0.0</span></th>
+					                          
+					                        </tr>
+					                    </tfoot>
+
+									</table>
+
+								</div>
+							</div>
+
+						</div>
+					</div>
+
+				</div>
+				<!-- /page content -->
+
+				<!-- footer content -->
+				<footer>
+					<div class="pull-right">
+						Gentelella - Bootstrap Admin Template by <a
+							href="https://colorlib.com">Colorlib</a>
+					</div>
+					<div class="clearfix"></div>
+				</footer>
+				<!-- /footer content -->
+			</div>
+		</div>
+	</div>
+
+	<!-- jQuery -->
+	<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+	<!-- Bootstrap -->
+	<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+	<!-- FastClick -->
+	<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+	<!-- NProgress -->
+	<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+	<!-- iCheck -->
+	<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+	<!-- Datatables -->
+	<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+	<script
+		th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+	<script
+		th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+	<script
+		th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+	<script
+		th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+	<script
+		th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+	<script
+		th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+	<script
+		th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+	<script
+		th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+	<!-- <script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+    <script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+    <script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+    <script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+    <script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+    <script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script> -->
+	
+	<!-- Datatables -->
+	<!-- <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script> -->
+	<script th:src="@{/vendors/ctx-datatables/jquery.dataTables.min.js}"></script>
+	<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js"></script> -->
+	<script th:src="@{/vendors/ctx-datatables/dataTables.buttons.min.js}"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script> -->
+	<script th:src="@{/vendors/ctx-datatables/jszip.min.js}"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script> -->
+	<script th:src="@{/vendors/ctx-datatables/pdfmake.min.js}"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script> -->
+	<script th:src="@{/vendors/ctx-datatables/vfs_fonts.js}"></script>
+	<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js"></script> -->
+	<script th:src="@{/vendors/ctx-datatables/buttons.html5.min.js}"></script>
+	<!-- <script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js"></script> -->
+	<script th:src="@{/vendors/ctx-datatables/buttons.print.min.js}"></script>
+	
+	<!-- Select2 -->
+	<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+	<!-- Select2 -->
+
+	<!-- Custom Theme Scripts -->
+	<script th:src="@{/build/js/custom.min.js}"></script>
+
+	<script th:src="@{/build/js/countx.profit.js}"></script>
+
+	<script>
+		$(".select2_single").select2({
+			
+		});
+	</script>
+
+</body>
+</html>

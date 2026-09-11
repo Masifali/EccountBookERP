@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Accounts Activity Summary Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f3f5;
+            font-size: 11px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .erp-header {
+            background-color: #00796B;
+            color: white;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .erp-toolbar {
+            background-color: #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
+            padding: 4px 10px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-erp {
+            background-color: #ffffff;
+            border: 1px solid #94a3b8;
+            border-radius: 3px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+
+        .btn-erp:hover {
+            background-color: #f1f5f9;
+            border-color: #64748b;
+            color: #1e293b;
+            text-decoration: none;
+        }
+
+        .btn-erp-primary {
+            background-color: #00796B;
+            color: white;
+            border: 1px solid #004d40;
+        }
+
+        .btn-erp-primary:hover {
+            background-color: #004d40;
+            color: white;
+        }
+
+        .erp-fieldset {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .erp-fieldset legend {
+            font-size: 11px;
+            font-weight: bold;
+            color: #00796B;
+            width: auto;
+            padding: 0 4px;
+            margin-bottom: 6px;
+            border: none;
+        }
+
+        .form-label-erp {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 2px;
+            font-size: 11px;
+        }
+
+        .form-control-erp {
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            padding: 2px 6px;
+            font-size: 11px;
+            height: 24px;
+            box-sizing: border-box;
+            background-color: #fff;
+            width: 100%;
+        }
+
+        .form-control-erp:focus {
+            border-color: #00796B;
+            outline: none;
+        }
+
+        .erp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
+        .erp-table th {
+            background-color: #00796B;
+            color: white;
+            padding: 5px 6px;
+            text-align: left;
+            border: 1px solid #004d40;
+            font-weight: 600;
+        }
+
+        .erp-table td {
+            padding: 4px 6px;
+            border: 1px solid #cbd5e1;
+            vertical-align: middle;
+        }
+
+        .erp-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .report-summary-bar {
+            background: #e0f2f1;
+            font-weight: bold;
+            color: #004d40;
+            font-size: 12px;
+            padding: 6px 12px;
+            border: 1px solid #00796B;
+            border-radius: 2px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="erp-header">
+        <div><i class="fa fa-line-chart"></i> Accounts Activity Summary Report</div>
+        <div><a href="/accounts/dashboard" style="color: white; text-decoration: none; font-weight: 600;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+    </div>
+    <div class="erp-toolbar">
+        <button type="button" class="btn-erp btn-erp-primary" onclick="executeActivitySummaryReport()"><i class="fa fa-eye"></i> Show (Ctrl+S)</button>
+        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print (Alt+1)</button>
+        <button type="button" class="btn-erp" onclick="resetActivitySummaryFilters()"><i class="fa fa-refresh"></i> New (Ctrl+N)</button>
+    </div>
+    <div style="padding: 10px;">
+        <div class="erp-fieldset">
+            <legend>Report Filter Criteria</legend>
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label-erp">Date Type</label>
+                    <select id="cmbDateType" class="form-control-erp">
+                        <option value="DocDate">Voucher Document Date</option>
+                        <option value="EntryDate">System Entry Date</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">From Date</label>
+                    <input type="date" id="txtFromDate" class="form-control-erp"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">To Date</label>
+                    <input type="date" id="txtToDate" class="form-control-erp"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Account Title / Filter</label>
+                    <select id="cmbAccountTitle" class="form-control-erp">
+                        <option value="">-- All Accounts --</option>
+                        <option th:each="ac : ${accountsList}" th:value="${ac.id}" th:text="${ac.accountCode + ' - ' + ac.accountTitle}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Report Type</label>
+                    <select id="cmbReportType" class="form-control-erp">
+                        <option value="1">1. ChartofAccount_Wise</option>
+                        <option value="2">2. Subsidiary_Wise</option>
+                    </select>
+                </div>
+                <div class="col-md-1" style="display:flex; align-items:flex-end; padding-bottom:2px;">
+                    <label style="font-weight:600; cursor:pointer;"><input type="checkbox" id="chkApprovedOnly" checked/> Approved Only</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-fieldset">
+            <legend>Activity Summary Data Output</legend>
+            <div style="text-align: center; margin-bottom: 10px;">
+                <h4 style="margin: 0; font-weight: bold; color: #00796B;" id="lblCompHeader">Golden Ace Rice Mills (Pvt) Ltd.</h4>
+                <h5 style="margin: 2px 0; font-weight: bold;">Accounts Activity Summary Report</h5>
+                <small style="color: #64748b;" id="lblPeriodHeader">Period: Loading... | Currency: PKR</small>
+            </div>
+            <table class="erp-table">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">Account Code</th>
+                        <th style="width: 25%;">Account Title</th>
+                        <th style="width: 20%;">Parent Account Title</th>
+                        <th style="width: 12%; text-align: right;">Opening (PKR)</th>
+                        <th style="width: 11%; text-align: right;">Debit (PKR)</th>
+                        <th style="width: 11%; text-align: right;">Credit (PKR)</th>
+                        <th style="width: 11%; text-align: right;">Closing (PKR)</th>
+                    </tr>
+                </thead>
+                <tbody id="activitySummaryTbody">
+                    <!-- Loaded dynamically via AJAX -->
+                </tbody>
+            </table>
+            <div class="report-summary-bar">
+                <div>Total Accounts: <span id="lblTotalRec">0</span></div>
+                <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
+                <div>Total Credit: <span id="lblTotalCredit">0.00</span></div>
+                <div>Net Movement: <span id="lblNetBalance">0.00 Dr</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            setInitialDates();
+            executeActivitySummaryReport();
+        });
+
+        function setInitialDates() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('txtFromDate').value = `${year}-01-01`;
+            document.getElementById('txtToDate').value = `${year}-${month}-${day}`;
+        }
+
+        function formatCurrency(val) {
+            if (val === null || val === undefined || isNaN(val)) return '0.00';
+            return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function executeActivitySummaryReport() {
+            const fromD = $('#txtFromDate').val();
+            const toD = $('#txtToDate').val();
+            $('#lblPeriodHeader').text(`Period: ${fromD} To ${toD} | Currency: PKR`);
+
+            const reqObj = {
+                accountId: $('#cmbAccountTitle').val() ? parseInt($('#cmbAccountTitle').val()) : null,
+                fromDate: fromD,
+                toDate: toD,
+                dateType: $('#cmbDateType').val(),
+                reportTypeId: parseInt($('#cmbReportType').val() || "1"),
+                approvedOnly: $('#chkApprovedOnly').is(':checked')
+            };
+
+            $.ajax({
+                url: '/accounts/api/reports/activity-summary',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(reqObj),
+                success: function(res) {
+                    if (res && res.success) {
+                        renderGrid(res.data);
+                    } else {
+                        $('#activitySummaryTbody').html('<tr><td colspan="7" style="text-align:center; color:red; padding: 20px;">' + (res.message || 'Error loading Activity Summary Report.') + '</td></tr>');
+                        updateTotals(0, 0, 0, 0);
+                    }
+                },
+                error: function(err) {
+                    $('#activitySummaryTbody').html('<tr><td colspan="7" style="text-align:center; color:red; padding: 20px;">Error executing Activity Summary Report.</td></tr>');
+                    updateTotals(0, 0, 0, 0);
+                }
+            });
+        }
+
+        function renderGrid(data) {
+            const tbody = $('#activitySummaryTbody');
+            tbody.empty();
+
+            if (!data || data.length === 0) {
+                tbody.html('<tr><td colspan="7" style="text-align:center; padding: 20px; color:#666;">No transaction records found for selected criteria.</td></tr>');
+                updateTotals(0, 0, 0, 0);
+                return;
+            }
+
+            let totalDebit = 0;
+            let totalCredit = 0;
+            let netBal = 0;
+
+            data.forEach(r => {
+                const openBal = parseFloat(r.Opening || r.opening || r.OpeningBalance || 0);
+                const deb = parseFloat(r.Debit || r.debit || r.TotalDebit || 0);
+                const cred = parseFloat(r.Credit || r.credit || r.TotalCredit || 0);
+                const closeBal = parseFloat(r.Closing || r.closing || (openBal + deb - cred));
+
+                totalDebit += deb;
+                totalCredit += cred;
+                netBal += closeBal;
+
+                tbody.append(`
+                    <tr>
+                        <td style="font-weight: bold; color: #00796B;">${r.AccountCode || r.accountCode || ''}</td>
+                        <td style="font-weight: 600;">${r.AccountTitle || r.accountTitle || ''}</td>
+                        <td style="color: #64748b;">${r.ParentAccountTitle || r.parentAccountTitle || r.ParentAccount || ''}</td>
+                        <td style="text-align: right;">${formatCurrency(Math.abs(openBal))} ${openBal >= 0 ? 'Dr' : 'Cr'}</td>
+                        <td style="text-align: right; color: #166534;">${formatCurrency(deb)}</td>
+                        <td style="text-align: right; color: #991b1b;">${formatCurrency(cred)}</td>
+                        <td style="text-align: right; font-weight: bold;">${formatCurrency(Math.abs(closeBal))} ${closeBal >= 0 ? 'Dr' : 'Cr'}</td>
+                    </tr>
+                `);
+            });
+
+            updateTotals(data.length, totalDebit, totalCredit, netBal);
+        }
+
+        function updateTotals(recCount, deb, cred, net) {
+            $('#lblTotalRec').text(recCount);
+            $('#lblTotalDebit').text(formatCurrency(deb));
+            $('#lblTotalCredit').text(formatCurrency(cred));
+            $('#lblNetBalance').text(`${formatCurrency(Math.abs(net))} ${net >= 0 ? 'Dr' : 'Cr'}`);
+        }
+
+        function resetActivitySummaryFilters() {
+            setInitialDates();
+            $('#cmbAccountTitle').val('');
+            $('#cmbDateType').val('DocDate');
+            $('#cmbReportType').val('1');
+            $('#chkApprovedOnly').prop('checked', true);
+            executeActivitySummaryReport();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>MY SHOP</title>
+
+    <!-- Bootstrap -->
+    <link href="/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="/vendors/nprogress/nprogress.css" rel="stylesheet">
+    <!-- jQuery custom content scroller -->
+    <link href="/vendors/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.min.css" rel="stylesheet"/>
+
+    <!-- Custom Theme Style -->
+    <link href="/build/css/custom.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div style="background:#ff0000;" th:fragment="side_bar">
+    <div class="col-md-3 left_col menu_fixed">
+        <div class="left_col scroll-view">
+
+
+            <div class="clearfix"></div>
+
+            <!-- sidebar menu -->
+
+            <div class="main_menu_side hidden-print main_menu" id="sidebar-menu"
+                 th:style="${#authorization.expression('hasAuthority(''INVENTORY_COSTING'')')} ? 'background: black;' : 'background: brown;'">
+                <div class="menu_section">
+                    <ul class="nav side-menu">
+
+                        <li th:if="${#authorization.expression('hasAuthority(''ACCOUNTS'')')}"><a><img id="loading"
+                                                                                                       th:src="@{/build/images/back_disabled.png}"></img>
+                            ACCOUNT MANAGEMENT <span class="fa fa-chevron-down"></span> </a>
+                            <ul class="nav child_menu">
+                                <li th:if="${#authorization.expression('hasAuthority(''NEW_ACCOUNT'')')}"><a
+                                        href="/accounts/new_account">NEW ACCOUNT</a></li>
+                                <!-- <li th:if="${#authorization.expression('hasAuthority(''WEIGHT'')')}"><a
+                                         href="/kanta/firstWeight">FIRST WEIGHT</a></li>
+                                 <li th:if="${#authorization.expression('hasAuthority(''WEIGHT'')')}"><a
+                                         href="/kanta/secondWeight">SECOND WEIGHT</a></li>
+ -->
+                                <li th:if="${#authorization.expression('hasAuthority(''WEIGHT'')')}"><a
+                                        href="/kanta/millWeightEntry">MILL WEIGHT ENRTY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''WEIGHT'')')}"><a
+                                        href="/kanta/localWeightEntry">LOCAL WEIGHT ENRTY</a></li>
+
+                                <li th:if="${#authorization.expression('hasAuthority(''WEIGHT'')')}"><a
+                                        href="/kanta/weight_list">WEIGHT LIST</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''WEIGHT'')')}"><a
+                                        href="/kanta/daily_weight_list">DAILY WEIGHT LIST</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''WEIGHT'')')}"><a
+                                        href="/kanta/complete_weight_entry">COMPLETE WEIGHT ENTRY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''CHART_OF_ACCOUNT'')')}"><a
+                                        href="/accounts/chart_of_accounts">CHART OF ACCOUNTS</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''ACCOUNT_HIST'')')}"><a
+                                        href="/accounts/account_hist">ACCOUNT HISTORY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''NEW_MILL'')')}"><a
+                                        href="/accounts/mill">ADD NEW MILL KHATA</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''SEND_OR_CREATE_BANK_ACCOUNT'')')}"><a
+                                        href="/bankAccounts/view_bank_account">SEND OR CREATE FACTORY ACCOUNT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''SEND_ACCOUNT_HISTORY'')')}"><a
+                                        href="/bankAccounts/send_account_history">SEND ACCOUNT HISTORY</a></li>
+                                <!-- <li th:if="${#authorization.expression('hasAuthority(''STOCK_OPENING_FORM'')')}"><a href="/utilities/utilities#financial_year_panel">ADD NEW FINANCIAL YEAR</a></li> -->
+                                <li th:if="${#authorization.expression('hasAuthority(''UPDATE_ACCOUNT'')')}"><a
+                                        href="/accounts/update_account_form">UPDATE ACCOUNT</a></li>
+                            </ul>
+                        </li>
+                        <li th:if="${#authorization.expression('hasAuthority(''VOUCHERS'')')}"><a><i
+                                class="fa fa-money"></i> VOUCHERS <span class="fa fa-chevron-down"></span></a>
+                            <ul class="nav child_menu">
+                                <li th:if="${#authorization.expression('hasAuthority(''VOUCHER_ALL'')') or #authorization.expression('hasAuthority(''VOUCHER_BPV_BRV_JV_OJV'')') or #authorization.expression('hasAuthority(''VOUCHER_CPV_CRV_JV'')')}">
+                                    <a href="/vouchers/new_voucher">NEW VOUCHER</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''ADMIN'')')}">
+                                    <a href="/vouchers/cheque-books">CHEQUE BOOKS / DETAILS</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''THIRD_PARTY'')')}">
+                                    <a href="/vouchers/new-with-third-party-voucher">NEW VOUCHER WITH THIRD PARTY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''VOUCHER_LIST'')')}">
+                                    <a href="/vouchers/voucher_list">VOUCHER LIST</a></li>
+                                <li><a href="/vouchers/voucher_detail_list">VOUCHER DETAIL LIST</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''INVENTORY_COSTING'')')}"><a
+                                        href="/costing/inventory_costing">INVENTORY COSTING</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PROFIT_LOSS'')')}">
+                                    <a href="/reports/profit&loss">PROFIT & LOSS</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''ADD_MILL_RATE'')')}"><a href="/stock/mill-rates">ADD MILL RATES</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''MILL_RATE_VIEW'')')}"><a href="/stock/mill-rates-view">MILL RATES VIEW</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''RATE_ENTRY'')')}"><a href="/reports/rateEntries">RATE ENTRIES</a></li>
+
+                                <li th:if="${#authorization.expression('hasAuthority(''PROFIT'')')}">
+                                    <a href="/reports/customize_profit_report">CUSTOMIZED REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PROFIT'')')}">
+                                    <a href="/reports/financial_statement">STATEMENT OF FINALCAIL POSITION</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PROFIT'')')}">
+                                    <a href="/reports/SOFP_comparison_report">PROFIT OR LOSS COMPARISON</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PROFIT'')')}">
+                                    <a href="/reports/expense-analysis-reports">MONTHLY EXPANCES ANALYSIS</a></li>
+
+                                <li th:if="${#authorization.expression('hasAuthority(''PROFIT'')')}"><a
+                                        href="/costing/monthlyCostingJVAVCO">MONTHLY COS JV AVCO</a></li>
+
+                                <li th:if="${#authorization.expression('hasAuthority(''CLOSING_VOUCHER'')')}"><a
+                                        href="/costing/monthlyClosingJV">CLOSING VOUCHER</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PRINT_CHECK'')')}">
+                                    <a href="/bank/print-check-form">PRINT CHECK</a></li>
+                            </ul>
+                        </li>
+                        <li th:if="${#authorization.expression('hasAuthority(''PAYABLES'')')}"><a><i
+                                class="fa fa-credit-card"></i> PURCHASE <span class="fa fa-chevron-down"></span></a>
+                            <ul class="nav child_menu">
+                                <li th:if="${#authorization.expression('hasAuthority(''NEW_PURCHASE_VOUCHER'')')}"><a
+                                        href="/payable/new_pjv_qty_form">PURCHASE VOUCHER</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''QTY'')')}"><a
+                                        href="/payable/new-purchase-voucher">PURCHASE QTY VOUCHER </a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PURCHASE_VOUCHER_LIST'')')}"><a
+                                        href="/receivables/purchase_voucher_list">PURCHASE VOUCHER LIST</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PURCHASE_REPORT'')')}"><a
+                                        href="/reports/purchase_report">PURCHASE REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''TRADING_REPORT'')')}"><a
+                                        href="/reports/trading-report">TRADING REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''SUPPLIER_STATUS_REPORT'')')}"><a
+                                        href="/reports/supplier_status_report">SUPPLIER STATUS REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PURCHASE_ORDER'')')}"><a
+                                        href="/payables/purchase_order_form">PURCHASE ORDER FORM</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PURCHASE_ORDER_LIST'')')}"><a
+                                        href="/payables/purchase_order_list">PURCHASE ORDER LIST</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PAYMENT_SCHEDULE_REPORT'')')}"><a
+                                        href="/reports/payment_schedule_form">PAYMENT SCHEDULE REPORT</a></li>
+
+                            </ul>
+                        </li>
+
+
+                        <li th:if="${#authorization.expression('hasAuthority(''SALE'')')}"><a><i
+                                class="fa fa-suitcase"></i> SALE <span class="fa fa-chevron-down"></span></a>
+                            <ul class="nav child_menu">
+                                <li th:if="${#authorization.expression('hasAuthority(''NEW_SALE_VOUCHER'')')}">
+                                    <a href="/receivables/new_sjv_qty_form">NEW SALE VOUCHER </a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''QTY'')')}">
+                                    <a href="/receivables/new-quantity-voucher">NEW SQV VOUCHER </a></li>
+
+                                <li th:if="${#authorization.expression('hasAuthority(''SALE_VOUCHER_LIST'')')}"><a
+                                        href="/SaleQty/sale_voucher_list">SALE VOUCHER LIST</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''SALE_REPORT'')')}"><a
+                                        href="/reports/sales_report">SALES REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''CUSTOMER_STATUS_REPORT'')')}"><a
+                                        href="/reports/customer_status_report">CUSTOMER STATUS REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''SALE_ORDER'')')}"><a
+                                        href="/receivables/sale_order_form">SALE ORDER FORM</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''SALE_ORDER_LIST'')')}"><a
+                                        href="/receivables/sale_order_list">SALE ORDER LIST</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PRODUCTION_FORM'')')}"><a
+                                        href="/production/production_form">PRODUCTION FORM</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''DAILY_CLOSING'')')}"><a
+                                        href="/vouchers/dailyClosing">DAILY CLOSING FORM</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PRODUCTION_FORM'')')}"><a
+                                        href="/production/new_sjv_qty_form">PRODUCTION FORM</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''RECIPE_VOUCHER_FORM'')')}"><a
+                                        href="/production/new_recipe_form">RECIPE VOUCHER FORM</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''DAY_PAYMENT_ENTRY'')')}"><a
+                                        href="/payables/today-payment-form">DAY PAYMENT ENTRY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PAY_PAYMENT_VIEW'')')}"><a
+                                        href="/payables/today-payment-view">DAY PAYMENT VIEW</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''SALE_INVOICE_VOUCHER'')')}"><a
+                                        href="/receivables/salesInvoiceVoucherForm">SALES INVOICE VOUCHER</a></li>
+                            </ul>
+                        </li>
+                        <li th:if="${#authorization.expression('hasAuthority(''INVENTORY'')')}"><a><i
+                                class="fa fa-cubes"></i> INVENTORY <span class="fa fa-chevron-down"></span></a>
+                            <ul class="nav child_menu">
+                                <li><a href="/inventory/dashboard">INVENTORY DASHBOARD</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''STOCK_OPENING_FORM'')')}"><a
+                                        href="/stocks/stock_opening_form">STOCK OPENING FORM</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''ITEM_RECIPE'')')}"><a
+                                        href="/stocks/recipe_form/0">ITEM RECIPE</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''STOCK_LEDGER'')')}"><a
+                                        href="/reports/stock_ledger">STOCK LEDGER</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''STOCK_REPORT_QUANTITY'')')}"><a
+                                        href="/reports/stock_report_quantity">STOCK REPORT - QUANTITY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''STOCK_REPORT_QUANTITY'')')}"><a
+                                        href="/reports/closing_stock_report_quantity">CLOSING STOCK QUANTITY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''STOCK_REPORT_QUANTITY'')')}">
+                                    <a href="/stocks/inventory-profitability-report">INVENTORY PROFITABILITY</a>
+                            </ul>
+
+                        </li>
+                        </li>
+                        <li th:if="${#authorization.expression('hasAuthority(''REPORTS'')')}"><a><i
+                                class="fa fa-bar-chart-o"></i> REPORTS <span class="fa fa-chevron-down"></span></a>
+                            <ul class="nav child_menu" style="height: 300px !important; overflow: scroll;">
+                                <li th:if="${#authorization.expression('hasAuthority(''DAILY_SUMMARY_REPORT'')')}"><a
+                                        href="/reports/daily_summary_report">DAILY SUMMARY REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''GENERAL_LEDGER'')')}"><a
+                                        href="/reports/general_ledger">GENERAL LEDGER</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''DETAIL_GENERAL_LEDGER'')')}"><a
+                                        href="/reports/detail_general_ledger">DETAIL GENERAL LEDGER</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''TRIAL_BALANCE'')')}"><a
+                                        href="/reports/trial_balance">TRIAL BALANCE</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PROFIT_LOSS'')')}"><a
+                                        href="/reports/pl_report">P & L REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''BALANCE_SHEET'')')}"><a
+                                        href="/reports/balance_sheet_report">BALANCE SHEET REPORT</a></li>
+                              <!--  <li><a href="/reports/monthly_breakup_report">MONTHLY BREAKUP REPORT</a></li>-->
+                                <li th:if="${#authorization.expression('hasAuthority(''CHEQUES_IN_HAND'')')}"><a
+                                        href="/reports/cheque_detail">CHEQUES IN HAND</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''COMBINE_VOUCHER_REPORT'')')}"><a
+                                        href="/reports/combine-voucher-report">COMBINE VOUCHER REPORT</a></li>
+                                <!-- <li><a href="/reports/reminders">REMINDERS</a></li> -->
+                            </ul>
+                        </li>
+
+                        <li th:if="${#authorization.expression('hasAuthority(''ADMIN'')')}"><a><i
+                                class="fa fa-university"></i> LOAN MANAGEMENT <span class="fa fa-chevron-down"></span></a>
+                            <ul class="nav child_menu">
+                                <li><a href="/loans/loan-management">LOAN MASTER</a></li>
+                                <li><a href="/loans/reports">LOAN REPORTS</a></li>
+                                <li><a href="/loans/reports?tab=pl">LOAN P&L STATEMENT</a></li>
+                            </ul>
+                        </li>
+
+                        <li th:if="${#authorization.expression('hasAuthority(''UTILITIES'')')}"><a><i
+                                class="fa fa-cogs"></i> UTILITIES <span class="fa fa-chevron-down"></span></a>
+                            <ul class="nav child_menu">
+                                <li th:if="${#authorization.expression('hasAuthority(''ADD_NEW_USER'')')}"><a
+                                        href="/utilities/utilities#user_panel">ADD NEW USER</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''ADD_NEW_COMPANY'')')}"><a
+                                        href="/utilities/utilities#company_panel">ADD NEW COMPANY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''ADD_NEW_BRANCH'')')}"><a
+                                        href="/utilities/utilities#branch_panel">ADD NEW BRANCH</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''SEND_BANK_ACCOUNT'')')}"><a
+                                        href="/bp/contactWithCategory">ADD NEW CONTACT CATEGORY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''NEW_CONTACT'')')}"><a
+                                        href="/bp/newContactForm">CONTACT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''CONTACT_LIST'')')}"><a
+                                        href="/bp/contactListFrom">SEARCH CONTACT</a></li>
+                            </ul>
+                        </li>
+                        <li th:if="${#authorization.expression('hasAuthority(''INFO'')')}"><a><i class="fa fa-cogs"></i>INFO
+                            <span class="fa fa-chevron-down"></span></a>
+                            <ul class="nav child_menu" style="height: 300px !important; overflow: scroll;">
+
+                                <li th:if="${#authorization.expression('hasAuthority(''PRE_PURCHASE_ENTRY'')')}"><a
+                                        href="/payables/pre_purchase_form">PRE PURCHASE</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''PRE_PURCHASE_REPORT'')')}"><a
+                                        href="/reports/pre_purchase_report">PRE PURCHASE REPORT</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''COMBINE_VOUCHER'')')}"><a
+                                        href="/SaleQty/new_pjv_sjv_qty_form">DIRECT SALE VOUCHER</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''NEW_CITY'')')}"><a
+                                        href="/accounts/city">ADD NEW CITY</a></li>
+                                <li th:if="${#authorization.expression('hasAuthority(''DATA_COLLECTION'')')}"><a
+                                        href="/accounts/data_collection">DATA COLLECTION</a></li>
+
+                            </ul>
+
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+            <!-- /sidebar menu -->
+
+            <!-- /menu footer buttons -->
+            <div class="sidebar-footer hidden-small">
+                <a data-placement="top" data-toggle="tooltip" style="width:100%;" th:href="@{/logout}" title="Logout">
+                    <span aria-hidden="true" class="glyphicon glyphicon-off"></span>
+                </a>
+            </div>
+            <!-- /menu footer buttons -->
+        </div>
+    </div>
+
+    <!-- top navigation -->
+    <div class="top_nav">
+        <div class="nav_menu">
+            <nav>
+                <div class="nav toggle">
+                    <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+                </div>
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="">
+                        <a aria-expanded="false" class="user-profile dropdown-toggle" data-toggle="dropdown"
+                           href="javascript:">
+                            <img alt="" src="/images/user.png">
+                            <span th:text="${#authentication != null ? #authentication.name : 'User'}"></span>
+                            <span class=" fa fa-angle-down"></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-usermenu pull-right">
+                            <!-- <li><a href="javascript:;"> Profile</a></li>
+                            <li>
+                              <a href="javascript:;">
+                                <span class="badge bg-red pull-right">50%</span>
+                                <span>Settings</span>
+                              </a>
+                            </li>
+                            <li><a href="javascript:;">Help</a></li> -->
+                            <li><a th:href="@{/logout}"><i class="fa fa-sign-out pull-right"></i> Log Out</a></li>
+                        </ul>
+                    </li>
+
+
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <!-- /top navigation -->
+</div>
+
+<!-- jQuery -->
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap -->
+<script src="/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- FastClick -->
+<script src="/vendors/fastclick/lib/fastclick.js"></script>
+<!-- NProgress -->
+<script src="/vendors/nprogress/nprogress.js"></script>
+<!-- jQuery custom content scroller -->
+<script src="/vendors/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js"></script>
+
+<!-- Custom Theme Scripts -->
+<script src="/build/js/custom.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#sidebar-menu li').removeClass('active');
+        $('#sidebar-menu li ul').slideUp();
+    });
+
+
+</script>
+</body>
+</html>

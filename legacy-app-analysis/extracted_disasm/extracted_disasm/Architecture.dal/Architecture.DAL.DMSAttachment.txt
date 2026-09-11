@@ -1,0 +1,550 @@
+
+====================================================================================================
+CLASS Architecture.DAL.DMSAttachment
+====================================================================================================
+
+; Architecture.DAL.DMSAttachment::SetData  (rva=0x8998, fat header, code_size=65, max_stack=4, exception_handlers=yes)
+    IL_0000: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_0005: stloc.1
+    IL_0006: ldloc.1
+    IL_0007: callvirt System.Data.Common.DbConnection::Open
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.SqlClient.SqlConnection::BeginTransaction
+    IL_0012: stloc.2
+    IL_0013: ldloc.2
+    IL_0014: ldarg.1
+    IL_0015: ldarg.2
+    IL_0016: ldstr ldstr ""
+    IL_001b: call MethodSpec#94
+    IL_0020: call System.Convert::ToInt32
+    IL_0025: stloc.0
+    IL_0026: ldloc.2
+    IL_0027: callvirt System.Data.Common.DbTransaction::Commit
+    IL_002c: leave.s IL_003f
+    IL_002e: ldloc.2
+    IL_002f: callvirt System.Data.Common.DbTransaction::Rollback
+    IL_0034: throw
+    IL_0035: ldloc.1
+    IL_0036: brfalse.s IL_003e
+    IL_0038: ldloc.1
+    IL_0039: callvirt System.IDisposable::Dispose
+    IL_003e: endfinally
+    IL_003f: ldloc.0
+    IL_0040: ret
+
+; Architecture.DAL.DMSAttachment::SetDataList  (rva=0x8a04, fat header, code_size=1466, max_stack=5, exception_handlers=yes)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: newobj TypeSpec#78::.ctor
+    IL_0007: stloc.1
+    IL_0008: ldstr ldstr ""
+    IL_000d: stloc.2
+    IL_000e: ldarg.1
+    IL_000f: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_0014: ldc.i4.0
+    IL_0015: callvirt TypeSpec#79::get_Item
+    IL_001a: callvirt Architecture.Model.DMSAttachments::get_OrganizationId
+    IL_001f: ldarg.1
+    IL_0020: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_0025: ldc.i4.0
+    IL_0026: callvirt TypeSpec#79::get_Item
+    IL_002b: callvirt Architecture.Model.DMSAttachments::get_CompanyId
+    IL_0030: ldstr ldstr "IsVpsAttachmentsServiceOn"
+    IL_0035: call Architecture.DAL.Common.CommonServices::GetConfigurationFromAllocation
+    IL_003a: call Architecture.Common.Conversion::ToBool
+    IL_003f: stloc.3
+    IL_0040: newobj Architecture.Model.VPS.ServerCredentials::.ctor
+    IL_0045: stloc.s 4
+    IL_0047: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_004c: stloc.s 5
+    IL_004e: ldloc.s 5
+    IL_0050: callvirt System.Data.Common.DbConnection::Open
+    IL_0055: ldloc.s 5
+    IL_0057: callvirt System.Data.SqlClient.SqlConnection::BeginTransaction
+    IL_005c: stloc.s 6
+    IL_005e: ldloc.3
+    IL_005f: brfalse.s IL_006a
+    IL_0061: call Architecture.DAL.Common.CommonServices::GetServerCredentials
+    IL_0066: stloc.s 4
+    IL_0068: br.s IL_00c0
+    IL_006a: ldarg.1
+    IL_006b: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_0070: ldc.i4.0
+    IL_0071: callvirt TypeSpec#79::get_Item
+    IL_0076: callvirt Architecture.Model.DMSAttachments::get_OrganizationId
+    IL_007b: ldarg.1
+    IL_007c: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_0081: ldc.i4.0
+    IL_0082: callvirt TypeSpec#79::get_Item
+    IL_0087: callvirt Architecture.Model.DMSAttachments::get_CompanyId
+    IL_008c: ldstr ldstr "Attachment Folder Path"
+    IL_0091: call Architecture.DAL.Common.CommonServices::GetConfigurationFromAllocation
+    IL_0096: stloc.2
+    IL_0097: ldarg.1
+    IL_0098: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_009d: brfalse.s IL_00c0
+    IL_009f: ldarg.1
+    IL_00a0: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_00a5: callvirt TypeSpec#79::get_Count
+    IL_00aa: ldc.i4.0
+    IL_00ab: ble.s IL_00c0
+    IL_00ad: ldloc.2
+    IL_00ae: call System.IO.Directory::Exists
+    IL_00b3: brtrue.s IL_00c0
+    IL_00b5: ldstr ldstr "Attachment Folder Path Not Configure Properly"
+    IL_00ba: newobj System.Exception::.ctor
+    IL_00bf: throw
+    IL_00c0: ldarg.1
+    IL_00c1: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_00c6: brfalse IL_0476
+    IL_00cb: ldarg.1
+    IL_00cc: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_00d1: callvirt TypeSpec#79::get_Count
+    IL_00d6: ldc.i4.0
+    IL_00d7: ble IL_0476
+    IL_00dc: ldstr ldstr ""
+    IL_00e1: stloc.s 7
+    IL_00e3: ldstr ldstr ""
+    IL_00e8: stloc.s 8
+    IL_00ea: ldarg.1
+    IL_00eb: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_00f0: callvirt TypeSpec#79::GetEnumerator
+    IL_00f5: stloc.s 10
+    IL_00f7: br IL_0398
+    IL_00fc: ldloca.s 10
+    IL_00fe: call TypeSpec#82::get_Current
+    IL_0103: stloc.s 11
+    IL_0105: ldloc.s 11
+    IL_0107: callvirt Architecture.Model.DMSAttachments::get_Attachment
+    IL_010c: stloc.s 12
+    IL_010e: ldloc.s 11
+    IL_0110: ldloc.s 12
+    IL_0112: call System.IO.Path::GetFileName
+    IL_0117: callvirt Architecture.Model.DMSAttachments::set_Attachment
+    IL_011c: ldloc.s 12
+    IL_011e: ldc.i4.1
+    IL_011f: newarr System.Char
+    IL_0124: dup
+    IL_0125: ldc.i4.0
+    IL_0126: ldc.i4.s 63
+    IL_0128: stelem.i2
+    IL_0129: callvirt System.String::Split
+    IL_012e: ldc.i4.0
+    IL_012f: ldelem.ref
+    IL_0130: stloc.s 13
+    IL_0132: ldloc.s 13
+    IL_0134: ldc.i4.1
+    IL_0135: newarr System.Char
+    IL_013a: dup
+    IL_013b: ldc.i4.0
+    IL_013c: ldc.i4.s 46
+    IL_013e: stelem.i2
+    IL_013f: callvirt System.String::Split
+    IL_0144: ldlen
+    IL_0145: conv.i4
+    IL_0146: ldc.i4.1
+    IL_0147: bgt.s IL_0150
+    IL_0149: ldsfld System.String::Empty
+    IL_014e: br.s IL_0167
+    IL_0150: ldloc.s 13
+    IL_0152: ldc.i4.1
+    IL_0153: newarr System.Char
+    IL_0158: dup
+    IL_0159: ldc.i4.0
+    IL_015a: ldc.i4.s 46
+    IL_015c: stelem.i2
+    IL_015d: callvirt System.String::Split
+    IL_0162: call MethodSpec#151
+    IL_0167: stloc.s 14
+    IL_0169: call Architecture.DAL.Common.CommonServices::GenerateCustomFileName
+    IL_016e: ldstr ldstr "."
+    IL_0173: ldloc.s 14
+    IL_0175: call System.String::Concat
+    IL_017a: stloc.s 15
+    IL_017c: ldloc.s 11
+    IL_017e: ldloc.s 15
+    IL_0180: callvirt Architecture.Model.DMSAttachments::set_UploadedFileCustomName
+    IL_0185: ldloc.s 6
+    IL_0187: ldloc.s 11
+    IL_0189: ldarg.2
+    IL_018a: ldstr ldstr ""
+    IL_018f: call MethodSpec#94
+    IL_0194: call System.Convert::ToInt32
+    IL_0199: stloc.0
+    IL_019a: ldloc.s 7
+    IL_019c: ldstr ldstr ""
+    IL_01a1: call System.String::op_Equality
+    IL_01a6: brtrue.s IL_01c2
+    IL_01a8: ldloc.s 7
+    IL_01aa: ldstr ldstr ","
+    IL_01af: ldloc.s 11
+    IL_01b1: callvirt Architecture.Model.DMSAttachments::get_Attachment
+    IL_01b6: call System.IO.Path::GetFileName
+    IL_01bb: call System.String::Concat
+    IL_01c0: br.s IL_01ce
+    IL_01c2: ldloc.s 11
+    IL_01c4: callvirt Architecture.Model.DMSAttachments::get_Attachment
+    IL_01c9: call System.IO.Path::GetFileName
+    IL_01ce: stloc.s 7
+    IL_01d0: ldloc.s 8
+    IL_01d2: ldstr ldstr ""
+    IL_01d7: call System.String::op_Equality
+    IL_01dc: brtrue.s IL_01f3
+    IL_01de: ldloc.s 8
+    IL_01e0: ldstr ldstr ","
+    IL_01e5: ldloc.s 11
+    IL_01e7: callvirt Architecture.Model.DMSAttachments::get_UploadedFileCustomName
+    IL_01ec: call System.String::Concat
+    IL_01f1: br.s IL_01fa
+    IL_01f3: ldloc.s 11
+    IL_01f5: callvirt Architecture.Model.DMSAttachments::get_UploadedFileCustomName
+    IL_01fa: stloc.s 8
+    IL_01fc: ldloc.3
+    IL_01fd: brtrue.s IL_022c
+    IL_01ff: ldloc.2
+    IL_0200: ldloc.s 15
+    IL_0202: call System.IO.Path::Combine
+    IL_0207: stloc.s 16
+    IL_0209: ldloc.s 16
+    IL_020b: call System.IO.File::Exists
+    IL_0210: brtrue IL_0398
+    IL_0215: ldloc.1
+    IL_0216: ldloc.s 16
+    IL_0218: callvirt TypeSpec#78::Add
+    IL_021d: ldloc.s 12
+    IL_021f: ldloc.s 16
+    IL_0221: ldc.i4.1
+    IL_0222: call System.IO.File::Copy
+    IL_0227: br IL_0398
+    IL_022c: ldstr ldstr "ftp://"
+    IL_0231: ldloc.s 4
+    IL_0233: callvirt Architecture.Model.VPS.ServerCredentials::get_ServerIp
+    IL_0238: ldstr ldstr "/"
+    IL_023d: ldloc.s 11
+    IL_023f: callvirt Architecture.Model.DMSAttachments::get_UploadedFileCustomName
+    IL_0244: call System.String::Concat
+    IL_0249: stloc.s 17
+    IL_024b: ldloc.s 17
+    IL_024d: call System.Net.WebRequest::Create
+    IL_0252: castclass System.Net.FtpWebRequest
+    IL_0257: stloc.s 18
+    IL_0259: ldloc.s 18
+    IL_025b: ldstr ldstr "STOR"
+    IL_0260: callvirt System.Net.WebRequest::set_Method
+    IL_0265: ldloc.s 18
+    IL_0267: ldc.i4.1
+    IL_0268: callvirt System.Net.FtpWebRequest::set_UsePassive
+    IL_026d: ldloc.s 18
+    IL_026f: ldc.i4.1
+    IL_0270: callvirt System.Net.FtpWebRequest::set_UseBinary
+    IL_0275: ldloc.s 18
+    IL_0277: ldc.i4.0
+    IL_0278: callvirt System.Net.FtpWebRequest::set_KeepAlive
+    IL_027d: ldloc.s 18
+    IL_027f: ldloc.s 4
+    IL_0281: callvirt Architecture.Model.VPS.ServerCredentials::get_UserName
+    IL_0286: ldloc.s 4
+    IL_0288: callvirt Architecture.Model.VPS.ServerCredentials::get_Password
+    IL_028d: newobj System.Net.NetworkCredential::.ctor
+    IL_0292: callvirt System.Net.WebRequest::set_Credentials
+    IL_0297: ldloc.s 12
+    IL_0299: newobj System.IO.FileInfo::.ctor
+    IL_029e: stloc.s 19
+    IL_02a0: ldloc.s 19
+    IL_02a2: callvirt System.IO.FileInfo::OpenRead
+    IL_02a7: stloc.s 21
+    IL_02a9: ldloc.s 19
+    IL_02ab: callvirt System.IO.FileInfo::get_Length
+    IL_02b0: conv.ovf.i
+    IL_02b1: newarr System.Byte
+    IL_02b6: stloc.s 20
+    IL_02b8: ldloc.s 21
+    IL_02ba: ldloc.s 20
+    IL_02bc: ldc.i4.0
+    IL_02bd: ldloc.s 20
+    IL_02bf: ldlen
+    IL_02c0: conv.i4
+    IL_02c1: callvirt System.IO.Stream::Read
+    IL_02c6: pop
+    IL_02c7: leave.s IL_02d5
+    IL_02c9: ldloc.s 21
+    IL_02cb: brfalse.s IL_02d4
+    IL_02cd: ldloc.s 21
+    IL_02cf: callvirt System.IDisposable::Dispose
+    IL_02d4: endfinally
+    IL_02d5: ldloc.s 18
+    IL_02d7: ldloc.s 20
+    IL_02d9: ldlen
+    IL_02da: conv.i4
+    IL_02db: conv.i8
+    IL_02dc: callvirt System.Net.WebRequest::set_ContentLength
+    IL_02e1: ldloc.s 18
+    IL_02e3: callvirt System.Net.WebRequest::GetRequestStream
+    IL_02e8: stloc.s 22
+    IL_02ea: ldloc.s 22
+    IL_02ec: ldloc.s 20
+    IL_02ee: ldc.i4.0
+    IL_02ef: ldloc.s 20
+    IL_02f1: ldlen
+    IL_02f2: conv.i4
+    IL_02f3: callvirt System.IO.Stream::Write
+    IL_02f8: leave.s IL_0306
+    IL_02fa: ldloc.s 22
+    IL_02fc: brfalse.s IL_0305
+    IL_02fe: ldloc.s 22
+    IL_0300: callvirt System.IDisposable::Dispose
+    IL_0305: endfinally
+    IL_0306: ldloc.s 18
+    IL_0308: callvirt System.Net.WebRequest::GetResponse
+    IL_030d: castclass System.Net.FtpWebResponse
+    IL_0312: stloc.s 23
+    IL_0314: ldloc.1
+    IL_0315: ldloc.s 11
+    IL_0317: callvirt Architecture.Model.DMSAttachments::get_UploadedFileCustomName
+    IL_031c: callvirt TypeSpec#78::Add
+    IL_0321: leave.s IL_032f
+    IL_0323: ldloc.s 23
+    IL_0325: brfalse.s IL_032e
+    IL_0327: ldloc.s 23
+    IL_0329: callvirt System.IDisposable::Dispose
+    IL_032e: endfinally
+    IL_032f: leave.s IL_0398
+    IL_0331: stloc.s 24
+    IL_0333: ldloc.s 24
+    IL_0335: callvirt System.Net.WebException::get_Response
+    IL_033a: isinst System.Net.FtpWebResponse
+    IL_033f: stloc.s 25
+    IL_0341: ldloc.s 25
+    IL_0343: brfalse.s IL_0368
+    IL_0345: ldstr ldstr "FTP Error: "
+    IL_034a: ldloc.s 25
+    IL_034c: callvirt System.Net.FtpWebResponse::get_StatusDescription
+    IL_0351: ldstr ldstr " - "
+    IL_0356: ldloc.s 24
+    IL_0358: callvirt System.Exception::get_Message
+    IL_035d: call System.String::Concat
+    IL_0362: newobj System.Exception::.ctor
+    IL_0367: throw
+    IL_0368: ldstr ldstr "Error: "
+    IL_036d: ldloc.s 24
+    IL_036f: callvirt System.Exception::get_Message
+    IL_0374: call System.String::Concat
+    IL_0379: newobj System.Exception::.ctor
+    IL_037e: throw
+    IL_037f: stloc.s 26
+    IL_0381: ldstr ldstr "Error: "
+    IL_0386: ldloc.s 26
+    IL_0388: callvirt System.Exception::get_Message
+    IL_038d: call System.String::Concat
+    IL_0392: newobj System.Exception::.ctor
+    IL_0397: throw
+    IL_0398: ldloca.s 10
+    IL_039a: call TypeSpec#82::MoveNext
+    IL_039f: brtrue IL_00fc
+    IL_03a4: leave.s IL_03b4
+    IL_03a6: ldloca.s 10
+    IL_03a8: constrained. TypeSpec#82
+    IL_03ae: callvirt System.IDisposable::Dispose
+    IL_03b3: endfinally
+    IL_03b4: newobj System.Data.SqlClient.SqlCommand::.ctor
+    IL_03b9: dup
+    IL_03ba: ldloc.s 5
+    IL_03bc: callvirt System.Data.SqlClient.SqlCommand::set_Connection
+    IL_03c1: dup
+    IL_03c2: ldloc.s 6
+    IL_03c4: callvirt System.Data.SqlClient.SqlCommand::set_Transaction
+    IL_03c9: dup
+    IL_03ca: ldc.i4.4
+    IL_03cb: callvirt System.Data.Common.DbCommand::set_CommandType
+    IL_03d0: dup
+    IL_03d1: ldstr ldstr "[dbo].[USP_DMS_UpdateAttachmentsValuesOfRefDocument]"
+    IL_03d6: callvirt System.Data.Common.DbCommand::set_CommandText
+    IL_03db: stloc.s 9
+    IL_03dd: ldloc.s 9
+    IL_03df: callvirt System.Data.SqlClient.SqlCommand::get_Parameters
+    IL_03e4: ldstr ldstr "@AttachmentName"
+    IL_03e9: ldloc.s 7
+    IL_03eb: callvirt System.Data.SqlClient.SqlParameterCollection::AddWithValue
+    IL_03f0: pop
+    IL_03f1: ldloc.s 8
+    IL_03f3: brfalse.s IL_0417
+    IL_03f5: ldloc.s 8
+    IL_03f7: ldsfld System.String::Empty
+    IL_03fc: call System.String::op_Inequality
+    IL_0401: brfalse.s IL_0417
+    IL_0403: ldloc.s 9
+    IL_0405: callvirt System.Data.SqlClient.SqlCommand::get_Parameters
+    IL_040a: ldstr ldstr "@CustomAttachmentsValues"
+    IL_040f: ldloc.s 8
+    IL_0411: callvirt System.Data.SqlClient.SqlParameterCollection::AddWithValue
+    IL_0416: pop
+    IL_0417: ldloc.s 9
+    IL_0419: callvirt System.Data.SqlClient.SqlCommand::get_Parameters
+    IL_041e: ldstr ldstr "@RefDocumentTypeId"
+    IL_0423: ldarg.1
+    IL_0424: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_0429: ldc.i4.0
+    IL_042a: callvirt TypeSpec#79::get_Item
+    IL_042f: callvirt Architecture.Model.DMSAttachments::get_RefDocumentTypeId
+    IL_0434: box System.Int32
+    IL_0439: callvirt System.Data.SqlClient.SqlParameterCollection::AddWithValue
+    IL_043e: pop
+    IL_043f: ldloc.s 9
+    IL_0441: callvirt System.Data.SqlClient.SqlCommand::get_Parameters
+    IL_0446: ldstr ldstr "@Id"
+    IL_044b: ldarg.1
+    IL_044c: callvirt Architecture.Model.DMSAttachments::get_AttachmentList
+    IL_0451: ldc.i4.0
+    IL_0452: callvirt TypeSpec#79::get_Item
+    IL_0457: callvirt Architecture.Model.DMSAttachments::get_RefDocumentNo
+    IL_045c: box System.Int32
+    IL_0461: callvirt System.Data.SqlClient.SqlParameterCollection::AddWithValue
+    IL_0466: pop
+    IL_0467: ldloc.s 9
+    IL_0469: callvirt System.Data.Common.DbCommand::ExecuteNonQuery
+    IL_046e: pop
+    IL_046f: ldloc.s 6
+    IL_0471: callvirt System.Data.Common.DbTransaction::Commit
+    IL_0476: leave IL_05b8
+    IL_047b: stloc.s 27
+    IL_047d: ldloc.s 6
+    IL_047f: callvirt System.Data.Common.DbTransaction::Rollback
+    IL_0484: ldloc.1
+    IL_0485: callvirt TypeSpec#78::GetEnumerator
+    IL_048a: stloc.s 28
+    IL_048c: br IL_058d
+    IL_0491: ldloca.s 28
+    IL_0493: call TypeSpec#120::get_Current
+    IL_0498: stloc.s 29
+    IL_049a: ldloc.3
+    IL_049b: brtrue.s IL_0504
+    IL_049d: ldloc.s 29
+    IL_049f: ldc.i4.3
+    IL_04a0: ldc.i4.3
+    IL_04a1: newobj System.IO.FileStream::.ctor
+    IL_04a6: stloc.s 32
+    IL_04a8: ldloc.s 32
+    IL_04aa: callvirt System.IO.Stream::Flush
+    IL_04af: ldloc.s 32
+    IL_04b1: callvirt System.IO.Stream::Close
+    IL_04b6: ldloc.s 32
+    IL_04b8: callvirt System.IO.Stream::Dispose
+    IL_04bd: leave.s IL_04cb
+    IL_04bf: ldloc.s 32
+    IL_04c1: brfalse.s IL_04ca
+    IL_04c3: ldloc.s 32
+    IL_04c5: callvirt System.IDisposable::Dispose
+    IL_04ca: endfinally
+    IL_04cb: ldc.i4.0
+    IL_04cc: stloc.s 30
+    IL_04ce: ldc.i4.0
+    IL_04cf: stloc.s 31
+    IL_04d1: br.s IL_04f3
+    IL_04d3: nop
+    IL_04d4: ldloc.s 29
+    IL_04d6: call System.IO.File::Delete
+    IL_04db: ldc.i4.1
+    IL_04dc: stloc.s 30
+    IL_04de: leave.s IL_04f3
+    IL_04e0: pop
+    IL_04e1: ldloc.s 31
+    IL_04e3: ldc.i4.1
+    IL_04e4: add
+    IL_04e5: stloc.s 31
+    IL_04e7: ldc.i4 500
+    IL_04ec: call System.Threading.Thread::Sleep
+    IL_04f1: leave.s IL_04f3
+    IL_04f3: ldloc.s 30
+    IL_04f5: brtrue IL_058d
+    IL_04fa: ldloc.s 31
+    IL_04fc: ldc.i4.5
+    IL_04fd: blt.s IL_04d3
+    IL_04ff: br IL_058d
+    IL_0504: ldstr ldstr "ftp://"
+    IL_0509: ldloc.s 4
+    IL_050b: callvirt Architecture.Model.VPS.ServerCredentials::get_ServerIp
+    IL_0510: ldstr ldstr "/"
+    IL_0515: ldloc.s 29
+    IL_0517: call System.String::Concat
+    IL_051c: stloc.s 33
+    IL_051e: ldloc.s 33
+    IL_0520: call System.Net.WebRequest::Create
+    IL_0525: castclass System.Net.FtpWebRequest
+    IL_052a: dup
+    IL_052b: ldstr ldstr "DELE"
+    IL_0530: callvirt System.Net.WebRequest::set_Method
+    IL_0535: dup
+    IL_0536: ldc.i4.1
+    IL_0537: callvirt System.Net.FtpWebRequest::set_UsePassive
+    IL_053c: dup
+    IL_053d: ldloc.s 4
+    IL_053f: callvirt Architecture.Model.VPS.ServerCredentials::get_UserName
+    IL_0544: ldloc.s 4
+    IL_0546: callvirt Architecture.Model.VPS.ServerCredentials::get_Password
+    IL_054b: newobj System.Net.NetworkCredential::.ctor
+    IL_0550: callvirt System.Net.WebRequest::set_Credentials
+    IL_0555: callvirt System.Net.WebRequest::GetResponse
+    IL_055a: castclass System.Net.FtpWebResponse
+    IL_055f: stloc.s 34
+    IL_0561: ldloc.s 34
+    IL_0563: callvirt System.Net.FtpWebResponse::get_StatusCode
+    IL_0568: ldc.i4 250
+    IL_056d: beq.s IL_057a
+    IL_056f: ldstr ldstr "Failed to delete file from VPS."
+    IL_0574: newobj System.Exception::.ctor
+    IL_0579: throw
+    IL_057a: leave.s IL_0588
+    IL_057c: ldloc.s 34
+    IL_057e: brfalse.s IL_0587
+    IL_0580: ldloc.s 34
+    IL_0582: callvirt System.IDisposable::Dispose
+    IL_0587: endfinally
+    IL_0588: leave.s IL_058d
+    IL_058a: pop
+    IL_058b: leave.s IL_058d
+    IL_058d: ldloca.s 28
+    IL_058f: call TypeSpec#120::MoveNext
+    IL_0594: brtrue IL_0491
+    IL_0599: leave.s IL_05a9
+    IL_059b: ldloca.s 28
+    IL_059d: constrained. TypeSpec#120
+    IL_05a3: callvirt System.IDisposable::Dispose
+    IL_05a8: endfinally
+    IL_05a9: ldloc.s 27
+    IL_05ab: throw
+    IL_05ac: ldloc.s 5
+    IL_05ae: brfalse.s IL_05b7
+    IL_05b0: ldloc.s 5
+    IL_05b2: callvirt System.IDisposable::Dispose
+    IL_05b7: endfinally
+    IL_05b8: ldloc.0
+    IL_05b9: ret
+
+; Architecture.DAL.DMSAttachment::GetData  (rva=0x9108, fat header, code_size=46, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#79::.ctor
+    IL_0005: stloc.0
+    IL_0006: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.Common.DbConnection::Open
+    IL_0012: ldloc.1
+    IL_0013: ldarg.1
+    IL_0014: ldarg.2
+    IL_0015: call MethodSpec#152
+    IL_001a: stloc.0
+    IL_001b: leave.s IL_0027
+    IL_001d: ldloc.1
+    IL_001e: brfalse.s IL_0026
+    IL_0020: ldloc.1
+    IL_0021: callvirt System.IDisposable::Dispose
+    IL_0026: endfinally
+    IL_0027: leave.s IL_002c
+    IL_0029: pop
+    IL_002a: rethrow
+    IL_002c: ldloc.0
+    IL_002d: ret
+
+; Architecture.DAL.DMSAttachment::.ctor  (rva=0x9160, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call System.Object::.ctor
+    IL_0006: ret

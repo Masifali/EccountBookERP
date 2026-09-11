@@ -1,0 +1,1866 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.UserRightsManagement.UserRightsEditing
+====================================================================================================
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::.ctor  (rva=0x196be7a, tiny header, code_size=53, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj Architecture.WinApp.Common.DropDownBind::.ctor
+    IL_0006: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::DDL
+    IL_000b: ldarg.0
+    IL_000c: newobj Architecture.Model.UserAccount::.ctor
+    IL_0011: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserAccount
+    IL_0016: ldarg.0
+    IL_0017: newobj TypeSpec#298::.ctor
+    IL_001c: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ModuleList
+    IL_0021: ldarg.0
+    IL_0022: call System.Windows.Forms.Form::.ctor
+    IL_0027: ldarg.0
+    IL_0028: call Architecture.WinApp.UserRightsManagement.UserRightsEditing::InitializeComponent
+    IL_002d: ldarg.0
+    IL_002e: ldarg.1
+    IL_002f: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserAccount
+    IL_0034: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserRightsEditing_Load  (rva=0x196beb0, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserNameFill
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserNameFill  (rva=0x196bee4, fat header, code_size=114, max_stack=7, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.UserAccount::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.UserAccount::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserAccount
+    IL_001d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0022: callvirt Architecture.Model.UserAccount::set_CompanyId
+    IL_0027: call Architecture.BLL.UserAccount::ReadAll
+    IL_002c: stloc.0
+    IL_002d: ldloc.0
+    IL_002e: callvirt System.Data.DataTable::get_Rows
+    IL_0033: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0038: ldc.i4.0
+    IL_0039: ble.s IL_0062
+    IL_003b: ldarg.0
+    IL_003c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::DDL
+    IL_0041: ldloc.0
+    IL_0042: ldarg.0
+    IL_0043: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0048: ldstr ldstr "Id"
+    IL_004d: ldstr ldstr "UserName"
+    IL_0052: ldstr ldstr "UserName"
+    IL_0057: ldc.i4.0
+    IL_0058: newobj TypeSpec#263::.ctor
+    IL_005d: callvirt Architecture.WinApp.Common.DropDownBind::BindDDLNew
+    IL_0062: leave.s IL_0071
+    IL_0064: callvirt System.Exception::get_Message
+    IL_0069: call System.Windows.Forms.MessageBox::Show
+    IL_006e: pop
+    IL_006f: leave.s IL_0071
+    IL_0071: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName_Leave  (rva=0x196bf74, fat header, code_size=22, max_stack=1, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.UserRightsManagement.UserRightsEditing::CompanyNameFill
+    IL_0006: leave.s IL_0015
+    IL_0008: callvirt System.Exception::get_Message
+    IL_000d: call System.Windows.Forms.MessageBox::Show
+    IL_0012: pop
+    IL_0013: leave.s IL_0015
+    IL_0015: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::CompanyNameFill  (rva=0x196bfa8, fat header, code_size=126, max_stack=7, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.UserAccountAllocation::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserAccount
+    IL_000c: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0011: callvirt Architecture.Model.UserAccountAllocation::set_OrganizationId
+    IL_0016: dup
+    IL_0017: ldc.i4.1
+    IL_0018: callvirt Architecture.Model.UserAccountAllocation::set_IsActive
+    IL_001d: dup
+    IL_001e: ldarg.0
+    IL_001f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0024: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0029: call Architecture.Common.Conversion::ToInt
+    IL_002e: callvirt Architecture.Model.UserAccountAllocation::set_UserAccountId
+    IL_0033: call Architecture.BLL.UserAccountAllocation::GetAllCompaniesByUserId
+    IL_0038: stloc.0
+    IL_0039: ldloc.0
+    IL_003a: callvirt System.Data.DataTable::get_Rows
+    IL_003f: callvirt System.Data.InternalDataCollectionBase::get_Count
+    IL_0044: ldc.i4.0
+    IL_0045: ble.s IL_006e
+    IL_0047: ldarg.0
+    IL_0048: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::DDL
+    IL_004d: ldloc.0
+    IL_004e: ldarg.0
+    IL_004f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0054: ldstr ldstr "CompanyId"
+    IL_0059: ldstr ldstr "CompName"
+    IL_005e: ldstr ldstr "Company"
+    IL_0063: ldc.i4.0
+    IL_0064: newobj TypeSpec#263::.ctor
+    IL_0069: callvirt Architecture.WinApp.Common.DropDownBind::BindDDLNew
+    IL_006e: leave.s IL_007d
+    IL_0070: callvirt System.Exception::get_Message
+    IL_0075: call System.Windows.Forms.MessageBox::Show
+    IL_007a: pop
+    IL_007b: leave.s IL_007d
+    IL_007d: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::FormValidation  (rva=0x196c044, fat header, code_size=78, max_stack=1, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0006: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_ActiveRow
+    IL_000b: brtrue.s IL_0026
+    IL_000d: ldstr ldstr "User Name Field is Required"
+    IL_0012: call System.Windows.Forms.MessageBox::Show
+    IL_0017: pop
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_001e: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_0023: pop
+    IL_0024: ldc.i4.0
+    IL_0025: ret
+    IL_0026: ldarg.0
+    IL_0027: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_002c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_ActiveRow
+    IL_0031: brtrue.s IL_004c
+    IL_0033: ldstr ldstr "Company Field is Required"
+    IL_0038: call System.Windows.Forms.MessageBox::Show
+    IL_003d: pop
+    IL_003e: ldarg.0
+    IL_003f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0044: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::Focus
+    IL_0049: pop
+    IL_004a: ldc.i4.0
+    IL_004b: ret
+    IL_004c: ldc.i4.1
+    IL_004d: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights_Click  (rva=0x196c0a0, fat header, code_size=68, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.UserRightsManagement.UserRightsEditing::FormValidation
+    IL_0006: pop
+    IL_0007: ldarg.0
+    IL_0008: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_000d: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0012: call Architecture.Common.Conversion::ToInt
+    IL_0017: ldarg.0
+    IL_0018: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_001d: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0022: call Architecture.Common.Conversion::ToInt
+    IL_0027: call Architecture.BLL.tblUserRights::GetbyId
+    IL_002c: stloc.0
+    IL_002d: ldarg.0
+    IL_002e: ldloc.0
+    IL_002f: call Architecture.WinApp.UserRightsManagement.UserRightsEditing::GridFill
+    IL_0034: leave.s IL_0043
+    IL_0036: callvirt System.Exception::get_Message
+    IL_003b: call System.Windows.Forms.MessageBox::Show
+    IL_0040: pop
+    IL_0041: leave.s IL_0043
+    IL_0043: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::GridFill  (rva=0x196c100, fat header, code_size=844, max_stack=6, exception_handlers=yes)
+    IL_0000: newobj System.Data.DataTable::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: callvirt System.Data.DataTable::get_Columns
+    IL_000c: ldstr ldstr "ModuleID"
+    IL_0011: callvirt System.Data.DataColumnCollection::Add
+    IL_0016: pop
+    IL_0017: ldloc.0
+    IL_0018: callvirt System.Data.DataTable::get_Columns
+    IL_001d: ldstr ldstr "RightName"
+    IL_0022: callvirt System.Data.DataColumnCollection::Add
+    IL_0027: pop
+    IL_0028: ldloc.0
+    IL_0029: callvirt System.Data.DataTable::get_Columns
+    IL_002e: ldstr ldstr "ModuleDescription"
+    IL_0033: callvirt System.Data.DataColumnCollection::Add
+    IL_0038: pop
+    IL_0039: ldloc.0
+    IL_003a: callvirt System.Data.DataTable::get_Columns
+    IL_003f: ldstr ldstr "ScreenName"
+    IL_0044: callvirt System.Data.DataColumnCollection::Add
+    IL_0049: pop
+    IL_004a: ldloc.0
+    IL_004b: callvirt System.Data.DataTable::get_Columns
+    IL_0050: ldstr ldstr "ScreenAlias"
+    IL_0055: callvirt System.Data.DataColumnCollection::Add
+    IL_005a: pop
+    IL_005b: ldloc.0
+    IL_005c: callvirt System.Data.DataTable::get_Columns
+    IL_0061: ldstr ldstr "RightsID"
+    IL_0066: callvirt System.Data.DataColumnCollection::Add
+    IL_006b: pop
+    IL_006c: ldloc.0
+    IL_006d: callvirt System.Data.DataTable::get_Columns
+    IL_0072: ldstr ldstr "ScreenID"
+    IL_0077: callvirt System.Data.DataColumnCollection::Add
+    IL_007c: pop
+    IL_007d: ldloc.0
+    IL_007e: callvirt System.Data.DataTable::get_Columns
+    IL_0083: ldstr ldstr "Value"
+    IL_0088: callvirt System.Data.DataColumnCollection::Add
+    IL_008d: pop
+    IL_008e: ldarg.0
+    IL_008f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0094: ldnull
+    IL_0095: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_009a: ldloc.0
+    IL_009b: callvirt System.Data.DataTable::Clear
+    IL_00a0: ldc.i4.0
+    IL_00a1: stloc.1
+    IL_00a2: br IL_0149
+    IL_00a7: ldloc.0
+    IL_00a8: callvirt System.Data.DataTable::get_Rows
+    IL_00ad: ldc.i4.8
+    IL_00ae: newarr System.Object
+    IL_00b3: dup
+    IL_00b4: ldc.i4.0
+    IL_00b5: ldarg.1
+    IL_00b6: ldloc.1
+    IL_00b7: callvirt TypeSpec#298::get_Item
+    IL_00bc: callvirt Architecture.Model.tblUserRights::get_ModuleID
+    IL_00c1: box System.Int32
+    IL_00c6: stelem.ref
+    IL_00c7: dup
+    IL_00c8: ldc.i4.1
+    IL_00c9: ldarg.1
+    IL_00ca: ldloc.1
+    IL_00cb: callvirt TypeSpec#298::get_Item
+    IL_00d0: callvirt Architecture.Model.tblUserRights::get_RightName
+    IL_00d5: stelem.ref
+    IL_00d6: dup
+    IL_00d7: ldc.i4.2
+    IL_00d8: ldarg.1
+    IL_00d9: ldloc.1
+    IL_00da: callvirt TypeSpec#298::get_Item
+    IL_00df: callvirt Architecture.Model.tblUserRights::get_ModuleDescription
+    IL_00e4: stelem.ref
+    IL_00e5: dup
+    IL_00e6: ldc.i4.3
+    IL_00e7: ldarg.1
+    IL_00e8: ldloc.1
+    IL_00e9: callvirt TypeSpec#298::get_Item
+    IL_00ee: callvirt Architecture.Model.tblUserRights::get_ScreenName
+    IL_00f3: stelem.ref
+    IL_00f4: dup
+    IL_00f5: ldc.i4.4
+    IL_00f6: ldarg.1
+    IL_00f7: ldloc.1
+    IL_00f8: callvirt TypeSpec#298::get_Item
+    IL_00fd: callvirt Architecture.Model.tblUserRights::get_ScreenAlias
+    IL_0102: stelem.ref
+    IL_0103: dup
+    IL_0104: ldc.i4.5
+    IL_0105: ldarg.1
+    IL_0106: ldloc.1
+    IL_0107: callvirt TypeSpec#298::get_Item
+    IL_010c: callvirt Architecture.Model.tblUserRights::get_RightsID
+    IL_0111: box System.Int32
+    IL_0116: stelem.ref
+    IL_0117: dup
+    IL_0118: ldc.i4.6
+    IL_0119: ldarg.1
+    IL_011a: ldloc.1
+    IL_011b: callvirt TypeSpec#298::get_Item
+    IL_0120: callvirt Architecture.Model.tblUserRights::get_ScreenID
+    IL_0125: box System.Int32
+    IL_012a: stelem.ref
+    IL_012b: dup
+    IL_012c: ldc.i4.7
+    IL_012d: ldarg.1
+    IL_012e: ldloc.1
+    IL_012f: callvirt TypeSpec#298::get_Item
+    IL_0134: callvirt Architecture.Model.tblUserRights::get_Value
+    IL_0139: box System.Boolean
+    IL_013e: stelem.ref
+    IL_013f: callvirt System.Data.DataRowCollection::Add
+    IL_0144: pop
+    IL_0145: ldloc.1
+    IL_0146: ldc.i4.1
+    IL_0147: add
+    IL_0148: stloc.1
+    IL_0149: ldloc.1
+    IL_014a: ldarg.1
+    IL_014b: callvirt TypeSpec#298::get_Count
+    IL_0150: blt IL_00a7
+    IL_0155: ldarg.0
+    IL_0156: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_015b: ldloc.0
+    IL_015c: callvirt Janus.Windows.GridEX.GridEX::set_DataSource
+    IL_0161: ldarg.0
+    IL_0162: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0167: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_016c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0171: ldstr ldstr "RightName"
+    IL_0176: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_017b: ldc.i4.0
+    IL_017c: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_0181: ldarg.0
+    IL_0182: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0187: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_018c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0191: ldstr ldstr "ScreenAlias"
+    IL_0196: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_019b: ldc.i4.0
+    IL_019c: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_01a1: ldarg.0
+    IL_01a2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_01a7: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_01ac: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01b1: ldstr ldstr "RightsID"
+    IL_01b6: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01bb: ldc.i4.0
+    IL_01bc: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_01c1: ldarg.0
+    IL_01c2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_01c7: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_01cc: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01d1: ldstr ldstr "ScreenID"
+    IL_01d6: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01db: ldc.i4.0
+    IL_01dc: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_01e1: ldarg.0
+    IL_01e2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_01e7: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_01ec: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_01f1: ldstr ldstr "Value"
+    IL_01f6: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_01fb: ldc.i4.8
+    IL_01fc: callvirt Janus.Windows.GridEX.GridEXColumn::set_EditType
+    IL_0201: ldarg.0
+    IL_0202: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0207: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_020c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0211: ldstr ldstr "RightName"
+    IL_0216: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_021b: ldc.i4.1
+    IL_021c: callvirt Janus.Windows.GridEX.GridEXColumn::set_FilterEditType
+    IL_0221: ldarg.0
+    IL_0222: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0227: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_022c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0231: ldstr ldstr "ScreenAlias"
+    IL_0236: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_023b: ldc.i4.1
+    IL_023c: callvirt Janus.Windows.GridEX.GridEXColumn::set_FilterEditType
+    IL_0241: ldarg.0
+    IL_0242: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0247: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_024c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0251: ldstr ldstr "RightsID"
+    IL_0256: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_025b: ldc.i4.1
+    IL_025c: callvirt Janus.Windows.GridEX.GridEXColumn::set_FilterEditType
+    IL_0261: ldarg.0
+    IL_0262: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0267: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_026c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0271: ldstr ldstr "ScreenID"
+    IL_0276: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_027b: ldc.i4.1
+    IL_027c: callvirt Janus.Windows.GridEX.GridEXColumn::set_FilterEditType
+    IL_0281: ldarg.0
+    IL_0282: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0287: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_028c: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0291: ldstr ldstr "Value"
+    IL_0296: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_029b: ldc.i4.7
+    IL_029c: callvirt Janus.Windows.GridEX.GridEXColumn::set_FilterEditType
+    IL_02a1: ldarg.0
+    IL_02a2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02a7: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_02ac: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_02b1: ldstr ldstr "Value"
+    IL_02b6: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_02bb: ldc.i4.3
+    IL_02bc: callvirt Janus.Windows.GridEX.GridEXColumn::set_ColumnType
+    IL_02c1: ldarg.0
+    IL_02c2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02c7: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_02cc: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_02d1: ldstr ldstr "Value"
+    IL_02d6: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_02db: ldstr ldstr "True"
+    IL_02e0: callvirt Janus.Windows.GridEX.GridEXColumn::set_CheckBoxTrueValue
+    IL_02e5: ldarg.0
+    IL_02e6: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02eb: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_02f0: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_02f5: ldstr ldstr "Value"
+    IL_02fa: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_02ff: ldstr ldstr "False"
+    IL_0304: callvirt Janus.Windows.GridEX.GridEXColumn::set_CheckBoxFalseValue
+    IL_0309: ldarg.0
+    IL_030a: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_030f: callvirt Janus.Windows.GridEX.GridEX::get_RootTable
+    IL_0314: callvirt Janus.Windows.GridEX.GridEXTable::get_Columns
+    IL_0319: ldstr ldstr "Value"
+    IL_031e: callvirt Janus.Windows.GridEX.GridEXColumnCollection::get_Item
+    IL_0323: ldc.i4.1
+    IL_0324: callvirt Janus.Windows.GridEX.GridEXColumn::set_UseHeaderSelector
+    IL_0329: ldarg.0
+    IL_032a: ldnull
+    IL_032b: ldnull
+    IL_032c: call Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar_Load
+    IL_0331: ldarg.0
+    IL_0332: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0337: callvirt Janus.Windows.GridEX.GridEX::CollapseGroups
+    IL_033c: leave.s IL_034b
+    IL_033e: callvirt System.Exception::get_Message
+    IL_0343: call System.Windows.Forms.MessageBox::Show
+    IL_0348: pop
+    IL_0349: leave.s IL_034b
+    IL_034b: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights_CellUpdated  (rva=0x196c474, tiny header, code_size=13, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0006: callvirt Janus.Windows.GridEX.GridEX::UpdateData
+    IL_000b: pop
+    IL_000c: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave_Click  (rva=0x196c484, fat header, code_size=327, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.tblUserRights::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldarg.0
+    IL_0008: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserAccount
+    IL_000d: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0012: callvirt Architecture.Model.tblUserRights::set_CompanyId
+    IL_0017: ldloc.0
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_001e: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0023: call Architecture.Common.Conversion::ToInt
+    IL_0028: callvirt Architecture.Model.tblUserRights::set_UserId
+    IL_002d: ldloc.0
+    IL_002e: newobj TypeSpec#298::.ctor
+    IL_0033: callvirt Architecture.Model.tblUserRights::set_TblUserRightslst
+    IL_0038: ldarg.0
+    IL_0039: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_003e: callvirt Janus.Windows.GridEX.GridEX::GetDataRows
+    IL_0043: stloc.1
+    IL_0044: ldc.i4.0
+    IL_0045: stloc.2
+    IL_0046: br IL_0107
+    IL_004b: ldloc.1
+    IL_004c: ldloc.2
+    IL_004d: ldelem.ref
+    IL_004e: stloc.3
+    IL_004f: newobj Architecture.Model.tblUserRights::.ctor
+    IL_0054: stloc.s 4
+    IL_0056: ldloc.s 4
+    IL_0058: ldarg.0
+    IL_0059: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_005e: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_0063: call Architecture.Common.Conversion::ToInt
+    IL_0068: callvirt Architecture.Model.tblUserRights::set_UserId
+    IL_006d: ldloc.s 4
+    IL_006f: ldloc.3
+    IL_0070: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_0075: ldstr ldstr "ScreenID"
+    IL_007a: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_007f: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_0084: callvirt System.Object::ToString
+    IL_0089: call Architecture.Common.Conversion::ToInt
+    IL_008e: callvirt Architecture.Model.tblUserRights::set_ScreenID
+    IL_0093: ldloc.s 4
+    IL_0095: ldloc.3
+    IL_0096: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_009b: ldstr ldstr "RightsID"
+    IL_00a0: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_00a5: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_00aa: callvirt System.Object::ToString
+    IL_00af: call Architecture.Common.Conversion::ToInt
+    IL_00b4: callvirt Architecture.Model.tblUserRights::set_RightsID
+    IL_00b9: ldloc.s 4
+    IL_00bb: ldloc.3
+    IL_00bc: callvirt Janus.Windows.GridEX.GridEXRow::get_Cells
+    IL_00c1: ldstr ldstr "Value"
+    IL_00c6: callvirt Janus.Windows.GridEX.GridEXCellCollection::get_Item
+    IL_00cb: callvirt Janus.Windows.GridEX.GridEXCell::get_Value
+    IL_00d0: callvirt System.Object::ToString
+    IL_00d5: call Architecture.Common.Conversion::ToBool
+    IL_00da: callvirt Architecture.Model.tblUserRights::set_Value
+    IL_00df: ldloc.s 4
+    IL_00e1: ldarg.0
+    IL_00e2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_00e7: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_Value
+    IL_00ec: call Architecture.Common.Conversion::ToInt
+    IL_00f1: callvirt Architecture.Model.tblUserRights::set_CompanyId
+    IL_00f6: ldloc.0
+    IL_00f7: callvirt Architecture.Model.tblUserRights::get_TblUserRightslst
+    IL_00fc: ldloc.s 4
+    IL_00fe: callvirt TypeSpec#298::Add
+    IL_0103: ldloc.2
+    IL_0104: ldc.i4.1
+    IL_0105: add
+    IL_0106: stloc.2
+    IL_0107: ldloc.2
+    IL_0108: ldloc.1
+    IL_0109: ldlen
+    IL_010a: conv.i4
+    IL_010b: blt IL_004b
+    IL_0110: ldloc.0
+    IL_0111: call Architecture.BLL.tblUserRights::Insert
+    IL_0116: pop
+    IL_0117: ldstr ldstr "User Rights for "
+    IL_011c: ldarg.0
+    IL_011d: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0122: callvirt System.Windows.Forms.Control::get_Text
+    IL_0127: ldstr ldstr " has been updated Successfully!"
+    IL_012c: call System.String::Concat
+    IL_0131: call System.Windows.Forms.MessageBox::Show
+    IL_0136: pop
+    IL_0137: leave.s IL_0146
+    IL_0139: callvirt System.Object::ToString
+    IL_013e: call System.Windows.Forms.MessageBox::Show
+    IL_0143: pop
+    IL_0144: leave.s IL_0146
+    IL_0146: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar_Load  (rva=0x196c5f4, fat header, code_size=66, max_stack=2, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call System.Windows.Forms.Control::get_Name
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_000c: callvirt System.Windows.Forms.Control::get_Name
+    IL_0011: call Architecture.WinApp.Common.CommonServices::GetGridLayout
+    IL_0016: stloc.0
+    IL_0017: ldloc.0
+    IL_0018: brfalse.s IL_0032
+    IL_001a: ldarg.0
+    IL_001b: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0020: ldloc.0
+    IL_0021: callvirt Janus.Windows.GridEX.GridEX::LoadLayoutFile
+    IL_0026: ldloc.0
+    IL_0027: callvirt System.IO.Stream::Close
+    IL_002c: ldloc.0
+    IL_002d: callvirt System.IO.Stream::Dispose
+    IL_0032: leave.s IL_0041
+    IL_0034: callvirt System.Object::ToString
+    IL_0039: call System.Windows.Forms.MessageBox::Show
+    IL_003e: pop
+    IL_003f: leave.s IL_0041
+    IL_0041: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserRightsEditing_FormClosed  (rva=0x52930, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.HistoryStack::Remove
+    IL_0006: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::Dispose  (rva=0x196c654, tiny header, code_size=30, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: brfalse.s IL_0016
+    IL_0003: ldarg.0
+    IL_0004: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::components
+    IL_0009: brfalse.s IL_0016
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::components
+    IL_0011: callvirt System.IDisposable::Dispose
+    IL_0016: ldarg.0
+    IL_0017: ldarg.1
+    IL_0018: call System.Windows.Forms.Form::Dispose
+    IL_001d: ret
+
+; Architecture.WinApp.UserRightsManagement.UserRightsEditing::InitializeComponent  (rva=0x196c674, fat header, code_size=4550, max_stack=6, exception_handlers=no)
+    IL_0000: newobj Janus.Windows.GridEX.GridEXLayout::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldtoken Architecture.WinApp.UserRightsManagement.UserRightsEditing
+    IL_000b: call System.Type::GetTypeFromHandle
+    IL_0010: newobj System.ComponentModel.ComponentResourceManager::.ctor
+    IL_0015: stloc.1
+    IL_0016: newobj Infragistics.Win.Appearance::.ctor
+    IL_001b: stloc.2
+    IL_001c: newobj Infragistics.Win.Appearance::.ctor
+    IL_0021: stloc.3
+    IL_0022: newobj Infragistics.Win.Appearance::.ctor
+    IL_0027: stloc.s 4
+    IL_0029: newobj Infragistics.Win.Appearance::.ctor
+    IL_002e: stloc.s 5
+    IL_0030: newobj Infragistics.Win.Appearance::.ctor
+    IL_0035: stloc.s 6
+    IL_0037: newobj Infragistics.Win.Appearance::.ctor
+    IL_003c: stloc.s 7
+    IL_003e: newobj Infragistics.Win.Appearance::.ctor
+    IL_0043: stloc.s 8
+    IL_0045: newobj Infragistics.Win.Appearance::.ctor
+    IL_004a: stloc.s 9
+    IL_004c: newobj Infragistics.Win.Appearance::.ctor
+    IL_0051: stloc.s 10
+    IL_0053: newobj Infragistics.Win.Appearance::.ctor
+    IL_0058: stloc.s 11
+    IL_005a: newobj Infragistics.Win.Appearance::.ctor
+    IL_005f: stloc.s 12
+    IL_0061: newobj Infragistics.Win.Appearance::.ctor
+    IL_0066: stloc.s 13
+    IL_0068: newobj Infragistics.Win.Appearance::.ctor
+    IL_006d: stloc.s 14
+    IL_006f: newobj Infragistics.Win.Appearance::.ctor
+    IL_0074: stloc.s 15
+    IL_0076: newobj Infragistics.Win.Appearance::.ctor
+    IL_007b: stloc.s 16
+    IL_007d: newobj Infragistics.Win.Appearance::.ctor
+    IL_0082: stloc.s 17
+    IL_0084: newobj Infragistics.Win.Appearance::.ctor
+    IL_0089: stloc.s 18
+    IL_008b: newobj Infragistics.Win.Appearance::.ctor
+    IL_0090: stloc.s 19
+    IL_0092: newobj Infragistics.Win.Appearance::.ctor
+    IL_0097: stloc.s 20
+    IL_0099: newobj Infragistics.Win.Appearance::.ctor
+    IL_009e: stloc.s 21
+    IL_00a0: newobj Infragistics.Win.Appearance::.ctor
+    IL_00a5: stloc.s 22
+    IL_00a7: newobj Infragistics.Win.Appearance::.ctor
+    IL_00ac: stloc.s 23
+    IL_00ae: newobj Infragistics.Win.Appearance::.ctor
+    IL_00b3: stloc.s 24
+    IL_00b5: newobj Infragistics.Win.Appearance::.ctor
+    IL_00ba: stloc.s 25
+    IL_00bc: ldarg.0
+    IL_00bd: newobj System.Windows.Forms.Panel::.ctor
+    IL_00c2: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_00c7: ldarg.0
+    IL_00c8: newobj Janus.Windows.GridEX.GridEX::.ctor
+    IL_00cd: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_00d2: ldarg.0
+    IL_00d3: newobj System.Windows.Forms.Panel::.ctor
+    IL_00d8: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_00dd: ldarg.0
+    IL_00de: newobj System.Windows.Forms.ToolStrip::.ctor
+    IL_00e3: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_00e8: ldarg.0
+    IL_00e9: newobj System.Windows.Forms.ToolStripButton::.ctor
+    IL_00ee: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_00f3: ldarg.0
+    IL_00f4: newobj System.Windows.Forms.ToolStripSeparator::.ctor
+    IL_00f9: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStripSeparator8
+    IL_00fe: ldarg.0
+    IL_00ff: newobj grid.User_Conrtols.CtrlGrdBar::.ctor
+    IL_0104: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_0109: ldarg.0
+    IL_010a: newobj System.Windows.Forms.Panel::.ctor
+    IL_010f: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_0114: ldarg.0
+    IL_0115: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_011a: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_011f: ldarg.0
+    IL_0120: newobj System.Windows.Forms.Button::.ctor
+    IL_0125: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_012a: ldarg.0
+    IL_012b: newobj Infragistics.Win.UltraWinGrid.UltraCombo::.ctor
+    IL_0130: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0135: ldarg.0
+    IL_0136: newobj System.Windows.Forms.Label::.ctor
+    IL_013b: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_0140: ldarg.0
+    IL_0141: newobj System.Windows.Forms.Label::.ctor
+    IL_0146: stfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_014b: ldarg.0
+    IL_014c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_0151: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0156: ldarg.0
+    IL_0157: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_015c: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_0161: ldarg.0
+    IL_0162: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_0167: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_016c: ldarg.0
+    IL_016d: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_0172: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0177: ldarg.0
+    IL_0178: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_017d: callvirt System.Windows.Forms.Control::SuspendLayout
+    IL_0182: ldarg.0
+    IL_0183: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0188: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_018d: ldarg.0
+    IL_018e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0193: callvirt System.ComponentModel.ISupportInitialize::BeginInit
+    IL_0198: ldarg.0
+    IL_0199: call System.Windows.Forms.Control::SuspendLayout
+    IL_019e: ldarg.0
+    IL_019f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_01a4: call System.Drawing.Color::get_White
+    IL_01a9: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_01ae: ldarg.0
+    IL_01af: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_01b4: callvirt System.Windows.Forms.Control::get_Controls
+    IL_01b9: ldarg.0
+    IL_01ba: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_01bf: callvirt ControlCollection::Add
+    IL_01c4: ldarg.0
+    IL_01c5: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_01ca: callvirt System.Windows.Forms.Control::get_Controls
+    IL_01cf: ldarg.0
+    IL_01d0: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_01d5: callvirt ControlCollection::Add
+    IL_01da: ldarg.0
+    IL_01db: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_01e0: callvirt System.Windows.Forms.Control::get_Controls
+    IL_01e5: ldarg.0
+    IL_01e6: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_01eb: callvirt ControlCollection::Add
+    IL_01f0: ldarg.0
+    IL_01f1: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_01f6: ldc.i4.5
+    IL_01f7: callvirt System.Windows.Forms.Control::set_Dock
+    IL_01fc: ldarg.0
+    IL_01fd: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_0202: ldc.i4.0
+    IL_0203: ldc.i4.0
+    IL_0204: newobj System.Drawing.Point::.ctor
+    IL_0209: callvirt System.Windows.Forms.Control::set_Location
+    IL_020e: ldarg.0
+    IL_020f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_0214: ldstr ldstr "panel1"
+    IL_0219: callvirt System.Windows.Forms.Control::set_Name
+    IL_021e: ldarg.0
+    IL_021f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_0224: ldc.i4 909
+    IL_0229: ldc.i4 596
+    IL_022e: newobj System.Drawing.Size::.ctor
+    IL_0233: callvirt System.Windows.Forms.Control::set_Size
+    IL_0238: ldarg.0
+    IL_0239: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_023e: ldc.i4.0
+    IL_023f: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0244: ldarg.0
+    IL_0245: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_024a: ldc.i4.1
+    IL_024b: callvirt Janus.Windows.GridEX.GridEX::set_AllowDelete
+    IL_0250: ldarg.0
+    IL_0251: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0256: call System.Drawing.Color::get_White
+    IL_025b: callvirt Janus.Windows.GridEX.ScrollableBase::set_BackColor
+    IL_0260: ldloc.0
+    IL_0261: ldloc.1
+    IL_0262: ldstr ldstr "grduserRights_DesignTimeLayout.LayoutString"
+    IL_0267: callvirt System.Resources.ResourceManager::GetString
+    IL_026c: callvirt Janus.Windows.GridEX.GridEXLayout::set_LayoutString
+    IL_0271: ldarg.0
+    IL_0272: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0277: ldloc.0
+    IL_0278: callvirt Janus.Windows.GridEX.GridEX::set_DesignTimeLayout
+    IL_027d: ldarg.0
+    IL_027e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0283: ldc.i4.5
+    IL_0284: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0289: ldarg.0
+    IL_028a: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_028f: ldc.i4.1
+    IL_0290: callvirt Janus.Windows.GridEX.GridEX::set_DynamicFiltering
+    IL_0295: ldarg.0
+    IL_0296: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_029b: ldc.i4.2
+    IL_029c: callvirt Janus.Windows.GridEX.GridEX::set_FilterMode
+    IL_02a1: ldarg.0
+    IL_02a2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02a7: ldc.i4.3
+    IL_02a8: callvirt Janus.Windows.GridEX.GridEX::set_FilterRowButtonStyle
+    IL_02ad: ldarg.0
+    IL_02ae: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02b3: ldstr ldstr "Verdana"
+    IL_02b8: ldc.r4 10.25
+    IL_02bd: newobj System.Drawing.Font::.ctor
+    IL_02c2: callvirt System.Windows.Forms.Control::set_Font
+    IL_02c7: ldarg.0
+    IL_02c8: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02cd: ldc.i4.0
+    IL_02ce: callvirt Janus.Windows.GridEX.GridEX::set_GroupByBoxVisible
+    IL_02d3: ldarg.0
+    IL_02d4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02d9: ldc.i4.0
+    IL_02da: ldc.i4.s 78
+    IL_02dc: newobj System.Drawing.Point::.ctor
+    IL_02e1: callvirt System.Windows.Forms.Control::set_Location
+    IL_02e6: ldarg.0
+    IL_02e7: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02ec: ldstr ldstr "grduserRights"
+    IL_02f1: callvirt System.Windows.Forms.Control::set_Name
+    IL_02f6: ldarg.0
+    IL_02f7: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_02fc: ldc.i4.1
+    IL_02fd: callvirt Janus.Windows.GridEX.ScrollableBase::set_RecordNavigator
+    IL_0302: ldarg.0
+    IL_0303: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0308: ldc.i4 909
+    IL_030d: ldc.i4 518
+    IL_0312: newobj System.Drawing.Size::.ctor
+    IL_0317: callvirt System.Windows.Forms.Control::set_Size
+    IL_031c: ldarg.0
+    IL_031d: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0322: ldc.i4.s 48
+    IL_0324: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0329: ldarg.0
+    IL_032a: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_032f: ldc.i4.1
+    IL_0330: callvirt Janus.Windows.GridEX.GridEX::set_TotalRow
+    IL_0335: ldarg.0
+    IL_0336: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_033b: ldc.i4.1
+    IL_033c: callvirt Janus.Windows.GridEX.GridEX::set_TotalRowPosition
+    IL_0341: ldarg.0
+    IL_0342: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0347: ldc.i4.4
+    IL_0348: callvirt Janus.Windows.GridEX.ScrollableBase::set_VisualStyle
+    IL_034d: ldarg.0
+    IL_034e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0353: ldarg.0
+    IL_0354: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights_CellUpdated
+    IL_035a: newobj Janus.Windows.GridEX.ColumnActionEventHandler::.ctor
+    IL_035f: callvirt Janus.Windows.GridEX.GridEX::add_CellValueChanged
+    IL_0364: ldarg.0
+    IL_0365: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_036a: ldarg.0
+    IL_036b: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights_CellUpdated
+    IL_0371: newobj Janus.Windows.GridEX.ColumnActionEventHandler::.ctor
+    IL_0376: callvirt Janus.Windows.GridEX.GridEX::add_CellEdited
+    IL_037b: ldarg.0
+    IL_037c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_0381: ldarg.0
+    IL_0382: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights_CellUpdated
+    IL_0388: newobj Janus.Windows.GridEX.ColumnActionEventHandler::.ctor
+    IL_038d: callvirt Janus.Windows.GridEX.GridEX::add_CellUpdated
+    IL_0392: ldarg.0
+    IL_0393: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_0398: ldc.i4.s 10
+    IL_039a: ldc.i4.s 110
+    IL_039c: ldc.i4.s 110
+    IL_039e: call System.Drawing.Color::FromArgb
+    IL_03a3: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_03a8: ldarg.0
+    IL_03a9: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_03ae: callvirt System.Windows.Forms.Control::get_Controls
+    IL_03b3: ldarg.0
+    IL_03b4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_03b9: callvirt ControlCollection::Add
+    IL_03be: ldarg.0
+    IL_03bf: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_03c4: callvirt System.Windows.Forms.Control::get_Controls
+    IL_03c9: ldarg.0
+    IL_03ca: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_03cf: callvirt ControlCollection::Add
+    IL_03d4: ldarg.0
+    IL_03d5: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_03da: ldc.i4.1
+    IL_03db: callvirt System.Windows.Forms.Control::set_Dock
+    IL_03e0: ldarg.0
+    IL_03e1: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_03e6: ldc.i4.0
+    IL_03e7: ldc.i4.s 46
+    IL_03e9: newobj System.Drawing.Point::.ctor
+    IL_03ee: callvirt System.Windows.Forms.Control::set_Location
+    IL_03f3: ldarg.0
+    IL_03f4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_03f9: ldc.i4.2
+    IL_03fa: newobj System.Windows.Forms.Padding::.ctor
+    IL_03ff: callvirt System.Windows.Forms.Control::set_Margin
+    IL_0404: ldarg.0
+    IL_0405: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_040a: ldstr ldstr "panel14"
+    IL_040f: callvirt System.Windows.Forms.Control::set_Name
+    IL_0414: ldarg.0
+    IL_0415: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_041a: ldc.i4 909
+    IL_041f: ldc.i4.s 32
+    IL_0421: newobj System.Drawing.Size::.ctor
+    IL_0426: callvirt System.Windows.Forms.Control::set_Size
+    IL_042b: ldarg.0
+    IL_042c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_0431: ldc.i4.s 47
+    IL_0433: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0438: ldarg.0
+    IL_0439: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_043e: ldc.i4.0
+    IL_043f: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0444: ldarg.0
+    IL_0445: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_044a: ldc.i4.s 20
+    IL_044c: ldc.i4.s 20
+    IL_044e: newobj System.Drawing.Size::.ctor
+    IL_0453: callvirt System.Windows.Forms.ToolStrip::set_ImageScalingSize
+    IL_0458: ldarg.0
+    IL_0459: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_045e: callvirt System.Windows.Forms.ToolStrip::get_Items
+    IL_0463: ldc.i4.2
+    IL_0464: newarr System.Windows.Forms.ToolStripItem
+    IL_0469: dup
+    IL_046a: ldc.i4.0
+    IL_046b: ldarg.0
+    IL_046c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_0471: stelem.ref
+    IL_0472: dup
+    IL_0473: ldc.i4.1
+    IL_0474: ldarg.0
+    IL_0475: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStripSeparator8
+    IL_047a: stelem.ref
+    IL_047b: callvirt System.Windows.Forms.ToolStripItemCollection::AddRange
+    IL_0480: ldarg.0
+    IL_0481: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_0486: ldc.i4.2
+    IL_0487: ldc.i4.2
+    IL_0488: newobj System.Drawing.Point::.ctor
+    IL_048d: callvirt System.Windows.Forms.Control::set_Location
+    IL_0492: ldarg.0
+    IL_0493: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_0498: ldstr ldstr "toolStrip4"
+    IL_049d: callvirt System.Windows.Forms.Control::set_Name
+    IL_04a2: ldarg.0
+    IL_04a3: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_04a8: ldc.i4.s 96
+    IL_04aa: ldc.i4.s 27
+    IL_04ac: newobj System.Drawing.Size::.ctor
+    IL_04b1: callvirt System.Windows.Forms.Control::set_Size
+    IL_04b6: ldarg.0
+    IL_04b7: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_04bc: ldc.i4.s 20
+    IL_04be: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_04c3: ldarg.0
+    IL_04c4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_04c9: ldstr ldstr "toolStrip4"
+    IL_04ce: callvirt System.Windows.Forms.Control::set_Text
+    IL_04d3: ldarg.0
+    IL_04d4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_04d9: ldstr ldstr "Verdana"
+    IL_04de: ldc.r4 9.75
+    IL_04e3: ldc.i4.0
+    IL_04e4: ldc.i4.3
+    IL_04e5: ldc.i4.0
+    IL_04e6: newobj System.Drawing.Font::.ctor
+    IL_04eb: callvirt System.Windows.Forms.ToolStripItem::set_Font
+    IL_04f0: ldarg.0
+    IL_04f1: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_04f6: call Architecture.WinApp.Properties.Resources::get_icons8_pencil_16
+    IL_04fb: callvirt System.Windows.Forms.ToolStripItem::set_Image
+    IL_0500: ldarg.0
+    IL_0501: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_0506: call System.Drawing.Color::get_Magenta
+    IL_050b: callvirt System.Windows.Forms.ToolStripItem::set_ImageTransparentColor
+    IL_0510: ldarg.0
+    IL_0511: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_0516: ldstr ldstr "btnSave"
+    IL_051b: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_0520: ldarg.0
+    IL_0521: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_0526: ldc.i4.s 78
+    IL_0528: ldc.i4.s 24
+    IL_052a: newobj System.Drawing.Size::.ctor
+    IL_052f: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_0534: ldarg.0
+    IL_0535: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_053a: ldstr ldstr "&Update"
+    IL_053f: callvirt System.Windows.Forms.ToolStripItem::set_Text
+    IL_0544: ldarg.0
+    IL_0545: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave
+    IL_054a: ldarg.0
+    IL_054b: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::btnSave_Click
+    IL_0551: newobj System.EventHandler::.ctor
+    IL_0556: callvirt System.Windows.Forms.ToolStripItem::add_Click
+    IL_055b: ldarg.0
+    IL_055c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStripSeparator8
+    IL_0561: ldstr ldstr "toolStripSeparator8"
+    IL_0566: callvirt System.Windows.Forms.ToolStripItem::set_Name
+    IL_056b: ldarg.0
+    IL_056c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStripSeparator8
+    IL_0571: ldc.i4.6
+    IL_0572: ldc.i4.s 27
+    IL_0574: newobj System.Drawing.Size::.ctor
+    IL_0579: callvirt System.Windows.Forms.ToolStripItem::set_Size
+    IL_057e: ldarg.0
+    IL_057f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_0584: ldc.i4.s 9
+    IL_0586: callvirt System.Windows.Forms.Control::set_Anchor
+    IL_058b: ldarg.0
+    IL_058c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_0591: ldarg.0
+    IL_0592: callvirt grid.User_Conrtols.CtrlGrdBar::set_FormName
+    IL_0597: ldarg.0
+    IL_0598: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_059d: ldc.i4 860
+    IL_05a2: ldc.i4.1
+    IL_05a3: newobj System.Drawing.Point::.ctor
+    IL_05a8: callvirt System.Windows.Forms.Control::set_Location
+    IL_05ad: ldarg.0
+    IL_05ae: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_05b3: ldc.i4.4
+    IL_05b4: newobj System.Windows.Forms.Padding::.ctor
+    IL_05b9: callvirt System.Windows.Forms.Control::set_Margin
+    IL_05be: ldarg.0
+    IL_05bf: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_05c4: ldarg.0
+    IL_05c5: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_05ca: callvirt grid.User_Conrtols.CtrlGrdBar::set_MyGrid
+    IL_05cf: ldarg.0
+    IL_05d0: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_05d5: ldstr ldstr "ctrlGrdBar"
+    IL_05da: callvirt System.Windows.Forms.Control::set_Name
+    IL_05df: ldarg.0
+    IL_05e0: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_05e5: ldc.i4.s 45
+    IL_05e7: ldc.i4.s 26
+    IL_05e9: newobj System.Drawing.Size::.ctor
+    IL_05ee: callvirt System.Windows.Forms.Control::set_Size
+    IL_05f3: ldarg.0
+    IL_05f4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_05f9: ldc.i4.s 19
+    IL_05fb: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0600: ldarg.0
+    IL_0601: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar
+    IL_0606: ldarg.0
+    IL_0607: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::ctrlGrdBar_Load
+    IL_060d: newobj System.EventHandler::.ctor
+    IL_0612: callvirt System.Windows.Forms.UserControl::add_Load
+    IL_0617: ldarg.0
+    IL_0618: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_061d: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0622: ldarg.0
+    IL_0623: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0628: callvirt ControlCollection::Add
+    IL_062d: ldarg.0
+    IL_062e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_0633: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0638: ldarg.0
+    IL_0639: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_063e: callvirt ControlCollection::Add
+    IL_0643: ldarg.0
+    IL_0644: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_0649: callvirt System.Windows.Forms.Control::get_Controls
+    IL_064e: ldarg.0
+    IL_064f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0654: callvirt ControlCollection::Add
+    IL_0659: ldarg.0
+    IL_065a: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_065f: callvirt System.Windows.Forms.Control::get_Controls
+    IL_0664: ldarg.0
+    IL_0665: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_066a: callvirt ControlCollection::Add
+    IL_066f: ldarg.0
+    IL_0670: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_0675: callvirt System.Windows.Forms.Control::get_Controls
+    IL_067a: ldarg.0
+    IL_067b: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_0680: callvirt ControlCollection::Add
+    IL_0685: ldarg.0
+    IL_0686: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_068b: ldc.i4.1
+    IL_068c: callvirt System.Windows.Forms.Control::set_Dock
+    IL_0691: ldarg.0
+    IL_0692: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_0697: ldc.i4.0
+    IL_0698: ldc.i4.0
+    IL_0699: newobj System.Drawing.Point::.ctor
+    IL_069e: callvirt System.Windows.Forms.Control::set_Location
+    IL_06a3: ldarg.0
+    IL_06a4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_06a9: ldstr ldstr "panel2"
+    IL_06ae: callvirt System.Windows.Forms.Control::set_Name
+    IL_06b3: ldarg.0
+    IL_06b4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_06b9: ldc.i4 909
+    IL_06be: ldc.i4.s 46
+    IL_06c0: newobj System.Drawing.Size::.ctor
+    IL_06c5: callvirt System.Windows.Forms.Control::set_Size
+    IL_06ca: ldarg.0
+    IL_06cb: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_06d0: ldc.i4.s 14
+    IL_06d2: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_06d7: ldarg.0
+    IL_06d8: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_06dd: ldc.i4.1
+    IL_06de: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_06e3: ldarg.0
+    IL_06e4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_06e9: ldc.i4.4
+    IL_06ea: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_06ef: ldarg.0
+    IL_06f0: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_06f5: ldc.i4.2
+    IL_06f6: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_06fb: ldarg.0
+    IL_06fc: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0701: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_0706: ldstr ldstr ""
+    IL_070b: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_0710: ldloc.2
+    IL_0711: call System.Drawing.SystemColors::get_Window
+    IL_0716: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_071b: ldloc.2
+    IL_071c: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_0721: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0726: ldarg.0
+    IL_0727: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_072c: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0731: ldloc.2
+    IL_0732: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_0737: ldarg.0
+    IL_0738: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_073d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0742: ldc.i4.4
+    IL_0743: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_0748: ldarg.0
+    IL_0749: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_074e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0753: ldc.i4.2
+    IL_0754: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_0759: ldloc.3
+    IL_075a: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_075f: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0764: ldloc.3
+    IL_0765: call System.Drawing.SystemColors::get_ControlDark
+    IL_076a: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_076f: ldloc.3
+    IL_0770: ldc.i4.2
+    IL_0771: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0776: ldloc.3
+    IL_0777: call System.Drawing.SystemColors::get_Window
+    IL_077c: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0781: ldarg.0
+    IL_0782: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0787: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_078c: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0791: ldloc.3
+    IL_0792: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_0797: ldloc.s 4
+    IL_0799: call System.Drawing.SystemColors::get_GrayText
+    IL_079e: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_07a3: ldarg.0
+    IL_07a4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_07a9: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_07ae: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_07b3: ldloc.s 4
+    IL_07b5: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_07ba: ldarg.0
+    IL_07bb: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_07c0: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_07c5: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_07ca: ldc.i4.4
+    IL_07cb: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_07d0: ldloc.s 5
+    IL_07d2: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_07d7: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_07dc: ldloc.s 5
+    IL_07de: call System.Drawing.SystemColors::get_Control
+    IL_07e3: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_07e8: ldloc.s 5
+    IL_07ea: ldc.i4.3
+    IL_07eb: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_07f0: ldloc.s 5
+    IL_07f2: call System.Drawing.SystemColors::get_GrayText
+    IL_07f7: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_07fc: ldarg.0
+    IL_07fd: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0802: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0807: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_080c: ldloc.s 5
+    IL_080e: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_0813: ldarg.0
+    IL_0814: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0819: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_081e: ldc.i4.1
+    IL_081f: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_0824: ldarg.0
+    IL_0825: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_082a: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_082f: ldc.i4.1
+    IL_0830: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_0835: ldloc.s 6
+    IL_0837: call System.Drawing.SystemColors::get_Window
+    IL_083c: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0841: ldloc.s 6
+    IL_0843: call System.Drawing.SystemColors::get_ControlText
+    IL_0848: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_084d: ldarg.0
+    IL_084e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0853: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0858: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_085d: ldloc.s 6
+    IL_085f: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_0864: ldloc.s 7
+    IL_0866: call System.Drawing.SystemColors::get_Highlight
+    IL_086b: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0870: ldloc.s 7
+    IL_0872: call System.Drawing.SystemColors::get_HighlightText
+    IL_0877: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_087c: ldarg.0
+    IL_087d: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0882: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0887: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_088c: ldloc.s 7
+    IL_088e: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_0893: ldarg.0
+    IL_0894: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0899: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_089e: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_08a3: ldc.i4.2
+    IL_08a4: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_08a9: ldarg.0
+    IL_08aa: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_08af: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_08b4: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_08b9: ldc.i4.2
+    IL_08ba: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_08bf: ldloc.s 8
+    IL_08c1: call System.Drawing.SystemColors::get_Window
+    IL_08c6: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_08cb: ldarg.0
+    IL_08cc: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_08d1: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_08d6: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_08db: ldloc.s 8
+    IL_08dd: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_08e2: ldloc.s 9
+    IL_08e4: call System.Drawing.Color::get_Silver
+    IL_08e9: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_08ee: ldloc.s 9
+    IL_08f0: ldc.i4.3
+    IL_08f1: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_08f6: ldarg.0
+    IL_08f7: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_08fc: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0901: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0906: ldloc.s 9
+    IL_0908: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_090d: ldarg.0
+    IL_090e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0913: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0918: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_091d: ldc.i4.4
+    IL_091e: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_0923: ldarg.0
+    IL_0924: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0929: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_092e: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0933: ldc.i4.0
+    IL_0934: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_0939: ldloc.s 10
+    IL_093b: call System.Drawing.SystemColors::get_Control
+    IL_0940: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0945: ldloc.s 10
+    IL_0947: call System.Drawing.SystemColors::get_ControlDark
+    IL_094c: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0951: ldloc.s 10
+    IL_0953: ldc.i4.1
+    IL_0954: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_0959: ldloc.s 10
+    IL_095b: ldc.i4.3
+    IL_095c: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0961: ldloc.s 10
+    IL_0963: call System.Drawing.SystemColors::get_Window
+    IL_0968: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_096d: ldarg.0
+    IL_096e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0973: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0978: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_097d: ldloc.s 10
+    IL_097f: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_0984: ldloc.s 11
+    IL_0986: ldstr ldstr "Left"
+    IL_098b: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_0990: ldarg.0
+    IL_0991: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0996: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_099b: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_09a0: ldloc.s 11
+    IL_09a2: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_09a7: ldarg.0
+    IL_09a8: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_09ad: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09b2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_09b7: ldc.i4.3
+    IL_09b8: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_09bd: ldarg.0
+    IL_09be: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_09c3: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09c8: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_09cd: ldc.i4.2
+    IL_09ce: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_09d3: ldloc.s 12
+    IL_09d5: call System.Drawing.SystemColors::get_Window
+    IL_09da: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_09df: ldloc.s 12
+    IL_09e1: call System.Drawing.Color::get_Silver
+    IL_09e6: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_09eb: ldarg.0
+    IL_09ec: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_09f1: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_09f6: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_09fb: ldloc.s 12
+    IL_09fd: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_0a02: ldarg.0
+    IL_0a03: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0a08: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a0d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a12: ldc.i4.2
+    IL_0a13: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_0a18: ldloc.s 13
+    IL_0a1a: call System.Drawing.SystemColors::get_ControlLight
+    IL_0a1f: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0a24: ldarg.0
+    IL_0a25: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0a2a: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a2f: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0a34: ldloc.s 13
+    IL_0a36: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_0a3b: ldarg.0
+    IL_0a3c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0a41: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a46: ldc.i4.0
+    IL_0a47: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_0a4c: ldarg.0
+    IL_0a4d: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0a52: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a57: ldc.i4.1
+    IL_0a58: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_0a5d: ldarg.0
+    IL_0a5e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0a63: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0a68: ldc.i4.2
+    IL_0a69: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_0a6e: ldarg.0
+    IL_0a6f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0a74: ldstr ldstr "Verdana"
+    IL_0a79: ldc.r4 9.75
+    IL_0a7e: ldc.i4.0
+    IL_0a7f: ldc.i4.3
+    IL_0a80: ldc.i4.0
+    IL_0a81: newobj System.Drawing.Font::.ctor
+    IL_0a86: callvirt System.Windows.Forms.Control::set_Font
+    IL_0a8b: ldarg.0
+    IL_0a8c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0a91: ldc.i4.1
+    IL_0a92: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_LimitToList
+    IL_0a97: ldarg.0
+    IL_0a98: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0a9d: ldc.i4 298
+    IL_0aa2: ldc.i4.8
+    IL_0aa3: newobj System.Drawing.Point::.ctor
+    IL_0aa8: callvirt System.Windows.Forms.Control::set_Location
+    IL_0aad: ldarg.0
+    IL_0aae: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0ab3: ldstr ldstr "CmbCompanyName"
+    IL_0ab8: callvirt System.Windows.Forms.Control::set_Name
+    IL_0abd: ldarg.0
+    IL_0abe: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0ac3: ldc.i4 346
+    IL_0ac8: ldc.i4.s 26
+    IL_0aca: newobj System.Drawing.Size::.ctor
+    IL_0acf: callvirt System.Windows.Forms.Control::set_Size
+    IL_0ad4: ldarg.0
+    IL_0ad5: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_0ada: ldc.i4.s 11
+    IL_0adc: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0ae1: ldarg.0
+    IL_0ae2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0ae7: call System.Drawing.Color::get_Teal
+    IL_0aec: callvirt System.Windows.Forms.Control::set_BackColor
+    IL_0af1: ldarg.0
+    IL_0af2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0af7: ldc.i4.0
+    IL_0af8: callvirt System.Windows.Forms.ButtonBase::set_FlatStyle
+    IL_0afd: ldarg.0
+    IL_0afe: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b03: ldstr ldstr "Verdana"
+    IL_0b08: ldc.r4 9.75
+    IL_0b0d: ldc.i4.1
+    IL_0b0e: ldc.i4.3
+    IL_0b0f: ldc.i4.0
+    IL_0b10: newobj System.Drawing.Font::.ctor
+    IL_0b15: callvirt System.Windows.Forms.Control::set_Font
+    IL_0b1a: ldarg.0
+    IL_0b1b: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b20: call System.Drawing.Color::get_White
+    IL_0b25: callvirt System.Windows.Forms.Control::set_ForeColor
+    IL_0b2a: ldarg.0
+    IL_0b2b: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b30: ldc.i4 647
+    IL_0b35: ldc.i4.8
+    IL_0b36: newobj System.Drawing.Point::.ctor
+    IL_0b3b: callvirt System.Windows.Forms.Control::set_Location
+    IL_0b40: ldarg.0
+    IL_0b41: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b46: ldstr ldstr "BtnFetchRights"
+    IL_0b4b: callvirt System.Windows.Forms.Control::set_Name
+    IL_0b50: ldarg.0
+    IL_0b51: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b56: ldc.i4.s 61
+    IL_0b58: ldc.i4.s 27
+    IL_0b5a: newobj System.Drawing.Size::.ctor
+    IL_0b5f: callvirt System.Windows.Forms.Control::set_Size
+    IL_0b64: ldarg.0
+    IL_0b65: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b6a: ldc.i4.s 13
+    IL_0b6c: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0b71: ldarg.0
+    IL_0b72: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b77: ldstr ldstr "Fetch Rights"
+    IL_0b7c: callvirt System.Windows.Forms.Control::set_Text
+    IL_0b81: ldarg.0
+    IL_0b82: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b87: ldc.i4.0
+    IL_0b88: callvirt System.Windows.Forms.ButtonBase::set_UseVisualStyleBackColor
+    IL_0b8d: ldarg.0
+    IL_0b8e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights
+    IL_0b93: ldarg.0
+    IL_0b94: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::BtnFetchRights_Click
+    IL_0b9a: newobj System.EventHandler::.ctor
+    IL_0b9f: callvirt System.Windows.Forms.Control::add_Click
+    IL_0ba4: ldarg.0
+    IL_0ba5: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0baa: ldc.i4.1
+    IL_0bab: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AllowNull
+    IL_0bb0: ldarg.0
+    IL_0bb1: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0bb6: ldc.i4.4
+    IL_0bb7: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoCompleteMode
+    IL_0bbc: ldarg.0
+    IL_0bbd: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0bc2: ldc.i4.2
+    IL_0bc3: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_AutoSuggestFilterMode
+    IL_0bc8: ldarg.0
+    IL_0bc9: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0bce: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::get_CheckedListSettings
+    IL_0bd3: ldstr ldstr ""
+    IL_0bd8: callvirt Infragistics.Win.UltraWinGrid.CheckedListSettings::set_CheckStateMember
+    IL_0bdd: ldloc.s 14
+    IL_0bdf: call System.Drawing.SystemColors::get_Window
+    IL_0be4: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0be9: ldloc.s 14
+    IL_0beb: call System.Drawing.SystemColors::get_InactiveCaption
+    IL_0bf0: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0bf5: ldarg.0
+    IL_0bf6: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0bfb: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c00: ldloc.s 14
+    IL_0c02: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_Appearance
+    IL_0c07: ldarg.0
+    IL_0c08: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0c0d: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c12: ldc.i4.4
+    IL_0c13: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_BorderStyle
+    IL_0c18: ldarg.0
+    IL_0c19: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0c1e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c23: ldc.i4.2
+    IL_0c24: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_CaptionVisible
+    IL_0c29: ldloc.s 15
+    IL_0c2b: call System.Drawing.SystemColors::get_ActiveBorder
+    IL_0c30: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0c35: ldloc.s 15
+    IL_0c37: call System.Drawing.SystemColors::get_ControlDark
+    IL_0c3c: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0c41: ldloc.s 15
+    IL_0c43: ldc.i4.2
+    IL_0c44: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0c49: ldloc.s 15
+    IL_0c4b: call System.Drawing.SystemColors::get_Window
+    IL_0c50: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0c55: ldarg.0
+    IL_0c56: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0c5b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c60: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0c65: ldloc.s 15
+    IL_0c67: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_Appearance
+    IL_0c6c: ldloc.s 16
+    IL_0c6e: call System.Drawing.SystemColors::get_GrayText
+    IL_0c73: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0c78: ldarg.0
+    IL_0c79: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0c7e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c83: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0c88: ldloc.s 16
+    IL_0c8a: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_BandLabelAppearance
+    IL_0c8f: ldarg.0
+    IL_0c90: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0c95: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0c9a: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0c9f: ldc.i4.4
+    IL_0ca0: callvirt Infragistics.Win.UltraWinGrid.SpecialBoxBase::set_BorderStyle
+    IL_0ca5: ldloc.s 17
+    IL_0ca7: call System.Drawing.SystemColors::get_ControlLightLight
+    IL_0cac: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0cb1: ldloc.s 17
+    IL_0cb3: call System.Drawing.SystemColors::get_Control
+    IL_0cb8: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0cbd: ldloc.s 17
+    IL_0cbf: ldc.i4.3
+    IL_0cc0: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0cc5: ldloc.s 17
+    IL_0cc7: call System.Drawing.SystemColors::get_GrayText
+    IL_0ccc: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0cd1: ldarg.0
+    IL_0cd2: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0cd7: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0cdc: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_GroupByBox
+    IL_0ce1: ldloc.s 17
+    IL_0ce3: callvirt Infragistics.Win.UltraWinGrid.GroupByBox::set_PromptAppearance
+    IL_0ce8: ldarg.0
+    IL_0ce9: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0cee: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0cf3: ldc.i4.1
+    IL_0cf4: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxColScrollRegions
+    IL_0cf9: ldarg.0
+    IL_0cfa: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0cff: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0d04: ldc.i4.1
+    IL_0d05: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_MaxRowScrollRegions
+    IL_0d0a: ldloc.s 18
+    IL_0d0c: call System.Drawing.SystemColors::get_Window
+    IL_0d11: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0d16: ldloc.s 18
+    IL_0d18: call System.Drawing.SystemColors::get_ControlText
+    IL_0d1d: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0d22: ldarg.0
+    IL_0d23: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0d28: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0d2d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0d32: ldloc.s 18
+    IL_0d34: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveCellAppearance
+    IL_0d39: ldloc.s 19
+    IL_0d3b: call System.Drawing.SystemColors::get_Highlight
+    IL_0d40: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0d45: ldloc.s 19
+    IL_0d47: call System.Drawing.SystemColors::get_HighlightText
+    IL_0d4c: callvirt Infragistics.Win.AppearanceBase::set_ForeColor
+    IL_0d51: ldarg.0
+    IL_0d52: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0d57: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0d5c: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0d61: ldloc.s 19
+    IL_0d63: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_ActiveRowAppearance
+    IL_0d68: ldarg.0
+    IL_0d69: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0d6e: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0d73: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0d78: ldc.i4.2
+    IL_0d79: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleCell
+    IL_0d7e: ldarg.0
+    IL_0d7f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0d84: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0d89: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0d8e: ldc.i4.2
+    IL_0d8f: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_BorderStyleRow
+    IL_0d94: ldloc.s 20
+    IL_0d96: call System.Drawing.SystemColors::get_Window
+    IL_0d9b: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0da0: ldarg.0
+    IL_0da1: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0da6: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0dab: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0db0: ldloc.s 20
+    IL_0db2: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CardAreaAppearance
+    IL_0db7: ldloc.s 21
+    IL_0db9: call System.Drawing.Color::get_Silver
+    IL_0dbe: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0dc3: ldloc.s 21
+    IL_0dc5: ldc.i4.3
+    IL_0dc6: callvirt Infragistics.Win.AppearanceBase::set_TextTrimming
+    IL_0dcb: ldarg.0
+    IL_0dcc: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0dd1: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0dd6: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ddb: ldloc.s 21
+    IL_0ddd: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellAppearance
+    IL_0de2: ldarg.0
+    IL_0de3: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0de8: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ded: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0df2: ldc.i4.4
+    IL_0df3: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellClickAction
+    IL_0df8: ldarg.0
+    IL_0df9: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0dfe: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e03: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0e08: ldc.i4.0
+    IL_0e09: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_CellPadding
+    IL_0e0e: ldloc.s 22
+    IL_0e10: call System.Drawing.SystemColors::get_Control
+    IL_0e15: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0e1a: ldloc.s 22
+    IL_0e1c: call System.Drawing.SystemColors::get_ControlDark
+    IL_0e21: callvirt Infragistics.Win.AppearanceBase::set_BackColor2
+    IL_0e26: ldloc.s 22
+    IL_0e28: ldc.i4.1
+    IL_0e29: callvirt Infragistics.Win.AppearanceBase::set_BackGradientAlignment
+    IL_0e2e: ldloc.s 22
+    IL_0e30: ldc.i4.3
+    IL_0e31: callvirt Infragistics.Win.AppearanceBase::set_BackGradientStyle
+    IL_0e36: ldloc.s 22
+    IL_0e38: call System.Drawing.SystemColors::get_Window
+    IL_0e3d: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0e42: ldarg.0
+    IL_0e43: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0e48: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e4d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0e52: ldloc.s 22
+    IL_0e54: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_GroupByRowAppearance
+    IL_0e59: ldloc.s 23
+    IL_0e5b: ldstr ldstr "Left"
+    IL_0e60: callvirt Infragistics.Win.AppearanceBase::set_TextHAlignAsString
+    IL_0e65: ldarg.0
+    IL_0e66: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0e6b: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e70: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0e75: ldloc.s 23
+    IL_0e77: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderAppearance
+    IL_0e7c: ldarg.0
+    IL_0e7d: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0e82: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e87: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0e8c: ldc.i4.3
+    IL_0e8d: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderClickAction
+    IL_0e92: ldarg.0
+    IL_0e93: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0e98: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0e9d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ea2: ldc.i4.2
+    IL_0ea3: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_HeaderStyle
+    IL_0ea8: ldloc.s 24
+    IL_0eaa: call System.Drawing.SystemColors::get_Window
+    IL_0eaf: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0eb4: ldloc.s 24
+    IL_0eb6: call System.Drawing.Color::get_Silver
+    IL_0ebb: callvirt Infragistics.Win.AppearanceBase::set_BorderColor
+    IL_0ec0: ldarg.0
+    IL_0ec1: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0ec6: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ecb: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ed0: ldloc.s 24
+    IL_0ed2: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowAppearance
+    IL_0ed7: ldarg.0
+    IL_0ed8: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0edd: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0ee2: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0ee7: ldc.i4.2
+    IL_0ee8: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_RowSelectors
+    IL_0eed: ldloc.s 25
+    IL_0eef: call System.Drawing.SystemColors::get_ControlLight
+    IL_0ef4: callvirt Infragistics.Win.AppearanceBase::set_BackColor
+    IL_0ef9: ldarg.0
+    IL_0efa: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0eff: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f04: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::get_Override
+    IL_0f09: ldloc.s 25
+    IL_0f0b: callvirt Infragistics.Win.UltraWinGrid.UltraGridOverride::set_TemplateAddRowAppearance
+    IL_0f10: ldarg.0
+    IL_0f11: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0f16: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f1b: ldc.i4.0
+    IL_0f1c: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollBounds
+    IL_0f21: ldarg.0
+    IL_0f22: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0f27: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f2c: ldc.i4.1
+    IL_0f2d: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ScrollStyle
+    IL_0f32: ldarg.0
+    IL_0f33: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0f38: callvirt Infragistics.Win.UltraWinGrid.UltraGridBase::get_DisplayLayout
+    IL_0f3d: ldc.i4.2
+    IL_0f3e: callvirt Infragistics.Win.UltraWinGrid.UltraGridLayout::set_ViewStyleBand
+    IL_0f43: ldarg.0
+    IL_0f44: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0f49: ldstr ldstr "Verdana"
+    IL_0f4e: ldc.r4 9.75
+    IL_0f53: ldc.i4.0
+    IL_0f54: ldc.i4.3
+    IL_0f55: ldc.i4.0
+    IL_0f56: newobj System.Drawing.Font::.ctor
+    IL_0f5b: callvirt System.Windows.Forms.Control::set_Font
+    IL_0f60: ldarg.0
+    IL_0f61: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0f66: ldc.i4.1
+    IL_0f67: callvirt Infragistics.Win.UltraWinGrid.UltraCombo::set_LimitToList
+    IL_0f6c: ldarg.0
+    IL_0f6d: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0f72: ldc.i4.s 84
+    IL_0f74: ldc.i4.8
+    IL_0f75: newobj System.Drawing.Point::.ctor
+    IL_0f7a: callvirt System.Windows.Forms.Control::set_Location
+    IL_0f7f: ldarg.0
+    IL_0f80: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0f85: ldstr ldstr "CmbUserName"
+    IL_0f8a: callvirt System.Windows.Forms.Control::set_Name
+    IL_0f8f: ldarg.0
+    IL_0f90: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0f95: ldc.i4 150
+    IL_0f9a: ldc.i4.s 26
+    IL_0f9c: newobj System.Drawing.Size::.ctor
+    IL_0fa1: callvirt System.Windows.Forms.Control::set_Size
+    IL_0fa6: ldarg.0
+    IL_0fa7: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0fac: ldc.i4.s 9
+    IL_0fae: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_0fb3: ldarg.0
+    IL_0fb4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_0fb9: ldarg.0
+    IL_0fba: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName_Leave
+    IL_0fc0: newobj System.EventHandler::.ctor
+    IL_0fc5: callvirt System.Windows.Forms.Control::add_Leave
+    IL_0fca: ldarg.0
+    IL_0fcb: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_0fd0: ldc.i4.1
+    IL_0fd1: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_0fd6: ldarg.0
+    IL_0fd7: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_0fdc: ldstr ldstr "Segoe UI Semibold"
+    IL_0fe1: ldc.r4 9.0
+    IL_0fe6: ldc.i4.1
+    IL_0fe7: ldc.i4.3
+    IL_0fe8: ldc.i4.0
+    IL_0fe9: newobj System.Drawing.Font::.ctor
+    IL_0fee: callvirt System.Windows.Forms.Control::set_Font
+    IL_0ff3: ldarg.0
+    IL_0ff4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_0ff9: ldc.i4 242
+    IL_0ffe: ldc.i4.s 14
+    IL_1000: newobj System.Drawing.Point::.ctor
+    IL_1005: callvirt System.Windows.Forms.Control::set_Location
+    IL_100a: ldarg.0
+    IL_100b: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_1010: ldstr ldstr "label2"
+    IL_1015: callvirt System.Windows.Forms.Control::set_Name
+    IL_101a: ldarg.0
+    IL_101b: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_1020: ldc.i4.s 58
+    IL_1022: ldc.i4.s 15
+    IL_1024: newobj System.Drawing.Size::.ctor
+    IL_1029: callvirt System.Windows.Forms.Control::set_Size
+    IL_102e: ldarg.0
+    IL_102f: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_1034: ldc.i4.s 12
+    IL_1036: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_103b: ldarg.0
+    IL_103c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label2
+    IL_1041: ldstr ldstr "Company"
+    IL_1046: callvirt System.Windows.Forms.Control::set_Text
+    IL_104b: ldarg.0
+    IL_104c: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_1051: ldc.i4.1
+    IL_1052: callvirt System.Windows.Forms.Control::set_AutoSize
+    IL_1057: ldarg.0
+    IL_1058: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_105d: ldstr ldstr "Segoe UI Semibold"
+    IL_1062: ldc.r4 9.0
+    IL_1067: ldc.i4.1
+    IL_1068: ldc.i4.3
+    IL_1069: ldc.i4.0
+    IL_106a: newobj System.Drawing.Font::.ctor
+    IL_106f: callvirt System.Windows.Forms.Control::set_Font
+    IL_1074: ldarg.0
+    IL_1075: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_107a: ldc.i4.s 14
+    IL_107c: ldc.i4.s 14
+    IL_107e: newobj System.Drawing.Point::.ctor
+    IL_1083: callvirt System.Windows.Forms.Control::set_Location
+    IL_1088: ldarg.0
+    IL_1089: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_108e: ldstr ldstr "label1"
+    IL_1093: callvirt System.Windows.Forms.Control::set_Name
+    IL_1098: ldarg.0
+    IL_1099: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_109e: ldc.i4.s 65
+    IL_10a0: ldc.i4.s 15
+    IL_10a2: newobj System.Drawing.Size::.ctor
+    IL_10a7: callvirt System.Windows.Forms.Control::set_Size
+    IL_10ac: ldarg.0
+    IL_10ad: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_10b2: ldc.i4.s 10
+    IL_10b4: callvirt System.Windows.Forms.Control::set_TabIndex
+    IL_10b9: ldarg.0
+    IL_10ba: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::label1
+    IL_10bf: ldstr ldstr "User Name"
+    IL_10c4: callvirt System.Windows.Forms.Control::set_Text
+    IL_10c9: ldarg.0
+    IL_10ca: ldc.r4 6.0
+    IL_10cf: ldc.r4 13.0
+    IL_10d4: newobj System.Drawing.SizeF::.ctor
+    IL_10d9: call System.Windows.Forms.ContainerControl::set_AutoScaleDimensions
+    IL_10de: ldarg.0
+    IL_10df: ldc.i4.1
+    IL_10e0: call System.Windows.Forms.ContainerControl::set_AutoScaleMode
+    IL_10e5: ldarg.0
+    IL_10e6: ldc.i4 909
+    IL_10eb: ldc.i4 596
+    IL_10f0: newobj System.Drawing.Size::.ctor
+    IL_10f5: call System.Windows.Forms.Form::set_ClientSize
+    IL_10fa: ldarg.0
+    IL_10fb: call System.Windows.Forms.Control::get_Controls
+    IL_1100: ldarg.0
+    IL_1101: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_1106: callvirt ControlCollection::Add
+    IL_110b: ldarg.0
+    IL_110c: ldstr ldstr "UserRightsEditing"
+    IL_1111: call System.Windows.Forms.Control::set_Name
+    IL_1116: ldarg.0
+    IL_1117: ldstr ldstr "dmin"
+    IL_111c: callvirt System.Windows.Forms.Control::set_Text
+    IL_1121: ldarg.0
+    IL_1122: ldc.i4.2
+    IL_1123: call System.Windows.Forms.Form::set_WindowState
+    IL_1128: ldarg.0
+    IL_1129: ldarg.0
+    IL_112a: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserRightsEditing_FormClosed
+    IL_1130: newobj System.Windows.Forms.FormClosedEventHandler::.ctor
+    IL_1135: call System.Windows.Forms.Form::add_FormClosed
+    IL_113a: ldarg.0
+    IL_113b: ldarg.0
+    IL_113c: ldftn Architecture.WinApp.UserRightsManagement.UserRightsEditing::UserRightsEditing_Load
+    IL_1142: newobj System.EventHandler::.ctor
+    IL_1147: call System.Windows.Forms.Form::add_Load
+    IL_114c: ldarg.0
+    IL_114d: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel1
+    IL_1152: ldc.i4.0
+    IL_1153: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1158: ldarg.0
+    IL_1159: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::grduserRights
+    IL_115e: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_1163: ldarg.0
+    IL_1164: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_1169: ldc.i4.0
+    IL_116a: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_116f: ldarg.0
+    IL_1170: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel14
+    IL_1175: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_117a: ldarg.0
+    IL_117b: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_1180: ldc.i4.0
+    IL_1181: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_1186: ldarg.0
+    IL_1187: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::toolStrip4
+    IL_118c: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_1191: ldarg.0
+    IL_1192: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_1197: ldc.i4.0
+    IL_1198: callvirt System.Windows.Forms.Control::ResumeLayout
+    IL_119d: ldarg.0
+    IL_119e: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::panel2
+    IL_11a3: callvirt System.Windows.Forms.Control::PerformLayout
+    IL_11a8: ldarg.0
+    IL_11a9: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbCompanyName
+    IL_11ae: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_11b3: ldarg.0
+    IL_11b4: ldfld Architecture.WinApp.UserRightsManagement.UserRightsEditing::CmbUserName
+    IL_11b9: callvirt System.ComponentModel.ISupportInitialize::EndInit
+    IL_11be: ldarg.0
+    IL_11bf: ldc.i4.0
+    IL_11c0: call System.Windows.Forms.Control::ResumeLayout
+    IL_11c5: ret

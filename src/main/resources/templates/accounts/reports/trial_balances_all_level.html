@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trial Balances All Level - WinForms Replica</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        /* ditto panel2 (Teal, 884x51: toolbar + toolStripLabel1) */
+        .win-header-panel2 { background-color: #00796B; }
+        .win-toolbar { padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; }
+        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
+        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
+        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
+        .win-header-title2 { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 15px; font-weight: bold; padding: 6px 10px 8px 10px; }
+        /* ditto panel3 filters bar (884x67, white) */
+        .win-filterbar { background: #ffffff; border-bottom: 1px solid #b0bec5; padding: 6px 10px; display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
+        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
+        .radio-inline-win { display: inline-flex; align-items: center; gap: 4px; margin-right: 4px; font-weight: 600; color: #334155; white-space: nowrap; }
+        .chk-inline-win { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; white-space: nowrap; }
+        /* ditto panel4 (Teal, 884x23: label1 "Filtered Records") */
+        .win-filtered-records { background-color: #00796B; color: #ffffff; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 12px; padding: 3px 10px; }
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
+        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; position: sticky; top: 0; z-index: 2; }
+        .win-grid-table td { padding: 3px 8px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; }
+        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
+        .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
+        .grid-scroll { max-height: 560px; overflow: auto; border: 1px solid #cbd5e1; margin: 0; }
+        /* ditto AddConditionalFormatting(): IsGroupDetail == "Group" -> FontBold */
+        .row-group td { font-weight: bold; }
+        .tree-toggle { display: inline-block; width: 14px; text-align: center; cursor: pointer; color: #00796B; font-weight: bold; user-select: none; }
+        .tree-toggle.leaf { visibility: hidden; }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="win-header-panel2">
+        <!-- ditto toolStrip3's real order: Reset | 135-Print -->
+        <div class="win-toolbar">
+            <button type="button" class="win-btn" onclick="resetTBL()"><i class="fa fa-plus text-success"></i> Reset</button>
+            <div class="dropdown" style="display:inline-block;">
+                <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown" title="Not reproduced in this port"><i class="fa fa-print"></i> 135-Print</button>
+            </div>
+            <a href="/accounts/dashboard" style="margin-left:auto; color:#ffffff; text-decoration:none; font-size:11px;">
+                <i class="fa fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+        <div class="win-header-title2">Trial Balances All Level</div>
+    </div>
+
+    <!-- ditto panel3 (884x67): From Date/To Date, View Options + Show, Four/Six Columns, Collapse/Expand, Skip Zero -->
+    <div class="win-filterbar">
+        <div>
+            <div class="win-label">From Date</div>
+            <input type="date" class="win-input" id="txtFromDate" style="width:150px;">
+        </div>
+        <div>
+            <div class="win-label">To Date</div>
+            <input type="date" class="win-input" id="txtToDate" style="width:150px;">
+        </div>
+        <div>
+            <div class="win-label">View Options</div>
+            <select class="win-input" id="cmbViewOption" style="width:200px;">
+                <option value="1">Upto 1st Level</option>
+                <option value="2">Upto 2nd Level</option>
+                <option value="3">Upto 3rd Level</option>
+                <option value="4">Upto 4th Level</option>
+                <option value="5" selected>Upto All(5) Levels</option>
+            </select>
+        </div>
+        <button type="button" class="win-btn win-btn-teal" onclick="btnshowClick()">Show</button>
+        <label class="chk-inline-win"><input type="checkbox" id="ChkFourColumns" checked> Four Columns</label>
+        <label class="chk-inline-win"><input type="checkbox" id="ChkSixColumns"> Six Columns</label>
+        <label class="radio-inline-win"><input type="radio" name="rdGroupTBL" id="rdGroupCollapsed"> Collapse</label>
+        <label class="radio-inline-win"><input type="radio" name="rdGroupTBL" id="rdGroupeExpand" checked> Expand</label>
+        <label class="chk-inline-win"><input type="checkbox" id="SkipZero"> Skip Zero</label>
+    </div>
+
+    <!-- ditto panel4's label1 "Filtered Records" -->
+    <div class="win-filtered-records">Filtered Records</div>
+
+    <div class="grid-scroll">
+        <table class="win-grid-table" id="tblTBL">
+            <thead>
+            <tr>
+                <th style="min-width:320px;">Account Title</th>
+                <th>Account Code</th>
+                <th>Ac Level</th>
+                <th>Account Type</th>
+                <th style="text-align:right;">Opening</th>
+                <th style="text-align:right;" class="col-six-tbl">Opening Dr</th>
+                <th style="text-align:right;" class="col-six-tbl">Opening Cr</th>
+                <th style="text-align:right;">Debit</th>
+                <th style="text-align:right;">Credit</th>
+                <th style="text-align:right;">Closing</th>
+                <th style="text-align:right;" class="col-six-tbl">Closing Dr</th>
+                <th style="text-align:right;" class="col-six-tbl">Closing Cr</th>
+            </tr>
+            </thead>
+            <tbody id="tblTBLBody">
+                <tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:inline="javascript">
+        function fmt(v) {
+            const n = parseFloat(v);
+            if (isNaN(n)) return '0';
+            return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        // Real, already-fetched SpCoahierarchy_TrialBalance_Rpt rows, flat (AcLevel 1-5, arrival
+        // order is the hierarchical parent-before-child order the proc returns).
+        let rawRows = [];
+        // Rebuilt per selected View Option - ditto GridBind()'s own dtFinal.
+        let dtFinal = [];
+        // RowIds the user has individually collapsed (ditto grdHistory.CollapseRecords() per-node).
+        let collapsedSet = new Set();
+
+        function buildTbRequest() {
+            return {
+                fromDate: $('#txtFromDate').val(),
+                toDate: $('#txtToDate').val(),
+                skipZero: $('#SkipZero').is(':checked')
+            };
+        }
+
+        // ditto GridBind()'s real 5-branch RowId/ParentId self-referencing tree build - ported
+        // line-for-line from the C# switch on cmbViewOption.Value, including RowId++ happening
+        // unconditionally every iteration (not only on rows that get pushed), ditto desktop.
+        function buildTree(viewOption, rows) {
+            const out = [];
+            let rowId = 0;
+            let p2 = null, p3 = null, p4 = null, p5 = null;
+            for (const r of rows) {
+                rowId++;
+                const lvl = parseInt(r.AcLevel, 10);
+                const push = (parentId) => out.push(Object.assign({}, r, { RowId: rowId, ParentId: parentId }));
+                if (viewOption === 1) {
+                    if (lvl === 1) { p2 = rowId; push(null); }
+                } else if (viewOption === 2) {
+                    if (lvl === 1) { p2 = rowId; push(null); }
+                    else if (lvl === 2) { p3 = rowId; push(p2); }
+                } else if (viewOption === 3) {
+                    if (lvl === 2) { p3 = rowId; push(null); }
+                    else if (lvl === 3) { p4 = rowId; push(p3); }
+                } else if (viewOption === 4) {
+                    if (lvl === 3) { p4 = rowId; push(null); }
+                    else if (lvl === 4) { p5 = rowId; push(p4); }
+                    else if (lvl === 5) { push(p5); }
+                } else if (viewOption === 5) {
+                    if (lvl === 1) { p2 = rowId; push(null); }
+                    else if (lvl === 2) { p3 = rowId; push(p2); }
+                    else if (lvl === 3) { p4 = rowId; push(p3); }
+                    else if (lvl === 4) { p5 = rowId; push(p4); }
+                    else if (lvl === 5) { push(p5); }
+                }
+            }
+            return out;
+        }
+
+        function btnshowClick() {
+            $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Loading...</td></tr>');
+            $.ajax({
+                url: '/accounts/api/reports/trial-balance-all-level',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(buildTbRequest()),
+                success: function (res) {
+                    if (res && res.success) {
+                        rawRows = res.data || [];
+                        collapsedSet = new Set();
+                        rebuildAndRender();
+                    } else {
+                        rawRows = []; dtFinal = [];
+                        $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Trial Balances All Level.') + '</td></tr>');
+                    }
+                },
+                error: function () {
+                    rawRows = []; dtFinal = [];
+                    $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">Error executing Trial Balances All Level report.</td></tr>');
+                }
+            });
+        }
+
+        function applyColumnModeTBL() {
+            const six = $('#ChkSixColumns').is(':checked');
+            $('.col-six-tbl').toggle(six);
+        }
+
+        // ditto ChkFourColumns_CheckedChanged / ChkSixColumns_CheckedChanged: mutually exclusive,
+        // clearing the other rather than allowing both/neither in the same way desktop does.
+        $('#ChkFourColumns').on('change', function () {
+            if ($(this).is(':checked')) { $('#ChkSixColumns').prop('checked', false); }
+            else { $(this).prop('checked', false); }
+            applyColumnModeTBL();
+        });
+        $('#ChkSixColumns').on('change', function () {
+            if ($(this).is(':checked')) { $('#ChkFourColumns').prop('checked', false); }
+            else { $(this).prop('checked', false); }
+            applyColumnModeTBL();
+        });
+
+        // ditto rdGroupCollapsed_CheckedChanged / rdGroupeExpand_CheckedChanged
+        $('#rdGroupCollapsed').on('change', function () {
+            if ($(this).is(':checked')) { collapseAll(); }
+        });
+        $('#rdGroupeExpand').on('change', function () {
+            if ($(this).is(':checked')) { expandAll(); }
+        });
+
+        function collapseAll() {
+            collapsedSet = new Set(dtFinal.filter(r => hasChildren(r.RowId)).map(r => r.RowId));
+            renderTree();
+        }
+        function expandAll() {
+            collapsedSet = new Set();
+            renderTree();
+        }
+
+        function hasChildren(rowId) {
+            return dtFinal.some(r => r.ParentId === rowId);
+        }
+
+        function rebuildAndRender() {
+            const viewOption = parseInt($('#cmbViewOption').val(), 10) || 5;
+            dtFinal = buildTree(viewOption, rawRows);
+            if ($('#rdGroupCollapsed').is(':checked')) {
+                collapsedSet = new Set(dtFinal.filter(r => hasChildren(r.RowId)).map(r => r.RowId));
+            } else {
+                collapsedSet = new Set();
+            }
+            renderTree();
+        }
+
+        // depth = number of ancestors (RowId chases ParentId up to a null root).
+        function depthOf(row, byId) {
+            let d = 0, cur = row;
+            while (cur.ParentId !== null && cur.ParentId !== undefined) {
+                cur = byId.get(cur.ParentId);
+                if (!cur) break;
+                d++;
+            }
+            return d;
+        }
+
+        // A row is visible only if none of its ancestors are individually collapsed.
+        function isVisible(row, byId) {
+            let cur = byId.get(row.ParentId);
+            while (cur) {
+                if (collapsedSet.has(cur.RowId)) return false;
+                cur = byId.get(cur.ParentId);
+            }
+            return true;
+        }
+
+        function renderTree() {
+            applyColumnModeTBL();
+            const tbody = $('#tblTBLBody');
+            tbody.empty();
+            if (!dtFinal || dtFinal.length === 0) {
+                tbody.html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">No records found for the selected criteria.</td></tr>');
+                return;
+            }
+            const byId = new Map(dtFinal.map(r => [r.RowId, r]));
+            dtFinal.forEach(r => {
+                if (!isVisible(r, byId)) return;
+                const depth = depthOf(r, byId);
+                const children = hasChildren(r.RowId);
+                const collapsed = collapsedSet.has(r.RowId);
+                const toggleHtml = children
+                    ? '<span class="tree-toggle" data-row-id="' + r.RowId + '">' + (collapsed ? '+' : '−') + '</span>'
+                    : '<span class="tree-toggle leaf">−</span>';
+                const isGroup = (r.IsGroupDetail === 'Group');
+                const opening = parseFloat(r.Opening || 0), openingDr = parseFloat(r.OpeningDr || 0), openingCr = parseFloat(r.OpeningCr || 0);
+                const debit = parseFloat(r.Debit || 0), credit = parseFloat(r.Credit || 0);
+                const closing = parseFloat(r.Closing || 0), closingDr = parseFloat(r.ClosingDr || 0), closingCr = parseFloat(r.ClosingCr || 0);
+                tbody.append(`
+                    <tr class="${isGroup ? 'row-group' : ''}">
+                        <td style="padding-left:${8 + depth * 18}px;">${toggleHtml} ${r.AccountTitle || ''}</td>
+                        <td>${r.AccountCode || ''}</td>
+                        <td>${r.AcLevel != null ? r.AcLevel : ''}</td>
+                        <td>${r.IsGroupDetail || ''}</td>
+                        <td style="text-align:right;">${fmt(opening)}</td>
+                        <td style="text-align:right;" class="col-six-tbl">${fmt(openingDr)}</td>
+                        <td style="text-align:right;" class="col-six-tbl">${fmt(openingCr)}</td>
+                        <td style="text-align:right;">${fmt(debit)}</td>
+                        <td style="text-align:right;">${fmt(credit)}</td>
+                        <td style="text-align:right;">${fmt(closing)}</td>
+                        <td style="text-align:right;" class="col-six-tbl">${fmt(closingDr)}</td>
+                        <td style="text-align:right;" class="col-six-tbl">${fmt(closingCr)}</td>
+                    </tr>
+                `);
+            });
+            applyColumnModeTBL();
+        }
+
+        $('#tblTBLBody').on('click', '.tree-toggle:not(.leaf)', function () {
+            const rowId = parseInt($(this).data('row-id'), 10);
+            if (collapsedSet.has(rowId)) collapsedSet.delete(rowId);
+            else collapsedSet.add(rowId);
+            renderTree();
+        });
+
+        $('#cmbViewOption').on('change', function () {
+            if (rawRows.length) rebuildAndRender();
+        });
+
+        // ditto btnNew_Click: reset view option to 1st Level, reset dates to current financial
+        // year start / today, then re-run GridBind().
+        function resetTBL() {
+            $('#cmbViewOption').val('1');
+            $('#txtFromDate, #txtToDate').val('');
+            $('#SkipZero').prop('checked', false);
+            if (rawRows.length) { btnshowClick(); }
+        }
+
+        $(document).ready(function () {
+            applyColumnModeTBL();
+        });
+    </script>
+</body>
+</html>

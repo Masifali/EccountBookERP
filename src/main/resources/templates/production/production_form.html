@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>M-TECH</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <!-- NProgress -->
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <!-- iCheck -->
+    <link rel="stylesheet" th:href="@{/vendors/iCheck/skins/flat/green.css}">
+    <!-- Datatables -->
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css}">
+    <!-- Select2 -->
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/jquery-confirm-master/css/jquery-confirm.css}">
+
+    <!-- Custom Theme Style -->
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <!-- Customization -->
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+</head>
+
+<body class="nav-sm">
+<div class="container body">
+    <div class="main_container">
+
+        <!-- side bar and top navigation -->
+        <div th:replace="fragments/fixed_sidebar :: div">
+        </div>
+        <!-- /side bar and top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+
+                <form class="form-horizontal form-label-left" id="purchaseOrderForm" method="post"
+                      th:action="@{/receivables/add_or_update_sale_order}" th:object="${production}">
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>SALE ORDER FORM</h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">COMPANY</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control" required="required"
+                                                            th:attr="style='pointer-events:'+${disableEditControls=='true'? 'none' : ''}"
+                                                            th:field="${production.company}">
+                                                        <!-- <option value="0"></option> -->
+                                                        <option th:each="company : ${companies}"
+                                                                th:text="${company.name}"
+                                                                th:value="${company.id}">
+                                                        </option>
+                                                    </select>
+                                                    <input id="purchaseOrderId" th:field="${production.id}"
+                                                           type="hidden"/>
+                                                    <input id="purchaseOrderCode"
+                                                           th:field="${production.productionCode}"
+                                                           type="hidden"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--   <div class="col-md-2 col-sm-2 col-xs-12">
+                                            <div id ="prurchaseFrom"  class="form-group">
+                                              <div class="col-md-12 col-sm-12 col-xs-12">
+                                                  <select class="form-control" required="required" th:field="${purchaseOrder.fromCompany}" >
+                                                      <option value ="0"></option>
+                                                      <option value ="1">INSHA</option>
+                                                      <option value ="2">IIL</option>
+                                                      <option value ="3">UTM</option>
+
+                                                  </select>
+                                               </div>
+                                          </div>
+                                      </div> -->
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">BRANCH</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control"
+                                                            th:attr="style='pointer-events:'+${disableEditControls=='true'? 'none' : ''}"
+                                                            th:field="${production.branch}">
+                                                        <th:block
+                                                                th:if="${production.company != null and production.company.branches != null}">
+                                                            <!-- <option value="0"></option> -->
+                                                            <option th:each="branch : ${production.company.branches}"
+                                                                    th:text="${branch.name}"
+                                                                    th:value="${branch.id}">
+                                                            </option>
+                                                        </th:block>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">SALE ORDER
+                                                    NO.</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <input class="form-control" id=purchaseOrderCode readonly
+                                                           required="required" th:field="${production.productionCode}"
+                                                           type="text">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">FINANCIAL
+                                                    YEAR</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control" required="required"
+                                                            th:attr="style='pointer-events:'+${disableEditControls=='true'? 'none' : ''}"
+                                                            th:field="${production.financialYear}">
+                                                        <option value="0"></option>
+                                                        <option th:attr="data-value=${financialYear.fromDate} + '|' + ${financialYear.toDate}"
+                                                                th:each="financialYear : ${financialYears}"
+                                                                th:text="${financialYear.name}"
+                                                                th:value="${financialYear.id}">
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+
+
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">SUPPLIER
+                                                    ACCOUNT</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <select class="form-control select2_single"
+                                                            required="required"
+                                                            th:field="${production.itemDef}">
+                                                        <option value="0"></option>
+                                                        <th:block
+                                                                th:each="itemSubCategory : ${itemSubCategories}">
+                                                            <option
+                                                                    th:each="itemDef : ${itemSubCategory.itemDefs}"
+                                                                    th:text="${itemDef.formattedCode + '&emsp;' + itemDef.itemSubCategory.name + ' ' + itemDef.name}"
+                                                                    th:value="${itemDef.id}">
+                                                            </option>
+                                                        </th:block>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">PURCHASE
+                                                    ORDER DATE</label>
+                                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                                    <input class="form-control" required="required"
+                                                           th:field="${production.productionDate}"
+                                                           type="date">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 col-sm.12 col-xs-12">
+                                        <label class="control-label col-md-6 col-sm-6 col-xs-12"
+                                               id=labelIdforShowAvg></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <div class="x_panel">
+                                        <div class="x_title">
+                                            <h2>SALE VOUCHER FORM</h2>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="x_content">
+
+
+                                        </div>
+
+                                        <div class="x_panel" style="overflow: scroll;">
+
+                                            <div class="x_content">
+                                                <div class="x_content">
+                                                    <table cellspacing="0"
+                                                           class="table table-striped table-bordered table-sm"
+                                                           id="purchase_order_entry_table" width="100%">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>#</th>
+
+                                                            <th>ITEM</th>
+                                                            <th>ACCOUNT</th>
+                                                            <th>MILL</th>
+                                                            <th>RATE</th>
+                                                            <th>KG</th>
+                                                            <th>VEHICAL</th>
+                                                            <th>DATE</th>
+                                                            <th>TYPE</th>
+
+                                                            <th>ACTION</th>
+                                                        </tr>
+                                                        </thead>
+
+                                                        <tbody>
+                                                        <tr th:each="Entry, rowStat : ${production.productionEntries}">
+                                                            <td>
+                                                                <span id="serial_no" th:text="${rowStat.count}"></span>
+                                                                <input th:field="${production.productionEntries[__${rowStat.index}__].id}"
+                                                                       type="hidden"/>
+                                                            </td>
+
+                                                            <td>
+                                                                <select class="form-control select2_single itemDef"
+                                                                        required="required"
+                                                                        th:field="${production.productionEntries[__${rowStat.index}__].itemDef}">
+                                                                    <option value="0"></option>
+                                                                    <th:block
+                                                                            th:each="itemSubCategory : ${itemSubCategories}">
+                                                                        <option
+                                                                                th:each="itemDef : ${itemSubCategory.itemDefs}"
+                                                                                th:text="${itemDef.formattedCode + '&emsp;' + itemDef.itemSubCategory.name + ' ' + itemDef.name}"
+                                                                                th:value="${itemDef.id}">
+                                                                        </option>
+                                                                    </th:block>
+                                                                </select>
+                                                            </td>
+
+                                                            <td>
+                                                                <select class="form-control select2_single customerAccount"
+                                                                        required="required"
+                                                                        th:field="${production.productionEntries[__${rowStat.index}__].customerAccount.code}">
+                                                                    <option th:value="0">SELECTE PARTY</option>
+                                                                    <option
+                                                                            th:each="account : ${accounts}"
+                                                                            th:text="${account.formattedCode + '&emsp;' + account.accountName }"
+                                                                            th:value="${account.code}">
+                                                                    </option>
+                                                                </select>
+                                                            </td>
+                                                            <td>
+                                                                <select class="form-control select2_single millKhata"
+                                                                        required="required"
+                                                                        th:field="${production.productionEntries[__${rowStat.index}__].millKhata.id}">
+                                                                    <option value="0">SELECTE MILL KHATA</option>
+                                                                    <option
+                                                                            th:each="mill : ${millKhate}"
+                                                                            th:text="${mill.accountName}"
+                                                                            th:value="${mill.id}">
+                                                                    </option>
+
+                                                                </select>
+                                                            </td>
+                                                            <td><input class="form-control  rate"
+                                                                       onfocus="this.select()"
+                                                                       step="any"
+                                                                       th:field="${production.productionEntries[__${rowStat.index}__].rate}"
+                                                                       type="number">
+                                                            </td>
+                                                            <td><input class="form-control kg" onfocus="this.select()"
+                                                                       required="required"
+                                                                       step="any"
+                                                                       th:field="${production.productionEntries[__${rowStat.index}__].kg}"
+                                                                       type="number">
+                                                            </td>
+
+                                                            <td><input class="form-control  vehical"
+                                                                       onfocus="this.select()"
+                                                                       required="required" step="any"
+                                                                       th:field="${production.productionEntries[__${rowStat.index}__].vehical}"
+                                                                       type="number">
+                                                            </td>
+
+                                                            <td><input class="form-control paymentDate"
+                                                                       required="required"
+                                                                       th:field="${production.productionEntries[__${rowStat.index}__].paymentDate}"
+                                                                       type="date">
+                                                            </td>
+                                                            <td><select class="form-control paymentType"
+                                                                        onfocus="this.select()"
+                                                                        required="required"
+                                                                        th:field="${production.productionEntries[__${rowStat.index}__].paymentType}"
+                                                                        type="number">
+                                                                <option value="cash">CASH</option>
+                                                                <option value="routine">ROUTINE</option>
+                                                                <option value="percentage">PRECENTAGE</option>
+
+                                                            </select>
+                                                            </td>
+
+                                                            <!--
+                                                           <td class="amount" th:text="${production.productionEntries[__${rowStat.index}__].amount}"></td> -->
+
+                                                            <td>
+                                                                <a class="entry_add" href="javascript:void(0)"
+                                                                   style="text-decoration: underline;">ADD</a>/<a
+                                                                    class="entry_delete"
+                                                                    href="javascript:void(0)"
+                                                                    style="text-decoration: underline;">DELETE</a>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+
+                                                        <tfoot>
+                                                        <tr>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th></th>
+                                                        </tr>
+                                                        </tfoot>
+
+                                                    </table>
+
+
+                                                    <div class="form-group">
+                                                        <button class="btn btn-success" id="submitForm"
+                                                                style="float: right;"><i class="fa fa-credit-card"></i>
+                                                            SUBMIT
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                </form>
+
+                <!-- modals -->
+
+                <!-- Notification modal -->
+                <div aria-hidden="true" class="modal fade" id="modal_notify" role="dialog" tabindex="-1">
+                    <div class="modal-dialog modal-md">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <button class="close" data-dismiss="modal" type="button"><span
+                                        aria-hidden="true">Ã—</span>
+                                </button>
+                                <h4 class="modal-title" style="color:#069"></h4>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-danger" data-dismiss="modal" type="button">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- /page content -->
+
+            <!-- footer content -->
+            <footer>
+                <div class="pull-right">
+                    Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+                </div>
+                <div class="clearfix"></div>
+            </footer>
+            <!-- /footer content -->
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- NProgress -->
+<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Datatables -->
+<script th:src="@{/vendors/datatables.net/js/jquery.dataTables.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/dataTables.buttons.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.flash.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.html5.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-buttons/js/buttons.print.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive/js/dataTables.responsive.min.js}"></script>
+<script th:src="@{/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js}"></script>
+<script th:src="@{/vendors/datatables.net-scroller/js/dataTables.scroller.min.js}"></script>
+<script th:src="@{/vendors/jszip/dist/jszip.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/pdfmake.min.js}"></script>
+<script th:src="@{/vendors/pdfmake/build/vfs_fonts.js}"></script>
+<!-- Select2 -->
+<script th:src="@{/vendors/select2/dist/js/select2.full.js}"></script>
+<script th:src="@{/vendors/select2-tab-fix-master/src/select2-tab-fix.js}"></script>
+<!-- confirm -->
+<script th:src="@{/vendors/jquery-confirm-master/js/jquery-confirm.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/build/js/countx_sale_order.js}"></script>
+<script>
+    $(".select2_single").select2({
+        dropdownAutoWidth: true,
+        width: '100%'
+    });
+</script>
+
+</body>
+</html>

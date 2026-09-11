@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Account Opening Balance - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #dbe4eb;
+            font-size: 11px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Top System Status Bar */
+        .erp-system-bar {
+            background-color: #004d40;
+            color: #e0f2f1;
+            padding: 3px 10px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .erp-system-bar .info-item {
+            margin-right: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-update {
+            background-color: #eab308;
+            color: #000;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        /* Sub-Window Title Header Bar */
+        .erp-window-header {
+            background: linear-gradient(to right, #00796B, #004d40);
+            color: white;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Toolbar Bar */
+        .erp-toolbar {
+            background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+            border-bottom: 1px solid #cbd5e1;
+            padding: 3px 8px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-erp {
+            background-color: #ffffff;
+            border: 1px solid #94a3b8;
+            border-radius: 3px;
+            padding: 2px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+        }
+
+        .btn-erp:hover {
+            background-color: #e2e8f0;
+            border-color: #64748b;
+            color: #0f172a;
+            text-decoration: none;
+        }
+
+        .btn-erp-save {
+            background-color: #00796B;
+            color: white;
+            border: 1px solid #004d40;
+        }
+
+        .btn-erp-save:hover {
+            background-color: #004d40;
+            color: white;
+        }
+
+        /* Fieldsets */
+        .erp-fieldset {
+            background: #ffffff;
+            border: 1px solid #b0bec5;
+            border-radius: 3px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+        }
+
+        .erp-fieldset legend {
+            font-size: 12px;
+            font-weight: bold;
+            color: #00796B;
+            width: auto;
+            padding: 0 4px;
+            margin-bottom: 6px;
+            border: none;
+        }
+
+        .form-row-custom {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-item-custom {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-item-custom label {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .form-control-erp {
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            padding: 2px 6px;
+            font-size: 11px;
+            height: 25px;
+            background-color: #fff;
+            color: #1e293b;
+        }
+
+        .form-control-erp:focus {
+            border-color: #00796B;
+            outline: none;
+        }
+
+        /* History Table Header & Grid */
+        .history-header {
+            background: #00796B;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 2px 2px 0 0;
+            margin-top: 4px;
+        }
+
+        .table-wrap {
+            max-height: 520px;
+            overflow-y: auto;
+            border: 1px solid #b0bec5;
+            background: white;
+        }
+
+        .erp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .erp-table th {
+            background-color: #1d4ed8; /* Blue table header matching desktop screenshot */
+            color: white;
+            padding: 5px 8px;
+            text-align: left;
+            border: 1px solid #1e40af;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .erp-table th.num-col, .erp-table td.num-col {
+            text-align: right;
+        }
+
+        .erp-table td {
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            vertical-align: middle;
+        }
+
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr:hover { background-color: #e0f2fe; cursor: pointer; }
+        .erp-table tr.selected-row { background-color: #bae6fd !important; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Top ERP System Status Bar -->
+    <div class="erp-system-bar">
+        <div>
+            <span class="info-item"><i class="fa fa-folder-open-o"></i> ...Select Any Value...</span>
+            <span class="info-item"><i class="fa fa-user"></i> Numan Rasheed (Admin)</span>
+            <span class="info-item"><i class="fa fa-building"></i> Golden Ace Rice Mills (Pvt) Ltd.</span>
+        </div>
+        <div>
+            <span class="info-item"><i class="fa fa-clock-o"></i> 12:31:39 am</span>
+            <span class="info-item"><i class="fa fa-calendar"></i> 2026-27</span>
+            <span class="info-item"><span class="badge-update"><i class="fa fa-download"></i> New Update is Available! Current Version: 1.0.0.13</span></span>
+        </div>
+    </div>
+
+    <!-- Sub-Window Title Header Bar -->
+    <div class="erp-window-header">
+        <div><i class="fa fa-balance-scale"></i> Account Opening Balance</div>
+        <div>
+            <a th:href="@{/accounts/dashboard}" title="Close Window" style="color:white; font-size:11px;"><i class="fa fa-times"></i></a>
+        </div>
+    </div>
+
+    <!-- Toolbar Bar -->
+    <div class="erp-toolbar">
+        <button type="button" id="btnNew" class="btn-erp"><i class="fa fa-plus"></i> New</button>
+        <button type="button" id="btnRefresh" class="btn-erp" onclick="location.reload();"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" id="btnUpdateBatch" class="btn-erp btn-erp-save" onclick="$('#batchForm').submit();"><i class="fa fa-save"></i> Update</button>
+        <button type="button" id="btnPrint129" class="btn-erp" onclick="printOpeningBalance();"><i class="fa fa-print"></i> 129-Print</button>
+        <button type="button" class="btn-erp"><i class="fa fa-keyboard-o"></i> Shortcut Keys</button>
+    </div>
+
+    <!-- Main Container -->
+    <div style="padding: 6px;">
+        <div class="erp-window-header" style="background:#006688; font-size:14px; padding:6px 10px;">
+            Opening Balance
+        </div>
+
+        <!-- 1. INFORMATION SECTION (Single Account Update Box matching Desktop Screenshot) -->
+        <div class="erp-fieldset" style="margin-top: 6px;">
+            <legend>Information</legend>
+            <div class="form-row-custom">
+                <!-- Account Title Combo Dropdown -->
+                <div class="form-item-custom" style="flex: 2; min-width: 320px;">
+                    <label for="selAccountTitle">Account_Title</label>
+                    <select id="selAccountTitle" class="form-control-erp" style="width: 100%;">
+                        <option value="">(Select Account Title...)</option>
+                        <option th:each="r : ${form.rows}" 
+                                th:value="${r.accountCode}" 
+                                th:data-debit="${r.openingDebit}" 
+                                th:data-credit="${r.openingCredit}"
+                                th:text="${r.accountTitle}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Debit Amount Input -->
+                <div class="form-item-custom">
+                    <label for="txtDebitAmount">Debit Amount</label>
+                    <input type="number" step="0.01" id="txtDebitAmount" class="form-control-erp" style="width: 110px; text-align: right;" value="0.00"/>
+                </div>
+
+                <!-- Credit Amount Input -->
+                <div class="form-item-custom">
+                    <label for="txtCreditAmount">Credit Amount</label>
+                    <input type="number" step="0.01" id="txtCreditAmount" class="form-control-erp" style="width: 110px; text-align: right;" value="0.00"/>
+                </div>
+
+                <!-- Update Single Button -->
+                <button type="button" id="btnUpdateSingle" class="btn-erp btn-erp-save" style="padding: 4px 18px; font-size: 12px;">
+                    <i class="fa fa-pencil-square-o"></i> Update Single
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. HISTORY SECTION (Detail Accounts Table Grid matching Desktop Screenshot) -->
+        <div class="history-header" style="background:#006688;">
+            <i class="fa fa-history"></i> History
+        </div>
+
+        <form id="batchForm" th:action="@{/accounts/opening_balance/save}" th:object="${form}" method="post">
+            <div class="table-wrap">
+                <table id="tblOpeningBalances" class="erp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">Account Type</th>
+                            <th>Account Title</th>
+                            <th class="num-col" style="width: 140px;">Debit Balance</th>
+                            <th class="num-col" style="width: 140px;">Credit Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="row, stat : *{rows}" th:data-code="${row.accountCode}">
+                            <td style="color:#64748b; font-weight:600;">Detail Account</td>
+                            <td style="font-weight:600; color:#1e293b;">
+                                <span th:text="${row.accountTitle}"></span>
+                                <input type="hidden" th:field="*{rows[__${stat.index}__].accountCode}"/>
+                                <input type="hidden" th:field="*{rows[__${stat.index}__].accountTitle}"/>
+                            </td>
+                            <td class="num-col">
+                                <input type="number" step="0.01" class="form-control-erp num-col input-debit" 
+                                       style="width: 130px; display: inline-block;" 
+                                       th:field="*{rows[__${stat.index}__].openingDebit}"/>
+                            </td>
+                            <td class="num-col">
+                                <input type="number" step="0.01" class="form-control-erp num-col input-credit" 
+                                       style="width: 130px; display: inline-block;" 
+                                       th:field="*{rows[__${stat.index}__].openingCredit}"/>
+                            </td>
+                        </tr>
+                        <tr th:if="${form.rows == null or form.rows.isEmpty()}">
+                            <td colspan="4" style="text-align:center; color:#94a3b8; padding:30px;">No detail accounts defined yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        $(document).ready(function () {
+            // Selecting Account Title populates Debit & Credit fields
+            $('#selAccountTitle').change(function () {
+                const $selected = $(this).find('option:selected');
+                const accountCode = $selected.val();
+                if (accountCode) {
+                    const debit = parseFloat($selected.attr('data-debit') || 0.00).toFixed(2);
+                    const credit = parseFloat($selected.attr('data-credit') || 0.00).toFixed(2);
+                    $('#txtDebitAmount').val(debit);
+                    $('#txtCreditAmount').val(credit);
+
+                    // Highlight corresponding row in table
+                    $('#tblOpeningBalances tbody tr').removeClass('selected-row');
+                    const $targetRow = $('#tblOpeningBalances tbody tr[data-code="' + accountCode + '"]');
+                    if ($targetRow.length > 0) {
+                        $targetRow.addClass('selected-row');
+                        $targetRow[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                } else {
+                    $('#txtDebitAmount').val('0.00');
+                    $('#txtCreditAmount').val('0.00');
+                    $('#tblOpeningBalances tbody tr').removeClass('selected-row');
+                }
+            });
+
+            // Update Single Button Action
+            $('#btnUpdateSingle').click(function () {
+                const accountCode = $('#selAccountTitle').val();
+                if (!accountCode) {
+                    alert('Please select an Account Title first.');
+                    return;
+                }
+
+                const debitAmount = parseFloat($('#txtDebitAmount').val() || 0);
+                const creditAmount = parseFloat($('#txtCreditAmount').val() || 0);
+
+                $.ajax({
+                    url: '/accounts/opening_balance/update-single',
+                    type: 'POST',
+                    data: {
+                        accountCode: accountCode,
+                        debitAmount: debitAmount,
+                        creditAmount: creditAmount
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            // Update values in dropdown dataset
+                            const $opt = $('#selAccountTitle option[value="' + accountCode + '"]');
+                            $opt.attr('data-debit', debitAmount);
+                            $opt.attr('data-credit', creditAmount);
+
+                            // Update values in History table row
+                            const $row = $('#tblOpeningBalances tbody tr[data-code="' + accountCode + '"]');
+                            if ($row.length > 0) {
+                                $row.find('.input-debit').val(debitAmount.toFixed(2));
+                                $row.find('.input-credit').val(creditAmount.toFixed(2));
+                            }
+                            alert('Opening Balance updated successfully for selected account!');
+                        } else {
+                            alert('Error updating single account: ' + (res.message || 'Server error'));
+                        }
+                    },
+                    error: function () {
+                        alert('Error submitting single update request.');
+                    }
+                });
+            });
+
+            $('#btnNew').click(function () {
+                $('#selAccountTitle').val('').trigger('change');
+            });
+
+            window.printOpeningBalance = function () {
+                $.ajax({
+                    url: '/accounts/opening_balance/print',
+                    type: 'GET',
+                    data: {
+                        organizationId: 1,
+                        companyId: 1,
+                        financialYearId: 1
+                    },
+                    success: function (res) {
+                        if (res.success && res.printUrl) {
+                            window.open(res.printUrl, '_blank', 'width=1100,height=750,scrollbars=yes,resizable=yes');
+                        } else {
+                            alert(res.message || 'Record Not Found For Display');
+                        }
+                    },
+                    error: function () {
+                        alert('Record Not Found For Display');
+                    }
+                });
+            };
+        });
+    </script>
+</body>
+</html>

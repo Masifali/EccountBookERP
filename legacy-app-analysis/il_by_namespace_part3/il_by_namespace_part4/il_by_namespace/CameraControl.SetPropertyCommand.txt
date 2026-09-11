@@ -1,0 +1,60 @@
+
+====================================================================================================
+CLASS CameraControl.SetPropertyCommand
+====================================================================================================
+
+; CameraControl.SetPropertyCommand::.ctor  (rva=0x1b478, tiny header, code_size=22, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.1
+    IL_0002: call CameraControl.Command::.ctor
+    IL_0007: ldarg.0
+    IL_0008: ldarg.2
+    IL_0009: stfld CameraControl.SetPropertyCommand::_propertyID
+    IL_000e: ldarg.0
+    IL_000f: ldarg.3
+    IL_0010: stfld CameraControl.SetPropertyCommand::_data
+    IL_0015: ret
+
+; CameraControl.SetPropertyCommand::Execute  (rva=0x1b490, fat header, code_size=108, max_stack=5, exception_handlers=no)
+    IL_0000: ldc.i4.0
+    IL_0001: stloc.0
+    IL_0002: ldarg.0
+    IL_0003: ldfld CameraControl.Command::_model
+    IL_0008: callvirt CameraControl.CameraModel::get_Camera
+    IL_000d: ldarg.0
+    IL_000e: ldfld CameraControl.SetPropertyCommand::_propertyID
+    IL_0013: ldc.i4.0
+    IL_0014: ldarg.0
+    IL_0015: ldfld CameraControl.SetPropertyCommand::_data
+    IL_001a: call System.Runtime.InteropServices.Marshal::SizeOf
+    IL_001f: ldarg.0
+    IL_0020: ldfld CameraControl.SetPropertyCommand::_data
+    IL_0025: call EDSDKLib.EDSDK::EdsSetPropertyData
+    IL_002a: stloc.0
+    IL_002b: ldloc.0
+    IL_002c: brfalse.s IL_006a
+    IL_002e: ldloc.0
+    IL_002f: ldc.i4 129
+    IL_0034: bne.un.s IL_0050
+    IL_0036: ldc.i4.2
+    IL_0037: ldsfld System.IntPtr::Zero
+    IL_003c: newobj CameraControl.CameraEvent::.ctor
+    IL_0041: stloc.1
+    IL_0042: ldarg.0
+    IL_0043: ldfld CameraControl.Command::_model
+    IL_0048: ldloc.1
+    IL_0049: callvirt CameraControl.Observable::NotifyObservers
+    IL_004e: ldc.i4.1
+    IL_004f: ret
+    IL_0050: ldc.i4.1
+    IL_0051: ldloc.0
+    IL_0052: conv.u8
+    IL_0053: call System.IntPtr::op_Explicit
+    IL_0058: newobj CameraControl.CameraEvent::.ctor
+    IL_005d: stloc.2
+    IL_005e: ldarg.0
+    IL_005f: ldfld CameraControl.Command::_model
+    IL_0064: ldloc.2
+    IL_0065: callvirt CameraControl.Observable::NotifyObservers
+    IL_006a: ldc.i4.1
+    IL_006b: ret

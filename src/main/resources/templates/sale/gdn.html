@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Golden Ace Rice Mills — Goods Dispatch Note</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body { font-family: "Segoe UI", "Verdana", Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; user-select: none; }
+        .erp-top-banner { background-color: #00796B; color: #ffffff; height: 32px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 600; justify-content: space-between; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 32px; display: flex; align-items: center; padding: 0 6px; gap: 4px; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; color: #000000; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; font-weight: 500; }
+        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-sep { width: 1px; height: 18px; background-color: #b0b0b0; margin: 0 2px; }
+        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 11pt; font-weight: bold; text-transform: uppercase; }
+        .win-form-body { background-color: #ece9d8; padding: 6px; }
+        .win-group-box { border: 1px solid #999999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
+        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .win-label { font-size: 8.5pt; font-weight: 600; color: #222222; white-space: nowrap; margin-bottom: 2px; }
+        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 8.5pt; height: 22px; border: 1px solid #7a9a9e; padding: 2px 4px; background-color: #ffffff; color: #000000; width: 100%; }
+        .win-textbox-readonly { background-color: #f0f0f0 !important; font-weight: bold; color: #004d40; }
+        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 8.5pt; font-weight: bold; border: 1px solid #004d40; height: 22px; padding: 0 8px; cursor: pointer; border-radius: 2px; }
+        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; }
+        .win-grid-scroll { max-height: 240px; overflow-x: auto; overflow-y: auto; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8pt; }
+        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color: #000000; font-weight: bold; border: 1px solid #999999; padding: 4px 5px; text-align: left; }
+        .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; color: #000000; }
+    </style>
+</head>
+<body>
+
+    <div class="erp-top-banner">
+        <div><i class="fa fa-arrow-right me-1"></i> Golden Ace Rice Mills (Pvt) Ltd.</div>
+        <div><i class="fa fa-user me-1"></i> Admin <span class="ms-3"><i class="fa fa-clock-o me-1"></i> 8:20 pm</span></div>
+    </div>
+
+    <div class="win-tool-strip">
+        <button type="button" class="win-btn-tool" onclick="location.reload()"><i class="fa fa-plus text-success"></i> + New</button>
+        <button type="button" class="win-btn-tool" onclick="btnSave_Click()"><i class="fa fa-save text-primary"></i> Save</button>
+        <button type="button" class="win-btn-tool" onclick="btnPrint()"><i class="fa fa-print"></i> Print</button>
+        <div class="win-sep"></div>
+        <div style="margin-left: auto;"><a href="/sale" class="win-btn-tool" style="color: #00796B; font-weight: bold;"><i class="fa fa-arrow-left"></i> Exit Module</a></div>
+    </div>
+
+    <div class="win-teal-header">
+        <span class="win-teal-header-title"><i class="fa fa-cubes me-1"></i> GOODS DISPATCH NOTE (GDN)</span>
+        <span class="badge bg-warning text-dark">GDN-2026</span>
+    </div>
+
+    <div class="win-form-body">
+        <fieldset class="win-group-box">
+            <legend>GDN General Information</legend>
+            <div class="row g-2">
+                <div class="col-md-2">
+                    <label class="win-label">GDN Doc No</label>
+                    <input type="text" id="txtDocNo" class="win-textbox win-textbox-readonly" th:value="${nextDocNo}" readonly/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">GDN Date</label>
+                    <input type="date" id="txtDocDate" class="win-datepicker"/>
+                </div>
+                <div class="col-md-4">
+                    <label class="win-label">Customer / Party *</label>
+                    <select id="cmbCustomer" class="win-combo">
+                        <option value="">-- Select Customer --</option>
+                        <option th:each="c : ${suppliers}" th:value="${c.id}" th:text="${c.customerName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="win-label">Outward Gate Pass (OGP) Link</label>
+                    <select id="cmbOgp" class="win-combo"><option value="">-- Select OGP --</option></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="win-label">Warehouse *</label>
+                    <select id="cmbWarehouse" class="win-combo">
+                        <option value="">-- Select Warehouse --</option>
+                        <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.warehouseName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="win-label">Transporter</label>
+                    <select id="cmbTransporter" class="win-combo"><option value="">-- Select Transporter --</option></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="win-label">Vehicle No</label>
+                    <input type="text" id="txtVehicleNo" class="win-textbox" placeholder="Vehicle No"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="win-label">Freight Amount (Rs)</label>
+                    <input type="number" step="0.01" id="txtFreight" class="win-textbox"/>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box" style="background-color: #ffffff;">
+            <legend>Dispatched Items Detail</legend>
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <label class="win-label">Item / Product *</label>
+                    <select id="lineItem" class="win-combo">
+                        <option value="">-- Select Item --</option>
+                        <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.itemName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Qty</label>
+                    <input type="number" step="0.01" id="lineQty" class="win-textbox" oninput="calcLine()"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Rate</label>
+                    <input type="number" step="0.01" id="lineRate" class="win-textbox" oninput="calcLine()"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Amount</label>
+                    <input type="number" step="0.01" id="lineAmount" class="win-textbox win-textbox-readonly" readonly/>
+                </div>
+                <div class="col-md-2 pt-3">
+                    <button type="button" class="win-btn-action w-100" onclick="btnAddRow_Click()"><i class="fa fa-plus"></i> Add Item</button>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="win-grid-container">
+            <div class="win-grid-scroll">
+                <table class="win-grid" id="tblItems">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">S#</th>
+                            <th>Item Description</th>
+                            <th style="width: 120px; text-align: right;">Qty</th>
+                            <th style="width: 120px; text-align: right;">Rate</th>
+                            <th style="width: 150px; text-align: right;">Amount</th>
+                            <th style="width: 60px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" class="text-center text-muted" style="padding: 12px;">No dispatched items added yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            document.getElementById('txtDocDate').valueAsDate = new Date();
+            $.get('/api/sale/outward-gate-passes', function(res) {
+                var $o = $('#cmbOgp').empty().append('<option value="">-- Select OGP --</option>');
+                res.forEach(function(x) { $o.append(`<option value="${x.id}">OGP-${x.docNo} (${x.customerName})</option>`); });
+            });
+        });
+        function calcLine() {
+            var q = parseFloat($('#lineQty').val()) || 0;
+            var r = parseFloat($('#lineRate').val()) || 0;
+            $('#lineAmount').val((q * r).toFixed(2));
+        }
+        function btnAddRow_Click() {
+            var itemId = $('#lineItem').val();
+            var itemName = $('#lineItem option:selected').text();
+            var qty = parseFloat($('#lineQty').val()) || 0;
+            var rate = parseFloat($('#lineRate').val()) || 0;
+            var amt = parseFloat($('#lineAmount').val()) || 0;
+            if(!itemId || qty <= 0) return alert('Select Item & Qty');
+            var tbody = $('#tblItems tbody');
+            if (tbody.find('td[colspan]').length > 0) tbody.empty();
+            tbody.append(`<tr><td class="text-center">1</td><td>${itemName}</td><td class="text-end">${qty.toFixed(2)}</td><td class="text-end">${rate.toFixed(2)}</td><td class="text-end">${amt.toFixed(2)}</td><td class="text-center"><button class="btn btn-sm btn-danger p-0 px-1" onclick="$(this).closest('tr').remove()">&times;</button></td></tr>`);
+        }
+        function btnSave_Click() { alert('Goods Dispatch Note saved successfully!'); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>Item</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+</head>
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div th:replace="fragments/fixed_sidebar :: div"></div>
+        <div class="right_col" role="main">
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel">
+                        <div class="x_title">
+                            <h2><i class="fa fa-cube"></i> <span th:text="${item.id != null and item.id > 0} ? 'Edit Item' : 'Add Item'"></span></h2>
+                            <ul class="nav navbar-right panel_toolbox">
+                                <li><a th:href="@{/inventory/items}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Back to Items</a></li>
+                            </ul>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="x_content">
+                            <form th:action="@{/inventory/items/save}" th:object="${item}" method="post" class="form-horizontal">
+                                <input type="hidden" th:field="*{id}"/>
+
+                                <h4 class="text-primary">Identification</h4>
+                                <div class="row">
+                                    <div class="col-md-3"><div class="form-group"><label>Item Code</label><input type="text" class="form-control" th:field="*{itemCode}"/></div></div>
+                                    <div class="col-md-5"><div class="form-group"><label>Item Name</label><input type="text" class="form-control" th:field="*{itemName}" required/></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>Alias Name</label><input type="text" class="form-control" th:field="*{itemAliasName}"/></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>Name (Other Lingo)</label><input type="text" class="form-control" th:field="*{itemNameOtherLingo}"/></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>HS Code</label><input type="text" class="form-control" th:field="*{hsCode}"/></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>Barcode No</label><input type="text" class="form-control" th:field="*{barcodeNo}"/></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>Product No</label><input type="text" class="form-control" th:field="*{productNo}"/></div></div>
+                                    <div class="col-md-6"><div class="form-group"><label>Model Name</label><input type="text" class="form-control" th:field="*{modelName}"/></div></div>
+                                    <div class="col-md-6"><div class="form-group"><label>Item Code (New)</label><input type="text" class="form-control" th:field="*{itemCodeNew}"/></div></div>
+                                    <div class="col-md-12"><div class="form-group"><label>Specification</label><textarea class="form-control" rows="2" th:field="*{itemSpecification}"></textarea></div></div>
+                                </div>
+
+                                <h4 class="text-primary">Classification</h4>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group"><label>Item Category</label>
+                                            <select class="form-control modal-select2" th:field="*{itemCategory.id}">
+                                                <option value="0">— None —</option>
+                                                <option th:each="c : ${itemCategories}" th:value="${c.id}" th:text="${c.categoryCode} + ' - ' + ${c.categoryDescription}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group"><label>Item Type</label>
+                                            <select class="form-control modal-select2" th:field="*{itemType.id}">
+                                                <option value="0">— None —</option>
+                                                <option th:each="t : ${itemTypes}" th:value="${t.id}" th:text="${t.typeCode} + ' - ' + ${t.typeDescription}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group"><label>Rack</label>
+                                            <select class="form-control modal-select2" th:field="*{rack.id}">
+                                                <option value="0">— None —</option>
+                                                <option th:each="r : ${racks}" th:value="${r.id}" th:text="${r.rackName}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3"><div class="form-group"><label>Item Class Id</label><input type="number" class="form-control" th:field="*{itemClassId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Base Unit Id</label><input type="number" class="form-control" th:field="*{baseUnitId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Product Type (text)</label><input type="text" class="form-control" th:field="*{productType}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Amount Calc Type</label><input type="text" class="form-control" th:field="*{amountCalcType}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Base Crop Year</label><input type="text" class="form-control" th:field="*{baseCropYear}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Crop Year Id</label><input type="number" class="form-control" th:field="*{cropYearId}"/></div></div>
+                                </div>
+
+                                <h4 class="text-primary">Stock Levels</h4>
+                                <div class="row">
+                                    <div class="col-md-3"><div class="form-group"><label>Min Stock Level</label><input type="number" step="any" class="form-control" th:field="*{minStockLevel}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Max Stock Level</label><input type="number" step="any" class="form-control" th:field="*{maxStockLevel}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Optimal Stock Level</label><input type="number" step="any" class="form-control" th:field="*{optimalStockLevel}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Reorder Level</label><input type="number" step="any" class="form-control" th:field="*{reorderLevel}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Reorder Qty</label><input type="number" step="any" class="form-control" th:field="*{reOrderQty}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Lead Time (days)</label><input type="number" class="form-control" th:field="*{leadTimeDay}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Shelf Life</label><input type="number" class="form-control" th:field="*{shelfLife}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Pack Qty</label><input type="number" step="any" class="form-control" th:field="*{packQty}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Pack Size</label><input type="number" step="any" class="form-control" th:field="*{packSize}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Pack Size Id</label><input type="number" class="form-control" th:field="*{packSizeId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>UOM Lookup Id</label><input type="number" class="form-control" th:field="*{uomLookUpId}"/></div></div>
+                                    <div class="col-md-3" style="margin-top:26px;"><div class="checkbox"><label><input type="checkbox" th:field="*{allowMultiUom}"/> Allow Multi UOM</label></div></div>
+                                    <div class="col-md-3" style="margin-top:26px;"><div class="checkbox"><label><input type="checkbox" th:field="*{isExpirable}"/> Expirable</label></div></div>
+                                </div>
+
+                                <h4 class="text-primary">Pricing</h4>
+                                <div class="row">
+                                    <div class="col-md-3"><div class="form-group"><label>Cost Price</label><input type="number" step="any" class="form-control" th:field="*{costPrice}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Purchase Price</label><input type="number" step="any" class="form-control" th:field="*{purchasePrice}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Retail Price</label><input type="number" step="any" class="form-control" th:field="*{retailPrice}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Wholesale Price</label><input type="number" step="any" class="form-control" th:field="*{wholeSalePrice}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>UOM Sched (Cost)</label><input type="number" class="form-control" th:field="*{uomScheduleIdCostRate}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>UOM Sched (Purchase)</label><input type="number" class="form-control" th:field="*{uomScheduleIdPurRate}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>UOM Sched (Retail)</label><input type="number" class="form-control" th:field="*{uomScheduleIdRetailRate}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>UOM Sched (Wholesale)</label><input type="number" class="form-control" th:field="*{uomScheduleIdWhsRate}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Min Rate</label><input type="number" step="any" class="form-control" th:field="*{minRate}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Max Rate</label><input type="number" step="any" class="form-control" th:field="*{maxRate}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Effected Date</label><input type="date" class="form-control" th:field="*{effectedDate}"/></div></div>
+                                    <div class="col-md-3" style="margin-top:26px;"><div class="checkbox"><label><input type="checkbox" th:field="*{isDiscountable}"/> Discountable</label></div></div>
+                                </div>
+
+                                <h4 class="text-primary">Tax</h4>
+                                <div class="row">
+                                    <div class="col-md-3"><div class="checkbox"><label><input type="checkbox" th:field="*{applyGST}"/> Apply GST</label></div></div>
+                                    <div class="col-md-3"><div class="checkbox"><label><input type="checkbox" th:field="*{applyVAT}"/> Apply VAT</label></div></div>
+                                    <div class="col-md-3"><div class="checkbox"><label><input type="checkbox" th:field="*{applyExciese}"/> Apply Excise</label></div></div>
+                                    <div class="col-md-3"><div class="checkbox"><label><input type="checkbox" th:field="*{otherTax}"/> Other Tax</label></div></div>
+                                    <div class="col-md-3"><div class="checkbox"><label><input type="checkbox" th:field="*{isTaxable}"/> Taxable</label></div></div>
+                                    <div class="col-md-3"><div class="checkbox"><label><input type="checkbox" th:field="*{atRetailPriceTax}"/> Tax at Retail Price</label></div></div>
+                                    <div class="col-md-3"><div class="checkbox"><label><input type="checkbox" th:field="*{atPurcahsePriceTax}"/> Tax at Purchase Price</label></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Sale Tax % (Purchase)</label><input type="number" step="any" class="form-control" th:field="*{saleTaxPurPercent}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Sale Tax % (Sales)</label><input type="number" step="any" class="form-control" th:field="*{saleTaxSalesPercent}"/></div></div>
+                                </div>
+
+                                <h4 class="text-primary">GL Accounts</h4>
+                                <div class="row">
+                                    <div class="col-md-3"><div class="form-group"><label>Purchase GL A/C Id</label><input type="number" class="form-control" th:field="*{purchaseGLAC}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Sale GL A/C Id</label><input type="number" class="form-control" th:field="*{saleGLAC}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>COGS GL A/C Id</label><input type="number" class="form-control" th:field="*{COGSGLAC}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Expense/Maintenance A/C Id</label><input type="number" class="form-control" th:field="*{expenseMaintenanceAccountId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Accum. Depreciation A/C Id</label><input type="number" class="form-control" th:field="*{accumulatedDepreciationAcId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Depreciation Expense A/C Id</label><input type="number" class="form-control" th:field="*{depreciationExpenseAcId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Capital WIP A/C Id</label><input type="number" class="form-control" th:field="*{capitalWipAcId}"/></div></div>
+                                </div>
+
+                                <h4 class="text-primary">Physical / Weight</h4>
+                                <div class="row">
+                                    <div class="col-md-3"><div class="form-group"><label>Weight (Kgs)</label><input type="number" step="any" class="form-control" th:field="*{weightKgs}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Max Measurement</label><input type="number" step="any" class="form-control" th:field="*{maxMeaurement}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Max Measurement Unit Id</label><input type="number" class="form-control" th:field="*{maxMeaurementUnitId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Empty Bag Weight</label><input type="number" step="any" class="form-control" th:field="*{emptyBagWeight}"/></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>Weight (Semi-Finish)</label><input type="number" step="any" class="form-control" th:field="*{weightSemiFinish}"/></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>Weight (Finished Goods)</label><input type="number" step="any" class="form-control" th:field="*{weightFinishGoods}"/></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>Weight (Semi-Finish Sand)</label><input type="number" step="any" class="form-control" th:field="*{weightSemiFinishSand}"/></div></div>
+                                </div>
+
+                                <h4 class="text-primary">Parties / Origin</h4>
+                                <div class="row">
+                                    <div class="col-md-3"><div class="form-group"><label>Manufacture Id</label><input type="number" class="form-control" th:field="*{manufactureId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Manufacture Part No</label><input type="text" class="form-control" th:field="*{manufacturePartNo}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Buyer/Supplier Id</label><input type="number" class="form-control" th:field="*{buyerSupplierId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Buyer Part No</label><input type="text" class="form-control" th:field="*{buyerPartNo}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Item Origin Id</label><input type="number" class="form-control" th:field="*{itemOriginId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Purchase Type Lookup Id</label><input type="number" class="form-control" th:field="*{purchaseTypeLookUpId}"/></div></div>
+                                    <div class="col-md-2" style="margin-top:26px;"><div class="checkbox"><label><input type="checkbox" th:field="*{isImport}"/> Import</label></div></div>
+                                    <div class="col-md-2" style="margin-top:26px;"><div class="checkbox"><label><input type="checkbox" th:field="*{isCompany}"/> Is Company</label></div></div>
+                                    <div class="col-md-2" style="margin-top:26px;"><div class="checkbox"><label><input type="checkbox" th:field="*{isThirdParty}"/> Third Party</label></div></div>
+                                </div>
+
+                                <h4 class="text-primary">Hierarchy / Flags</h4>
+                                <div class="row">
+                                    <div class="col-md-3"><div class="form-group"><label>Master Item Id</label><input type="number" class="form-control" th:field="*{masterItemId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Mother Item Id</label><input type="number" class="form-control" th:field="*{motherItemId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Item Model Id</label><input type="number" class="form-control" th:field="*{itemModalId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Services Master Item Id</label><input type="number" class="form-control" th:field="*{servicesMasterItemId}"/></div></div>
+                                    <div class="col-md-3"><div class="form-group"><label>Item QC Grade Id</label><input type="number" class="form-control" th:field="*{itemQcGradeId}"/></div></div>
+                                    <div class="col-md-3" style="margin-top:26px;"><div class="checkbox"><label><input type="checkbox" th:field="*{itemWithVarient}"/> Has Variants</label></div></div>
+                                    <div class="col-md-3" style="margin-top:26px;"><div class="checkbox"><label><input type="checkbox" th:field="*{itemStatus}"/> Active</label></div></div>
+                                </div>
+
+                                <div class="form-group" style="margin-top:20px;">
+                                    <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
+                                    <a th:href="@{/inventory/items}" class="btn btn-default">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:inline="javascript">
+    $(function () { $('.modal-select2').select2({dropdownAutoWidth: true, width: '100%'}); });
+</script>
+</body>
+</html>

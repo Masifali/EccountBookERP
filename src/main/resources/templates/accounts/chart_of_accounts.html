@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chart of Account Definition - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #dbe4eb;
+            font-size: 11px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Top System Status Bar */
+        .erp-system-bar {
+            background-color: #004d40;
+            color: #e0f2f1;
+            padding: 3px 10px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #00332c;
+        }
+
+        .erp-system-bar .info-item {
+            margin-right: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .erp-system-bar .badge-update {
+            background-color: #eab308;
+            color: #000;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        /* Sub-Window Title Header Bar */
+        .erp-window-header {
+            background: linear-gradient(to right, #00796B, #004d40);
+            color: white;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .erp-window-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .erp-window-controls button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            font-size: 10px;
+            border-radius: 2px;
+            cursor: pointer;
+            padding: 0;
+            text-align: center;
+        }
+
+        .erp-window-controls button:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        /* Toolbar Bar */
+        .erp-toolbar {
+            background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+            border-bottom: 1px solid #cbd5e1;
+            padding: 3px 8px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-erp {
+            background-color: #ffffff;
+            border: 1px solid #94a3b8;
+            border-radius: 3px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+        }
+
+        .btn-erp:hover {
+            background-color: #e2e8f0;
+            border-color: #64748b;
+            color: #0f172a;
+            text-decoration: none;
+        }
+
+        .btn-erp-save {
+            background-color: #00796B;
+            color: white;
+            border: 1px solid #004d40;
+        }
+
+        .btn-erp-save:hover {
+            background-color: #004d40;
+            color: white;
+        }
+
+        /* Section Fieldsets */
+        .erp-fieldset {
+            background: #ffffff;
+            border: 1px solid #b0bec5;
+            border-radius: 3px;
+            padding: 6px 8px;
+            margin-bottom: 6px;
+            position: relative;
+        }
+
+        .erp-fieldset legend {
+            font-size: 11px;
+            font-weight: bold;
+            color: #00796B;
+            width: auto;
+            padding: 0 4px;
+            margin-bottom: 4px;
+            border: none;
+        }
+
+        .form-group-erp {
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group-erp label {
+            width: 38%;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .form-group-erp label .req { color: #ef4444; font-weight: bold; }
+
+        .form-group-erp .form-control-erp {
+            width: 62%;
+        }
+
+        .form-control-erp {
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            padding: 1px 5px;
+            font-size: 11px;
+            height: 23px;
+            box-sizing: border-box;
+            background-color: #fff;
+            color: #1e293b;
+        }
+
+        .form-control-erp:disabled, .form-control-erp[readonly] {
+            background-color: #eef2f5;
+            color: #64748b;
+        }
+
+        .form-control-erp:focus {
+            border-color: #00796B;
+            outline: none;
+            box-shadow: 0 0 0 1px #00796B;
+        }
+
+        /* Autocomplete Overlay Popup */
+        .autocomplete-container {
+            position: relative;
+            width: 62%;
+        }
+
+        .autocomplete-container input {
+            width: 100%;
+        }
+
+        /* UltraCombo Dropdown Arrow Button Style */
+        .combo-input-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .combo-input-wrapper input {
+            width: 100% !important;
+            padding-right: 22px !important;
+        }
+
+        .combo-arrow-btn {
+            position: absolute;
+            right: 1px;
+            top: 1px;
+            bottom: 1px;
+            width: 20px;
+            background: linear-gradient(to bottom, #ffffff, #e2e8f0);
+            border-left: 1px solid #94a3b8;
+            border-radius: 0 2px 2px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e293b;
+            font-size: 9px;
+            cursor: pointer;
+            user-select: none;
+            z-index: 5;
+        }
+
+        .combo-arrow-btn:hover {
+            background: #cbd5e1;
+            color: #00796B;
+        }
+
+        .autocomplete-popup {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            background: white;
+            border: 1px solid #00796B;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .autocomplete-table {
+            margin: 0;
+            width: 100%;
+        }
+
+        .autocomplete-table th {
+            background-color: #00796B;
+            color: white;
+            font-size: 10px;
+            padding: 3px 5px;
+        }
+
+        .autocomplete-table td {
+            font-size: 11px;
+            padding: 3px 5px;
+            cursor: pointer;
+        }
+
+        .autocomplete-row:hover {
+            background-color: #e0f2f1 !important;
+        }
+
+        /* Stacked Level Header & Table Grids */
+        .coa-level-header {
+            background: #00796B;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 2px 2px 0 0;
+            margin-top: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .coa-level-table-wrap {
+            max-height: 95px;
+            height: 95px;
+            overflow-y: auto;
+            border: 1px solid #b0bec5;
+            background: white;
+        }
+
+        /* Data Tables */
+        .erp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .erp-table th {
+            background-color: #00796B;
+            color: white;
+            padding: 3px 5px;
+            text-align: left;
+            border: 1px solid #004d40;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .erp-table td {
+            padding: 2px 5px;
+            border: 1px solid #cbd5e1;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr.selected-row { background-color: #0078d7 !important; color: white !important; font-weight: bold; }
+        .erp-table tr.selected-row td { color: white !important; }
+        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
+
+        /* Janus GridEX Record Paging Footer Bar */
+        .erp-paging-bar {
+            background: #e2e8f0;
+            border: 1px solid #b0bec5;
+            border-top: none;
+            padding: 1px 4px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 4px;
+        }
+
+        .btn-page {
+            background: #ffffff;
+            border: 1px solid #94a3b8;
+            padding: 0px 4px;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 2px;
+            line-height: 1.2;
+        }
+
+        .btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Bottom Tab Strip (WinForms Form / History Tabs) */
+        .erp-tab-strip {
+            background: #cfd8dc;
+            border-top: 1px solid #b0bec5;
+            padding: 2px 5px 0 5px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .erp-tab-button {
+            padding: 3px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #37474f;
+            background: #eceff1;
+            border: 1px solid #b0bec5;
+            border-bottom: none;
+            border-radius: 3px 3px 0 0;
+            cursor: pointer;
+        }
+
+        .erp-tab-button.active {
+            background: #ffffff;
+            color: #00796B;
+            border-top: 2px solid #00796B;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top ERP System Bar -->
+    <div class="erp-system-bar">
+        <div>
+            <span class="info-item"><i class="fa fa-folder-open-o"></i> ...Select Any Value...</span>
+            <span class="info-item"><i class="fa fa-user"></i> Numan Rasheed (Admin)</span>
+            <span class="info-item"><i class="fa fa-building"></i> Golden Ace Rice Mills (Pvt) Ltd.</span>
+        </div>
+        <div>
+            <span class="info-item"><i class="fa fa-clock-o"></i> 7:14:01 am</span>
+            <span class="info-item"><i class="fa fa-calendar"></i> 2026-27</span>
+            <span class="info-item"><span class="badge-update"><i class="fa fa-download"></i> New Update is Available! Current Version: 1.0.0.13</span></span>
+        </div>
+    </div>
+
+    <!-- Sub-Window Title Header Bar -->
+    <div class="erp-window-header">
+        <div><i class="fa fa-sitemap"></i> Chart of Account Definition</div>
+        <div class="erp-window-controls">
+            <button title="Minimize"><i class="fa fa-minus"></i></button>
+            <button title="Maximize"><i class="fa fa-square-o"></i></button>
+            <a href="/accounts/dashboard" title="Close Window" style="color:white; font-size:11px; margin-left:6px;"><i class="fa fa-times"></i></a>
+        </div>
+    </div>
+
+    <!-- Toolbar Bar -->
+    <div class="erp-toolbar">
+        <button type="button" id="btnNew" class="btn-erp"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" id="btnRefresh" class="btn-erp"><i class="fa fa-refresh"></i> Refresh (Ctrl+R)</button>
+        <button type="button" id="btnSaveToolbar" onclick="$('#coaForm').submit();" class="btn-erp btn-erp-save"><i class="fa fa-save"></i> Save (Ctrl+S)</button>
+        <button type="button" id="btnPrint" class="btn-erp"><i class="fa fa-print"></i> 114-Print</button>
+        <button type="button" id="btnDefineCity" class="btn-erp"><i class="fa fa-building-o"></i> Define City</button>
+        <a th:href="@{/accounts/bank-reconciliation-upload-excel}" class="btn-erp"><i class="fa fa-file-excel-o"></i> Upload Excel Sheet</a>
+    </div>
+
+    <!-- Main Container -->
+    <div style="padding: 4px 6px;">
+
+        <!-- Tab Content Panes -->
+        <div class="tab-content" style="background: white; border: 1px solid #b0bec5; padding: 6px;">
+
+            <!-- FORM TAB -->
+            <div role="tabpanel" class="tab-pane active" id="tabForm">
+                <form id="coaForm">
+                    <input type="hidden" id="accountId" name="id"/>
+
+                    <div class="row" style="margin-left:-4px; margin-right:-4px;">
+
+                        <!-- LEFT + MIDDLE COMBINED CONTAINER (Width 58.3% / col-md-7) -->
+                        <div class="col-md-7 col-sm-12" style="padding-left:4px; padding-right:4px;">
+                            <div class="row" style="margin-left:-4px; margin-right:-4px;">
+
+                                <!-- Left Sub-Column: Account Information & Child Filter -->
+                                <div class="col-md-6 col-sm-12" style="padding-left:4px; padding-right:4px;">
+                                    <div class="erp-fieldset">
+                                        <legend>Account Information</legend>
+
+                                        <div class="form-group-erp">
+                                            <label>Parent Account <span class="req">*</span></label>
+                                            <select id="parentAccountCode" class="form-control-erp">
+                                                <option value="0">0 - (Top Level / Root)</option>
+                                                <option th:each="p : ${allAccounts}" th:value="${p.accountCode}" th:text="${p.accountCode + ' - ' + p.accountTitle}"></option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Account Title <span class="req">*</span></label>
+                                            <div class="autocomplete-container">
+                                                <div class="combo-input-wrapper">
+                                                    <input type="text" id="accountTitleInput" class="form-control-erp" th:value="${accountForm.accountTitle}" placeholder="Account Title" required autocomplete="off"/>
+                                                    <span class="combo-arrow-btn" id="btnAccountTitleInputArrow" title="Show Accounts"><i class="fa fa-chevron-down"></i></span>
+                                                </div>
+                                                <div id="accountTitlePopup" class="autocomplete-popup"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Title (Other Lingo)</label>
+                                            <input type="text" id="accountTitleOtherLingo" class="form-control-erp" th:value="${accountForm.accountTitleOtherLingo}" placeholder="Title in secondary language"/>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Account Type <span class="req">*</span></label>
+                                            <select id="accountTypeId" class="form-control-erp">
+                                                <option value="">(Select Type)</option>
+                                                <option th:each="t : ${accountTypes}" th:value="${t.id}" th:text="${t.accountType}"></option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>P/L Notes <span class="req">*</span></label>
+                                            <select id="plNoteId" class="form-control-erp" disabled>
+                                                <option value="">(Select P/L Note)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>B/S Notes <span class="req">*</span></label>
+                                            <select id="bsNoteId" class="form-control-erp" disabled>
+                                                <option value="">(Select B/S Note)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Sup/Cust Group</label>
+                                            <select id="customerGroupId" class="form-control-erp">
+                                                <option value="">(Select Group)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Custom Group</label>
+                                            <select id="customGroupId" class="form-control-erp">
+                                                <option value="">(Select Custom Group)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>City Name</label>
+                                            <select id="cityId" class="form-control-erp">
+                                                <option value="">(Select City)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Filter Accounts In Child Grid Fieldset -->
+                                    <div class="erp-fieldset">
+                                        <legend>Filter Accounts In Child Grid</legend>
+                                        <div class="form-group-erp">
+                                            <label>Account Type</label>
+                                            <select id="filterAccountType" class="form-control-erp">
+                                                <option value="">All Types</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group-erp">
+                                            <label>Account Title</label>
+                                            <div class="autocomplete-container">
+                                                <div class="combo-input-wrapper">
+                                                    <input type="text" id="filterAccountTitle" class="form-control-erp" placeholder="Type title to filter..." autocomplete="off"/>
+                                                    <span class="combo-arrow-btn" id="btnFilterAccountTitleArrow" title="Show Accounts"><i class="fa fa-chevron-down"></i></span>
+                                                </div>
+                                                <div id="filterTitlePopup" class="autocomplete-popup" style="width: 480px; min-width: 450px; z-index: 9999;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Sub-Column: Account Properties & Allocation -->
+                                <div class="col-md-6 col-sm-12" style="padding-left:4px; padding-right:4px;">
+                                    <div class="erp-fieldset">
+                                        <legend>Account Properties</legend>
+
+                                        <div class="form-group-erp">
+                                            <label>Group / Detail <span class="req">*</span></label>
+                                            <select id="accountGroup" class="form-control-erp" disabled>
+                                                <option value="Group" th:selected="${accountForm.accountGroup == 'Group'}">Group</option>
+                                                <option value="Detail" th:selected="${accountForm.accountGroup == 'Detail'}">Detail</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Account Code</label>
+                                            <input type="text" id="accountCode" class="form-control-erp" th:value="${accountForm.accountCode}" placeholder="(Auto-generated)" readonly/>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Account Class</label>
+                                            <input type="text" id="accountClassText" class="form-control-erp" placeholder="(Unset)" readonly/>
+                                            <input type="hidden" id="accountClass" th:value="${accountForm.accountClass}"/>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Account Level</label>
+                                            <input type="number" id="accountLevel" class="form-control-erp" th:value="${accountForm.accountLevel != null ? accountForm.accountLevel : 1}" readonly/>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Other Code</label>
+                                            <input type="text" id="otherErpCode" class="form-control-erp" th:value="${accountForm.otherErpCode}"/>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Phone No</label>
+                                            <input type="text" id="contactNo" class="form-control-erp" th:value="${accountForm.contactNo}"/>
+                                        </div>
+
+                                        <div class="form-group-erp">
+                                            <label>Opening</label>
+                                            <input type="text" id="openingBalance" class="form-control-erp" placeholder="0.00"/>
+                                        </div>
+
+                                        <div style="margin-top: 6px; text-align: right;">
+                                            <button type="submit" id="btnSaveCoa" class="btn-erp btn-erp-save" style="padding: 3px 16px;"><i class="fa fa-save"></i> Save</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Account Allocation To Locations Fieldset -->
+                                    <div class="erp-fieldset">
+                                        <legend>Account Allocation To Locations</legend>
+                                        <div style="max-height: 85px; height: 85px; overflow-y: auto; border: 1px solid #cbd5e1;">
+                                            <table id="grdAllocation" class="erp-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Location</th>
+                                                        <th style="width: 50px; text-align: center;">Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>GOLDEN ACE FOODS</td>
+                                                        <td style="text-align: center;"><input type="checkbox" checked/></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div id="pagingAlloc"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- WIDE CHILD OF SELECTED PARENT FIELDSET (Spans Below Account Allocation & Filter Grid) -->
+                            <div class="erp-fieldset" style="margin-top: 6px;">
+                                <legend><i class="fa fa-sitemap"></i> Child Of Selected Parent</legend>
+                                <div style="overflow-x: auto; max-height: 140px; height: 140px; border: 1px solid #cbd5e1; background: white;">
+                                    <table id="grdChildAccounts" class="erp-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 15%;">Account Code</th>
+                                                <th style="width: 35%;">Account Title</th>
+                                                <th style="width: 15%;">Group / Detail</th>
+                                                <th style="width: 15%;">Account Type</th>
+                                                <th style="width: 10%;">Other Code</th>
+                                                <th style="width: 10%; text-align: center;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 10px;">Select a parent account or search to view child accounts.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="pagingChild"></div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN: Stacked Multi-Level Account Tree Grids (Width 41.7% / col-md-5) -->
+                        <div class="col-md-5 col-sm-12" style="padding-left:4px; padding-right:4px;">
+
+                            <!-- 1st Level -->
+                            <div class="coa-level-header">1st Level Accounts</div>
+                            <div class="coa-level-table-wrap">
+                                <table id="grdLevel1" class="erp-table">
+                                    <thead><tr><th style="width:30%;">Account Code</th><th>Account Title</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="a : ${level1List}" class="level-row" data-level="1" th:data-code="${a.accountCode}" th:data-id="${a.id}">
+                                            <td style="font-weight:bold; color:#00796B; width:30%;" th:text="${a.accountCode}"></td>
+                                            <td th:text="${a.accountTitle}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pagingLevel1"></div>
+
+                            <!-- 2nd Level -->
+                            <div class="coa-level-header">2nd Level Account's Of Selected 1st Level</div>
+                            <div class="coa-level-table-wrap">
+                                <table id="grdLevel2" class="erp-table">
+                                    <thead><tr><th style="width:30%;">Account Code</th><th>Account Title</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="a : ${level2List}" class="level-row" data-level="2" th:data-code="${a.accountCode}" th:data-id="${a.id}">
+                                            <td style="font-weight:bold; color:#00796B; width:30%;" th:text="${a.accountCode}"></td>
+                                            <td th:text="${a.accountTitle}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pagingLevel2"></div>
+
+                            <!-- 3rd Level -->
+                            <div class="coa-level-header">3rd Level Account's Of Selected 2nd Level</div>
+                            <div class="coa-level-table-wrap">
+                                <table id="grdLevel3" class="erp-table">
+                                    <thead><tr><th style="width:30%;">Account Code</th><th>Account Title</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="a : ${level3List}" class="level-row" data-level="3" th:data-code="${a.accountCode}" th:data-id="${a.id}">
+                                            <td style="font-weight:bold; color:#00796B; width:30%;" th:text="${a.accountCode}"></td>
+                                            <td th:text="${a.accountTitle}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pagingLevel3"></div>
+
+                            <!-- 4th Level -->
+                            <div class="coa-level-header">4th Level Account's Of Selected 3rd Level</div>
+                            <div class="coa-level-table-wrap">
+                                <table id="grdLevel4" class="erp-table">
+                                    <thead><tr><th style="width:30%;">Account Code</th><th>Account Title</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="a : ${level4List}" class="level-row" data-level="4" th:data-code="${a.accountCode}" th:data-id="${a.id}">
+                                            <td style="font-weight:bold; color:#00796B; width:30%;" th:text="${a.accountCode}"></td>
+                                            <td th:text="${a.accountTitle}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pagingLevel4"></div>
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- HISTORY TAB -->
+            <div role="tabpanel" class="tab-pane" id="tabHistory">
+                <!-- History Toolbar -->
+                <div class="erp-toolbar" style="margin-bottom: 4px; border: 1px solid #b0bec5; border-radius: 2px;">
+                    <button type="button" id="btnUpdateHistory" class="btn-erp"><i class="fa fa-pencil"></i> Update</button>
+                    <a th:href="@{/accounts/bank-reconciliation-upload-excel}" class="btn-erp"><i class="fa fa-file-excel-o"></i> Update Chart Of Accounts Through Excel Sheet</a>
+                </div>
+
+                <!-- History Header -->
+                <div class="coa-level-header" style="font-size:12px; margin-bottom:4px; padding: 4px 8px;">
+                    <span><i class="fa fa-history"></i> Chart OF Account History</span>
+                    <i class="fa fa-cog" style="cursor:pointer;" title="Settings"></i>
+                </div>
+
+                <!-- Filters Fieldset -->
+                <div class="erp-fieldset" style="margin-bottom: 6px;">
+                    <legend>Filters</legend>
+                    <div class="row" style="margin-bottom: 4px; font-size: 11px;">
+                        <div class="col-md-5 col-sm-12">
+                            <label style="font-weight:bold; display:block; margin-bottom:2px; color:#00796B;">Upto_Level</label>
+                            <label class="radio-inline" style="margin-left:0; margin-right:8px;"><input type="radio" name="rdUptoLevel" value="1"/> 1st Level</label>
+                            <label class="radio-inline" style="margin-right:8px;"><input type="radio" name="rdUptoLevel" value="2"/> 2nd Level</label>
+                            <label class="radio-inline" style="margin-right:8px;"><input type="radio" name="rdUptoLevel" value="3"/> 3rd Level</label>
+                            <label class="radio-inline" style="margin-right:8px;"><input type="radio" name="rdUptoLevel" value="4" checked/> 4th Level</label>
+                            <label class="radio-inline" style="margin-right:8px;"><input type="radio" name="rdUptoLevel" value="5"/> 5th Level</label>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label style="font-weight:bold; display:block; margin-bottom:2px; color:#00796B;">Status</label>
+                            <label class="radio-inline" style="margin-left:0; margin-right:10px;"><input type="radio" name="radStatus" value="All" checked/> All</label>
+                            <label class="radio-inline" style="margin-right:10px;"><input type="radio" name="radStatus" value="Active Only"/> Active</label>
+                            <label class="radio-inline" style="margin-right:10px;"><input type="radio" name="radStatus" value="InActive"/> InActive</label>
+                        </div>
+                        <div class="col-md-4 col-sm-6 text-right" style="display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:14px;">
+                            <div>
+                                <label class="radio-inline" style="margin-left:0; margin-right:6px;"><input type="radio" name="rdExpandCollapse" value="Collapse"/> Collapse</label>
+                                <label class="radio-inline" style="margin-right:0;"><input type="radio" name="rdExpandCollapse" value="Expand" checked/> Expand</label>
+                            </div>
+                            <button type="button" id="btnShowHistory" class="btn-erp btn-erp-save" style="padding: 2px 14px;"><i class="fa fa-search"></i> Show</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tree Grid Table -->
+                <div style="overflow-x: auto; max-height: 380px; border: 1px solid #b0bec5; background: white;">
+                    <table id="grdHistory" class="erp-table">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 260px;">Account Title</th>
+                                <th>Account Code</th>
+                                <th>Other Erp Code</th>
+                                <th>Account Group</th>
+                                <th>Account Level</th>
+                                <th>IsActive</th>
+                                <th>Account Class</th>
+                                <th>Account Type</th>
+                                <th>Note Title</th>
+                                <th style="width: 60px; text-align: center;">Update</th>
+                                <th style="width: 140px; text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="pagingHistory"></div>
+            </div>
+
+        </div>
+
+        <!-- WinForms Style Bottom Tab Strip (Form / History) -->
+        <div class="erp-tab-strip">
+            <button type="button" class="erp-tab-button active" data-target="#tabForm"><i class="fa fa-edit"></i> Form</button>
+            <button type="button" class="erp-tab-button" data-target="#tabHistory"><i class="fa fa-history"></i> History</button>
+        </div>
+    </div>
+
+    <!-- Define City Modal -->
+    <div class="modal fade" id="cityModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#00796B; color:white; padding:6px 12px;">
+                    <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                    <h4 class="modal-title" style="font-size:12px; font-weight:bold;">Define City</h4>
+                </div>
+                <div class="modal-body" style="padding:12px;">
+                    <div class="form-group-erp" style="display:block;">
+                        <label style="width:100%; margin-bottom:4px;">City Name <span class="req">*</span></label>
+                        <input type="text" id="newCityName" class="form-control-erp" style="width:100%;" placeholder="Enter City Name"/>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding:6px 12px;">
+                    <button type="button" class="btn-erp" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btnSaveCityModal" class="btn-erp btn-erp-save">Save City</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/build/js/countx_coa_definition.js}"></script>
+</body>
+</html>

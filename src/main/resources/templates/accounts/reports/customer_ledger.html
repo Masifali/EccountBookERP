@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Desktop menu tile says "Customer Ledger Report"; the real on-screen header label
+         (label23, teal strip) reads "Party  Ledger" (double space, copied verbatim from
+         CustomerLedger.cs's InitializeComponent) - same "menu name differs from on-screen
+         caption" pattern already seen on Invoice Adjustment / Payment Adjustment Voucher. -->
+    <title>Party Ledger - WinForms Replica</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
+        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
+        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
+        /* ditto label23 "Party  Ledger" header strip (panel3) */
+        .win-header-panel { background-color: #00796B; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 15px; font-weight: bold; }
+        /* ditto groupBox1 "Filters" (left, 427x99) + GlInfoBox "GL Information" (right, 483x99,
+           hidden until a party has been shown - ditto GlInfoBox.Hide() on load) */
+        .filters-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 4px; align-items: stretch; }
+        .win-groupbox { border: 1px solid #9ca3af; border-radius: 2px; padding: 10px 10px 8px 10px; position: relative; background: #fff; flex: 1 1 380px; }
+        .win-groupbox-title { position: absolute; top: -9px; left: 10px; background: #ffffff; padding: 0 6px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 11px; color: #222; }
+        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
+        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
+        .acct-info-grid { display: grid; grid-template-columns: 95px 1fr 75px 90px 40px; gap: 3px 6px; font-size: 11px; align-items: center; }
+        .acct-info-grid .lbl { font-weight: bold; color: #222; }
+        .acct-info-grid .val { color: #111; }
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
+        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; position: sticky; top: 0; z-index: 2; }
+        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; }
+        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
+        .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
+        .grid-scroll { max-height: 460px; overflow: auto; border: 1px solid #cbd5e1; margin: 6px; }
+        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 6px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-address-book"></i> Party Ledger</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ditto toolStrip3's real order: Reset, Refresh | 130-Print | ShortCut Keys -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="resetCL()"><i class="fa fa-plus text-success"></i> Reset</button>
+        <button type="button" class="win-btn" onclick="executeCL()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+        <button type="button" class="win-btn" disabled title="Not reproduced in this port"><i class="fa fa-print"></i> 130-Print</button>
+        <button type="button" class="win-btn" disabled title="Not reproduced in this port"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    </div>
+
+    <div class="win-header-panel">
+        <span class="win-header-title">Party  Ledger</span>
+    </div>
+
+    <div class="filters-row">
+        <!-- ditto groupBox1 "Filters" -->
+        <div class="win-groupbox">
+            <span class="win-groupbox-title">Filters</span>
+            <div class="row" style="display:flex; gap:8px; margin-bottom:6px;">
+                <div style="flex:1 1 45%;">
+                    <div class="win-label">Date Type</div>
+                    <select class="win-input" id="cmbDateType" onchange="onDateTypeChanged()">
+                        <option value="">--</option>
+                        <option th:each="dt : ${dateTypesList}" th:value="${dt.id}" th:text="${dt.parameters}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="row" style="display:flex; gap:8px; margin-bottom:6px;">
+                <div style="flex:1 1 45%;">
+                    <div class="win-label">From Date</div>
+                    <input type="date" class="win-input" id="txtFromDate">
+                </div>
+                <div style="flex:1 1 45%;">
+                    <div class="win-label">To Date</div>
+                    <input type="date" class="win-input" id="txtToDate">
+                </div>
+            </div>
+            <div class="row" style="display:flex; gap:8px; align-items:flex-end;">
+                <div style="flex:1 1 70%;">
+                    <div class="win-label">Party Name</div>
+                    <select class="win-input" id="comSupplier">
+                        <option value="">-- Select Party --</option>
+                        <option th:each="s : ${supplierCustomersList}" th:value="${s.Id}" th:text="${s.CompanyName}"
+                                th:attr="data-glaccountid=${s.GlAccountId}"></option>
+                    </select>
+                </div>
+                <div>
+                    <button type="button" class="win-btn win-btn-teal" onclick="executeCL()"><i class="fa fa-eye"></i> Show</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ditto GlInfoBox "GL Information" - hidden until a party's ledger has been shown -->
+        <div class="win-groupbox" id="glInfoBox" hidden>
+            <span class="win-groupbox-title">GL Information</span>
+            <div class="acct-info-grid">
+                <div class="lbl">Account Code</div><div class="val" id="infoAccountCode">-</div>
+                <div class="lbl">Opening</div><div class="val" id="infoOpening">0</div><div class="val" id="infoOpeningDrCr"></div>
+                <div class="lbl">Account Class</div><div class="val" id="infoAccountClass">-</div>
+                <div class="lbl">Total Debit</div><div class="val" id="infoTotalDebit">0</div><div></div>
+                <div class="lbl">Account Type</div><div class="val" id="infoAccountType">-</div>
+                <div class="lbl">Total Credit</div><div class="val" id="infoTotalCredit">0</div><div></div>
+                <div></div><div></div>
+                <div class="lbl">Closing</div><div class="val" id="infoClosing">0</div><div class="val" id="infoClosingDrCr"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-form-card">
+        <div class="win-toolbar" style="justify-content: space-between;">
+            <span><i class="fa fa-table"></i> <b id="lblStatus">Ready</b></span>
+        </div>
+        <div class="grid-scroll">
+            <!-- ditto grdCustomerLedgerSettings() real column set/order/captions -->
+            <table class="win-grid-table" id="clTable">
+                <thead>
+                <tr>
+                    <th>V-Type</th>
+                    <th>V-Date</th>
+                    <th>V-No</th>
+                    <th>Description</th>
+                    <th>Vehicle No</th>
+                    <th style="text-align:right;">Qty</th>
+                    <th style="text-align:right;">Weight</th>
+                    <th>Order No</th>
+                    <th style="text-align:right;">Rate Cut</th>
+                    <th style="text-align:right;">Net Rate</th>
+                    <th style="text-align:right;">Debit Amount</th>
+                    <th style="text-align:right;">Credit Amount</th>
+                    <th style="text-align:right;">Running Balance</th>
+                    <th>Manual Bill No</th>
+                    <th>Gp No</th>
+                    <th>Gp Date</th>
+                </tr>
+                </thead>
+                <tbody id="clTbody">
+                    <tr><td colspan="16" style="text-align:center; padding:16px; color:#666;">Select a Party Name and click Show.</td></tr>
+                </tbody>
+                <tfoot>
+                <tr class="grid-total-row">
+                    <td colspan="5" style="text-align:right;">Total:</td>
+                    <td style="text-align:right;" id="totQty">0</td>
+                    <td style="text-align:right;" id="totWeight">0</td>
+                    <td colspan="2"></td>
+                    <td style="text-align:right;" id="totDebit">0</td>
+                    <td style="text-align:right;" id="totCredit">0</td>
+                    <td colspan="4"></td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:inline="javascript">
+        function fmt(v) {
+            const n = parseFloat(v);
+            if (isNaN(n)) return '0';
+            return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        // ditto CmbDateType_ValueChanged: 1=Today, 2=Today-7d, 3=month-start..Today,
+        // 4=Jan1..Today, 5=FinancialYear Start_Period..Today.
+        function onDateTypeChanged() {
+            const id = parseInt($('#cmbDateType').val());
+            const today = new Date();
+            const iso = d => d.toISOString().split('T')[0];
+            if (id === 1) {
+                $('#txtFromDate').val(iso(today));
+            } else if (id === 2) {
+                const d = new Date(today); d.setDate(d.getDate() - 7);
+                $('#txtFromDate').val(iso(d));
+            } else if (id === 3) {
+                $('#txtFromDate').val(iso(new Date(today.getFullYear(), today.getMonth(), 1)));
+                $('#txtToDate').val(iso(today));
+            } else if (id === 4) {
+                $('#txtFromDate').val(iso(new Date(today.getFullYear(), 0, 1)));
+                $('#txtToDate').val(iso(today));
+            }
+        }
+
+        function executeCL() {
+            const supplierCustomerId = $('#comSupplier').val();
+            if (!supplierCustomerId) {
+                alert('Party Name required. Please Check!');
+                $('#comSupplier').focus();
+                return;
+            }
+            $('#lblStatus').text('Executing Customer Ledger query...');
+            const fromDate = $('#txtFromDate').val();
+            const toDate = $('#txtToDate').val();
+
+            $.ajax({
+                url: '/accounts/api/reports/account-info',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ accountId: $('#comSupplier option:selected').data('glaccountid'), fromDate: fromDate, toDate: toDate }),
+                success: applyAccountInfo
+            });
+
+            $.ajax({
+                url: '/accounts/api/reports/customer-ledger',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ supplierCustomerId: supplierCustomerId, fromDate: fromDate, toDate: toDate }),
+                success: function (res) {
+                    if (res && res.success) {
+                        renderGrid(res.data);
+                        $('#lblStatus').text('Total Records: ' + res.totalRecords);
+                    } else {
+                        $('#clTbody').html('<tr><td colspan="16" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Customer Ledger.') + '</td></tr>');
+                    }
+                },
+                error: function () {
+                    $('#clTbody').html('<tr><td colspan="16" style="text-align:center; color:red; padding:16px;">Error executing Customer Ledger report.</td></tr>');
+                }
+            });
+        }
+
+        function applyAccountInfo(info) {
+            if (!info || Object.keys(info).length === 0) { $('#glInfoBox').prop('hidden', true); return; }
+            $('#glInfoBox').prop('hidden', false);
+            $('#infoAccountCode').text(info.accountCode || '-');
+            $('#infoAccountClass').text(info.accountClass || '-');
+            $('#infoAccountType').text(info.accountType || '-');
+            const opening = parseFloat(info.openingBalance || 0);
+            const closing = parseFloat(info.closingBalance || 0);
+            $('#infoOpening').text(fmt(Math.abs(opening)));
+            $('#infoOpeningDrCr').text(opening > 0 ? 'Dr' : (opening < 0 ? 'Cr' : 'Nill'));
+            $('#infoTotalDebit').text(fmt(info.debitAmount || 0));
+            $('#infoTotalCredit').text(fmt(info.creditAmount || 0));
+            $('#infoClosing').text(fmt(Math.abs(closing)));
+            $('#infoClosingDrCr').text(closing > 0 ? 'Dr' : (closing < 0 ? 'Cr' : 'Nill'));
+        }
+
+        function renderGrid(data) {
+            const tbody = $('#clTbody');
+            tbody.empty();
+            if (!data || data.length === 0) {
+                tbody.html('<tr><td colspan="16" style="text-align:center; padding:16px; color:#666;">No transaction records found for the selected criteria.</td></tr>');
+                $('#totQty, #totWeight, #totDebit, #totCredit').text('0');
+                return;
+            }
+            let totQty = 0, totWeight = 0, totDebit = 0, totCredit = 0;
+            data.forEach(r => {
+                const qty = parseFloat(r.QtyIn || 0);
+                const weight = parseFloat(r.WeightIn || 0);
+                const debit = parseFloat(r.DebitAmt || 0);
+                const credit = parseFloat(r.CreditAmt || 0);
+                const runningBalance = parseFloat(r.RunningBalance || 0);
+                totQty += qty; totWeight += weight; totDebit += debit; totCredit += credit;
+                let balType = 'Nill';
+                if (runningBalance > 0) balType = 'Dr'; else if (runningBalance < 0) balType = 'Cr';
+                let vDate = r.DocDate || '';
+                if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
+                let gpDate = r.GpDate || '';
+                if (typeof gpDate === 'string' && gpDate.includes('T')) gpDate = gpDate.split('T')[0];
+                tbody.append(`
+                    <tr>
+                        <td>${r.DocumentTypeCode || ''}</td>
+                        <td>${vDate}</td>
+                        <td>${r.DocNo || ''}</td>
+                        <td>${r.ItemName || ''}</td>
+                        <td>${r.VehicleNo || ''}</td>
+                        <td style="text-align:right;">${qty ? fmt(qty) : ''}</td>
+                        <td style="text-align:right;">${weight ? fmt(weight) : ''}</td>
+                        <td>${r.OrderNo || ''}</td>
+                        <td style="text-align:right;">${r.RateCut ? fmt(r.RateCut) : ''}</td>
+                        <td style="text-align:right;">${r.NetRate ? fmt(r.NetRate) : ''}</td>
+                        <td style="text-align:right;">${debit ? fmt(debit) : ''}</td>
+                        <td style="text-align:right;">${credit ? fmt(credit) : ''}</td>
+                        <td style="text-align:right; font-weight:bold;">${fmt(Math.abs(runningBalance))} ${balType}</td>
+                        <td>${r.MnBillNo || ''}</td>
+                        <td>${r.GpNo || ''}</td>
+                        <td>${gpDate}</td>
+                    </tr>
+                `);
+            });
+            $('#totQty').text(fmt(totQty));
+            $('#totWeight').text(fmt(totWeight));
+            $('#totDebit').text(fmt(totDebit));
+            $('#totCredit').text(fmt(totCredit));
+        }
+
+        function resetCL() {
+            $('#comSupplier, #cmbDateType').val('');
+            $('#txtFromDate, #txtToDate').val('');
+            $('#glInfoBox').prop('hidden', true);
+            $('#clTbody').html('<tr><td colspan="16" style="text-align:center; padding:16px; color:#666;">Select a Party Name and click Show.</td></tr>');
+            $('#totQty, #totWeight, #totDebit, #totCredit').text('0');
+            $('#lblStatus').text('Ready');
+        }
+    </script>
+</body>
+</html>

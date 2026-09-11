@@ -1,0 +1,908 @@
+
+====================================================================================================
+CLASS Architecture.DAL.UserAccount
+====================================================================================================
+
+; Architecture.DAL.UserAccount::SetData  (rva=0xa6e4, fat header, code_size=1492, max_stack=5, exception_handlers=yes)
+    IL_0000: ldstr ldstr ""
+    IL_0005: stloc.1
+    IL_0006: newobj Architecture.Model.VPS.ServerCredentials::.ctor
+    IL_000b: stloc.2
+    IL_000c: ldarg.1
+    IL_000d: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_0012: ldarg.1
+    IL_0013: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_0018: ldstr ldstr "IsVpsAttachmentsServiceOn"
+    IL_001d: call Architecture.DAL.Common.CommonServices::GetConfigurationFromAllocation
+    IL_0022: call Architecture.Common.Conversion::ToBool
+    IL_0027: stloc.3
+    IL_0028: newobj TypeSpec#78::.ctor
+    IL_002d: stloc.s 4
+    IL_002f: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_0034: stloc.s 5
+    IL_0036: ldloc.s 5
+    IL_0038: callvirt System.Data.Common.DbConnection::Open
+    IL_003d: ldloc.s 5
+    IL_003f: callvirt System.Data.SqlClient.SqlConnection::BeginTransaction
+    IL_0044: stloc.s 6
+    IL_0046: ldarg.1
+    IL_0047: ldarg.1
+    IL_0048: callvirt Architecture.Model.UserAccount::get_Password
+    IL_004d: call Architecture.Model.Encryption::UserPasswordEncryptString
+    IL_0052: callvirt Architecture.Model.UserAccount::set_Password
+    IL_0057: ldloc.s 6
+    IL_0059: ldarg.1
+    IL_005a: ldarg.2
+    IL_005b: ldstr ldstr ""
+    IL_0060: call MethodSpec#179
+    IL_0065: call System.Convert::ToInt32
+    IL_006a: stloc.0
+    IL_006b: ldloc.0
+    IL_006c: ldc.i4.0
+    IL_006d: ble.s IL_0078
+    IL_006f: ldarg.1
+    IL_0070: ldloc.0
+    IL_0071: callvirt Architecture.Model.UserAccount::set_ID
+    IL_0076: br.s IL_007f
+    IL_0078: ldarg.1
+    IL_0079: callvirt Architecture.Model.UserAccount::get_ID
+    IL_007e: stloc.0
+    IL_007f: ldarg.1
+    IL_0080: callvirt Architecture.Model.UserAccount::get_UserProfileList
+    IL_0085: brfalse IL_04e8
+    IL_008a: ldarg.1
+    IL_008b: callvirt Architecture.Model.UserAccount::get_UserProfileList
+    IL_0090: stloc.s 7
+    IL_0092: ldloc.s 7
+    IL_0094: ldloc.0
+    IL_0095: callvirt Architecture.Model.UserProfile::set_UserId
+    IL_009a: ldloc.3
+    IL_009b: brfalse.s IL_00a5
+    IL_009d: call Architecture.DAL.Common.CommonServices::GetServerCredentials
+    IL_00a2: stloc.2
+    IL_00a3: br.s IL_00eb
+    IL_00a5: ldarg.1
+    IL_00a6: callvirt Architecture.Model.UserAccount::get_OrganizationId
+    IL_00ab: ldarg.1
+    IL_00ac: callvirt Architecture.Model.UserAccount::get_CompanyId
+    IL_00b1: ldstr ldstr "Attachment Folder Path"
+    IL_00b6: call Architecture.DAL.Common.CommonServices::GetConfigurationFromAllocation
+    IL_00bb: stloc.1
+    IL_00bc: ldloc.s 7
+    IL_00be: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_00c3: brfalse.s IL_00eb
+    IL_00c5: ldloc.s 7
+    IL_00c7: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_00cc: ldsfld System.String::Empty
+    IL_00d1: call System.String::op_Inequality
+    IL_00d6: brfalse.s IL_00eb
+    IL_00d8: ldloc.1
+    IL_00d9: call System.IO.Directory::Exists
+    IL_00de: brtrue.s IL_00eb
+    IL_00e0: ldstr ldstr "Attachment Folder Path Not Configure Properly"
+    IL_00e5: newobj System.Exception::.ctor
+    IL_00ea: throw
+    IL_00eb: ldloc.s 7
+    IL_00ed: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_00f2: ldsfld System.String::Empty
+    IL_00f7: call System.String::op_Inequality
+    IL_00fc: brfalse IL_0349
+    IL_0101: ldloc.s 7
+    IL_0103: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_0108: brfalse IL_0349
+    IL_010d: ldloc.s 7
+    IL_010f: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_0114: call System.IO.Path::IsPathRooted
+    IL_0119: brfalse IL_0349
+    IL_011e: ldc.r8 0.0
+    IL_0127: stloc.s 8
+    IL_0129: ldloc.s 7
+    IL_012b: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_0130: newobj System.IO.FileInfo::.ctor
+    IL_0135: stloc.s 9
+    IL_0137: ldloc.s 9
+    IL_0139: callvirt System.IO.FileSystemInfo::get_Exists
+    IL_013e: brfalse.s IL_0154
+    IL_0140: ldloc.s 9
+    IL_0142: callvirt System.IO.FileInfo::get_Length
+    IL_0147: conv.r8
+    IL_0148: ldc.r8 1048576.0
+    IL_0151: div
+    IL_0152: stloc.s 8
+    IL_0154: ldloc.s 8
+    IL_0156: ldc.r8 5.0
+    IL_015f: ble.un.s IL_017c
+    IL_0161: ldstr ldstr "File Size Exceeds 5MB Of File: "
+    IL_0166: ldarg.1
+    IL_0167: callvirt Architecture.Model.UserAccount::get_PictureURL
+    IL_016c: call System.IO.Path::GetFileName
+    IL_0171: call System.String::Concat
+    IL_0176: newobj System.Exception::.ctor
+    IL_017b: throw
+    IL_017c: ldloc.s 7
+    IL_017e: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_0183: call System.IO.Path::GetFileNameWithoutExtension
+    IL_0188: stloc.s 10
+    IL_018a: ldloc.s 7
+    IL_018c: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_0191: call System.IO.Path::GetExtension
+    IL_0196: stloc.s 11
+    IL_0198: call System.DateTime::get_Now
+    IL_019d: stloc.s 13
+    IL_019f: ldloca.s 13
+    IL_01a1: ldstr ldstr "yyyy_MM_dd_HH_mm_ss"
+    IL_01a6: call System.DateTime::ToString
+    IL_01ab: stloc.s 12
+    IL_01ad: ldloc.s 10
+    IL_01af: ldstr ldstr "_"
+    IL_01b4: ldloc.s 12
+    IL_01b6: ldloc.s 11
+    IL_01b8: call System.String::Concat
+    IL_01bd: stloc.s 10
+    IL_01bf: ldloc.3
+    IL_01c0: brtrue.s IL_01e9
+    IL_01c2: ldloc.1
+    IL_01c3: ldloc.s 10
+    IL_01c5: call System.IO.Path::Combine
+    IL_01ca: stloc.s 14
+    IL_01cc: ldloc.s 7
+    IL_01ce: callvirt Architecture.Model.UserProfile::get_ProfileImageFileName
+    IL_01d3: ldloc.s 14
+    IL_01d5: ldc.i4.1
+    IL_01d6: call System.IO.File::Copy
+    IL_01db: ldloc.s 4
+    IL_01dd: ldloc.s 10
+    IL_01df: callvirt TypeSpec#78::Add
+    IL_01e4: br IL_0340
+    IL_01e9: ldstr ldstr "ftp://"
+    IL_01ee: ldloc.2
+    IL_01ef: callvirt Architecture.Model.VPS.ServerCredentials::get_ServerIp
+    IL_01f4: ldstr ldstr "/"
+    IL_01f9: ldloc.s 10
+    IL_01fb: call System.String::Concat
+    IL_0200: stloc.s 15
+    IL_0202: ldloc.s 15
+    IL_0204: call System.Net.WebRequest::Create
+    IL_0209: castclass System.Net.FtpWebRequest
+    IL_020e: stloc.s 16
+    IL_0210: ldloc.s 16
+    IL_0212: ldstr ldstr "STOR"
+    IL_0217: callvirt System.Net.WebRequest::set_Method
+    IL_021c: ldloc.s 16
+    IL_021e: ldc.i4.1
+    IL_021f: callvirt System.Net.FtpWebRequest::set_UsePassive
+    IL_0224: ldloc.s 16
+    IL_0226: ldc.i4.1
+    IL_0227: callvirt System.Net.FtpWebRequest::set_UseBinary
+    IL_022c: ldloc.s 16
+    IL_022e: ldc.i4.0
+    IL_022f: callvirt System.Net.FtpWebRequest::set_KeepAlive
+    IL_0234: ldloc.s 16
+    IL_0236: ldloc.2
+    IL_0237: callvirt Architecture.Model.VPS.ServerCredentials::get_UserName
+    IL_023c: ldloc.2
+    IL_023d: callvirt Architecture.Model.VPS.ServerCredentials::get_Password
+    IL_0242: newobj System.Net.NetworkCredential::.ctor
+    IL_0247: callvirt System.Net.WebRequest::set_Credentials
+    IL_024c: ldloc.s 9
+    IL_024e: callvirt System.IO.FileInfo::OpenRead
+    IL_0253: stloc.s 18
+    IL_0255: ldloc.s 9
+    IL_0257: callvirt System.IO.FileInfo::get_Length
+    IL_025c: conv.ovf.i
+    IL_025d: newarr System.Byte
+    IL_0262: stloc.s 17
+    IL_0264: ldloc.s 18
+    IL_0266: ldloc.s 17
+    IL_0268: ldc.i4.0
+    IL_0269: ldloc.s 17
+    IL_026b: ldlen
+    IL_026c: conv.i4
+    IL_026d: callvirt System.IO.Stream::Read
+    IL_0272: pop
+    IL_0273: leave.s IL_0281
+    IL_0275: ldloc.s 18
+    IL_0277: brfalse.s IL_0280
+    IL_0279: ldloc.s 18
+    IL_027b: callvirt System.IDisposable::Dispose
+    IL_0280: endfinally
+    IL_0281: ldloc.s 16
+    IL_0283: ldloc.s 17
+    IL_0285: ldlen
+    IL_0286: conv.i4
+    IL_0287: conv.i8
+    IL_0288: callvirt System.Net.WebRequest::set_ContentLength
+    IL_028d: ldloc.s 16
+    IL_028f: callvirt System.Net.WebRequest::GetRequestStream
+    IL_0294: stloc.s 19
+    IL_0296: ldloc.s 19
+    IL_0298: ldloc.s 17
+    IL_029a: ldc.i4.0
+    IL_029b: ldloc.s 17
+    IL_029d: ldlen
+    IL_029e: conv.i4
+    IL_029f: callvirt System.IO.Stream::Write
+    IL_02a4: leave.s IL_02b2
+    IL_02a6: ldloc.s 19
+    IL_02a8: brfalse.s IL_02b1
+    IL_02aa: ldloc.s 19
+    IL_02ac: callvirt System.IDisposable::Dispose
+    IL_02b1: endfinally
+    IL_02b2: ldloc.s 16
+    IL_02b4: callvirt System.Net.WebRequest::GetResponse
+    IL_02b9: castclass System.Net.FtpWebResponse
+    IL_02be: stloc.s 20
+    IL_02c0: ldloc.s 4
+    IL_02c2: ldloc.s 10
+    IL_02c4: callvirt TypeSpec#78::Add
+    IL_02c9: leave.s IL_02d7
+    IL_02cb: ldloc.s 20
+    IL_02cd: brfalse.s IL_02d6
+    IL_02cf: ldloc.s 20
+    IL_02d1: callvirt System.IDisposable::Dispose
+    IL_02d6: endfinally
+    IL_02d7: leave.s IL_0340
+    IL_02d9: stloc.s 21
+    IL_02db: ldloc.s 21
+    IL_02dd: callvirt System.Net.WebException::get_Response
+    IL_02e2: isinst System.Net.FtpWebResponse
+    IL_02e7: stloc.s 22
+    IL_02e9: ldloc.s 22
+    IL_02eb: brfalse.s IL_0310
+    IL_02ed: ldstr ldstr "FTP Error: "
+    IL_02f2: ldloc.s 22
+    IL_02f4: callvirt System.Net.FtpWebResponse::get_StatusDescription
+    IL_02f9: ldstr ldstr " - "
+    IL_02fe: ldloc.s 21
+    IL_0300: callvirt System.Exception::get_Message
+    IL_0305: call System.String::Concat
+    IL_030a: newobj System.Exception::.ctor
+    IL_030f: throw
+    IL_0310: ldstr ldstr "Error: "
+    IL_0315: ldloc.s 21
+    IL_0317: callvirt System.Exception::get_Message
+    IL_031c: call System.String::Concat
+    IL_0321: newobj System.Exception::.ctor
+    IL_0326: throw
+    IL_0327: stloc.s 23
+    IL_0329: ldstr ldstr "Error: "
+    IL_032e: ldloc.s 23
+    IL_0330: callvirt System.Exception::get_Message
+    IL_0335: call System.String::Concat
+    IL_033a: newobj System.Exception::.ctor
+    IL_033f: throw
+    IL_0340: ldloc.s 7
+    IL_0342: ldloc.s 10
+    IL_0344: callvirt Architecture.Model.UserProfile::set_ProfileImageFileName
+    IL_0349: ldloc.s 7
+    IL_034b: callvirt Architecture.Model.UserProfile::get_PictureToDeleteInUpdateIfAny
+    IL_0350: brfalse IL_04ab
+    IL_0355: ldloc.s 7
+    IL_0357: callvirt Architecture.Model.UserProfile::get_PictureToDeleteInUpdateIfAny
+    IL_035c: ldsfld System.String::Empty
+    IL_0361: call System.String::op_Inequality
+    IL_0366: brfalse IL_04ab
+    IL_036b: ldloc.3
+    IL_036c: brtrue IL_040a
+    IL_0371: ldloc.1
+    IL_0372: ldstr ldstr "\\"
+    IL_0377: ldloc.s 7
+    IL_0379: callvirt Architecture.Model.UserProfile::get_PictureToDeleteInUpdateIfAny
+    IL_037e: call System.String::Concat
+    IL_0383: stloc.s 24
+    IL_0385: ldloc.s 24
+    IL_0387: call System.IO.File::Exists
+    IL_038c: brfalse.s IL_03ff
+    IL_038e: ldloc.s 24
+    IL_0390: ldc.i4.3
+    IL_0391: ldc.i4.3
+    IL_0392: newobj System.IO.FileStream::.ctor
+    IL_0397: stloc.s 27
+    IL_0399: ldloc.s 27
+    IL_039b: callvirt System.IO.Stream::Flush
+    IL_03a0: ldloc.s 27
+    IL_03a2: callvirt System.IO.Stream::Close
+    IL_03a7: ldloc.s 27
+    IL_03a9: callvirt System.IO.Stream::Dispose
+    IL_03ae: leave.s IL_03bc
+    IL_03b0: ldloc.s 27
+    IL_03b2: brfalse.s IL_03bb
+    IL_03b4: ldloc.s 27
+    IL_03b6: callvirt System.IDisposable::Dispose
+    IL_03bb: endfinally
+    IL_03bc: ldc.i4.0
+    IL_03bd: stloc.s 25
+    IL_03bf: ldc.i4.0
+    IL_03c0: stloc.s 26
+    IL_03c2: br.s IL_03e4
+    IL_03c4: nop
+    IL_03c5: ldloc.s 24
+    IL_03c7: call System.IO.File::Delete
+    IL_03cc: ldc.i4.1
+    IL_03cd: stloc.s 25
+    IL_03cf: leave.s IL_03e4
+    IL_03d1: pop
+    IL_03d2: ldloc.s 26
+    IL_03d4: ldc.i4.1
+    IL_03d5: add
+    IL_03d6: stloc.s 26
+    IL_03d8: ldc.i4 500
+    IL_03dd: call System.Threading.Thread::Sleep
+    IL_03e2: leave.s IL_03e4
+    IL_03e4: ldloc.s 25
+    IL_03e6: brtrue.s IL_03ed
+    IL_03e8: ldloc.s 26
+    IL_03ea: ldc.i4.5
+    IL_03eb: blt.s IL_03c4
+    IL_03ed: ldloc.s 25
+    IL_03ef: brtrue IL_04ab
+    IL_03f4: ldstr ldstr "Unable to delete file. It is in use by another process."
+    IL_03f9: newobj System.Exception::.ctor
+    IL_03fe: throw
+    IL_03ff: ldstr ldstr "File not exist."
+    IL_0404: newobj System.Exception::.ctor
+    IL_0409: throw
+    IL_040a: ldstr ldstr "ftp://"
+    IL_040f: ldloc.2
+    IL_0410: callvirt Architecture.Model.VPS.ServerCredentials::get_ServerIp
+    IL_0415: ldstr ldstr "/"
+    IL_041a: ldloc.s 7
+    IL_041c: callvirt Architecture.Model.UserProfile::get_PictureToDeleteInUpdateIfAny
+    IL_0421: call System.String::Concat
+    IL_0426: stloc.s 28
+    IL_0428: ldloc.s 28
+    IL_042a: call System.Net.WebRequest::Create
+    IL_042f: castclass System.Net.FtpWebRequest
+    IL_0434: dup
+    IL_0435: ldstr ldstr "DELE"
+    IL_043a: callvirt System.Net.WebRequest::set_Method
+    IL_043f: dup
+    IL_0440: ldc.i4.1
+    IL_0441: callvirt System.Net.FtpWebRequest::set_UsePassive
+    IL_0446: dup
+    IL_0447: ldloc.2
+    IL_0448: callvirt Architecture.Model.VPS.ServerCredentials::get_UserName
+    IL_044d: ldloc.2
+    IL_044e: callvirt Architecture.Model.VPS.ServerCredentials::get_Password
+    IL_0453: newobj System.Net.NetworkCredential::.ctor
+    IL_0458: callvirt System.Net.WebRequest::set_Credentials
+    IL_045d: callvirt System.Net.WebRequest::GetResponse
+    IL_0462: castclass System.Net.FtpWebResponse
+    IL_0467: stloc.s 29
+    IL_0469: ldloc.s 29
+    IL_046b: callvirt System.Net.FtpWebResponse::get_StatusCode
+    IL_0470: ldc.i4 250
+    IL_0475: beq.s IL_0482
+    IL_0477: ldstr ldstr "Failed to delete file from VPS."
+    IL_047c: newobj System.Exception::.ctor
+    IL_0481: throw
+    IL_0482: leave.s IL_0490
+    IL_0484: ldloc.s 29
+    IL_0486: brfalse.s IL_048f
+    IL_0488: ldloc.s 29
+    IL_048a: callvirt System.IDisposable::Dispose
+    IL_048f: endfinally
+    IL_0490: leave.s IL_04ab
+    IL_0492: stloc.s 30
+    IL_0494: ldstr ldstr "Error while deleting file from VPS: "
+    IL_0499: ldloc.s 30
+    IL_049b: callvirt System.Exception::get_Message
+    IL_04a0: call System.String::Concat
+    IL_04a5: newobj System.Exception::.ctor
+    IL_04aa: throw
+    IL_04ab: ldloc.s 7
+    IL_04ad: callvirt Architecture.Model.UserProfile::get_Id
+    IL_04b2: brtrue.s IL_04cf
+    IL_04b4: ldloc.s 6
+    IL_04b6: ldloc.s 7
+    IL_04b8: ldstr ldstr "Sp_UserProfile_Insert"
+    IL_04bd: ldstr ldstr ""
+    IL_04c2: call MethodSpec#177
+    IL_04c7: call System.Convert::ToInt32
+    IL_04cc: pop
+    IL_04cd: br.s IL_04e8
+    IL_04cf: ldloc.s 6
+    IL_04d1: ldloc.s 7
+    IL_04d3: ldstr ldstr "Sp_UserProfile_Update"
+    IL_04d8: ldstr ldstr ""
+    IL_04dd: call MethodSpec#177
+    IL_04e2: call System.Convert::ToInt32
+    IL_04e7: pop
+    IL_04e8: ldarg.1
+    IL_04e9: callvirt Architecture.Model.UserAccount::get_UserAccountAllocationsList
+    IL_04ee: callvirt TypeSpec#137::GetEnumerator
+    IL_04f3: stloc.s 31
+    IL_04f5: br IL_058f
+    IL_04fa: ldloca.s 31
+    IL_04fc: call TypeSpec#138::get_Current
+    IL_0501: stloc.s 32
+    IL_0503: newobj Architecture.Model.ScreenRightstoUser::.ctor
+    IL_0508: stloc.s 33
+    IL_050a: ldloc.s 33
+    IL_050c: ldarg.1
+    IL_050d: callvirt Architecture.Model.UserAccount::get_UserGroupId
+    IL_0512: callvirt Architecture.Model.ScreenRightstoUser::set_UserId
+    IL_0517: ldloc.s 33
+    IL_0519: ldloc.0
+    IL_051a: callvirt Architecture.Model.ScreenRightstoUser::set_NewUserid
+    IL_051f: ldloc.s 33
+    IL_0521: ldloc.s 32
+    IL_0523: callvirt Architecture.Model.UserAccountAllocation::get_CompanyId
+    IL_0528: callvirt Architecture.Model.ScreenRightstoUser::set_CompanyId
+    IL_052d: ldloc.s 33
+    IL_052f: ldstr ldstr "ScreenRightstoUser"
+    IL_0534: callvirt Architecture.Model.ScreenRightstoUser::set_Activity
+    IL_0539: ldloc.s 6
+    IL_053b: ldloc.s 33
+    IL_053d: ldstr ldstr "Sp_tblUserRights_GetAllMethod"
+    IL_0542: ldstr ldstr ""
+    IL_0547: call MethodSpec#174
+    IL_054c: call System.Convert::ToInt32
+    IL_0551: pop
+    IL_0552: ldloc.s 32
+    IL_0554: ldloc.0
+    IL_0555: callvirt Architecture.Model.UserAccountAllocation::set_UserAccountId
+    IL_055a: ldloc.s 32
+    IL_055c: ldloc.0
+    IL_055d: callvirt Architecture.Model.UserAccountAllocation::set_ModifyUserId
+    IL_0562: ldloc.s 32
+    IL_0564: ldloc.0
+    IL_0565: callvirt Architecture.Model.UserAccountAllocation::set_EntryUserId
+    IL_056a: ldloc.s 32
+    IL_056c: call System.DateTime::get_Now
+    IL_0571: callvirt Architecture.Model.UserAccountAllocation::set_ModifyDate
+    IL_0576: ldloc.s 6
+    IL_0578: ldloc.s 32
+    IL_057a: ldstr ldstr "Sp_UserAccountAllocation_Insert"
+    IL_057f: ldstr ldstr ""
+    IL_0584: call MethodSpec#180
+    IL_0589: call System.Convert::ToInt32
+    IL_058e: pop
+    IL_058f: ldloca.s 31
+    IL_0591: call TypeSpec#138::MoveNext
+    IL_0596: brtrue IL_04fa
+    IL_059b: leave.s IL_05ab
+    IL_059d: ldloca.s 31
+    IL_059f: constrained. TypeSpec#138
+    IL_05a5: callvirt System.IDisposable::Dispose
+    IL_05aa: endfinally
+    IL_05ab: ldloc.s 6
+    IL_05ad: callvirt System.Data.Common.DbTransaction::Commit
+    IL_05b2: leave.s IL_05d2
+    IL_05b4: ldloc.s 6
+    IL_05b6: callvirt System.Data.Common.DbTransaction::Rollback
+    IL_05bb: ldloc.2
+    IL_05bc: ldloc.3
+    IL_05bd: ldloc.1
+    IL_05be: ldloc.s 4
+    IL_05c0: call Architecture.DAL.Common.CommonServices::DeleteAttachmentsPhysicallyInException
+    IL_05c5: throw
+    IL_05c6: ldloc.s 5
+    IL_05c8: brfalse.s IL_05d1
+    IL_05ca: ldloc.s 5
+    IL_05cc: callvirt System.IDisposable::Dispose
+    IL_05d1: endfinally
+    IL_05d2: ldloc.0
+    IL_05d3: ret
+
+; Architecture.DAL.UserAccount::GetData  (rva=0xade8, fat header, code_size=612, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#139::.ctor
+    IL_0005: stloc.0
+    IL_0006: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.Common.DbConnection::Open
+    IL_0012: ldloc.1
+    IL_0013: ldarg.1
+    IL_0014: ldarg.2
+    IL_0015: call MethodSpec#181
+    IL_001a: stloc.0
+    IL_001b: leave.s IL_0027
+    IL_001d: ldloc.1
+    IL_001e: brfalse.s IL_0026
+    IL_0020: ldloc.1
+    IL_0021: callvirt System.IDisposable::Dispose
+    IL_0026: endfinally
+    IL_0027: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_002c: stloc.2
+    IL_002d: ldloc.2
+    IL_002e: callvirt System.Data.Common.DbConnection::Open
+    IL_0033: ldloc.0
+    IL_0034: brfalse.s IL_00af
+    IL_0036: ldloc.0
+    IL_0037: callvirt TypeSpec#139::GetEnumerator
+    IL_003c: stloc.3
+    IL_003d: br.s IL_0096
+    IL_003f: ldloca.s 3
+    IL_0041: call TypeSpec#140::get_Current
+    IL_0046: stloc.s 4
+    IL_0048: newobj TypeSpec#16::.ctor
+    IL_004d: stloc.s 5
+    IL_004f: ldloc.s 5
+    IL_0051: ldstr ldstr "@Id"
+    IL_0056: ldloc.s 4
+    IL_0058: callvirt Architecture.Model.UserAccount::get_ID
+    IL_005d: box System.Int32
+    IL_0062: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0067: callvirt TypeSpec#16::Add
+    IL_006c: ldloc.s 5
+    IL_006e: ldstr ldstr "@Activity"
+    IL_0073: ldstr ldstr "GetUserAllocationByUserId"
+    IL_0078: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_007d: callvirt TypeSpec#16::Add
+    IL_0082: ldloc.s 4
+    IL_0084: ldloc.2
+    IL_0085: ldstr ldstr "Sp_UserAccount_GetAllMethod"
+    IL_008a: ldloc.s 5
+    IL_008c: call MethodSpec#182
+    IL_0091: callvirt Architecture.Model.UserAccount::set_UserAccountAllocationsList
+    IL_0096: ldloca.s 3
+    IL_0098: call TypeSpec#140::MoveNext
+    IL_009d: brtrue.s IL_003f
+    IL_009f: leave.s IL_00af
+    IL_00a1: ldloca.s 3
+    IL_00a3: constrained. TypeSpec#140
+    IL_00a9: callvirt System.IDisposable::Dispose
+    IL_00ae: endfinally
+    IL_00af: leave.s IL_00bb
+    IL_00b1: ldloc.2
+    IL_00b2: brfalse.s IL_00ba
+    IL_00b4: ldloc.2
+    IL_00b5: callvirt System.IDisposable::Dispose
+    IL_00ba: endfinally
+    IL_00bb: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_00c0: stloc.s 6
+    IL_00c2: ldloc.s 6
+    IL_00c4: callvirt System.Data.Common.DbConnection::Open
+    IL_00c9: ldloc.0
+    IL_00ca: brfalse.s IL_0149
+    IL_00cc: ldloc.0
+    IL_00cd: callvirt TypeSpec#139::get_Count
+    IL_00d2: ldc.i4.0
+    IL_00d3: ble.s IL_0149
+    IL_00d5: newobj TypeSpec#16::.ctor
+    IL_00da: stloc.s 7
+    IL_00dc: ldloc.s 7
+    IL_00de: ldstr ldstr "@UserId"
+    IL_00e3: ldloc.0
+    IL_00e4: ldc.i4.0
+    IL_00e5: callvirt TypeSpec#139::get_Item
+    IL_00ea: callvirt Architecture.Model.UserAccount::get_ID
+    IL_00ef: box System.Int32
+    IL_00f4: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_00f9: callvirt TypeSpec#16::Add
+    IL_00fe: ldloc.s 7
+    IL_0100: ldstr ldstr "@Activity"
+    IL_0105: ldstr ldstr "GetUserProfileByUserId"
+    IL_010a: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_010f: callvirt TypeSpec#16::Add
+    IL_0114: ldloc.s 6
+    IL_0116: ldstr ldstr "SP_UserProfile_GetAllMethod"
+    IL_011b: ldloc.s 7
+    IL_011d: call MethodSpec#183
+    IL_0122: stloc.s 8
+    IL_0124: ldloc.0
+    IL_0125: ldc.i4.0
+    IL_0126: callvirt TypeSpec#139::get_Item
+    IL_012b: ldloc.s 8
+    IL_012d: brfalse.s IL_0139
+    IL_012f: ldloc.s 8
+    IL_0131: callvirt TypeSpec#136::get_Count
+    IL_0136: ldc.i4.0
+    IL_0137: bgt.s IL_013c
+    IL_0139: ldnull
+    IL_013a: br.s IL_0144
+    IL_013c: ldloc.s 8
+    IL_013e: ldc.i4.0
+    IL_013f: callvirt TypeSpec#136::get_Item
+    IL_0144: callvirt Architecture.Model.UserAccount::set_UserProfileList
+    IL_0149: leave.s IL_0157
+    IL_014b: ldloc.s 6
+    IL_014d: brfalse.s IL_0156
+    IL_014f: ldloc.s 6
+    IL_0151: callvirt System.IDisposable::Dispose
+    IL_0156: endfinally
+    IL_0157: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_015c: stloc.s 9
+    IL_015e: ldloc.s 9
+    IL_0160: callvirt System.Data.Common.DbConnection::Open
+    IL_0165: ldloc.0
+    IL_0166: brfalse IL_024f
+    IL_016b: ldloc.0
+    IL_016c: callvirt TypeSpec#139::GetEnumerator
+    IL_0171: stloc.3
+    IL_0172: br IL_0233
+    IL_0177: ldloca.s 3
+    IL_0179: call TypeSpec#140::get_Current
+    IL_017e: stloc.s 10
+    IL_0180: ldstr ldstr ","
+    IL_0185: ldloc.s 10
+    IL_0187: callvirt Architecture.Model.UserAccount::get_UserAccountAllocationsList
+    IL_018c: ldsfld <>c::<>9__1_0
+    IL_0191: dup
+    IL_0192: brtrue.s IL_01ab
+    IL_0194: pop
+    IL_0195: ldsfld <>c::<>9
+    IL_019a: ldftn <>c::<GetData>b__1_0
+    IL_01a0: newobj TypeSpec#141::.ctor
+    IL_01a5: dup
+    IL_01a6: stsfld <>c::<>9__1_0
+    IL_01ab: call MethodSpec#184
+    IL_01b0: ldsfld <>c::<>9__1_1
+    IL_01b5: dup
+    IL_01b6: brtrue.s IL_01cf
+    IL_01b8: pop
+    IL_01b9: ldsfld <>c::<>9
+    IL_01be: ldftn <>c::<GetData>b__1_1
+    IL_01c4: newobj TypeSpec#142::.ctor
+    IL_01c9: dup
+    IL_01ca: stsfld <>c::<>9__1_1
+    IL_01cf: call MethodSpec#185
+    IL_01d4: call System.String::Join
+    IL_01d9: stloc.s 11
+    IL_01db: ldloc.s 10
+    IL_01dd: callvirt Architecture.Model.UserAccount::get_ID
+    IL_01e2: box System.Int32
+    IL_01e7: call Architecture.Common.Conversion::ToInt
+    IL_01ec: stloc.s 12
+    IL_01ee: newobj TypeSpec#16::.ctor
+    IL_01f3: dup
+    IL_01f4: ldstr ldstr "@UserId"
+    IL_01f9: ldloc.s 12
+    IL_01fb: box System.Int32
+    IL_0200: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0205: callvirt TypeSpec#16::Add
+    IL_020a: dup
+    IL_020b: ldstr ldstr "@CompanyIds"
+    IL_0210: ldloc.s 11
+    IL_0212: newobj System.Data.SqlClient.SqlParameter::.ctor
+    IL_0217: callvirt TypeSpec#16::Add
+    IL_021c: stloc.s 13
+    IL_021e: ldloc.s 10
+    IL_0220: ldloc.s 9
+    IL_0222: ldstr ldstr "[dbo].[USP_ApplicationsAllocateToUser_ForUserAccount]"
+    IL_0227: ldloc.s 13
+    IL_0229: call MethodSpec#186
+    IL_022e: callvirt Architecture.Model.UserAccount::set_ApplicationsAllocateToUserList
+    IL_0233: ldloca.s 3
+    IL_0235: call TypeSpec#140::MoveNext
+    IL_023a: brtrue IL_0177
+    IL_023f: leave.s IL_024f
+    IL_0241: ldloca.s 3
+    IL_0243: constrained. TypeSpec#140
+    IL_0249: callvirt System.IDisposable::Dispose
+    IL_024e: endfinally
+    IL_024f: leave.s IL_025d
+    IL_0251: ldloc.s 9
+    IL_0253: brfalse.s IL_025c
+    IL_0255: ldloc.s 9
+    IL_0257: callvirt System.IDisposable::Dispose
+    IL_025c: endfinally
+    IL_025d: leave.s IL_0262
+    IL_025f: pop
+    IL_0260: rethrow
+    IL_0262: ldloc.0
+    IL_0263: ret
+
+; Architecture.DAL.UserAccount::GetDataAdminUser  (rva=0xb104, fat header, code_size=46, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#143::.ctor
+    IL_0005: stloc.0
+    IL_0006: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.Common.DbConnection::Open
+    IL_0012: ldloc.1
+    IL_0013: ldarg.1
+    IL_0014: ldarg.2
+    IL_0015: call MethodSpec#187
+    IL_001a: stloc.0
+    IL_001b: leave.s IL_0027
+    IL_001d: ldloc.1
+    IL_001e: brfalse.s IL_0026
+    IL_0020: ldloc.1
+    IL_0021: callvirt System.IDisposable::Dispose
+    IL_0026: endfinally
+    IL_0027: leave.s IL_002c
+    IL_0029: pop
+    IL_002a: rethrow
+    IL_002c: ldloc.0
+    IL_002d: ret
+
+; Architecture.DAL.UserAccount::GetDataAll  (rva=0xb15c, fat header, code_size=54, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#139::.ctor
+    IL_0005: stloc.0
+    IL_0006: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.Common.DbConnection::Open
+    IL_0012: ldloc.1
+    IL_0013: ldarg.1
+    IL_0014: ldarg.2
+    IL_0015: call MethodSpec#188
+    IL_001a: stloc.0
+    IL_001b: leave.s IL_0027
+    IL_001d: ldloc.1
+    IL_001e: brfalse.s IL_0026
+    IL_0020: ldloc.1
+    IL_0021: callvirt System.IDisposable::Dispose
+    IL_0026: endfinally
+    IL_0027: leave.s IL_0034
+    IL_0029: callvirt System.Exception::get_Message
+    IL_002e: newobj System.Exception::.ctor
+    IL_0033: throw
+    IL_0034: ldloc.0
+    IL_0035: ret
+
+; Architecture.DAL.UserAccount::Login  (rva=0xb1bc, fat header, code_size=117, max_stack=5, exception_handlers=yes)
+    IL_0000: ldnull
+    IL_0001: stloc.0
+    IL_0002: ldnull
+    IL_0003: stloc.1
+    IL_0004: ldarg.0
+    IL_0005: ldfld Architecture.DAL.DALBase::sqlDataBase
+    IL_000a: ldstr ldstr "Proc_UserAccount_Login"
+    IL_000f: callvirt Microsoft.Practices.EnterpriseLibrary.Data.Database::GetStoredProcCommand
+    IL_0014: stloc.2
+    IL_0015: ldarg.0
+    IL_0016: ldfld Architecture.DAL.DALBase::sqlDataBase
+    IL_001b: ldloc.2
+    IL_001c: ldstr ldstr "UserName"
+    IL_0021: ldc.i4.s 12
+    IL_0023: ldarg.1
+    IL_0024: callvirt Microsoft.Practices.EnterpriseLibrary.Data.Sql.SqlDatabase::AddInParameter
+    IL_0029: ldarg.0
+    IL_002a: ldfld Architecture.DAL.DALBase::sqlDataBase
+    IL_002f: ldloc.2
+    IL_0030: ldstr ldstr "Password"
+    IL_0035: ldc.i4.s 12
+    IL_0037: ldarg.2
+    IL_0038: callvirt Microsoft.Practices.EnterpriseLibrary.Data.Sql.SqlDatabase::AddInParameter
+    IL_003d: ldarg.0
+    IL_003e: ldfld Architecture.DAL.DALBase::sqlDataBase
+    IL_0043: ldloc.2
+    IL_0044: callvirt Microsoft.Practices.EnterpriseLibrary.Data.Database::ExecuteReader
+    IL_0049: stloc.1
+    IL_004a: br.s IL_0054
+    IL_004c: ldarg.0
+    IL_004d: ldloc.1
+    IL_004e: call Architecture.DAL.UserAccount::FillDTO
+    IL_0053: stloc.0
+    IL_0054: ldloc.1
+    IL_0055: callvirt System.Data.IDataReader::Read
+    IL_005a: brtrue.s IL_004c
+    IL_005c: ldloc.0
+    IL_005d: stloc.3
+    IL_005e: leave.s IL_0073
+    IL_0060: throw
+    IL_0061: ldloc.1
+    IL_0062: brfalse.s IL_0072
+    IL_0064: ldloc.1
+    IL_0065: callvirt System.Data.IDataReader::get_IsClosed
+    IL_006a: brtrue.s IL_0072
+    IL_006c: ldloc.1
+    IL_006d: callvirt System.Data.IDataReader::Close
+    IL_0072: endfinally
+    IL_0073: ldloc.3
+    IL_0074: ret
+
+; Architecture.DAL.UserAccount::FillDTO  (rva=0xb25c, fat header, code_size=324, max_stack=4, exception_handlers=yes)
+    IL_0000: newobj Architecture.Model.UserAccount::.ctor
+    IL_0005: dup
+    IL_0006: ldarg.1
+    IL_0007: ldstr ldstr "Id"
+    IL_000c: callvirt System.Data.IDataRecord::get_Item
+    IL_0011: call Architecture.Common.Conversion::ToInt
+    IL_0016: callvirt Architecture.Model.UserAccount::set_ID
+    IL_001b: dup
+    IL_001c: ldarg.1
+    IL_001d: ldstr ldstr "FirstName"
+    IL_0022: callvirt System.Data.IDataRecord::get_Item
+    IL_0027: call Architecture.Common.Conversion::ToString
+    IL_002c: callvirt Architecture.Model.UserAccount::set_FirstName
+    IL_0031: dup
+    IL_0032: ldarg.1
+    IL_0033: ldstr ldstr "LastName"
+    IL_0038: callvirt System.Data.IDataRecord::get_Item
+    IL_003d: call Architecture.Common.Conversion::ToString
+    IL_0042: callvirt Architecture.Model.UserAccount::set_LastName
+    IL_0047: dup
+    IL_0048: ldarg.1
+    IL_0049: ldstr ldstr "UserName"
+    IL_004e: callvirt System.Data.IDataRecord::get_Item
+    IL_0053: call Architecture.Common.Conversion::ToString
+    IL_0058: callvirt Architecture.Model.UserAccount::set_UserName
+    IL_005d: dup
+    IL_005e: ldarg.1
+    IL_005f: ldstr ldstr "Password"
+    IL_0064: callvirt System.Data.IDataRecord::get_Item
+    IL_0069: call Architecture.Common.Conversion::ToString
+    IL_006e: call Architecture.Model.Encryption::UserPasswordDecryptString
+    IL_0073: callvirt Architecture.Model.UserAccount::set_Password
+    IL_0078: dup
+    IL_0079: ldarg.1
+    IL_007a: ldstr ldstr "IsActive"
+    IL_007f: callvirt System.Data.IDataRecord::get_Item
+    IL_0084: call Architecture.Common.Conversion::ToBool
+    IL_0089: callvirt Architecture.Model.UserAccount::set_IsActive
+    IL_008e: dup
+    IL_008f: ldarg.1
+    IL_0090: ldstr ldstr "UserRoleId"
+    IL_0095: callvirt System.Data.IDataRecord::get_Item
+    IL_009a: call Architecture.Common.Conversion::ToInt
+    IL_009f: callvirt Architecture.Model.UserAccount::set_UserRoleId
+    IL_00a4: dup
+    IL_00a5: ldarg.1
+    IL_00a6: ldstr ldstr "UserGroupId"
+    IL_00ab: callvirt System.Data.IDataRecord::get_Item
+    IL_00b0: call Architecture.Common.Conversion::ToInt
+    IL_00b5: callvirt Architecture.Model.UserAccount::set_UserGroupId
+    IL_00ba: dup
+    IL_00bb: ldarg.1
+    IL_00bc: ldstr ldstr "RoleName"
+    IL_00c1: callvirt System.Data.IDataRecord::get_Item
+    IL_00c6: call Architecture.Common.Conversion::ToString
+    IL_00cb: callvirt Architecture.Model.UserAccount::set_RoleName
+    IL_00d0: dup
+    IL_00d1: ldarg.1
+    IL_00d2: ldstr ldstr "OrganizationId"
+    IL_00d7: callvirt System.Data.IDataRecord::get_Item
+    IL_00dc: call Architecture.Common.Conversion::ToInt
+    IL_00e1: callvirt Architecture.Model.UserAccount::set_OrganizationId
+    IL_00e6: dup
+    IL_00e7: ldarg.1
+    IL_00e8: ldstr ldstr "CompanyId"
+    IL_00ed: callvirt System.Data.IDataRecord::get_Item
+    IL_00f2: call Architecture.Common.Conversion::ToInt
+    IL_00f7: callvirt Architecture.Model.UserAccount::set_CompanyId
+    IL_00fc: dup
+    IL_00fd: ldarg.1
+    IL_00fe: ldstr ldstr "CompName"
+    IL_0103: callvirt System.Data.IDataRecord::get_Item
+    IL_0108: call Architecture.Common.Conversion::ToString
+    IL_010d: callvirt Architecture.Model.UserAccount::set_CompName
+    IL_0112: dup
+    IL_0113: ldarg.1
+    IL_0114: ldstr ldstr "OrgName"
+    IL_0119: callvirt System.Data.IDataRecord::get_Item
+    IL_011e: call Architecture.Common.Conversion::ToString
+    IL_0123: callvirt Architecture.Model.UserAccount::set_OrgName
+    IL_0128: dup
+    IL_0129: ldarg.1
+    IL_012a: ldstr ldstr "CompAddress"
+    IL_012f: callvirt System.Data.IDataRecord::get_Item
+    IL_0134: call Architecture.Common.Conversion::ToString
+    IL_0139: callvirt Architecture.Model.UserAccount::set_CompAddress
+    IL_013e: stloc.0
+    IL_013f: leave.s IL_0142
+    IL_0141: throw
+    IL_0142: ldloc.0
+    IL_0143: ret
+
+; Architecture.DAL.UserAccount::VerifyCode  (rva=0xb3c8, fat header, code_size=46, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj TypeSpec#139::.ctor
+    IL_0005: stloc.0
+    IL_0006: call Architecture.DAL.Common.ConnectionObject::SQL
+    IL_000b: stloc.1
+    IL_000c: ldloc.1
+    IL_000d: callvirt System.Data.Common.DbConnection::Open
+    IL_0012: ldloc.1
+    IL_0013: ldarg.1
+    IL_0014: ldarg.2
+    IL_0015: call MethodSpec#181
+    IL_001a: stloc.0
+    IL_001b: leave.s IL_0027
+    IL_001d: ldloc.1
+    IL_001e: brfalse.s IL_0026
+    IL_0020: ldloc.1
+    IL_0021: callvirt System.IDisposable::Dispose
+    IL_0026: endfinally
+    IL_0027: leave.s IL_002c
+    IL_0029: pop
+    IL_002a: rethrow
+    IL_002c: ldloc.0
+    IL_002d: ret
+
+; Architecture.DAL.UserAccount::.ctor  (rva=0xb420, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.DAL.DALBase::.ctor
+    IL_0006: ret

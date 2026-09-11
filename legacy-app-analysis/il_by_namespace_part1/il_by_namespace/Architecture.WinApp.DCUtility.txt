@@ -1,0 +1,772 @@
+
+====================================================================================================
+CLASS Architecture.WinApp.DCUtility
+====================================================================================================
+
+; Architecture.WinApp.DCUtility::.ctor  (rva=0x8611c, fat header, code_size=212, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: newobj System.Object::.ctor
+    IL_0006: stfld Architecture.WinApp.DCUtility::ErrLock
+    IL_000b: ldarg.0
+    IL_000c: newobj System.Object::.ctor
+    IL_0011: stfld Architecture.WinApp.DCUtility::LvLock
+    IL_0016: ldarg.0
+    IL_0017: call System.Windows.Forms.Form::.ctor
+    IL_001c: ldarg.0
+    IL_001d: ldarg.1
+    IL_001e: stfld Architecture.WinApp.DCUtility::CameraListBox
+    IL_0023: ldarg.0
+    IL_0024: ldarg.2
+    IL_0025: stfld Architecture.WinApp.DCUtility::MainProgressBar
+    IL_002a: ldarg.0
+    IL_002b: ldarg.3
+    IL_002c: stfld Architecture.WinApp.DCUtility::LiveViewPicBox
+    IL_0031: ldarg.0
+    IL_0032: ldarg.s 4
+    IL_0034: stfld Architecture.WinApp.DCUtility::SessionButton
+    IL_0039: ldarg.0
+    IL_003a: ldarg.s 5
+    IL_003c: stfld Architecture.WinApp.DCUtility::LiveViewButton
+    IL_0041: ldarg.0
+    IL_0042: ldarg.s 6
+    IL_0044: stfld Architecture.WinApp.DCUtility::DrivePath
+    IL_0049: ldarg.0
+    IL_004a: newobj EOSDigital.API.CanonAPI::.ctor
+    IL_004f: stfld Architecture.WinApp.DCUtility::APIHandler
+    IL_0054: ldarg.0
+    IL_0055: ldfld Architecture.WinApp.DCUtility::APIHandler
+    IL_005a: ldarg.0
+    IL_005b: ldftn Architecture.WinApp.DCUtility::APIHandler_CameraAdded
+    IL_0061: newobj EOSDigital.API.CameraAddedHandler::.ctor
+    IL_0066: callvirt EOSDigital.API.CanonAPI::add_CameraAdded
+    IL_006b: ldarg.0
+    IL_006c: ldftn Architecture.WinApp.DCUtility::ErrorHandler_SevereErrorHappened
+    IL_0072: newobj EOSDigital.API.GeneralExceptionHandler::.ctor
+    IL_0077: call EOSDigital.API.ErrorHandler::add_SevereErrorHappened
+    IL_007c: ldarg.0
+    IL_007d: ldftn Architecture.WinApp.DCUtility::ErrorHandler_NonSevereErrorHappened
+    IL_0083: newobj EOSDigital.API.SDKExceptionHandler::.ctor
+    IL_0088: call EOSDigital.API.ErrorHandler::add_NonSevereErrorHappened
+    IL_008d: ldarg.0
+    IL_008e: ldfld Architecture.WinApp.DCUtility::LiveViewPicBox
+    IL_0093: ldarg.0
+    IL_0094: ldftn Architecture.WinApp.DCUtility::LiveViewPicBox_Paint
+    IL_009a: newobj System.Windows.Forms.PaintEventHandler::.ctor
+    IL_009f: callvirt System.Windows.Forms.Control::add_Paint
+    IL_00a4: ldarg.0
+    IL_00a5: ldarg.0
+    IL_00a6: ldfld Architecture.WinApp.DCUtility::LiveViewPicBox
+    IL_00ab: callvirt System.Windows.Forms.Control::get_Width
+    IL_00b0: stfld Architecture.WinApp.DCUtility::LVBw
+    IL_00b5: ldarg.0
+    IL_00b6: ldarg.0
+    IL_00b7: ldfld Architecture.WinApp.DCUtility::LiveViewPicBox
+    IL_00bc: callvirt System.Windows.Forms.Control::get_Height
+    IL_00c1: stfld Architecture.WinApp.DCUtility::LVBh
+    IL_00c6: ldarg.0
+    IL_00c7: call Architecture.WinApp.DCUtility::RefreshCamera
+    IL_00cc: ldarg.0
+    IL_00cd: ldc.i4.1
+    IL_00ce: stfld Architecture.WinApp.DCUtility::IsInit
+    IL_00d3: ret
+
+; Architecture.WinApp.DCUtility::StartLiveView  (rva=0x861fc, fat header, code_size=71, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: callvirt EOSDigital.API.Camera::StartLiveView
+    IL_000b: ldarg.0
+    IL_000c: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0011: ldc.i4.s 11
+    IL_0013: ldc.i4.2
+    IL_0014: box System.Int32
+    IL_0019: ldc.i4.0
+    IL_001a: callvirt EOSDigital.API.Camera::SetSetting
+    IL_001f: ldarg.0
+    IL_0020: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0025: ldc.i4 4096
+    IL_002a: ldc.i4 2147483647
+    IL_002f: callvirt EOSDigital.API.Camera::SetCapacity
+    IL_0034: leave.s IL_0046
+    IL_0036: stloc.0
+    IL_0037: ldarg.0
+    IL_0038: ldloc.0
+    IL_0039: callvirt System.Exception::get_Message
+    IL_003e: ldc.i4.0
+    IL_003f: call Architecture.WinApp.DCUtility::ReportError
+    IL_0044: leave.s IL_0046
+    IL_0046: ret
+
+; Architecture.WinApp.DCUtility::StopLiveView  (rva=0x86260, fat header, code_size=31, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: ldc.i4.1
+    IL_0007: callvirt EOSDigital.API.Camera::StopLiveView
+    IL_000c: leave.s IL_001e
+    IL_000e: stloc.0
+    IL_000f: ldarg.0
+    IL_0010: ldloc.0
+    IL_0011: callvirt System.Exception::get_Message
+    IL_0016: ldc.i4.0
+    IL_0017: call Architecture.WinApp.DCUtility::ReportError
+    IL_001c: leave.s IL_001e
+    IL_001e: ret
+
+; Architecture.WinApp.DCUtility::RefreshButtonClick  (rva=0x8629c, fat header, code_size=25, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.DCUtility::RefreshCamera
+    IL_0006: leave.s IL_0018
+    IL_0008: stloc.0
+    IL_0009: ldarg.0
+    IL_000a: ldloc.0
+    IL_000b: callvirt System.Exception::get_Message
+    IL_0010: ldc.i4.0
+    IL_0011: call Architecture.WinApp.DCUtility::ReportError
+    IL_0016: leave.s IL_0018
+    IL_0018: ret
+
+; Architecture.WinApp.DCUtility::LiveViewPicBox_SizeChanged  (rva=0x862d4, fat header, code_size=64, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldfld Architecture.WinApp.DCUtility::LiveViewPicBox
+    IL_0007: callvirt System.Windows.Forms.Control::get_Width
+    IL_000c: stfld Architecture.WinApp.DCUtility::LVBw
+    IL_0011: ldarg.0
+    IL_0012: ldarg.0
+    IL_0013: ldfld Architecture.WinApp.DCUtility::LiveViewPicBox
+    IL_0018: callvirt System.Windows.Forms.Control::get_Height
+    IL_001d: stfld Architecture.WinApp.DCUtility::LVBh
+    IL_0022: ldarg.0
+    IL_0023: ldfld Architecture.WinApp.DCUtility::LiveViewPicBox
+    IL_0028: callvirt System.Windows.Forms.Control::Invalidate
+    IL_002d: leave.s IL_003f
+    IL_002f: stloc.0
+    IL_0030: ldarg.0
+    IL_0031: ldloc.0
+    IL_0032: callvirt System.Exception::get_Message
+    IL_0037: ldc.i4.0
+    IL_0038: call Architecture.WinApp.DCUtility::ReportError
+    IL_003d: leave.s IL_003f
+    IL_003f: ret
+
+; Architecture.WinApp.DCUtility::LiveViewPicBox_Paint  (rva=0x86330, fat header, code_size=259, max_stack=6, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: brfalse.s IL_0015
+    IL_0008: ldarg.0
+    IL_0009: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_000e: callvirt EOSDigital.API.Camera::get_SessionOpen
+    IL_0013: brtrue.s IL_0016
+    IL_0015: ret
+    IL_0016: ldarg.0
+    IL_0017: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_001c: callvirt EOSDigital.API.Camera::get_IsLiveViewOn
+    IL_0021: brtrue.s IL_0035
+    IL_0023: ldarg.2
+    IL_0024: callvirt System.Windows.Forms.PaintEventArgs::get_Graphics
+    IL_0029: ldarg.0
+    IL_002a: callvirt System.Windows.Forms.Control::get_BackColor
+    IL_002f: callvirt System.Drawing.Graphics::Clear
+    IL_0034: ret
+    IL_0035: ldarg.0
+    IL_0036: ldfld Architecture.WinApp.DCUtility::LvLock
+    IL_003b: stloc.0
+    IL_003c: ldc.i4.0
+    IL_003d: stloc.1
+    IL_003e: ldloc.0
+    IL_003f: ldloca.s 1
+    IL_0041: call System.Threading.Monitor::Enter
+    IL_0046: ldarg.0
+    IL_0047: ldfld Architecture.WinApp.DCUtility::Evf_Bmp
+    IL_004c: brfalse IL_00f6
+    IL_0051: ldarg.0
+    IL_0052: ldarg.0
+    IL_0053: ldfld Architecture.WinApp.DCUtility::LVBw
+    IL_0058: conv.r4
+    IL_0059: ldarg.0
+    IL_005a: ldfld Architecture.WinApp.DCUtility::LVBh
+    IL_005f: conv.r4
+    IL_0060: div
+    IL_0061: stfld Architecture.WinApp.DCUtility::LVBratio
+    IL_0066: ldarg.0
+    IL_0067: ldarg.0
+    IL_0068: ldfld Architecture.WinApp.DCUtility::Evf_Bmp
+    IL_006d: callvirt System.Drawing.Image::get_Width
+    IL_0072: conv.r4
+    IL_0073: ldarg.0
+    IL_0074: ldfld Architecture.WinApp.DCUtility::Evf_Bmp
+    IL_0079: callvirt System.Drawing.Image::get_Height
+    IL_007e: conv.r4
+    IL_007f: div
+    IL_0080: stfld Architecture.WinApp.DCUtility::LVration
+    IL_0085: ldarg.0
+    IL_0086: ldfld Architecture.WinApp.DCUtility::LVBratio
+    IL_008b: ldarg.0
+    IL_008c: ldfld Architecture.WinApp.DCUtility::LVration
+    IL_0091: bge.un.s IL_00b6
+    IL_0093: ldarg.0
+    IL_0094: ldarg.0
+    IL_0095: ldfld Architecture.WinApp.DCUtility::LVBw
+    IL_009a: stfld Architecture.WinApp.DCUtility::w
+    IL_009f: ldarg.0
+    IL_00a0: ldarg.0
+    IL_00a1: ldfld Architecture.WinApp.DCUtility::LVBw
+    IL_00a6: conv.r4
+    IL_00a7: ldarg.0
+    IL_00a8: ldfld Architecture.WinApp.DCUtility::LVration
+    IL_00ad: div
+    IL_00ae: conv.i4
+    IL_00af: stfld Architecture.WinApp.DCUtility::h
+    IL_00b4: br.s IL_00d7
+    IL_00b6: ldarg.0
+    IL_00b7: ldarg.0
+    IL_00b8: ldfld Architecture.WinApp.DCUtility::LVBh
+    IL_00bd: conv.r4
+    IL_00be: ldarg.0
+    IL_00bf: ldfld Architecture.WinApp.DCUtility::LVration
+    IL_00c4: mul
+    IL_00c5: conv.i4
+    IL_00c6: stfld Architecture.WinApp.DCUtility::w
+    IL_00cb: ldarg.0
+    IL_00cc: ldarg.0
+    IL_00cd: ldfld Architecture.WinApp.DCUtility::LVBh
+    IL_00d2: stfld Architecture.WinApp.DCUtility::h
+    IL_00d7: ldarg.2
+    IL_00d8: callvirt System.Windows.Forms.PaintEventArgs::get_Graphics
+    IL_00dd: ldarg.0
+    IL_00de: ldfld Architecture.WinApp.DCUtility::Evf_Bmp
+    IL_00e3: ldc.i4.0
+    IL_00e4: ldc.i4.0
+    IL_00e5: ldarg.0
+    IL_00e6: ldfld Architecture.WinApp.DCUtility::w
+    IL_00eb: ldarg.0
+    IL_00ec: ldfld Architecture.WinApp.DCUtility::h
+    IL_00f1: callvirt System.Drawing.Graphics::DrawImage
+    IL_00f6: leave.s IL_0102
+    IL_00f8: ldloc.1
+    IL_00f9: brfalse.s IL_0101
+    IL_00fb: ldloc.0
+    IL_00fc: call System.Threading.Monitor::Exit
+    IL_0101: endfinally
+    IL_0102: ret
+
+; Architecture.WinApp.DCUtility::FocusNear3Button_Click  (rva=0x86450, fat header, code_size=36, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: ldc.i4 259
+    IL_000b: ldc.i4.3
+    IL_000c: callvirt EOSDigital.API.Camera::SendCommand
+    IL_0011: leave.s IL_0023
+    IL_0013: stloc.0
+    IL_0014: ldarg.0
+    IL_0015: ldloc.0
+    IL_0016: callvirt System.Exception::get_Message
+    IL_001b: ldc.i4.0
+    IL_001c: call Architecture.WinApp.DCUtility::ReportError
+    IL_0021: leave.s IL_0023
+    IL_0023: ret
+
+; Architecture.WinApp.DCUtility::FocusNear2Button_Click  (rva=0x86490, fat header, code_size=36, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: ldc.i4 259
+    IL_000b: ldc.i4.2
+    IL_000c: callvirt EOSDigital.API.Camera::SendCommand
+    IL_0011: leave.s IL_0023
+    IL_0013: stloc.0
+    IL_0014: ldarg.0
+    IL_0015: ldloc.0
+    IL_0016: callvirt System.Exception::get_Message
+    IL_001b: ldc.i4.0
+    IL_001c: call Architecture.WinApp.DCUtility::ReportError
+    IL_0021: leave.s IL_0023
+    IL_0023: ret
+
+; Architecture.WinApp.DCUtility::FocusNear1Button_Click  (rva=0x864d0, fat header, code_size=36, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: ldc.i4 259
+    IL_000b: ldc.i4.1
+    IL_000c: callvirt EOSDigital.API.Camera::SendCommand
+    IL_0011: leave.s IL_0023
+    IL_0013: stloc.0
+    IL_0014: ldarg.0
+    IL_0015: ldloc.0
+    IL_0016: callvirt System.Exception::get_Message
+    IL_001b: ldc.i4.0
+    IL_001c: call Architecture.WinApp.DCUtility::ReportError
+    IL_0021: leave.s IL_0023
+    IL_0023: ret
+
+; Architecture.WinApp.DCUtility::FocusFar1Button_Click  (rva=0x86510, fat header, code_size=40, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: ldc.i4 259
+    IL_000b: ldc.i4 32769
+    IL_0010: callvirt EOSDigital.API.Camera::SendCommand
+    IL_0015: leave.s IL_0027
+    IL_0017: stloc.0
+    IL_0018: ldarg.0
+    IL_0019: ldloc.0
+    IL_001a: callvirt System.Exception::get_Message
+    IL_001f: ldc.i4.0
+    IL_0020: call Architecture.WinApp.DCUtility::ReportError
+    IL_0025: leave.s IL_0027
+    IL_0027: ret
+
+; Architecture.WinApp.DCUtility::FocusFar2Button_Click  (rva=0x86554, fat header, code_size=40, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: ldc.i4 259
+    IL_000b: ldc.i4 32770
+    IL_0010: callvirt EOSDigital.API.Camera::SendCommand
+    IL_0015: leave.s IL_0027
+    IL_0017: stloc.0
+    IL_0018: ldarg.0
+    IL_0019: ldloc.0
+    IL_001a: callvirt System.Exception::get_Message
+    IL_001f: ldc.i4.0
+    IL_0020: call Architecture.WinApp.DCUtility::ReportError
+    IL_0025: leave.s IL_0027
+    IL_0027: ret
+
+; Architecture.WinApp.DCUtility::FocusFar3Button_Click  (rva=0x86598, fat header, code_size=40, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: ldc.i4 259
+    IL_000b: ldc.i4 32771
+    IL_0010: callvirt EOSDigital.API.Camera::SendCommand
+    IL_0015: leave.s IL_0027
+    IL_0017: stloc.0
+    IL_0018: ldarg.0
+    IL_0019: ldloc.0
+    IL_001a: callvirt System.Exception::get_Message
+    IL_001f: ldc.i4.0
+    IL_0020: call Architecture.WinApp.DCUtility::ReportError
+    IL_0025: leave.s IL_0027
+    IL_0027: ret
+
+; Architecture.WinApp.DCUtility::CloseSession  (rva=0x865dc, tiny header, code_size=34, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0006: callvirt EOSDigital.API.Camera::CloseSession
+    IL_000b: ldarg.0
+    IL_000c: call Architecture.WinApp.DCUtility::DisposeSession
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.WinApp.DCUtility::SessionButton
+    IL_0017: ldstr ldstr "Open"
+    IL_001c: callvirt System.Windows.Forms.Control::set_Text
+    IL_0021: ret
+
+; Architecture.WinApp.DCUtility::RefreshCamera  (rva=0x86600, fat header, code_size=185, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::CameraListBox
+    IL_0006: callvirt System.Windows.Forms.ListBox::get_Items
+    IL_000b: callvirt ObjectCollection::Clear
+    IL_0010: ldarg.0
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.WinApp.DCUtility::APIHandler
+    IL_0017: callvirt EOSDigital.API.CanonAPI::GetCameraList
+    IL_001c: stfld Architecture.WinApp.DCUtility::CamList
+    IL_0021: ldarg.0
+    IL_0022: ldfld Architecture.WinApp.DCUtility::CamList
+    IL_0027: callvirt TypeSpec#314::GetEnumerator
+    IL_002c: stloc.0
+    IL_002d: br.s IL_004e
+    IL_002f: ldloca.s 0
+    IL_0031: call TypeSpec#315::get_Current
+    IL_0036: stloc.1
+    IL_0037: ldarg.0
+    IL_0038: ldfld Architecture.WinApp.DCUtility::CameraListBox
+    IL_003d: callvirt System.Windows.Forms.ListBox::get_Items
+    IL_0042: ldloc.1
+    IL_0043: callvirt EOSDigital.API.Camera::get_DeviceName
+    IL_0048: callvirt ObjectCollection::Add
+    IL_004d: pop
+    IL_004e: ldloca.s 0
+    IL_0050: call TypeSpec#315::MoveNext
+    IL_0055: brtrue.s IL_002f
+    IL_0057: leave.s IL_0067
+    IL_0059: ldloca.s 0
+    IL_005b: constrained. TypeSpec#315
+    IL_0061: callvirt System.IDisposable::Dispose
+    IL_0066: endfinally
+    IL_0067: ldarg.0
+    IL_0068: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_006d: dup
+    IL_006e: brtrue.s IL_0074
+    IL_0070: pop
+    IL_0071: ldc.i4.0
+    IL_0072: br.s IL_0079
+    IL_0074: call EOSDigital.API.Camera::get_SessionOpen
+    IL_0079: brfalse.s IL_009e
+    IL_007b: ldarg.0
+    IL_007c: ldfld Architecture.WinApp.DCUtility::CameraListBox
+    IL_0081: ldarg.0
+    IL_0082: ldfld Architecture.WinApp.DCUtility::CamList
+    IL_0087: ldarg.0
+    IL_0088: ldftn Architecture.WinApp.DCUtility::<RefreshCamera>b__36_0
+    IL_008e: newobj TypeSpec#316::.ctor
+    IL_0093: callvirt TypeSpec#314::FindIndex
+    IL_0098: callvirt System.Windows.Forms.ListControl::set_SelectedIndex
+    IL_009d: ret
+    IL_009e: ldarg.0
+    IL_009f: ldfld Architecture.WinApp.DCUtility::CamList
+    IL_00a4: callvirt TypeSpec#314::get_Count
+    IL_00a9: ldc.i4.0
+    IL_00aa: ble.s IL_00b8
+    IL_00ac: ldarg.0
+    IL_00ad: ldfld Architecture.WinApp.DCUtility::CameraListBox
+    IL_00b2: ldc.i4.0
+    IL_00b3: callvirt System.Windows.Forms.ListControl::set_SelectedIndex
+    IL_00b8: ret
+
+; Architecture.WinApp.DCUtility::DisposeSession  (rva=0x866d8, fat header, code_size=60, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldc.i4.0
+    IL_0002: stfld Architecture.WinApp.DCUtility::IsInit
+    IL_0007: ldarg.0
+    IL_0008: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_000d: dup
+    IL_000e: brtrue.s IL_0013
+    IL_0010: pop
+    IL_0011: br.s IL_0018
+    IL_0013: call EOSDigital.API.Camera::Dispose
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.DCUtility::APIHandler
+    IL_001e: dup
+    IL_001f: brtrue.s IL_0024
+    IL_0021: pop
+    IL_0022: br.s IL_0029
+    IL_0024: call EOSDigital.API.CanonAPI::Dispose
+    IL_0029: leave.s IL_003b
+    IL_002b: stloc.0
+    IL_002c: ldarg.0
+    IL_002d: ldloc.0
+    IL_002e: callvirt System.Exception::get_Message
+    IL_0033: ldc.i4.0
+    IL_0034: call Architecture.WinApp.DCUtility::ReportError
+    IL_0039: leave.s IL_003b
+    IL_003b: ret
+
+; Architecture.WinApp.DCUtility::OpenSession  (rva=0x86730, fat header, code_size=165, max_stack=3, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::CameraListBox
+    IL_0006: callvirt System.Windows.Forms.ListControl::get_SelectedIndex
+    IL_000b: ldc.i4.0
+    IL_000c: blt IL_00a4
+    IL_0011: ldarg.0
+    IL_0012: ldarg.0
+    IL_0013: ldfld Architecture.WinApp.DCUtility::CamList
+    IL_0018: ldarg.0
+    IL_0019: ldfld Architecture.WinApp.DCUtility::CameraListBox
+    IL_001e: callvirt System.Windows.Forms.ListControl::get_SelectedIndex
+    IL_0023: callvirt TypeSpec#314::get_Item
+    IL_0028: stfld Architecture.WinApp.DCUtility::MainCamera
+    IL_002d: ldarg.0
+    IL_002e: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0033: callvirt EOSDigital.API.Camera::OpenSession
+    IL_0038: ldarg.0
+    IL_0039: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_003e: ldarg.0
+    IL_003f: ldftn Architecture.WinApp.DCUtility::MainCamera_LiveViewUpdated
+    IL_0045: newobj EOSDigital.API.LiveViewUpdate::.ctor
+    IL_004a: callvirt EOSDigital.API.Camera::add_LiveViewUpdated
+    IL_004f: ldarg.0
+    IL_0050: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0055: ldarg.0
+    IL_0056: ldftn Architecture.WinApp.DCUtility::MainCamera_ProgressChanged
+    IL_005c: newobj EOSDigital.API.ProgressHandler::.ctor
+    IL_0061: callvirt EOSDigital.API.Camera::add_ProgressChanged
+    IL_0066: ldarg.0
+    IL_0067: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_006c: ldarg.0
+    IL_006d: ldftn Architecture.WinApp.DCUtility::MainCamera_StateChanged
+    IL_0073: newobj EOSDigital.API.StateChangeHandler::.ctor
+    IL_0078: callvirt EOSDigital.API.Camera::add_StateChanged
+    IL_007d: ldarg.0
+    IL_007e: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_0083: ldarg.0
+    IL_0084: ldftn Architecture.WinApp.DCUtility::MainCamera_DownloadReady
+    IL_008a: newobj EOSDigital.API.DownloadHandler::.ctor
+    IL_008f: callvirt EOSDigital.API.Camera::add_DownloadReady
+    IL_0094: ldarg.0
+    IL_0095: ldfld Architecture.WinApp.DCUtility::SessionButton
+    IL_009a: ldstr ldstr "Close Session"
+    IL_009f: callvirt System.Windows.Forms.Control::set_Text
+    IL_00a4: ret
+
+; Architecture.WinApp.DCUtility::ReportError  (rva=0x867e4, fat header, code_size=145, max_stack=4, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::ErrLock
+    IL_0006: stloc.1
+    IL_0007: ldc.i4.0
+    IL_0008: stloc.2
+    IL_0009: ldloc.1
+    IL_000a: ldloca.s 2
+    IL_000c: call System.Threading.Monitor::Enter
+    IL_0011: ldarg.0
+    IL_0012: ldarg.0
+    IL_0013: ldfld Architecture.WinApp.DCUtility::ErrCount
+    IL_0018: ldc.i4.1
+    IL_0019: add
+    IL_001a: stloc.3
+    IL_001b: ldloc.3
+    IL_001c: stfld Architecture.WinApp.DCUtility::ErrCount
+    IL_0021: ldloc.3
+    IL_0022: stloc.0
+    IL_0023: leave.s IL_002f
+    IL_0025: ldloc.2
+    IL_0026: brfalse.s IL_002e
+    IL_0028: ldloc.1
+    IL_0029: call System.Threading.Monitor::Exit
+    IL_002e: endfinally
+    IL_002f: ldarg.2
+    IL_0030: brfalse.s IL_0039
+    IL_0032: ldarg.0
+    IL_0033: ldc.i4.0
+    IL_0034: call Architecture.WinApp.DCUtility::EnableUI
+    IL_0039: ldloc.0
+    IL_003a: ldc.i4.4
+    IL_003b: bge.s IL_004e
+    IL_003d: ldarg.1
+    IL_003e: ldstr ldstr "Error"
+    IL_0043: ldc.i4.0
+    IL_0044: ldc.i4.s 16
+    IL_0046: call System.Windows.Forms.MessageBox::Show
+    IL_004b: pop
+    IL_004c: br.s IL_0065
+    IL_004e: ldloc.0
+    IL_004f: ldc.i4.4
+    IL_0050: bne.un.s IL_0065
+    IL_0052: ldstr ldstr "Many errors happened!"
+    IL_0057: ldstr ldstr "Error"
+    IL_005c: ldc.i4.0
+    IL_005d: ldc.i4.s 16
+    IL_005f: call System.Windows.Forms.MessageBox::Show
+    IL_0064: pop
+    IL_0065: ldarg.0
+    IL_0066: ldfld Architecture.WinApp.DCUtility::ErrLock
+    IL_006b: stloc.1
+    IL_006c: ldc.i4.0
+    IL_006d: stloc.2
+    IL_006e: ldloc.1
+    IL_006f: ldloca.s 2
+    IL_0071: call System.Threading.Monitor::Enter
+    IL_0076: ldarg.0
+    IL_0077: ldarg.0
+    IL_0078: ldfld Architecture.WinApp.DCUtility::ErrCount
+    IL_007d: ldc.i4.1
+    IL_007e: sub
+    IL_007f: stfld Architecture.WinApp.DCUtility::ErrCount
+    IL_0084: leave.s IL_0090
+    IL_0086: ldloc.2
+    IL_0087: brfalse.s IL_008f
+    IL_0089: ldloc.1
+    IL_008a: call System.Threading.Monitor::Exit
+    IL_008f: endfinally
+    IL_0090: ret
+
+; Architecture.WinApp.DCUtility::EnableUI  (rva=0x868a0, fat header, code_size=48, max_stack=3, exception_handlers=no)
+    IL_0000: newobj <>c__DisplayClass40_0::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldarg.0
+    IL_0008: stfld <>c__DisplayClass40_0::<>4__this
+    IL_000d: ldloc.0
+    IL_000e: ldarg.1
+    IL_000f: stfld <>c__DisplayClass40_0::enable
+    IL_0014: ldarg.0
+    IL_0015: call System.Windows.Forms.Control::get_InvokeRequired
+    IL_001a: brfalse.s IL_002f
+    IL_001c: ldarg.0
+    IL_001d: ldloc.0
+    IL_001e: ldftn <>c__DisplayClass40_0::<EnableUI>b__0
+    IL_0024: newobj System.Action::.ctor
+    IL_0029: call System.Windows.Forms.Control::Invoke
+    IL_002e: pop
+    IL_002f: ret
+
+; Architecture.WinApp.DCUtility::APIHandler_CameraAdded  (rva=0x868dc, fat header, code_size=38, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.0
+    IL_0002: ldftn Architecture.WinApp.DCUtility::<APIHandler_CameraAdded>b__41_0
+    IL_0008: newobj System.Action::.ctor
+    IL_000d: call System.Windows.Forms.Control::Invoke
+    IL_0012: pop
+    IL_0013: leave.s IL_0025
+    IL_0015: stloc.0
+    IL_0016: ldarg.0
+    IL_0017: ldloc.0
+    IL_0018: callvirt System.Exception::get_Message
+    IL_001d: ldc.i4.0
+    IL_001e: call Architecture.WinApp.DCUtility::ReportError
+    IL_0023: leave.s IL_0025
+    IL_0025: ret
+
+; Architecture.WinApp.DCUtility::MainCamera_StateChanged  (rva=0x86920, fat header, code_size=54, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.2
+    IL_0001: ldc.i4 769
+    IL_0006: bne.un.s IL_0023
+    IL_0008: ldarg.0
+    IL_0009: ldfld Architecture.WinApp.DCUtility::IsInit
+    IL_000e: brfalse.s IL_0023
+    IL_0010: ldarg.0
+    IL_0011: ldarg.0
+    IL_0012: ldftn Architecture.WinApp.DCUtility::<MainCamera_StateChanged>b__42_0
+    IL_0018: newobj System.Action::.ctor
+    IL_001d: call System.Windows.Forms.Control::Invoke
+    IL_0022: pop
+    IL_0023: leave.s IL_0035
+    IL_0025: stloc.0
+    IL_0026: ldarg.0
+    IL_0027: ldloc.0
+    IL_0028: callvirt System.Exception::get_Message
+    IL_002d: ldc.i4.0
+    IL_002e: call Architecture.WinApp.DCUtility::ReportError
+    IL_0033: leave.s IL_0035
+    IL_0035: ret
+
+; Architecture.WinApp.DCUtility::MainCamera_ProgressChanged  (rva=0x86974, fat header, code_size=58, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj <>c__DisplayClass43_0::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldarg.0
+    IL_0008: stfld <>c__DisplayClass43_0::<>4__this
+    IL_000d: ldloc.0
+    IL_000e: ldarg.2
+    IL_000f: stfld <>c__DisplayClass43_0::progress
+    IL_0014: ldarg.0
+    IL_0015: ldloc.0
+    IL_0016: ldftn <>c__DisplayClass43_0::<MainCamera_ProgressChanged>b__0
+    IL_001c: newobj System.Action::.ctor
+    IL_0021: call System.Windows.Forms.Control::Invoke
+    IL_0026: pop
+    IL_0027: leave.s IL_0039
+    IL_0029: stloc.1
+    IL_002a: ldarg.0
+    IL_002b: ldloc.1
+    IL_002c: callvirt System.Exception::get_Message
+    IL_0031: ldc.i4.0
+    IL_0032: call Architecture.WinApp.DCUtility::ReportError
+    IL_0037: leave.s IL_0039
+    IL_0039: ret
+
+; Architecture.WinApp.DCUtility::MainCamera_LiveViewUpdated  (rva=0x869cc, fat header, code_size=88, max_stack=3, exception_handlers=yes)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::LvLock
+    IL_0006: stloc.0
+    IL_0007: ldc.i4.0
+    IL_0008: stloc.1
+    IL_0009: ldloc.0
+    IL_000a: ldloca.s 1
+    IL_000c: call System.Threading.Monitor::Enter
+    IL_0011: ldarg.0
+    IL_0012: ldfld Architecture.WinApp.DCUtility::Evf_Bmp
+    IL_0017: dup
+    IL_0018: brtrue.s IL_001d
+    IL_001a: pop
+    IL_001b: br.s IL_0022
+    IL_001d: call System.Drawing.Image::Dispose
+    IL_0022: ldarg.0
+    IL_0023: ldarg.2
+    IL_0024: newobj System.Drawing.Bitmap::.ctor
+    IL_0029: stfld Architecture.WinApp.DCUtility::Evf_Bmp
+    IL_002e: leave.s IL_003a
+    IL_0030: ldloc.1
+    IL_0031: brfalse.s IL_0039
+    IL_0033: ldloc.0
+    IL_0034: call System.Threading.Monitor::Exit
+    IL_0039: endfinally
+    IL_003a: ldarg.0
+    IL_003b: ldfld Architecture.WinApp.DCUtility::LiveViewPicBox
+    IL_0040: callvirt System.Windows.Forms.Control::Invalidate
+    IL_0045: leave.s IL_0057
+    IL_0047: stloc.2
+    IL_0048: ldarg.0
+    IL_0049: ldloc.2
+    IL_004a: callvirt System.Exception::get_Message
+    IL_004f: ldc.i4.0
+    IL_0050: call Architecture.WinApp.DCUtility::ReportError
+    IL_0055: leave.s IL_0057
+    IL_0057: ret
+
+; Architecture.WinApp.DCUtility::MainCamera_DownloadReady  (rva=0x86a4c, fat header, code_size=78, max_stack=3, exception_handlers=yes)
+    IL_0000: newobj <>c__DisplayClass45_0::.ctor
+    IL_0005: stloc.0
+    IL_0006: ldloc.0
+    IL_0007: ldnull
+    IL_0008: stfld <>c__DisplayClass45_0::dir
+    IL_000d: ldarg.0
+    IL_000e: ldloc.0
+    IL_000f: ldftn <>c__DisplayClass45_0::<MainCamera_DownloadReady>b__0
+    IL_0015: newobj System.Action::.ctor
+    IL_001a: call System.Windows.Forms.Control::Invoke
+    IL_001f: pop
+    IL_0020: ldarg.1
+    IL_0021: ldarg.2
+    IL_0022: callvirt EOSDigital.API.Camera::DownloadFile
+    IL_0027: pop
+    IL_0028: ldarg.0
+    IL_0029: ldarg.0
+    IL_002a: ldftn Architecture.WinApp.DCUtility::<MainCamera_DownloadReady>b__45_1
+    IL_0030: newobj System.Action::.ctor
+    IL_0035: call System.Windows.Forms.Control::Invoke
+    IL_003a: pop
+    IL_003b: leave.s IL_004d
+    IL_003d: stloc.1
+    IL_003e: ldarg.0
+    IL_003f: ldloc.1
+    IL_0040: callvirt System.Exception::get_Message
+    IL_0045: ldc.i4.0
+    IL_0046: call Architecture.WinApp.DCUtility::ReportError
+    IL_004b: leave.s IL_004d
+    IL_004d: ret
+
+; Architecture.WinApp.DCUtility::ErrorHandler_NonSevereErrorHappened  (rva=0x86ab8, fat header, code_size=38, max_stack=5, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldstr ldstr "SDK Error code: {0} ({1})"
+    IL_0006: ldarg.2
+    IL_0007: box EOSDigital.SDK.ErrorCode
+    IL_000c: ldarg.2
+    IL_000d: stloc.0
+    IL_000e: ldloca.s 0
+    IL_0010: ldstr ldstr "X"
+    IL_0015: call System.Int32::ToString
+    IL_001a: call System.String::Format
+    IL_001f: ldc.i4.0
+    IL_0020: call Architecture.WinApp.DCUtility::ReportError
+    IL_0025: ret
+
+; Architecture.WinApp.DCUtility::ErrorHandler_SevereErrorHappened  (rva=0x86aea, tiny header, code_size=14, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldarg.2
+    IL_0002: callvirt System.Exception::get_Message
+    IL_0007: ldc.i4.1
+    IL_0008: call Architecture.WinApp.DCUtility::ReportError
+    IL_000d: ret
+
+; Architecture.WinApp.DCUtility::<RefreshCamera>b__36_0  (rva=0x86af9, tiny header, code_size=20, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.1
+    IL_0001: callvirt EOSDigital.API.Camera::get_ID
+    IL_0006: ldarg.0
+    IL_0007: ldfld Architecture.WinApp.DCUtility::MainCamera
+    IL_000c: callvirt EOSDigital.API.Camera::get_ID
+    IL_0011: ceq
+    IL_0013: ret
+
+; Architecture.WinApp.DCUtility::<APIHandler_CameraAdded>b__41_0  (rva=0x86b0e, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.DCUtility::RefreshCamera
+    IL_0006: ret
+
+; Architecture.WinApp.DCUtility::<MainCamera_StateChanged>b__42_0  (rva=0x86b16, tiny header, code_size=7, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: call Architecture.WinApp.DCUtility::CloseSession
+    IL_0006: ret
+
+; Architecture.WinApp.DCUtility::<MainCamera_DownloadReady>b__45_1  (rva=0x86b1e, tiny header, code_size=13, max_stack=8, exception_handlers=no)
+    IL_0000: ldarg.0
+    IL_0001: ldfld Architecture.WinApp.DCUtility::MainProgressBar
+    IL_0006: ldc.i4.0
+    IL_0007: callvirt System.Windows.Forms.ProgressBar::set_Value
+    IL_000c: ret
