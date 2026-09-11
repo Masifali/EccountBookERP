@@ -160,10 +160,17 @@ public class AccountsReportService {
             params.add("GetAccountsBalancesOpeningCurrentAndClosing");
             List<Map<String, Object>> bal = jdbcTemplate.queryForList(sql.toString(), params.toArray());
             if (!bal.isEmpty()) {
-                info.put("openingBalance", bal.get(0).get("OpeningBalance"));
-                info.put("debitAmount", bal.get(0).get("DebitAmount"));
-                info.put("creditAmount", bal.get(0).get("CreditAmount"));
-                info.put("closingBalance", bal.get(0).get("ClosingBalance"));
+                Map<String, Object> row = bal.get(0);
+                info.put("openingBalance", row.get("OpeningBalance"));
+                info.put("debitAmount", row.get("DebitAmount"));
+                info.put("creditAmount", row.get("CreditAmount"));
+                info.put("closingBalance", row.get("ClosingBalance"));
+                info.put("pendingPrematureReceipts", row.get("PendingPrematureReceipts"));
+                info.put("pendingPrematurePayments", row.get("PendingPrematureDebit"));
+                info.put("balAfterPrematureReceiptsClearance", row.get("BalanceAfterPrematureReceiptsClearance"));
+                info.put("pdcReceipts", row.get("PdcReceipts"));
+                info.put("pdcPayments", row.get("PdcPayments"));
+                info.put("balAfterCheqClearance", row.get("BalanceAfterCheqClearance"));
             }
         } catch (Exception ignored) {
         }
