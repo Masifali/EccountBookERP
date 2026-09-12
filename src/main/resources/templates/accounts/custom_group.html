@@ -11,6 +11,7 @@
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
     
     <style>
@@ -147,6 +148,21 @@
         .acg-btn-teal:hover {
             background-color: #006666;
             color: #ffffff;
+        }
+        /* Select2 custom tweak for compact toolbar look */
+        .select2-container--default .select2-selection--single {
+            height: 26px !important;
+            line-height: 24px !important;
+            font-size: 11px !important;
+            border: 1px solid #ccc !important;
+            border-radius: 2px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 24px !important;
+            padding-left: 6px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 24px !important;
         }
         /* Tables & Grids */
         .acg-grid-container {
@@ -351,21 +367,21 @@
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
                             <div style="flex: 1 1 180px; min-width: 170px; display: flex; align-items: center; gap: 6px;">
                                 <label class="acg-form-label" style="min-width: 70px; margin: 0;">Group Name</label>
-                                <select id="cmbGroupName" class="acg-input" style="flex: 1;" onchange="onGroupNameChange()">
+                                <select id="cmbGroupName" class="acg-input select2-dropdown" style="flex: 1;" onchange="onGroupNameChange()">
                                     <option value="0">-- Select Group --</option>
                                     <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.acLookUpsDescription}"></option>
                                 </select>
                             </div>
                             <div style="flex: 1 1 180px; min-width: 170px; display: flex; align-items: center; gap: 6px;">
                                 <label class="acg-form-label" style="min-width: 80px; margin: 0;">Account Types</label>
-                                <select id="cmbAccountTypes" class="acg-input" style="flex: 1;" onchange="onAccountTypeChange()">
+                                <select id="cmbAccountTypes" class="acg-input select2-dropdown" style="flex: 1;" onchange="onAccountTypeChange()">
                                     <option value="0">-- All Types --</option>
                                     <option th:each="t : ${accountTypes}" th:value="${t.id}" th:text="${t.accountType}"></option>
                                 </select>
                             </div>
                             <div style="flex: 1.5 1 240px; min-width: 210px; display: flex; align-items: center; gap: 6px;">
                                 <label class="acg-form-label" style="min-width: 85px; margin: 0;">Parent Account</label>
-                                <select id="cmbParentAccount" class="acg-input" style="flex: 1;">
+                                <select id="cmbParentAccount" class="acg-input select2-dropdown" style="flex: 1;">
                                     <option value="0">-- All Parent Accounts --</option>
                                     <option th:each="p : ${parentAccounts}" th:value="${p.id}" th:text="${p.accountTitle + ' (' + p.accountCode + ')'}"></option>
                                 </select>
@@ -477,8 +493,17 @@
 <!-- Scripts -->
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
 <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
 <script>
     let activeGroupId = 0;
+
+    $(document).ready(function() {
+        if ($.fn.select2) {
+            $('#cmbGroupName, #cmbAccountTypes, #cmbParentAccount').select2({
+                width: '100%'
+            });
+        }
+    });
 
     // Reset Left Form (btnClear_Click / Reset)
     function resetLeftForm() {
@@ -536,8 +561,12 @@
         $(tr).addClass('selected');
         const id = $(tr).attr('data-id');
         if (id) {
-            $('#cmbGroupName').val(id);
-            onGroupNameChange();
+            if ($.fn.select2) {
+                $('#cmbGroupName').val(id).trigger('change');
+            } else {
+                $('#cmbGroupName').val(id);
+                onGroupNameChange();
+            }
         }
     }
 
@@ -575,6 +604,9 @@
                 });
             }
             $('#cmbParentAccount').html(html);
+            if ($.fn.select2) {
+                $('#cmbParentAccount').trigger('change.select2');
+            }
         });
     }
 
@@ -608,15 +640,23 @@
         });
     }
 
+    function toggleRowCheckbox(tr, e) {
+        if (e && e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'I')) return;
+        const chk = $(tr).find('input[type="checkbox"]');
+        if (chk.length) {
+            chk.prop('checked', !chk.prop('checked'));
+        }
+    }
+
     function renderUnallocGrid(list) {
         let html = '';
         if (list && list.length > 0) {
             list.forEach(item => {
-                const coaId = item.ChartOfAccountId || item.chartOfAccountId || item.Id || item.id;
-                const code = item.AccountCode || item.accountCode || '';
-                const title = item.AccountTitle || item.accountTitle || '';
-                html += `<tr>
-                            <td style="text-align:center;"><input type="checkbox" class="chk-unalloc" value="${coaId}"/></td>
+                const coaId = item.ChartOfAccountId || item.chartOfAccountId || item.CHART_OF_ACCOUNT_ID || item.Id || item.id || item.ID;
+                const code = item.AccountCode || item.accountCode || item.ACCOUNT_CODE || '';
+                const title = item.AccountTitle || item.accountTitle || item.ACCOUNT_TITLE || '';
+                html += `<tr onclick="toggleRowCheckbox(this, event)">
+                            <td style="text-align:center;"><input type="checkbox" class="chk-unalloc" value="${coaId}" onclick="event.stopPropagation()"/></td>
                             <td>${code}</td>
                             <td><strong>${title}</strong></td>
                          </tr>`;
@@ -632,11 +672,11 @@
         let html = '';
         if (list && list.length > 0) {
             list.forEach(item => {
-                const coaId = item.ChartOfAccountId || item.chartOfAccountId || item.Id || item.id;
-                const code = item.AccountCode || item.accountCode || '';
-                const title = item.AccountTitle || item.accountTitle || '';
-                html += `<tr>
-                            <td style="text-align:center;"><input type="checkbox" class="chk-alloc" value="${coaId}"/></td>
+                const coaId = item.ChartOfAccountId || item.chartOfAccountId || item.CHART_OF_ACCOUNT_ID || item.Id || item.id || item.ID;
+                const code = item.AccountCode || item.accountCode || item.ACCOUNT_CODE || '';
+                const title = item.AccountTitle || item.accountTitle || item.ACCOUNT_TITLE || '';
+                html += `<tr onclick="toggleRowCheckbox(this, event)">
+                            <td style="text-align:center;"><input type="checkbox" class="chk-alloc" value="${coaId}" onclick="event.stopPropagation()"/></td>
                             <td>${code}</td>
                             <td><strong>${title}</strong></td>
                          </tr>`;
@@ -720,9 +760,15 @@
 
     // Reset Right Filters (btnAcClear_Click)
     function resetRightFilters() {
-        $('#cmbAccountTypes').val('0');
-        $('#cmbGroupName').val('0');
-        $('#cmbParentAccount').val('0');
+        if ($.fn.select2) {
+            $('#cmbAccountTypes').val('0').trigger('change.select2');
+            $('#cmbGroupName').val('0').trigger('change.select2');
+            $('#cmbParentAccount').val('0').trigger('change.select2');
+        } else {
+            $('#cmbAccountTypes').val('0');
+            $('#cmbGroupName').val('0');
+            $('#cmbParentAccount').val('0');
+        }
         clearGrids();
     }
 
