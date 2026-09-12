@@ -96,9 +96,15 @@
                             <div class="col-md-2" style="padding-left: 0;"><label class="win-label">Date</label></div>
                             <div class="col-md-2" style="padding-left: 0;"><input type="date" id="dtpVoucherDate" class="win-input"/></div>
                         </div>
-                        <div class="row" style="margin-bottom: 6px;">
+                        <div class="row" style="margin-bottom: 6px; position: relative;">
                             <div class="col-md-4"><label class="win-label">Bank Account *</label></div>
-                            <div class="col-md-8"><select id="cmbCreditAccount" class="win-input"><option value="0">-- Select --</option></select></div>
+                            <div class="col-md-8" style="position: relative;">
+                                <input type="text" id="txtCreditAccSearch" class="win-input" placeholder="Type to search bank account..." autocomplete="off" onkeyup="onCreditAccSearch(event)" onfocus="onCreditAccSearch(event)"/>
+                                <input type="hidden" id="cmbCreditAccount" value="0"/>
+                                <div id="popCreditAcc" class="search-popup">
+                                    <table><thead><tr><th>Account Title</th><th style="width:100px;">Code</th></tr></thead><tbody id="tbodyPopCreditAcc"></tbody></table>
+                                </div>
+                            </div>
                         </div>
                         <div class="row" style="margin-bottom: 6px;">
                             <div class="col-md-4"><label class="win-label">Location Type *</label></div>
@@ -406,12 +412,11 @@
             });
 
             $.get('/accounts/api/vouchers/cash-bank-accounts?type=bank', function(accounts) {
-                let opt = '<option value="0">-- Select --</option>';
-                (accounts || []).forEach(function(acc) {
-                    const id = acc.id || acc.Id, title = acc.accountTitle || acc.AccountTitle || '';
-                    opt += '<option value="' + id + '">' + $('<div>').text(title).html() + '</option>';
-                });
-                $('#cmbCreditAccount').html(opt);
+                if (accounts && accounts.length > 0 && $('#txtCreditAccSearch').val() === '') {
+                    const first = accounts[0];
+                    $('#cmbCreditAccount').val(first.id || first.Id);
+                    $('#txtCreditAccSearch').val((first.accountTitle || first.AccountTitle || '') + ' [' + (first.accountCode || first.AccountCode || '') + ']');
+                }
             });
 
             $.get('/accounts/api/vouchers/payment-types', function(list) {
@@ -493,11 +498,6 @@
             $('#txtFcyAmount').val(rate > 0 ? (total / rate).toFixed(2) : '0.00');
         }
 
-        // Ditto PostDatedCheqPaymentVouchers.cs-style FormValidationDetail(): when Financial
-        // Instrument = "Cheque" (assumed Id=1, ditto desktop's own hardcoded Conversion.ToInt(...)==1
-        // check - usp_getInstrumentType's first/only "Cheque" row is expected to be Id=1 the same way
-        // every other install's lookup table is), Cheque No/Bank/Cheque Type become relevant; for any
-        // other instrument (Cash, Online Transfer, etc.) they are hidden rather than guessed-required.
         function onFinancialInstrumentChange() {
             const instId = parseInt($('#cmbFinancialInstrument').val()) || 0;
             const isCheque = instId === 1;
@@ -509,10 +509,30 @@
         function filterAccList(list, query) {
             const q = query.toLowerCase();
             return list.filter(function(a) {
-                return ((a.accountTitle || '').toLowerCase().indexOf(q) >= 0) || ((a.accountCode || '') + '').toLowerCase().indexOf(q) >= 0;
+                const title = a.accountTitle || a.AccountTitle || '';
+                const code = a.accountCode || a.AccountCode || '';
+                return (title.toLowerCase().indexOf(q) >= 0) || ((code + '').toLowerCase().indexOf(q) >= 0);
             }).slice(0, 50);
         }
         function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+        function onCreditAccSearch(e) {
+            const query = $('#txtCreditAccSearch').val().trim();
+            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
+                let html = '';
+                (data || []).forEach(function(acc) {
+                    const id = acc.id || acc.Id || 0, code = acc.accountCode || acc.AccountCode || '', title = acc.accountTitle || acc.AccountTitle || '';
+                    html += '<tr onclick="selectCreditAcc(' + id + ', \'' + escapeQuotes(code) + '\', \'' + escapeQuotes(title) + '\')"><td><strong>' + title + '</strong></td><td>' + code + '</td></tr>';
+                });
+                $('#tbodyPopCreditAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+                $('#popCreditAcc').show();
+            });
+        }
+        function selectCreditAcc(id, code, title) {
+            $('#cmbCreditAccount').val(id);
+            $('#txtCreditAccSearch').val(title + ' [' + code + ']');
+            $('#popCreditAcc').hide();
+        }
 
         function onDebitAccSearch(e) {
             const query = $('#txtDebitAccSearch').val().trim();
@@ -536,11 +556,23 @@
             const q = $('#txtWhtDebitAccSearch').val().trim();
             if (q.length < 1) { $('#popWhtDebitAcc').hide(); return; }
             const rows = filterAccList(whtAccountList, q);
-            let html = rows.map(function(a) {
-                return '<tr onclick="selectWhtDebitAcc(' + a.id + ', \'' + escapeQuotes(a.accountCode) + '\', \'' + escapeQuotes(a.accountTitle) + '\')"><td><strong>' + a.accountTitle + '</strong></td><td>' + a.accountCode + '</td></tr>';
-            }).join('');
-            $('#tbodyPopWhtDebitAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
-            $('#popWhtDebitAcc').show();
+            if (rows.length > 0) {
+                let html = rows.map(function(a) {
+                    const id = a.id || a.Id, code = a.accountCode || a.AccountCode || '', title = a.accountTitle || a.AccountTitle || '';
+                    return '<tr onclick="selectWhtDebitAcc(' + id + ', \'' + escapeQuotes(code) + '\', \'' + escapeQuotes(title) + '\')"><td><strong>' + title + '</strong></td><td>' + code + '</td></tr>';
+                }).join('');
+                $('#tbodyPopWhtDebitAcc').html(html);
+                $('#popWhtDebitAcc').show();
+            } else {
+                $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(q), function(data) {
+                    let html = '';
+                    (data || []).forEach(function(a) {
+                        html += '<tr onclick="selectWhtDebitAcc(' + a.id + ', \'' + escapeQuotes(a.accountCode) + '\', \'' + escapeQuotes(a.accountTitle) + '\')"><td><strong>' + a.accountTitle + '</strong></td><td>' + a.accountCode + '</td></tr>';
+                    });
+                    $('#tbodyPopWhtDebitAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+                    $('#popWhtDebitAcc').show();
+                });
+            }
         }
         function selectWhtDebitAcc(id, code, title) { $('#hdnWhtDebitAccId').val(id); $('#txtWhtDebitAccSearch').val(title + ' [' + code + ']'); $('#popWhtDebitAcc').hide(); }
 
@@ -548,15 +580,28 @@
             const q = $('#txtWhtCreditAccSearch').val().trim();
             if (q.length < 1) { $('#popWhtCreditAcc').hide(); return; }
             const rows = filterAccList(whtAccountList, q);
-            let html = rows.map(function(a) {
-                return '<tr onclick="selectWhtCreditAcc(' + a.id + ', \'' + escapeQuotes(a.accountCode) + '\', \'' + escapeQuotes(a.accountTitle) + '\')"><td><strong>' + a.accountTitle + '</strong></td><td>' + a.accountCode + '</td></tr>';
-            }).join('');
-            $('#tbodyPopWhtCreditAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
-            $('#popWhtCreditAcc').show();
+            if (rows.length > 0) {
+                let html = rows.map(function(a) {
+                    const id = a.id || a.Id, code = a.accountCode || a.AccountCode || '', title = a.accountTitle || a.AccountTitle || '';
+                    return '<tr onclick="selectWhtCreditAcc(' + id + ', \'' + escapeQuotes(code) + '\', \'' + escapeQuotes(title) + '\')"><td><strong>' + title + '</strong></td><td>' + code + '</td></tr>';
+                }).join('');
+                $('#tbodyPopWhtCreditAcc').html(html);
+                $('#popWhtCreditAcc').show();
+            } else {
+                $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(q), function(data) {
+                    let html = '';
+                    (data || []).forEach(function(a) {
+                        html += '<tr onclick="selectWhtCreditAcc(' + a.id + ', \'' + escapeQuotes(a.accountCode) + '\', \'' + escapeQuotes(a.accountTitle) + '\')"><td><strong>' + a.accountTitle + '</strong></td><td>' + a.accountCode + '</td></tr>';
+                    });
+                    $('#tbodyPopWhtCreditAcc').html(html || '<tr><td colspan="2" style="text-align:center;color:#888;">No matching accounts found</td></tr>');
+                    $('#popWhtCreditAcc').show();
+                });
+            }
         }
         function selectWhtCreditAcc(id, code, title) { $('#hdnWhtCreditAccId').val(id); $('#txtWhtCreditAccSearch').val(title + ' [' + code + ']'); $('#popWhtCreditAcc').hide(); }
 
         $(document).on('click', function(e) {
+            if (!$(e.target).closest('#txtCreditAccSearch, #popCreditAcc').length) $('#popCreditAcc').hide();
             if (!$(e.target).closest('#txtDebitAccSearch, #popAccounts').length) $('#popAccounts').hide();
             if (!$(e.target).closest('#txtWhtDebitAccSearch, #popWhtDebitAcc').length) $('#popWhtDebitAcc').hide();
             if (!$(e.target).closest('#txtWhtCreditAccSearch, #popWhtCreditAcc').length) $('#popWhtCreditAcc').hide();

@@ -33,32 +33,38 @@
         <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
     </div>
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Reset Filters</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnViewReport" onclick="executeVoucherReport()"><i class="fa fa-eye"></i> View Report</button>
+        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp" id="btnExportExcel" onclick="exportToExcel()"><i class="fa fa-file-excel-o"></i> Export Excel</button>
+        <button type="button" class="btn-erp" id="btnResetFilters" onclick="resetFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
     </div>
     <div style="padding: 10px;">
         <div class="erp-fieldset">
             <legend>Report Filter Criteria</legend>
             <div class="row">
-                
-                    <div class="col-md-3">
-                        <label class="form-label-erp">From Date</label>
-                        <input type="text" class="form-control-erp" placeholder="Select From Date..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">To Date</label>
-                        <input type="text" class="form-control-erp" placeholder="Select To Date..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Voucher Type</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Voucher Type..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Voucher Status</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Voucher Status..."/>
-                    </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">From Date</label>
+                    <input type="date" class="form-control-erp" id="txtFromDate"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">To Date</label>
+                    <input type="date" class="form-control-erp" id="txtToDate"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Voucher Type</label>
+                    <select class="form-control-erp" id="cmbDocumentType">
+                        <option value="">-- All Voucher Types --</option>
+                        <option th:each="dt : ${docTypesList}" th:value="${dt.id}" th:text="${dt.documentTypeDescription}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Voucher Status</label>
+                    <select class="form-control-erp" id="cmbVoucherStatus">
+                        <option value="">-- All Statuses --</option>
+                        <option value="approved">Approved</option>
+                        <option value="unapproved">Unapproved</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -67,9 +73,9 @@
             <div style="text-align: center; margin-bottom: 10px;">
                 <h4 style="margin: 0; font-weight: bold; color: #00796B;">Golden Ace Rice Mills (Pvt) Ltd.</h4>
                 <h5 style="margin: 2px 0; font-weight: bold;">Voucher Report</h5>
-                <small style="color: #64748b;">Period: 01-Jul-2026 To 07-Sep-2026 | Currency: PKR</small>
+                <small style="color: #64748b;" id="lblReportPeriod">Period: All Dates | Currency: PKR</small>
             </div>
-            <table class="erp-table">
+            <table class="erp-table" id="tblVoucherReport">
                 <thead>
                     <tr>
                         <th style="width: 12%;">Account / Code</th>
@@ -80,34 +86,128 @@
                         <th style="width: 15%; text-align: right;">Closing Balance</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">101001</td>
-                        <td>CASH IN HAND - MAIN OFFICE</td>
-                        <td style="text-align: right;">50,000.00 Dr</td>
-                        <td style="text-align: right;">125,000.00</td>
-                        <td style="text-align: right;">85,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">90,000.00 Dr</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">101002</td>
-                        <td>MEEZAN BANK LIMITED - A/C 010293847</td>
-                        <td style="text-align: right;">1,200,000.00 Dr</td>
-                        <td style="text-align: right;">450,000.00</td>
-                        <td style="text-align: right;">320,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">1,330,000.00 Dr</td>
-                    </tr>
+                <tbody id="tbodyVoucherReport">
+                    <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 15px;">Click "View Report" to load voucher report data.</td></tr>
                 </tbody>
             </table>
             <div class="report-summary-bar">
-                <div>Total Records: 2</div>
-                <div>Total Debit: 575,000.00</div>
-                <div>Total Credit: 405,000.00</div>
-                <div>Net Balance: 1,420,000.00 Dr</div>
+                <div id="summaryTotalRecords">Total Records: 0</div>
+                <div id="summaryTotalDebit">Total Debit: 0.00</div>
+                <div id="summaryTotalCredit">Total Credit: 0.00</div>
+                <div id="summaryNetBalance">Net Balance: 0.00 Dr</div>
             </div>
         </div>
     </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            $('#txtToDate').val(today);
+            executeVoucherReport();
+        });
+
+        function formatCurrency(val, appendType) {
+            const num = parseFloat(val) || 0;
+            const absFormatted = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (appendType) {
+                return absFormatted + (num < 0 ? ' Cr' : ' Dr');
+            }
+            return absFormatted;
+        }
+
+        function executeVoucherReport() {
+            const fromDate = $('#txtFromDate').val();
+            const toDate = $('#txtToDate').val();
+            const docTypeId = $('#cmbDocumentType').val();
+            const status = $('#cmbVoucherStatus').val();
+
+            let periodText = 'Period: ';
+            if (fromDate && toDate) periodText += fromDate + ' To ' + toDate;
+            else if (fromDate) periodText += 'From ' + fromDate;
+            else if (toDate) periodText += 'Up To ' + toDate;
+            else periodText += 'All Dates';
+            periodText += ' | Currency: PKR';
+            $('#lblReportPeriod').text(periodText);
+
+            $('#tbodyVoucherReport').html('<tr><td colspan="6" style="text-align: center; color: #00796B; padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading Voucher Report...</td></tr>');
+
+            const req = {
+                fromDate: fromDate || null,
+                toDate: toDate || null,
+                documentTypeId: docTypeId ? parseInt(docTypeId) : null,
+                voucherStatus: status || null
+            };
+
+            $.ajax({
+                url: '/accounts/api/reports/voucher-report',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(req),
+                success: function(res) {
+                    if (res && res.success && res.data && res.data.length > 0) {
+                        let html = '';
+                        let totDebit = 0, totCredit = 0, totBalance = 0;
+                        res.data.forEach(function(row) {
+                            const code = row.accountCode || row.AccountCode || '';
+                            const title = row.accountTitle || row.AccountTitle || '';
+                            const ob = parseFloat(row.openingBalance || row.OpeningBalance || 0);
+                            const db = parseFloat(row.totalDebit || row.TotalDebit || row.Debit || 0);
+                            const cr = parseFloat(row.totalCredit || row.TotalCredit || row.Credit || 0);
+                            const cb = parseFloat(row.balance || row.Balance || 0);
+
+                            totDebit += db;
+                            totCredit += cr;
+                            totBalance += cb;
+
+                            html += '<tr>' +
+                                '<td style="font-weight: bold; color: #00796B;">' + $('<div>').text(code).html() + '</td>' +
+                                '<td>' + $('<div>').text(title).html() + '</td>' +
+                                '<td style="text-align: right;">' + formatCurrency(ob, true) + '</td>' +
+                                '<td style="text-align: right;">' + formatCurrency(db, false) + '</td>' +
+                                '<td style="text-align: right;">' + formatCurrency(cr, false) + '</td>' +
+                                '<td style="text-align: right; font-weight: bold;">' + formatCurrency(cb, true) + '</td>' +
+                                '</tr>';
+                        });
+                        $('#tbodyVoucherReport').html(html);
+                        $('#summaryTotalRecords').text('Total Records: ' + res.data.length);
+                        $('#summaryTotalDebit').text('Total Debit: ' + formatCurrency(totDebit, false));
+                        $('#summaryTotalCredit').text('Total Credit: ' + formatCurrency(totCredit, false));
+                        $('#summaryNetBalance').text('Net Balance: ' + formatCurrency(totBalance, true));
+                    } else {
+                        $('#tbodyVoucherReport').html('<tr><td colspan="6" style="text-align: center; color: #888; padding: 15px;">No records found for the selected criteria.</td></tr>');
+                        $('#summaryTotalRecords').text('Total Records: 0');
+                        $('#summaryTotalDebit').text('Total Debit: 0.00');
+                        $('#summaryTotalCredit').text('Total Credit: 0.00');
+                        $('#summaryNetBalance').text('Net Balance: 0.00 Dr');
+                    }
+                },
+                error: function(err) {
+                    const msg = (err && err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'Error loading voucher report.';
+                    $('#tbodyVoucherReport').html('<tr><td colspan="6" style="text-align: center; color: red; padding: 15px;">' + $('<div>').text(msg).html() + '</td></tr>');
+                }
+            });
+        }
+
+        function resetFilters() {
+            $('#txtFromDate').val('');
+            const today = new Date().toISOString().split('T')[0];
+            $('#txtToDate').val(today);
+            $('#cmbDocumentType').val('');
+            $('#cmbVoucherStatus').val('');
+            executeVoucherReport();
+        }
+
+        function exportToExcel() {
+            let table = document.getElementById("tblVoucherReport");
+            let html = table.outerHTML;
+            let url = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'Voucher_Report.xls';
+            a.click();
+        }
+    </script>
 </body>
 </html>

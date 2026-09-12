@@ -58,6 +58,59 @@ public class AccountsReportRestController {
         }
     }
 
+    @PostMapping("/multi-accounts-ledger")
+    public ResponseEntity<?> getMultiAccountsLedger(@RequestBody Map<String, Object> req) {
+        try {
+            String accountIds = strOrNull(req.get("accountIds"));
+            String fromDate = strOrNull(req.get("fromDate"));
+            String toDate = strOrNull(req.get("toDate"));
+            Integer subsidiaryAccountId = intOrNull(req.get("subsidiaryAccountId"));
+            Integer branchId = intOrNull(req.get("branchId"));
+            Integer costCenterId = intOrNull(req.get("costCenterId"));
+            Integer languageId = intOrNull(req.get("languageId"));
+            boolean includeUnposted = Boolean.parseBoolean(String.valueOf(req.getOrDefault("includeUnposted", false)));
+
+            List<Map<String, Object>> data = accountsReportService.getMultiAccountsLedgerReport(accountIds, fromDate, toDate,
+                    subsidiaryAccountId, branchId, costCenterId, languageId, includeUnposted);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data.size());
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Multi Accounts Ledger: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @PostMapping("/bank-summary-ledger")
+    public ResponseEntity<?> getBankSummaryLedger(@RequestBody Map<String, Object> req) {
+        try {
+            String accountIds = strOrNull(req.get("accountIds"));
+            String fromDate = strOrNull(req.get("fromDate"));
+            String toDate = strOrNull(req.get("toDate"));
+
+            List<Map<String, Object>> data = accountsReportService.getBankSummaryLedgerReport(accountIds, fromDate, toDate);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data.size());
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Bank Summary Ledger: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @GetMapping("/bank-accounts")
+    public ResponseEntity<?> getBankAccounts() {
+        return ResponseEntity.ok(accountsReportService.getBankAccounts());
+    }
+
     @PostMapping("/customer-ledger")
     public ResponseEntity<?> getCustomerLedger(@RequestBody Map<String, Object> req) {
         try {
@@ -275,6 +328,57 @@ public class AccountsReportRestController {
             Map<String, Object> err = new HashMap<>();
             err.put("success", false);
             err.put("message", "Error loading Activity Summary: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @PostMapping("/wages-report")
+    public ResponseEntity<?> getWagesReport(@RequestBody Map<String, Object> req) {
+        try {
+            String fromDate = strOrNull(req.get("fromDate"));
+            String toDate = strOrNull(req.get("toDate"));
+            Integer contractorId = intOrNull(req.get("contractorId"));
+            Integer wagesAccountId = intOrNull(req.get("wagesAccountId"));
+            Integer debitAccountId = intOrNull(req.get("debitAccountId"));
+            Integer itemId = intOrNull(req.get("itemId"));
+            Integer documentTypeId = intOrNull(req.get("documentTypeId"));
+            String branchesIds = strOrNull(req.get("branchesIds"));
+            Boolean includeUnposted = req.get("includeUnposted") != null ? Boolean.parseBoolean(String.valueOf(req.get("includeUnposted"))) : null;
+            String activityName = strOrNull(req.get("activityName"));
+
+            List<Map<String, Object>> data = accountsReportService.getWagesReport(fromDate, toDate, contractorId,
+                    wagesAccountId, debitAccountId, itemId, documentTypeId, branchesIds, includeUnposted, activityName);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data.size());
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Wages Report: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @PostMapping("/voucher-report")
+    public ResponseEntity<?> getVoucherReport(@RequestBody Map<String, Object> req) {
+        try {
+            String fromDate = strOrNull(req.get("fromDate"));
+            String toDate = strOrNull(req.get("toDate"));
+            Integer documentTypeId = intOrNull(req.get("documentTypeId"));
+            String voucherStatus = strOrNull(req.get("voucherStatus"));
+
+            List<Map<String, Object>> data = accountsReportService.getVoucherReport(fromDate, toDate, documentTypeId, voucherStatus);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data.size());
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Voucher Report: " + e.getMessage());
             return ResponseEntity.status(500).body(err);
         }
     }

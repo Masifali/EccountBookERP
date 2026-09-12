@@ -4,242 +4,206 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>General Ledger - WinForms Replica</title>
+    <title>General Ledger Report - WinForms Replica</title>
 
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
 
     <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
-        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #d8e0e8; font-size: 10.5px; color: #000; margin: 0; padding: 0; overflow-x: hidden; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-size: 11.5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 23px; box-sizing: border-box; }
         
-        /* Nav Tabs styling */
-        .win-nav-tabs { border-bottom: 1px solid #00796B; background: #d0d7de; padding: 2px 8px 0 8px; display: flex; gap: 2px; list-style: none; margin: 0; }
-        .win-nav-tabs > li > a { border: 1px solid #b0bec5; border-bottom: none; background: #e4e9ed; color: #333; padding: 3px 10px; font-size: 11px; font-weight: bold; border-radius: 3px 3px 0 0; text-decoration: none; display: block; }
-        .win-nav-tabs > li.active > a, .win-nav-tabs > li > a:hover { background: #ffffff; color: #00796B; border-color: #00796B; }
+        .win-nav-tabs { border-bottom: 1px solid #99aab8; background: #d8e0e8; padding: 2px 6px 0 6px; display: flex; gap: 2px; list-style: none; margin: 0; }
+        .win-nav-tabs > li > a { border: 1px solid #99aab8; border-bottom: none; background: #e4ebf2; color: #222; padding: 2px 8px; font-size: 10.5px; font-weight: normal; border-radius: 2px 2px 0 0; text-decoration: none; display: block; }
+        .win-nav-tabs > li.active > a { background: #ffffff; color: #000; font-weight: bold; border-color: #99aab8; }
 
-        /* Select2 WinForms styling */
-        .select2-container--default .select2-selection--single {
-            height: 23px !important;
-            padding: 1px 4px;
-            font-size: 11px;
-            border: 1px solid #94a3b8;
-            border-radius: 2px;
-            background-color: #ffffff;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 21px !important;
-            padding-left: 2px;
-            color: #222;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 21px !important;
-        }
-        .select2-dropdown {
-            font-size: 11px;
-            border-color: #00796B !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .select2-search__field {
-            font-size: 11px !important;
-            padding: 2px 5px !important;
-            border-color: #00796B !important;
-        }
-        .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #00796B !important;
-            color: #ffffff;
-        }
-        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
-        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 6px; display: flex; gap: 4px; align-items: center; height: 25px; box-sizing: border-box; }
+
+        .win-btn { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 1px 7px; font-size: 10.5px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; height: 20px; box-shadow: inset 0 1px 0 #fff; text-decoration: none; }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
         .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; padding: 3px 12px; }
-        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
 
-        .win-header-panel { background-color: #00796B; padding: 4px 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 14px; font-weight: bold; }
-        .chk-inline { display: inline-flex; align-items: center; gap: 4px; font-weight: bold; color: #ffffff; font-size: 11px; margin: 0; cursor: pointer; }
+        .win-header-panel { background-color: #00796B; padding: 2px 8px; display: flex; justify-content: space-between; align-items: center; height: 24px; box-sizing: border-box; }
+        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 12px; font-weight: bold; }
+        .chk-inline { display: inline-flex; align-items: center; gap: 3px; font-weight: bold; color: #ffffff; font-size: 10.5px; margin: 0; cursor: pointer; }
+
+        .filters-container { display: flex; gap: 4px; padding: 4px; background: #d8e0e8; align-items: stretch; }
         
-        .win-groupbox { border: 1px solid #9ca3af; border-radius: 2px; margin: 4px 2px; padding: 8px 8px 6px 8px; position: relative; background: #fff; }
-        .win-groupbox-title { position: absolute; top: -8px; left: 8px; background: #ffffff; padding: 0 4px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 10px; color: #222; }
-        .win-groupbox .row { margin-bottom: 4px; }
-        .filters-row { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px; align-items: stretch; }
-        .win-label { font-weight: 600; color: #334155; margin-bottom: 1px; font-size: 10px; white-space: nowrap; }
-        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 1px 4px; font-size: 11px; height: 23px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
-        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
-        .win-input[readonly] { background: #f1f5f9; }
-        .radio-inline-win { display: inline-flex; align-items: center; gap: 3px; margin-right: 10px; font-weight: 600; color: #334155; font-size: 11px; cursor: pointer; }
+        .win-groupbox { border: 1px solid #8fa3b5; border-radius: 2px; padding: 8px 6px 4px 6px; position: relative; background: #ffffff; box-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+        .win-groupbox-title { position: absolute; top: -7px; left: 8px; background: #ffffff; padding: 0 4px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 10px; color: #000; }
+        
+        .gb-filters { width: 330px; flex: 0 0 330px; }
+        .gb-detail { width: 280px; flex: 0 0 280px; }
+        .gb-other { width: 310px; flex: 0 0 310px; }
+        .gb-opb { width: 140px; flex: 0 0 140px; }
 
-        /* Two-column info grids */
-        .acct-info-grid { display: grid; grid-template-columns: 85px 1fr 70px 75px 25px; gap: 2px 4px; font-size: 10px; align-items: center; }
-        .acct-info-grid .lbl { font-weight: bold; color: #222; }
-        .acct-info-grid .val { color: #111; font-weight: 600; text-align: right; }
-        .acct-other-grid { display: grid; grid-template-columns: 140px 75px; gap: 2px 4px; font-size: 10px; align-items: center; }
-        .acct-other-grid .lbl { font-weight: bold; color: #222; }
-        .acct-other-grid .val { color: #111; font-weight: 600; text-align: right; }
+        .win-label { font-weight: 600; color: #222; margin-bottom: 1px; font-size: 10px; white-space: nowrap; }
+        .win-input { border: 1px solid #7f9db9; border-radius: 1px; padding: 1px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; height: 20px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; }
+        
+        .win-btn-show { background: #00796B; color: #ffffff; border: 1px solid #004d40; font-weight: bold; font-size: 11px; padding: 1px 10px; height: 21px; border-radius: 2px; cursor: pointer; }
+        .win-btn-show:hover { background: #004d40; }
 
-        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 10px; background: #ffffff; }
-        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 4px 6px; border: 1px solid #004d40; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; }
-        .win-grid-table td { padding: 3px 6px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; }
-        .win-grid-table tbody tr:hover { background-color: #e0f2f1; }
-        .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
-        .grid-scroll { max-height: 440px; overflow: auto; border: 1px solid #cbd5e1; margin: 4px; }
-        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 4px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        /* Select2 custom compact styles */
+        .select2-container--default .select2-selection--single { height: 20px !important; padding: 0px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; border: 1px solid #7f9db9; border-radius: 1px; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 18px !important; padding-left: 0px; color: #000; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 18px !important; }
+
+        /* Grid Table Styling */
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 10.5px; font-family: Tahoma, sans-serif; background: #ffffff; }
+        .win-grid-table th { background: linear-gradient(to bottom, #dbe6f2 0%, #b0c4de 100%); color: #000000; font-weight: bold; padding: 3px 5px; border: 1px solid #849ca8; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; }
+        .win-grid-table td { padding: 2px 5px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; height: 19px; }
+        .win-grid-table tbody tr:nth-child(even) { background-color: #f7fafc; }
+        .win-grid-table tbody tr:hover { background-color: #cbe5ff; }
+        .grid-total-row td { font-weight: bold; background: #eaf0f6; border-top: 2px solid #00796B; }
+
+        .grid-scroll { max-height: calc(100vh - 240px); overflow: auto; border: 1px solid #849ca8; margin: 4px; background: #fff; }
         .mini-grid { width: 100%; border-collapse: collapse; font-size: 10px; }
-        .mini-grid th { background: #00796B; color: #fff; padding: 2px 4px; border: 1px solid #004d40; }
+        .mini-grid th { background: #b0c4de; color: #000; padding: 2px 4px; border: 1px solid #849ca8; text-align: left; }
         .mini-grid td { padding: 2px 4px; border: 1px solid #cbd5e1; text-align: center; }
-        [hidden] { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="win-title-bar">
         <span><i class="fa fa-book"></i> General Ledger Report</span>
-        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 10.5px;">
             <i class="fa fa-arrow-left"></i> Back to Dashboard
         </a>
     </div>
 
     <!-- Tabs header matching Desktop -->
     <ul class="win-nav-tabs">
-        <li class="active"><a href="#singleLedger">Single Account Ledger</a></li>
-        <li><a href="#" onclick="alert('Multi Accounts Ledger is available on the main dashboard.'); return false;">Multi Accounts Ledger</a></li>
-        <li><a href="#" onclick="alert('Bank Summary Ledger is available on the main dashboard.'); return false;">Bank Summary Ledger</a></li>
+        <li class="active" id="tabSingleItem"><a href="#" onclick="switchLedgerTab('single'); return false;">Single Account Ledger</a></li>
+        <li id="tabMultiItem"><a href="#" onclick="switchLedgerTab('multi'); return false;">Multi Accounts Ledger</a></li>
+        <li id="tabBankItem"><a href="#" onclick="switchLedgerTab('bank'); return false;">Bank Summary Ledger</a></li>
     </ul>
 
     <!-- Toolbar buttons matching Desktop exact order -->
     <div class="win-toolbar">
         <button type="button" class="win-btn" onclick="resetGL()"><i class="fa fa-plus text-success"></i> Reset</button>
-        <button type="button" class="win-btn" disabled title="Print 105"><i class="fa fa-print"></i> Print-105</button>
-        <button type="button" class="win-btn" disabled title="Print 106"><i class="fa fa-print"></i> Print-106</button>
-        <button type="button" class="win-btn" disabled title="Print 107"><i class="fa fa-print"></i> Print-107</button>
+        <button type="button" class="win-btn" disabled><i class="fa fa-print"></i> Print-105</button>
+        <button type="button" class="win-btn" disabled><i class="fa fa-print"></i> Print-106</button>
+        <button type="button" class="win-btn" disabled><i class="fa fa-print"></i> Print-107</button>
         <button type="button" class="win-btn" onclick="saveCheckedRows()"><i class="fa fa-save text-primary"></i> SaveCheckedRows</button>
         <button type="button" class="win-btn" onclick="bookmarkAllPrevious()"><i class="fa fa-bookmark text-warning"></i> Bookmark All Previous Rows After Last Checked Row</button>
-        <button type="button" class="win-btn" disabled title="ShortCut Keys"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        <button type="button" class="win-btn" disabled><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
     </div>
 
-    <!-- Header panel with General Ledger + Cost Center label + Include unposted vouchers -->
+    <!-- Header panel with General Ledger + Cost Center + Include unposted vouchers -->
     <div class="win-header-panel">
-        <span class="win-header-title">General Ledger <span style="font-size: 11px; font-weight: normal; margin-left: 10px; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 2px;">Cost Center</span></span>
+        <span class="win-header-title">General Ledger <span style="font-size: 10.5px; font-weight: normal; margin-left: 10px; background: rgba(255,255,255,0.2); padding: 1px 5px; border-radius: 2px;">Cost Center</span></span>
         <label class="chk-inline"><input type="checkbox" id="chkIncludeUnposted" checked> Include unposted vouchers</label>
     </div>
 
-    <div class="filters-row">
+    <div class="filters-container">
         <!-- Filters Box -->
-        <div class="win-groupbox" style="flex: 1 1 420px;">
+        <div class="win-groupbox gb-filters">
             <span class="win-groupbox-title">Filters</span>
-            <div class="row" style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                 <div>
-                    <label class="win-label" style="margin-right:6px;">Date Type</label>
-                    <label class="radio-inline-win"><input type="radio" name="rdAcBy" id="rdAcByName" checked> Title</label>
-                    <label class="radio-inline-win"><input type="radio" name="rdAcBy" id="rdAcByCode"> Code</label>
+                    <span class="win-label" style="margin-right:6px;">Date Type</span>
+                    <label style="font-size:10.5px; font-weight:600; cursor:pointer; margin-right:8px;"><input type="radio" name="rdAcBy" id="rdAcByName" checked> Title</label>
+                    <label style="font-size:10.5px; font-weight:600; cursor:pointer;"><input type="radio" name="rdAcBy" id="rdAcByCode"> Code</label>
                 </div>
             </div>
-            <div class="row" style="display:flex; gap:6px;">
-                <div style="flex:1 1 120px;">
+            <div style="display:flex; gap:4px; margin-bottom:4px;">
+                <div style="flex:1;">
                     <select class="win-input" id="cmbDateType" onchange="onDateTypeChanged()">
-                        <option value="">-- Financial Year --</option>
+                        <option value="5">Financial Year</option>
                         <option th:each="dt : ${dateTypesList}" th:value="${dt.id}" th:text="${dt.parameters}"></option>
                     </select>
                 </div>
-                <div style="flex:1 1 110px; display:flex; align-items:center; gap:2px;">
+                <div style="width:105px; display:flex; align-items:center; gap:2px;">
                     <span class="win-label">From</span>
                     <input type="date" class="win-input" id="txtFromDate">
                 </div>
-                <div style="flex:1 1 110px; display:flex; align-items:center; gap:2px;">
+                <div style="width:105px; display:flex; align-items:center; gap:2px;">
                     <span class="win-label">To</span>
                     <input type="date" class="win-input" id="txtToDate">
                 </div>
             </div>
-            <div class="row" style="display:flex; align-items:center; gap:4px;">
-                <span class="win-label" style="width:45px;">Account</span>
+
+            <!-- Single Account Selector -->
+            <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;" id="rowSingleAccount">
+                <span class="win-label" style="width:40px;">Account</span>
                 <div style="flex:1;">
                     <select class="win-input" id="cmbAccountTitle" onchange="onAccountChanged()">
                         <option value="">-- Select Account --</option>
-                        <option th:each="ac : ${accountsList}" th:value="${ac.Id}"
-                                th:text="${ac.AccountCode + ' - ' + ac.AccountTitle}"></option>
+                        <option th:each="ac : ${accountsList}" th:value="${ac.Id != null ? ac.Id : ac.id}"
+                                th:text="${(ac.AccountCode != null ? ac.AccountCode : ac.accountCode) + ' - ' + (ac.AccountTitle != null ? ac.AccountTitle : ac.accountTitle)}"></option>
                     </select>
                 </div>
             </div>
-            <div class="row" style="display:flex; gap:6px;">
-                <div style="flex:1 1 50%;">
-                    <div class="win-label">Subsidiary Ac</div>
-                    <select class="win-input" id="cmbSubsidiaryAccount">
-                        <option value="">--</option>
-                        <option th:each="sa : ${subsidiaryAccountsList}" th:value="${sa.SubsidiaryAccountId}" th:text="${sa.SubsidaryAccount}"></option>
-                    </select>
-                </div>
-                <div style="flex:1 1 50%;">
-                    <div class="win-label">Branch</div>
-                    <select class="win-input" id="cmbBranch">
-                        <option value="">--</option>
-                        <option th:each="b : ${branchesList}" th:value="${b.Id}" th:text="${b.BranchName}"></option>
+
+            <!-- Multi Accounts Selector -->
+            <div style="display:none; align-items:center; gap:4px; margin-bottom:4px;" id="rowMultiAccounts">
+                <span class="win-label" style="width:50px;">Accounts</span>
+                <div style="flex:1;">
+                    <select class="win-input" id="cmbMultiAccounts" multiple="multiple">
+                        <option th:each="ac : ${accountsList}" th:value="${ac.Id != null ? ac.Id : ac.id}"
+                                th:text="${(ac.AccountCode != null ? ac.AccountCode : ac.accountCode) + ' - ' + (ac.AccountTitle != null ? ac.AccountTitle : ac.accountTitle)}"></option>
                     </select>
                 </div>
             </div>
-            <div class="row" style="display:flex; gap:6px;">
-                <div style="flex:1 1 50%;">
-                    <div class="win-label">Cost Center</div>
-                    <select class="win-input" id="cmbCostCenter" onchange="reloadDependentDropdowns()">
-                        <option value="">--</option>
-                        <option th:each="cc : ${costCentersList}" th:value="${cc.Id}" th:text="${cc.CostCenterName}"></option>
-                    </select>
-                </div>
-                <div style="flex:1 1 50%;">
-                    <div class="win-label">Language</div>
-                    <select class="win-input" id="cmbLanguage">
-                        <option value="">--</option>
-                        <option th:each="lg : ${languagesList}" th:value="${lg.Id}" th:text="${lg.LanguageDescription}"></option>
+
+            <!-- Bank Accounts Selector -->
+            <div style="display:none; align-items:center; gap:4px; margin-bottom:4px;" id="rowBankAccounts">
+                <span class="win-label" style="width:50px;">Bank Acct</span>
+                <div style="flex:1;">
+                    <select class="win-input" id="cmbBankAccounts" multiple="multiple">
+                        <option th:each="ac : ${accountsList}" th:value="${ac.Id != null ? ac.Id : ac.id}"
+                                th:text="${(ac.AccountCode != null ? ac.AccountCode : ac.accountCode) + ' - ' + (ac.AccountTitle != null ? ac.AccountTitle : ac.accountTitle)}"></option>
                     </select>
                 </div>
             </div>
-            <div class="row" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-                <div>
-                    <label class="radio-inline-win"><input type="radio" name="rdMode" id="chkDetail" checked> Detail</label>
-                    <label class="radio-inline-win"><input type="radio" name="rdMode" id="chkSummery1"> Summary-I</label>
-                    <label class="radio-inline-win"><input type="radio" name="rdMode" id="chkSummery2"> Summary-II</label>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                <div id="modeOptionsDiv">
+                    <label style="font-size:10.5px; font-weight:600; cursor:pointer; margin-right:6px;"><input type="radio" name="rdMode" id="chkDetail" checked onchange="renderGrid()"> Detail</label>
+                    <label style="font-size:10.5px; font-weight:600; cursor:pointer; margin-right:6px;"><input type="radio" name="rdMode" id="chkSummery1" onchange="renderGrid()"> Summary-I</label>
+                    <label style="font-size:10.5px; font-weight:600; cursor:pointer;"><input type="radio" name="rdMode" id="chkSummery2" onchange="renderGrid()"> Summary-II</label>
                 </div>
-                <button type="button" class="win-btn win-btn-teal" onclick="executeGL()"><i class="fa fa-eye"></i> Show</button>
+                <button type="button" class="win-btn-show" onclick="executeGL()"><i class="fa fa-eye"></i> Show</button>
             </div>
         </div>
 
         <!-- Account Detail Box -->
-        <div class="win-groupbox" style="flex: 1 1 260px;">
+        <div class="win-groupbox gb-detail">
             <span class="win-groupbox-title">Account Detail</span>
-            <div class="acct-info-grid">
-                <div class="lbl">Account Code</div><div class="val" id="infoAccountCode" style="text-align:left;">-</div><div></div><div></div><div></div>
-                <div class="lbl">Account Class</div><div class="val" id="infoAccountClass" style="text-align:left;">-</div>
-                <div class="lbl">Opening</div><div class="val" id="infoOpening">0</div><div class="val" id="infoOpeningDrCr"></div>
+            <div style="display:grid; grid-template-columns:80px 1fr 65px 75px 25px; gap:3px 4px; font-size:10px; align-items:center;">
+                <div style="font-weight:bold;">Account Code</div><div id="infoAccountCode" style="font-weight:bold;">-</div>
+                <div style="font-weight:bold;">Opening</div><div id="infoOpening" style="font-weight:bold; text-align:right;">0</div><div id="infoOpeningDrCr" style="font-weight:bold;"></div>
                 
-                <div class="lbl">Account Type</div><div class="val" id="infoAccountType" style="text-align:left;">-</div>
-                <div class="lbl">Total Debit</div><div class="val" id="infoTotalDebit">0</div><div></div>
+                <div style="font-weight:bold;">Account Class</div><div id="infoAccountClass" style="font-weight:bold;">-</div>
+                <div style="font-weight:bold;">Total Debit</div><div id="infoTotalDebit" style="font-weight:bold; text-align:right;">0</div><div></div>
+                
+                <div style="font-weight:bold;">Account Type</div><div id="infoAccountType" style="font-weight:bold;">-</div>
+                <div style="font-weight:bold;">Total Credit</div><div id="infoTotalCredit" style="font-weight:bold; text-align:right;">0</div><div></div>
                 
                 <div></div><div></div>
-                <div class="lbl">Total Credit</div><div class="val" id="infoTotalCredit">0</div><div></div>
-                
-                <div></div><div></div>
-                <div class="lbl">Closing</div><div class="val" id="infoClosing">0</div><div class="val" id="infoClosingDrCr"></div>
+                <div style="font-weight:bold;">Closing</div><div id="infoClosing" style="font-weight:bold; text-align:right;">0</div><div id="infoClosingDrCr" style="font-weight:bold;"></div>
             </div>
         </div>
 
         <!-- Account Other Info Box -->
-        <div class="win-groupbox" style="flex: 1 1 270px;">
+        <div class="win-groupbox gb-other">
             <span class="win-groupbox-title">Account Other Info</span>
-            <div class="acct-other-grid">
-                <div class="lbl">Pending Premature Receipts</div><div class="val" id="infoPendingPrematureReceipts">0</div>
-                <div class="lbl">Pending Premature Payments</div><div class="val" id="infoPendingPrematurePayments">0</div>
-                <div class="lbl">Balance After Premature Receipts Clearance</div><div class="val" id="infoBalAfterPrematureReceiptsClearance" style="color:#00796B;">0</div>
-                <div class="lbl">Post Dated Cheqs Receipts</div><div class="val" id="infoPdcReceipts">0</div>
-                <div class="lbl">Post Dated Cheqs Payments</div><div class="val" id="infoPdcPayments">0</div>
-                <div class="lbl">Balance After Cheqs Clearance</div><div class="val" id="infoBalAfterCheqClearance" style="color:#00796B;">0</div>
+            <div style="display:grid; grid-template-columns:180px 1fr; gap:2px 4px; font-size:10px; align-items:center;">
+                <div style="font-weight:bold;">Pending Premature Receipts</div><div id="infoPendingPrematureReceipts" style="font-weight:bold; text-align:right;">0</div>
+                <div style="font-weight:bold;">Pending Premature Payments</div><div id="infoPendingPrematurePayments" style="font-weight:bold; text-align:right;">0</div>
+                <div style="font-weight:bold;">Balance After Premature Receipts Clearance</div><div id="infoBalAfterPrematureReceiptsClearance" style="font-weight:bold; text-align:right; color:#00796B;">0</div>
+                <div style="font-weight:bold;">Post Dated Cheqs Receipts</div><div id="infoPdcReceipts" style="font-weight:bold; text-align:right;">0</div>
+                <div style="font-weight:bold;">Post Dated Cheqs Payments</div><div id="infoPdcPayments" style="font-weight:bold; text-align:right;">0</div>
+                <div style="font-weight:bold;">Balance After Cheqs Clearance</div><div id="infoBalAfterCheqClearance" style="font-weight:bold; text-align:right; color:#00796B;">0</div>
             </div>
         </div>
 
         <!-- Right Side OPB Mini Table -->
-        <div class="win-groupbox" style="flex: 0 0 110px; padding: 4px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <label class="chk-inline" style="color:#222; font-size:10px;"><input type="checkbox" checked> OPB</label>
+        <div class="win-groupbox gb-opb" style="padding:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                <label style="font-size:10px; font-weight:bold; cursor:pointer; margin:0;"><input type="checkbox" checked> OPB</label>
             </div>
             <table class="mini-grid">
                 <thead>
@@ -253,15 +217,15 @@
     </div>
 
     <!-- Main Grid Form Card -->
-    <div class="win-form-card">
-        <div class="win-toolbar" style="justify-content: space-between;">
+    <div style="background:#ffffff; border:1px solid #849ca8; margin:4px;">
+        <div style="background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom:1px solid #849ca8; padding:2px 6px; display:flex; justify-content:space-between; align-items:center;">
             <span><i class="fa fa-table"></i> <b id="lblStatus">Ready</b></span>
         </div>
         <div class="grid-scroll">
             <table class="win-grid-table" id="glTable">
                 <thead>
                 <tr>
-                    <th style="width:30px; text-align:center;"><input type="checkbox" id="chkSelectAll" onclick="toggleAllCheckboxes(this)"></th>
+                    <th style="width:25px; text-align:center;"><input type="checkbox" id="chkSelectAll" onclick="toggleAllCheckboxes(this)"></th>
                     <th>Bookmark Remarks</th>
                     <th>Voucher Date</th>
                     <th>Doc Type</th>
@@ -330,18 +294,8 @@
                 $('#txtToDate').val(iso(today));
             } else if (id === 5) {
                 $('#txtFromDate').val('2026-08-01');
-                $('#txtToDate').val(iso(today));
+                $('#txtToDate').val('2026-09-11');
             }
-        }
-
-        function reloadDependentDropdowns() {
-            const costCenterId = $('#cmbCostCenter').val();
-            $.get('/accounts/api/reports/subsidiary-accounts', { costCenterId: costCenterId || undefined }, function (rows) {
-                const sel = $('#cmbSubsidiaryAccount');
-                sel.empty().append('<option value="">--</option>');
-                (rows || []).forEach(r => sel.append(`<option value="${r.SubsidiaryAccountId}">${r.SubsidaryAccount}</option>`));
-                sel.trigger('change.select2');
-            });
         }
 
         function onAccountChanged() {
@@ -392,7 +346,50 @@
             $('#miniOpbVal').text(fmt(Math.abs(opening)));
         }
 
+        let rawGlData = [];
+        let activeTab = 'single';
+
+        function switchLedgerTab(tab) {
+            activeTab = tab;
+            $('.win-nav-tabs li').removeClass('active');
+            if (tab === 'single') {
+                $('#tabSingleItem').addClass('active');
+                $('#rowSingleAccount').css('display', 'flex');
+                $('#rowMultiAccounts, #rowBankAccounts').css('display', 'none');
+                $('.gb-detail, .gb-other, .gb-opb').show();
+                $('#modeOptionsDiv').show();
+                $('#lblStatus').text('Ready');
+                renderGrid([]);
+            } else if (tab === 'multi') {
+                $('#tabMultiItem').addClass('active');
+                $('#rowMultiAccounts').css('display', 'flex');
+                $('#rowSingleAccount, #rowBankAccounts').css('display', 'none');
+                $('.gb-detail, .gb-other, .gb-opb').hide();
+                $('#modeOptionsDiv').show();
+                $('#lblStatus').text('Ready - Multi Accounts Mode');
+                renderGrid([]);
+            } else if (tab === 'bank') {
+                $('#tabBankItem').addClass('active');
+                $('#rowBankAccounts').css('display', 'flex');
+                $('#rowSingleAccount, #rowMultiAccounts').css('display', 'none');
+                $('.gb-detail, .gb-other, .gb-opb').hide();
+                $('#modeOptionsDiv').hide();
+                $('#lblStatus').text('Ready - Bank Summary Mode');
+                renderBankSummaryGrid([]);
+            }
+        }
+
         function executeGL() {
+            if (activeTab === 'single') {
+                executeSingleGL();
+            } else if (activeTab === 'multi') {
+                executeMultiGL();
+            } else if (activeTab === 'bank') {
+                executeBankSummaryGL();
+            }
+        }
+
+        function executeSingleGL() {
             const accountId = $('#cmbAccountTitle').val();
             if (!accountId) {
                 alert('Please select an Account first.');
@@ -403,10 +400,6 @@
                 accountId: accountId,
                 fromDate: $('#txtFromDate').val(),
                 toDate: $('#txtToDate').val(),
-                subsidiaryAccountId: $('#cmbSubsidiaryAccount').val() || null,
-                branchId: $('#cmbBranch').val() || null,
-                costCenterId: $('#cmbCostCenter').val() || null,
-                languageId: $('#cmbLanguage').val() || null,
                 includeUnposted: $('#chkIncludeUnposted').is(':checked')
             };
             $.ajax({
@@ -416,67 +409,405 @@
                 data: JSON.stringify(req),
                 success: function (res) {
                     if (res && res.success) {
-                        renderGrid(res.data);
+                        rawGlData = res.data || [];
+                        renderGrid(rawGlData);
                         if (res.accountInfo) applyAccountInfo(res.accountInfo);
                         $('#lblStatus').text('Total Records: ' + res.totalRecords);
                     } else {
-                        $('#glTbody').html('<tr><td colspan="14" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading General Ledger.') + '</td></tr>');
+                        $('#glTbody').html('<tr><td colspan="14" style="text-align:center; color:red; padding:12px;">' + (res.message || 'Error loading General Ledger.') + '</td></tr>');
                     }
                 },
                 error: function () {
-                    $('#glTbody').html('<tr><td colspan="14" style="text-align:center; color:red; padding:16px;">Error executing General Ledger report.</td></tr>');
+                    $('#glTbody').html('<tr><td colspan="14" style="text-align:center; color:red; padding:12px;">Error executing General Ledger report.</td></tr>');
                 }
             });
         }
 
-        function renderGrid(data) {
-            const tbody = $('#glTbody');
-            tbody.empty();
-            if (!data || data.length === 0) {
-                tbody.html('<tr><td colspan="14" style="text-align:center; padding:16px; color:#666;">No transaction records found for the selected criteria.</td></tr>');
-                $('#totDebit, #totCredit, #totBalance').text('0');
-                $('#totBalType').text('Dr');
+        function executeMultiGL() {
+            const selectedVals = $('#cmbMultiAccounts').val() || [];
+            if (selectedVals.length === 0) {
+                alert('Please select at least one Account for Multi Accounts Ledger.');
                 return;
             }
+            $('#lblStatus').text('Executing Multi Accounts Ledger query...');
+            const req = {
+                accountIds: selectedVals.join(','),
+                fromDate: $('#txtFromDate').val(),
+                toDate: $('#txtToDate').val(),
+                includeUnposted: $('#chkIncludeUnposted').is(':checked')
+            };
+            $.ajax({
+                url: '/accounts/api/reports/multi-accounts-ledger',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(req),
+                success: function (res) {
+                    if (res && res.success) {
+                        rawGlData = res.data || [];
+                        renderGrid(rawGlData);
+                        $('#lblStatus').text('Total Records: ' + res.totalRecords);
+                    } else {
+                        $('#glTbody').html('<tr><td colspan="14" style="text-align:center; color:red; padding:12px;">' + (res.message || 'Error loading Multi Accounts Ledger.') + '</td></tr>');
+                    }
+                },
+                error: function () {
+                    $('#glTbody').html('<tr><td colspan="14" style="text-align:center; color:red; padding:12px;">Error executing Multi Accounts Ledger report.</td></tr>');
+                }
+            });
+        }
+
+        function executeBankSummaryGL() {
+            const selectedVals = $('#cmbBankAccounts').val() || [];
+            $('#lblStatus').text('Executing Bank Summary Ledger query...');
+            const req = {
+                accountIds: selectedVals.join(','),
+                fromDate: $('#txtFromDate').val(),
+                toDate: $('#txtToDate').val()
+            };
+            $.ajax({
+                url: '/accounts/api/reports/bank-summary-ledger',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(req),
+                success: function (res) {
+                    if (res && res.success) {
+                        renderBankSummaryGrid(res.data || []);
+                        $('#lblStatus').text('Total Records: ' + (res.data ? res.data.length : 0));
+                    } else {
+                        $('#glTbody').html('<tr><td colspan="10" style="text-align:center; color:red; padding:12px;">' + (res.message || 'Error loading Bank Summary Ledger.') + '</td></tr>');
+                    }
+                },
+                error: function () {
+                    $('#glTbody').html('<tr><td colspan="10" style="text-align:center; color:red; padding:12px;">Error executing Bank Summary Ledger report.</td></tr>');
+                }
+            });
+        }
+
+        function renderBankSummaryGrid(currentData) {
+            const thead = $('#glTable thead');
+            const tbody = $('#glTbody');
+            const tfoot = $('#glTable tfoot');
+            tbody.empty();
+
+            thead.html(`
+                <tr>
+                    <th>Voucher Date</th>
+                    <th>Doc Type</th>
+                    <th>Voucher No</th>
+                    <th>Account Code</th>
+                    <th>Account Title</th>
+                    <th>Off Set Title</th>
+                    <th style="text-align:right;">Debit</th>
+                    <th style="text-align:right;">Credit</th>
+                    <th style="text-align:right;">Balance</th>
+                    <th>Remarks</th>
+                </tr>
+            `);
+
+            if (!currentData || currentData.length === 0) {
+                tbody.html('<tr><td colspan="10" style="text-align:center; padding:12px; color:#666;">No bank transaction records found.</td></tr>');
+                tfoot.html(`
+                    <tr class="grid-total-row">
+                        <td colspan="6" style="text-align:right;">Total:</td>
+                        <td style="text-align:right;">0</td>
+                        <td style="text-align:right;">0</td>
+                        <td style="text-align:right;">0</td>
+                        <td></td>
+                    </tr>
+                `);
+                return;
+            }
+
             let totDebit = 0, totCredit = 0;
-            data.forEach((r, idx) => {
-                const debit = parseFloat(r.Debit || 0);
-                const credit = parseFloat(r.Credit || 0);
+            currentData.forEach(r => {
+                const debit = parseFloat(r.Debit || r.DebitAmount || 0);
+                const credit = parseFloat(r.Credit || r.CreditAmount || 0);
                 const balance = parseFloat(r.Balance || 0);
                 totDebit += debit;
                 totCredit += credit;
+
                 let vDate = r.VoucherDate || '';
                 if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
-                let dDate = r.DueDate || '';
-                if (typeof dDate === 'string' && dDate.includes('T')) dDate = dDate.split('T')[0];
-                
-                const balTypeStr = r.BalType || (balance < 0 ? 'Cr' : 'Dr');
+
                 const balFmt = balance < 0 ? `(${fmt(Math.abs(balance))})` : fmt(balance);
 
                 tbody.append(`
                     <tr>
-                        <td style="text-align:center;"><input type="checkbox" class="chk-row" data-idx="${idx}"></td>
-                        <td>${r.BookmarkRemarks || ''}</td>
                         <td>${vDate}</td>
-                        <td><a href="#" style="color:#00796B; text-decoration:underline;">${r.DocType || ''}</a></td>
-                        <td>${r.VoucherNo || ''}</td>
+                        <td><a href="#" style="color:#00796B; text-decoration:underline;">${r.DocType || r.DocumentTypeDescription || ''}</a></td>
+                        <td>${r.VoucherNo || r.VoucherCode || ''}</td>
                         <td>${r.AccountCode || ''}</td>
-                        <td>${r.OffSetTitle || ''}</td>
+                        <td><b>${r.AccountTitle || ''}</b></td>
+                        <td>${r.OffSetTitle || r.OffsetAccountTitle || ''}</td>
                         <td style="text-align:right;">${debit ? fmt(debit) : '0'}</td>
                         <td style="text-align:right;">${credit ? fmt(credit) : '0'}</td>
                         <td style="text-align:right; font-weight:bold;">${balFmt}</td>
-                        <td style="text-align:center; font-weight:bold;">${balTypeStr}</td>
-                        <td style="text-align:right;">${r.BillAmount ? fmt(r.BillAmount) : '0'}</td>
-                        <td style="text-align:center;">${r.DueDays || '0'}</td>
-                        <td style="text-align:center;">${dDate}</td>
+                        <td>${r.Comments || r.Remarks || ''}</td>
                     </tr>
                 `);
             });
-            $('#totDebit').text(fmt(totDebit));
-            $('#totCredit').text(fmt(totCredit));
+
             const netBal = totDebit - totCredit;
-            $('#totBalance').text(netBal < 0 ? `(${fmt(Math.abs(netBal))})` : fmt(netBal));
-            $('#totBalType').text(netBal < 0 ? 'Cr' : 'Dr');
+            tfoot.html(`
+                <tr class="grid-total-row">
+                    <td colspan="6" style="text-align:right;">Total:</td>
+                    <td style="text-align:right;">${fmt(totDebit)}</td>
+                    <td style="text-align:right;">${fmt(totCredit)}</td>
+                    <td style="text-align:right;">${netBal < 0 ? '(' + fmt(Math.abs(netBal)) + ')' : fmt(netBal)}</td>
+                    <td></td>
+                </tr>
+            `);
+        }
+
+        function renderGrid(data) {
+            const currentData = data || rawGlData || [];
+            const thead = $('#glTable thead');
+            const tbody = $('#glTbody');
+            const tfoot = $('#glTable tfoot');
+            tbody.empty();
+
+            const isSummary1 = $('#chkSummery1').is(':checked');
+            const isSummary2 = $('#chkSummery2').is(':checked');
+
+            if (isSummary1) {
+                // SUMMARY-I MODE: Group by Voucher Date & Doc Type
+                thead.html(`
+                    <tr>
+                        <th>Voucher Date</th>
+                        <th>Doc Type</th>
+                        <th>Account Code</th>
+                        <th style="text-align:center;">Voucher Count</th>
+                        <th style="text-align:right;">Total Debit</th>
+                        <th style="text-align:right;">Total Credit</th>
+                        <th style="text-align:right;">Net Balance</th>
+                        <th style="text-align:center;">Bal Type</th>
+                    </tr>
+                `);
+
+                if (!currentData || currentData.length === 0) {
+                    tbody.html('<tr><td colspan="8" style="text-align:center; padding:12px; color:#666;">No records found for Summary-I view.</td></tr>');
+                    tfoot.html(`
+                        <tr class="grid-total-row">
+                            <td colspan="4" style="text-align:right;">Total:</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:center;">Dr</td>
+                        </tr>
+                    `);
+                    return;
+                }
+
+                const groups = {};
+                currentData.forEach(r => {
+                    let vDate = r.VoucherDate || '';
+                    if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
+                    const docType = r.DocType || 'N/A';
+                    const key = vDate + '|' + docType;
+                    if (!groups[key]) {
+                        groups[key] = { vDate: vDate, docType: docType, accountCode: r.AccountCode || '', count: 0, debit: 0, credit: 0 };
+                    }
+                    groups[key].count++;
+                    groups[key].debit += parseFloat(r.Debit || 0);
+                    groups[key].credit += parseFloat(r.Credit || 0);
+                });
+
+                let totDebit = 0, totCredit = 0;
+                Object.values(groups).forEach(g => {
+                    totDebit += g.debit;
+                    totCredit += g.credit;
+                    const net = g.debit - g.credit;
+                    const balTypeStr = net < 0 ? 'Cr' : (net > 0 ? 'Dr' : 'Dr');
+                    const balFmt = net < 0 ? `(${fmt(Math.abs(net))})` : fmt(net);
+
+                    tbody.append(`
+                        <tr>
+                            <td>${g.vDate}</td>
+                            <td><a href="#" style="color:#00796B; text-decoration:underline;">${g.docType}</a></td>
+                            <td>${g.accountCode}</td>
+                            <td style="text-align:center;">${g.count}</td>
+                            <td style="text-align:right;">${fmt(g.debit)}</td>
+                            <td style="text-align:right;">${fmt(g.credit)}</td>
+                            <td style="text-align:right; font-weight:bold;">${balFmt}</td>
+                            <td style="text-align:center; font-weight:bold;">${balTypeStr}</td>
+                        </tr>
+                    `);
+                });
+
+                const grandNet = totDebit - totCredit;
+                tfoot.html(`
+                    <tr class="grid-total-row">
+                        <td colspan="4" style="text-align:right;">Total:</td>
+                        <td style="text-align:right;">${fmt(totDebit)}</td>
+                        <td style="text-align:right;">${fmt(totCredit)}</td>
+                        <td style="text-align:right;">${grandNet < 0 ? '(' + fmt(Math.abs(grandNet)) + ')' : fmt(grandNet)}</td>
+                        <td style="text-align:center;">${grandNet < 0 ? 'Cr' : 'Dr'}</td>
+                    </tr>
+                `);
+
+            } else if (isSummary2) {
+                // SUMMARY-II MODE: Group by Month / Period
+                thead.html(`
+                    <tr>
+                        <th>Month / Period</th>
+                        <th style="text-align:right;">Total Debit</th>
+                        <th style="text-align:right;">Total Credit</th>
+                        <th style="text-align:right;">Closing Balance</th>
+                        <th style="text-align:center;">Bal Type</th>
+                    </tr>
+                `);
+
+                if (!currentData || currentData.length === 0) {
+                    tbody.html('<tr><td colspan="5" style="text-align:center; padding:12px; color:#666;">No records found for Summary-II view.</td></tr>');
+                    tfoot.html(`
+                        <tr class="grid-total-row">
+                            <td style="text-align:right;">Total:</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:center;">Dr</td>
+                        </tr>
+                    `);
+                    return;
+                }
+
+                const months = {};
+                currentData.forEach(r => {
+                    let vDate = r.VoucherDate || '';
+                    if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
+                    let monthKey = 'Period';
+                    if (vDate) {
+                        const parts = vDate.split('-');
+                        if (parts.length >= 2) {
+                            const d = new Date(vDate);
+                            monthKey = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+                        }
+                    }
+                    if (!months[monthKey]) {
+                        months[monthKey] = { period: monthKey, debit: 0, credit: 0 };
+                    }
+                    months[monthKey].debit += parseFloat(r.Debit || 0);
+                    months[monthKey].credit += parseFloat(r.Credit || 0);
+                });
+
+                let totDebit = 0, totCredit = 0;
+                Object.values(months).forEach(m => {
+                    totDebit += m.debit;
+                    totCredit += m.credit;
+                    const net = m.debit - m.credit;
+                    const balTypeStr = net < 0 ? 'Cr' : (net > 0 ? 'Dr' : 'Dr');
+                    const balFmt = net < 0 ? `(${fmt(Math.abs(net))})` : fmt(net);
+
+                    tbody.append(`
+                        <tr>
+                            <td><b>${m.period}</b></td>
+                            <td style="text-align:right;">${fmt(m.debit)}</td>
+                            <td style="text-align:right;">${fmt(m.credit)}</td>
+                            <td style="text-align:right; font-weight:bold;">${balFmt}</td>
+                            <td style="text-align:center; font-weight:bold;">${balTypeStr}</td>
+                        </tr>
+                    `);
+                });
+
+                const grandNet = totDebit - totCredit;
+                tfoot.html(`
+                    <tr class="grid-total-row">
+                        <td style="text-align:right;">Total:</td>
+                        <td style="text-align:right;">${fmt(totDebit)}</td>
+                        <td style="text-align:right;">${fmt(totCredit)}</td>
+                        <td style="text-align:right;">${grandNet < 0 ? '(' + fmt(Math.abs(grandNet)) + ')' : fmt(grandNet)}</td>
+                        <td style="text-align:center;">${grandNet < 0 ? 'Cr' : 'Dr'}</td>
+                    </tr>
+                `);
+
+            } else {
+                // DETAIL MODE: Full 14-Column Grid matching Desktop exact captions
+                thead.html(`
+                    <tr>
+                        <th style="width:25px; text-align:center;"><input type="checkbox" id="chkSelectAll" onclick="toggleAllCheckboxes(this)"></th>
+                        <th>Bookmark Remarks</th>
+                        <th>Voucher Date</th>
+                        <th>Doc Type</th>
+                        <th>Voucher No</th>
+                        <th>Account Code</th>
+                        <th>Off Set Title</th>
+                        <th style="text-align:right;">Debit</th>
+                        <th style="text-align:right;">Credit</th>
+                        <th style="text-align:right;">Balance</th>
+                        <th style="text-align:center;">Bal Type</th>
+                        <th style="text-align:right;">Bill Amount</th>
+                        <th style="text-align:center;">Due Days</th>
+                        <th style="text-align:center;">Due Date</th>
+                    </tr>
+                `);
+
+                if (!currentData || currentData.length === 0) {
+                    tbody.html('<tr><td colspan="14" style="text-align:center; padding:12px; color:#666;">No transaction records found for the selected criteria.</td></tr>');
+                    tfoot.html(`
+                        <tr class="grid-total-row">
+                            <td colspan="7" style="text-align:right;">Total:</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:right;">0</td>
+                            <td style="text-align:center;">Dr</td>
+                            <td colspan="3"></td>
+                        </tr>
+                    `);
+                    return;
+                }
+
+                let totDebit = 0, totCredit = 0;
+                currentData.forEach((r, idx) => {
+                    const debit = parseFloat(r.Debit || r.DebitAmount || 0);
+                    const credit = parseFloat(r.Credit || r.CreditAmount || 0);
+                    const balance = parseFloat(r.Balance || 0);
+                    totDebit += debit;
+                    totCredit += credit;
+                    let vDate = r.VoucherDate || '';
+                    if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
+                    let dDate = r.DueDate || '';
+                    if (typeof dDate === 'string' && dDate.includes('T')) dDate = dDate.split('T')[0];
+                    
+                    const isOpb = (!r.VoucherNo && !r.VoucherCode && !r.DocType && !r.DocumentTypeDescription && !debit && !credit) || (vDate && vDate.includes('07-31') && !debit && !credit);
+                    const docType = r.DocType || r.DocumentTypeDescription || r.DocumentTypeCode || r.DocumentType || r.VoucherType || (isOpb ? 'OPB' : '');
+                    const voucherNo = (r.VoucherNo != null && r.VoucherNo !== '') ? r.VoucherNo : ((r.VoucherCode != null && r.VoucherCode !== '') ? r.VoucherCode : ((r.VNo != null && r.VNo !== '') ? r.VNo : (isOpb ? 'OPB' : '')));
+                    const offsetTitle = r.OffSetTitle || r.OffsetAccountTitle || r.OffSetAccountTitle || r.AgainstAccountTitle || r.AgainstAccount || '';
+                    const remarks = r.BookmarkRemarks || r.Comments || r.Remarks || r.Description || '';
+                    const balTypeStr = r.BalType || r.balType || r.Bal_Type || (balance < 0 ? 'Cr' : (balance > 0 ? 'Dr' : 'Cr'));
+                    const balFmt = balance < 0 ? `(${fmt(Math.abs(balance))})` : fmt(balance);
+
+                    tbody.append(`
+                        <tr>
+                            <td style="text-align:center;"><input type="checkbox" class="chk-row" data-idx="${idx}"></td>
+                            <td>${remarks}</td>
+                            <td>${vDate}</td>
+                            <td><a href="#" style="color:#00796B; text-decoration:underline;">${docType}</a></td>
+                            <td>${voucherNo}</td>
+                            <td>${r.AccountCode || r.accountCode || ''}</td>
+                            <td>${offsetTitle}</td>
+                            <td style="text-align:right;">${debit ? fmt(debit) : '0'}</td>
+                            <td style="text-align:right;">${credit ? fmt(credit) : '0'}</td>
+                            <td style="text-align:right; font-weight:bold;">${balFmt}</td>
+                            <td style="text-align:center; font-weight:bold;">${balTypeStr}</td>
+                            <td style="text-align:right;">${r.BillAmount ? fmt(r.BillAmount) : '0'}</td>
+                            <td style="text-align:center;">${r.DueDays || '0'}</td>
+                            <td style="text-align:center;">${dDate}</td>
+                        </tr>
+                    `);
+                });
+
+                const netBal = totDebit - totCredit;
+                tfoot.html(`
+                    <tr class="grid-total-row">
+                        <td colspan="7" style="text-align:right;">Total:</td>
+                        <td style="text-align:right;">${fmt(totDebit)}</td>
+                        <td style="text-align:right;">${fmt(totCredit)}</td>
+                        <td style="text-align:right;">${netBal < 0 ? '(' + fmt(Math.abs(netBal)) + ')' : fmt(netBal)}</td>
+                        <td style="text-align:center;">${netBal < 0 ? 'Cr' : 'Dr'}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                `);
+            }
         }
 
         function toggleAllCheckboxes(master) {
@@ -503,32 +834,64 @@
         }
 
         function resetGL() {
-            $('#cmbAccountTitle, #cmbSubsidiaryAccount, #cmbBranch, #cmbCostCenter, #cmbLanguage, #cmbDateType').val('').trigger('change.select2');
-            $('#txtFromDate, #txtToDate').val('');
+            $('#cmbAccountTitle, #cmbDateType').val('').trigger('change.select2');
+            $('#cmbMultiAccounts, #cmbBankAccounts').val([]).trigger('change.select2');
+            $('#txtFromDate').val('2026-08-01');
+            $('#txtToDate').val('2026-09-11');
             $('#chkIncludeUnposted').prop('checked', true);
+            $('#chkDetail').prop('checked', true);
             clearAccountInfo();
-            $('#glTbody').html('<tr><td colspan="14" style="text-align:center; padding:16px; color:#666;">Select an Account and click Show.</td></tr>');
-            $('#totDebit, #totCredit, #totBalance').text('0');
-            $('#totBalType').text('Dr');
+            rawGlData = [];
+            if (activeTab === 'bank') {
+                renderBankSummaryGrid([]);
+            } else {
+                renderGrid([]);
+            }
             $('#lblStatus').text('Ready');
         }
 
         $(document).ready(function () {
-            const today = new Date().toISOString().split('T')[0];
             $('#txtFromDate').val('2026-08-01');
             $('#txtToDate').val('2026-09-11');
 
-            $('#cmbAccountTitle, #cmbSubsidiaryAccount, #cmbBranch, #cmbCostCenter, #cmbLanguage, #cmbDateType').select2({
+            $('#cmbAccountTitle, #cmbDateType').select2({
                 width: '100%',
                 dropdownAutoWidth: true
+            });
+
+            $('#cmbMultiAccounts').select2({
+                width: '100%',
+                dropdownAutoWidth: true,
+                placeholder: 'Select Account(s)...'
+            });
+
+            $('#cmbBankAccounts').select2({
+                width: '100%',
+                dropdownAutoWidth: true,
+                placeholder: 'Select Bank Account(s)...'
+            });
+
+            $.get('/accounts/api/reports/bank-accounts', function(data) {
+                if (data && data.length > 0) {
+                    const $b = $('#cmbBankAccounts').empty();
+                    data.forEach(function(ac) {
+                        const id = ac.id || ac.Id || ac.ID;
+                        const code = ac.accountCode || ac.AccountCode || '';
+                        const title = ac.accountTitle || ac.AccountTitle || '';
+                        if (id && title) {
+                            $b.append(new Option((code ? code + ' - ' : '') + title, id));
+                        }
+                    });
+                    $b.trigger('change.select2');
+                }
             });
         });
     </script>
 
     <!-- Bottom Footer Tabs Bar matching Desktop C# screenshot -->
-    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #c0c7cf; border-top: 1px solid #999; padding: 2px 8px 0 8px; display: flex; gap: 4px; z-index: 1000; font-size: 11px;">
-        <a href="/accounts/reports/general-ledger" style="background: #ffffff; color: #00796B; font-weight: bold; border: 1px solid #00796B; border-bottom: none; padding: 2px 12px; text-decoration: none; border-radius: 3px 3px 0 0; box-shadow: 0 -1px 2px rgba(0,0,0,0.1);">General Leder</a>
-        <a href="/accounts/reports/customer-ledger" style="background: #d8e0e8; color: #333; font-weight: bold; border: 1px solid #94a3b8; border-bottom: none; padding: 2px 12px; text-decoration: none; border-radius: 3px 3px 0 0;">Party_Ledger</a>
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #c0c7cf; border-top: 1px solid #999; padding: 2px 8px 0 8px; display: flex; gap: 4px; z-index: 1000; font-size: 10.5px;">
+        <a href="/accounts/reports/general-ledger" style="background: #ffffff; color: #00796B; font-weight: bold; border: 1px solid #00796B; border-bottom: none; padding: 2px 10px; text-decoration: none; border-radius: 2px 2px 0 0; box-shadow: 0 -1px 2px rgba(0,0,0,0.1);">General Ledger</a>
+        <a href="/accounts/reports/customer-ledger" style="background: #d8e0e8; color: #333; font-weight: bold; border: 1px solid #94a3b8; border-bottom: none; padding: 2px 10px; text-decoration: none; border-radius: 2px 2px 0 0;">Party_Ledger</a>
     </div>
 </body>
 </html>

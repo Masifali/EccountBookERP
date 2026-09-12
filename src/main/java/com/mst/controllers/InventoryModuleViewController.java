@@ -54,8 +54,14 @@ public class InventoryModuleViewController {
     @GetMapping("/items/add")
     public String addItemForm(Model model) {
         model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("item", new Item());
+        Item item = new Item();
+        item.setItemCategory(new ItemCategory());
+        item.setItemType(new ItemType());
+        item.setRack(new Rack());
+        model.addAttribute("item", item);
+        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
         model.addAttribute("categories", itemCategoryService.getAllItemCategories());
+        model.addAttribute("itemTypes", itemTypeService.getAll());
         model.addAttribute("types", itemTypeService.getAll());
         model.addAttribute("racks", rackService.getAll());
         model.addAttribute("accounts", chartofAccountService.getAllAccounts());
@@ -68,9 +74,14 @@ public class InventoryModuleViewController {
         if (item == null) {
             return "redirect:/inventory/items";
         }
+        if (item.getItemCategory() == null) item.setItemCategory(new ItemCategory());
+        if (item.getItemType() == null) item.setItemType(new ItemType());
+        if (item.getRack() == null) item.setRack(new Rack());
         model.addAttribute("activeMenu", "inventory");
         model.addAttribute("item", item);
+        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
         model.addAttribute("categories", itemCategoryService.getAllItemCategories());
+        model.addAttribute("itemTypes", itemTypeService.getAll());
         model.addAttribute("types", itemTypeService.getAll());
         model.addAttribute("racks", rackService.getAll());
         model.addAttribute("accounts", chartofAccountService.getAllAccounts());
@@ -301,5 +312,44 @@ public class InventoryModuleViewController {
     public String deleteRack(@PathVariable("id") int id) {
         rackService.delete(id);
         return "redirect:/inventory/racks";
+    }
+
+    // 10. LOTS
+    @GetMapping({"/lots", "/define_lots", "/define-lots"})
+    public String viewLots(Model model) {
+        model.addAttribute("activeMenu", "inventory");
+        return "inventory/lots";
+    }
+
+    // 11. ITEM MIN MAX RATE
+    @GetMapping({"/item_min_max_rate", "/item-min-max-rate"})
+    public String viewItemMinMaxRate(Model model) {
+        model.addAttribute("activeMenu", "inventory");
+        return "inventory/item_min_max_rate";
+    }
+
+    // 12. CONSUMPTION ITEMS
+    @GetMapping({"/consumption_items", "/consumption-items"})
+    public String viewConsumptionItems(Model model) {
+        model.addAttribute("activeMenu", "inventory");
+        return "inventory/consumption_items";
+    }
+
+    // 13. POS DEFINE ITEM
+    @GetMapping({"/pos_define_item", "/pos-define-item"})
+    public String posDefineItem(Model model) {
+        model.addAttribute("activeMenu", "inventory");
+        Item item = new Item();
+        item.setItemCategory(new ItemCategory());
+        item.setItemType(new ItemType());
+        item.setRack(new Rack());
+        model.addAttribute("item", item);
+        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
+        model.addAttribute("categories", itemCategoryService.getAllItemCategories());
+        model.addAttribute("itemTypes", itemTypeService.getAll());
+        model.addAttribute("types", itemTypeService.getAll());
+        model.addAttribute("racks", rackService.getAll());
+        model.addAttribute("accounts", chartofAccountService.getAllAccounts());
+        return "inventory/item_form";
     }
 }

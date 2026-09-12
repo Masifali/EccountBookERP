@@ -93,7 +93,7 @@
     <!-- TEAL HEADER -->
     <div class="win-teal-header">
         <div class="win-teal-header-title">Commission Agent Purchase Order Master</div>
-        <div id="lblDocNoDisplay" class="win-doc-badge">PO-2026-0001</div>
+        <div id="lblDocNoDisplay" class="win-doc-badge">PO-1</div>
     </div>
 
     <!-- MAIN FORM BODY -->
@@ -111,7 +111,7 @@
                         <div class="col-md-6">
                             <label class="win-label">Doc & Branch # <span style="color:red;">*</span></label>
                             <div style="display: flex; gap: 2px;">
-                                <input type="text" id="txtDocNo" class="win-textbox win-textbox-readonly" readonly placeholder="PO-2026"/>
+                                <input type="text" id="txtDocNo" class="win-textbox win-textbox-readonly" readonly placeholder="PO-1"/>
                                 <input type="text" id="txtBranchNo" class="win-textbox" style="width: 70px;" placeholder="Branch #"/>
                             </div>
                         </div>
@@ -191,11 +191,10 @@
                         <div class="col-md-6">
                             <label class="win-label">Delivery Term <span style="color:red;">*</span></label>
                             <select id="cmbDeliveryTerm" class="win-combo">
-                                <option value="0">-- Select Delivery Term --</option>
-                                <option value="Ex-Factory">Ex-Factory</option>
-                                <option value="FOB">FOB</option>
-                                <option value="C&F">C&F</option>
-                                <option value="FOR">FOR</option>
+                                <option value="0">Delivery Term</option>
+                                <option value="1">Load</option>
+                                <option value="2">Load &amp; PartyWeight</option>
+                                <option value="3">Load &amp; FactoryWeight</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -852,6 +851,76 @@
                 <div class="modal-body" style="padding: 10px; background-color: #ece9d8;">
                     <input type="file" id="fileAttach" class="win-textbox" style="margin-bottom: 8px;"/>
                     <button type="button" class="win-btn-action" onclick="alert('Attachment added successfully.')"><i class="fa fa-upload"></i> Attach File</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DEFINE LOOKUP PARTIES (Replica of Desktop WinForms Screen) -->
+    <div class="modal fade" id="modalDefineLookUpParties" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document" style="max-width: 850px;">
+            <div class="modal-content" style="border-radius: 0; border: 2px solid #008080; background-color: #ece9d8;">
+                
+                <!-- TOOLBAR -->
+                <div class="win-tool-strip">
+                    <button type="button" class="win-btn-tool" onclick="btnNewLookupParty_Click()"><i class="fa fa-plus-circle"></i> New</button>
+                    <button type="button" class="win-btn-tool" onclick="loadLookupPartiesGrid()"><i class="fa fa-refresh"></i> Refresh</button>
+                    <button type="button" class="win-btn-tool win-btn-tool-save" onclick="saveLookupParty_Click()"><i class="fa fa-save"></i> Save</button>
+                    <button type="button" class="close text-dark" data-dismiss="modal" style="margin-left: auto; opacity: 1; font-size: 16pt;">&times;</button>
+                </div>
+
+                <!-- TEAL HEADER -->
+                <div class="win-teal-header" style="height: 24px;">
+                    <div class="win-teal-header-title" style="font-size: 10pt;">Define LookUp Parties</div>
+                </div>
+
+                <div class="modal-body" style="padding: 8px;">
+                    <!-- FORM INPUTS -->
+                    <div class="row" style="margin-bottom: 8px;">
+                        <div class="col-md-4">
+                            <label class="win-label">PartyName</label>
+                            <input type="text" id="txtLookupPartyName" class="win-textbox" placeholder="Enter party name..."/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">Party Type</label>
+                            <select id="cmbLookupPartyType" class="win-combo">
+                                <option value="5">Booking Person</option>
+                                <option value="1">Reference Party</option>
+                                <option value="2">Broker</option>
+                                <option value="3">Agent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">Agent</label>
+                            <select id="cmbLookupAgent" class="win-combo">
+                                <option value="0">...Select Any Value...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="display: flex; align-items: flex-end; padding-bottom: 4px;">
+                            <label class="win-radio-inline" style="font-weight: bold; margin-bottom: 0;">
+                                <input type="checkbox" id="chkLookupIsActive" checked/> Is Active
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- GRID -->
+                    <div class="win-grid-container">
+                        <div class="win-grid-scroll" style="max-height: 280px;">
+                            <table class="win-grid">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 140px;">Reference Party Type</th>
+                                        <th>Reference Party Name</th>
+                                        <th style="width: 70px; text-align: center;">Is Active</th>
+                                        <th style="width: 160px;">Supplier Customer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblLookupPartiesTbody">
+                                    <tr><td colspan="4" style="text-align: center; padding: 20px;">Loading Reference Parties from database...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

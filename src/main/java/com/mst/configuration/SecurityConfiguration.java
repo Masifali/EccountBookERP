@@ -55,7 +55,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/login", "/css/**", "/js/**", "/images/**", "/vendors/**", "/build/**").permitAll()
+                .antMatchers("/login", "/css/**", "/js/**", "/images/**", "/vendors/**", "/build/**", "/.well-known/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -73,7 +73,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         web
                 .ignoring()
                 .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**",
-                        "/images/**", "/vendors/**", "/Whastsapp/**", "/build/**", "/modules/**")
+                        "/images/**", "/vendors/**", "/Whastsapp/**", "/build/**", "/modules/**", "/.well-known/**")
                 .requestMatchers(new org.springframework.security.web.util.matcher.AndRequestMatcher(
                         new AntPathRequestMatcher("/api/**"),
                         new org.springframework.security.web.util.matcher.NegatedRequestMatcher(

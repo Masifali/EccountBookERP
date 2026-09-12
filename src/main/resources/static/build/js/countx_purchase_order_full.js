@@ -79,10 +79,14 @@ function fetchNextDocNo() {
         url: '/api/purchase-order/next-doc-no?docType=1052',
         type: 'GET',
         success: function(res) {
-            const code = res ? (res.nextCode || res.docNo) : null;
-            if (code) {
-                $('#txtDocNo').val(code);
-                $('#lblDocNoDisplay').text("PO-2026-" + String(code).padStart(4, '0'));
+            const docNo = res ? res.docNo : null;
+            const displayCode = res ? (res.displayCode || res.nextCode || ("PO-" + docNo)) : '';
+            const branchNo = res ? (res.branchNo || docNo) : '';
+            if (displayCode) {
+                $('#txtDocNo').val(displayCode);
+                if (docNo) $('#txtDocNo').data('docNo', docNo);
+                if (branchNo) $('#txtBranchNo').val(branchNo);
+                $('#lblDocNoDisplay').text(displayCode);
             }
         }
     });
@@ -102,13 +106,32 @@ function loadDropdowns() {
     $.get('/api/purchase-order/payment-terms', function(data) {
         const sel = $('#cmbPaymentTerm');
         sel.find('option:gt(0)').remove();
-        if (data) {
-            data.forEach(t => sel.append(`<option value="${t.id}" data-days="${t.dueDays}">${escapeHtml(t.description)}</option>`));
+        if (data && data.length > 0) {
+            data.forEach(t => {
+                const id = t.id != null ? t.id : (t.Id != null ? t.Id : 0);
+                const desc = t.description || t.TermsDescription || t.TermsName || t.Name;
+                const dueDays = t.dueDays != null ? t.dueDays : (t.DueDays != null ? t.DueDays : 0);
+                if (desc) {
+                    sel.append(`<option value="${id}" data-days="${dueDays}">${escapeHtml(desc)}</option>`);
+                }
+            });
         }
     });
 
     // Delivery Terms
-    $.get('/api/purchase-order/delivery-terms', function(data) {});
+    $.get('/api/purchase-order/delivery-terms', function(data) {
+        const sel = $('#cmbDeliveryTerm');
+        sel.find('option:gt(0)').remove();
+        if (data && data.length > 0) {
+            data.forEach(d => {
+                const id = d.id != null ? d.id : d.Id;
+                const desc = d.description || d.DeliveryTermDescription || d.DeliveryTerm || d.Description || d.DeliveryTermName || d.TermName;
+                if (desc) {
+                    sel.append(`<option value="${id}">${escapeHtml(desc)}</option>`);
+                }
+            });
+        }
+    });
 
     // Job Lots
     $.get('/api/purchase-order/job-lots', function(data) {
@@ -239,6 +262,20 @@ function preloadSearchData() {
             commSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`);
             brokerSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`);
             bookingSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`);
+        });
+
+        // Load real Booking Persons from database if available
+        $.get('/api/purchase-order/booking-persons', function(bpData) {
+            if (bpData && bpData.length > 0) {
+                bookingSel.find('option:gt(0)').remove();
+                bpData.forEach(b => {
+                    const id = b.id != null ? b.id : b.Id;
+                    const name = b.partyName || b.ReferencePartyName || b.description || b.Description;
+                    if (name) {
+                        bookingSel.append(`<option value="${id}">${escapeHtml(name)}</option>`);
+                    }
+                });
+            }
         });
     });
 
@@ -1280,11 +1317,25 @@ function switchTab(tabId) {
 /* ============================================================
  * 11. TOOLBAR OPERATIONS (SAVE / UPDATE / NEW / LOAD ORDER)
  * ============================================================ */
+function getDocNoFromInput() {
+    let stored = $('#txtDocNo').data('docNo');
+    if (stored && !isNaN(stored) && parseInt(stored, 10) > 0) return parseInt(stored, 10);
+    let val = ($('#txtDocNo').val() || '').trim();
+    if (!val) return 0;
+    let parts = val.split('-');
+    let lastPart = parts[parts.length - 1];
+    let num = parseInt(lastPart, 10);
+    if (!isNaN(num) && num > 0) return num;
+    num = parseInt(val.replace(/\D/g, ''), 10);
+    return (!isNaN(num) && num > 0) ? num : 0;
+}
+
 function buildPayload() {
     return {
         purchaseOrderMasterId: currentPoMasterId,
         documentTypeId: 1052,
-        docNo: parseInt($('#txtDocNo').val() || '0'),
+        docNo: getDocNoFromInput(),
+        branchNo: $('#txtBranchNo').val() ? parseInt($('#txtBranchNo').val(), 10) : getDocNoFromInput(),
         docDate: $('#txtDocDate').val(),
         supplierId: parseInt($('#hidSupplierId').val() || '0'),
         deliveryStartDate: $('#txtDeliveryStartDate').val(),
@@ -1293,6 +1344,8 @@ function buildPayload() {
         paymentTermId: parseInt($('#cmbPaymentTerm').val() || '0'),
         dueDays: parseInt($('#txtDueDays').val() || '0'),
         paymentDueDate: $('#txtPaymentDueDate').val(),
+        deliveryTermId: parseInt($('#cmbDeliveryTerm').val() || '0'),
+        bookingPersonId: parseInt($('#cmbBookingPerson').val() || '0'),
         commissionAgentId: parseInt($('#cmbCommissionAgent').val() || '0'),
         commType: $('#cmbCommType').val(),
         commRate: parseFloat($('#txtCommRate').val() || '0'),
@@ -1413,6 +1466,7 @@ function btnNew_Click() {
     $('#hidSupplierId').val('0');
     $('#txtSupplierDisplay').val('');
     $('#txtRemarksHeader').val('');
+    $('#txtBranchNo').val('');
 
     fetchNextDocNo();
     setWinDefaultDates();
@@ -1465,9 +1519,16 @@ function loadSelectedOrder(poId) {
         if (!po) return;
 
         currentPoMasterId = po.purchaseOrderMasterId;
-        $('#txtDocNo').val(po.docNo);
-        $('#lblDocNoDisplay').text("PO-2026-" + String(po.docNo).padStart(4, '0'));
+        const docNo = po.docNo || 1;
+        const displayCode = po.displayCode || po.voucherCode || ("PO-" + docNo);
+        const branchNo = po.branchNo || docNo;
+        $('#txtDocNo').val(displayCode);
+        $('#txtDocNo').data('docNo', docNo);
+        $('#txtBranchNo').val(branchNo);
+        $('#lblDocNoDisplay').text(displayCode);
         $('#txtDocDate').val(po.docDate);
+        $('#cmbDeliveryTerm').val(po.deliveryTermId || po.deliveryTerm || '0');
+        $('#cmbBookingPerson').val(po.bookingPersonId || po.bookingPerson || '0');
         $('#hidSupplierId').val(po.supplierId);
         $('#txtSupplierDisplay').val(po.supplierName);
         $('#txtRemarksHeader').val(po.remarksHeader);
@@ -1559,6 +1620,101 @@ function btnPrintReport(reportType) {
 
 function openAttachmentsModal() {
     $('#modalAttachments').modal('show');
+}
+
+/* ============================================================
+ * DEFINE LOOKUP PARTIES (Booking Person / Reference Parties)
+ * ============================================================ */
+function openDefineLookUpPartiesModal() {
+    const agentSel = $('#cmbLookupAgent');
+    agentSel.find('option:gt(0)').remove();
+    if (allSuppliers && allSuppliers.length > 0) {
+        allSuppliers.forEach(s => agentSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`));
+    }
+    btnNewLookupParty_Click();
+    loadLookupPartiesGrid();
+    $('#modalDefineLookUpParties').modal('show');
+}
+
+function btnNewLookupParty_Click() {
+    $('#txtLookupPartyName').val('');
+    $('#cmbLookupPartyType').val('5');
+    $('#cmbLookupAgent').val('0');
+    $('#chkLookupIsActive').prop('checked', true);
+}
+
+function loadLookupPartiesGrid() {
+    $.get('/api/purchase-order/lookup-parties', function(data) {
+        const tbody = $('#tblLookupPartiesTbody');
+        tbody.empty();
+        if (!data || data.length === 0) {
+            tbody.html('<tr><td colspan="4" style="text-align: center; padding: 20px;">No lookup parties found.</td></tr>');
+            return;
+        }
+        data.forEach(p => {
+            const partyType = p.partyTypeName || (p.partyTypeId === 5 ? 'Booking Person' : 'Reference Party');
+            const partyName = p.partyName || p.ReferencePartyName || '';
+            const isActive = p.isActive ? '<i class="fa fa-check text-success"></i>' : '<i class="fa fa-times text-danger"></i>';
+            const supplierCust = p.supplierCustomerName || '';
+            tbody.append(`
+                <tr>
+                    <td>${escapeHtml(partyType)}</td>
+                    <td><strong>${escapeHtml(partyName)}</strong></td>
+                    <td style="text-align: center;">${isActive}</td>
+                    <td>${escapeHtml(supplierCust)}</td>
+                </tr>
+            `);
+        });
+    });
+}
+
+function saveLookupParty_Click() {
+    const partyName = ($('#txtLookupPartyName').val() || '').trim();
+    if (!partyName) {
+        alert("PartyName Field is Required");
+        $('#txtLookupPartyName').focus();
+        return;
+    }
+
+    const payload = {
+        partyName: partyName,
+        partyTypeId: parseInt($('#cmbLookupPartyType').val() || '5', 10),
+        supplierCustomerId: parseInt($('#cmbLookupAgent').val() || '0', 10),
+        isActive: $('#chkLookupIsActive').is(':checked')
+    };
+
+    $.ajax({
+        url: '/api/purchase-order/save-lookup-party',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function(res) {
+            if (res && res.success) {
+                alert(res.message || "Record Saved Successfully.");
+                btnNewLookupParty_Click();
+                loadLookupPartiesGrid();
+                $.get('/api/purchase-order/booking-persons', function(data) {
+                    const bookingSel = $('#cmbBookingPerson');
+                    bookingSel.find('option:gt(0)').remove();
+                    if (data && data.length > 0) {
+                        data.forEach(b => {
+                            const id = b.id != null ? b.id : b.Id;
+                            const name = b.partyName || b.ReferencePartyName || b.description || b.Description;
+                            if (name) {
+                                bookingSel.append(`<option value="${id}">${escapeHtml(name)}</option>`);
+                            }
+                        });
+                        if (res.id) bookingSel.val(res.id);
+                    }
+                });
+            } else {
+                alert("Error saving party: " + (res ? res.message : "Unknown error"));
+            }
+        },
+        error: function() {
+            alert("Error saving lookup party.");
+        }
+    });
 }
 
 /* ============================================================

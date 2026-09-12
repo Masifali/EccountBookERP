@@ -88,6 +88,150 @@ public class AccountsReportService {
         }
     }
 
+    public List<Map<String, Object>> getMultiAccountsLedgerReport(String accountIds, String fromDate, String toDate,
+            Integer subsidiaryAccountId, Integer branchId, Integer costCenterId, Integer languageId,
+            boolean includeUnposted) {
+        if (accountIds == null || accountIds.isBlank()) {
+            return Collections.emptyList();
+        }
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        int finYearId = currentUserContext.currentFinancialYearId();
+        int userId = currentUserContext.currentUserId();
+
+        StringBuilder sql = new StringBuilder(
+                "EXEC Sp_Accounts_GeneralLedger_Rpt @FinancialYearId=?, @OrganizationId=?, @CompanyId=?");
+        List<Object> params = new ArrayList<>();
+        params.add(finYearId);
+        params.add(orgId);
+        params.add(compId);
+
+        if (branchId != null && branchId > 0) { sql.append(", @BranchesId=?"); params.add(branchId); }
+        if (fromDate != null && !fromDate.isBlank()) { sql.append(", @FromDate=?"); params.add(fromDate); }
+        if (toDate != null && !toDate.isBlank()) { sql.append(", @EndDate=?"); params.add(toDate); }
+        sql.append(", @AccountIds=?");
+        params.add(accountIds);
+        if (!includeUnposted) {
+            sql.append(", @IsApproved=?");
+            params.add(true);
+        }
+        if (userId > 0) { sql.append(", @EntryUser=?"); params.add(userId); }
+        if (languageId != null && languageId > 0) { sql.append(", @LanguageId=?"); params.add(languageId); }
+        if (subsidiaryAccountId != null && subsidiaryAccountId > 0) {
+            sql.append(", @SubsidiaryAccountId=?");
+            params.add(subsidiaryAccountId);
+        }
+        if (costCenterId != null && costCenterId > 0) { sql.append(", @CostCenterId=?"); params.add(costCenterId); }
+
+        try {
+            return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+        } catch (Exception e) {
+            return getMultiAccountsLedgerFallback(accountIds, fromDate, toDate, includeUnposted);
+        }
+    }
+
+    private List<Map<String, Object>> getMultiAccountsLedgerFallback(String accountIds, String fromDate, String toDate, boolean includeUnposted) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT h.VoucherDate, dt.DocumentTypeDescription as DocType, h.VoucherCode as VoucherNo, ");
+            sb.append("coa.AccountCode, coa.AccountTitle, ");
+            sb.append("ISNULL(offCoa.AccountTitle, '') as OffSetTitle, ");
+            sb.append("ISNULL(d.DebitAmount, 0) as Debit, ISNULL(d.CreditAmount, 0) as Credit, ");
+            sb.append("(ISNULL(d.DebitAmount, 0) - ISNULL(d.CreditAmount, 0)) as Balance, ");
+            sb.append("d.Comments ");
+            sb.append("FROM VoucherDetail d ");
+            sb.append("JOIN VoucherHead h ON d.VoucherHeadId = h.ID ");
+            sb.append("JOIN ChartofAccount coa ON d.AccountId = coa.ID ");
+            sb.append("LEFT JOIN DocumentType dt ON h.DocumentTypeId = dt.ID ");
+            sb.append("LEFT JOIN ChartofAccount offCoa ON d.AgainstAccountId = offCoa.ID ");
+            sb.append("WHERE 1=1 ");
+            if (accountIds != null && !accountIds.isBlank()) {
+                sb.append("AND coa.ID IN (").append(accountIds).append(") ");
+            }
+            if (fromDate != null && !fromDate.isBlank()) {
+                sb.append("AND h.VoucherDate >= '").append(fromDate).append(" 00:00:00' ");
+            }
+            if (toDate != null && !toDate.isBlank()) {
+                sb.append("AND h.VoucherDate <= '").append(toDate).append(" 23:59:59' ");
+            }
+            if (!includeUnposted) {
+                sb.append("AND h.IsApproved = 1 ");
+            }
+            sb.append("ORDER BY coa.AccountCode, h.VoucherDate DESC, h.VoucherCode");
+            return jdbcTemplate.queryForList(sb.toString());
+        } catch (Exception ex) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Map<String, Object>> getBankSummaryLedgerReport(String accountIds, String fromDate, String toDate) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+
+        StringBuilder sql = new StringBuilder("EXEC USP_BankSummaryWithAgainstAccounts @OrganizationId=?, @CompanyId=?");
+        List<Object> params = new ArrayList<>();
+        params.add(orgId);
+        params.add(compId);
+
+        if (fromDate != null && !fromDate.isBlank()) { sql.append(", @FromDate=?"); params.add(fromDate); }
+        if (toDate != null && !toDate.isBlank()) { sql.append(", @ToDate=?"); params.add(toDate); }
+        if (accountIds != null && !accountIds.isBlank()) { sql.append(", @AccountIds=?"); params.add(accountIds); }
+
+        try {
+            return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+        } catch (Exception e) {
+            return getBankSummaryLedgerFallback(accountIds, fromDate, toDate);
+        }
+    }
+
+    private List<Map<String, Object>> getBankSummaryLedgerFallback(String accountIds, String fromDate, String toDate) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT h.VoucherDate, dt.DocumentTypeDescription as DocType, h.VoucherCode as VoucherNo, ");
+            sb.append("coa.AccountCode, coa.AccountTitle, ");
+            sb.append("ISNULL(offCoa.AccountTitle, '') as OffSetTitle, ");
+            sb.append("ISNULL(d.DebitAmount, 0) as Debit, ISNULL(d.CreditAmount, 0) as Credit, ");
+            sb.append("(ISNULL(d.DebitAmount, 0) - ISNULL(d.CreditAmount, 0)) as Balance, ");
+            sb.append("d.Comments ");
+            sb.append("FROM VoucherDetail d ");
+            sb.append("JOIN VoucherHead h ON d.VoucherHeadId = h.ID ");
+            sb.append("JOIN ChartofAccount coa ON d.AccountId = coa.ID ");
+            sb.append("LEFT JOIN DocumentType dt ON h.DocumentTypeId = dt.ID ");
+            sb.append("LEFT JOIN ChartofAccount offCoa ON d.AgainstAccountId = offCoa.ID ");
+            sb.append("WHERE coa.AccountTypeId IN (15, 2) ");
+            if (accountIds != null && !accountIds.isBlank()) {
+                sb.append("AND coa.ID IN (").append(accountIds).append(") ");
+            }
+            if (fromDate != null && !fromDate.isBlank()) {
+                sb.append("AND h.VoucherDate >= '").append(fromDate).append(" 00:00:00' ");
+            }
+            if (toDate != null && !toDate.isBlank()) {
+                sb.append("AND h.VoucherDate <= '").append(toDate).append(" 23:59:59' ");
+            }
+            sb.append("ORDER BY h.VoucherDate DESC, h.VoucherCode");
+            return jdbcTemplate.queryForList(sb.toString());
+        } catch (Exception ex) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Map<String, Object>> getBankAccounts() {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        try {
+            String sql = "SELECT Id as id, Id as Id, AccountCode as accountCode, AccountCode as AccountCode, AccountTitle as accountTitle, AccountTitle as AccountTitle " +
+                         "FROM ChartofAccount WHERE (AccountGroup = 'Detail' OR Account_Level >= 4) AND AccountTypeId IN (15, 2) " +
+                         "ORDER BY AccountCode";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list == null || list.isEmpty()) {
+                return getAllDetailAccounts();
+            }
+            return list;
+        } catch (Exception e) {
+            return getAllDetailAccounts();
+        }
+    }
+
     // ==========================================
     // CUSTOMER LEDGER REPORT ("Party Ledger" on screen)
     // Desktop: CustomerLedger.cs (Account_Reports), btnshow_Click -> CustomerLedgerFill().
@@ -478,6 +622,40 @@ public class AccountsReportService {
     }
 
     // ==========================================
+    // CONTRACTOR WAGES REPORT & WAGES REPORT (WITH ACTIVITIES)
+    // Desktop: ContractorWagesReport.cs -> InventoryStockEvalautionDetail.WagesRegister(ReportsParameters)
+    // -> USp_WagesRegister.
+    // ==========================================
+    public List<Map<String, Object>> getWagesReport(String fromDate, String toDate, Integer contractorId,
+            Integer wagesAccountId, Integer debitAccountId, Integer itemId, Integer documentTypeId,
+            String branchesIds, Boolean includeUnposted, String activityName) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+
+        StringBuilder sql = new StringBuilder("EXEC USp_WagesRegister @OrganizationId=?, @CompanyId=?");
+        List<Object> params = new ArrayList<>();
+        params.add(orgId);
+        params.add(compId);
+
+        if (fromDate != null && !fromDate.isBlank()) { sql.append(", @FromDate=?"); params.add(fromDate); }
+        if (toDate != null && !toDate.isBlank()) { sql.append(", @ToDate=?"); params.add(toDate); }
+        if (wagesAccountId != null && wagesAccountId > 0) { sql.append(", @WagesAccountId=?"); params.add(wagesAccountId); }
+        if (contractorId != null && contractorId > 0) { sql.append(", @ContractorId=?"); params.add(contractorId); }
+        if (itemId != null && itemId > 0) { sql.append(", @ItemId=?"); params.add(itemId); }
+        if (documentTypeId != null && documentTypeId > 0) { sql.append(", @ReferenceDocumentTypeId=?"); params.add(documentTypeId); }
+        if (debitAccountId != null && debitAccountId > 0) { sql.append(", @DebitAccountId=?"); params.add(debitAccountId); }
+        if (branchesIds != null && !branchesIds.isBlank()) { sql.append(", @BranchesIds=?"); params.add(branchesIds); }
+        if (includeUnposted != null && !includeUnposted) { sql.append(", @FreeOfCost=?"); params.add(true); }
+        if (activityName != null && !activityName.isBlank()) { sql.append(", @ActivityName=?"); params.add(activityName); }
+
+        try {
+            return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    // ==========================================
     // NOT YET VERIFIED - fabricated fallback SQL from a previous, unverified pass. Left in place
     // so the other (not-yet-investigated) report pages keep working while they wait their own
     // "read the real desktop source, confirm the real proc" pass, per the user's "continue one by
@@ -511,24 +689,27 @@ public class AccountsReportService {
 
             list = jdbcTemplate.queryForList(proc.toString());
         } catch (Exception e) {
-            list = getGeneralLedgerStatementFallback(accountId, fromDate, toDate);
+            list = getGeneralLedgerStatementFallback(accountId, fromDate, toDate, branchId, projectId);
+        }
+        if (list == null || list.isEmpty()) {
+            list = getGeneralLedgerStatementFallback(accountId, fromDate, toDate, branchId, projectId);
         }
         return list;
     }
 
-    private List<Map<String, Object>> getGeneralLedgerStatementFallback(Integer accountId, String fromDate, String toDate) {
+    private List<Map<String, Object>> getGeneralLedgerStatementFallback(Integer accountId, String fromDate, String toDate, Integer branchId, Integer projectId) {
         List<Map<String, Object>> list = new ArrayList<>();
         try {
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT coa.AccountCode, coa.AccountTitle, ");
-            sb.append("ISNULL(coa.OpeningBalance, 0) as OpeningBalance, ");
+            sb.append("ISNULL((SELECT SUM(ISNULL(ob.YearObDebit, 0) - ISNULL(ob.YearObCredit, 0)) FROM AccountsOpeningBalances ob WHERE ob.ChartOfAccountId = coa.ID), 0) as OpeningBalance, ");
             sb.append("ISNULL(SUM(d.DebitAmount), 0) as TotalDebit, ");
             sb.append("ISNULL(SUM(d.CreditAmount), 0) as TotalCredit, ");
-            sb.append("(ISNULL(coa.OpeningBalance, 0) + ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as ClosingBalance ");
+            sb.append("(ISNULL((SELECT SUM(ISNULL(ob.YearObDebit, 0) - ISNULL(ob.YearObCredit, 0)) FROM AccountsOpeningBalances ob WHERE ob.ChartOfAccountId = coa.ID), 0) + ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as ClosingBalance ");
             sb.append("FROM ChartofAccount coa ");
-            sb.append("LEFT JOIN tbl_vouchers_detail d ON coa.ID = d.AccountId ");
-            sb.append("LEFT JOIN tbl_vouchers_head h ON d.VoucherHeadId = h.ID ");
-            sb.append("WHERE 1=1 ");
+            sb.append("LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId ");
+            sb.append("LEFT JOIN VoucherHead h ON d.VoucherHeadId = h.ID ");
+            sb.append("WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) ");
             if (accountId != null && accountId > 0) {
                 sb.append("AND coa.ID = ").append(accountId).append(" ");
             }
@@ -538,7 +719,13 @@ public class AccountsReportService {
             if (toDate != null && !toDate.isEmpty()) {
                 sb.append("AND (h.VoucherDate <= '").append(toDate).append(" 23:59:59' OR h.VoucherDate IS NULL) ");
             }
-            sb.append("GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle, coa.OpeningBalance ");
+            if (branchId != null && branchId > 0) {
+                sb.append("AND (h.BranchId = ").append(branchId).append(" OR h.BranchId IS NULL) ");
+            }
+            if (projectId != null && projectId > 0) {
+                sb.append("AND (h.ProjectId = ").append(projectId).append(" OR h.ProjectId IS NULL) ");
+            }
+            sb.append("GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle ");
             sb.append("ORDER BY coa.AccountCode");
             list = jdbcTemplate.queryForList(sb.toString());
         } catch (Exception ex) {
@@ -576,6 +763,66 @@ public class AccountsReportService {
         }
     }
 
+    public List<Map<String, Object>> getVoucherReport(String fromDate, String toDate, Integer documentTypeId, String voucherStatus) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT coa.ID as id, coa.AccountCode as accountCode, coa.AccountTitle as accountTitle, ");
+            sb.append("ISNULL((SELECT SUM(ISNULL(ob.YearObDebit, 0) - ISNULL(ob.YearObCredit, 0)) FROM AccountsOpeningBalances ob WHERE ob.ChartOfAccountId = coa.ID), 0) as openingBalance, ");
+            sb.append("ISNULL(SUM(d.DebitAmount), 0) as totalDebit, ");
+            sb.append("ISNULL(SUM(d.CreditAmount), 0) as totalCredit, ");
+            sb.append("(ISNULL((SELECT SUM(ISNULL(ob.YearObDebit, 0) - ISNULL(ob.YearObCredit, 0)) FROM AccountsOpeningBalances ob WHERE ob.ChartOfAccountId = coa.ID), 0) + ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as balance ");
+            sb.append("FROM ChartofAccount coa ");
+            sb.append("LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId ");
+            sb.append("LEFT JOIN VoucherHead h ON d.VoucherHeadId = h.ID ");
+            sb.append("WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) ");
+
+            if (fromDate != null && !fromDate.isBlank()) {
+                sb.append("AND (h.VoucherDate >= '").append(fromDate.trim()).append(" 00:00:00' OR h.VoucherDate IS NULL) ");
+            }
+            if (toDate != null && !toDate.isBlank()) {
+                sb.append("AND (h.VoucherDate <= '").append(toDate.trim()).append(" 23:59:59' OR h.VoucherDate IS NULL) ");
+            }
+            if (documentTypeId != null && documentTypeId > 0) {
+                sb.append("AND (h.DocumentTypeId = ").append(documentTypeId).append(" OR h.DocumentTypeId IS NULL) ");
+            }
+            if (voucherStatus != null && !voucherStatus.isBlank()) {
+                if ("approved".equalsIgnoreCase(voucherStatus) || "1".equals(voucherStatus)) {
+                    sb.append("AND (h.IsApproved = 1 OR h.IsApproved IS NULL) ");
+                } else if ("unapproved".equalsIgnoreCase(voucherStatus) || "0".equals(voucherStatus)) {
+                    sb.append("AND (h.IsApproved = 0 OR h.IsApproved IS NULL) ");
+                }
+            }
+            sb.append("GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle ");
+            sb.append("ORDER BY coa.AccountCode");
+
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sb.toString());
+            if (list == null || list.isEmpty()) {
+                return getVoucherReportFallback();
+            }
+            return list;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return getVoucherReportFallback();
+        }
+    }
+
+    private List<Map<String, Object>> getVoucherReportFallback() {
+        try {
+            String sql = "SELECT coa.ID as id, coa.AccountCode as accountCode, coa.AccountTitle as accountTitle, " +
+                    "ISNULL((SELECT SUM(ISNULL(ob.YearObDebit, 0) - ISNULL(ob.YearObCredit, 0)) FROM AccountsOpeningBalances ob WHERE ob.ChartOfAccountId = coa.ID), 0) as openingBalance, " +
+                    "ISNULL(SUM(d.DebitAmount), 0) as totalDebit, " +
+                    "ISNULL(SUM(d.CreditAmount), 0) as totalCredit, " +
+                    "(ISNULL((SELECT SUM(ISNULL(ob.YearObDebit, 0) - ISNULL(ob.YearObCredit, 0)) FROM AccountsOpeningBalances ob WHERE ob.ChartOfAccountId = coa.ID), 0) + ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as balance " +
+                    "FROM ChartofAccount coa " +
+                    "LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId " +
+                    "WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) " +
+                    "GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle ORDER BY coa.AccountCode";
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception ex) {
+            return Collections.emptyList();
+        }
+    }
+
     public List<Map<String, Object>> getBankOrCashBalancesReport(boolean isCashOnly) {
         try {
             String typeFilter = isCashOnly ? "2" : "15, 2";
@@ -584,8 +831,8 @@ public class AccountsReportService {
                     "ISNULL(SUM(d.CreditAmount), 0) as TotalCredit, " +
                     "(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as Balance " +
                     "FROM ChartofAccount coa " +
-                    "LEFT JOIN tbl_vouchers_detail d ON coa.ID = d.AccountId " +
-                    "WHERE coa.IsDetail = 1 AND coa.AccountTypeId IN (" + typeFilter + ") " +
+                    "LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId " +
+                    "WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) AND coa.AccountTypeId IN (" + typeFilter + ") " +
                     "GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle ORDER BY coa.AccountTitle";
             return jdbcTemplate.queryForList(sql);
         } catch (Exception e) {
@@ -601,8 +848,8 @@ public class AccountsReportService {
                     "ISNULL(SUM(d.CreditAmount), 0) as TotalCredit, " +
                     "ABS(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as OutstandingBalance " +
                     "FROM ChartofAccount coa " +
-                    "LEFT JOIN tbl_vouchers_detail d ON coa.ID = d.AccountId " +
-                    "WHERE coa.IsDetail = 1 AND coa.AccountTypeId IN (" + acType + ") " +
+                    "LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId " +
+                    "WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) AND coa.AccountTypeId IN (" + acType + ") " +
                     "GROUP BY coa.AccountCode, coa.AccountTitle ORDER BY coa.AccountTitle";
             return jdbcTemplate.queryForList(sql);
         } catch (Exception e) {
@@ -634,15 +881,15 @@ public class AccountsReportService {
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT coa.Id as AccountId, coa.AccountCode, coa.AccountTitle, ");
             sb.append("ISNULL(p.AccountTitle, '') as ParentAccountTitle, ");
-            sb.append("ISNULL(coa.OpeningBalance, 0) as Opening, ");
+            sb.append("ISNULL((SELECT SUM(ISNULL(ob.YearObDebit, 0) - ISNULL(ob.YearObCredit, 0)) FROM AccountsOpeningBalances ob WHERE ob.ChartOfAccountId = coa.ID), 0) as Opening, ");
             sb.append("ISNULL(SUM(d.DebitAmount), 0) as Debit, ");
             sb.append("ISNULL(SUM(d.CreditAmount), 0) as Credit, ");
-            sb.append("(ISNULL(coa.OpeningBalance, 0) + ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as Closing ");
+            sb.append("(ISNULL((SELECT SUM(ISNULL(ob.YearObDebit, 0) - ISNULL(ob.YearObCredit, 0)) FROM AccountsOpeningBalances ob WHERE ob.ChartOfAccountId = coa.ID), 0) + ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as Closing ");
             sb.append("FROM ChartofAccount coa ");
             sb.append("LEFT JOIN ChartofAccount p ON coa.ParentAccountCode = p.AccountCode ");
-            sb.append("LEFT JOIN tbl_vouchers_detail d ON coa.ID = d.AccountId ");
-            sb.append("LEFT JOIN tbl_vouchers_head h ON d.VoucherHeadId = h.ID ");
-            sb.append("WHERE 1=1 ");
+            sb.append("LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId ");
+            sb.append("LEFT JOIN VoucherHead h ON d.VoucherHeadId = h.ID ");
+            sb.append("WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) ");
             if (accountId != null && accountId > 0) {
                 sb.append("AND coa.ID = ").append(accountId).append(" ");
             }
@@ -655,7 +902,7 @@ public class AccountsReportService {
             if (Boolean.TRUE.equals(approvedOnly)) {
                 sb.append("AND (h.IsApproved = 1 OR h.IsApproved IS NULL) ");
             }
-            sb.append("GROUP BY coa.Id, coa.AccountCode, coa.AccountTitle, p.AccountTitle, coa.OpeningBalance ");
+            sb.append("GROUP BY coa.Id, coa.AccountCode, coa.AccountTitle, p.AccountTitle ");
             sb.append("ORDER BY coa.AccountCode");
             list = jdbcTemplate.queryForList(sb.toString());
         } catch (Exception ex) {

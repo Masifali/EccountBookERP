@@ -236,6 +236,22 @@ public class AccountsModuleViewController {
 			case "account-notes-report":
 				model.addAttribute("moduleTitle", "Account Notes Report");
 				return "accounts/reports/account_notes_report";
+			case "wages-report":
+			case "wages_report":
+				model.addAttribute("moduleTitle", "Wages Report");
+				model.addAttribute("contractorsList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("costCentersList", accountsReportService.getCostCenters());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
+				model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
+				return "accounts/reports/wages_report";
+			case "wages-report-activities":
+			case "wages_report_activities":
+				model.addAttribute("moduleTitle", "Wages Report (With Activities)");
+				model.addAttribute("contractorsList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("costCentersList", accountsReportService.getCostCenters());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
+				model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
+				return "accounts/reports/wages_report_activities";
 			default:
 				model.addAttribute("moduleTitle", formatTitle(reportType));
 				return "accounts/reports/general_ledger";

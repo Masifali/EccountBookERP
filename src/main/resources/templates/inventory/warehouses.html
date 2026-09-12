@@ -1,137 +1,137 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
     <meta charset="utf-8">
-    <meta content="IE=edge" http-equiv="X-UA-Compatible">
-    <meta content="width=device-width, initial-scale=1" name="viewport">
-    <title>Warehouses</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Define WareHouse - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
+        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .btn-erp-danger { background-color: #dc2626; color: white; border: 1px solid #991b1b; }
+        .btn-erp-danger:hover { background-color: #991b1b; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
+        .form-control-erp:focus { border-color: #00796B; outline: none; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
+    </style>
 </head>
-<body class="nav-md">
-<div class="container body">
-    <div class="main_container">
-        <div th:replace="fragments/fixed_sidebar :: div"></div>
-        <div class="right_col" role="main">
-            <div class="row">
-                <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h2><i class="fa fa-building-o"></i> Warehouses</h2>
-                            <ul class="nav navbar-right panel_toolbox">
-                                <li>
-                                    <button type="button" class="btn btn-success" onclick="openModal(false)">
-                                        <i class="fa fa-plus"></i> Add Warehouse
-                                    </button>
-                                </li>
-                            </ul>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="x_content">
-                            <table class="table table-striped table-bordered" id="dataTable">
-                                <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>CODE</th>
-                                    <th>NAME</th>
-                                    <th>TYPE</th>
-                                    <th>ACTIVE</th>
-                                    <th style="text-align:center; width:110px;">ACTIONS</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr th:each="w, stat : ${warehouses}">
-                                    <td th:text="${stat.index + 1}"></td>
-                                    <td th:text="${w.wareHouseCode}"></td>
-                                    <td th:text="${w.wareHouseName}"></td>
-                                    <td th:text="${w.warehouseType}"></td>
-                                    <td th:text="${w.isActive} ? 'Yes' : 'No'"></td>
-                                    <td style="text-align:center; white-space:nowrap;">
-                                        <a href="javascript:void(0)" title="Edit" th:attr="onclick='editItem(' + ${w.id} + ')'"><i class="fa fa-pencil"></i></a>
-                                        &nbsp;
-                                        <a th:href="@{'/inventory/warehouses/delete/' + ${w.id}}" title="Delete" onclick="return confirm('Delete this warehouse?')"><i class="fa fa-trash"></i></a>
-                                    </td>
-                                </tr>
-                                <tr th:if="${warehouses == null or warehouses.isEmpty()}">
-                                    <td colspan="6" style="text-align:center; color:#9aa3ae; padding:30px;">No warehouses defined yet.</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
+<body>
+    <div class="erp-header">
+        <div><i class="fa fa-building-o"></i> Define WareHouse / Godown</div>
+        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory</a></div>
+    </div>
+    <div class="erp-toolbar">
+        <button type="button" class="btn-erp" onclick="resetForm()"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" onclick="submitSave()"><i class="fa fa-save"></i> Save (Ctrl+S)</button>
+        <button type="button" class="btn-erp btn-erp-danger" onclick="submitDelete()"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" class="btn-erp" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+    </div>
+    <div style="padding: 10px;">
+        <form th:action="@{/inventory/warehouses/save}" th:object="${warehouse}" method="post" id="warehouseForm">
+            <input type="hidden" th:field="*{id}" id="txtWhId"/>
+            <div class="erp-fieldset">
+                <legend>Warehouse Definition</legend>
+                <div class="row">
+                    <div class="col-md-2">
+                        <label class="form-label-erp">Warehouse Code</label>
+                        <input type="text" th:field="*{warehouseCode}" id="txtWhCode" class="form-control-erp" placeholder="e.g. WH-01" required/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-erp">Warehouse Name / Title</label>
+                        <input type="text" th:field="*{warehouseName}" id="txtWhName" class="form-control-erp" placeholder="Enter Warehouse Name" required/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-erp">Location / Address</label>
+                        <input type="text" th:field="*{location}" id="txtWhLocation" class="form-control-erp" placeholder="Location Details"/>
+                    </div>
+                    <div class="col-md-2" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                        <label style="font-weight: 600; cursor: pointer;">
+                            <input type="checkbox" th:field="*{isActive}" id="chkIsActive"/> Active Warehouse
+                        </label>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
-<div class="modal fade" id="itemModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document" style="max-width:520px;">
-        <div class="modal-content">
-            <form th:action="@{/inventory/warehouses/save}" th:object="${warehouse}" method="post" id="itemForm">
-                <input type="hidden" th:field="*{id}" id="modalItemId"/>
-                <div class="modal-header">
-                    <h4 id="itemModalLabel">Add Warehouse</h4>
-                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group"><label>Code</label><input type="text" class="form-control" th:field="*{wareHouseCode}"/></div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group"><label>Name</label><input type="text" class="form-control" th:field="*{wareHouseName}" required/></div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Branch / Company</label>
-                                <select class="form-control modal-select2" th:field="*{branchesId}">
-                                    <option value="0">— None —</option>
-                                    <option th:each="br : ${companyBranches}" th:value="${br.id}" th:text="${br.compName}"></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group"><label>Warehouse Type</label><input type="text" class="form-control" th:field="*{warehouseType}"/></div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="form-group"><label><input type="checkbox" th:field="*{isActive}"/> Active</label></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Save</button>
-                </div>
-            </form>
-        </div>
+            <div class="erp-fieldset">
+                <legend>Warehouses & Godowns List</legend>
+                <table class="erp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%; text-align: center;">Sr #</th>
+                            <th style="width: 20%;">Code</th>
+                            <th style="width: 45%;">Warehouse Name</th>
+                            <th style="width: 20%;">Location</th>
+                            <th style="width: 10%; text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="w, stat : ${warehouses}" th:attr="onclick='selectWarehouse(' + ${w.id} + ', \'' + ${w.warehouseCode} + '\', \'' + ${w.warehouseName} + '\', \'' + ${w.location} + '\', ' + ${w.isActive} + ')'">
+                            <td style="text-align: center;" th:text="${stat.index + 1}"></td>
+                            <td th:text="${w.warehouseCode}"></td>
+                            <td th:text="${w.warehouseName}"></td>
+                            <td th:text="${w.location}"></td>
+                            <td style="text-align: center;">
+                                <span class="badge" th:style="${w.isActive} ? 'background-color:#166534;' : 'background-color:#dc2626;'" th:text="${w.isActive} ? 'Active' : 'Inactive'"></span>
+                            </td>
+                        </tr>
+                        <tr th:if="${warehouses == null or warehouses.isEmpty()}">
+                            <td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">No warehouses defined yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </form>
     </div>
-</div>
-
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-<script th:inline="javascript">
-    $(function () { $('.modal-select2').select2({dropdownAutoWidth: true, width: '100%'}); });
-    function openModal(isEdit) {
-        if (!isEdit) {
-            $('#itemForm')[0].reset();
-            $('#modalItemId').val('0');
-            $('.modal-select2').val('0').trigger('change');
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        function resetForm() {
+            $('#txtWhId').val('0');
+            $('#txtWhCode').val('');
+            $('#txtWhName').val('');
+            $('#txtWhLocation').val('');
+            $('#chkIsActive').prop('checked', true);
         }
-        $('#itemModalLabel').text(isEdit ? 'Edit Warehouse' : 'Add Warehouse');
-        $('#itemModal').modal('show');
-    }
-    function editItem(id) { window.location.href = '/inventory/warehouses/edit/' + id; }
-    /*[# th:if="${warehouse != null and warehouse.id != null and warehouse.id > 0}"]*/
-    $(function () { openModal(true); });
-    /*[/]*/
-</script>
+
+        function selectWarehouse(id, code, name, location, active) {
+            $('#txtWhId').val(id);
+            $('#txtWhCode').val(code);
+            $('#txtWhName').val(name);
+            $('#txtWhLocation').val(location);
+            $('#chkIsActive').prop('checked', active);
+        }
+
+        function submitSave() {
+            if (!$('#txtWhName').val()) { alert('Please enter Warehouse Name.'); return; }
+            $('#warehouseForm').submit();
+        }
+
+        function submitDelete() {
+            const id = $('#txtWhId').val();
+            if (!id || id === '0') { alert('Please select a warehouse to delete.'); return; }
+            if (confirm('Are you sure you want to delete this warehouse?')) {
+                window.location.href = '/inventory/warehouses/delete/' + id;
+            }
+        }
+
+        $(document).keydown(function(e) {
+            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetForm(); }
+            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); submitSave(); }
+        });
+    </script>
 </body>
 </html>

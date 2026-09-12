@@ -20,9 +20,12 @@ public class PurchaseOrderRestController {
             @RequestParam(defaultValue = "1052") int docType,
             @RequestParam(defaultValue = "1") int companyId) {
         int docNo = purchaseOrderService.generateNextDocNo(docType, companyId);
+        String formattedCode = String.format("PO-%d", docNo);
         Map<String, Object> res = new HashMap<>();
         res.put("docNo", docNo);
-        res.put("displayCode", String.format("PO-2026-%04d", docNo));
+        res.put("branchNo", docNo);
+        res.put("nextCode", formattedCode);
+        res.put("displayCode", formattedCode);
         return ResponseEntity.ok(res);
     }
 
@@ -78,6 +81,26 @@ public class PurchaseOrderRestController {
     @GetMapping("/delivery-terms")
     public ResponseEntity<List<Map<String, Object>>> getDeliveryTerms() {
         return ResponseEntity.ok(purchaseOrderService.getDeliveryTerms());
+    }
+
+    @GetMapping("/booking-persons")
+    public ResponseEntity<List<Map<String, Object>>> getBookingPersons() {
+        return ResponseEntity.ok(purchaseOrderService.getBookingPersons());
+    }
+
+    @GetMapping("/lookup-party-types")
+    public ResponseEntity<List<Map<String, Object>>> getLookupPartyTypes() {
+        return ResponseEntity.ok(purchaseOrderService.getLookupPartyTypes());
+    }
+
+    @GetMapping("/lookup-parties")
+    public ResponseEntity<List<Map<String, Object>>> getLookupParties() {
+        return ResponseEntity.ok(purchaseOrderService.getLookupParties());
+    }
+
+    @PostMapping("/save-lookup-party")
+    public ResponseEntity<Map<String, Object>> saveLookupParty(@RequestBody Map<String, Object> payload) {
+        return ResponseEntity.ok(purchaseOrderService.saveLookupParty(payload));
     }
 
     @GetMapping("/accounts")

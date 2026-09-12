@@ -1,78 +1,83 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
     <meta charset="utf-8">
-    <meta content="IE=edge" http-equiv="X-UA-Compatible">
-    <meta content="width=device-width, initial-scale=1" name="viewport">
-    <title>Items</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Define Item Master - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
-    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
+        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .btn-erp-danger { background-color: #dc2626; color: white; border: 1px solid #991b1b; }
+        .btn-erp-danger:hover { background-color: #991b1b; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
+    </style>
 </head>
-<body class="nav-md">
-<div class="container body">
-    <div class="main_container">
-        <div th:replace="fragments/fixed_sidebar :: div"></div>
-        <div class="right_col" role="main">
-            <div class="row">
-                <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h2><i class="fa fa-cube"></i> Items</h2>
-                            <ul class="nav navbar-right panel_toolbox">
-                                <li>
-                                    <a th:href="@{/inventory/items/add}" class="btn btn-success">
-                                        <i class="fa fa-plus"></i> Add Item
-                                    </a>
-                                </li>
-                            </ul>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="x_content">
-                            <table class="table table-striped table-bordered" id="dataTable">
-                                <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>CODE</th>
-                                    <th>NAME</th>
-                                    <th>CATEGORY</th>
-                                    <th>TYPE</th>
-                                    <th>ACTIVE</th>
-                                    <th style="text-align:center; width:110px;">ACTIONS</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr th:each="i, stat : ${items}">
-                                    <td th:text="${stat.index + 1}"></td>
-                                    <td th:text="${i.itemCode}"></td>
-                                    <td th:text="${i.itemName}"></td>
-                                    <td th:text="${i.itemCategory != null ? i.itemCategory.categoryDescription : ''}"></td>
-                                    <td th:text="${i.itemType != null ? i.itemType.typeDescription : ''}"></td>
-                                    <td th:text="${i.itemStatus} ? 'Yes' : 'No'"></td>
-                                    <td style="text-align:center; white-space:nowrap;">
-                                        <a th:href="@{'/inventory/items/edit/' + ${i.id}}" title="Edit"><i class="fa fa-pencil"></i></a>
-                                        &nbsp;
-                                        <a th:href="@{'/inventory/items/delete/' + ${i.id}}" title="Delete" onclick="return confirm('Delete this item?')"><i class="fa fa-trash"></i></a>
-                                    </td>
-                                </tr>
-                                <tr th:if="${items == null or items.isEmpty()}">
-                                    <td colspan="7" style="text-align:center; color:#9aa3ae; padding:30px;">No items defined yet.</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<body>
+    <div class="erp-header">
+        <div><i class="fa fa-cube"></i> Define Item Master</div>
+        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory</a></div>
+    </div>
+    <div class="erp-toolbar">
+        <a href="/inventory/items/add" class="btn-erp btn-erp-primary"><i class="fa fa-plus"></i> Add New Item (Ctrl+N)</a>
+        <button type="button" class="btn-erp" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+    </div>
+    <div style="padding: 10px;">
+        <div class="erp-fieldset">
+            <legend>Items Master Registry</legend>
+            <table class="erp-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%; text-align: center;">Sr #</th>
+                        <th style="width: 15%;">Item Code</th>
+                        <th style="width: 35%;">Item Name / Description</th>
+                        <th style="width: 15%;">Category</th>
+                        <th style="width: 15%;">Type</th>
+                        <th style="width: 8%; text-align: center;">Status</th>
+                        <th style="width: 7%; text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="i, stat : ${items}">
+                        <td style="text-align: center;" th:text="${stat.index + 1}"></td>
+                        <td th:text="${i.itemCode}"></td>
+                        <td th:text="${i.itemName}"></td>
+                        <td th:text="${i.itemCategory != null ? i.itemCategory.categoryDescription : ''}"></td>
+                        <td th:text="${i.itemType != null ? i.itemType.typeDescription : ''}"></td>
+                        <td style="text-align: center;">
+                            <span class="badge" th:style="${i.itemStatus} ? 'background-color:#166534;' : 'background-color:#dc2626;'" th:text="${i.itemStatus} ? 'Active' : 'Inactive'"></span>
+                        </td>
+                        <td style="text-align: center;">
+                            <a th:href="@{'/inventory/items/edit/' + ${i.id}}" class="btn-erp" style="padding: 1px 5px;" title="Edit"><i class="fa fa-pencil"></i></a>
+                            <a th:href="@{'/inventory/items/delete/' + ${i.id}}" class="btn-erp btn-erp-danger" style="padding: 1px 5px;" title="Delete" onclick="return confirm('Delete item?')"><i class="fa fa-trash"></i></a>
+                        </td>
+                    </tr>
+                    <tr th:if="${items == null or items.isEmpty()}">
+                        <td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">No items defined yet. Click "Add New Item" above to define.</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
-
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        $(document).keydown(function(e) {
+            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); window.location.href='/inventory/items/add'; }
+        });
+    </script>
 </body>
 </html>

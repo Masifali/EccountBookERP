@@ -153,8 +153,18 @@ public class PurchaseOrderFullService {
 
     public int generateNextDocNo(int documentTypeId, int companyId) {
         try {
-            String sql = "SELECT ISNULL(MAX(DocNo), 0) + 1 FROM PurchaseOrder WHERE DocumentTypeId = ? AND (CompanyId = ? OR ? = 0)";
-            Integer code = jdbcTemplate.queryForObject(sql, Integer.class, documentTypeId, companyId, companyId);
+            int orgId = currentUserContext.currentOrganizationId();
+            int compId = companyId > 0 ? companyId : currentUserContext.currentCompanyId();
+
+            String sql = "SELECT ISNULL(MAX(DocNo), 0) + 1 FROM PurchaseOrder " +
+                         "WHERE (CompanyId = ? OR CompanyId IS NULL OR ? = 0) " +
+                         "AND (OrganizationId = ? OR OrganizationId IS NULL OR ? = 0)";
+            Integer code = jdbcTemplate.queryForObject(sql, Integer.class, compId, compId, orgId, orgId);
+            if (code != null && code > 1) {
+                return code;
+            }
+            sql = "SELECT ISNULL(MAX(DocNo), 0) + 1 FROM PurchaseOrder";
+            code = jdbcTemplate.queryForObject(sql, Integer.class);
             return (code != null && code > 0) ? code : 1;
         } catch (Exception e) {
             return 1;
@@ -349,7 +359,17 @@ public class PurchaseOrderFullService {
 
     public List<Map<String, Object>> getPaymentTerms() {
         try {
-            String sql = "SELECT Id as id, TermsDescription as description, ISNULL(DueDays, 0) as dueDays FROM InvDueTerms ORDER BY TermsDescription";
+            int orgId = currentUserContext.currentOrganizationId();
+            int compId = currentUserContext.currentCompanyId();
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(
+                    "EXEC Sp_InvDueTerms_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
+                    orgId, compId, "GetAll");
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+        try {
+            String sql = "SELECT Id as id, TermsDescription as description, ISNULL(DueDays, 0) as dueDays FROM InvDueTerms WHERE IsActive = 1 OR IsActive IS NULL ORDER BY TermsDescription";
             return jdbcTemplate.queryForList(sql);
         } catch (Exception e) {
             return Collections.emptyList();
@@ -358,11 +378,101 @@ public class PurchaseOrderFullService {
 
     public List<Map<String, Object>> getDeliveryTerms() {
         try {
+            List<Map<String, Object>> list = jdbcTemplate.queryForList("EXEC [dbo].[USP_DeliveryTerm_GetAllMethod] @Activity=?", "FormHistory");
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+        try {
             String sql = "SELECT Id as id, DeliveryTermDescription as description FROM DeliveryTerm ORDER BY DeliveryTermDescription";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+
+        List<Map<String, Object>> fallback = new ArrayList<>();
+        Map<String, Object> m1 = new HashMap<>(); m1.put("id", 1); m1.put("description", "Load"); fallback.add(m1);
+        Map<String, Object> m2 = new HashMap<>(); m2.put("id", 2); m2.put("description", "Load & PartyWeight"); fallback.add(m2);
+        Map<String, Object> m3 = new HashMap<>(); m3.put("id", 3); m3.put("description", "Load & FactoryWeight"); fallback.add(m3);
+        return fallback;
+    }
+
+    public List<Map<String, Object>> getBookingPersons() {
+        try {
+            int orgId = currentUserContext.currentOrganizationId();
+            int compId = currentUserContext.currentCompanyId();
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(
+                    "EXEC Sp_ReferenceParties_GetAllMethod @OrganizationId=?, @CompanyId=?, @ReferencePartyTypeId=5, @Activity=?",
+                    orgId, compId, "ReferencePArtyByReferencePartyTypeIdOrSupplierCustomerId");
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+        try {
+            String sql = "SELECT Id as id, ReferencePartyName as partyName, ReferencePartyName as description FROM ReferenceParties WHERE (ReferencePartyTypeId = 5 OR ReferencePartyTypeId IS NULL) AND (IsActive = 1 OR IsActive IS NULL) ORDER BY ReferencePartyName";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+        return Collections.emptyList();
+    }
+
+    public List<Map<String, Object>> getLookupPartyTypes() {
+        List<Map<String, Object>> types = new ArrayList<>();
+        Map<String, Object> t1 = new HashMap<>(); t1.put("id", 1); t1.put("description", "Reference Party"); types.add(t1);
+        Map<String, Object> t2 = new HashMap<>(); t2.put("id", 5); t2.put("description", "Booking Person"); types.add(t2);
+        Map<String, Object> t3 = new HashMap<>(); t3.put("id", 2); t3.put("description", "Broker"); types.add(t3);
+        Map<String, Object> t4 = new HashMap<>(); t4.put("id", 3); t4.put("description", "Agent"); types.add(t4);
+        return types;
+    }
+
+    public List<Map<String, Object>> getLookupParties() {
+        try {
+            String sql = "SELECT rp.Id as id, rp.ReferencePartyName as partyName, ISNULL(rp.ReferencePartyTypeId, 1) as partyTypeId, " +
+                    "CASE WHEN rp.ReferencePartyTypeId = 5 THEN 'Booking Person' WHEN rp.ReferencePartyTypeId = 1 THEN 'Reference Party' ELSE 'Other' END as partyTypeName, " +
+                    "CASE WHEN rp.IsActive = 0 THEN 0 ELSE 1 END as isActive, " +
+                    "s.CompanyName as supplierCustomerName " +
+                    "FROM ReferenceParties rp " +
+                    "LEFT JOIN SupplierCustomer s ON rp.SupplierCustomerId = s.Id " +
+                    "ORDER BY rp.ReferencePartyTypeId, rp.ReferencePartyName";
             return jdbcTemplate.queryForList(sql);
         } catch (Exception e) {
             return Collections.emptyList();
         }
+    }
+
+    public Map<String, Object> saveLookupParty(Map<String, Object> payload) {
+        Map<String, Object> res = new HashMap<>();
+        try {
+            String partyName = payload.get("partyName") != null ? payload.get("partyName").toString().trim() : "";
+            if (partyName.isEmpty()) {
+                res.put("success", false);
+                res.put("message", "PartyName Field is Required");
+                return res;
+            }
+            int partyTypeId = payload.get("partyTypeId") != null ? Integer.parseInt(payload.get("partyTypeId").toString()) : 1;
+            int supplierCustomerId = payload.get("supplierCustomerId") != null && !payload.get("supplierCustomerId").toString().isEmpty() ? Integer.parseInt(payload.get("supplierCustomerId").toString()) : 0;
+            boolean isActive = payload.get("isActive") == null || Boolean.parseBoolean(payload.get("isActive").toString()) || "1".equals(payload.get("isActive").toString());
+
+            int orgId = currentUserContext.currentOrganizationId();
+            int compId = currentUserContext.currentCompanyId();
+
+            String insertSql = "INSERT INTO ReferenceParties (ReferencePartyName, ReferencePartyTypeId, SupplierCustomerId, IsActive, OrganizationId, CompanyId, EntryDate) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+            jdbcTemplate.update(insertSql, partyName, partyTypeId, supplierCustomerId > 0 ? supplierCustomerId : null, isActive ? 1 : 0, orgId, compId);
+
+            Integer newId = jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
+            res.put("success", true);
+            res.put("id", newId);
+            res.put("partyName", partyName);
+            res.put("message", "Record Saved Successfully.");
+        } catch (Exception e) {
+            res.put("success", false);
+            res.put("message", "Error saving lookup party: " + e.getMessage());
+        }
+        return res;
     }
 
     public List<Map<String, Object>> getAccounts(String query) {
@@ -1068,6 +1178,11 @@ public class PurchaseOrderFullService {
                 return null;
             }
             Map<String, Object> head = new HashMap<>(list.get(0));
+            if (head.get("docNo") != null) {
+                int docNo = ((Number) head.get("docNo")).intValue();
+                head.put("displayCode", String.format("PO-%d", docNo));
+                head.put("branchNo", docNo);
+            }
 
             try {
                 // Real read, ditto Sp_PurchaseOrderDetail_GetAllMethod's own column list and joins
@@ -1126,6 +1241,8 @@ public class PurchaseOrderFullService {
             sb.append("SELECT po.Id as id, po.DocNo as docNo, CONVERT(VARCHAR(10), po.DocDate, 120) as docDate, ")
               .append("s.CompanyName as supplierName, ISNULL(s.SupCustCode, s.ManualPartyCode) as supplierCode, ")
               .append("po.RemarksHeader as remarks, ")
+              .append("('PO-' + CAST(po.DocNo AS VARCHAR)) as voucherCode, ")
+              .append("('PO-' + CAST(po.DocNo AS VARCHAR)) as displayCode, ")
               .append("(SELECT ISNULL(SUM(Amount), 0) FROM PurchaseOrderDetail WHERE PurchaseOrderId = po.Id) as totalAmount ")
               .append("FROM PurchaseOrder po ")
               .append("LEFT JOIN SupplierCustomer s ON po.SupplierCustomerId = s.Id ")

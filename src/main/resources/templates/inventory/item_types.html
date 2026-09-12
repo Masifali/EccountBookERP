@@ -1,157 +1,129 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
     <meta charset="utf-8">
-    <meta content="IE=edge" http-equiv="X-UA-Compatible">
-    <meta content="width=device-width, initial-scale=1" name="viewport">
-    <title>Item Type - Inventory Definition</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Define Item Type - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/nprogress/nprogress.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/custom.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_custom.css}">
     <style>
-        .win-toolbar {
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            padding: 6px 12px;
-            margin-bottom: 15px;
-            border-radius: 3px;
-        }
-        .win-toolbar .btn {
-            margin-right: 5px;
-        }
-        .form-section {
-            background: #fff;
-            padding: 15px;
-            border: 1px solid #e5e5e5;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .table-history tbody tr:hover {
-            background-color: #f0f7ff !important;
-        }
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
+        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .btn-erp-danger { background-color: #dc2626; color: white; border: 1px solid #991b1b; }
+        .btn-erp-danger:hover { background-color: #991b1b; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
+        .form-control-erp:focus { border-color: #00796B; outline: none; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
     </style>
 </head>
-<body class="nav-md">
-<div class="container body">
-    <div class="main_container">
-        <div th:replace="fragments/fixed_sidebar :: div"></div>
-        <div class="right_col" role="main">
-            <div class="row">
-                <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h2><i class="fa fa-tags"></i> Item Type Definition <small>WinForms Golden Master Ditto Copy</small></h2>
-                            <div class="clearfix"></div>
-                        </div>
-
-                        <!-- Top Toolbar matching Desktop WinForms -->
-                        <div class="win-toolbar">
-                            <button type="button" class="btn btn-primary btn-sm" id="btnNew">
-                                <i class="fa fa-file-o"></i> New (Ctrl+N)
-                            </button>
-                            <button type="button" class="btn btn-default btn-sm" id="btnRefresh">
-                                <i class="fa fa-refresh"></i> Refresh
-                            </button>
-                            <button type="button" class="btn btn-success btn-sm" id="btnSave">
-                                <i class="fa fa-save"></i> Save (Ctrl+S)
-                            </button>
-                            <button type="button" class="btn btn-warning btn-sm" id="btnUpdate" style="display:none;">
-                                <i class="fa fa-edit"></i> Update (Ctrl+U)
-                            </button>
-                        </div>
-
-                        <div class="x_content">
-                            <!-- Input Form Section -->
-                            <div class="form-section">
-                                <form id="itemTypeForm" onsubmit="return false;">
-                                    <input type="hidden" id="recId" value="0"/>
-                                    <div class="row">
-                                        <div class="col-md-3 col-sm-6 col-xs-12">
-                                            <div class="form-group">
-                                                <label for="txtItemTypeCode">Item Type Code <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="txtItemTypeCode" placeholder="Auto-generated" readonly />
-                                            </div>
-                                        </div>
-                                        <div class="col-md-5 col-sm-6 col-xs-12">
-                                            <div class="form-group">
-                                                <label for="txtTypeDescription">Description <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="txtTypeDescription" placeholder="Enter Item Type Description" required />
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4 col-sm-6 col-xs-12">
-                                            <div class="form-group">
-                                                <label for="cmbItemTypeType">Type</label>
-                                                <select class="form-control" id="cmbItemTypeType">
-                                                    <option value="">-- Select Type --</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 col-sm-6 col-xs-12">
-                                            <div class="form-group">
-                                                <label for="cmbParentCategory">Parent Category</label>
-                                                <select class="form-control" id="cmbParentCategory">
-                                                    <option value="">-- Select Parent Category --</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 col-sm-6 col-xs-12" style="padding-top: 25px;">
-                                            <div class="checkbox">
-                                                <label style="font-weight: bold; font-size: 14px;">
-                                                    <input type="checkbox" id="chkIsMother" value="true"> Is Mother
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- History Grid Section -->
-                            <div class="x_panel">
-                                <div class="x_title">
-                                    <h3><i class="fa fa-history"></i> History / Records <small>(Double-click row to edit)</small></h3>
-                                    <div class="clearfix"></div>
-                                </div>
-                                <div class="x_content">
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-bordered table-hover table-history" id="grdHistory">
-                                            <thead>
-                                            <tr style="background-color: #2A3F54; color: #fff;">
-                                                <th style="width: 60px;">ID</th>
-                                                <th style="width: 120px;">Code</th>
-                                                <th>Description</th>
-                                                <th>Type</th>
-                                                <th>Parent Category</th>
-                                                <th style="width: 100px;">Is Mother</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody id="historyTableBody">
-                                            <tr>
-                                                <td colspan="6" class="text-center text-muted">Loading history...</td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+<body>
+    <div class="erp-header">
+        <div><i class="fa fa-list-ul"></i> Define Item Type</div>
+        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory</a></div>
+    </div>
+    <div class="erp-toolbar">
+        <button type="button" class="btn-erp" onclick="resetForm()"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" onclick="submitSave()"><i class="fa fa-save"></i> Save (Ctrl+S)</button>
+        <button type="button" class="btn-erp btn-erp-danger" onclick="submitDelete()"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" class="btn-erp" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+    </div>
+    <div style="padding: 10px;">
+        <form th:action="@{/inventory/item_types/save}" th:object="${itemType}" method="post" id="typeForm">
+            <input type="hidden" th:field="*{id}" id="txtTypeId"/>
+            <div class="erp-fieldset">
+                <legend>Item Type Definition</legend>
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label-erp">Type Code</label>
+                        <input type="text" th:field="*{typeCode}" id="txtTypeCode" class="form-control-erp" placeholder="e.g. IT-001" required/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-erp">Type Description / Name</label>
+                        <input type="text" th:field="*{typeDescription}" id="txtTypeDesc" class="form-control-erp" placeholder="Enter Item Type Description" required/>
+                    </div>
+                    <div class="col-md-3" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                        <label style="font-weight: 600; cursor: pointer;">
+                            <input type="checkbox" th:field="*{isActive}" id="chkIsActive"/> Active Type
+                        </label>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-<script th:src="@{/build/js/countx_item_type.js}"></script>
+            <div class="erp-fieldset">
+                <legend>Item Types List</legend>
+                <table class="erp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%; text-align: center;">Sr #</th>
+                            <th style="width: 25%;">Type Code</th>
+                            <th style="width: 50%;">Type Description</th>
+                            <th style="width: 20%; text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="t, stat : ${itemTypes}" th:attr="onclick='selectType(' + ${t.id} + ', \'' + ${t.typeCode} + '\', \'' + ${t.typeDescription} + '\', ' + ${t.isActive} + ')'">
+                            <td style="text-align: center;" th:text="${stat.index + 1}"></td>
+                            <td th:text="${t.typeCode}"></td>
+                            <td th:text="${t.typeDescription}"></td>
+                            <td style="text-align: center;">
+                                <span class="badge" th:style="${t.isActive} ? 'background-color:#166534;' : 'background-color:#dc2626;'" th:text="${t.isActive} ? 'Active' : 'Inactive'"></span>
+                            </td>
+                        </tr>
+                        <tr th:if="${itemTypes == null or itemTypes.isEmpty()}">
+                            <td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">No Item Types defined yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        function resetForm() {
+            $('#txtTypeId').val('0');
+            $('#txtTypeCode').val('');
+            $('#txtTypeDesc').val('');
+            $('#chkIsActive').prop('checked', true);
+        }
+
+        function selectType(id, code, desc, active) {
+            $('#txtTypeId').val(id);
+            $('#txtTypeCode').val(code);
+            $('#txtTypeDesc').val(desc);
+            $('#chkIsActive').prop('checked', active);
+        }
+
+        function submitSave() {
+            if (!$('#txtTypeDesc').val()) { alert('Please enter Item Type Description.'); return; }
+            $('#typeForm').submit();
+        }
+
+        function submitDelete() {
+            const id = $('#txtTypeId').val();
+            if (!id || id === '0') { alert('Please select an item type to delete.'); return; }
+            if (confirm('Are you sure you want to delete this item type?')) {
+                window.location.href = '/inventory/item_types/delete/' + id;
+            }
+        }
+
+        $(document).keydown(function(e) {
+            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetForm(); }
+            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); submitSave(); }
+        });
+    </script>
 </body>
 </html>

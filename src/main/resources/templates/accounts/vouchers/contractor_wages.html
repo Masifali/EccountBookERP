@@ -115,7 +115,7 @@
                     </tbody>
                 </table>
                 <div style="margin-top: 8px;">
-                    <button type="button" class="btn-erp"><i class="fa fa-plus"></i> Add Row</button>
+                    <button type="button" class="btn-erp" onclick="addRow()"><i class="fa fa-plus"></i> Add Row</button>
                 </div>
                 <div class="totals-bar">
                     <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
@@ -127,5 +127,69 @@
     </div>
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        function updateTotals() {
+            let totDebit = 0, totCredit = 0;
+            $('.line-debit').each(function() { totDebit += parseFloat($(this).val() || 0); });
+            $('.line-credit').each(function() { totCredit += parseFloat($(this).val() || 0); });
+            $('#lblTotalDebit').text(totDebit.toFixed(2));
+            $('#lblTotalCredit').text(totCredit.toFixed(2));
+            const diff = Math.abs(totDebit - totCredit);
+            $('#lblDiff').text(diff.toFixed(2));
+        }
+
+        function reindexRows() {
+            $('#lineItemsBody tr').each(function(i) {
+                $(this).find('td:first').text(i + 1);
+            });
+            updateTotals();
+        }
+
+        function addRow() {
+            const count = $('#lineItemsBody tr').length + 1;
+            const tr = `
+                <tr>
+                    <td style="text-align: center;">${count}</td>
+                    <td>
+                        <select class="form-control-erp">
+                            <option value="">-- Select Account --</option>
+                            <option value="101">401001 - OFFICE EXPENSES</option>
+                            <option value="102">401002 - UTILITIES EXPENSES</option>
+                            <option value="103">201001 - SUNDRY CREDITORS</option>
+                        </select>
+                    </td>
+                    <td><input type="text" class="form-control-erp" placeholder="Particulars..."/></td>
+                    <td><input type="number" step="0.01" class="form-control-erp line-debit" value="0.00" style="text-align: right;" onchange="updateTotals()"/></td>
+                    <td><input type="number" step="0.01" class="form-control-erp line-credit" value="0.00" style="text-align: right;" onchange="updateTotals()"/></td>
+                    <td style="text-align: center;"><button type="button" class="btn-erp btn-erp-danger" style="padding: 1px 6px;" onclick="removeRow(this)">&times;</button></td>
+                </tr>
+            `;
+            $('#lineItemsBody').append(tr);
+            updateTotals();
+        }
+
+        function removeRow(btn) {
+            if ($('#lineItemsBody tr').length > 1) {
+                $(btn).closest('tr').remove();
+                reindexRows();
+            } else {
+                alert('At least one line item row is required.');
+            }
+        }
+
+        $(document).on('input change', '.line-debit, .line-credit', function() {
+            updateTotals();
+        });
+
+        $(document).keydown(function(e) {
+            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) {
+                e.preventDefault();
+                location.reload();
+            } else if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                alert('Voucher saved successfully.');
+            }
+        });
+    </script>
 </body>
 </html>

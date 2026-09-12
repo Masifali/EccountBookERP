@@ -91,13 +91,19 @@
                 </div>
             </div>
             <div class="row" style="display:flex; gap:8px; align-items:flex-end;">
-                <div style="flex:1 1 70%;">
+                <div style="flex:1 1 70%; position: relative;">
                     <div class="win-label">Party Name</div>
-                    <select class="win-input" id="comSupplier">
+                    <input type="text" class="win-input" id="txtPartySearch" placeholder="-- Type to search party --" onfocus="onPartySearchFocus()" oninput="onPartySearchInput()" autocomplete="off">
+                    <select class="win-input" id="comSupplier" style="display: none;">
                         <option value="">-- Select Party --</option>
                         <option th:each="s : ${supplierCustomersList}" th:value="${s.Id}" th:text="${s.CompanyName}"
                                 th:attr="data-glaccountid=${s.GlAccountId}"></option>
                     </select>
+                    <div id="popParty" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:9999; background:#fff; border:1px solid #00796B; max-height:220px; overflow-y:auto; box-shadow:0 4px 8px rgba(0,0,0,0.15); border-radius:0 0 3px 3px;">
+                        <table class="table table-hover table-sm mb-0" style="font-size:11px; margin:0; width:100%;">
+                            <tbody id="tbodyPopParty"></tbody>
+                        </table>
+                    </div>
                 </div>
                 <div>
                     <button type="button" class="win-btn win-btn-teal" onclick="executeCL()"><i class="fa fa-eye"></i> Show</button>
@@ -169,23 +175,98 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:inline="javascript">
+        let partyList = [];
+
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            if (!$('#txtFromDate').val()) $('#txtFromDate').val(today);
+            if (!$('#txtToDate').val()) $('#txtToDate').val(today);
+
+            $('#comSupplier option').each(function() {
+                const val = $(this).attr('value');
+                if (val) {
+                    partyList.push({
+                        id: val,
+                        name: $(this).text().trim(),
+                        glAccountId: $(this).data('glaccountid') || ''
+                    });
+                }
+            });
+
+            if (partyList.length === 0) {
+                $.get('/accounts/api/reports/supplier-customers', function(data) {
+                    if (data && data.length > 0) {
+                        partyList = data.map(function(s) {
+                            return {
+                                id: s.Id || s.id,
+                                name: s.CompanyName || s.companyName || s.Name || s.name || ('Party #' + (s.Id || s.id)),
+                                glAccountId: s.GlAccountId || s.glAccountId || ''
+                            };
+                        });
+                    }
+                });
+            }
+        });
+
+        function onPartySearchFocus() {
+            onPartySearchInput();
+        }
+
+        function onPartySearchInput() {
+            const q = ($('#txtPartySearch').val() || '').toLowerCase().trim();
+            const filtered = partyList.filter(function(p) {
+                return p.name.toLowerCase().indexOf(q) >= 0;
+            }).slice(0, 50);
+
+            if (filtered.length > 0) {
+                let html = '';
+                filtered.forEach(function(p) {
+                    const escapedName = (p.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    html += '<tr style="cursor:pointer;" onclick="selectParty(' + p.id + ', \'' + escapedName + '\', \'' + p.glAccountId + '\')">' +
+                            '<td style="padding:5px 8px;"><strong>' + $('<div>').text(p.name).html() + '</strong></td>' +
+                            '</tr>';
+                });
+                $('#tbodyPopParty').html(html);
+                $('#popParty').show();
+            } else {
+                $('#tbodyPopParty').html('<tr><td style="padding:6px 8px; color:#888; text-align:center;">No matching parties found</td></tr>');
+                $('#popParty').show();
+            }
+        }
+
+        function selectParty(id, name, glAccountId) {
+            $('#txtPartySearch').val(name);
+            $('#comSupplier').val(id);
+            if ($('#comSupplier option[value="' + id + '"]').length === 0) {
+                $('#comSupplier').append($('<option>', { value: id, text: name, 'data-glaccountid': glAccountId }));
+                $('#comSupplier').val(id);
+            }
+            $('#popParty').hide();
+        }
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#txtPartySearch, #popParty').length) {
+                $('#popParty').hide();
+            }
+        });
+
         function fmt(v) {
             const n = parseFloat(v);
             if (isNaN(n)) return '0';
             return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         }
 
-        // ditto CmbDateType_ValueChanged: 1=Today, 2=Today-7d, 3=month-start..Today,
-        // 4=Jan1..Today, 5=FinancialYear Start_Period..Today.
         function onDateTypeChanged() {
             const id = parseInt($('#cmbDateType').val());
             const today = new Date();
             const iso = d => d.toISOString().split('T')[0];
             if (id === 1) {
                 $('#txtFromDate').val(iso(today));
+                $('#txtToDate').val(iso(today));
             } else if (id === 2) {
                 const d = new Date(today); d.setDate(d.getDate() - 7);
                 $('#txtFromDate').val(iso(d));
+                $('#txtToDate').val(iso(today));
             } else if (id === 3) {
                 $('#txtFromDate').val(iso(new Date(today.getFullYear(), today.getMonth(), 1)));
                 $('#txtToDate').val(iso(today));
@@ -196,21 +277,31 @@
         }
 
         function executeCL() {
-            const supplierCustomerId = $('#comSupplier').val();
+            let supplierCustomerId = $('#comSupplier').val();
+            if (!supplierCustomerId && $('#txtPartySearch').val()) {
+                const searchTxt = $('#txtPartySearch').val().toLowerCase().trim();
+                const matching = partyList.find(p => p.name.toLowerCase() === searchTxt);
+                if (matching) {
+                    supplierCustomerId = matching.id;
+                    $('#comSupplier').val(matching.id);
+                }
+            }
+
             if (!supplierCustomerId) {
                 alert('Party Name required. Please Check!');
-                $('#comSupplier').focus();
+                $('#txtPartySearch').focus();
                 return;
             }
             $('#lblStatus').text('Executing Customer Ledger query...');
             const fromDate = $('#txtFromDate').val();
             const toDate = $('#txtToDate').val();
+            const glAccId = $('#comSupplier option:selected').data('glaccountid') || (partyList.find(p => p.id == supplierCustomerId) || {}).glAccountId;
 
             $.ajax({
                 url: '/accounts/api/reports/account-info',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ accountId: $('#comSupplier option:selected').data('glaccountid'), fromDate: fromDate, toDate: toDate }),
+                data: JSON.stringify({ accountId: glAccId, fromDate: fromDate, toDate: toDate }),
                 success: applyAccountInfo
             });
 
@@ -300,7 +391,10 @@
 
         function resetCL() {
             $('#comSupplier, #cmbDateType').val('');
-            $('#txtFromDate, #txtToDate').val('');
+            $('#txtPartySearch').val('');
+            const today = new Date().toISOString().split('T')[0];
+            $('#txtFromDate').val(today);
+            $('#txtToDate').val(today);
             $('#glInfoBox').prop('hidden', true);
             $('#clTbody').html('<tr><td colspan="16" style="text-align:center; padding:16px; color:#666;">Select a Party Name and click Show.</td></tr>');
             $('#totQty, #totWeight, #totDebit, #totCredit').text('0');

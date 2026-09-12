@@ -11,6 +11,7 @@ public class PurchaseOrderFullDto {
     private Integer purchaseOrderMasterId = 0;
     private Integer documentTypeId = 1052;
     private Integer docNo;
+    private Integer branchNo;
     private String docDate;
     private Integer supplierId;
     private String supplierName;
@@ -21,6 +22,7 @@ public class PurchaseOrderFullDto {
     private Integer dueDays = 0;
     private String paymentDueDate;
     private Integer deliveryTermId;
+    private Integer bookingPersonId;
 
     // Commission & Brokery
     private Integer commissionAgentId;
