@@ -83,6 +83,8 @@ public class AccountDefinitionModulesController {
 	private IAccountCustomGroupService accountCustomGroupService;
 	@Autowired
 	private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+	@Autowired
+	private com.mst.repositories.ICustomerGroupRepository customerGroupRepository;
 
 	// ==========================================
 	// 3. DEFINE SUPPLIER / CUSTOMER (/accounts/supplier)
@@ -215,6 +217,7 @@ public class AccountDefinitionModulesController {
 
 		List<UserAccount> users = userAccountRepository.findAllByOrderByUserName();
 		List<ChartofAccount> allAccounts = chartofAccountService.getAllAccounts();
+		List<CustomerGroup> customerGroups = customerGroupRepository.findAllByOrderByDescription();
 		Set<String> allocatedAccountCodes = new HashSet<>();
 
 		if (userId != null && userId > 0) {
@@ -242,6 +245,7 @@ public class AccountDefinitionModulesController {
 		model.addAttribute("selUserId", userId);
 		model.addAttribute("allAccounts", allAccounts);
 		model.addAttribute("allocatedAccountCodes", allocatedAccountCodes);
+		model.addAttribute("customerGroups", customerGroups != null ? customerGroups : new ArrayList<>());
 
 		return "accounts/user_coa_management";
 	}
@@ -270,6 +274,158 @@ public class AccountDefinitionModulesController {
 		}
 
 		return "redirect:/accounts/user-coa-management?userId=" + userId;
+	}
+
+	@GetMapping("/api/user-coa-management/allocated/{userId}")
+	@ResponseBody
+	public Map<String, Object> getAllocatedCoaForUser(@PathVariable("userId") Integer userId) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserChartOfAccount') " +
+					"CREATE TABLE UserChartOfAccount (UserId INT, AccountCode VARCHAR(50), PRIMARY KEY (UserId, AccountCode))");
+			List<String> codes = jdbcTemplate.queryForList(
+					"SELECT AccountCode FROM UserChartOfAccount WHERE UserId = ?", String.class, userId);
+			res.put("success", true);
+			res.put("allocatedAccountCodes", codes != null ? codes : new ArrayList<>());
+		} catch (Exception e) {
+			res.put("success", true);
+			res.put("allocatedAccountCodes", new ArrayList<>());
+		}
+		return res;
+	}
+
+	@PostMapping("/api/user-coa-management/allocate")
+	@ResponseBody
+	public Map<String, Object> allocateCoaToUser(
+			@RequestParam("userId") Integer userId,
+			@RequestBody List<String> accountCodes) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserChartOfAccount') " +
+					"CREATE TABLE UserChartOfAccount (UserId INT, AccountCode VARCHAR(50), PRIMARY KEY (UserId, AccountCode))");
+			jdbcTemplate.update("DELETE FROM UserChartOfAccount WHERE UserId = ?", userId);
+			if (accountCodes != null && !accountCodes.isEmpty()) {
+				for (String code : accountCodes) {
+					if (code != null && !code.isBlank()) {
+						jdbcTemplate.update("INSERT INTO UserChartOfAccount (UserId, AccountCode) VALUES (?, ?)", userId, code.trim());
+					}
+				}
+			}
+			res.put("success", true);
+			res.put("message", "User Chart of Accounts Rights saved successfully!");
+		} catch (Exception e) {
+			res.put("success", false);
+			res.put("message", "Error saving User COA Rights: " + e.getMessage());
+		}
+		return res;
+	}
+
+
+	@PostMapping("/api/customer-groups/save")
+	@ResponseBody
+	public Map<String, Object> saveCustomerGroup(
+			@RequestParam(value = "id", required = false) Integer id,
+			@RequestParam("code") String code,
+			@RequestParam("description") String description) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			CustomerGroup group;
+			if (id != null && id > 0) {
+				group = customerGroupRepository.findById(id).orElse(new CustomerGroup());
+			} else {
+				group = new CustomerGroup();
+				group.setId(customerGroupRepository.findMaxId() + 1);
+			}
+			group.setCode(code != null ? code.trim() : "");
+			group.setDescription(description != null ? description.trim() : "");
+			customerGroupRepository.save(group);
+			res.put("success", true);
+			res.put("message", "Customer Group saved successfully!");
+			res.put("group", group);
+		} catch (Exception e) {
+			res.put("success", false);
+			res.put("message", "Error saving Customer Group: " + e.getMessage());
+		}
+		return res;
+	}
+
+	@PostMapping("/api/customer-groups/delete/{id}")
+	@ResponseBody
+	public Map<String, Object> deleteCustomerGroup(@PathVariable("id") Integer id) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			customerGroupRepository.deleteById(id);
+			res.put("success", true);
+			res.put("message", "Customer Group deleted successfully!");
+		} catch (Exception e) {
+			res.put("success", false);
+			res.put("message", "Error deleting Customer Group: " + e.getMessage());
+		}
+		return res;
+	}
+
+	@PostMapping("/api/customer-groups/allocate")
+	@ResponseBody
+	public Map<String, Object> allocateCoaToCustomerGroup(
+			@RequestParam("customerGroupId") Integer customerGroupId,
+			@RequestBody List<String> accountCodes) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'CustomerGroupCOAAllocation') " +
+					"CREATE TABLE CustomerGroupCOAAllocation (CustomerGroupId INT, AccountCode VARCHAR(50), PRIMARY KEY (CustomerGroupId, AccountCode))");
+			jdbcTemplate.update("DELETE FROM CustomerGroupCOAAllocation WHERE CustomerGroupId = ?", customerGroupId);
+			if (accountCodes != null && !accountCodes.isEmpty()) {
+				for (String code : accountCodes) {
+					if (code != null && !code.isBlank()) {
+						jdbcTemplate.update("INSERT INTO CustomerGroupCOAAllocation (CustomerGroupId, AccountCode) VALUES (?, ?)", customerGroupId, code.trim());
+					}
+				}
+			}
+			res.put("success", true);
+			res.put("message", "COA Accounts allocated to Customer Group successfully!");
+		} catch (Exception e) {
+			res.put("success", false);
+			res.put("message", "Error allocating COA to Customer Group: " + e.getMessage());
+		}
+		return res;
+	}
+
+	@GetMapping("/api/customer-groups/allocated/{customerGroupId}")
+	@ResponseBody
+	public Map<String, Object> getAllocatedCoaForCustomerGroup(@PathVariable("customerGroupId") Integer customerGroupId) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			List<String> codes = jdbcTemplate.queryForList(
+					"SELECT AccountCode FROM CustomerGroupCOAAllocation WHERE CustomerGroupId = ?", String.class, customerGroupId);
+			res.put("success", true);
+			res.put("allocatedAccountCodes", codes != null ? codes : new ArrayList<>());
+		} catch (Exception e) {
+			res.put("success", true);
+			res.put("allocatedAccountCodes", new ArrayList<>());
+		}
+		return res;
+	}
+
+	@GetMapping("/api/user-coa-management/history/{userId}")
+	@ResponseBody
+	public Map<String, Object> getUserCoaHistory(@PathVariable("userId") Integer userId) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			String sql = "SELECT u.UserName, u.FirstName + ' ' + u.LastName as FullName, " +
+					"coa.AccountCode, coa.AccountTitle, ucoa.UserId " +
+					"FROM UserChartOfAccount ucoa " +
+					"JOIN UserAccount u ON ucoa.UserId = u.ID " +
+					"JOIN ChartofAccount coa ON ucoa.AccountCode = coa.AccountCode " +
+					(userId > 0 ? "WHERE ucoa.UserId = " + userId + " " : "") +
+					"ORDER BY u.UserName, coa.AccountCode";
+			List<Map<String, Object>> history = jdbcTemplate.queryForList(sql);
+			res.put("success", true);
+			res.put("history", history);
+		} catch (Exception e) {
+			res.put("success", true);
+			res.put("history", new ArrayList<>());
+		}
+		return res;
 	}
 
 	// ==========================================
@@ -337,18 +493,25 @@ public class AccountDefinitionModulesController {
 
 		try {
 			String sql = "SELECT coa.ID as id, coa.AccountCode as accountCode, coa.AccountTitle as accountTitle, " +
-					"ISNULL(aob.YearObDebit, 0) as yearObDebit, ISNULL(aob.YearObCredit, 0) as yearObCredit, " +
-					"ISNULL(aob.OpeningBalance, 0) as openingBalance " +
+					"act.AccountType as accountType, pcoa.AccountTitle as parentAccountTitle, " +
+					"COALESCE(NULLIF(aob.YearObDebit, 0), NULLIF(coa.YearObDebit, 0), 0) as yearObDebit, " +
+					"COALESCE(NULLIF(aob.YearObCredit, 0), NULLIF(coa.YearObCredit, 0), 0) as yearObCredit, " +
+					"COALESCE(NULLIF(aob.OpeningBalance, 0), 0) as openingBalance " +
 					"FROM ChartofAccount coa " +
-					"LEFT JOIN AccountsOpeningBalances aob ON (aob.ChartOfAccountId = coa.ID OR aob.AccountCode = coa.AccountCode) " +
+					"LEFT JOIN AccountType act ON coa.AccountTypeId = act.Id " +
+					"LEFT JOIN ChartofAccount pcoa ON coa.ParentAccountId = pcoa.ID " +
+					"LEFT JOIN AccountsOpeningBalances aob ON (aob.ChartOfAccountId = coa.ID OR aob.AccountCode = coa.AccountCode OR aob.ChartOfAccountTitle = coa.AccountTitle) " +
 					"WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) " +
-					"ORDER BY coa.AccountCode";
+					"ORDER BY coa.AccountTitle, coa.AccountCode";
 
 			List<java.util.Map<String, Object>> dbRows = jdbcTemplate.queryForList(sql);
 			for (java.util.Map<String, Object> r : dbRows) {
 				OpeningBalanceRow row = new OpeningBalanceRow();
+				row.setAccountId(r.get("id") != null ? ((Number) r.get("id")).intValue() : 0);
 				row.setAccountCode(r.get("accountCode") != null ? r.get("accountCode").toString() : "");
 				row.setAccountTitle(r.get("accountTitle") != null ? r.get("accountTitle").toString() : "");
+				row.setAccountType(r.get("accountType") != null ? r.get("accountType").toString() : "Detail Account");
+				row.setParentAccountTitle(r.get("parentAccountTitle") != null ? r.get("parentAccountTitle").toString() : "");
 
 				double debit = r.get("yearObDebit") != null ? ((Number) r.get("yearObDebit")).doubleValue() : 0.0;
 				double credit = r.get("yearObCredit") != null ? ((Number) r.get("yearObCredit")).doubleValue() : 0.0;
@@ -367,8 +530,10 @@ public class AccountDefinitionModulesController {
 			List<ChartofAccount> detailAccounts = chartofAccountService.getDetailAccounts();
 			for (ChartofAccount acc : detailAccounts) {
 				OpeningBalanceRow r = new OpeningBalanceRow();
+				r.setAccountId(acc.getId());
 				r.setAccountCode(acc.getAccountCode());
 				r.setAccountTitle(acc.getAccountTitle());
+				r.setAccountType("Detail Account");
 				r.setOpeningDebit(0.0);
 				r.setOpeningCredit(0.0);
 				rows.add(r);
@@ -387,6 +552,9 @@ public class AccountDefinitionModulesController {
 		if (form != null && form.getRows() != null) {
 			for (OpeningBalanceRow r : form.getRows()) {
 				if (r.getAccountCode() != null && !r.getAccountCode().trim().isEmpty()) {
+					double d = r.getOpeningDebitValue();
+					double c = r.getOpeningCreditValue();
+
 					AccountOpeningBalance ob = accountOpeningBalanceRepository.findByAccountCode(r.getAccountCode());
 					if (ob == null) {
 						Integer maxId = accountOpeningBalanceRepository.findMaxId();
@@ -394,9 +562,14 @@ public class AccountDefinitionModulesController {
 						ob.setId(maxId != null ? maxId + 1 : 1);
 						ob.setAccountCode(r.getAccountCode());
 					}
-					ob.setYearObDebit(r.getOpeningDebit() != null ? r.getOpeningDebit() : 0.0);
-					ob.setYearObCredit(r.getOpeningCredit() != null ? r.getOpeningCredit() : 0.0);
+					ob.setYearObDebit(d);
+					ob.setYearObCredit(c);
 					accountOpeningBalanceRepository.save(ob);
+
+					try {
+						jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE AccountCode = ? OR ChartOfAccountId = (SELECT ID FROM ChartofAccount WHERE AccountCode = ?)", d, c, (d - c), r.getAccountCode(), r.getAccountCode());
+						jdbcTemplate.update("UPDATE ChartofAccount SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE AccountCode = ?", d, c, (d - c), r.getAccountCode());
+					} catch (Exception ignored) {}
 				}
 			}
 		}
@@ -411,6 +584,9 @@ public class AccountDefinitionModulesController {
 			@RequestParam(value = "creditAmount", defaultValue = "0.0") Double creditAmount) {
 		java.util.Map<String, Object> res = new java.util.HashMap<>();
 		try {
+			double d = debitAmount != null ? debitAmount : 0.0;
+			double c = creditAmount != null ? creditAmount : 0.0;
+
 			AccountOpeningBalance ob = accountOpeningBalanceRepository.findByAccountCode(accountCode);
 			if (ob == null) {
 				Integer maxId = accountOpeningBalanceRepository.findMaxId();
@@ -418,9 +594,15 @@ public class AccountDefinitionModulesController {
 				ob.setId(maxId != null ? maxId + 1 : 1);
 				ob.setAccountCode(accountCode);
 			}
-			ob.setYearObDebit(debitAmount != null ? debitAmount : 0.0);
-			ob.setYearObCredit(creditAmount != null ? creditAmount : 0.0);
+			ob.setYearObDebit(d);
+			ob.setYearObCredit(c);
 			accountOpeningBalanceRepository.save(ob);
+
+			try {
+				jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE AccountCode = ? OR ChartOfAccountId = (SELECT ID FROM ChartofAccount WHERE AccountCode = ?)", d, c, (d - c), accountCode, accountCode);
+				jdbcTemplate.update("UPDATE ChartofAccount SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE AccountCode = ?", d, c, (d - c), accountCode);
+			} catch (Exception ignored) {}
+
 			res.put("success", true);
 		} catch (Exception e) {
 			res.put("success", false);
@@ -428,6 +610,7 @@ public class AccountDefinitionModulesController {
 		}
 		return res;
 	}
+
 
 	@GetMapping("/opening_balance/print")
 	@ResponseBody
@@ -712,18 +895,30 @@ public class AccountDefinitionModulesController {
 	}
 
 	public static class OpeningBalanceRow {
+		private Integer accountId;
 		private String accountCode;
 		private String accountTitle;
+		private String accountType;
+		private String parentAccountTitle;
 		private Double openingDebit = 0.0;
 		private Double openingCredit = 0.0;
 
+		public Integer getAccountId() { return accountId; }
+		public void setAccountId(Integer accountId) { this.accountId = accountId; }
 		public String getAccountCode() { return accountCode; }
 		public void setAccountCode(String accountCode) { this.accountCode = accountCode; }
 		public String getAccountTitle() { return accountTitle; }
 		public void setAccountTitle(String accountTitle) { this.accountTitle = accountTitle; }
+		public String getAccountType() { return accountType; }
+		public void setAccountType(String accountType) { this.accountType = accountType; }
+		public String getParentAccountTitle() { return parentAccountTitle; }
+		public void setParentAccountTitle(String parentAccountTitle) { this.parentAccountTitle = parentAccountTitle; }
 		public Double getOpeningDebit() { return openingDebit; }
 		public void setOpeningDebit(Double openingDebit) { this.openingDebit = openingDebit; }
 		public Double getOpeningCredit() { return openingCredit; }
 		public void setOpeningCredit(Double openingCredit) { this.openingCredit = openingCredit; }
+		public Double getOpeningDebitValue() { return openingDebit != null ? openingDebit : 0.0; }
+		public Double getOpeningCreditValue() { return openingCredit != null ? openingCredit : 0.0; }
 	}
+
 }

@@ -7,6 +7,7 @@
     <title>PDC Management - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
         .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -15,77 +16,324 @@
         .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
         .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
         .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .btn-erp-danger { background-color: #dc3545; color: white; border: 1px solid #bd2130; }
+        .btn-erp-danger:hover { background-color: #c82333; color: white; }
         .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
         .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
         .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
         .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .grid-container { height: 440px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
         .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
         .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
+        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <div class="erp-header">
-        <div><i class="fa fa-university"></i> PDC Management</div>
+        <div><i class="fa fa-calendar-check-o"></i> Post Dated Cheque Management (PdcBank - Banking Management)</div>
         <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
     </div>
+    
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
-        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-save"></i> Save</button>
-        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Refresh</button>
-        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="btn-erp" id="btnUpdate"><i class="fa fa-pencil"></i> Update</button>
+        <button type="button" class="btn-erp btn-erp-danger" id="btnDelete"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
     </div>
+
     <div style="padding: 10px;">
+        <input type="hidden" id="pdcId" value="" />
+
         <div class="erp-fieldset">
-            <legend>PDC Management Form Controls</legend>
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label-erp">Select Bank Account</label>
-                    <select class="form-control-erp">
-                        <option value="">-- Select Bank Account --</option>
-                        <option value="1">MEEZAN BANK - A/C 010293847</option>
-                        <option value="2">HABIB BANK LIMITED - A/C 9948271</option>
+            <legend>Post Dated Cheque Information</legend>
+            <div class="row" style="margin-bottom: 6px;">
+                <div class="col-md-2">
+                    <label class="form-label-erp">Cheque Type *</label>
+                    <select id="chequeType" class="form-control-erp">
+                        <option value="Received">PDC Received</option>
+                        <option value="Issued">PDC Issued</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label-erp">Date Period</label>
-                    <input type="date" class="form-control-erp" value="2026-09-07"/>
+                    <label class="form-label-erp">Bank Account *</label>
+                    <select id="bankAccountId" class="form-control-erp select2">
+                        <option value="">-- Select Bank Account --</option>
+                        <option th:each="acc : ${bankAccountsList}" th:value="${acc.id}" th:text="${acc.accountTitle}"></option>
+                    </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label-erp">Reference / Cheque No</label>
-                    <input type="text" class="form-control-erp" placeholder="Enter reference..."/>
+                    <label class="form-label-erp">Party Account *</label>
+                    <select id="partyAccountId" class="form-control-erp select2">
+                        <option value="">-- Select Party Account --</option>
+                        <option th:each="acc : ${bankAccountsList}" th:value="${acc.id}" th:text="${acc.accountTitle}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Cheque No *</label>
+                    <input type="text" id="chequeNo" class="form-control-erp" placeholder="e.g. CHQ-99120" />
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom: 6px;">
+                <div class="col-md-3">
+                    <label class="form-label-erp">Cheque Date</label>
+                    <input type="date" id="chequeDate" class="form-control-erp" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Deposit Date</label>
+                    <input type="date" id="depositDate" class="form-control-erp" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Clearing Date</label>
+                    <input type="date" id="clearingDate" class="form-control-erp" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Amount (PKR) *</label>
+                    <input type="number" step="0.01" id="amount" class="form-control-erp" placeholder="0.00" style="text-align: right; font-weight: bold;" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label-erp">Status</label>
+                    <select id="status" class="form-control-erp">
+                        <option value="Pending">Pending</option>
+                        <option value="Cleared">Cleared</option>
+                        <option value="Bounced">Bounced</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-9">
+                    <label class="form-label-erp">Remarks / Notes</label>
+                    <input type="text" id="remarks" class="form-control-erp" placeholder="Cheque transaction notes..." />
                 </div>
             </div>
         </div>
 
         <div class="erp-fieldset">
-            <legend>PDC Management Records Grid</legend>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">Date</th>
-                        <th style="width: 15%;">Cheque / Ref No</th>
-                        <th style="width: 25%;">Account / Payee</th>
-                        <th style="width: 20%;">Description</th>
-                        <th style="width: 15%; text-align: right;">Amount (PKR)</th>
-                        <th style="width: 15%; text-align: center;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>2026-09-07</td>
-                        <td style="font-weight: bold; color: #00796B;">CHQ-882104</td>
-                        <td>AL-FATATEH TRADERS</td>
-                        <td>Payment against Invoice #1042</td>
-                        <td style="text-align: right; font-weight: bold;">150,000.00</td>
-                        <td style="text-align: center;"><span class="label label-success">Active / Valid</span></td>
-                    </tr>
-                </tbody>
-            </table>
+            <legend>PDC Register Records</legend>
+            <div class="grid-container">
+                <table class="erp-table" id="pdcGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">ID</th>
+                            <th style="width: 10%;">Cheque No</th>
+                            <th style="width: 10%;">Type</th>
+                            <th style="width: 20%;">Bank Account</th>
+                            <th style="width: 20%;">Party Account</th>
+                            <th style="width: 10%;">Cheque Date</th>
+                            <th style="width: 12%; text-align: right;">Amount (PKR)</th>
+                            <th style="width: 13%; text-align: center;">Status</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="4" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="5" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="6" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="7" placeholder="Filter..." /></th>
+                        </tr>
+                    </thead>
+                    <tbody id="pdcGridBody">
+                        <tr><td colspan="8" style="text-align:center;">Loading PDC records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
+    <script>
+        var pdcData = [];
+
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            var today = new Date().toISOString().split('T')[0];
+            $('#chequeDate, #depositDate, #clearingDate').val(today);
+
+            loadPdcGrid();
+
+            $('#btnNew').click(function() { resetForm(); });
+            $('#btnSave, #btnUpdate').click(function() { savePdc(); });
+            $('#btnDelete').click(function() { deletePdc(); });
+            $('#btnRefresh').click(function() { loadPdcGrid(); });
+
+            $('.filter-row input').on('keyup change', function() {
+                filterGrid();
+            });
+        });
+
+        function loadPdcGrid() {
+            $.ajax({
+                url: '/api/banking/pdc/list',
+                type: 'GET',
+                success: function(data) {
+                    pdcData = data || [];
+                    renderGrid(pdcData);
+                },
+                error: function() {
+                    $('#pdcGridBody').html('<tr><td colspan="8" style="text-align:center; color:red;">Failed to load PDC records.</td></tr>');
+                }
+            });
+        }
+
+        function renderGrid(list) {
+            var html = '';
+            if(!list || list.length === 0) {
+                html = '<tr><td colspan="8" style="text-align:center;">No PDC records found.</td></tr>';
+            } else {
+                $.each(list, function(idx, item) {
+                    var amt = parseFloat(item.amount || 0);
+                    var badgeClass = 'label-warning';
+                    if(item.status === 'Cleared') badgeClass = 'label-success';
+                    else if(item.status === 'Bounced') badgeClass = 'label-danger';
+                    else if(item.status === 'Cancelled') badgeClass = 'label-default';
+
+                    html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
+                    html += '<td>' + (item.id || '') + '</td>';
+                    html += '<td><strong>' + (item.chequeNo || '') + '</strong></td>';
+                    html += '<td>' + (item.chequeType || 'Received') + '</td>';
+                    html += '<td>' + (item.bankName || ('Account #' + item.bankAccountId)) + '</td>';
+                    html += '<td>' + (item.partyAccountTitle || ('Account #' + item.partyAccountId)) + '</td>';
+                    html += '<td>' + (item.chequeDate || '') + '</td>';
+                    html += '<td style="text-align:right; font-weight:bold;">' + amt.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
+                    html += '<td style="text-align:center;"><span class="label ' + badgeClass + '">' + (item.status || 'Pending') + '</span></td>';
+                    html += '</tr>';
+                });
+            }
+            $('#pdcGridBody').html(html);
+        }
+
+        function selectRow(tr, idx) {
+            $('#pdcGridBody tr').removeClass('selected');
+            $(tr).addClass('selected');
+            var item = pdcData[idx];
+            if(item) {
+                $('#pdcId').val(item.id);
+                $('#chequeType').val(item.chequeType || 'Received');
+                $('#bankAccountId').val(item.bankAccountId).trigger('change');
+                $('#partyAccountId').val(item.partyAccountId).trigger('change');
+                $('#chequeNo').val(item.chequeNo || '');
+                $('#chequeDate').val(item.chequeDate || '');
+                $('#depositDate').val(item.depositDate || '');
+                $('#clearingDate').val(item.clearingDate || '');
+                $('#amount').val(item.amount || '0.00');
+                $('#status').val(item.status || 'Pending');
+                $('#remarks').val(item.remarks || '');
+            }
+        }
+
+        function resetForm() {
+            var today = new Date().toISOString().split('T')[0];
+            $('#pdcId').val('');
+            $('#chequeType').val('Received');
+            $('#bankAccountId').val('').trigger('change');
+            $('#partyAccountId').val('').trigger('change');
+            $('#chequeNo').val('');
+            $('#chequeDate').val(today);
+            $('#depositDate').val(today);
+            $('#clearingDate').val(today);
+            $('#amount').val('');
+            $('#status').val('Pending');
+            $('#remarks').val('');
+            $('#pdcGridBody tr').removeClass('selected');
+        }
+
+        function savePdc() {
+            var chequeNo = $('#chequeNo').val().trim();
+            var amount = $('#amount').val();
+            if(!chequeNo) {
+                alert('Please enter Cheque Number.');
+                $('#chequeNo').focus();
+                return;
+            }
+            if(!amount || parseFloat(amount) <= 0) {
+                alert('Please enter a valid Cheque Amount.');
+                $('#amount').focus();
+                return;
+            }
+
+            var payload = {
+                id: $('#pdcId').val() ? parseInt($('#pdcId').val()) : null,
+                chequeType: $('#chequeType').val(),
+                bankAccountId: $('#bankAccountId').val() ? parseInt($('#bankAccountId').val()) : 0,
+                partyAccountId: $('#partyAccountId').val() ? parseInt($('#partyAccountId').val()) : 0,
+                chequeNo: chequeNo,
+                chequeDate: $('#chequeDate').val(),
+                depositDate: $('#depositDate').val(),
+                clearingDate: $('#clearingDate').val(),
+                amount: parseFloat(amount),
+                status: $('#status').val(),
+                remarks: $('#remarks').val()
+            };
+
+            $.ajax({
+                url: '/api/banking/pdc/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    alert('PDC Record saved successfully!');
+                    resetForm();
+                    loadPdcGrid();
+                },
+                error: function(xhr) {
+                    alert('Failed to save PDC: ' + (xhr.responseText || 'Error occurred'));
+                }
+            });
+        }
+
+        function deletePdc() {
+            var id = $('#pdcId').val();
+            if(!id) {
+                alert('Please select a PDC record to delete.');
+                return;
+            }
+            if(confirm('Are you sure you want to delete PDC record #' + id + '?')) {
+                $.ajax({
+                    url: '/api/banking/pdc/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        alert('PDC record deleted successfully!');
+                        resetForm();
+                        loadPdcGrid();
+                    },
+                    error: function(xhr) {
+                        alert('Failed to delete: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        function filterGrid() {
+            var filters = [];
+            $('.filter-row input').each(function() {
+                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
+            });
+
+            $('#pdcGridBody tr').each(function() {
+                var row = $(this);
+                var show = true;
+                $.each(filters, function(i, f) {
+                    if(f.val) {
+                        var text = row.find('td').eq(f.col).text().toLowerCase();
+                        if(text.indexOf(f.val) === -1) {
+                            show = false;
+                            return false;
+                        }
+                    }
+                });
+                row.toggle(show);
+            });
+        }
+    </script>
 </body>
 </html>

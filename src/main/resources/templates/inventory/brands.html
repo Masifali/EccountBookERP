@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Define Brand - EccountBookERP</title>
+    <title>Define Brands - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <style>
@@ -15,115 +15,226 @@
         .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
         .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
         .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .btn-erp-danger { background-color: #dc2626; color: white; border: 1px solid #991b1b; }
-        .btn-erp-danger:hover { background-color: #991b1b; color: white; }
+        .btn-erp-danger { background-color: #dc3545; color: white; border: 1px solid #bd2130; }
+        .btn-erp-danger:hover { background-color: #c82333; color: white; }
         .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
         .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
         .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
         .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .grid-container { height: 440px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
         .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
         .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
+        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
+        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <div class="erp-header">
-        <div><i class="fa fa-tags"></i> Define Brand</div>
-        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory</a></div>
+        <div><i class="fa fa-bookmark-o"></i> Define Brand (InvenBrand - Inventory Management)</div>
+        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory Dashboard</a></div>
     </div>
+    
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp" onclick="resetForm()"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
-        <button type="button" class="btn-erp btn-erp-primary" onclick="submitSave()"><i class="fa fa-save"></i> Save (Ctrl+S)</button>
-        <button type="button" class="btn-erp btn-erp-danger" onclick="submitDelete()"><i class="fa fa-trash"></i> Delete</button>
-        <button type="button" class="btn-erp" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="btn-erp" id="btnUpdate"><i class="fa fa-pencil"></i> Update</button>
+        <button type="button" class="btn-erp btn-erp-danger" id="btnDelete"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
     </div>
+
     <div style="padding: 10px;">
-        <form th:action="@{/inventory/brands/save}" th:object="${brand}" method="post" id="brandForm">
-            <input type="hidden" th:field="*{id}" id="txtBrandId"/>
-            <div class="erp-fieldset">
-                <legend>Brand Definition</legend>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Brand Code</label>
-                        <input type="text" th:field="*{brandCode}" id="txtBrandCode" class="form-control-erp" placeholder="e.g. BR-001" required/>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label-erp">Brand Name</label>
-                        <input type="text" th:field="*{brandName}" id="txtBrandName" class="form-control-erp" placeholder="Enter Brand Name" required/>
-                    </div>
-                    <div class="col-md-3" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
-                        <label style="font-weight: 600; cursor: pointer;">
-                            <input type="checkbox" th:field="*{isActive}" id="chkIsActive"/> Active Brand
-                        </label>
-                    </div>
+        <input type="hidden" id="brandId" value="" />
+
+        <div class="erp-fieldset">
+            <legend>Brand Information</legend>
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label-erp">Brand Code *</label>
+                    <input type="text" id="brandCode" class="form-control-erp" placeholder="e.g. BRD-01" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-erp">Brand Name / Title *</label>
+                    <input type="text" id="brandName" class="form-control-erp" placeholder="e.g. Super Kernel Brand" />
+                </div>
+                <div class="col-md-3" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                    <label style="font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="brandStatus" checked="checked" /> Active Brand
+                    </label>
                 </div>
             </div>
+        </div>
 
-            <div class="erp-fieldset">
-                <legend>Brands List</legend>
-                <table class="erp-table">
+        <div class="erp-fieldset">
+            <legend>Brands Master Records</legend>
+            <div class="grid-container">
+                <table class="erp-table" id="brandGrid">
                     <thead>
                         <tr>
-                            <th style="width: 5%; text-align: center;">Sr #</th>
+                            <th style="width: 10%;">ID</th>
                             <th style="width: 25%;">Brand Code</th>
                             <th style="width: 50%;">Brand Name</th>
-                            <th style="width: 20%; text-align: center;">Status</th>
+                            <th style="width: 15%; text-align: center;">Status</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr th:each="b, stat : ${brands}" th:attr="onclick='selectBrand(' + ${b.id} + ', \'' + ${b.brandCode} + '\', \'' + ${b.brandName} + '\', ' + ${b.isActive} + ')'">
-                            <td style="text-align: center;" th:text="${stat.index + 1}"></td>
-                            <td th:text="${b.brandCode}"></td>
-                            <td th:text="${b.brandName}"></td>
-                            <td style="text-align: center;">
-                                <span class="badge" th:style="${b.isActive} ? 'background-color:#166534;' : 'background-color:#dc2626;'" th:text="${b.isActive} ? 'Active' : 'Inactive'"></span>
-                            </td>
-                        </tr>
-                        <tr th:if="${brands == null or brands.isEmpty()}">
-                            <td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">No brands defined yet.</td>
-                        </tr>
+                    <tbody id="brandGridBody">
+                        <tr><td colspan="4" style="text-align:center;">Loading brands...</td></tr>
                     </tbody>
                 </table>
             </div>
-        </form>
+        </div>
     </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script>
-        function resetForm() {
-            $('#txtBrandId').val('0');
-            $('#txtBrandCode').val('');
-            $('#txtBrandName').val('');
-            $('#chkIsActive').prop('checked', true);
+        var brandData = [];
+
+        $(document).ready(function() {
+            loadBrandGrid();
+
+            $('#btnNew').click(function() { resetForm(); });
+            $('#btnSave, #btnUpdate').click(function() { saveBrand(); });
+            $('#btnDelete').click(function() { deleteBrand(); });
+            $('#btnRefresh').click(function() { loadBrandGrid(); });
+
+            $('.filter-row input').on('keyup change', function() {
+                filterGrid();
+            });
+        });
+
+        function loadBrandGrid() {
+            $.ajax({
+                url: '/api/inventory/brands/list',
+                type: 'GET',
+                success: function(data) {
+                    brandData = data || [];
+                    renderGrid(brandData);
+                },
+                error: function() {
+                    $('#brandGridBody').html('<tr><td colspan="4" style="text-align:center; color:red;">Failed to load brands.</td></tr>');
+                }
+            });
         }
 
-        function selectBrand(id, code, name, active) {
-            $('#txtBrandId').val(id);
-            $('#txtBrandCode').val(code);
-            $('#txtBrandName').val(name);
-            $('#chkIsActive').prop('checked', active);
+        function renderGrid(list) {
+            var html = '';
+            if(!list || list.length === 0) {
+                html = '<tr><td colspan="4" style="text-align:center;">No Brand records found.</td></tr>';
+            } else {
+                $.each(list, function(idx, item) {
+                    html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
+                    html += '<td>' + (item.id || '') + '</td>';
+                    html += '<td>' + (item.brandCode || '') + '</td>';
+                    html += '<td><strong>' + (item.brandName || '') + '</strong></td>';
+                    html += '<td style="text-align:center;">' + (item.brandStatus !== false ? '<span class="label label-success">Active</span>' : '<span class="label label-default">Inactive</span>') + '</td>';
+                    html += '</tr>';
+                });
+            }
+            $('#brandGridBody').html(html);
         }
 
-        function submitSave() {
-            if (!$('#txtBrandName').val()) { alert('Please enter Brand Name.'); return; }
-            $('#brandForm').submit();
-        }
-
-        function submitDelete() {
-            const id = $('#txtBrandId').val();
-            if (!id || id === '0') { alert('Please select a brand to delete.'); return; }
-            if (confirm('Are you sure you want to delete this brand?')) {
-                window.location.href = '/inventory/brands/delete/' + id;
+        function selectRow(tr, idx) {
+            $('#brandGridBody tr').removeClass('selected');
+            $(tr).addClass('selected');
+            var item = brandData[idx];
+            if(item) {
+                $('#brandId').val(item.id);
+                $('#brandCode').val(item.brandCode || '');
+                $('#brandName').val(item.brandName || '');
+                $('#brandStatus').prop('checked', item.brandStatus !== false);
             }
         }
 
-        $(document).keydown(function(e) {
-            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetForm(); }
-            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); submitSave(); }
-        });
+        function resetForm() {
+            $('#brandId').val('');
+            $('#brandCode').val('');
+            $('#brandName').val('');
+            $('#brandStatus').prop('checked', true);
+            $('#brandGridBody tr').removeClass('selected');
+        }
+
+        function saveBrand() {
+            var name = $('#brandName').val().trim();
+            if(!name) {
+                alert('Please enter Brand Name.');
+                $('#brandName').focus();
+                return;
+            }
+
+            var payload = {
+                id: $('#brandId').val() ? parseInt($('#brandId').val()) : null,
+                brandCode: $('#brandCode').val(),
+                brandName: name,
+                brandStatus: $('#brandStatus').is(':checked')
+            };
+
+            $.ajax({
+                url: '/api/inventory/brands/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    alert('Brand saved successfully!');
+                    resetForm();
+                    loadBrandGrid();
+                },
+                error: function(xhr) {
+                    alert('Failed to save Brand: ' + (xhr.responseText || 'Error occurred'));
+                }
+            });
+        }
+
+        function deleteBrand() {
+            var id = $('#brandId').val();
+            if(!id) {
+                alert('Please select a Brand from grid to delete.');
+                return;
+            }
+            if(confirm('Are you sure you want to delete Brand #' + id + '?')) {
+                $.ajax({
+                    url: '/api/inventory/brands/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        alert('Brand deleted successfully!');
+                        resetForm();
+                        loadBrandGrid();
+                    },
+                    error: function(xhr) {
+                        alert('Failed to delete brand: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        function filterGrid() {
+            var filters = [];
+            $('.filter-row input').each(function() {
+                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
+            });
+
+            $('#brandGridBody tr').each(function() {
+                var row = $(this);
+                var show = true;
+                $.each(filters, function(i, f) {
+                    if(f.val) {
+                        var text = row.find('td').eq(f.col).text().toLowerCase();
+                        if(text.indexOf(f.val) === -1) {
+                            show = false;
+                            return false;
+                        }
+                    }
+                });
+                row.toggle(show);
+            });
+        }
     </script>
 </body>
 </html>

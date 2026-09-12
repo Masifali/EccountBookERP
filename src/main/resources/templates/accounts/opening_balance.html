@@ -207,6 +207,14 @@
             z-index: 10;
         }
 
+        .erp-table tr.filter-row th {
+            background-color: #eff6ff;
+            padding: 2px 4px;
+            position: sticky;
+            top: 28px;
+            z-index: 9;
+        }
+
         .erp-table th.num-col, .erp-table td.num-col {
             text-align: right;
         }
@@ -272,8 +280,8 @@
                         <option value="">(Select Account Title...)</option>
                         <option th:each="r : ${form.rows}" 
                                 th:value="${r.accountCode}" 
-                                th:data-debit="${r.openingDebit}" 
-                                th:data-credit="${r.openingCredit}"
+                                th:data-debit="${r.openingDebitValue}" 
+                                th:data-credit="${r.openingCreditValue}"
                                 th:text="${r.accountTitle}">
                         </option>
                     </select>
@@ -282,13 +290,13 @@
                 <!-- Debit Amount Input -->
                 <div class="form-item-custom">
                     <label for="txtDebitAmount">Debit Amount</label>
-                    <input type="number" step="0.01" id="txtDebitAmount" class="form-control-erp" style="width: 110px; text-align: right;" value="0.00"/>
+                    <input type="number" step="0.01" id="txtDebitAmount" class="form-control-erp" style="width: 110px; text-align: right;" value="0"/>
                 </div>
 
                 <!-- Credit Amount Input -->
                 <div class="form-item-custom">
                     <label for="txtCreditAmount">Credit Amount</label>
-                    <input type="number" step="0.01" id="txtCreditAmount" class="form-control-erp" style="width: 110px; text-align: right;" value="0.00"/>
+                    <input type="number" step="0.01" id="txtCreditAmount" class="form-control-erp" style="width: 110px; text-align: right;" value="0"/>
                 </div>
 
                 <!-- Update Single Button -->
@@ -308,33 +316,43 @@
                 <table id="tblOpeningBalances" class="erp-table">
                     <thead>
                         <tr>
-                            <th style="width: 180px;">Account Type</th>
+                            <th style="width: 160px;">Account Type</th>
+                            <th style="width: 220px;">Parent Account Title</th>
                             <th>Account Title</th>
-                            <th class="num-col" style="width: 140px;">Debit Balance</th>
-                            <th class="num-col" style="width: 140px;">Credit Balance</th>
+                            <th class="num-col" style="width: 130px;">Debit Balance</th>
+                            <th class="num-col" style="width: 130px;">Credit Balance</th>
+                        </tr>
+                        <!-- Header Search Filter Row (Ditto Desktop DataGridView Filter Row) -->
+                        <tr class="filter-row">
+                            <th><input type="text" class="form-control-erp col-filter" data-col="0" placeholder="Filter..." style="width:100%;"/></th>
+                            <th><input type="text" class="form-control-erp col-filter" data-col="1" placeholder="Filter parent..." style="width:100%;"/></th>
+                            <th><input type="text" class="form-control-erp col-filter" id="txtFilterTitle" data-col="2" placeholder="Search Account Title (e.g. asif)..." style="width:100%;"/></th>
+                            <th><input type="text" class="form-control-erp col-filter" data-col="3" placeholder="Filter debit..." style="width:100%;"/></th>
+                            <th><input type="text" class="form-control-erp col-filter" data-col="4" placeholder="Filter credit..." style="width:100%;"/></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="row, stat : *{rows}" th:data-code="${row.accountCode}">
-                            <td style="color:#64748b; font-weight:600;">Detail Account</td>
-                            <td style="font-weight:600; color:#1e293b;">
+                        <tr th:each="row, stat : *{rows}" th:data-code="${row.accountCode}" class="row-ob">
+                            <td class="td-type" style="color:#64748b; font-weight:600;" th:text="${row.accountType != null ? row.accountType : 'Detail Account'}">Detail Account</td>
+                            <td class="td-parent" style="color:#475569;" th:text="${row.parentAccountTitle}"></td>
+                            <td class="td-title" style="font-weight:600; color:#1e293b;">
                                 <span th:text="${row.accountTitle}"></span>
                                 <input type="hidden" th:field="*{rows[__${stat.index}__].accountCode}"/>
                                 <input type="hidden" th:field="*{rows[__${stat.index}__].accountTitle}"/>
                             </td>
-                            <td class="num-col">
+                            <td class="num-col td-debit">
                                 <input type="number" step="0.01" class="form-control-erp num-col input-debit" 
-                                       style="width: 130px; display: inline-block;" 
+                                       style="width: 120px; display: inline-block;" 
                                        th:field="*{rows[__${stat.index}__].openingDebit}"/>
                             </td>
-                            <td class="num-col">
+                            <td class="num-col td-credit">
                                 <input type="number" step="0.01" class="form-control-erp num-col input-credit" 
-                                       style="width: 130px; display: inline-block;" 
+                                       style="width: 120px; display: inline-block;" 
                                        th:field="*{rows[__${stat.index}__].openingCredit}"/>
                             </td>
                         </tr>
-                        <tr th:if="${form.rows == null or form.rows.isEmpty()}">
-                            <td colspan="4" style="text-align:center; color:#94a3b8; padding:30px;">No detail accounts defined yet.</td>
+                        <tr th:if="${form.rows == null or form.rows.isEmpty()}" id="trNoData">
+                            <td colspan="5" style="text-align:center; color:#94a3b8; padding:30px;">No detail accounts defined yet.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -360,8 +378,8 @@
                 const $selected = $(this).find('option:selected');
                 const accountCode = $selected.val();
                 if (accountCode) {
-                    const debit = parseFloat($selected.attr('data-debit') || 0.00).toFixed(2);
-                    const credit = parseFloat($selected.attr('data-credit') || 0.00).toFixed(2);
+                    const debit = parseFloat($selected.attr('data-debit') || 0);
+                    const credit = parseFloat($selected.attr('data-credit') || 0);
                     $('#txtDebitAmount').val(debit);
                     $('#txtCreditAmount').val(credit);
 
@@ -373,11 +391,52 @@
                         $targetRow[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                 } else {
-                    $('#txtDebitAmount').val('0.00');
-                    $('#txtCreditAmount').val('0.00');
+                    $('#txtDebitAmount').val('0');
+                    $('#txtCreditAmount').val('0');
                     $('#tblOpeningBalances tbody tr').removeClass('selected-row');
                 }
             });
+
+            // Clicking any row in the table selects it and populates top fields
+            $('#tblOpeningBalances tbody').on('click', 'tr.row-ob', function() {
+                const code = $(this).attr('data-code');
+                if (code) {
+                    $('#selAccountTitle').val(code).trigger('change');
+                }
+            });
+
+            // Live Grid Column Filter Search
+            $('.col-filter').on('keyup change', function() {
+                filterGridRows();
+            });
+
+            function filterGridRows() {
+                const f0 = $('.col-filter[data-col="0"]').val().toLowerCase().trim();
+                const f1 = $('.col-filter[data-col="1"]').val().toLowerCase().trim();
+                const f2 = $('.col-filter[data-col="2"]').val().toLowerCase().trim();
+                const f3 = $('.col-filter[data-col="3"]').val().toLowerCase().trim();
+                const f4 = $('.col-filter[data-col="4"]').val().toLowerCase().trim();
+
+                $('#tblOpeningBalances tbody tr.row-ob').each(function() {
+                    const type = $(this).find('.td-type').text().toLowerCase();
+                    const parent = $(this).find('.td-parent').text().toLowerCase();
+                    const title = $(this).find('.td-title').text().toLowerCase();
+                    const debit = $(this).find('.input-debit').val().toLowerCase();
+                    const credit = $(this).find('.input-credit').val().toLowerCase();
+
+                    const match0 = !f0 || type.includes(f0);
+                    const match1 = !f1 || parent.includes(f1);
+                    const match2 = !f2 || title.includes(f2);
+                    const match3 = !f3 || debit.includes(f3);
+                    const match4 = !f4 || credit.includes(f4);
+
+                    if (match0 && match1 && match2 && match3 && match4) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
 
             // Update Single Button Action
             $('#btnUpdateSingle').click(function () {
@@ -399,7 +458,7 @@
                         creditAmount: creditAmount
                     },
                     success: function (res) {
-                        if (res.success) {
+                        if (res && res.success) {
                             // Update values in dropdown dataset
                             const $opt = $('#selAccountTitle option[value="' + accountCode + '"]');
                             $opt.attr('data-debit', debitAmount);
@@ -408,10 +467,10 @@
                             // Update values in History table row
                             const $row = $('#tblOpeningBalances tbody tr[data-code="' + accountCode + '"]');
                             if ($row.length > 0) {
-                                $row.find('.input-debit').val(debitAmount.toFixed(2));
-                                $row.find('.input-credit').val(creditAmount.toFixed(2));
+                                $row.find('.input-debit').val(debitAmount);
+                                $row.find('.input-credit').val(creditAmount);
                             }
-                            alert('Opening Balance updated successfully for selected account!');
+                            alert('Update record Successfully');
                         } else {
                             alert('Error updating single account: ' + (res.message || 'Server error'));
                         }
@@ -424,6 +483,8 @@
 
             $('#btnNew').click(function () {
                 $('#selAccountTitle').val('').trigger('change');
+                $('.col-filter').val('');
+                filterGridRows();
             });
 
             window.printOpeningBalance = function () {

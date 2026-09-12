@@ -7,6 +7,7 @@
     <title>Bank Detail Definition - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
         .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -15,77 +16,288 @@
         .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
         .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
         .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .btn-erp-danger { background-color: #dc3545; color: white; border: 1px solid #bd2130; }
+        .btn-erp-danger:hover { background-color: #c82333; color: white; }
         .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
         .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
         .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
         .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .grid-container { height: 440px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
         .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
         .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
+        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <div class="erp-header">
-        <div><i class="fa fa-university"></i> Bank Detail Definition</div>
+        <div><i class="fa fa-info-circle"></i> Bank Detail Definition (SupfrmBankDetail - Banking Management)</div>
         <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
     </div>
+    
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
-        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-save"></i> Save</button>
-        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Refresh</button>
-        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="btn-erp" id="btnUpdate"><i class="fa fa-pencil"></i> Update</button>
+        <button type="button" class="btn-erp btn-erp-danger" id="btnDelete"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
     </div>
+
     <div style="padding: 10px;">
+        <input type="hidden" id="detailId" value="" />
+
         <div class="erp-fieldset">
-            <legend>Bank Detail Definition Form Controls</legend>
-            <div class="row">
+            <legend>Bank Account Detail Information</legend>
+            <div class="row" style="margin-bottom: 6px;">
                 <div class="col-md-4">
-                    <label class="form-label-erp">Select Bank Account</label>
-                    <select class="form-control-erp">
+                    <label class="form-label-erp">Bank Account *</label>
+                    <select id="bankAccountId" class="form-control-erp select2">
                         <option value="">-- Select Bank Account --</option>
-                        <option value="1">MEEZAN BANK - A/C 010293847</option>
-                        <option value="2">HABIB BANK LIMITED - A/C 9948271</option>
+                        <option th:each="acc : ${bankAccountsList}" th:value="${acc.id}" th:text="${acc.accountTitle}"></option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label-erp">Date Period</label>
-                    <input type="date" class="form-control-erp" value="2026-09-07"/>
+                    <label class="form-label-erp">Branch Name *</label>
+                    <input type="text" id="branchName" class="form-control-erp" placeholder="e.g. Main Branch Blue Area" />
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label-erp">Reference / Cheque No</label>
-                    <input type="text" class="form-control-erp" placeholder="Enter reference..."/>
+                    <label class="form-label-erp">Account Number *</label>
+                    <input type="text" id="accountNo" class="form-control-erp" placeholder="e.g. 010293847" />
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom: 6px;">
+                <div class="col-md-4">
+                    <label class="form-label-erp">IBAN Number</label>
+                    <input type="text" id="ibanNo" class="form-control-erp" placeholder="e.g. PK36MEZN0000102938" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Swift Code</label>
+                    <input type="text" id="swiftCode" class="form-control-erp" placeholder="e.g. MEZNPKKA" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Contact Person</label>
+                    <input type="text" id="contactPerson" class="form-control-erp" placeholder="Branch Officer Name" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Contact Phone</label>
+                    <input type="text" id="contactPhone" class="form-control-erp" placeholder="Phone Number" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-9">
+                    <label class="form-label-erp">Remarks / Notes</label>
+                    <input type="text" id="remarks" class="form-control-erp" placeholder="Additional account details..." />
+                </div>
+                <div class="col-md-3" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                    <label style="font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="isActive" checked="checked" /> Is Active Account
+                    </label>
                 </div>
             </div>
         </div>
 
         <div class="erp-fieldset">
-            <legend>Bank Detail Definition Records Grid</legend>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">Date</th>
-                        <th style="width: 15%;">Cheque / Ref No</th>
-                        <th style="width: 25%;">Account / Payee</th>
-                        <th style="width: 20%;">Description</th>
-                        <th style="width: 15%; text-align: right;">Amount (PKR)</th>
-                        <th style="width: 15%; text-align: center;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>2026-09-07</td>
-                        <td style="font-weight: bold; color: #00796B;">CHQ-882104</td>
-                        <td>AL-FATATEH TRADERS</td>
-                        <td>Payment against Invoice #1042</td>
-                        <td style="text-align: right; font-weight: bold;">150,000.00</td>
-                        <td style="text-align: center;"><span class="label label-success">Active / Valid</span></td>
-                    </tr>
-                </tbody>
-            </table>
+            <legend>Bank Details Records</legend>
+            <div class="grid-container">
+                <table class="erp-table" id="detailGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">ID</th>
+                            <th style="width: 25%;">Bank Account</th>
+                            <th style="width: 20%;">Branch Name</th>
+                            <th style="width: 15%;">Account No</th>
+                            <th style="width: 15%;">IBAN</th>
+                            <th style="width: 10%;">Contact</th>
+                            <th style="width: 10%; text-align: center;">Status</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="4" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="5" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="6" placeholder="Filter..." /></th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailGridBody">
+                        <tr><td colspan="7" style="text-align:center;">Loading bank details...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
+    <script>
+        var detailData = [];
+
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            loadDetailGrid();
+
+            $('#btnNew').click(function() { resetForm(); });
+            $('#btnSave, #btnUpdate').click(function() { saveDetail(); });
+            $('#btnDelete').click(function() { deleteDetail(); });
+            $('#btnRefresh').click(function() { loadDetailGrid(); });
+
+            $('.filter-row input').on('keyup change', function() {
+                filterGrid();
+            });
+        });
+
+        function loadDetailGrid() {
+            $.ajax({
+                url: '/api/banking/bank-details/list',
+                type: 'GET',
+                success: function(data) {
+                    detailData = data || [];
+                    renderGrid(detailData);
+                },
+                error: function() {
+                    $('#detailGridBody').html('<tr><td colspan="7" style="text-align:center; color:red;">Failed to load data.</td></tr>');
+                }
+            });
+        }
+
+        function renderGrid(list) {
+            var html = '';
+            if(!list || list.length === 0) {
+                html = '<tr><td colspan="7" style="text-align:center;">No Bank Detail records found.</td></tr>';
+            } else {
+                $.each(list, function(idx, item) {
+                    html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
+                    html += '<td>' + (item.id || '') + '</td>';
+                    html += '<td><strong>' + (item.bankAccountTitle || ('Account #' + item.bankAccountId)) + '</strong></td>';
+                    html += '<td>' + (item.branchName || '') + '</td>';
+                    html += '<td>' + (item.accountNo || '') + '</td>';
+                    html += '<td>' + (item.ibanNo || '') + '</td>';
+                    html += '<td>' + (item.contactPerson || item.contactPhone || '') + '</td>';
+                    html += '<td style="text-align:center;">' + (item.isActive ? '<span class="label label-success">Active</span>' : '<span class="label label-default">Inactive</span>') + '</td>';
+                    html += '</tr>';
+                });
+            }
+            $('#detailGridBody').html(html);
+        }
+
+        function selectRow(tr, idx) {
+            $('#detailGridBody tr').removeClass('selected');
+            $(tr).addClass('selected');
+            var item = detailData[idx];
+            if(item) {
+                $('#detailId').val(item.id);
+                $('#bankAccountId').val(item.bankAccountId).trigger('change');
+                $('#branchName').val(item.branchName || '');
+                $('#accountNo').val(item.accountNo || '');
+                $('#ibanNo').val(item.ibanNo || '');
+                $('#swiftCode').val(item.swiftCode || '');
+                $('#contactPerson').val(item.contactPerson || '');
+                $('#contactPhone').val(item.contactPhone || '');
+                $('#remarks').val(item.remarks || '');
+                $('#isActive').prop('checked', item.isActive !== false);
+            }
+        }
+
+        function resetForm() {
+            $('#detailId').val('');
+            $('#bankAccountId').val('').trigger('change');
+            $('#branchName').val('');
+            $('#accountNo').val('');
+            $('#ibanNo').val('');
+            $('#swiftCode').val('');
+            $('#contactPerson').val('');
+            $('#contactPhone').val('');
+            $('#remarks').val('');
+            $('#isActive').prop('checked', true);
+            $('#detailGridBody tr').removeClass('selected');
+        }
+
+        function saveDetail() {
+            var bankAccountId = $('#bankAccountId').val();
+            if(!bankAccountId) {
+                alert('Please select a Bank Account.');
+                $('#bankAccountId').focus();
+                return;
+            }
+
+            var payload = {
+                id: $('#detailId').val() ? parseInt($('#detailId').val()) : null,
+                bankAccountId: parseInt(bankAccountId),
+                branchName: $('#branchName').val(),
+                accountNo: $('#accountNo').val(),
+                ibanNo: $('#ibanNo').val(),
+                swiftCode: $('#swiftCode').val(),
+                contactPerson: $('#contactPerson').val(),
+                contactPhone: $('#contactPhone').val(),
+                remarks: $('#remarks').val(),
+                isActive: $('#isActive').is(':checked')
+            };
+
+            $.ajax({
+                url: '/api/banking/bank-details/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    alert('Bank Detail saved successfully!');
+                    resetForm();
+                    loadDetailGrid();
+                },
+                error: function(xhr) {
+                    alert('Failed to save Bank Detail: ' + (xhr.responseText || 'Error occurred'));
+                }
+            });
+        }
+
+        function deleteDetail() {
+            var id = $('#detailId').val();
+            if(!id) {
+                alert('Please select a Bank Detail record to delete.');
+                return;
+            }
+            if(confirm('Are you sure you want to delete Bank Detail record #' + id + '?')) {
+                $.ajax({
+                    url: '/api/banking/bank-details/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        alert('Bank Detail record deleted successfully!');
+                        resetForm();
+                        loadDetailGrid();
+                    },
+                    error: function(xhr) {
+                        alert('Failed to delete: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        function filterGrid() {
+            var filters = [];
+            $('.filter-row input').each(function() {
+                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
+            });
+
+            $('#detailGridBody tr').each(function() {
+                var row = $(this);
+                var show = true;
+                $.each(filters, function(i, f) {
+                    if(f.val) {
+                        var text = row.find('td').eq(f.col).text().toLowerCase();
+                        if(text.indexOf(f.val) === -1) {
+                            show = false;
+                            return false;
+                        }
+                    }
+                });
+                row.toggle(show);
+            });
+        }
+    </script>
 </body>
 </html>

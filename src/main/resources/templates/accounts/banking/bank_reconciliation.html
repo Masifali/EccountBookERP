@@ -7,6 +7,7 @@
     <title>Bank Reconciliation With Vouchers - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
         .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -19,73 +20,263 @@
         .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
         .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
         .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .grid-container { height: 440px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
         .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
         .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
+        .summary-bar { background-color: #e2e8f0; border: 1px solid #cbd5e1; padding: 6px 12px; font-weight: bold; display: flex; justify-content: space-between; font-size: 11px; border-radius: 3px; }
     </style>
 </head>
 <body>
     <div class="erp-header">
-        <div><i class="fa fa-university"></i> Bank Reconciliation With Vouchers</div>
+        <div><i class="fa fa-calculator"></i> Bank Reconciliation With Vouchers (Architecture.WinApp.Reconciliation)</div>
         <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
     </div>
+    
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
-        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-save"></i> Save</button>
-        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Refresh</button>
-        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnLoadVouchers"><i class="fa fa-search"></i> Load Vouchers</button>
+        <button type="button" class="btn-erp" id="btnSelectAll"><i class="fa fa-check-square-o"></i> Select All</button>
+        <button type="button" class="btn-erp" id="btnUnselectAll"><i class="fa fa-square-o"></i> Unselect All</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnSaveReconcile"><i class="fa fa-save"></i> Save Reconciliation</button>
+        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
     </div>
+
     <div style="padding: 10px;">
         <div class="erp-fieldset">
-            <legend>Bank Reconciliation With Vouchers Form Controls</legend>
+            <legend>Bank Account & Period Selection</legend>
             <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label-erp">Select Bank Account</label>
-                    <select class="form-control-erp">
-                        <option value="">-- Select Bank Account --</option>
-                        <option value="1">MEEZAN BANK - A/C 010293847</option>
-                        <option value="2">HABIB BANK LIMITED - A/C 9948271</option>
+                <div class="col-md-5">
+                    <label class="form-label-erp">Select Bank Account *</label>
+                    <select id="bankAccountId" class="form-control-erp select2">
+                        <option value="">-- All Bank Accounts --</option>
+                        <option th:each="acc : ${bankAccountsList}" th:value="${acc.id}" th:text="${acc.accountTitle}"></option>
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label-erp">Date Period</label>
-                    <input type="date" class="form-control-erp" value="2026-09-07"/>
+                <div class="col-md-3">
+                    <label class="form-label-erp">From Date</label>
+                    <input type="date" id="fromDate" class="form-control-erp" />
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label-erp">Reference / Cheque No</label>
-                    <input type="text" class="form-control-erp" placeholder="Enter reference..."/>
+                <div class="col-md-3">
+                    <label class="form-label-erp">To Date</label>
+                    <input type="date" id="toDate" class="form-control-erp" />
+                </div>
+                <div class="col-md-1" style="display: flex; align-items: flex-end;">
+                    <button type="button" class="btn-erp btn-erp-primary" id="btnFilterGo" style="width: 100%; height: 24px; justify-content: center;">GO</button>
                 </div>
             </div>
         </div>
 
         <div class="erp-fieldset">
-            <legend>Bank Reconciliation With Vouchers Records Grid</legend>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">Date</th>
-                        <th style="width: 15%;">Cheque / Ref No</th>
-                        <th style="width: 25%;">Account / Payee</th>
-                        <th style="width: 20%;">Description</th>
-                        <th style="width: 15%; text-align: right;">Amount (PKR)</th>
-                        <th style="width: 15%; text-align: center;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>2026-09-07</td>
-                        <td style="font-weight: bold; color: #00796B;">CHQ-882104</td>
-                        <td>AL-FATATEH TRADERS</td>
-                        <td>Payment against Invoice #1042</td>
-                        <td style="text-align: right; font-weight: bold;">150,000.00</td>
-                        <td style="text-align: center;"><span class="label label-success">Active / Valid</span></td>
-                    </tr>
-                </tbody>
-            </table>
+            <legend>Bank Vouchers Reconciliation Grid</legend>
+            <div class="grid-container">
+                <table class="erp-table" id="reconcileGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 4%; text-align: center;"><input type="checkbox" id="chkHeaderSelect" /></th>
+                            <th style="width: 10%;">Voucher No</th>
+                            <th style="width: 9%;">Date</th>
+                            <th style="width: 12%;">Doc Type</th>
+                            <th style="width: 22%;">Account / Particulars</th>
+                            <th style="width: 10%;">Cheque No</th>
+                            <th style="width: 10%; text-align: right;">Debit (PKR)</th>
+                            <th style="width: 10%; text-align: right;">Credit (PKR)</th>
+                            <th style="width: 13%;">Reconcile Date</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th></th>
+                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="4" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="5" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="6" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="7" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="8" placeholder="Filter..." /></th>
+                        </tr>
+                    </thead>
+                    <tbody id="reconcileGridBody">
+                        <tr><td colspan="9" style="text-align:center;">Click "Load Vouchers" to fetch bank transactions.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="summary-bar" style="margin-top: 6px;">
+                <div>Total Loaded Vouchers: <span id="lblTotalCount">0</span></div>
+                <div>Total Debit: <span id="lblTotalDebit">0.00</span> | Total Credit: <span id="lblTotalCredit">0.00</span></div>
+                <div>Reconciled Items: <span id="lblReconciledCount" style="color: #00796B;">0</span></div>
+            </div>
         </div>
     </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
+    <script>
+        var voucherData = [];
+
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            var today = new Date().toISOString().split('T')[0];
+            var firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+            $('#fromDate').val(firstDay);
+            $('#toDate').val(today);
+
+            loadVouchers();
+
+            $('#btnLoadVouchers, #btnFilterGo, #btnRefresh').click(function() { loadVouchers(); });
+            $('#btnSelectAll').click(function() { toggleAllCheckboxes(true); });
+            $('#btnUnselectAll').click(function() { toggleAllCheckboxes(false); });
+            $('#chkHeaderSelect').change(function() { toggleAllCheckboxes($(this).is(':checked')); });
+            $('#btnSaveReconcile').click(function() { saveReconciliation(); });
+
+            $('.filter-row input').on('keyup change', function() {
+                filterGrid();
+            });
+        });
+
+        function loadVouchers() {
+            var bankAccountId = $('#bankAccountId').val();
+            var fromDate = $('#fromDate').val();
+            var toDate = $('#toDate').val();
+
+            $.ajax({
+                url: '/api/banking/reconciliation/vouchers',
+                type: 'GET',
+                data: {
+                    bankAccountId: bankAccountId,
+                    fromDate: fromDate,
+                    toDate: toDate
+                },
+                success: function(data) {
+                    voucherData = data || [];
+                    renderGrid(voucherData);
+                },
+                error: function() {
+                    $('#reconcileGridBody').html('<tr><td colspan="9" style="text-align:center; color:red;">Failed to load vouchers.</td></tr>');
+                }
+            });
+        }
+
+        function renderGrid(list) {
+            var html = '';
+            var totalDebit = 0, totalCredit = 0, reconciledCount = 0;
+
+            if(!list || list.length === 0) {
+                html = '<tr><td colspan="9" style="text-align:center;">No voucher records found for selected period.</td></tr>';
+            } else {
+                $.each(list, function(idx, item) {
+                    var isChecked = item.isReconciled === true || item.isReconciled === 'true' || item.isReconciled === 1;
+                    if(isChecked) reconciledCount++;
+                    var debit = parseFloat(item.debit || 0);
+                    var credit = parseFloat(item.credit || 0);
+                    totalDebit += debit;
+                    totalCredit += credit;
+
+                    html += '<tr data-idx="' + idx + '">';
+                    html += '<td style="text-align:center;"><input type="checkbox" class="row-chk" data-idx="' + idx + '" ' + (isChecked ? 'checked="checked"' : '') + ' onchange="updateRowState(' + idx + ', this.checked)" /></td>';
+                    html += '<td><strong>' + (item.voucherNo || ('VCH-' + item.voucherHeadId)) + '</strong></td>';
+                    html += '<td>' + (item.voucherDate || '') + '</td>';
+                    html += '<td>' + (item.docType || 'Voucher') + '</td>';
+                    html += '<td>' + (item.accountTitle || item.particulars || '') + '</td>';
+                    html += '<td>' + (item.chequeNo || '-') + '</td>';
+                    html += '<td style="text-align:right;">' + (debit > 0 ? debit.toLocaleString(undefined, {minimumFractionDigits: 2}) : '0.00') + '</td>';
+                    html += '<td style="text-align:right;">' + (credit > 0 ? credit.toLocaleString(undefined, {minimumFractionDigits: 2}) : '0.00') + '</td>';
+                    html += '<td><input type="date" class="form-control-erp row-date" data-idx="' + idx + '" value="' + (item.reconcileDate ? item.reconcileDate.split('T')[0] : new Date().toISOString().split('T')[0]) + '" /></td>';
+                    html += '</tr>';
+                });
+            }
+            $('#reconcileGridBody').html(html);
+            $('#lblTotalCount').text(list ? list.length : 0);
+            $('#lblTotalDebit').text(totalDebit.toLocaleString(undefined, {minimumFractionDigits: 2}));
+            $('#lblTotalCredit').text(totalCredit.toLocaleString(undefined, {minimumFractionDigits: 2}));
+            $('#lblReconciledCount').text(reconciledCount);
+        }
+
+        function updateRowState(idx, isChecked) {
+            if(voucherData[idx]) {
+                voucherData[idx].isReconciled = isChecked;
+            }
+            recalculateSummary();
+        }
+
+        function toggleAllCheckboxes(state) {
+            $('.row-chk').prop('checked', state);
+            $.each(voucherData, function(i, item) {
+                item.isReconciled = state;
+            });
+            recalculateSummary();
+        }
+
+        function recalculateSummary() {
+            var count = 0;
+            $('.row-chk:checked').each(function() {
+                count++;
+            });
+            $('#lblReconciledCount').text(count);
+        }
+
+        function saveReconciliation() {
+            if(!voucherData || voucherData.length === 0) {
+                alert('No vouchers available to save.');
+                return;
+            }
+
+            var itemsToSave = [];
+            $('.row-chk').each(function() {
+                var idx = $(this).data('idx');
+                var isChecked = $(this).is(':checked');
+                var recDate = $('.row-date[data-idx="' + idx + '"]').val();
+                var item = voucherData[idx];
+                if(item) {
+                    itemsToSave.push({
+                        reconciliationId: item.reconciliationId,
+                        voucherHeadId: item.voucherHeadId,
+                        bankAccountId: item.bankAccountId || $('#bankAccountId').val(),
+                        isReconciled: isChecked,
+                        reconcileDate: recDate,
+                        remarks: item.remarks || 'Web Reconciliation'
+                    });
+                }
+            });
+
+            $.ajax({
+                url: '/api/banking/reconciliation/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(itemsToSave),
+                success: function(res) {
+                    alert('Bank Reconciliation saved successfully!');
+                    loadVouchers();
+                },
+                error: function(xhr) {
+                    alert('Failed to save reconciliation: ' + (xhr.responseText || 'Error occurred'));
+                }
+            });
+        }
+
+        function filterGrid() {
+            var filters = [];
+            $('.filter-row input').each(function() {
+                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
+            });
+
+            $('#reconcileGridBody tr').each(function() {
+                var row = $(this);
+                var show = true;
+                $.each(filters, function(i, f) {
+                    if(f.val) {
+                        var text = row.find('td').eq(f.col).text().toLowerCase();
+                        if(text.indexOf(f.val) === -1) {
+                            show = false;
+                            return false;
+                        }
+                    }
+                });
+                row.toggle(show);
+            });
+        }
+    </script>
 </body>
 </html>

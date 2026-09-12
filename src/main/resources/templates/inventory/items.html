@@ -7,6 +7,7 @@
     <title>Define Item Master - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
         .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -15,69 +16,536 @@
         .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
         .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
         .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .btn-erp-danger { background-color: #dc2626; color: white; border: 1px solid #991b1b; }
-        .btn-erp-danger:hover { background-color: #991b1b; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .btn-erp-danger { background-color: #dc3545; color: white; border: 1px solid #bd2130; }
+        .btn-erp-danger:hover { background-color: #c82333; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 8px 10px; margin-bottom: 8px; }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
+        .grid-container { height: 360px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
         .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
         .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
+        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
+        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <div class="erp-header">
-        <div><i class="fa fa-cube"></i> Define Item Master</div>
-        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory</a></div>
+        <div><i class="fa fa-cube"></i> Item Definition Master (InvDefrmAddItem - Inventory Management)</div>
+        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory Dashboard</a></div>
     </div>
+    
     <div class="erp-toolbar">
-        <a href="/inventory/items/add" class="btn-erp btn-erp-primary"><i class="fa fa-plus"></i> Add New Item (Ctrl+N)</a>
-        <button type="button" class="btn-erp" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save (Ctrl+S)</button>
+        <button type="button" class="btn-erp" id="btnUpdate"><i class="fa fa-pencil"></i> Update</button>
+        <button type="button" class="btn-erp btn-erp-danger" id="btnDelete"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
     </div>
+
     <div style="padding: 10px;">
+        <input type="hidden" id="itemId" value="" />
+
         <div class="erp-fieldset">
-            <legend>Items Master Registry</legend>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 5%; text-align: center;">Sr #</th>
-                        <th style="width: 15%;">Item Code</th>
-                        <th style="width: 35%;">Item Name / Description</th>
-                        <th style="width: 15%;">Category</th>
-                        <th style="width: 15%;">Type</th>
-                        <th style="width: 8%; text-align: center;">Status</th>
-                        <th style="width: 7%; text-align: center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="i, stat : ${items}">
-                        <td style="text-align: center;" th:text="${stat.index + 1}"></td>
-                        <td th:text="${i.itemCode}"></td>
-                        <td th:text="${i.itemName}"></td>
-                        <td th:text="${i.itemCategory != null ? i.itemCategory.categoryDescription : ''}"></td>
-                        <td th:text="${i.itemType != null ? i.itemType.typeDescription : ''}"></td>
-                        <td style="text-align: center;">
-                            <span class="badge" th:style="${i.itemStatus} ? 'background-color:#166534;' : 'background-color:#dc2626;'" th:text="${i.itemStatus} ? 'Active' : 'Inactive'"></span>
-                        </td>
-                        <td style="text-align: center;">
-                            <a th:href="@{'/inventory/items/edit/' + ${i.id}}" class="btn-erp" style="padding: 1px 5px;" title="Edit"><i class="fa fa-pencil"></i></a>
-                            <a th:href="@{'/inventory/items/delete/' + ${i.id}}" class="btn-erp btn-erp-danger" style="padding: 1px 5px;" title="Delete" onclick="return confirm('Delete item?')"><i class="fa fa-trash"></i></a>
-                        </td>
-                    </tr>
-                    <tr th:if="${items == null or items.isEmpty()}">
-                        <td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">No items defined yet. Click "Add New Item" above to define.</td>
-                    </tr>
-                </tbody>
-            </table>
+            <legend>Basic Identification & Info</legend>
+            <div class="row" style="margin-bottom: 4px;">
+                <div class="col-md-2">
+                    <label class="form-label-erp">Item Code</label>
+                    <input type="text" id="itemCode" class="form-control-erp" placeholder="Auto / Code" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-erp">Item Name / Title *</label>
+                    <input type="text" id="itemName" class="form-control-erp" placeholder="Full Item Name" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Alias Name</label>
+                    <input type="text" id="itemAliasName" class="form-control-erp" placeholder="Short Alias" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Name (Other Lingo)</label>
+                    <input type="text" id="itemNameOtherLingo" class="form-control-erp" placeholder="Urdu / Other Lingo" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label-erp">HS Code</label>
+                    <input type="text" id="hSCode" class="form-control-erp" placeholder="e.g. 1006.30" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Barcode No</label>
+                    <input type="text" id="barcodeNo" class="form-control-erp" placeholder="Barcode String" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Product No</label>
+                    <input type="text" id="productNo" class="form-control-erp" placeholder="Part / Product #" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Model Name</label>
+                    <input type="text" id="modelName" class="form-control-erp" placeholder="Model Name" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Specification</label>
+                    <input type="text" id="itemSpecification" class="form-control-erp" placeholder="Specs" />
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-fieldset">
+            <legend>Classification & Location</legend>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label-erp">Item Category</label>
+                    <select id="itemCategoryId" class="form-control-erp select2">
+                        <option value="">-- Select Category --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-erp">Item Type</label>
+                    <select id="itemTypeId" class="form-control-erp select2">
+                        <option value="">-- Select Type --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-erp">Rack Location</label>
+                    <select id="rackId" class="form-control-erp select2">
+                        <option value="">-- Select Rack --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-fieldset">
+            <legend>Pricing, Rates & Stock Levels</legend>
+            <div class="row" style="margin-bottom: 4px;">
+                <div class="col-md-2">
+                    <label class="form-label-erp">Cost Price</label>
+                    <input type="number" step="0.01" id="costPrice" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Purchase Price</label>
+                    <input type="number" step="0.01" id="purchasePrice" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Retail Price</label>
+                    <input type="number" step="0.01" id="retailPrice" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Wholesale Price</label>
+                    <input type="number" step="0.01" id="wholeSalePrice" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Min Rate</label>
+                    <input type="number" step="0.01" id="minRate" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Max Rate</label>
+                    <input type="number" step="0.01" id="maxRate" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label-erp">Min Stock Level</label>
+                    <input type="number" step="0.01" id="minStockLevel" class="form-control-erp" placeholder="0" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Max Stock Level</label>
+                    <input type="number" step="0.01" id="maxStockLevel" class="form-control-erp" placeholder="0" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Optimal Stock</label>
+                    <input type="number" step="0.01" id="optimalStockLevel" class="form-control-erp" placeholder="0" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Reorder Level</label>
+                    <input type="number" step="0.01" id="reorderLevel" class="form-control-erp" placeholder="0" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Reorder Qty</label>
+                    <input type="number" step="0.01" id="reOrderQty" class="form-control-erp" placeholder="0" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Lead Time (Days)</label>
+                    <input type="number" id="leadTimeDay" class="form-control-erp" placeholder="0" style="text-align: right;" />
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-fieldset">
+            <legend>Taxes, Expiry & Item Settings</legend>
+            <div class="row" style="margin-bottom: 4px;">
+                <div class="col-md-2">
+                    <label class="form-label-erp">Purchase Tax %</label>
+                    <input type="number" step="0.01" id="saleTaxPurPercent" class="form-control-erp" placeholder="0.00%" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Sales Tax %</label>
+                    <input type="number" step="0.01" id="saleTaxSalesPercent" class="form-control-erp" placeholder="0.00%" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Shelf Life (Days)</label>
+                    <input type="number" id="shelfLife" class="form-control-erp" placeholder="Days" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Weight (KGS)</label>
+                    <input type="number" step="0.01" id="weightKgs" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+                <div class="col-md-4" style="display: flex; gap: 15px; align-items: flex-end; padding-bottom: 2px;">
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="applyGST" /> GST</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="applyVAT" /> VAT</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="isTaxable" /> Taxable</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="isExpirable" /> Expirable</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12" style="display: flex; gap: 20px; align-items: center; padding-top: 4px;">
+                    <label style="font-weight: 600; cursor: pointer; color: #00796B;"><input type="checkbox" id="itemStatus" checked="checked" /> Item Active</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="isDiscountable" /> Discountable</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="allowMultiUom" /> Multi-UOM</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="itemWithVarient" /> With Variant</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="isImport" /> Is Import</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="isCompany" /> Company Item</label>
+                    <label style="font-weight: 600; cursor: pointer;"><input type="checkbox" id="isThirdParty" /> Third Party</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-fieldset">
+            <legend>Item Registry Master Records</legend>
+            <div class="grid-container">
+                <table class="erp-table" id="itemGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 4%;">ID</th>
+                            <th style="width: 10%;">Item Code</th>
+                            <th style="width: 25%;">Item Name / Title</th>
+                            <th style="width: 15%;">Category</th>
+                            <th style="width: 12%;">Type</th>
+                            <th style="width: 10%;">Rack</th>
+                            <th style="width: 10%; text-align: right;">Pur. Price</th>
+                            <th style="width: 10%; text-align: right;">Retail Price</th>
+                            <th style="width: 4%; text-align: center;">Active</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="4" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="5" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="6" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="7" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="8" placeholder="Filter..." /></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemGridBody">
+                        <tr><td colspan="9" style="text-align:center;">Loading item records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
     <script>
-        $(document).keydown(function(e) {
-            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); window.location.href='/inventory/items/add'; }
+        var itemData = [];
+
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            loadDropdowns();
+            loadItemGrid();
+
+            $('#btnNew').click(function() { resetForm(); });
+            $('#btnSave, #btnUpdate').click(function() { saveItem(); });
+            $('#btnDelete').click(function() { deleteItem(); });
+            $('#btnRefresh').click(function() { loadItemGrid(); });
+
+            $('.filter-row input').on('keyup change', function() {
+                filterGrid();
+            });
+
+            $(document).keydown(function(e) {
+                if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetForm(); }
+                if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveItem(); }
+            });
         });
+
+        function loadDropdowns() {
+            $.get('/api/inventory/categories/list', function(cats) {
+                var html = '<option value="">-- Select Category --</option>';
+                $.each(cats || [], function(i, c) {
+                    html += '<option value="' + c.id + '">' + (c.categoryCode || '') + ' - ' + (c.categoryDescription || '') + '</option>';
+                });
+                $('#itemCategoryId').html(html).trigger('change.select2');
+            });
+
+            $.get('/api/inventory/types/list', function(types) {
+                var html = '<option value="">-- Select Type --</option>';
+                $.each(types || [], function(i, t) {
+                    html += '<option value="' + t.id + '">' + (t.typeCode || '') + ' - ' + (t.typeDescription || '') + '</option>';
+                });
+                $('#itemTypeId').html(html).trigger('change.select2');
+            });
+
+            $.get('/api/inventory/racks/list', function(racks) {
+                var html = '<option value="">-- Select Rack --</option>';
+                $.each(racks || [], function(i, r) {
+                    html += '<option value="' + r.id + '">' + (r.rackName || '') + '</option>';
+                });
+                $('#rackId').html(html).trigger('change.select2');
+            });
+        }
+
+        function loadItemGrid() {
+            $.ajax({
+                url: '/api/inventory/items/list',
+                type: 'GET',
+                success: function(data) {
+                    itemData = data || [];
+                    renderGrid(itemData);
+                },
+                error: function() {
+                    $('#itemGridBody').html('<tr><td colspan="9" style="text-align:center; color:red;">Failed to load items.</td></tr>');
+                }
+            });
+        }
+
+        function renderGrid(list) {
+            var html = '';
+            if(!list || list.length === 0) {
+                html = '<tr><td colspan="9" style="text-align:center;">No Items defined yet.</td></tr>';
+            } else {
+                $.each(list, function(idx, item) {
+                    var purPrice = parseFloat(item.purchasePrice || 0);
+                    var retPrice = parseFloat(item.retailPrice || 0);
+                    html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
+                    html += '<td>' + (item.id || '') + '</td>';
+                    html += '<td>' + (item.itemCode || '') + '</td>';
+                    html += '<td><strong>' + (item.itemName || '') + '</strong></td>';
+                    html += '<td>' + (item.categoryName || '') + '</td>';
+                    html += '<td>' + (item.typeName || '') + '</td>';
+                    html += '<td>' + (item.rackName || '') + '</td>';
+                    html += '<td style="text-align:right;">' + purPrice.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
+                    html += '<td style="text-align:right; font-weight:bold;">' + retPrice.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
+                    html += '<td style="text-align:center;">' + (item.itemStatus !== false ? '<span class="label label-success">Y</span>' : '<span class="label label-danger">N</span>') + '</td>';
+                    html += '</tr>';
+                });
+            }
+            $('#itemGridBody').html(html);
+        }
+
+        function selectRow(tr, idx) {
+            $('#itemGridBody tr').removeClass('selected');
+            $(tr).addClass('selected');
+            var item = itemData[idx];
+            if(item) {
+                $('#itemId').val(item.id);
+                $('#itemCode').val(item.itemCode || '');
+                $('#itemName').val(item.itemName || '');
+                $('#itemAliasName').val(item.itemAliasName || '');
+                $('#itemNameOtherLingo').val(item.itemNameOtherLingo || '');
+                $('#hSCode').val(item.hSCode || '');
+                $('#barcodeNo').val(item.barcodeNo || '');
+                $('#productNo').val(item.productNo || '');
+                $('#modelName').val(item.modelName || '');
+                $('#itemSpecification').val(item.itemSpecification || '');
+                $('#itemCategoryId').val(item.itemCategoryId || '').trigger('change');
+                $('#itemTypeId').val(item.itemTypeId || '').trigger('change');
+                $('#rackId').val(item.rackId || '').trigger('change');
+                $('#costPrice').val(item.costPrice || '');
+                $('#purchasePrice').val(item.purchasePrice || '');
+                $('#retailPrice').val(item.retailPrice || '');
+                $('#wholeSalePrice').val(item.wholeSalePrice || '');
+                $('#minRate').val(item.minRate || '');
+                $('#maxRate').val(item.maxRate || '');
+                $('#minStockLevel').val(item.minStockLevel || '');
+                $('#maxStockLevel').val(item.maxStockLevel || '');
+                $('#optimalStockLevel').val(item.optimalStockLevel || '');
+                $('#reorderLevel').val(item.reorderLevel || '');
+                $('#reOrderQty').val(item.reOrderQty || '');
+                $('#leadTimeDay').val(item.leadTimeDay || '');
+                $('#saleTaxPurPercent').val(item.saleTaxPurPercent || '');
+                $('#saleTaxSalesPercent').val(item.saleTaxSalesPercent || '');
+                $('#shelfLife').val(item.shelfLife || '');
+                $('#weightKgs').val(item.weightKgs || '');
+                $('#applyGST').prop('checked', item.applyGST === true);
+                $('#applyVAT').prop('checked', item.applyVAT === true);
+                $('#isTaxable').prop('checked', item.isTaxable === true);
+                $('#isExpirable').prop('checked', item.isExpirable === true);
+                $('#itemStatus').prop('checked', item.itemStatus !== false);
+                $('#isDiscountable').prop('checked', item.isDiscountable === true);
+                $('#allowMultiUom').prop('checked', item.allowMultiUom === true);
+                $('#itemWithVarient').prop('checked', item.itemWithVarient === true);
+                $('#isImport').prop('checked', item.isImport === true);
+                $('#isCompany').prop('checked', item.isCompany === true);
+                $('#isThirdParty').prop('checked', item.isThirdParty === true);
+            }
+        }
+
+        function resetForm() {
+            $('#itemId').val('');
+            $('#itemCode').val('');
+            $('#itemName').val('');
+            $('#itemAliasName').val('');
+            $('#itemNameOtherLingo').val('');
+            $('#hSCode').val('');
+            $('#barcodeNo').val('');
+            $('#productNo').val('');
+            $('#modelName').val('');
+            $('#itemSpecification').val('');
+            $('#itemCategoryId').val('').trigger('change');
+            $('#itemTypeId').val('').trigger('change');
+            $('#rackId').val('').trigger('change');
+            $('#costPrice').val('');
+            $('#purchasePrice').val('');
+            $('#retailPrice').val('');
+            $('#wholeSalePrice').val('');
+            $('#minRate').val('');
+            $('#maxRate').val('');
+            $('#minStockLevel').val('');
+            $('#maxStockLevel').val('');
+            $('#optimalStockLevel').val('');
+            $('#reorderLevel').val('');
+            $('#reOrderQty').val('');
+            $('#leadTimeDay').val('');
+            $('#saleTaxPurPercent').val('');
+            $('#saleTaxSalesPercent').val('');
+            $('#shelfLife').val('');
+            $('#weightKgs').val('');
+            $('#applyGST').prop('checked', false);
+            $('#applyVAT').prop('checked', false);
+            $('#isTaxable').prop('checked', false);
+            $('#isExpirable').prop('checked', false);
+            $('#itemStatus').prop('checked', true);
+            $('#isDiscountable').prop('checked', false);
+            $('#allowMultiUom').prop('checked', false);
+            $('#itemWithVarient').prop('checked', false);
+            $('#isImport').prop('checked', false);
+            $('#isCompany').prop('checked', false);
+            $('#isThirdParty').prop('checked', false);
+            $('#itemGridBody tr').removeClass('selected');
+        }
+
+        function saveItem() {
+            var name = $('#itemName').val().trim();
+            if(!name) {
+                alert('Please enter Item Name / Title.');
+                $('#itemName').focus();
+                return;
+            }
+
+            var catId = $('#itemCategoryId').val();
+            var typeId = $('#itemTypeId').val();
+            var rkId = $('#rackId').val();
+
+            var payload = {
+                id: $('#itemId').val() ? parseInt($('#itemId').val()) : null,
+                itemCode: $('#itemCode').val(),
+                itemName: name,
+                itemAliasName: $('#itemAliasName').val(),
+                itemNameOtherLingo: $('#itemNameOtherLingo').val(),
+                hSCode: $('#hSCode').val(),
+                barcodeNo: $('#barcodeNo').val(),
+                productNo: $('#productNo').val(),
+                modelName: $('#modelName').val(),
+                itemSpecification: $('#itemSpecification').val(),
+                itemCategory: catId ? { id: parseInt(catId) } : null,
+                itemType: typeId ? { id: parseInt(typeId) } : null,
+                rack: rkId ? { id: parseInt(rkId) } : null,
+                costPrice: parseFloat($('#costPrice').val() || 0),
+                purchasePrice: parseFloat($('#purchasePrice').val() || 0),
+                retailPrice: parseFloat($('#retailPrice').val() || 0),
+                wholeSalePrice: parseFloat($('#wholeSalePrice').val() || 0),
+                minRate: parseFloat($('#minRate').val() || 0),
+                maxRate: parseFloat($('#maxRate').val() || 0),
+                minStockLevel: parseFloat($('#minStockLevel').val() || 0),
+                maxStockLevel: parseFloat($('#maxStockLevel').val() || 0),
+                optimalStockLevel: parseFloat($('#optimalStockLevel').val() || 0),
+                reorderLevel: parseFloat($('#reorderLevel').val() || 0),
+                reOrderQty: parseFloat($('#reOrderQty').val() || 0),
+                leadTimeDay: parseInt($('#leadTimeDay').val() || 0),
+                saleTaxPurPercent: parseFloat($('#saleTaxPurPercent').val() || 0),
+                saleTaxSalesPercent: parseFloat($('#saleTaxSalesPercent').val() || 0),
+                shelfLife: parseInt($('#shelfLife').val() || 0),
+                weightKgs: parseFloat($('#weightKgs').val() || 0),
+                applyGST: $('#applyGST').is(':checked'),
+                applyVAT: $('#applyVAT').is(':checked'),
+                isTaxable: $('#isTaxable').is(':checked'),
+                isExpirable: $('#isExpirable').is(':checked'),
+                itemStatus: $('#itemStatus').is(':checked'),
+                isDiscountable: $('#isDiscountable').is(':checked'),
+                allowMultiUom: $('#allowMultiUom').is(':checked'),
+                itemWithVarient: $('#itemWithVarient').is(':checked'),
+                isImport: $('#isImport').is(':checked'),
+                isCompany: $('#isCompany').is(':checked'),
+                isThirdParty: $('#isThirdParty').is(':checked')
+            };
+
+            $.ajax({
+                url: '/api/inventory/items/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    alert('Item saved successfully!');
+                    resetForm();
+                    loadItemGrid();
+                },
+                error: function(xhr) {
+                    alert('Failed to save Item: ' + (xhr.responseText || 'Error occurred'));
+                }
+            });
+        }
+
+        function deleteItem() {
+            var id = $('#itemId').val();
+            if(!id) {
+                alert('Please select an Item from grid to delete.');
+                return;
+            }
+            if(confirm('Are you sure you want to delete Item #' + id + '?')) {
+                $.ajax({
+                    url: '/api/inventory/items/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        alert('Item deleted successfully!');
+                        resetForm();
+                        loadItemGrid();
+                    },
+                    error: function(xhr) {
+                        alert('Failed to delete item: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        function filterGrid() {
+            var filters = [];
+            $('.filter-row input').each(function() {
+                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
+            });
+
+            $('#itemGridBody tr').each(function() {
+                var row = $(this);
+                var show = true;
+                $.each(filters, function(i, f) {
+                    if(f.val) {
+                        var text = row.find('td').eq(f.col).text().toLowerCase();
+                        if(text.indexOf(f.val) === -1) {
+                            show = false;
+                            return false;
+                        }
+                    }
+                });
+                row.toggle(show);
+            });
+        }
     </script>
 </body>
 </html>

@@ -283,6 +283,17 @@ public class AccountsModuleViewController {
 	@GetMapping("/banking/{bankingType}")
 	public String getBankingModule(@PathVariable("bankingType") String bankingType, Model model) {
 		model.addAttribute("activeMenu", "accounts");
+		try {
+			String bankSql = "SELECT Id as id, AccountTitle as accountTitle, AccountCode as accountCode FROM ChartofAccount WHERE (AccountTypeId = 15 OR AccountGroup = 'Detail' OR Account_Level >= 4) ORDER BY AccountTitle ASC";
+			model.addAttribute("bankAccountsList", jdbcTemplate.queryForList(bankSql));
+			String countrySql = "SELECT Id as id, CountryName as countryName FROM Country ORDER BY CountryName ASC";
+			model.addAttribute("countriesList", jdbcTemplate.queryForList(countrySql));
+			String citySql = "SELECT Id as id, CityName as cityName FROM City ORDER BY CityName ASC";
+			model.addAttribute("citiesList", jdbcTemplate.queryForList(citySql));
+			String ccSql = "SELECT Id as id, CostCenterName as costCenterName FROM CostCenter ORDER BY CostCenterName ASC";
+			model.addAttribute("costCentersList", jdbcTemplate.queryForList(ccSql));
+		} catch (Exception e) {}
+
 		String normalized = bankingType.toLowerCase().trim();
 
 		switch (normalized) {

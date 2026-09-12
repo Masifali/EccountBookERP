@@ -7,6 +7,7 @@
     <title>Cheque Printing - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
         .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -19,73 +20,364 @@
         .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
         .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
         .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .grid-container { height: 380px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
         .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
         .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
+        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
+        
+        /* Cheque preview layout */
+        .cheque-box { width: 620px; height: 260px; border: 2px dashed #00796B; background: #fafafa; margin: 0 auto; padding: 15px; position: relative; font-family: 'Courier New', Courier, monospace; }
+        .cheque-crossed { position: absolute; top: 15px; left: 15px; border-left: 2px solid #000; border-right: 2px solid #000; padding: 2px 10px; font-weight: bold; font-size: 10px; transform: rotate(-25deg); }
     </style>
 </head>
 <body>
     <div class="erp-header">
-        <div><i class="fa fa-university"></i> Cheque Printing</div>
+        <div><i class="fa fa-print"></i> Cheque Printing (ChequePrinting - Banking Management)</div>
         <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
     </div>
+    
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
-        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-save"></i> Save</button>
-        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Refresh</button>
-        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save & Print</button>
+        <button type="button" class="btn-erp" id="btnPrintPreview"><i class="fa fa-eye"></i> Print Preview</button>
+        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh Log</button>
     </div>
+
     <div style="padding: 10px;">
+        <input type="hidden" id="chequeId" value="" />
+
         <div class="erp-fieldset">
-            <legend>Cheque Printing Form Controls</legend>
-            <div class="row">
+            <legend>Cheque Information & Formatting</legend>
+            <div class="row" style="margin-bottom: 6px;">
                 <div class="col-md-4">
-                    <label class="form-label-erp">Select Bank Account</label>
-                    <select class="form-control-erp">
+                    <label class="form-label-erp">Bank Account *</label>
+                    <select id="bankAccountId" class="form-control-erp select2">
                         <option value="">-- Select Bank Account --</option>
-                        <option value="1">MEEZAN BANK - A/C 010293847</option>
-                        <option value="2">HABIB BANK LIMITED - A/C 9948271</option>
+                        <option th:each="acc : ${bankAccountsList}" th:value="${acc.id}" th:text="${acc.accountTitle}"></option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label-erp">Date Period</label>
-                    <input type="date" class="form-control-erp" value="2026-09-07"/>
+                    <label class="form-label-erp">Payee Name / Title *</label>
+                    <input type="text" id="payeeName" class="form-control-erp" placeholder="e.g. M/S AL-FATATEH TRADERS" />
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label-erp">Reference / Cheque No</label>
-                    <input type="text" class="form-control-erp" placeholder="Enter reference..."/>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Cheque Date *</label>
+                    <input type="date" id="chequeDate" class="form-control-erp" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Cheque No *</label>
+                    <input type="text" id="chequeNo" class="form-control-erp" placeholder="e.g. CHQ-882104" />
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom: 6px;">
+                <div class="col-md-3">
+                    <label class="form-label-erp">Amount in Digits (PKR) *</label>
+                    <input type="number" step="0.01" id="amount" class="form-control-erp" placeholder="0.00" style="text-align: right; font-weight: bold; font-size: 12px;" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-erp">Amount in Words (Auto-Converted)</label>
+                    <input type="text" id="amountInWords" class="form-control-erp" readonly="readonly" style="background-color: #f1f5f9; font-weight: 600; color: #00796B;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Template Format</label>
+                    <select id="templateName" class="form-control-erp">
+                        <option value="Standard">Standard Format</option>
+                        <option value="Crossed">Crossed Format</option>
+                        <option value="Cash">Bearer / Cash</option>
+                    </select>
+                </div>
+                <div class="col-md-1" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                    <label style="font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="isCrossed" checked="checked" /> Cross A/C
+                    </label>
                 </div>
             </div>
         </div>
 
         <div class="erp-fieldset">
-            <legend>Cheque Printing Records Grid</legend>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">Date</th>
-                        <th style="width: 15%;">Cheque / Ref No</th>
-                        <th style="width: 25%;">Account / Payee</th>
-                        <th style="width: 20%;">Description</th>
-                        <th style="width: 15%; text-align: right;">Amount (PKR)</th>
-                        <th style="width: 15%; text-align: center;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>2026-09-07</td>
-                        <td style="font-weight: bold; color: #00796B;">CHQ-882104</td>
-                        <td>AL-FATATEH TRADERS</td>
-                        <td>Payment against Invoice #1042</td>
-                        <td style="text-align: right; font-weight: bold;">150,000.00</td>
-                        <td style="text-align: center;"><span class="label label-success">Active / Valid</span></td>
-                    </tr>
-                </tbody>
-            </table>
+            <legend>Printed Cheque History Log</legend>
+            <div class="grid-container">
+                <table class="erp-table" id="chequeGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">ID</th>
+                            <th style="width: 15%;">Cheque No</th>
+                            <th style="width: 20%;">Bank Account</th>
+                            <th style="width: 20%;">Payee Name</th>
+                            <th style="width: 10%;">Date</th>
+                            <th style="width: 12%; text-align: right;">Amount (PKR)</th>
+                            <th style="width: 10%;">Template</th>
+                            <th style="width: 8%; text-align: center;">Crossed</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="4" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="5" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="6" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="7" placeholder="Filter..." /></th>
+                        </tr>
+                    </thead>
+                    <tbody id="chequeGridBody">
+                        <tr><td colspan="8" style="text-align:center;">Loading cheque history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
+    <!-- Cheque Print Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background: #00796B; color: white;">
+                    <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                    <h4 class="modal-title"><i class="fa fa-print"></i> Cheque Print Preview</h4>
+                </div>
+                <div class="modal-body" style="background: #e2e8f0; padding: 20px;">
+                    <div class="cheque-box" id="chequeBoxView">
+                        <div class="cheque-crossed" id="pvCrossed">A/C PAYEE ONLY</div>
+                        <div style="text-align: right; font-weight: bold; margin-bottom: 20px;">
+                            DATE: <span id="pvDate">DD/MM/YYYY</span>
+                        </div>
+                        <div style="margin-bottom: 15px; font-size: 13px;">
+                            PAY: <span id="pvPayee" style="font-weight: bold; border-bottom: 1px dotted #000; padding: 0 10px;">_____________________</span>
+                        </div>
+                        <div style="margin-bottom: 15px; font-size: 12px;">
+                            RUPEES: <span id="pvWords" style="font-weight: bold; border-bottom: 1px dotted #000; padding: 0 10px;">_____________________</span>
+                        </div>
+                        <div style="position: absolute; bottom: 25px; right: 20px; font-size: 14px; font-weight: bold; border: 1px solid #000; padding: 5px 15px; background: #fff;">
+                            PKR ***<span id="pvDigits">0.00</span>***
+                        </div>
+                        <div style="position: absolute; bottom: 20px; left: 20px; font-size: 10px;">
+                            CHEQUE NO: <span id="pvNo">CHQ-000</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print();"><i class="fa fa-print"></i> Send to Printer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
+    <script>
+        var chequeData = [];
+
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            var today = new Date().toISOString().split('T')[0];
+            $('#chequeDate').val(today);
+
+            loadChequeGrid();
+
+            $('#amount').on('input keyup change', function() {
+                var val = parseFloat($(this).val() || 0);
+                $('#amountInWords').val(numberToWords(val));
+            });
+
+            $('#btnNew').click(function() { resetForm(); });
+            $('#btnSave').click(function() { saveCheque(); });
+            $('#btnPrintPreview').click(function() { showPreview(); });
+            $('#btnRefresh').click(function() { loadChequeGrid(); });
+
+            $('.filter-row input').on('keyup change', function() {
+                filterGrid();
+            });
+        });
+
+        function loadChequeGrid() {
+            $.ajax({
+                url: '/api/banking/cheque-printing/list',
+                type: 'GET',
+                success: function(data) {
+                    chequeData = data || [];
+                    renderGrid(chequeData);
+                },
+                error: function() {
+                    $('#chequeGridBody').html('<tr><td colspan="8" style="text-align:center; color:red;">Failed to load cheque records.</td></tr>');
+                }
+            });
+        }
+
+        function renderGrid(list) {
+            var html = '';
+            if(!list || list.length === 0) {
+                html = '<tr><td colspan="8" style="text-align:center;">No cheque records printed yet.</td></tr>';
+            } else {
+                $.each(list, function(idx, item) {
+                    var amt = parseFloat(item.amount || 0);
+                    html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
+                    html += '<td>' + (item.id || '') + '</td>';
+                    html += '<td><strong>' + (item.chequeNo || '') + '</strong></td>';
+                    html += '<td>' + (item.bankAccountTitle || ('Account #' + item.bankAccountId)) + '</td>';
+                    html += '<td>' + (item.payeeName || '') + '</td>';
+                    html += '<td>' + (item.chequeDate || '') + '</td>';
+                    html += '<td style="text-align:right; font-weight:bold;">' + amt.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
+                    html += '<td>' + (item.templateName || 'Standard') + '</td>';
+                    html += '<td style="text-align:center;">' + (item.isCrossed ? '<span class="label label-success">Yes</span>' : '<span class="label label-default">No</span>') + '</td>';
+                    html += '</tr>';
+                });
+            }
+            $('#chequeGridBody').html(html);
+        }
+
+        function selectRow(tr, idx) {
+            $('#chequeGridBody tr').removeClass('selected');
+            $(tr).addClass('selected');
+            var item = chequeData[idx];
+            if(item) {
+                $('#chequeId').val(item.id);
+                $('#bankAccountId').val(item.bankAccountId).trigger('change');
+                $('#payeeName').val(item.payeeName || '');
+                $('#chequeDate').val(item.chequeDate || '');
+                $('#chequeNo').val(item.chequeNo || '');
+                $('#amount').val(item.amount || '0.00');
+                $('#amountInWords').val(item.amountInWords || numberToWords(item.amount || 0));
+                $('#templateName').val(item.templateName || 'Standard');
+                $('#isCrossed').prop('checked', item.isCrossed !== false);
+            }
+        }
+
+        function resetForm() {
+            var today = new Date().toISOString().split('T')[0];
+            $('#chequeId').val('');
+            $('#bankAccountId').val('').trigger('change');
+            $('#payeeName').val('');
+            $('#chequeDate').val(today);
+            $('#chequeNo').val('');
+            $('#amount').val('');
+            $('#amountInWords').val('');
+            $('#templateName').val('Standard');
+            $('#isCrossed').prop('checked', true);
+            $('#chequeGridBody tr').removeClass('selected');
+        }
+
+        function saveCheque() {
+            var payee = $('#payeeName').val().trim();
+            var chequeNo = $('#chequeNo').val().trim();
+            var amount = $('#amount').val();
+            if(!payee) {
+                alert('Please enter Payee Name.');
+                $('#payeeName').focus();
+                return;
+            }
+            if(!chequeNo) {
+                alert('Please enter Cheque Number.');
+                $('#chequeNo').focus();
+                return;
+            }
+            if(!amount || parseFloat(amount) <= 0) {
+                alert('Please enter a valid Cheque Amount.');
+                $('#amount').focus();
+                return;
+            }
+
+            var payload = {
+                id: $('#chequeId').val() ? parseInt($('#chequeId').val()) : null,
+                bankAccountId: $('#bankAccountId').val() ? parseInt($('#bankAccountId').val()) : 0,
+                payeeName: payee,
+                chequeDate: $('#chequeDate').val(),
+                amount: parseFloat(amount),
+                amountInWords: $('#amountInWords').val(),
+                chequeNo: chequeNo,
+                templateName: $('#templateName').val(),
+                isCrossed: $('#isCrossed').is(':checked')
+            };
+
+            $.ajax({
+                url: '/api/banking/cheque-printing/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    showPreview();
+                    resetForm();
+                    loadChequeGrid();
+                },
+                error: function(xhr) {
+                    alert('Failed to save cheque record: ' + (xhr.responseText || 'Error occurred'));
+                }
+            });
+        }
+
+        function showPreview() {
+            var payee = $('#payeeName').val() || '___________________';
+            var amount = parseFloat($('#amount').val() || 0);
+            var words = $('#amountInWords').val() || numberToWords(amount);
+            var dateStr = $('#chequeDate').val() || 'DD/MM/YYYY';
+            var chqNo = $('#chequeNo').val() || 'CHQ-000';
+            var isCrossed = $('#isCrossed').is(':checked');
+
+            $('#pvPayee').text(payee.toUpperCase());
+            $('#pvDigits').text(amount.toLocaleString(undefined, {minimumFractionDigits: 2}));
+            $('#pvWords').text(words.toUpperCase() + ' ONLY');
+            $('#pvDate').text(dateStr);
+            $('#pvNo').text(chqNo);
+            if(isCrossed) $('#pvCrossed').show(); else $('#pvCrossed').hide();
+
+            $('#previewModal').modal('show');
+        }
+
+        function numberToWords(num) {
+            if(!num || num <= 0) return 'Zero Rupees';
+            var a = ['','One ','Two ','Three ','Four ','Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+            var b = ['', '', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+
+            function inWords(n) {
+                if ((n = n.toString()).length > 9) return 'Overflow';
+                var nStr = ('000000000' + n).substr(-9);
+                var match = nStr.match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+                if (!match) return '';
+                var str = '';
+                str += (match[1] != 0) ? (a[Number(match[1])] || b[match[1][0]] + ' ' + a[match[1][1]]) + 'Crore ' : '';
+                str += (match[2] != 0) ? (a[Number(match[2])] || b[match[2][0]] + ' ' + a[match[2][1]]) + 'Lakh ' : '';
+                str += (match[3] != 0) ? (a[Number(match[3])] || b[match[3][0]] + ' ' + a[match[3][1]]) + 'Thousand ' : '';
+                str += (match[4] != 0) ? (a[Number(match[4])] || b[match[4][0]] + ' ' + a[match[4][1]]) + 'Hundred ' : '';
+                str += (match[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(match[5])] || b[match[5][0]] + ' ' + a[match[5][1]]) : '';
+                return str;
+            }
+
+            var parts = num.toString().split('.');
+            var whole = parseInt(parts[0]);
+            var dec = parts.length > 1 ? parseInt(parts[1].substring(0,2)) : 0;
+
+            var res = inWords(whole) + 'Rupees';
+            if(dec > 0) res += ' and ' + inWords(dec) + 'Paisa';
+            return res;
+        }
+
+        function filterGrid() {
+            var filters = [];
+            $('.filter-row input').each(function() {
+                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
+            });
+
+            $('#chequeGridBody tr').each(function() {
+                var row = $(this);
+                var show = true;
+                $.each(filters, function(i, f) {
+                    if(f.val) {
+                        var text = row.find('td').eq(f.col).text().toLowerCase();
+                        if(text.indexOf(f.val) === -1) {
+                            show = false;
+                            return false;
+                        }
+                    }
+                });
+                row.toggle(show);
+            });
+        }
+    </script>
 </body>
 </html>

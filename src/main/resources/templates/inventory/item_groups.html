@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Define Item Uom Schedule - EccountBookERP</title>
+    <title>Item Groups - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <style>
@@ -15,110 +15,226 @@
         .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
         .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
         .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .btn-erp-danger { background-color: #dc2626; color: white; border: 1px solid #991b1b; }
-        .btn-erp-danger:hover { background-color: #991b1b; color: white; }
+        .btn-erp-danger { background-color: #dc3545; color: white; border: 1px solid #bd2130; }
+        .btn-erp-danger:hover { background-color: #c82333; color: white; }
         .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
         .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
         .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
         .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
+        .grid-container { height: 440px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
         .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
         .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .erp-table tr:hover { background-color: #e0f2f1; cursor: pointer; }
+        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
+        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <div class="erp-header">
-        <div><i class="fa fa-sitemap"></i> Define Item Uom Schedule</div>
-        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory</a></div>
+        <div><i class="fa fa-object-group"></i> Item Group Definition (InvenItemGroup - Inventory Management)</div>
+        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory Dashboard</a></div>
     </div>
+    
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp" onclick="resetForm()"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
-        <button type="button" class="btn-erp btn-erp-primary" onclick="submitSave()"><i class="fa fa-save"></i> Save (Ctrl+S)</button>
-        <button type="button" class="btn-erp btn-erp-danger" onclick="submitDelete()"><i class="fa fa-trash"></i> Delete</button>
-        <button type="button" class="btn-erp" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="btn-erp" id="btnUpdate"><i class="fa fa-pencil"></i> Update</button>
+        <button type="button" class="btn-erp btn-erp-danger" id="btnDelete"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
     </div>
+
     <div style="padding: 10px;">
-        <form th:action="@{/inventory/item_groups/save}" th:object="${itemGroup}" method="post" id="groupForm">
-            <input type="hidden" th:field="*{id}" id="txtGroupId"/>
-            <div class="erp-fieldset">
-                <legend>Item Uom Schedule Definition</legend>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label class="form-label-erp">UOM Code / Abbr</label>
-                        <input type="text" id="txtGroupCode" class="form-control-erp" placeholder="e.g. UOM-001"/>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label-erp">UOM Schedule Title / Name</label>
-                        <input type="text" th:field="*{groupName}" id="txtGroupName" class="form-control-erp" placeholder="Enter UOM Schedule Name" required/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Conversion Multiplier</label>
-                        <input type="number" step="0.001" id="txtMultiplier" class="form-control-erp" value="1.000" style="text-align: right;"/>
-                    </div>
+        <input type="hidden" id="groupId" value="" />
+
+        <div class="erp-fieldset">
+            <legend>Item Group Information</legend>
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label-erp">Group Code *</label>
+                    <input type="text" id="groupCode" class="form-control-erp" placeholder="e.g. GRP-01" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-erp">Group Description *</label>
+                    <input type="text" id="groupDescription" class="form-control-erp" placeholder="e.g. Premium Basmati Group" />
+                </div>
+                <div class="col-md-3" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                    <label style="font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="groupStatus" checked="checked" /> Active Group
+                    </label>
                 </div>
             </div>
+        </div>
 
-            <div class="erp-fieldset">
-                <legend>Item UOM Schedules List</legend>
-                <table class="erp-table">
+        <div class="erp-fieldset">
+            <legend>Item Groups Master Records</legend>
+            <div class="grid-container">
+                <table class="erp-table" id="groupGrid">
                     <thead>
                         <tr>
-                            <th style="width: 5%; text-align: center;">Sr #</th>
-                            <th style="width: 75%;">UOM Schedule Title</th>
-                            <th style="width: 20%; text-align: center;">Actions</th>
+                            <th style="width: 10%;">ID</th>
+                            <th style="width: 25%;">Group Code</th>
+                            <th style="width: 50%;">Group Description</th>
+                            <th style="width: 15%; text-align: center;">Status</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr th:each="g, stat : ${itemGroups}" th:attr="onclick='selectGroup(' + ${g.id} + ', \'' + ${g.groupName} + '\')'">
-                            <td style="text-align: center;" th:text="${stat.index + 1}"></td>
-                            <td th:text="${g.groupName}"></td>
-                            <td style="text-align: center;">
-                                <button type="button" class="btn-erp" style="padding: 1px 6px;" th:attr="onclick='selectGroup(' + ${g.id} + ', \'' + ${g.groupName} + '\')'"><i class="fa fa-edit"></i> Edit</button>
-                            </td>
-                        </tr>
-                        <tr th:if="${itemGroups == null or itemGroups.isEmpty()}">
-                            <td colspan="3" style="text-align: center; color: #64748b; padding: 20px;">No UOM Schedules defined yet.</td>
-                        </tr>
+                    <tbody id="groupGridBody">
+                        <tr><td colspan="4" style="text-align:center;">Loading item groups...</td></tr>
                     </tbody>
                 </table>
             </div>
-        </form>
+        </div>
     </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script>
-        function resetForm() {
-            $('#txtGroupId').val('0');
-            $('#txtGroupCode').val('');
-            $('#txtGroupName').val('');
-            $('#txtMultiplier').val('1.000');
+        var groupData = [];
+
+        $(document).ready(function() {
+            loadGroupGrid();
+
+            $('#btnNew').click(function() { resetForm(); });
+            $('#btnSave, #btnUpdate').click(function() { saveGroup(); });
+            $('#btnDelete').click(function() { deleteGroup(); });
+            $('#btnRefresh').click(function() { loadGroupGrid(); });
+
+            $('.filter-row input').on('keyup change', function() {
+                filterGrid();
+            });
+        });
+
+        function loadGroupGrid() {
+            $.ajax({
+                url: '/api/inventory/groups/list',
+                type: 'GET',
+                success: function(data) {
+                    groupData = data || [];
+                    renderGrid(groupData);
+                },
+                error: function() {
+                    $('#groupGridBody').html('<tr><td colspan="4" style="text-align:center; color:red;">Failed to load groups.</td></tr>');
+                }
+            });
         }
 
-        function selectGroup(id, name) {
-            $('#txtGroupId').val(id);
-            $('#txtGroupName').val(name);
+        function renderGrid(list) {
+            var html = '';
+            if(!list || list.length === 0) {
+                html = '<tr><td colspan="4" style="text-align:center;">No Group records found.</td></tr>';
+            } else {
+                $.each(list, function(idx, item) {
+                    html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
+                    html += '<td>' + (item.id || '') + '</td>';
+                    html += '<td>' + (item.groupCode || '') + '</td>';
+                    html += '<td><strong>' + (item.groupDescription || '') + '</strong></td>';
+                    html += '<td style="text-align:center;">' + (item.groupStatus !== false ? '<span class="label label-success">Active</span>' : '<span class="label label-default">Inactive</span>') + '</td>';
+                    html += '</tr>';
+                });
+            }
+            $('#groupGridBody').html(html);
         }
 
-        function submitSave() {
-            if (!$('#txtGroupName').val()) { alert('Please enter UOM Schedule Title.'); return; }
-            $('#groupForm').submit();
-        }
-
-        function submitDelete() {
-            const id = $('#txtGroupId').val();
-            if (!id || id === '0') { alert('Please select a schedule to delete.'); return; }
-            if (confirm('Are you sure you want to delete this UOM Schedule?')) {
-                window.location.href = '/inventory/item_groups/delete/' + id;
+        function selectRow(tr, idx) {
+            $('#groupGridBody tr').removeClass('selected');
+            $(tr).addClass('selected');
+            var item = groupData[idx];
+            if(item) {
+                $('#groupId').val(item.id);
+                $('#groupCode').val(item.groupCode || '');
+                $('#groupDescription').val(item.groupDescription || '');
+                $('#groupStatus').prop('checked', item.groupStatus !== false);
             }
         }
 
-        $(document).keydown(function(e) {
-            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetForm(); }
-            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); submitSave(); }
-        });
+        function resetForm() {
+            $('#groupId').val('');
+            $('#groupCode').val('');
+            $('#groupDescription').val('');
+            $('#groupStatus').prop('checked', true);
+            $('#groupGridBody tr').removeClass('selected');
+        }
+
+        function saveGroup() {
+            var desc = $('#groupDescription').val().trim();
+            if(!desc) {
+                alert('Please enter Group Description.');
+                $('#groupDescription').focus();
+                return;
+            }
+
+            var payload = {
+                id: $('#groupId').val() ? parseInt($('#groupId').val()) : null,
+                groupCode: $('#groupCode').val(),
+                groupDescription: desc,
+                groupStatus: $('#groupStatus').is(':checked')
+            };
+
+            $.ajax({
+                url: '/api/inventory/groups/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    alert('Item Group saved successfully!');
+                    resetForm();
+                    loadGroupGrid();
+                },
+                error: function(xhr) {
+                    alert('Failed to save Item Group: ' + (xhr.responseText || 'Error occurred'));
+                }
+            });
+        }
+
+        function deleteGroup() {
+            var id = $('#groupId').val();
+            if(!id) {
+                alert('Please select a Group from grid to delete.');
+                return;
+            }
+            if(confirm('Are you sure you want to delete Group #' + id + '?')) {
+                $.ajax({
+                    url: '/api/inventory/groups/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        alert('Item Group deleted successfully!');
+                        resetForm();
+                        loadGroupGrid();
+                    },
+                    error: function(xhr) {
+                        alert('Failed to delete group: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        function filterGrid() {
+            var filters = [];
+            $('.filter-row input').each(function() {
+                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
+            });
+
+            $('#groupGridBody tr').each(function() {
+                var row = $(this);
+                var show = true;
+                $.each(filters, function(i, f) {
+                    if(f.val) {
+                        var text = row.find('td').eq(f.col).text().toLowerCase();
+                        if(text.indexOf(f.val) === -1) {
+                            show = false;
+                            return false;
+                        }
+                    }
+                });
+                row.toggle(show);
+            });
+        }
     </script>
 </body>
 </html>
