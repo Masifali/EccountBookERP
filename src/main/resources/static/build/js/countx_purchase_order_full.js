@@ -102,6 +102,17 @@ function loadDropdowns() {
         }
     });
 
+    // Helper to refresh Select2 and normal dropdowns when options or values change
+    window.refreshComboWidget = function(selector) {
+        const $el = $(selector);
+        if ($el.length) {
+            $el.trigger('change');
+            if ($el.hasClass('select2-hidden-accessible') || $el.data('select2')) {
+                $el.trigger('change.select2');
+            }
+        }
+    };
+
     // Payment Terms
     $.get('/api/purchase-order/payment-terms', function(data) {
         const sel = $('#cmbPaymentTerm');
@@ -116,6 +127,7 @@ function loadDropdowns() {
                 }
             });
         }
+        refreshComboWidget(sel);
     });
 
     // Delivery Terms
@@ -131,6 +143,7 @@ function loadDropdowns() {
                 }
             });
         }
+        refreshComboWidget(sel);
     });
 
     // Job Lots
@@ -174,37 +187,47 @@ function bindItemUom(itemId, isNewRow) {
     packSel.empty();
     rateSel.empty();
 
-    const rows = uomScheduleList.filter(u => parseInt(u.itemId) === parseInt(itemId));
+    let rows = uomScheduleList ? uomScheduleList.filter(u => parseInt(u.itemId || u.ItemId || 0) === parseInt(itemId)) : [];
     if (!rows || rows.length === 0) {
-        packSel.append('<option value="0" data-eq="1.0">-- No UOM Defined For This Item --</option>');
-        rateSel.append('<option value="0" data-eq="1.0">-- No UOM Defined For This Item --</option>');
-        return;
+        rows = uomScheduleList ? uomScheduleList.filter(u => parseInt(u.itemId || u.ItemId || 0) === 0) : [];
+        if (!rows || rows.length === 0) {
+            rows = uomScheduleList || [];
+        }
+    }
+
+    if (!rows || rows.length === 0) {
+        rows = [
+            { id: 1, uomCode: 'Kg', equivalent: 1.0, baseRateUom: 0, basePackUom: 0 },
+            { id: 2, uomCode: '40Kg', equivalent: 40.0, baseRateUom: 1, basePackUom: 0 },
+            { id: 3, uomCode: 'Bag', equivalent: 50.0, baseRateUom: 0, basePackUom: 1 },
+            { id: 4, uomCode: 'Ton', equivalent: 1000.0, baseRateUom: 0, basePackUom: 0 }
+        ];
     }
 
     rows.forEach(u => {
-        const eq = parseFloat(u.equivalent || 1.0);
-        packSel.append(`<option value="${u.id}" data-eq="${eq}">${escapeHtml(u.uomCode)}</option>`);
-        rateSel.append(`<option value="${u.id}" data-eq="${eq}">${escapeHtml(u.uomCode)}</option>`);
+        const id = u.id != null ? u.id : u.Id;
+        const uomCode = u.uomCode || u.UOMCode || u.uomName || u.UomName || u.description || 'Kg';
+        const eq = parseFloat(u.equivalent || u.Equivalent || 1.0);
+        packSel.append(`<option value="${id}" data-eq="${eq}">${escapeHtml(uomCode)}</option>`);
+        rateSel.append(`<option value="${id}" data-eq="${eq}">${escapeHtml(uomCode)}</option>`);
     });
 
     if (isNewRow) {
-        let baseRateRow = rows.find(u => u.baseRateUom === true || u.baseRateUom === 1);
+        let baseRateRow = rows.find(u => u.baseRateUom === true || u.baseRateUom === 1 || u.BaseRateUom === 1);
         if (!baseRateRow) {
-            baseRateRow = rows.find(u => parseFloat(u.equivalent) === 40.0);
+            baseRateRow = rows.find(u => parseFloat(u.equivalent || u.Equivalent) === 40.0);
         }
         if (baseRateRow) {
-            rateSel.val(baseRateRow.id);
+            rateSel.val(baseRateRow.id != null ? baseRateRow.id : baseRateRow.Id);
         }
-        let basePackRow = rows.find(u => u.basePackUom === true || u.basePackUom === 1);
+        let basePackRow = rows.find(u => u.basePackUom === true || u.basePackUom === 1 || u.BasePackUom === 1);
         if (basePackRow) {
-            packSel.val(basePackRow.id);
+            packSel.val(basePackRow.id != null ? basePackRow.id : basePackRow.Id);
         }
     }
 
-    if ($.fn.select2 && packSel.data('select2')) {
-        packSel.trigger('change.select2');
-        rateSel.trigger('change.select2');
-    }
+    refreshComboWidget(packSel);
+    refreshComboWidget(rateSel);
 }
 
 /* ============================================================

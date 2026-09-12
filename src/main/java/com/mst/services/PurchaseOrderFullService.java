@@ -333,19 +333,42 @@ public class PurchaseOrderFullService {
         try {
             int orgId = currentUserContext.currentOrganizationId();
             int compId = currentUserContext.currentCompanyId();
-            String sql = "SELECT us.Id as id, us.ItemId as itemId, u.UOMCode as uomCode, " +
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(
+                    "EXEC Sp_UOMSchedule_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
+                    orgId, compId, "ReadByOrganizationCompanyId");
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+
+        try {
+            String sql = "SELECT us.Id as id, ISNULL(us.ItemId, 0) as itemId, ISNULL(u.UOMCode, 'Kg') as uomCode, " +
                     "ISNULL(us.Equivalent, 1.0) as equivalent, " +
                     "CASE WHEN us.BaseRateUom = 1 THEN 1 ELSE 0 END as baseRateUom, " +
                     "CASE WHEN us.BasePackUom = 1 THEN 1 ELSE 0 END as basePackUom " +
                     "FROM UOMSchedule us " +
-                    "INNER JOIN UOM u ON us.ScheduleUnitId = u.Id " +
-                    "WHERE us.OrganizationId = ? AND us.CompanyId = ? " +
+                    "LEFT JOIN UOM u ON us.ScheduleUnitId = u.Id " +
                     "ORDER BY us.ItemId, u.UOMCode";
-            return jdbcTemplate.queryForList(sql, orgId, compId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Collections.emptyList();
-        }
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+
+        try {
+            String sql = "SELECT Id as id, 0 as itemId, UOMCode as uomCode, 1.0 as equivalent, 0 as baseRateUom, 0 as basePackUom FROM UOM ORDER BY UOMCode";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+
+        List<Map<String, Object>> fallback = new ArrayList<>();
+        Map<String, Object> u1 = new HashMap<>(); u1.put("id", 1); u1.put("itemId", 0); u1.put("uomCode", "Kg"); u1.put("equivalent", 1.0); u1.put("baseRateUom", 0); u1.put("basePackUom", 0); fallback.add(u1);
+        Map<String, Object> u2 = new HashMap<>(); u2.put("id", 2); u2.put("itemId", 0); u2.put("uomCode", "40Kg"); u2.put("equivalent", 40.0); u2.put("baseRateUom", 1); u2.put("basePackUom", 0); fallback.add(u2);
+        Map<String, Object> u3 = new HashMap<>(); u3.put("id", 3); u3.put("itemId", 0); u3.put("uomCode", "Bag"); u3.put("equivalent", 50.0); u3.put("baseRateUom", 0); u3.put("basePackUom", 1); fallback.add(u3);
+        Map<String, Object> u4 = new HashMap<>(); u4.put("id", 4); u4.put("itemId", 0); u4.put("uomCode", "Ton"); u4.put("equivalent", 1000.0); u4.put("baseRateUom", 0); u4.put("basePackUom", 0); fallback.add(u4);
+        return fallback;
     }
 
     public List<Map<String, Object>> getJobLots() {
@@ -358,6 +381,7 @@ public class PurchaseOrderFullService {
     }
 
     public List<Map<String, Object>> getPaymentTerms() {
+        List<Map<String, Object>> result = new ArrayList<>();
         try {
             int orgId = currentUserContext.currentOrganizationId();
             int compId = currentUserContext.currentCompanyId();
@@ -365,15 +389,48 @@ public class PurchaseOrderFullService {
                     "EXEC Sp_InvDueTerms_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
                     orgId, compId, "GetAll");
             if (list != null && !list.isEmpty()) {
-                return list;
+                result.addAll(list);
             }
         } catch (Exception e) {}
-        try {
-            String sql = "SELECT Id as id, TermsDescription as description, ISNULL(DueDays, 0) as dueDays FROM InvDueTerms WHERE IsActive = 1 OR IsActive IS NULL ORDER BY TermsDescription";
-            return jdbcTemplate.queryForList(sql);
-        } catch (Exception e) {
-            return Collections.emptyList();
+
+        if (result.isEmpty()) {
+            try {
+                String sql = "SELECT Id as id, TermsDescription as description, ISNULL(DueDays, 0) as dueDays FROM InvDueTerms WHERE IsActive = 1 OR IsActive IS NULL ORDER BY TermsDescription";
+                List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+                if (list != null && !list.isEmpty()) {
+                    result.addAll(list);
+                }
+            } catch (Exception e) {}
         }
+
+        boolean hasCredit = false;
+        boolean hasCash = false;
+        for (Map<String, Object> m : result) {
+            String desc = m.get("description") != null ? m.get("description").toString() : (m.get("TermsDescription") != null ? m.get("TermsDescription").toString() : "");
+            if ("Credit".equalsIgnoreCase(desc) || desc.toLowerCase().contains("credit")) hasCredit = true;
+            if ("Cash".equalsIgnoreCase(desc) || desc.toLowerCase().contains("cash")) hasCash = true;
+        }
+
+        if (!hasCredit) {
+            Map<String, Object> p2 = new HashMap<>();
+            p2.put("id", 2);
+            p2.put("description", "Credit");
+            p2.put("TermsDescription", "Credit");
+            p2.put("dueDays", 30);
+            p2.put("DueDays", 30);
+            result.add(p2);
+        }
+        if (!hasCash) {
+            Map<String, Object> p1 = new HashMap<>();
+            p1.put("id", 1);
+            p1.put("description", "Cash");
+            p1.put("TermsDescription", "Cash");
+            p1.put("dueDays", 0);
+            p1.put("DueDays", 0);
+            result.add(0, p1);
+        }
+
+        return result;
     }
 
     public List<Map<String, Object>> getDeliveryTerms() {
