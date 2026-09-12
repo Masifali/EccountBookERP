@@ -26,6 +26,9 @@ public class AccountsModuleViewController {
 	@org.springframework.beans.factory.annotation.Autowired
 	private com.mst.services.AccountsReportService accountsReportService;
 
+	@org.springframework.beans.factory.annotation.Autowired
+	private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
 	@GetMapping({"", "/", "/dashboard"})
 	public String accountsDashboard(Model model) {
 		model.addAttribute("activeMenu", "accounts");
@@ -95,6 +98,10 @@ public class AccountsModuleViewController {
 				return "accounts/vouchers/freight_voucher";
 			case "day-book-approval":
 				model.addAttribute("moduleTitle", "Day Book Approval");
+				try {
+					String sql = "SELECT Id as id, AccountTitle as accountTitle, AccountCode as accountCode FROM ChartofAccount WHERE (AccountGroup = 'Detail' OR Account_Level >= 4) ORDER BY AccountTitle ASC";
+					model.addAttribute("cashAccountsList", jdbcTemplate.queryForList(sql));
+				} catch (Exception e) {}
 				return "accounts/vouchers/day_book_approval";
 			case "pdc-transaction-payment":
 				model.addAttribute("moduleTitle", "PDC Transaction Payment");
@@ -102,6 +109,9 @@ public class AccountsModuleViewController {
 			case "advance-adjustment":
 				model.addAttribute("moduleTitle", "Advance Adjustment");
 				return "accounts/vouchers/advance_adjustment";
+			case "contractor-wages-dashboard":
+				model.addAttribute("moduleTitle", "Contractor Wages Dashboard");
+				return "accounts/vouchers/contractor_wages_dashboard";
 			case "contractor-wages":
 				model.addAttribute("moduleTitle", "Contractor Wages Account");
 				return "accounts/vouchers/contractor_wages";
@@ -127,6 +137,11 @@ public class AccountsModuleViewController {
 		model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
 		model.addAttribute("customGroupsList", accountsReportService.getCustomGroups());
 		model.addAttribute("citiesList", accountsReportService.getCities());
+		model.addAttribute("costCentersList", accountsReportService.getCostCenters());
+		model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
+		model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+		model.addAttribute("languagesList", accountsReportService.getLanguages());
+		model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
 
 		String normalized = reportType.toLowerCase().trim();
 
@@ -155,6 +170,9 @@ public class AccountsModuleViewController {
 				return "accounts/reports/customer_ledger";
 			case "day-book":
 				model.addAttribute("moduleTitle", "Day Book");
+				model.addAttribute("accountsList", accountsReportService.getBankAccounts());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
+				model.addAttribute("costCentersList", accountsReportService.getCostCenters());
 				return "accounts/reports/day_book";
 			case "balance-sheet":
 				model.addAttribute("moduleTitle", "Balance Sheet");

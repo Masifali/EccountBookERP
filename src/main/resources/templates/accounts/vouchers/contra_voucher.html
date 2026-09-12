@@ -4,48 +4,240 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Contra Voucher - WinForms Replica</title>
+    <title>Intra-Company Fund Transfer Voucher - WinForms Replica</title>
     
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     
     <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
-        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
-        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
-        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
-        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
-        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 8px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .win-section-header { background-color: #f1f5f9; color: #00796B; font-weight: bold; font-size: 11px; padding: 4px 8px; border-bottom: 1px solid #cbd5e1; border-top: 1px solid #cbd5e1; }
-        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
-        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
-        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
-        .win-textarea { border: 1px solid #94a3b8; border-radius: 2px; padding: 4px 6px; font-size: 11px; width: 100%; height: 52px; resize: none; box-sizing: border-box; }
-        .search-popup { position: absolute; z-index: 1050; background: #ffffff; border: 1px solid #00796B; box-shadow: 0 4px 12px rgba(0,0,0,0.18); max-height: 260px; overflow-y: auto; width: 580px; display: none; }
-        .search-popup table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .search-popup th { background-color: #00796B; color: white; padding: 4px 6px; position: sticky; top: 0; font-weight: 600; border: 1px solid #004d40; }
-        .search-popup td { padding: 4px 6px; border: 1px solid #e2e8f0; cursor: pointer; }
-        .search-popup tr:hover { background-color: #e0f2f1; font-weight: 600; }
-        .detail-entry-bar { background-color: #fafafa; border: 1px solid #cbd5e1; padding: 8px; margin: 6px 0; }
-        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
-        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; }
-        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
-        .totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
-        .win-tab-bar { background: #d1d5db; border-bottom: 1px solid #b0bec5; padding: 2px 8px 0 8px; display: flex; gap: 3px; }
-        .win-tab-btn { background: #e5e7eb; border: 1px solid #9ca3af; border-bottom: none; border-radius: 3px 3px 0 0; padding: 4px 14px; font-size: 11px; font-weight: bold; color: #374151; cursor: pointer; }
-        .win-tab-btn.active { background: #ffffff; color: #00796B; border-color: #b0bec5; border-bottom: 2px solid #ffffff; margin-bottom: -1px; }
+        body {
+            font-family: "Segoe UI", "Tahoma", "Geneva", "Verdana", sans-serif;
+            background-color: #e4e9ed;
+            font-size: 11px;
+            color: #222;
+            margin: 0;
+            padding: 0;
+        }
+
+        .win-sub-header {
+            font-size: 10px;
+            color: #4f5d65;
+            padding: 2px 10px;
+            background: #d8e0e6;
+            border-bottom: 1px solid #b0bec5;
+        }
+
+        .win-toolbar {
+            background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%);
+            border-bottom: 1px solid #b0bec5;
+            padding: 3px 8px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .win-btn {
+            background: #ffffff;
+            border: 1px solid #90a4ae;
+            border-radius: 2px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #263238;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+            height: 25px;
+        }
+        .win-btn:hover { background: #e0f2f1; border-color: #0f5959; color: #004d40; }
+        .win-btn-teal { background: #0f5959; color: #ffffff; border-color: #083b3b; }
+        .win-btn-teal:hover { background: #083b3b; color: #ffffff; }
+
+        .win-title-bar {
+            background-color: #0f5959;
+            color: #ffffff;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #083b3b;
+        }
+
+        .win-form-card {
+            background: #ffffff;
+            border: 1px solid #b0bec5;
+            margin: 6px;
+            padding: 8px;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .win-group-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            padding: 12px 10px 8px 10px;
+            margin-bottom: 8px;
+            background-color: #ffffff;
+            position: relative;
+        }
+
+        .win-group-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: #0f5959;
+            background: #ffffff;
+            padding: 0 6px;
+            position: absolute;
+            top: -9px;
+            left: 10px;
+        }
+
+        .win-label {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 2px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .win-input {
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            padding: 2px 6px;
+            font-size: 11px;
+            height: 24px;
+            width: 100%;
+            background-color: #ffffff;
+            box-sizing: border-box;
+        }
+        .win-input:focus { border-color: #0f5959; outline: none; box-shadow: 0 0 2px rgba(15,89,89,0.4); }
+
+        .win-textarea {
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            padding: 4px 6px;
+            font-size: 11px;
+            width: 100%;
+            height: 98px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        /* Select2 styling override for WinForms ERP look */
+        .select2-container--default .select2-selection--single {
+            height: 24px !important;
+            line-height: 22px !important;
+            font-size: 11px !important;
+            border: 1px solid #94a3b8 !important;
+            border-radius: 2px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 22px !important;
+            padding-left: 6px !important;
+            color: #222 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 22px !important;
+        }
+        .select2-dropdown {
+            border: 1px solid #0f5959 !important;
+            font-size: 11px !important;
+        }
+
+        .detail-entry-bar {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            border-radius: 2px;
+        }
+
+        .win-grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: #ffffff;
+        }
+        .win-grid-table th {
+            background-color: #0f5959;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 4px 8px;
+            border: 1px solid #083b3b;
+            text-align: left;
+        }
+        .win-grid-table td {
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            vertical-align: middle;
+        }
+        .win-grid-table tbody tr:hover { background-color: #e0f2f1; }
+
+        .btn-add-green {
+            background-color: #00796b;
+            color: white;
+            border: 1px solid #004d40;
+            height: 24px;
+            width: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-add-green:hover { background-color: #004d40; }
+
+        .totals-bar {
+            background: #e0f2f1;
+            font-weight: bold;
+            color: #0f5959;
+            font-size: 12px;
+            padding: 4px 12px;
+            border: 1px solid #0f5959;
+            border-radius: 2px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
+        .win-tab-bar {
+            background: #d1d5db;
+            border-bottom: 1px solid #b0bec5;
+            padding: 2px 8px 0 8px;
+            display: flex;
+            gap: 3px;
+        }
+        .win-tab-btn {
+            background: #e5e7eb;
+            border: 1px solid #9ca3af;
+            border-bottom: none;
+            border-radius: 3px 3px 0 0;
+            padding: 4px 14px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #374151;
+            cursor: pointer;
+        }
+        .win-tab-btn.active {
+            background: #ffffff;
+            color: #0f5959;
+            border-color: #b0bec5;
+            border-bottom: 2px solid #ffffff;
+            margin-bottom: -1px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="win-title-bar">
-        <span><i class="fa fa-refresh"></i> Contra Voucher</span>
-        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
-            <i class="fa fa-arrow-left"></i> Back to Dashboard
-        </a>
+    <div class="win-sub-header">
+        <i class="fa fa-folder-o"></i> Contra Voucher
     </div>
 
     <div class="win-toolbar">
@@ -69,6 +261,13 @@
         </button>
     </div>
 
+    <div class="win-title-bar">
+        <span>Intra-Company Fund Transfer Voucher</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
     <!-- Form Tab & History Tab Bar -->
     <div class="win-tab-bar">
         <button type="button" class="win-tab-btn active" id="tabBtnForm" onclick="switchTab('form')">
@@ -82,103 +281,100 @@
     <div id="tabFormContent" class="win-form-card">
         <form id="formVoucher" onsubmit="event.preventDefault(); submitVoucher();">
 
-            <div class="win-section-header">Main</div>
-            <div style="padding: 10px;">
+            <!-- MAIN SECTION BOX -->
+            <div class="win-group-box">
+                <span class="win-group-title">Main</span>
                 <div class="row">
-                    <div class="col-md-5">
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Cost Center</label></div>
+                    <!-- Column 1: Project, Voucher No, Voucher Date, Credit Account -->
+                    <div class="col-md-4">
+                        <div class="row" style="margin-bottom: 5px;">
+                            <div class="col-md-4"><label class="win-label">Project</label></div>
                             <div class="col-md-8">
                                 <select id="cmbCostCenter" class="win-input">
                                     <option value="1">Golden Ace Rice Mills (Pvt) Ltd.</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Voucher Type</label></div>
-                            <div class="col-md-8">
-                                <select id="cmbVoucherType" class="win-input" disabled>
-                                    <option value="10" selected>Contra Voucher</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 6px;">
+                        <div class="row" style="margin-bottom: 5px;">
                             <div class="col-md-4"><label class="win-label">Voucher No</label></div>
-                            <div class="col-md-3">
+                            <div class="col-md-8">
                                 <input type="text" id="txtVoucherNo" class="win-input" readonly style="font-weight: bold; background: #f8fafc;"/>
                             </div>
-                            <div class="col-md-2" style="padding-left: 0;"><label class="win-label">Date</label></div>
-                            <div class="col-md-3" style="padding-left: 0;">
+                        </div>
+                        <div class="row" style="margin-bottom: 5px;">
+                            <div class="col-md-4"><label class="win-label">Voucher Date</label></div>
+                            <div class="col-md-8">
                                 <input type="date" id="dtpVoucherDate" class="win-input"/>
                             </div>
                         </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Cash/Bank Account</label></div>
+                        <div class="row" style="margin-bottom: 5px;">
+                            <div class="col-md-4"><label class="win-label">Credit Account</label></div>
                             <div class="col-md-8">
-                                <select id="cmbDebitAccount" class="win-input">
-                                    <!-- Populated dynamically via API -->
+                                <select id="cmbCreditAccount" class="win-input" style="width: 100%;">
+                                    <option value="0">...Select Any Value...</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-md-7">
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-3"><label class="win-label">Cheque No</label></div>
-                            <div class="col-md-4">
-                                <input type="text" id="txtHeaderChequeNo" class="win-input" placeholder="Cheque No"/>
-                            </div>
-                            <div class="col-md-2"><label class="win-label">Cheque Date</label></div>
-                            <div class="col-md-3">
-                                <input type="date" id="dtpHeaderChequeDate" class="win-input"/>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-3"><label class="win-label">Payee Title</label></div>
-                            <div class="col-md-9">
-                                <input type="text" id="txtPayeeTitle" class="win-input" placeholder="Payee Title / Bank Branch"/>
-                            </div>
-                        </div>
+                    <!-- Column 2: Remarks -->
+                    <div class="col-md-4">
                         <div class="row">
                             <div class="col-md-3"><label class="win-label">Remarks</label></div>
                             <div class="col-md-9">
-                                <textarea id="txtHeaderRemarks" class="win-textarea" placeholder="Enter contra voucher main remarks..."></textarea>
+                                <textarea id="txtHeaderRemarks" class="win-textarea" placeholder=""></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Cheque Date, Cheque No, PayTitle, Print Preview -->
+                    <div class="col-md-4">
+                        <div class="row" style="margin-bottom: 5px;">
+                            <div class="col-md-4"><label class="win-label">Cheque Date</label></div>
+                            <div class="col-md-8">
+                                <input type="date" id="dtpHeaderChequeDate" class="win-input"/>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 5px;">
+                            <div class="col-md-4"><label class="win-label">Cheque No</label></div>
+                            <div class="col-md-8">
+                                <input type="text" id="txtHeaderChequeNo" class="win-input"/>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 5px;">
+                            <div class="col-md-4"><label class="win-label">PayTitle</label></div>
+                            <div class="col-md-8">
+                                <input type="text" id="txtPayTitle" class="win-input"/>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 4px;">
+                            <div class="col-md-4"></div>
+                            <div class="col-md-8">
+                                <label style="font-size: 11px; cursor: pointer; font-weight: 600; color: #334155;">
+                                    <input type="checkbox" id="chkPrintPreview" checked/> Print Preview
+                                </label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="win-section-header">Detail</div>
-            <div style="padding: 10px;">
+            <!-- DETAIL SECTION BOX -->
+            <div class="win-group-box">
+                <span class="win-group-title">Detail</span>
+
                 <div class="detail-entry-bar">
-                    <div class="row" style="margin-bottom: 6px;">
-                        <div class="col-md-4" style="position: relative;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label class="win-label">Transfer Account</label>
-                                <div>
-                                    <label style="font-size: 10px; cursor: pointer; margin-right: 6px;"><input type="radio" name="rdSearch" id="rdSearchTitle" checked/> Title</label>
-                                    <label style="font-size: 10px; cursor: pointer;"><input type="radio" name="rdSearch" id="rdSearchCode"/> Code</label>
-                                </div>
+                    <div class="row" style="align-items: center;">
+                        <div class="col-md-3">
+                            <div style="margin-bottom: 2px;">
+                                <label class="win-label" style="margin-right: 8px;">Debit</label>
+                                <label style="font-size: 10px; cursor: pointer; margin-right: 6px;"><input type="radio" name="rdSearch" id="rdSearchTitle" checked/> Title</label>
+                                <label style="font-size: 10px; cursor: pointer; margin-right: 6px;"><input type="radio" name="rdSearch" id="rdSearchCode"/> Code</label>
+                                <span style="font-size: 10px; color: #64748b;">label8</span>
                             </div>
-                            <input type="text" id="txtDebitAccSearch" class="win-input" placeholder="Type to search cash/bank account title or code..." autocomplete="off" onkeyup="onDebitAccSearch(event)" oninput="onDebitAccSearch(event)" onfocus="onDebitAccSearch(event)"/>
-                            <input type="hidden" id="hdnDebitAccId" value="0"/>
-                            <input type="hidden" id="hdnDebitAccCode" value=""/>
-                            <input type="hidden" id="hdnDebitAccTitle" value=""/>
-                            
-                            <div id="popAccounts" class="search-popup">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Account Title</th>
-                                            <th style="width: 100px;">AccountCode</th>
-                                            <th style="width: 130px;">ParentAccountTitle</th>
-                                            <th style="width: 90px;">AccountClass</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbodyPopAccounts"></tbody>
-                                </table>
-                            </div>
+                            <select id="cmbDetailAccount" class="win-input" style="width: 100%;">
+                                <option value="0">...Select Any Value...</option>
+                            </select>
                         </div>
 
                         <div class="col-md-2">
@@ -188,47 +384,39 @@
                             </select>
                         </div>
 
+                        <div class="col-md-4">
+                            <label class="win-label">Remarks</label>
+                            <input type="text" id="txtLineRemarks" class="win-input" placeholder=""/>
+                        </div>
+
                         <div class="col-md-2">
                             <label class="win-label">Debit Amount</label>
-                            <input type="number" step="0.01" id="txtDebitAmount" class="win-input" placeholder="0.00" style="text-align: right; font-weight: bold;"/>
+                            <input type="number" step="0.01" id="txtDebitAmount" class="win-input" placeholder="" style="text-align: right; font-weight: bold;"/>
                         </div>
 
-                        <div class="col-md-2">
-                            <label class="win-label">Credit Amount</label>
-                            <input type="number" step="0.01" id="txtCreditAmount" class="win-input" placeholder="0.00" style="text-align: right; font-weight: bold;"/>
-                        </div>
-
-                        <div class="col-md-2" style="display: flex; align-items: flex-end;">
-                            <button type="button" id="btnAddRow" class="win-btn win-btn-teal" style="width: 100%; height: 25px; justify-content: center;" onclick="addDetailRow()">
-                                <i class="fa fa-plus"></i> + Add
+                        <div class="col-md-1" style="display: flex; align-items: flex-end; padding-top: 16px;">
+                            <button type="button" id="btnAddRow" class="btn-add-green" onclick="addDetailRow()" title="Add Row">
+                                <i class="fa fa-plus"></i>
                             </button>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <label class="win-label">Remarks</label>
-                            <input type="text" id="txtLineRemarks" class="win-input" placeholder="Enter line item remarks..."/>
                         </div>
                     </div>
                 </div>
 
-                <div style="max-height: 300px; overflow-y: auto; margin-top: 8px;">
+                <div style="max-height: 320px; overflow-y: auto; margin-top: 6px;">
                     <table class="win-grid-table" id="tblGrid">
                         <thead>
                             <tr>
-                                <th style="width: 30px; text-align: center;">X</th>
-                                <th style="width: 90px;">Account Code</th>
+                                <th style="width: 120px;">Account Code</th>
                                 <th>Account Title</th>
-                                <th style="width: 100px;">Job / Lot</th>
+                                <th style="width: 120px;">Job Lot</th>
                                 <th>Remarks</th>
-                                <th style="width: 120px; text-align: right;">Debit Amount</th>
-                                <th style="width: 120px; text-align: right;">Credit Amount</th>
+                                <th style="width: 140px; text-align: right;">Debit Amount</th>
+                                <th style="width: 60px; text-align: center;">Delete</th>
                             </tr>
                         </thead>
                         <tbody id="tbodyGrid">
                             <tr id="trEmptyGrid">
-                                <td colspan="7" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td>
+                                <td colspan="6" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td>
                             </tr>
                         </tbody>
                     </table>
@@ -236,25 +424,24 @@
 
                 <div class="totals-bar">
                     <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
-                    <div>Total Credit: <span id="lblTotalCredit">0.00</span></div>
-                    <div>Difference: <span id="lblDiff">0.00</span></div>
+                    <div>Line Items: <span id="lblTotalItems">0</span></div>
                 </div>
             </div>
 
         </form>
     </div>
 
+    <!-- HISTORY TAB CONTENT -->
     <div id="tabHistoryContent" class="win-form-card" style="display: none;">
-        <div class="win-section-header">Contra Voucher History</div>
-        <div style="padding: 10px;">
-            <div class="detail-entry-bar">
+        <div class="win-group-box">
+            <span class="win-group-title">Contra Voucher History</span>
+            <div style="padding: 4px;">
                 <div class="row" style="margin-bottom: 6px;">
                     <div class="col-md-3">
                         <label class="win-label">Date Type</label><br/>
-                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="contraHistDateType" value="docdate" checked onchange="loadContraHistory()"/> Doc Date</label>
-                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="contraHistDateType" value="entrydate" onchange="loadContraHistory()"/> Entry Date</label>
-                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="contraHistDateType" value="modifydate" onchange="loadContraHistory()"/> Modify Date</label>
-                        <label style="font-weight: normal;"><input type="radio" name="contraHistDateType" value="approveddate" onchange="loadContraHistory()"/> Approved Date</label>
+                        <label style="font-weight: normal; margin-right: 8px;"><input type="radio" name="contraHistDateType" value="docdate" checked onchange="loadContraHistory()"/> Doc Date</label>
+                        <label style="font-weight: normal; margin-right: 8px;"><input type="radio" name="contraHistDateType" value="entrydate" onchange="loadContraHistory()"/> Entry Date</label>
+                        <label style="font-weight: normal; margin-right: 8px;"><input type="radio" name="contraHistDateType" value="modifydate" onchange="loadContraHistory()"/> Modify Date</label>
                     </div>
                     <div class="col-md-2">
                         <label class="win-label">From Date</label>
@@ -281,7 +468,7 @@
                     <div class="col-md-3">
                         <label class="win-label">Approved Status</label>
                         <select id="cmbApprovedStatusContra" class="win-input" onchange="loadContraHistory()">
-                            <option value="notapproved" selected>Not Apporved</option>
+                            <option value="notapproved" selected>Not Approved</option>
                             <option value="approved">Approved</option>
                             <option value="all">All</option>
                         </select>
@@ -293,41 +480,29 @@
                         <button type="button" class="win-btn" onclick="resetContraHistory()">
                             <i class="fa fa-undo"></i> Reset
                         </button>
-                        <div id="contraHistTotals" style="margin-left: 12px; font-size: 12px; display: none;">
-                            <b>Total Vouchers:</b> <span id="contraHistTotalVouchers">0</span> &nbsp;
-                            <b>Approved:</b> <span id="contraHistTotalApproved">0</span> &nbsp;
-                            <b>Not Approved:</b> <span id="contraHistTotalUnApproved">0</span>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div style="max-height: 420px; overflow-y: auto; overflow-x: auto; margin-top: 8px;">
+            <div style="max-height: 400px; overflow-y: auto; overflow-x: auto; margin-top: 8px;">
                 <table class="win-grid-table" id="tblContraHistoryGrid">
                     <thead>
                         <tr>
-                            <th style="width: 50px;">Edit</th>
+                            <th style="width: 45px; text-align: center;">Edit</th>
                             <th style="width: 70px;">V.No</th>
                             <th style="width: 90px;">V.Date</th>
                             <th style="width: 60px;">V.Type</th>
-                            <th style="width: 100px;">Manual Bill No</th>
                             <th>Account Title</th>
                             <th>Against Account</th>
-                            <th style="width: 260px;">Remarks</th>
-                            <th style="width: 100px; text-align: right;">Voucher Amount</th>
-                            <th style="width: 90px;">Entry User</th>
-                            <th style="width: 130px;">Entry Date</th>
-                            <th style="width: 90px;">Modify User</th>
-                            <th style="width: 130px;">Modify Date</th>
-                            <th style="width: 90px;">Approved User</th>
-                            <th style="width: 130px;">Approved Date</th>
-                            <th style="width: 90px;">Cheque No</th>
-                            <th style="width: 70px; text-align: center;">Attachment</th>
+                            <th style="width: 220px;">Remarks</th>
+                            <th style="width: 100px; text-align: right;">Amount</th>
+                            <th style="width: 90px;">User</th>
+                            <th style="width: 110px;">Entry Date</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyContraHistoryGrid">
                         <tr>
-                            <td colspan="17" style="text-align: center; color: #888; padding: 20px;">Loading...</td>
+                            <td colspan="10" style="text-align: center; color: #888; padding: 20px;">Loading...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -339,7 +514,7 @@
     <div class="modal fade" id="modalShortcuts" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
-                <div class="modal-header" style="background: #00796B; color: #fff; padding: 8px 12px;">
+                <div class="modal-header" style="background: #0f5959; color: #fff; padding: 8px 12px;">
                     <button type="button" class="close" data-dismiss="modal" style="color: #fff;"><span>&times;</span></button>
                     <h5 class="modal-title" style="font-weight: bold; font-size: 13px;"><i class="fa fa-keyboard-o"></i> Keyboard Shortcuts</h5>
                 </div>
@@ -348,7 +523,7 @@
                         <tbody>
                             <tr><td><code>Ctrl + N</code></td><td>New Voucher</td></tr>
                             <tr><td><code>Ctrl + S</code></td><td>Save Voucher</td></tr>
-                            <tr><td><code>Ctrl + R</code></td><td>Refresh</td></tr>
+                            <tr><td><code>Ctrl + R</code></td><td>Refresh Page</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -358,34 +533,27 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+
     <script>
         let gridItems = [];
         let editingIndex = -1;
         let editingVoucherId = 0;
+        let accountsCache = [];
 
         $(document).ready(function() {
             const today = new Date().toISOString().split('T')[0];
             $('#dtpVoucherDate').val(today);
             $('#dtpHeaderChequeDate').val(today);
 
-            // Fetch Cash/Bank Accounts dynamically from DB API
-            $.get('/accounts/api/vouchers/cash-bank-accounts', function(accounts) {
-                let opt = '<option value="0">...Select Any Value...</option>';
-                if (accounts && accounts.length > 0) {
-                    accounts.forEach((acc, idx) => {
-                        const id = acc.id || acc.Id;
-                        const title = acc.accountTitle || acc.AccountTitle || '';
-                        const selected = idx === 0 ? 'selected' : '';
-                        opt += `<option value="${id}" ${selected}>${title}</option>`;
-                    });
-                }
-                $('#cmbDebitAccount').html(opt);
-            });
+            // Initialize Select2 dropdowns
+            $('#cmbCreditAccount').select2({ placeholder: '...Select Any Value...' });
+            $('#cmbDetailAccount').select2({ placeholder: '...Select Any Value...' });
 
-            // Fetch next numeric code from stored procedure. DocType 10 for Contra Voucher (real
-            // DocumentType table row: Id=10, Code=CONTRA - this was previously wired to 6, which is
-            // actually "Bill_PV"/Bill Payables in the real schema, a completely different voucher; every
-            // Contra Voucher saved before this fix was silently misfiled under DocumentTypeId=6).
+            // Load Accounts for dropdowns
+            loadAccounts();
+
+            // Load next voucher code (DocType 10 = Contra Voucher)
             $.get('/accounts/api/vouchers/next-code?documentTypeId=10', function(res) {
                 if (res && res.nextCode) {
                     $('#txtVoucherNo').val(res.nextCode);
@@ -393,74 +561,46 @@
             });
         });
 
-        function onDebitAccSearch(e) {
-            const query = $('#txtDebitAccSearch').val().trim();
-            if (query.length < 1) {
-                $('#popAccounts').hide();
-                return;
-            }
+        function loadAccounts() {
+            $.get('/accounts/api/vouchers/cash-bank-accounts', function(accounts) {
+                accountsCache = accounts || [];
+                let creditOpt = '<option value="0">...Select Any Value...</option>';
+                let detailOpt = '<option value="0">...Select Any Value...</option>';
 
-            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
-                let html = '';
-                if (data && data.length > 0) {
-                    data.forEach(acc => {
-                        const id = acc.id || acc.ChartOfAccountId || 0;
-                        const code = acc.accountCode || acc.AccountCode || '';
+                if (accountsCache.length > 0) {
+                    accountsCache.forEach((acc) => {
+                        const id = acc.id || acc.Id;
                         const title = acc.accountTitle || acc.AccountTitle || '';
-                        const parent = acc.parentAccountTitle || acc.ParentAccountTitle || 'Detail';
-                        const clsName = acc.className || acc.AccountClass || 'Assets';
-
-                        html += `<tr onclick="selectDebitAcc(${id}, '${code}', '${escapeQuotes(title)}')">
-                                    <td><strong>${title}</strong></td>
-                                    <td>${code}</td>
-                                    <td>${parent}</td>
-                                    <td>${clsName}</td>
-                                 </tr>`;
+                        const code = acc.accountCode || acc.AccountCode || '';
+                        const label = code ? `${title} [${code}]` : title;
+                        creditOpt += `<option value="${id}">${label}</option>`;
+                        detailOpt += `<option value="${id}" data-code="${code}" data-title="${title}">${label}</option>`;
                     });
-                    $('#tbodyPopAccounts').html(html);
-                    $('#popAccounts').show();
-                } else {
-                    $('#tbodyPopAccounts').html('<tr><td colspan="4" style="text-align:center; color:#888; padding:8px;">No matching accounts found</td></tr>');
-                    $('#popAccounts').show();
                 }
+
+                $('#cmbCreditAccount').html(creditOpt).trigger('change');
+                $('#cmbDetailAccount').html(detailOpt).trigger('change');
             });
         }
 
-        function escapeQuotes(str) { return str.replace(/'/g, "\\'").replace(/"/g, "&quot;"); }
-
-        function selectDebitAcc(id, code, title) {
-            $('#hdnDebitAccId').val(id);
-            $('#hdnDebitAccCode').val(code);
-            $('#hdnDebitAccTitle').val(title);
-            $('#txtDebitAccSearch').val(`${title} [${code}]`);
-            $('#popAccounts').hide();
-            $('#txtDebitAmount').focus();
-        }
-
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('#txtDebitAccSearch, #popAccounts').length) {
-                $('#popAccounts').hide();
-            }
-        });
-
         function addDetailRow() {
-            const accId = parseInt($('#hdnDebitAccId').val()) || 0;
-            const accCode = $('#hdnDebitAccCode').val();
-            const accTitle = $('#hdnDebitAccTitle').val();
+            const selectedOpt = $('#cmbDetailAccount option:selected');
+            const accId = parseInt($('#cmbDetailAccount').val()) || 0;
+            const accCode = selectedOpt.attr('data-code') || '';
+            const accTitle = selectedOpt.attr('data-title') || selectedOpt.text().split('[')[0].trim();
             const jobLot = $('#cmbJobLot option:selected').text();
             const jobLotId = parseInt($('#cmbJobLot').val()) || 1;
             const remarks = $('#txtLineRemarks').val().trim();
             const debitAmt = parseFloat($('#txtDebitAmount').val()) || 0.0;
-            const creditAmt = parseFloat($('#txtCreditAmount').val()) || 0.0;
 
-            if (!accCode || !accTitle) {
-                alert('Please select an Account from the search list.');
-                $('#txtDebitAccSearch').focus();
+            if (accId <= 0) {
+                alert('Please select an Account.');
+                $('#cmbDetailAccount').select2('open');
                 return;
             }
 
-            if (debitAmt <= 0 && creditAmt <= 0) {
-                alert('Please enter a valid Debit Amount or Credit Amount greater than 0.');
+            if (debitAmt <= 0) {
+                alert('Please enter a valid Debit Amount greater than 0.');
                 $('#txtDebitAmount').focus();
                 return;
             }
@@ -473,48 +613,39 @@
                 jobLotId: jobLotId,
                 remarks: remarks,
                 debitAmount: debitAmt,
-                creditAmount: creditAmt
+                creditAmount: 0.0
             };
 
             if (editingIndex >= 0) {
                 gridItems[editingIndex] = item;
                 editingIndex = -1;
-                $('#btnAddRow').html('<i class="fa fa-plus"></i> + Add');
+                $('#btnAddRow').html('<i class="fa fa-plus"></i>');
             } else {
                 gridItems.push(item);
             }
             renderGrid();
 
-            $('#hdnDebitAccId').val('0');
-            $('#hdnDebitAccCode').val('');
-            $('#hdnDebitAccTitle').val('');
-            $('#txtDebitAccSearch').val('');
+            // Clear entry inputs
+            $('#cmbDetailAccount').val('0').trigger('change');
             $('#txtLineRemarks').val('');
             $('#txtDebitAmount').val('');
-            $('#txtCreditAmount').val('');
-            $('#txtDebitAccSearch').focus();
         }
 
         function editDetailRow(index) {
             const item = gridItems[index];
             if (!item) return;
             editingIndex = index;
-            $('#hdnDebitAccId').val(item.chartOfAccountId);
-            $('#hdnDebitAccCode').val(item.accountCode);
-            $('#hdnDebitAccTitle').val(item.accountTitle);
-            $('#txtDebitAccSearch').val(`${item.accountTitle} [${item.accountCode}]`);
+            $('#cmbDetailAccount').val(item.chartOfAccountId).trigger('change');
             $('#txtLineRemarks').val(item.remarks);
             $('#txtDebitAmount').val(item.debitAmount);
-            $('#txtCreditAmount').val(item.creditAmount);
-            $('#btnAddRow').html('<i class="fa fa-pencil"></i> Update');
-            $('#txtDebitAmount').focus();
+            $('#btnAddRow').html('<i class="fa fa-check"></i>');
         }
 
         function removeGridItem(index) {
             gridItems.splice(index, 1);
             if (editingIndex === index) {
                 editingIndex = -1;
-                $('#btnAddRow').html('<i class="fa fa-plus"></i> + Add');
+                $('#btnAddRow').html('<i class="fa fa-plus"></i>');
             }
             renderGrid();
         }
@@ -522,34 +653,28 @@
         function renderGrid() {
             let html = '';
             let totalDebit = 0.0;
-            let totalCredit = 0.0;
 
             if (gridItems.length > 0) {
                 gridItems.forEach((item, idx) => {
                     totalDebit += item.debitAmount;
-                    totalCredit += item.creditAmount;
-                    html += `<tr ondblclick="editDetailRow(${idx})" title="Double-click to edit this row">
-                                <td style="text-align:center;">
-                                    <button type="button" class="btn btn-xs btn-primary" onclick="editDetailRow(${idx})" style="margin-right:2px;"><i class="fa fa-pencil"></i></button>
-                                    <button type="button" class="btn btn-xs btn-danger" onclick="removeGridItem(${idx})">&times;</button>
-                                </td>
+                    html += `<tr ondblclick="editDetailRow(${idx})" title="Double-click to edit">
                                 <td>${item.accountCode}</td>
                                 <td><strong>${item.accountTitle}</strong></td>
                                 <td>${item.jobLot}</td>
                                 <td>${item.remarks}</td>
                                 <td style="text-align:right; font-weight:bold;">${item.debitAmount.toFixed(2)}</td>
-                                <td style="text-align:right; font-weight:bold;">${item.creditAmount.toFixed(2)}</td>
+                                <td style="text-align:center;">
+                                    <button type="button" class="btn btn-xs btn-danger" onclick="removeGridItem(${idx})">&times;</button>
+                                </td>
                              </tr>`;
                 });
             } else {
-                html = '<tr id="trEmptyGrid"><td colspan="7" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr>';
+                html = '<tr id="trEmptyGrid"><td colspan="6" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr>';
             }
 
             $('#tbodyGrid').html(html);
             $('#lblTotalDebit').text(totalDebit.toFixed(2));
-            $('#lblTotalCredit').text(totalCredit.toFixed(2));
-            const diff = Math.abs(totalDebit - totalCredit);
-            $('#lblDiff').text(diff.toFixed(2));
+            $('#lblTotalItems').text(gridItems.length);
         }
 
         function submitVoucher() {
@@ -558,36 +683,34 @@
                 return;
             }
 
-            const totalDebit = parseFloat($('#lblTotalDebit').text()) || 0.0;
-            const totalCredit = parseFloat($('#lblTotalCredit').text()) || 0.0;
-
-            if (Math.abs(totalDebit - totalCredit) > 0.01) {
-                alert(`Contra Voucher is not balanced! Total Debit (${totalDebit.toFixed(2)}) must equal Total Credit (${totalCredit.toFixed(2)}).`);
+            const creditAccId = parseInt($('#cmbCreditAccount').val()) || 0;
+            if (creditAccId <= 0) {
+                alert('Please select a Credit Account.');
+                $('#cmbCreditAccount').select2('open');
                 return;
             }
 
-            // Field names below match VoucherRequestDto (id/documentTypeId/voucherCode/voucherDate/
-            // remarks/voucherAmount/refAccountId/chequeNo/chequeDate/details[].accountId/comments/
-            // debitAmount/creditAmount) exactly - the previous payload used unrelated names
-            // (voucherNo/creditAccountId/narration/totalAmount/chartOfAccountId/documentTypeId=6/...)
-            // that either don't exist on the DTO or pointed at the wrong DocumentTypeId, so every save
-            // silently persisted a blank, misfiled VoucherHead row with zero VoucherDetail rows.
+            const totalDebit = parseFloat($('#lblTotalDebit').text()) || 0.0;
+
             const payload = {
                 id: editingVoucherId > 0 ? editingVoucherId : null,
-                documentTypeId: 10, // Contra Voucher (real DocumentType.Id - see next-code fix above)
+                documentTypeId: 10, // Contra Voucher
                 voucherCode: parseInt($('#txtVoucherNo').val()) || null,
                 voucherDate: $('#dtpVoucherDate').val(),
-                refAccountId: parseInt($('#cmbDebitAccount').val()) || null,
+                refAccountId: creditAccId,
                 chequeNo: $('#txtHeaderChequeNo').val().trim(),
                 chequeDate: $('#dtpHeaderChequeDate').val(),
+                payTitle: $('#txtPayTitle').val().trim(),
                 remarks: $('#txtHeaderRemarks').val().trim(),
                 voucherAmount: totalDebit,
+                projectId: parseInt($('#cmbCostCenter').val()) || 1,
                 details: gridItems.map(function(item) {
                     return {
                         accountId: item.chartOfAccountId,
                         comments: item.remarks,
                         debitAmount: item.debitAmount || 0.0,
-                        creditAmount: item.creditAmount || 0.0
+                        creditAmount: 0.0,
+                        jobLotId: item.jobLotId || 1
                     };
                 })
             };
@@ -637,11 +760,7 @@
             }
         }
 
-        // ====================================================================================
-        // Contra Voucher History - real ditto-copy of ContraVoucher.cs's HistoryFill() /
-        // DataGridHistory, backed by GET /accounts/api/vouchers/contra/history -> EXEC
-        // USP_VoucherFormHistory (@DocumentTypeName='10'). See VoucherService.getContraHistory().
-        // ====================================================================================
+        // History Functionality
         let contraHistoryAccountsLoaded = false;
 
         function loadContraHistoryAccounts() {
@@ -683,15 +802,9 @@
                 const rows = (res && res.rows) || [];
 
                 if (rows.length === 0) {
-                    $('#contraHistTotals').hide();
-                    tbody.append('<tr><td colspan="17" style="text-align: center; color: #888; padding: 20px;">No vouchers found</td></tr>');
+                    tbody.append('<tr><td colspan="10" style="text-align: center; color: #888; padding: 20px;">No vouchers found</td></tr>');
                     return;
                 }
-
-                $('#contraHistTotals').show();
-                $('#contraHistTotalVouchers').text(res.totalVouchers || 0);
-                $('#contraHistTotalApproved').text(res.totalApprovedVoucher || 0);
-                $('#contraHistTotalUnApproved').text(res.totalUnApprovedVoucher || 0);
 
                 rows.forEach(function(v) {
                     const row = '<tr style="cursor: pointer;" ondblclick="loadContraVoucherForEdit(' + v.id + ')">' +
@@ -699,29 +812,20 @@
                         '<td style="font-weight: bold;">' + (v.voucherCode != null ? v.voucherCode : '') + '</td>' +
                         '<td>' + (v.voucherDate || '') + '</td>' +
                         '<td>' + (v.documentType || '') + '</td>' +
-                        '<td>' + (v.manualBillNo || '') + '</td>' +
                         '<td>' + (v.accountTitle || '') + '</td>' +
                         '<td>' + (v.againstAccount || '') + '</td>' +
                         '<td>' + (v.remarks || '') + '</td>' +
                         '<td style="text-align: right; font-weight: bold;">' + (parseFloat(v.voucherAmount || 0)).toFixed(2) + '</td>' +
                         '<td>' + (v.entryUser || '') + '</td>' +
                         '<td>' + (v.entryDate || '') + '</td>' +
-                        '<td>' + (v.modifyUser || '') + '</td>' +
-                        '<td>' + (v.modifyDate || '') + '</td>' +
-                        '<td>' + (v.approvedUser || '') + '</td>' +
-                        '<td>' + (v.approvedDate || '') + '</td>' +
-                        '<td>' + (v.chequeNo || '') + '</td>' +
-                        '<td style="text-align: center;">' + (v.attachment && v.attachment > 0 ? v.attachment : '') + '</td>' +
                         '</tr>';
                     tbody.append(row);
                 });
             }).fail(function() {
-                $('#tbodyContraHistoryGrid').html('<tr><td colspan="17" style="text-align: center; color: red; padding: 20px;">Error loading Contra History</td></tr>');
+                $('#tbodyContraHistoryGrid').html('<tr><td colspan="10" style="text-align: center; color: red; padding: 20px;">Error loading Contra History</td></tr>');
             });
         }
 
-        // Loads the complete real voucher (header + all detail rows) from GET /accounts/api/vouchers/{id}
-        // and preserves its real Id so the next Save updates this same voucher instead of duplicating it.
         function loadContraVoucherForEdit(id) {
             $.get('/accounts/api/vouchers/' + id, function(voucher) {
                 if (!voucher || !voucher.header) return;
@@ -733,7 +837,8 @@
                 $('#txtHeaderRemarks').val(header.remarks || '');
                 if (header.chequeNo) $('#txtHeaderChequeNo').val(header.chequeNo);
                 if (header.chequeDate) $('#dtpHeaderChequeDate').val(header.chequeDate);
-                if (header.refAccountId) $('#cmbDebitAccount').val(header.refAccountId);
+                if (header.payTitle) $('#txtPayTitle').val(header.payTitle);
+                if (header.refAccountId) $('#cmbCreditAccount').val(header.refAccountId).trigger('change');
 
                 const details = voucher.details || [];
                 gridItems = details.map(function(d) {
@@ -745,7 +850,7 @@
                         jobLotId: 1,
                         remarks: d.comments || '',
                         debitAmount: parseFloat(d.debitAmount || 0),
-                        creditAmount: parseFloat(d.creditAmount || 0)
+                        creditAmount: 0.0
                     };
                 });
                 renderGrid();
