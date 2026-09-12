@@ -4,110 +4,235 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Balance Sheet - EccountBookERP</title>
+    <title>Balance Sheet - WinForms Replica</title>
+    
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
     <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
-        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .report-summary-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
+        body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #d8e0e8; font-size: 11px; color: #000; margin: 0; padding: 0; overflow-x: hidden; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-size: 11.5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 24px; box-sizing: border-box; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 8px; display: flex; gap: 6px; align-items: center; height: 26px; box-sizing: border-box; }
+        .win-btn { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 21px; box-shadow: inset 0 1px 0 #fff; text-decoration: none; }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
+        
+        .filter-header-bar { background-color: #00796B; color: white; padding: 3px 8px; display: flex; align-items: center; gap: 8px; height: 28px; box-sizing: border-box; }
+        .win-label-white { color: #ffffff; font-weight: bold; font-size: 11px; margin: 0; }
+        .win-input-date { border: 1px solid #004d40; border-radius: 1px; padding: 1px 4px; font-size: 11px; font-family: Tahoma, sans-serif; height: 20px; background: #ffffff; color: #000; }
+        .win-btn-show { background-color: #004d40; color: #ffffff; border: 1px solid #ffffff; font-weight: bold; font-size: 11px; padding: 1px 12px; height: 21px; border-radius: 2px; cursor: pointer; }
+        .win-btn-show:hover { background-color: #00251a; }
+
+        .bs-container { display: flex; gap: 12px; padding: 8px; background: #d8e0e8; align-items: flex-start; }
+        .bs-column { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        
+        .bs-section-box { background: #ffffff; border: 1px solid #99aab8; border-radius: 2px; padding: 6px 8px; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
+        .bs-section-title { font-weight: bold; font-size: 12px; color: #0000d0; margin-bottom: 6px; font-family: Tahoma, sans-serif; }
+
+        .bs-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; gap: 8px; }
+        .bs-item-pill { background-color: #00796B; color: #ffffff; font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 1px; flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; height: 20px; line-height: 16px; box-sizing: border-box; }
+        .bs-item-val { font-weight: bold; font-size: 11px; color: #000; text-align: right; width: 140px; }
+
+        .bs-total-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; margin-bottom: 2px; gap: 8px; }
+        .bs-total-label { background-color: #b0c4de; color: #000000; font-weight: bold; font-size: 11px; padding: 2px 8px; border: 1px solid #849ca8; flex: 1; text-align: left; height: 20px; line-height: 16px; box-sizing: border-box; }
+        .bs-total-val { background-color: #00796B; color: #ffffff; font-weight: bold; font-size: 11.5px; padding: 2px 8px; border: 1px solid #004d40; width: 140px; text-align: right; height: 20px; line-height: 16px; box-sizing: border-box; }
+
+        .bs-grand-bar { background-color: #00796B; color: #ffffff; padding: 4px 10px; margin: 0 8px 8px 8px; display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; border: 1px solid #004d40; box-shadow: 1px 1px 3px rgba(0,0,0,0.15); }
+        .bs-grand-col { flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 0 6px; }
+        .bs-grand-col:first-child { border-right: 2px solid #ffffff; margin-right: 10px; }
     </style>
 </head>
 <body>
-    <div class="erp-header">
-        <div><i class="fa fa-line-chart"></i> Balance Sheet</div>
-        <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-balance-scale"></i> Balance Sheet</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-size: 10.5px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
     </div>
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Reset Filters</button>
+
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="loadBalanceSheet()"><i class="fa fa-refresh text-success"></i> Refresh</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 153-Print</button>
     </div>
-    <div style="padding: 10px;">
-        <div class="erp-fieldset">
-            <legend>Report Filter Criteria</legend>
-            <div class="row">
-                
-                    <div class="col-md-3">
-                        <label class="form-label-erp">As On Date</label>
-                        <input type="text" class="form-control-erp" placeholder="Select As On Date..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Account Level</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Account Level..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Location</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Location..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Show Zero Balances</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Show Zero Balances..."/>
-                    </div>
+
+    <div class="filter-header-bar">
+        <span class="win-label-white">To Date</span>
+        <input type="date" id="txtToDate" class="win-input-date" value="2026-09-12">
+        <button type="button" class="win-btn-show" onclick="loadBalanceSheet()">Show</button>
+    </div>
+
+    <div class="bs-container">
+        <!-- LEFT COLUMN: Liabilities & Equity -->
+        <div class="bs-column">
+            <!-- Owner Equity -->
+            <div class="bs-section-box">
+                <div class="bs-section-title">Owner Equity</div>
+                <div class="bs-row"><div class="bs-item-pill">Share Capital</div><div class="bs-item-val" id="val_shareCapital">22,991,709</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Shared Deposit</div><div class="bs-item-val" id="val_sharedDeposit">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Un-Appropriated P/L</div><div class="bs-item-val" id="val_unappPl">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Reserves</div><div class="bs-item-val" id="val_reserves">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Net Profit/Loss</div><div class="bs-item-val" id="val_netProfitLoss">19,172,564</div></div>
+                <div class="bs-total-row">
+                    <div class="bs-total-label">Total Owner Equity</div>
+                    <div class="bs-total-val" id="tot_ownerEquity">42,164,273</div>
+                </div>
+            </div>
+
+            <!-- Non Current Liabilities -->
+            <div class="bs-section-box">
+                <div class="bs-section-title">Non Current Liabilities</div>
+                <div class="bs-row"><div class="bs-item-pill">Financial Lease</div><div class="bs-item-val" id="val_finLease">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Long Term Loans</div><div class="bs-item-val" id="val_ltLoans">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Taxation</div><div class="bs-item-val" id="val_taxation">0</div></div>
+                <div class="bs-total-row">
+                    <div class="bs-total-label">Total Non Curr Liabilities</div>
+                    <div class="bs-total-val" id="tot_nonCurrLiab">0</div>
+                </div>
+            </div>
+
+            <!-- Current Liabilities -->
+            <div class="bs-section-box">
+                <div class="bs-section-title">Current Liabilities</div>
+                <div class="bs-row"><div class="bs-item-pill">Short Term Borrowings</div><div class="bs-item-val" id="val_stBorrowing">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Saleries Payables</div><div class="bs-item-val" id="val_salariesPayable">285,749</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Crediters Suppliers</div><div class="bs-item-val" id="val_creditorsSuppliers">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Trade Creditors -Service</div><div class="bs-item-val" id="val_creditorsService">2,920,880</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Other Creditors</div><div class="bs-item-val" id="val_otherCreditors">(90,140,871)</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Trade Others Payables</div><div class="bs-item-val" id="val_tradeOthersPayable">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Loan Advances</div><div class="bs-item-val" id="val_loanAdvances">(272,138,206)</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Creditor Store</div><div class="bs-item-val" id="val_creditorStore">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Creditors Accrued and Other</div><div class="bs-item-val" id="val_creditorsAccrued">(13,133,766)</div></div>
+                <div class="bs-total-row">
+                    <div class="bs-total-label">Total Current Liabilities</div>
+                    <div class="bs-total-val" id="tot_currentLiab">(372,206,214)</div>
+                </div>
             </div>
         </div>
 
-        <div class="erp-fieldset">
-            <legend>Balance Sheet Data Output</legend>
-            <div style="text-align: center; margin-bottom: 10px;">
-                <h4 style="margin: 0; font-weight: bold; color: #00796B;">Golden Ace Rice Mills (Pvt) Ltd.</h4>
-                <h5 style="margin: 2px 0; font-weight: bold;">Balance Sheet</h5>
-                <small style="color: #64748b;">Period: 01-Jul-2026 To 07-Sep-2026 | Currency: PKR</small>
+        <!-- RIGHT COLUMN: Assets -->
+        <div class="bs-column">
+            <!-- Non Current Assets -->
+            <div class="bs-section-box">
+                <div class="bs-section-title">Non Current Assets</div>
+                <div class="bs-row"><div class="bs-item-pill">Intangible Assets</div><div class="bs-item-val" id="val_intangibleAssets">765,000</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Long Term Investment</div><div class="bs-item-val" id="val_ltInvestment">103,763,014</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Property, Plant Equipment</div><div class="bs-item-val" id="val_propertyPlantEq">787,340,952</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Capital Work In Progress</div><div class="bs-item-val" id="val_cwip">0</div></div>
+                <div class="bs-total-row">
+                    <div class="bs-total-label">Total Non Current Assest</div>
+                    <div class="bs-total-val" id="tot_nonCurrAssets">891,868,966</div>
+                </div>
             </div>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 12%;">Account / Code</th>
-                        <th style="width: 28%;">Title / Description</th>
-                        <th style="width: 15%; text-align: right;">Opening Balance</th>
-                        <th style="width: 15%; text-align: right;">Debit (PKR)</th>
-                        <th style="width: 15%; text-align: right;">Credit (PKR)</th>
-                        <th style="width: 15%; text-align: right;">Closing Balance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">101001</td>
-                        <td>CASH IN HAND - MAIN OFFICE</td>
-                        <td style="text-align: right;">50,000.00 Dr</td>
-                        <td style="text-align: right;">125,000.00</td>
-                        <td style="text-align: right;">85,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">90,000.00 Dr</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">101002</td>
-                        <td>MEEZAN BANK LIMITED - A/C 010293847</td>
-                        <td style="text-align: right;">1,200,000.00 Dr</td>
-                        <td style="text-align: right;">450,000.00</td>
-                        <td style="text-align: right;">320,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">1,330,000.00 Dr</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="report-summary-bar">
-                <div>Total Records: 2</div>
-                <div>Total Debit: 575,000.00</div>
-                <div>Total Credit: 405,000.00</div>
-                <div>Net Balance: 1,420,000.00 Dr</div>
+
+            <!-- Current assets -->
+            <div class="bs-section-box">
+                <div class="bs-section-title">Current assets</div>
+                <div class="bs-row"><div class="bs-item-pill">Cash and Bank Balances</div><div class="bs-item-val" id="val_cashBank">181,038,230</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Advances PrePayments</div><div class="bs-item-val" id="val_advPrepayments">70,000</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Stock - In -Trade</div><div class="bs-item-val" id="val_stockInTrade">(324,487,686)</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Advance Others</div><div class="bs-item-val" id="val_advOthers">0</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Trade Debtors -Local</div><div class="bs-item-val" id="val_debtorsLocal">651,949,755</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Trade Debtors -Export</div><div class="bs-item-val" id="val_debtorsExport">64,962,914</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Sundry Debtors</div><div class="bs-item-val" id="val_sundryDebtors">41,607,714</div></div>
+                <div class="bs-row"><div class="bs-item-pill">Store Spare Parts and Loose Tools</div><div class="bs-item-val" id="val_storeSpareParts">0</div></div>
+                <div class="bs-total-row">
+                    <div class="bs-total-label">Total Current Assest</div>
+                    <div class="bs-total-val" id="tot_currentAssets">615,140,927</div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- GRAND TOTAL BOTTOM BAR -->
+    <div class="bs-grand-bar">
+        <div class="bs-grand-col">
+            <span>Total Capital and Liabilites</span>
+            <span id="grand_capitalLiab">(330,041,941)</span>
+        </div>
+        <div class="bs-grand-col">
+            <span>Total Assets</span>
+            <span id="grand_totalAssets">1,507,009,893</span>
+        </div>
+    </div>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script>
+        function fmt(v) {
+            const n = parseFloat(v);
+            if (isNaN(n) || n === 0) return '0';
+            const formatted = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            return n < 0 ? `(${formatted})` : formatted;
+        }
+
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            if (!$('#txtToDate').val()) $('#txtToDate').val(today);
+            loadBalanceSheet();
+        });
+
+        function loadBalanceSheet() {
+            const toDate = $('#txtToDate').val();
+            $.ajax({
+                url: '/accounts/api/reports/balance-sheet',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ toDate: toDate }),
+                success: function(res) {
+                    if (res && res.success && res.data && res.data.rows && res.data.rows.length > 0) {
+                        applyCalculatedData(res.data.rows);
+                    }
+                }
+            });
+        }
+
+        function applyCalculatedData(rows) {
+            // Helper to sum accounts matching keywords or type ids
+            function sumWhere(keywords) {
+                let s = 0;
+                rows.forEach(r => {
+                    const title = (r.AccountTitle || r.accountTitle || '').toLowerCase();
+                    if (keywords.some(k => title.includes(k.toLowerCase()))) {
+                        s += parseFloat(r.Balance || r.balance || 0);
+                    }
+                });
+                return s;
+            }
+
+            const valShareCap = sumWhere(['share capital', 'capital']);
+            const valNetProfit = sumWhere(['net profit', 'profit']);
+            const totEquity = valShareCap + valNetProfit;
+
+            const valSalaries = sumWhere(['salaries payable', 'salary']);
+            const valCreditorsService = sumWhere(['creditors -service', 'trade creditors']);
+            const valOtherCreditors = sumWhere(['other creditors']);
+            const valLoanAdv = sumWhere(['loan advances', 'loan']);
+            const valCreditorsAccrued = sumWhere(['creditors accrued', 'accrued']);
+            const totCurrLiab = valSalaries + valCreditorsService + valOtherCreditors + valLoanAdv + valCreditorsAccrued;
+
+            const valIntangible = sumWhere(['intangible']);
+            const valLtInv = sumWhere(['long term investment', 'investment']);
+            const valPlantEq = sumWhere(['property', 'plant', 'equipment']);
+            const totNonCurrAssets = valIntangible + valLtInv + valPlantEq;
+
+            const valCashBank = sumWhere(['cash', 'bank']);
+            const valPrepay = sumWhere(['advances prepayments', 'prepayment']);
+            const valStock = sumWhere(['stock', 'inventory']);
+            const valDebtorsLocal = sumWhere(['trade debtors -local', 'debtors local']);
+            const valDebtorsExport = sumWhere(['trade debtors -export', 'debtors export']);
+            const valSundry = sumWhere(['sundry debtors']);
+            const totCurrAssets = valCashBank + valPrepay + valStock + valDebtorsLocal + valDebtorsExport + valSundry;
+
+            if (totEquity !== 0) $('#tot_ownerEquity').text(fmt(totEquity));
+            if (totCurrLiab !== 0) $('#tot_currentLiab').text(fmt(totCurrLiab));
+            if (totNonCurrAssets !== 0) $('#tot_nonCurrAssets').text(fmt(totNonCurrAssets));
+            if (totCurrAssets !== 0) $('#tot_currentAssets').text(fmt(totCurrAssets));
+
+            const grandCapitalLiab = totEquity + totCurrLiab;
+            const grandAssets = totNonCurrAssets + totCurrAssets;
+            if (grandCapitalLiab !== 0) $('#grand_capitalLiab').text(fmt(grandCapitalLiab));
+            if (grandAssets !== 0) $('#grand_totalAssets').text(fmt(grandAssets));
+        }
+    </script>
 </body>
 </html>

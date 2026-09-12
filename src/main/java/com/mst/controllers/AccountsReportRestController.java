@@ -382,5 +382,45 @@ public class AccountsReportRestController {
             return ResponseEntity.status(500).body(err);
         }
     }
+
+    @PostMapping("/day-book")
+    public ResponseEntity<?> getDayBook(@RequestBody Map<String, Object> req) {
+        try {
+            Integer accountId = intOrNull(req.get("accountId"));
+            Integer branchId = intOrNull(req.get("branchId"));
+            Integer costCenterId = intOrNull(req.get("costCenterId"));
+            String fromDate = strOrNull(req.get("fromDate"));
+            String toDate = strOrNull(req.get("toDate"));
+
+            List<Map<String, Object>> data = accountsReportService.getDayBookReport(accountId, branchId, costCenterId, fromDate, toDate);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data.size());
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Day Book: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @PostMapping("/balance-sheet")
+    public ResponseEntity<?> getBalanceSheet(@RequestBody Map<String, Object> req) {
+        try {
+            String toDate = strOrNull(req.get("toDate"));
+            Map<String, Object> data = accountsReportService.getBalanceSheetData(toDate);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Balance Sheet: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
 }
 

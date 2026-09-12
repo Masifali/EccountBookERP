@@ -4,9 +4,12 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Day Book - EccountBookERP</title>
+    <title>Day Book Report - EccountBookERP</title>
+    
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
         .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -20,6 +23,9 @@
         .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
         .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
         .form-control-erp:focus { border-color: #00796B; outline: none; }
+        .select2-container--default .select2-selection--single { height: 24px !important; line-height: 22px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 22px !important; padding-left: 6px !important; color: #222 !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 22px !important; }
         .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
         .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
         .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
@@ -29,40 +35,48 @@
 </head>
 <body>
     <div class="erp-header">
-        <div><i class="fa fa-line-chart"></i> Day Book</div>
+        <div><i class="fa fa-line-chart"></i> Day Book Report</div>
         <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
     </div>
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp btn-erp-primary" onclick="generateReport()"><i class="fa fa-eye"></i> View Report</button>
+        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
         <button type="button" class="btn-erp"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Reset Filters</button>
+        <button type="button" class="btn-erp" onclick="resetFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
     </div>
     <div style="padding: 10px;">
         <div class="erp-fieldset">
             <legend>Report Filter Criteria</legend>
             <div class="row">
-                
-                    <div class="col-md-3">
-                        <label class="form-label-erp">From Date</label>
-                        <input type="text" class="form-control-erp" placeholder="Select From Date..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">To Date</label>
-                        <input type="text" class="form-control-erp" placeholder="Select To Date..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Voucher Type</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Voucher Type..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Location</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Location..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">User</label>
-                        <input type="text" class="form-control-erp" placeholder="Select User..."/>
-                    </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">From Date</label>
+                    <input type="date" id="dtpFromDate" class="form-control-erp" value="2026-09-12"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">To Date</label>
+                    <input type="date" id="dtpToDate" class="form-control-erp" value="2026-09-12"/>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-erp">Cash / Bank Account</label>
+                    <select id="cmbAccount" class="form-control-erp select2-elem" style="width: 100%;">
+                        <option value="0">-- All Accounts --</option>
+                        <option th:each="acc : ${accountsList}" th:value="${acc.id != null ? acc.id : acc.Id}" th:text="${(acc.accountCode != null ? acc.accountCode : (acc.AccountCode != null ? acc.AccountCode : '')) + ' - ' + (acc.accountTitle != null ? acc.accountTitle : (acc.AccountTitle != null ? acc.AccountTitle : ''))}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Location / Branch</label>
+                    <select id="cmbBranch" class="form-control-erp select2-elem" style="width: 100%;">
+                        <option value="0">-- All Locations --</option>
+                        <option th:each="b : ${branchesList}" th:value="${b.id != null ? b.id : b.Id}" th:text="${b.name != null ? b.name : (b.Name != null ? b.Name : (b.branchName != null ? b.branchName : ''))}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Cost Center</label>
+                    <select id="cmbCostCenter" class="form-control-erp select2-elem" style="width: 100%;">
+                        <option value="0">-- All Cost Centers --</option>
+                        <option th:each="cc : ${costCentersList}" th:value="${cc.id != null ? cc.id : cc.Id}" th:text="${cc.name != null ? cc.name : (cc.Name != null ? cc.Name : '')}"></option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -70,48 +84,141 @@
             <legend>Day Book Data Output</legend>
             <div style="text-align: center; margin-bottom: 10px;">
                 <h4 style="margin: 0; font-weight: bold; color: #00796B;">Golden Ace Rice Mills (Pvt) Ltd.</h4>
-                <h5 style="margin: 2px 0; font-weight: bold;">Day Book</h5>
-                <small style="color: #64748b;">Period: 01-Jul-2026 To 07-Sep-2026 | Currency: PKR</small>
+                <h5 style="margin: 2px 0; font-weight: bold;">Day Book Report</h5>
+                <small id="lblPeriod" style="color: #64748b;">Period: Current Date | Currency: PKR</small>
             </div>
-            <table class="erp-table">
+            <table class="erp-table" id="tblDayBook">
                 <thead>
                     <tr>
                         <th style="width: 12%;">Account / Code</th>
-                        <th style="width: 28%;">Title / Description</th>
+                        <th style="width: 28%;">Title / Particulars</th>
                         <th style="width: 15%; text-align: right;">Opening Balance</th>
                         <th style="width: 15%; text-align: right;">Debit (PKR)</th>
                         <th style="width: 15%; text-align: right;">Credit (PKR)</th>
                         <th style="width: 15%; text-align: right;">Closing Balance</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">101001</td>
-                        <td>CASH IN HAND - MAIN OFFICE</td>
-                        <td style="text-align: right;">50,000.00 Dr</td>
-                        <td style="text-align: right;">125,000.00</td>
-                        <td style="text-align: right;">85,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">90,000.00 Dr</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">101002</td>
-                        <td>MEEZAN BANK LIMITED - A/C 010293847</td>
-                        <td style="text-align: right;">1,200,000.00 Dr</td>
-                        <td style="text-align: right;">450,000.00</td>
-                        <td style="text-align: right;">320,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">1,330,000.00 Dr</td>
-                    </tr>
+                <tbody id="tbodyReport">
+                    <tr><td colspan="6" style="text-align:center; padding:16px; color:#666;">Loading Day Book data...</td></tr>
                 </tbody>
             </table>
             <div class="report-summary-bar">
-                <div>Total Records: 2</div>
-                <div>Total Debit: 575,000.00</div>
-                <div>Total Credit: 405,000.00</div>
-                <div>Net Balance: 1,420,000.00 Dr</div>
+                <div id="summaryRecords">Total Records: 0</div>
+                <div id="summaryDebit">Total Debit: 0.00</div>
+                <div id="summaryCredit">Total Credit: 0.00</div>
+                <div id="summaryNet">Net Balance: 0.00 Dr</div>
             </div>
         </div>
     </div>
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script>
+        function fmt(v) {
+            const n = parseFloat(v);
+            if (isNaN(n)) return '0.00';
+            return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            if (!$('#dtpFromDate').val()) $('#dtpFromDate').val(today);
+            if (!$('#dtpToDate').val()) $('#dtpToDate').val(today);
+            $('.select2-elem').select2({ width: '100%', placeholder: '...Select Any Value...' });
+            generateReport();
+        });
+
+        function updatePeriodLabel() {
+            const fromStr = $('#dtpFromDate').val() || 'Today';
+            const toStr = $('#dtpToDate').val() || 'Today';
+            $('#lblPeriod').text(`Period: ${fromStr} To ${toStr} | Currency: PKR`);
+        }
+
+        function generateReport() {
+            updatePeriodLabel();
+            const req = {
+                accountId: parseInt($('#cmbAccount').val() || '0'),
+                branchId: parseInt($('#cmbBranch').val() || '0'),
+                costCenterId: parseInt($('#cmbCostCenter').val() || '0'),
+                fromDate: $('#dtpFromDate').val(),
+                toDate: $('#dtpToDate').val()
+            };
+
+            $.ajax({
+                url: '/accounts/api/reports/day-book',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(req),
+                success: function(res) {
+                    if (res && res.success && res.data) {
+                        renderDayBookTable(res.data);
+                    } else {
+                        $('#tbodyReport').html('<tr><td colspan="6" style="text-align:center; padding:12px; color:#666;">No Day Book records found.</td></tr>');
+                        updateSummary(0, 0, 0, 0);
+                    }
+                },
+                error: function() {
+                    $('#tbodyReport').html('<tr><td colspan="6" style="text-align:center; padding:12px; color:red;">Error loading Day Book Report.</td></tr>');
+                    updateSummary(0, 0, 0, 0);
+                }
+            });
+        }
+
+        function renderDayBookTable(data) {
+            const tbody = $('#tbodyReport');
+            tbody.empty();
+            if (!data || data.length === 0) {
+                tbody.html('<tr><td colspan="6" style="text-align:center; padding:12px; color:#666;">No Day Book records found.</td></tr>');
+                updateSummary(0, 0, 0, 0);
+                return;
+            }
+
+            let totDebit = 0, totCredit = 0, totNet = 0;
+            data.forEach(r => {
+                const code = r.AccountCode || r.accountCode || '-';
+                const title = r.AccountTitle || r.accountTitle || '-';
+                const opBal = parseFloat(r.OpeningBalance || r.openingBalance || 0);
+                const debit = parseFloat(r.TotalDebit || r.totalDebit || r.Debit || 0);
+                const credit = parseFloat(r.TotalCredit || r.totalCredit || r.Credit || 0);
+                const clBal = parseFloat(r.ClosingBalance || r.closingBalance || (opBal + debit - credit));
+
+                totDebit += debit;
+                totCredit += credit;
+                totNet += clBal;
+
+                const opStr = opBal < 0 ? `(${fmt(Math.abs(opBal))}) Cr` : `${fmt(opBal)} Dr`;
+                const clStr = clBal < 0 ? `(${fmt(Math.abs(clBal))}) Cr` : `${fmt(clBal)} Dr`;
+
+                tbody.append(`
+                    <tr>
+                        <td style="font-weight: bold; color: #00796B;">${code}</td>
+                        <td>${title}</td>
+                        <td style="text-align: right;">${opStr}</td>
+                        <td style="text-align: right;">${fmt(debit)}</td>
+                        <td style="text-align: right;">${fmt(credit)}</td>
+                        <td style="text-align: right; font-weight: bold;">${clStr}</td>
+                    </tr>
+                `);
+            });
+
+            updateSummary(data.length, totDebit, totCredit, totNet);
+        }
+
+        function updateSummary(count, debit, credit, net) {
+            $('#summaryRecords').text(`Total Records: ${count}`);
+            $('#summaryDebit').text(`Total Debit: ${fmt(debit)}`);
+            $('#summaryCredit').text(`Total Credit: ${fmt(credit)}`);
+            const netStr = net < 0 ? `(${fmt(Math.abs(net))}) Cr` : `${fmt(net)} Dr`;
+            $('#summaryNet').text(`Net Balance: ${netStr}`);
+        }
+
+        function resetFilters() {
+            const today = new Date().toISOString().split('T')[0];
+            $('#dtpFromDate').val(today);
+            $('#dtpToDate').val(today);
+            $('.select2-elem').val('0').trigger('change');
+            generateReport();
+        }
+    </script>
 </body>
 </html>

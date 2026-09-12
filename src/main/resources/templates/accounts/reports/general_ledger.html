@@ -600,16 +600,19 @@
 
                 const groups = {};
                 currentData.forEach(r => {
-                    let vDate = r.VoucherDate || '';
+                    let vDate = r.VoucherDate || r.voucherDate || r.VDate || r.vDate || '';
                     if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
-                    const docType = r.DocType || 'N/A';
-                    const key = vDate + '|' + docType;
+                    const docType = r.DocType || r.DocumentTypeDescription || r.DocumentTypeCode || r.docType || r.documentTypeDescription || r.DocumentType || r.VoucherType || 'N/A';
+                    const accountCode = r.AccountCode || r.accountCode || '';
+                    const key = vDate + '|' + docType + '|' + accountCode;
                     if (!groups[key]) {
-                        groups[key] = { vDate: vDate, docType: docType, accountCode: r.AccountCode || '', count: 0, debit: 0, credit: 0 };
+                        groups[key] = { vDate: vDate, docType: docType, accountCode: accountCode, count: 0, debit: 0, credit: 0 };
                     }
+                    const debitVal = parseFloat(r.Debit != null ? r.Debit : (r.DebitAmount != null ? r.DebitAmount : (r.debit != null ? r.debit : (r.debitAmount != null ? r.debitAmount : 0))));
+                    const creditVal = parseFloat(r.Credit != null ? r.Credit : (r.CreditAmount != null ? r.CreditAmount : (r.credit != null ? r.credit : (r.creditAmount != null ? r.creditAmount : 0))));
                     groups[key].count++;
-                    groups[key].debit += parseFloat(r.Debit || 0);
-                    groups[key].credit += parseFloat(r.Credit || 0);
+                    groups[key].debit += isNaN(debitVal) ? 0 : debitVal;
+                    groups[key].credit += isNaN(creditVal) ? 0 : creditVal;
                 });
 
                 let totDebit = 0, totCredit = 0;
@@ -673,7 +676,7 @@
 
                 const months = {};
                 currentData.forEach(r => {
-                    let vDate = r.VoucherDate || '';
+                    let vDate = r.VoucherDate || r.voucherDate || r.VDate || r.vDate || '';
                     if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
                     let monthKey = 'Period';
                     if (vDate) {
@@ -686,8 +689,10 @@
                     if (!months[monthKey]) {
                         months[monthKey] = { period: monthKey, debit: 0, credit: 0 };
                     }
-                    months[monthKey].debit += parseFloat(r.Debit || 0);
-                    months[monthKey].credit += parseFloat(r.Credit || 0);
+                    const debitVal = parseFloat(r.Debit != null ? r.Debit : (r.DebitAmount != null ? r.DebitAmount : (r.debit != null ? r.debit : (r.debitAmount != null ? r.debitAmount : 0))));
+                    const creditVal = parseFloat(r.Credit != null ? r.Credit : (r.CreditAmount != null ? r.CreditAmount : (r.credit != null ? r.credit : (r.creditAmount != null ? r.creditAmount : 0))));
+                    months[monthKey].debit += isNaN(debitVal) ? 0 : debitVal;
+                    months[monthKey].credit += isNaN(creditVal) ? 0 : creditVal;
                 });
 
                 let totDebit = 0, totCredit = 0;
@@ -758,11 +763,11 @@
 
                 let totDebit = 0, totCredit = 0;
                 currentData.forEach((r, idx) => {
-                    const debit = parseFloat(r.Debit || r.DebitAmount || 0);
-                    const credit = parseFloat(r.Credit || r.CreditAmount || 0);
-                    const balance = parseFloat(r.Balance || 0);
-                    totDebit += debit;
-                    totCredit += credit;
+                    const debit = parseFloat(r.Debit != null ? r.Debit : (r.DebitAmount != null ? r.DebitAmount : (r.debit != null ? r.debit : (r.debitAmount != null ? r.debitAmount : 0))));
+                    const credit = parseFloat(r.Credit != null ? r.Credit : (r.CreditAmount != null ? r.CreditAmount : (r.credit != null ? r.credit : (r.creditAmount != null ? r.creditAmount : 0))));
+                    const balance = parseFloat(r.Balance != null ? r.Balance : (r.balance != null ? r.balance : 0));
+                    totDebit += isNaN(debit) ? 0 : debit;
+                    totCredit += isNaN(credit) ? 0 : credit;
                     let vDate = r.VoucherDate || '';
                     if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
                     let dDate = r.DueDate || '';

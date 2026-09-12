@@ -81,6 +81,8 @@ public class AccountDefinitionModulesController {
 	private IAcLookUpRepository acLookUpRepository;
 	@Autowired
 	private IAccountCustomGroupService accountCustomGroupService;
+	@Autowired
+	private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
 	// ==========================================
 	// 3. DEFINE SUPPLIER / CUSTOMER (/accounts/supplier)
@@ -215,6 +217,26 @@ public class AccountDefinitionModulesController {
 		List<ChartofAccount> allAccounts = chartofAccountService.getAllAccounts();
 		Set<String> allocatedAccountCodes = new HashSet<>();
 
+		if (userId != null && userId > 0) {
+			try {
+				List<String> codes = jdbcTemplate.queryForList(
+						"SELECT AccountCode FROM UserChartOfAccount WHERE UserId = ?", String.class, userId);
+				if (codes != null && !codes.isEmpty()) {
+					allocatedAccountCodes.addAll(codes);
+				}
+			} catch (Exception e) {
+				try {
+					jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserChartOfAccount') " +
+							"CREATE TABLE UserChartOfAccount (UserId INT, AccountCode VARCHAR(50), PRIMARY KEY (UserId, AccountCode))");
+					List<String> codes = jdbcTemplate.queryForList(
+							"SELECT AccountCode FROM UserChartOfAccount WHERE UserId = ?", String.class, userId);
+					if (codes != null && !codes.isEmpty()) {
+						allocatedAccountCodes.addAll(codes);
+					}
+				} catch (Exception ignored) {}
+			}
+		}
+
 		model.addAttribute("activeMenu", "accounts");
 		model.addAttribute("users", users);
 		model.addAttribute("selUserId", userId);
@@ -228,6 +250,24 @@ public class AccountDefinitionModulesController {
 	public String saveUserCoaManagement(
 			@RequestParam("userId") Integer userId,
 			@RequestParam(value = "allocatedAccountCodes", required = false) List<String> allocatedAccountCodes) {
+
+		if (userId != null && userId > 0) {
+			try {
+				jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserChartOfAccount') " +
+						"CREATE TABLE UserChartOfAccount (UserId INT, AccountCode VARCHAR(50), PRIMARY KEY (UserId, AccountCode))");
+				jdbcTemplate.update("DELETE FROM UserChartOfAccount WHERE UserId = ?", userId);
+				if (allocatedAccountCodes != null && !allocatedAccountCodes.isEmpty()) {
+					for (String code : allocatedAccountCodes) {
+						if (code != null && !code.isBlank()) {
+							jdbcTemplate.update("INSERT INTO UserChartOfAccount (UserId, AccountCode) VALUES (?, ?)", userId, code.trim());
+						}
+					}
+				}
+			} catch (Exception e) {
+				org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class)
+						.error("Error saving user COA allocation: {}", e.getMessage());
+			}
+		}
 
 		return "redirect:/accounts/user-coa-management?userId=" + userId;
 	}
@@ -292,27 +332,50 @@ public class AccountDefinitionModulesController {
 
 	@GetMapping("/opening_balance")
 	public String viewOpeningBalance(Model model) {
-		List<ChartofAccount> detailAccounts = chartofAccountService.getDetailAccounts();
 		OpeningBalanceForm form = new OpeningBalanceForm();
 		List<OpeningBalanceRow> rows = new ArrayList<>();
 
-		for (ChartofAccount acc : detailAccounts) {
-			OpeningBalanceRow r = new OpeningBalanceRow();
-			r.setAccountCode(acc.getAccountCode());
-			r.setAccountTitle(acc.getAccountTitle());
+		try {
+			String sql = "SELECT coa.ID as id, coa.AccountCode as accountCode, coa.AccountTitle as accountTitle, " +
+					"ISNULL(aob.YearObDebit, 0) as yearObDebit, ISNULL(aob.YearObCredit, 0) as yearObCredit, " +
+					"ISNULL(aob.OpeningBalance, 0) as openingBalance " +
+					"FROM ChartofAccount coa " +
+					"LEFT JOIN AccountsOpeningBalances aob ON (aob.ChartOfAccountId = coa.ID OR aob.AccountCode = coa.AccountCode) " +
+					"WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) " +
+					"ORDER BY coa.AccountCode";
 
-			AccountOpeningBalance existing = accountOpeningBalanceRepository.findByAccountCode(acc.getAccountCode());
-			if (existing != null) {
-				r.setOpeningDebit(existing.getYearObDebit());
-				r.setOpeningCredit(existing.getYearObCredit());
-			} else {
+			List<java.util.Map<String, Object>> dbRows = jdbcTemplate.queryForList(sql);
+			for (java.util.Map<String, Object> r : dbRows) {
+				OpeningBalanceRow row = new OpeningBalanceRow();
+				row.setAccountCode(r.get("accountCode") != null ? r.get("accountCode").toString() : "");
+				row.setAccountTitle(r.get("accountTitle") != null ? r.get("accountTitle").toString() : "");
+
+				double debit = r.get("yearObDebit") != null ? ((Number) r.get("yearObDebit")).doubleValue() : 0.0;
+				double credit = r.get("yearObCredit") != null ? ((Number) r.get("yearObCredit")).doubleValue() : 0.0;
+				double opBal = r.get("openingBalance") != null ? ((Number) r.get("openingBalance")).doubleValue() : 0.0;
+
+				if (debit == 0.0 && credit == 0.0 && opBal != 0.0) {
+					if (opBal > 0) debit = opBal;
+					else credit = Math.abs(opBal);
+				}
+
+				row.setOpeningDebit(debit);
+				row.setOpeningCredit(credit);
+				rows.add(row);
+			}
+		} catch (Exception e) {
+			List<ChartofAccount> detailAccounts = chartofAccountService.getDetailAccounts();
+			for (ChartofAccount acc : detailAccounts) {
+				OpeningBalanceRow r = new OpeningBalanceRow();
+				r.setAccountCode(acc.getAccountCode());
+				r.setAccountTitle(acc.getAccountTitle());
 				r.setOpeningDebit(0.0);
 				r.setOpeningCredit(0.0);
+				rows.add(r);
 			}
-			rows.add(r);
 		}
-		form.setRows(rows);
 
+		form.setRows(rows);
 		model.addAttribute("activeMenu", "accounts");
 		model.addAttribute("form", form);
 

@@ -7,6 +7,7 @@
     <title>Receivables Report - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
         .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -33,32 +34,37 @@
         <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
     </div>
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp"><i class="fa fa-refresh"></i> Reset Filters</button>
+        <button type="button" class="btn-erp btn-erp-primary" onclick="loadReport()"><i class="fa fa-eye"></i> View Report</button>
+        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="btn-erp" onclick="alert('Exporting Excel...')"><i class="fa fa-file-excel-o"></i> Export Excel</button>
+        <button type="button" class="btn-erp" onclick="resetFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
     </div>
     <div style="padding: 10px;">
         <div class="erp-fieldset">
             <legend>Report Filter Criteria</legend>
             <div class="row">
-                
-                    <div class="col-md-3">
-                        <label class="form-label-erp">From Date</label>
-                        <input type="text" class="form-control-erp" placeholder="Select From Date..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">To Date</label>
-                        <input type="text" class="form-control-erp" placeholder="Select To Date..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Customer</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Customer..."/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Location</label>
-                        <input type="text" class="form-control-erp" placeholder="Select Location..."/>
-                    </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">From Date</label>
+                    <input type="date" id="txtFromDate" class="form-control-erp"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">To Date</label>
+                    <input type="date" id="txtToDate" class="form-control-erp"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Customer / Party</label>
+                    <select id="cmbCustomer" class="form-control-erp select2">
+                        <option value="">-- All Customers --</option>
+                        <option th:each="sc : ${supplierCustomersList}" th:value="${sc.id}" th:text="${sc.supplierName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Branch / Location</label>
+                    <select id="cmbBranch" class="form-control-erp select2">
+                        <option value="">-- All Locations --</option>
+                        <option th:each="b : ${branchesList}" th:value="${b.Id}" th:text="${b.BranchName}"></option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -67,47 +73,73 @@
             <div style="text-align: center; margin-bottom: 10px;">
                 <h4 style="margin: 0; font-weight: bold; color: #00796B;">Golden Ace Rice Mills (Pvt) Ltd.</h4>
                 <h5 style="margin: 2px 0; font-weight: bold;">Receivables Report</h5>
-                <small style="color: #64748b;">Period: 01-Jul-2026 To 07-Sep-2026 | Currency: PKR</small>
+                <small style="color: #64748b;" id="lblPeriod">Period: Current Date To Current Date | Currency: PKR</small>
             </div>
             <table class="erp-table">
                 <thead>
                     <tr>
-                        <th style="width: 12%;">Account / Code</th>
-                        <th style="width: 28%;">Title / Description</th>
+                        <th style="width: 12%;">Customer Code</th>
+                        <th style="width: 28%;">Customer Name</th>
                         <th style="width: 15%; text-align: right;">Opening Balance</th>
-                        <th style="width: 15%; text-align: right;">Debit (PKR)</th>
-                        <th style="width: 15%; text-align: right;">Credit (PKR)</th>
-                        <th style="width: 15%; text-align: right;">Closing Balance</th>
+                        <th style="width: 15%; text-align: right;">Sales / Dr</th>
+                        <th style="width: 15%; text-align: right;">Receipts / Cr</th>
+                        <th style="width: 15%; text-align: right;">Net Receivable</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="reportTbody">
                     <tr>
-                        <td style="font-weight: bold; color: #00796B;">101001</td>
-                        <td>CASH IN HAND - MAIN OFFICE</td>
-                        <td style="text-align: right;">50,000.00 Dr</td>
-                        <td style="text-align: right;">125,000.00</td>
-                        <td style="text-align: right;">85,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">90,000.00 Dr</td>
+                        <td style="font-weight: bold; color: #00796B;">CUST-001</td>
+                        <td>INTERNATIONAL FOOD IMPORTERS LLC</td>
+                        <td style="text-align: right;">500,000.00 Dr</td>
+                        <td style="text-align: right;">1,200,000.00</td>
+                        <td style="text-align: right;">850,000.00</td>
+                        <td style="text-align: right; font-weight: bold;">850,000.00 Dr</td>
                     </tr>
                     <tr>
-                        <td style="font-weight: bold; color: #00796B;">101002</td>
-                        <td>MEEZAN BANK LIMITED - A/C 010293847</td>
-                        <td style="text-align: right;">1,200,000.00 Dr</td>
-                        <td style="text-align: right;">450,000.00</td>
-                        <td style="text-align: right;">320,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">1,330,000.00 Dr</td>
+                        <td style="font-weight: bold; color: #00796B;">CUST-002</td>
+                        <td>ROYAL GRAINS EXPORT HOUSE</td>
+                        <td style="text-align: right;">250,000.00 Dr</td>
+                        <td style="text-align: right;">600,000.00</td>
+                        <td style="text-align: right;">400,000.00</td>
+                        <td style="text-align: right; font-weight: bold;">450,000.00 Dr</td>
                     </tr>
                 </tbody>
             </table>
             <div class="report-summary-bar">
                 <div>Total Records: 2</div>
-                <div>Total Debit: 575,000.00</div>
-                <div>Total Credit: 405,000.00</div>
-                <div>Net Balance: 1,420,000.00 Dr</div>
+                <div>Total Sales / Dr: 1,800,000.00</div>
+                <div>Total Receipts / Cr: 1,250,000.00</div>
+                <div>Total Net Receivable: 1,300,000.00 Dr</div>
             </div>
         </div>
     </div>
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            $('#txtFromDate, #txtToDate').val(today);
+            $('.select2').select2({ width: '100%' });
+            updatePeriodLabel();
+        });
+
+        function updatePeriodLabel() {
+            const fd = $('#txtFromDate').val();
+            const td = $('#txtToDate').val();
+            $('#lblPeriod').text(`Period: ${fd} To ${td} | Currency: PKR`);
+        }
+
+        function loadReport() {
+            updatePeriodLabel();
+        }
+
+        function resetFilters() {
+            const today = new Date().toISOString().split('T')[0];
+            $('#txtFromDate, #txtToDate').val(today);
+            $('.select2').val('').trigger('change');
+            updatePeriodLabel();
+        }
+    </script>
 </body>
 </html>
