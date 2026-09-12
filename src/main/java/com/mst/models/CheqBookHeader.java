@@ -25,42 +25,44 @@ public class CheqBookHeader {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "Id")
 	private Long id;
 
-	@Column(name = "doc_no")
+	@Column(name = "DocNo")
 	private Integer docNo;
 
-	@Column(name = "doc_date")
+	@Column(name = "DocDate")
+	@org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
 	private LocalDate docDate;
 
-	@Column(name = "bank_id")
+	@Column(name = "BankId")
 	private Integer bankId;
 
-	@Column(name = "chart_of_account_id")
+	@Column(name = "ChartOfAccountId")
 	private Integer chartOfAccountId;
 
-	@Column(name = "cb_prefix", length = 50)
+	@Column(name = "CbPrefix", length = 50)
 	private String cbPrefix;
 
-	@Column(name = "cb_sr_from", length = 50)
+	@Column(name = "CbSrFrom", length = 50)
 	private String cbSrFrom;
 
-	@Column(name = "cb_sr_to", length = 50)
+	@Column(name = "CbSrTo", length = 50)
 	private String cbSrTo;
 
-	@Column(length = 255)
+	@Column(name = "Remarks", length = 255)
 	private String remarks;
 
-	@Column(name = "entry_user")
+	@Column(name = "EntryUser")
 	private Integer entryUser;
 
-	@Column(name = "entry_date")
+	@Column(name = "EntryDate")
 	private LocalDateTime entryDate;
 
-	@Column(name = "company_id")
+	@Column(name = "CompanyId")
 	private Integer companyId;
 
-	@Column(name = "organization_id")
+	@Column(name = "OrganizationId")
 	private Integer organizationId;
 
 	@Transient

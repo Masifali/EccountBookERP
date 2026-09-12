@@ -39,9 +39,27 @@ public class CheqBookRegistrationService {
 
 	public List<ChartofAccount> getBankAccounts() {
 		List<ChartofAccount> accounts = chartOfAccountRepository.findAllByOrderByAccountCode();
-		return accounts.stream()
+		List<ChartofAccount> bankAccounts = accounts.stream()
 				.filter(a -> a.getAccountGroup() != null && "Detail".equalsIgnoreCase(a.getAccountGroup().trim()))
+				.filter(a -> {
+					if (a.getAccountTypeId() != null && (a.getAccountTypeId() == 15 || a.getAccountTypeId() == 2)) {
+						return true;
+					}
+					String title = a.getAccountTitle() != null ? a.getAccountTitle().toLowerCase() : "";
+					String code = a.getAccountCode() != null ? a.getAccountCode() : "";
+					return title.contains("bank") || title.contains("hbl") || title.contains("mcb") ||
+							title.contains("abl") || title.contains("ubl") || title.contains("meezan") ||
+							title.contains("faysal") || title.contains("allied") || title.contains("bop") ||
+							code.startsWith("01-002") || code.startsWith("10-002");
+				})
 				.collect(Collectors.toList());
+
+		if (bankAccounts.isEmpty()) {
+			return accounts.stream()
+					.filter(a -> a.getAccountGroup() != null && "Detail".equalsIgnoreCase(a.getAccountGroup().trim()))
+					.collect(Collectors.toList());
+		}
+		return bankAccounts;
 	}
 
 	public Integer getNextDocNo() {
@@ -52,22 +70,35 @@ public class CheqBookRegistrationService {
 	public List<CheqBookHeader> getAllHeaders() {
 		List<CheqBookHeader> headers = headerRepository.findAllByOrderByIdDesc();
 		List<ChartofAccount> allAccounts = chartOfAccountRepository.findAll();
-		Map<Integer, String> accountMap = new HashMap<>();
+		Map<Integer, String> accountMapById = new HashMap<>();
+		Map<String, String> accountMapByCode = new HashMap<>();
 		for (ChartofAccount a : allAccounts) {
+			String display = (a.getAccountCode() != null ? a.getAccountCode() + " - " : "") + (a.getAccountTitle() != null ? a.getAccountTitle() : "");
 			if (a.getId() != null) {
-				accountMap.put(a.getId(), a.getAccountCode() + " - " + a.getAccountTitle());
+				accountMapById.put(a.getId(), display);
+			}
+			if (a.getAccountCode() != null && !a.getAccountCode().trim().isEmpty()) {
+				accountMapByCode.put(a.getAccountCode().trim(), display);
 			}
 		}
 
 		for (CheqBookHeader h : headers) {
-			Integer accId = h.getBankId() != null ? h.getBankId() : h.getChartOfAccountId();
-			if (accId != null && accountMap.containsKey(accId)) {
-				h.setBankName(accountMap.get(accId));
-				h.setAccountTitle(accountMap.get(accId));
-			} else {
-				h.setBankName("Account #" + accId);
-				h.setAccountTitle("Account #" + accId);
+			Integer accId = h.getBankId() != null && h.getBankId() > 0 ? h.getBankId() : h.getChartOfAccountId();
+			String name = null;
+			if (accId != null && accId > 0) {
+				if (accountMapById.containsKey(accId)) {
+					name = accountMapById.get(accId);
+				} else if (accountMapByCode.containsKey(String.valueOf(accId))) {
+					name = accountMapByCode.get(String.valueOf(accId));
+				} else {
+					name = "Account #" + accId;
+				}
 			}
+			if (name == null || name.trim().isEmpty()) {
+				name = "Bank Account";
+			}
+			h.setBankName(name);
+			h.setAccountTitle(name);
 		}
 		return headers;
 	}

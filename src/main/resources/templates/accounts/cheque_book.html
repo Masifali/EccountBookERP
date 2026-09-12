@@ -7,6 +7,7 @@
     <title>Cheque Book Registration - WinForms Replica</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Verdana", Tahoma, Arial, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; }
         .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; }
@@ -69,7 +70,7 @@
                     </div>
                     <div class="col-md-2">
                         <label class="win-label">Doc Date</label>
-                        <input type="date" th:field="*{docDate}" class="win-datepicker" required/>
+                        <input type="date" id="docDate" th:field="*{docDate}" th:value="${chequeForm.docDate != null ? #temporals.format(chequeForm.docDate, 'yyyy-MM-dd') : #temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}" class="win-datepicker" required/>
                     </div>
                     <div class="col-md-1">
                         <label class="win-label">Doc No</label>
@@ -189,11 +190,21 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
     <script>
         let currentHeaderId = [[${selHeaderId != null ? selHeaderId : 0}]];
 
+        $(document).ready(function() {
+            $('#bankId').select2({
+                placeholder: "-- Select Bank Account --",
+                allowClear: true,
+                width: '100%'
+            });
+        });
+
         function btnNew_Click() {
             document.getElementById('frmChequeBook').reset();
+            $('#bankId').val('0').trigger('change');
         }
 
         function loadDetails(headerId) {

@@ -19,27 +19,28 @@ public class CheqBookDetail {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "Id")
 	private Long id;
 
-	@Column(name = "cheq_book_header_id")
+	@Column(name = "CheqBookHeaderId")
 	private Long cheqBookHeaderId;
 
-	@Column(name = "cheq_no", length = 50)
+	@Column(name = "CheqNo", length = 50)
 	private String cheqNo;
 
-	@Column(name = "cheq_status", length = 50)
+	@Column(name = "CheqStatus", length = 50)
 	private String cheqStatus = "Blank";
 
-	@Column(name = "other_remarks", length = 255)
+	@Column(name = "OtherRemarks", length = 255)
 	private String otherRemarks;
 
-	@Column(name = "cheq_cancel_status")
+	@Column(name = "CheqCancelStatus")
 	private Boolean cheqCancelStatus = false;
 
-	@Column(name = "cheque_status_date")
+	@Column(name = "ChequeStatusDate")
 	private LocalDateTime chequeStatusDate;
 
-	@Column(name = "status_change_user_id")
+	@Column(name = "StatusChangeUserId")
 	private Integer statusChangeUserId;
 
 	@Transient

@@ -54,6 +54,14 @@ public class AccountCustomGroupService implements IAccountCustomGroupService {
 		group.setOrganizationId(orgId);
 		group.setCompanyId(compId);
 
+		if (group.getId() != null && group.getId() > 0) {
+			AcLookUp existing = acLookUpRepository.findById(group.getId()).orElse(null);
+			if (existing != null) {
+				existing.setAcLookUpsDescription(group.getAcLookUpsDescription());
+				return acLookUpRepository.save(existing);
+			}
+		}
+
 		if (group.getId() == null || group.getId() == 0) {
 			group.setId(acLookUpRepository.findMaxId() + 1);
 		}
@@ -63,7 +71,7 @@ public class AccountCustomGroupService implements IAccountCustomGroupService {
 	@Override
 	public void deleteGroup(int id) {
 		if (accountsCustomGroupRepository.countByAcLookUpsId(id) > 0) {
-			throw new IllegalStateException("Cannot delete group because accounts are currently allocated to it.");
+			throw new IllegalStateException("Cannot delete group because accounts are currently allocated to it. Please unallocate all accounts first.");
 		}
 		acLookUpRepository.deleteById(id);
 	}
@@ -80,7 +88,10 @@ public class AccountCustomGroupService implements IAccountCustomGroupService {
 	@Override
 	public List<ChartofAccount> getParentAccounts(Integer accountTypeId) {
 		try {
-			List<ChartofAccount> list = chartofAccountRepository.findByAccountLevelOrderByAccountTitle(3);
+			List<ChartofAccount> list = chartofAccountRepository.findByAccountGroupOrderByAccountTitle("Group");
+			if (list == null || list.isEmpty()) {
+				list = chartofAccountRepository.findByAccountLevelInOrderByAccountCode(List.of(1, 2, 3));
+			}
 			if (accountTypeId != null && accountTypeId > 0) {
 				return list.stream()
 						.filter(a -> a.getAccountTypeId() != null && a.getAccountTypeId().equals(accountTypeId))
@@ -101,7 +112,38 @@ public class AccountCustomGroupService implements IAccountCustomGroupService {
 
 		try {
 			String sql = "EXEC [dbo].[USP_AccountCustomGroup_UnAllocatedData] @OrganizationId=?, @CompanyId=?, @CustomGroupId=?, @AccountTypeId=?, @ParentAccountId=?";
-			return jdbcTemplate.queryForList(sql, orgId, compId, customGroupId, accTypeId, parentAccId);
+			List<Map<String, Object>> list = jdbcTemplate.queryForList(sql, orgId, compId, customGroupId, accTypeId, parentAccId);
+			if (list != null && !list.isEmpty()) {
+				return list;
+			}
+		} catch (Exception ignored) {}
+
+		// Direct SQL fallback query
+		StringBuilder sb = new StringBuilder();
+		sb.append("SELECT c.Id AS ChartOfAccountId, c.AccountCode, c.AccountTitle, c.AccountTypeId, c.ParentCodeId ")
+		  .append("FROM ChartofAccount c ")
+		  .append("WHERE (LOWER(c.AccountGroup) = 'detail' OR c.Account_Level = 4) ")
+		  .append("  AND c.Id NOT IN (SELECT g.ChartOfAccountId FROM AccountsCustomGroups g WHERE g.AcLookUpsId = ?) ");
+
+		List<Object> params = new java.util.ArrayList<>();
+		params.add(customGroupId);
+
+		if (accTypeId > 0) {
+			sb.append("  AND c.AccountTypeId = ? ");
+			params.add(accTypeId);
+		}
+
+		if (parentAccId > 0) {
+			sb.append("  AND (c.ParentCodeId = ? OR c.Lvl03Id = ? OR c.ParentAccountCode IN (SELECT p.AccountCode FROM ChartofAccount p WHERE p.Id = ?)) ");
+			params.add(parentAccId);
+			params.add(parentAccId);
+			params.add(parentAccId);
+		}
+
+		sb.append("ORDER BY c.AccountCode");
+
+		try {
+			return jdbcTemplate.queryForList(sb.toString(), params.toArray());
 		} catch (Exception ex) {
 			return Collections.emptyList();
 		}
@@ -116,7 +158,38 @@ public class AccountCustomGroupService implements IAccountCustomGroupService {
 
 		try {
 			String sql = "EXEC [dbo].[USP_AccountCustomGroup_AllocatedData] @OrganizationId=?, @CompanyId=?, @CustomGroupId=?, @AccountTypeId=?, @ParentAccountId=?";
-			return jdbcTemplate.queryForList(sql, orgId, compId, customGroupId, accTypeId, parentAccId);
+			List<Map<String, Object>> list = jdbcTemplate.queryForList(sql, orgId, compId, customGroupId, accTypeId, parentAccId);
+			if (list != null && !list.isEmpty()) {
+				return list;
+			}
+		} catch (Exception ignored) {}
+
+		// Direct SQL fallback query
+		StringBuilder sb = new StringBuilder();
+		sb.append("SELECT c.Id AS ChartOfAccountId, c.AccountCode, c.AccountTitle, c.AccountTypeId, c.ParentCodeId, g.SortNo ")
+		  .append("FROM ChartofAccount c ")
+		  .append("INNER JOIN AccountsCustomGroups g ON c.Id = g.ChartOfAccountId ")
+		  .append("WHERE g.AcLookUpsId = ? ");
+
+		List<Object> params = new java.util.ArrayList<>();
+		params.add(customGroupId);
+
+		if (accTypeId > 0) {
+			sb.append("  AND c.AccountTypeId = ? ");
+			params.add(accTypeId);
+		}
+
+		if (parentAccId > 0) {
+			sb.append("  AND (c.ParentCodeId = ? OR c.Lvl03Id = ? OR c.ParentAccountCode IN (SELECT p.AccountCode FROM ChartofAccount p WHERE p.Id = ?)) ");
+			params.add(parentAccId);
+			params.add(parentAccId);
+			params.add(parentAccId);
+		}
+
+		sb.append("ORDER BY c.AccountCode");
+
+		try {
+			return jdbcTemplate.queryForList(sb.toString(), params.toArray());
 		} catch (Exception ex) {
 			return Collections.emptyList();
 		}
@@ -131,15 +204,19 @@ public class AccountCustomGroupService implements IAccountCustomGroupService {
 		int userId = currentUserContext.currentUserId();
 
 		for (Integer coaId : chartOfAccountIds) {
+			boolean ok = false;
 			try {
 				String sql = "EXEC [dbo].[Sp_AccountsCustomGroups_Insert] @ChartOfAccountId=?, @AcLookUpsId=?, @organizationId=?, @companyId=?, @EntryUserId=?, @ModifyUserId=?";
 				jdbcTemplate.update(sql, coaId, customGroupId, orgId, compId, userId, userId);
-			} catch (Exception ex) {
-				// Prevent duplicate allocation failure
+				ok = true;
+			} catch (Exception ignored) {}
+
+			if (!ok) {
 				try {
 					String directInsert = "INSERT INTO AccountsCustomGroups (AcLookUpsId, ChartOfAccountId, SortNo, EntryDate, EntryUserId, organizationId, companyId) " +
-							"SELECT ?, ?, ISNULL(MAX(SortNo), 0) + 1, GETDATE(), ?, ?, ? FROM AccountsCustomGroups";
-					jdbcTemplate.update(directInsert, customGroupId, coaId, userId, orgId, compId);
+							"SELECT ?, ?, ISNULL((SELECT MAX(SortNo) FROM AccountsCustomGroups), 0) + 1, GETDATE(), ?, ?, ? " +
+							"WHERE NOT EXISTS (SELECT 1 FROM AccountsCustomGroups WHERE AcLookUpsId = ? AND ChartOfAccountId = ?)";
+					jdbcTemplate.update(directInsert, customGroupId, coaId, userId, orgId, compId, customGroupId, coaId);
 				} catch (Exception ignored) {}
 			}
 		}
@@ -165,10 +242,14 @@ public class AccountCustomGroupService implements IAccountCustomGroupService {
 		if (chartOfAccountIds == null || chartOfAccountIds.isEmpty()) return;
 
 		for (Integer coaId : chartOfAccountIds) {
+			boolean ok = false;
 			try {
 				String sql = "EXEC [dbo].[Sp_ChartofAccount_GetAllMethodFromCOA] @CoaType='DeleteAccountsFromCustomGroup', @AcLookUpsId=?, @Id=?";
 				jdbcTemplate.update(sql, customGroupId, coaId);
-			} catch (Exception ex) {
+				ok = true;
+			} catch (Exception ignored) {}
+
+			if (!ok) {
 				try {
 					String directDelete = "DELETE FROM AccountsCustomGroups WHERE AcLookUpsId = ? AND ChartOfAccountId = ?";
 					jdbcTemplate.update(directDelete, customGroupId, coaId);
@@ -180,7 +261,7 @@ public class AccountCustomGroupService implements IAccountCustomGroupService {
 	@Override
 	public void unAllocateAccounts(int allocationId) {
 		try {
-			String directDelete = "DELETE FROM AccountsCustomGroups WHERE Id = ? OR ChartOfAccountId = ?";
+			String directDelete = "DELETE FROM AccountsCustomGroups WHERE SortNo = ? OR ChartOfAccountId = ?";
 			jdbcTemplate.update(directDelete, allocationId, allocationId);
 		} catch (Exception ignored) {}
 	}
