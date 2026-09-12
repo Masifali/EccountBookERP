@@ -467,7 +467,14 @@ public class PurchaseOrderFullService {
             }
         } catch (Exception e) {}
         try {
-            String sql = "SELECT Id as id, ReferencePartyName as partyName, ReferencePartyName as description FROM ReferenceParties WHERE (ReferencePartyTypeId = 5 OR ReferencePartyTypeId IS NULL) AND (IsActive = 1 OR IsActive IS NULL) ORDER BY ReferencePartyName";
+            String sql = "SELECT Id as id, ReferencePartyName as partyName, ReferencePartyName as description FROM ReferenceParties WHERE ReferencePartyTypeId = 5 AND (IsActive = 1 OR IsActive IS NULL) ORDER BY ReferencePartyName";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception e) {}
+        try {
+            String sql = "SELECT Id as id, ReferencePartyName as partyName, ReferencePartyName as description FROM ReferenceParties WHERE (IsActive = 1 OR IsActive IS NULL) ORDER BY ReferencePartyName";
             List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
             if (list != null && !list.isEmpty()) {
                 return list;

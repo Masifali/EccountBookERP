@@ -273,33 +273,34 @@ function loadDefaultEmptyBagRows(callback) {
 function preloadSearchData() {
     $.get('/api/purchase-order/suppliers?mode=name', function(data) {
         allSuppliers = data || [];
-        // Populate Commission Agent, Broker Ac & Booking Person dropdowns
+        // Populate Commission Agent & Broker Ac dropdowns
         const commSel = $('#cmbCommissionAgent');
         const brokerSel = $('#cmbBrokerAc');
-        const bookingSel = $('#cmbBookingPerson');
         commSel.find('option:gt(0)').remove();
         brokerSel.find('option:gt(0)').remove();
-        bookingSel.find('option:gt(0)').remove();
 
         allSuppliers.forEach(s => {
             commSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`);
             brokerSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`);
-            bookingSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`);
         });
+        refreshComboWidget(commSel);
+        refreshComboWidget(brokerSel);
+    });
 
-        // Load real Booking Persons from database if available
-        $.get('/api/purchase-order/booking-persons', function(bpData) {
-            if (bpData && bpData.length > 0) {
-                bookingSel.find('option:gt(0)').remove();
-                bpData.forEach(b => {
-                    const id = b.id != null ? b.id : b.Id;
-                    const name = b.partyName || b.ReferencePartyName || b.description || b.Description;
-                    if (name) {
-                        bookingSel.append(`<option value="${id}">${escapeHtml(name)}</option>`);
-                    }
-                });
-            }
-        });
+    // Load real Booking Persons strictly from ReferenceParties table/SP
+    $.get('/api/purchase-order/booking-persons', function(bpData) {
+        const bookingSel = $('#cmbBookingPerson');
+        bookingSel.find('option:gt(0)').remove();
+        if (bpData && bpData.length > 0) {
+            bpData.forEach(b => {
+                const id = b.id != null ? b.id : b.Id;
+                const name = b.partyName || b.ReferencePartyName || b.description || b.Description;
+                if (name) {
+                    bookingSel.append(`<option value="${id}">${escapeHtml(name)}</option>`);
+                }
+            });
+        }
+        refreshComboWidget(bookingSel);
     });
 
     $.get('/api/purchase-order/items?mode=name', function(data) {
