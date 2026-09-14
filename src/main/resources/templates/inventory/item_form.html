@@ -7,191 +7,345 @@
     <title>Define Item - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .btn-erp-danger { background-color: #dc2626; color: white; border: 1px solid #991b1b; }
-        .btn-erp-danger:hover { background-color: #991b1b; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
+        body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 10.5px; color: #000; margin: 0; padding: 0; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-size: 11.5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 23px; box-sizing: border-box; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 6px; display: flex; gap: 4px; align-items: center; height: 25px; box-sizing: border-box; }
+        .win-btn { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 1px 7px; font-size: 10.5px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; height: 20px; box-shadow: inset 0 1px 0 #fff; text-decoration: none; }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
+        .win-btn-primary { background: #00796B; color: #fff; border-color: #004d40; }
+        .win-btn-primary:hover { background: #004d40; color: #fff; }
+        
+        .win-panel-header { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-weight: bold; font-size: 11px; height: 22px; display: flex; align-items: center; justify-content: space-between; }
+        .form-section { background: #ffffff; border: 1px solid #94a3b8; padding: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .win-label { font-weight: 600; color: #222; margin-bottom: 1px; font-size: 10px; white-space: nowrap; }
+        .win-input { border: 1px solid #7f9db9; border-radius: 1px; padding: 1px 4px; font-size: 10.5px; font-family: Tahoma, sans-serif; height: 21px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; }
+        
+        .select2-container--default .select2-selection--single { height: 21px !important; padding: 0px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; border: 1px solid #7f9db9; border-radius: 1px; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 19px !important; padding-left: 0px; color: #000; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 19px !important; }
+
+        /* Side buttons styling matching C# Screenshot #2 */
+        .btn-side-def { background: #00796B; color: #ffffff; border: 1px solid #004d40; font-weight: bold; font-size: 10px; height: 24px; text-align: center; border-radius: 2px; text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+        .btn-side-def:hover { background: #004d40; color: #ffffff; text-decoration: none; }
+
+        .win-groupbox { border: 1px solid #94a3b8; border-radius: 2px; padding: 6px; position: relative; background: #ffffff; margin-bottom: 4px; }
+        .win-groupbox-title { position: absolute; top: -8px; left: 8px; background: #ffffff; padding: 0 4px; font-weight: bold; font-size: 10px; color: #000; }
+
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 10px; font-family: Tahoma, sans-serif; background: #ffffff; }
+        .win-grid-table th { background: linear-gradient(to bottom, #dbe6f2 0%, #b0c4de 100%); color: #000000; font-weight: bold; padding: 3px 5px; border: 1px solid #849ca8; text-align: left; position: sticky; top: 0; z-index: 2; }
+        .win-grid-table td { padding: 2px 5px; border: 1px solid #cbd5e1; vertical-align: middle; }
     </style>
 </head>
 <body>
-    <div class="erp-header">
-        <div><i class="fa fa-cube"></i> <span th:text="${item != null and item.id != null and item.id > 0} ? 'Edit Item Master' : 'Define Item Master'"></span></div>
-        <div><a href="/inventory/items" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Items List</a></div>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-cube"></i> Define Item</span>
+        <a href="/inventory/items" style="color: #ffffff; text-decoration: none; font-size: 10.5px;">
+            <i class="fa fa-arrow-left"></i> Back to Items List
+        </a>
     </div>
-    <div class="erp-toolbar">
-        <a href="/inventory/items/add" class="btn-erp"><i class="fa fa-file-o"></i> New (Ctrl+N)</a>
-        <button type="button" class="btn-erp btn-erp-primary" onclick="submitForm()"><i class="fa fa-save"></i> Save (Ctrl+S)</button>
-        <a href="/inventory/items" class="btn-erp"><i class="fa fa-list"></i> Items List</a>
-        <button type="button" class="btn-erp" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+
+    <!-- WinForms Toolbar matching Screenshot #2 -->
+    <div class="win-toolbar">
+        <a href="/inventory/items/add" class="win-btn"><i class="fa fa-plus text-success"></i> New</a>
+        <button type="button" class="win-btn" onclick="location.reload()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+        <button type="button" class="win-btn win-btn-primary" onclick="submitForm()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+        <button type="button" class="win-btn"><i class="fa fa-paperclip"></i> Attachment</button>
+        <button type="button" class="win-btn"><i class="fa fa-upload"></i> Upload Items</button>
     </div>
-    <div style="padding: 10px;">
-        <form th:action="@{/inventory/items/save}" th:object="${item}" method="post" id="itemForm">
-            <input type="hidden" th:field="*{id}"/>
 
-            <div class="erp-fieldset">
-                <legend>Identification & Basic Info</legend>
-                <div class="row">
-                    <div class="col-md-2">
-                        <label class="form-label-erp">Item Code</label>
-                        <input type="text" class="form-control-erp" th:field="*{itemCode}"/>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label-erp">Item Name / Title *</label>
-                        <input type="text" class="form-control-erp" th:field="*{itemName}" required/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Alias Name</label>
-                        <input type="text" class="form-control-erp" th:field="*{itemAliasName}"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Name (Other Lingo)</label>
-                        <input type="text" class="form-control-erp" th:field="*{itemNameOtherLingo}"/>
-                    </div>
-                </div>
-                <div class="row" style="margin-top:6px;">
-                    <div class="col-md-2">
-                        <label class="form-label-erp">HS Code</label>
-                        <input type="text" class="form-control-erp" th:field="*{hSCode}"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Barcode No</label>
-                        <input type="text" class="form-control-erp" th:field="*{barcodeNo}"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Product No</label>
-                        <input type="text" class="form-control-erp" th:field="*{productNo}"/>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label-erp">Model Name</label>
-                        <input type="text" class="form-control-erp" th:field="*{modelName}"/>
-                    </div>
-                </div>
-                <div class="row" style="margin-top:6px;">
-                    <div class="col-md-12">
-                        <label class="form-label-erp">Specification</label>
-                        <input type="text" class="form-control-erp" th:field="*{itemSpecification}"/>
-                    </div>
-                </div>
-            </div>
-
-            <div class="erp-fieldset">
-                <legend>Classification & Racks</legend>
-                <div class="row">
-                    <div class="col-md-4">
-                        <label class="form-label-erp">Item Category</label>
-                        <select class="form-control-erp" th:field="*{itemCategory.id}">
-                            <option value="0">— Select Category —</option>
-                            <option th:each="c : ${itemCategories}" th:value="${c.id}" th:text="${c.categoryCode} + ' - ' + ${c.categoryDescription}"></option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label-erp">Item Type</label>
-                        <select class="form-control-erp" th:field="*{itemType.id}">
-                            <option value="0">— Select Type —</option>
-                            <option th:each="t : ${itemTypes}" th:value="${t.id}" th:text="${t.typeCode} + ' - ' + ${t.typeDescription}"></option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label-erp">Rack Location</label>
-                        <select class="form-control-erp" th:field="*{rack.id}">
-                            <option value="0">— Select Rack —</option>
-                            <option th:each="r : ${racks}" th:value="${r.id}" th:text="${r.rackName}"></option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="erp-fieldset">
-                <legend>Pricing & Rates</legend>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Cost Price</label>
-                        <input type="number" step="any" class="form-control-erp" th:field="*{costPrice}" style="text-align:right;"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Purchase Price</label>
-                        <input type="number" step="any" class="form-control-erp" th:field="*{purchasePrice}" style="text-align:right;"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Retail Price</label>
-                        <input type="number" step="any" class="form-control-erp" th:field="*{retailPrice}" style="text-align:right;"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Wholesale Price</label>
-                        <input type="number" step="any" class="form-control-erp" th:field="*{wholeSalePrice}" style="text-align:right;"/>
-                    </div>
-                </div>
-                <div class="row" style="margin-top:6px;">
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Min Rate</label>
-                        <input type="number" step="any" class="form-control-erp" th:field="*{minRate}" style="text-align:right;"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Max Rate</label>
-                        <input type="number" step="any" class="form-control-erp" th:field="*{maxRate}" style="text-align:right;"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Min Stock Level</label>
-                        <input type="number" step="any" class="form-control-erp" th:field="*{minStockLevel}" style="text-align:right;"/>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label-erp">Max Stock Level</label>
-                        <input type="number" step="any" class="form-control-erp" th:field="*{maxStockLevel}" style="text-align:right;"/>
-                    </div>
-                </div>
-            </div>
-
-            <div class="erp-fieldset">
-                <legend>GL Accounts & Taxes</legend>
-                <div class="row">
-                    <div class="col-md-4">
-                        <label class="form-label-erp">Purchase GL Account ID</label>
-                        <input type="number" class="form-control-erp" th:field="*{purchaseGLAC}"/>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label-erp">Sale GL Account ID</label>
-                        <input type="number" class="form-control-erp" th:field="*{saleGLAC}"/>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label-erp">COGS GL Account ID</label>
-                        <input type="number" class="form-control-erp" th:field="*{cOGSGLAC}"/>
-                    </div>
-                </div>
-                <div class="row" style="margin-top:6px;">
-                    <div class="col-md-3">
-                        <label style="font-weight:600; cursor:pointer;"><input type="checkbox" th:field="*{applyGST}"/> Apply GST</label>
-                    </div>
-                    <div class="col-md-3">
-                        <label style="font-weight:600; cursor:pointer;"><input type="checkbox" th:field="*{applyVAT}"/> Apply VAT</label>
-                    </div>
-                    <div class="col-md-3">
-                        <label style="font-weight:600; cursor:pointer;"><input type="checkbox" th:field="*{isTaxable}"/> Taxable</label>
-                    </div>
-                    <div class="col-md-3">
-                        <label style="font-weight:600; cursor:pointer;"><input type="checkbox" th:field="*{itemStatus}"/> Active Item</label>
-                    </div>
-                </div>
-            </div>
-        </form>
+    <!-- Panel Header: Add Item -->
+    <div class="win-panel-header">
+        <span>Add Item</span>
+        <div style="font-weight: normal; font-size: 10.5px;">
+            <span style="margin-right: 10px;">Item Name By</span>
+            <label style="margin-right: 10px; cursor: pointer;"><input type="radio" name="rdItemNameBy" checked> Category And Type</label>
+            <label style="cursor: pointer;"><input type="radio" name="rdItemNameBy"> Type And Category</label>
+        </div>
     </div>
+
+    <form th:action="@{/inventory/items/save}" th:object="${item}" method="post" id="itemForm" style="padding: 4px;">
+        <input type="hidden" th:field="*{id}" id="itemId"/>
+
+        <div style="display: flex; gap: 8px;">
+            <!-- Left Main Information Form -->
+            <div style="flex: 1; min-width: 0;">
+                <div class="win-groupbox" style="margin-top: 6px;">
+                    <span class="win-groupbox-title">Main Information</span>
+                    
+                    <div class="row" style="margin-bottom: 4px;">
+                        <div class="col-md-6">
+                            <span class="win-label">Item Category</span>
+                            <select class="win-input select2" th:field="*{itemCategory.id}">
+                                <option value="0">-- Select Category --</option>
+                                <option th:each="c : ${itemCategories}" th:value="${c.id}" th:text="${c.categoryCode != null ? c.categoryCode + ' - ' + c.categoryDescription : c.categoryDescription}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="win-label">Stock GL A/c</span>
+                            <select class="win-input select2" th:field="*{purchaseGLAC}">
+                                <option value="0">-- Select Stock GL A/c --</option>
+                                <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${(a.accountCode != null ? a.accountCode : '') + ' - ' + (a.accountTitle != null ? a.accountTitle : '')}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 4px;">
+                        <div class="col-md-6">
+                            <span class="win-label">Item Type</span>
+                            <select class="win-input select2" th:field="*{itemType.id}">
+                                <option value="0">-- Select Type --</option>
+                                <option th:each="t : ${itemTypes}" th:value="${t.id}" th:text="${t.typeCode != null ? t.typeCode + ' - ' + t.typeDescription : t.typeDescription}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="win-label">Sale GL A/c</span>
+                            <select class="win-input select2" th:field="*{saleGLAC}">
+                                <option value="0">-- Select Sale GL A/c --</option>
+                                <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${(a.accountCode != null ? a.accountCode : '') + ' - ' + (a.accountTitle != null ? a.accountTitle : '')}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 4px;">
+                        <div class="col-md-6">
+                            <span class="win-label">Item Code</span>
+                            <input type="text" class="win-input" th:field="*{itemCode}" placeholder="Auto or enter code" />
+                        </div>
+                        <div class="col-md-6">
+                            <span class="win-label">CGS GL A/c</span>
+                            <select class="win-input select2" th:field="*{cOGSGLAC}">
+                                <option value="0">-- Select CGS GL A/c --</option>
+                                <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${(a.accountCode != null ? a.accountCode : '') + ' - ' + (a.accountTitle != null ? a.accountTitle : '')}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 4px;">
+                        <div class="col-md-6">
+                            <span class="win-label">Item Name *</span>
+                            <input type="text" class="win-input" th:field="*{itemName}" id="itemName" required />
+                        </div>
+                        <div class="col-md-6">
+                            <span class="win-label">HS Code</span>
+                            <input type="text" class="win-input" th:field="*{hSCode}" />
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 4px;">
+                        <div class="col-md-6">
+                            <span class="win-label">Other Name</span>
+                            <input type="text" class="win-input" th:field="*{itemNameOtherLingo}" />
+                        </div>
+                        <div class="col-md-6">
+                            <span class="win-label">Pack Qty</span>
+                            <input type="number" step="any" class="win-input" th:field="*{packQty}" />
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 4px;">
+                        <div class="col-md-6">
+                            <span class="win-label">Base Unit</span>
+                            <select class="win-input" th:field="*{baseUnitId}">
+                                <option value="1">KGs</option>
+                                <option value="2">Bags</option>
+                                <option value="3">M.Tons</option>
+                                <option value="4">Pcs</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="win-label">Tax Type</span>
+                            <select class="win-input">
+                                <option value="1">Standard Tax</option>
+                                <option value="2">Exempt</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                            <label style="font-weight: bold; cursor: pointer; margin: 0;"><input type="checkbox" th:field="*{applyGST}" /> GST</label>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 4px;">
+                        <div class="col-md-6">
+                            <span class="win-label">Item Class</span>
+                            <select class="win-input" th:field="*{itemClassId}">
+                                <option value="1">Raw Material</option>
+                                <option value="2">Finish Goods</option>
+                                <option value="3">By Product</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" style="display: flex; gap: 15px; align-items: center; padding-top: 15px;">
+                            <label style="font-weight: bold; cursor: pointer; margin: 0;"><input type="radio" th:field="*{itemWithVarient}" value="true" /> With Variant</label>
+                            <label style="font-weight: bold; cursor: pointer; margin: 0;"><input type="radio" th:field="*{itemWithVarient}" value="false" checked /> Without Variant</label>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 4px;">
+                        <div class="col-md-6">
+                            <span class="win-label">Uom Group</span>
+                            <select class="win-input" th:field="*{uomLookUpId}">
+                                <option value="1">Default UOM Group</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" style="display: flex; gap: 10px; align-items: center; padding-top: 12px;">
+                            <label style="font-weight: bold; cursor: pointer; margin: 0;"><input type="checkbox" /> Commision On Sale</label>
+                            <label style="font-weight: bold; cursor: pointer; margin: 0;"><input type="checkbox" /> Commission on Purchase</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <span class="win-label">Mother Item</span>
+                            <select class="win-input select2" th:field="*{motherItemId}">
+                                <option value="0">-- Select Mother Item --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px;">
+                            <label style="font-weight: bold; cursor: pointer; margin: 0;"><input type="checkbox" th:field="*{itemStatus}" checked /> Is Active</label>
+                            <button type="button" class="win-btn win-btn-primary" style="height: 22px; padding: 2px 10px;" onclick="$('#moreDetailsDiv').toggle()">More Details +</button>
+                        </div>
+                    </div>
+
+                    <!-- Expandable More Details Section -->
+                    <div id="moreDetailsDiv" style="display: none; margin-top: 10px; padding-top: 8px; border-top: 1px solid #cbd5e1;">
+                        <div class="row" style="margin-bottom: 4px;">
+                            <div class="col-md-3">
+                                <span class="win-label">Cost Price</span>
+                                <input type="number" step="any" class="win-input" th:field="*{costPrice}" style="text-align:right;" />
+                            </div>
+                            <div class="col-md-3">
+                                <span class="win-label">Purchase Price</span>
+                                <input type="number" step="any" class="win-input" th:field="*{purchasePrice}" style="text-align:right;" />
+                            </div>
+                            <div class="col-md-3">
+                                <span class="win-label">Retail Price</span>
+                                <input type="number" step="any" class="win-input" th:field="*{retailPrice}" style="text-align:right;" />
+                            </div>
+                            <div class="col-md-3">
+                                <span class="win-label">Wholesale Price</span>
+                                <input type="number" step="any" class="win-input" th:field="*{wholeSalePrice}" style="text-align:right;" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <span class="win-label">Min Rate</span>
+                                <input type="number" step="any" class="win-input" th:field="*{minRate}" style="text-align:right;" />
+                            </div>
+                            <div class="col-md-3">
+                                <span class="win-label">Max Rate</span>
+                                <input type="number" step="any" class="win-input" th:field="*{maxRate}" style="text-align:right;" />
+                            </div>
+                            <div class="col-md-3">
+                                <span class="win-label">Min Stock Level</span>
+                                <input type="number" step="any" class="win-input" th:field="*{minStockLevel}" style="text-align:right;" />
+                            </div>
+                            <div class="col-md-3">
+                                <span class="win-label">Max Stock Level</span>
+                                <input type="number" step="any" class="win-input" th:field="*{maxStockLevel}" style="text-align:right;" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Related Defination Buttons matching C# Screenshot #2 -->
+            <div style="width: 200px; flex: 0 0 200px;">
+                <div class="win-groupbox" style="margin-top: 6px;">
+                    <span class="win-groupbox-title">Related Defination</span>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px;">
+                        <a href="/inventory/item_categories" class="btn-side-def">Item Category</a>
+                        <a href="/inventory/item_types" class="btn-side-def">Item Type</a>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px;">
+                        <a href="/inventory/item_groups" class="btn-side-def">Item Uom</a>
+                        <a href="/inventory/define-lots" class="btn-side-def">Crop Year</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/item_groups" class="btn-side-def">Item Uom Group</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/item_groups" class="btn-side-def">Item Uom Group Schedule</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/item_uom_schedule" class="btn-side-def">Item Uom Schedule</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/item_groups" class="btn-side-def">Uom Group Assign To Item</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/item-min-max-rate" class="btn-side-def">Item Tax Schedule</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/warehouses" class="btn-side-def">Items Allocate to Warehouse</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/racks" class="btn-side-def">Item Allocation to Location</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/items" class="btn-side-def">Item Multi Language</a>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <a href="/inventory/items" class="btn-side-def">Item Allocate To Manufacturer</a>
+                    </div>
+                    <div>
+                        <a href="/inventory/brands" class="btn-side-def">Define Brands</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Item Allocation Grid matching C# Screenshot #2 -->
+            <div style="width: 220px; flex: 0 0 220px;">
+                <div class="win-groupbox" style="margin-top: 6px; height: calc(100% - 10px);">
+                    <span class="win-groupbox-title">Item Allocation</span>
+                    
+                    <div style="border: 1px solid #cbd5e1; height: 310px; overflow-y: auto; background: #fff;">
+                        <table class="win-grid-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 30px; text-align: center;"><input type="checkbox" checked /></th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="text-align: center;"><input type="checkbox" checked /></td>
+                                    <td>GOLDEN ACE FOODS</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center;"><input type="checkbox" checked /></td>
+                                    <td>FACTORY WAREHOUSE</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="font-size: 9.5px; color: #555; margin-top: 4px;">Record: |&lt; &lt; 1 of 1 &gt; &gt;|</div>
+                </div>
+            </div>
+        </div>
+    </form>
+
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
     <script>
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+        });
+
         function submitForm() {
-            if (!$('#itemName').val()) { alert('Please enter Item Name.'); return; }
+            if (!$('#itemName').val().trim()) {
+                alert('Please enter Item Name.');
+                $('#itemName').focus();
+                return;
+            }
             $('#itemForm').submit();
         }
+
         $(document).keydown(function(e) {
             if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); window.location.href='/inventory/items/add'; }
             if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); submitForm(); }

@@ -4,110 +4,194 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Item Categories - EccountBookERP</title>
+    <title>Define Item Category - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .btn-erp-danger { background-color: #dc3545; color: white; border: 1px solid #bd2130; }
-        .btn-erp-danger:hover { background-color: #c82333; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .grid-container { height: 440px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
-        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
-        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
+        body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 10.5px; color: #000; margin: 0; padding: 0; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-size: 11.5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 23px; box-sizing: border-box; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 6px; display: flex; gap: 4px; align-items: center; height: 25px; box-sizing: border-box; }
+        .win-btn { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 1px 7px; font-size: 10.5px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; height: 20px; box-shadow: inset 0 1px 0 #fff; text-decoration: none; }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
+        .win-btn-primary { background: #00796B; color: #fff; border-color: #004d40; }
+        .win-btn-primary:hover { background: #004d40; color: #fff; }
+        
+        .win-panel-header { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-weight: bold; font-size: 11px; height: 20px; display: flex; align-items: center; }
+        .form-section { background: #ffffff; border: 1px solid #94a3b8; padding: 8px; margin: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .win-label { font-weight: 600; color: #222; margin-bottom: 1px; font-size: 10px; white-space: nowrap; }
+        .win-input { border: 1px solid #7f9db9; border-radius: 1px; padding: 1px 4px; font-size: 10.5px; font-family: Tahoma, sans-serif; height: 21px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; }
+        
+        .select2-container--default .select2-selection--single { height: 21px !important; padding: 0px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; border: 1px solid #7f9db9; border-radius: 1px; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 19px !important; padding-left: 0px; color: #000; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 19px !important; }
+
+        .grid-container { max-height: calc(100vh - 250px); overflow: auto; border: 1px solid #849ca8; margin: 4px; background: #fff; }
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 10px; font-family: Tahoma, sans-serif; background: #ffffff; }
+        .win-grid-table th { background: linear-gradient(to bottom, #dbe6f2 0%, #b0c4de 100%); color: #000000; font-weight: bold; padding: 3px 5px; border: 1px solid #849ca8; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; }
+        .win-grid-table td { padding: 2px 5px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; height: 19px; }
+        .win-grid-table tbody tr:nth-child(even) { background-color: #f7fafc; }
+        .win-grid-table tbody tr:hover { background-color: #cbe5ff; cursor: pointer; }
+        .win-grid-table tbody tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="erp-header">
-        <div><i class="fa fa-tags"></i> Item Category Definition (InvenItemCategory - Inventory Management)</div>
-        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory Dashboard</a></div>
-    </div>
-    
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
-        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save</button>
-        <button type="button" class="btn-erp" id="btnUpdate"><i class="fa fa-pencil"></i> Update</button>
-        <button type="button" class="btn-erp btn-erp-danger" id="btnDelete"><i class="fa fa-trash"></i> Delete</button>
-        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
+
+    <div class="win-title-bar">
+        <span><i class="fa fa-tags"></i> Define Item Category</span>
+        <a href="/inventory" style="color: #ffffff; text-decoration: none; font-size: 10.5px;">
+            <i class="fa fa-arrow-left"></i> Back to Inventory
+        </a>
     </div>
 
-    <div style="padding: 10px;">
+    <!-- WinForms Toolbar -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" id="btnNew" onclick="resetForm()"><i class="fa fa-plus text-success"></i> New</button>
+        <button type="button" class="win-btn" id="btnRefresh" onclick="loadCatGrid()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+        <button type="button" class="win-btn win-btn-primary" id="btnSave" onclick="saveCat()"><i class="fa fa-save"></i> Save</button>
+    </div>
+
+    <!-- Header Panel: Detail -->
+    <div class="win-panel-header">Detail</div>
+
+    <!-- Form Section matching C# WinForms screenshot #3 -->
+    <div class="form-section">
         <input type="hidden" id="categoryId" value="" />
-
-        <div class="erp-fieldset">
-            <legend>Item Category Information</legend>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label-erp">Category Code *</label>
-                    <input type="text" id="categoryCode" class="form-control-erp" placeholder="e.g. CAT-01" />
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label-erp">Category Description *</label>
-                    <input type="text" id="categoryDescription" class="form-control-erp" placeholder="e.g. Finished Goods Rice" />
-                </div>
-                <div class="col-md-3" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
-                    <label style="font-weight: 600; cursor: pointer;">
-                        <input type="checkbox" id="categoryStatus" checked="checked" /> Active Category
-                    </label>
-                </div>
+        
+        <div class="row" style="margin-bottom: 4px;">
+            <div class="col-md-3">
+                <span class="win-label">Code</span>
+                <input type="text" id="categoryCode" class="win-input" placeholder="e.g. 01" />
+            </div>
+            <div class="col-md-3">
+                <span class="win-label">Revenue Account</span>
+                <select id="revenueAccountId" class="win-input select2">
+                    <option value="0">-- Select Revenue Account --</option>
+                    <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${(a.accountCode != null ? a.accountCode : '') + ' - ' + (a.accountTitle != null ? a.accountTitle : '')}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <span class="win-label">Production Stage</span>
+                <select id="itemProductionStageId" class="win-input">
+                    <option value="0">-- Select Stage --</option>
+                    <option value="1">UnProcess</option>
+                    <option value="2">Process</option>
+                    <option value="3">Finish Goods</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <span class="win-label">Variety Nature</span>
+                <select id="itemVarietyNatureId" class="win-input">
+                    <option value="0">-- Select Variety --</option>
+                    <option value="1">Paddy</option>
+                    <option value="2">Brown</option>
+                    <option value="3">General</option>
+                    <option value="4">Steam</option>
+                    <option value="5">Steam Sela</option>
+                    <option value="6">Sela</option>
+                    <option value="7">White</option>
+                </select>
             </div>
         </div>
 
-        <div class="erp-fieldset">
-            <legend>Item Categories Master Records</legend>
-            <div class="grid-container">
-                <table class="erp-table" id="catGrid">
-                    <thead>
-                        <tr>
-                            <th style="width: 10%;">ID</th>
-                            <th style="width: 25%;">Category Code</th>
-                            <th style="width: 50%;">Category Description</th>
-                            <th style="width: 15%; text-align: center;">Status</th>
-                        </tr>
-                        <tr class="filter-row">
-                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
-                        </tr>
-                    </thead>
-                    <tbody id="catGridBody">
-                        <tr><td colspan="4" style="text-align:center;">Loading categories...</td></tr>
-                    </tbody>
-                </table>
+        <div class="row" style="margin-bottom: 4px;">
+            <div class="col-md-3">
+                <span class="win-label">Description</span>
+                <input type="text" id="categoryDescription" class="win-input" placeholder="e.g. Paddy Punjabi" />
+            </div>
+            <div class="col-md-3">
+                <span class="win-label">CGS Account</span>
+                <select id="cgsAccountId" class="win-input select2">
+                    <option value="0">-- Select CGS Account --</option>
+                    <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${(a.accountCode != null ? a.accountCode : '') + ' - ' + (a.accountTitle != null ? a.accountTitle : '')}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <span class="win-label">Class Group</span>
+                <select id="itemClassGroupId" class="win-input">
+                    <option value="0">-- Select Class Group --</option>
+                    <option value="1">Raw Material</option>
+                    <option value="2">Finish Goods</option>
+                    <option value="3">By Product</option>
+                </select>
+            </div>
+            <div class="col-md-3" style="display: flex; align-items: flex-end;">
+                <label style="font-weight: bold; cursor: pointer; font-size: 10.5px; margin: 0;">
+                    <input type="checkbox" id="categoryStatus" checked> Is Active
+                </label>
             </div>
         </div>
+
+        <div class="row">
+            <div class="col-md-1.5" style="width: 12%;">
+                <span class="win-label">Serial From &amp; To</span>
+                <input type="number" id="serialFrom" class="win-input" placeholder="1" />
+            </div>
+            <div class="col-md-1.5" style="width: 12%; padding-top: 15px;">
+                <input type="number" id="serialTo" class="win-input" placeholder="50" />
+            </div>
+            <div class="col-md-3">
+                <span class="win-label">Inventory Account</span>
+                <select id="inventoryAccountId" class="win-input select2">
+                    <option value="0">-- Select Inventory Account --</option>
+                    <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${(a.accountCode != null ? a.accountCode : '') + ' - ' + (a.accountTitle != null ? a.accountTitle : '')}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <span class="win-label">Parent Category</span>
+                <select id="inventoryParentCategoriesId" class="win-input select2">
+                    <option value="0">-- Select Parent Category --</option>
+                    <option value="1">Paddy</option>
+                    <option value="2">Rice</option>
+                    <option value="3">By Product</option>
+                    <option value="4">Other</option>
+                    <option value="5">Work In Process</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Panel: History -->
+    <div class="win-panel-header">
+        <span>History</span>
+        <span style="font-weight: normal; margin-left: 15px; font-size: 10px; opacity: 0.9;">Drag a column header here to group by that column.</span>
+    </div>
+
+    <!-- History Grid matching WinForms Screenshot #3 exact 12 columns -->
+    <div class="grid-container">
+        <table class="win-grid-table" id="catGrid">
+            <thead>
+                <tr>
+                    <th>Category Code</th>
+                    <th>Category Description</th>
+                    <th>Serial From</th>
+                    <th>Serial To</th>
+                    <th>Category Status</th>
+                    <th>Parent Category</th>
+                    <th>CGSAccount Title</th>
+                    <th>Revenue Account Title</th>
+                    <th>Inventory Account Title</th>
+                    <th>Class Group Name</th>
+                    <th>Production Stage</th>
+                    <th>Variety Nature</th>
+                </tr>
+            </thead>
+            <tbody id="catGridBody">
+                <tr><td colspan="12" style="text-align:center;">Loading categories...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
     <script>
         var catData = [];
 
         $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
             loadCatGrid();
-
-            $('#btnNew').click(function() { resetForm(); });
-            $('#btnSave, #btnUpdate').click(function() { saveCat(); });
-            $('#btnDelete').click(function() { deleteCat(); });
-            $('#btnRefresh').click(function() { loadCatGrid(); });
-
-            $('.filter-row input').on('keyup change', function() {
-                filterGrid();
-            });
         });
 
         function loadCatGrid() {
@@ -119,7 +203,7 @@
                     renderGrid(catData);
                 },
                 error: function() {
-                    $('#catGridBody').html('<tr><td colspan="4" style="text-align:center; color:red;">Failed to load categories.</td></tr>');
+                    $('#catGridBody').html('<tr><td colspan="12" style="text-align:center; color:red;">Failed to load categories.</td></tr>');
                 }
             });
         }
@@ -127,14 +211,22 @@
         function renderGrid(list) {
             var html = '';
             if(!list || list.length === 0) {
-                html = '<tr><td colspan="4" style="text-align:center;">No Category records found.</td></tr>';
+                html = '<tr><td colspan="12" style="text-align:center;">No Category records found.</td></tr>';
             } else {
                 $.each(list, function(idx, item) {
                     html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
-                    html += '<td>' + (item.id || '') + '</td>';
                     html += '<td>' + (item.categoryCode || '') + '</td>';
                     html += '<td><strong>' + (item.categoryDescription || '') + '</strong></td>';
-                    html += '<td style="text-align:center;">' + (item.categoryStatus !== false ? '<span class="label label-success">Active</span>' : '<span class="label label-default">Inactive</span>') + '</td>';
+                    html += '<td>' + (item.serialFrom !== null && item.serialFrom !== undefined ? item.serialFrom : '') + '</td>';
+                    html += '<td>' + (item.serialTo !== null && item.serialTo !== undefined ? item.serialTo : '') + '</td>';
+                    html += '<td>' + (item.categoryStatus !== false ? 'Active' : 'InActive') + '</td>';
+                    html += '<td>' + (item.parentCategoryName || '') + '</td>';
+                    html += '<td>' + (item.cgsAccountTitle || '') + '</td>';
+                    html += '<td>' + (item.revenueAccountTitle || '') + '</td>';
+                    html += '<td>' + (item.inventoryAccountTitle || '') + '</td>';
+                    html += '<td>' + (item.classGroupName || '') + '</td>';
+                    html += '<td>' + (item.productionStageName || '') + '</td>';
+                    html += '<td>' + (item.varietyNatureName || '') + '</td>';
                     html += '</tr>';
                 });
             }
@@ -149,6 +241,15 @@
                 $('#categoryId').val(item.id);
                 $('#categoryCode').val(item.categoryCode || '');
                 $('#categoryDescription').val(item.categoryDescription || '');
+                $('#serialFrom').val(item.serialFrom || '');
+                $('#serialTo').val(item.serialTo || '');
+                $('#revenueAccountId').val(item.revenueAccountId || 0).trigger('change');
+                $('#cgsAccountId').val(item.cgsAccountId || 0).trigger('change');
+                $('#inventoryAccountId').val(item.inventoryAccountId || 0).trigger('change');
+                $('#inventoryParentCategoriesId').val(item.inventoryParentCategoriesId || 0).trigger('change');
+                $('#itemClassGroupId').val(item.itemClassGroupId || 0);
+                $('#itemProductionStageId').val(item.itemProductionStageId || 0);
+                $('#itemVarietyNatureId').val(item.itemVarietyNatureId || 0);
                 $('#categoryStatus').prop('checked', item.categoryStatus !== false);
             }
         }
@@ -157,6 +258,15 @@
             $('#categoryId').val('');
             $('#categoryCode').val('');
             $('#categoryDescription').val('');
+            $('#serialFrom').val('');
+            $('#serialTo').val('');
+            $('#revenueAccountId').val(0).trigger('change');
+            $('#cgsAccountId').val(0).trigger('change');
+            $('#inventoryAccountId').val(0).trigger('change');
+            $('#inventoryParentCategoriesId').val(0).trigger('change');
+            $('#itemClassGroupId').val(0);
+            $('#itemProductionStageId').val(0);
+            $('#itemVarietyNatureId').val(0);
             $('#categoryStatus').prop('checked', true);
             $('#catGridBody tr').removeClass('selected');
         }
@@ -173,6 +283,15 @@
                 id: $('#categoryId').val() ? parseInt($('#categoryId').val()) : null,
                 categoryCode: $('#categoryCode').val(),
                 categoryDescription: desc,
+                serialFrom: $('#serialFrom').val() ? parseInt($('#serialFrom').val()) : null,
+                serialTo: $('#serialTo').val() ? parseInt($('#serialTo').val()) : null,
+                revenueAccountId: $('#revenueAccountId').val() ? parseInt($('#revenueAccountId').val()) : null,
+                cgsAccountId: $('#cgsAccountId').val() ? parseInt($('#cgsAccountId').val()) : null,
+                inventoryAccountId: $('#inventoryAccountId').val() ? parseInt($('#inventoryAccountId').val()) : null,
+                inventoryParentCategoriesId: $('#inventoryParentCategoriesId').val() ? parseInt($('#inventoryParentCategoriesId').val()) : null,
+                itemClassGroupId: $('#itemClassGroupId').val() ? parseInt($('#itemClassGroupId').val()) : null,
+                itemProductionStageId: $('#itemProductionStageId').val() ? parseInt($('#itemProductionStageId').val()) : null,
+                itemVarietyNatureId: $('#itemVarietyNatureId').val() ? parseInt($('#itemVarietyNatureId').val()) : null,
                 categoryStatus: $('#categoryStatus').is(':checked')
             };
 
@@ -189,50 +308,6 @@
                 error: function(xhr) {
                     alert('Failed to save Category: ' + (xhr.responseText || 'Error occurred'));
                 }
-            });
-        }
-
-        function deleteCat() {
-            var id = $('#categoryId').val();
-            if(!id) {
-                alert('Please select a Category from grid to delete.');
-                return;
-            }
-            if(confirm('Are you sure you want to delete Category #' + id + '?')) {
-                $.ajax({
-                    url: '/api/inventory/categories/' + id,
-                    type: 'DELETE',
-                    success: function() {
-                        alert('Category deleted successfully!');
-                        resetForm();
-                        loadCatGrid();
-                    },
-                    error: function(xhr) {
-                        alert('Failed to delete category: ' + xhr.responseText);
-                    }
-                });
-            }
-        }
-
-        function filterGrid() {
-            var filters = [];
-            $('.filter-row input').each(function() {
-                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
-            });
-
-            $('#catGridBody tr').each(function() {
-                var row = $(this);
-                var show = true;
-                $.each(filters, function(i, f) {
-                    if(f.val) {
-                        var text = row.find('td').eq(f.col).text().toLowerCase();
-                        if(text.indexOf(f.val) === -1) {
-                            show = false;
-                            return false;
-                        }
-                    }
-                });
-                row.toggle(show);
             });
         }
     </script>

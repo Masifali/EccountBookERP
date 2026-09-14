@@ -92,20 +92,12 @@
                     </tr>
                 </thead>
                 <tbody id="reportTbody">
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">SUP-001</td>
-                        <td>AL-HABIB TRADERS (PVT) LTD</td>
-                        <td style="text-align: right;">150,000.00</td>
-                        <td style="text-align: right;">80,000.00</td>
-                        <td style="text-align: right;">40,000.00</td>
-                        <td style="text-align: right;">0.00</td>
-                        <td style="text-align: right; font-weight: bold;">270,000.00</td>
-                    </tr>
+                    <tr><td colspan="7" style="text-align:center; padding:15px; color:#666;">Click View Report to load data.</td></tr>
                 </tbody>
             </table>
             <div class="report-summary-bar">
-                <div>Total Suppliers: 1</div>
-                <div>Total Outstanding: 270,000.00 PKR</div>
+                <div id="lblTotalSuppliers">Total Suppliers: 0</div>
+                <div id="lblTotalOutstanding">Total Outstanding: 0.00 PKR</div>
             </div>
         </div>
     </div>
@@ -118,6 +110,7 @@
             $('#txtAsOnDate').val(today);
             $('.select2').select2({ width: '100%' });
             updatePeriodLabel();
+            loadReport();
         });
 
         function updatePeriodLabel() {
@@ -127,13 +120,56 @@
 
         function loadReport() {
             updatePeriodLabel();
+            const toDate = $('#txtAsOnDate').val();
+            const tbody = $('#reportTbody');
+            tbody.html('<tr><td colspan="7" style="text-align:center; padding:15px;"><i class="fa fa-spinner fa-spin"></i> Loading Supplier Payables Aging...</td></tr>');
+
+            $.ajax({
+                url: `/accounts/api/reports/party-aging?isPayables=true&toDate=${toDate}`,
+                type: 'GET',
+                success: function(data) {
+                    tbody.empty();
+                    if (!data || data.length === 0) {
+                        tbody.html('<tr><td colspan="7" style="text-align:center; color:#666; padding:15px;">No supplier aging data found.</td></tr>');
+                        $('#lblTotalSuppliers').text('Total Suppliers: 0');
+                        $('#lblTotalOutstanding').text('Total Outstanding: 0.00 PKR');
+                        return;
+                    }
+                    let totalBal = 0;
+                    data.forEach(item => {
+                        const code = item.AccountCode || item.accountCode || item.Code || '';
+                        const name = item.AccountTitle || item.accountTitle || item.Name || '';
+                        const c030 = Number(item.Current030 || item.current030 || 0);
+                        const d3160 = Number(item.Days3160 || item.days3160 || 0);
+                        const d6190 = Number(item.Days6190 || item.days6190 || 0);
+                        const d90p = Number(item.Days90Plus || item.days90Plus || 0);
+                        const bal = Number(item.OutstandingBalance || item.outstandingBalance || (c030 + d3160 + d6190 + d90p));
+                        totalBal += bal;
+
+                        tbody.append(`<tr>
+                            <td style="font-weight: bold; color: #00796B;">${code}</td>
+                            <td>${name}</td>
+                            <td style="text-align: right;">${c030.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td style="text-align: right;">${d3160.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td style="text-align: right;">${d6190.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td style="text-align: right;">${d90p.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td style="text-align: right; font-weight: bold;">${bal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        </tr>`);
+                    });
+                    $('#lblTotalSuppliers').text(`Total Suppliers: ${data.length}`);
+                    $('#lblTotalOutstanding').text(`Total Outstanding: ${totalBal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} PKR`);
+                },
+                error: function() {
+                    tbody.html('<tr><td colspan="7" style="text-align:center; color:red; padding:15px;">Error loading Supplier Payables Aging.</td></tr>');
+                }
+            });
         }
 
         function resetFilters() {
             const today = new Date().toISOString().split('T')[0];
             $('#txtAsOnDate').val(today);
             $('.select2').val('').trigger('change');
-            updatePeriodLabel();
+            loadReport();
         }
     </script>
 </body>

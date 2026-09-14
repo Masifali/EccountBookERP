@@ -352,4 +352,14 @@ public class InventoryModuleViewController {
         model.addAttribute("accounts", chartofAccountService.getAllAccounts());
         return "inventory/item_form";
     }
+
+    // 14. ITEM UOM SCHEDULE
+    @GetMapping({"/item_uom_schedule", "/item-uom-schedule"})
+    public String viewItemUomSchedule(Model model) {
+        model.addAttribute("activeMenu", "inventory");
+        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
+        model.addAttribute("itemTypes", itemTypeService.getAll());
+        model.addAttribute("items", itemService.getAll());
+        return "inventory/item_uom_schedule";
+    }
 }

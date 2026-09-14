@@ -1,13 +1,21 @@
 package com.mst.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class MainModulesController {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @GetMapping({"/modules", "/main-hub", "/modules-hub"})
     public String mainModulesHub(Model model) {
@@ -19,6 +27,9 @@ public class MainModulesController {
     public String qualityControl(Model model) {
         model.addAttribute("activeMenu", "quality");
         model.addAttribute("moduleTitle", "Quality Control Master");
+        model.addAttribute("production", new HashMap<>());
+        model.addAttribute("companies", new ArrayList<>());
+        model.addAttribute("branches", new ArrayList<>());
         return "production/production_form";
     }
 
@@ -32,6 +43,9 @@ public class MainModulesController {
     public String production(Model model) {
         model.addAttribute("activeMenu", "production");
         model.addAttribute("moduleTitle", "Production Entry & Yield");
+        model.addAttribute("production", new HashMap<>());
+        model.addAttribute("companies", new ArrayList<>());
+        model.addAttribute("branches", new ArrayList<>());
         return "production/production_form";
     }
 
@@ -72,10 +86,36 @@ public class MainModulesController {
         return "redirect:/inventory/item-categories";
     }
 
+    private void populateStockOpeningModel(Model model) {
+        model.addAttribute("activeMenu", "inventory");
+
+        if (!model.containsAttribute("itemCategory")) {
+            model.addAttribute("itemCategory", new HashMap<>());
+        }
+
+        try {
+            model.addAttribute("itemCategories", jdbcTemplate.queryForList("SELECT ID as id, CategoryCode as formattedCode, CategoryDescription as name FROM ItemCategory"));
+        } catch (Exception e) {
+            model.addAttribute("itemCategories", new ArrayList<>());
+        }
+
+        try {
+            model.addAttribute("itemSubCategories", jdbcTemplate.queryForList("SELECT ID as id, TypeCode as formattedCode, TypeDescription as name FROM ItemType"));
+        } catch (Exception e) {
+            model.addAttribute("itemSubCategories", new ArrayList<>());
+        }
+
+        try {
+            model.addAttribute("itemDefs", jdbcTemplate.queryForList("SELECT ID as id, ItemCode as formattedCode, ItemName as name, CostPrice as standardRate, RetailPrice as saleRate, 1.0 as unitValue FROM Item"));
+        } catch (Exception e) {
+            model.addAttribute("itemDefs", new ArrayList<>());
+        }
+    }
+
     // Stocks & Inventory Sub-modules
     @GetMapping({"/stocks/stock_opening_form", "/stocks/stock-opening-form"})
     public String stockOpeningForm(Model model) {
-        model.addAttribute("activeMenu", "inventory");
+        populateStockOpeningModel(model);
         return "stocks/stock_opening_form";
     }
 
@@ -97,16 +137,56 @@ public class MainModulesController {
         return "stocks/mill_rates_view";
     }
 
-    @GetMapping("/stocks/inventory_profitability_report")
-    public String inventoryProfitabilityReport(Model model) {
+    private void populateStockProfitabilityModel(Model model) {
         model.addAttribute("activeMenu", "inventory");
+
+        if (!model.containsAttribute("stockLedgerReportRequest")) {
+            Map<String, Object> req = new HashMap<>();
+            req.put("companyId", 0);
+            req.put("branchId", 0);
+            req.put("itemCategoryId", 0);
+            req.put("itemDefId", 0);
+            req.put("fromDate", LocalDate.now().toString());
+            req.put("toDate", LocalDate.now().toString());
+            req.put("summary", "0");
+            model.addAttribute("stockLedgerReportRequest", req);
+        }
+
+        try {
+            model.addAttribute("companies", jdbcTemplate.queryForList("SELECT ID as id, CompName as name FROM Company"));
+        } catch (Exception e) {
+            model.addAttribute("companies", new ArrayList<>());
+        }
+
+        try {
+            model.addAttribute("companyBranches", jdbcTemplate.queryForList("SELECT ID as id, BranchName as name FROM Branches"));
+        } catch (Exception e) {
+            model.addAttribute("companyBranches", new ArrayList<>());
+        }
+
+        try {
+            model.addAttribute("itemCategories", jdbcTemplate.queryForList("SELECT ID as id, CategoryDescription as name FROM ItemCategory"));
+        } catch (Exception e) {
+            model.addAttribute("itemCategories", new ArrayList<>());
+        }
+
+        try {
+            model.addAttribute("itemDefs", jdbcTemplate.queryForList("SELECT ID as id, ItemCode as formattedCode, ItemName as name FROM Item"));
+        } catch (Exception e) {
+            model.addAttribute("itemDefs", new ArrayList<>());
+        }
+    }
+
+    @GetMapping({"/stocks/inventory_profitability_report", "/stocks/inventory-profitability-report"})
+    public String inventoryProfitabilityReport(Model model) {
+        populateStockProfitabilityModel(model);
         return "stocks/inventory_profitability_report";
     }
 
     // 13. Stock Valuation Report
     @GetMapping({"/stocks/stock_valuation", "/stocks/stock-valuation"})
     public String stockValuation(Model model) {
-        model.addAttribute("activeMenu", "inventory");
+        populateStockOpeningModel(model);
         model.addAttribute("moduleTitle", "Stock Valuation Report");
         return "stocks/stock_opening_form";
     }
@@ -114,7 +194,7 @@ public class MainModulesController {
     // 14. Stock Movement Report
     @GetMapping({"/stocks/stock_movement", "/stocks/stock-movement"})
     public String stockMovement(Model model) {
-        model.addAttribute("activeMenu", "inventory");
+        populateStockProfitabilityModel(model);
         model.addAttribute("moduleTitle", "Stock Movement Report");
         return "stocks/inventory_profitability_report";
     }
@@ -122,7 +202,7 @@ public class MainModulesController {
     // 15. Stock Register Report
     @GetMapping({"/stocks/stock_register", "/stocks/stock-register"})
     public String stockRegister(Model model) {
-        model.addAttribute("activeMenu", "inventory");
+        populateStockOpeningModel(model);
         model.addAttribute("moduleTitle", "Stock Register Report");
         return "stocks/stock_opening_form";
     }
@@ -138,7 +218,7 @@ public class MainModulesController {
     // 17. Item Stock As On Date
     @GetMapping({"/stocks/stock_as_on_date", "/stocks/stock-as-on-date"})
     public String stockAsOnDate(Model model) {
-        model.addAttribute("activeMenu", "inventory");
+        populateStockOpeningModel(model);
         model.addAttribute("moduleTitle", "Item Stock As On Date");
         return "stocks/stock_opening_form";
     }

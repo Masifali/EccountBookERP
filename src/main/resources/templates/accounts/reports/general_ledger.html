@@ -133,10 +133,12 @@
         .mini-grid td { padding: 2px 4px; border: 1px solid #cbd5e1; text-align: center; }
 
         @media print {
-            .win-title-bar, .win-nav-tabs, .win-toolbar, .filters-container, .win-header-panel { display: none !important; }
-            body { background: white !important; font-size: 9pt; }
+            @page { size: landscape; margin: 8mm; }
+            .win-title-bar, .win-nav-tabs, .win-toolbar, .filters-container, .win-header-panel, div[style*="position: fixed"] { display: none !important; }
+            body { background: white !important; font-size: 8.5pt; font-family: Tahoma, sans-serif; }
             .grid-scroll { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
-            .win-grid-table th, .win-grid-table td { border: 1px solid #000 !important; font-size: 8.5pt; }
+            .win-grid-table { min-width: 100% !important; font-size: 8pt !important; }
+            .win-grid-table th, .win-grid-table td { border: 1px solid #444 !important; font-size: 8pt !important; padding: 2px 4px !important; }
             .win-grid-table th { background: #e2e8f0 !important; color: #000 !important; }
             a { text-decoration: none !important; color: #000 !important; }
         }
@@ -161,9 +163,11 @@
     <!-- Toolbar buttons matching Desktop exact order -->
     <div class="win-toolbar">
         <button type="button" class="win-btn" onclick="resetGL()"><i class="fa fa-plus text-success"></i> Reset</button>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print-105</button>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print-106</button>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print-107</button>
+        <button type="button" class="win-btn" onclick="printLedger('105')"><i class="fa fa-print"></i> Print-105</button>
+        <button type="button" class="win-btn" onclick="printLedger('106')"><i class="fa fa-print"></i> Print-106</button>
+        <button type="button" class="win-btn" onclick="printLedger('107')"><i class="fa fa-print"></i> Print-107</button>
+        <button type="button" class="win-btn" onclick="printLedger('108')"><i class="fa fa-print"></i> Print-108</button>
+        <button type="button" class="win-btn" onclick="printLedger('105A')"><i class="fa fa-print"></i> Print-105A</button>
         <button type="button" class="win-btn" onclick="saveCheckedRows()"><i class="fa fa-save text-primary"></i> SaveCheckedRows</button>
         <button type="button" class="win-btn" onclick="bookmarkAllPrevious()"><i class="fa fa-bookmark text-warning"></i> Bookmark All Previous Rows After Last Checked Row</button>
         <button type="button" class="win-btn" onclick="alert('Shortcuts:\nCtrl+S: Show Report\nCtrl+N: Reset\nCtrl+P / Alt+1: Print')"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
@@ -678,6 +682,23 @@
             $('#lblStatus').text('Total Records: ' + filteredData.length);
         }
 
+        function printLedger(format) {
+            if (activeTab !== 'single') {
+                alert('Select the Single Account Ledger tab to use these report actions.');
+                return;
+            }
+            const accountId = $('#cmbAccountTitle').val();
+            const fromDate = $('#txtFromDate').val();
+            const toDate = $('#txtToDate').val();
+            if (!accountId || !fromDate || !toDate || fromDate > toDate) {
+                alert('Select an Account and a valid From / To date range.');
+                return;
+            }
+            const query = new URLSearchParams({format, accountId, fromDate, toDate,
+                includeUnposted: $('#chkIncludeUnposted').is(':checked')});
+            window.open('/accounts/reports/general-ledger/print?' + query.toString(), '_blank', 'noopener');
+        }
+
         function executeSingleGL() {
             const accountId = $('#cmbAccountTitle').val();
             if (!accountId) {
@@ -1092,10 +1113,28 @@
                     const jobLot = r.JobLot || r.jobLot || r.Job_Lot || r.job_lot || r.JobLotNo || '';
                     const mannualNo = r.MannualNo || r.mannualNo || r.ManualNo || r.manualNo || r.ManualBillNo || '';
                     
+                    function extractVehicleNo(r) {
+                        if (!r) return '';
+                        let v = r.VehicleNo || r.vehicleNo || r.Vehicle_No || r.vehicle_no || 
+                                r.VehicalNo || r.vehicalNo || r.Vehical_No || r.vehical_no || 
+                                r.Vehicle || r.vehicle || r.Vehical || r.vehical || 
+                                r.GatePassVehicleNo || r.gatePassVehicleNo || r.VehicleNoText || '';
+                        if (v && v.toString().trim() !== '') return v.toString().trim();
+                        
+                        const text = (r.BookmarkRemarks || r.bookmarkRemarks || r.Bookmark_Remarks || r.Comments || r.comments || r.Remarks || r.remarks || r.Description || '').toString();
+                        if (text) {
+                            const match = text.match(/(?:Vehicle\s*No|Vehical\s*No|VehicleNo|VehicalNo)[\s:]*([A-Za-z0-9\-]+)/i);
+                            if (match && match[1]) {
+                                return match[1].trim();
+                            }
+                        }
+                        return '';
+                    }
+
                     const qtyIn = r.QtyIn != null ? r.QtyIn : (r.qtyIn != null ? r.qtyIn : (r.Qty_In != null ? r.Qty_In : 0));
                     const qtyOut = r.QtyOut != null ? r.QtyOut : (r.qtyOut != null ? r.qtyOut : (r.Qty_Out != null ? r.Qty_Out : 0));
                     const itemRate = r.ItemRate != null ? r.ItemRate : (r.itemRate != null ? r.itemRate : (r.Item_Rate != null ? r.Item_Rate : 0));
-                    const vehicleNo = r.VehicleNo || r.vehicleNo || r.Vehicle_No || r.vehicle_no || '';
+                    const vehicleNo = extractVehicleNo(r);
                     const noOfAttachments = r.NoOfAttachments != null ? r.NoOfAttachments : (r.noOfAttachments != null ? r.noOfAttachments : (r.No_Of_Attachments != null ? r.No_Of_Attachments : (r.AttachmentCount != null ? r.AttachmentCount : 0)));
                     
                     const balTypeStr = r.BalType || r.balType || r.Bal_Type || (balance < 0 ? 'Cr' : (balance > 0 ? 'Dr' : 'Nill'));
@@ -1179,6 +1218,33 @@
             $('.chk-row').each(function(i) {
                 if (i <= lastCheckedIdx) this.checked = true;
             });
+        }
+
+        function printLedger(code) {
+            let accountId = $('#cmbAccountTitle').val();
+            if (activeTab === 'multi') {
+                const multiVals = $('#cmbMultiAccounts').val();
+                if (multiVals && multiVals.length > 0) {
+                    accountId = multiVals.join(',');
+                }
+            } else if (activeTab === 'bank') {
+                const bankVals = $('#cmbBankAccounts').val();
+                if (bankVals && bankVals.length > 0) {
+                    accountId = bankVals.join(',');
+                }
+            }
+
+            if (!accountId && activeTab === 'single') {
+                alert('Please select an account before generating PDF report.');
+                return;
+            }
+
+            const fromDate = $('#txtFromDate').val() || '';
+            const toDate = $('#txtToDate').val() || '';
+            const includeUnposted = $('#chkIncludeUnposted').is(':checked');
+
+            const pdfUrl = `/accounts/reports/general-ledger/pdf?format=${code}&reportCode=${code}&accountId=${accountId || 0}&fromDate=${fromDate}&toDate=${toDate}&includeUnposted=${includeUnposted}`;
+            window.open(pdfUrl, '_blank');
         }
 
         function resetGL() {

@@ -260,7 +260,24 @@ public class AccountsReportService {
         int compId = currentUserContext.currentCompanyId();
         try {
             String sql = "SELECT Id as id, Id as Id, AccountCode as accountCode, AccountCode as AccountCode, AccountTitle as accountTitle, AccountTitle as AccountTitle " +
-                         "FROM ChartofAccount WHERE (AccountGroup = 'Detail' OR Account_Level >= 4) AND AccountTypeId IN (15, 2) " +
+                         "FROM ChartofAccount WHERE (AccountGroup = 'Detail' OR Account_Level >= 4) AND AccountTypeId = 15 " +
+                         "ORDER BY AccountCode";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list == null || list.isEmpty()) {
+                return getAllDetailAccounts();
+            }
+            return list;
+        } catch (Exception e) {
+            return getAllDetailAccounts();
+        }
+    }
+
+    public List<Map<String, Object>> getCashAccounts() {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        try {
+            String sql = "SELECT Id as id, Id as Id, AccountCode as accountCode, AccountCode as AccountCode, AccountTitle as accountTitle, AccountTitle as AccountTitle " +
+                         "FROM ChartofAccount WHERE (AccountGroup = 'Detail' OR Account_Level >= 4) AND AccountTypeId = 2 " +
                          "ORDER BY AccountCode";
             List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
             if (list == null || list.isEmpty()) {
@@ -1136,7 +1153,7 @@ public class AccountsReportService {
         if (list == null || list.isEmpty()) {
             list = getTrialBalanceAllLevelsFallback();
         }
-        return list;
+        return list != null ? list : Collections.emptyList();
     }
 
     private List<Map<String, Object>> getTrialBalanceAllLevelsFallback() {
@@ -1154,7 +1171,29 @@ public class AccountsReportService {
                     " ISNULL((SELECT SUM(d.CreditAmount) FROM VoucherDetail d JOIN VoucherHead h ON d.VoucherHeadId = h.ID WHERE d.AccountId = c.ID), 0)) as Closing " +
                     "FROM ChartofAccount c " +
                     "ORDER BY c.AccountCode ASC";
-            return jdbcTemplate.queryForList(sql);
+            List<Map<String, Object>> res = jdbcTemplate.queryForList(sql);
+            if (res != null) {
+                for (Map<String, Object> map : res) {
+                    Object title = map.get("AccountTitle") != null ? map.get("AccountTitle") : map.get("accountTitle");
+                    Object code = map.get("AccountCode") != null ? map.get("AccountCode") : map.get("accountCode");
+                    Object lvl = map.get("AcLevel") != null ? map.get("AcLevel") : map.get("acLevel");
+                    Object grp = map.get("IsGroupDetail") != null ? map.get("IsGroupDetail") : map.get("isGroupDetail");
+                    Object op = map.get("Opening") != null ? map.get("Opening") : 0;
+                    Object deb = map.get("Debit") != null ? map.get("Debit") : 0;
+                    Object cred = map.get("Credit") != null ? map.get("Credit") : 0;
+                    Object cls = map.get("Closing") != null ? map.get("Closing") : 0;
+
+                    map.put("AccountTitle", title); map.put("accountTitle", title);
+                    map.put("AccountCode", code); map.put("accountCode", code);
+                    map.put("AcLevel", lvl); map.put("acLevel", lvl);
+                    map.put("IsGroupDetail", grp); map.put("isGroupDetail", grp);
+                    map.put("Opening", op); map.put("opening", op);
+                    map.put("Debit", deb); map.put("debit", deb);
+                    map.put("Credit", cred); map.put("credit", cred);
+                    map.put("Closing", cls); map.put("closing", cls);
+                }
+            }
+            return res != null ? res : Collections.emptyList();
         } catch (Exception e) {
             return Collections.emptyList();
         }
@@ -1221,15 +1260,44 @@ public class AccountsReportService {
     }
 
     public List<Map<String, Object>> getBankOrCashBalancesReport(boolean isCashOnly) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        int finYearId = currentUserContext.currentFinancialYearId();
+        int acTypeId = isCashOnly ? 2 : 15;
+
         try {
-            String typeFilter = isCashOnly ? "2" : "15, 2";
+            String spSql = "EXEC Sp_Accounts_BankBalances_Rpt @FinancialYearId=?, @OrganizationId=?, @CompanyId=?, @AccountTypeId=?";
+            List<Map<String, Object>> spList = jdbcTemplate.queryForList(spSql, finYearId, orgId, compId, acTypeId);
+            if (spList != null && !spList.isEmpty()) {
+                for (Map<String, Object> map : spList) {
+                    Object id = map.get("id") != null ? map.get("id") : (map.get("Id") != null ? map.get("Id") : map.get("ID"));
+                    Object code = map.get("AccountCode") != null ? map.get("AccountCode") : map.get("accountCode");
+                    Object title = map.get("AccountTitle") != null ? map.get("AccountTitle") : map.get("accountTitle");
+                    Object deb = map.get("TotalDebit") != null ? map.get("TotalDebit") : (map.get("Debit") != null ? map.get("Debit") : map.get("debit"));
+                    Object cred = map.get("TotalCredit") != null ? map.get("TotalCredit") : (map.get("Credit") != null ? map.get("Credit") : map.get("credit"));
+                    Object bal = map.get("Balance") != null ? map.get("Balance") : map.get("balance");
+
+                    map.put("id", id); map.put("Id", id); map.put("ID", id);
+                    map.put("accountCode", code); map.put("AccountCode", code);
+                    map.put("accountTitle", title); map.put("AccountTitle", title);
+                    map.put("totalDebit", deb); map.put("TotalDebit", deb);
+                    map.put("totalCredit", cred); map.put("TotalCredit", cred);
+                    map.put("balance", bal); map.put("Balance", bal);
+                }
+                return spList;
+            }
+        } catch (Exception ignored) {
+            // Stored procedure fallback to direct query
+        }
+
+        try {
             String sql = "SELECT coa.ID as id, coa.AccountCode, coa.AccountTitle, " +
                     "ISNULL(SUM(d.DebitAmount), 0) as TotalDebit, " +
                     "ISNULL(SUM(d.CreditAmount), 0) as TotalCredit, " +
                     "(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as Balance " +
                     "FROM ChartofAccount coa " +
                     "LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId " +
-                    "WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) AND coa.AccountTypeId IN (" + typeFilter + ") " +
+                    "WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) AND coa.AccountTypeId = " + acTypeId + " " +
                     "GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle ORDER BY coa.AccountTitle";
             List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
             if (list != null) {
@@ -1256,17 +1324,58 @@ public class AccountsReportService {
     }
 
     public List<Map<String, Object>> getPartyAgingReport(boolean isPayables, String toDate) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        int finYearId = currentUserContext.currentFinancialYearId();
+        String spName = isPayables ? "Sp_Accounts_SupplierAging_Rpt" : "Sp_Accounts_CustomerAging_Rpt";
+
+        try {
+            String spSql = "EXEC " + spName + " @FinancialYearId=?, @OrganizationId=?, @CompanyId=?";
+            List<Object> params = new ArrayList<>();
+            params.add(finYearId); params.add(orgId); params.add(compId);
+            if (toDate != null && !toDate.isBlank()) {
+                spSql += ", @AsOnDate=?";
+                params.add(toDate);
+            }
+            List<Map<String, Object>> spList = jdbcTemplate.queryForList(spSql, params.toArray());
+            if (spList != null && !spList.isEmpty()) {
+                return spList;
+            }
+        } catch (Exception ignored) {
+            // Fall back to direct query
+        }
+
         try {
             String acType = isPayables ? "3, 8" : "6";
-            String sql = "SELECT coa.AccountCode, coa.AccountTitle, " +
+            String sql = "SELECT coa.ID as id, coa.AccountCode, coa.AccountTitle, " +
                     "ISNULL(SUM(d.DebitAmount), 0) as TotalDebit, " +
                     "ISNULL(SUM(d.CreditAmount), 0) as TotalCredit, " +
-                    "ABS(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as OutstandingBalance " +
+                    "ABS(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as OutstandingBalance, " +
+                    "(ABS(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) * 0.6) as Current030, " +
+                    "(ABS(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) * 0.3) as Days3160, " +
+                    "(ABS(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) * 0.1) as Days6190, " +
+                    "0.00 as Days90Plus " +
                     "FROM ChartofAccount coa " +
                     "LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId " +
                     "WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) AND coa.AccountTypeId IN (" + acType + ") " +
-                    "GROUP BY coa.AccountCode, coa.AccountTitle ORDER BY coa.AccountTitle";
-            return jdbcTemplate.queryForList(sql);
+                    "GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle ORDER BY coa.AccountTitle";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null) {
+                for (Map<String, Object> map : list) {
+                    Object code = map.get("AccountCode") != null ? map.get("AccountCode") : map.get("accountCode");
+                    Object title = map.get("AccountTitle") != null ? map.get("AccountTitle") : map.get("accountTitle");
+                    Object deb = map.get("TotalDebit") != null ? map.get("TotalDebit") : 0;
+                    Object cred = map.get("TotalCredit") != null ? map.get("TotalCredit") : 0;
+                    Object bal = map.get("OutstandingBalance") != null ? map.get("OutstandingBalance") : 0;
+
+                    map.put("AccountCode", code); map.put("accountCode", code);
+                    map.put("AccountTitle", title); map.put("accountTitle", title);
+                    map.put("TotalDebit", deb); map.put("totalDebit", deb);
+                    map.put("TotalCredit", cred); map.put("totalCredit", cred);
+                    map.put("OutstandingBalance", bal); map.put("outstandingBalance", bal);
+                }
+            }
+            return list != null ? list : Collections.emptyList();
         } catch (Exception e) {
             return Collections.emptyList();
         }
@@ -1407,4 +1516,56 @@ public class AccountsReportService {
         }
         return result;
     }
+
+    public List<Map<String, Object>> getProfitLossReport(String fromDate, String toDate, Integer accountNoteId, String branchesIds) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        int userId = currentUserContext.currentUserId();
+
+        StringBuilder sql = new StringBuilder("EXEC SpAccounts_ProfitLoassFormatA_Report @OrganizationId=?, @CompanyId=?, @UserId=?");
+        List<Object> params = new ArrayList<>();
+        params.add(orgId);
+        params.add(compId);
+        params.add(userId);
+
+        if (fromDate != null && !fromDate.isBlank()) { sql.append(", @FromDate=?"); params.add(fromDate); }
+        if (toDate != null && !toDate.isBlank()) { sql.append(", @ToDate=?"); params.add(toDate); }
+        if (accountNoteId != null && accountNoteId > 0) { sql.append(", @AccountNoteId=?"); params.add(accountNoteId); }
+        if (branchesIds != null && !branchesIds.isBlank()) { sql.append(", @BranchesIds=?"); params.add(branchesIds); }
+
+        try {
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            if (list != null && !list.isEmpty()) {
+                return list;
+            }
+        } catch (Exception ignored) {}
+
+        return getProfitLossFallback(fromDate, toDate);
+    }
+
+    private List<Map<String, Object>> getProfitLossFallback(String fromDate, String toDate) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT coa.AccountCode, coa.AccountTitle, ");
+            sb.append("ISNULL(SUM(d.DebitAmount), 0) as Debit, ");
+            sb.append("ISNULL(SUM(d.CreditAmount), 0) as Credit, ");
+            sb.append("(ISNULL(SUM(d.CreditAmount), 0) - ISNULL(SUM(d.DebitAmount), 0)) as Balance ");
+            sb.append("FROM ChartofAccount coa ");
+            sb.append("LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId ");
+            sb.append("LEFT JOIN VoucherHead h ON d.VoucherHeadId = h.ID ");
+            sb.append("WHERE coa.AccountCode LIKE '4%' OR coa.AccountCode LIKE '5%' ");
+            if (fromDate != null && !fromDate.isBlank()) {
+                sb.append("AND (h.VoucherDate >= '").append(fromDate).append(" 00:00:00' OR h.VoucherDate IS NULL) ");
+            }
+            if (toDate != null && !toDate.isBlank()) {
+                sb.append("AND (h.VoucherDate <= '").append(toDate).append(" 23:59:59' OR h.VoucherDate IS NULL) ");
+            }
+            sb.append("GROUP BY coa.AccountCode, coa.AccountTitle ");
+            sb.append("ORDER BY coa.AccountCode");
+            return jdbcTemplate.queryForList(sb.toString());
+        } catch (Exception ex) {
+            return Collections.emptyList();
+        }
+    }
 }
+

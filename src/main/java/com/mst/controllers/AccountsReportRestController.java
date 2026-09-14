@@ -273,11 +273,14 @@ public class AccountsReportRestController {
     @PostMapping("/trial-balance-all-level")
     public ResponseEntity<?> getTrialBalanceAllLevel(@RequestBody Map<String, Object> req) {
         try {
-            String fromDate = strOrNull(req.get("fromDate"));
-            String toDate = strOrNull(req.get("toDate"));
-            boolean skipZero = Boolean.parseBoolean(String.valueOf(req.getOrDefault("skipZero", false)));
+            String fromDate = strOrNull(req != null ? req.get("fromDate") : null);
+            String toDate = strOrNull(req != null ? req.get("toDate") : null);
+            boolean skipZero = req != null && Boolean.parseBoolean(String.valueOf(req.getOrDefault("skipZero", false)));
 
             List<Map<String, Object>> data = accountsReportService.getTrialBalanceAllLevelsReport(fromDate, toDate, skipZero);
+            if (data == null) {
+                data = Collections.emptyList();
+            }
             Map<String, Object> res = new HashMap<>();
             res.put("success", true);
             res.put("data", data);
@@ -420,5 +423,28 @@ public class AccountsReportRestController {
             return ResponseEntity.status(500).body(err);
         }
     }
+
+    @PostMapping("/profit-loss")
+    public ResponseEntity<?> getProfitLoss(@RequestBody Map<String, Object> req) {
+        try {
+            String fromDate = strOrNull(req.get("fromDate"));
+            String toDate = strOrNull(req.get("toDate"));
+            Integer accountNoteId = intOrNull(req.get("accountNoteId"));
+            String branchesIds = strOrNull(req.get("branchesIds"));
+
+            List<Map<String, Object>> data = accountsReportService.getProfitLossReport(fromDate, toDate, accountNoteId, branchesIds);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data != null ? data.size() : 0);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Profit & Loss Report: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
 }
+
 

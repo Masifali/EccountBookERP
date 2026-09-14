@@ -89,27 +89,14 @@
                 </thead>
                 <tbody id="reportTbody">
                     <tr>
-                        <td style="font-weight: bold; color: #00796B;">401001</td>
-                        <td>SALES REVENUE - LOCAL</td>
-                        <td style="text-align: right;">0.00</td>
-                        <td style="text-align: right;">0.00</td>
-                        <td style="text-align: right;">3,500,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">3,500,000.00 Cr</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">501001</td>
-                        <td>COST OF GOODS SOLD - RAW MATERIALS</td>
-                        <td style="text-align: right;">0.00</td>
-                        <td style="text-align: right;">2,100,000.00</td>
-                        <td style="text-align: right;">0.00</td>
-                        <td style="text-align: right; font-weight: bold;">2,100,000.00 Dr</td>
+                        <td colspan="6" style="text-align: center; color: #64748b; padding: 15px;">Click <b>View Report</b> to load Profit &amp; Loss data.</td>
                     </tr>
                 </tbody>
             </table>
-            <div class="report-summary-bar">
-                <div>Total Revenue: 3,500,000.00 Cr</div>
-                <div>Total Expense: 2,100,000.00 Dr</div>
-                <div>Net Profit / (Loss): 1,400,000.00 Cr</div>
+            <div class="report-summary-bar" id="summaryBar">
+                <div id="lblTotRev">Total Revenue: 0.00 Cr</div>
+                <div id="lblTotExp">Total Expense: 0.00 Dr</div>
+                <div id="lblNetProf">Net Profit / (Loss): 0.00</div>
             </div>
         </div>
     </div>
@@ -122,6 +109,7 @@
             $('#txtFromDate, #txtToDate').val(today);
             $('.select2').select2({ width: '100%' });
             updatePeriodLabel();
+            loadReport();
         });
 
         function updatePeriodLabel() {
@@ -130,8 +118,75 @@
             $('#lblPeriod').text(`Period: ${fd} To ${td} | Currency: PKR`);
         }
 
+        function fmtNum(v) {
+            const n = parseFloat(v) || 0;
+            return Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         function loadReport() {
             updatePeriodLabel();
+            const fromDate = $('#txtFromDate').val();
+            const toDate = $('#txtToDate').val();
+            const branchId = $('#cmbBranch').val();
+
+            $('#reportTbody').html('<tr><td colspan="6" style="text-align: center; padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading report data...</td></tr>');
+
+            $.ajax({
+                url: '/accounts/api/reports/profit-loss',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    fromDate: fromDate,
+                    toDate: toDate,
+                    branchesIds: branchId
+                }),
+                success: function(res) {
+                    if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+                        let html = '';
+                        let totRev = 0;
+                        let totExp = 0;
+
+                        res.data.forEach(row => {
+                            const code = row.AccountCode || row.accountCode || row.AccountsNotes || row.AccountNoteId || '';
+                            const title = row.AccountTitle || row.accountTitle || row.AccountsNotes || '';
+                            const ob = parseFloat(row.OpeningBalance || row.openingBalance || 0);
+                            const db = parseFloat(row.Debit || row.debit || row.DebitAmount || 0);
+                            const cr = parseFloat(row.Credit || row.credit || row.CreditAmount || 0);
+                            const bal = parseFloat(row.Balance || row.balance || row.Amount || (cr - db));
+
+                            if (bal >= 0) { totRev += Math.abs(bal); } else { totExp += Math.abs(bal); }
+
+                            const typeStr = bal >= 0 ? 'Cr' : 'Dr';
+
+                            html += `<tr>
+                                <td style="font-weight: bold; color: #00796B;">${code}</td>
+                                <td>${title}</td>
+                                <td style="text-align: right;">${fmtNum(ob)}</td>
+                                <td style="text-align: right;">${fmtNum(db)}</td>
+                                <td style="text-align: right;">${fmtNum(cr)}</td>
+                                <td style="text-align: right; font-weight: bold;">${fmtNum(bal)} ${typeStr}</td>
+                            </tr>`;
+                        });
+
+                        $('#reportTbody').html(html);
+
+                        const net = totRev - totExp;
+                        const netStr = net >= 0 ? `${fmtNum(net)} Cr` : `${fmtNum(net)} Dr`;
+
+                        $('#lblTotRev').text(`Total Revenue: ${fmtNum(totRev)} Cr`);
+                        $('#lblTotExp').text(`Total Expense: ${fmtNum(totExp)} Dr`);
+                        $('#lblNetProf').html(`Net Profit / (Loss): <strong>${netStr}</strong>`);
+                    } else {
+                        $('#reportTbody').html('<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 15px;">No records found for the selected filter criteria.</td></tr>');
+                        $('#lblTotRev').text('Total Revenue: 0.00 Cr');
+                        $('#lblTotExp').text('Total Expense: 0.00 Dr');
+                        $('#lblNetProf').text('Net Profit / (Loss): 0.00');
+                    }
+                },
+                error: function() {
+                    $('#reportTbody').html('<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 15px;"><i class="fa fa-exclamation-triangle"></i> Error loading Profit & Loss report data.</td></tr>');
+                }
+            });
         }
 
         function resetFilters() {
@@ -139,6 +194,7 @@
             $('#txtFromDate, #txtToDate').val(today);
             $('.select2').val('').trigger('change');
             updatePeriodLabel();
+            loadReport();
         }
     </script>
 </body>

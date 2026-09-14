@@ -84,4 +84,20 @@ public class PurchaseRestController {
             return ResponseEntity.status(400).body(res);
         }
     }
+
+    @PostMapping("/save-store-invoice")
+    public ResponseEntity<?> saveStorePurchaseInvoice(@RequestBody Map<String, Object> req) {
+        Map<String, Object> res = purchaseService.saveStorePurchaseInvoice(req);
+        if (Boolean.TRUE.equals(res.get("success"))) {
+            return ResponseEntity.ok(res);
+        } else {
+            return ResponseEntity.status(400).body(res);
+        }
+    }
+
+    @PostMapping("/store-invoice-history")
+    public ResponseEntity<?> getStorePurchaseInvoiceHistory(@RequestBody Map<String, Object> req) {
+        return ResponseEntity.ok(Map.of("success", true, "data", purchaseService.getStorePurchaseInvoiceHistory(req)));
+    }
 }
+

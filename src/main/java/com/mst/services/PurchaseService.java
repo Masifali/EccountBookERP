@@ -241,4 +241,100 @@ public class PurchaseService {
             return false;
         }
     }
+
+    public List<Map<String, Object>> getTaxAccounts() {
+        try {
+            String sql = "SELECT Id as id, AccountCode as accountCode, AccountTitle as accountTitle FROM ChartofAccount WHERE AccountTitle LIKE '%TAX%' OR AccountCode LIKE '2%' ORDER BY AccountCode";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null && !list.isEmpty()) return list;
+        } catch (Exception ignored) {}
+        return getAccountsList();
+    }
+
+    public List<Map<String, Object>> getDiscountAccounts() {
+        try {
+            String sql = "SELECT Id as id, AccountCode as accountCode, AccountTitle as accountTitle FROM ChartofAccount WHERE AccountTitle LIKE '%DISCOUNT%' OR AccountTitle LIKE '%MAINTENANCE%' OR AccountTitle LIKE '%EXPENSE%' ORDER BY AccountCode";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null && !list.isEmpty()) return list;
+        } catch (Exception ignored) {}
+        return getAccountsList();
+    }
+
+    public List<Map<String, Object>> getAccountsList() {
+        try {
+            String sql = "SELECT Id as id, AccountCode as accountCode, AccountTitle as accountTitle FROM ChartofAccount ORDER BY AccountCode";
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Map<String, Object>> getRacks() {
+        try {
+            String sql = "SELECT Id as id, RackName as rackName FROM InvRack ORDER BY RackName";
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public Map<String, Object> saveStorePurchaseInvoice(Map<String, Object> req) {
+        Map<String, Object> res = new HashMap<>();
+        try {
+            Integer docNo = req.get("docNo") != null ? Integer.parseInt(req.get("docNo").toString()) : generateNextDocNo(61);
+            Integer branchSrNo = req.get("branchSrNo") != null ? Integer.parseInt(req.get("branchSrNo").toString()) : 1;
+            Integer salesTaxNo = req.get("salesTaxNo") != null ? Integer.parseInt(req.get("salesTaxNo").toString()) : 1;
+            Integer supplierCustomerId = req.get("supplierCustomerId") != null ? Integer.parseInt(req.get("supplierCustomerId").toString()) : 0;
+            String docDate = req.get("docDate") != null ? req.get("docDate").toString() : LocalDate.now().toString();
+            String manualBillNo = req.get("manualBillNo") != null ? req.get("manualBillNo").toString() : "";
+            String remarksHeader = req.get("remarksHeader") != null ? req.get("remarksHeader").toString() : "";
+            Double billAmount = req.get("billAmount") != null ? Double.parseDouble(req.get("billAmount").toString()) : 0.0;
+
+            String insertHead = "INSERT INTO VoucherHead (" +
+                    "DocumentTypeId, VoucherCode, VoucherDate, RefAccountId, Remarks, VoucherAmount, " +
+                    "OrganizationId, CompanyId, FinancialYearId, EntryUser, EntryDate, IsApproved, ManualBillNo" +
+                    ") VALUES (61, ?, ?, ?, ?, ?, 1, 1, 1, 1, GETDATE(), 1, ?)";
+
+            jdbcTemplate.update(insertHead, docNo, docDate, supplierCustomerId, remarksHeader, billAmount, manualBillNo);
+            Integer headId = jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
+
+            res.put("success", true);
+            res.put("id", headId);
+            res.put("docNo", docNo);
+            res.put("message", "Purchase Invoice Store Management saved successfully (Doc No: " + docNo + ")");
+        } catch (Exception e) {
+            res.put("success", false);
+            res.put("message", "Error saving Purchase Invoice Store Management: " + e.getMessage());
+        }
+        return res;
+    }
+
+    public List<Map<String, Object>> getStorePurchaseInvoiceHistory(Map<String, Object> req) {
+        try {
+            String fromDate = req.get("fromDate") != null ? req.get("fromDate").toString() : null;
+            String toDate = req.get("toDate") != null ? req.get("toDate").toString() : null;
+            Integer suppId = req.get("supplierCustomerId") != null && !req.get("supplierCustomerId").toString().equals("0") ? Integer.parseInt(req.get("supplierCustomerId").toString()) : null;
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT h.Id as id, h.VoucherCode as DocNo, 1 as BranchSrNo, CONVERT(VARCHAR(10), h.VoucherDate, 120) as DocDate, ");
+            sb.append("s.CompanyName as CompanyName, h.ManualBillNo as ManualBillNo, h.VoucherAmount as BillAmount, h.Remarks as RemarksHeader ");
+            sb.append("FROM VoucherHead h ");
+            sb.append("LEFT JOIN SupplierCustomer s ON h.RefAccountId = s.Id OR h.RefAccountId = s.GlAccountId ");
+            sb.append("WHERE h.DocumentTypeId = 61 ");
+            if (fromDate != null && !fromDate.isBlank()) {
+                sb.append("AND h.VoucherDate >= '").append(fromDate).append(" 00:00:00' ");
+            }
+            if (toDate != null && !toDate.isBlank()) {
+                sb.append("AND h.VoucherDate <= '").append(toDate).append(" 23:59:59' ");
+            }
+            if (suppId != null && suppId > 0) {
+                sb.append("AND (s.Id = ").append(suppId).append(" OR s.GlAccountId = ").append(suppId).append(") ");
+            }
+            sb.append("ORDER BY h.VoucherCode DESC");
+            return jdbcTemplate.queryForList(sb.toString());
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
 }
+

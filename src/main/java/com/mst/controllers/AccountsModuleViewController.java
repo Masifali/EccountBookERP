@@ -241,7 +241,7 @@ public class AccountsModuleViewController {
 			case "cash-balances":
 			case "cash_balances":
 				model.addAttribute("moduleTitle", "Cash Balances");
-				model.addAttribute("accountsList", accountsReportService.getBankAccounts());
+				model.addAttribute("accountsList", accountsReportService.getCashAccounts());
 				return "accounts/reports/cash_balances";
 			case "pdc-register":
 				model.addAttribute("moduleTitle", "Post Dated Cheque Register");

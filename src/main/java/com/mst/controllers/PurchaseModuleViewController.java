@@ -161,4 +161,24 @@ public class PurchaseModuleViewController {
         model.addAttribute("jobLots", purchaseService.getJobLots());
         return "purchase/purchase_invoice_return";
     }
+
+    @GetMapping({"/purchase-invoice-store-management", "/purchase-invoice-store"})
+    public String purchaseInvoiceStoreManagement(Model model) {
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "Purchase Invoice Store Management");
+        model.addAttribute("documentTypeId", 61);
+        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(61));
+        model.addAttribute("nextBranchSrNo", 1);
+        model.addAttribute("nextTaxNo", 1);
+        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
+        model.addAttribute("items", purchaseService.getItems(""));
+        model.addAttribute("warehouses", purchaseService.getWarehouses());
+        model.addAttribute("racks", purchaseService.getRacks());
+        model.addAttribute("jobLots", purchaseService.getJobLots());
+        model.addAttribute("taxAccounts", purchaseService.getTaxAccounts());
+        model.addAttribute("discountAccounts", purchaseService.getDiscountAccounts());
+        return "purchase/purchase_invoice_store_management";
+    }
 }
+
+
