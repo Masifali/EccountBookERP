@@ -5,6 +5,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Controller handling view routing for Accounts Dashboard and Submodule navigation:
@@ -132,8 +133,16 @@ public class AccountsModuleViewController {
 	// ==========================================
 
 	@GetMapping({"/reports/{reportType}", "/accounts/reports/{reportType}"})
-	public String getReportModule(@PathVariable("reportType") String reportType, Model model) {
+	public String getReportModule(
+			@PathVariable("reportType") String reportType,
+			@RequestParam(name = "accountId", required = false) Integer accountId,
+			@RequestParam(name = "fromDate", required = false) String fromDate,
+			@RequestParam(name = "toDate", required = false) String toDate,
+			Model model) {
 		model.addAttribute("activeMenu", "accounts");
+		model.addAttribute("selectedAccountId", accountId);
+		model.addAttribute("selectedFromDate", fromDate);
+		model.addAttribute("selectedToDate", toDate);
 		model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
 		model.addAttribute("customGroupsList", accountsReportService.getCustomGroups());
 		model.addAttribute("citiesList", accountsReportService.getCities());
@@ -186,6 +195,8 @@ public class AccountsModuleViewController {
 				model.addAttribute("documentTypesList", accountsReportService.getDocumentTypesForReports());
 				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				model.addAttribute("languagesList", accountsReportService.getLanguages());
+				model.addAttribute("customGroupsList", accountsReportService.getCustomGroups());
+				model.addAttribute("citiesList", accountsReportService.getCities());
 				return "accounts/reports/selected_trial_balance";
 			case "trial-balances-all-level":
 				model.addAttribute("moduleTitle", "Trial Balances All Level");
@@ -194,65 +205,100 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Trial Balance");
 				model.addAttribute("documentTypesList", accountsReportService.getDocumentTypesForReports());
 				model.addAttribute("accountGroupsList", accountsReportService.getAccountGroups());
+				model.addAttribute("customGroupsList", accountsReportService.getCustomGroups());
 				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/trial_balance";
 			case "payables-aging":
 				model.addAttribute("moduleTitle", "Payables Aging");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/payables_aging";
 			case "receivables-aging":
 				model.addAttribute("moduleTitle", "Receivables Aging");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/receivables_aging";
 			case "payables-report":
 				model.addAttribute("moduleTitle", "Payables Report");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/payables_report";
 			case "receivables-report":
 				model.addAttribute("moduleTitle", "Receivables Report");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/receivables_report";
 			case "voucher-report":
 				model.addAttribute("moduleTitle", "Voucher Report");
 				model.addAttribute("docTypesList", voucherValidationService.getDocumentTypes());
+				model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
+				model.addAttribute("customGroupsList", accountsReportService.getCustomGroups());
 				return "accounts/reports/voucher_report";
 			case "bank-balances":
 				model.addAttribute("moduleTitle", "Bank Balances");
+				model.addAttribute("accountsList", accountsReportService.getBankAccounts());
 				return "accounts/reports/bank_balances";
+			case "cash-balances":
+			case "cash_balances":
+				model.addAttribute("moduleTitle", "Cash Balances");
+				model.addAttribute("accountsList", accountsReportService.getBankAccounts());
+				return "accounts/reports/cash_balances";
 			case "pdc-register":
 				model.addAttribute("moduleTitle", "Post Dated Cheque Register");
 				return "accounts/reports/pdc_register";
 			case "pdc-information":
 				model.addAttribute("moduleTitle", "Post Dated Cheque Information");
+				model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
 				return "accounts/reports/pdc_information";
 			case "payables-aging-new":
 				model.addAttribute("moduleTitle", "Payables Aging New");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/payables_aging_new";
 			case "receivables-aging-new":
 				model.addAttribute("moduleTitle", "Receivables Aging New");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/receivables_aging_new";
 			case "payables-report-invoice-wise":
 				model.addAttribute("moduleTitle", "Payables Report Invoice Wise");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/payables_report_invoice_wise";
 			case "receivables-by-due-dates":
 				model.addAttribute("moduleTitle", "Receivables By Due Dates");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/receivables_by_due_dates";
 			case "payables-payment-schedule":
 				model.addAttribute("moduleTitle", "Payables And Payment Schedule");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
 				return "accounts/reports/payables_payment_schedule";
 			case "receivables-receipt-schedule":
 				model.addAttribute("moduleTitle", "Receivables And Receipt Schedule");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
 				return "accounts/reports/receivables_receipt_schedule";
 			case "bills-payables-report":
 				model.addAttribute("moduleTitle", "Bills Payables Report");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
 				return "accounts/reports/bills_payables_report";
 			case "party-limits-balances":
 				model.addAttribute("moduleTitle", "Party Limits & Balances");
+				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/party_limits_balances";
 			case "subsidiary-payables-report":
 				model.addAttribute("moduleTitle", "Subsidiary Payables Report");
+				model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
+				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/subsidiary_payables_report";
 			case "chart-of-accounts-report":
 				model.addAttribute("moduleTitle", "Chart of Accounts Report");
+				model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
 				return "accounts/reports/chart_of_accounts_report";
 			case "account-notes-report":
 				model.addAttribute("moduleTitle", "Account Notes Report");
+				model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
 				return "accounts/reports/account_notes_report";
 			case "wages-report":
 			case "wages_report":

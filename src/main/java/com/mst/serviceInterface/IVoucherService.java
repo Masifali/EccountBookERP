@@ -14,6 +14,8 @@ public interface IVoucherService {
 
 	Map<String, Object> getVoucherById(int voucherHeadId);
 
+	Map<String, Object> getVoucherByCode(int documentTypeId, int voucherCode);
+
 	Map<String, Object> saveVoucher(VoucherRequestDto dto);
 
 	void deleteVoucher(int voucherHeadId);

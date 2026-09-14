@@ -7,6 +7,7 @@
     <title>Voucher Validation - WinForms Replica</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body {
             font-family: "Verdana", Tahoma, Arial, sans-serif;
@@ -446,8 +447,10 @@
     </div>
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
     <script>
         $(document).ready(function() {
+            $('#CmbAccountTitle, #cmbdoctype, #CmbCustomGroup, #CmbLanguage').select2({ width: '100%' });
             setWinFormsDefaultDates();
             btnshow_Click();
         });
@@ -559,6 +562,9 @@
                 rows.forEach(r => {
                     const deb = parseFloat(r.debitAmount || 0);
                     const cred = parseFloat(r.creditAmount || 0);
+                    const acId = r.accountId || r.AccountId || '';
+                    const acCode = r.accountCode || r.AccountCode || '';
+                    const acLink = acId ? `<a href="/accounts/reports/general-ledger?accountId=${acId}" target="_blank" style="color:#0056b3; text-decoration:underline; font-weight:600;">${$('<div>').text(acCode).html()}</a>` : $('<div>').text(acCode).html();
                     groupDebit += deb;
                     groupCredit += cred;
 
@@ -566,7 +572,7 @@
                         <tr>
                             <td>${r.documentType || ''}</td>
                             <td>${r.voucherDate || ''}</td>
-                            <td>${r.accountCode || ''}</td>
+                            <td>${acLink}</td>
                             <td>${r.accountTitle || ''}</td>
                             <td>${r.offsetAccount || ''}</td>
                             <td style="text-align: right;">${deb > 0 ? formatWinNumber(deb) : '0.00'}</td>
@@ -611,9 +617,9 @@
             $('#txtdocnofrom').val('');
             $('#txtdocnoto').val('');
             $('#txtManualNo').val('');
-            $('#CmbAccountTitle').val('');
-            $('#cmbdoctype').val([]);
-            $('#CmbCustomGroup').val('');
+            $('#CmbAccountTitle').val('').trigger('change');
+            $('#cmbdoctype').val([]).trigger('change');
+            $('#CmbCustomGroup').val('').trigger('change');
             $('#RdAll').prop('checked', true);
             $('#rdDocFromToDate').prop('checked', true);
             $('#chkSkipCgs').prop('checked', false);

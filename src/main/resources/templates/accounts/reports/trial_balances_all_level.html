@@ -8,10 +8,10 @@
 
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
 
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
-        /* ditto panel2 (Teal, 884x51: toolbar + toolStripLabel1) */
         .win-header-panel2 { background-color: #00796B; }
         .win-toolbar { padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; }
         .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
@@ -20,14 +20,12 @@
         .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
         .win-btn-teal:hover { background: #004d40; color: #ffffff; }
         .win-header-title2 { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 15px; font-weight: bold; padding: 6px 10px 8px 10px; }
-        /* ditto panel3 filters bar (884x67, white) */
         .win-filterbar { background: #ffffff; border-bottom: 1px solid #b0bec5; padding: 6px 10px; display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
         .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
         .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; background-color: #ffffff; box-sizing: border-box; }
         .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
         .radio-inline-win { display: inline-flex; align-items: center; gap: 4px; margin-right: 4px; font-weight: 600; color: #334155; white-space: nowrap; }
         .chk-inline-win { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; white-space: nowrap; }
-        /* ditto panel4 (Teal, 884x23: label1 "Filtered Records") */
         .win-filtered-records { background-color: #00796B; color: #ffffff; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 12px; padding: 3px 10px; }
         .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
         .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; position: sticky; top: 0; z-index: 2; }
@@ -35,22 +33,28 @@
         .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
         .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
         .grid-scroll { max-height: 560px; overflow: auto; border: 1px solid #cbd5e1; margin: 0; }
-        /* ditto AddConditionalFormatting(): IsGroupDetail == "Group" -> FontBold */
         .row-group td { font-weight: bold; }
         .tree-toggle { display: inline-block; width: 14px; text-align: center; cursor: pointer; color: #00796B; font-weight: bold; user-select: none; }
         .tree-toggle.leaf { visibility: hidden; }
+        .select2-container--default .select2-selection--single { height: 25px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 23px !important; font-size: 11px !important; padding-left: 2px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
         [hidden] { display: none !important; }
+        @media print {
+            .win-header-panel2, .win-filterbar, .win-filtered-records, a, button { display: none !important; }
+            body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+            .grid-scroll { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
+            .win-grid-table th, .win-grid-table td { border: 1px solid #000 !important; color: #000 !important; }
+            .win-grid-table th { background: #eee !important; color: #000 !important; }
+        }
     </style>
 </head>
 <body>
 
     <div class="win-header-panel2">
-        <!-- ditto toolStrip3's real order: Reset | 135-Print -->
         <div class="win-toolbar">
             <button type="button" class="win-btn" onclick="resetTBL()"><i class="fa fa-plus text-success"></i> Reset</button>
-            <div class="dropdown" style="display:inline-block;">
-                <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown" title="Not reproduced in this port"><i class="fa fa-print"></i> 135-Print</button>
-            </div>
+            <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 135-Print</button>
             <a href="/accounts/dashboard" style="margin-left:auto; color:#ffffff; text-decoration:none; font-size:11px;">
                 <i class="fa fa-arrow-left"></i> Back to Dashboard
             </a>
@@ -58,7 +62,6 @@
         <div class="win-header-title2">Trial Balances All Level</div>
     </div>
 
-    <!-- ditto panel3 (884x67): From Date/To Date, View Options + Show, Four/Six Columns, Collapse/Expand, Skip Zero -->
     <div class="win-filterbar">
         <div>
             <div class="win-label">From Date</div>
@@ -70,7 +73,7 @@
         </div>
         <div>
             <div class="win-label">View Options</div>
-            <select class="win-input" id="cmbViewOption" style="width:200px;">
+            <select class="win-input select2" id="cmbViewOption" style="width:200px;">
                 <option value="1">Upto 1st Level</option>
                 <option value="2">Upto 2nd Level</option>
                 <option value="3">Upto 3rd Level</option>
@@ -86,7 +89,6 @@
         <label class="chk-inline-win"><input type="checkbox" id="SkipZero"> Skip Zero</label>
     </div>
 
-    <!-- ditto panel4's label1 "Filtered Records" -->
     <div class="win-filtered-records">Filtered Records</div>
 
     <div class="grid-scroll">
@@ -115,6 +117,7 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
     <script th:inline="javascript">
         function fmt(v) {
             const n = parseFloat(v);
@@ -122,12 +125,8 @@
             return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         }
 
-        // Real, already-fetched SpCoahierarchy_TrialBalance_Rpt rows, flat (AcLevel 1-5, arrival
-        // order is the hierarchical parent-before-child order the proc returns).
         let rawRows = [];
-        // Rebuilt per selected View Option - ditto GridBind()'s own dtFinal.
         let dtFinal = [];
-        // RowIds the user has individually collapsed (ditto grdHistory.CollapseRecords() per-node).
         let collapsedSet = new Set();
 
         function buildTbRequest() {
@@ -138,9 +137,6 @@
             };
         }
 
-        // ditto GridBind()'s real 5-branch RowId/ParentId self-referencing tree build - ported
-        // line-for-line from the C# switch on cmbViewOption.Value, including RowId++ happening
-        // unconditionally every iteration (not only on rows that get pushed), ditto desktop.
         function buildTree(viewOption, rows) {
             const out = [];
             let rowId = 0;
@@ -201,8 +197,6 @@
             $('.col-six-tbl').toggle(six);
         }
 
-        // ditto ChkFourColumns_CheckedChanged / ChkSixColumns_CheckedChanged: mutually exclusive,
-        // clearing the other rather than allowing both/neither in the same way desktop does.
         $('#ChkFourColumns').on('change', function () {
             if ($(this).is(':checked')) { $('#ChkSixColumns').prop('checked', false); }
             else { $(this).prop('checked', false); }
@@ -214,7 +208,6 @@
             applyColumnModeTBL();
         });
 
-        // ditto rdGroupCollapsed_CheckedChanged / rdGroupeExpand_CheckedChanged
         $('#rdGroupCollapsed').on('change', function () {
             if ($(this).is(':checked')) { collapseAll(); }
         });
@@ -246,7 +239,6 @@
             renderTree();
         }
 
-        // depth = number of ancestors (RowId chases ParentId up to a null root).
         function depthOf(row, byId) {
             let d = 0, cur = row;
             while (cur.ParentId !== null && cur.ParentId !== undefined) {
@@ -257,7 +249,6 @@
             return d;
         }
 
-        // A row is visible only if none of its ancestors are individually collapsed.
         function isVisible(row, byId) {
             let cur = byId.get(row.ParentId);
             while (cur) {
@@ -319,11 +310,10 @@
             if (rawRows.length) rebuildAndRender();
         });
 
-        // ditto btnNew_Click: reset view option to 1st Level, reset dates to current financial
-        // year start / today, then re-run GridBind().
         function resetTBL() {
-            $('#cmbViewOption').val('1');
-            $('#txtFromDate, #txtToDate').val('');
+            $('#cmbViewOption').val('1').trigger('change');
+            const today = new Date().toISOString().split('T')[0];
+            $('#txtFromDate, #txtToDate').val(today);
             $('#SkipZero').prop('checked', false);
             if (rawRows.length) { btnshowClick(); }
         }
@@ -332,6 +322,7 @@
             const today = new Date().toISOString().split('T')[0];
             if (!$('#txtFromDate').val()) $('#txtFromDate').val(today);
             if (!$('#txtToDate').val()) $('#txtToDate').val(today);
+            $('.select2').select2({ width: '200px' });
             applyColumnModeTBL();
         });
     </script>

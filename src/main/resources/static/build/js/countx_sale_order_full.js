@@ -618,7 +618,7 @@ function btnSave_Click() {
 }
 
 function btnPrintReport(reportCode) {
-    alert('Generating Print Preview for Report #' + reportCode);
+    window.print();
 }
 
 function loadHistoryData() {

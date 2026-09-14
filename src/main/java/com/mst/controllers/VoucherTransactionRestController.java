@@ -110,6 +110,17 @@ public class VoucherTransactionRestController {
 		return ResponseEntity.ok(voucher);
 	}
 
+	@GetMapping("/by-code")
+	public ResponseEntity<?> getVoucherByCode(
+			@RequestParam("documentTypeId") int documentTypeId,
+			@RequestParam("voucherCode") int voucherCode) {
+		Map<String, Object> voucher = voucherService.getVoucherByCode(documentTypeId, voucherCode);
+		if (voucher == null) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(voucher);
+	}
+
 	@PostMapping("/save")
 	public ResponseEntity<?> saveVoucher(@RequestBody VoucherRequestDto dto) {
 		Map<String, Object> res = voucherService.saveVoucher(dto);

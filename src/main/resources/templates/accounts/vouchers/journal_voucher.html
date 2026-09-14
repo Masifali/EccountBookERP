@@ -353,6 +353,16 @@
                     $('#txtVoucherNo').val(res.nextCode);
                 }
             });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramVoucherCode = urlParams.get('voucherCode') || urlParams.get('VoucherCode') || urlParams.get('fromDocNo');
+            const paramId = urlParams.get('id') || urlParams.get('Id');
+
+            if (paramId) {
+                loadJvVoucherForEdit(parseInt(paramId));
+            } else if (paramVoucherCode) {
+                loadJvVoucherByCode(parseInt(paramVoucherCode));
+            }
         });
 
         function onDebitAccSearch(e) {
@@ -663,34 +673,59 @@
             });
         }
 
-        // Loads the complete real voucher (header + all detail rows) from GET /accounts/api/vouchers/{id}
-        // and preserves its real Id so the next Save updates this same voucher instead of duplicating it.
+        function populateJvForm(voucher) {
+            if (!voucher || !voucher.header) return;
+            switchTab('form');
+            const header = voucher.header;
+            editingVoucherId = header.id || 0;
+            $('#txtVoucherNo').val(header.voucherCode != null ? header.voucherCode : '');
+            let vDate = header.voucherDate || '';
+            if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
+            if (vDate) $('#dtpVoucherDate').val(vDate);
+            $('#txtRefNo').val(header.manualBillNo || header.refNo || '');
+            $('#txtHeaderRemarks').val(header.remarks || '');
+
+            const details = voucher.details || [];
+            gridItems = details.map(function(d) {
+                return {
+                    chartOfAccountId: d.accountId,
+                    accountCode: d.accountCode || '',
+                    accountTitle: d.accountTitle || '',
+                    jobLot: 'General',
+                    jobLotId: 1,
+                    remarks: d.comments || '',
+                    debitAmount: parseFloat(d.debitAmount || 0),
+                    creditAmount: parseFloat(d.creditAmount || 0)
+                };
+            });
+            renderGrid();
+        }
+
         function loadJvVoucherForEdit(id) {
             $.get('/accounts/api/vouchers/' + id, function(voucher) {
-                if (!voucher || !voucher.header) return;
-                switchTab('form');
-                const header = voucher.header;
-                editingVoucherId = header.id || id;
-                $('#txtVoucherNo').val(header.voucherCode != null ? header.voucherCode : '');
-                if (header.voucherDate) $('#dtpVoucherDate').val(header.voucherDate);
-                $('#txtHeaderRemarks').val(header.remarks || '');
-
-                const details = voucher.details || [];
-                gridItems = details.map(function(d) {
-                    return {
-                        chartOfAccountId: d.accountId,
-                        accountCode: d.accountCode || '',
-                        accountTitle: d.accountTitle || '',
-                        jobLot: 'General',
-                        jobLotId: 1,
-                        remarks: d.comments || '',
-                        debitAmount: parseFloat(d.debitAmount || 0),
-                        creditAmount: parseFloat(d.creditAmount || 0)
-                    };
-                });
-                renderGrid();
+                populateJvForm(voucher);
             }).fail(function() {
                 alert('Could not load Journal Voucher #' + id);
+            });
+        }
+
+        function loadJvVoucherByCode(code) {
+            $.get('/accounts/api/vouchers/by-code?documentTypeId=5&voucherCode=' + code, function(voucher) {
+                if (voucher && voucher.header) {
+                    populateJvForm(voucher);
+                } else {
+                    loadJvFallbackByHistory(code);
+                }
+            }).fail(function() {
+                loadJvFallbackByHistory(code);
+            });
+        }
+
+        function loadJvFallbackByHistory(code) {
+            $.get('/accounts/api/vouchers/jv/history?fromDocNo=' + code + '&toDocNo=' + code + '&approvedStatus=all', function(res) {
+                if (res && res.rows && res.rows.length > 0) {
+                    loadJvVoucherForEdit(res.rows[0].id);
+                }
             });
         }
 

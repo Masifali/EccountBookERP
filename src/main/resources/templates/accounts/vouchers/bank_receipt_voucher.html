@@ -385,6 +385,32 @@
                     $('#txtVoucherNo').val(res.nextCode);
                 }
             });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramVoucherCode = urlParams.get('voucherCode') || urlParams.get('VoucherCode') || urlParams.get('fromDocNo');
+            const paramId = urlParams.get('id') || urlParams.get('Id');
+
+            if (paramId) {
+                loadBrvVoucherForEdit(parseInt(paramId));
+            } else if (paramVoucherCode) {
+                $.get('/accounts/api/vouchers/by-code?documentTypeId=4&voucherCode=' + encodeURIComponent(paramVoucherCode), function(voucher) {
+                    if (voucher && voucher.header) {
+                        loadBrvVoucherForEdit(voucher.header.id);
+                    } else {
+                        $.get('/accounts/api/vouchers/brv/history?fromDocNo=' + encodeURIComponent(paramVoucherCode) + '&toDocNo=' + encodeURIComponent(paramVoucherCode) + '&approvedStatus=all', function(res) {
+                            if (res && res.rows && res.rows.length > 0) {
+                                loadBrvVoucherForEdit(res.rows[0].id);
+                            }
+                        });
+                    }
+                }).fail(function() {
+                    $.get('/accounts/api/vouchers/brv/history?fromDocNo=' + encodeURIComponent(paramVoucherCode) + '&toDocNo=' + encodeURIComponent(paramVoucherCode) + '&approvedStatus=all', function(res) {
+                        if (res && res.rows && res.rows.length > 0) {
+                            loadBrvVoucherForEdit(res.rows[0].id);
+                        }
+                    });
+                });
+            }
         });
 
         function onDebitAccSearch(e) {

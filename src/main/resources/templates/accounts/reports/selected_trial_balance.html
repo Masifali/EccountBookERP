@@ -39,7 +39,18 @@
         .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
         .grid-scroll { max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; margin: 6px; }
         .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 6px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .select2-container--default .select2-selection--single { height: 25px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 23px !important; font-size: 11px !important; padding-left: 2px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
         [hidden] { display: none !important; }
+        @media print {
+            .win-title-bar, .win-toolbar, .win-groupbox, .win-header-panel, a, button { display: none !important; }
+            body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+            .grid-scroll { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
+            .win-form-card { border: none !important; box-shadow: none !important; margin: 0 !important; }
+            .win-grid-table th, .win-grid-table td { border: 1px solid #000 !important; color: #000 !important; }
+            .win-grid-table th { background: #eee !important; color: #000 !important; }
+        }
     </style>
 </head>
 <body>
@@ -54,13 +65,11 @@
     <!-- ditto tsSelectedTrialBalance's real order: Reset | Print | Level Wise | 113A-Print -->
     <div class="win-toolbar">
         <button type="button" class="win-btn" onclick="resetST()"><i class="fa fa-plus text-success"></i> Reset</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
         <div class="dropdown" style="display:inline-block;">
-            <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown" title="Not reproduced in this port"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown">Level Wise</button>
         </div>
-        <div class="dropdown" style="display:inline-block;">
-            <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown" title="Not reproduced in this port">Level Wise</button>
-        </div>
-        <button type="button" class="win-btn" disabled title="113A-Print - not reproduced in this port"><i class="fa fa-print"></i> 113A-Print</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 113A-Print</button>
     </div>
 
     <!-- ditto panel3's label23 "Trial Balances Selected" header -->
@@ -80,9 +89,9 @@
             </div>
             <div style="flex:1 1 260px;">
                 <div class="win-label">Custom Groups</div>
-                <select class="win-input" id="CmbCustomeGroups">
+                <select class="win-input select2" id="CmbCustomeGroups">
                     <option value="">--</option>
-                    <option th:each="cg : ${customGroupsList}" th:value="${cg.Id}" th:text="${cg.Description}"></option>
+                    <option th:each="cg : ${customGroupsList}" th:value="${cg['id'] != null ? cg['id'] : (cg['Id'] != null ? cg['Id'] : '')}" th:text="${cg['description'] != null ? cg['description'] : (cg['Description'] != null ? cg['Description'] : (cg['name'] != null ? cg['name'] : (cg['Name'] != null ? cg['Name'] : '')))}"></option>
                 </select>
             </div>
             <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="ChkBoxPostSelectedTrial" checked> Include UnPost Voucher</label>
@@ -98,9 +107,9 @@
             </div>
             <div style="flex:1 1 260px;">
                 <div class="win-label">City Name</div>
-                <select class="win-input" id="CmbCityName">
+                <select class="win-input select2" id="CmbCityName">
                     <option value="">--</option>
-                    <option th:each="c : ${citiesList}" th:value="${c.Id}" th:text="${c.CityName}"></option>
+                    <option th:each="c : ${citiesList}" th:value="${c['id'] != null ? c['id'] : (c['Id'] != null ? c['Id'] : '')}" th:text="${c['cityName'] != null ? c['cityName'] : (c['CityName'] != null ? c['CityName'] : (c['name'] != null ? c['name'] : (c['Name'] != null ? c['Name'] : '')))}"></option>
                 </select>
             </div>
             <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="ChkZkipZeroSelected" checked> Skip Zero</label>
@@ -108,16 +117,16 @@
         <div class="row">
             <div style="flex:1 1 260px;">
                 <div class="win-label">Documents Not To Include</div>
-                <select class="win-input" id="cmbDocumentTypeIds" multiple size="1" style="height:26px;">
-                    <option th:each="dt : ${documentTypesList}" th:value="${dt.Id}" th:text="${dt.DocumentTypeDescription}"></option>
+                <select class="win-input select2" id="cmbDocumentTypeIds" multiple size="1" style="height:26px;">
+                    <option th:each="dt : ${documentTypesList}" th:value="${dt['id'] != null ? dt['id'] : (dt['Id'] != null ? dt['Id'] : '')}" th:text="${dt['documentTypeDescription'] != null ? dt['documentTypeDescription'] : (dt['DocumentTypeDescription'] != null ? dt['DocumentTypeDescription'] : (dt['description'] != null ? dt['description'] : (dt['Description'] != null ? dt['Description'] : '')))}"></option>
                 </select>
             </div>
             <!-- ditto lblLangSelected/CmbLanguageSelected: Visible=false by default, shown by Ctrl+L -->
             <div style="flex:1 1 220px;" id="langWrapST" hidden>
                 <div class="win-label">Language</div>
-                <select class="win-input" id="CmbLanguageSelected">
+                <select class="win-input select2" id="CmbLanguageSelected">
                     <option value="">--</option>
-                    <option th:each="l : ${languagesList}" th:value="${l.Id}" th:text="${l.LanguageName}"></option>
+                    <option th:each="l : ${languagesList}" th:value="${l['id'] != null ? l['id'] : (l['Id'] != null ? l['Id'] : '')}" th:text="${l['languageName'] != null ? l['languageName'] : (l['LanguageName'] != null ? l['LanguageName'] : (l['name'] != null ? l['name'] : (l['Name'] != null ? l['Name'] : '')))}"></option>
                 </select>
             </div>
             <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="chkSkipCgs"> Skip CGS</label>
@@ -125,9 +134,9 @@
         <div class="row">
             <div style="flex:1 1 260px;">
                 <div class="win-label">Group Account</div>
-                <select class="win-input" id="cmbAccountTitle">
+                <select class="win-input select2" id="cmbAccountTitle">
                     <option value="">--</option>
-                    <option th:each="ag : ${accountGroupsSelectedList}" th:value="${ag.Id}" th:text="${ag.AccountTitle}"></option>
+                    <option th:each="ag : ${accountGroupsSelectedList}" th:value="${ag['id'] != null ? ag['id'] : (ag['Id'] != null ? ag['Id'] : '')}" th:text="${ag['accountTitle'] != null ? ag['accountTitle'] : (ag['AccountTitle'] != null ? ag['AccountTitle'] : (ag['accountGroup'] != null ? ag['accountGroup'] : (ag['AccountGroup'] != null ? ag['AccountGroup'] : '')))}"></option>
                 </select>
             </div>
             <button type="button" class="win-btn win-btn-teal" style="align-self:center;" onclick="executeST()">Show</button>
@@ -136,9 +145,9 @@
         <div class="row">
             <div style="flex:1 1 260px;" id="branchWrapST">
                 <div class="win-label">Branches</div>
-                <select class="win-input" id="CmbBranchesST">
+                <select class="win-input select2" id="CmbBranchesST">
                     <option value="">--</option>
-                    <option th:each="b : ${branchesList}" th:value="${b.Id}" th:text="${b.BranchName}"></option>
+                    <option th:each="b : ${branchesList}" th:value="${b['id'] != null ? b['id'] : (b['Id'] != null ? b['Id'] : '')}" th:text="${b['branchName'] != null ? b['branchName'] : (b['BranchName'] != null ? b['BranchName'] : (b['name'] != null ? b['name'] : (b['Name'] != null ? b['Name'] : '')))}"></option>
                 </select>
             </div>
             <label class="radio-inline-win" style="align-self:center;"><input type="radio" name="rdColumnsST" id="rdSixColumnsST"> Six Columns</label>
@@ -186,6 +195,7 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
     <script th:inline="javascript">
         function fmt(v) {
             const n = parseFloat(v);
@@ -193,17 +203,14 @@
             return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         }
 
-        // Real, already-fetched SpAccounts_TrialBalanceSelectedNew_Report rows.
         let stData = [];
 
-        // ditto SelectedTrialBalance_KeyDown: Ctrl+L reveals the hidden Language combo
         $(document).on('keydown', function (e) {
             if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
                 $('#langWrapST').prop('hidden', false);
             }
         });
 
-        // ditto btnShowSelectedTrial_Click's real ReportsParameters build
         function buildStRequest() {
             const docTypeIds = $('#cmbDocumentTypeIds').val() || [];
             return {
@@ -246,10 +253,6 @@
             });
         }
 
-        // ditto GridSettingsSelected(): Four Columns hides the Dr/Cr split columns; Six Columns
-        // shows them. Unlike main Trial Balance, this grid is ALWAYS grouped by ParentTitle
-        // (grdSelected.RootTable.Groups.Add("ParentTitle") is unconditional, no "Group On Parent
-        // Ac" checkbox on this screen).
         function applyColumnModeST() {
             const six = $('#rdSixColumnsST').is(':checked');
             $('.col-six-st').toggle(six);
@@ -267,23 +270,33 @@
             let totOpening = 0, totOpeningDr = 0, totOpeningCr = 0, totDebit = 0, totCredit = 0, totClosing = 0, totClosingDr = 0, totClosingCr = 0;
             let lastParent = null;
             stData.forEach(r => {
-                const parentTitle = r.ParentAccountTitle || '';
-                if (parentTitle !== lastParent) {
-                    tbody.append('<tr class="grid-group-row"><td colspan="12">' + parentTitle + '</td></tr>');
+                const parentTitle = r.ParentAccountTitle || r.parentAccountTitle || r.GroupAccountTitle || '';
+                if (parentTitle && parentTitle !== lastParent) {
+                    tbody.append('<tr class="grid-group-row"><td colspan="12">' + $('<div>').text(parentTitle).html() + '</td></tr>');
                     lastParent = parentTitle;
                 }
-                const opening = parseFloat(r.Opening || 0), openingDr = parseFloat(r.OpeningDr || 0), openingCr = parseFloat(r.OpeningCr || 0);
-                const debit = parseFloat(r.CurrDebit || 0), credit = parseFloat(r.CurrCredit || 0);
-                const closing = parseFloat(r.Closing || 0), closingDr = parseFloat(r.ClosingDr || 0), closingCr = parseFloat(r.ClosingCr || 0);
+                const branch = r.BranchName || r.branchName || '';
+                const code = r.AccountCode || r.accountCode || '';
+                const title = r.AccountTitle || r.accountTitle || '';
+                const type = r.AccountType || r.accountType || '';
+                const opening = parseFloat(r.Opening || r.opening || r.openingBalance || 0);
+                const openingDr = parseFloat(r.OpeningDr || r.openingDr || 0);
+                const openingCr = parseFloat(r.OpeningCr || r.openingCr || 0);
+                const debit = parseFloat(r.CurrDebit || r.currDebit || r.debitAmount || r.DebitAmount || 0);
+                const credit = parseFloat(r.CurrCredit || r.currCredit || r.creditAmount || r.CreditAmount || 0);
+                const closing = parseFloat(r.Closing || r.closing || r.closingBalance || 0);
+                const closingDr = parseFloat(r.ClosingDr || r.closingDr || 0);
+                const closingCr = parseFloat(r.ClosingCr || r.closingCr || 0);
+
                 totOpening += opening; totOpeningDr += openingDr; totOpeningCr += openingCr;
                 totDebit += debit; totCredit += credit;
                 totClosing += closing; totClosingDr += closingDr; totClosingCr += closingCr;
                 tbody.append(`
                     <tr>
-                        <td>${r.BranchName || ''}</td>
-                        <td>${r.AccountCode || ''}</td>
-                        <td>${r.AccountTitle || ''}</td>
-                        <td>${r.AccountType || ''}</td>
+                        <td>${$('<div>').text(branch).html()}</td>
+                        <td>${$('<div>').text(code).html()}</td>
+                        <td>${$('<div>').text(title).html()}</td>
+                        <td>${$('<div>').text(type).html()}</td>
                         <td style="text-align:right;">${fmt(opening)}</td>
                         <td style="text-align:right;" class="col-six-st">${fmt(openingDr)}</td>
                         <td style="text-align:right;" class="col-six-st">${fmt(openingCr)}</td>
@@ -306,12 +319,11 @@
             applyColumnModeST();
         }
 
-        // ditto ResetSelectedTrial()
         function resetST() {
             $('#ChkZkipZeroSelected').prop('checked', true);
-            $('#CmbCityName, #CmbCustomeGroups, #cmbAccountTitle').val('');
-            stData = [];
-            renderST();
+            $('#txtClosingDebit, #txtClosingCredit').val('0');
+            $('#CmbCityName, #CmbCustomeGroups, #cmbAccountTitle, #cmbDocumentTypeIds, #CmbLanguageSelected, #CmbBranchesST').val('').trigger('change');
+            executeST();
         }
 
         $('#rdFourColumnsST, #rdSixColumnsST').on('change', applyColumnModeST);
@@ -321,10 +333,9 @@
             const today = new Date().toISOString().split('T')[0];
             if (!$('#datFromDateSt').val()) $('#datFromDateSt').val(today);
             if (!$('#datToDateST').val()) $('#datToDateST').val(today);
-            $('#CmbCustomeGroups, #CmbCityName, #cmbDocumentTypeIds, #CmbLanguageSelected, #cmbAccountTitle, #CmbBranchesST').select2({ width: '100%' });
-            $('#stTbody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>');
+            $('.select2').select2({ width: '100%' });
+            executeST();
         });
     </script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
 </body>
 </html>

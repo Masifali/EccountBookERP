@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -314,11 +315,13 @@ public class AccountsReportRestController {
             Integer accountId = req.get("accountId") != null && !req.get("accountId").toString().isEmpty() ? Integer.parseInt(req.get("accountId").toString()) : null;
             String fromDate = req.get("fromDate") != null ? req.get("fromDate").toString() : null;
             String toDate = req.get("toDate") != null ? req.get("toDate").toString() : null;
+            String docTypes = req.get("docTypes") != null ? req.get("docTypes").toString() : null;
             String dateType = req.get("dateType") != null ? req.get("dateType").toString() : "DocDate";
             Integer reportTypeId = req.get("reportTypeId") != null ? Integer.parseInt(req.get("reportTypeId").toString()) : 1;
             Boolean approvedOnly = req.get("approvedOnly") != null ? Boolean.parseBoolean(req.get("approvedOnly").toString()) : true;
+            Boolean includeUnposted = req.get("includeUnposted") != null ? Boolean.parseBoolean(req.get("includeUnposted").toString()) : true;
 
-            List<Map<String, Object>> data = accountsReportService.getActivitySummaryReport(accountId, fromDate, toDate, dateType, reportTypeId, approvedOnly);
+            List<Map<String, Object>> data = accountsReportService.getActivitySummaryReport(accountId, fromDate, toDate, dateType, reportTypeId, approvedOnly, docTypes, includeUnposted);
             Map<String, Object> res = new HashMap<>();
             res.put("success", true);
             res.put("data", data);
@@ -364,16 +367,11 @@ public class AccountsReportRestController {
     @PostMapping("/voucher-report")
     public ResponseEntity<?> getVoucherReport(@RequestBody Map<String, Object> req) {
         try {
-            String fromDate = strOrNull(req.get("fromDate"));
-            String toDate = strOrNull(req.get("toDate"));
-            Integer documentTypeId = intOrNull(req.get("documentTypeId"));
-            String voucherStatus = strOrNull(req.get("voucherStatus"));
-
-            List<Map<String, Object>> data = accountsReportService.getVoucherReport(fromDate, toDate, documentTypeId, voucherStatus);
+            List<Map<String, Object>> data = accountsReportService.getVoucherReport(req != null ? req : Collections.emptyMap());
             Map<String, Object> res = new HashMap<>();
             res.put("success", true);
             res.put("data", data);
-            res.put("totalRecords", data.size());
+            res.put("totalRecords", data != null ? data.size() : 0);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             Map<String, Object> err = new HashMap<>();

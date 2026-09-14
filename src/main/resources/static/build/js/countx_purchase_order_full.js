@@ -1639,7 +1639,7 @@ function loadSelectedOrder(poId) {
 }
 
 function btnPrintReport(reportType) {
-    alert("Report printing generated for format: " + reportType + " (Doc No: " + $('#txtDocNo').val() + ")");
+    window.print();
 }
 
 function openAttachmentsModal() {

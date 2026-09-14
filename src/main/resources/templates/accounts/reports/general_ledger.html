@@ -11,6 +11,37 @@
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
 
     <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        .form-container,
+        .filter-panel,
+        .account-detail-panel,
+        .filters-container {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .form-row,
+        .filter-row,
+        .account-detail-row {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        input,
+        select,
+        button,
+        textarea {
+            box-sizing: border-box;
+            min-width: 0;
+            max-width: 100%;
+        }
+
         body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #d8e0e8; font-size: 10.5px; color: #000; margin: 0; padding: 0; overflow-x: hidden; }
         .win-title-bar { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-size: 11.5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 23px; box-sizing: border-box; }
         
@@ -28,15 +59,45 @@
         .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 12px; font-weight: bold; }
         .chk-inline { display: inline-flex; align-items: center; gap: 3px; font-weight: bold; color: #ffffff; font-size: 10.5px; margin: 0; cursor: pointer; }
 
-        .filters-container { display: flex; gap: 4px; padding: 4px; background: #d8e0e8; align-items: stretch; }
+        .filters-container { display: flex; gap: 4px; padding: 4px; background: #d8e0e8; align-items: stretch; flex-wrap: wrap; }
         
         .win-groupbox { border: 1px solid #8fa3b5; border-radius: 2px; padding: 8px 6px 4px 6px; position: relative; background: #ffffff; box-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
         .win-groupbox-title { position: absolute; top: -7px; left: 8px; background: #ffffff; padding: 0 4px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 10px; color: #000; }
         
-        .gb-filters { width: 330px; flex: 0 0 330px; }
-        .gb-detail { width: 280px; flex: 0 0 280px; }
-        .gb-other { width: 310px; flex: 0 0 310px; }
-        .gb-opb { width: 140px; flex: 0 0 140px; }
+        .gb-filters { width: 340px; flex: 0 0 340px; max-width: 100%; }
+        .gb-detail { width: 360px; flex: 0 0 360px; max-width: 100%; }
+        .gb-other { width: 320px; flex: 0 0 320px; max-width: 100%; }
+        .gb-opb { width: 170px; flex: 0 0 170px; max-width: 100%; }
+
+        .date-filter-row {
+            display: grid;
+            grid-template-columns: minmax(80px, 1fr) auto minmax(95px, 1fr) auto minmax(95px, 1fr);
+            align-items: center;
+            gap: 3px;
+            width: 100%;
+            min-width: 0;
+            margin-bottom: 4px;
+        }
+
+        .date-filter-row > * {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .date-filter-row input[type="date"],
+        .date-filter-row select {
+            width: 100%;
+            height: 22px;
+            padding: 1px 3px;
+            font-size: 10.5px;
+            font-family: Tahoma, sans-serif;
+        }
+
+        @media (max-width: 600px) {
+            .date-filter-row {
+                grid-template-columns: auto minmax(110px, 1fr);
+            }
+        }
 
         .win-label { font-weight: 600; color: #222; margin-bottom: 1px; font-size: 10px; white-space: nowrap; }
         .win-input { border: 1px solid #7f9db9; border-radius: 1px; padding: 1px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; height: 20px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
@@ -50,18 +111,35 @@
         .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 18px !important; padding-left: 0px; color: #000; }
         .select2-container--default .select2-selection--single .select2-selection__arrow { height: 18px !important; }
 
-        /* Grid Table Styling */
-        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 10.5px; font-family: Tahoma, sans-serif; background: #ffffff; }
+        /* Table Scroll Wrapper & Grid Table Styling */
+        .table-scroll-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .grid-scroll { max-height: calc(100vh - 240px); overflow: auto; border: 1px solid #849ca8; margin: 4px; background: #fff; }
+
+        .win-grid-table { width: 100%; min-width: 100%; border-collapse: collapse; font-size: 10.5px; font-family: Tahoma, sans-serif; background: #ffffff; }
         .win-grid-table th { background: linear-gradient(to bottom, #dbe6f2 0%, #b0c4de 100%); color: #000000; font-weight: bold; padding: 3px 5px; border: 1px solid #849ca8; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; }
         .win-grid-table td { padding: 2px 5px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; height: 19px; }
         .win-grid-table tbody tr:nth-child(even) { background-color: #f7fafc; }
         .win-grid-table tbody tr:hover { background-color: #cbe5ff; }
         .grid-total-row td { font-weight: bold; background: #eaf0f6; border-top: 2px solid #00796B; }
 
-        .grid-scroll { max-height: calc(100vh - 240px); overflow: auto; border: 1px solid #849ca8; margin: 4px; background: #fff; }
         .mini-grid { width: 100%; border-collapse: collapse; font-size: 10px; }
         .mini-grid th { background: #b0c4de; color: #000; padding: 2px 4px; border: 1px solid #849ca8; text-align: left; }
         .mini-grid td { padding: 2px 4px; border: 1px solid #cbd5e1; text-align: center; }
+
+        @media print {
+            .win-title-bar, .win-nav-tabs, .win-toolbar, .filters-container, .win-header-panel { display: none !important; }
+            body { background: white !important; font-size: 9pt; }
+            .grid-scroll { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
+            .win-grid-table th, .win-grid-table td { border: 1px solid #000 !important; font-size: 8.5pt; }
+            .win-grid-table th { background: #e2e8f0 !important; color: #000 !important; }
+            a { text-decoration: none !important; color: #000 !important; }
+        }
     </style>
 </head>
 <body>
@@ -83,12 +161,12 @@
     <!-- Toolbar buttons matching Desktop exact order -->
     <div class="win-toolbar">
         <button type="button" class="win-btn" onclick="resetGL()"><i class="fa fa-plus text-success"></i> Reset</button>
-        <button type="button" class="win-btn" disabled><i class="fa fa-print"></i> Print-105</button>
-        <button type="button" class="win-btn" disabled><i class="fa fa-print"></i> Print-106</button>
-        <button type="button" class="win-btn" disabled><i class="fa fa-print"></i> Print-107</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print-105</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print-106</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print-107</button>
         <button type="button" class="win-btn" onclick="saveCheckedRows()"><i class="fa fa-save text-primary"></i> SaveCheckedRows</button>
         <button type="button" class="win-btn" onclick="bookmarkAllPrevious()"><i class="fa fa-bookmark text-warning"></i> Bookmark All Previous Rows After Last Checked Row</button>
-        <button type="button" class="win-btn" disabled><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        <button type="button" class="win-btn" onclick="alert('Shortcuts:\nCtrl+S: Show Report\nCtrl+N: Reset\nCtrl+P / Alt+1: Print')"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
     </div>
 
     <!-- Header panel with General Ledger + Cost Center + Include unposted vouchers -->
@@ -108,19 +186,19 @@
                     <label style="font-size:10.5px; font-weight:600; cursor:pointer;"><input type="radio" name="rdAcBy" id="rdAcByCode"> Code</label>
                 </div>
             </div>
-            <div style="display:flex; gap:4px; margin-bottom:4px;">
-                <div style="flex:1;">
+            <div class="date-filter-row">
+                <div>
                     <select class="win-input" id="cmbDateType" onchange="onDateTypeChanged()">
                         <option value="5">Financial Year</option>
                         <option th:each="dt : ${dateTypesList}" th:value="${dt.id}" th:text="${dt.parameters}"></option>
                     </select>
                 </div>
-                <div style="width:105px; display:flex; align-items:center; gap:2px;">
-                    <span class="win-label">From</span>
+                <span class="win-label">From</span>
+                <div>
                     <input type="date" class="win-input" id="txtFromDate">
                 </div>
-                <div style="width:105px; display:flex; align-items:center; gap:2px;">
-                    <span class="win-label">To</span>
+                <span class="win-label">To</span>
+                <div>
                     <input type="date" class="win-input" id="txtToDate">
                 </div>
             </div>
@@ -172,7 +250,7 @@
         <!-- Account Detail Box -->
         <div class="win-groupbox gb-detail">
             <span class="win-groupbox-title">Account Detail</span>
-            <div style="display:grid; grid-template-columns:80px 1fr 65px 75px 25px; gap:3px 4px; font-size:10px; align-items:center;">
+            <div style="display:grid; grid-template-columns:80px 1fr 65px 95px 25px; gap:3px 4px; font-size:10px; align-items:center;">
                 <div style="font-weight:bold;">Account Code</div><div id="infoAccountCode" style="font-weight:bold;">-</div>
                 <div style="font-weight:bold;">Opening</div><div id="infoOpening" style="font-weight:bold; text-align:right;">0</div><div id="infoOpeningDrCr" style="font-weight:bold;"></div>
                 
@@ -183,7 +261,7 @@
                 <div style="font-weight:bold;">Total Credit</div><div id="infoTotalCredit" style="font-weight:bold; text-align:right;">0</div><div></div>
                 
                 <div></div><div></div>
-                <div style="font-weight:bold;">Closing</div><div id="infoClosing" style="font-weight:bold; text-align:right;">0</div><div id="infoClosingDrCr" style="font-weight:bold;"></div>
+                <div style="font-weight:bold;">Closing</div><div id="infoClosing" style="font-weight:bold; text-align:right; color:#b91c1c;">0</div><div id="infoClosingDrCr" style="font-weight:bold; color:#b91c1c;"></div>
             </div>
         </div>
 
@@ -193,24 +271,25 @@
             <div style="display:grid; grid-template-columns:180px 1fr; gap:2px 4px; font-size:10px; align-items:center;">
                 <div style="font-weight:bold;">Pending Premature Receipts</div><div id="infoPendingPrematureReceipts" style="font-weight:bold; text-align:right;">0</div>
                 <div style="font-weight:bold;">Pending Premature Payments</div><div id="infoPendingPrematurePayments" style="font-weight:bold; text-align:right;">0</div>
-                <div style="font-weight:bold;">Balance After Premature Receipts Clearance</div><div id="infoBalAfterPrematureReceiptsClearance" style="font-weight:bold; text-align:right; color:#00796B;">0</div>
+                <div style="font-weight:bold;">Balance After Premature Receipts Clearance</div><div id="infoBalAfterPrematureReceiptsClearance" style="font-weight:bold; text-align:right; color:#b91c1c;">0</div>
                 <div style="font-weight:bold;">Post Dated Cheqs Receipts</div><div id="infoPdcReceipts" style="font-weight:bold; text-align:right;">0</div>
                 <div style="font-weight:bold;">Post Dated Cheqs Payments</div><div id="infoPdcPayments" style="font-weight:bold; text-align:right;">0</div>
-                <div style="font-weight:bold;">Balance After Cheqs Clearance</div><div id="infoBalAfterCheqClearance" style="font-weight:bold; text-align:right; color:#00796B;">0</div>
+                <div style="font-weight:bold;">Balance After Cheqs Clearance</div><div id="infoBalAfterCheqClearance" style="font-weight:bold; text-align:right; color:#b91c1c;">0</div>
             </div>
         </div>
 
-        <!-- Right Side OPB Mini Table -->
-        <div class="win-groupbox gb-opb" style="padding:4px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                <label style="font-size:10px; font-weight:bold; cursor:pointer; margin:0;"><input type="checkbox" checked> OPB</label>
-            </div>
-            <table class="mini-grid">
+        <!-- Right Side Document Type Filter Mini Table (ditto WinForms GrdDocType) -->
+        <div class="win-groupbox gb-opb" style="padding:2px 4px; min-width:180px; max-height:125px; overflow-y:auto; background:#ffffff;">
+            <table class="mini-grid" id="tblDocTypeFilter" style="width:100%; border-collapse:collapse; font-size:10px;">
                 <thead>
-                    <tr><th>D.Type</th><th>Balance</th></tr>
+                    <tr style="background:#d8e4e8; border-bottom:1px solid #94a3b8; font-weight:bold;">
+                        <th style="width:22px; text-align:center; padding:2px;"><input type="checkbox" id="chkDocTypeAll" checked onclick="toggleAllDocTypeFilters(this)"></th>
+                        <th style="padding:2px 4px; text-align:left;">D.Type</th>
+                        <th style="padding:2px 4px; text-align:right;">Balance</th>
+                    </tr>
                 </thead>
-                <tbody>
-                    <tr><td>OPB</td><td id="miniOpbVal">0</td></tr>
+                <tbody id="tbodyDocTypeFilter">
+                    <tr><td colspan="3" style="text-align:center; color:#888; padding:4px;">-</td></tr>
                 </tbody>
             </table>
         </div>
@@ -221,7 +300,7 @@
         <div style="background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom:1px solid #849ca8; padding:2px 6px; display:flex; justify-content:space-between; align-items:center;">
             <span><i class="fa fa-table"></i> <b id="lblStatus">Ready</b></span>
         </div>
-        <div class="grid-scroll">
+        <div class="table-scroll-wrapper grid-scroll">
             <table class="win-grid-table" id="glTable">
                 <thead>
                 <tr>
@@ -389,6 +468,204 @@
             }
         }
 
+        function extractDocType(r) {
+            if (!r) return '';
+            
+            // 1. Direct field checks (both case variations & all standard field names)
+            let dt = r.DocTypeCode || r.docTypeCode || r.DocType || r.docType || r.DocumentTypeCode || r.documentTypeCode || 
+                     r.DocTypeShort || r.DocumentTypeShort || r.DocTypeAbbreviation || r.Doc_Type ||
+                     r.typeVoucher || r.TypeVoucher || r.type_voucher || r.VoucherType || r.voucherType || 
+                     r.VType || r.vType || r.DocumentTypeDescription || r.documentTypeDescription || 
+                     r.DocumentType || r.documentType || r.DocTypeDescription || r.docTypeDescription ||
+                     r.DocTypeName || r.docTypeName || r.DocumentTypeName || r.documentTypeName || '';
+
+            if (dt && typeof dt === 'string') {
+                dt = dt.trim();
+                const upper = dt.toUpperCase();
+                if (upper.includes('BANK PAYMENT') || upper === 'BPV') return 'BPV';
+                if (upper.includes('CASH PAYMENT') || upper === 'CPV') return 'CPV';
+                if (upper.includes('BANK RECEIPT') || upper === 'BRV') return 'BRV';
+                if (upper.includes('CASH RECEIPT') || upper === 'CRV') return 'CRV';
+                if (upper.includes('JOURNAL') || upper === 'JV') return 'JV';
+                if (upper.includes('CONTRA') || upper === 'CV') return 'CONT';
+                if (upper.includes('EXPENSE') || upper === 'EV') return 'EV';
+                if (upper.includes('PARTY RECEIPT') || upper === 'PRV') return 'PRV';
+                if (upper.includes('PARTY PAYMENT') || upper === 'PPV') return 'PPV';
+                if (upper === 'PI-R' || upper === 'IP-R' || upper === 'P1-R' || upper === 'PIR' || upper === 'IPR' || upper === 'PI') return 'PI-R';
+                if (upper.includes('INVOICE') || upper.includes('PURCHASE')) return 'PI-R';
+                if (upper.includes('FREIGHT') || upper === 'FRT') return 'FRT';
+                if (upper.includes('CONTRACTOR') || upper === 'CW') return 'CW';
+                if (upper.includes('PDC') || upper === 'CHEQUE') return 'PDC';
+                return dt;
+            }
+
+            // 2. Numeric DocumentTypeId mapping
+            const dtId = parseInt(r.DocumentTypeId != null ? r.DocumentTypeId : (r.documentTypeId != null ? r.documentTypeId : (r.DocTypeId != null ? r.DocTypeId : r.docTypeId)));
+            if (!isNaN(dtId)) {
+                const dtMap = {
+                    1: 'CPV',
+                    2: 'BPV',
+                    3: 'CRV',
+                    4: 'BRV',
+                    5: 'JV',
+                    6: 'CONT',
+                    7: 'EV',
+                    8: 'PRV',
+                    9: 'PPV',
+                    10: 'CONT',
+                    11: 'PDC',
+                    12: 'INV-ADJ',
+                    13: 'FRT',
+                    14: 'CW',
+                    18: 'PI-R',
+                    19: 'PI-R',
+                    26: 'EV',
+                    34: 'PRV',
+                    35: 'PPV'
+                };
+                if (dtMap[dtId]) return dtMap[dtId];
+            }
+
+            // 3. Fallback: Parse prefix from VoucherNo / VoucherCode (e.g. BPV-101, JV-45, CPV-3, PI-R-76)
+            const vNo = (r.VoucherNo || r.voucherNo || r.VoucherCode || r.voucherCode || r.VNo || r.vNo || '').toString().trim();
+            if (vNo) {
+                const match = vNo.match(/^([A-Za-z\-]+)[-\/\s_\d]/);
+                if (match && match[1]) {
+                    const prefix = match[1].toUpperCase();
+                    if (['BPV', 'CPV', 'BRV', 'CRV', 'JV', 'EV', 'PRV', 'PPV', 'PDC', 'FRT', 'CW', 'CONT', 'CV', 'PI', 'PI-R', 'IP-R', 'PIR', 'IPR'].includes(prefix)) {
+                        if (prefix === 'CV') return 'CONT';
+                        if (['PI', 'PIR', 'IP-R', 'IPR'].includes(prefix)) return 'PI-R';
+                        return prefix;
+                    }
+                }
+            }
+
+            return '';
+        }
+
+        function getVoucherUrl(docType, voucherNo, id) {
+            if (!voucherNo || voucherNo === '0' || voucherNo === 0 || voucherNo === 'OPB') return '#';
+            const dt = (docType || '').toString().trim().toUpperCase();
+            const vNo = encodeURIComponent(voucherNo);
+            const vId = id ? encodeURIComponent(id) : '';
+
+            if (dt === 'CPV') {
+                return `/accounts/vouchers/cash-payment?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'BPV') {
+                return `/accounts/vouchers/bank-payment?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'CRV') {
+                return `/accounts/vouchers/cash-receipt?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'BRV') {
+                return `/accounts/vouchers/bank-receipt?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'JV') {
+                return `/accounts/vouchers/journal?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'CONT' || dt === 'CV') {
+                return `/accounts/vouchers/contra?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'EV') {
+                return `/accounts/vouchers/expense?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'PRV') {
+                return `/accounts/vouchers/party-receipt?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'PPV') {
+                return `/accounts/vouchers/party-payment?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'PI-R' || dt === 'IP-R' || dt === 'P1-R' || dt === 'PI' || dt === 'PIR' || dt === 'IPR') {
+                return `/accounts/vouchers/payment-by-invoice?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'PDC') {
+                return `/accounts/vouchers/pdc-payment?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'INV-ADJ' || dt === 'IA') {
+                return `/accounts/vouchers/invoices-adjustment?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'FRT') {
+                return `/accounts/vouchers/freight?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else if (dt === 'CW') {
+                return `/accounts/vouchers/contractor-wages?voucherCode=${vNo}${vId ? '&id=' + vId : ''}`;
+            } else {
+                return `/accounts/reports/voucher-report?fromDocNo=${vNo}&toDocNo=${vNo}`;
+            }
+        }
+
+        let docTypeBalances = {};
+
+        function populateDocTypeFilters(data, accountInfo) {
+            docTypeBalances = {};
+            const tbody = $('#tbodyDocTypeFilter');
+            tbody.empty();
+
+            const opbVal = accountInfo ? parseFloat(accountInfo.openingBalance || 0) : 0;
+            if (opbVal !== 0 || (data && data.some(r => extractDocType(r) === 'OPB'))) {
+                docTypeBalances['OPB'] = opbVal;
+            }
+
+            if (data && data.length > 0) {
+                data.forEach(r => {
+                    const debit = parseFloat(r.Debit != null ? r.Debit : (r.DebitAmount != null ? r.DebitAmount : (r.debit != null ? r.debit : (r.debitAmount != null ? r.debitAmount : 0))));
+                    const credit = parseFloat(r.Credit != null ? r.Credit : (r.CreditAmount != null ? r.CreditAmount : (r.credit != null ? r.credit : (r.creditAmount != null ? r.creditAmount : 0))));
+                    let vDate = r.VoucherDate || r.voucherDate || '';
+                    if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
+                    const isOpb = (!r.VoucherNo && !r.voucherNo && !r.VoucherCode && !r.voucherCode && !r.DocType && !r.docType && !debit && !credit) || (vDate && vDate.includes('07-31') && !debit && !credit);
+                    
+                    const dt = extractDocType(r) || (isOpb ? 'OPB' : 'Other');
+                    if (dt === 'OPB') return;
+
+                    const net = (isNaN(debit) ? 0 : debit) - (isNaN(credit) ? 0 : credit);
+                    docTypeBalances[dt] = (docTypeBalances[dt] || 0) + net;
+                });
+            }
+
+            const docTypes = Object.keys(docTypeBalances);
+            if (docTypes.length === 0) {
+                tbody.html('<tr><td colspan="3" style="text-align:center; color:#888; padding:4px;">-</td></tr>');
+                return;
+            }
+
+            let html = '';
+            docTypes.forEach(dt => {
+                const bal = docTypeBalances[dt];
+                const balFmt = bal < 0 ? `(${fmt(Math.abs(bal))})` : fmt(bal);
+                html += `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="text-align:center; padding:2px;"><input type="checkbox" class="chk-doctype-filter" data-type="${dt}" checked onclick="applyFilteredGLData()"></td>
+                        <td style="padding:2px 4px; font-weight:600;">${dt}</td>
+                        <td style="padding:2px 4px; text-align:right; font-weight:bold;">${balFmt}</td>
+                    </tr>
+                `;
+            });
+            tbody.html(html);
+            $('#chkDocTypeAll').prop('checked', true);
+        }
+
+        function toggleAllDocTypeFilters(master) {
+            $('.chk-doctype-filter').prop('checked', master.checked);
+            applyFilteredGLData();
+        }
+
+        function applyFilteredGLData() {
+            const checkedTypes = new Set();
+            $('.chk-doctype-filter:checked').each(function() {
+                checkedTypes.add($(this).attr('data-type'));
+            });
+
+            const allChecked = $('.chk-doctype-filter').length === checkedTypes.size;
+            $('#chkDocTypeAll').prop('checked', allChecked);
+
+            if (!rawGlData || rawGlData.length === 0) {
+                renderGrid([]);
+                return;
+            }
+
+            const filteredData = rawGlData.filter(r => {
+                const debit = parseFloat(r.Debit != null ? r.Debit : (r.DebitAmount != null ? r.DebitAmount : (r.debit != null ? r.debit : (r.debitAmount != null ? r.debitAmount : 0))));
+                const credit = parseFloat(r.Credit != null ? r.Credit : (r.CreditAmount != null ? r.CreditAmount : (r.credit != null ? r.credit : (r.creditAmount != null ? r.creditAmount : 0))));
+                let vDate = r.VoucherDate || r.voucherDate || '';
+                if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
+
+                const isOpb = (!r.VoucherNo && !r.voucherNo && !r.VoucherCode && !r.voucherCode && !extractDocType(r) && !debit && !credit) || (vDate && vDate.includes('07-31') && !debit && !credit);
+                const docType = extractDocType(r) || (isOpb ? 'OPB' : 'Other');
+                return checkedTypes.has(docType);
+            });
+
+            renderGrid(filteredData);
+            $('#lblStatus').text('Total Records: ' + filteredData.length);
+        }
+
         function executeSingleGL() {
             const accountId = $('#cmbAccountTitle').val();
             if (!accountId) {
@@ -410,9 +687,9 @@
                 success: function (res) {
                     if (res && res.success) {
                         rawGlData = res.data || [];
-                        renderGrid(rawGlData);
                         if (res.accountInfo) applyAccountInfo(res.accountInfo);
-                        $('#lblStatus').text('Total Records: ' + res.totalRecords);
+                        populateDocTypeFilters(rawGlData, res.accountInfo);
+                        applyFilteredGLData();
                     } else {
                         $('#glTbody').html('<tr><td colspan="14" style="text-align:center; color:red; padding:12px;">' + (res.message || 'Error loading General Ledger.') + '</td></tr>');
                     }
@@ -602,7 +879,7 @@
                 currentData.forEach(r => {
                     let vDate = r.VoucherDate || r.voucherDate || r.VDate || r.vDate || '';
                     if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
-                    const docType = r.DocType || r.DocumentTypeDescription || r.DocumentTypeCode || r.docType || r.documentTypeDescription || r.DocumentType || r.VoucherType || 'N/A';
+                    const docType = extractDocType(r) || 'N/A';
                     const accountCode = r.AccountCode || r.accountCode || '';
                     const key = vDate + '|' + docType + '|' + accountCode;
                     if (!groups[key]) {
@@ -768,26 +1045,38 @@
                     const balance = parseFloat(r.Balance != null ? r.Balance : (r.balance != null ? r.balance : 0));
                     totDebit += isNaN(debit) ? 0 : debit;
                     totCredit += isNaN(credit) ? 0 : credit;
-                    let vDate = r.VoucherDate || '';
+                    let vDate = r.VoucherDate || r.voucherDate || '';
                     if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
-                    let dDate = r.DueDate || '';
+                    let dDate = r.DueDate || r.dueDate || '';
                     if (typeof dDate === 'string' && dDate.includes('T')) dDate = dDate.split('T')[0];
                     
-                    const isOpb = (!r.VoucherNo && !r.VoucherCode && !r.DocType && !r.DocumentTypeDescription && !debit && !credit) || (vDate && vDate.includes('07-31') && !debit && !credit);
-                    const docType = r.DocType || r.DocumentTypeDescription || r.DocumentTypeCode || r.DocumentType || r.VoucherType || (isOpb ? 'OPB' : '');
-                    const voucherNo = (r.VoucherNo != null && r.VoucherNo !== '') ? r.VoucherNo : ((r.VoucherCode != null && r.VoucherCode !== '') ? r.VoucherCode : ((r.VNo != null && r.VNo !== '') ? r.VNo : (isOpb ? 'OPB' : '')));
-                    const offsetTitle = r.OffSetTitle || r.OffsetAccountTitle || r.OffSetAccountTitle || r.AgainstAccountTitle || r.AgainstAccount || '';
-                    const remarks = r.BookmarkRemarks || r.Comments || r.Remarks || r.Description || '';
-                    const balTypeStr = r.BalType || r.balType || r.Bal_Type || (balance < 0 ? 'Cr' : (balance > 0 ? 'Dr' : 'Cr'));
+                    const isOpb = (!r.VoucherNo && !r.voucherNo && !r.VoucherCode && !r.voucherCode && !extractDocType(r) && !debit && !credit) || (vDate && vDate.includes('07-31') && !debit && !credit);
+                    const docType = extractDocType(r) || (isOpb ? 'OPB' : '');
+                    const voucherNo = (r.VoucherNo != null && r.VoucherNo !== '') ? r.VoucherNo : ((r.voucherNo != null && r.voucherNo !== '') ? r.voucherNo : ((r.VoucherCode != null && r.VoucherCode !== '') ? r.VoucherCode : ((r.voucherCode != null && r.voucherCode !== '') ? r.voucherCode : ((r.VNo != null && r.VNo !== '') ? r.VNo : (isOpb ? '0' : '0')))));
+                    const vId = r.VoucherId || r.voucherId || r.Id || r.id || null;
+                    const offsetTitle = r.OffSetTitle || r.offSetTitle || r.OffsetAccountTitle || r.OffSetAccountTitle || r.AgainstAccountTitle || r.AgainstAccount || '';
+                    const remarks = r.BookmarkRemarks || r.bookmarkRemarks || r.Comments || r.comments || r.Remarks || r.Description || '';
+                    const balTypeStr = r.BalType || r.balType || r.Bal_Type || (balance < 0 ? 'Cr' : (balance > 0 ? 'Dr' : 'Nill'));
                     const balFmt = balance < 0 ? `(${fmt(Math.abs(balance))})` : fmt(balance);
+
+                    const vNoDisplay = (voucherNo !== null && voucherNo !== undefined && voucherNo !== '') ? voucherNo : '0';
+                    const vUrl = getVoucherUrl(docType, voucherNo, vId);
+
+                    const vNoLink = (voucherNo && voucherNo !== '0' && voucherNo !== 0 && voucherNo !== 'OPB' && vUrl !== '#') 
+                        ? `<a href="${vUrl}" target="_blank" style="color:#0056b3; text-decoration:underline; font-weight:600;">${vNoDisplay}</a>`
+                        : `<span>${vNoDisplay}</span>`;
+
+                    const docTypeLink = (docType && docType !== 'OPB' && voucherNo && voucherNo !== '0' && voucherNo !== 0 && vUrl !== '#') 
+                        ? `<a href="${vUrl}" target="_blank" style="color:#0056b3; text-decoration:underline; font-weight:600;">${docType}</a>`
+                        : `<span>${docType}</span>`;
 
                     tbody.append(`
                         <tr>
                             <td style="text-align:center;"><input type="checkbox" class="chk-row" data-idx="${idx}"></td>
                             <td>${remarks}</td>
                             <td>${vDate}</td>
-                            <td><a href="#" style="color:#00796B; text-decoration:underline;">${docType}</a></td>
-                            <td>${voucherNo}</td>
+                            <td>${docTypeLink}</td>
+                            <td>${vNoLink}</td>
                             <td>${r.AccountCode || r.accountCode || ''}</td>
                             <td>${offsetTitle}</td>
                             <td style="text-align:right;">${debit ? fmt(debit) : '0'}</td>
@@ -842,7 +1131,8 @@
             $('#cmbAccountTitle, #cmbDateType').val('').trigger('change.select2');
             $('#cmbMultiAccounts, #cmbBankAccounts').val([]).trigger('change.select2');
             $('#txtFromDate').val('2026-08-01');
-            $('#txtToDate').val('2026-09-11');
+            const todayStr = new Date().toISOString().split('T')[0];
+            $('#txtToDate').val(todayStr);
             $('#chkIncludeUnposted').prop('checked', true);
             $('#chkDetail').prop('checked', true);
             clearAccountInfo();
@@ -856,8 +1146,17 @@
         }
 
         $(document).ready(function () {
-            $('#txtFromDate').val('2026-08-01');
-            $('#txtToDate').val('2026-09-11');
+            const todayStr = new Date().toISOString().split('T')[0];
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramAccountId = urlParams.get('accountId') || urlParams.get('AccountId') || /*[[${selectedAccountId}]]*/ null;
+            const paramFromDate = urlParams.get('fromDate') || urlParams.get('FromDate') || /*[[${selectedFromDate}]]*/ null;
+            const paramToDate = urlParams.get('toDate') || urlParams.get('ToDate') || /*[[${selectedToDate}]]*/ null;
+
+            if (paramFromDate) $('#txtFromDate').val(paramFromDate);
+            else if (!$('#txtFromDate').val()) $('#txtFromDate').val('2026-08-01');
+
+            if (paramToDate) $('#txtToDate').val(paramToDate);
+            else if (!$('#txtToDate').val()) $('#txtToDate').val(todayStr);
 
             $('#cmbAccountTitle, #cmbDateType').select2({
                 width: '100%',
@@ -890,6 +1189,12 @@
                     $b.trigger('change.select2');
                 }
             });
+
+            if (paramAccountId) {
+                $('#cmbAccountTitle').val(paramAccountId).trigger('change.select2');
+                loadAccountInfo();
+                executeSingleGL();
+            }
         });
     </script>
 

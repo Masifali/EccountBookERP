@@ -139,6 +139,28 @@ public class VoucherService implements IVoucherService {
 	}
 
 	@Override
+	public Map<String, Object> getVoucherByCode(int documentTypeId, int voucherCode) {
+		int orgId = currentUserContext.currentOrganizationId();
+		int compId = currentUserContext.currentCompanyId();
+		try {
+			String sql = "SELECT TOP 1 Id FROM VoucherHead WHERE DocumentTypeId = ? AND VoucherCode = ? AND OrganizationId = ? AND CompanyId = ? ORDER BY Id DESC";
+			List<Integer> ids = jdbcTemplate.queryForList(sql, Integer.class, documentTypeId, voucherCode, orgId, compId);
+			if (ids != null && !ids.isEmpty()) {
+				return getVoucherById(ids.get(0));
+			}
+		} catch (Exception ex) {
+		}
+		try {
+			String sql = "SELECT TOP 1 Id FROM VoucherHead WHERE DocumentTypeId = ? AND VoucherCode = ? ORDER BY Id DESC";
+			List<Integer> ids = jdbcTemplate.queryForList(sql, Integer.class, documentTypeId, voucherCode);
+			if (ids != null && !ids.isEmpty()) {
+				return getVoucherById(ids.get(0));
+			}
+		} catch (Exception ignored) {}
+		return null;
+	}
+
+	@Override
 	@Transactional
 	public Map<String, Object> saveVoucher(VoucherRequestDto dto) {
 		Map<String, Object> response = new HashMap<>();

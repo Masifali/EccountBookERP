@@ -4,274 +4,257 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Accounts Activity Summary Report - EccountBookERP</title>
+    <title>Accounts Activity Summary Report - WinForms Replica</title>
+
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
     <style>
-        body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f3f5;
-            font-size: 11px;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
+        body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #d8e0e8; font-size: 10.5px; color: #000; margin: 0; padding: 0; overflow-x: hidden; }
+        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-size: 11.5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 23px; box-sizing: border-box; }
+        
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 6px; display: flex; gap: 4px; align-items: center; height: 25px; box-sizing: border-box; }
 
-        .erp-header {
-            background-color: #00796B;
-            color: white;
-            padding: 6px 12px;
-            font-size: 13px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .win-btn { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 1px 7px; font-size: 10.5px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; height: 20px; box-shadow: inset 0 1px 0 #fff; text-decoration: none; }
+        .win-btn:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
+        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .erp-toolbar {
-            background-color: #e2e8f0;
-            border-bottom: 1px solid #cbd5e1;
-            padding: 4px 10px;
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+        .win-header-panel { background-color: #00796B; padding: 2px 8px; display: flex; justify-content: space-between; align-items: center; height: 24px; box-sizing: border-box; }
+        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 12px; font-weight: bold; }
 
-        .btn-erp {
-            background-color: #ffffff;
-            border: 1px solid #94a3b8;
-            border-radius: 3px;
-            padding: 3px 10px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #1e293b;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            text-decoration: none;
-        }
+        .filters-container { padding: 4px; background: #d8e0e8; }
+        
+        .win-groupbox { border: 1px solid #8fa3b5; border-radius: 2px; padding: 8px 8px 6px 8px; position: relative; background: #ffffff; box-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+        .win-groupbox-title { position: absolute; top: -7px; left: 8px; background: #ffffff; padding: 0 4px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 10px; color: #000; }
 
-        .btn-erp:hover {
-            background-color: #f1f5f9;
-            border-color: #64748b;
-            color: #1e293b;
-            text-decoration: none;
-        }
+        .win-label { font-weight: 600; color: #222; margin-bottom: 1px; font-size: 10px; white-space: nowrap; }
+        .win-label-chk { font-weight: 600; color: #222; font-size: 10.5px; margin: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+        .win-input { border: 1px solid #7f9db9; border-radius: 1px; padding: 1px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; height: 20px; background-color: #ffffff; box-sizing: border-box; }
+        .win-input:focus { border-color: #00796B; outline: none; }
+        
+        .win-btn-show { background: #00796B; color: #ffffff; border: 1px solid #004d40; font-weight: bold; font-size: 11px; padding: 1px 14px; height: 22px; border-radius: 2px; cursor: pointer; }
+        .win-btn-show:hover { background: #004d40; }
 
-        .btn-erp-primary {
-            background-color: #00796B;
-            color: white;
-            border: 1px solid #004d40;
-        }
+        /* Select2 custom compact styles */
+        .select2-container--default .select2-selection--single { height: 20px !important; padding: 0px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; border: 1px solid #7f9db9; border-radius: 1px; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 18px !important; padding-left: 0px; color: #000; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 18px !important; }
 
-        .btn-erp-primary:hover {
-            background-color: #004d40;
-            color: white;
-        }
+        .select2-container--default .select2-selection--multiple { min-height: 20px !important; border: 1px solid #7f9db9; border-radius: 1px; padding: 0 2px; }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice { padding: 0 4px; font-size: 10px; margin-top: 1px; margin-bottom: 1px; background-color: #e0f2f1; border: 1px solid #00796B; color: #000; }
 
-        .erp-fieldset {
-            background: white;
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
+        /* Instruction Bar */
+        .win-grouping-bar { background: #dbe6f2; color: #1e3a8a; border: 1px solid #93c5fd; padding: 3px 8px; font-size: 10.5px; font-weight: bold; margin: 2px 4px; box-shadow: inset 0 1px 0 #fff; }
 
-        .erp-fieldset legend {
-            font-size: 11px;
-            font-weight: bold;
-            color: #00796B;
-            width: auto;
-            padding: 0 4px;
-            margin-bottom: 6px;
-            border: none;
-        }
+        /* Grid Table Styling */
+        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 10.5px; font-family: Tahoma, sans-serif; background: #ffffff; }
+        .win-grid-table th { background: linear-gradient(to bottom, #dbe6f2 0%, #b0c4de 100%); color: #000000; font-weight: bold; padding: 3px 5px; border: 1px solid #849ca8; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; }
+        .win-grid-table td { padding: 2px 5px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; height: 19px; }
+        .win-grid-table tbody tr:nth-child(even) { background-color: #f7fafc; }
+        .win-grid-table tbody tr:hover { background-color: #cbe5ff; }
+        .grid-total-row td { font-weight: bold; background: #eaf0f6; border-top: 2px solid #00796B; }
 
-        .form-label-erp {
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 2px;
-            font-size: 11px;
-        }
-
-        .form-control-erp {
-            border: 1px solid #94a3b8;
-            border-radius: 2px;
-            padding: 2px 6px;
-            font-size: 11px;
-            height: 24px;
-            box-sizing: border-box;
-            background-color: #fff;
-            width: 100%;
-        }
-
-        .form-control-erp:focus {
-            border-color: #00796B;
-            outline: none;
-        }
-
-        .erp-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            margin-top: 6px;
-        }
-
-        .erp-table th {
-            background-color: #00796B;
-            color: white;
-            padding: 5px 6px;
-            text-align: left;
-            border: 1px solid #004d40;
-            font-weight: 600;
-        }
-
-        .erp-table td {
-            padding: 4px 6px;
-            border: 1px solid #cbd5e1;
-            vertical-align: middle;
-        }
-
-        .erp-table tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
-
-        .report-summary-bar {
-            background: #e0f2f1;
-            font-weight: bold;
-            color: #004d40;
-            font-size: 12px;
-            padding: 6px 12px;
-            border: 1px solid #00796B;
-            border-radius: 2px;
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
+        .grid-scroll { max-height: calc(100vh - 210px); overflow: auto; border: 1px solid #849ca8; margin: 4px; background: #fff; }
+        @media print {
+            .win-title-bar, .win-toolbar, .filters-container, .win-header-panel, .win-grouping-bar, a, button { display: none !important; }
+            body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+            .grid-scroll { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
+            .win-grid-table th, .win-grid-table td { border: 1px solid #000 !important; color: #000 !important; }
+            .win-grid-table th { background: #eee !important; color: #000 !important; }
         }
     </style>
 </head>
 <body>
-    <div class="erp-header">
-        <div><i class="fa fa-line-chart"></i> Accounts Activity Summary Report</div>
-        <div><a href="/accounts/dashboard" style="color: white; text-decoration: none; font-weight: 600;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+
+    <!-- Title Bar -->
+    <div class="win-title-bar">
+        <span><i class="fa fa-line-chart"></i> Accounts Activity Summary Report</span>
+        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 10.5px;">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
     </div>
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary" onclick="executeActivitySummaryReport()"><i class="fa fa-eye"></i> Show (Ctrl+S)</button>
-        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print (Alt+1)</button>
-        <button type="button" class="btn-erp" onclick="resetActivitySummaryFilters()"><i class="fa fa-refresh"></i> New (Ctrl+N)</button>
+
+    <!-- WinForms Toolbar Buttons -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="resetFilters()"><i class="fa fa-plus-circle text-success"></i> Reset</button>
+        <button type="button" class="win-btn" onclick="executeActivitySummaryReport()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 110-Print</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 110APrint</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 110BPrint</button>
+        <button type="button" class="win-btn" disabled><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
     </div>
-    <div style="padding: 10px;">
-        <div class="erp-fieldset">
-            <legend>Report Filter Criteria</legend>
-            <div class="row">
-                <div class="col-md-2">
-                    <label class="form-label-erp">Date Type</label>
-                    <select id="cmbDateType" class="form-control-erp">
-                        <option value="DocDate">Voucher Document Date</option>
-                        <option value="EntryDate">System Entry Date</option>
+
+    <!-- Dark Teal Header Panel -->
+    <div class="win-header-panel">
+        <span class="win-header-title">Activity Summary</span>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-container">
+        <div class="win-groupbox">
+            <span class="win-groupbox-title">Filters</span>
+            
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 6px;">
+                <!-- Date Type -->
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span class="win-label">Date Type</span>
+                    <select id="cmbDateType" class="win-input" style="width: 140px;" onchange="onDateTypeChanged()">
+                        <option value="5">Financial Year</option>
+                        <option th:each="dt : ${dateTypesList}" th:value="${dt.id}" th:text="${dt.parameters}"></option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label-erp">From Date</label>
-                    <input type="date" id="txtFromDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label-erp">To Date</label>
-                    <input type="date" id="txtToDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Account Title / Filter</label>
-                    <select id="cmbAccountTitle" class="form-control-erp">
-                        <option value="">-- All Accounts --</option>
-                        <option th:each="ac : ${accountsList}" th:value="${ac.id}" th:text="${ac.accountCode + ' - ' + ac.accountTitle}"></option>
+
+                <!-- Doc_Types -->
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span class="win-label">Doc_Types</span>
+                    <select id="cmbDocTypes" class="win-input select2" multiple="multiple" style="width: 250px;">
+                        <option value="1">CPV - Cash Payment Voucher</option>
+                        <option value="2">BPV - Bank Payment Voucher</option>
+                        <option value="3">CRV - Cash Receipt Voucher</option>
+                        <option value="4">BRV - Bank Receipt Voucher</option>
+                        <option value="5">JV - Journal Voucher</option>
+                        <option value="6">CONT - Contra Voucher</option>
+                        <option value="7">EV - Expense Voucher</option>
+                        <option value="8">PRV - Party Receipt Voucher</option>
+                        <option value="9">PPV - Party Payment Voucher</option>
+                        <option value="10">PI-R - Payment By Invoice</option>
+                        <option value="11">PDC - Post Dated Cheque</option>
+                        <option value="12">INV-ADJ - Invoice Adjustment</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label-erp">Report Type</label>
-                    <select id="cmbReportType" class="form-control-erp">
-                        <option value="1">1. ChartofAccount_Wise</option>
-                        <option value="2">2. Subsidiary_Wise</option>
-                    </select>
+
+                <!-- Radio Options: Four Columns / Six Columns -->
+                <div style="display:flex; align-items:center; gap:8px; margin-left: 6px;">
+                    <label class="win-label-chk"><input type="radio" name="rdColumns" id="rdFourCols" checked onchange="renderGrid()"> Four Columns</label>
+                    <label class="win-label-chk"><input type="radio" name="rdColumns" id="rdSixCols" onchange="renderGrid()"> Six Columns</label>
                 </div>
-                <div class="col-md-1" style="display:flex; align-items:flex-end; padding-bottom:2px;">
-                    <label style="font-weight:600; cursor:pointer;"><input type="checkbox" id="chkApprovedOnly" checked/> Approved Only</label>
+
+                <!-- Filter Type Sub Groupbox -->
+                <div style="border: 1px solid #8fa3b5; border-radius: 2px; padding: 2px 8px; position: relative; margin-left: 6px; background: #fff;">
+                    <span style="position: absolute; top: -7px; left: 6px; background: #fff; padding: 0 2px; font-size: 9px; font-weight: bold; color: #222;">Filter Type</span>
+                    <label class="win-label-chk" style="margin-right: 6px;"><input type="radio" name="rdFilterType" id="rdDocDate" checked> Doc Date</label>
+                    <label class="win-label-chk"><input type="radio" name="rdFilterType" id="rdEntryDate"> Entry Date</label>
+                </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span class="win-label">From Date</span>
+                    <input type="date" id="txtFromDate" class="win-input" style="width: 125px;">
+                </div>
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span class="win-label">To Date</span>
+                    <input type="date" id="txtToDate" class="win-input" style="width: 125px;">
+                </div>
+
+                <div style="display:flex; align-items:center; gap:4px; margin-left: 8px;">
+                    <label class="win-label-chk"><input type="checkbox" id="chkIncludeUnposted" checked> Include UnPosted Vouchers</label>
+                </div>
+
+                <div style="margin-left: auto;">
+                    <button type="button" class="win-btn-show" onclick="executeActivitySummaryReport()"><i class="fa fa-eye"></i> Show</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="erp-fieldset">
-            <legend>Activity Summary Data Output</legend>
-            <div style="text-align: center; margin-bottom: 10px;">
-                <h4 style="margin: 0; font-weight: bold; color: #00796B;" id="lblCompHeader">Golden Ace Rice Mills (Pvt) Ltd.</h4>
-                <h5 style="margin: 2px 0; font-weight: bold;">Accounts Activity Summary Report</h5>
-                <small style="color: #64748b;" id="lblPeriodHeader">Period: Loading... | Currency: PKR</small>
-            </div>
-            <table class="erp-table">
+    <!-- Filtered Records Panel -->
+    <div class="win-header-panel">
+        <span class="win-header-title">Filtered Records</span>
+    </div>
+
+    <!-- Instruction Bar -->
+    <div class="win-grouping-bar">
+        Drag a column header here to group by that column.
+    </div>
+
+    <!-- Main Grid Form -->
+    <div style="background:#ffffff; border:1px solid #849ca8; margin:4px;">
+        <div class="grid-scroll">
+            <table class="win-grid-table" id="tblActivitySummary">
                 <thead>
-                    <tr>
-                        <th style="width: 10%;">Account Code</th>
-                        <th style="width: 25%;">Account Title</th>
-                        <th style="width: 20%;">Parent Account Title</th>
-                        <th style="width: 12%; text-align: right;">Opening (PKR)</th>
-                        <th style="width: 11%; text-align: right;">Debit (PKR)</th>
-                        <th style="width: 11%; text-align: right;">Credit (PKR)</th>
-                        <th style="width: 11%; text-align: right;">Closing (PKR)</th>
+                    <tr id="trHead">
+                        <!-- Dynamic Columns: Four Columns vs Six Columns -->
                     </tr>
                 </thead>
-                <tbody id="activitySummaryTbody">
-                    <!-- Loaded dynamically via AJAX -->
+                <tbody id="tbodyActivitySummary">
+                    <tr><td colspan="8" style="text-align:center; padding:16px; color:#666;">Click Show to execute Activity Summary Report.</td></tr>
                 </tbody>
+                <tfoot id="tfootActivitySummary">
+                    <!-- Totals Row -->
+                </tfoot>
             </table>
-            <div class="report-summary-bar">
-                <div>Total Accounts: <span id="lblTotalRec">0</span></div>
-                <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
-                <div>Total Credit: <span id="lblTotalCredit">0.00</span></div>
-                <div>Net Movement: <span id="lblNetBalance">0.00 Dr</span></div>
-            </div>
         </div>
     </div>
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
+    <script th:inline="javascript">
+        function fmt(v) {
+            const n = parseFloat(v);
+            if (isNaN(n)) return '0.00';
+            return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function fmtDrCr(v) {
+            const n = parseFloat(v);
+            if (isNaN(n) || n === 0) return '0.00 Dr';
+            const formatted = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return n < 0 ? `(${formatted}) Cr` : `${formatted} Dr`;
+        }
+
         $(document).ready(function() {
-            setInitialDates();
-            $('#cmbAccountTitle, #cmbDateType, #cmbReportType').select2({ width: '100%' });
+            onDateTypeChanged();
+            $('#cmbDocTypes').select2({
+                placeholder: "Select Document Types...",
+                allowClear: true,
+                width: '250px'
+            });
             executeActivitySummaryReport();
         });
 
-        function setInitialDates() {
+        function onDateTypeChanged() {
+            const id = parseInt($('#cmbDateType').val());
             const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const todayStr = `${year}-${month}-${day}`;
-            document.getElementById('txtFromDate').value = todayStr;
-            document.getElementById('txtToDate').value = todayStr;
+            const iso = d => d.toISOString().split('T')[0];
+            if (id === 1) {
+                $('#txtFromDate').val(iso(today));
+                $('#txtToDate').val(iso(today));
+            } else if (id === 2) {
+                const d = new Date(today); d.setDate(d.getDate() - 7);
+                $('#txtFromDate').val(iso(d));
+                $('#txtToDate').val(iso(today));
+            } else if (id === 3) {
+                $('#txtFromDate').val(iso(new Date(today.getFullYear(), today.getMonth(), 1)));
+                $('#txtToDate').val(iso(today));
+            } else if (id === 4) {
+                $('#txtFromDate').val(iso(new Date(today.getFullYear(), 0, 1)));
+                $('#txtToDate').val(iso(today));
+            } else if (id === 5) {
+                $('#txtFromDate').val('2026-08-01');
+                $('#txtToDate').val('2026-09-13');
+            }
         }
 
-        function formatCurrency(val) {
-            if (val === null || val === undefined || isNaN(val)) return '0.00';
-            return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
+        let rawSummaryData = [];
 
         function executeActivitySummaryReport() {
             const fromD = $('#txtFromDate').val();
             const toD = $('#txtToDate').val();
-            $('#lblPeriodHeader').text(`Period: ${fromD} To ${toD} | Currency: PKR`);
+            const selectedDocTypes = $('#cmbDocTypes').val() || [];
 
             const reqObj = {
-                accountId: $('#cmbAccountTitle').val() ? parseInt($('#cmbAccountTitle').val()) : null,
                 fromDate: fromD,
                 toDate: toD,
-                dateType: $('#cmbDateType').val(),
-                reportTypeId: parseInt($('#cmbReportType').val() || "1"),
-                approvedOnly: $('#chkApprovedOnly').is(':checked')
+                dateType: $('#rdDocDate').is(':checked') ? 'DocDate' : 'EntryDate',
+                docTypes: selectedDocTypes.join(','),
+                includeUnposted: $('#chkIncludeUnposted').is(':checked')
             };
+
+            $('#tbodyActivitySummary').html('<tr><td colspan="8" style="text-align:center; padding:16px; color:#00796B;"><i class="fa fa-spinner fa-spin"></i> Executing Activity Summary query...</td></tr>');
 
             $.ajax({
                 url: '/accounts/api/reports/activity-summary',
@@ -280,72 +263,138 @@
                 data: JSON.stringify(reqObj),
                 success: function(res) {
                     if (res && res.success) {
-                        renderGrid(res.data);
+                        rawSummaryData = res.data || [];
+                        renderGrid();
                     } else {
-                        $('#activitySummaryTbody').html('<tr><td colspan="7" style="text-align:center; color:red; padding: 20px;">' + (res.message || 'Error loading Activity Summary Report.') + '</td></tr>');
-                        updateTotals(0, 0, 0, 0);
+                        $('#tbodyActivitySummary').html('<tr><td colspan="8" style="text-align:center; color:red; padding: 16px;">' + (res.message || 'Error loading Activity Summary Report.') + '</td></tr>');
                     }
                 },
-                error: function(err) {
-                    $('#activitySummaryTbody').html('<tr><td colspan="7" style="text-align:center; color:red; padding: 20px;">Error executing Activity Summary Report.</td></tr>');
-                    updateTotals(0, 0, 0, 0);
+                error: function() {
+                    $('#tbodyActivitySummary').html('<tr><td colspan="8" style="text-align:center; color:red; padding: 16px;">Error executing Activity Summary Report.</td></tr>');
                 }
             });
         }
 
-        function renderGrid(data) {
-            const tbody = $('#activitySummaryTbody');
-            tbody.empty();
+        function renderGrid() {
+            const isSixCols = $('#rdSixCols').is(':checked');
+            const trHead = $('#trHead');
+            const tbody = $('#tbodyActivitySummary');
+            const tfoot = $('#tfootActivitySummary');
 
-            if (!data || data.length === 0) {
-                tbody.html('<tr><td colspan="7" style="text-align:center; padding: 20px; color:#666;">No transaction records found for selected criteria.</td></tr>');
-                updateTotals(0, 0, 0, 0);
+            tbody.empty();
+            tfoot.empty();
+
+            if (isSixCols) {
+                trHead.html(`
+                    <th>Account Code</th>
+                    <th>Account Title</th>
+                    <th style="text-align:right;">Opening</th>
+                    <th style="text-align:right;">Debit (Doc)</th>
+                    <th style="text-align:right;">Credit (Doc)</th>
+                    <th style="text-align:right;">Debit (Entry)</th>
+                    <th style="text-align:right;">Credit (Entry)</th>
+                    <th style="text-align:right;">Closing</th>
+                `);
+            } else {
+                trHead.html(`
+                    <th>Account Code</th>
+                    <th>Account Title</th>
+                    <th style="text-align:right;">Opening</th>
+                    <th style="text-align:right;">Debit</th>
+                    <th style="text-align:right;">Credit</th>
+                    <th style="text-align:right;">Closing</th>
+                `);
+            }
+
+            if (!rawSummaryData || rawSummaryData.length === 0) {
+                const colSpan = isSixCols ? 8 : 6;
+                tbody.html(`<tr><td colspan="${colSpan}" style="text-align:center; padding: 16px; color:#666;">No transaction records found for selected criteria.</td></tr>`);
                 return;
             }
 
-            let totalDebit = 0;
-            let totalCredit = 0;
-            let netBal = 0;
+            let totOpening = 0, totDebit = 0, totCredit = 0, totClosing = 0;
+            let totDebitEntry = 0, totCreditEntry = 0;
 
-            data.forEach(r => {
+            rawSummaryData.forEach(r => {
                 const openBal = parseFloat(r.Opening || r.opening || r.OpeningBalance || 0);
                 const deb = parseFloat(r.Debit || r.debit || r.TotalDebit || 0);
                 const cred = parseFloat(r.Credit || r.credit || r.TotalCredit || 0);
+                const debEntry = parseFloat(r.DebitEntry || r.debitEntry || deb);
+                const credEntry = parseFloat(r.CreditEntry || r.creditEntry || cred);
                 const closeBal = parseFloat(r.Closing || r.closing || (openBal + deb - cred));
+                const acId = r.AccountId || r.accountId || r.Id || r.id || '';
+                const acCode = r.AccountCode || r.accountCode || '';
+                const acTitle = r.AccountTitle || r.accountTitle || '';
 
-                totalDebit += deb;
-                totalCredit += cred;
-                netBal += closeBal;
+                totOpening += openBal;
+                totDebit += deb;
+                totCredit += cred;
+                totDebitEntry += debEntry;
+                totCreditEntry += credEntry;
+                totClosing += closeBal;
 
-                tbody.append(`
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">${r.AccountCode || r.accountCode || ''}</td>
-                        <td style="font-weight: 600;">${r.AccountTitle || r.accountTitle || ''}</td>
-                        <td style="color: #64748b;">${r.ParentAccountTitle || r.parentAccountTitle || r.ParentAccount || ''}</td>
-                        <td style="text-align: right;">${formatCurrency(Math.abs(openBal))} ${openBal >= 0 ? 'Dr' : 'Cr'}</td>
-                        <td style="text-align: right; color: #166534;">${formatCurrency(deb)}</td>
-                        <td style="text-align: right; color: #991b1b;">${formatCurrency(cred)}</td>
-                        <td style="text-align: right; font-weight: bold;">${formatCurrency(Math.abs(closeBal))} ${closeBal >= 0 ? 'Dr' : 'Cr'}</td>
-                    </tr>
-                `);
+                const codeHtml = acId 
+                    ? `<a href="/accounts/reports/general-ledger?accountId=${acId}" target="_blank" style="color:#0056b3; text-decoration:underline; font-weight:bold;">${$('<div>').text(acCode).html()}</a>` 
+                    : `<span>${$('<div>').text(acCode).html()}</span>`;
+
+                if (isSixCols) {
+                    tbody.append(`
+                        <tr>
+                            <td style="font-weight: bold; color: #00796B;">${codeHtml}</td>
+                            <td style="font-weight: 600;">${$('<div>').text(acTitle).html()}</td>
+                            <td style="text-align: right;">${fmt(openBal)}</td>
+                            <td style="text-align: right; color: #166534;">${fmt(deb)}</td>
+                            <td style="text-align: right; color: #991b1b;">${fmt(cred)}</td>
+                            <td style="text-align: right; color: #166534;">${fmt(debEntry)}</td>
+                            <td style="text-align: right; color: #991b1b;">${fmt(credEntry)}</td>
+                            <td style="text-align: right; font-weight: bold;">${fmtDrCr(closeBal)}</td>
+                        </tr>
+                    `);
+                } else {
+                    tbody.append(`
+                        <tr>
+                            <td style="font-weight: bold; color: #00796B;">${codeHtml}</td>
+                            <td style="font-weight: 600;">${$('<div>').text(acTitle).html()}</td>
+                            <td style="text-align: right;">${fmt(openBal)}</td>
+                            <td style="text-align: right; color: #166534;">${fmt(deb)}</td>
+                            <td style="text-align: right; color: #991b1b;">${fmt(cred)}</td>
+                            <td style="text-align: right; font-weight: bold;">${fmtDrCr(closeBal)}</td>
+                        </tr>
+                    `);
+                }
             });
 
-            updateTotals(data.length, totalDebit, totalCredit, netBal);
+            if (isSixCols) {
+                tfoot.html(`
+                    <tr class="grid-total-row">
+                        <td colspan="2" style="text-align:right;">Total:</td>
+                        <td style="text-align:right;">${fmt(totOpening)}</td>
+                        <td style="text-align:right;">${fmt(totDebit)}</td>
+                        <td style="text-align:right;">${fmt(totCredit)}</td>
+                        <td style="text-align:right;">${fmt(totDebitEntry)}</td>
+                        <td style="text-align:right;">${fmt(totCreditEntry)}</td>
+                        <td style="text-align:right;">${fmtDrCr(totClosing)}</td>
+                    </tr>
+                `);
+            } else {
+                tfoot.html(`
+                    <tr class="grid-total-row">
+                        <td colspan="2" style="text-align:right;">Total:</td>
+                        <td style="text-align:right;">${fmt(totOpening)}</td>
+                        <td style="text-align:right;">${fmt(totDebit)}</td>
+                        <td style="text-align:right;">${fmt(totCredit)}</td>
+                        <td style="text-align:right;">${fmtDrCr(totClosing)}</td>
+                    </tr>
+                `);
+            }
         }
 
-        function updateTotals(recCount, deb, cred, net) {
-            $('#lblTotalRec').text(recCount);
-            $('#lblTotalDebit').text(formatCurrency(deb));
-            $('#lblTotalCredit').text(formatCurrency(cred));
-            $('#lblNetBalance').text(`${formatCurrency(Math.abs(net))} ${net >= 0 ? 'Dr' : 'Cr'}`);
-        }
-
-        function resetActivitySummaryFilters() {
-            setInitialDates();
-            $('#cmbAccountTitle').val('');
-            $('#cmbDateType').val('DocDate');
-            $('#cmbReportType').val('1');
-            $('#chkApprovedOnly').prop('checked', true);
+        function resetFilters() {
+            onDateTypeChanged();
+            $('#cmbDocTypes').val(null).trigger('change');
+            $('#rdFourCols').prop('checked', true);
+            $('#rdDocDate').prop('checked', true);
+            $('#chkIncludeUnposted').prop('checked', true);
             executeActivitySummaryReport();
         }
     </script>
