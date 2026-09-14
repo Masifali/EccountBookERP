@@ -96,7 +96,16 @@ public class AccountsReportService {
             sb.append("ISNULL(offCoa.AccountTitle, '') as OffSetTitle, ");
             sb.append("ISNULL(d.DebitAmount, 0) as Debit, ISNULL(d.CreditAmount, 0) as Credit, ");
             sb.append("(ISNULL(d.DebitAmount, 0) - ISNULL(d.CreditAmount, 0)) as Balance, ");
-            sb.append("d.Comments ");
+            sb.append("ISNULL(d.BookmarkRemarks, '') as BookmarkRemarks, ");
+            sb.append("ISNULL(d.Comments, '') as Comments, ");
+            sb.append("ISNULL(h.ChequeNo, '') as ChequeNo, ");
+            sb.append("h.ChequeDate, h.PayeeTitle, ");
+            sb.append("ISNULL(h.RefParty, '') as RefParty, ISNULL(h.JobLot, '') as JobLot, ");
+            sb.append("ISNULL(h.ManualBillNo, '') as MannualNo, ");
+            sb.append("ISNULL(d.QtyIn, 0) as QtyIn, ISNULL(d.QtyOut, 0) as QtyOut, ");
+            sb.append("ISNULL(d.ItemRate, 0) as ItemRate, ");
+            sb.append("ISNULL(h.VehicleNo, '') as VehicleNo, ");
+            sb.append("ISNULL(h.AttachmentCount, 0) as NoOfAttachments ");
             sb.append("FROM VoucherDetail d ");
             sb.append("JOIN VoucherHead h ON d.VoucherHeadId = h.ID ");
             sb.append("JOIN ChartofAccount coa ON d.AccountId = coa.ID ");
