@@ -331,8 +331,8 @@ public class AccountsModuleViewController {
 				model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
 				return "accounts/reports/wages_report_activities";
 			default:
-				model.addAttribute("moduleTitle", formatTitle(reportType));
-				return "accounts/reports/general_ledger";
+				throw new org.springframework.web.server.ResponseStatusException(
+						org.springframework.http.HttpStatus.NOT_FOUND, "Report route is not implemented: " + reportType);
 		}
 	}
 
