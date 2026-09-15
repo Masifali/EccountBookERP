@@ -46,4 +46,18 @@ public class COAAllocation {
 
 	@Column(name = "BranchId")
 	private Integer branchId;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public Integer getChartofAccountId() { return chartofAccountId; }
+	public void setChartofAccountId(Integer chartofAccountId) { this.chartofAccountId = chartofAccountId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public String getGlPageNo() { return glPageNo; }
+	public void setGlPageNo(String glPageNo) { this.glPageNo = glPageNo; }
+	public Boolean getIsActive() { return isActive; }
+	public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+	public Integer getBranchId() { return branchId; }
+	public void setBranchId(Integer branchId) { this.branchId = branchId; }
 }

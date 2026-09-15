@@ -221,4 +221,30 @@ public class SupplierCustomer {
 
 	@Column(name = "BusinessTypeId")
 	private Integer businessTypeId;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getCompanyName() { return companyName; }
+	public void setCompanyName(String companyName) { this.companyName = companyName; }
+	public String getSupCustCode() { return supCustCode; }
+	public void setSupCustCode(String supCustCode) { this.supCustCode = supCustCode; }
+	public Integer getCustomerTypeId() { return customerTypeId; }
+	public void setCustomerTypeId(Integer customerTypeId) { this.customerTypeId = customerTypeId; }
+	public Integer getCustomerGroupId() { return customerGroupId; }
+	public void setCustomerGroupId(Integer customerGroupId) { this.customerGroupId = customerGroupId; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public Integer getEntryUser() { return entryUser; }
+	public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
+	public Boolean getStatus() { return status; }
+	public void setStatus(Boolean status) { this.status = status; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+	public Integer getModifyUser() { return modifyUser; }
+	public void setModifyUser(Integer modifyUser) { this.modifyUser = modifyUser; }
 }

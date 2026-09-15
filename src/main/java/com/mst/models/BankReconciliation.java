@@ -106,4 +106,32 @@ public class BankReconciliation {
 
 	public BankReconciliation() {
 	}
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public Integer getVoucherHeadId() { return voucherHeadId; }
+	public void setVoucherHeadId(Integer voucherHeadId) { this.voucherHeadId = voucherHeadId; }
+	public Integer getBankAccountId() { return bankAccountId; }
+	public void setBankAccountId(Integer bankAccountId) { this.bankAccountId = bankAccountId; }
+	public Boolean getIsReconciled() { return isReconciled; }
+	public void setIsReconciled(Boolean isReconciled) { this.isReconciled = isReconciled; }
+	public String getRemarks() { return remarks; }
+	public void setRemarks(String remarks) { this.remarks = remarks; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public Integer getBranchesId() { return branchesId; }
+	public void setBranchesId(Integer branchesId) { this.branchesId = branchesId; }
+	public Integer getProjectsId() { return projectsId; }
+	public void setProjectsId(Integer projectsId) { this.projectsId = projectsId; }
+	public Integer getFinancialYearId() { return financialYearId; }
+	public void setFinancialYearId(Integer financialYearId) { this.financialYearId = financialYearId; }
+	public Integer getEntryUserId() { return entryUserId; }
+	public void setEntryUserId(Integer entryUserId) { this.entryUserId = entryUserId; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public LocalDateTime getReconcileDate() { return reconcileDate; }
+	public void setReconcileDate(LocalDateTime reconcileDate) { this.reconcileDate = reconcileDate; }
 }

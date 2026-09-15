@@ -57,4 +57,19 @@ public class UserRight {
 
 	@Column(name = "AppId")
 	private Integer appId;
+
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public UserAccount getUser() { return user; }
+	public void setUser(UserAccount user) { this.user = user; }
+	public Screen getScreen() { return screen; }
+	public void setScreen(Screen screen) { this.screen = screen; }
+	public RightType getRightType() { return rightType; }
+	public void setRightType(RightType rightType) { this.rightType = rightType; }
+	public Boolean getValue() { return value; }
+	public void setValue(Boolean value) { this.value = value; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public Integer getAppId() { return appId; }
+	public void setAppId(Integer appId) { this.appId = appId; }
 }

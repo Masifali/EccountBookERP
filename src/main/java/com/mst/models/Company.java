@@ -88,4 +88,20 @@ public class Company {
 
 	@Column(name = "ModifyDate")
 	private LocalDateTime modifyDate;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getCompCode() { return compCode; }
+	public void setCompCode(String compCode) { this.compCode = compCode; }
+	public String getCompName() { return compName; }
+	public void setCompName(String compName) { this.compName = compName; }
+	public String getCompType() { return compType; }
+	public void setCompType(String compType) { this.compType = compType; }
+	public String getCompAddress() { return compAddress; }
+	public void setCompAddress(String compAddress) { this.compAddress = compAddress; }
+	public String getCityName() { return cityName; }
+	public void setCityName(String cityName) { this.cityName = cityName; }
+	public Boolean getIsHeadOffice() { return isHeadOffice; }
+	public void setIsHeadOffice(Boolean isHeadOffice) { this.isHeadOffice = isHeadOffice; }
 }

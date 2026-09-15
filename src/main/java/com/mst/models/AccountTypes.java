@@ -68,4 +68,14 @@ public class AccountTypes {
 
 	@Column(name = "CompanyId")
 	private Integer companyId;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getAccountType() { return accountType; }
+	public void setAccountType(String accountType) { this.accountType = accountType; }
+	public String getAbbreviation() { return abbreviation; }
+	public void setAbbreviation(String abbreviation) { this.abbreviation = abbreviation; }
+	public String getDescription() { return description; }
+	public void setDescription(String description) { this.description = description; }
 }

@@ -68,4 +68,32 @@ public class ItemType {
 
 	@Column(name = "IsMother")
 	private Boolean isMother = false;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getTypeCode() { return typeCode; }
+	public void setTypeCode(String typeCode) { this.typeCode = typeCode; }
+	public String getTypeDescription() { return typeDescription; }
+	public void setTypeDescription(String typeDescription) { this.typeDescription = typeDescription; }
+	public Integer getType() { return type; }
+	public void setType(Integer type) { this.type = type; }
+	public Integer getParentCategoryId() { return parentCategoryId; }
+	public void setParentCategoryId(Integer parentCategoryId) { this.parentCategoryId = parentCategoryId; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public Integer getEntryUser() { return entryUser; }
+	public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public Boolean getPostState() { return postState; }
+	public void setPostState(Boolean postState) { this.postState = postState; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+	public Integer getModifyUser() { return modifyUser; }
+	public void setModifyUser(Integer modifyUser) { this.modifyUser = modifyUser; }
+	public Boolean getIsMother() { return isMother; }
+	public void setIsMother(Boolean isMother) { this.isMother = isMother; }
 }

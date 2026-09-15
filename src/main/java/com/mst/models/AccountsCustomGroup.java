@@ -62,4 +62,24 @@ public class AccountsCustomGroup {
 
 	@Column(name = "companyId")
 	private Integer companyId;
+
+	// Explicit Getters and Setters
+	public Integer getSortNo() { return sortNo; }
+	public void setSortNo(Integer sortNo) { this.sortNo = sortNo; }
+	public Integer getAcLookUpsId() { return acLookUpsId; }
+	public void setAcLookUpsId(Integer acLookUpsId) { this.acLookUpsId = acLookUpsId; }
+	public Integer getChartOfAccountId() { return chartOfAccountId; }
+	public void setChartOfAccountId(Integer chartOfAccountId) { this.chartOfAccountId = chartOfAccountId; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public Integer getEntryUserId() { return entryUserId; }
+	public void setEntryUserId(Integer entryUserId) { this.entryUserId = entryUserId; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+	public Integer getModifyUserId() { return modifyUserId; }
+	public void setModifyUserId(Integer modifyUserId) { this.modifyUserId = modifyUserId; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
 }

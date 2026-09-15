@@ -54,4 +54,16 @@ public class AcLookUp {
 
 	@Column(name = "CompanyId")
 	private Integer companyId;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getAcLookUpsDescription() { return acLookUpsDescription; }
+	public void setAcLookUpsDescription(String acLookUpsDescription) { this.acLookUpsDescription = acLookUpsDescription; }
+	public Integer getAcLookUpTypesId() { return acLookUpTypesId; }
+	public void setAcLookUpTypesId(Integer acLookUpTypesId) { this.acLookUpTypesId = acLookUpTypesId; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
 }

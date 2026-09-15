@@ -76,4 +76,36 @@ public class CheqBookHeader {
 
 	@OneToMany(mappedBy = "cheqBookHeaderId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<CheqBookDetail> details = new ArrayList<>();
+
+	// Explicit Getters and Setters
+	public Long getId() { return id; }
+	public void setId(Long id) { this.id = id; }
+	public Integer getDocNo() { return docNo; }
+	public void setDocNo(Integer docNo) { this.docNo = docNo; }
+	public LocalDate getDocDate() { return docDate; }
+	public void setDocDate(LocalDate docDate) { this.docDate = docDate; }
+	public Integer getBankId() { return bankId; }
+	public void setBankId(Integer bankId) { this.bankId = bankId; }
+	public Integer getChartOfAccountId() { return chartOfAccountId; }
+	public void setChartOfAccountId(Integer chartOfAccountId) { this.chartOfAccountId = chartOfAccountId; }
+	public String getCbSrFrom() { return cbSrFrom; }
+	public void setCbSrFrom(String cbSrFrom) { this.cbSrFrom = cbSrFrom; }
+	public String getCbSrTo() { return cbSrTo; }
+	public void setCbSrTo(String cbSrTo) { this.cbSrTo = cbSrTo; }
+	public String getBankName() { return bankName; }
+	public void setBankName(String bankName) { this.bankName = bankName; }
+	public String getAccountTitle() { return accountTitle; }
+	public void setAccountTitle(String accountTitle) { this.accountTitle = accountTitle; }
+	public Integer getEntryUser() { return entryUser; }
+	public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public String getCbPrefix() { return cbPrefix; }
+	public void setCbPrefix(String cbPrefix) { this.cbPrefix = cbPrefix; }
+	public String getRemarks() { return remarks; }
+	public void setRemarks(String remarks) { this.remarks = remarks; }
 }

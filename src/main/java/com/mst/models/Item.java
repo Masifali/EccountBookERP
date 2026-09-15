@@ -333,4 +333,17 @@ public class Item {
 	@JoinColumn(name = "RackId")
 	private Rack rack;
 
+	// Explicit Getters and Setters for relations
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getItemCode() { return itemCode; }
+	public void setItemCode(String itemCode) { this.itemCode = itemCode; }
+	public String getItemName() { return itemName; }
+	public void setItemName(String itemName) { this.itemName = itemName; }
+	public ItemCategory getItemCategory() { return itemCategory; }
+	public void setItemCategory(ItemCategory itemCategory) { this.itemCategory = itemCategory; }
+	public ItemType getItemType() { return itemType; }
+	public void setItemType(ItemType itemType) { this.itemType = itemType; }
+	public Rack getRack() { return rack; }
+	public void setRack(Rack rack) { this.rack = rack; }
 }

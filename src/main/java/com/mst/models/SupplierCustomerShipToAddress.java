@@ -67,4 +67,18 @@ public class SupplierCustomerShipToAddress {
 
     @Column(name = "CompanyId")
     private Integer companyId;
+
+    // Explicit Getters and Setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    public Integer getSupplierCustomerId() { return supplierCustomerId; }
+    public void setSupplierCustomerId(Integer supplierCustomerId) { this.supplierCustomerId = supplierCustomerId; }
+    public Integer getOrganizationId() { return organizationId; }
+    public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+    public Integer getCompanyId() { return companyId; }
+    public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+    public LocalDateTime getEntryDate() { return entryDate; }
+    public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+    public Integer getEntryUser() { return entryUser; }
+    public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
 }

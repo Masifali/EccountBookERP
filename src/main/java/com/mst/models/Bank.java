@@ -104,4 +104,30 @@ public class Bank {
 
 	@Column(name = "BankAccountTitle")
 	private String bankAccountTitle;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getBranchCode() { return branchCode; }
+	public void setBranchCode(String branchCode) { this.branchCode = branchCode; }
+	public String getBranchName() { return branchName; }
+	public void setBranchName(String branchName) { this.branchName = branchName; }
+	public Integer getChartOfAccountId() { return chartOfAccountId; }
+	public void setChartOfAccountId(Integer chartOfAccountId) { this.chartOfAccountId = chartOfAccountId; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public Integer getEntryUser() { return entryUser; }
+	public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+	public Integer getModifyUser() { return modifyUser; }
+	public void setModifyUser(Integer modifyUser) { this.modifyUser = modifyUser; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public String getBankAccountNo() { return bankAccountNo; }
+	public void setBankAccountNo(String bankAccountNo) { this.bankAccountNo = bankAccountNo; }
+	public String getBankAccountTitle() { return bankAccountTitle; }
+	public void setBankAccountTitle(String bankAccountTitle) { this.bankAccountTitle = bankAccountTitle; }
 }

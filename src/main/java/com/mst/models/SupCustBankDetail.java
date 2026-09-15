@@ -58,4 +58,18 @@ public class SupCustBankDetail {
 
     @Column(name = "ProjectsId")
     private Integer projectsId;
+
+    // Explicit Getters and Setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    public Integer getSupCustId() { return supCustId; }
+    public void setSupCustId(Integer supCustId) { this.supCustId = supCustId; }
+    public Integer getOrganizationId() { return organizationId; }
+    public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+    public Integer getCompanyId() { return companyId; }
+    public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+    public LocalDateTime getEntryDate() { return entryDate; }
+    public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+    public Integer getEntryUser() { return entryUser; }
+    public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
 }

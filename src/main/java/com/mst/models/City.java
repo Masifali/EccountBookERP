@@ -27,4 +27,16 @@ public class City {
 
 	@Column(name = "OrganizationId")
 	private Integer organizationId;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getCityName() { return cityName; }
+	public void setCityName(String cityName) { this.cityName = cityName; }
+	public Integer getTehsilId() { return tehsilId; }
+	public void setTehsilId(Integer tehsilId) { this.tehsilId = tehsilId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
 }

@@ -215,4 +215,55 @@ public class VoucherHead {
 	@Column(name = "FixedAssetEntryTypeId")
 	private Integer fixedAssetEntryTypeId;
 
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public DocumentType getDocumentType() { return documentType; }
+	public void setDocumentType(DocumentType documentType) { this.documentType = documentType; }
+	public Integer getDocumentTypeSrNo() { return documentTypeSrNo; }
+	public void setDocumentTypeSrNo(Integer documentTypeSrNo) { this.documentTypeSrNo = documentTypeSrNo; }
+	public Integer getVoucherCode() { return voucherCode; }
+	public void setVoucherCode(Integer voucherCode) { this.voucherCode = voucherCode; }
+	public LocalDate getVoucherDate() { return voucherDate; }
+	public void setVoucherDate(LocalDate voucherDate) { this.voucherDate = voucherDate; }
+	public String getRemarks() { return remarks; }
+	public void setRemarks(String remarks) { this.remarks = remarks; }
+	public Double getVoucherAmount() { return voucherAmount; }
+	public void setVoucherAmount(Double voucherAmount) { this.voucherAmount = voucherAmount; }
+	public Integer getFinancialYearId() { return financialYearId; }
+	public void setFinancialYearId(Integer financialYearId) { this.financialYearId = financialYearId; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public Integer getEntryUser() { return entryUser; }
+	public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+	public Integer getModifyUser() { return modifyUser; }
+	public void setModifyUser(Integer modifyUser) { this.modifyUser = modifyUser; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public Integer getBranchId() { return branchId; }
+	public void setBranchId(Integer branchId) { this.branchId = branchId; }
+	public String getManualBillNo() { return manualBillNo; }
+	public void setManualBillNo(String manualBillNo) { this.manualBillNo = manualBillNo; }
+	public Double getBillAmount() { return billAmount; }
+	public void setBillAmount(Double billAmount) { this.billAmount = billAmount; }
+	public Integer getProjectId() { return projectId; }
+	public void setProjectId(Integer projectId) { this.projectId = projectId; }
+	public Integer getMultiCurrencyId() { return multiCurrencyId; }
+	public void setMultiCurrencyId(Integer multiCurrencyId) { this.multiCurrencyId = multiCurrencyId; }
+	public Double getExchangeCurrencyRate() { return exchangeCurrencyRate; }
+	public void setExchangeCurrencyRate(Double exchangeCurrencyRate) { this.exchangeCurrencyRate = exchangeCurrencyRate; }
+	public Double getFcAmount() { return fcAmount; }
+	public void setFcAmount(Double fcAmount) { this.fcAmount = fcAmount; }
+	public String getRemarksOtherLingo() { return remarksOtherLingo; }
+	public void setRemarksOtherLingo(String remarksOtherLingo) { this.remarksOtherLingo = remarksOtherLingo; }
+	public Integer getRefDocNoId() { return refDocNoId; }
+	public void setRefDocNoId(Integer refDocNoId) { this.refDocNoId = refDocNoId; }
+	public Boolean getIncludeWHT() { return includeWHT; }
+	public void setIncludeWHT(Boolean includeWHT) { this.includeWHT = includeWHT; }
+	public LocalDateTime getChequeDate() { return chequeDate; }
+	public void setChequeDate(LocalDateTime chequeDate) { this.chequeDate = chequeDate; }
 }

@@ -45,4 +45,22 @@ public class CheqBookDetail {
 
 	@Transient
 	private String bankName;
+
+	// Explicit Getters and Setters
+	public Long getId() { return id; }
+	public void setId(Long id) { this.id = id; }
+	public Long getCheqBookHeaderId() { return cheqBookHeaderId; }
+	public void setCheqBookHeaderId(Long cheqBookHeaderId) { this.cheqBookHeaderId = cheqBookHeaderId; }
+	public String getCheqNo() { return cheqNo; }
+	public void setCheqNo(String cheqNo) { this.cheqNo = cheqNo; }
+	public String getCheqStatus() { return cheqStatus; }
+	public void setCheqStatus(String cheqStatus) { this.cheqStatus = cheqStatus; }
+	public String getOtherRemarks() { return otherRemarks; }
+	public void setOtherRemarks(String otherRemarks) { this.otherRemarks = otherRemarks; }
+	public Boolean getCheqCancelStatus() { return cheqCancelStatus; }
+	public void setCheqCancelStatus(Boolean cheqCancelStatus) { this.cheqCancelStatus = cheqCancelStatus; }
+	public LocalDateTime getChequeStatusDate() { return chequeStatusDate; }
+	public void setChequeStatusDate(LocalDateTime chequeStatusDate) { this.chequeStatusDate = chequeStatusDate; }
+	public Integer getStatusChangeUserId() { return statusChangeUserId; }
+	public void setStatusChangeUserId(Integer statusChangeUserId) { this.statusChangeUserId = statusChangeUserId; }
 }

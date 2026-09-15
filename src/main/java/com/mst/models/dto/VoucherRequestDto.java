@@ -155,5 +155,113 @@ public class VoucherRequestDto {
 		// here would silently corrupt whichever value was set second. When present, takes priority
 		// over the header-level dto.againstAccountId fallback in saveVoucher()'s detail loop.
 		private Integer lineAgainstAccountId;
+
+		public Integer getId() { return id; }
+		public void setId(Integer id) { this.id = id; }
+		public Integer getAccountId() { return accountId; }
+		public void setAccountId(Integer accountId) { this.accountId = accountId; }
+		public String getComments() { return comments; }
+		public void setComments(String comments) { this.comments = comments; }
+		public Double getDebitAmount() { return debitAmount; }
+		public void setDebitAmount(Double debitAmount) { this.debitAmount = debitAmount; }
+		public Double getCreditAmount() { return creditAmount; }
+		public void setCreditAmount(Double creditAmount) { this.creditAmount = creditAmount; }
+		public Integer getJobLotId() { return jobLotId; }
+		public void setJobLotId(Integer jobLotId) { this.jobLotId = jobLotId; }
+		public String getRefInvoiceNo() { return refInvoiceNo; }
+		public void setRefInvoiceNo(String refInvoiceNo) { this.refInvoiceNo = refInvoiceNo; }
+		public Integer getSupplierCustomerId() { return supplierCustomerId; }
+		public void setSupplierCustomerId(Integer supplierCustomerId) { this.supplierCustomerId = supplierCustomerId; }
+		public Integer getCostCenterId() { return costCenterId; }
+		public void setCostCenterId(Integer costCenterId) { this.costCenterId = costCenterId; }
+		public String getChequeNoDetail() { return chequeNoDetail; }
+		public void setChequeNoDetail(String chequeNoDetail) { this.chequeNoDetail = chequeNoDetail; }
+		public LocalDate getChequeDateDetail() { return chequeDateDetail; }
+		public void setChequeDateDetail(LocalDate chequeDateDetail) { this.chequeDateDetail = chequeDateDetail; }
+		public String getPaymentType() { return paymentType; }
+		public void setPaymentType(String paymentType) { this.paymentType = paymentType; }
+		public String getCommentsOtherLingo() { return commentsOtherLingo; }
+		public void setCommentsOtherLingo(String commentsOtherLingo) { this.commentsOtherLingo = commentsOtherLingo; }
+		public Integer getPaymentTypeId() { return paymentTypeId; }
+		public void setPaymentTypeId(Integer paymentTypeId) { this.paymentTypeId = paymentTypeId; }
+		public Integer getInstrumentTypeId() { return instrumentTypeId; }
+		public void setInstrumentTypeId(Integer instrumentTypeId) { this.instrumentTypeId = instrumentTypeId; }
+		public Integer getChequeTypeId() { return chequeTypeId; }
+		public void setChequeTypeId(Integer chequeTypeId) { this.chequeTypeId = chequeTypeId; }
+		public String getPayeeTitle() { return payeeTitle; }
+		public void setPayeeTitle(String payeeTitle) { this.payeeTitle = payeeTitle; }
+		public Integer getReferenceAccountId() { return referenceAccountId; }
+		public void setReferenceAccountId(Integer referenceAccountId) { this.referenceAccountId = referenceAccountId; }
+		public Integer getOrderNo() { return orderNo; }
+		public void setOrderNo(Integer orderNo) { this.orderNo = orderNo; }
+		public Integer getDocumentTypeIdRef() { return documentTypeIdRef; }
+		public void setDocumentTypeIdRef(Integer documentTypeIdRef) { this.documentTypeIdRef = documentTypeIdRef; }
+		public Double getQtyIn() { return qtyIn; }
+		public void setQtyIn(Double qtyIn) { this.qtyIn = qtyIn; }
+		public Double getQtyOut() { return qtyOut; }
+		public void setQtyOut(Double qtyOut) { this.qtyOut = qtyOut; }
+		public Double getItemAmount() { return itemAmount; }
+		public void setItemAmount(Double itemAmount) { this.itemAmount = itemAmount; }
+		public Double getWhtHolding() { return whtHolding; }
+		public void setWhtHolding(Double whtHolding) { this.whtHolding = whtHolding; }
+		public Integer getLineAgainstAccountId() { return lineAgainstAccountId; }
+		public void setLineAgainstAccountId(Integer lineAgainstAccountId) { this.lineAgainstAccountId = lineAgainstAccountId; }
 	}
+
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public Integer getDocumentTypeId() { return documentTypeId; }
+	public void setDocumentTypeId(Integer documentTypeId) { this.documentTypeId = documentTypeId; }
+	public Integer getVoucherCode() { return voucherCode; }
+	public void setVoucherCode(Integer voucherCode) { this.voucherCode = voucherCode; }
+	public LocalDate getVoucherDate() { return voucherDate; }
+	public void setVoucherDate(LocalDate voucherDate) { this.voucherDate = voucherDate; }
+	public String getRemarks() { return remarks; }
+	public void setRemarks(String remarks) { this.remarks = remarks; }
+	public Double getVoucherAmount() { return voucherAmount; }
+	public void setVoucherAmount(Double voucherAmount) { this.voucherAmount = voucherAmount; }
+	public List<VoucherDetailRowDto> getDetails() { return details; }
+	public void setDetails(List<VoucherDetailRowDto> details) { this.details = details; }
+	public Integer getRefAccountId() { return refAccountId; }
+	public void setRefAccountId(Integer refAccountId) { this.refAccountId = refAccountId; }
+	public Integer getAgainstAccountId() { return againstAccountId; }
+	public void setAgainstAccountId(Integer againstAccountId) { this.againstAccountId = againstAccountId; }
+	public String getPayTitle() { return payTitle; }
+	public void setPayTitle(String payTitle) { this.payTitle = payTitle; }
+	public String getManualBillNo() { return manualBillNo; }
+	public void setManualBillNo(String manualBillNo) { this.manualBillNo = manualBillNo; }
+	public Double getBillAmount() { return billAmount; }
+	public void setBillAmount(Double billAmount) { this.billAmount = billAmount; }
+	public Integer getProjectId() { return projectId; }
+	public void setProjectId(Integer projectId) { this.projectId = projectId; }
+	public Integer getMultiCurrencyId() { return multiCurrencyId; }
+	public void setMultiCurrencyId(Integer multiCurrencyId) { this.multiCurrencyId = multiCurrencyId; }
+	public Double getExchangeCurrencyRate() { return exchangeCurrencyRate; }
+	public void setExchangeCurrencyRate(Double exchangeCurrencyRate) { this.exchangeCurrencyRate = exchangeCurrencyRate; }
+	public Double getFcAmount() { return fcAmount; }
+	public void setFcAmount(Double fcAmount) { this.fcAmount = fcAmount; }
+	public String getRemarksOtherLingo() { return remarksOtherLingo; }
+	public void setRemarksOtherLingo(String remarksOtherLingo) { this.remarksOtherLingo = remarksOtherLingo; }
+	public Integer getRefDocNoId() { return refDocNoId; }
+	public void setRefDocNoId(Integer refDocNoId) { this.refDocNoId = refDocNoId; }
+	public Boolean getIncludeWht() { return includeWht; }
+	public void setIncludeWht(Boolean includeWht) { this.includeWht = includeWht; }
+	public Integer getBranchId() { return branchId; }
+	public void setBranchId(Integer branchId) { this.branchId = branchId; }
+	public LocalDate getChequeDate() { return chequeDate; }
+	public void setChequeDate(LocalDate chequeDate) { this.chequeDate = chequeDate; }
+	public Boolean getMirrorCreditToRefAccount() { return mirrorCreditToRefAccount; }
+	public void setMirrorCreditToRefAccount(Boolean mirrorCreditToRefAccount) { this.mirrorCreditToRefAccount = mirrorCreditToRefAccount; }
+	public Integer getLocationTypeId() { return locationTypeId; }
+	public void setLocationTypeId(Integer locationTypeId) { this.locationTypeId = locationTypeId; }
+	public Double getTaxAmount() { return taxAmount; }
+	public void setTaxAmount(Double taxAmount) { this.taxAmount = taxAmount; }
+	public Double getTaxPercent() { return taxPercent; }
+	public void setTaxPercent(Double taxPercent) { this.taxPercent = taxPercent; }
+	public String getTaxTypeName() { return taxTypeName; }
+	public void setTaxTypeName(String taxTypeName) { this.taxTypeName = taxTypeName; }
+	public Integer getTaxTypeId() { return taxTypeId; }
+	public void setTaxTypeId(Integer taxTypeId) { this.taxTypeId = taxTypeId; }
+	public Boolean getPostSingleWhtDebitRow() { return postSingleWhtDebitRow; }
+	public void setPostSingleWhtDebitRow(Boolean postSingleWhtDebitRow) { this.postSingleWhtDebitRow = postSingleWhtDebitRow; }
 }

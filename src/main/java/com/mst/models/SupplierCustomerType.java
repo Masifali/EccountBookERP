@@ -40,4 +40,10 @@ public class SupplierCustomerType {
 
 	@Column(name = "CompanyId", nullable = false)
 	private Integer companyId;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getSupplierCustomerType() { return supplierCustomerType; }
+	public void setSupplierCustomerType(String supplierCustomerType) { this.supplierCustomerType = supplierCustomerType; }
 }

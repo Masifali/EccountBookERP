@@ -60,4 +60,14 @@ public class CustomerGroup {
 
 	@Column(name = "CompanyId")
 	private Integer companyId;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getCode() { return code; }
+	public void setCode(String code) { this.code = code; }
+	public String getDescription() { return description; }
+	public void setDescription(String description) { this.description = description; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
 }

@@ -104,4 +104,25 @@ public class Screen {
 	 */
 	@Column(name = "RealModuleId")
 	private Integer realModuleId;
+
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getScreenName() { return screenName; }
+	public void setScreenName(String screenName) { this.screenName = screenName; }
+	public String getScreenAlias() { return screenAlias; }
+	public void setScreenAlias(String screenAlias) { this.screenAlias = screenAlias; }
+	public String getModuleDescription() { return moduleDescription; }
+	public void setModuleDescription(String moduleDescription) { this.moduleDescription = moduleDescription; }
+	public String getTargetUrl() { return targetUrl; }
+	public void setTargetUrl(String targetUrl) { this.targetUrl = targetUrl; }
+	public String getMenuControllName() { return menuControllName; }
+	public void setMenuControllName(String menuControllName) { this.menuControllName = menuControllName; }
+	public String getAuthorityCode() { return authorityCode; }
+	public void setAuthorityCode(String authorityCode) { this.authorityCode = authorityCode; }
+	public String getSectionAuthorityCode() { return sectionAuthorityCode; }
+	public void setSectionAuthorityCode(String sectionAuthorityCode) { this.sectionAuthorityCode = sectionAuthorityCode; }
+	public Integer getRealScreenDefinitionId() { return realScreenDefinitionId; }
+	public void setRealScreenDefinitionId(Integer realScreenDefinitionId) { this.realScreenDefinitionId = realScreenDefinitionId; }
+	public Integer getRealModuleId() { return realModuleId; }
+	public void setRealModuleId(Integer realModuleId) { this.realModuleId = realModuleId; }
 }

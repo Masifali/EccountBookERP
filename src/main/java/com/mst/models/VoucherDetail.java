@@ -319,4 +319,69 @@ public class VoucherDetail {
 	@Column(name = "RefDocNoDetailId")
 	private Integer refDocNoDetailId;
 
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public VoucherHead getVoucherHead() { return voucherHead; }
+	public void setVoucherHead(VoucherHead voucherHead) { this.voucherHead = voucherHead; }
+	public ChartofAccount getAccount() { return account; }
+	public void setAccount(ChartofAccount account) { this.account = account; }
+	public Integer getAgainstAccountId() { return againstAccountId; }
+	public void setAgainstAccountId(Integer againstAccountId) { this.againstAccountId = againstAccountId; }
+	public String getComments() { return comments; }
+	public void setComments(String comments) { this.comments = comments; }
+	public Double getDebitAmount() { return debitAmount; }
+	public void setDebitAmount(Double debitAmount) { this.debitAmount = debitAmount; }
+	public Double getCreditAmount() { return creditAmount; }
+	public void setCreditAmount(Double creditAmount) { this.creditAmount = creditAmount; }
+	public Integer getJobLotId() { return jobLotId; }
+	public void setJobLotId(Integer jobLotId) { this.jobLotId = jobLotId; }
+	public Integer getCostCenterId() { return costCenterId; }
+	public void setCostCenterId(Integer costCenterId) { this.costCenterId = costCenterId; }
+	public String getCheqNoDetail() { return cheqNoDetail; }
+	public void setCheqNoDetail(String cheqNoDetail) { this.cheqNoDetail = cheqNoDetail; }
+	public LocalDate getDCheqDate() { return dCheqDate; }
+	public void setDCheqDate(LocalDate dCheqDate) { this.dCheqDate = dCheqDate; }
+	public String getRefInvoiceNo() { return refInvoiceNo; }
+	public void setRefInvoiceNo(String refInvoiceNo) { this.refInvoiceNo = refInvoiceNo; }
+	public Integer getSupplierCustomerId() { return supplierCustomerId; }
+	public void setSupplierCustomerId(Integer supplierCustomerId) { this.supplierCustomerId = supplierCustomerId; }
+	public String getPaymentType() { return paymentType; }
+	public void setPaymentType(String paymentType) { this.paymentType = paymentType; }
+	public String getCommentsOtherLingo() { return commentsOtherLingo; }
+	public void setCommentsOtherLingo(String commentsOtherLingo) { this.commentsOtherLingo = commentsOtherLingo; }
+	public Integer getLocationTypeId() { return locationTypeId; }
+	public void setLocationTypeId(Integer locationTypeId) { this.locationTypeId = locationTypeId; }
+	public Integer getOrderNo() { return orderNo; }
+	public void setOrderNo(Integer orderNo) { this.orderNo = orderNo; }
+	public Integer getDocumentTypeIdRef() { return documentTypeIdRef; }
+	public void setDocumentTypeIdRef(Integer documentTypeIdRef) { this.documentTypeIdRef = documentTypeIdRef; }
+	public Double getQtyIn() { return qtyIn; }
+	public void setQtyIn(Double qtyIn) { this.qtyIn = qtyIn; }
+	public Double getQtyOut() { return qtyOut; }
+	public void setQtyOut(Double qtyOut) { this.qtyOut = qtyOut; }
+	public Double getItemAmount() { return itemAmount; }
+	public void setItemAmount(Double itemAmount) { this.itemAmount = itemAmount; }
+	public Double getWhtHolding() { return whtHolding; }
+	public void setWhtHolding(Double whtHolding) { this.whtHolding = whtHolding; }
+	public Integer getTaxTypeId() { return taxTypeId; }
+	public void setTaxTypeId(Integer taxTypeId) { this.taxTypeId = taxTypeId; }
+	public Double getTaxPrcnt() { return taxPrcnt; }
+	public void setTaxPrcnt(Double taxPrcnt) { this.taxPrcnt = taxPrcnt; }
+	public Double getTaxesTotalAmount() { return taxesTotalAmount; }
+	public void setTaxesTotalAmount(Double taxesTotalAmount) { this.taxesTotalAmount = taxesTotalAmount; }
+	public String getIsTaxable() { return isTaxable; }
+	public void setIsTaxable(String isTaxable) { this.isTaxable = isTaxable; }
+	public Integer getPaymentTypeId() { return paymentTypeId; }
+	public void setPaymentTypeId(Integer paymentTypeId) { this.paymentTypeId = paymentTypeId; }
+	public Integer getInstrumentTypeId() { return instrumentTypeId; }
+	public void setInstrumentTypeId(Integer instrumentTypeId) { this.instrumentTypeId = instrumentTypeId; }
+	public Integer getChequeTypeId() { return chequeTypeId; }
+	public void setChequeTypeId(Integer chequeTypeId) { this.chequeTypeId = chequeTypeId; }
+	public String getPayeeTitle() { return payeeTitle; }
+	public void setPayeeTitle(String payeeTitle) { this.payeeTitle = payeeTitle; }
+	public Integer getReferenceAccountId() { return referenceAccountId; }
+	public void setReferenceAccountId(Integer referenceAccountId) { this.referenceAccountId = referenceAccountId; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
 }

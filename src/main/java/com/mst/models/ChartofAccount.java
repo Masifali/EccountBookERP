@@ -161,4 +161,77 @@ public class ChartofAccount {
 
     @Column(name = "PostUser")
     private Integer postUser;
+
+    // Explicit Getters and Setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    public String getAccountCode() { return accountCode; }
+    public void setAccountCode(String accountCode) { this.accountCode = accountCode; }
+    public String getParentAccountCode() { return parentAccountCode; }
+    public void setParentAccountCode(String parentAccountCode) { this.parentAccountCode = parentAccountCode; }
+    public Integer getParentCodeId() { return parentCodeId; }
+    public void setParentCodeId(Integer parentCodeId) { this.parentCodeId = parentCodeId; }
+    public String getAccountGroup() { return accountGroup; }
+    public void setAccountGroup(String accountGroup) { this.accountGroup = accountGroup; }
+    public String getAccountTitle() { return accountTitle; }
+    public void setAccountTitle(String accountTitle) { this.accountTitle = accountTitle; }
+    public String getAccountTitleOtherLingo() { return accountTitleOtherLingo; }
+    public void setAccountTitleOtherLingo(String accountTitleOtherLingo) { this.accountTitleOtherLingo = accountTitleOtherLingo; }
+    public Integer getAccountLevel() { return accountLevel; }
+    public void setAccountLevel(Integer accountLevel) { this.accountLevel = accountLevel; }
+    public Integer getAccountClass() { return accountClass; }
+    public void setAccountClass(Integer accountClass) { this.accountClass = accountClass; }
+    public Integer getAccountTypeId() { return accountTypeId; }
+    public void setAccountTypeId(Integer accountTypeId) { this.accountTypeId = accountTypeId; }
+    public Integer getBsNoteId() { return bsNoteId; }
+    public void setBsNoteId(Integer bsNoteId) { this.bsNoteId = bsNoteId; }
+    public Integer getPlNoteId() { return plNoteId; }
+    public void setPlNoteId(Integer plNoteId) { this.plNoteId = plNoteId; }
+    public Integer getCompanyId() { return companyId; }
+    public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+    public Integer getOrganizationId() { return organizationId; }
+    public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+    public Integer getFinancialYearId() { return financialYearId; }
+    public void setFinancialYearId(Integer financialYearId) { this.financialYearId = financialYearId; }
+    public Integer getBranchId() { return branchId; }
+    public void setBranchId(Integer branchId) { this.branchId = branchId; }
+    public Integer getCustomerGroupId() { return customerGroupId; }
+    public void setCustomerGroupId(Integer customerGroupId) { this.customerGroupId = customerGroupId; }
+    public Integer getCityId() { return cityId; }
+    public void setCityId(Integer cityId) { this.cityId = cityId; }
+    public Integer getCurrencyId() { return currencyId; }
+    public void setCurrencyId(Integer currencyId) { this.currencyId = currencyId; }
+    public String getOtherErpCode() { return otherErpCode; }
+    public void setOtherErpCode(String otherErpCode) { this.otherErpCode = otherErpCode; }
+    public String getContactNo() { return contactNo; }
+    public void setContactNo(String contactNo) { this.contactNo = contactNo; }
+    public String getQrCode() { return qrCode; }
+    public void setQrCode(String qrCode) { this.qrCode = qrCode; }
+    public Integer getSubSidiaryAcStatus() { return subSidiaryAcStatus; }
+    public void setSubSidiaryAcStatus(Integer subSidiaryAcStatus) { this.subSidiaryAcStatus = subSidiaryAcStatus; }
+    public Integer getLvl01Id() { return lvl01Id; }
+    public void setLvl01Id(Integer lvl01Id) { this.lvl01Id = lvl01Id; }
+    public Integer getLvl02Id() { return lvl02Id; }
+    public void setLvl02Id(Integer lvl02Id) { this.lvl02Id = lvl02Id; }
+    public Integer getLvl03Id() { return lvl03Id; }
+    public void setLvl03Id(Integer lvl03Id) { this.lvl03Id = lvl03Id; }
+    public Integer getLvl04Id() { return lvl04Id; }
+    public void setLvl04Id(Integer lvl04Id) { this.lvl04Id = lvl04Id; }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public Boolean getPostState() { return postState; }
+    public void setPostState(Boolean postState) { this.postState = postState; }
+    public LocalDateTime getEntryDate() { return entryDate; }
+    public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+    public LocalDateTime getModifyDate() { return modifyDate; }
+    public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+    public LocalDateTime getPostDate() { return postDate; }
+    public void setPostDate(LocalDateTime postDate) { this.postDate = postDate; }
+    public Integer getEntryUser() { return entryUser; }
+    public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
+    public Integer getModifyUser() { return modifyUser; }
+    public void setModifyUser(Integer modifyUser) { this.modifyUser = modifyUser; }
+    public Integer getPostUser() { return postUser; }
+    public void setPostUser(Integer postUser) { this.postUser = postUser; }
 }
+

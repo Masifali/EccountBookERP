@@ -64,4 +64,18 @@ public class ConfigrationsAllocation {
 
 	/** NOT a column on this table - projected in from dbo.ConfigrationsDefinition.ConfigModuleDescription. */
 	private String configModuleDescription;
+
+	// Explicit Getters and Setters
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public Integer getConfigrationsDefinitionId() { return configrationsDefinitionId; }
+	public void setConfigrationsDefinitionId(Integer configrationsDefinitionId) { this.configrationsDefinitionId = configrationsDefinitionId; }
+	public String getConfigDescription() { return configDescription; }
+	public void setConfigDescription(String configDescription) { this.configDescription = configDescription; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public String getConfigModuleDescription() { return configModuleDescription; }
+	public void setConfigModuleDescription(String configModuleDescription) { this.configModuleDescription = configModuleDescription; }
 }
