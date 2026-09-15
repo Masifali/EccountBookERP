@@ -262,7 +262,7 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Payables Aging New");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
 				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
-				return "accounts/reports/payables_aging_new";
+				return "accounts/reports/payables_aging";
 			case "receivables-aging-new":
 				model.addAttribute("moduleTitle", "Receivables Aging New");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
