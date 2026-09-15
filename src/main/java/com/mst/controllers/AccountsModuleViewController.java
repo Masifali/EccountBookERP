@@ -163,6 +163,10 @@ public class AccountsModuleViewController {
 		String normalized = reportType.toLowerCase().trim();
 
 		switch (normalized) {
+			case "all-payables":
+			case "all_payables":
+				model.addAttribute("moduleTitle", "Payables & Receivables Reports");
+				return "accounts/reports/all_payables";
 			case "activity-summary":
 			case "accounts-activity-summary":
 				model.addAttribute("moduleTitle", "Accounts Activity Summary Report");
@@ -227,10 +231,11 @@ public class AccountsModuleViewController {
 				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/receivables_aging";
 			case "payables-report":
-				model.addAttribute("moduleTitle", "Payables Report");
+			case "payables-report-new":
+				model.addAttribute("moduleTitle", "Payables Report Accounts Classification Wise");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
 				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
-				return "accounts/reports/payables_report";
+				return "accounts/reports/payables-report";
 			case "receivables-report":
 				model.addAttribute("moduleTitle", "Receivables Report");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
@@ -279,9 +284,10 @@ public class AccountsModuleViewController {
 				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/receivables_by_due_dates";
 			case "payables-payment-schedule":
+			case "payables-payment-schedule-new":
 				model.addAttribute("moduleTitle", "Payables And Payment Schedule");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
-				return "accounts/reports/payables_payment_schedule";
+				return "accounts/reports/payables-payment-schedule";
 			case "receivables-receipt-schedule":
 				model.addAttribute("moduleTitle", "Receivables And Receipt Schedule");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
