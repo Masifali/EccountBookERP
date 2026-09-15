@@ -1316,6 +1316,19 @@ public class AccountsReportService {
         }
 
         if (list != null && !list.isEmpty()) {
+            boolean isPivot = false;
+            Map<String, Object> sample = list.get(0);
+            for (String key : sample.keySet()) {
+                if (key.equalsIgnoreCase("lvl01_Code") || key.equalsIgnoreCase("lvl1_Code") || key.equalsIgnoreCase("lvl01_Title") || key.equalsIgnoreCase("lvl1_Title")) {
+                    isPivot = true;
+                    break;
+                }
+            }
+
+            if (isPivot) {
+                return processPivotHierarchyList(list);
+            }
+
             for (Map<String, Object> map : list) {
                 Object title = null, code = null, lvl = null, grp = null;
                 Object op = null, opDr = null, opCr = null, deb = null, cred = null, cls = null, clsDr = null, clsCr = null;
@@ -1366,6 +1379,101 @@ public class AccountsReportService {
             }
         }
         return list != null ? list : Collections.emptyList();
+    }
+
+    private List<Map<String, Object>> processPivotHierarchyList(List<Map<String, Object>> rawList) {
+        if (rawList == null || rawList.isEmpty()) return Collections.emptyList();
+        
+        Map<String, Map<String, Object>> nodes = new LinkedHashMap<>();
+
+        for (Map<String, Object> raw : rawList) {
+            double opening = doubleOrZero(raw.get("Opening") != null ? raw.get("Opening") : raw.get("opening"));
+            double openingDr = doubleOrZero(raw.get("OpeningDr") != null ? raw.get("OpeningDr") : raw.get("openingDr"));
+            double openingCr = doubleOrZero(raw.get("OpeningCr") != null ? raw.get("OpeningCr") : raw.get("openingCr"));
+            double debit = doubleOrZero(raw.get("Debit") != null ? raw.get("Debit") : raw.get("debit"));
+            double credit = doubleOrZero(raw.get("Credit") != null ? raw.get("Credit") : raw.get("credit"));
+            double closing = doubleOrZero(raw.get("Closing") != null ? raw.get("Closing") : raw.get("closing"));
+            double closingDr = doubleOrZero(raw.get("ClosingDr") != null ? raw.get("ClosingDr") : raw.get("closingDr"));
+            double closingCr = doubleOrZero(raw.get("ClosingCr") != null ? raw.get("ClosingCr") : raw.get("closingCr"));
+
+            for (int i = 1; i <= 5; i++) {
+                String codeKey1 = String.format("lvl%02d_Code", i);
+                String titleKey1 = String.format("lvl%02d_Title", i);
+                String codeKey2 = String.format("lvl%d_Code", i);
+                String titleKey2 = String.format("lvl%d_Title", i);
+
+                Object codeObj = null;
+                Object titleObj = null;
+
+                for (Map.Entry<String, Object> e : raw.entrySet()) {
+                    String k = e.getKey();
+                    if (k.equalsIgnoreCase(codeKey1) || k.equalsIgnoreCase(codeKey2)) codeObj = e.getValue();
+                    if (k.equalsIgnoreCase(titleKey1) || k.equalsIgnoreCase(titleKey2)) titleObj = e.getValue();
+                }
+
+                if (codeObj != null && !codeObj.toString().trim().isEmpty() && !codeObj.toString().trim().equals("0")) {
+                    String code = codeObj.toString().trim();
+                    String title = titleObj != null ? titleObj.toString().trim() : code;
+
+                    Map<String, Object> node = nodes.get(code);
+                    if (node == null) {
+                        node = new LinkedHashMap<>();
+                        node.put("AccountCode", code);
+                        node.put("accountCode", code);
+                        node.put("AccountTitle", title);
+                        node.put("accountTitle", title);
+                        node.put("AcLevel", i);
+                        node.put("acLevel", i);
+                        node.put("IsGroupDetail", i >= 4 ? "Detail" : "Group");
+                        node.put("isGroupDetail", i >= 4 ? "Detail" : "Group");
+                        node.put("Opening", 0.0); node.put("opening", 0.0);
+                        node.put("OpeningDr", 0.0); node.put("openingDr", 0.0);
+                        node.put("OpeningCr", 0.0); node.put("openingCr", 0.0);
+                        node.put("Debit", 0.0); node.put("debit", 0.0);
+                        node.put("Credit", 0.0); node.put("credit", 0.0);
+                        node.put("Closing", 0.0); node.put("closing", 0.0);
+                        node.put("ClosingDr", 0.0); node.put("closingDr", 0.0);
+                        node.put("ClosingCr", 0.0); node.put("closingCr", 0.0);
+                        nodes.put(code, node);
+                    }
+
+                    node.put("Opening", ((Number) node.get("Opening")).doubleValue() + opening);
+                    node.put("OpeningDr", ((Number) node.get("OpeningDr")).doubleValue() + openingDr);
+                    node.put("OpeningCr", ((Number) node.get("OpeningCr")).doubleValue() + openingCr);
+                    node.put("Debit", ((Number) node.get("Debit")).doubleValue() + debit);
+                    node.put("Credit", ((Number) node.get("Credit")).doubleValue() + credit);
+                    node.put("Closing", ((Number) node.get("Closing")).doubleValue() + closing);
+                    node.put("ClosingDr", ((Number) node.get("ClosingDr")).doubleValue() + closingDr);
+                    node.put("ClosingCr", ((Number) node.get("ClosingCr")).doubleValue() + closingCr);
+
+                    node.put("opening", node.get("Opening"));
+                    node.put("openingDr", node.get("OpeningDr"));
+                    node.put("openingCr", node.get("OpeningCr"));
+                    node.put("debit", node.get("Debit"));
+                    node.put("credit", node.get("Credit"));
+                    node.put("closing", node.get("Closing"));
+                    node.put("closingDr", node.get("ClosingDr"));
+                    node.put("closingCr", node.get("ClosingCr"));
+                }
+            }
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>(nodes.values());
+        result.sort((a, b) -> {
+            String ca = a.get("AccountCode") != null ? a.get("AccountCode").toString() : "";
+            String cb = b.get("AccountCode") != null ? b.get("AccountCode").toString() : "";
+            return ca.compareTo(cb);
+        });
+        return result;
+    }
+
+    private static double doubleOrZero(Object obj) {
+        if (obj == null) return 0.0;
+        try {
+            return Double.parseDouble(obj.toString().trim());
+        } catch (Exception e) {
+            return 0.0;
+        }
     }
 
     private List<Map<String, Object>> getTrialBalanceAllLevelsFallback() {

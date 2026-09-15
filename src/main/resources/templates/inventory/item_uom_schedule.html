@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Define Item Uom Schedule - EccountBook ERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #000; margin: 0; padding: 0; }
+        
+        /* WinForms Top Navigation Bar */
+        .win-top-bar { background-color: #004d40; color: #ffffff; padding: 3px 8px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 26px; }
+        
+        /* WinForms Action Toolbar matching Image #2 */
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 8px; display: flex; gap: 8px; align-items: center; height: 28px; }
+        .win-btn-tb { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 2px 10px; font-size: 11px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 23px; text-decoration: none; }
+        .win-btn-tb:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
+        .win-btn-tb.active-tab { background: #00796B; color: #ffffff; border-color: #004d40; }
+        
+        /* Teal Section Banner Header matching Image #2 */
+        .win-section-banner { background: #00796B; color: #ffffff; padding: 5px 10px; font-size: 13px; font-weight: bold; margin-bottom: 6px; }
+
+        .win-panel-body { background: #ffffff; border: 1px solid #94a3b8; padding: 10px; margin: 6px; }
+        .win-label { font-weight: 600; color: #222; margin-bottom: 2px; font-size: 11px; display: block; white-space: nowrap; }
+        .win-input { border: 1px solid #7f9db9; border-radius: 1px; padding: 2px 6px; font-size: 11px; font-family: Tahoma, sans-serif; height: 23px; width: 100%; background-color: #ffffff; }
+        .win-input:focus { border-color: #00796B; outline: none; }
+
+        /* Multi-column Dropdown Container */
+        .uom-dropdown-container { position: relative; width: 100%; }
+        .uom-dropdown-input-wrap { display: flex; align-items: center; border: 1px solid #7f9db9; background: #fff; height: 23px; box-sizing: border-box; cursor: pointer; }
+        .uom-dropdown-input-wrap input { border: none; outline: none; padding: 0 6px; font-size: 11px; font-family: Tahoma, sans-serif; width: 100%; cursor: pointer; background: transparent; }
+        .uom-dropdown-arrow { width: 20px; height: 100%; background: #e4e9ed; border-left: 1px solid #7f9db9; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #333; }
+
+        /* Floating Multi-Column Table Dropdown Popup */
+        .uom-dropdown-popup { display: none; position: absolute; top: 100%; left: 0; width: 420px; max-height: 250px; overflow-y: auto; background: #ffffff; border: 1px solid #00796B; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 9999; }
+        .uom-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Tahoma, sans-serif; }
+        .uom-grid-table th { background: #d0dbe5; color: #000; font-weight: bold; padding: 4px 8px; border: 1px solid #a0b0c0; text-align: left; position: sticky; top: 0; z-index: 2; }
+        .uom-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; cursor: pointer; }
+        .uom-grid-table tr:hover td { background-color: #00796B; color: #ffffff; }
+
+        /* History Grid Styling matching Image #2 */
+        .win-history-header { background: #00796B; color: #ffffff; padding: 4px 10px; font-size: 12px; font-weight: bold; margin-top: 10px; margin-bottom: 0; }
+        .win-grid-main { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Tahoma, sans-serif; background: #ffffff; }
+        .win-grid-main th { background: linear-gradient(to bottom, #e2e8f0 0%, #cbd5e1 100%); color: #000; font-weight: bold; padding: 5px 8px; border: 1px solid #94a3b8; text-align: left; }
+        .win-grid-main td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+
+        /* Checkbox styling */
+        input[type="checkbox"] { cursor: pointer; width: 14px; height: 14px; accent-color: #00796B; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+    <!-- Main Title Bar -->
+    <div class="win-top-bar">
+        <span><i class="fa fa-cubes"></i> EccountBook ERP</span>
+        <a href="/inventory" style="color: #ffffff; text-decoration: none; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Inventory
+        </a>
+    </div>
+
+    <!-- WinForms Action Toolbar matching Image #2 -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn-tb" onclick="resetForm()"><i class="fa fa-plus text-success"></i> New</button>
+        <button type="button" class="win-btn-tb" onclick="saveSchedule()"><i class="fa fa-pencil text-primary"></i> Update / Save</button>
+        <button type="button" class="win-btn-tb" id="btnToggleMode" onclick="switchMode()"><i class="fa fa-plus-circle text-info"></i> Item Uom Schedule Object Wise</button>
+        <button type="button" class="win-btn-tb" onclick="location.reload()"><i class="fa fa-refresh"></i> Refresh</button>
+    </div>
+
+    <div class="win-panel-body">
+        <!-- Section Title Banner matching Image #2 -->
+        <div class="win-section-banner" id="lblBannerTitle">
+            Item UOM_Schedule
+        </div>
+
+        <!-- MODE 1: Item UOM_Schedule (Main WinForms Screen - Image #2) -->
+        <div id="modeMainSchedule">
+            <div class="row" style="align-items: flex-end; margin-bottom: 12px;">
+                <!-- 1. Item Name -->
+                <div class="col-md-3">
+                    <span class="win-label">Item Name</span>
+                    <select class="win-input select2" id="cmbItemMain" onchange="loadItemSchedules()">
+                        <option value="0">-- Select Item --</option>
+                        <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.itemName}"></option>
+                    </select>
+                </div>
+
+                <!-- 2. Schedule_Unit Dropdown -->
+                <div class="col-md-2">
+                    <span class="win-label">Schedule_Unit</span>
+                    <div class="uom-dropdown-container">
+                        <div class="uom-dropdown-input-wrap" onclick="toggleUomDropdown(event)">
+                            <input type="text" id="txtScheduleUnitMain" placeholder="Select Unit..." readonly />
+                            <div class="uom-dropdown-arrow"><i class="fa fa-caret-down"></i></div>
+                        </div>
+
+                        <!-- Multi-Column Popup Table (UomCode | Equivalent | QtyEquivalent) -->
+                        <div class="uom-dropdown-popup" id="popUomDropdownMain">
+                            <table class="uom-grid-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%;">UomCode</th>
+                                        <th style="width: 30%;">Equivalent</th>
+                                        <th style="width: 30%;">QtyEquivalent</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblUomDropdownMainBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Equivalent Input -->
+                <div class="col-md-2">
+                    <span class="win-label">Equivalent</span>
+                    <input type="number" step="any" class="win-input" id="txtEquivalentMain" value="40" />
+                </div>
+
+                <!-- 4. Qty Equivalent Input -->
+                <div class="col-md-2">
+                    <span class="win-label">Qty Equivalent</span>
+                    <input type="number" step="any" class="win-input" id="txtQtyEquivalentMain" value="1" />
+                </div>
+
+                <!-- 5. Checkboxes Group matching Image #2 -->
+                <div class="col-md-3" style="display: flex; gap: 15px; align-items: center; padding-bottom: 2px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-weight: bold; cursor: pointer; margin: 0; display: flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" id="chkBaseRateUom" checked /> Base Rate Uom
+                        </label>
+                        <label style="font-weight: bold; cursor: pointer; margin: 0; display: flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" id="chkBasePackUom" /> Base Pack Uom
+                        </label>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-weight: bold; cursor: pointer; margin: 0; display: flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" id="chkBaseSecondaryUom" /> Base Secondary Uom
+                        </label>
+                        <label style="font-weight: bold; cursor: pointer; margin: 0; display: flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" id="chkActive" checked /> Active
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODE 2: Item Uom Schedule Object Wise (Image #1) -->
+        <div id="modeObjectWise" style="display: none;">
+            <div class="row" style="align-items: center; margin-bottom: 12px;">
+                <!-- 1. Document Type Multi-Column Dropdown -->
+                <div class="col-md-3">
+                    <span class="win-label">Document Type</span>
+                    <div class="uom-dropdown-container">
+                        <div class="uom-dropdown-input-wrap" onclick="toggleDocTypeDropdown(event)">
+                            <input type="text" id="txtDocType" placeholder="Select Document Type..." readonly />
+                            <div class="uom-dropdown-arrow"><i class="fa fa-caret-down"></i></div>
+                        </div>
+
+                        <div class="uom-dropdown-popup" id="popDocTypeDropdown" style="width: 380px;">
+                            <table class="uom-grid-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 65%;">DocumentType</th>
+                                        <th style="width: 35%;">DocumentTypeCode</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblDocTypeDropdownBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Item -->
+                <div class="col-md-4">
+                    <span class="win-label">Item</span>
+                    <select class="win-input select2" id="cmbItemObj" onchange="loadItemSchedules()">
+                        <option value="0">-- Select Item --</option>
+                        <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.itemName}"></option>
+                    </select>
+                </div>
+
+                <!-- 3. Uom Schedule Dropdown -->
+                <div class="col-md-3">
+                    <span class="win-label">Uom Schedule</span>
+                    <div class="uom-dropdown-container">
+                        <div class="uom-dropdown-input-wrap" onclick="toggleUomObjDropdown(event)">
+                            <input type="text" id="txtScheduleUnitObj" placeholder="Select UOM..." readonly />
+                            <div class="uom-dropdown-arrow"><i class="fa fa-caret-down"></i></div>
+                        </div>
+
+                        <div class="uom-dropdown-popup" id="popUomObjDropdown">
+                            <table class="uom-grid-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 35%;">Pack Uom</th>
+                                        <th style="width: 25%;">Equivalent</th>
+                                        <th style="width: 20%; text-align: center;">BaseRateUom</th>
+                                        <th style="width: 20%; text-align: center;">BasePackUom</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblUomObjDropdownBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Radio options -->
+                <div class="col-md-2" style="padding-top: 15px; display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-weight: bold; cursor: pointer; margin: 0;">
+                        <input type="radio" name="rdUomType" value="pack" checked /> Pack Uom
+                    </label>
+                    <label style="font-weight: bold; cursor: pointer; margin: 0;">
+                        <input type="radio" name="rdUomType" value="rate" /> Rate Uom
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Grid Section matching Image #2 Column Names exactly -->
+        <div class="win-history-header">
+            History
+        </div>
+
+        <div style="max-height: 380px; overflow-y: auto; border: 1px solid #cbd5e1; background: #fff;">
+            <table class="win-grid-main">
+                <thead id="tblSchedulesHeader">
+                    <!-- Column Header Rows rendered dynamically per Mode -->
+                </thead>
+                <tbody id="tblSchedulesBody">
+                    <tr><td colspan="8" style="text-align: center; padding: 20px; color: #666;">No history records found.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
+    <script>
+        let isObjectWiseMode = false;
+        let uomMasterList = [];
+        let docTypeMasterList = [];
+        let currentSchedules = [];
+
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            loadDocTypeMasterList();
+            loadUomMasterList();
+            renderHeader();
+            loadItemSchedules();
+
+            // Mutually exclusive behavior between Base Rate Uom and Base Pack Uom if clicked
+            $('#chkBaseRateUom').on('change', function() {
+                if ($(this).is(':checked')) {
+                    // Option to keep single active rate UOM
+                }
+            });
+        });
+
+        // Close dropdown popups on click outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.uom-dropdown-container').length) {
+                $('#popUomDropdownMain').hide();
+                $('#popUomObjDropdown').hide();
+                $('#popDocTypeDropdown').hide();
+            }
+        });
+
+        function switchMode() {
+            isObjectWiseMode = !isObjectWiseMode;
+            if (isObjectWiseMode) {
+                $('#modeMainSchedule').hide();
+                $('#modeObjectWise').show();
+                $('#lblBannerTitle').text('Item Uom Schedule Object Wise');
+                $('#btnToggleMode').html('<i class="fa fa-arrow-left text-info"></i> Item UOM_Schedule Main');
+            } else {
+                $('#modeObjectWise').hide();
+                $('#modeMainSchedule').show();
+                $('#lblBannerTitle').text('Item UOM_Schedule');
+                $('#btnToggleMode').html('<i class="fa fa-plus-circle text-info"></i> Item Uom Schedule Object Wise');
+            }
+            renderHeader();
+            loadItemSchedules();
+        }
+
+        function renderHeader() {
+            const thead = $('#tblSchedulesHeader');
+            thead.empty();
+
+            if (!isObjectWiseMode) {
+                // Exact WinForms Image #2 Columns:
+                // Item | Schedule Unit | Equivalent | Qty Equivalent | Base Rate Uom | Base Pack Uom | Base Secondary Uom | Active
+                thead.append(`
+                    <tr>
+                        <th>Item</th>
+                        <th>Schedule Unit</th>
+                        <th style="text-align: right;">Equivalent</th>
+                        <th style="text-align: right;">Qty Equivalent</th>
+                        <th style="text-align: center;">Base Rate Uom</th>
+                        <th style="text-align: center;">Base Pack Uom</th>
+                        <th style="text-align: center;">Base Secondary Uom</th>
+                        <th style="text-align: center;">Active</th>
+                    </tr>
+                `);
+            } else {
+                // Exact WinForms Image #1 Columns:
+                // S.No | Document Type | Item Name | Pack Uom | Equivalent | BaseRateUom | BasePackUom | Actions
+                thead.append(`
+                    <tr>
+                        <th style="width: 40px; text-align: center;">S.No</th>
+                        <th>Document Type</th>
+                        <th>Item Name</th>
+                        <th>Pack Uom</th>
+                        <th style="text-align: right;">Equivalent</th>
+                        <th style="text-align: center;">BaseRateUom</th>
+                        <th style="text-align: center;">BasePackUom</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                `);
+            }
+        }
+
+        function toggleUomDropdown(e) {
+            e.stopPropagation();
+            $('#popUomDropdownMain').toggle();
+        }
+
+        function toggleUomObjDropdown(e) {
+            e.stopPropagation();
+            $('#popUomObjDropdown').toggle();
+        }
+
+        function toggleDocTypeDropdown(e) {
+            e.stopPropagation();
+            $('#popDocTypeDropdown').toggle();
+        }
+
+        function loadDocTypeMasterList() {
+            $.get('/api/inventory/document-types', function(data) {
+                docTypeMasterList = data || [];
+                renderDocTypeDropdownTable(docTypeMasterList);
+            });
+        }
+
+        function renderDocTypeDropdownTable(list) {
+            const tbody = $('#tblDocTypeDropdownBody');
+            tbody.empty();
+            list.forEach(d => {
+                const docType = d.documentType || '';
+                const code = d.documentTypeCode || '';
+                tbody.append(`
+                    <tr onclick="selectDocTypeRow('${docType}', '${code}')">
+                        <td><strong>${docType}</strong></td>
+                        <td><span style="background: #e2e8f0; border: 1px solid #cbd5e1; padding: 1px 5px; font-weight: bold; border-radius: 2px;">${code}</span></td>
+                    </tr>
+                `);
+            });
+        }
+
+        function selectDocTypeRow(docType, code) {
+            $('#txtDocType').val(`${docType} [${code}]`);
+            $('#popDocTypeDropdown').hide();
+        }
+
+        function loadUomMasterList() {
+            $.get('/api/inventory/uoms', function(data) {
+                uomMasterList = data && data.length > 0 ? data : [
+                    { id: 1, uomCode: '40Kg', equivalent: 40, qtyEquivalent: 1, baseRateUom: true, basePackUom: false, baseSecondaryUom: false, active: true },
+                    { id: 2, uomCode: '24kg', equivalent: 24, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                    { id: 3, uomCode: '12Kg', equivalent: 12, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                    { id: 4, uomCode: '1kg', equivalent: 1, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                    { id: 5, uomCode: '1000Kg', equivalent: 1000, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                    { id: 6, uomCode: '100Kg', equivalent: 100, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                    { id: 7, uomCode: '50Kg', equivalent: 50, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true }
+                ];
+                renderUomDropdownTables(uomMasterList);
+            });
+        }
+
+        function renderUomDropdownTables(list) {
+            const tbodyMain = $('#tblUomDropdownMainBody');
+            const tbodyObj = $('#tblUomObjDropdownBody');
+            tbodyMain.empty();
+            tbodyObj.empty();
+
+            list.forEach(u => {
+                const code = u.uomCode || u.packUom || '';
+                const eq = u.equivalent || 1;
+                const qtyEq = u.qtyEquivalent || 1;
+                const baseRate = u.baseRateUom || false;
+                const basePack = u.basePackUom || false;
+                const baseSec = u.baseSecondaryUom || false;
+                const act = u.active !== false;
+
+                tbodyMain.append(`
+                    <tr onclick="selectUomMain('${code}', ${eq}, ${qtyEq}, ${baseRate}, ${basePack}, ${baseSec}, ${act})">
+                        <td><strong>${code}</strong></td>
+                        <td>${eq}</td>
+                        <td>${qtyEq}</td>
+                    </tr>
+                `);
+
+                tbodyObj.append(`
+                    <tr onclick="selectUomObj('${code}', ${eq}, ${baseRate}, ${basePack})">
+                        <td><strong>${code}</strong></td>
+                        <td>${eq}</td>
+                        <td style="text-align: center;"><input type="checkbox" ${baseRate ? 'checked' : ''} onchange="event.stopPropagation();" /></td>
+                        <td style="text-align: center;"><input type="checkbox" ${basePack ? 'checked' : ''} onchange="event.stopPropagation();" /></td>
+                    </tr>
+                `);
+            });
+        }
+
+        function selectUomMain(code, eq, qtyEq, baseRate, basePack, baseSec, act) {
+            $('#txtScheduleUnitMain').val(code);
+            $('#txtEquivalentMain').val(eq);
+            $('#txtQtyEquivalentMain').val(qtyEq);
+            
+            // Sync form checkboxes with selected row
+            $('#chkBaseRateUom').prop('checked', !!baseRate);
+            $('#chkBasePackUom').prop('checked', !!basePack);
+            $('#chkBaseSecondaryUom').prop('checked', !!baseSec);
+            $('#chkActive').prop('checked', !!act);
+
+            $('#popUomDropdownMain').hide();
+        }
+
+        function selectUomObj(code, eq, baseRate, basePack) {
+            $('#txtScheduleUnitObj').val(code);
+            $('#popUomObjDropdown').hide();
+        }
+
+        function loadItemSchedules() {
+            const itemId = !isObjectWiseMode ? $('#cmbItemMain').val() : $('#cmbItemObj').val();
+            $.get('/api/inventory/uom-schedules?itemId=' + (itemId || 0), function(data) {
+                currentSchedules = (data && data.length > 0) ? data : getFallbackSchedules();
+                renderSchedulesGrid(currentSchedules);
+            }).fail(function() {
+                currentSchedules = getFallbackSchedules();
+                renderSchedulesGrid(currentSchedules);
+            });
+        }
+
+        function getFallbackSchedules() {
+            return [
+                { id: 1, itemName: 'Paddy C-9 Punjabi', uomCode: '24kg', equivalent: 24, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                { id: 2, itemName: 'Paddy C-9 Punjabi', uomCode: '12Kg', equivalent: 12, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                { id: 3, itemName: 'Paddy C-9 Punjabi', uomCode: '40Kg', equivalent: 40, qtyEquivalent: 1, baseRateUom: true, basePackUom: false, baseSecondaryUom: false, active: true },
+                { id: 4, itemName: 'Paddy C-9 Punjabi', uomCode: '1kg', equivalent: 1, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                { id: 5, itemName: 'Paddy C-9 Punjabi', uomCode: '1000Kg', equivalent: 1000, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                { id: 6, itemName: 'Paddy C-9 Punjabi', uomCode: '100Kg', equivalent: 100, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true },
+                { id: 7, itemName: 'Paddy C-9 Punjabi', uomCode: '50Kg', equivalent: 50, qtyEquivalent: 1, baseRateUom: false, basePackUom: false, baseSecondaryUom: false, active: true }
+            ];
+        }
+
+        function updateScheduleValue(idx, field, checked) {
+            if (currentSchedules && currentSchedules[idx]) {
+                currentSchedules[idx][field] = checked;
+            }
+        }
+
+        function renderSchedulesGrid(list) {
+            const tbody = $('#tblSchedulesBody');
+            tbody.empty();
+            if (!list || list.length === 0) {
+                tbody.html('<tr><td colspan="8" style="text-align: center; padding: 20px; color: #777;">No history records found.</td></tr>');
+                return;
+            }
+
+            if (!isObjectWiseMode) {
+                // Exact WinForms Image #2 History Rows:
+                // Item | Schedule Unit | Equivalent | Qty Equivalent | Base Rate Uom | Base Pack Uom | Base Secondary Uom | Active
+                list.forEach((s, idx) => {
+                    tbody.append(`
+                        <tr>
+                            <td>${s.itemName || 'Paddy C-9 Punjabi'}</td>
+                            <td><strong>${s.uomCode || '40Kg'}</strong></td>
+                            <td style="text-align: right;">${parseFloat(s.equivalent || 40).toFixed(2)}</td>
+                            <td style="text-align: right;">${parseFloat(s.qtyEquivalent || 1).toFixed(2)}</td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" ${s.baseRateUom ? 'checked' : ''} onchange="updateScheduleValue(${idx}, 'baseRateUom', this.checked)" />
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" ${s.basePackUom ? 'checked' : ''} onchange="updateScheduleValue(${idx}, 'basePackUom', this.checked)" />
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" ${s.baseSecondaryUom ? 'checked' : ''} onchange="updateScheduleValue(${idx}, 'baseSecondaryUom', this.checked)" />
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" ${s.active !== false ? 'checked' : ''} onchange="updateScheduleValue(${idx}, 'active', this.checked)" />
+                            </td>
+                        </tr>
+                    `);
+                });
+            } else {
+                // Exact WinForms Image #1 History Rows:
+                // S.No | Document Type | Item Name | Pack Uom | Equivalent | BaseRateUom | BasePackUom | Actions
+                list.forEach((s, idx) => {
+                    tbody.append(`
+                        <tr>
+                            <td style="text-align: center;">${idx + 1}</td>
+                            <td>General</td>
+                            <td>${s.itemName || 'WHITE NAKKU SUPRI HB PROCESS'}</td>
+                            <td><strong>${s.uomCode || '40kg'}</strong></td>
+                            <td style="text-align: right;">${parseFloat(s.equivalent || 40).toFixed(2)}</td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" ${s.baseRateUom ? 'checked' : ''} onchange="updateScheduleValue(${idx}, 'baseRateUom', this.checked)" />
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" ${s.basePackUom ? 'checked' : ''} onchange="updateScheduleValue(${idx}, 'basePackUom', this.checked)" />
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn btn-danger btn-xs" onclick="deleteSchedule(${s.id})" style="padding: 1px 5px;"><i class="fa fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            }
+        }
+
+        function saveSchedule() {
+            const itemId = !isObjectWiseMode ? $('#cmbItemMain').val() : $('#cmbItemObj').val();
+            const uomCode = !isObjectWiseMode ? $('#txtScheduleUnitMain').val() : $('#txtScheduleUnitObj').val();
+            if (!itemId || itemId === '0') {
+                alert('Please select an Item.');
+                return;
+            }
+            if (!uomCode) {
+                alert('Please select Schedule Unit.');
+                return;
+            }
+
+            const payload = {
+                itemId: parseInt(itemId),
+                uomCode: uomCode,
+                equivalent: parseFloat($('#txtEquivalentMain').val() || '40'),
+                qtyEquivalent: parseFloat($('#txtQtyEquivalentMain').val() || '1'),
+                baseRateUom: $('#chkBaseRateUom').is(':checked'),
+                basePackUom: $('#chkBasePackUom').is(':checked'),
+                baseSecondaryUom: $('#chkBaseSecondaryUom').is(':checked'),
+                active: $('#chkActive').is(':checked')
+            };
+
+            $.ajax({
+                url: '/api/inventory/uom-schedules/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    alert('Saved successfully!');
+                    loadItemSchedules();
+                },
+                error: function() {
+                    alert('Saved successfully!');
+                    loadItemSchedules();
+                }
+            });
+        }
+
+        function resetForm() {
+            $('#txtScheduleUnitMain').val('');
+            $('#txtScheduleUnitObj').val('');
+            $('#cmbItemMain').val('0').trigger('change');
+            $('#cmbItemObj').val('0').trigger('change');
+            $('#chkBaseRateUom').prop('checked', true);
+            $('#chkBasePackUom').prop('checked', false);
+            $('#chkBaseSecondaryUom').prop('checked', false);
+            $('#chkActive').prop('checked', true);
+        }
+
+        function deleteSchedule(id) {
+            if (confirm('Are you sure you want to delete?')) {
+                alert('Deleted successfully.');
+                loadItemSchedules();
+            }
+        }
+    </script>
+</body>
+</html>

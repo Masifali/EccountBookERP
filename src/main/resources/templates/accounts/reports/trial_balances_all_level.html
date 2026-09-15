@@ -181,8 +181,56 @@
             return out;
         }
 
+        function normalizeRows(rows) {
+            if (!rows || !rows.length) return [];
+            const sample = rows[0];
+            if (sample.lvl01_Code || sample.lvl1_Code || sample.Lvl01_Code || sample.Lvl1_Code || sample.lvl01_Title || sample.lvl1_Title) {
+                const nodes = new Map();
+                rows.forEach(r => {
+                    const op = parseFloat(r.Opening || r.opening || 0);
+                    const opDr = parseFloat(r.OpeningDr || r.openingDr || 0);
+                    const opCr = parseFloat(r.OpeningCr || r.openingCr || 0);
+                    const deb = parseFloat(r.Debit || r.debit || 0);
+                    const cred = parseFloat(r.Credit || r.credit || 0);
+                    const cls = parseFloat(r.Closing || r.closing || 0);
+                    const clsDr = parseFloat(r.ClosingDr || r.closingDr || 0);
+                    const clsCr = parseFloat(r.ClosingCr || r.closingCr || 0);
+
+                    for (let i = 1; i <= 5; i++) {
+                        const codeKey1 = `lvl0${i}_Code`, titleKey1 = `lvl0${i}_Title`;
+                        const codeKey2 = `lvl${i}_Code`, titleKey2 = `lvl${i}_Title`;
+                        const code = r[codeKey1] || r[codeKey2] || r[`Lvl0${i}_Code`] || r[`Lvl${i}_Code`];
+                        const title = r[titleKey1] || r[titleKey2] || r[`Lvl0${i}_Title`] || r[`Lvl${i}_Title`] || code;
+
+                        if (code && String(code).trim() !== '' && String(code).trim() !== '0') {
+                            const cStr = String(code).trim();
+                            if (!nodes.has(cStr)) {
+                                nodes.set(cStr, {
+                                    AccountCode: cStr,
+                                    AccountTitle: String(title).trim(),
+                                    AcLevel: i,
+                                    IsGroupDetail: i >= 4 ? 'Detail' : 'Group',
+                                    Opening: 0, OpeningDr: 0, OpeningCr: 0,
+                                    Debit: 0, Credit: 0,
+                                    Closing: 0, ClosingDr: 0, ClosingCr: 0
+                                });
+                            }
+                            const n = nodes.get(cStr);
+                            n.Opening += op; n.OpeningDr += opDr; n.OpeningCr += opCr;
+                            n.Debit += deb; n.Credit += cred;
+                            n.Closing += cls; n.ClosingDr += clsDr; n.ClosingCr += clsCr;
+                        }
+                    }
+                });
+                const res = Array.from(nodes.values());
+                res.sort((a, b) => a.AccountCode.localeCompare(b.AccountCode));
+                return res;
+            }
+            return rows;
+        }
+
         function btnshowClick() {
-            $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Loading...</td></tr>');
+            $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;"><i class="fa fa-spinner fa-spin"></i> Loading Trial Balances All Level...</td></tr>');
             $.ajax({
                 url: '/accounts/api/reports/trial-balance-all-level',
                 type: 'POST',
@@ -190,7 +238,7 @@
                 data: JSON.stringify(buildTbRequest()),
                 success: function (res) {
                     if (res && res.success) {
-                        rawRows = res.data || [];
+                        rawRows = normalizeRows(res.data || []);
                         collapsedSet = new Set();
                         rebuildAndRender();
                     } else {

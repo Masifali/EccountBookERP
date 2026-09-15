@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wages Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
+        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .btn-erp-excel { background-color: #166534; color: white; border: 1px solid #14532d; }
+        .btn-erp-excel:hover { background-color: #14532d; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
+        .form-control-erp:focus { border-color: #00796B; outline: none; }
+        .erp-table-container { background: white; border: 1px solid #cbd5e1; border-radius: 3px; overflow-x: auto; max-height: calc(100vh - 200px); }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 6px 8px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 10; }
+        .erp-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr:hover { background-color: #e0f2f1; }
+        .totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="erp-header">
+        <div><i class="fa fa-file-text-o"></i> Wages Report</div>
+        <div><a href="/contractor-wages?tab=report" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Contractor Wages</a></div>
+    </div>
+
+    <div class="erp-toolbar">
+        <button type="button" class="btn-erp btn-erp-primary" onclick="loadWagesReport()"><i class="fa fa-search"></i> Show Report (F5)</button>
+        <button type="button" class="btn-erp btn-erp-excel" onclick="exportToExcel()"><i class="fa fa-file-excel-o"></i> Export to Excel</button>
+        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+    </div>
+
+    <div style="padding: 10px;">
+        <div class="erp-fieldset">
+            <legend>Filter Parameters</legend>
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label-erp">From Date</label>
+                    <input type="date" id="txtFromDate" class="form-control-erp"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">To Date</label>
+                    <input type="date" id="txtToDate" class="form-control-erp"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Contractor Name</label>
+                    <select id="cmbContractor" class="form-control-erp select2">
+                        <option value="">-- All Contractors --</option>
+                        <option th:each="c : ${contractorsList}" th:value="${c['id'] != null ? c['id'] : (c['Id'] != null ? c['Id'] : '')}" th:text="${c['supplierName'] != null ? c['supplierName'] : (c['SupplierName'] != null ? c['SupplierName'] : (c['companyName'] != null ? c['companyName'] : (c['CompanyName'] != null ? c['CompanyName'] : (c['name'] != null ? c['name'] : ''))))}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Cost Center / Branch</label>
+                    <select id="cmbCostCenter" class="form-control-erp select2">
+                        <option value="">-- All Cost Centers --</option>
+                        <option th:each="cc : ${costCentersList}" th:value="${cc.CostCenterId}" th:text="${cc.CostCenterName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                    <label style="font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="chkIncludeUnposted" checked/> Include Unposted
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-table-container">
+            <table class="erp-table" id="tblWagesReport">
+                <thead>
+                    <tr>
+                        <th style="width: 4%; text-align: center;">Sr #</th>
+                        <th style="width: 8%;">Date</th>
+                        <th style="width: 12%;">Voucher / Doc No</th>
+                        <th style="width: 12%;">Doc Type</th>
+                        <th style="width: 20%;">Contractor Name</th>
+                        <th style="width: 22%;">Particulars / Narration</th>
+                        <th style="width: 7%; text-align: right;">Qty / Weight</th>
+                        <th style="width: 7%; text-align: right;">Rate</th>
+                        <th style="width: 8%; text-align: right;">Wages Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="tblBody">
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: #64748b; padding: 20px;">Click "Show Report" to fetch contractor wages data.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="totals-bar">
+            <div>Total Records: <span id="lblTotalRecords">0</span></div>
+            <div>Total Quantity: <span id="lblTotalQty">0.00</span></div>
+            <div>Total Wages Amount: RS <span id="lblTotalAmount">0.00</span></div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            if (!$('#txtFromDate').val()) $('#txtFromDate').val(today);
+            if (!$('#txtToDate').val()) $('#txtToDate').val(today);
+            $('.select2').select2({ width: '100%' });
+        });
+        function loadWagesReport() {
+            const req = {
+                fromDate: $('#txtFromDate').val(),
+                toDate: $('#txtToDate').val(),
+                contractorId: $('#cmbContractor').val(),
+                costCenterId: $('#cmbCostCenter').val(),
+                includeUnposted: $('#chkIncludeUnposted').is(':checked')
+            };
+
+            $('#tblBody').html('<tr><td colspan="9" style="text-align: center; padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading Wages Report...</td></tr>');
+
+            $.ajax({
+                url: '/accounts/api/reports/wages-report',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(req),
+                success: function(res) {
+                    if (res && res.data && res.data.length > 0) {
+                        let html = '';
+                        let totQty = 0, totAmt = 0;
+                        res.data.forEach((r, i) => {
+                            const qty = parseFloat(r.Qty || r.Weight || 0);
+                            const rate = parseFloat(r.Rate || 0);
+                            const amt = parseFloat(r.Amount || r.WagesAmount || r.Debit || 0);
+                            totQty += qty;
+                            totAmt += amt;
+
+                            html += `
+                                <tr>
+                                    <td style="text-align: center;">${i + 1}</td>
+                                    <td>${r.VoucherDate || r.Date || ''}</td>
+                                    <td>${r.VoucherNo || r.DocumentNo || ''}</td>
+                                    <td>${r.DocumentTypeName || r.DocType || ''}</td>
+                                    <td>${r.ContractorName || r.SupplierName || ''}</td>
+                                    <td>${r.Narration || r.Remarks || ''}</td>
+                                    <td style="text-align: right;">${qty.toFixed(2)}</td>
+                                    <td style="text-align: right;">${rate.toFixed(2)}</td>
+                                    <td style="text-align: right; font-weight: 600;">${amt.toFixed(2)}</td>
+                                </tr>
+                            `;
+                        });
+                        $('#tblBody').html(html);
+                        $('#lblTotalRecords').text(res.data.length);
+                        $('#lblTotalQty').text(totQty.toFixed(2));
+                        $('#lblTotalAmount').text(totAmt.toFixed(2));
+                    } else {
+                        $('#tblBody').html('<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 20px;">No records found for the selected filter criteria.</td></tr>');
+                        $('#lblTotalRecords').text('0');
+                        $('#lblTotalQty').text('0.00');
+                        $('#lblTotalAmount').text('0.00');
+                    }
+                },
+                error: function(err) {
+                    $('#tblBody').html('<tr><td colspan="9" style="text-align: center; color: #dc2626; padding: 20px;">Error loading data from database.</td></tr>');
+                }
+            });
+        }
+
+        function exportToExcel() {
+            let table = document.getElementById("tblWagesReport");
+            let html = table.outerHTML;
+            let blob = new Blob([html], { type: "application/vnd.ms-excel" });
+            let a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "Wages_Report.xls";
+            a.click();
+        }
+
+        $(document).keydown(function(e) {
+            if (e.keyCode === 116) { // F5
+                e.preventDefault();
+                loadWagesReport();
+            }
+        });
+    </script>
+</body>
+</html>

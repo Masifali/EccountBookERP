@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${report.title()}">General Ledger</title>
+    <style>
+        body { font: 12px Arial, sans-serif; margin: 20px; color: #111; background: white; }
+        header { text-align: center; } h1 { font-size: 20px; } h2 { font-size: 16px; }
+        .scroll { overflow-x: auto; } table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #999; padding: 5px; text-align: left; vertical-align: top; }
+        th { background: #eee; } td { overflow-wrap: anywhere; }
+        thead { display: table-header-group; } tr { break-inside: avoid; }
+        .actions { margin-bottom: 15px; } .empty { text-align: center; padding: 30px; }
+        @page { size: A4 landscape; margin: 10mm; }
+        @media print { .actions { display: none; } body { margin: 0; font-size: 9px; } .scroll { overflow: visible; } }
+    </style>
+</head>
+<body>
+<div class="actions"><button type="button" onclick="window.print()" th:disabled="${report.rows().isEmpty()}">Print / Save PDF</button></div>
+<header>
+    <h1 th:text="${report.companyName()}"></h1><p th:text="${report.companyAddress()}"></p>
+    <h2 th:text="${'Print-' + report.code() + ' — ' + report.title()}"></h2>
+    <p><span th:text="${report.fromDate()}"></span> — <span th:text="${report.toDate()}"></span></p>
+</header>
+<p class="empty" th:if="${report.rows().isEmpty()}">Not Record Found For Display</p>
+<div class="scroll" th:unless="${report.rows().isEmpty()}">
+    <table><thead><tr><th th:each="column : ${report.columns()}" th:text="${column.title()}"></th></tr></thead>
+        <tbody><tr th:each="row : ${report.rows()}"><td th:each="column : ${report.columns()}" th:text="${row[column.field()]}"></td></tr></tbody>
+    </table>
+</div>
+</body></html>

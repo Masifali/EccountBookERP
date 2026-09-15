@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cash Balances Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        
+        /* Top Banner & Toolbars */
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-header-title { font-size: 14px; font-weight: bold; color: white; display: flex; align-items: center; gap: 8px; }
+        .erp-sub-bar { background-color: #b0bec5; height: 22px; padding: 2px 12px; font-size: 11px; color: #37474f; display: flex; align-items: center; border-bottom: 1px solid #90a4ae; }
+        
+        .erp-toolbar { background-color: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-toolbar { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 26px; }
+        .btn-toolbar:hover { background-color: #e2e8f0; border-color: #64748b; text-decoration: none; color: #0f172a; }
+        .btn-toolbar-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-toolbar-primary:hover { background-color: #004d40; color: white; }
+
+        /* Filter Row */
+        .erp-filter-box { background: white; border-bottom: 1px solid #cbd5e1; padding: 6px 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; gap: 2px; }
+        .filter-label { font-weight: 600; color: #334155; font-size: 11px; margin: 0; }
+        .filter-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; }
+        .filter-input:focus { border-color: #00796B; outline: none; }
+        
+        .radio-group-box { display: flex; align-items: center; gap: 12px; background-color: #f8fafc; padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 3px; margin-left: auto; }
+        .radio-label { font-weight: 600; font-size: 11px; cursor: pointer; margin: 0; display: flex; align-items: center; gap: 4px; }
+
+        /* Tab Navigation */
+        .erp-tabs-nav { background: #e2e8f0; border-bottom: 2px solid #00796B; padding: 0 10px; display: flex; gap: 2px; }
+        .erp-tab-btn { background: #cbd5e1; border: 1px solid #94a3b8; border-bottom: none; border-radius: 4px 4px 0 0; padding: 6px 16px; font-weight: bold; font-size: 11px; color: #475569; cursor: pointer; }
+        .erp-tab-btn.active { background: #00796B; color: white; border-color: #004d40; }
+        .erp-tab-content { display: none; padding: 10px; }
+        .erp-tab-content.active { display: block; }
+
+        /* Summary 3-Column Card Grid (Ditto Desktop Layout) */
+        .cards-grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-height: calc(100vh - 200px); overflow-y: auto; padding-right: 4px; }
+        @media (max-width: 992px) { .cards-grid-container { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .cards-grid-container { grid-template-columns: 1fr; } }
+
+        .cash-card { background: white; border: 1px solid #94a3b8; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+        .cash-card-header { background-color: #00796B; color: white; font-weight: bold; font-size: 12px; text-align: center; padding: 6px 8px; text-transform: uppercase; border-bottom: 1px solid #004d40; letter-spacing: 0.5px; }
+        
+        .cash-card-body { padding: 8px 12px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+        .card-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; line-height: 1.4; }
+        .card-label { color: #334155; font-weight: 500; }
+        .card-value { font-weight: 600; color: #0f172a; text-align: right; }
+        
+        .cash-card-footer { background-color: #00796B; border: none; border-top: 1px solid #004d40; color: white; font-weight: bold; font-size: 11px; text-align: center; padding: 6px; cursor: pointer; width: 100%; transition: background-color 0.2s; }
+        .cash-card-footer:hover { background-color: #004d40; }
+
+        /* Split View for Detail Tab */
+        .detail-split-container { display: flex; gap: 8px; height: calc(100vh - 210px); }
+        .detail-panel { flex: 1; display: flex; flex-direction: column; background: white; border: 1px solid #cbd5e1; border-radius: 3px; overflow: hidden; }
+        .detail-panel-title { background: #00796B; color: white; font-weight: bold; padding: 5px 10px; font-size: 12px; display: flex; justify-content: space-between; }
+
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+        .erp-table th { background-color: #00796B; color: white; padding: 6px 8px; text-align: center; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 10; }
+        .erp-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr:hover { background-color: #f1f5f9; }
+        
+        .erp-table .group-row { background-color: #e0f2f1 !important; font-weight: bold; color: #004d40; }
+        .erp-table .total-row { background-color: #e2e8f0 !important; font-weight: bold; color: #0f172a; position: sticky; bottom: 0; z-index: 9; border-top: 2px solid #94a3b8; }
+        
+        .grid-link { color: #0284c7; font-weight: 600; text-decoration: none; cursor: pointer; }
+        .grid-link:hover { text-decoration: underline; color: #0369a1; }
+    </style>
+</head>
+<body>
+
+    <!-- Header Banner -->
+    <div class="erp-header">
+        <div class="erp-header-title"><i class="fa fa-money"></i> Cash Balances Report</div>
+        <div>
+            <a href="/accounts/dashboard" style="color: white; text-decoration: none; font-weight: 600; margin-right: 15px;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="erp-sub-bar">
+        <i class="fa fa-window-maximize" style="margin-right: 6px;"></i>
+        <span>Accounts &gt; Reports &gt; Cash Balances Report</span>
+    </div>
+
+    <!-- Top Toolbar -->
+    <div class="erp-toolbar">
+        <button type="button" class="btn-toolbar" onclick="resetCashFilters()"><i class="fa fa-refresh"></i> Reset</button>
+        <button type="button" class="btn-toolbar" onclick="loadCashBalancesData()"><i class="fa fa-sync"></i> Refresh</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('592')"><i class="fa fa-print"></i> 592_Print Receipt and Payment</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('593')"><i class="fa fa-print"></i> 593_Print Summary</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('594')"><i class="fa fa-print"></i> 594-CashInOutFlow</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('595')"><i class="fa fa-print"></i> 595-CashDailyActivity</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('599')"><i class="fa fa-print"></i> 599_Cash&amp;BankPaymentRecieptWithAllJv</button>
+    </div>
+
+    <!-- Filter Control Row -->
+    <div class="erp-filter-box">
+        <div class="filter-group" style="width: 110px;">
+            <label class="filter-label">Date Type</label>
+            <select id="cmbDateType" class="filter-input" onchange="onDateTypeChanged()">
+                <option value="1" selected>This Day</option>
+                <option value="2">This Week</option>
+                <option value="3">This Month</option>
+                <option value="4">This Year</option>
+                <option value="5">Financial Year</option>
+            </select>
+        </div>
+
+        <div class="filter-group" style="width: 110px;">
+            <label class="filter-label">From Date</label>
+            <input type="date" id="txtFromDate" class="filter-input" />
+        </div>
+
+        <div class="filter-group" style="width: 110px;">
+            <label class="filter-label">To Date</label>
+            <input type="date" id="txtToDate" class="filter-input" />
+        </div>
+
+        <div class="filter-group" style="width: 220px;">
+            <label class="filter-label">Account Title</label>
+            <select id="cmbAccountTitle" class="filter-input select2">
+                <option value="">-- All Cash Accounts --</option>
+                <option th:each="ac : ${accountsList}" th:value="${ac['id'] != null ? ac['id'] : (ac['Id'] != null ? ac['Id'] : '')}" th:text="${(ac['accountCode'] != null ? ac['accountCode'] : (ac['AccountCode'] != null ? ac['AccountCode'] : '')) + ' - ' + (ac['accountTitle'] != null ? ac['accountTitle'] : (ac['AccountTitle'] != null ? ac['AccountTitle'] : ''))}"></option>
+            </select>
+        </div>
+
+        <div class="filter-group" style="margin-top: 14px;">
+            <button type="button" class="btn-toolbar btn-toolbar-primary" style="height: 24px; padding: 0 16px;" onclick="loadCashBalancesData()">Show</button>
+        </div>
+
+        <div class="radio-group-box">
+            <label class="radio-label">
+                <input type="radio" name="radGroupBy" id="radGroupOffset" value="offset" onchange="applyDetailGrouping()" /> Group By Offset Account
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="radGroupBy" id="radGroupNone" value="none" onchange="applyDetailGrouping()" /> None
+            </label>
+        </div>
+    </div>
+
+    <!-- Tab Buttons -->
+    <div class="erp-tabs-nav">
+        <button type="button" class="erp-tab-btn active" onclick="switchTab('summary')">Summary</button>
+        <button type="button" class="erp-tab-btn" onclick="switchTab('detail')">Payment/Receipts Detail</button>
+    </div>
+
+    <!-- TAB 1: SUMMARY CARD GRID -->
+    <div id="tabSummary" class="erp-tab-content active">
+        <div class="cards-grid-container" id="cardsGrid">
+            <!-- Dynamically populated 3-column Cash Account Cards -->
+        </div>
+    </div>
+
+    <!-- TAB 2: PAYMENT / RECEIPTS DETAIL -->
+    <div id="tabDetail" class="erp-tab-content">
+        <div class="detail-split-container">
+            
+            <!-- Left Panel: Payment -->
+            <div class="detail-panel">
+                <div class="detail-panel-title">
+                    <span><i class="fa fa-arrow-up"></i> Payment</span>
+                    <span id="lblPaymentCount">0 Records</span>
+                </div>
+                <div style="flex: 1; overflow: auto;">
+                    <table class="erp-table" id="paymentTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">V.Date</th>
+                                <th style="width: 60px;">V.Type</th>
+                                <th style="width: 60px;">V.No</th>
+                                <th style="width: 160px;">Cash Account</th>
+                                <th style="width: 180px;">Paid To</th>
+                                <th style="width: 100px; text-align: right;">Amount</th>
+                                <th style="width: 70px;">Attachments</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentTbody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                        <tfoot id="paymentTfoot">
+                            <!-- Footer total -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right Panel: Receipts -->
+            <div class="detail-panel">
+                <div class="detail-panel-title">
+                    <span><i class="fa fa-arrow-down"></i> Receipts</span>
+                    <span id="lblReceiptCount">0 Records</span>
+                </div>
+                <div style="flex: 1; overflow: auto;">
+                    <table class="erp-table" id="receiptTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">V.Date</th>
+                                <th style="width: 60px;">V.Type</th>
+                                <th style="width: 60px;">V.No</th>
+                                <th style="width: 160px;">Cash Account</th>
+                                <th style="width: 180px;">Received From</th>
+                                <th style="width: 100px; text-align: right;">Amount</th>
+                                <th style="width: 70px;">Attachments</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receiptTbody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                        <tfoot id="receiptTfoot">
+                            <!-- Footer total -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    
+    <script>
+        let rawSummaryData = [];
+        let rawDetailData = { receipts: [], payments: [] };
+
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            initDefaultDates();
+            loadCashBalancesData();
+        });
+
+        function initDefaultDates() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+
+            document.getElementById('txtFromDate').value = todayStr;
+            document.getElementById('txtToDate').value = todayStr;
+        }
+
+        function onDateTypeChanged() {
+            const val = $('#cmbDateType').val();
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+
+            if (val === '1') {
+                $('#txtFromDate').val(todayStr);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '2') {
+                const weekAgo = new Date(today);
+                weekAgo.setDate(today.getDate() - 7);
+                const wY = weekAgo.getFullYear();
+                const wM = String(weekAgo.getMonth() + 1).padStart(2, '0');
+                const wD = String(weekAgo.getDate()).padStart(2, '0');
+                $('#txtFromDate').val(`${wY}-${wM}-${wD}`);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '3') {
+                $('#txtFromDate').val(`${yyyy}-${mm}-01`);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '4') {
+                $('#txtFromDate').val(`${yyyy}-01-01`);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '5') {
+                $('#txtFromDate').val(`${yyyy}-01-01`);
+                $('#txtToDate').val(todayStr);
+            }
+        }
+
+        function switchTab(tabName) {
+            $('.erp-tab-btn').removeClass('active');
+            $('.erp-tab-content').removeClass('active');
+
+            if (tabName === 'summary') {
+                $('.erp-tab-btn:eq(0)').addClass('active');
+                $('#tabSummary').addClass('active');
+            } else {
+                $('.erp-tab-btn:eq(1)').addClass('active');
+                $('#tabDetail').addClass('active');
+            }
+        }
+
+        function formatDesktopNumber(val) {
+            if (val === null || val === undefined || isNaN(val)) return '0';
+            const num = parseFloat(val);
+            if (num === 0) return '0';
+            const absFormatted = Math.abs(num).toLocaleString('en-US');
+            return num < 0 ? `(${absFormatted})` : absFormatted;
+        }
+
+        function formatCurrency(val) {
+            if (val === null || val === undefined || isNaN(val)) return '0.00';
+            return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function loadCashBalancesData() {
+            const fromDate = $('#txtFromDate').val();
+            const toDate = $('#txtToDate').val();
+            const accountId = $('#cmbAccountTitle').val();
+
+            // 1. Fetch Summary Card Data
+            $.ajax({
+                url: '/accounts/api/reports/cash-balances-summary',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ fromDate: fromDate, toDate: toDate, accountId: accountId }),
+                success: function(res) {
+                    if (res && res.success) {
+                        rawSummaryData = res.data || [];
+                        renderSummaryCards(rawSummaryData);
+                    }
+                },
+                error: function() {
+                    $('#cardsGrid').html('<div style="grid-column: 1/-1; text-align: center; color: red; padding: 20px;">Error loading Cash Balances Summary.</div>');
+                }
+            });
+
+            // 2. Fetch Detail Data
+            $.ajax({
+                url: '/accounts/api/reports/cash-balances-detail',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ fromDate: fromDate, toDate: toDate, accountId: accountId }),
+                success: function(res) {
+                    if (res && res.success) {
+                        rawDetailData = { receipts: res.receipts || [], payments: res.payments || [] };
+                        renderDetailGrids(rawDetailData);
+                    }
+                }
+            });
+        }
+
+        function renderSummaryCards(data) {
+            const grid = $('#cardsGrid');
+            grid.empty();
+
+            if (!data || data.length === 0) {
+                grid.html('<div style="grid-column: 1/-1; text-align: center; color: #666; padding: 30px; background: white; border: 1px solid #cbd5e1; border-radius: 4px;">No Cash Accounts found for the selected criteria.</div>');
+                return;
+            }
+
+            data.forEach(card => {
+                const title = card.AccountTitle || card.title || 'CASH ACCOUNT';
+                const opening = parseFloat(card.Opening || 0);
+                const currDr = parseFloat(card.CurrDebit || 0);
+                const currCr = parseFloat(card.CurrCredit || 0);
+                const diffVal = parseFloat(card.DiffValue || 0);
+                const status = card.Status || 'Nothing';
+                const closing = parseFloat(card.Closing || 0);
+                const accountId = card.AccountId || 0;
+
+                const glUrl = `/accounts/reports/general-ledger?accountId=${accountId}&fromDate=${$('#txtFromDate').val()}&toDate=${$('#txtToDate').val()}`;
+
+                const cardHtml = `
+                    <div class="cash-card">
+                        <div class="cash-card-header">${title}</div>
+                        <div class="cash-card-body">
+                            <div class="card-row">
+                                <span class="card-label">Opening</span>
+                                <span class="card-value">${formatDesktopNumber(opening)}</span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">Current Dr</span>
+                                <span class="card-value">${formatDesktopNumber(currDr)}</span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">Current Cr</span>
+                                <span class="card-value">${formatDesktopNumber(currCr)}</span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">${status}</span>
+                                <span class="card-value">${formatDesktopNumber(diffVal)}</span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">Closing</span>
+                                <span class="card-value">${formatDesktopNumber(closing)}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="cash-card-footer" onclick="openGeneralLedger(${accountId})">More Info &gt;&gt;&gt;&gt;&gt;</button>
+                    </div>
+                `;
+                grid.append(cardHtml);
+            });
+        }
+
+        function openGeneralLedger(accountId) {
+            const fromDate = $('#txtFromDate').val();
+            const toDate = $('#txtToDate').val();
+            window.open(`/accounts/reports/general-ledger?accountId=${accountId}&fromDate=${fromDate}&toDate=${toDate}`, '_blank');
+        }
+
+        function renderDetailGrids(detailData) {
+            renderPaymentGrid(detailData.payments || []);
+            renderReceiptGrid(detailData.receipts || []);
+        }
+
+        function getVoucherUrl(docTypeId, id) {
+            if (docTypeId == 1) return `/accounts/vouchers/cash-payment?id=${id}`;
+            if (docTypeId == 2) return `/accounts/vouchers/bank-payment?id=${id}`;
+            if (docTypeId == 3) return `/accounts/vouchers/cash-receipt?id=${id}`;
+            if (docTypeId == 4) return `/accounts/vouchers/bank-receipt?id=${id}`;
+            if (docTypeId == 5) return `/accounts/vouchers/journal?id=${id}`;
+            return `/accounts/vouchers/cash-payment?id=${id}`;
+        }
+
+        function renderPaymentGrid(payments) {
+            const tbody = $('#paymentTbody');
+            const tfoot = $('#paymentTfoot');
+            tbody.empty(); tfoot.empty();
+
+            $('#lblPaymentCount').text(`${payments.length} Records`);
+
+            if (!payments || payments.length === 0) {
+                tbody.html('<tr><td colspan="7" style="text-align:center; padding: 15px; color:#666;">No payment transactions found.</td></tr>');
+                return;
+            }
+
+            let totalAmt = 0;
+            payments.forEach(r => {
+                const amt = parseFloat(r.Amount || 0);
+                totalAmt += amt;
+                const vUrl = getVoucherUrl(r.DocumentTypeId, r.Id);
+
+                tbody.append(`
+                    <tr>
+                        <td style="text-align: center;">${r.VDate || ''}</td>
+                        <td style="text-align: center;"><a href="${vUrl}" class="grid-link" target="_blank">${r.VType || ''}</a></td>
+                        <td style="text-align: center;"><a href="${vUrl}" class="grid-link" target="_blank">${r.VNo || ''}</a></td>
+                        <td>${r.CashAccount || ''}</td>
+                        <td>${r.PaidTo || ''}</td>
+                        <td style="text-align: right; font-weight: 600;">${formatCurrency(amt)}</td>
+                        <td style="text-align: center;">${r.NoOfAttachments || 0}</td>
+                    </tr>
+                `);
+            });
+
+            tfoot.html(`
+                <tr class="total-row">
+                    <td colspan="5" style="text-align: right;">Total Payments:</td>
+                    <td style="text-align: right;">${formatCurrency(totalAmt)}</td>
+                    <td></td>
+                </tr>
+            `);
+        }
+
+        function renderReceiptGrid(receipts) {
+            const tbody = $('#receiptTbody');
+            const tfoot = $('#receiptTfoot');
+            tbody.empty(); tfoot.empty();
+
+            $('#lblReceiptCount').text(`${receipts.length} Records`);
+
+            if (!receipts || receipts.length === 0) {
+                tbody.html('<tr><td colspan="7" style="text-align:center; padding: 15px; color:#666;">No receipt transactions found.</td></tr>');
+                return;
+            }
+
+            let totalAmt = 0;
+            receipts.forEach(r => {
+                const amt = parseFloat(r.Amount || 0);
+                totalAmt += amt;
+                const vUrl = getVoucherUrl(r.DocumentTypeId, r.Id);
+
+                tbody.append(`
+                    <tr>
+                        <td style="text-align: center;">${r.VDate || ''}</td>
+                        <td style="text-align: center;"><a href="${vUrl}" class="grid-link" target="_blank">${r.VType || ''}</a></td>
+                        <td style="text-align: center;"><a href="${vUrl}" class="grid-link" target="_blank">${r.VNo || ''}</a></td>
+                        <td>${r.CashAccount || ''}</td>
+                        <td>${r.ReceivedFrom || ''}</td>
+                        <td style="text-align: right; font-weight: 600;">${formatCurrency(amt)}</td>
+                        <td style="text-align: center;">${r.NoOfAttachments || 0}</td>
+                    </tr>
+                `);
+            });
+
+            tfoot.html(`
+                <tr class="total-row">
+                    <td colspan="5" style="text-align: right;">Total Receipts:</td>
+                    <td style="text-align: right;">${formatCurrency(totalAmt)}</td>
+                    <td></td>
+                </tr>
+            `);
+        }
+
+        function applyDetailGrouping() {
+            renderDetailGrids(rawDetailData);
+        }
+
+        function resetCashFilters() {
+            initDefaultDates();
+            $('#cmbDateType').val('5');
+            $('#cmbAccountTitle').val('').trigger('change');
+            $('#radGroupNone').prop('checked', true);
+            loadCashBalancesData();
+        }
+
+        function printReport(rptCode) {
+            window.print();
+        }
+    </script>
+</body>
+</html>

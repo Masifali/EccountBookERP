@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Invoice Store Management - WinForms Replica</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333333; margin: 0; padding: 0; }
+        
+        .form-container, .filter-panel, .account-detail-panel { width: 100%; max-width: 100%; min-width: 0; }
+        .form-row, .filter-row, .account-detail-row { min-width: 0; max-width: 100%; }
+        input, select, button, textarea { box-sizing: border-box; min-width: 0; max-width: 100%; }
+
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 30px; display: flex; align-items: center; padding: 0 6px; gap: 4px; flex-wrap: wrap; }
+        .win-btn-tool { background: #ffffff; border: 1px solid #7a9a9e; padding: 2px 8px; font-family: "Segoe UI", sans-serif; font-size: 11px; color: #000000; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; text-decoration: none; }
+        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; text-decoration: none; color: #000; }
+        .win-btn-tool-save { font-weight: bold; color: #004d40; border-color: #00796B; }
+        
+        .win-teal-header { background-color: #00796B; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-weight: bold; font-size: 12px; }
+        .win-teal-header-title { font-size: 13px; }
+
+        .win-form-body { background-color: #ffffff; padding: 8px; }
+        .win-group-box { border: 1px solid #cbd5e1; border-radius: 3px; padding: 8px; margin-bottom: 8px; background-color: #ffffff; }
+        .win-group-box legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 5px; margin-bottom: 4px; border: none; }
+        .win-label { font-size: 11px; font-weight: 600; color: #334155; margin-bottom: 2px; display: block; white-space: nowrap; }
+        .win-textbox, .win-combo, .win-datepicker { font-size: 11px; height: 24px; border: 1px solid #94a3b8; padding: 2px 6px; box-sizing: border-box; background-color: #ffffff; color: #000000; border-radius: 2px; width: 100%; }
+        .win-textbox:focus, .win-combo:focus, .win-datepicker:focus { border-color: #00796B; outline: none; }
+        
+        .table-scroll-wrapper { width: 100%; max-width: 100%; overflow-x: auto; overflow-y: auto; max-height: 240px; border: 1px solid #cbd5e1; }
+        .table-scroll-wrapper table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 11px; }
+        .win-grid th { background-color: #00796B; color: #ffffff; font-weight: 600; border: 1px solid #004d40; padding: 4px 6px; text-align: left; position: sticky; top: 0; z-index: 5; white-space: nowrap; }
+        .win-grid td { border: 1px solid #cbd5e1; padding: 3px 6px; color: #333333; vertical-align: middle; white-space: nowrap; }
+        .win-grid tr:nth-child(even) { background-color: #f8fafc; }
+
+        .btn-grid-action { background: #ffffff; border: 1px solid #94a3b8; padding: 0 4px; font-size: 10px; cursor: pointer; border-radius: 2px; }
+        .btn-grid-action:hover { background: #e2e8f0; }
+        .btn-grid-add { color: #00796B; font-weight: bold; }
+        .btn-grid-del { color: #ef4444; font-weight: bold; }
+
+        .summary-panel { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 3px; padding: 8px; }
+        .summary-row { display: flex; align-items: center; margin-bottom: 4px; gap: 4px; }
+        .summary-label { font-size: 11px; font-weight: 600; color: #334155; width: 180px; flex-shrink: 0; text-align: right; padding-right: 6px; }
+        .summary-op { font-weight: bold; width: 15px; text-align: center; color: #00796B; }
+
+        .nav-tabs { border-bottom: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; }
+        .nav-tabs > li > a { padding: 4px 12px; color: #334155; border-radius: 2px 2px 0 0; }
+        .nav-tabs > li.active > a { color: #00796B; border-color: #cbd5e1 #cbd5e1 #ffffff; background-color: #ffffff; }
+    </style>
+</head>
+<body>
+
+    <div class="win-tool-strip">
+        <button type="button" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> + New</button>
+        <button type="button" class="win-btn-tool" onclick="btnRefresh_Click()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="win-btn-tool" onclick="alert('Attachments...')"><i class="fa fa-paperclip"></i> Attachment</button>
+        <button type="button" class="win-btn-tool" onclick="loadGrnModal()"><i class="fa fa-download"></i> Load GRN</button>
+        <button type="button" class="win-btn-tool" onclick="openVoucherPrint(103)"><i class="fa fa-print"></i> 103-Voucher</button>
+        <button type="button" class="win-btn-tool" onclick="openSlipPrint(230)"><i class="fa fa-print"></i> 230-Slip</button>
+        <button type="button" class="win-btn-tool" onclick="alert('ShortCut Keys: Alt+S (Save), Alt+N (New), Alt+R (Refresh)')"><i class="fa fa-key"></i> ShortCut Keys</button>
+        
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+            <label style="margin: 0; font-size: 11px;"><input type="checkbox" id="chkVoucherPreview" checked> Voucher Preview</label>
+            <label style="margin: 0; font-size: 11px;"><input type="checkbox" id="chkSlipPreview" checked> Slip Preview</label>
+            <a href="/purchase" style="color: #00796B; font-weight: bold; text-decoration: underline; margin-left: 10px;">
+                <i class="fa fa-arrow-left"></i> Back to Purchase Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="win-teal-header">
+        <div class="win-teal-header-title"><i class="fa fa-shopping-cart"></i> Purchase Invoice Store Management</div>
+        <div id="lblVoucherDisplayHeader" style="color: #ffeb3b;" th:text="'PISM-2026-' + ${nextDocNo}">PISM-2026-0001</div>
+    </div>
+
+    <div class="win-form-body">
+        <ul class="nav nav-tabs" id="mainTabControl">
+            <li class="active"><a href="#tabForm" data-toggle="tab">Form</a></li>
+            <li><a href="#tabHistory" data-toggle="tab" onclick="loadHistory()">History</a></li>
+        </ul>
+
+        <div class="tab-content" style="padding-top: 8px;">
+            <!-- TAB 1: FORM -->
+            <div class="tab-pane active" id="tabForm">
+                <fieldset class="win-group-box">
+                    <legend>Purchase Invoice Header Information</legend>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label class="win-label">Doc No &amp; Branch Sr No</label>
+                            <div style="display: flex; gap: 2px;">
+                                <input type="text" id="txtDocNo" class="win-textbox" th:value="${nextDocNo}" readonly style="background-color: #f1f5f9; font-weight: bold; text-align: center;"/>
+                                <input type="text" id="txtBranchSrNo" class="win-textbox" th:value="${nextBranchSrNo != null ? nextBranchSrNo : 1}" readonly style="background-color: #f1f5f9; font-weight: bold; text-align: center;"/>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Invoice Tax No</label>
+                            <input type="text" id="txtTaxInvoiceNo" class="win-textbox" th:value="${nextTaxNo != null ? nextTaxNo : 1}"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="win-label">Bill To Party</label>
+                            <select id="cmbSupplier" class="win-combo select2">
+                                <option value="0">-- Select Supplier / Party --</option>
+                                <option th:each="s : ${suppliers}" th:value="${s.id != null ? s.id : s.Id}" th:text="${(s.partyCode != null ? s.partyCode : (s.PartyCode != null ? s.PartyCode : '')) + ' - ' + (s.companyName != null ? s.companyName : (s.CompanyName != null ? s.CompanyName : s.supplierName))}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Due Days</label>
+                            <input type="number" id="txtDueDays" class="win-textbox" value="0" oninput="calcDueDate()"/>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Doc Date</label>
+                            <input type="date" id="txtDocDate" class="win-datepicker" onchange="calcDueDate()"/>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 4px;">
+                        <div class="col-md-2">
+                            <label class="win-label">Manual No</label>
+                            <input type="text" id="txtManualNo" class="win-textbox" placeholder="Manual Bill #"/>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Payment Term</label>
+                            <select id="cmbPaymentTerms" class="win-combo">
+                                <option value="Cash">Cash</option>
+                                <option value="Credit" selected>Credit</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Due Date</label>
+                            <input type="date" id="txtDueDate" class="win-datepicker"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="win-label">Remarks</label>
+                            <input type="text" id="txtRemarks" class="win-textbox" placeholder="Enter purchase invoice remarks..."/>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- TOP TWO GRIDS: FREIGHT & PARTY ADDLESS -->
+                <div class="row">
+                    <!-- SECTION 1: FREIGHT DETAIL GRID -->
+                    <div class="col-md-5">
+                        <fieldset class="win-group-box">
+                            <legend>Credit To Selected Account and Charged To Product (Freight Detail)</legend>
+                            <div class="table-scroll-wrapper" style="max-height: 120px;">
+                                <table class="win-grid" id="tblFreight">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30px; text-align: center;">X</th>
+                                            <th style="width: 30px; text-align: center;">+</th>
+                                            <th style="width: 220px;">Transporter Account</th>
+                                            <th style="width: 100px; text-align: right;">Credit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyFreight">
+                                        <!-- Dynamic freight rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <!-- SECTION 2: PARTY ADDLESS GRID -->
+                    <div class="col-md-7">
+                        <fieldset class="win-group-box">
+                            <legend>Party AddLess</legend>
+                            <div class="table-scroll-wrapper" style="max-height: 120px;">
+                                <table class="win-grid" id="tblAddLess">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30px; text-align: center;">X</th>
+                                            <th style="width: 30px; text-align: center;">+</th>
+                                            <th style="width: 160px;">Account</th>
+                                            <th style="width: 120px;">Remarks</th>
+                                            <th style="width: 60px; text-align: right;">%</th>
+                                            <th style="width: 60px; text-align: right;">Qty</th>
+                                            <th style="width: 60px; text-align: right;">Rate</th>
+                                            <th style="width: 80px; text-align: right;">Debit</th>
+                                            <th style="width: 80px; text-align: right;">Credit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyAddLess">
+                                        <!-- Dynamic AddLess rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: ITEM DETAIL GRID -->
+                <fieldset class="win-group-box">
+                    <legend>Item Detail</legend>
+
+                    <!-- Line Entry Bar -->
+                    <div class="row" style="margin-bottom: 6px; background-color: #f1f5f9; padding: 6px; border-radius: 3px; border: 1px solid #cbd5e1;">
+                        <div class="col-md-3">
+                            <label class="win-label">Item Name</label>
+                            <select id="cmbItem" class="win-combo select2" onchange="onItemChange(this.value)">
+                                <option value="0">-- Select Item --</option>
+                                <option th:each="i : ${items}" th:value="${i.id != null ? i.id : i.Id}" th:data-code="${i.itemCode}" th:data-price="${i.purchasePrice}" th:text="${(i.itemCode != null ? i.itemCode : '') + ' - ' + (i.itemName != null ? i.itemName : i.name)}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Ware House Name</label>
+                            <select id="cmbWarehouse" class="win-combo">
+                                <option value="0">-- Select Warehouse --</option>
+                                <option th:each="w : ${warehouses}" th:value="${w.id != null ? w.id : w.Id}" th:text="${w.warehouseName != null ? w.warehouseName : w.name}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="win-label">Rack Name</label>
+                            <select id="cmbRack" class="win-combo">
+                                <option value="0">-- Select Rack --</option>
+                                <option th:each="r : ${racks}" th:value="${r.id != null ? r.id : r.Id}" th:text="${r.rackName != null ? r.rackName : r.name}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="win-label">UOM</label>
+                            <select id="cmbUom" class="win-combo">
+                                <option value="1">Nos</option>
+                                <option value="2">Kg</option>
+                                <option value="3">Bags</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="win-label">Condition</label>
+                            <select id="cmbCondition" class="win-combo">
+                                <option value="1">Fresh</option>
+                                <option value="2">Used</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="win-label">Item Qty</label>
+                            <input type="number" step="0.01" id="txtLineQty" class="win-textbox" placeholder="0.00" oninput="calcLineDetails()"/>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="win-label">Rate</label>
+                            <input type="number" step="0.01" id="txtLineRate" class="win-textbox" placeholder="0.00" oninput="calcLineDetails()"/>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="win-label">&nbsp;</label>
+                            <button type="button" class="btn btn-sm btn-primary" style="width: 100%; height: 24px; padding: 0; font-size: 11px; font-weight: bold; background-color: #00796B; border-color: #004d40;" onclick="btnAddItemRow_Click()">
+                                <i class="fa fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll-wrapper">
+                        <table class="win-grid" id="tblItemDetail">
+                            <thead>
+                                <tr>
+                                    <th>Purchase Order No</th>
+                                    <th>Purchase Demand No</th>
+                                    <th>Pre Bill No</th>
+                                    <th>Delivery Challan No</th>
+                                    <th>Grn No</th>
+                                    <th style="min-width: 180px;">Item Name</th>
+                                    <th>Ware House Name</th>
+                                    <th>Rack Name</th>
+                                    <th>UOM</th>
+                                    <th>Item Condition</th>
+                                    <th style="text-align: right;">Item Qty</th>
+                                    <th style="text-align: right;">Rate</th>
+                                    <th style="text-align: right;">Item Amount Without Discount</th>
+                                    <th style="text-align: right;">Discount Amount</th>
+                                    <th style="text-align: right;">Item Amount</th>
+                                    <th>Tax Name</th>
+                                    <th style="text-align: right;">Tax Percent</th>
+                                    <th style="text-align: right;">Tax Amount</th>
+                                    <th style="text-align: right;">Bill Amount</th>
+                                    <th style="text-align: right;">Freights</th>
+                                    <th style="text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyItemDetail">
+                                <tr>
+                                    <td colspan="21" style="text-align: center; color: #64748b; padding: 12px;">No items added yet. Select an item above and click <b>Add</b>.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </fieldset>
+
+                <!-- BOTTOM SECTION: OTHER EXPENSES & SUMMARY CALCULATIONS -->
+                <div class="row">
+                    <!-- SECTION 4: OTHER EXPENSES GRID -->
+                    <div class="col-md-5">
+                        <fieldset class="win-group-box">
+                            <legend>Other Expenses Credit to Party &amp; Charge to Product</legend>
+                            <div class="table-scroll-wrapper" style="max-height: 180px;">
+                                <table class="win-grid" id="tblOtherExpenses">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30px; text-align: center;">X</th>
+                                            <th style="width: 30px; text-align: center;">+</th>
+                                            <th style="width: 160px;">Other Item Name</th>
+                                            <th style="width: 60px; text-align: right;">Qty</th>
+                                            <th style="width: 60px; text-align: right;">Rate</th>
+                                            <th style="width: 80px; text-align: right;">Amount</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyOtherExpenses">
+                                        <!-- Dynamic Other Expenses rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <!-- SECTION 5: SUMMARY CALCULATION PANEL -->
+                    <div class="col-md-7">
+                        <div class="summary-panel">
+                            <!-- Item Amount - Item Discount = Net Item Amount -->
+                            <div class="summary-row">
+                                <span class="summary-label">Item Amount</span>
+                                <input type="number" id="txtSumItemAmount" class="win-textbox" value="0.00" readonly style="width: 110px; text-align: right; background-color: #f1f5f9; font-weight: bold;"/>
+                                <span class="summary-op">-</span>
+                                <input type="number" id="txtSumItemDiscount" class="win-textbox" value="0.00" style="width: 90px; text-align: right;" oninput="recalcSummary()"/>
+                                <span class="summary-op">=</span>
+                                <input type="number" id="txtSumNetItemAmount" class="win-textbox" value="0.00" readonly style="width: 110px; text-align: right; background-color: #e0f2f1; font-weight: bold; color: #00796B;"/>
+                            </div>
+
+                            <!-- Tax Account & Amount (Cr) -->
+                            <div class="summary-row">
+                                <span class="summary-label">Tax Account &amp; Amount (Cr)</span>
+                                <select id="cmbTaxAccount" class="win-combo select2" style="flex: 1;">
+                                    <option value="0">-- Select Tax Account --</option>
+                                    <option th:each="a : ${taxAccounts}" th:value="${a.id != null ? a.id : a.Id}" th:text="${(a.accountCode != null ? a.accountCode : '') + ' - ' + (a.accountTitle != null ? a.accountTitle : a.AccountTitle)}"></option>
+                                </select>
+                                <span class="summary-op">+</span>
+                                <input type="number" id="txtTaxAmount" class="win-textbox" value="0.00" style="width: 110px; text-align: right;" oninput="recalcSummary()"/>
+                            </div>
+
+                            <!-- Item Net Amount + Tax Amount -->
+                            <div class="summary-row">
+                                <span class="summary-label">Item Net Amount + Tax Amount</span>
+                                <span class="summary-op">+</span>
+                                <input type="number" id="txtNetItemPlusTax" class="win-textbox" value="0.00" readonly style="width: 110px; text-align: right; background-color: #f1f5f9; font-weight: bold;"/>
+                            </div>
+
+                            <!-- Total Expense Amount -->
+                            <div class="summary-row">
+                                <span class="summary-label">Total Expense Amount</span>
+                                <span class="summary-op">+</span>
+                                <input type="number" id="txtTotalExpenseAmt" class="win-textbox" value="0.00" readonly style="width: 110px; text-align: right; background-color: #f1f5f9; font-weight: bold;"/>
+                            </div>
+
+                            <!-- Discount Account & Discount Amount (Cr) -->
+                            <div class="summary-row">
+                                <span class="summary-label">Discount Account &amp; Discount Amount (Cr)</span>
+                                <select id="cmbDiscountAccount" class="win-combo select2" style="flex: 1;">
+                                    <option value="0">-- Select Discount Account --</option>
+                                    <option th:each="a : ${discountAccounts}" th:value="${a.id != null ? a.id : a.Id}" th:text="${(a.accountCode != null ? a.accountCode : '') + ' - ' + (a.accountTitle != null ? a.accountTitle : a.AccountTitle)}"></option>
+                                </select>
+                                <span class="summary-op">+</span>
+                                <input type="number" id="txtDiscountAmt" class="win-textbox" value="0.00" style="width: 110px; text-align: right;" oninput="recalcSummary()"/>
+                            </div>
+
+                            <!-- Total Party Freight Amount -->
+                            <div class="summary-row">
+                                <span class="summary-label">Total Party Freight Amount</span>
+                                <span class="summary-op">+</span>
+                                <input type="number" id="txtPartyFreightAmt" class="win-textbox" value="0.00" readonly style="width: 110px; text-align: right; background-color: #f1f5f9; font-weight: bold;"/>
+                            </div>
+
+                            <!-- Total Party AddLess Amount -->
+                            <div class="summary-row">
+                                <span class="summary-label">Total Party AddLess Amount</span>
+                                <span class="summary-op">+</span>
+                                <input type="number" id="txtPartyAddLessAmt" class="win-textbox" value="0.00" readonly style="width: 110px; text-align: right; background-color: #f1f5f9; font-weight: bold;"/>
+                            </div>
+
+                            <hr style="margin: 6px 0; border-color: #cbd5e1;"/>
+
+                            <!-- Net Bill Amount -->
+                            <div class="summary-row">
+                                <span class="summary-label" style="font-size: 12px; color: #00796B;">Net Bill Amount</span>
+                                <span class="summary-op" style="font-size: 13px;">=</span>
+                                <input type="number" id="txtNetBillAmount" class="win-textbox" value="0.00" readonly style="width: 130px; text-align: right; background-color: #00796B; color: #ffffff; font-weight: bold; font-size: 13px; height: 26px;"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: HISTORY -->
+            <div class="tab-pane" id="tabHistory">
+                <fieldset class="win-group-box">
+                    <legend>Purchase Invoice History Filters</legend>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="win-label">From Date</label>
+                            <input type="date" id="txtHistFromDate" class="win-datepicker"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="win-label">To Date</label>
+                            <input type="date" id="txtHistToDate" class="win-datepicker"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="win-label">Supplier / Party Filter</label>
+                            <select id="cmbHistSupplier" class="win-combo select2">
+                                <option value="0">-- All Suppliers --</option>
+                                <option th:each="s : ${suppliers}" th:value="${s.id != null ? s.id : s.Id}" th:text="${(s.partyCode != null ? s.partyCode : '') + ' - ' + (s.companyName != null ? s.companyName : s.supplierName)}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-top: 16px;">
+                            <button type="button" class="btn btn-sm btn-primary" style="width: 100%; height: 24px; background-color: #00796B; border-color: #004d40;" onclick="loadHistory()">
+                                <i class="fa fa-search"></i> Search History
+                            </button>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="table-scroll-wrapper" style="max-height: 380px;">
+                    <table class="win-grid" id="tblHistory">
+                        <thead>
+                            <tr>
+                                <th>Doc No</th>
+                                <th>Branch Sr No</th>
+                                <th>Doc Date</th>
+                                <th>Supplier / Party</th>
+                                <th>Manual No</th>
+                                <th style="text-align: right;">Bill Amount</th>
+                                <th>Remarks</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHistory">
+                            <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 15px;">Click <b>Search History</b> to load records.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script>
+        let itemDetailList = [];
+        let freightList = [];
+        let addLessList = [];
+        let otherExpList = [];
+
+        $(document).ready(function() {
+            const today = new Date().toISOString().split('T')[0];
+            $('#txtDocDate, #txtDueDate, #txtHistFromDate, #txtHistToDate').val(today);
+            $('.select2').select2({ width: '100%' });
+
+            // Initialize default empty rows for Freight, AddLess, OtherExp
+            initEmptyRows();
+        });
+
+        function initEmptyRows() {
+            addFreightRow();
+            addAddLessRow();
+            addOtherExpRow();
+        }
+
+        function calcDueDate() {
+            const days = parseInt($('#txtDueDays').val() || '0');
+            const docDateVal = $('#txtDocDate').val();
+            if (docDateVal) {
+                const dt = new Date(docDateVal);
+                dt.setDate(dt.getDate() + days);
+                $('#txtDueDate').val(dt.toISOString().split('T')[0]);
+            }
+        }
+
+        function addFreightRow() {
+            freightList.push({ transporterId: 0, credit: 0 });
+            renderFreightGrid();
+        }
+
+        function removeFreightRow(idx) {
+            if (freightList.length > 1) {
+                freightList.splice(idx, 1);
+                renderFreightGrid();
+            }
+        }
+
+        function renderFreightGrid() {
+            let html = '';
+            freightList.forEach((row, i) => {
+                html += `<tr>
+                    <td style="text-align: center;"><button type="button" class="btn-grid-action btn-grid-del" onclick="removeFreightRow(${i})">&times;</button></td>
+                    <td style="text-align: center;"><button type="button" class="btn-grid-action btn-grid-add" onclick="addFreightRow()">+</button></td>
+                    <td><input type="text" class="win-textbox" placeholder="Transporter..." value="${row.transporter || ''}" oninput="freightList[${i}].transporter=this.value"/></td>
+                    <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.credit || '0.00'}" oninput="freightList[${i}].credit=parseFloat(this.value)||0; recalcSummary();"/></td>
+                </tr>`;
+            });
+            $('#tbodyFreight').html(html);
+            recalcSummary();
+        }
+
+        function addAddLessRow() {
+            addLessList.push({ accountId: 0, remarks: '', pct: 0, qty: 0, rate: 0, debit: 0, credit: 0 });
+            renderAddLessGrid();
+        }
+
+        function removeAddLessRow(idx) {
+            if (addLessList.length > 1) {
+                addLessList.splice(idx, 1);
+                renderAddLessGrid();
+            }
+        }
+
+        function renderAddLessGrid() {
+            let html = '';
+            addLessList.forEach((row, i) => {
+                html += `<tr>
+                    <td style="text-align: center;"><button type="button" class="btn-grid-action btn-grid-del" onclick="removeAddLessRow(${i})">&times;</button></td>
+                    <td style="text-align: center;"><button type="button" class="btn-grid-action btn-grid-add" onclick="addAddLessRow()">+</button></td>
+                    <td><input type="text" class="win-textbox" placeholder="Account..." value="${row.account || ''}" oninput="addLessList[${i}].account=this.value"/></td>
+                    <td><input type="text" class="win-textbox" placeholder="Remarks..." value="${row.remarks || ''}" oninput="addLessList[${i}].remarks=this.value"/></td>
+                    <td><input type="number" class="win-textbox" style="text-align: right;" value="${row.pct || 0}" oninput="addLessList[${i}].pct=parseFloat(this.value)||0"/></td>
+                    <td><input type="number" class="win-textbox" style="text-align: right;" value="${row.qty || 0}" oninput="addLessList[${i}].qty=parseFloat(this.value)||0"/></td>
+                    <td><input type="number" class="win-textbox" style="text-align: right;" value="${row.rate || 0}" oninput="addLessList[${i}].rate=parseFloat(this.value)||0"/></td>
+                    <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.debit || 0}" oninput="addLessList[${i}].debit=parseFloat(this.value)||0; recalcSummary();"/></td>
+                    <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.credit || 0}" oninput="addLessList[${i}].credit=parseFloat(this.value)||0; recalcSummary();"/></td>
+                </tr>`;
+            });
+            $('#tbodyAddLess').html(html);
+            recalcSummary();
+        }
+
+        function addOtherExpRow() {
+            otherExpList.push({ itemName: '', qty: 0, rate: 0, amount: 0, remarks: '' });
+            renderOtherExpGrid();
+        }
+
+        function removeOtherExpRow(idx) {
+            if (otherExpList.length > 1) {
+                otherExpList.splice(idx, 1);
+                renderOtherExpGrid();
+            }
+        }
+
+        function renderOtherExpGrid() {
+            let html = '';
+            otherExpList.forEach((row, i) => {
+                html += `<tr>
+                    <td style="text-align: center;"><button type="button" class="btn-grid-action btn-grid-del" onclick="removeOtherExpRow(${i})">&times;</button></td>
+                    <td style="text-align: center;"><button type="button" class="btn-grid-action btn-grid-add" onclick="addOtherExpRow()">+</button></td>
+                    <td><input type="text" class="win-textbox" placeholder="Item Name..." value="${row.itemName || ''}" oninput="otherExpList[${i}].itemName=this.value"/></td>
+                    <td><input type="number" class="win-textbox" style="text-align: right;" value="${row.qty || 0}" oninput="otherExpList[${i}].qty=parseFloat(this.value)||0; calcOtherExpLine(${i});"/></td>
+                    <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.rate || 0}" oninput="otherExpList[${i}].rate=parseFloat(this.value)||0; calcOtherExpLine(${i});"/></td>
+                    <td><input type="number" step="0.01" id="txtOtherAmt_${i}" class="win-textbox" style="text-align: right; background-color: #f1f5f9; font-weight: bold;" value="${row.amount || 0}" readonly/></td>
+                    <td><input type="text" class="win-textbox" placeholder="Remarks..." value="${row.remarks || ''}" oninput="otherExpList[${i}].remarks=this.value"/></td>
+                </tr>`;
+            });
+            $('#tbodyOtherExpenses').html(html);
+            recalcSummary();
+        }
+
+        function calcOtherExpLine(i) {
+            const qty = otherExpList[i].qty || 0;
+            const rate = otherExpList[i].rate || 0;
+            otherExpList[i].amount = qty * rate;
+            $(`#txtOtherAmt_${i}`).val(otherExpList[i].amount.toFixed(2));
+            recalcSummary();
+        }
+
+        function onItemChange(itemId) {
+            const opt = $('#cmbItem option:selected');
+            const price = parseFloat(opt.attr('data-price') || '0');
+            if (price > 0) {
+                $('#txtLineRate').val(price.toFixed(2));
+            }
+        }
+
+        function btnAddItemRow_Click() {
+            const itemId = parseInt($('#cmbItem').val() || '0');
+            if (itemId <= 0) {
+                alert("Please select an Item.");
+                return;
+            }
+            const itemText = $('#cmbItem option:selected').text();
+            const whId = parseInt($('#cmbWarehouse').val() || '0');
+            const whText = whId > 0 ? $('#cmbWarehouse option:selected').text() : '';
+            const rackId = parseInt($('#cmbRack').val() || '0');
+            const rackText = rackId > 0 ? $('#cmbRack option:selected').text() : '';
+            const uom = $('#cmbUom option:selected').text();
+            const condition = $('#cmbCondition option:selected').text();
+            const qty = parseFloat($('#txtLineQty').val() || '0');
+            const rate = parseFloat($('#txtLineRate').val() || '0');
+
+            if (qty <= 0) {
+                alert("Please enter a valid Quantity.");
+                return;
+            }
+
+            const grossAmt = qty * rate;
+
+            const row = {
+                poNo: '',
+                demandNo: '',
+                preBillNo: '',
+                challanNo: '',
+                grnNo: '',
+                itemId: itemId,
+                itemName: itemText,
+                warehouseId: whId,
+                warehouseName: whText,
+                rackId: rackId,
+                rackName: rackText,
+                uom: uom,
+                condition: condition,
+                qty: qty,
+                rate: rate,
+                grossAmt: grossAmt,
+                discountAmt: 0,
+                netAmt: grossAmt,
+                taxName: '',
+                taxPct: 0,
+                taxAmt: 0,
+                billAmt: grossAmt,
+                freightAmt: 0
+            };
+
+            itemDetailList.push(row);
+            renderItemDetailGrid();
+
+            // Clear inputs
+            $('#cmbItem').val('0').trigger('change');
+            $('#txtLineQty').val('');
+            $('#txtLineRate').val('');
+        }
+
+        function removeItemRow(idx) {
+            itemDetailList.splice(idx, 1);
+            renderItemDetailGrid();
+        }
+
+        function renderItemDetailGrid() {
+            if (itemDetailList.length === 0) {
+                $('#tbodyItemDetail').html('<tr><td colspan="21" style="text-align: center; color: #64748b; padding: 12px;">No items added yet. Select an item above and click <b>Add</b>.</td></tr>');
+                recalcSummary();
+                return;
+            }
+
+            let html = '';
+            itemDetailList.forEach((row, i) => {
+                html += `<tr>
+                    <td>${row.poNo || ''}</td>
+                    <td>${row.demandNo || ''}</td>
+                    <td>${row.preBillNo || ''}</td>
+                    <td>${row.challanNo || ''}</td>
+                    <td>${row.grnNo || ''}</td>
+                    <td><strong>${row.itemName}</strong></td>
+                    <td>${row.warehouseName}</td>
+                    <td>${row.rackName}</td>
+                    <td>${row.uom}</td>
+                    <td>${row.condition}</td>
+                    <td style="text-align: right;">${row.qty.toFixed(2)}</td>
+                    <td style="text-align: right;">${row.rate.toFixed(2)}</td>
+                    <td style="text-align: right;">${row.grossAmt.toFixed(2)}</td>
+                    <td style="text-align: right;">${row.discountAmt.toFixed(2)}</td>
+                    <td style="text-align: right; font-weight: bold;">${row.netAmt.toFixed(2)}</td>
+                    <td>${row.taxName || ''}</td>
+                    <td style="text-align: right;">${row.taxPct.toFixed(2)}</td>
+                    <td style="text-align: right;">${row.taxAmt.toFixed(2)}</td>
+                    <td style="text-align: right; font-weight: bold; color: #00796B;">${row.billAmt.toFixed(2)}</td>
+                    <td style="text-align: right;">${row.freightAmt.toFixed(2)}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-grid-action btn-grid-del" onclick="removeItemRow(${i})">&times;</button>
+                    </td>
+                </tr>`;
+            });
+            $('#tbodyItemDetail').html(html);
+            recalcSummary();
+        }
+
+        function recalcSummary() {
+            let totItemAmt = 0;
+            itemDetailList.forEach(r => totItemAmt += r.netAmt);
+            $('#txtSumItemAmount').val(totItemAmt.toFixed(2));
+
+            const itemDisc = parseFloat($('#txtSumItemDiscount').val() || '0');
+            const netItemAmt = Math.max(0, totItemAmt - itemDisc);
+            $('#txtSumNetItemAmount').val(netItemAmt.toFixed(2));
+
+            const taxAmt = parseFloat($('#txtTaxAmount').val() || '0');
+            const netPlusTax = netItemAmt + taxAmt;
+            $('#txtNetItemPlusTax').val(netPlusTax.toFixed(2));
+
+            let totOtherExp = 0;
+            otherExpList.forEach(r => totOtherExp += (r.amount || 0));
+            $('#txtTotalExpenseAmt').val(totOtherExp.toFixed(2));
+
+            const discAmt = parseFloat($('#txtDiscountAmt').val() || '0');
+
+            let totFreight = 0;
+            freightList.forEach(r => totFreight += (r.credit || 0));
+            $('#txtPartyFreightAmt').val(totFreight.toFixed(2));
+
+            let totAddLess = 0;
+            addLessList.forEach(r => totAddLess += (r.credit - r.debit || 0));
+            $('#txtPartyAddLessAmt').val(totAddLess.toFixed(2));
+
+            const netBillAmt = netPlusTax + totOtherExp + discAmt + totFreight + totAddLess;
+            $('#txtNetBillAmount').val(netBillAmt.toFixed(2));
+        }
+
+        function btnSave_Click() {
+            const suppId = parseInt($('#cmbSupplier').val() || '0');
+            if (suppId <= 0) {
+                alert("Please select a valid Supplier / Party.");
+                $('#cmbSupplier').select2('open');
+                return;
+            }
+            if (itemDetailList.length === 0) {
+                alert("Please add at least one line item before saving.");
+                return;
+            }
+
+            const payload = {
+                docNo: parseInt($('#txtDocNo').val() || '0'),
+                branchSrNo: parseInt($('#txtBranchSrNo').val() || '1'),
+                salesTaxNo: parseInt($('#txtTaxInvoiceNo').val() || '1'),
+                supplierCustomerId: suppId,
+                dueDays: parseInt($('#txtDueDays').val() || '0'),
+                docDate: $('#txtDocDate').val(),
+                manualBillNo: $('#txtManualNo').val(),
+                paymentTerm: $('#cmbPaymentTerms').val(),
+                dueDate: $('#txtDueDate').val(),
+                remarksHeader: $('#txtRemarks').val(),
+                billAmount: parseFloat($('#txtNetBillAmount').val() || '0'),
+                invPurchaseInvoiceDetailList: itemDetailList
+            };
+
+            $.ajax({
+                url: '/api/purchase/save-store-invoice',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    if (res && res.success) {
+                        alert(res.message || "Purchase Invoice Store Management saved successfully.");
+                        btnNew_Click();
+                    } else {
+                        alert("Error saving Purchase Invoice: " + (res.message || "Unknown error"));
+                    }
+                },
+                error: function() {
+                    alert("Error communicating with server while saving Purchase Invoice.");
+                }
+            });
+        }
+
+        function btnNew_Click() {
+            itemDetailList = [];
+            freightList = [];
+            addLessList = [];
+            otherExpList = [];
+            initEmptyRows();
+            renderItemDetailGrid();
+            $('#txtManualNo').val('');
+            $('#txtRemarks').val('');
+            $('#txtSumItemDiscount').val('0.00');
+            $('#txtTaxAmount').val('0.00');
+            $('#txtDiscountAmt').val('0.00');
+            recalcSummary();
+        }
+
+        function btnRefresh_Click() {
+            btnNew_Click();
+        }
+
+        function loadHistory() {
+            const fromDate = $('#txtHistFromDate').val();
+            const toDate = $('#txtHistToDate').val();
+            const suppId = $('#cmbHistSupplier').val();
+
+            $('#tbodyHistory').html('<tr><td colspan="8" style="text-align: center; padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading history...</td></tr>');
+
+            $.ajax({
+                url: '/api/purchase/store-invoice-history',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    fromDate: fromDate,
+                    toDate: toDate,
+                    supplierCustomerId: suppId
+                }),
+                success: function(res) {
+                    if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(r => {
+                            html += `<tr>
+                                <td style="font-weight: bold; color: #00796B;">${r.DocNo || r.docNo || ''}</td>
+                                <td>${r.BranchSrNo || r.branchSrNo || ''}</td>
+                                <td>${r.DocDate || r.docDate || ''}</td>
+                                <td>${r.CompanyName || r.companyName || r.SupplierName || ''}</td>
+                                <td>${r.ManualBillNo || r.manualBillNo || ''}</td>
+                                <td style="text-align: right; font-weight: bold;">${parseFloat(r.BillAmount || r.billAmount || 0).toFixed(2)}</td>
+                                <td>${r.RemarksHeader || r.remarksHeader || ''}</td>
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn-xs btn-default" onclick="alert('Viewing history record...')"><i class="fa fa-eye"></i> View</button>
+                                </td>
+                            </tr>`;
+                        });
+                        $('#tbodyHistory').html(html);
+                    } else {
+                        $('#tbodyHistory').html('<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 15px;">No historical purchase invoices found.</td></tr>');
+                    }
+                },
+                error: function() {
+                    $('#tbodyHistory').html('<tr><td colspan="8" style="text-align: center; color: #ef4444; padding: 15px;"><i class="fa fa-exclamation-triangle"></i> Error loading history records.</td></tr>');
+                }
+            });
+        }
+
+        function loadGrnModal() {
+            alert("Load GRN feature: Pulls pending GRN records into Purchase Invoice Item Details.");
+        }
+
+        function openVoucherPrint(code) {
+            window.open(`/accounts/reports/general-ledger/pdf/${code}`, '_blank');
+        }
+
+        function openSlipPrint(code) {
+            window.open(`/accounts/reports/general-ledger/pdf/${code}`, '_blank');
+        }
+    </script>
+</body>
+</html>

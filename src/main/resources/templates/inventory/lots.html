@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Define Lots / Batches - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
+        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-erp-primary:hover { background-color: #004d40; color: white; }
+        .btn-erp-danger { background-color: #dc3545; color: white; border: 1px solid #bd2130; }
+        .btn-erp-danger:hover { background-color: #c82333; color: white; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
+        .grid-container { height: 440px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
+        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
+        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
+        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div class="erp-header">
+        <div><i class="fa fa-barcode"></i> Define Lots / Batches (Lot - Inventory Management)</div>
+        <div><a href="/inventory" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Inventory Dashboard</a></div>
+    </div>
+    
+    <div class="erp-toolbar">
+        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New (Ctrl+N)</button>
+        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="btn-erp" id="btnUpdate"><i class="fa fa-pencil"></i> Update</button>
+        <button type="button" class="btn-erp btn-erp-danger" id="btnDelete"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
+    </div>
+
+    <div style="padding: 10px;">
+        <input type="hidden" id="lotId" value="" />
+
+        <div class="erp-fieldset">
+            <legend>Lot / Batch Information</legend>
+            <div class="row" style="margin-bottom: 6px;">
+                <div class="col-md-3">
+                    <label class="form-label-erp">Lot Number *</label>
+                    <input type="text" id="lotNo" class="form-control-erp" placeholder="e.g. LOT-2026-09" />
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label-erp">Select Item *</label>
+                    <select id="itemId" class="form-control-erp select2">
+                        <option value="">-- Select Item --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Batch Qty</label>
+                    <input type="number" step="0.01" id="quantity" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-erp">Batch Rate (PKR)</label>
+                    <input type="number" step="0.01" id="rate" class="form-control-erp" placeholder="0.00" style="text-align: right;" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label-erp">Manufacture Date</label>
+                    <input type="date" id="manufactureDate" class="form-control-erp" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-erp">Expiry Date</label>
+                    <input type="date" id="expiryDate" class="form-control-erp" />
+                </div>
+                <div class="col-md-6" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
+                    <label style="font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="isActive" checked="checked" /> Active Lot / Batch
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-fieldset">
+            <legend>Lots / Batches Registry Records</legend>
+            <div class="grid-container">
+                <table class="erp-table" id="lotGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 8%;">ID</th>
+                            <th style="width: 15%;">Lot No</th>
+                            <th style="width: 32%;">Item Description</th>
+                            <th style="width: 12%;">Mfg Date</th>
+                            <th style="width: 12%;">Exp Date</th>
+                            <th style="width: 11%; text-align: right;">Quantity</th>
+                            <th style="width: 10%; text-align: center;">Status</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="4" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="5" placeholder="Filter..." /></th>
+                            <th><input type="text" data-col="6" placeholder="Filter..." /></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lotGridBody">
+                        <tr><td colspan="7" style="text-align:center;">Loading lots...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
+    <script>
+        var lotData = [];
+
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            var today = new Date().toISOString().split('T')[0];
+            $('#manufactureDate, #expiryDate').val(today);
+            loadItems();
+            loadLotGrid();
+
+            $('#btnNew').click(function() { resetForm(); });
+            $('#btnSave, #btnUpdate').click(function() { saveLot(); });
+            $('#btnDelete').click(function() { deleteLot(); });
+            $('#btnRefresh').click(function() { loadLotGrid(); });
+
+            $('.filter-row input').on('keyup change', function() {
+                filterGrid();
+            });
+        });
+
+        function loadItems() {
+            $.get('/api/inventory/items/list', function(items) {
+                var html = '<option value="">-- Select Item --</option>';
+                $.each(items || [], function(i, item) {
+                    html += '<option value="' + item.id + '">' + (item.itemName || '') + '</option>';
+                });
+                $('#itemId').html(html).trigger('change.select2');
+            });
+        }
+
+        function loadLotGrid() {
+            $.ajax({
+                url: '/api/inventory/lots/list',
+                type: 'GET',
+                success: function(data) {
+                    lotData = data || [];
+                    renderGrid(lotData);
+                },
+                error: function() {
+                    $('#lotGridBody').html('<tr><td colspan="7" style="text-align:center; color:red;">Failed to load lots.</td></tr>');
+                }
+            });
+        }
+
+        function renderGrid(list) {
+            var html = '';
+            if(!list || list.length === 0) {
+                html = '<tr><td colspan="7" style="text-align:center;">No Lot records found.</td></tr>';
+            } else {
+                $.each(list, function(idx, item) {
+                    var qty = parseFloat(item.quantity || 0);
+                    html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
+                    html += '<td>' + (item.id || '') + '</td>';
+                    html += '<td><strong>' + (item.lotNo || '') + '</strong></td>';
+                    html += '<td>' + (item.itemName || ('Item #' + item.itemId)) + '</td>';
+                    html += '<td>' + (item.manufactureDate || '') + '</td>';
+                    html += '<td>' + (item.expiryDate || '') + '</td>';
+                    html += '<td style="text-align:right; font-weight:bold;">' + qty.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
+                    html += '<td style="text-align:center;">' + (item.isActive !== false ? '<span class="label label-success">Active</span>' : '<span class="label label-default">Inactive</span>') + '</td>';
+                    html += '</tr>';
+                });
+            }
+            $('#lotGridBody').html(html);
+        }
+
+        function selectRow(tr, idx) {
+            $('#lotGridBody tr').removeClass('selected');
+            $(tr).addClass('selected');
+            var item = lotData[idx];
+            if(item) {
+                $('#lotId').val(item.id);
+                $('#lotNo').val(item.lotNo || '');
+                $('#itemId').val(item.itemId || '').trigger('change');
+                $('#manufactureDate').val(item.manufactureDate || '');
+                $('#expiryDate').val(item.expiryDate || '');
+                $('#quantity').val(item.quantity || '');
+                $('#rate').val(item.rate || '');
+                $('#isActive').prop('checked', item.isActive !== false);
+            }
+        }
+
+        function resetForm() {
+            var today = new Date().toISOString().split('T')[0];
+            $('#lotId').val('');
+            $('#lotNo').val('');
+            $('#itemId').val('').trigger('change');
+            $('#manufactureDate').val(today);
+            $('#expiryDate').val(today);
+            $('#quantity').val('');
+            $('#rate').val('');
+            $('#isActive').prop('checked', true);
+            $('#lotGridBody tr').removeClass('selected');
+        }
+
+        function saveLot() {
+            var lotNo = $('#lotNo').val().trim();
+            if(!lotNo) {
+                alert('Please enter Lot Number.');
+                $('#lotNo').focus();
+                return;
+            }
+
+            var payload = {
+                id: $('#lotId').val() ? parseInt($('#lotId').val()) : null,
+                lotNo: lotNo,
+                itemId: $('#itemId').val() ? parseInt($('#itemId').val()) : 0,
+                manufactureDate: $('#manufactureDate').val(),
+                expiryDate: $('#expiryDate').val(),
+                quantity: parseFloat($('#quantity').val() || 0),
+                rate: parseFloat($('#rate').val() || 0),
+                isActive: $('#isActive').is(':checked')
+            };
+
+            $.ajax({
+                url: '/api/inventory/lots/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    alert('Lot / Batch saved successfully!');
+                    resetForm();
+                    loadLotGrid();
+                },
+                error: function(xhr) {
+                    alert('Failed to save Lot: ' + (xhr.responseText || 'Error occurred'));
+                }
+            });
+        }
+
+        function deleteLot() {
+            var id = $('#lotId').val();
+            if(!id) {
+                alert('Please select a Lot from grid to delete.');
+                return;
+            }
+            if(confirm('Are you sure you want to delete Lot #' + id + '?')) {
+                $.ajax({
+                    url: '/api/inventory/lots/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        alert('Lot deleted successfully!');
+                        resetForm();
+                        loadLotGrid();
+                    },
+                    error: function(xhr) {
+                        alert('Failed to delete lot: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        function filterGrid() {
+            var filters = [];
+            $('.filter-row input').each(function() {
+                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
+            });
+
+            $('#lotGridBody tr').each(function() {
+                var row = $(this);
+                var show = true;
+                $.each(filters, function(i, f) {
+                    if(f.val) {
+                        var text = row.find('td').eq(f.col).text().toLowerCase();
+                        if(text.indexOf(f.val) === -1) {
+                            show = false;
+                            return false;
+                        }
+                    }
+                });
+                row.toggle(show);
+            });
+        }
+    </script>
+</body>
+</html>
