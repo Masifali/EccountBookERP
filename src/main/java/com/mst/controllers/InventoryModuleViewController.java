@@ -248,7 +248,7 @@ public class InventoryModuleViewController {
         return "redirect:/inventory/brands";
     }
 
-    @GetMapping("/brands/delete/{id}")
+    @PostMapping("/brands/delete/{id}")
     public String deleteBrand(@PathVariable("id") int id) {
         brandService.delete(id);
         return "redirect:/inventory/brands";

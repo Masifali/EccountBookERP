@@ -335,32 +335,20 @@ public class InventoryManagementRestController {
 
 	@GetMapping("/brands/list")
 	public ResponseEntity<List<Brand>> getBrandsList() {
-		try {
-			return ResponseEntity.ok(brandRepository.findAll());
-		} catch (Exception e) {
-			return ResponseEntity.ok(new ArrayList<>());
-		}
+		return ResponseEntity.ok(desktopBrandService.getAll());
 	}
+
+    @Autowired private com.mst.services.BrandService desktopBrandService;
 
 	@PostMapping("/brands/save")
 	public ResponseEntity<?> saveBrand(@RequestBody Brand brand) {
-		try {
-			if (brand.getId() == null || brand.getId() <= 0) {
-				String maxSql = "SELECT COALESCE(MAX(Id), 0) FROM Brand";
-				Integer maxId = jdbcTemplate.queryForObject(maxSql, Integer.class);
-				brand.setId((maxId == null ? 0 : maxId) + 1);
-			}
-			Brand saved = brandRepository.save(brand);
-			return ResponseEntity.ok(saved);
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body("Error saving brand: " + e.getMessage());
-		}
+		return ResponseEntity.ok(desktopBrandService.addOrUpdate(brand));
 	}
 
 	@DeleteMapping("/brands/{id}")
 	public ResponseEntity<?> deleteBrand(@PathVariable("id") Integer id) {
 		try {
-			brandRepository.deleteById(id);
+			desktopBrandService.delete(id);
 			Map<String, Object> resp = new HashMap<>();
 			resp.put("success", true);
 			resp.put("message", "Brand deleted successfully");

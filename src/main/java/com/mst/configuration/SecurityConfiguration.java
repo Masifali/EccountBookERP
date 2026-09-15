@@ -80,7 +80,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .requestMatchers(new org.springframework.security.web.util.matcher.AndRequestMatcher(
                         new AntPathRequestMatcher("/api/**"),
                         new org.springframework.security.web.util.matcher.NegatedRequestMatcher(
-                                new AntPathRequestMatcher("/api/accounts/**"))));
+                                new AntPathRequestMatcher("/api/accounts/**")),
+                        new org.springframework.security.web.util.matcher.NegatedRequestMatcher(
+                                new AntPathRequestMatcher("/api/inventory/**"))));
     }
 
     @Bean

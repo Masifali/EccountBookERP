@@ -13,12 +13,15 @@ import lombok.Data;
  * Ditto of the real GoldenAcedb dbo.Brand table (desktop: Inventory_Definition/
  * DefineBrand.cs). Id is NOT a SQL Server IDENTITY column in the real schema (same
  * as Item/ItemCategory/ItemType/ProductType) - the desktop assigns the next Id
- * itself, so BrandService does the equivalent (see IBrandRepository.findMaxId()).
+ * through USP_Brand_InsertAndUpdate, which BrandService also uses.
  */
 @Entity
 @Table(name = "Brand")
 @Data
 public class Brand {
+
+    @javax.persistence.Transient private String entryUserName;
+    @javax.persistence.Transient private String modifyUserName;
 
 	@Id
 	@Column(name = "Id")

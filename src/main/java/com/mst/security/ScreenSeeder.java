@@ -103,14 +103,20 @@ public class ScreenSeeder implements CommandLineRunner {
 			seed("Chart of Account Allocate Cost Center", "Accounts", "/accounts/banking/coa-allocate-cost-center", "BNK_COA_COST_CENTER", "ACCOUNTS", null, 4);
 
 			// Inventory Screens
-			seed("Brands", "Inventory", "/inventory/brands", "INVENTORY_BRANDS", "INVENTORY", null, null);
+			seed("Define Brand", "Inventory", "/inventory/brands", "INVENTORY_BRANDS", "INVENTORY", 876, 4);
+            seed("Inventory Stock Transactions Report", "Inventory", "/inventory/stock-transactions", "INVENTORY_STOCK_TRANSACTIONS", "INVENTORY", 580, 93);
 			seed("Item Groups", "Inventory", "/inventory/item_groups", "INVENTORY_ITEM_GROUPS", "INVENTORY", null, null);
 			seed("Product Types", "Inventory", "/inventory/product_types", "INVENTORY_PRODUCT_TYPES", "INVENTORY", null, null);
-			seed("Warehouses", "Inventory", "/inventory/warehouses", "INVENTORY_WAREHOUSES", "INVENTORY", null, null);
+			seed("Define WareHouse", "Inventory", "/inventory/warehouses", "INVENTORY_WAREHOUSES", "INVENTORY", 116, 4);
 			seed("Racks", "Inventory", "/inventory/racks", "INVENTORY_RACKS", "INVENTORY", null, null);
-			seed("Item Categories", "Inventory", "/inventory/item_categories", "INVENTORY_ITEM_CATEGORIES", "INVENTORY", null, null);
-			seed("Item Types", "Inventory", "/inventory/item_types", "INVENTORY_ITEM_TYPES", "INVENTORY", null, null);
-			seed("Items", "Inventory", "/inventory/items", "INVENTORY_ITEMS", "INVENTORY", null, null);
+			seed("Define Item Category", "Inventory", "/inventory/item_categories", "INVENTORY_ITEM_CATEGORIES", "INVENTORY", 112, 4);
+			seed("Define Item Type", "Inventory", "/inventory/item_types", "INVENTORY_ITEM_TYPES", "INVENTORY", 113, 4);
+			seed("Define Item", "Inventory", "/inventory/items", "INVENTORY_ITEMS", "INVENTORY", 111, 4);
+            seed("Opening Stock Balancing", "Inventory", "/stocks/stock_opening_form", "INVENTORY_OPENING_STOCK", "INVENTORY", 92, 4);
+            seed("Define Item Uom Schedule", "Inventory", "/inventory/item_uom_schedule", "INVENTORY_UOM_SCHEDULE", "INVENTORY", 115, 4);
+            seed("Item Min Max Rate Schedule", "Inventory", "/inventory/item-min-max-rate", "INVENTORY_MIN_MAX", "INVENTORY", 104, 4);
+            seed("Consumption Items", "Inventory", "/inventory/consumption-items", "INVENTORY_CONSUMPTION", "INVENTORY", 105, 4);
+            seed("Define Lots", "Inventory", "/inventory/define-lots", "INVENTORY_LOTS", "INVENTORY", 110, 4);
 
 			// User Management Screens
 			seed("User Registration", "User Management", "/user-management/users", "ADD_NEW_USER", "UTILITIES", null, null);
