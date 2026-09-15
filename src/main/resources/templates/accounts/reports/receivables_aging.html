@@ -4,159 +4,364 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Receivables Aging - EccountBookERP</title>
+    <title>ERP 1006 Receivables Aging - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
+        * { box-sizing: border-box; }
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        
+        /* Top Navigation Header */
+        .erp-header { background-color: #00796B; color: white; padding: 5px 10px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-header a { color: white; text-decoration: underline; }
+        
+        /* Toolbar Bar */
+        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 8px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 2px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 26px; }
+        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; color: #00796B; }
         .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
         .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
+        .btn-erp.disabled, .btn-erp:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
+        
+        /* Title Banner */
+        .erp-title-banner { background-color: #00796B; color: white; padding: 5px 10px; font-size: 13px; font-weight: bold; margin-bottom: 6px; }
+        
+        /* Layout Grid Cards */
+        .erp-main-container { padding: 6px 10px; }
+        .erp-filters-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; align-items: flex-start; }
+        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 2px; padding: 8px; font-size: 11px; }
+        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; float: none; }
+        
+        /* Inputs & Selects */
+        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; display: inline-block; }
         .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; box-sizing: border-box; background-color: #fff; width: 100%; }
         .form-control-erp:focus { border-color: #00796B; outline: none; }
+        
+        /* Select2 Theme Tuning */
         .select2-container--default .select2-selection--single { height: 25px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
         .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 23px !important; font-size: 11px !important; padding-left: 2px !important; color: #222 !important; }
         .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
-        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .erp-table tr:hover { background-color: #f0f7f7; }
-        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .report-summary-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
+        
+        /* Radio Group */
+        .radio-group-box { background: white; border: 1px solid #cbd5e1; border-radius: 2px; padding: 8px; width: 150px; flex: none; }
+        .radio-group-box label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-weight: 600; cursor: pointer; }
+        
+        /* Period Filter Box */
+        .period-box { background: white; border: 1px solid #00796B; border-radius: 2px; padding: 6px; width: 160px; flex: none; font-size: 11px; }
+        .period-box-title { background: #00796B; color: white; padding: 2px 4px; font-weight: bold; text-align: center; margin-bottom: 6px; font-size: 10px; }
+        
+        /* Metric Cards */
+        .cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: 280px; flex: none; }
+        .metric-card { background: white; border: 1px solid #cbd5e1; text-align: center; }
+        .metric-card-header { background: #00796B; color: white; padding: 3px 6px; font-weight: bold; font-size: 11px; }
+        .metric-card-value { padding: 6px; font-size: 14px; font-weight: bold; color: #1e293b; min-height: 30px; }
+        
+        /* Totals of Receivables Card */
+        .totals-card { background: white; border: 1px solid #cbd5e1; width: 260px; flex: none; }
+        .totals-card-header { background: #00796B; color: white; padding: 4px; text-align: center; font-weight: bold; font-size: 11px; }
+        .totals-card-body { padding: 6px; }
+        .totals-row { display: flex; justify-content: space-between; padding: 4px 6px; border-bottom: 1px dashed #e2e8f0; font-size: 11px; }
+        .totals-row:last-child { border-bottom: none; }
+        .totals-row label { font-weight: bold; color: #334155; margin: 0; }
+        .totals-row output { font-weight: bold; color: #0f172a; }
+        
+        /* Filtered Records Header Bar */
+        .filtered-records-bar { background-color: #00796B; color: white; padding: 4px 10px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 4px; border-radius: 2px 2px 0 0; }
+        .filtered-records-controls { display: flex; align-items: center; gap: 10px; font-weight: normal; font-size: 11px; }
+        .filtered-records-controls label { margin: 0; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .btn-apply-sort { background-color: #ffffff; color: #00796B; border: none; font-weight: bold; padding: 2px 8px; border-radius: 2px; font-size: 11px; cursor: pointer; }
+        .btn-apply-sort:hover { background-color: #e2e8f0; }
+        
+        /* Table Grid Container */
+        .table-grid-container { background: white; border: 1px solid #cbd5e1; border-top: none; max-height: 480px; overflow-x: auto; overflow-y: auto; width: 100%; }
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+        .erp-table th { background-color: #316ac5; color: white; padding: 5px 8px; text-align: left; border: 1px solid #cbd5e1; font-weight: bold; position: sticky; top: 0; z-index: 2; }
+        .erp-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
+        .erp-table tr.group-header-row td { background-color: #d0e1f9; color: #004d40; font-weight: bold; font-size: 11px; }
+        .erp-table tr.selected-row td { background-color: #316ac5 !important; color: white !important; }
+        .erp-table tr.selected-row a, .erp-table tr.selected-row button { color: white !important; }
+        .erp-table tr:hover { background-color: #f1f5f9; }
+        
+        /* Footer Status Bar */
+        .erp-statusbar { background: #e2e8f0; border-top: 1px solid #cbd5e1; padding: 4px 10px; font-size: 11px; color: #475569; font-weight: 600; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+        
+        /* Modal Styling */
+        dialog { border: 1px solid #00796B; border-radius: 4px; padding: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); width: 850px; max-width: 95vw; }
+        dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+        .modal-header-erp { background-color: #00796B; color: white; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body-erp { padding: 12px; max-height: 450px; overflow-y: auto; }
+        
         @media print {
-            .erp-header, .erp-toolbar, fieldset legend, .erp-fieldset:first-of-type, a, button { display: none !important; }
-            body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
-            .erp-fieldset { border: none !important; margin: 0 !important; padding: 0 !important; }
-            .erp-table th, .erp-table td { border: 1px solid #000 !important; color: #000 !important; }
-            .erp-table th { background: #eee !important; color: #000 !important; }
+            .erp-header, .erp-toolbar, .filtered-records-bar, .erp-statusbar, button, a { display: none !important; }
+            body { background: white !important; }
+            .table-grid-container { max-height: none !important; overflow: visible !important; }
+            .erp-table th, .erp-table td { border: 1px solid #000 !important; }
         }
     </style>
 </head>
 <body>
+    <!-- Top Header -->
     <div class="erp-header">
-        <div><i class="fa fa-line-chart"></i> Receivables Aging Report</div>
-        <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+        <div><i class="fa fa-calculator"></i> ERP 1006 Receivables Aging</div>
+        <div><a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
     </div>
+
+    <!-- Toolbar Buttons -->
     <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary" onclick="generateReport()"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp" onclick="resetFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
+        <button type="button" id="btnNew" class="btn-erp"><i class="fa fa-plus-circle"></i> + New</button>
+        <button type="button" id="btnPrint" class="btn-erp"><i class="fa fa-print"></i> 123-Print</button>
+        <button type="button" id="btnShortcuts" class="btn-erp"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        <button type="button" id="btnHistory" class="btn-erp"><i class="fa fa-history"></i> History</button>
+        <button type="button" id="btnRefresh" class="btn-erp"><i class="fa fa-refresh"></i> Refresh</button>
     </div>
-    <div style="padding: 10px;">
-        <div class="erp-fieldset">
-            <legend>Report Filter Criteria</legend>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label-erp">As On Date</label>
-                    <input type="date" id="dtpAsOnDate" class="form-control-erp"/>
+
+    <!-- Section Title Banner -->
+    <div class="erp-title-banner">
+        Accounts Receivables Aging
+    </div>
+
+    <div class="erp-main-container">
+        <!-- Filters & Metric Header Container -->
+        <div class="erp-filters-grid">
+            <!-- Left Filter Controls -->
+            <div class="erp-fieldset" style="flex: 1; min-width: 320px;">
+                <legend>Filters</legend>
+                <div class="row">
+                    <div class="col-md-6 col-sm-6" style="margin-bottom: 6px;">
+                        <label class="form-label-erp">End Date & Aging Days</label>
+                        <div style="display: flex; gap: 4px;">
+                            <input type="date" id="dtpAsOnDate" class="form-control-erp" style="flex: 2;"/>
+                            <input type="number" id="txtAgingDays" class="form-control-erp" value="30" min="1" style="flex: 1;"/>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6" style="margin-bottom: 6px;">
+                        <label class="form-label-erp">Control Account</label>
+                        <select id="cmbControlAccount" class="form-control-erp select2-elem" style="width: 100%;">
+                            <option value="0">-- Select Control Account --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-sm-6" style="margin-bottom: 6px;">
+                        <label class="form-label-erp">Account Title</label>
+                        <select id="cmbAccountTitle" class="form-control-erp select2-elem" style="width: 100%;">
+                            <option value="0">-- Select Account --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-sm-6" style="margin-bottom: 6px;">
+                        <label class="form-label-erp">Custom Group</label>
+                        <select id="cmbCustomGroup" class="form-control-erp select2-elem" style="width: 100%;">
+                            <option value="0">-- Select Custom Group --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-sm-4" style="margin-bottom: 6px;">
+                        <label class="form-label-erp">City</label>
+                        <select id="cmbCity" class="form-control-erp select2-elem" style="width: 100%;">
+                            <option value="0">-- Select City --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-sm-4" style="margin-bottom: 6px;">
+                        <label class="form-label-erp">Cost Center</label>
+                        <select id="cmbCostCenter" class="form-control-erp select2-elem" style="width: 100%;">
+                            <option value="0">-- Select Cost Center --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-sm-4" style="margin-bottom: 6px;">
+                        <label class="form-label-erp">Branches</label>
+                        <select id="cmbBranches" class="form-control-erp select2-elem" style="width: 100%;">
+                            <option value="0">-- Select Branch --</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Customer / Party</label>
-                    <select id="cmbCustomer" class="form-control-erp select2-elem" style="width: 100%;">
-                        <option value="0">-- All Customers --</option>
-                        <option th:each="c : ${supplierCustomersList}" th:value="${c.id}" th:text="${c.name}"></option>
-                    </select>
+                <div style="text-align: right; margin-top: 4px;">
+                    <button type="button" id="btnShow" class="btn-erp btn-erp-primary" style="padding: 2px 20px;"><i class="fa fa-search"></i> Show</button>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Aging Intervals</label>
-                    <select id="cmbAgingInterval" class="form-control-erp select2-elem" style="width: 100%;">
-                        <option value="30">30 / 60 / 90 Days</option>
-                        <option value="15">15 / 30 / 45 Days</option>
-                        <option value="60">60 / 120 / 180 Days</option>
-                    </select>
+            </div>
+
+            <!-- Radio Options -->
+            <div class="radio-group-box">
+                <label><input type="radio" name="modeRadio" value="0"/> Net Receivable</label>
+                <label><input type="radio" name="modeRadio" value="2"/> Not Yet Due</label>
+                <label><input type="radio" name="modeRadio" value="1" checked/> Over Due</label>
+            </div>
+
+            <!-- Period Filtered Records Box -->
+            <div class="period-box">
+                <div class="period-box-title">Period Filtered Records</div>
+                <div style="margin-bottom: 4px;">
+                    <label class="form-label-erp" style="margin: 0;">From Date</label>
+                    <input type="text" id="lblFromDate" class="form-control-erp" readonly value="18-May-26"/>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Location / Branch</label>
-                    <select id="cmbBranch" class="form-control-erp select2-elem" style="width: 100%;">
-                        <option value="0">-- All Locations --</option>
-                        <option th:each="b : ${branchesList}" th:value="${b.id}" th:text="${b.name}"></option>
-                    </select>
+                <div>
+                    <label class="form-label-erp" style="margin: 0;">To Date</label>
+                    <input type="text" id="lblToDate" class="form-control-erp" readonly value="15-Sep-26"/>
+                </div>
+            </div>
+
+            <!-- Metric Summary Cards -->
+            <div class="cards-container">
+                <div class="metric-card">
+                    <div class="metric-card-header" id="cardHeader_1">1_30</div>
+                    <div class="metric-card-value" id="tile1_30">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-header" id="cardHeader_2">31_60</div>
+                    <div class="metric-card-value" id="tile31_60">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-header" id="cardHeader_3">61_90</div>
+                    <div class="metric-card-value" id="tile61_90">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-header" id="cardHeader_4">90_Above</div>
+                    <div class="metric-card-value" id="tile90_Above">0</div>
+                </div>
+            </div>
+
+            <!-- Totals of Receivables Card -->
+            <div class="totals-card">
+                <div class="totals-card-header">Totals of Receivables</div>
+                <div class="totals-card-body">
+                    <div class="totals-row">
+                        <label>Curr Balance</label>
+                        <output id="lblCurrBalance">0</output>
+                    </div>
+                    <div class="totals-row">
+                        <label>Over Due</label>
+                        <output id="lblOverDue">0</output>
+                    </div>
+                    <div class="totals-row">
+                        <label>Not Yet Due</label>
+                        <output id="lblNotYetDue">0</output>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="erp-fieldset">
-            <legend>Receivables Aging Output</legend>
-            <div style="text-align: center; margin-bottom: 10px;">
-                <h4 style="margin: 0; font-weight: bold; color: #00796B;">Golden Ace Rice Mills (Pvt) Ltd.</h4>
-                <h5 style="margin: 2px 0; font-weight: bold;">Receivables Aging Report</h5>
-                <small id="lblPeriod" style="color: #64748b;">As On: Current Date | Currency: PKR</small>
+        <!-- Filtered Records Action Bar -->
+        <div class="filtered-records-bar">
+            <div><i class="fa fa-filter"></i> Filtered Records</div>
+            <div class="filtered-records-controls">
+                <label><input type="checkbox" class="chk-sort" value="AccountCode"/> Account Code</label>
+                <label><input type="checkbox" class="chk-sort" value="AccountTitle" checked/> Account Title</label>
+                <label><input type="checkbox" class="chk-sort" value="CurrentBalance"/> Current Balance</label>
+                <button type="button" id="btnApplySorting" class="btn-apply-sort">Apply Sorting</button>
+                <label><input type="radio" name="sortDirection" value="1" checked/> Ascending</label>
+                <label><input type="radio" name="sortDirection" value="-1"/> Descending</label>
+                <span>(AccountTitle ASC)</span>
+                <input type="text" id="txtSearch" class="form-control-erp" placeholder="Filter records in grid..." style="width: 160px; height: 22px;"/>
             </div>
+        </div>
+
+        <!-- Main Grid Table -->
+        <div class="table-grid-container">
             <table class="erp-table">
                 <thead>
                     <tr>
-                        <th style="width: 12%;">Code</th>
-                        <th>Customer / Account Title</th>
-                        <th style="width: 14%; text-align: right;">Total Receivable</th>
-                        <th style="width: 12%; text-align: right;">0 - 30 Days</th>
-                        <th style="width: 12%; text-align: right;">31 - 60 Days</th>
-                        <th style="width: 12%; text-align: right;">61 - 90 Days</th>
-                        <th style="width: 12%; text-align: right;">90+ Days</th>
+                        <th style="width: 110px;">Account Code</th>
+                        <th style="width: 260px;">Account Title</th>
+                        <th style="width: 70px;">Account Type</th>
+                        <th style="width: 120px; text-align: right;">Current Balance</th>
+                        <th style="width: 120px; text-align: right;">Over Due</th>
+                        <th style="width: 100px; text-align: right;">Not Yet Due</th>
+                        <th style="width: 110px; text-align: right;">1 30</th>
+                        <th style="width: 110px; text-align: right;">31 60</th>
+                        <th style="width: 110px; text-align: right;">61 90</th>
+                        <th style="width: 110px; text-align: right;">90 Above</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyReport">
                     <tr>
-                        <td style="font-weight: bold; color: #00796B;">102001</td>
-                        <td>SUPER FOODS INTERNATIONAL</td>
-                        <td style="text-align: right; font-weight: bold;">980,000.00</td>
-                        <td style="text-align: right;">580,000.00</td>
-                        <td style="text-align: right;">300,000.00</td>
-                        <td style="text-align: right;">100,000.00</td>
-                        <td style="text-align: right;">0.00</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">102002</td>
-                        <td>GLOBAL RICE EXPORTERS</td>
-                        <td style="text-align: right; font-weight: bold;">1,450,000.00</td>
-                        <td style="text-align: right;">800,000.00</td>
-                        <td style="text-align: right;">400,000.00</td>
-                        <td style="text-align: right;">150,000.00</td>
-                        <td style="text-align: right;">100,000.00</td>
+                        <td colspan="10" style="text-align: center; padding: 15px; color: #64748b;">
+                            Loading report records...
+                        </td>
                     </tr>
                 </tbody>
             </table>
-            <div class="report-summary-bar">
-                <div>Total Customers: 2</div>
-                <div>Total Receivable: 2,430,000.00</div>
-                <div>Over 90 Days: 100,000.00</div>
-            </div>
+        </div>
+
+        <!-- Footer Status Bar -->
+        <div class="erp-statusbar">
+            <span id="lblStatus">Ready. Click Show to display receivables aging records.</span>
+            <span>Currency: PKR | Golden Ace Rice Mills (Pvt) Ltd.</span>
         </div>
     </div>
+
+    <!-- Voucher Details Modal Popup -->
+    <dialog id="dialogVoucherDetails">
+        <div class="modal-header-erp">
+            <span id="voucherModalTitle">Receivable Aging Details</span>
+            <button type="button" id="btnCloseVoucherModal" style="background: none; border: none; color: white; font-size: 16px; cursor: pointer;">&times;</button>
+        </div>
+        <div class="modal-body-erp">
+            <table class="erp-table">
+                <thead>
+                    <tr>
+                        <th>Document Type</th>
+                        <th>Voucher Code</th>
+                        <th>Voucher Date</th>
+                        <th>Due Days</th>
+                        <th>Due Date</th>
+                        <th>Days Overdue</th>
+                        <th>Account Title</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyVoucherDetails">
+                </tbody>
+            </table>
+        </div>
+    </dialog>
+
+    <!-- Shortcut Keys Modal Popup -->
+    <dialog id="dialogShortcuts">
+        <div class="modal-header-erp">
+            <span>Shortcut Keys</span>
+            <button type="button" id="btnCloseShortcuts" style="background: none; border: none; color: white; font-size: 16px; cursor: pointer;">&times;</button>
+        </div>
+        <div class="modal-body-erp">
+            <ul style="line-height: 1.8; font-size: 12px; margin: 0; padding-left: 20px;">
+                <td><strong>Ctrl + S</strong>: Load / Show Report</td>
+                <td><strong>Ctrl + N</strong>: Reset Filters (+ New)</td>
+                <td><strong>Ctrl + R</strong>: Refresh Lookups</td>
+                <td><strong>Ctrl + P</strong>: Print Report</td>
+            </ul>
+        </div>
+    </dialog>
+
+    <!-- History Modal Popup -->
+    <dialog id="dialogHistory">
+        <div class="modal-header-erp">
+            <span>Receivables Aging Execution History</span>
+            <button type="button" id="btnCloseHistory" style="background: none; border: none; color: white; font-size: 16px; cursor: pointer;">&times;</button>
+        </div>
+        <div class="modal-body-erp">
+            <table class="erp-table">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>User</th>
+                        <th>As On Date</th>
+                        <th>Filter Criteria</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Report Load</td>
+                        <td>Numan Rasheed (Admin)</td>
+                        <td>Current Date</td>
+                        <td>All Accounts / Over Due</td>
+                        <td>Just Now</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </dialog>
+
+    <!-- Scripts -->
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#dtpAsOnDate').val(today);
-            $('.select2-elem').select2({ placeholder: '...Select Any Value...' });
-            updatePeriodLabel();
-        });
-
-        function updatePeriodLabel() {
-            const dt = $('#dtpAsOnDate').val() || 'Today';
-            $('#lblPeriod').text(`As On: ${dt} | Currency: PKR`);
-        }
-
-        function generateReport() {
-            updatePeriodLabel();
-            alert('Receivables Aging Report regenerated.');
-        }
-
-        function resetFilters() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#dtpAsOnDate').val(today);
-            $('.select2-elem').val('0').trigger('change');
-            updatePeriodLabel();
-        }
-    </script>
+    <script th:src="@{/js/receivables-aging.js}"></script>
 </body>
 </html>

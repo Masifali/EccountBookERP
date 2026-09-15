@@ -53,6 +53,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
 
     protected void configure(HttpSecurity http) throws Exception {
+        // Replace the default DENY writer only with the scoped report-frame policy.
+        http.headers().frameOptions().disable()
+                .addHeaderWriter(new com.mst.security.ReportFrameHeaderWriter());
         http
                 .authorizeRequests()
                 .antMatchers("/login", "/css/**", "/js/**", "/images/**", "/vendors/**", "/build/**", "/.well-known/**").permitAll()

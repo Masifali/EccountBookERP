@@ -17,6 +17,10 @@ public class TradeReportController {
     public String receivables(Model model) { model.addAttribute("accountClass",2); return "accounts/reports/trade_accounts"; }
     @GetMapping("/accounts/reports/all-payables")
     public String allPayables() { return "accounts/reports/all_payables"; }
+    @GetMapping({"/accounts/reports/supplier-aging", "/accounts/reports/payables-aging-new"})
+    public String supplierAging() { return "accounts/reports/payables_aging_new"; }
+    @GetMapping({"/accounts/reports/customer-aging", "/accounts/reports/receivables-aging-new"})
+    public String customerAging() { return "accounts/reports/receivables_aging_new"; }
     @GetMapping("/api/accounts/trade-report/lookups") @ResponseBody
     public Map<String,Object> lookups() { return service.lookups(); }
     @GetMapping("/api/accounts/trade-report/accounts") @ResponseBody

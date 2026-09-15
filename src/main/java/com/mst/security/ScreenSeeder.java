@@ -65,10 +65,16 @@ public class ScreenSeeder implements CommandLineRunner {
 			seed("Selected Trial Balance", "Accounts", "/accounts/reports/selected-trial-balance", "RPT_SELECTED_TRIAL_BAL", "ACCOUNTS", null, 3);
 			seed("Trial Balances All Level", "Accounts", "/accounts/reports/trial-balances-all-level", "RPT_TRIAL_BAL_ALL_LEVEL", "ACCOUNTS", null, 3);
 			seed("Trial Balance", "Accounts", "/accounts/reports/trial-balance", "RPT_TRIAL_BALANCE", "ACCOUNTS", null, 3);
-			seed("Payables Aging", "Accounts", "/accounts/reports/payables-aging", "RPT_PAYABLES_AGING", "ACCOUNTS", null, 3);
-			seed("Receivables Aging", "Accounts", "/accounts/reports/receivables-aging", "RPT_RECEIVABLES_AGING", "ACCOUNTS", null, 3);
-			seed("Payables Report", "Accounts", "/accounts/reports/payables-report", "RPT_PAYABLES", "ACCOUNTS", null, 3);
-			seed("Receivables Report", "Accounts", "/accounts/reports/receivables-report", "RPT_RECEIVABLES", "ACCOUNTS", null, 3);
+			            // Desktop frmPayablesReports launcher: ScreenDefinition identities from the reference DB.
+            seed("Payables & Receivables Reports", "Accounts", "/accounts/reports/all-payables", "RPT_ALL_PAYABLES", "ACCOUNTS", 787, 3);
+            seed("1001 Trade Creditors", "Accounts", "/accounts/reports/trade-payables", "RPT_TRADE_CREDITORS", "ACCOUNTS", 66, 3);
+            seed("1002 Trade Debtors", "Accounts", "/accounts/reports/trade-receivables", "RPT_TRADE_DEBTORS", "ACCOUNTS", 65, 3);
+            seed("1006 Receivables Aging", "Accounts", "/accounts/reports/receivables-new", "RPT_RECEIVABLES_AGING", "ACCOUNTS", 769, 3);
+            seed("1008 Payables & Receivable Forecast", "Accounts", "/accounts/reports/due-date-analysis", "RPT_PAYABLES_FORECAST", "ACCOUNTS", 75, 3);
+            seed("Payables Aging", "Accounts", "/accounts/reports/payables-aging", "RPT_PAYABLES_AGING", "ACCOUNTS", 47, 3);
+			seed("Receivables Aging", "Accounts", "/accounts/reports/receivables-aging", "RPT_RECEIVABLES_AGING", "ACCOUNTS", 769, 3);
+			seed("Payables Report", "Accounts", "/accounts/reports/payables-report", "RPT_PAYABLES", "ACCOUNTS", 48, 3);
+			seed("Receivables Report", "Accounts", "/accounts/reports/receivables-report", "RPT_RECEIVABLES", "ACCOUNTS", 80, 3);
 			seed("Voucher Report", "Accounts", "/accounts/reports/voucher-report", "RPT_VOUCHER", "ACCOUNTS", null, 3);
 			seed("Bank Balances", "Accounts", "/accounts/reports/bank-balances", "RPT_BANK_BALANCES", "ACCOUNTS", null, 3);
 			seed("Post Dated Cheque Register", "Accounts", "/accounts/reports/pdc-register", "RPT_PDC_REGISTER", "ACCOUNTS", null, 3);
@@ -76,9 +82,9 @@ public class ScreenSeeder implements CommandLineRunner {
 			seed("Payables Aging New", "Accounts", "/accounts/reports/payables-aging-new", "RPT_PAYABLES_AGING_NEW", "ACCOUNTS", null, 3);
 			seed("Receivables Aging New", "Accounts", "/accounts/reports/receivables-aging-new", "RPT_RECEIVABLES_AGING_NEW", "ACCOUNTS", null, 3);
 			seed("Payables Report Invoice Wise", "Accounts", "/accounts/reports/payables-report-invoice-wise", "RPT_PAYABLES_INVOICE_WISE", "ACCOUNTS", null, 3);
-			seed("Receivables By Due Dates", "Accounts", "/accounts/reports/receivables-by-due-dates", "RPT_RECEIVABLES_DUE_DATES", "ACCOUNTS", null, 3);
-			seed("Payables And Payment Schedule", "Accounts", "/accounts/reports/payables-payment-schedule", "RPT_PAYABLES_PAY_SCHED", "ACCOUNTS", null, 3);
-			seed("Receivables And Receipt Schedule", "Accounts", "/accounts/reports/receivables-receipt-schedule", "RPT_RECEIVABLES_REC_SCHED", "ACCOUNTS", null, 3);
+			seed("Receivables By Due Dates", "Accounts", "/accounts/reports/receivables-by-due-dates", "RPT_RECEIVABLES_DUE_DATES", "ACCOUNTS", 68, 3);
+			seed("Payables And Payment Schedule", "Accounts", "/accounts/reports/payables-payment-schedule", "RPT_PAYABLES_PAY_SCHED", "ACCOUNTS", 78, 3);
+			seed("Receivables And Receipt Schedule", "Accounts", "/accounts/reports/receivables-receipt-schedule", "RPT_RECEIVABLES_REC_SCHED", "ACCOUNTS", 71, 3);
 			seed("Bills Payables Report", "Accounts", "/accounts/reports/bills-payables-report", "RPT_BILLS_PAYABLES", "ACCOUNTS", null, 3);
 			seed("Party Limits & Balances", "Accounts", "/accounts/reports/party-limits-balances", "RPT_PARTY_LIMITS", "ACCOUNTS", null, 3);
 			seed("Subsidiary Payables Report", "Accounts", "/accounts/reports/subsidiary-payables-report", "RPT_SUBSIDIARY_PAYABLES", "ACCOUNTS", null, 3);
