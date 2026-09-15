@@ -4,195 +4,624 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bank Balances - EccountBookERP</title>
+    <title>Bank Balances Report - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e2e8f0; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; font-size: 11px; color: #333; margin: 0; padding: 0; }
+        
+        /* Top Banner & Toolbars */
         .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .erp-header-title { font-size: 14px; font-weight: bold; color: white; display: flex; align-items: center; gap: 8px; }
         .erp-sub-bar { background-color: #b0bec5; height: 22px; padding: 2px 12px; font-size: 11px; color: #37474f; display: flex; align-items: center; border-bottom: 1px solid #90a4ae; }
-        .erp-toolbar { background-color: #cbd5e1; border-bottom: 1px solid #94a3b8; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
-        .erp-grid-container { margin: 10px; background: white; border: 1px solid #94a3b8; border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-        .erp-grid-header { background-color: #00796B; color: white; font-weight: bold; font-size: 12px; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; }
-        .grid-scroll-wrapper { max-height: 520px; overflow-x: auto; overflow-y: auto; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 800px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 6px 8px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 5; }
+        
+        .erp-toolbar { background-color: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-toolbar { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 26px; }
+        .btn-toolbar:hover { background-color: #e2e8f0; border-color: #64748b; text-decoration: none; color: #0f172a; }
+        .btn-toolbar-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-toolbar-primary:hover { background-color: #004d40; color: white; }
+
+        /* Filter Row */
+        .erp-filter-box { background: white; border-bottom: 1px solid #cbd5e1; padding: 8px 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; gap: 2px; }
+        .filter-label { font-weight: 600; color: #334155; font-size: 11px; margin: 0; }
+        .filter-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; }
+        .filter-input:focus { border-color: #00796B; outline: none; }
+        .filter-input-readonly { background-color: #f8fafc; font-weight: bold; color: #0f172a; text-align: right; }
+        
+        .radio-group-box { display: flex; align-items: center; gap: 10px; background-color: #f8fafc; padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 3px; }
+        .radio-label { font-weight: 600; font-size: 11px; cursor: pointer; margin: 0; display: flex; align-items: center; gap: 4px; }
+
+        /* Tab Navigation */
+        .erp-tabs-nav { background: #e2e8f0; border-bottom: 2px solid #00796B; padding: 0 10px; display: flex; gap: 2px; }
+        .erp-tab-btn { background: #cbd5e1; border: 1px solid #94a3b8; border-bottom: none; border-radius: 4px 4px 0 0; padding: 6px 16px; font-weight: bold; font-size: 11px; color: #475569; cursor: pointer; }
+        .erp-tab-btn.active { background: #00796B; color: white; border-color: #004d40; }
+        .erp-tab-content { display: none; padding: 0; }
+        .erp-tab-content.active { display: block; }
+
+        /* Grid Containers */
+        .erp-grid-header { background-color: #00796B; color: white; font-weight: bold; font-size: 12px; padding: 5px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .grid-scroll-wrapper { max-height: calc(100vh - 210px); overflow-x: auto; overflow-y: auto; background: white; }
+        
+        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+        .erp-table th { background-color: #00796B; color: white; padding: 6px 8px; text-align: center; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 0 #004d40; }
         .erp-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
         .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .report-summary-bar { background: #00796B; color: white; font-weight: bold; font-size: 12px; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #004d40; }
+        .erp-table tr:hover { background-color: #f1f5f9; }
+        
+        .erp-table .group-row { background-color: #e0f2f1 !important; font-weight: bold; color: #004d40; }
+        .erp-table .group-row td { border-top: 2px solid #80cbc4; border-bottom: 2px solid #80cbc4; }
+        .erp-table .total-row { background-color: #e2e8f0 !important; font-weight: bold; color: #0f172a; position: sticky; bottom: 0; z-index: 9; border-top: 2px solid #94a3b8; }
+        
+        .grid-link { color: #0284c7; font-weight: 600; text-decoration: none; cursor: pointer; }
+        .grid-link:hover { text-decoration: underline; color: #0369a1; }
+        
+        /* Split view for Detail tab */
+        .detail-split-container { display: flex; gap: 8px; padding: 8px; height: calc(100vh - 210px); }
+        .detail-panel { flex: 1; display: flex; flex-direction: column; background: white; border: 1px solid #cbd5e1; border-radius: 3px; overflow: hidden; }
+        .detail-panel-title { background: #00796B; color: white; font-weight: bold; padding: 5px 10px; font-size: 12px; display: flex; justify-content: space-between; }
+
+        /* Print Modal / View */
+        @media print {
+            .erp-header, .erp-sub-bar, .erp-toolbar, .erp-filter-box, .erp-tabs-nav, .no-print { display: none !important; }
+            .grid-scroll-wrapper, .detail-split-container { max-height: none !important; height: auto !important; overflow: visible !important; }
+            body { background: white !important; font-size: 10pt; }
+            .erp-table th { background-color: #ddd !important; color: black !important; }
+        }
     </style>
 </head>
 <body>
+
+    <!-- Header Banner -->
     <div class="erp-header">
-        <div><i class="fa fa-university"></i> Bank & Cash Balances Report</div>
-        <div><a href="/accounts/dashboard" style="color: white; text-decoration: none; font-weight: 600;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+        <div class="erp-header-title"><i class="fa fa-university"></i> Bank Balances</div>
+        <div>
+            <a href="/accounts/dashboard" style="color: white; text-decoration: none; font-weight: 600; margin-right: 15px;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a>
+        </div>
     </div>
+    
     <div class="erp-sub-bar">
         <i class="fa fa-window-maximize" style="margin-right: 6px;"></i>
-        <span>Screens &gt; Bank & Cash Balances Report</span>
-    </div>
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary" onclick="loadBankBalances()"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp" onclick="alert('Exporting Balances to Excel...')"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp" onclick="resetBankFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
+        <span>Accounts &gt; Reports &gt; Bank Balances Report</span>
     </div>
 
-    <div class="erp-fieldset">
-        <legend>Report Filter Criteria</legend>
-        <div class="row">
-            <div class="col-md-3">
-                <label class="form-label-erp">As On Date</label>
-                <input type="date" id="txtAsOnDate" class="form-control-erp"/>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label-erp">Account Filter</label>
-                <select id="cmbBankAccount" class="form-control-erp">
-                    <option value="">-- All Bank & Cash Accounts --</option>
-                    <option th:each="ac : ${accountsList}" th:value="${ac.id}" th:text="${ac.accountCode + ' - ' + ac.accountTitle}"></option>
-                </select>
-            </div>
-            <div class="col-md-3" style="margin-top: 18px;">
-                <button type="button" class="btn-erp btn-erp-primary" style="width: 100%; height: 25px;" onclick="loadBankBalances()">
-                    <i class="fa fa-search"></i> Load Balances
-                </button>
-            </div>
+    <!-- Top Toolbar -->
+    <div class="erp-toolbar">
+        <button type="button" class="btn-toolbar" onclick="resetBankFilters()"><i class="fa fa-refresh"></i> Reset</button>
+        <button type="button" class="btn-toolbar" onclick="loadBankBalancesData()"><i class="fa fa-sync"></i> Refresh</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('593')"><i class="fa fa-print"></i> 593_Print Summary</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('593_01')"><i class="fa fa-print"></i> 593_01_Print Summary</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('590')"><i class="fa fa-print"></i> 590_Print Receipt and Payment</button>
+        <button type="button" class="btn-toolbar" onclick="printReport('590_01')"><i class="fa fa-print"></i> 590_01_Print</button>
+        <button type="button" class="btn-toolbar btn-toolbar-primary" onclick="openBankManualBalance()"><i class="fa fa-pencil-square-o"></i> Bank Manual Balance</button>
+    </div>
+
+    <!-- Filter Control Row -->
+    <div class="erp-filter-box">
+        <div class="filter-group" style="width: 120px;">
+            <label class="filter-label">Date Type</label>
+            <select id="cmbDateType" class="filter-input" onchange="onDateTypeChanged()">
+                <option value="1">This Day</option>
+                <option value="2">This Week</option>
+                <option value="3">This Month</option>
+                <option value="4">This Year</option>
+                <option value="5" selected>Financial Year</option>
+                <option value="6">Last Record Date</option>
+            </select>
+        </div>
+
+        <div class="filter-group" style="width: 110px;">
+            <label class="filter-label">From Date</label>
+            <input type="date" id="txtFromDate" class="filter-input" />
+        </div>
+
+        <div class="filter-group" style="width: 110px;">
+            <label class="filter-label">To Date</label>
+            <input type="date" id="txtToDate" class="filter-input" />
+        </div>
+
+        <div class="filter-group" style="width: 120px;">
+            <label class="filter-label">Available Balances</label>
+            <input type="text" id="txtAvailableBalances" class="filter-input filter-input-readonly" readonly value="0.00" />
+        </div>
+
+        <div class="filter-group" style="width: 120px;">
+            <label class="filter-label">OverDrawn Balances</label>
+            <input type="text" id="txtOverdrawnBalances" class="filter-input filter-input-readonly" readonly value="0.00" />
+        </div>
+
+        <div class="filter-group" style="justify-content: center;">
+            <label class="radio-label" style="margin-top: 14px;">
+                <input type="checkbox" id="chkExcludeZero" onchange="loadBankBalancesData()" /> Exclude 0 Debit/Credit From Summary
+            </label>
+        </div>
+
+        <div class="filter-group" style="margin-top: 14px;">
+            <button type="button" class="btn-toolbar btn-toolbar-primary" style="height: 24px; padding: 0 16px;" onclick="loadBankBalancesData()">Show</button>
+        </div>
+
+        <div class="radio-group-box" style="margin-top: 12px; margin-left: auto;">
+            <label class="radio-label">
+                <input type="radio" name="radGroupBy" id="radGroupBank" value="bank" checked onchange="applyDetailGrouping()" /> Group By Bank Name
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="radGroupBy" id="radGroupAccount" value="account" onchange="applyDetailGrouping()" /> Group By Account
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="radGroupBy" id="radGroupNone" value="none" onchange="applyDetailGrouping()" /> None
+            </label>
         </div>
     </div>
 
-    <div class="erp-grid-container">
+    <!-- Tab Buttons -->
+    <div class="erp-tabs-nav">
+        <button type="button" class="erp-tab-btn active" onclick="switchTab('summary')">Summary</button>
+        <button type="button" class="erp-tab-btn" onclick="switchTab('detail')">Payment/Receipts Detail</button>
+    </div>
+
+    <!-- TAB 1: SUMMARY GRID -->
+    <div id="tabSummary" class="erp-tab-content active">
         <div class="erp-grid-header">
-            <span><i class="fa fa-table"></i> Bank Balances Data Output</span>
-            <span id="lblStatus">Ready</span>
+            <span><i class="fa fa-list"></i> Bank Balances Summary</span>
+            <span id="lblSummaryStatus">Ready</span>
         </div>
         <div class="grid-scroll-wrapper">
-            <table class="erp-table" id="bankTable">
+            <table class="erp-table" id="summaryTable">
                 <thead>
                     <tr>
-                        <th style="width: 130px;">Account Code</th>
-                        <th style="width: 320px;">Account Title</th>
-                        <th style="width: 130px; text-align: right;">Total Debit (PKR)</th>
-                        <th style="width: 130px; text-align: right;">Total Credit (PKR)</th>
-                        <th style="width: 140px; text-align: right;">Current Balance (PKR)</th>
+                        <th style="width: 90px;">Account Code</th>
+                        <th style="width: 250px;">Account Title</th>
+                        <th style="width: 110px;">Opening</th>
+                        <th style="width: 110px;">Debit</th>
+                        <th style="width: 110px;">Credit</th>
+                        <th style="width: 110px;">Closing</th>
+                        <th style="width: 120px;">Pending Premature Receipts</th>
+                        <th style="width: 120px;">Pending Premature Payments</th>
+                        <th style="width: 140px;">Balance After Premature Receipts Clearance</th>
+                        <th style="width: 120px;">Post Date Cheqs Receipts</th>
+                        <th style="width: 120px;">Post Date Cheqs Payments</th>
+                        <th style="width: 120px;">Balance After Cheq Clearance</th>
+                        <th style="width: 120px;">Post Dated Cheq Amount</th>
+                        <th style="width: 70px;">Balance Time</th>
+                        <th style="width: 100px;">Manual Balance</th>
+                        <th style="width: 120px;">Source</th>
+                        <th style="width: 120px;">Confirm By</th>
                     </tr>
                 </thead>
-                <tbody id="bankTbody">
-                    <!-- Loaded dynamically via AJAX -->
+                <tbody id="summaryTbody">
+                    <!-- Populated dynamically via AJAX -->
                 </tbody>
+                <tfoot id="summaryTfoot">
+                    <!-- Footer totals -->
+                </tfoot>
             </table>
-        </div>
-        <div class="report-summary-bar">
-            <div>Total Accounts: <span id="lblTotalRec">0</span></div>
-            <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
-            <div>Total Credit: <span id="lblTotalCredit">0.00</span></div>
-            <div>Net Balance: <span id="lblNetBal">0.00</span></div>
         </div>
     </div>
 
+    <!-- TAB 2: PAYMENT / RECEIPTS DETAIL -->
+    <div id="tabDetail" class="erp-tab-content">
+        <div class="detail-split-container">
+            
+            <!-- Left Panel: Payment -->
+            <div class="detail-panel">
+                <div class="detail-panel-title">
+                    <span><i class="fa fa-arrow-up"></i> Payment</span>
+                    <span id="lblPaymentCount">0 Records</span>
+                </div>
+                <div style="flex: 1; overflow: auto;">
+                    <table class="erp-table" id="paymentTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">V.Date</th>
+                                <th style="width: 60px;">V.Type</th>
+                                <th style="width: 60px;">V.No</th>
+                                <th style="width: 180px;">Bank Name</th>
+                                <th style="width: 180px;">Paid To</th>
+                                <th style="width: 100px; text-align: right;">Amount</th>
+                                <th style="width: 80px;">Cheque No</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentTbody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                        <tfoot id="paymentTfoot">
+                            <!-- Footer total -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right Panel: Receipts -->
+            <div class="detail-panel">
+                <div class="detail-panel-title">
+                    <span><i class="fa fa-arrow-down"></i> Receipts</span>
+                    <span id="lblReceiptCount">0 Records</span>
+                </div>
+                <div style="flex: 1; overflow: auto;">
+                    <table class="erp-table" id="receiptTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">V.Date</th>
+                                <th style="width: 60px;">V.Type</th>
+                                <th style="width: 60px;">V.No</th>
+                                <th style="width: 180px;">Bank Name</th>
+                                <th style="width: 180px;">Received From</th>
+                                <th style="width: 100px; text-align: right;">Amount</th>
+                                <th style="width: 80px;">Cheque No</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receiptTbody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                        <tfoot id="receiptTfoot">
+                            <!-- Footer total -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    
     <script>
+        let rawSummaryData = [];
+        let rawDetailData = { receipts: [], payments: [] };
+        let activeTab = 'summary';
+
         $(document).ready(function() {
-            setInitialBankDate();
-            $('#cmbBankAccount').select2({ width: '100%' });
-            loadBankBalances();
+            initDefaultDates();
+            loadBankBalancesData();
         });
 
-        function setInitialBankDate() {
+        function initDefaultDates() {
+            // Default: Financial Year (Start Period to Today)
             const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('txtAsOnDate').value = `${year}-${month}-${day}`;
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+
+            document.getElementById('txtFromDate').value = `${yyyy}-01-01`;
+            document.getElementById('txtToDate').value = `${yyyy}-${mm}-${dd}`;
         }
 
-        function formatCurrency(val) {
+        function onDateTypeChanged() {
+            const val = $('#cmbDateType').val();
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+
+            if (val === '1') {
+                // This Day
+                $('#txtFromDate').val(todayStr);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '2') {
+                // This Week
+                const weekAgo = new Date(today);
+                weekAgo.setDate(today.getDate() - 7);
+                const wY = weekAgo.getFullYear();
+                const wM = String(weekAgo.getMonth() + 1).padStart(2, '0');
+                const wD = String(weekAgo.getDate()).padStart(2, '0');
+                $('#txtFromDate').val(`${wY}-${wM}-${wD}`);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '3') {
+                // This Month
+                $('#txtFromDate').val(`${yyyy}-${mm}-01`);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '4') {
+                // This Year
+                $('#txtFromDate').val(`${yyyy}-01-01`);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '5') {
+                // Financial Year
+                $('#txtFromDate').val(`${yyyy}-01-01`);
+                $('#txtToDate').val(todayStr);
+            } else if (val === '6') {
+                // Last Record Date
+                $('#txtFromDate').val(todayStr);
+                $('#txtToDate').val(todayStr);
+            }
+        }
+
+        function switchTab(tabName) {
+            activeTab = tabName;
+            $('.erp-tab-btn').removeClass('active');
+            $('.erp-tab-content').removeClass('active');
+
+            if (tabName === 'summary') {
+                $('.erp-tab-btn:eq(0)').addClass('active');
+                $('#tabSummary').addClass('active');
+            } else {
+                $('.erp-tab-btn:eq(1)').addClass('active');
+                $('#tabDetail').addClass('active');
+            }
+        }
+
+        function formatNumber(val, decimals = 2) {
             if (val === null || val === undefined || isNaN(val)) return '0.00';
-            return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         }
 
-        function loadBankBalances() {
-            $('#lblStatus').text("Fetching Bank Balances...");
+        function loadBankBalancesData() {
+            const fromDate = $('#txtFromDate').val();
+            const toDate = $('#txtToDate').val();
+            const excludeZero = $('#chkExcludeZero').is(':checked');
 
+            $('#lblSummaryStatus').text("Loading data...");
+
+            // 1. Fetch Summary Data
             $.ajax({
-                url: '/accounts/api/reports/bank-balances?isCashOnly=false',
-                type: 'GET',
-                success: function(data) {
-                    renderBankGrid(data);
+                url: '/accounts/api/reports/bank-balances-summary',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ fromDate: fromDate, toDate: toDate, excludeZero: excludeZero }),
+                success: function(res) {
+                    if (res && res.success) {
+                        rawSummaryData = res.data || [];
+                        renderSummaryGrid(rawSummaryData);
+                        calculateCalculatedBalances(rawSummaryData);
+                    }
                 },
-                error: function(err) {
-                    $('#bankTbody').html('<tr><td colspan="5" style="text-align:center; color:red; padding: 20px;">Error loading Bank Balances.</td></tr>');
-                    updateBankTotals(0, 0, 0, 0);
+                error: function() {
+                    $('#summaryTbody').html('<tr><td colspan="17" style="text-align:center; color:red; padding: 15px;">Error loading Summary report data.</td></tr>');
+                }
+            });
+
+            // 2. Fetch Detail Data
+            $.ajax({
+                url: '/accounts/api/reports/bank-balances-detail',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ fromDate: fromDate, toDate: toDate }),
+                success: function(res) {
+                    if (res && res.success) {
+                        rawDetailData = { receipts: res.receipts || [], payments: res.payments || [] };
+                        renderDetailGrids(rawDetailData);
+                    }
                 }
             });
         }
 
-        function renderBankGrid(data) {
-            const tbody = $('#bankTbody');
+        function calculateCalculatedBalances(data) {
+            let available = 0;
+            let overdrawn = 0;
+            data.forEach(r => {
+                const closing = parseFloat(r.Closing || 0);
+                if (closing >= 0) {
+                    available += closing;
+                } else {
+                    overdrawn += Math.abs(closing);
+                }
+            });
+            $('#txtAvailableBalances').val(formatNumber(available));
+            $('#txtOverdrawnBalances').val(formatNumber(overdrawn));
+        }
+
+        function renderSummaryGrid(data) {
+            const tbody = $('#summaryTbody');
+            const tfoot = $('#summaryTfoot');
             tbody.empty();
+            tfoot.empty();
 
-            const selId = $('#cmbBankAccount').val();
-            let filtered = data || [];
-            if (selId && parseInt(selId) > 0) {
-                filtered = filtered.filter(x => (x.id || x.ID) == parseInt(selId));
-            }
-
-            if (!filtered || filtered.length === 0) {
-                tbody.html('<tr><td colspan="5" style="text-align:center; padding: 20px; color:#666;">No bank account balances found.</td></tr>');
-                $('#lblStatus').text("Total Accounts: 0");
-                updateBankTotals(0, 0, 0, 0);
+            if (!data || data.length === 0) {
+                tbody.html('<tr><td colspan="17" style="text-align:center; padding: 20px; color:#666;">No bank balance summary records found.</td></tr>');
+                $('#lblSummaryStatus').text("Total Records: 0");
                 return;
             }
 
-            let totalDebit = 0;
-            let totalCredit = 0;
-            let netBal = 0;
+            // Group by CustomGroup
+            const groups = {};
+            data.forEach(r => {
+                const grp = r.CustomGroup || 'Bank Accounts';
+                if (!groups[grp]) groups[grp] = [];
+                groups[grp].push(r);
+            });
 
-            filtered.forEach(r => {
-                const deb = parseFloat(r.TotalDebit || r.totalDebit || 0);
-                const cred = parseFloat(r.TotalCredit || r.totalCredit || 0);
-                const bal = parseFloat(r.Balance || r.balance || (deb - cred));
-                totalDebit += deb;
-                totalCredit += cred;
-                netBal += bal;
+            let totOpening = 0, totDebit = 0, totCredit = 0, totClosing = 0;
+            let totPendPremRec = 0, totPendPremPay = 0, totBalPrem = 0;
+            let totPdcRec = 0, totPdcPay = 0, totBalCheq = 0, totPdcAmt = 0, totManual = 0;
+
+            for (const grpName in groups) {
+                const items = groups[grpName];
+                
+                // Group Header Row
+                tbody.append(`
+                    <tr class="group-row">
+                        <td colspan="17"><i class="fa fa-folder-open"></i> ${grpName} (${items.length} Accounts)</td>
+                    </tr>
+                `);
+
+                items.forEach(r => {
+                    const op = parseFloat(r.Opening || 0);
+                    const deb = parseFloat(r.Debit || 0);
+                    const cred = parseFloat(r.Credit || 0);
+                    const cls = parseFloat(r.Closing || 0);
+                    const pRec = parseFloat(r.PendingPrematureReceipts || 0);
+                    const pPay = parseFloat(r.PendingPrematurePayments || 0);
+                    const bPrem = parseFloat(r.BalanceAfterPrematureReceiptsClearance || 0);
+                    const pdcR = parseFloat(r.PostDateCheqsReceipts || 0);
+                    const pdcP = parseFloat(r.PostDateCheqsPayments || 0);
+                    const bChq = parseFloat(r.BalanceAfterCheqClearance || 0);
+                    const pdcA = parseFloat(r.PostDatedCheqAmount || 0);
+                    const manB = parseFloat(r.ManualBalance || 0);
+
+                    totOpening += op; totDebit += deb; totCredit += cred; totClosing += cls;
+                    totPendPremRec += pRec; totPendPremPay += pPay; totBalPrem += bPrem;
+                    totPdcRec += pdcR; totPdcPay += pdcP; totBalCheq += bChq; totPdcAmt += pdcA; totManual += manB;
+
+                    const glUrl = `/accounts/reports/general-ledger?accountId=${r.AccountId || 0}&fromDate=${$('#txtFromDate').val()}&toDate=${$('#txtToDate').val()}`;
+
+                    tbody.append(`
+                        <tr>
+                            <td><a href="${glUrl}" class="grid-link" target="_blank">${r.AccountCode || ''}</a></td>
+                            <td>${r.AccountTitle || ''}</td>
+                            <td style="text-align: right;">${formatNumber(op)}</td>
+                            <td style="text-align: right;">${formatNumber(deb)}</td>
+                            <td style="text-align: right;">${formatNumber(cred)}</td>
+                            <td style="text-align: right; font-weight: bold;">${formatNumber(cls)}</td>
+                            <td style="text-align: right;">${formatNumber(pRec)}</td>
+                            <td style="text-align: right;">${formatNumber(pPay)}</td>
+                            <td style="text-align: right;">${formatNumber(bPrem)}</td>
+                            <td style="text-align: right;">${formatNumber(pdcR)}</td>
+                            <td style="text-align: right;">${formatNumber(pdcP)}</td>
+                            <td style="text-align: right;">${formatNumber(bChq)}</td>
+                            <td style="text-align: right;">${formatNumber(pdcA)}</td>
+                            <td style="text-align: center;">${r.BalanceTime || ''}</td>
+                            <td style="text-align: right;">${formatNumber(manB)}</td>
+                            <td>${r.Source || ''}</td>
+                            <td>${r.ConfirmBy || ''}</td>
+                        </tr>
+                    `);
+                });
+            }
+
+            // Footer Totals Row
+            tfoot.html(`
+                <tr class="total-row">
+                    <td colspan="2" style="text-align: right;">Total Summary:</td>
+                    <td style="text-align: right;">${formatNumber(totOpening)}</td>
+                    <td style="text-align: right;">${formatNumber(totDebit)}</td>
+                    <td style="text-align: right;">${formatNumber(totCredit)}</td>
+                    <td style="text-align: right;">${formatNumber(totClosing)}</td>
+                    <td style="text-align: right;">${formatNumber(totPendPremRec)}</td>
+                    <td style="text-align: right;">${formatNumber(totPendPremPay)}</td>
+                    <td style="text-align: right;">${formatNumber(totBalPrem)}</td>
+                    <td style="text-align: right;">${formatNumber(totPdcRec)}</td>
+                    <td style="text-align: right;">${formatNumber(totPdcPay)}</td>
+                    <td style="text-align: right;">${formatNumber(totBalCheq)}</td>
+                    <td style="text-align: right;">${formatNumber(totPdcAmt)}</td>
+                    <td></td>
+                    <td style="text-align: right;">${formatNumber(totManual)}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            `);
+
+            $('#lblSummaryStatus').text(`Total Accounts: ${data.length}`);
+        }
+
+        function renderDetailGrids(detailData) {
+            renderPaymentGrid(detailData.payments || []);
+            renderReceiptGrid(detailData.receipts || []);
+        }
+
+        function getVoucherUrl(docTypeId, id) {
+            if (docTypeId == 1) return `/accounts/vouchers/cash-payment?id=${id}`;
+            if (docTypeId == 2) return `/accounts/vouchers/bank-payment?id=${id}`;
+            if (docTypeId == 3) return `/accounts/vouchers/cash-receipt?id=${id}`;
+            if (docTypeId == 4) return `/accounts/vouchers/bank-receipt?id=${id}`;
+            if (docTypeId == 5) return `/accounts/vouchers/journal?id=${id}`;
+            return `/accounts/vouchers/bank-payment?id=${id}`;
+        }
+
+        function renderPaymentGrid(payments) {
+            const tbody = $('#paymentTbody');
+            const tfoot = $('#paymentTfoot');
+            tbody.empty(); tfoot.empty();
+
+            $('#lblPaymentCount').text(`${payments.length} Records`);
+
+            if (!payments || payments.length === 0) {
+                tbody.html('<tr><td colspan="7" style="text-align:center; padding: 15px; color:#666;">No payment transactions.</td></tr>');
+                return;
+            }
+
+            let totalAmt = 0;
+            payments.forEach(r => {
+                const amt = parseFloat(r.Amount || 0);
+                totalAmt += amt;
+                const vUrl = getVoucherUrl(r.DocumentTypeId, r.Id);
+                const glUrl = `/accounts/reports/general-ledger?accountId=${r.AgainstAccountId || 0}&fromDate=${$('#txtFromDate').val()}&toDate=${$('#txtToDate').val()}`;
 
                 tbody.append(`
                     <tr>
-                        <td><strong style="color: #00796B;">${r.AccountCode || r.accountCode || ''}</strong></td>
-                        <td>${r.AccountTitle || r.accountTitle || ''}</td>
-                        <td style="text-align: right;">${deb > 0 ? formatCurrency(deb) : '-'}</td>
-                        <td style="text-align: right;">${cred > 0 ? formatCurrency(cred) : '-'}</td>
-                        <td style="text-align: right; font-weight: bold;">${formatCurrency(Math.abs(bal))} ${bal >= 0 ? 'Dr' : 'Cr'}</td>
+                        <td style="text-align: center;">${r.VDate || ''}</td>
+                        <td style="text-align: center;"><a href="${vUrl}" class="grid-link" target="_blank">${r.VType || ''}</a></td>
+                        <td style="text-align: center;"><a href="${vUrl}" class="grid-link" target="_blank">${r.VNo || ''}</a></td>
+                        <td>${r.BankName || ''}</td>
+                        <td><a href="${glUrl}" class="grid-link" target="_blank">${r.PaidTo || ''}</a></td>
+                        <td style="text-align: right; font-weight: 600;">${formatNumber(amt)}</td>
+                        <td>${r.ChequeNo || ''}</td>
                     </tr>
                 `);
             });
 
-            $('#lblStatus').text(`Total Accounts: ${filtered.length}`);
-            updateBankTotals(filtered.length, totalDebit, totalCredit, netBal);
+            tfoot.html(`
+                <tr class="total-row">
+                    <td colspan="5" style="text-align: right;">Total Payments:</td>
+                    <td style="text-align: right;">${formatNumber(totalAmt)}</td>
+                    <td></td>
+                </tr>
+            `);
         }
 
-        function updateBankTotals(recCount, deb, cred, bal) {
-            $('#lblTotalRec').text(recCount);
-            $('#lblTotalDebit').text(formatCurrency(deb));
-            $('#lblTotalCredit').text(formatCurrency(cred));
-            $('#lblNetBal').text(`${formatCurrency(Math.abs(bal))} ${bal >= 0 ? 'Dr' : 'Cr'}`);
+        function renderReceiptGrid(receipts) {
+            const tbody = $('#receiptTbody');
+            const tfoot = $('#receiptTfoot');
+            tbody.empty(); tfoot.empty();
+
+            $('#lblReceiptCount').text(`${receipts.length} Records`);
+
+            if (!receipts || receipts.length === 0) {
+                tbody.html('<tr><td colspan="7" style="text-align:center; padding: 15px; color:#666;">No receipt transactions.</td></tr>');
+                return;
+            }
+
+            let totalAmt = 0;
+            receipts.forEach(r => {
+                const amt = parseFloat(r.Amount || 0);
+                totalAmt += amt;
+                const vUrl = getVoucherUrl(r.DocumentTypeId, r.Id);
+                const glUrl = `/accounts/reports/general-ledger?accountId=${r.AgainstAccountId || 0}&fromDate=${$('#txtFromDate').val()}&toDate=${$('#txtToDate').val()}`;
+
+                tbody.append(`
+                    <tr>
+                        <td style="text-align: center;">${r.VDate || ''}</td>
+                        <td style="text-align: center;"><a href="${vUrl}" class="grid-link" target="_blank">${r.VType || ''}</a></td>
+                        <td style="text-align: center;"><a href="${vUrl}" class="grid-link" target="_blank">${r.VNo || ''}</a></td>
+                        <td>${r.BankName || ''}</td>
+                        <td><a href="${glUrl}" class="grid-link" target="_blank">${r.ReceivedFrom || ''}</a></td>
+                        <td style="text-align: right; font-weight: 600;">${formatNumber(amt)}</td>
+                        <td>${r.ChequeNo || ''}</td>
+                    </tr>
+                `);
+            });
+
+            tfoot.html(`
+                <tr class="total-row">
+                    <td colspan="5" style="text-align: right;">Total Receipts:</td>
+                    <td style="text-align: right;">${formatNumber(totalAmt)}</td>
+                    <td></td>
+                </tr>
+            `);
+        }
+
+        function applyDetailGrouping() {
+            // Re-render detail grids based on radio choice
+            renderDetailGrids(rawDetailData);
         }
 
         function resetBankFilters() {
-            setInitialBankDate();
-            $('#cmbBankAccount').val('');
-            loadBankBalances();
+            initDefaultDates();
+            $('#cmbDateType').val('5');
+            $('#chkExcludeZero').prop('checked', false);
+            $('#radGroupBank').prop('checked', true);
+            loadBankBalancesData();
+        }
+
+        function openBankManualBalance() {
+            window.location.href = '/accounts/bank-balance-manual-entry';
+        }
+
+        function printReport(rptCode) {
+            window.print();
         }
     </script>
 </body>

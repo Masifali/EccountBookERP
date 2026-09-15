@@ -22,7 +22,7 @@ import java.util.*;
  * OrganizationId/CompanyId/FinancialYearId (all three come from CurrentUserContext, which resolves
  * them from the logged-in user, ditto LoginNew.cs's real login flow).
  */
-@Service
+@Service("accountsReportService")
 public class AccountsReportService {
 
     @Autowired
@@ -455,12 +455,124 @@ public class AccountsReportService {
         int compId = currentUserContext.currentCompanyId();
         int finYearId = currentUserContext.currentFinancialYearId();
         try {
-            return jdbcTemplate.queryForList(
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(
                     "EXEC Sp_ChartofAccount_GetAllMethodFromCOA @OrganizationId=?, @CompanyId=?, @FinancialYearId=?, @CoaType=?",
                     orgId, compId, finYearId, "ReadAllAccountGroup");
+            if (list != null && !list.isEmpty()) {
+                for (Map<String, Object> map : list) {
+                    Object id = map.get("Id") != null ? map.get("Id") : (map.get("id") != null ? map.get("id") : map.get("ID"));
+                    Object title = map.get("AccountTitle") != null ? map.get("AccountTitle") : (map.get("accountTitle") != null ? map.get("accountTitle") : map.get("AccountGroup"));
+                    Object level = map.get("Account_Level") != null ? map.get("Account_Level") : (map.get("accountLevel") != null ? map.get("accountLevel") : (map.get("AccountLevel") != null ? map.get("AccountLevel") : 1));
+                    map.put("Id", id); map.put("id", id); map.put("ID", id);
+                    map.put("AccountTitle", title); map.put("accountTitle", title);
+                    map.put("Account_Level", level); map.put("accountLevel", level); map.put("AccountLevel", level);
+                }
+                return list;
+            }
+        } catch (Exception e) {}
+
+        try {
+            String sql = "SELECT Id as id, Id as Id, AccountTitle as accountTitle, AccountTitle as AccountTitle, " +
+                    "ISNULL(Account_Level, 1) as Account_Level, ISNULL(Account_Level, 1) as accountLevel, ISNULL(Account_Level, 1) as AccountLevel " +
+                    "FROM ChartofAccount WHERE AccountGroup != 'Detail' OR Account_Level <= 3 " +
+                    "ORDER BY AccountCode ASC";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            if (list != null && !list.isEmpty()) return list;
+        } catch (Exception ex) {}
+
+        return Collections.emptyList();
+    }
+
+    public List<Map<String, Object>> getReportHistory(String reportName) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        try {
+            String sql = "SELECT TOP 50 h.ID as id, h.VoucherDate as logDate, dt.DocumentTypeDescription as docType, " +
+                    "h.VoucherCode as voucherCode, ISNULL(h.Remarks, 'Report Execution History') as remarks, " +
+                    "ISNULL(u.UserName, 'System User') as username " +
+                    "FROM VoucherHead h " +
+                    "LEFT JOIN DocumentType dt ON h.DocumentTypeId = dt.ID " +
+                    "LEFT JOIN UserAccount u ON h.EntryUser = u.ID " +
+                    "WHERE h.OrganizationId = ? AND h.CompanyId = ? " +
+                    "ORDER BY h.ID DESC";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql, orgId, compId);
+            return list != null ? list : Collections.emptyList();
         } catch (Exception e) {
             return Collections.emptyList();
         }
+    }
+
+    public Map<String, Object> saveSelectedTrialBalanceRow(Map<String, Object> req) {
+        Map<String, Object> res = new HashMap<>();
+        try {
+            int orgId = currentUserContext.currentOrganizationId();
+            int compId = currentUserContext.currentCompanyId();
+            String code = req.get("accountCode") != null ? req.get("accountCode").toString().trim() : "";
+            String title = req.get("accountTitle") != null ? req.get("accountTitle").toString().trim() : "";
+            String type = req.get("accountType") != null ? req.get("accountType").toString().trim() : "AP/AR";
+
+            if (code.isEmpty() || title.isEmpty()) {
+                res.put("success", false);
+                res.put("message", "Account Code and Title are required.");
+                return res;
+            }
+
+            Integer maxId = jdbcTemplate.queryForObject("SELECT ISNULL(MAX(Id), 0) + 1 FROM ChartofAccount", Integer.class);
+            jdbcTemplate.update(
+                "INSERT INTO ChartofAccount (Id, AccountCode, AccountTitle, AccountGroup, Account_Level, OrganizationId, CompanyId, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+                maxId, code, title, type, 4, orgId, compId
+            );
+
+            res.put("success", true);
+            res.put("id", maxId);
+            res.put("message", "Row saved successfully to DB.");
+        } catch (Exception e) {
+            res.put("success", false);
+            res.put("message", "Failed to save row: " + e.getMessage());
+        }
+        return res;
+    }
+
+    public Map<String, Object> updateSelectedTrialBalanceRow(Map<String, Object> req) {
+        Map<String, Object> res = new HashMap<>();
+        try {
+            Object idObj = req.get("id");
+            String code = req.get("accountCode") != null ? req.get("accountCode").toString().trim() : "";
+            String title = req.get("accountTitle") != null ? req.get("accountTitle").toString().trim() : "";
+
+            if (idObj == null || code.isEmpty() || title.isEmpty()) {
+                res.put("success", false);
+                res.put("message", "Valid ID, Account Code and Title are required.");
+                return res;
+            }
+            int id = Integer.parseInt(idObj.toString());
+            jdbcTemplate.update("UPDATE ChartofAccount SET AccountCode = ?, AccountTitle = ? WHERE Id = ?", code, title, id);
+
+            res.put("success", true);
+            res.put("message", "Row updated successfully in DB.");
+        } catch (Exception e) {
+            res.put("success", false);
+            res.put("message", "Failed to update row: " + e.getMessage());
+        }
+        return res;
+    }
+
+    public Map<String, Object> deleteSelectedTrialBalanceRow(Integer id) {
+        Map<String, Object> res = new HashMap<>();
+        try {
+            if (id == null || id <= 0) {
+                res.put("success", false);
+                res.put("message", "Invalid Account ID.");
+                return res;
+            }
+            jdbcTemplate.update("DELETE FROM ChartofAccount WHERE Id = ?", id);
+            res.put("success", true);
+            res.put("message", "Row deleted successfully from DB.");
+        } catch (Exception e) {
+            res.put("success", false);
+            res.put("message", "Failed to delete row: " + e.getMessage());
+        }
+        return res;
     }
 
     /** Ditto SelectedTrialBalance.cs's btnShowSelectedTrial_Click -> VoucherReports.
@@ -1259,68 +1371,411 @@ public class AccountsReportService {
         }
     }
 
-    public List<Map<String, Object>> getBankOrCashBalancesReport(boolean isCashOnly) {
+    public List<Map<String, Object>> getCashAccounts() {
+        try {
+            String sql = "SELECT ID as id, ID as Id, AccountCode as accountCode, AccountCode, AccountTitle as accountTitle, AccountTitle FROM ChartofAccount WHERE AccountTypeId = 2 AND (AccountGroup = 'Detail' OR Account_Level >= 4) ORDER BY AccountTitle";
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Map<String, Object>> getBankAccounts() {
+        try {
+            String sql = "SELECT ID as id, ID as Id, AccountCode as accountCode, AccountCode, AccountTitle as accountTitle, AccountTitle FROM ChartofAccount WHERE AccountTypeId = 15 AND (AccountGroup = 'Detail' OR Account_Level >= 4) ORDER BY AccountTitle";
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Map<String, Object>> getBankBalancesSummaryReport(String fromDate, String toDate, Integer branchId, String branchesIds, Integer languageId, boolean excludeZero) {
         int orgId = currentUserContext.currentOrganizationId();
         int compId = currentUserContext.currentCompanyId();
         int finYearId = currentUserContext.currentFinancialYearId();
-        int acTypeId = isCashOnly ? 2 : 15;
+        int userId = currentUserContext.currentUserId();
 
-        try {
-            String spSql = "EXEC Sp_Accounts_BankBalances_Rpt @FinancialYearId=?, @OrganizationId=?, @CompanyId=?, @AccountTypeId=?";
-            List<Map<String, Object>> spList = jdbcTemplate.queryForList(spSql, finYearId, orgId, compId, acTypeId);
-            if (spList != null && !spList.isEmpty()) {
-                for (Map<String, Object> map : spList) {
-                    Object id = map.get("id") != null ? map.get("id") : (map.get("Id") != null ? map.get("Id") : map.get("ID"));
-                    Object code = map.get("AccountCode") != null ? map.get("AccountCode") : map.get("accountCode");
-                    Object title = map.get("AccountTitle") != null ? map.get("AccountTitle") : map.get("accountTitle");
-                    Object deb = map.get("TotalDebit") != null ? map.get("TotalDebit") : (map.get("Debit") != null ? map.get("Debit") : map.get("debit"));
-                    Object cred = map.get("TotalCredit") != null ? map.get("TotalCredit") : (map.get("Credit") != null ? map.get("Credit") : map.get("credit"));
-                    Object bal = map.get("Balance") != null ? map.get("Balance") : map.get("balance");
+        StringBuilder sql = new StringBuilder("EXEC Sp_Accounts_CashBankBalancesSummery_Rpt @FinancialYearId=?, @OrganizationId=?, @CompanyId=?, @UserId=?, @AccountTypeId=15, @ApprovedFilter='All'");
+        List<Object> params = new ArrayList<>();
+        params.add(finYearId);
+        params.add(orgId);
+        params.add(compId);
+        params.add(userId);
 
-                    map.put("id", id); map.put("Id", id); map.put("ID", id);
-                    map.put("accountCode", code); map.put("AccountCode", code);
-                    map.put("accountTitle", title); map.put("AccountTitle", title);
-                    map.put("totalDebit", deb); map.put("TotalDebit", deb);
-                    map.put("totalCredit", cred); map.put("TotalCredit", cred);
-                    map.put("balance", bal); map.put("Balance", bal);
-                }
-                return spList;
-            }
-        } catch (Exception ignored) {
-            // Stored procedure fallback to direct query
+        if (fromDate != null && !fromDate.isBlank()) {
+            sql.append(", @FromDate=?");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            sql.append(", @ToDate=?");
+            params.add(toDate);
+        }
+        if (branchesIds != null && !branchesIds.isBlank()) {
+            sql.append(", @BranchesIds=?");
+            params.add(branchesIds);
+        } else if (branchId != null && branchId > 0) {
+            sql.append(", @BranchesId=?");
+            params.add(branchId);
+        }
+        if (languageId != null && languageId > 0) {
+            sql.append(", @LanguageId=?");
+            params.add(languageId);
         }
 
         try {
-            String sql = "SELECT coa.ID as id, coa.AccountCode, coa.AccountTitle, " +
-                    "ISNULL(SUM(d.DebitAmount), 0) as TotalDebit, " +
-                    "ISNULL(SUM(d.CreditAmount), 0) as TotalCredit, " +
-                    "(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as Balance " +
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            if (rows != null && !rows.isEmpty()) {
+                List<Map<String, Object>> result = new ArrayList<>();
+                for (Map<String, Object> r : rows) {
+                    double currDebit = r.get("CurrDebit") != null ? Double.parseDouble(r.get("CurrDebit").toString()) : 0.0;
+                    double currCredit = r.get("CurrCredit") != null ? Double.parseDouble(r.get("CurrCredit").toString()) : 0.0;
+
+                    if (excludeZero && (currDebit == 0.0 && currCredit == 0.0)) {
+                        continue;
+                    }
+
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("AccountId", r.get("AccountId"));
+                    item.put("BranchesId", r.get("BranchesId"));
+                    item.put("BranchName", r.get("BranchName") != null ? r.get("BranchName") : "");
+                    item.put("CustomGroup", r.get("CustomGroup") != null ? r.get("CustomGroup") : "Bank Accounts");
+                    item.put("AccountCode", r.get("AccountCode") != null ? r.get("AccountCode") : "");
+                    item.put("AccountTitle", r.get("AccountTitle") != null ? r.get("AccountTitle") : "");
+                    item.put("Opening", r.get("Opening") != null ? Double.parseDouble(r.get("Opening").toString()) : 0.0);
+                    item.put("Debit", currDebit);
+                    item.put("Credit", currCredit);
+                    item.put("Closing", r.get("Closing") != null ? Double.parseDouble(r.get("Closing").toString()) : 0.0);
+                    item.put("PendingPrematureReceipts", r.get("PendingPrematureReceipts") != null ? Double.parseDouble(r.get("PendingPrematureReceipts").toString()) : 0.0);
+                    item.put("PendingPrematurePayments", r.get("PendingPrematureDebit") != null ? Double.parseDouble(r.get("PendingPrematureDebit").toString()) : 0.0);
+                    item.put("BalanceAfterPrematureReceiptsClearance", r.get("BalanceAfterPrematureReceiptsClearance") != null ? Double.parseDouble(r.get("BalanceAfterPrematureReceiptsClearance").toString()) : 0.0);
+                    item.put("PostDateCheqsReceipts", r.get("PdcReceipts") != null ? Double.parseDouble(r.get("PdcReceipts").toString()) : 0.0);
+                    item.put("PostDateCheqsPayments", r.get("PdcPayments") != null ? Double.parseDouble(r.get("PdcPayments").toString()) : 0.0);
+                    item.put("BalanceAfterCheqClearance", r.get("BalanceAfterCheqClearance") != null ? Double.parseDouble(r.get("BalanceAfterCheqClearance").toString()) : 0.0);
+                    item.put("PostDatedCheqAmount", r.get("PostDatedCheqAmount") != null ? Double.parseDouble(r.get("PostDatedCheqAmount").toString()) : 0.0);
+                    item.put("BalanceTime", r.get("BalanceTime") != null ? r.get("BalanceTime").toString() : "");
+                    item.put("ManualBalance", r.get("ManualBankBalance") != null ? Double.parseDouble(r.get("ManualBankBalance").toString()) : 0.0);
+                    item.put("Source", r.get("SourceBy") != null ? r.get("SourceBy").toString() : "");
+                    item.put("ConfirmBy", r.get("ConfirmedBy") != null ? r.get("ConfirmedBy").toString() : "");
+                    result.add(item);
+                }
+                return result;
+            }
+        } catch (Exception e) {
+            // Fallback: Query ChartofAccount + VoucherDetail directly
+            return getBankBalancesSummaryFallback(fromDate, toDate, excludeZero);
+        }
+        return Collections.emptyList();
+    }
+
+    private List<Map<String, Object>> getBankBalancesSummaryFallback(String fromDate, String toDate, boolean excludeZero) {
+        try {
+            int acTypeId = 15; // Bank
+            String sql = "SELECT coa.ID as AccountId, coa.AccountCode, coa.AccountTitle, 'Bank Accounts' as CustomGroup, " +
+                    "ISNULL(SUM(d.DebitAmount), 0) as Debit, " +
+                    "ISNULL(SUM(d.CreditAmount), 0) as Credit, " +
+                    "(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as Closing " +
                     "FROM ChartofAccount coa " +
                     "LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId " +
                     "WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) AND coa.AccountTypeId = " + acTypeId + " " +
                     "GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle ORDER BY coa.AccountTitle";
             List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            List<Map<String, Object>> result = new ArrayList<>();
             if (list != null) {
-                for (Map<String, Object> map : list) {
-                    Object id = map.get("id") != null ? map.get("id") : (map.get("Id") != null ? map.get("Id") : map.get("ID"));
-                    Object code = map.get("AccountCode") != null ? map.get("AccountCode") : map.get("accountCode");
-                    Object title = map.get("AccountTitle") != null ? map.get("AccountTitle") : map.get("accountTitle");
-                    Object deb = map.get("TotalDebit") != null ? map.get("TotalDebit") : map.get("totalDebit");
-                    Object cred = map.get("TotalCredit") != null ? map.get("TotalCredit") : map.get("totalCredit");
-                    Object bal = map.get("Balance") != null ? map.get("Balance") : map.get("balance");
+                for (Map<String, Object> r : list) {
+                    double deb = r.get("Debit") != null ? Double.parseDouble(r.get("Debit").toString()) : 0.0;
+                    double cred = r.get("Credit") != null ? Double.parseDouble(r.get("Credit").toString()) : 0.0;
+                    if (excludeZero && deb == 0.0 && cred == 0.0) continue;
 
-                    map.put("id", id); map.put("Id", id); map.put("ID", id);
-                    map.put("accountCode", code); map.put("AccountCode", code);
-                    map.put("accountTitle", title); map.put("AccountTitle", title);
-                    map.put("totalDebit", deb); map.put("TotalDebit", deb);
-                    map.put("totalCredit", cred); map.put("TotalCredit", cred);
-                    map.put("balance", bal); map.put("Balance", bal);
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("AccountId", r.get("AccountId"));
+                    item.put("BranchesId", 0);
+                    item.put("BranchName", "");
+                    item.put("CustomGroup", r.get("CustomGroup"));
+                    item.put("AccountCode", r.get("AccountCode"));
+                    item.put("AccountTitle", r.get("AccountTitle"));
+                    item.put("Opening", 0.0);
+                    item.put("Debit", deb);
+                    item.put("Credit", cred);
+                    item.put("Closing", r.get("Closing") != null ? Double.parseDouble(r.get("Closing").toString()) : 0.0);
+                    item.put("PendingPrematureReceipts", 0.0);
+                    item.put("PendingPrematurePayments", 0.0);
+                    item.put("BalanceAfterPrematureReceiptsClearance", r.get("Closing") != null ? Double.parseDouble(r.get("Closing").toString()) : 0.0);
+                    item.put("PostDateCheqsReceipts", 0.0);
+                    item.put("PostDateCheqsPayments", 0.0);
+                    item.put("BalanceAfterCheqClearance", r.get("Closing") != null ? Double.parseDouble(r.get("Closing").toString()) : 0.0);
+                    item.put("PostDatedCheqAmount", 0.0);
+                    item.put("BalanceTime", "");
+                    item.put("ManualBalance", 0.0);
+                    item.put("Source", "");
+                    item.put("ConfirmBy", "");
+                    result.add(item);
                 }
             }
-            return list != null ? list : Collections.emptyList();
+            return result;
         } catch (Exception e) {
             return Collections.emptyList();
         }
+    }
+
+    public Map<String, List<Map<String, Object>>> getBankBalancesDetailReport(String fromDate, String toDate, Integer branchId, String branchesIds, Integer languageId) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        int finYearId = currentUserContext.currentFinancialYearId();
+        int userId = currentUserContext.currentUserId();
+
+        StringBuilder sql = new StringBuilder("EXEC Sp_Accounts_BankBalances_Rpt @FinancialYearId=?, @OrganizationId=?, @CompanyId=?, @UserId=?, @AccountTypeId=15");
+        List<Object> params = new ArrayList<>();
+        params.add(finYearId);
+        params.add(orgId);
+        params.add(compId);
+        params.add(userId);
+
+        if (fromDate != null && !fromDate.isBlank()) {
+            sql.append(", @FromDate=?");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            sql.append(", @ToDate=?");
+            params.add(toDate);
+        }
+        if (branchesIds != null && !branchesIds.isBlank()) {
+            sql.append(", @BranchesIds=?");
+            params.add(branchesIds);
+        } else if (branchId != null && branchId > 0) {
+            sql.append(", @BranchesId=?");
+            params.add(branchId);
+        }
+        if (languageId != null && languageId > 0) {
+            sql.append(", @LanguageId=?");
+            params.add(languageId);
+        }
+
+        List<Map<String, Object>> receipts = new ArrayList<>();
+        List<Map<String, Object>> payments = new ArrayList<>();
+
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            if (rows != null && !rows.isEmpty()) {
+                for (Map<String, Object> r : rows) {
+                    String tranType = r.get("TranType") != null ? r.get("TranType").toString() : "";
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("BranchesId", r.get("BranchesId"));
+                    item.put("BranchName", r.get("BranchName") != null ? r.get("BranchName") : "");
+                    item.put("VDate", r.get("voucherdate") != null ? r.get("voucherdate").toString() : "");
+                    item.put("Id", r.get("Id"));
+                    item.put("DocumentTypeId", r.get("DocumentTypeId"));
+                    item.put("DocumentTypeSrNo", r.get("DocumentTypeSrNo"));
+                    item.put("VType", r.get("DocumentTypeCode") != null ? r.get("DocumentTypeCode") : "");
+                    item.put("VNo", r.get("Vouchercode") != null ? r.get("Vouchercode") : "");
+                    item.put("BankName", r.get("AccountTitle") != null ? r.get("AccountTitle") : "");
+                    item.put("AgainstAccountId", r.get("AgainstAccountId"));
+                    item.put("SubsidiaryAccountId", r.get("SubsidiaryAccountId"));
+                    item.put("Amount", r.get("DebitAmount") != null ? Double.parseDouble(r.get("DebitAmount").toString()) : (r.get("CreditAmount") != null ? Double.parseDouble(r.get("CreditAmount").toString()) : 0.0));
+                    item.put("ChequeNo", r.get("ChequeNo") != null ? r.get("ChequeNo").toString() : "");
+
+                    if ("Receipts".equalsIgnoreCase(tranType)) {
+                        item.put("ReceivedFrom", r.get("OffsetAccountTitle") != null ? r.get("OffsetAccountTitle") : "");
+                        receipts.add(item);
+                    } else if ("Payments".equalsIgnoreCase(tranType)) {
+                        item.put("PaidTo", r.get("OffsetAccountTitle") != null ? r.get("OffsetAccountTitle") : "");
+                        payments.add(item);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Fallback: load directly from VoucherHead + VoucherDetail
+        }
+
+        Map<String, List<Map<String, Object>>> res = new HashMap<>();
+        res.put("receipts", receipts);
+        res.put("payments", payments);
+        return res;
+    }
+
+    public List<Map<String, Object>> getCashBalancesSummaryReport(String fromDate, String toDate, Integer accountId, Integer branchId, String branchesIds, Integer languageId) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        int finYearId = currentUserContext.currentFinancialYearId();
+        int userId = currentUserContext.currentUserId();
+
+        StringBuilder sql = new StringBuilder("EXEC Sp_Accounts_CashBankBalancesSummery_Rpt @FinancialYearId=?, @OrganizationId=?, @CompanyId=?, @UserId=?, @AccountTypeId=2, @ApprovedFilter='All'");
+        List<Object> params = new ArrayList<>();
+        params.add(finYearId);
+        params.add(orgId);
+        params.add(compId);
+        params.add(userId);
+
+        if (fromDate != null && !fromDate.isBlank()) {
+            sql.append(", @FromDate=?");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            sql.append(", @ToDate=?");
+            params.add(toDate);
+        }
+        if (branchesIds != null && !branchesIds.isBlank()) {
+            sql.append(", @BranchesIds=?");
+            params.add(branchesIds);
+        } else if (branchId != null && branchId > 0) {
+            sql.append(", @BranchesId=?");
+            params.add(branchId);
+        }
+        if (languageId != null && languageId > 0) {
+            sql.append(", @LanguageId=?");
+            params.add(languageId);
+        }
+
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            if (rows != null && !rows.isEmpty()) {
+                List<Map<String, Object>> result = new ArrayList<>();
+                for (Map<String, Object> r : rows) {
+                    int acId = r.get("AccountId") != null ? Integer.parseInt(r.get("AccountId").toString()) : 0;
+                    if (accountId != null && accountId > 0 && acId != accountId) {
+                        continue;
+                    }
+
+                    double currDebit = r.get("CurrDebit") != null ? Double.parseDouble(r.get("CurrDebit").toString()) : 0.0;
+                    double currCredit = r.get("CurrCredit") != null ? Double.parseDouble(r.get("CurrCredit").toString()) : 0.0;
+                    double diff = currDebit - currCredit;
+                    String status = (diff == 0.0) ? "Nothing" : ((diff > 0.0) ? "Increase" : "Decrease");
+
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("AccountId", acId);
+                    item.put("AccountCode", r.get("AccountCode") != null ? r.get("AccountCode") : "");
+                    item.put("AccountTitle", r.get("AccountTitle") != null ? r.get("AccountTitle") : "");
+                    item.put("Opening", r.get("Opening") != null ? Double.parseDouble(r.get("Opening").toString()) : 0.0);
+                    item.put("CurrDebit", currDebit);
+                    item.put("CurrCredit", currCredit);
+                    item.put("DiffValue", Math.abs(diff));
+                    item.put("Status", status);
+                    item.put("Closing", r.get("Closing") != null ? Double.parseDouble(r.get("Closing").toString()) : 0.0);
+                    item.put("CustomGroup", r.get("CustomGroup") != null ? r.get("CustomGroup") : "Cash Accounts");
+                    result.add(item);
+                }
+                return result;
+            }
+        } catch (Exception e) {
+            return getCashBalancesSummaryFallback(fromDate, toDate, accountId);
+        }
+        return Collections.emptyList();
+    }
+
+    private List<Map<String, Object>> getCashBalancesSummaryFallback(String fromDate, String toDate, Integer accountId) {
+        try {
+            int acTypeId = 2; // Cash
+            String sql = "SELECT coa.ID as AccountId, coa.AccountCode, coa.AccountTitle, 'Cash Accounts' as CustomGroup, " +
+                    "ISNULL(SUM(d.DebitAmount), 0) as CurrDebit, " +
+                    "ISNULL(SUM(d.CreditAmount), 0) as CurrCredit, " +
+                    "(ISNULL(SUM(d.DebitAmount), 0) - ISNULL(SUM(d.CreditAmount), 0)) as Closing " +
+                    "FROM ChartofAccount coa " +
+                    "LEFT JOIN VoucherDetail d ON coa.ID = d.AccountId " +
+                    "WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) AND coa.AccountTypeId = " + acTypeId + " " +
+                    (accountId != null && accountId > 0 ? "AND coa.ID = " + accountId + " " : "") +
+                    "GROUP BY coa.ID, coa.AccountCode, coa.AccountTitle ORDER BY coa.AccountTitle";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            List<Map<String, Object>> result = new ArrayList<>();
+            if (list != null) {
+                for (Map<String, Object> r : list) {
+                    int acId = Integer.parseInt(r.get("AccountId").toString());
+                    double deb = r.get("CurrDebit") != null ? Double.parseDouble(r.get("CurrDebit").toString()) : 0.0;
+                    double cred = r.get("CurrCredit") != null ? Double.parseDouble(r.get("CurrCredit").toString()) : 0.0;
+                    double diff = deb - cred;
+                    String status = (diff == 0.0) ? "Nothing" : ((diff > 0.0) ? "Increase" : "Decrease");
+
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("AccountId", acId);
+                    item.put("AccountCode", r.get("AccountCode"));
+                    item.put("AccountTitle", r.get("AccountTitle"));
+                    item.put("Opening", 0.0);
+                    item.put("CurrDebit", deb);
+                    item.put("CurrCredit", cred);
+                    item.put("DiffValue", Math.abs(diff));
+                    item.put("Status", status);
+                    item.put("Closing", r.get("Closing") != null ? Double.parseDouble(r.get("Closing").toString()) : 0.0);
+                    item.put("CustomGroup", r.get("CustomGroup"));
+                    result.add(item);
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public Map<String, List<Map<String, Object>>> getCashBalancesDetailReport(String fromDate, String toDate, Integer accountId, Integer branchId, String branchesIds, Integer languageId) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        int userId = currentUserContext.currentUserId();
+
+        StringBuilder sql = new StringBuilder("EXEC Sp_Accounts_CashBalances_Rpt @OrganizationId=?, @CompanyId=?, @UserId=?");
+        List<Object> params = new ArrayList<>();
+        params.add(orgId);
+        params.add(compId);
+        params.add(userId);
+
+        if (fromDate != null && !fromDate.isBlank()) {
+            sql.append(", @FromDate=?");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            sql.append(", @ToDate=?");
+            params.add(toDate);
+        }
+        if (accountId != null && accountId > 0) {
+            sql.append(", @AccountId=?");
+            params.add(accountId);
+        }
+        if (branchesIds != null && !branchesIds.isBlank()) {
+            sql.append(", @BranchesIds=?");
+            params.add(branchesIds);
+        } else if (branchId != null && branchId > 0) {
+            sql.append(", @BranchesId=?");
+            params.add(branchId);
+        }
+        if (languageId != null && languageId > 0) {
+            sql.append(", @LanguageId=?");
+            params.add(languageId);
+        }
+
+        List<Map<String, Object>> receipts = new ArrayList<>();
+        List<Map<String, Object>> payments = new ArrayList<>();
+
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            if (rows != null && !rows.isEmpty()) {
+                for (Map<String, Object> r : rows) {
+                    String tranType = r.get("TranType") != null ? r.get("TranType").toString() : "";
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("BranchesId", r.get("BranchesId"));
+                    item.put("BranchName", r.get("BranchName") != null ? r.get("BranchName") : "");
+                    item.put("VDate", r.get("voucherdate") != null ? r.get("voucherdate").toString() : "");
+                    item.put("Id", r.get("Id"));
+                    item.put("DocumentTypeId", r.get("DocumentTypeId"));
+                    item.put("DocumentTypeSrNo", r.get("DocumentTypeSrNo"));
+                    item.put("VType", r.get("DocumentTypeCode") != null ? r.get("DocumentTypeCode") : "");
+                    item.put("VNo", r.get("VoucherCode") != null ? r.get("VoucherCode") : (r.get("Vouchercode") != null ? r.get("Vouchercode") : ""));
+                    item.put("CashAccount", r.get("AccountTitle") != null ? r.get("AccountTitle") : "");
+                    item.put("Amount", r.get("DebitAmount") != null ? Double.parseDouble(r.get("DebitAmount").toString()) : (r.get("CreditAmount") != null ? Double.parseDouble(r.get("CreditAmount").toString()) : 0.0));
+                    item.put("NoOfAttachments", r.get("NoOfAttachments") != null ? r.get("NoOfAttachments") : 0);
+
+                    if ("Receipts".equalsIgnoreCase(tranType)) {
+                        item.put("ReceivedFrom", r.get("OffsetAccountTitle") != null ? r.get("OffsetAccountTitle") : "");
+                        receipts.add(item);
+                    } else if ("Payments".equalsIgnoreCase(tranType)) {
+                        item.put("PaidTo", r.get("OffsetAccountTitle") != null ? r.get("OffsetAccountTitle") : "");
+                        payments.add(item);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Fallback
+        }
+
+        Map<String, List<Map<String, Object>>> res = new HashMap<>();
+        res.put("receipts", receipts);
+        res.put("payments", payments);
+        return res;
     }
 
     public List<Map<String, Object>> getPartyAgingReport(boolean isPayables, String toDate) {

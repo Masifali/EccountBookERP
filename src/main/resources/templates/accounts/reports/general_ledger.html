@@ -488,9 +488,9 @@
             if (!r) return '';
             
             // 1. Direct field checks (both case variations & all standard field names)
-            let dt = r.DocTypeCode || r.docTypeCode || r.DocType || r.docType || r.DocumentTypeCode || r.documentTypeCode || 
+            let dt = r.typeVoucher || r.TypeVoucher || r.type_voucher || r.DocTypeCode || r.docTypeCode || r.DocType || r.docType || r.DocumentTypeCode || r.documentTypeCode || 
                      r.DocTypeShort || r.DocumentTypeShort || r.DocTypeAbbreviation || r.Doc_Type ||
-                     r.typeVoucher || r.TypeVoucher || r.type_voucher || r.VoucherType || r.voucherType || 
+                     r.VoucherType || r.voucherType || 
                      r.VType || r.vType || r.DocumentTypeDescription || r.documentTypeDescription || 
                      r.DocumentType || r.documentType || r.DocTypeDescription || r.docTypeDescription ||
                      r.DocTypeName || r.docTypeName || r.DocumentTypeName || r.documentTypeName || '';
@@ -498,6 +498,7 @@
             if (dt && typeof dt === 'string') {
                 dt = dt.trim();
                 const upper = dt.toUpperCase();
+                if (upper === 'P1-R' || upper === 'P1R' || upper === 'PI-R' || upper === 'IP-R' || upper === 'PIR' || upper === 'IPR') return 'P1-R';
                 if (upper.includes('BANK PAYMENT') || upper === 'BPV') return 'BPV';
                 if (upper.includes('CASH PAYMENT') || upper === 'CPV') return 'CPV';
                 if (upper.includes('BANK RECEIPT') || upper === 'BRV') return 'BRV';
@@ -507,8 +508,7 @@
                 if (upper.includes('EXPENSE') || upper === 'EV') return 'EV';
                 if (upper.includes('PARTY RECEIPT') || upper === 'PRV') return 'PRV';
                 if (upper.includes('PARTY PAYMENT') || upper === 'PPV') return 'PPV';
-                if (upper === 'PI-R' || upper === 'IP-R' || upper === 'P1-R' || upper === 'PIR' || upper === 'IPR' || upper === 'PI') return 'PI-R';
-                if (upper.includes('INVOICE') || upper.includes('PURCHASE')) return 'PI-R';
+                if (upper.includes('INVOICE') || upper.includes('PURCHASE')) return 'P1-R';
                 if (upper.includes('FREIGHT') || upper === 'FRT') return 'FRT';
                 if (upper.includes('CONTRACTOR') || upper === 'CW') return 'CW';
                 if (upper.includes('PDC') || upper === 'CHEQUE') return 'PDC';
@@ -533,8 +533,8 @@
                     12: 'INV-ADJ',
                     13: 'FRT',
                     14: 'CW',
-                    18: 'PI-R',
-                    19: 'PI-R',
+                    18: 'P1-R',
+                    19: 'P1-R',
                     26: 'EV',
                     34: 'PRV',
                     35: 'PPV'
@@ -542,15 +542,15 @@
                 if (dtMap[dtId]) return dtMap[dtId];
             }
 
-            // 3. Fallback: Parse prefix from VoucherNo / VoucherCode (e.g. BPV-101, JV-45, CPV-3, PI-R-76)
+            // 3. Fallback: Parse prefix from VoucherNo / VoucherCode (e.g. BPV-101, JV-45, CPV-3, P1-R-76)
             const vNo = (r.VoucherNo || r.voucherNo || r.VoucherCode || r.voucherCode || r.VNo || r.vNo || '').toString().trim();
             if (vNo) {
-                const match = vNo.match(/^([A-Za-z\-]+)[-\/\s_\d]/);
+                const match = vNo.match(/^([A-Za-z0-9\-]+)[-\/\s_\d]/);
                 if (match && match[1]) {
                     const prefix = match[1].toUpperCase();
-                    if (['BPV', 'CPV', 'BRV', 'CRV', 'JV', 'EV', 'PRV', 'PPV', 'PDC', 'FRT', 'CW', 'CONT', 'CV', 'PI', 'PI-R', 'IP-R', 'PIR', 'IPR'].includes(prefix)) {
+                    if (['BPV', 'CPV', 'BRV', 'CRV', 'JV', 'EV', 'PRV', 'PPV', 'PDC', 'FRT', 'CW', 'CONT', 'CV', 'PI', 'PI-R', 'P1-R', 'P1R', 'IP-R', 'PIR', 'IPR'].includes(prefix)) {
                         if (prefix === 'CV') return 'CONT';
-                        if (['PI', 'PIR', 'IP-R', 'IPR'].includes(prefix)) return 'PI-R';
+                        if (['PI', 'PIR', 'IP-R', 'IPR', 'PI-R', 'P1R', 'P1-R'].includes(prefix)) return 'P1-R';
                         return prefix;
                     }
                 }

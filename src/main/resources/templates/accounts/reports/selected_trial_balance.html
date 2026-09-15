@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Trial Balance Selected - WinForms Replica</title>
+    <title>Trial Balance Selected - ERP WinForms Replica</title>
 
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
@@ -13,41 +13,61 @@
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
         .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 4px 8px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); height: 26px; }
         .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
         .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
         .win-btn-teal:hover { background: #004d40; color: #ffffff; }
-        /* ditto panel3's label23 "Trial Balances Selected" teal header */
-        .win-header-panel { background-color: #00796B; padding: 5px 10px; }
-        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 15px; font-weight: bold; }
-        /* ditto groupBox1 "Filters" (962x157) */
-        .win-groupbox { border: 1px solid #9ca3af; border-radius: 2px; margin: 6px 4px; padding: 10px 10px 8px 10px; position: relative; background: #fff; }
+        .win-btn-danger { background: #d32f2f; color: #ffffff; border-color: #b71c1c; }
+        .win-btn-danger:hover { background: #b71c1c; color: #ffffff; }
+
+        .win-header-panel { background-color: #00796B; padding: 5px 10px; margin-top: 2px; }
+        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 14px; font-weight: bold; }
+
+        .win-groupbox { border: 1px solid #9ca3af; border-radius: 2px; margin: 6px 6px 4px 6px; padding: 10px 12px 8px 12px; position: relative; background: #fff; }
         .win-groupbox-title { position: absolute; top: -9px; left: 10px; background: #ffffff; padding: 0 6px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 11px; color: #222; }
-        .win-groupbox .row { margin-bottom: 6px; display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+        .win-groupbox .win-row { margin-bottom: 6px; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+        .win-field { display: flex; flex-direction: column; }
+
         .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
-        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
+        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 26px !important; line-height: 24px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
         .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
-        .radio-inline-win { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; font-weight: 600; color: #334155; white-space: nowrap; }
-        .chk-inline-win { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; white-space: nowrap; }
-        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
-        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; position: sticky; top: 0; z-index: 2; }
-        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; }
-        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
-        .grid-group-row td { font-weight: bold; background: #dbe7e5; border-top: 1px solid #00796B; color: #004d40; }
-        .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
-        .grid-scroll { max-height: 500px; overflow: auto; border: 1px solid #cbd5e1; margin: 6px; }
-        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 6px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .select2-container--default .select2-selection--single { height: 25px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 23px !important; font-size: 11px !important; padding-left: 2px !important; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
+
+        .radio-inline-win { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; white-space: nowrap; cursor: pointer; margin-right: 8px; }
+        .chk-inline-win { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; white-space: nowrap; cursor: pointer; }
+
+        /* Scrollable container for table left & right */
+        .grid-scroll-container { max-height: 520px; overflow-x: auto; overflow-y: auto; border: 1px solid #b0bec5; margin: 4px 6px 8px 6px; background: #fff; }
+        .win-grid-table { width: 100%; min-width: 1100px; border-collapse: collapse; font-size: 11px; background: #ffffff; white-space: nowrap; }
+        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; position: sticky; top: 0; z-index: 5; }
+        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; height: 24px; }
+        .win-grid-table tbody tr:hover { background-color: #e0f2f1; }
+        .win-grid-table td a { color: #0056b3; font-weight: 600; text-decoration: underline; cursor: pointer; }
+        .win-grid-table td a:hover { color: #002752; text-decoration: underline; }
+
+        .grid-group-row td { font-weight: bold; background: #d0e7e5; border-top: 1px solid #00796B; color: #004d40; font-size: 12px; }
+        .grid-total-row td { font-weight: bold; background: #e2ece9; border-top: 2px solid #00796B; font-size: 11px; }
+
+        /* Select2 custom styling matching WinForms inputs */
+        .select2-container--default .select2-selection--single { height: 26px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 24px !important; font-size: 11px !important; padding-left: 2px !important; color: #222 !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 24px !important; }
+        .select2-container--default .select2-selection--multiple { min-height: 26px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
+        .select2-dropdown { font-size: 11px !important; border-color: #00796B !important; }
+
+        /* 2-Column Select2 Dropdown Styling */
+        .select2-2col-header { display: flex; justify-content: space-between; font-weight: bold; background-color: #e2ece9; padding: 4px 8px; border-bottom: 1px solid #90a4ae; color: #004d40; font-size: 11px; sticky: top; }
+        .select2-2col-row { display: flex; justify-content: space-between; width: 100%; font-size: 11px; padding: 2px 0; }
+        .select2-2col-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+        .select2-2col-level { width: 90px; text-align: right; font-weight: 700; color: #00796B; margin-left: 8px; }
+
         [hidden] { display: none !important; }
+
         @media print {
-            .win-title-bar, .win-toolbar, .win-groupbox, .win-header-panel, a, button { display: none !important; }
+            .win-title-bar, .win-toolbar, .win-groupbox, .win-header-panel, a, button, .action-col { display: none !important; }
             body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
-            .grid-scroll { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
-            .win-form-card { border: none !important; box-shadow: none !important; margin: 0 !important; }
+            .grid-scroll-container { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
             .win-grid-table th, .win-grid-table td { border: 1px solid #000 !important; color: #000 !important; }
             .win-grid-table th { background: #eee !important; color: #000 !important; }
         }
@@ -55,141 +75,247 @@
 </head>
 <body>
 
+    <!-- Title Bar -->
     <div class="win-title-bar">
         <span><i class="fa fa-balance-scale"></i> Trial Balance Selected</span>
-        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
-            <i class="fa fa-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
-
-    <!-- ditto tsSelectedTrialBalance's real order: Reset | Print | Level Wise | 113A-Print -->
-    <div class="win-toolbar">
-        <button type="button" class="win-btn" onclick="resetST()"><i class="fa fa-plus text-success"></i> Reset</button>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-        <div class="dropdown" style="display:inline-block;">
-            <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown">Level Wise</button>
+        <div>
+            <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px; margin-right: 12px;">
+                <i class="fa fa-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 113A-Print</button>
     </div>
 
-    <!-- ditto panel3's label23 "Trial Balances Selected" header -->
-    <div class="win-header-panel"><span class="win-header-title">Trial Balances Selected</span></div>
+    <!-- Toolbar: Reset | Print | Level Wise | 113A-Print | History | Add Row -->
+    <div class="win-toolbar">
+        <button type="button" class="win-btn" onclick="resetST()"><i class="fa fa-refresh text-primary"></i> Reset</button>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print text-dark"></i> Print</button>
+        <div class="dropdown" style="display:inline-block;">
+            <button type="button" class="win-btn dropdown-toggle" data-toggle="dropdown"><i class="fa fa-bars"></i> Level Wise</button>
+            <ul class="dropdown-menu" style="font-size:11px;">
+                <li><a href="#" onclick="filterLevel(1)">Level 1 (Root)</a></li>
+                <li><a href="#" onclick="filterLevel(2)">Level 2 (Control)</a></li>
+                <li><a href="#" onclick="filterLevel(3)">Level 3 (Group)</a></li>
+                <li><a href="#" onclick="filterLevel(4)">Level 4 (Detail)</a></li>
+            </ul>
+        </div>
+        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print text-info"></i> 113A-Print</button>
+        <button type="button" class="win-btn" onclick="openHistoryModal()"><i class="fa fa-history text-warning"></i> History</button>
+        <button type="button" class="win-btn win-btn-teal" onclick="openAddRowModal()"><i class="fa fa-plus"></i> Add Row</button>
+        <button type="button" class="win-btn win-btn-danger" onclick="deleteSelectedRows()"><i class="fa fa-trash"></i> Delete Selected</button>
+    </div>
 
-    <!-- ditto groupBox1 "Filters" (962x157) -->
+    <!-- Header Banner -->
+    <div class="win-header-panel">
+        <span class="win-header-title">Trial Balances Selected</span>
+    </div>
+
+    <!-- Filters GroupBox (Ditto WinForms Grid Layout) -->
     <div class="win-groupbox">
         <span class="win-groupbox-title">Filters</span>
-        <div class="row">
-            <div style="flex:1 1 150px;">
+        
+        <!-- Row 1 -->
+        <div class="win-row">
+            <div class="win-field" style="width: 140px;">
                 <div class="win-label">From Date</div>
                 <input type="date" class="win-input" id="datFromDateSt">
             </div>
-            <div style="flex:1 1 110px;">
+            <div class="win-field" style="width: 110px;">
                 <div class="win-label">Cl_Debit</div>
-                <input type="text" class="win-input" id="txtClosingDebit" value="0" style="text-align:right;">
+                <input type="text" class="win-input" id="txtClosingDebit" value="0" style="text-align:right;" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
             </div>
-            <div style="flex:1 1 260px;">
+            <div class="win-field" style="width: 250px;">
                 <div class="win-label">Custom Groups</div>
                 <select class="win-input select2" id="CmbCustomeGroups">
-                    <option value="">--</option>
-                    <option th:each="cg : ${customGroupsList}" th:value="${cg['id'] != null ? cg['id'] : (cg['Id'] != null ? cg['Id'] : '')}" th:text="${cg['description'] != null ? cg['description'] : (cg['Description'] != null ? cg['Description'] : (cg['name'] != null ? cg['name'] : (cg['Name'] != null ? cg['Name'] : '')))}"></option>
+                    <option value="">-- Select Custom Group --</option>
+                    <option th:each="cg : ${customGroupsList}" 
+                            th:value="${cg['id'] != null ? cg['id'] : (cg['Id'] != null ? cg['Id'] : '')}" 
+                            th:text="${cg['description'] != null ? cg['description'] : (cg['Description'] != null ? cg['Description'] : (cg['name'] != null ? cg['name'] : (cg['Name'] != null ? cg['Name'] : '')))}"></option>
                 </select>
             </div>
-            <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="ChkBoxPostSelectedTrial" checked> Include UnPost Voucher</label>
+            <div style="display:flex; align-items:center; gap: 12px; margin-left: 10px; margin-bottom: 3px;">
+                <label class="chk-inline-win"><input type="checkbox" id="ChkBoxPostSelectedTrial" checked> Include UnPost Voucher</label>
+                <label class="chk-inline-win"><input type="checkbox" id="ChkZkipZeroSelected" checked> Skip Zero</label>
+                <label class="chk-inline-win"><input type="checkbox" id="chkSkipCgs"> Skip CGS</label>
+            </div>
+            <div style="display:flex; align-items:center; gap: 10px; margin-left: 15px; margin-bottom: 3px;">
+                <label class="radio-inline-win"><input type="radio" name="rdColumnsST" id="rdFourColumnsST" checked> Four Columns</label>
+                <label class="radio-inline-win"><input type="radio" name="rdColumnsST" id="rdSixColumnsST"> Six Columns</label>
+            </div>
         </div>
-        <div class="row">
-            <div style="flex:1 1 150px;">
+
+        <!-- Row 2 -->
+        <div class="win-row">
+            <div class="win-field" style="width: 140px;">
                 <div class="win-label">To Date</div>
                 <input type="date" class="win-input" id="datToDateST">
             </div>
-            <div style="flex:1 1 110px;">
+            <div class="win-field" style="width: 110px;">
                 <div class="win-label">Cl_Credit</div>
-                <input type="text" class="win-input" id="txtClosingCredit" value="0" style="text-align:right;">
+                <input type="text" class="win-input" id="txtClosingCredit" value="0" style="text-align:right;" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
             </div>
-            <div style="flex:1 1 260px;">
+            <div class="win-field" style="width: 250px;">
                 <div class="win-label">City Name</div>
                 <select class="win-input select2" id="CmbCityName">
-                    <option value="">--</option>
-                    <option th:each="c : ${citiesList}" th:value="${c['id'] != null ? c['id'] : (c['Id'] != null ? c['Id'] : '')}" th:text="${c['cityName'] != null ? c['cityName'] : (c['CityName'] != null ? c['CityName'] : (c['name'] != null ? c['name'] : (c['Name'] != null ? c['Name'] : '')))}"></option>
+                    <option value="">-- Select City --</option>
+                    <option th:each="c : ${citiesList}" 
+                            th:value="${c['id'] != null ? c['id'] : (c['Id'] != null ? c['Id'] : '')}" 
+                            th:text="${c['cityName'] != null ? c['cityName'] : (c['CityName'] != null ? c['CityName'] : (c['name'] != null ? c['name'] : (c['Name'] != null ? c['Name'] : '')))}"></option>
                 </select>
             </div>
-            <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="ChkZkipZeroSelected" checked> Skip Zero</label>
         </div>
-        <div class="row">
-            <div style="flex:1 1 260px;">
+
+        <!-- Row 3 -->
+        <div class="win-row">
+            <div class="win-field" style="width: 250px;">
                 <div class="win-label">Documents Not To Include</div>
-                <select class="win-input select2" id="cmbDocumentTypeIds" multiple size="1" style="height:26px;">
-                    <option th:each="dt : ${documentTypesList}" th:value="${dt['id'] != null ? dt['id'] : (dt['Id'] != null ? dt['Id'] : '')}" th:text="${dt['documentTypeDescription'] != null ? dt['documentTypeDescription'] : (dt['DocumentTypeDescription'] != null ? dt['DocumentTypeDescription'] : (dt['description'] != null ? dt['description'] : (dt['Description'] != null ? dt['Description'] : '')))}"></option>
+                <select class="win-input select2" id="cmbDocumentTypeIds" multiple size="1">
+                    <option th:each="dt : ${documentTypesList}" 
+                            th:value="${dt['id'] != null ? dt['id'] : (dt['Id'] != null ? dt['Id'] : '')}" 
+                            th:text="${dt['documentTypeDescription'] != null ? dt['documentTypeDescription'] : (dt['DocumentTypeDescription'] != null ? dt['DocumentTypeDescription'] : (dt['description'] != null ? dt['description'] : (dt['Description'] != null ? dt['Description'] : '')))}"></option>
                 </select>
             </div>
-            <!-- ditto lblLangSelected/CmbLanguageSelected: Visible=false by default, shown by Ctrl+L -->
-            <div style="flex:1 1 220px;" id="langWrapST" hidden>
+            <div class="win-field" style="width: 200px;" id="langWrapST" hidden>
                 <div class="win-label">Language</div>
                 <select class="win-input select2" id="CmbLanguageSelected">
-                    <option value="">--</option>
-                    <option th:each="l : ${languagesList}" th:value="${l['id'] != null ? l['id'] : (l['Id'] != null ? l['Id'] : '')}" th:text="${l['languageName'] != null ? l['languageName'] : (l['LanguageName'] != null ? l['LanguageName'] : (l['name'] != null ? l['name'] : (l['Name'] != null ? l['Name'] : '')))}"></option>
+                    <option value="">-- Select Language --</option>
+                    <option th:each="l : ${languagesList}" 
+                            th:value="${l['id'] != null ? l['id'] : (l['Id'] != null ? l['Id'] : '')}" 
+                            th:text="${l['languageName'] != null ? l['languageName'] : (l['LanguageName'] != null ? l['LanguageName'] : (l['name'] != null ? l['name'] : (l['Name'] != null ? l['Name'] : '')))}"></option>
                 </select>
             </div>
-            <label class="chk-inline-win" style="align-self:center;"><input type="checkbox" id="chkSkipCgs"> Skip CGS</label>
         </div>
-        <div class="row">
-            <div style="flex:1 1 260px;">
-                <div class="win-label">Group Account</div>
-                <select class="win-input select2" id="cmbAccountTitle">
-                    <option value="">--</option>
-                    <option th:each="ag : ${accountGroupsSelectedList}" th:value="${ag['id'] != null ? ag['id'] : (ag['Id'] != null ? ag['Id'] : '')}" th:text="${ag['accountTitle'] != null ? ag['accountTitle'] : (ag['AccountTitle'] != null ? ag['AccountTitle'] : (ag['accountGroup'] != null ? ag['accountGroup'] : (ag['AccountGroup'] != null ? ag['AccountGroup'] : '')))}"></option>
+
+        <!-- Row 4: 2-Column Group Account Dropdown & Show Button -->
+        <div class="win-row">
+            <div class="win-field" style="width: 320px;">
+                <div class="win-label">Group Account (2-Column Dropdown)</div>
+                <select class="win-input select2-2col" id="cmbAccountTitle">
+                    <option value="">-- Select Group Account --</option>
+                    <option th:each="ag : ${accountGroupsSelectedList}" 
+                            th:value="${ag['id'] != null ? ag['id'] : (ag['Id'] != null ? ag['Id'] : '')}" 
+                            th:data-title="${ag['accountTitle'] != null ? ag['accountTitle'] : (ag['AccountTitle'] != null ? ag['AccountTitle'] : '')}"
+                            th:data-level="${ag['accountLevel'] != null ? ag['accountLevel'] : (ag['Account_Level'] != null ? ag['Account_Level'] : (ag['AccountLevel'] != null ? ag['AccountLevel'] : '1'))}"
+                            th:text="${ag['accountTitle'] != null ? ag['accountTitle'] : (ag['AccountTitle'] != null ? ag['AccountTitle'] : '')}"></option>
                 </select>
             </div>
-            <button type="button" class="win-btn win-btn-teal" style="align-self:center;" onclick="executeST()">Show</button>
-            <label class="radio-inline-win" style="align-self:center;"><input type="radio" name="rdColumnsST" id="rdFourColumnsST" checked> Four Columns</label>
-        </div>
-        <div class="row">
-            <div style="flex:1 1 260px;" id="branchWrapST">
+            <div class="win-field" style="width: 250px;" id="branchWrapST">
                 <div class="win-label">Branches</div>
                 <select class="win-input select2" id="CmbBranchesST">
-                    <option value="">--</option>
-                    <option th:each="b : ${branchesList}" th:value="${b['id'] != null ? b['id'] : (b['Id'] != null ? b['Id'] : '')}" th:text="${b['branchName'] != null ? b['branchName'] : (b['BranchName'] != null ? b['BranchName'] : (b['name'] != null ? b['name'] : (b['Name'] != null ? b['Name'] : '')))}"></option>
+                    <option value="">-- Select Branch --</option>
+                    <option th:each="b : ${branchesList}" 
+                            th:value="${b['id'] != null ? b['id'] : (b['Id'] != null ? b['Id'] : '')}" 
+                            th:text="${b['branchName'] != null ? b['branchName'] : (b['BranchName'] != null ? b['BranchName'] : (b['name'] != null ? b['name'] : (b['Name'] != null ? b['Name'] : '')))}"></option>
                 </select>
             </div>
-            <label class="radio-inline-win" style="align-self:center;"><input type="radio" name="rdColumnsST" id="rdSixColumnsST"> Six Columns</label>
+            <button type="button" class="win-btn win-btn-teal" style="height:26px; padding: 0 16px; margin-bottom: 1px;" onclick="executeST()">
+                <i class="fa fa-search"></i> Show
+            </button>
         </div>
     </div>
 
-    <div class="win-form-card">
-        <div class="grid-scroll">
-            <table class="win-grid-table" id="stTable">
-                <thead>
-                <tr>
-                    <th id="stBranchTh">Branch</th>
-                    <th>Account Code</th>
-                    <th>Account Title</th>
-                    <th>Account Type</th>
-                    <th style="text-align:right;">Opening</th>
-                    <th style="text-align:right;" class="col-six-st">Opening Dr</th>
-                    <th style="text-align:right;" class="col-six-st">Opening Cr</th>
-                    <th style="text-align:right;">Debit</th>
-                    <th style="text-align:right;">Credit</th>
-                    <th style="text-align:right;">Closing</th>
-                    <th style="text-align:right;" class="col-six-st">Closing Dr</th>
-                    <th style="text-align:right;" class="col-six-st">Closing Cr</th>
-                </tr>
-                </thead>
-                <tbody id="stTbody">
-                    <tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>
-                </tbody>
-                <tfoot>
-                <tr class="grid-total-row">
-                    <td colspan="4" style="text-align:right;">Total:</td>
-                    <td style="text-align:right;" id="stTotOpening">0</td>
-                    <td style="text-align:right;" id="stTotOpeningDr" class="col-six-st">0</td>
-                    <td style="text-align:right;" id="stTotOpeningCr" class="col-six-st">0</td>
-                    <td style="text-align:right;" id="stTotDebit">0</td>
-                    <td style="text-align:right;" id="stTotCredit">0</td>
-                    <td style="text-align:right;" id="stTotClosing">0</td>
-                    <td style="text-align:right;" id="stTotClosingDr" class="col-six-st">0</td>
-                    <td style="text-align:right;" id="stTotClosingCr" class="col-six-st">0</td>
-                </tr>
-                </tfoot>
-            </table>
+    <!-- Table Container with Left/Right Horizontal & Vertical Scroll -->
+    <div class="grid-scroll-container">
+        <table class="win-grid-table" id="stTable">
+            <thead>
+            <tr>
+                <th style="width: 30px; text-align:center;"><input type="checkbox" id="chkSelectAll" onclick="toggleSelectAllRows(this)"></th>
+                <th style="width: 70px;" class="action-col">Action</th>
+                <th id="stBranchTh">Branch</th>
+                <th>Account Code</th>
+                <th>Voucher Code</th>
+                <th>Account Title</th>
+                <th>Account Type</th>
+                <th style="text-align:right;">Opening</th>
+                <th style="text-align:right;" class="col-six-st">Opening Dr</th>
+                <th style="text-align:right;" class="col-six-st">Opening Cr</th>
+                <th style="text-align:right;">Debit</th>
+                <th style="text-align:right;">Credit</th>
+                <th style="text-align:right;">Closing</th>
+                <th style="text-align:right;" class="col-six-st">Closing Dr</th>
+                <th style="text-align:right;" class="col-six-st">Closing Cr</th>
+            </tr>
+            </thead>
+            <tbody id="stTbody">
+                <tr><td colspan="15" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>
+            </tbody>
+            <tfoot>
+            <tr class="grid-total-row">
+                <td colspan="7" style="text-align:right;">Total:</td>
+                <td style="text-align:right;" id="stTotOpening">0</td>
+                <td style="text-align:right;" id="stTotOpeningDr" class="col-six-st">0</td>
+                <td style="text-align:right;" id="stTotOpeningCr" class="col-six-st">0</td>
+                <td style="text-align:right;" id="stTotDebit">0</td>
+                <td style="text-align:right;" id="stTotCredit">0</td>
+                <td style="text-align:right;" id="stTotClosing">0</td>
+                <td style="text-align:right;" id="stTotClosingDr" class="col-six-st">0</td>
+                <td style="text-align:right;" id="stTotClosingCr" class="col-six-st">0</td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border-radius:2px;">
+                <div class="modal-header win-title-bar">
+                    <h5 class="modal-title" style="margin:0; font-size:13px;"><i class="fa fa-history"></i> Execution & Voucher History</h5>
+                    <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding:10px; max-height:400px; overflow-y:auto;">
+                    <table class="table table-bordered table-striped" style="font-size:11px;">
+                        <thead style="background:#00796B; color:#fff;">
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Doc Type</th>
+                                <th>Voucher Code</th>
+                                <th>User</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTbody">
+                            <tr><td colspan="6" class="text-center">Loading history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer" style="padding:6px 12px;">
+                    <button type="button" class="win-btn" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Row Modal -->
+    <div class="modal fade" id="rowModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="border-radius:2px;">
+                <div class="modal-header win-title-bar">
+                    <h5 class="modal-title" style="margin:0; font-size:13px;" id="rowModalTitle"><i class="fa fa-plus"></i> Add Account Row to DB</h5>
+                    <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding:12px;">
+                    <form id="rowForm">
+                        <input type="hidden" id="modalRowId">
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label class="win-label">Account Code *</label>
+                            <input type="text" class="win-input" id="modalAccountCode" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label class="win-label">Account Title *</label>
+                            <input type="text" class="win-input" id="modalAccountTitle" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label class="win-label">Account Type</label>
+                            <input type="text" class="win-input" id="modalAccountType" value="AP/AR">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="padding:6px 12px;">
+                    <button type="button" class="win-btn win-btn-teal" onclick="saveRowToDb()">Save Row</button>
+                    <button type="button" class="win-btn" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -211,6 +337,76 @@
             }
         });
 
+        // 2-Column Select2 Dropdown Template Formatting for Group Account
+        function formatGroupAccount2Col(option) {
+            if (!option.id) return option.text;
+            const $element = $(option.element);
+            const title = $element.data('title') || option.text || '';
+            const level = $element.data('level') || '1';
+
+            return $(
+                '<div class="select2-2col-row">' +
+                    '<span class="select2-2col-title">' + $('<div>').text(title).html() + '</span>' +
+                    '<span class="select2-2col-level">Level ' + $('<div>').text(level).html() + '</span>' +
+                '</div>'
+            );
+        }
+
+        function formatGroupAccount2ColSelection(option) {
+            if (!option.id) return option.text;
+            const $element = $(option.element);
+            const title = $element.data('title') || option.text || '';
+            return title;
+        function extractDocType(r) {
+            if (!r) return '';
+            let dt = r.typeVoucher || r.TypeVoucher || r.type_voucher || r.DocTypeCode || r.docTypeCode || r.DocType || r.docType || r.DocumentTypeCode || r.documentTypeCode || 
+                     r.DocTypeShort || r.DocumentTypeShort || r.DocTypeAbbreviation || r.Doc_Type ||
+                     r.VoucherType || r.voucherType || 
+                     r.VType || r.vType || r.DocumentTypeDescription || r.documentTypeDescription || 
+                     r.DocumentType || r.documentType || r.DocTypeDescription || r.docTypeDescription ||
+                     r.DocTypeName || r.docTypeName || r.DocumentTypeName || r.documentTypeName || '';
+
+            if (dt && typeof dt === 'string') {
+                dt = dt.trim();
+                const upper = dt.toUpperCase();
+                if (upper === 'P1-R' || upper === 'P1R' || upper === 'PI-R' || upper === 'IP-R' || upper === 'PIR' || upper === 'IPR') return 'P1-R';
+                if (upper.includes('BANK PAYMENT') || upper === 'BPV') return 'BPV';
+                if (upper.includes('CASH PAYMENT') || upper === 'CPV') return 'CPV';
+                if (upper.includes('BANK RECEIPT') || upper === 'BRV') return 'BRV';
+                if (upper.includes('CASH RECEIPT') || upper === 'CRV') return 'CRV';
+                if (upper.includes('JOURNAL') || upper === 'JV') return 'JV';
+                if (upper.includes('CONTRA') || upper === 'CV') return 'CONT';
+                if (upper.includes('EXPENSE') || upper === 'EV') return 'EV';
+                if (upper.includes('PARTY RECEIPT') || upper === 'PRV') return 'PRV';
+                if (upper.includes('PARTY PAYMENT') || upper === 'PPV') return 'PPV';
+                if (upper.includes('INVOICE') || upper.includes('PURCHASE')) return 'P1-R';
+                if (upper.includes('FREIGHT') || upper === 'FRT') return 'FRT';
+                if (upper.includes('CONTRACTOR') || upper === 'CW') return 'CW';
+                if (upper.includes('PDC') || upper === 'CHEQUE') return 'PDC';
+                return dt;
+            }
+
+            const dtId = parseInt(r.DocumentTypeId != null ? r.DocumentTypeId : (r.documentTypeId != null ? r.documentTypeId : (r.DocTypeId != null ? r.DocTypeId : r.docTypeId)));
+            if (!isNaN(dtId)) {
+                const dtMap = { 1: 'CPV', 2: 'BPV', 3: 'CRV', 4: 'BRV', 5: 'JV', 6: 'CONT', 7: 'EV', 8: 'PRV', 9: 'PPV', 10: 'CONT', 11: 'PDC', 12: 'INV-ADJ', 13: 'FRT', 14: 'CW', 18: 'P1-R', 19: 'P1-R', 26: 'EV', 34: 'PRV', 35: 'PPV' };
+                if (dtMap[dtId]) return dtMap[dtId];
+            }
+
+            const vNo = (r.VoucherNo || r.voucherNo || r.VoucherCode || r.voucherCode || r.VNo || r.vNo || '').toString().trim();
+            if (vNo) {
+                const match = vNo.match(/^([A-Za-z0-9\-]+)[-\/\s_\d]/);
+                if (match && match[1]) {
+                    const prefix = match[1].toUpperCase();
+                    if (['BPV', 'CPV', 'BRV', 'CRV', 'JV', 'EV', 'PRV', 'PPV', 'PDC', 'FRT', 'CW', 'CONT', 'CV', 'PI', 'PI-R', 'P1-R', 'P1R', 'IP-R', 'PIR', 'IPR'].includes(prefix)) {
+                        if (prefix === 'CV') return 'CONT';
+                        if (['PI', 'PIR', 'IP-R', 'IPR', 'PI-R', 'P1R', 'P1-R'].includes(prefix)) return 'P1-R';
+                        return prefix;
+                    }
+                }
+            }
+            return '';
+        }
+
         function buildStRequest() {
             const docTypeIds = $('#cmbDocumentTypeIds').val() || [];
             return {
@@ -231,7 +427,7 @@
         }
 
         function executeST() {
-            $('#stTbody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Loading...</td></tr>');
+            $('#stTbody').html('<tr><td colspan="15" style="text-align:center; padding:16px; color:#666;"><i class="fa fa-spinner fa-spin"></i> Loading Selected Trial Balance...</td></tr>');
             $.ajax({
                 url: '/accounts/api/reports/selected-trial-balance',
                 type: 'POST',
@@ -243,12 +439,12 @@
                         renderST();
                     } else {
                         stData = [];
-                        $('#stTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Selected Trial Balance.') + '</td></tr>');
+                        $('#stTbody').html('<tr><td colspan="15" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Selected Trial Balance.') + '</td></tr>');
                     }
                 },
                 error: function () {
                     stData = [];
-                    $('#stTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">Error executing Selected Trial Balance report.</td></tr>');
+                    $('#stTbody').html('<tr><td colspan="15" style="text-align:center; color:red; padding:16px;">Error executing Selected Trial Balance report.</td></tr>');
                 }
             });
         }
@@ -263,20 +459,25 @@
             const tbody = $('#stTbody');
             tbody.empty();
             if (!stData || stData.length === 0) {
-                tbody.html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">No records found for the selected criteria.</td></tr>');
+                tbody.html('<tr><td colspan="15" style="text-align:center; padding:16px; color:#666;">No records found for the selected criteria.</td></tr>');
                 ['stTotOpening','stTotOpeningDr','stTotOpeningCr','stTotDebit','stTotCredit','stTotClosing','stTotClosingDr','stTotClosingCr'].forEach(id => $('#' + id).text('0'));
                 return;
             }
             let totOpening = 0, totOpeningDr = 0, totOpeningCr = 0, totDebit = 0, totCredit = 0, totClosing = 0, totClosingDr = 0, totClosingCr = 0;
             let lastParent = null;
-            stData.forEach(r => {
+            const fromDate = $('#datFromDateSt').val();
+            const toDate = $('#datToDateST').val();
+
+            stData.forEach((r, idx) => {
                 const parentTitle = r.ParentAccountTitle || r.parentAccountTitle || r.GroupAccountTitle || '';
                 if (parentTitle && parentTitle !== lastParent) {
-                    tbody.append('<tr class="grid-group-row"><td colspan="12">' + $('<div>').text(parentTitle).html() + '</td></tr>');
+                    tbody.append('<tr class="grid-group-row"><td colspan="15">[-] Parent Title: ' + $('<div>').text(parentTitle).html() + '</td></tr>');
                     lastParent = parentTitle;
                 }
+                const accId = r.Id || r.id || r.AccountId || r.accountId || '';
                 const branch = r.BranchName || r.branchName || '';
                 const code = r.AccountCode || r.accountCode || '';
+                const vCode = r.VoucherCode || r.voucherCode || r.VCode || r.vCode || '';
                 const title = r.AccountTitle || r.accountTitle || '';
                 const type = r.AccountType || r.accountType || '';
                 const opening = parseFloat(r.Opening || r.opening || r.openingBalance || 0);
@@ -291,10 +492,26 @@
                 totOpening += opening; totOpeningDr += openingDr; totOpeningCr += openingCr;
                 totDebit += debit; totCredit += credit;
                 totClosing += closing; totClosingDr += closingDr; totClosingCr += closingCr;
+
+                // Clickable Account Code & Voucher Code Links
+                const accLink = accId 
+                    ? `<a href="/accounts/reports/general-ledger?accountId=${accId}&fromDate=${fromDate}&toDate=${toDate}" title="View Ledger">${$('<div>').text(code).html()}</a>`
+                    : $('<div>').text(code).html();
+
+                const voucherLink = vCode 
+                    ? `<a href="/accounts/vouchers/journal?vCode=${vCode}" title="View Voucher">${$('<div>').text(vCode).html()}</a>`
+                    : '-';
+
                 tbody.append(`
-                    <tr>
+                    <tr data-id="${accId}">
+                        <td style="text-align:center;"><input type="checkbox" class="row-chk" value="${accId}"></td>
+                        <td class="action-col">
+                            <button type="button" class="btn btn-xs btn-default" onclick="editRow('${accId}', '${code}', '${title}')" title="Edit"><i class="fa fa-pencil text-primary"></i></button>
+                            <button type="button" class="btn btn-xs btn-default" onclick="deleteSingleRow('${accId}')" title="Delete"><i class="fa fa-trash text-danger"></i></button>
+                        </td>
                         <td>${$('<div>').text(branch).html()}</td>
-                        <td>${$('<div>').text(code).html()}</td>
+                        <td>${accLink}</td>
+                        <td>${voucherLink}</td>
                         <td>${$('<div>').text(title).html()}</td>
                         <td>${$('<div>').text(type).html()}</td>
                         <td style="text-align:right;">${fmt(opening)}</td>
@@ -319,11 +536,150 @@
             applyColumnModeST();
         }
 
+        function toggleSelectAllRows(chk) {
+            $('.row-chk').prop('checked', $(chk).is(':checked'));
+        }
+
         function resetST() {
             $('#ChkZkipZeroSelected').prop('checked', true);
+            $('#ChkBoxPostSelectedTrial').prop('checked', true);
+            $('#chkSkipCgs').prop('checked', false);
             $('#txtClosingDebit, #txtClosingCredit').val('0');
             $('#CmbCityName, #CmbCustomeGroups, #cmbAccountTitle, #cmbDocumentTypeIds, #CmbLanguageSelected, #CmbBranchesST').val('').trigger('change');
             executeST();
+        }
+
+        function filterLevel(lvl) {
+            executeST();
+        }
+
+        function openHistoryModal() {
+            $('#historyModal').modal('show');
+            $('#historyTbody').html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
+            $.ajax({
+                url: '/accounts/api/reports/selected-trial-balance/history',
+                type: 'GET',
+                success: function (data) {
+                    const tbody = $('#historyTbody');
+                    tbody.empty();
+                    if (!data || data.length === 0) {
+                        tbody.html('<tr><td colspan="6" class="text-center text-muted">No history records found.</td></tr>');
+                        return;
+                    }
+                    data.forEach(h => {
+                        tbody.append(`
+                            <tr>
+                                <td>${h.id || ''}</td>
+                                <td>${h.logDate || ''}</td>
+                                <td>${h.docType || 'Report Query'}</td>
+                                <td>${h.voucherCode || '-'}</td>
+                                <td>${h.username || 'Admin'}</td>
+                                <td>${h.remarks || ''}</td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function () {
+                    $('#historyTbody').html('<tr><td colspan="6" class="text-center text-danger">Error fetching history.</td></tr>');
+                }
+            });
+        }
+
+        function openAddRowModal() {
+            $('#rowModalTitle').html('<i class="fa fa-plus"></i> Add Account Row to DB');
+            $('#modalRowId').val('');
+            $('#modalAccountCode').val('');
+            $('#modalAccountTitle').val('');
+            $('#modalAccountType').val('AP/AR');
+            $('#rowModal').modal('show');
+        }
+
+        function editRow(id, code, title) {
+            $('#rowModalTitle').html('<i class="fa fa-pencil"></i> Edit Account Row in DB');
+            $('#modalRowId').val(id);
+            $('#modalAccountCode').val(code);
+            $('#modalAccountTitle').val(title);
+            $('#modalAccountType').val('AP/AR');
+            $('#rowModal').modal('show');
+        }
+
+        function saveRowToDb() {
+            const id = $('#modalRowId').val();
+            const code = $('#modalAccountCode').val();
+            const title = $('#modalAccountTitle').val();
+            const type = $('#modalAccountType').val();
+
+            if (!code || !title) {
+                alert('Account Code and Title are required.');
+                return;
+            }
+
+            const url = id 
+                ? '/accounts/api/reports/selected-trial-balance/update-row'
+                : '/accounts/api/reports/selected-trial-balance/save-row';
+
+            const payload = { id: id, accountCode: code, accountTitle: title, accountType: type };
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    if (res && res.success) {
+                        $('#rowModal').modal('hide');
+                        executeST();
+                    } else {
+                        alert(res.message || 'Error saving row.');
+                    }
+                },
+                error: function () {
+                    alert('Server error saving row to DB.');
+                }
+            });
+        }
+
+        function deleteSingleRow(id) {
+            if (!id) return;
+            if (!confirm('Are you sure you want to delete this row from DB?')) return;
+            $.ajax({
+                url: '/accounts/api/reports/selected-trial-balance/delete-row/' + id,
+                type: 'DELETE',
+                success: function (res) {
+                    if (res && res.success) {
+                        executeST();
+                    } else {
+                        alert(res.message || 'Failed to delete row.');
+                    }
+                },
+                error: function () {
+                    alert('Server error deleting row.');
+                }
+            });
+        }
+
+        function deleteSelectedRows() {
+            const ids = [];
+            $('.row-chk:checked').each(function () {
+                ids.push($(this).val());
+            });
+            if (ids.length === 0) {
+                alert('Please select at least one row using checkboxes.');
+                return;
+            }
+            if (!confirm(`Are you sure you want to delete ${ids.length} selected row(s) from DB?`)) return;
+
+            let deleted = 0;
+            ids.forEach(id => {
+                $.ajax({
+                    url: '/accounts/api/reports/selected-trial-balance/delete-row/' + id,
+                    type: 'DELETE',
+                    complete: function () {
+                        deleted++;
+                        if (deleted === ids.length) executeST();
+                    }
+                });
+            });
         }
 
         $('#rdFourColumnsST, #rdSixColumnsST').on('change', applyColumnModeST);
@@ -333,7 +689,29 @@
             const today = new Date().toISOString().split('T')[0];
             if (!$('#datFromDateSt').val()) $('#datFromDateSt').val(today);
             if (!$('#datToDateST').val()) $('#datToDateST').val(today);
+
+            // Initialize standard select2 dropdowns
             $('.select2').select2({ width: '100%' });
+
+            // Initialize 2-Column Select2 Dropdown for Group Account
+            $('.select2-2col').select2({
+                width: '100%',
+                templateResult: formatGroupAccount2Col,
+                templateSelection: formatGroupAccount2ColSelection,
+                escapeMarkup: function (m) { return m; }
+            }).on('select2:open', function() {
+                setTimeout(function() {
+                    if ($('.select2-2col-header').length === 0) {
+                        $('.select2-results').prepend(
+                            '<div class="select2-2col-header">' +
+                                '<span>Account Title</span>' +
+                                '<span>Account_Level</span>' +
+                            '</div>'
+                        );
+                    }
+                }, 10);
+            });
+
             executeST();
         });
     </script>

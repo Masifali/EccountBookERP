@@ -1,10 +1,10 @@
 package com.mst.security.filter;
 
 
-import com.mst.repositories.IUserRepository;
+import com.mst.repositories.IUserAccountRepository;
 import com.mst.security.CustomUserDetailsService;
 import com.mst.security.JwtUtils;
-import com.mst.services.UserService;
+
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,8 @@ public class ReceiptMangerAuthFilter extends OncePerRequestFilter {
     @Lazy
     CustomUserDetailsService customUserDetailsService;
     @Autowired
-    private IUserRepository userRepository;
+    @org.springframework.beans.factory.annotation.Qualifier("IUserAccountRepository")
+    private IUserAccountRepository userRepository;
     @Autowired
     private JwtUtils jwtUtils;
 

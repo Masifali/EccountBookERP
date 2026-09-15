@@ -270,6 +270,31 @@ public class AccountsReportRestController {
         }
     }
 
+    @GetMapping("/cities")
+    public ResponseEntity<?> getCitiesList() {
+        return ResponseEntity.ok(accountsReportService.getCities());
+    }
+
+    @GetMapping("/selected-trial-balance/history")
+    public ResponseEntity<?> getSelectedTrialBalanceHistory() {
+        return ResponseEntity.ok(accountsReportService.getReportHistory("SelectedTrialBalance"));
+    }
+
+    @PostMapping("/selected-trial-balance/save-row")
+    public ResponseEntity<?> saveSelectedTrialBalanceRow(@RequestBody Map<String, Object> req) {
+        return ResponseEntity.ok(accountsReportService.saveSelectedTrialBalanceRow(req));
+    }
+
+    @PostMapping("/selected-trial-balance/update-row")
+    public ResponseEntity<?> updateSelectedTrialBalanceRow(@RequestBody Map<String, Object> req) {
+        return ResponseEntity.ok(accountsReportService.updateSelectedTrialBalanceRow(req));
+    }
+
+    @DeleteMapping("/selected-trial-balance/delete-row/{id}")
+    public ResponseEntity<?> deleteSelectedTrialBalanceRow(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(accountsReportService.deleteSelectedTrialBalanceRow(id));
+    }
+
     @PostMapping("/trial-balance-all-level")
     public ResponseEntity<?> getTrialBalanceAllLevel(@RequestBody Map<String, Object> req) {
         try {
@@ -294,9 +319,106 @@ public class AccountsReportRestController {
         }
     }
 
+    @PostMapping("/bank-balances-summary")
+    public ResponseEntity<?> getBankBalancesSummary(@RequestBody Map<String, Object> req) {
+        try {
+            String fromDate = req.get("fromDate") != null ? req.get("fromDate").toString() : null;
+            String toDate = req.get("toDate") != null ? req.get("toDate").toString() : null;
+            Integer branchId = req.get("branchId") != null && !req.get("branchId").toString().isEmpty() ? Integer.parseInt(req.get("branchId").toString()) : null;
+            String branchesIds = req.get("branchesIds") != null ? req.get("branchesIds").toString() : null;
+            Integer languageId = req.get("languageId") != null && !req.get("languageId").toString().isEmpty() ? Integer.parseInt(req.get("languageId").toString()) : null;
+            boolean excludeZero = req.get("excludeZero") != null ? Boolean.parseBoolean(req.get("excludeZero").toString()) : false;
+
+            List<Map<String, Object>> data = accountsReportService.getBankBalancesSummaryReport(fromDate, toDate, branchId, branchesIds, languageId, excludeZero);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data.size());
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Bank Balances Summary: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @PostMapping("/bank-balances-detail")
+    public ResponseEntity<?> getBankBalancesDetail(@RequestBody Map<String, Object> req) {
+        try {
+            String fromDate = req.get("fromDate") != null ? req.get("fromDate").toString() : null;
+            String toDate = req.get("toDate") != null ? req.get("toDate").toString() : null;
+            Integer branchId = req.get("branchId") != null && !req.get("branchId").toString().isEmpty() ? Integer.parseInt(req.get("branchId").toString()) : null;
+            String branchesIds = req.get("branchesIds") != null ? req.get("branchesIds").toString() : null;
+            Integer languageId = req.get("languageId") != null && !req.get("languageId").toString().isEmpty() ? Integer.parseInt(req.get("languageId").toString()) : null;
+
+            Map<String, List<Map<String, Object>>> res = accountsReportService.getBankBalancesDetailReport(fromDate, toDate, branchId, branchesIds, languageId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("receipts", res.get("receipts"));
+            response.put("payments", res.get("payments"));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Bank Balances Detail: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @PostMapping("/cash-balances-summary")
+    public ResponseEntity<?> getCashBalancesSummary(@RequestBody Map<String, Object> req) {
+        try {
+            String fromDate = req.get("fromDate") != null ? req.get("fromDate").toString() : null;
+            String toDate = req.get("toDate") != null ? req.get("toDate").toString() : null;
+            Integer accountId = req.get("accountId") != null && !req.get("accountId").toString().isEmpty() ? Integer.parseInt(req.get("accountId").toString()) : null;
+            Integer branchId = req.get("branchId") != null && !req.get("branchId").toString().isEmpty() ? Integer.parseInt(req.get("branchId").toString()) : null;
+            String branchesIds = req.get("branchesIds") != null ? req.get("branchesIds").toString() : null;
+            Integer languageId = req.get("languageId") != null && !req.get("languageId").toString().isEmpty() ? Integer.parseInt(req.get("languageId").toString()) : null;
+
+            List<Map<String, Object>> data = accountsReportService.getCashBalancesSummaryReport(fromDate, toDate, accountId, branchId, branchesIds, languageId);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data.size());
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Cash Balances Summary: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
+    @PostMapping("/cash-balances-detail")
+    public ResponseEntity<?> getCashBalancesDetail(@RequestBody Map<String, Object> req) {
+        try {
+            String fromDate = req.get("fromDate") != null ? req.get("fromDate").toString() : null;
+            String toDate = req.get("toDate") != null ? req.get("toDate").toString() : null;
+            Integer accountId = req.get("accountId") != null && !req.get("accountId").toString().isEmpty() ? Integer.parseInt(req.get("accountId").toString()) : null;
+            Integer branchId = req.get("branchId") != null && !req.get("branchId").toString().isEmpty() ? Integer.parseInt(req.get("branchId").toString()) : null;
+            String branchesIds = req.get("branchesIds") != null ? req.get("branchesIds").toString() : null;
+            Integer languageId = req.get("languageId") != null && !req.get("languageId").toString().isEmpty() ? Integer.parseInt(req.get("languageId").toString()) : null;
+
+            Map<String, List<Map<String, Object>>> res = accountsReportService.getCashBalancesDetailReport(fromDate, toDate, accountId, branchId, branchesIds, languageId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("receipts", res.get("receipts"));
+            response.put("payments", res.get("payments"));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Cash Balances Detail: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
+
     @GetMapping("/bank-balances")
     public ResponseEntity<?> getBankBalances(@RequestParam(value = "isCashOnly", defaultValue = "false") boolean isCashOnly) {
-        List<Map<String, Object>> data = accountsReportService.getBankOrCashBalancesReport(isCashOnly);
+        List<Map<String, Object>> data = isCashOnly ?
+                accountsReportService.getCashBalancesSummaryReport(null, null, null, null, null, null) :
+                accountsReportService.getBankBalancesSummaryReport(null, null, null, null, null, false);
         return ResponseEntity.ok(data);
     }
 
