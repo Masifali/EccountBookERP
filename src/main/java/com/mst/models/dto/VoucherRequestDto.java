@@ -264,4 +264,12 @@ public class VoucherRequestDto {
 	public void setTaxTypeId(Integer taxTypeId) { this.taxTypeId = taxTypeId; }
 	public Boolean getPostSingleWhtDebitRow() { return postSingleWhtDebitRow; }
 	public void setPostSingleWhtDebitRow(Boolean postSingleWhtDebitRow) { this.postSingleWhtDebitRow = postSingleWhtDebitRow; }
+	public String getChequeNo() { return chequeNo; }
+	public void setChequeNo(String chequeNo) { this.chequeNo = chequeNo; }
+	public Integer getSupplierCustomerId() { return supplierCustomerId; }
+	public void setSupplierCustomerId(Integer supplierCustomerId) { this.supplierCustomerId = supplierCustomerId; }
+	public LocalDate getDueDate() { return dueDate; }
+	public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+	public Integer getDueDays() { return dueDays; }
+	public void setDueDays(Integer dueDays) { this.dueDays = dueDays; }
 }

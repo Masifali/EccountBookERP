@@ -112,6 +112,19 @@
             <tbody id="tblTBLBody">
                 <tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>
             </tbody>
+            <tfoot>
+            <tr class="grid-total-row">
+                <td colspan="4" style="text-align:right;">Total:</td>
+                <td style="text-align:right;" id="tblTotOpening">0</td>
+                <td style="text-align:right;" id="tblTotOpeningDr" class="col-six-tbl">0</td>
+                <td style="text-align:right;" id="tblTotOpeningCr" class="col-six-tbl">0</td>
+                <td style="text-align:right;" id="tblTotDebit">0</td>
+                <td style="text-align:right;" id="tblTotCredit">0</td>
+                <td style="text-align:right;" id="tblTotClosing">0</td>
+                <td style="text-align:right;" id="tblTotClosingDr" class="col-six-tbl">0</td>
+                <td style="text-align:right;" id="tblTotClosingCr" class="col-six-tbl">0</td>
+            </tr>
+            </tfoot>
         </table>
     </div>
 
@@ -264,10 +277,25 @@
             tbody.empty();
             if (!dtFinal || dtFinal.length === 0) {
                 tbody.html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">No records found for the selected criteria.</td></tr>');
+                ['tblTotOpening','tblTotOpeningDr','tblTotOpeningCr','tblTotDebit','tblTotCredit','tblTotClosing','tblTotClosingDr','tblTotClosingCr'].forEach(id => $('#' + id).text('0'));
                 return;
             }
+            let totOpening = 0, totOpeningDr = 0, totOpeningCr = 0, totDebit = 0, totCredit = 0, totClosing = 0, totClosingDr = 0, totClosingCr = 0;
             const byId = new Map(dtFinal.map(r => [r.RowId, r]));
+
             dtFinal.forEach(r => {
+                const lvl = parseInt(r.AcLevel, 10);
+                if (lvl === 1) {
+                    totOpening += parseFloat(r.Opening || 0);
+                    totOpeningDr += parseFloat(r.OpeningDr || 0);
+                    totOpeningCr += parseFloat(r.OpeningCr || 0);
+                    totDebit += parseFloat(r.Debit || 0);
+                    totCredit += parseFloat(r.Credit || 0);
+                    totClosing += parseFloat(r.Closing || 0);
+                    totClosingDr += parseFloat(r.ClosingDr || 0);
+                    totClosingCr += parseFloat(r.ClosingCr || 0);
+                }
+
                 if (!isVisible(r, byId)) return;
                 const depth = depthOf(r, byId);
                 const children = hasChildren(r.RowId);
@@ -281,10 +309,10 @@
                 const closing = parseFloat(r.Closing || 0), closingDr = parseFloat(r.ClosingDr || 0), closingCr = parseFloat(r.ClosingCr || 0);
                 tbody.append(`
                     <tr class="${isGroup ? 'row-group' : ''}">
-                        <td style="padding-left:${8 + depth * 18}px;">${toggleHtml} ${r.AccountTitle || ''}</td>
-                        <td>${r.AccountCode || ''}</td>
+                        <td style="padding-left:${8 + depth * 18}px;">${toggleHtml} ${$('<div>').text(r.AccountTitle || '').html()}</td>
+                        <td>${$('<div>').text(r.AccountCode || '').html()}</td>
                         <td>${r.AcLevel != null ? r.AcLevel : ''}</td>
-                        <td>${r.IsGroupDetail || ''}</td>
+                        <td>${$('<div>').text(r.IsGroupDetail || '').html()}</td>
                         <td style="text-align:right;">${fmt(opening)}</td>
                         <td style="text-align:right;" class="col-six-tbl">${fmt(openingDr)}</td>
                         <td style="text-align:right;" class="col-six-tbl">${fmt(openingCr)}</td>
@@ -296,6 +324,15 @@
                     </tr>
                 `);
             });
+
+            $('#tblTotOpening').text(fmt(totOpening));
+            $('#tblTotOpeningDr').text(fmt(totOpeningDr));
+            $('#tblTotOpeningCr').text(fmt(totOpeningCr));
+            $('#tblTotDebit').text(fmt(totDebit));
+            $('#tblTotCredit').text(fmt(totCredit));
+            $('#tblTotClosing').text(fmt(totClosing));
+            $('#tblTotClosingDr').text(fmt(totClosingDr));
+            $('#tblTotClosingCr').text(fmt(totClosingCr));
             applyColumnModeTBL();
         }
 
@@ -311,11 +348,11 @@
         });
 
         function resetTBL() {
-            $('#cmbViewOption').val('1').trigger('change');
+            $('#cmbViewOption').val('5').trigger('change');
             const today = new Date().toISOString().split('T')[0];
             $('#txtFromDate, #txtToDate').val(today);
             $('#SkipZero').prop('checked', false);
-            if (rawRows.length) { btnshowClick(); }
+            btnshowClick();
         }
 
         $(document).ready(function () {
@@ -324,6 +361,7 @@
             if (!$('#txtToDate').val()) $('#txtToDate').val(today);
             $('.select2').select2({ width: '200px' });
             applyColumnModeTBL();
+            btnshowClick();
         });
     </script>
 </body>

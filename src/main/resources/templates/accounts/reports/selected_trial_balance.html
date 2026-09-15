@@ -158,8 +158,8 @@
                 <select class="win-input select2" id="CmbCityName">
                     <option value="">-- Select City --</option>
                     <option th:each="c : ${citiesList}" 
-                            th:value="${c['id'] != null ? c['id'] : (c['Id'] != null ? c['Id'] : '')}" 
-                            th:text="${c['cityName'] != null ? c['cityName'] : (c['CityName'] != null ? c['CityName'] : (c['name'] != null ? c['name'] : (c['Name'] != null ? c['Name'] : '')))}"></option>
+                            th:value="${c['id'] != null ? c['id'] : (c['Id'] != null ? c['Id'] : (c['ID'] != null ? c['ID'] : ''))}" 
+                            th:text="${c['cityName'] != null && !#strings.isEmpty(c['cityName']) ? c['cityName'] : (c['CityName'] != null && !#strings.isEmpty(c['CityName']) ? c['CityName'] : (c['name'] != null && !#strings.isEmpty(c['name']) ? c['name'] : (c['Name'] != null && !#strings.isEmpty(c['Name']) ? c['Name'] : (c['description'] != null ? c['description'] : (c['Description'] != null ? c['Description'] : '')))))}"></option>
                 </select>
             </div>
         </div>
@@ -357,6 +357,8 @@
             const $element = $(option.element);
             const title = $element.data('title') || option.text || '';
             return title;
+        }
+
         function extractDocType(r) {
             if (!r) return '';
             let dt = r.typeVoucher || r.TypeVoucher || r.type_voucher || r.DocTypeCode || r.docTypeCode || r.DocType || r.docType || r.DocumentTypeCode || r.documentTypeCode || 
@@ -495,11 +497,11 @@
 
                 // Clickable Account Code & Voucher Code Links
                 const accLink = accId 
-                    ? `<a href="/accounts/reports/general-ledger?accountId=${accId}&fromDate=${fromDate}&toDate=${toDate}" title="View Ledger">${$('<div>').text(code).html()}</a>`
+                    ? `<a href="/accounts/reports/general-ledger?accountId=${accId}&fromDate=${fromDate}&toDate=${toDate}" target="_blank" title="View Ledger">${$('<div>').text(code).html()}</a>`
                     : $('<div>').text(code).html();
 
                 const voucherLink = vCode 
-                    ? `<a href="/accounts/vouchers/journal?vCode=${vCode}" title="View Voucher">${$('<div>').text(vCode).html()}</a>`
+                    ? `<a href="/accounts/reports/voucher-report?fromDocNo=${encodeURIComponent(vCode)}&toDocNo=${encodeURIComponent(vCode)}" target="_blank" title="View Voucher">${$('<div>').text(vCode).html()}</a>`
                     : '-';
 
                 tbody.append(`

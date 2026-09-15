@@ -266,4 +266,8 @@ public class VoucherHead {
 	public void setIncludeWHT(Boolean includeWHT) { this.includeWHT = includeWHT; }
 	public LocalDateTime getChequeDate() { return chequeDate; }
 	public void setChequeDate(LocalDateTime chequeDate) { this.chequeDate = chequeDate; }
+	public String getChequeNo() { return chequeNo; }
+	public void setChequeNo(String chequeNo) { this.chequeNo = chequeNo; }
+	public String getPayTitle() { return payTitle; }
+	public void setPayTitle(String payTitle) { this.payTitle = payTitle; }
 }

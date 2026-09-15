@@ -234,8 +234,9 @@
                 $('#txtFromDate').val(iso(new Date(today.getFullYear(), 0, 1)));
                 $('#txtToDate').val(iso(today));
             } else if (id === 5) {
-                $('#txtFromDate').val('2026-08-01');
-                $('#txtToDate').val('2026-09-13');
+                const y = today.getFullYear();
+                $('#txtFromDate').val(`${y}-01-01`);
+                $('#txtToDate').val(iso(today));
             }
         }
 
@@ -312,78 +313,126 @@
                 return;
             }
 
-            let totOpening = 0, totDebit = 0, totCredit = 0, totClosing = 0;
-            let totDebitEntry = 0, totCreditEntry = 0;
-
+            // Group by ParentAccountTitle
+            const groups = {};
             rawSummaryData.forEach(r => {
-                const openBal = parseFloat(r.Opening || r.opening || r.OpeningBalance || 0);
-                const deb = parseFloat(r.Debit || r.debit || r.TotalDebit || 0);
-                const cred = parseFloat(r.Credit || r.credit || r.TotalCredit || 0);
-                const debEntry = parseFloat(r.DebitEntry || r.debitEntry || deb);
-                const credEntry = parseFloat(r.CreditEntry || r.creditEntry || cred);
-                const closeBal = parseFloat(r.Closing || r.closing || (openBal + deb - cred));
-                const acId = r.AccountId || r.accountId || r.Id || r.id || '';
-                const acCode = r.AccountCode || r.accountCode || '';
-                const acTitle = r.AccountTitle || r.accountTitle || '';
+                const pTitle = r.ParentAccountTitle || r.parentAccountTitle || 'General Accounts';
+                if (!groups[pTitle]) groups[pTitle] = [];
+                groups[pTitle].push(r);
+            });
 
-                totOpening += openBal;
-                totDebit += deb;
-                totCredit += cred;
-                totDebitEntry += debEntry;
-                totCreditEntry += credEntry;
-                totClosing += closeBal;
+            let gOpening = 0, gDebit = 0, gCredit = 0, gClosing = 0;
+            let gDebitEntry = 0, gCreditEntry = 0;
+            const colSpan = isSixCols ? 8 : 6;
 
-                const codeHtml = acId 
-                    ? `<a href="/accounts/reports/general-ledger?accountId=${acId}" target="_blank" style="color:#0056b3; text-decoration:underline; font-weight:bold;">${$('<div>').text(acCode).html()}</a>` 
-                    : `<span>${$('<div>').text(acCode).html()}</span>`;
+            for (const parentTitle in groups) {
+                const items = groups[parentTitle];
+                
+                // Group Header Row
+                tbody.append(`
+                    <tr style="background-color: #dbe6f2; font-weight: bold; color: #1e3a8a;">
+                        <td colspan="${colSpan}"><i class="fa fa-folder-open-o"></i> Parent Account Title: ${$('<div>').text(parentTitle).html()}</td>
+                    </tr>
+                `);
 
+                let pOpening = 0, pDebit = 0, pCredit = 0, pClosing = 0;
+                let pDebitEntry = 0, pCreditEntry = 0;
+
+                items.forEach(r => {
+                    const openBal = parseFloat(r.Opening || r.opening || r.OpeningBalance || 0);
+                    const deb = parseFloat(r.Debit || r.debit || r.TotalDebit || 0);
+                    const cred = parseFloat(r.Credit || r.credit || r.TotalCredit || 0);
+                    const debEntry = parseFloat(r.DebitEntry || r.debitEntry || deb);
+                    const credEntry = parseFloat(r.CreditEntry || r.creditEntry || cred);
+                    const closeBal = parseFloat(r.Closing || r.closing || (openBal + deb - cred));
+                    const acId = r.AccountId || r.accountId || r.Id || r.id || '';
+                    const acCode = r.AccountCode || r.accountCode || '';
+                    const acTitle = r.AccountTitle || r.accountTitle || '';
+
+                    pOpening += openBal; pDebit += deb; pCredit += cred; pClosing += closeBal;
+                    pDebitEntry += debEntry; pCreditEntry += credEntry;
+
+                    gOpening += openBal; gDebit += deb; gCredit += cred; gClosing += closeBal;
+                    gDebitEntry += debEntry; gCreditEntry += credEntry;
+
+                    const codeHtml = acId 
+                        ? `<a href="/accounts/reports/general-ledger?accountId=${acId}" target="_blank" style="color:#0056b3; text-decoration:underline; font-weight:bold;">${$('<div>').text(acCode).html()}</a>` 
+                        : `<span>${$('<div>').text(acCode).html()}</span>`;
+
+                    if (isSixCols) {
+                        tbody.append(`
+                            <tr>
+                                <td style="font-weight: bold; color: #00796B; padding-left: 15px;">${codeHtml}</td>
+                                <td style="font-weight: 600;">${$('<div>').text(acTitle).html()}</td>
+                                <td style="text-align: right;">${fmt(openBal)}</td>
+                                <td style="text-align: right; color: #166534;">${fmt(deb)}</td>
+                                <td style="text-align: right; color: #991b1b;">${fmt(cred)}</td>
+                                <td style="text-align: right; color: #166534;">${fmt(debEntry)}</td>
+                                <td style="text-align: right; color: #991b1b;">${fmt(credEntry)}</td>
+                                <td style="text-align: right; font-weight: bold;">${fmtDrCr(closeBal)}</td>
+                            </tr>
+                        `);
+                    } else {
+                        tbody.append(`
+                            <tr>
+                                <td style="font-weight: bold; color: #00796B; padding-left: 15px;">${codeHtml}</td>
+                                <td style="font-weight: 600;">${$('<div>').text(acTitle).html()}</td>
+                                <td style="text-align: right;">${fmt(openBal)}</td>
+                                <td style="text-align: right; color: #166534;">${fmt(deb)}</td>
+                                <td style="text-align: right; color: #991b1b;">${fmt(cred)}</td>
+                                <td style="text-align: right; font-weight: bold;">${fmtDrCr(closeBal)}</td>
+                            </tr>
+                        `);
+                    }
+                });
+
+                // Group Subtotal Row
                 if (isSixCols) {
                     tbody.append(`
-                        <tr>
-                            <td style="font-weight: bold; color: #00796B;">${codeHtml}</td>
-                            <td style="font-weight: 600;">${$('<div>').text(acTitle).html()}</td>
-                            <td style="text-align: right;">${fmt(openBal)}</td>
-                            <td style="text-align: right; color: #166534;">${fmt(deb)}</td>
-                            <td style="text-align: right; color: #991b1b;">${fmt(cred)}</td>
-                            <td style="text-align: right; color: #166534;">${fmt(debEntry)}</td>
-                            <td style="text-align: right; color: #991b1b;">${fmt(credEntry)}</td>
-                            <td style="text-align: right; font-weight: bold;">${fmtDrCr(closeBal)}</td>
+                        <tr style="background-color: #f1f5f9; font-weight: bold; border-bottom: 1.5px solid #94a3b8;">
+                            <td colspan="2" style="text-align: right; color: #475569;">Group Subtotal:</td>
+                            <td style="text-align: right;">${fmt(pOpening)}</td>
+                            <td style="text-align: right;">${fmt(pDebit)}</td>
+                            <td style="text-align: right;">${fmt(pCredit)}</td>
+                            <td style="text-align: right;">${fmt(pDebitEntry)}</td>
+                            <td style="text-align: right;">${fmt(pCreditEntry)}</td>
+                            <td style="text-align: right;">${fmtDrCr(pClosing)}</td>
                         </tr>
                     `);
                 } else {
                     tbody.append(`
-                        <tr>
-                            <td style="font-weight: bold; color: #00796B;">${codeHtml}</td>
-                            <td style="font-weight: 600;">${$('<div>').text(acTitle).html()}</td>
-                            <td style="text-align: right;">${fmt(openBal)}</td>
-                            <td style="text-align: right; color: #166534;">${fmt(deb)}</td>
-                            <td style="text-align: right; color: #991b1b;">${fmt(cred)}</td>
-                            <td style="text-align: right; font-weight: bold;">${fmtDrCr(closeBal)}</td>
+                        <tr style="background-color: #f1f5f9; font-weight: bold; border-bottom: 1.5px solid #94a3b8;">
+                            <td colspan="2" style="text-align: right; color: #475569;">Group Subtotal:</td>
+                            <td style="text-align: right;">${fmt(pOpening)}</td>
+                            <td style="text-align: right;">${fmt(pDebit)}</td>
+                            <td style="text-align: right;">${fmt(pCredit)}</td>
+                            <td style="text-align: right;">${fmtDrCr(pClosing)}</td>
                         </tr>
                     `);
                 }
-            });
+            }
 
+            // Grand Total Row
             if (isSixCols) {
                 tfoot.html(`
                     <tr class="grid-total-row">
-                        <td colspan="2" style="text-align:right;">Total:</td>
-                        <td style="text-align:right;">${fmt(totOpening)}</td>
-                        <td style="text-align:right;">${fmt(totDebit)}</td>
-                        <td style="text-align:right;">${fmt(totCredit)}</td>
-                        <td style="text-align:right;">${fmt(totDebitEntry)}</td>
-                        <td style="text-align:right;">${fmt(totCreditEntry)}</td>
-                        <td style="text-align:right;">${fmtDrCr(totClosing)}</td>
+                        <td colspan="2" style="text-align:right;">Grand Total:</td>
+                        <td style="text-align:right;">${fmt(gOpening)}</td>
+                        <td style="text-align:right;">${fmt(gDebit)}</td>
+                        <td style="text-align:right;">${fmt(gCredit)}</td>
+                        <td style="text-align:right;">${fmt(gDebitEntry)}</td>
+                        <td style="text-align:right;">${fmt(gCreditEntry)}</td>
+                        <td style="text-align:right;">${fmtDrCr(gClosing)}</td>
                     </tr>
                 `);
             } else {
                 tfoot.html(`
                     <tr class="grid-total-row">
-                        <td colspan="2" style="text-align:right;">Total:</td>
-                        <td style="text-align:right;">${fmt(totOpening)}</td>
-                        <td style="text-align:right;">${fmt(totDebit)}</td>
-                        <td style="text-align:right;">${fmt(totCredit)}</td>
-                        <td style="text-align:right;">${fmtDrCr(totClosing)}</td>
+                        <td colspan="2" style="text-align:right;">Grand Total:</td>
+                        <td style="text-align:right;">${fmt(gOpening)}</td>
+                        <td style="text-align:right;">${fmt(gDebit)}</td>
+                        <td style="text-align:right;">${fmt(gCredit)}</td>
+                        <td style="text-align:right;">${fmtDrCr(gClosing)}</td>
                     </tr>
                 `);
             }

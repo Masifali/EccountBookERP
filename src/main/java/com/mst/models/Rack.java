@@ -52,4 +52,23 @@ public class Rack {
 
 	@Column(name = "isActive")
 	private Boolean isActive = true;
+
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public Warehouse getWarehouse() { return warehouse; }
+	public void setWarehouse(Warehouse warehouse) { this.warehouse = warehouse; }
+	public String getRackName() { return rackName; }
+	public void setRackName(String rackName) { this.rackName = rackName; }
+	public Integer getSortNo() { return sortNo; }
+	public void setSortNo(Integer sortNo) { this.sortNo = sortNo; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public Integer getEntryUserId() { return entryUserId; }
+	public void setEntryUserId(Integer entryUserId) { this.entryUserId = entryUserId; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+	public Integer getModifyUserId() { return modifyUserId; }
+	public void setModifyUserId(Integer modifyUserId) { this.modifyUserId = modifyUserId; }
+	public Boolean getIsActive() { return isActive; }
+	public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }

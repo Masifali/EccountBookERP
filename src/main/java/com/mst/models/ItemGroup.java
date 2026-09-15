@@ -31,4 +31,13 @@ public class ItemGroup {
 
 	@Column(name = "CompanyId")
 	private Integer companyId;
+
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getItemGroupName() { return itemGroupName; }
+	public void setItemGroupName(String itemGroupName) { this.itemGroupName = itemGroupName; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
 }

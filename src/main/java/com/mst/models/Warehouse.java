@@ -65,4 +65,29 @@ public class Warehouse {
 
 	@Column(name = "WarehouseType", length = 50)
 	private String warehouseType;
+
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getWareHouseCode() { return wareHouseCode; }
+	public void setWareHouseCode(String wareHouseCode) { this.wareHouseCode = wareHouseCode; }
+	public String getWareHouseName() { return wareHouseName; }
+	public void setWareHouseName(String wareHouseName) { this.wareHouseName = wareHouseName; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public Integer getEntryUser() { return entryUser; }
+	public void setEntryUser(Integer entryUser) { this.entryUser = entryUser; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+	public Integer getModifyUser() { return modifyUser; }
+	public void setModifyUser(Integer modifyUser) { this.modifyUser = modifyUser; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public Boolean getIsActive() { return isActive; }
+	public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+	public Integer getBranchesId() { return branchesId; }
+	public void setBranchesId(Integer branchesId) { this.branchesId = branchesId; }
+	public String getWarehouseType() { return warehouseType; }
+	public void setWarehouseType(String warehouseType) { this.warehouseType = warehouseType; }
 }

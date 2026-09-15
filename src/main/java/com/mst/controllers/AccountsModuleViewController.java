@@ -43,6 +43,14 @@ public class AccountsModuleViewController {
 		return "accounts/bank_reconciliation_upload_excel";
 	}
 
+	@GetMapping({"/bank-balance-manual-entry", "/reports/bank-balance-manual-entry", "/banking/bank-balance-manual-entry"})
+	public String bankBalanceManualEntry(Model model) {
+		model.addAttribute("activeMenu", "accounts");
+		model.addAttribute("moduleTitle", "Bank Balance Manual Entry");
+		model.addAttribute("bankAccountsList", accountsReportService.getBankAccounts());
+		return "accounts/banking/bank_balance_manual_entry";
+	}
+
 	// ==========================================
 	// 2. ACCOUNTS TRANSACTION MODULES (18)
 	// ==========================================

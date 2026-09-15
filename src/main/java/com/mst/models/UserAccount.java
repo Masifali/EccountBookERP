@@ -138,4 +138,55 @@ public class UserAccount {
 
 	@Column(name = "ModifyDate")
 	private LocalDateTime modifyDate;
+
+	public Integer getId() { return id; }
+	public void setId(Integer id) { this.id = id; }
+	public String getUserName() { return userName; }
+	public void setUserName(String userName) { this.userName = userName; }
+	public String getPassword() { return password; }
+	public void setPassword(String password) { this.password = password; }
+	public String getFirstName() { return firstName; }
+	public void setFirstName(String firstName) { this.firstName = firstName; }
+	public String getLastName() { return lastName; }
+	public void setLastName(String lastName) { this.lastName = lastName; }
+	public String getCellNo() { return cellNo; }
+	public void setCellNo(String cellNo) { this.cellNo = cellNo; }
+	public UserGroup getUserGroup() { return userGroup; }
+	public void setUserGroup(UserGroup userGroup) { this.userGroup = userGroup; }
+	public Integer getUserRoleId() { return userRoleId; }
+	public void setUserRoleId(Integer userRoleId) { this.userRoleId = userRoleId; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
+	public Integer getOrganizationId() { return organizationId; }
+	public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
+	public Integer getBranchesId() { return branchesId; }
+	public void setBranchesId(Integer branchesId) { this.branchesId = branchesId; }
+	public Integer getSupplierCustomerId() { return supplierCustomerId; }
+	public void setSupplierCustomerId(Integer supplierCustomerId) { this.supplierCustomerId = supplierCustomerId; }
+	public Integer getEntryUserId() { return entryUserId; }
+	public void setEntryUserId(Integer entryUserId) { this.entryUserId = entryUserId; }
+	public Integer getModifyUserId() { return modifyUserId; }
+	public void setModifyUserId(Integer modifyUserId) { this.modifyUserId = modifyUserId; }
+	public Integer getUserTypeId() { return userTypeId; }
+	public void setUserTypeId(Integer userTypeId) { this.userTypeId = userTypeId; }
+	public Integer getAppId() { return appId; }
+	public void setAppId(Integer appId) { this.appId = appId; }
+	public Integer getEmployeeId() { return employeeId; }
+	public void setEmployeeId(Integer employeeId) { this.employeeId = employeeId; }
+	public Integer getAuthenticationCode() { return authenticationCode; }
+	public void setAuthenticationCode(Integer authenticationCode) { this.authenticationCode = authenticationCode; }
+	public Integer getAuthenticationEnabled() { return authenticationEnabled; }
+	public void setAuthenticationEnabled(Integer authenticationEnabled) { this.authenticationEnabled = authenticationEnabled; }
+	public String getPlayerId() { return playerId; }
+	public void setPlayerId(String playerId) { this.playerId = playerId; }
+	public String getAppVersion() { return appVersion; }
+	public void setAppVersion(String appVersion) { this.appVersion = appVersion; }
+	public Boolean getIsActive() { return isActive; }
+	public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+	public Boolean getDeviceDependency() { return deviceDependency; }
+	public void setDeviceDependency(Boolean deviceDependency) { this.deviceDependency = deviceDependency; }
+	public LocalDateTime getEntryDate() { return entryDate; }
+	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
 }

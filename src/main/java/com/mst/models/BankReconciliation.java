@@ -134,4 +134,18 @@ public class BankReconciliation {
 	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
 	public LocalDateTime getReconcileDate() { return reconcileDate; }
 	public void setReconcileDate(LocalDateTime reconcileDate) { this.reconcileDate = reconcileDate; }
+	public String getParticulars() { return particulars; }
+	public void setParticulars(String particulars) { this.particulars = particulars; }
+	public BigDecimal getDebit() { return debit; }
+	public void setDebit(BigDecimal debit) { this.debit = debit; }
+	public BigDecimal getCredit() { return credit; }
+	public void setCredit(BigDecimal credit) { this.credit = credit; }
+	public Integer getActionId() { return actionId; }
+	public void setActionId(Integer actionId) { this.actionId = actionId; }
+	public LocalDateTime getModifyDate() { return modifyDate; }
+	public void setModifyDate(LocalDateTime modifyDate) { this.modifyDate = modifyDate; }
+	public Integer getModifyUserId() { return modifyUserId; }
+	public void setModifyUserId(Integer modifyUserId) { this.modifyUserId = modifyUserId; }
+	public Integer getDocumentTypeId() { return documentTypeId; }
+	public void setDocumentTypeId(Integer documentTypeId) { this.documentTypeId = documentTypeId; }
 }
