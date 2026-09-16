@@ -778,9 +778,14 @@ function renderDetailGrid() {
 }
 
 function updateDetailTotals(qty, wt, amt) {
+    $('#lblTotalItemCount').text(lineItems ? lineItems.length : 0);
     $('#lblTotalQty').text(qty.toFixed(2));
-    $('#lblTotalWeight').text(wt.toFixed(2) + " KG");
+    $('#lblTotalWeight').text(wt.toFixed(2));
     $('#lblGrandTotal').text(amt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+    $('#txtHeaderTotalQty').val(qty.toFixed(2));
+    $('#txtHeaderTotalWeight').val(wt.toFixed(2));
+    $('#txtHeaderTotalAmount').val(amt.toFixed(2));
 }
 
 /* ============================================================
@@ -984,16 +989,16 @@ function removeEmptyBagRow(idx) {
 
 function resolveEmptyBagDisplayNames(b) {
     if (!b.typeName && b.type) {
-        const t = emptyBagTypes.find(x => parseInt(x.Id) === parseInt(b.type));
-        if (t) b.typeName = t.type;
+        const t = emptyBagTypes.find(x => parseInt(x.Id || x.id) === parseInt(b.type));
+        if (t) b.typeName = t.type || t.typeName;
     }
-    if (!b.itemName && b.itemId) {
-        const i = emptyBagItemOptions.find(x => parseInt(x.ItemId) === parseInt(b.itemId));
-        if (i) b.itemName = i.ItemName;
+    if ((!b.itemName || b.itemName === '0') && b.itemId) {
+        const i = emptyBagItemOptions.find(x => parseInt(x.ItemId || x.itemId || x.id) === parseInt(b.itemId));
+        if (i) b.itemName = i.ItemName || i.itemName;
     }
     if (!b.packingTypeName && b.packingTypeId) {
-        const p = emptyBagPackingTypes.find(x => parseInt(x.Id) === parseInt(b.packingTypeId));
-        if (p) b.packingTypeName = p.PackTypeDesc;
+        const p = emptyBagPackingTypes.find(x => parseInt(x.Id || x.id) === parseInt(b.packingTypeId));
+        if (p) b.packingTypeName = p.PackTypeDesc || p.packingTypeName;
     }
     return b;
 }
@@ -1007,13 +1012,14 @@ function renderEbGrid() {
     }
     emptyBagItems.forEach((b, idx) => {
         resolveEmptyBagDisplayNames(b);
+        const displayItemName = (b.itemName && b.itemName.trim() !== '') ? b.itemName : (b.itemId != null ? b.itemId : '0');
         tbody.append(`
             <tr>
                 <td>${idx + 1}</td>
                 <td>${escapeHtml(b.typeName || '')}</td>
-                <td>${escapeHtml(b.itemName || '')}</td>
-                <td>${escapeHtml(b.packingTypeName || '')}</td>
+                <td>${escapeHtml(displayItemName)}</td>
                 <td style="text-align: right;">${(b.rate || 0).toFixed(2)}</td>
+                <td>${escapeHtml(b.packingTypeName || '')}</td>
                 <td style="text-align: right;">${(b.weightCut || 0).toFixed(3)}</td>
                 <td>
                     <button type="button" class="btn btn-default btn-xs" onclick="editEmptyBagRow(${idx})"><i class="fa fa-pencil"></i></button>

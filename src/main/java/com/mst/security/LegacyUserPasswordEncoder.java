@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
  * username and password for user login use db useraccount") - with no separate
  * credential table.
  *
- * Confirmed against real data: decrypting live dbo.UserAccount.Password values from
- * goldenAce5_25t.sql with this exact scheme yields plausible real plaintext
- * passwords (e.g. user "GOLDEN" -> "Dealing@3", "WB1" -> "123", "Suneel" ->
- * "suneel0009", "NAEEM" -> "naeem486", "KAREEM" -> "kareem@654"). The real desktop
+ * Compatible with the desktop encryption implementation. The desktop
  * source (Architecture.Model.Encryption.cs) confirms the exact algorithm:
  *
  *   RijndaelManaged (128-bit block = AES), CipherMode.CBC, PaddingMode.PKCS7,

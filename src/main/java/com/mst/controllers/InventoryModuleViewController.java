@@ -43,187 +43,28 @@ public class InventoryModuleViewController {
         return "inventory/inventory_dashboard";
     }
 
-    // 2. ITEMS
-    @GetMapping({"/items", "/items/list"})
-    public String viewItems(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("items", itemService.getAll());
-        return "inventory/items";
-    }
-
-    @GetMapping("/items/add")
-    public String addItemForm(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        Item item = new Item();
-        item.setItemCategory(new ItemCategory());
-        item.setItemType(new ItemType());
-        item.setRack(new Rack());
-        model.addAttribute("item", item);
-        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("categories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("itemTypes", itemTypeService.getAll());
-        model.addAttribute("types", itemTypeService.getAll());
-        model.addAttribute("racks", rackService.getAll());
-        model.addAttribute("accounts", chartofAccountService.getAllAccounts());
-        return "inventory/item_form";
-    }
-
-    @GetMapping("/items/edit/{id}")
-    public String editItemForm(@PathVariable("id") int id, Model model) {
-        Item item = itemService.getById(id);
-        if (item == null) {
-            return "redirect:/inventory/items";
-        }
-        if (item.getItemCategory() == null) item.setItemCategory(new ItemCategory());
-        if (item.getItemType() == null) item.setItemType(new ItemType());
-        if (item.getRack() == null) item.setRack(new Rack());
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("item", item);
-        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("categories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("itemTypes", itemTypeService.getAll());
-        model.addAttribute("types", itemTypeService.getAll());
-        model.addAttribute("racks", rackService.getAll());
-        model.addAttribute("accounts", chartofAccountService.getAllAccounts());
-        return "inventory/item_form";
-    }
-
-    @PostMapping("/items/save")
-    public String saveItem(@ModelAttribute("item") Item item) {
-        itemService.addOrUpdate(item);
-        return "redirect:/inventory/items";
-    }
-
-    @GetMapping("/items/delete/{id}")
-    public String deleteItem(@PathVariable("id") int id) {
-        itemService.delete(id);
-        return "redirect:/inventory/items";
-    }
-
-    // 3. ITEM CATEGORIES
-    @GetMapping({"/item_categories", "/item-categories"})
-    public String viewItemCategories(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("itemCategory", new ItemCategory());
-        model.addAttribute("accounts", chartofAccountService.getAllAccounts());
-        return "inventory/item_categories";
-    }
-
-    @GetMapping("/item_categories/edit/{id}")
-    public String editItemCategory(@PathVariable("id") int id, Model model) {
-        ItemCategory category = itemCategoryService.getItemCategoryById(id);
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("itemCategory", category != null ? category : new ItemCategory());
-        model.addAttribute("accounts", chartofAccountService.getAllAccounts());
-        return "inventory/item_categories";
-    }
-
-    @PostMapping("/item_categories/save")
-    public String saveItemCategory(@ModelAttribute("itemCategory") ItemCategory itemCategory) {
-        itemCategoryService.save(itemCategory);
-        return "redirect:/inventory/item_categories";
-    }
-
-    @GetMapping("/item_categories/delete/{id}")
-    public String deleteItemCategory(@PathVariable("id") int id) {
-        itemCategoryService.delete(id);
-        return "redirect:/inventory/item_categories";
-    }
-
-    // 4. ITEM TYPES
-    @GetMapping({"/item_types", "/item-types"})
-    public String viewItemTypes(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("itemTypes", itemTypeService.getAll());
-        model.addAttribute("itemType", new ItemType());
-        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
-        return "inventory/item_types";
-    }
-
-    @GetMapping("/item_types/edit/{id}")
-    public String editItemType(@PathVariable("id") int id, Model model) {
-        ItemType itemType = itemTypeService.getById(id);
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("itemTypes", itemTypeService.getAll());
-        model.addAttribute("itemType", itemType != null ? itemType : new ItemType());
-        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
-        return "inventory/item_types";
-    }
-
-    @PostMapping("/item_types/save")
-    public String saveItemType(@ModelAttribute("itemType") ItemType itemType) {
-        itemTypeService.addOrUpdate(itemType);
-        return "redirect:/inventory/item_types";
-    }
-
-    @GetMapping("/item_types/delete/{id}")
-    public String deleteItemType(@PathVariable("id") int id) {
-        itemTypeService.delete(id);
-        return "redirect:/inventory/item_types";
-    }
-
-    // 5. ITEM GROUPS
+    // DefineItemGroup stores GroupId and ItemGroupName through its original procedures.
     @GetMapping({"/item_groups", "/item-groups"})
-    public String viewItemGroups(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("itemGroups", itemGroupService.getAll());
-        model.addAttribute("itemGroup", new ItemGroup());
-        return "inventory/item_groups";
-    }
+    public String viewItemGroups(Model model) { return "inventory/item_uom_groups"; }
 
     @GetMapping("/item_groups/edit/{id}")
     public String editItemGroup(@PathVariable("id") int id, Model model) {
-        ItemGroup group = itemGroupService.getById(id);
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("itemGroups", itemGroupService.getAll());
-        model.addAttribute("itemGroup", group != null ? group : new ItemGroup());
-        return "inventory/item_groups";
+        return "redirect:/inventory/item-groups?id=" + id;
     }
-
-    @PostMapping("/item_groups/save")
-    public String saveItemGroup(@ModelAttribute("itemGroup") ItemGroup itemGroup) {
-        itemGroupService.addOrUpdate(itemGroup);
-        return "redirect:/inventory/item_groups";
-    }
-
-    @GetMapping("/item_groups/delete/{id}")
-    public String deleteItemGroup(@PathVariable("id") int id) {
-        itemGroupService.delete(id);
-        return "redirect:/inventory/item_groups";
-    }
-
-    // 6. WAREHOUSES
+    // 6. WAREHOUSES: original InvWareHouse data is loaded by the scoped desktop API.
     @GetMapping("/warehouses")
-    public String viewWarehouses(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("warehouses", warehouseService.getAll());
-        model.addAttribute("warehouse", new Warehouse());
-        return "inventory/warehouses";
-    }
+    public String viewWarehouses(Model model) { return "inventory/warehouses"; }
+
+    @GetMapping("/warehouse-racks")
+    public String warehouseRacks() { return "inventory/warehouse_racks"; }
+
+    @GetMapping("/warehouse-rack-items")
+    public String warehouseRackItems() { return "inventory/warehouse_rack_items"; }
 
     @GetMapping("/warehouses/edit/{id}")
     public String editWarehouse(@PathVariable("id") int id, Model model) {
-        Warehouse warehouse = warehouseService.getById(id);
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("warehouses", warehouseService.getAll());
-        model.addAttribute("warehouse", warehouse != null ? warehouse : new Warehouse());
-        return "inventory/warehouses";
+        return "redirect:/inventory/warehouses?id=" + id;
     }
-
-    @PostMapping("/warehouses/save")
-    public String saveWarehouse(@ModelAttribute("warehouse") Warehouse warehouse) {
-        warehouseService.addOrUpdate(warehouse);
-        return "redirect:/inventory/warehouses";
-    }
-
-    @GetMapping("/warehouses/delete/{id}")
-    public String deleteWarehouse(@PathVariable("id") int id) {
-        warehouseService.delete(id);
-        return "redirect:/inventory/warehouses";
-    }
-
     // 7. BRANDS
     @GetMapping("/brands")
     public String viewBrands(Model model) {
@@ -335,31 +176,7 @@ public class InventoryModuleViewController {
         return "inventory/consumption_items";
     }
 
-    // 13. POS DEFINE ITEM
-    @GetMapping({"/pos_define_item", "/pos-define-item"})
-    public String posDefineItem(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        Item item = new Item();
-        item.setItemCategory(new ItemCategory());
-        item.setItemType(new ItemType());
-        item.setRack(new Rack());
-        model.addAttribute("item", item);
-        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("categories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("itemTypes", itemTypeService.getAll());
-        model.addAttribute("types", itemTypeService.getAll());
-        model.addAttribute("racks", rackService.getAll());
-        model.addAttribute("accounts", chartofAccountService.getAllAccounts());
-        return "inventory/item_form";
-    }
 
-    // 14. ITEM UOM SCHEDULE
-    @GetMapping({"/item_uom_schedule", "/item-uom-schedule"})
-    public String viewItemUomSchedule(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("itemCategories", itemCategoryService.getAllItemCategories());
-        model.addAttribute("itemTypes", itemTypeService.getAll());
-        model.addAttribute("items", itemService.getAll());
-        return "inventory/item_uom_schedule";
-    }
 }
+
+

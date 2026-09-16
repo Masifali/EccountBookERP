@@ -113,11 +113,6 @@ public class MainModulesController {
     }
 
     // Stocks & Inventory Sub-modules
-    @GetMapping({"/stocks/stock_opening_form", "/stocks/stock-opening-form"})
-    public String stockOpeningForm(Model model) {
-        populateStockOpeningModel(model);
-        return "stocks/stock_opening_form";
-    }
 
     @GetMapping({"/stocks/item_recipe_form", "/stocks/item-recipe-form"})
     public String itemRecipeForm(Model model) {
@@ -191,14 +186,6 @@ public class MainModulesController {
         return "stocks/stock_opening_form";
     }
 
-    // 14. Stock Movement Report
-    @GetMapping({"/stocks/stock_movement", "/stocks/stock-movement"})
-    public String stockMovement(Model model) {
-        populateStockProfitabilityModel(model);
-        model.addAttribute("moduleTitle", "Stock Movement Report");
-        return "stocks/inventory_profitability_report";
-    }
-
     // 15. Stock Register Report
     @GetMapping({"/stocks/stock_register", "/stocks/stock-register"})
     public String stockRegister(Model model) {
@@ -221,14 +208,6 @@ public class MainModulesController {
         populateStockOpeningModel(model);
         model.addAttribute("moduleTitle", "Item Stock As On Date");
         return "stocks/stock_opening_form";
-    }
-
-    // 18. Item Ledger Report
-    @GetMapping({"/stocks/item_ledger", "/stocks/item-ledger"})
-    public String itemLedger(Model model) {
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("moduleTitle", "Item Ledger Report");
-        return "inventory/items";
     }
 
     // 19. Lot Wise Stock Report

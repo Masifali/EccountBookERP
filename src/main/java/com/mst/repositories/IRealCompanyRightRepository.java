@@ -9,4 +9,5 @@ import com.mst.models.RealCompanyRight;
 public interface IRealCompanyRightRepository extends JpaRepository<RealCompanyRight, Integer> {
 
 	List<RealCompanyRight> findByCompanyIdAndScreenIdInAndIsActiveTrue(Integer companyId, List<Integer> screenIds);
+	List<RealCompanyRight> findByCompanyIdAndScreenIdIn(Integer companyId, List<Integer> screenIds);
 }

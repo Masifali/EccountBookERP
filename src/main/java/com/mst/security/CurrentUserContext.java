@@ -18,20 +18,6 @@ public class CurrentUserContext {
 	@Autowired
 	private JdbcTemplate jdbc;
 
-	private UserAccount resolve() {
-		try {
-			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			if (auth != null && auth.isAuthenticated() && auth.getName() != null) {
-				UserAccount account = userAccountRepository.findByUserName(auth.getName());
-				if (account != null) {
-					resolveDesktopAllocations(account);
-					return account;
-				}
-			}
-		} catch (Exception ignored) {
-		}
-		return null;
-	}
 
 	/** Mirrors LoginNew: active company allocation, then allocated branch. */
 	private void resolveDesktopAllocations(UserAccount account) {
@@ -72,37 +58,28 @@ public class CurrentUserContext {
         }
         UserAccount user = userAccountRepository.findByUserName(auth.getName());
         if (user != null) resolveDesktopAllocations(user);
-        if (user == null || user.getOrganizationId() == null || user.getCompanyId() == null) {
+        if (user == null || !Boolean.TRUE.equals(user.getIsActive()) || user.getOrganizationId() == null || user.getOrganizationId() <= 0 || user.getCompanyId() == null || user.getCompanyId() <= 0) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "The signed-in user has no accounting company context");
         }
         return user;
     }
 
-	public int currentUserId() {
-		UserAccount account = resolve();
-		return account != null && account.getId() != null ? account.getId() : 1;
-	}
-
-    public int currentOrganizationId() {
-		UserAccount account = resolve();
-		return account != null && account.getOrganizationId() != null ? account.getOrganizationId() : 1;
+    private int requireId(Integer value,String field) {
+        if(value==null||value<=0)throw new org.springframework.security.access.AccessDeniedException("The signed-in user has no active "+field+" context");
+        return value;
     }
-
-	public int currentCompanyId() {
-		UserAccount account = resolve();
-		return account != null && account.getCompanyId() != null ? account.getCompanyId() : 1;
-	}
-
-	public int currentBranchId() {
-		UserAccount account = resolve();
-		return account != null && account.getBranchesId() != null ? account.getBranchesId() : 1;
-	}
-
-	public int currentAppId() {
-		UserAccount account = resolve();
-		return account != null && account.getAppId() != null ? account.getAppId() : 1;
-	}
+    public int currentUserId(){return requireId(requireAccountingUser().getId(),"user");}
+    public int currentOrganizationId(){return requireId(requireAccountingUser().getOrganizationId(),"organization");}
+    public int currentCompanyId(){return requireId(requireAccountingUser().getCompanyId(),"company");}
+    public int currentBranchId(){return requireId(requireAccountingUser().getBranchesId(),"branch");}
+    public int currentAppId(){
+        UserAccount account=requireAccountingUser();
+        var apps=jdbc.queryForList("EXEC dbo.USP_ApplicationsAllocateToUser_AllocatedData @CompanyId=?,@UserId=?",account.getCompanyId(),account.getId());
+        if(account.getAppId()!=null&&account.getAppId()>0&&apps.stream().anyMatch(a->((Number)a.get("AppId")).intValue()==account.getAppId()))return account.getAppId();
+        if(apps.size()==1)return requireId(((Number)apps.get(0).get("AppId")).intValue(),"application");
+        throw new org.springframework.security.access.AccessDeniedException("Select an application allocated to the signed-in user");
+    }
 
 	/**
 	 * Ditto of LoginNew.cs's Financial-Year selection: desktop calls
@@ -116,9 +93,9 @@ public class CurrentUserContext {
 	 * default year first) is used - never a hardcoded id.
 	 */
 	public int currentFinancialYearId() {
-		UserAccount account = resolve();
+		UserAccount account = requireAccountingUser();
 		if (account == null || account.getOrganizationId() == null || account.getCompanyId() == null) {
-			return 1;
+			throw new org.springframework.security.access.AccessDeniedException("The signed-in user has no active financial year context");
 		}
 		try {
 			java.util.List<java.util.Map<String, Object>> years = jdbc.queryForList(
@@ -132,6 +109,6 @@ public class CurrentUserContext {
 			}
 		} catch (Exception ignored) {
 		}
-		return 1;
+		throw new org.springframework.security.access.AccessDeniedException("The signed-in user has no active financial year context");
 	}
 }

@@ -34,20 +34,52 @@ public class PurchaseModuleViewController {
 
     @GetMapping("/supplier")
     public String supplierPurchases(Model model) {
-        return "redirect:/accounts/supplier";
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "Supplier Purchases");
+        return "purchase/supplier_purchases";
     }
 
     @GetMapping("/reports")
     public String purchaseReports(Model model) {
-        return "redirect:/accounts/reports/payables-report";
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "Purchase Reports");
+        return "purchase/purchase_reports_dashboard";
+    }
+
+    @GetMapping("/reports/purchase-order-register")
+    public String purchaseOrderRegisterReport(Model model) {
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "Purchase Order Register");
+        return "purchase/reports/purchase_order_report";
+    }
+
+    @GetMapping("/reports/inward-gate-pass-register")
+    public String inwardGatePassRegisterReport(Model model) {
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "Inward Gate Pass Register");
+        return "purchase/reports/inward_gate_pass_report";
+    }
+
+    @GetMapping("/reports/grn-register")
+    public String grnRegisterReport(Model model) {
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "GRN Register");
+        return "purchase/reports/grn_report";
+    }
+
+    @GetMapping("/reports/purchase-invoice-register")
+    public String purchaseInvoiceRegisterReport(Model model) {
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "Purchase Invoice Register");
+        return "purchase/reports/purchase_invoice_report";
     }
 
     @GetMapping("/purchase-order")
     public String purchaseOrder(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Order");
-        model.addAttribute("documentTypeId", 16);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(16));
+        model.addAttribute("documentTypeId", 41);
+        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(41));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());

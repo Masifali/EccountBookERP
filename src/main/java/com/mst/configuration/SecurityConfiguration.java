@@ -56,6 +56,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         // Replace the default DENY writer only with the scoped report-frame policy.
         http.headers().frameOptions().disable()
                 .addHeaderWriter(new com.mst.security.ReportFrameHeaderWriter());
+        http.addFilterBefore(receiptMangerAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+        http.exceptionHandling().defaultAuthenticationEntryPointFor(
+                new org.springframework.security.web.authentication.HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED),
+                new AntPathRequestMatcher("/api/**"));
         http
                 .authorizeRequests()
                 .antMatchers("/login", "/css/**", "/js/**", "/images/**", "/vendors/**", "/build/**", "/.well-known/**").permitAll()
@@ -76,13 +80,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         web
                 .ignoring()
                 .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**",
-                        "/images/**", "/vendors/**", "/Whastsapp/**", "/build/**", "/modules/**", "/.well-known/**")
-                .requestMatchers(new org.springframework.security.web.util.matcher.AndRequestMatcher(
-                        new AntPathRequestMatcher("/api/**"),
-                        new org.springframework.security.web.util.matcher.NegatedRequestMatcher(
-                                new AntPathRequestMatcher("/api/accounts/**")),
-                        new org.springframework.security.web.util.matcher.NegatedRequestMatcher(
-                                new AntPathRequestMatcher("/api/inventory/**"))));
+                        "/images/**", "/vendors/**", "/Whastsapp/**", "/build/**", "/.well-known/**");
+
+    }
+
+    @Bean
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<ReceiptMangerAuthFilter> receiptFilterRegistration() {
+        var registration=new org.springframework.boot.web.servlet.FilterRegistrationBean<>(receiptMangerAuthFilter);
+        registration.setEnabled(false); // Run once inside Spring Security, after session restoration.
+        return registration;
     }
 
     @Bean

@@ -94,4 +94,27 @@ public class PurchaseReportRestController {
             return ResponseEntity.status(500).body(err);
         }
     }
+
+    @PostMapping("/gate-pass")
+    public ResponseEntity<?> getGatePassRegister(@RequestBody Map<String, Object> req) {
+        try {
+            String fromDate = strOrNull(req.get("fromDate"));
+            String toDate = strOrNull(req.get("toDate"));
+            Integer supplierId = intOrNull(req.get("supplierId"));
+            String status = strOrNull(req.get("status"));
+
+            List<Map<String, Object>> data = purchaseReportService.getGatePassRegisterReport(fromDate, toDate, supplierId, status);
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("data", data);
+            res.put("totalRecords", data.size());
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Error loading Gate Pass Register: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
+        }
+    }
 }
+

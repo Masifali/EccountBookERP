@@ -104,7 +104,11 @@ public class ScreenSeeder implements CommandLineRunner {
 
 			// Inventory Screens
 			seed("Define Brand", "Inventory", "/inventory/brands", "INVENTORY_BRANDS", "INVENTORY", 876, 4);
+            seed("Pos Define Item", "Inventory", "/inventory/pos-define-item", "INVENTORY_POS_ITEMS", "INVENTORY", 106, 4);
             seed("Inventory Stock Transactions Report", "Inventory", "/inventory/stock-transactions", "INVENTORY_STOCK_TRANSACTIONS", "INVENTORY", 580, 93);
+            seed("Item Ledger (Inventory)", "Inventory", "/stocks/item_ledger", "INVENTORY_ITEM_LEDGER", "INVENTORY", 287, 19);
+            seed("Stock Report Store", "Inventory", "/stocks/store-stock-report", "INVENTORY_STORE_STOCK", "INVENTORY", 288, 19);
+            seed("Transaction Report Vehicle Wise", "Inventory", "/stocks/transaction-vehicle-wise", "INVENTORY_VEHICLE_TRANSACTIONS", "INVENTORY", 291, 19);
 			seed("Item Groups", "Inventory", "/inventory/item_groups", "INVENTORY_ITEM_GROUPS", "INVENTORY", null, null);
 			seed("Product Types", "Inventory", "/inventory/product_types", "INVENTORY_PRODUCT_TYPES", "INVENTORY", null, null);
 			seed("Define WareHouse", "Inventory", "/inventory/warehouses", "INVENTORY_WAREHOUSES", "INVENTORY", 116, 4);
@@ -121,7 +125,7 @@ public class ScreenSeeder implements CommandLineRunner {
 			// User Management Screens
 			seed("User Registration", "User Management", "/user-management/users", "ADD_NEW_USER", "UTILITIES", null, null);
 			seed("User Roles", "User Management", "/user-management/roles", "USER_ROLES", "UTILITIES", null, null);
-			seed("User Rights", "User Management", "/user-management/rights", "USER_RIGHTS", "UTILITIES", null, null);
+			seed("User Rights", "User Management", "/user-management/rights", "USER_RIGHTS", "UTILITIES", 409, 43);
 
 			// ==========================================
 			// 5. PURCHASE MODULES (10)
@@ -129,7 +133,7 @@ public class ScreenSeeder implements CommandLineRunner {
 			seed("Purchase Dashboard", "Purchase", "/purchase", "PURCHASE_DASHBOARD", "PURCHASE", null, 5);
 			seed("Supplier Purchases", "Purchase", "/purchase/supplier", "PURCHASE_SUPPLIER", "PURCHASE", null, 5);
 			seed("Purchase Reports", "Purchase", "/purchase/reports", "PURCHASE_REPORTS", "PURCHASE", null, 5);
-			seed("Purchase Order", "Purchase", "/purchase/purchase-order", "PURCHASE_ORDER", "PURCHASE", 16, 5);
+			seed("Purchase Order", "Purchase", "/purchase/purchase-order", "PURCHASE_ORDER", "PURCHASE", 120, 5);
 			seed("Inward Gate Pass", "Purchase", "/purchase/inward-gate-pass", "INWARD_GATE_PASS", "PURCHASE", 34, 5);
 			seed("Goods Receipt Notes", "Purchase", "/purchase/goods-receipt-notes", "GOODS_RECEIPT_NOTES", "PURCHASE", 36, 5);
 			seed("GRN (Sale Return)", "Purchase", "/purchase/grn-sale-return", "GRN_SALE_RETURN", "PURCHASE", 37, 5);

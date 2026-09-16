@@ -84,9 +84,17 @@ function loadMasterLookups() {
         bindCombo('#lineCityArea', data.cities, 'Id', 'CityName');
         bindCombo('#lineWarehouse', data.warehouses, 'Id', 'WareHouseName');
 
-        // Customer Expense & Payment Detail Dropdowns
-        bindCombo('#expItem', data.items, 'Id', 'ItemName', '-- Select Item --');
+        // Payment Detail dropdown - Sp_InvDueTerms_GetAllMethod (Id, TermsDescription). Real, correct source.
         bindCombo('#payTerm', data.paymentTerms, 'Id', 'TermsDescription', '-- Select Term --');
+
+        // Customer Expense "Other Item" dropdown - KNOWN WRONG, BLOCKED (see SALE-ORDER-PROGRESS.md Pass 3).
+        // Desktop's real source is InventoryItemsOther.GetAll() -> Sp_InventoryItemsOther_GetAllMethod
+        // (Id, OtherItemName) - a completely separate master table from the main Item list. The Java
+        // backend (SaleOrderService/SaleCommonService) could not be reached this session (deeply-nested
+        // file staging blocked - see progress doc), so no /sale/sale-order/api/other-items endpoint exists
+        // yet and this still falls back to the main Item list as a stopgap. Do not treat this dropdown as
+        // fixed; swap this line for a real other-items endpoint the moment backend access is restored.
+        bindCombo('#expItem', data.items, 'Id', 'ItemName', '-- Select Item --');
 
         // History Customer Search Combo
         bindCombo('#histCustomerCombo', data.customers, 'Id', 'CompanyName', '...Select Customer...');
@@ -206,6 +214,82 @@ function setupEventListeners() {
             $('#txtDeliveryStartDate').val(d.toISOString().split('T')[0]);
         }
     });
+
+    // -------- Customer Expense entry bar: Qty/Rate -> Amount, Amount(manual) resets Qty/Rate --------
+    // Ports desktop grdInvExp_CellUpdated verbatim: editing Qty or Rate recomputes Amount = round(Qty*Rate);
+    // editing Amount directly makes Amount authoritative and zeroes Qty/Rate.
+    $('#expQty, #expRate').on('input', function () {
+        var qty = parseFloat($('#expQty').val()) || 0;
+        var rate = parseFloat($('#expRate').val()) || 0;
+        $('#expAmount').val((qty * rate).toFixed(2));
+    });
+    $('#expAmount').on('input', function () {
+        $('#expQty').val('0');
+        $('#expRate').val('0');
+    });
+
+    // -------- Payment Detail entry bar: two-way %OfTotal <-> Amount, DueDays <-> DueDate --------
+    // Ports desktop grdPaymentDetail_CellUpdated verbatim (see SALE-ORDER-PROGRESS.md Pass 3).
+    $('#payPercent').on('input', function () {
+        var pct = parseFloat($(this).val()) || 0;
+        if (pct > 100) { pct = 100; $(this).val(100); }
+        var total = getDetailOrderTotal();
+        var amt = Math.round((pct * total / 100) * 10000) / 10000;
+        if (total > 0 && amt > total) { amt = total; }
+        $('#payAmount').val(amt.toFixed(2));
+    });
+    $('#payAmount').on('input', function () {
+        var total = getDetailOrderTotal();
+        var amt = parseFloat($(this).val()) || 0;
+        if (total > 0 && amt > total) { amt = total; $(this).val(amt.toFixed(2)); }
+        if (total > 0) {
+            var pct = Math.round((amt / total * 100) * 10000) / 10000;
+            $('#payPercent').val(pct);
+        }
+    });
+    $('#payDueDays').on('input', function () {
+        var days = parseInt($(this).val()) || 0;
+        var docDateVal = $('#txtDocDate').val();
+        if (docDateVal) {
+            var d = new Date(docDateVal);
+            d.setDate(d.getDate() + days);
+            $('#payDueDate').val(d.toISOString().split('T')[0]);
+        }
+    });
+    $('#payDueDate').on('change', function () {
+        var docDateVal = $('#txtDocDate').val();
+        var dueDateVal = $(this).val();
+        if (!docDateVal || !dueDateVal) return;
+        var docDate = new Date(docDateVal);
+        var dueDate = new Date(dueDateVal);
+        if (dueDate < docDate) {
+            alert("Due Date Can't less Than DocDate");
+            $(this).val(docDateVal);
+            $('#payDueDays').val(0);
+            return;
+        }
+        var days = Math.round((dueDate - docDate) / (1000 * 60 * 60 * 24));
+        $('#payDueDays').val(days);
+    });
+}
+
+// Detail tab order total (desktop: GridEX_Helper.GetColumnSum(grd, "Amount")) - the base that
+// Payment Detail's %OfTotal / Amount two-way calc and the Save-time reconciliation both use.
+function getDetailOrderTotal() {
+    var total = 0;
+    currentLineItems.forEach(function (item) { total += (item.amount || 0); });
+    return total;
+}
+
+// Desktop PaymentAmountReCalculate(): when exactly one Payment Detail row exists and the Detail
+// tab total changes, that row's Amount is kept in sync from its %OfTotal against the fresh total.
+function paymentAmountReCalculate() {
+    var total = getDetailOrderTotal();
+    if (total > 0 && currentPaymentSchedules.length === 1) {
+        var row = currentPaymentSchedules[0];
+        row.amount = Math.round((row.percentOfTotal * total / 100) * 10000) / 10000;
+        renderPaymentGrid();
+    }
 }
 
 function resetCustomerBalance() {
@@ -250,13 +334,29 @@ function btnAddRow_Click() {
     var amount = parseFloat($('#lineAmount').val()) || 0;
     var bagPrice = parseFloat($('#lineBagPrice').val()) || 0;
     var wtCut = parseFloat($('#lineWtCut').val()) || 0;
-    var cityArea = $('#lineCityArea option:selected').text() || 'Khudian Khas';
-    var warehouse = $('#lineWarehouse option:selected').text() || 'RICE ROOM G-1';
+    var cityId = $('#lineCityArea').val() || '';
+    var cityArea = $('#lineCityArea option:selected').text() || '';
+    var warehouseId = $('#lineWarehouse').val() || '';
+    var warehouse = $('#lineWarehouse option:selected').text() || '';
+    var labSample = $('#lineLabSample').val() || '';
+    var remarks = $('#lineRemarks').val() || '';
+    var commOnSale = $('#lineCommOnSale').is(':checked');
 
     if (!itemId || qty <= 0) {
         alert('Please select an Item and enter Quantity.');
         return;
     }
+
+    var jobLotIdVal = $('#lineJobLot').val() || '';
+    var packTypeIdVal = $('#linePackType').val() || '';
+
+    // Real desktop per-row required fields (SaleOrder.cs Insert(), see SALE-ORDER-PROGRESS.md
+    // Pass 3): Crop Year, Job Lot, Pack Type, Pack Uom, Net Weight are all mandatory per row.
+    if (!cropYear) { alert('Crop Year not found in detail grid.'); return; }
+    if (!jobLotIdVal) { alert('Job Lot not found in detail grid.'); return; }
+    if (!packTypeIdVal) { alert('Pack Type not found in detail grid.'); return; }
+    if (weight <= 0) { alert('New Weight not found in detail grid.'); return; }
+    if (rate > 0 && amount <= 0) { alert('Amount not found in detail grid.'); return; }
 
     var itemObj = {
         itemId: itemId,
@@ -264,7 +364,9 @@ function btnAddRow_Click() {
         itemCode: 'ITM-' + itemId,
         cropYear: cropYear,
         jobLot: jobLot,
+        jobLotId: jobLotIdVal,
         packingType: packType,
+        packingTypeId: packTypeIdVal,
         packSize: packSize,
         quantity: qty,
         weight: weight,
@@ -273,8 +375,13 @@ function btnAddRow_Click() {
         amount: amount,
         bagPrice: bagPrice,
         weightCut: wtCut,
+        cityId: cityId,
         cityArea: cityArea,
-        warehouse: warehouse
+        warehouseId: warehouseId,
+        warehouse: warehouse,
+        labSample: labSample,
+        remarks: remarks,
+        commOnSale: commOnSale
     };
 
     currentLineItems.push(itemObj);
@@ -285,7 +392,7 @@ function btnAddRow_Click() {
 function renderDetailGrid() {
     var tbody = $('#tblDetail tbody').empty();
     if (currentLineItems.length === 0) {
-        tbody.append('<tr><td colspan="15" class="text-center text-muted" style="padding: 12px;">No order line items added yet. Record: 0 of 0</td></tr>');
+        tbody.append('<tr><td colspan="19" class="text-center text-muted" style="padding: 12px;">No order line items added yet. Record: 0 of 0</td></tr>');
         recalcTotals();
         return;
     }
@@ -306,7 +413,11 @@ function renderDetailGrid() {
             <td class="text-end amt-val">${item.amount.toFixed(2)}</td>
             <td class="text-end">${item.bagPrice.toFixed(2)}</td>
             <td class="text-end">${item.weightCut.toFixed(2)}</td>
-            <td>${item.cityArea}</td>
+            <td>${item.cityArea || ''}</td>
+            <td>${item.warehouse || ''}</td>
+            <td>${item.labSample || ''}</td>
+            <td>${item.remarks || ''}</td>
+            <td class="text-center">${item.commOnSale ? '<i class="fa fa-check text-success"></i>' : ''}</td>
         </tr>`;
         tbody.append(tr);
     });
@@ -327,6 +438,9 @@ function clearLineEntry() {
     $('#lineAmount').val('0.00');
     $('#lineBagPrice').val('');
     $('#lineWtCut').val('');
+    $('#lineLabSample').val('');
+    $('#lineRemarks').val('');
+    $('#lineCommOnSale').prop('checked', false);
 }
 
 function recalcTotals() {
@@ -340,6 +454,7 @@ function recalcTotals() {
     $('#txtOrderWeight').val(totalWt.toFixed(2));
     $('#txtCurrentOrder').val(totalAmt.toFixed(2));
     recalcNetRecoverable();
+    paymentAmountReCalculate();
 }
 
 // =========================================================
@@ -350,14 +465,19 @@ function btnAddExpenseRow_Click() {
     var itemName = $('#expItem option:selected').text();
     var qty = parseFloat($('#expQty').val()) || 0;
     var rate = parseFloat($('#expRate').val()) || 0;
+    var amt = parseFloat($('#expAmount').val()) || 0;
     var remarks = $('#expRemarks').val() || '';
 
-    if (!itemId || qty <= 0) {
-        alert('Select Item and enter Quantity for Expense.');
+    if (!itemId || amt <= 0) {
+        alert('Select Item and enter Qty/Rate or Amount for Expense.');
         return;
     }
 
-    var amt = qty * rate;
+    // Desktop auto-fills Remarks when left blank: "OtherItemName : {name}  {qty}  @{rate}"
+    if (!remarks || remarks === '0') {
+        remarks = 'OtherItemName : ' + itemName + '  ' + qty + '  @' + rate;
+    }
+
     currentExpenseItems.push({
         itemId: itemId,
         itemName: itemName,
@@ -368,7 +488,7 @@ function btnAddExpenseRow_Click() {
     });
 
     renderExpenseGrid();
-    $('#expItem').val(''); $('#expQty').val(''); $('#expRate').val(''); $('#expRemarks').val('');
+    $('#expItem').val(''); $('#expQty').val(''); $('#expRate').val(''); $('#expAmount').val('0.00'); $('#expRemarks').val('');
 }
 
 function renderExpenseGrid() {
@@ -422,7 +542,57 @@ function btnAddPaymentRow_Click() {
     });
 
     renderPaymentGrid();
-    $('#payTerm').val(''); $('#payDueDays').val('0'); $('#payPercent').val('0'); $('#payAmount').val('0.00'); $('#payRemarks').val('');
+    $('#payTerm').val(''); $('#payDueDays').val('0'); $('#payDueDate').val(''); $('#payPercent').val('0'); $('#payAmount').val('0.00'); $('#payRemarks').val('');
+}
+
+// Real desktop save-time validation + fallback (Sale Order Insert(), see SALE-ORDER-PROGRESS.md
+// Pass 3). Returns {ok:true} or {ok:false, message} - never silently drops a validation.
+// If the grid was never touched (sum of Amount == 0), synthesizes a single implicit 100% row
+// from the header's own Payment Term/Due Days, exactly like desktop does at save time - the
+// Payment Detail tab is never a hard requirement to visit before saving.
+function buildPaymentTermsForSave() {
+    var detailTotal = getDetailOrderTotal();
+    var sumAmount = 0, sumPercent = 0;
+    currentPaymentSchedules.forEach(function (p) { sumAmount += (p.amount || 0); });
+
+    var rows;
+    if (sumAmount > 0) {
+        for (var i = 0; i < currentPaymentSchedules.length; i++) {
+            var p = currentPaymentSchedules[i];
+            if (!p.paymentTermId) {
+                return { ok: false, message: 'Payment Term Required in row#' + (i + 1) };
+            }
+            // Desktop hardcodes PaymentTermId==2 as the "Credit" term requiring Due Days.
+            if (parseInt(p.paymentTermId) === 2 && (!p.dueDays || p.dueDays <= 0)) {
+                return { ok: false, message: 'Due Days Required In case Of Credit row in row#' + (i + 1) };
+            }
+            sumPercent += (p.percentOfTotal || 0);
+        }
+        rows = currentPaymentSchedules;
+    } else {
+        var termId = parseInt($('#cmbPaymentTerm').val()) || 0;
+        var dueDays = parseInt($('#txtDueDays').val()) || 0;
+        var termText = $('#cmbPaymentTerm option:selected').text() || '';
+        rows = [{
+            paymentTermId: termId,
+            paymentTerm: termText,
+            dueDays: dueDays,
+            dueDate: $('#txtDueDate').val(),
+            percentOfTotal: 100,
+            amount: detailTotal,
+            remarks: ''
+        }];
+        sumAmount = detailTotal;
+        sumPercent = 100;
+    }
+
+    if (Math.abs(sumAmount - detailTotal) > 0.3) {
+        return { ok: false, message: 'Payment Detail Amount:' + sumAmount.toFixed(2) + ' Not Equal to Total Amount:' + detailTotal.toFixed(2) };
+    }
+    if (Math.abs(100 - sumPercent) > 0.01) {
+        return { ok: false, message: 'Payment Detail Total% not near to 100' };
+    }
+    return { ok: true, rows: rows };
 }
 
 function renderPaymentGrid() {
@@ -457,6 +627,17 @@ function switchTab(tabId) {
     $('#' + tabId).show();
     $('.win-nav-tabs li').removeClass('active');
     $(event.target).closest('li').addClass('active');
+}
+
+// Programmatic tab switch (no click event available) - used when Save-time validation needs to
+// focus a tab, matching desktop's tabControl2.SelectedIndex = 2 / ((Control)grdPaymentDetail).Focus().
+var TAB_IDS = ['tabDetail', 'tabCustomerExpense', 'tabPaymentDetail'];
+function switchTabById(tabId) {
+    $('.po-tab-pane').hide();
+    $('#' + tabId).show();
+    $('.win-nav-tabs li').removeClass('active');
+    var idx = TAB_IDS.indexOf(tabId);
+    if (idx >= 0) { $('#poTabControl li').eq(idx).addClass('active'); }
 }
 
 function showFormTab() {
@@ -563,6 +744,21 @@ function btnSave_Click() {
         return;
     }
 
+    // Real desktop Payment Detail validation/fallback (Sp_SaleOrder_Insert flow) - see
+    // SALE-ORDER-PROGRESS.md Pass 3. Must run before submit; a failure focuses that tab.
+    var paymentResult = buildPaymentTermsForSave();
+    if (!paymentResult.ok) {
+        alert(paymentResult.message);
+        switchTabById('tabPaymentDetail');
+        return;
+    }
+
+    // Real desktop save-time filter for Customer Expense rows: only ItemId!=0 && Amount>0 rows
+    // are actually submitted (SaleOrderCustomerExpenseslist in Insert()).
+    var expenseRowsForSave = currentExpenseItems.filter(function (e) {
+        return e.itemId && parseFloat(e.amount) > 0;
+    });
+
     var payload = {
         voucherCode: parseInt($('#txtDocNo').val()) || 0,
         orderDate: $('#txtDocDate').val(),
@@ -594,8 +790,8 @@ function btnSave_Click() {
         otherCommRemarks: $('#txtOtherCommRemarks').val(),
         remarks: $('#txtRemarks').val(),
         lineItems: currentLineItems,
-        expenseItems: currentExpenseItems,
-        paymentSchedules: currentPaymentSchedules
+        expenseItems: expenseRowsForSave,
+        paymentSchedules: paymentResult.rows
     };
 
     $.ajax({
@@ -688,7 +884,9 @@ function loadOrderIntoForm(id) {
                     itemCode: l.ItemCodeNew || ('ITM-' + l.OrderItemId),
                     cropYear: l.Crop || '',
                     jobLot: l.JobLotDescription || '',
+                    jobLotId: l.JobLotId || '',
                     packingType: l.PackingType || '',
+                    packingTypeId: l.PackingTypeID || '',
                     packSize: '',
                     quantity: parseFloat(l.OrderItemQty) || 0,
                     weight: parseFloat(l.NetWeight) || 0,
@@ -697,8 +895,18 @@ function loadOrderIntoForm(id) {
                     amount: parseFloat(l.Amount) || 0,
                     bagPrice: parseFloat(l.BagPrice) || 0,
                     weightCut: parseFloat(l.BagWeight) || 0,
+                    cityId: l.CityId || '',
                     cityArea: l.CityArea || '',
-                    warehouse: l.WarehouseName || ''
+                    warehouseId: l.WarehouseId || '',
+                    warehouse: l.WarehouseName || '',
+                    labSample: l.LabSampleNo || '',
+                    remarks: l.OrderRemarks || '',
+                    commOnSale: l.CommOnSale === true || l.CommOnSale === 1,
+                    // Row identity/soft-delete plumbing needed by the real save proc
+                    // (Sp_SaleOrderDetail_Insert branches on ActionTypeId) - not yet consumed by
+                    // the backend (still blocked), kept here so it's ready when unblocked.
+                    id: l.Id || 0,
+                    actionTypeId: 2
                 };
             });
             renderDetailGrid();
@@ -707,9 +915,9 @@ function loadOrderIntoForm(id) {
             renderDetailGrid();
         }
 
-        // Customer Expense / Payment Detail tabs are still placeholders in the HTML (separate
-        // pending tasks) - real rows are already being fetched here so nothing is lost, they are
-        // just not rendered into a grid yet.
+        // Customer Expense / Payment Detail tabs - real rows fetched via the same load-by-id
+        // activities the desktop DAL uses (SaleOrderCustomerExpensesByHeaderId /
+        // SaleOrderPaymentTermDetailByHeaderId), now rendered into their real grids.
         currentExpenseItems = (data.customerExpenses || []).map(function (e) {
             return {
                 itemId: e.InvRevExpItemId,
@@ -720,6 +928,7 @@ function loadOrderIntoForm(id) {
                 remarks: e.Remarks || ''
             };
         });
+        renderExpenseGrid();
         currentPaymentSchedules = (data.paymentSchedules || []).map(function (p) {
             return {
                 paymentTermId: p.PaymentTermId,
@@ -731,5 +940,6 @@ function loadOrderIntoForm(id) {
                 remarks: p.PaymentRemarks || ''
             };
         });
+        renderPaymentGrid();
     });
 }
