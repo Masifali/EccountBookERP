@@ -9,6 +9,9 @@ let chargeToProductItems = [];
 let paymentTermsDetailItems = [];
 
 let allSuppliers = [];
+let allBrokers = [];
+let allCommAgents = [];
+let allBookingPersons = [];
 let allItems = [];
 let allCities = [];
 
@@ -79,14 +82,10 @@ function fetchNextDocNo() {
         url: '/api/purchase-order/next-doc-no?docType=1052',
         type: 'GET',
         success: function(res) {
-            const docNo = res ? res.docNo : null;
-            const displayCode = res ? (res.displayCode || res.nextCode || ("PO-" + docNo)) : '';
-            const branchNo = res ? (res.branchNo || docNo) : '';
-            if (displayCode) {
-                $('#txtDocNo').val(displayCode);
-                if (docNo) $('#txtDocNo').data('docNo', docNo);
-                if (branchNo) $('#txtBranchNo').val(branchNo);
-                $('#lblDocNoDisplay').text(displayCode);
+            const code = res ? (res.nextCode || res.docNo) : null;
+            if (code) {
+                $('#txtDocNo').val(code);
+                $('#lblDocNoDisplay').text("PO-2026-" + String(code).padStart(4, '0'));
             }
         }
     });
@@ -102,49 +101,17 @@ function loadDropdowns() {
         }
     });
 
-    // Helper to refresh Select2 and normal dropdowns when options or values change
-    window.refreshComboWidget = function(selector) {
-        const $el = $(selector);
-        if ($el.length) {
-            $el.trigger('change');
-            if ($el.hasClass('select2-hidden-accessible') || $el.data('select2')) {
-                $el.trigger('change.select2');
-            }
-        }
-    };
-
     // Payment Terms
     $.get('/api/purchase-order/payment-terms', function(data) {
         const sel = $('#cmbPaymentTerm');
         sel.find('option:gt(0)').remove();
-        if (data && data.length > 0) {
-            data.forEach(t => {
-                const id = t.id != null ? t.id : (t.Id != null ? t.Id : 0);
-                const desc = t.description || t.TermsDescription || t.TermsName || t.Name;
-                const dueDays = t.dueDays != null ? t.dueDays : (t.DueDays != null ? t.DueDays : 0);
-                if (desc) {
-                    sel.append(`<option value="${id}" data-days="${dueDays}">${escapeHtml(desc)}</option>`);
-                }
-            });
+        if (data) {
+            data.forEach(t => sel.append(`<option value="${t.id}" data-days="${t.dueDays}">${escapeHtml(t.description)}</option>`));
         }
-        refreshComboWidget(sel);
     });
 
     // Delivery Terms
-    $.get('/api/purchase-order/delivery-terms', function(data) {
-        const sel = $('#cmbDeliveryTerm');
-        sel.find('option:gt(0)').remove();
-        if (data && data.length > 0) {
-            data.forEach(d => {
-                const id = d.id != null ? d.id : d.Id;
-                const desc = d.description || d.DeliveryTermDescription || d.DeliveryTerm || d.Description || d.DeliveryTermName || d.TermName;
-                if (desc) {
-                    sel.append(`<option value="${id}">${escapeHtml(desc)}</option>`);
-                }
-            });
-        }
-        refreshComboWidget(sel);
-    });
+    $.get('/api/purchase-order/delivery-terms', function(data) {});
 
     // Job Lots
     $.get('/api/purchase-order/job-lots', function(data) {
@@ -187,47 +154,53 @@ function bindItemUom(itemId, isNewRow) {
     packSel.empty();
     rateSel.empty();
 
-    let rows = uomScheduleList ? uomScheduleList.filter(u => parseInt(u.itemId || u.ItemId || 0) === parseInt(itemId)) : [];
+    let rows = (uomScheduleList || []).filter(u => {
+        const uItem = parseInt(u.itemId || u.ItemId || 0);
+        return uItem === parseInt(itemId) || uItem === 0;
+    });
+
     if (!rows || rows.length === 0) {
-        rows = uomScheduleList ? uomScheduleList.filter(u => parseInt(u.itemId || u.ItemId || 0) === 0) : [];
-        if (!rows || rows.length === 0) {
-            rows = uomScheduleList || [];
-        }
+        rows = uomScheduleList || [];
     }
 
     if (!rows || rows.length === 0) {
         rows = [
-            { id: 1, uomCode: 'Kg', equivalent: 1.0, baseRateUom: 0, basePackUom: 0 },
-            { id: 2, uomCode: '40Kg', equivalent: 40.0, baseRateUom: 1, basePackUom: 0 },
-            { id: 3, uomCode: 'Bag', equivalent: 50.0, baseRateUom: 0, basePackUom: 1 },
-            { id: 4, uomCode: 'Ton', equivalent: 1000.0, baseRateUom: 0, basePackUom: 0 }
+            { id: 1, itemId: 0, uomCode: "40Kg", equivalent: 40.0, baseRateUom: 1, basePackUom: 0 },
+            { id: 2, itemId: 0, uomCode: "Kg", equivalent: 1.0, baseRateUom: 0, basePackUom: 0 },
+            { id: 3, itemId: 0, uomCode: "Bag", equivalent: 50.0, baseRateUom: 0, basePackUom: 1 },
+            { id: 4, itemId: 0, uomCode: "Ton", equivalent: 1000.0, baseRateUom: 0, basePackUom: 0 }
         ];
     }
 
     rows.forEach(u => {
-        const id = u.id != null ? u.id : u.Id;
-        const uomCode = u.uomCode || u.UOMCode || u.uomName || u.UomName || u.description || 'Kg';
+        const id = u.id || u.Id || 1;
         const eq = parseFloat(u.equivalent || u.Equivalent || 1.0);
-        packSel.append(`<option value="${id}" data-eq="${eq}">${escapeHtml(uomCode)}</option>`);
-        rateSel.append(`<option value="${id}" data-eq="${eq}">${escapeHtml(uomCode)}</option>`);
+        const code = u.uomCode || u.UOMCode || u.UomCode || 'Kg';
+        packSel.append(`<option value="${id}" data-eq="${eq}">${escapeHtml(code)}</option>`);
+        rateSel.append(`<option value="${id}" data-eq="${eq}">${escapeHtml(code)}</option>`);
     });
 
     if (isNewRow) {
-        let baseRateRow = rows.find(u => u.baseRateUom === true || u.baseRateUom === 1 || u.BaseRateUom === 1);
+        let baseRateRow = rows.find(u => u.baseRateUom === true || u.baseRateUom === 1 || String(u.uomCode).toLowerCase().includes('40kg'));
         if (!baseRateRow) {
-            baseRateRow = rows.find(u => parseFloat(u.equivalent || u.Equivalent) === 40.0);
+            baseRateRow = rows.find(u => parseFloat(u.equivalent || 1.0) === 40.0) || rows[0];
         }
         if (baseRateRow) {
-            rateSel.val(baseRateRow.id != null ? baseRateRow.id : baseRateRow.Id);
+            rateSel.val(baseRateRow.id || baseRateRow.Id);
         }
-        let basePackRow = rows.find(u => u.basePackUom === true || u.basePackUom === 1 || u.BasePackUom === 1);
+        let basePackRow = rows.find(u => u.basePackUom === true || u.basePackUom === 1 || String(u.uomCode).toLowerCase().includes('bag'));
+        if (!basePackRow) {
+            basePackRow = rows[0];
+        }
         if (basePackRow) {
-            packSel.val(basePackRow.id != null ? basePackRow.id : basePackRow.Id);
+            packSel.val(basePackRow.id || basePackRow.Id);
         }
     }
 
-    refreshComboWidget(packSel);
-    refreshComboWidget(rateSel);
+    if ($.fn.select2 && packSel.data('select2')) {
+        packSel.trigger('change.select2');
+        rateSel.trigger('change.select2');
+    }
 }
 
 /* ============================================================
@@ -273,35 +246,17 @@ function loadDefaultEmptyBagRows(callback) {
 function preloadSearchData() {
     $.get('/api/purchase-order/suppliers?mode=name', function(data) {
         allSuppliers = data || [];
-        // Populate Commission Agent & Broker Ac dropdowns
-        const commSel = $('#cmbCommissionAgent');
-        const brokerSel = $('#cmbBrokerAc');
-        commSel.find('option:gt(0)').remove();
-        brokerSel.find('option:gt(0)').remove();
-
-        allSuppliers.forEach(s => {
-            commSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`);
-            brokerSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`);
-        });
-        refreshComboWidget(commSel);
-        refreshComboWidget(brokerSel);
     });
 
-    // Load real Booking Persons strictly from ReferenceParties table/SP
-    $.get('/api/purchase-order/booking-persons', function(bpData) {
-        const bookingSel = $('#cmbBookingPerson');
-        bookingSel.find('option:gt(0)').remove();
-        if (bpData && bpData.length > 0) {
-            bpData.forEach(b => {
-                const id = b.id != null ? b.id : b.Id;
-                const name = b.partyName || b.ReferencePartyName || b.description || b.Description;
-                if (name) {
-                    bookingSel.append(`<option value="${id}">${escapeHtml(name)}</option>`);
-                }
-            });
-        }
-        refreshComboWidget(bookingSel);
+    $.get('/api/purchase-order/brokers', function(data) {
+        allBrokers = data || [];
     });
+
+    $.get('/api/purchase-order/commission-agents', function(data) {
+        allCommAgents = data || [];
+    });
+
+    loadBookingPersons();
 
     $.get('/api/purchase-order/items?mode=name', function(data) {
         allItems = data || [];
@@ -389,9 +344,180 @@ function onSupplierSelectedEventChain(supp) {
         onPaymentTermChange();
     }
     // 2. Set default Commission Agent if not set
-    if ($('#cmbCommissionAgent').val() == '0' && supp.id > 0) {
-        $('#cmbCommissionAgent').val(supp.id);
+    if ($('#hidCommissionAgentId').val() == '0' && supp.id > 0) {
+        $('#hidCommissionAgentId').val(supp.id);
+        $('#txtCommAgentDisplay').val(supp.companyName);
     }
+}
+
+/* ============================================================
+ * BROKER AC, COMM AGENT & BOOKING PERSON SEARCH & SELECTION
+ * ============================================================ */
+function openBrokerSearchModal() {
+    $.get('/api/purchase-order/brokers', function(data) {
+        allBrokers = data || [];
+        renderBrokerModalGrid(allBrokers);
+        $('#modalBrokerSearch').modal('show');
+        setTimeout(() => $('#txtModalBrokerQuery').focus(), 300);
+    });
+}
+
+function filterBrokerSearchGrid() {
+    const q = $('#txtModalBrokerQuery').val().toLowerCase();
+    const filtered = allBrokers.filter(b =>
+        (b.companyName && b.companyName.toLowerCase().includes(q)) ||
+        (b.glAccountId && String(b.glAccountId).includes(q)) ||
+        (b.partyCode && b.partyCode.toLowerCase().includes(q)) ||
+        (b.cityName && b.cityName.toLowerCase().includes(q)) ||
+        (b.mobileNo && b.mobileNo.toLowerCase().includes(q))
+    );
+    renderBrokerModalGrid(filtered);
+}
+
+function renderBrokerModalGrid(list) {
+    const tbody = $('#tblBrokerModalTbody');
+    tbody.empty();
+    if (!list || list.length === 0) {
+        tbody.html('<tr><td colspan="7" style="text-align:center; padding: 15px;">No matching broker accounts found.</td></tr>');
+        return;
+    }
+    list.forEach(b => {
+        tbody.append(`
+            <tr onclick="selectBroker(${b.id})">
+                <td><strong style="color: #004d40;">${escapeHtml(b.companyName)}</strong></td>
+                <td>${b.glAccountId || 0}</td>
+                <td>${escapeHtml(b.partyCode || '')}</td>
+                <td>${b.cityId || 0}</td>
+                <td>${escapeHtml(b.cityName || '')}</td>
+                <td>${escapeHtml(b.mobileNo || '')}</td>
+                <td style="text-align: center;"><button type="button" class="win-btn-action" style="padding: 1px 6px;">Select</button></td>
+            </tr>
+        `);
+    });
+}
+
+function selectBroker(brokerId) {
+    const broker = allBrokers.find(b => b.id === brokerId);
+    if (!broker) return;
+    $('#hidBrokerAccountId').val(broker.id);
+    $('#txtBrokerAcDisplay').val(broker.companyName);
+    $('#modalBrokerSearch').modal('hide');
+    calcBrokery();
+}
+
+function openCommAgentSearchModal() {
+    $.get('/api/purchase-order/commission-agents', function(data) {
+        allCommAgents = data || [];
+        renderCommAgentModalGrid(allCommAgents);
+        $('#modalCommAgentSearch').modal('show');
+        setTimeout(() => $('#txtModalCommAgentQuery').focus(), 300);
+    });
+}
+
+function filterCommAgentSearchGrid() {
+    const q = $('#txtModalCommAgentQuery').val().toLowerCase();
+    const filtered = allCommAgents.filter(a =>
+        (a.companyName && a.companyName.toLowerCase().includes(q)) ||
+        (a.glAccountId && String(a.glAccountId).includes(q)) ||
+        (a.partyCode && a.partyCode.toLowerCase().includes(q)) ||
+        (a.cityName && a.cityName.toLowerCase().includes(q)) ||
+        (a.mobileNo && a.mobileNo.toLowerCase().includes(q))
+    );
+    renderCommAgentModalGrid(filtered);
+}
+
+function renderCommAgentModalGrid(list) {
+    const tbody = $('#tblCommAgentModalTbody');
+    tbody.empty();
+    if (!list || list.length === 0) {
+        tbody.html('<tr><td colspan="6" style="text-align:center; padding: 15px;">No matching commission agents found.</td></tr>');
+        return;
+    }
+    list.forEach(a => {
+        tbody.append(`
+            <tr onclick="selectCommAgent(${a.id})">
+                <td><strong style="color: #004d40;">${escapeHtml(a.companyName)}</strong></td>
+                <td>${a.glAccountId || 0}</td>
+                <td>${escapeHtml(a.partyCode || '')}</td>
+                <td>${escapeHtml(a.cityName || '')}</td>
+                <td>${escapeHtml(a.mobileNo || '')}</td>
+                <td style="text-align: center;"><button type="button" class="win-btn-action" style="padding: 1px 6px;">Select</button></td>
+            </tr>
+        `);
+    });
+}
+
+function selectCommAgent(agentId) {
+    const agent = allCommAgents.find(a => a.id === agentId);
+    if (!agent) return;
+    $('#hidCommissionAgentId').val(agent.id);
+    $('#txtCommAgentDisplay').val(agent.companyName);
+    $('#modalCommAgentSearch').modal('hide');
+    calcCommission();
+}
+
+function loadBookingPersons(callback) {
+    $.get('/api/purchase-order/booking-persons', function(data) {
+        allBookingPersons = data || [];
+        if (typeof callback === 'function') callback();
+    });
+}
+
+function openBookingPersonSearchModal() {
+    loadBookingPersons(function() {
+        renderBookingPersonModalGrid(allBookingPersons);
+        $('#modalBookingPersonSearch').modal('show');
+        setTimeout(() => $('#txtModalBookingPersonQuery').focus(), 300);
+    });
+}
+
+function filterBookingPersonSearchGrid() {
+    const q = $('#txtModalBookingPersonQuery').val().toLowerCase();
+    const filtered = allBookingPersons.filter(p => {
+        const name = p.partyName || p.description || p.name || '';
+        return name.toLowerCase().includes(q);
+    });
+    renderBookingPersonModalGrid(filtered);
+}
+
+function renderBookingPersonModalGrid(list) {
+    const tbody = $('#tblBookingPersonModalTbody');
+    tbody.empty();
+    tbody.append(`
+        <tr onclick="selectBookingPerson(0)">
+            <td><em>-- Select --</em></td>
+            <td><em>Booking Person</em></td>
+            <td style="text-align: center;"><button type="button" class="win-btn-action" style="padding: 1px 6px;">Clear</button></td>
+        </tr>
+    `);
+    if (!list || list.length === 0) {
+        return;
+    }
+    list.forEach(p => {
+        const pName = p.partyName || p.description || p.name || '';
+        const pType = p.referencePartyType || p.partyTypeName || 'Booking Person';
+        tbody.append(`
+            <tr onclick="selectBookingPerson(${p.id})">
+                <td><strong style="color: #004d40;">${escapeHtml(pName)}</strong></td>
+                <td>${escapeHtml(pType)}</td>
+                <td style="text-align: center;"><button type="button" class="win-btn-action" style="padding: 1px 6px;">Select</button></td>
+            </tr>
+        `);
+    });
+}
+
+function selectBookingPerson(personId) {
+    if (!personId || personId <= 0) {
+        $('#hidBookingPersonId').val('0');
+        $('#txtBookingPersonDisplay').val('-- Select --');
+        $('#modalBookingPersonSearch').modal('hide');
+        return;
+    }
+    const person = allBookingPersons.find(p => p.id === personId);
+    if (!person) return;
+    $('#hidBookingPersonId').val(person.id);
+    $('#txtBookingPersonDisplay').val(person.partyName || person.description || person.name);
+    $('#modalBookingPersonSearch').modal('hide');
 }
 
 /* ============================================================
@@ -778,14 +904,9 @@ function renderDetailGrid() {
 }
 
 function updateDetailTotals(qty, wt, amt) {
-    $('#lblTotalItemCount').text(lineItems ? lineItems.length : 0);
     $('#lblTotalQty').text(qty.toFixed(2));
-    $('#lblTotalWeight').text(wt.toFixed(2));
+    $('#lblTotalWeight').text(wt.toFixed(2) + " KG");
     $('#lblGrandTotal').text(amt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-
-    $('#txtHeaderTotalQty').val(qty.toFixed(2));
-    $('#txtHeaderTotalWeight').val(wt.toFixed(2));
-    $('#txtHeaderTotalAmount').val(amt.toFixed(2));
 }
 
 /* ============================================================
@@ -939,7 +1060,12 @@ function btnAddEmptyBag_Click() {
     const type = parseInt($('#cmbEbType').val() || '0');
     const typeName = $('#cmbEbType option:selected').text();
     const itemId = parseInt($('#cmbEbItem').val() || '0');
-    const itemName = itemId > 0 ? $('#cmbEbItem option:selected').text() : '';
+    // Ditto of desktop grdEmptyBags "ItemId" ValueList column (PurchsaeOrder.cs GrdEmptyBagsRefresh():
+    // HasValueList/LimitToList bound to dtEmptyBagsItem "ItemId"->"ItemName"). No real Item ever has
+    // Id=0, so when nothing is selected Janus GridEX can't resolve the ValueList entry and falls back
+    // to showing the raw underlying cell value as text - i.e. the real desktop screen literally shows
+    // "0" here, not a blank cell. Match that instead of showing blank.
+    const itemName = itemId > 0 ? $('#cmbEbItem option:selected').text() : String(itemId);
     const packingTypeId = parseInt($('#cmbEbPackingType').val() || '0');
     const packingTypeName = $('#cmbEbPackingType option:selected').text();
     const rate = parseFloat($('#txtEbRate').val() || '0');
@@ -989,45 +1115,156 @@ function removeEmptyBagRow(idx) {
 
 function resolveEmptyBagDisplayNames(b) {
     if (!b.typeName && b.type) {
-        const t = emptyBagTypes.find(x => parseInt(x.Id || x.id) === parseInt(b.type));
-        if (t) b.typeName = t.type || t.typeName;
+        const t = emptyBagTypes.find(x => parseInt(x.Id) === parseInt(b.type));
+        if (t) b.typeName = t.type;
     }
-    if ((!b.itemName || b.itemName === '0') && b.itemId) {
-        const i = emptyBagItemOptions.find(x => parseInt(x.ItemId || x.itemId || x.id) === parseInt(b.itemId));
-        if (i) b.itemName = i.ItemName || i.itemName;
+    if (!b.itemName && b.itemId) {
+        const i = emptyBagItemOptions.find(x => parseInt(x.ItemId) === parseInt(b.itemId));
+        if (i) b.itemName = i.ItemName;
+    }
+    // Ditto of desktop grdEmptyBags "ItemId" ValueList column (PurchsaeOrder.cs GrdEmptyBagsRefresh():
+    // HasValueList/LimitToList bound to dtEmptyBagsItem "ItemId"->"ItemName"). Real default rows (and
+    // any legacy/orphaned row) carry ItemId=0 or an Id with no matching Item master row, and no real
+    // Item ever has Id=0 - so Janus GridEX cannot resolve a ValueList entry and displays the raw
+    // underlying cell value as text instead of blank. The real desktop screen literally shows "0" (or
+    // the stored, unmatched Id) here, never an empty cell - match that exactly rather than showing blank.
+    if (!b.itemName) {
+        b.itemName = (b.itemId !== undefined && b.itemId !== null) ? String(b.itemId) : '0';
     }
     if (!b.packingTypeName && b.packingTypeId) {
-        const p = emptyBagPackingTypes.find(x => parseInt(x.Id || x.id) === parseInt(b.packingTypeId));
-        if (p) b.packingTypeName = p.PackTypeDesc || p.packingTypeName;
+        const p = emptyBagPackingTypes.find(x => parseInt(x.Id) === parseInt(b.packingTypeId));
+        if (p) b.packingTypeName = p.PackTypeDesc;
     }
     return b;
+}
+
+var selectedEbIdx = 0;
+
+function selectEbRow(idx) {
+    if (!emptyBagItems || idx < 0 || idx >= emptyBagItems.length) return;
+    selectedEbIdx = idx;
+    $('#tblEbTbody tr').removeClass('selected-row').css('background-color', '');
+    $(`#tblEbTbody tr[data-idx="${idx}"]`).addClass('selected-row').css('background-color', '#cbe2f7');
+    updateEbNavigator(selectedEbIdx + 1, emptyBagItems.length);
+}
+
+function updateEbNavigator(current, total) {
+    $('#ebNavCurrent').val(total > 0 ? current : 0);
+    $('#ebNavCurrent').attr('max', total);
+    $('#ebNavTotal').text(total);
+
+    $('#btnEbNavFirst, #btnEbNavPrev').prop('disabled', current <= 1 || total === 0);
+    $('#btnEbNavNext, #btnEbNavLast').prop('disabled', current >= total || total === 0);
+}
+
+function ebNavFirst() {
+    if (emptyBagItems && emptyBagItems.length > 0) selectEbRow(0);
+}
+
+function ebNavPrev() {
+    if (selectedEbIdx > 0) selectEbRow(selectedEbIdx - 1);
+}
+
+function ebNavNext() {
+    if (emptyBagItems && selectedEbIdx < emptyBagItems.length - 1) selectEbRow(selectedEbIdx + 1);
+}
+
+function ebNavLast() {
+    if (emptyBagItems && emptyBagItems.length > 0) selectEbRow(emptyBagItems.length - 1);
+}
+
+function ebNavGoTo(val) {
+    var idx = parseInt(val) - 1;
+    if (!isNaN(idx) && idx >= 0 && emptyBagItems && idx < emptyBagItems.length) {
+        selectEbRow(idx);
+    }
+}
+
+function updateEbCell(idx, field, val) {
+    if (!emptyBagItems || !emptyBagItems[idx]) return;
+    var row = emptyBagItems[idx];
+
+    // ValueList (dropdown) columns hold an integer Id, not a decimal - parse them as int and
+    // keep the paired display name in step so Save/History/reopen keep working unchanged.
+    if (field === 'type') {
+        row.type = parseInt(val, 10) || 0;
+        var t = emptyBagTypes.find(function (x) { return parseInt(x.Id, 10) === row.type; });
+        row.typeName = t ? t.type : String(row.type);
+        return;
+    }
+    if (field === 'itemId') {
+        row.itemId = parseInt(val, 10) || 0;
+        var i = emptyBagItemOptions.find(function (x) { return parseInt(x.ItemId, 10) === row.itemId; });
+        row.itemName = i ? i.ItemName : String(row.itemId);
+        return;
+    }
+
+    var num = parseFloat(String(val).replace(/,/g, ''));
+    row[field] = isNaN(num) ? 0 : num;
+}
+
+/**
+ * Builds the <option> list for an in-grid ValueList column, ditto of Janus GridEX
+ * Column.ValueList.PopulateValueList(view, valueMember, displayMember) with LimitToList = true
+ * (PurchsaeOrder.cs GrdEmptyBagsRefresh()). When the stored cell value matches no ValueList
+ * entry - e.g. the seeded default rows that carry ItemId = 0, and no real Item ever has Id 0 -
+ * GridEX falls back to painting the RAW underlying value as text rather than blanking the cell,
+ * so the raw value is prepended as the selected option to reproduce that exactly.
+ */
+function ebValueListOptions(list, valueKey, textKey, currentVal) {
+    var cur = parseInt(currentVal, 10);
+    if (isNaN(cur)) cur = 0;
+    var html = '';
+    var matched = false;
+    (list || []).forEach(function (o) {
+        var v = parseInt(o[valueKey], 10);
+        var isSel = (v === cur);
+        if (isSel) matched = true;
+        var text = (o[textKey] === undefined || o[textKey] === null) ? '' : String(o[textKey]);
+        html += '<option value="' + v + '"' + (isSel ? ' selected' : '') + '>' + escapeHtml(text) + '</option>';
+    });
+    if (!matched) {
+        html = '<option value="' + cur + '" selected>' + escapeHtml(String(cur)) + '</option>' + html;
+    }
+    return html;
 }
 
 function renderEbGrid() {
     const tbody = $('#tblEbTbody');
     tbody.empty();
     if (!emptyBagItems || emptyBagItems.length === 0) {
-        tbody.html('<tr><td colspan="7" style="text-align: center; padding: 15px; color: #777;">No empty bag packing material specified.</td></tr>');
+        tbody.html('<tr><td colspan="5" style="text-align: center; padding: 15px; color: #777;">No empty bag packing material specified.</td></tr>');
+        updateEbNavigator(0, 0);
         return;
     }
     emptyBagItems.forEach((b, idx) => {
         resolveEmptyBagDisplayNames(b);
-        const displayItemName = (b.itemName && b.itemName.trim() !== '') ? b.itemName : (b.itemId != null ? b.itemId : '0');
+        const rateDisplay = (b.rate === undefined || b.rate === null) ? 0 : b.rate;
+        const weightCutDisplay = (b.weightCut === undefined || b.weightCut === null) ? 0 : b.weightCut;
+        const isSelected = selectedEbIdx === idx;
+        const bgStyle = isSelected ? 'background-color: #cbe2f7;' : '';
+
+        // Type and Item Name are in-cell dropdowns, ditto PurchsaeOrder.cs GrdEmptyBagsRefresh():
+        // both columns are EditType 4 (Combo) with HasValueList/LimitToList = true.
+        // PackingType is deliberately NOT a dropdown here: gridEmptyBagsSettings() runs
+        // GrdEmptyBagsRefresh() and then immediately overrides
+        // grdEmptyBags.RootTable.Columns["PackingType"].EditType = (EditType)0 (NoEdit), so on the
+        // real screen it shows its ValueList text (PackTypeDesc) but cannot be edited.
         tbody.append(`
-            <tr>
-                <td>${idx + 1}</td>
-                <td>${escapeHtml(b.typeName || '')}</td>
-                <td>${escapeHtml(displayItemName)}</td>
-                <td style="text-align: right;">${(b.rate || 0).toFixed(2)}</td>
+            <tr data-idx="${idx}" onclick="selectEbRow(${idx})" style="${bgStyle} cursor: pointer;">
+                <td><select class="win-grid-cell-combo" onchange="updateEbCell(${idx}, 'type', this.value)">${ebValueListOptions(emptyBagTypes, 'Id', 'type', b.type)}</select></td>
+                <td><select class="win-grid-cell-combo" onchange="updateEbCell(${idx}, 'itemId', this.value)">${ebValueListOptions(emptyBagItemOptions, 'ItemId', 'ItemName', b.itemId)}</select></td>
+                <td style="text-align: right;" contenteditable="true" onblur="updateEbCell(${idx}, 'rate', this.innerText)">${rateDisplay}</td>
                 <td>${escapeHtml(b.packingTypeName || '')}</td>
-                <td style="text-align: right;">${(b.weightCut || 0).toFixed(3)}</td>
-                <td>
-                    <button type="button" class="btn btn-default btn-xs" onclick="editEmptyBagRow(${idx})"><i class="fa fa-pencil"></i></button>
-                    <button type="button" class="btn btn-danger btn-xs" onclick="removeEmptyBagRow(${idx})">&times;</button>
-                </td>
+                <td style="text-align: right;" contenteditable="true" onblur="updateEbCell(${idx}, 'weightCut', this.innerText)">${weightCutDisplay}</td>
             </tr>
         `);
     });
+
+    if (selectedEbIdx < 0 || selectedEbIdx >= emptyBagItems.length) {
+        selectedEbIdx = 0;
+    }
+    updateEbNavigator(selectedEbIdx + 1, emptyBagItems.length);
 }
 
 /* ============================================================
@@ -1347,41 +1584,26 @@ function switchTab(tabId) {
 /* ============================================================
  * 11. TOOLBAR OPERATIONS (SAVE / UPDATE / NEW / LOAD ORDER)
  * ============================================================ */
-function getDocNoFromInput() {
-    let stored = $('#txtDocNo').data('docNo');
-    if (stored && !isNaN(stored) && parseInt(stored, 10) > 0) return parseInt(stored, 10);
-    let val = ($('#txtDocNo').val() || '').trim();
-    if (!val) return 0;
-    let parts = val.split('-');
-    let lastPart = parts[parts.length - 1];
-    let num = parseInt(lastPart, 10);
-    if (!isNaN(num) && num > 0) return num;
-    num = parseInt(val.replace(/\D/g, ''), 10);
-    return (!isNaN(num) && num > 0) ? num : 0;
-}
-
 function buildPayload() {
     return {
         purchaseOrderMasterId: currentPoMasterId,
         documentTypeId: 1052,
-        docNo: getDocNoFromInput(),
-        branchNo: $('#txtBranchNo').val() ? parseInt($('#txtBranchNo').val(), 10) : getDocNoFromInput(),
+        docNo: parseInt($('#txtDocNo').val() || '0'),
         docDate: $('#txtDocDate').val(),
         supplierId: parseInt($('#hidSupplierId').val() || '0'),
+        bookingPersonId: parseInt($('#hidBookingPersonId').val() || '0'),
         deliveryStartDate: $('#txtDeliveryStartDate').val(),
         deliveryDays: parseInt($('#txtDeliveryDays').val() || '7'),
         expiryDate: $('#txtExpiryDate').val(),
         paymentTermId: parseInt($('#cmbPaymentTerm').val() || '0'),
         dueDays: parseInt($('#txtDueDays').val() || '0'),
         paymentDueDate: $('#txtPaymentDueDate').val(),
-        deliveryTermId: parseInt($('#cmbDeliveryTerm').val() || '0'),
-        bookingPersonId: parseInt($('#cmbBookingPerson').val() || '0'),
-        commissionAgentId: parseInt($('#cmbCommissionAgent').val() || '0'),
+        commissionAgentId: parseInt($('#hidCommissionAgentId').val() || '0'),
         commType: $('#cmbCommType').val(),
         commRate: parseFloat($('#txtCommRate').val() || '0'),
         commUomId: parseInt($('#cmbCommUom').val() || '1'),
         commAmount: parseFloat($('#txtCommAmount').val() || '0'),
-        brokerAccountId: parseInt($('#cmbBrokerAc').val() || '0'),
+        brokerAccountId: parseInt($('#hidBrokerAccountId').val() || '0'),
         brokeryType: $('#cmbBrokeryType').val(),
         brokeryRate: parseFloat($('#txtBrokeryRate').val() || '0'),
         brokeryRateUomId: parseInt($('#cmbBrokeryRateUom').val() || '1'),
@@ -1455,6 +1677,7 @@ function btnSave_Click() {
             if (res && (res.success || res.voucherHeadId)) {
                 alert(res.message || "Purchase Order saved successfully.");
                 btnNew_Click();
+                loadPurchaseOrderHistory();
             } else {
                 alert("Error saving Purchase Order: " + (res.message || "Unknown error"));
             }
@@ -1495,8 +1718,13 @@ function btnNew_Click() {
 
     $('#hidSupplierId').val('0');
     $('#txtSupplierDisplay').val('');
+    $('#hidBrokerAccountId').val('0');
+    $('#txtBrokerAcDisplay').val('');
+    $('#hidCommissionAgentId').val('0');
+    $('#txtCommAgentDisplay').val('');
+    $('#hidBookingPersonId').val('0');
+    $('#txtBookingPersonDisplay').val('-- Select --');
     $('#txtRemarksHeader').val('');
-    $('#txtBranchNo').val('');
 
     fetchNextDocNo();
     setWinDefaultDates();
@@ -1549,18 +1777,21 @@ function loadSelectedOrder(poId) {
         if (!po) return;
 
         currentPoMasterId = po.purchaseOrderMasterId;
-        const docNo = po.docNo || 1;
-        const displayCode = po.displayCode || po.voucherCode || ("PO-" + docNo);
-        const branchNo = po.branchNo || docNo;
-        $('#txtDocNo').val(displayCode);
-        $('#txtDocNo').data('docNo', docNo);
-        $('#txtBranchNo').val(branchNo);
-        $('#lblDocNoDisplay').text(displayCode);
+        $('#txtDocNo').val(po.docNo);
+        $('#lblDocNoDisplay').text("PO-2026-" + String(po.docNo).padStart(4, '0'));
         $('#txtDocDate').val(po.docDate);
-        $('#cmbDeliveryTerm').val(po.deliveryTermId || po.deliveryTerm || '0');
-        $('#cmbBookingPerson').val(po.bookingPersonId || po.bookingPerson || '0');
-        $('#hidSupplierId').val(po.supplierId);
-        $('#txtSupplierDisplay').val(po.supplierName);
+        $('#hidSupplierId').val(po.supplierId || 0);
+        $('#txtSupplierDisplay').val(po.supplierName || '');
+        
+        $('#hidBrokerAccountId').val(po.brokerAccountId || 0);
+        $('#txtBrokerAcDisplay').val(po.brokerAccountName || (po.brokerAccountId ? 'Broker Ac #' + po.brokerAccountId : ''));
+        
+        $('#hidCommissionAgentId').val(po.commissionAgentId || 0);
+        $('#txtCommAgentDisplay').val(po.commissionAgentName || (po.commissionAgentId ? 'Agent #' + po.commissionAgentId : ''));
+        
+        $('#hidBookingPersonId').val(po.bookingPersonId || 0);
+        $('#txtBookingPersonDisplay').val(po.bookingPersonName || '-- Select --');
+
         $('#txtRemarksHeader').val(po.remarksHeader);
 
         lineItems = po.lineItems || [];
@@ -1645,106 +1876,11 @@ function loadSelectedOrder(poId) {
 }
 
 function btnPrintReport(reportType) {
-    window.print();
+    alert("Report printing generated for format: " + reportType + " (Doc No: " + $('#txtDocNo').val() + ")");
 }
 
 function openAttachmentsModal() {
     $('#modalAttachments').modal('show');
-}
-
-/* ============================================================
- * DEFINE LOOKUP PARTIES (Booking Person / Reference Parties)
- * ============================================================ */
-function openDefineLookUpPartiesModal() {
-    const agentSel = $('#cmbLookupAgent');
-    agentSel.find('option:gt(0)').remove();
-    if (allSuppliers && allSuppliers.length > 0) {
-        allSuppliers.forEach(s => agentSel.append(`<option value="${s.id}">${escapeHtml(s.companyName)}</option>`));
-    }
-    btnNewLookupParty_Click();
-    loadLookupPartiesGrid();
-    $('#modalDefineLookUpParties').modal('show');
-}
-
-function btnNewLookupParty_Click() {
-    $('#txtLookupPartyName').val('');
-    $('#cmbLookupPartyType').val('5');
-    $('#cmbLookupAgent').val('0');
-    $('#chkLookupIsActive').prop('checked', true);
-}
-
-function loadLookupPartiesGrid() {
-    $.get('/api/purchase-order/lookup-parties', function(data) {
-        const tbody = $('#tblLookupPartiesTbody');
-        tbody.empty();
-        if (!data || data.length === 0) {
-            tbody.html('<tr><td colspan="4" style="text-align: center; padding: 20px;">No lookup parties found.</td></tr>');
-            return;
-        }
-        data.forEach(p => {
-            const partyType = p.partyTypeName || (p.partyTypeId === 5 ? 'Booking Person' : 'Reference Party');
-            const partyName = p.partyName || p.ReferencePartyName || '';
-            const isActive = p.isActive ? '<i class="fa fa-check text-success"></i>' : '<i class="fa fa-times text-danger"></i>';
-            const supplierCust = p.supplierCustomerName || '';
-            tbody.append(`
-                <tr>
-                    <td>${escapeHtml(partyType)}</td>
-                    <td><strong>${escapeHtml(partyName)}</strong></td>
-                    <td style="text-align: center;">${isActive}</td>
-                    <td>${escapeHtml(supplierCust)}</td>
-                </tr>
-            `);
-        });
-    });
-}
-
-function saveLookupParty_Click() {
-    const partyName = ($('#txtLookupPartyName').val() || '').trim();
-    if (!partyName) {
-        alert("PartyName Field is Required");
-        $('#txtLookupPartyName').focus();
-        return;
-    }
-
-    const payload = {
-        partyName: partyName,
-        partyTypeId: parseInt($('#cmbLookupPartyType').val() || '5', 10),
-        supplierCustomerId: parseInt($('#cmbLookupAgent').val() || '0', 10),
-        isActive: $('#chkLookupIsActive').is(':checked')
-    };
-
-    $.ajax({
-        url: '/api/purchase-order/save-lookup-party',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(payload),
-        success: function(res) {
-            if (res && res.success) {
-                alert(res.message || "Record Saved Successfully.");
-                btnNewLookupParty_Click();
-                loadLookupPartiesGrid();
-                $.get('/api/purchase-order/booking-persons', function(data) {
-                    const bookingSel = $('#cmbBookingPerson');
-                    bookingSel.find('option:gt(0)').remove();
-                    if (data && data.length > 0) {
-                        data.forEach(b => {
-                            const id = b.id != null ? b.id : b.Id;
-                            const name = b.partyName || b.ReferencePartyName || b.description || b.Description;
-                            if (name) {
-                                bookingSel.append(`<option value="${id}">${escapeHtml(name)}</option>`);
-                            }
-                        });
-                        if (res.id) bookingSel.val(res.id);
-                    }
-                });
-            } else {
-                alert("Error saving party: " + (res ? res.message : "Unknown error"));
-            }
-        },
-        error: function() {
-            alert("Error saving lookup party.");
-        }
-    });
 }
 
 /* ============================================================
@@ -1764,6 +1900,142 @@ function bindKeyboardShortcuts() {
         } else if (e.altKey && e.keyCode === 65) { // Alt + A
             e.preventDefault();
             btnAddDetailRow_Click();
+        }
+    });
+}
+
+function switchMainView(view) {
+    if (view === 'form') {
+        $('#tabBtnForm').addClass('active').css({ 'background': '#fff', 'color': '#000' });
+        $('#tabBtnHistory').removeClass('active').css({ 'background': '#ece9d8', 'color': '#555' });
+        $('#mainViewForm').show();
+        $('#mainViewHistory').hide();
+    } else if (view === 'history') {
+        $('#tabBtnHistory').addClass('active').css({ 'background': '#fff', 'color': '#000' });
+        $('#tabBtnForm').removeClass('active').css({ 'background': '#ece9d8', 'color': '#555' });
+        $('#mainViewForm').hide();
+        $('#mainViewHistory').show();
+        loadPurchaseOrderHistory();
+    }
+}
+
+function loadPurchaseOrderHistory() {
+    const fromDate = $('#txtHistoryFromDate').val() || '';
+    const toDate = $('#txtHistoryToDate').val() || '';
+
+    $.get(`/api/purchase-order/history?fromDate=${fromDate}&toDate=${toDate}`, function(data) {
+        const tbody = $('#tblHistoryTbody');
+        tbody.empty();
+        if (!data || data.length === 0) {
+            tbody.html('<tr><td colspan="6" style="text-align: center; padding: 20px; color: #777;">No Purchase Order history records found.</td></tr>');
+            return;
+        }
+        data.forEach(po => {
+            const poId = po.id || po.Id || po.PurchaseOrderMasterId || po.purchaseOrderMasterId || 0;
+            const docCode = po.voucherCode || po.displayCode || `PO-${po.docNo || po.DocNo || poId}`;
+            const partyName = po.supplierName || po.SupplierName || 'N/A';
+            const orderDate = po.docDate || po.DocDate || '';
+            const amount = parseFloat(po.totalAmount || po.TotalAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            tbody.append(`
+                <tr onclick="loadSelectedOrderFromHistory(${poId})" style="cursor: pointer;">
+                    <td><strong style="color: #008080;">${docCode}</strong></td>
+                    <td>${orderDate}</td>
+                    <td>${escapeHtml(partyName)}</td>
+                    <td>${escapeHtml(po.remarks || po.Remarks || '')}</td>
+                    <td style="text-align: right;">Rs. ${amount}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="win-btn-action" onclick="event.stopPropagation(); loadSelectedOrderFromHistory(${poId})">Open</button>
+                    </td>
+                </tr>
+            `);
+        });
+    });
+}
+
+function loadSelectedOrderFromHistory(poId) {
+    loadSelectedOrder(poId);
+    switchMainView('form');
+}
+
+/* ============================================================
+ * DEFINE LOOKUP PARTIES MODAL & PERSISTENCE
+ * ============================================================ */
+function openDefineLookUpPartiesModal() {
+    loadLookupPartiesGrid();
+    $('#modalDefineLookUpParties').modal('show');
+    setTimeout(() => $('#txtLookupPartyName').focus(), 300);
+}
+
+function btnNewLookupParty_Click() {
+    $('#txtLookupPartyName').val('');
+    $('#cmbLookupPartyType').val('5');
+    $('#cmbLookupAgent').val('0');
+    $('#chkLookupIsActive').prop('checked', true);
+}
+
+function loadLookupPartiesGrid() {
+    $.get('/api/purchase-order/lookup-parties', function(data) {
+        const tbody = $('#tblLookupPartiesTbody');
+        tbody.empty();
+        if (!data || data.length === 0) {
+            tbody.html('<tr><td colspan="4" style="text-align: center; padding: 15px;">No lookup parties found.</td></tr>');
+            return;
+        }
+        data.forEach(p => {
+            const activeText = p.isActive === 1 || p.isActive === true ? 'Yes' : 'No';
+            tbody.append(`
+                <tr>
+                    <td>${escapeHtml(p.partyTypeName)}</td>
+                    <td><strong style="color: #004d40;">${escapeHtml(p.partyName)}</strong></td>
+                    <td style="text-align: center;">${activeText}</td>
+                    <td>${escapeHtml(p.supplierCustomerName || '')}</td>
+                </tr>
+            `);
+        });
+    });
+}
+
+function saveLookupParty_Click() {
+    const partyName = $('#txtLookupPartyName').val();
+    if (!partyName || !partyName.trim()) {
+        alert("PartyName Field is Required");
+        return;
+    }
+    const payload = {
+        partyName: partyName.trim(),
+        partyTypeId: parseInt($('#cmbLookupPartyType').val() || '5'),
+        supplierCustomerId: parseInt($('#cmbLookupAgent').val() || '0'),
+        isActive: $('#chkLookupIsActive').is(':checked')
+    };
+
+    $.ajax({
+        url: '/api/purchase-order/save-lookup-party',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function(res) {
+            if (res && res.success) {
+                alert(res.message || "Record Saved Successfully.");
+                const newId = res.id;
+                const newName = res.partyName;
+                $('#txtLookupPartyName').val('');
+                $('#modalDefineLookUpParties').modal('hide');
+                loadLookupPartiesGrid();
+                
+                // Auto-refresh Booking Persons and select newly created Booking Person
+                loadBookingPersons(function() {
+                    if (newId && newId > 0) {
+                        $('#hidBookingPersonId').val(newId);
+                        $('#txtBookingPersonDisplay').val(newName);
+                    }
+                });
+            } else {
+                alert(res ? res.message : "Error saving lookup party.");
+            }
+        },
+        error: function() {
+            alert("Error saving lookup party.");
         }
     });
 }

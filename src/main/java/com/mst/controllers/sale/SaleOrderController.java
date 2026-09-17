@@ -2,6 +2,7 @@ package com.mst.controllers.sale;
 
 import com.mst.models.sale.dto.SaleOrderDto;
 import com.mst.services.sale.SaleOrderService;
+import com.mst.services.sale.SaleOrderAttachmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controller for Sale Order module (DocumentTypeId = 20),
+ * Controller for Sale Order module (desktop DocumentTypeId = 81),
  * rendering Thymeleaf page and exposing all necessary REST APIs.
  */
 @Controller
@@ -22,6 +23,9 @@ public class SaleOrderController {
 
     @Autowired
     private SaleOrderService saleOrderService;
+
+    @Autowired
+    private SaleOrderAttachmentService saleOrderAttachmentService;
 
     @Autowired(required = false)
     private com.mst.services.BranchService branchService;
@@ -58,8 +62,9 @@ public class SaleOrderController {
 
     @GetMapping("/api/customer-balance/{customerId}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getCustomerBalanceSummary(@PathVariable("customerId") int customerId) {
-        return ResponseEntity.ok(saleOrderService.getCustomerBalanceSummary(customerId));
+    public ResponseEntity<Map<String, Object>> getCustomerBalanceSummary(@PathVariable("customerId") int customerId,
+            @RequestParam(value="saleOrderId", required=false) Integer saleOrderId) {
+        return ResponseEntity.ok(saleOrderService.getCustomerBalanceSummary(customerId, saleOrderId));
     }
 
     @GetMapping("/api/item-uoms/{itemId}")
@@ -93,7 +98,7 @@ public class SaleOrderController {
     @GetMapping("/api/pre-booking-orders")
     @ResponseBody
     public ResponseEntity<List<Map<String, Object>>> getPreBookingOrders() {
-        return ResponseEntity.ok(Collections.emptyList());
+        return ResponseEntity.ok(saleOrderService.getOutstandingPreBookingOrders());
     }
 
     @PostMapping("/api/save")
@@ -105,8 +110,11 @@ public class SaleOrderController {
 
     @GetMapping("/api/history")
     @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> getHistory() {
-        return ResponseEntity.ok(saleOrderService.getSaleOrdersHistory());
+    public ResponseEntity<List<Map<String, Object>>> getHistory(
+            @RequestParam(value="fromDate", required=false) String fromDate,
+            @RequestParam(value="toDate", required=false) String toDate,
+            @RequestParam(value="customerId", required=false) Integer customerId) {
+        return ResponseEntity.ok(saleOrderService.getSaleOrdersHistory(fromDate, toDate, customerId));
     }
 
     @GetMapping("/api/{id}")
@@ -115,5 +123,28 @@ public class SaleOrderController {
         Map<String, Object> data = saleOrderService.getSaleOrderById(id);
         if (data != null) return ResponseEntity.ok(data);
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/api/{id:[0-9]+}/attachments")
+    @ResponseBody
+    public List<Map<String, Object>> attachments(@PathVariable int id) {
+        return saleOrderAttachmentService.list(id);
+    }
+
+    @PostMapping("/api/{id:[0-9]+}/attachments")
+    @ResponseBody
+    public List<Map<String, Object>> saveAttachments(@PathVariable int id,
+            @RequestBody SaleOrderAttachmentService.Request request) {
+        return saleOrderAttachmentService.save(id, request);
+    }
+
+    @GetMapping("/api/{id:[0-9]+}/attachments/{attachmentId:[0-9]+}")
+    public ResponseEntity<byte[]> downloadAttachment(@PathVariable int id, @PathVariable int attachmentId) {
+        var file = saleOrderAttachmentService.download(id, attachmentId);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment()
+                                .filename(file.name(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM).body(file.bytes());
     }
 }

@@ -41,6 +41,8 @@ import com.mst.services.CheqBookRegistrationService;
 import com.mst.serviceInterface.IChartofAccountService;
 import com.mst.serviceInterface.ISupplierCustomerService;
 import com.mst.serviceInterface.IAccountCustomGroupService;
+import com.mst.security.CurrentUserContext;
+import com.mst.repositories.IChartofAccountRepository;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Map;
@@ -85,6 +87,10 @@ public class AccountDefinitionModulesController {
 	private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 	@Autowired
 	private com.mst.repositories.ICustomerGroupRepository customerGroupRepository;
+	@Autowired
+	private CurrentUserContext currentUserContext;
+	@Autowired
+	private IChartofAccountRepository chartofAccountRepository;
 
 	// ==========================================
 	// 3. DEFINE SUPPLIER / CUSTOMER (/accounts/supplier)
@@ -486,61 +492,73 @@ public class AccountDefinitionModulesController {
 	// 7. ACCOUNT OPENING BALANCE (/accounts/opening_balance)
 	// ==========================================
 
+	// ==========================================
+	// 7. ACCOUNT OPENING BALANCE (/accounts/opening_balance)
+	// ==========================================
+
 	@GetMapping("/opening_balance")
 	public String viewOpeningBalance(Model model) {
 		OpeningBalanceForm form = new OpeningBalanceForm();
 		List<OpeningBalanceRow> rows = new ArrayList<>();
+		double totalDebit = 0.0;
+		double totalCredit = 0.0;
 
 		try {
-			String sql = "SELECT coa.ID as id, coa.AccountCode as accountCode, coa.AccountTitle as accountTitle, " +
-					"act.AccountType as accountType, pcoa.AccountTitle as parentAccountTitle, " +
-					"COALESCE(NULLIF(aob.YearObDebit, 0), NULLIF(coa.YearObDebit, 0), 0) as yearObDebit, " +
-					"COALESCE(NULLIF(aob.YearObCredit, 0), NULLIF(coa.YearObCredit, 0), 0) as yearObCredit, " +
-					"COALESCE(NULLIF(aob.OpeningBalance, 0), 0) as openingBalance " +
-					"FROM ChartofAccount coa " +
-					"LEFT JOIN AccountType act ON coa.AccountTypeId = act.Id " +
-					"LEFT JOIN ChartofAccount pcoa ON coa.ParentAccountId = pcoa.ID " +
-					"LEFT JOIN AccountsOpeningBalances aob ON (aob.ChartOfAccountId = coa.ID OR aob.AccountCode = coa.AccountCode OR aob.ChartOfAccountTitle = coa.AccountTitle) " +
-					"WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) " +
-					"ORDER BY coa.AccountTitle, coa.AccountCode";
+			int orgId = currentUserContext.currentOrganizationId();
+			int compId = currentUserContext.currentCompanyId();
+			int finYearId = 1;
 
-			List<java.util.Map<String, Object>> dbRows = jdbcTemplate.queryForList(sql);
+			String sql = "EXEC dbo.Sp_AccountsOpeningBalances_GetMethod @OrganizationId=?, @CompanyId=?, @FinancialYearId=?, @Activity='GetAll'";
+			List<java.util.Map<String, Object>> dbRows = jdbcTemplate.queryForList(sql, orgId, compId, finYearId);
+
+			if (dbRows == null || dbRows.isEmpty()) {
+				sql = "SELECT coa.ID as ChartOfAccountId, coa.AccountCode as AccountCode, coa.AccountTitle as ChartOfAccountTitle, " +
+						"act.AccountType as AccountType, pcoa.AccountTitle as ParentAccountTitle, " +
+						"COALESCE(aob.Id, 0) as Id, " +
+						"COALESCE(NULLIF(aob.YearObDebit, 0), NULLIF(coa.YearObDebit, 0), 0) as YearObDebit, " +
+						"COALESCE(NULLIF(aob.YearObCredit, 0), NULLIF(coa.YearObCredit, 0), 0) as YearObCredit " +
+						"FROM ChartofAccount coa " +
+						"LEFT JOIN AccountType act ON coa.AccountTypeId = act.Id " +
+						"LEFT JOIN ChartofAccount pcoa ON coa.ParentAccountId = pcoa.ID " +
+						"LEFT JOIN AccountsOpeningBalances aob ON (aob.ChartOfAccountId = coa.ID OR aob.AccountCode = coa.AccountCode OR aob.ChartOfAccountTitle = coa.AccountTitle) " +
+						"WHERE (coa.AccountGroup = 'Detail' OR coa.Account_Level >= 4) " +
+						"ORDER BY coa.AccountTitle, coa.AccountCode";
+				dbRows = jdbcTemplate.queryForList(sql);
+			}
+
 			for (java.util.Map<String, Object> r : dbRows) {
 				OpeningBalanceRow row = new OpeningBalanceRow();
-				row.setAccountId(r.get("id") != null ? ((Number) r.get("id")).intValue() : 0);
-				row.setAccountCode(r.get("accountCode") != null ? r.get("accountCode").toString() : "");
-				row.setAccountTitle(r.get("accountTitle") != null ? r.get("accountTitle").toString() : "");
-				row.setAccountType(r.get("accountType") != null ? r.get("accountType").toString() : "Detail Account");
-				row.setParentAccountTitle(r.get("parentAccountTitle") != null ? r.get("parentAccountTitle").toString() : "");
+				row.setId(r.get("Id") != null ? ((Number) r.get("Id")).intValue() : 0);
+				row.setChartOfAccountId(r.get("ChartOfAccountId") != null ? ((Number) r.get("ChartOfAccountId")).intValue() : (r.get("id") != null ? ((Number) r.get("id")).intValue() : 0));
+				row.setAccountCode(r.get("AccountCode") != null ? r.get("AccountCode").toString() : (r.get("accountCode") != null ? r.get("accountCode").toString() : ""));
+				
+				String title = r.get("ChartOfAccountTitle") != null ? r.get("ChartOfAccountTitle").toString() : (r.get("AccountTitle") != null ? r.get("AccountTitle").toString() : (r.get("accountTitle") != null ? r.get("accountTitle").toString() : ""));
+				row.setAccountTitle(title);
+				
+				String type = r.get("AccountType") != null ? r.get("AccountType").toString() : (r.get("accountType") != null ? r.get("accountType").toString() : "Detail Account");
+				row.setAccountType(type);
 
-				double debit = r.get("yearObDebit") != null ? ((Number) r.get("yearObDebit")).doubleValue() : 0.0;
-				double credit = r.get("yearObCredit") != null ? ((Number) r.get("yearObCredit")).doubleValue() : 0.0;
-				double opBal = r.get("openingBalance") != null ? ((Number) r.get("openingBalance")).doubleValue() : 0.0;
+				String parentTitle = r.get("ParentAccountTitle") != null ? r.get("ParentAccountTitle").toString() : (r.get("parentAccountTitle") != null ? r.get("parentAccountTitle").toString() : "");
+				row.setParentAccountTitle(parentTitle);
 
-				if (debit == 0.0 && credit == 0.0 && opBal != 0.0) {
-					if (opBal > 0) debit = opBal;
-					else credit = Math.abs(opBal);
-				}
+				double debit = r.get("YearObDebit") != null ? ((Number) r.get("YearObDebit")).doubleValue() : (r.get("yearObDebit") != null ? ((Number) r.get("yearObDebit")).doubleValue() : 0.0);
+				double credit = r.get("YearObCredit") != null ? ((Number) r.get("YearObCredit")).doubleValue() : (r.get("yearObCredit") != null ? ((Number) r.get("yearObCredit")).doubleValue() : 0.0);
 
 				row.setOpeningDebit(debit);
 				row.setOpeningCredit(credit);
+
+				totalDebit += debit;
+				totalCredit += credit;
+
 				rows.add(row);
 			}
 		} catch (Exception e) {
-			List<ChartofAccount> detailAccounts = chartofAccountService.getDetailAccounts();
-			for (ChartofAccount acc : detailAccounts) {
-				OpeningBalanceRow r = new OpeningBalanceRow();
-				r.setAccountId(acc.getId());
-				r.setAccountCode(acc.getAccountCode());
-				r.setAccountTitle(acc.getAccountTitle());
-				r.setAccountType("Detail Account");
-				r.setOpeningDebit(0.0);
-				r.setOpeningCredit(0.0);
-				rows.add(r);
-			}
+			org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class).error("Error in viewOpeningBalance: {}", e.getMessage(), e);
 		}
 
 		form.setRows(rows);
+		form.setTotalDebit(totalDebit);
+		form.setTotalCredit(totalCredit);
 		model.addAttribute("activeMenu", "accounts");
 		model.addAttribute("form", form);
 
@@ -550,26 +568,23 @@ public class AccountDefinitionModulesController {
 	@PostMapping("/opening_balance/save")
 	public String saveOpeningBalance(@ModelAttribute("form") OpeningBalanceForm form) {
 		if (form != null && form.getRows() != null) {
+			int orgId = currentUserContext.currentOrganizationId();
+			int compId = currentUserContext.currentCompanyId();
+			int userId = currentUserContext.currentUserId();
+
 			for (OpeningBalanceRow r : form.getRows()) {
-				if (r.getAccountCode() != null && !r.getAccountCode().trim().isEmpty()) {
+				int chartOfAccountId = r.getChartOfAccountId() != null ? r.getChartOfAccountId() : 0;
+				if (chartOfAccountId > 0) {
 					double d = r.getOpeningDebitValue();
 					double c = r.getOpeningCreditValue();
+					int id = r.getId() != null ? r.getId() : 0;
 
-					AccountOpeningBalance ob = accountOpeningBalanceRepository.findByAccountCode(r.getAccountCode());
-					if (ob == null) {
-						Integer maxId = accountOpeningBalanceRepository.findMaxId();
-						ob = new AccountOpeningBalance();
-						ob.setId(maxId != null ? maxId + 1 : 1);
-						ob.setAccountCode(r.getAccountCode());
+					if (id > 0) {
+						jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ?, ModifyDate = GETDATE(), ModifyUser = ? WHERE Id = ?", d, c, (d - c), userId, id);
+					} else {
+						jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ?, ModifyDate = GETDATE(), ModifyUser = ? WHERE ChartOfAccountId = ? AND OrganizationId = ? AND CompanyId = ?", d, c, (d - c), userId, chartOfAccountId, orgId, compId);
 					}
-					ob.setYearObDebit(d);
-					ob.setYearObCredit(c);
-					accountOpeningBalanceRepository.save(ob);
-
-					try {
-						jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE AccountCode = ? OR ChartOfAccountId = (SELECT ID FROM ChartofAccount WHERE AccountCode = ?)", d, c, (d - c), r.getAccountCode(), r.getAccountCode());
-						jdbcTemplate.update("UPDATE ChartofAccount SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE AccountCode = ?", d, c, (d - c), r.getAccountCode());
-					} catch (Exception ignored) {}
+					jdbcTemplate.update("UPDATE ChartofAccount SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE ID = ?", d, c, (d - c), chartOfAccountId);
 				}
 			}
 		}
@@ -579,31 +594,36 @@ public class AccountDefinitionModulesController {
 	@PostMapping("/opening_balance/update-single")
 	@ResponseBody
 	public java.util.Map<String, Object> updateSingleOpeningBalance(
-			@RequestParam("accountCode") String accountCode,
+			@RequestParam(value = "id", required = false, defaultValue = "0") Integer id,
+			@RequestParam(value = "chartOfAccountId", required = false, defaultValue = "0") Integer chartOfAccountId,
+			@RequestParam(value = "accountCode", required = false) String accountCode,
 			@RequestParam(value = "debitAmount", defaultValue = "0.0") Double debitAmount,
 			@RequestParam(value = "creditAmount", defaultValue = "0.0") Double creditAmount) {
 		java.util.Map<String, Object> res = new java.util.HashMap<>();
 		try {
 			double d = debitAmount != null ? debitAmount : 0.0;
 			double c = creditAmount != null ? creditAmount : 0.0;
+			int orgId = currentUserContext.currentOrganizationId();
+			int compId = currentUserContext.currentCompanyId();
+			int userId = currentUserContext.currentUserId();
 
-			AccountOpeningBalance ob = accountOpeningBalanceRepository.findByAccountCode(accountCode);
-			if (ob == null) {
-				Integer maxId = accountOpeningBalanceRepository.findMaxId();
-				ob = new AccountOpeningBalance();
-				ob.setId(maxId != null ? maxId + 1 : 1);
-				ob.setAccountCode(accountCode);
+			int coaId = chartOfAccountId;
+			if (coaId <= 0 && accountCode != null && !accountCode.isEmpty()) {
+				ChartofAccount coa = chartofAccountRepository.findByAccountCode(accountCode);
+				if (coa != null) coaId = coa.getId();
 			}
-			ob.setYearObDebit(d);
-			ob.setYearObCredit(c);
-			accountOpeningBalanceRepository.save(ob);
 
-			try {
-				jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE AccountCode = ? OR ChartOfAccountId = (SELECT ID FROM ChartofAccount WHERE AccountCode = ?)", d, c, (d - c), accountCode, accountCode);
-				jdbcTemplate.update("UPDATE ChartofAccount SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE AccountCode = ?", d, c, (d - c), accountCode);
-			} catch (Exception ignored) {}
+			if (id != null && id > 0) {
+				jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ?, ModifyDate = GETDATE(), ModifyUser = ? WHERE Id = ?", d, c, (d - c), userId, id);
+			} else if (coaId > 0) {
+				jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ?, ModifyDate = GETDATE(), ModifyUser = ? WHERE ChartOfAccountId = ? AND OrganizationId = ? AND CompanyId = ?", d, c, (d - c), userId, coaId, orgId, compId);
+			}
+			if (coaId > 0) {
+				jdbcTemplate.update("UPDATE ChartofAccount SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE ID = ?", d, c, (d - c), coaId);
+			}
 
 			res.put("success", true);
+			res.put("message", "Update record Successfully");
 		} catch (Exception e) {
 			res.put("success", false);
 			res.put("message", e.getMessage());
@@ -890,12 +910,21 @@ public class AccountDefinitionModulesController {
 	// Form Helper Classes for Batch Opening Balance Submission
 	public static class OpeningBalanceForm {
 		private List<OpeningBalanceRow> rows = new ArrayList<>();
+		private Double totalDebit = 0.0;
+		private Double totalCredit = 0.0;
+
 		public List<OpeningBalanceRow> getRows() { return rows; }
 		public void setRows(List<OpeningBalanceRow> rows) { this.rows = rows; }
+		public Double getTotalDebit() { return totalDebit; }
+		public void setTotalDebit(Double totalDebit) { this.totalDebit = totalDebit; }
+		public Double getTotalCredit() { return totalCredit; }
+		public void setTotalCredit(Double totalCredit) { this.totalCredit = totalCredit; }
 	}
 
 	public static class OpeningBalanceRow {
-		private Integer accountId;
+		private Integer id = 0;
+		private Integer chartOfAccountId = 0;
+		private Integer accountId = 0;
 		private String accountCode;
 		private String accountTitle;
 		private String accountType;
@@ -903,6 +932,10 @@ public class AccountDefinitionModulesController {
 		private Double openingDebit = 0.0;
 		private Double openingCredit = 0.0;
 
+		public Integer getId() { return id; }
+		public void setId(Integer id) { this.id = id; }
+		public Integer getChartOfAccountId() { return chartOfAccountId; }
+		public void setChartOfAccountId(Integer chartOfAccountId) { this.chartOfAccountId = chartOfAccountId; }
 		public Integer getAccountId() { return accountId; }
 		public void setAccountId(Integer accountId) { this.accountId = accountId; }
 		public String getAccountCode() { return accountCode; }

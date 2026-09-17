@@ -93,4 +93,32 @@ public class InwardGatePassRestController {
 
         return service.getHistory(orgId, compId, branchId, yearId, docTypeId, fromDate, toDate, fromDocNo, toDocNo, supplierId);
     }
+
+    @GetMapping("/driver-bio/cnic")
+    public Map<String, Object> findDriverBioByCnic(@RequestParam String cnic) {
+        return service.findDriverBioByCnic(cnic);
+    }
+
+    @GetMapping("/driver-bio/cell")
+    public Map<String, Object> findDriverBioByCell(@RequestParam String cell) {
+        return service.findDriverBioByCell(cell);
+    }
+
+    @RequestMapping(value = "/po-info", method = {RequestMethod.GET, RequestMethod.POST})
+    public List<Map<String, Object>> getPoInfo(
+            @RequestBody(required = false) Map<String, Object> payload,
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate,
+            @RequestParam(required = false) Integer supplierId) {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        if (payload != null) {
+            if (payload.get("fromDate") != null) fromDate = payload.get("fromDate").toString();
+            if (payload.get("toDate") != null) toDate = payload.get("toDate").toString();
+            if (payload.get("supplierId") != null && !payload.get("supplierId").toString().isEmpty()) {
+                supplierId = Integer.parseInt(payload.get("supplierId").toString());
+            }
+        }
+        return service.getPoInfoGrid(orgId, compId, fromDate, toDate, supplierId);
+    }
 }

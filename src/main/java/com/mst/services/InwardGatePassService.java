@@ -25,7 +25,20 @@ public class InwardGatePassService {
         map.put("items", repository.getItems(orgId, compId));
         map.put("weighBridges", repository.getWeighBridges());
         map.put("packingTypes", repository.getPackingTypes());
+        map.put("transitVehicles", repository.getTransitVehicles(orgId, compId));
         return map;
+    }
+
+    public Map<String, Object> findDriverBioByCnic(String cnic) {
+        return repository.findDriverBioByCnic(cnic);
+    }
+
+    public Map<String, Object> findDriverBioByCell(String cell) {
+        return repository.findDriverBioByCell(cell);
+    }
+
+    public List<Map<String, Object>> getPoInfoGrid(Integer orgId, Integer compId, String fromDate, String toDate, Integer supplierId) {
+        return repository.getPoInfoGrid(orgId, compId, fromDate, toDate, supplierId);
     }
 
     public Map<String, Object> generateNextNumbers(Integer orgId, Integer compId, Integer branchId, Integer yearId, Integer docTypeId, String gatepassType) {

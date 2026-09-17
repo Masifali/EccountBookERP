@@ -7,6 +7,7 @@
     <title>Goods Receipt Notes (GRN) - WinForms Replica</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Verdana", Tahoma, Arial, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; }
         .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; }
@@ -29,6 +30,12 @@
         .win-grid th { background-color: #ece9d8; color: #000000; font-weight: normal; border: 1px solid #aca899; padding: 4px 6px; text-align: left; position: sticky; top: 0; z-index: 5; }
         .win-grid td { border: 1px solid #e0e0e0; padding: 3px 6px; color: #000000; vertical-align: middle; }
         .win-totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 8px 14px; border: 1px solid #008080; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 6px; }
+
+        .select2-container--default .select2-selection--single { height: 25px !important; padding: 1px 4px !important; border: 1px solid #7a9a9e !important; border-radius: 0 !important; font-size: 9.75pt !important; font-family: "Verdana", sans-serif !important; background-color: #ffffff !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 22px !important; padding-left: 2px !important; color: #000000 !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
+        .select2-dropdown { border: 1px solid #008080 !important; font-size: 9pt !important; border-radius: 0 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; }
+        .select2-search__field { font-size: 9pt !important; padding: 3px !important; border: 1px solid #008080 !important; }
     </style>
 </head>
 <body>
@@ -65,9 +72,9 @@
                 </div>
                 <div class="col-md-4">
                     <label class="win-label">Supplier / Party</label>
-                    <select id="cmbSupplier" class="win-combo">
+                    <select id="cmbSupplier" class="win-combo select2">
                         <option value="0">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.supplierCode + ' - ' + s.supplierName}"></option>
+                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${(s.supplierCode != null and s.supplierCode != '' and s.supplierCode != 'null' ? s.supplierCode + ' - ' : '') + s.supplierName}"></option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -93,21 +100,21 @@
             <div class="row">
                 <div class="col-md-4">
                     <label class="win-label">Item</label>
-                    <select id="cmbItem" class="win-combo" onchange="onItemChange(this.value)">
+                    <select id="cmbItem" class="win-combo select2">
                         <option value="0">-- Select Item --</option>
-                        <option th:each="i : ${items}" th:value="${i.id}" th:data-price="${i.purchasePrice}" th:text="${i.itemCode + ' - ' + i.itemName}"></option>
+                        <option th:each="i : ${items}" th:value="${i.id}" th:data-price="${i.purchasePrice}" th:text="${(i.itemCode != null and i.itemCode != '' and i.itemCode != 'null' ? i.itemCode + ' - ' : '') + i.itemName}"></option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="win-label">Receiving Warehouse</label>
-                    <select id="cmbWarehouse" class="win-combo">
+                    <select id="cmbWarehouse" class="win-combo select2">
                         <option value="0">-- Select Warehouse --</option>
                         <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.warehouseName}"></option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="win-label">Job / Lot</label>
-                    <select id="cmbJobLot" class="win-combo">
+                    <select id="cmbJobLot" class="win-combo select2">
                         <option value="0">-- Select Job/Lot --</option>
                         <option th:each="j : ${jobLots}" th:value="${j.id}" th:text="${j.description}"></option>
                     </select>
@@ -172,11 +179,18 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
     <script>
         let lineItems = [];
 
         $(document).ready(function() {
             setWinDefaultDate();
+            if ($.fn.select2) {
+                $('.select2').select2({ width: '100%' });
+            }
+            $('#cmbItem').on('change', function() {
+                onItemChange(this.value);
+            });
         });
 
         function setWinDefaultDate() {
@@ -247,7 +261,7 @@
             lineItems.push(item);
             renderGrid();
 
-            $('#cmbItem').val('0');
+            $('#cmbItem').val('0').trigger('change.select2');
             $('#txtQty').val('');
             $('#txtRate').val('');
             $('#txtAmount').val('');
@@ -356,7 +370,10 @@
             $('#txtRemarks').val('');
             $('#txtBiltyNo').val('');
             $('#txtVehicleNo').val('');
-            $('#cmbSupplier').val('0');
+            $('#cmbSupplier').val('0').trigger('change.select2');
+            $('#cmbItem').val('0').trigger('change.select2');
+            $('#cmbWarehouse').val('0').trigger('change.select2');
+            $('#cmbJobLot').val('0').trigger('change.select2');
             setWinDefaultDate();
             $.ajax({
                 url: '/api/purchase/next-code?docType=36',

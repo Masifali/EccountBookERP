@@ -7,6 +7,7 @@
     <title>Golden Ace Rice Mills — Sale Order Master</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         body { font-family: "Segoe UI", "Verdana", Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; user-select: none; }
         
@@ -81,7 +82,7 @@
         }
     </style>
 </head>
-<body>
+<body><div id="saleOrderLoader" class="sale-order-loader" hidden style="position:fixed;inset:0;z-index:99999;background:rgba(255,255,255,.65);align-items:center;justify-content:center;font-weight:bold;font-size:16px;color:#007f7f">Loading...</div><style>.sale-order-loader{display:flex}.sale-order-loader[hidden]{display:none!important}</style>
 
     <!-- ERP TOP BANNER -->
     <div class="erp-top-banner">
@@ -123,7 +124,7 @@
         <div class="d-flex align-items-center gap-2">
             <span class="win-teal-header-title"><i class="fa fa-shopping-cart me-1"></i> SALE ORDER</span>
             <span class="ms-3 me-1 font-weight-bold" style="font-size: 8.5pt;">Location Type</span>
-            <select id="cmbLocationType" class="win-combo" style="width: 140px; height: 20px; font-size: 8pt;">
+            <select id="cmbLocationType" class="win-combo so-select2" style="width: 140px; height: 20px; font-size: 8pt;">
                 <option value="1" selected>Pakistan</option>
                 <option value="2">International</option>
             </select>
@@ -140,119 +141,120 @@
         <!-- TOP SECTION (3 COLUMNS REPLICA) -->
         <div class="row g-1">
             
-            <!-- COLUMN 1: MAIN DOCUMENT & PARTY -->
-            <div class="col-md-4">
+            <!-- COLUMNS 1+2 MERGED: real desktop groupBox1.Text="Main" (InitializeComponent, SaleOrder.cs)
+                 is ONE single groupbox holding every field below - Doc No through Remarks, Payment
+                 Terms through Order Weight, AND the Party Gl/Outstanding/Current/Limit/Net Recoverable
+                 balance figures. There is no separate "Terms & Balance Summary" groupbox on the real
+                 desktop screen at all - that second bordered/labeled box was a fabricated split that
+                 didn't match desktop's real single-box layout. Merged back into one "Main" fieldset
+                 spanning both columns, with the same 3 field-groups as internal sub-columns instead of
+                 two separately-bordered boxes. -->
+            <div class="col-md-8">
                 <fieldset class="win-group-box">
                     <legend>Main</legend>
-                    
-                    <!-- Doc No & Branch -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3"><label class="win-label m-0">Doc & Branch #</label></div>
-                        <div class="col-md-9">
-                            <div class="d-flex gap-1">
-                                <input type="text" id="txtDocPrefix" class="win-textbox win-textbox-readonly" style="width: 60px;" value="SO-114" readonly/>
-                                <input type="text" id="txtDocNo" class="win-textbox" th:value="${nextCode != null ? nextCode : '114'}"/>
-                                <select id="cmbBranch" class="win-combo" style="width: 90px;">
-                                    <option value="1">Branch #</option>
-                                    <option th:each="b : ${branches}" th:value="${b.id}" th:text="${b.branchName}"></option>
-                                </select>
+                    <div class="row g-2">
+                        <!-- Sub-col 1: Doc/Party fields (same fields, same order as before the merge) -->
+                        <div class="col-md-6">
+                            <!-- Doc No & Branch -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4"><label class="win-label m-0">Doc & Branch #</label></div>
+                                <div class="col-md-8">
+                                    <div class="d-flex gap-1">
+                                        <input type="text" id="txtDocPrefix" class="win-textbox win-textbox-readonly" style="width: 60px;" value="SO-114" readonly/>
+                                        <input type="text" id="txtDocNo" class="win-textbox" th:value="${nextCode != null ? nextCode : '114'}"/>
+                                        <select id="cmbBranch" class="win-combo so-select2" style="width: 90px;">
+                                            <option value="1">Branch #</option>
+                                            <option th:each="b : ${branches}" th:value="${b.id}" th:text="${b.branchName}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Doc Date -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4"><label class="win-label m-0">Doc Date</label></div>
+                                <div class="col-md-8">
+                                    <input type="date" id="txtDocDate" class="win-datepicker"/>
+                                </div>
+                            </div>
+
+                            <!-- Order Category & No -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4"><label class="win-label m-0">Order Cat & No</label></div>
+                                <div class="col-md-8">
+                                    <div class="d-flex gap-1">
+                                        <select id="cmbOrderCategory" class="win-combo so-select2" style="flex: 1;">
+                                            <option value="Rice" selected>Rice</option>
+                                            <option value="Paddy">Paddy</option>
+                                        </select>
+                                        <input type="text" id="txtCatNo" class="win-textbox" style="width: 50px;" value="1"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Category-I -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4"><label class="win-label m-0">Category-I</label></div>
+                                <div class="col-md-8">
+                                    <select id="cmbCategoryI" class="win-combo so-select2"><option value="">...Select Category-I...</option></select>
+                                </div>
+                            </div>
+
+                            <!-- Category-II -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4"><label class="win-label m-0">Category-II</label></div>
+                                <div class="col-md-8">
+                                    <select id="cmbCategoryII" class="win-combo so-select2"><option value="">...Select Category-II...</option></select>
+                                </div>
+                            </div>
+
+                            <!-- Party -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4">
+                                    <label class="win-label m-0">Party</label>
+                                    <div>
+                                        <label class="win-radio-inline"><input type="radio" name="radParty" id="radPartyName" checked> Name</label>
+                                        <label class="win-radio-inline"><input type="radio" name="radParty" id="radPartyCode"> Code</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <select id="cmbCustomer" class="win-combo so-select2">
+                                        <option value="">...Select Any Value...</option>
+                                        <option th:each="c : ${suppliers}" th:value="${c.id}" th:text="${c.customerName}"></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Party Ref No -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4"><label class="win-label m-0">Party Ref No</label></div>
+                                <div class="col-md-8"><input type="text" id="txtPartyRefNo" class="win-textbox"/></div>
+                            </div>
+
+                            <!-- Booking Person -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4"><label class="win-label m-0">Booking Person</label></div>
+                                <div class="col-md-8">
+                                    <div class="d-flex gap-1">
+                                        <select id="cmbBookingPerson" class="win-combo so-select2" style="flex: 1;"><option value="">...Select Any Value...</option></select>
+                                        <button type="button" class="win-btn-action" style="background: #2e7d32;"><i class="fa fa-plus"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Remarks -->
+                            <div class="row mb-1 align-items-center">
+                                <div class="col-md-4"><label class="win-label m-0">Remarks</label></div>
+                                <div class="col-md-8"><input type="text" id="txtRemarks" class="win-textbox" placeholder="Order remarks..."/></div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Doc Date -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3"><label class="win-label m-0">Doc Date</label></div>
-                        <div class="col-md-9">
-                            <input type="date" id="txtDocDate" class="win-datepicker"/>
-                        </div>
-                    </div>
-
-                    <!-- Order Category & No -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3"><label class="win-label m-0">Order Cat & No</label></div>
-                        <div class="col-md-9">
-                            <div class="d-flex gap-1">
-                                <select id="cmbOrderCategory" class="win-combo" style="flex: 1;">
-                                    <option value="Rice" selected>Rice</option>
-                                    <option value="Paddy">Paddy</option>
-                                </select>
-                                <input type="text" id="txtCatNo" class="win-textbox" style="width: 50px;" value="1"/>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Category-I -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3"><label class="win-label m-0">Category-I</label></div>
-                        <div class="col-md-9">
-                            <select id="cmbCategoryI" class="win-combo"><option value="">...Select Category-I...</option></select>
-                        </div>
-                    </div>
-
-                    <!-- Category-II -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3"><label class="win-label m-0">Category-II</label></div>
-                        <div class="col-md-9">
-                            <select id="cmbCategoryII" class="win-combo"><option value="">...Select Category-II...</option></select>
-                        </div>
-                    </div>
-
-                    <!-- Party -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3">
-                            <label class="win-label m-0">Party</label>
-                            <div>
-                                <label class="win-radio-inline"><input type="radio" name="radParty" id="radPartyName" checked> Name</label>
-                                <label class="win-radio-inline"><input type="radio" name="radParty" id="radPartyCode"> Code</label>
-                            </div>
-                        </div>
-                        <div class="col-md-9">
-                            <select id="cmbCustomer" class="win-combo">
-                                <option value="">...Select Any Value...</option>
-                                <option th:each="c : ${suppliers}" th:value="${c.id}" th:text="${c.customerName}"></option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Party Ref No -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3"><label class="win-label m-0">Party Ref No</label></div>
-                        <div class="col-md-9"><input type="text" id="txtPartyRefNo" class="win-textbox"/></div>
-                    </div>
-
-                    <!-- Booking Person -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3"><label class="win-label m-0">Booking Person</label></div>
-                        <div class="col-md-9">
-                            <div class="d-flex gap-1">
-                                <select id="cmbBookingPerson" class="win-combo" style="flex: 1;"><option value="">...Select Any Value...</option></select>
-                                <button type="button" class="win-btn-action" style="background: #2e7d32;"><i class="fa fa-plus"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Remarks -->
-                    <div class="row mb-1 align-items-center">
-                        <div class="col-md-3"><label class="win-label m-0">Remarks</label></div>
-                        <div class="col-md-9"><input type="text" id="txtRemarks" class="win-textbox" placeholder="Order remarks..."/></div>
-                    </div>
-
-                </fieldset>
-            </div>
-
-            <!-- COLUMN 2: PAYMENT, DELIVERY & BALANCE BOX -->
-            <div class="col-md-4">
-                <fieldset class="win-group-box">
-                    <legend>Terms & Balance Summary</legend>
-                    
-                    <div class="row g-1">
-                        <!-- Left Sub-col: Terms -->
-                        <div class="col-md-7">
+                        <!-- Sub-col 2: Terms fields (same fields as before the merge) -->
+                        <div class="col-md-4">
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Payment Terms</label></div>
                                 <div class="col-md-7">
-                                    <select id="cmbPaymentTerm" class="win-combo"><option value="Credit" selected>Credit</option><option value="Cash">Cash</option></select>
+                                    <select id="cmbPaymentTerm" class="win-combo so-select2"><option value="Credit" selected>Credit</option><option value="Cash">Cash</option></select>
                                 </div>
                             </div>
                             <div class="row mb-1 align-items-center">
@@ -266,7 +268,7 @@
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Delivery Term</label></div>
                                 <div class="col-md-7">
-                                    <select id="cmbDeliveryTerm" class="win-combo"><option value="Load" selected>Load</option><option value="Unload">Unload</option></select>
+                                    <select id="cmbDeliveryTerm" class="win-combo so-select2"><option value="Load" selected>Load</option><option value="Unload">Unload</option></select>
                                 </div>
                             </div>
                             <div class="row mb-1 align-items-center">
@@ -287,8 +289,8 @@
                             </div>
                         </div>
 
-                        <!-- Right Sub-col: Party GL Balance Summary Box -->
-                        <div class="col-md-5">
+                        <!-- Sub-col 3: Party GL Balance Summary (same fields as before the merge) -->
+                        <div class="col-md-2">
                             <div class="balance-box">
                                 <div class="balance-row">
                                     <span class="balance-label">Party Gl Amount</span>
@@ -325,17 +327,17 @@
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Sales Man/Agent</label></div>
                         <div class="col-md-8">
-                            <select id="cmbSalesMan" class="win-combo"><option value="">...Select Any Value...</option></select>
+                            <select id="cmbSalesMan" class="win-combo so-select2"><option value="">...Select Any Value...</option></select>
                         </div>
                     </div>
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Comm Type</label></div>
-                        <div class="col-md-4"><select id="cmbCommType" class="win-combo"><option value="Flat" selected>Flat</option><option value="Percent">Percent</option></select></div>
+                        <div class="col-md-4"><select id="cmbCommType" class="win-combo so-select2"><option value="Flat" selected>Flat</option><option value="Percent">Percent</option></select></div>
                         <div class="col-md-4"><input type="number" id="txtCommRate" class="win-textbox" placeholder="Rate"/></div>
                     </div>
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Comm Uom</label></div>
-                        <div class="col-md-4"><select id="cmbCommUom" class="win-combo"><option value="1" selected>1</option></select></div>
+                        <div class="col-md-4"><select id="cmbCommUom" class="win-combo so-select2"><option value="1" selected>1</option></select></div>
                         <div class="col-md-4"><input type="number" id="txtCommAmount" class="win-textbox" placeholder="Amount"/></div>
                     </div>
                     <div class="row align-items-center">
@@ -350,17 +352,17 @@
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Sales Man/Agent</label></div>
                         <div class="col-md-8">
-                            <select id="cmbOtherSalesMan" class="win-combo"><option value="">...Select Any Value...</option></select>
+                            <select id="cmbOtherSalesMan" class="win-combo so-select2"><option value="">...Select Any Value...</option></select>
                         </div>
                     </div>
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Comm Type</label></div>
-                        <div class="col-md-4"><select id="cmbOtherCommType" class="win-combo"><option value="Flat" selected>Flat</option><option value="Percent">Percent</option></select></div>
+                        <div class="col-md-4"><select id="cmbOtherCommType" class="win-combo so-select2"><option value="Flat" selected>Flat</option><option value="Percent">Percent</option></select></div>
                         <div class="col-md-4"><input type="number" id="txtOtherCommRate" class="win-textbox" placeholder="Rate"/></div>
                     </div>
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Comm Uom</label></div>
-                        <div class="col-md-4"><select id="cmbOtherCommUom" class="win-combo"><option value="1" selected>1</option></select></div>
+                        <div class="col-md-4"><select id="cmbOtherCommUom" class="win-combo so-select2"><option value="1" selected>1</option></select></div>
                         <div class="col-md-4"><input type="number" id="txtOtherCommAmount" class="win-textbox" value="0"/></div>
                     </div>
                     <div class="row align-items-center">
@@ -376,9 +378,17 @@
         <fieldset class="win-group-box" style="background-color: #ffffff;">
             <legend>Detail Item Entry</legend>
 
-            <!-- Line 1: Item Toggles, Crop Year, Job/Lot, Pack Type, Pack Size, Qty, Net Weight, Rate, Rate UOM -->
+            <!-- Line 1: Item Toggles, Crop Year, Job/Lot, Pack Type, Pack Size, Qty, Net Weight, Pack Uom, Rate, Rate UOM.
+                 NOTE: this row's col-md-* widths must sum to <= 12 (Bootstrap's grid width) - they
+                 previously summed to 13 (col-md-3 toggles + col-md-2 item + seven col-md-1 fields +
+                 col-md-1 Rate/RateUom = 13), which silently pushed the last column (Rate + Rate Uom)
+                 onto a wrapped second line starting back at the row's left edge, overlapping the
+                 Item-toggles/Item-select area instead of staying inline - this is the real cause of
+                 the "both are not same" layout mismatch reported against the real desktop screen
+                 (which renders this whole line as one continuous row, ditto SaleOrder.cs groupBox3).
+                 Fixed by trimming the toggles column from col-md-3 to col-md-2 (sum now = 12). -->
             <div class="row g-1 mb-1 align-items-center">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="win-label me-2">Item:</label>
                     <label class="win-radio-inline"><input type="radio" name="radItemFilter" id="radCategory"> Category</label>
                     <label class="win-radio-inline"><input type="radio" name="radItemFilter" id="radType"> Type</label>
@@ -387,21 +397,40 @@
                     <label class="win-radio-inline"><input type="radio" name="radItemSelect" id="radCode"> Code</label>
                 </div>
                 <div class="col-md-2">
-                    <select id="lineItem" class="win-combo">
+                    <select id="lineItem" class="win-combo so-select2">
                         <option value="">-- Select Item --</option>
                         <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.itemName}"></option>
                     </select>
                 </div>
-                <div class="col-md-1"><input type="text" id="lineCropYear" class="win-textbox" value="2025-26" placeholder="Crop Yr"/></div>
-                <div class="col-md-1"><select id="lineJobLot" class="win-combo"><option value="General" selected>General</option></select></div>
-                <div class="col-md-1"><select id="linePackType" class="win-combo"><option value="PP Bags" selected>PP Bags</option></select></div>
+                <!-- Real desktop "Crop Year" cell is CmbCropyr - a genuine DB-bound UltraCombo
+                     (SaleOrder.cs line ~1572: DDL.BindDDLNew(dtCrop, CmbCropyr, "Id", "CropYear",
+                     ...), Sp_InvCropYear_GetAllMethod @Activity='ReadAll') - NOT a free-text box.
+                     The backend already fetched the full real crop-year list into
+                     data.cropYears via /api/master-lookups, but the page only ever read
+                     data.cropYears[0] into a plain <input>, discarding every other real crop year
+                     and letting the user only ever see/keep the first one. Fixed: real <select>
+                     bound to the full list (see bindCombo('#lineCropYear', ...) in
+                     countx_sale_order_full.js), matching the desktop's dropdown. Bound by CropYear
+                     text as both value and label (not by Id) because every other place in this
+                     file that reads #lineCropYear expects the crop-year string itself (e.g.
+                     "2025-26"), ditto the desktop's own SetData() call which reads
+                     CmbCropyr.Text, not CmbCropyr.Value, into the Crop field. -->
+                <div class="col-md-1"><select id="lineCropYear" class="win-combo so-select2"><option value="2025-26" selected>2025-26</option></select></div>
+                <div class="col-md-1"><select id="lineJobLot" class="win-combo so-select2"><option value="General" selected>General</option></select></div>
+                <div class="col-md-1"><select id="linePackType" class="win-combo so-select2"><option value="PP Bags" selected>PP Bags</option></select></div>
                 <div class="col-md-1"><input type="text" id="linePackSize" class="win-textbox" placeholder="Pack Size"/></div>
-                <div class="col-md-1"><input type="number" step="0.01" id="lineQty" class="win-textbox" placeholder="Qty" oninput="calcLine()"/></div>
-                <div class="col-md-1"><input type="number" step="0.01" id="lineWeight" class="win-textbox" placeholder="Net Wt" oninput="calcLine()"/></div>
+                <div class="col-md-1"><input type="number" step="0.001" id="lineQty" class="win-textbox" placeholder="Qty" oninput="calcLine('qty')"/></div>
+                <div class="col-md-1"><input type="number" step="0.001" id="lineWeight" class="win-textbox" placeholder="Net Wt" oninput="calcLine('weight')"/></div>
+                <!-- Real desktop "Pack Uom" cell (OrderItemUOMId) - a real, required, per-item UOM
+                     Schedule row distinct from Rate Uom (see SALE-ORDER-PROGRESS.md Pass 3: the
+                     save proc rejects a row with "Pack Uom not found..." if this is 0). Bound from
+                     the same real /api/item-uoms/{itemId} schedule as Rate Uom, auto-defaulted to
+                     the row with BasePackUom=1 (ditto CommonServices.GetBasePackUomId). -->
+                <div class="col-md-1"><select id="linePackUom" class="win-combo so-select2"><option value="">Pack Uom</option></select></div>
                 <div class="col-md-1">
                     <div class="d-flex gap-1">
-                        <input type="number" step="0.01" id="lineRate" class="win-textbox" value="0" placeholder="Rate" oninput="calcLine()"/>
-                        <select id="lineRateUom" class="win-combo"><option value="40KG">40KG</option></select>
+                        <input type="number" step="0.01" id="lineRate" class="win-textbox" value="0" placeholder="Rate" oninput="calcLine('rate')"/>
+                        <select id="lineRateUom" class="win-combo so-select2"><option value="40KG">40KG</option></select>
                     </div>
                 </div>
             </div>
@@ -422,11 +451,11 @@
                 </div>
                 <div class="col-md-2">
                     <label class="win-label m-0">City/Area</label>
-                    <select id="lineCityArea" class="win-combo"><option value="Khudian Khas" selected>Khudian Khas</option></select>
+                    <select id="lineCityArea" class="win-combo so-select2"><option value="Khudian Khas" selected>Khudian Khas</option></select>
                 </div>
                 <div class="col-md-2">
                     <label class="win-label m-0">Warehouse</label>
-                    <select id="lineWarehouse" class="win-combo">
+                    <select id="lineWarehouse" class="win-combo so-select2">
                         <option value="RICE ROOM G-1" selected>RICE ROOM G-1</option>
                         <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.warehouseName}"></option>
                     </select>
@@ -471,6 +500,7 @@
                                     <th style="width: 70px;">Pack Size</th>
                                     <th style="width: 60px; text-align: right;">QTY</th>
                                     <th style="width: 80px; text-align: right;">NetWeight</th>
+                                    <th style="width: 70px;">Pack UOM</th>
                                     <th style="width: 70px;">Rate UOM</th>
                                     <th style="width: 70px; text-align: right;">Rate</th>
                                     <th style="width: 90px; text-align: right;">Amount</th>
@@ -484,7 +514,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td colspan="19" class="text-center text-muted" style="padding: 12px;">No order line items added yet. Record: 0 of 0</td></tr>
+                                <tr><td colspan="20" class="text-center text-muted" style="padding: 12px;">No order line items added yet. Record: 0 of 0</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -496,7 +526,7 @@
                 <div class="row g-1 mb-2 align-items-end">
                     <div class="col-md-4">
                         <label class="win-label m-0">Other Item</label>
-                        <select id="expItem" class="win-combo"><option value="">-- Select Item --</option></select>
+                        <select id="expItem" class="win-combo so-select2"><option value="">-- Select Item --</option></select>
                     </div>
                     <div class="col-md-2">
                         <label class="win-label m-0">Qty</label>
@@ -544,7 +574,7 @@
                 <div class="row g-1 mb-2 align-items-end">
                     <div class="col-md-3">
                         <label class="win-label m-0">Payment Term</label>
-                        <select id="payTerm" class="win-combo"><option value="">-- Select Term --</option></select>
+                        <select id="payTerm" class="win-combo so-select2"><option value="">-- Select Term --</option></select>
                     </div>
                     <div class="col-md-1">
                         <label class="win-label m-0">Due Days</label>
@@ -613,7 +643,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="win-label">Customer Search Filter</label>
-                    <input type="text" id="histCustomerSearch" class="win-textbox" placeholder="Type customer name or code..."/>
+                    <select id="histCustomerCombo" class="win-combo so-select2"><option value="">...Select Customer...</option></select>
                 </div>
                 <div class="col-md-2 pt-3">
                     <button type="button" class="win-btn-action w-100" onclick="loadHistoryData()"><i class="fa fa-search me-1"></i> Search History</button>
@@ -653,7 +683,28 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
     <script th:src="@{/build/js/countx_sale_order_full.js}"></script>
+    <script>
+        // Ditto every one of the real desktop's 30 UltraCombo dropdowns on this screen (combitem,
+        // combjob, cmbPackType, combitempck, combrateuom, combcityarea, CmbWarehouse, CmbCropyr,
+        // CmbCustomerName, combsalesman, CmbOtherCommissionAgent, CmbBookingPerson, combpttrm,
+        // combdeliverytrm, combcommtype/CmbOtherCommissionType, combruom/CmbOtherCommissionUom,
+        // cmbOrderCategory1/2, CmbCategory, cmbLocationType, CmbStatus, cmbCurrency, cmbBranchName,
+        // combrefparty, combstockparty - verified: recovered_source SaleOrder.cs, 30 occurrences of
+        // AutoCompleteMode=(4)/AutoSuggestFilterMode=(2), i.e. every combo on the real screen is
+        // type-ahead/keystroke-filterable, not a plain closed list) - select2 is this app's own
+        // established pattern for that behavior (see e.g. configurations/configuration.html,
+        // inventory/warehouses.html, inventory/item_form.html). Applied here to every real
+        // dropdown on this screen (".so-select2"). Selects that are populated/rebuilt purely
+        // client-side after page load (bindCombo(), bindItemCombo(), bindCustomerCombo(), and the
+        // Item-selection Rate Uom/Pack Uom handler) each call $el.trigger('change') right after
+        // rebuilding their <option> list, which is what makes select2 re-read the new option list
+        // and refresh its display - select2 does not detect raw DOM option changes on its own.
+        $(function () {
+            $('.so-select2').select2({ dropdownAutoWidth: true, width: '100%' });
+        });
+    </script>
     <!-- Modal Attachments -->
     <div class="modal fade" id="modalAttachments" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">

@@ -180,7 +180,7 @@ public class PurchaseOrderFullService {
             } else {
                 sb.append("ISNULL(s.CompanyName, '') as companyName, ISNULL(s.SupCustCode, ISNULL(s.ManualPartyCode, '')) as partyCode, ");
             }
-            sb.append("ISNULL(s.GlAccountId, 0) as glAccountId, ISNULL(c.CityName, '') as cityName, ISNULL(s.MobilePersonal, '') as mobileNo ");
+            sb.append("ISNULL(s.GlAccountId, 0) as glAccountId, ISNULL(s.CityId, 0) as cityId, ISNULL(c.Description, ISNULL(c.CityName, '')) as cityName, ISNULL(s.MobilePersonal, ISNULL(s.PhoneOffice, '')) as mobileNo ");
             sb.append("FROM SupplierCustomer s ");
             sb.append("LEFT JOIN City c ON s.CityId = c.Id ");
             sb.append("WHERE 1=1 ");
@@ -198,6 +198,50 @@ public class PurchaseOrderFullService {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Error in searchSuppliers: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Map<String, Object>> searchBrokers(String query) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT s.Id as id, ISNULL(s.CompanyName, '') as companyName, ")
+              .append("ISNULL(s.GlAccountId, 0) as glAccountId, ISNULL(s.SupCustCode, ISNULL(s.ManualPartyCode, '')) as partyCode, ")
+              .append("ISNULL(s.CityId, 0) as cityId, ISNULL(c.Description, ISNULL(c.CityName, '')) as cityName, ")
+              .append("ISNULL(s.MobilePersonal, ISNULL(s.PhoneOffice, '')) as mobileNo ")
+              .append("FROM SupplierCustomer s ")
+              .append("LEFT JOIN City c ON s.CityId = c.Id ")
+              .append("WHERE 1=1 ");
+
+            if (query != null && !query.trim().isEmpty()) {
+                String q = query.trim().replace("'", "''");
+                sb.append("AND (s.CompanyName LIKE '%").append(q).append("%' OR s.SupCustCode LIKE '%").append(q).append("%' OR CAST(s.GlAccountId AS VARCHAR) LIKE '%").append(q).append("%') ");
+            }
+            sb.append("ORDER BY s.CompanyName");
+            return jdbcTemplate.queryForList(sb.toString());
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Map<String, Object>> searchCommissionAgents(String query) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT s.Id as id, ISNULL(s.CompanyName, '') as companyName, ")
+              .append("ISNULL(s.GlAccountId, 0) as glAccountId, ISNULL(s.SupCustCode, ISNULL(s.ManualPartyCode, '')) as partyCode, ")
+              .append("ISNULL(s.CityId, 0) as cityId, ISNULL(c.Description, ISNULL(c.CityName, '')) as cityName, ")
+              .append("ISNULL(s.MobilePersonal, ISNULL(s.PhoneOffice, '')) as mobileNo ")
+              .append("FROM SupplierCustomer s ")
+              .append("LEFT JOIN City c ON s.CityId = c.Id ")
+              .append("WHERE 1=1 ");
+
+            if (query != null && !query.trim().isEmpty()) {
+                String q = query.trim().replace("'", "''");
+                sb.append("AND (s.CompanyName LIKE '%").append(q).append("%' OR s.SupCustCode LIKE '%").append(q).append("%' OR CAST(s.GlAccountId AS VARCHAR) LIKE '%").append(q).append("%') ");
+            }
+            sb.append("ORDER BY s.CompanyName");
+            return jdbcTemplate.queryForList(sb.toString());
+        } catch (Exception e) {
             return Collections.emptyList();
         }
     }
@@ -330,45 +374,63 @@ public class PurchaseOrderFullService {
      *  desktop). Joins UOM (dbo.V_UomScheduleAndUom's own join) to expose the real UOMCode text
      *  instead of a bare Id. */
     public List<Map<String, Object>> getUomSchedulesForPurchaseOrder() {
+        List<Map<String, Object>> rawList = null;
         try {
             int orgId = currentUserContext.currentOrganizationId();
             int compId = currentUserContext.currentCompanyId();
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(
+            rawList = jdbcTemplate.queryForList(
                     "EXEC Sp_UOMSchedule_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
                     orgId, compId, "ReadByOrganizationCompanyId");
-            if (list != null && !list.isEmpty()) {
-                return list;
-            }
         } catch (Exception e) {}
 
-        try {
-            String sql = "SELECT us.Id as id, ISNULL(us.ItemId, 0) as itemId, ISNULL(u.UOMCode, 'Kg') as uomCode, " +
-                    "ISNULL(us.Equivalent, 1.0) as equivalent, " +
-                    "CASE WHEN us.BaseRateUom = 1 THEN 1 ELSE 0 END as baseRateUom, " +
-                    "CASE WHEN us.BasePackUom = 1 THEN 1 ELSE 0 END as basePackUom " +
-                    "FROM UOMSchedule us " +
-                    "LEFT JOIN UOM u ON us.ScheduleUnitId = u.Id " +
-                    "ORDER BY us.ItemId, u.UOMCode";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-            if (list != null && !list.isEmpty()) {
-                return list;
-            }
-        } catch (Exception e) {}
+        if (rawList == null || rawList.isEmpty()) {
+            try {
+                String sql = "SELECT us.Id as id, ISNULL(us.ItemId, 0) as itemId, ISNULL(u.UOMCode, 'Kg') as uomCode, " +
+                        "ISNULL(us.Equivalent, 1.0) as equivalent, " +
+                        "CASE WHEN us.BaseRateUom = 1 THEN 1 ELSE 0 END as baseRateUom, " +
+                        "CASE WHEN us.BasePackUom = 1 THEN 1 ELSE 0 END as basePackUom " +
+                        "FROM UOMSchedule us " +
+                        "LEFT JOIN UOM u ON us.ScheduleUnitId = u.Id " +
+                        "ORDER BY us.ItemId, u.UOMCode";
+                rawList = jdbcTemplate.queryForList(sql);
+            } catch (Exception e) {}
+        }
 
-        try {
-            String sql = "SELECT Id as id, 0 as itemId, UOMCode as uomCode, 1.0 as equivalent, 0 as baseRateUom, 0 as basePackUom FROM UOM ORDER BY UOMCode";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-            if (list != null && !list.isEmpty()) {
-                return list;
-            }
-        } catch (Exception e) {}
+        if (rawList == null || rawList.isEmpty()) {
+            try {
+                String sql = "SELECT Id as id, 0 as itemId, UOMCode as uomCode, 1.0 as equivalent, 0 as baseRateUom, 0 as basePackUom FROM UOM ORDER BY UOMCode";
+                rawList = jdbcTemplate.queryForList(sql);
+            } catch (Exception e) {}
+        }
 
-        List<Map<String, Object>> fallback = new ArrayList<>();
-        Map<String, Object> u1 = new HashMap<>(); u1.put("id", 1); u1.put("itemId", 0); u1.put("uomCode", "Kg"); u1.put("equivalent", 1.0); u1.put("baseRateUom", 0); u1.put("basePackUom", 0); fallback.add(u1);
-        Map<String, Object> u2 = new HashMap<>(); u2.put("id", 2); u2.put("itemId", 0); u2.put("uomCode", "40Kg"); u2.put("equivalent", 40.0); u2.put("baseRateUom", 1); u2.put("basePackUom", 0); fallback.add(u2);
-        Map<String, Object> u3 = new HashMap<>(); u3.put("id", 3); u3.put("itemId", 0); u3.put("uomCode", "Bag"); u3.put("equivalent", 50.0); u3.put("baseRateUom", 0); u3.put("basePackUom", 1); fallback.add(u3);
-        Map<String, Object> u4 = new HashMap<>(); u4.put("id", 4); u4.put("itemId", 0); u4.put("uomCode", "Ton"); u4.put("equivalent", 1000.0); u4.put("baseRateUom", 0); u4.put("basePackUom", 0); fallback.add(u4);
-        return fallback;
+        if (rawList == null || rawList.isEmpty()) {
+            rawList = new ArrayList<>();
+            Map<String, Object> u1 = new HashMap<>(); u1.put("id", 1); u1.put("itemId", 0); u1.put("uomCode", "Kg"); u1.put("equivalent", 1.0); u1.put("baseRateUom", 0); u1.put("basePackUom", 0); rawList.add(u1);
+            Map<String, Object> u2 = new HashMap<>(); u2.put("id", 2); u2.put("itemId", 0); u2.put("uomCode", "40Kg"); u2.put("equivalent", 40.0); u2.put("baseRateUom", 1); u2.put("basePackUom", 0); rawList.add(u2);
+            Map<String, Object> u3 = new HashMap<>(); u3.put("id", 3); u3.put("itemId", 0); u3.put("uomCode", "Bag"); u3.put("equivalent", 50.0); u3.put("baseRateUom", 0); u3.put("basePackUom", 1); rawList.add(u3);
+            Map<String, Object> u4 = new HashMap<>(); u4.put("id", 4); u4.put("itemId", 0); u4.put("uomCode", "Ton"); u4.put("equivalent", 1000.0); u4.put("baseRateUom", 0); u4.put("basePackUom", 0); rawList.add(u4);
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> row : rawList) {
+            Map<String, Object> norm = new HashMap<>();
+            Object idVal = row.get("id") != null ? row.get("id") : row.get("Id");
+            Object itemVal = row.get("itemId") != null ? row.get("itemId") : row.get("ItemId");
+            Object codeVal = row.get("uomCode") != null ? row.get("uomCode") : (row.get("UOMCode") != null ? row.get("UOMCode") : row.get("UomCode"));
+            Object eqVal = row.get("equivalent") != null ? row.get("equivalent") : row.get("Equivalent");
+            Object brVal = row.get("baseRateUom") != null ? row.get("baseRateUom") : row.get("BaseRateUom");
+            Object bpVal = row.get("basePackUom") != null ? row.get("basePackUom") : row.get("BasePackUom");
+
+            norm.put("id", idVal != null ? idVal : 0);
+            norm.put("itemId", itemVal != null ? itemVal : 0);
+            norm.put("uomCode", codeVal != null ? codeVal.toString().trim() : "Kg");
+            norm.put("equivalent", eqVal != null ? eqVal : 1.0);
+            norm.put("baseRateUom", brVal != null ? brVal : 0);
+            norm.put("basePackUom", bpVal != null ? bpVal : 0);
+            result.add(norm);
+        }
+
+        return result;
     }
 
     public List<Map<String, Object>> getJobLots() {
@@ -1144,26 +1206,27 @@ public class PurchaseOrderFullService {
             Integer poMasterId = dto.getPurchaseOrderMasterId();
             if (poMasterId != null && poMasterId > 0) {
                 // Update - ditto Sp_PurchaseOrder_Update: only the header fields the user actually
-                // edits on this screen are touched (DocNo/DocDate/Supplier/Remarks). OrganizationId,
-                // CompanyId, BranchesId and FinancialYearId are deliberately left untouched here -
-                // the previous implementation force-overwrote them to hardcoded 1s on every Update,
-                // which is exactly the kind of "overwrite ... with missing/wrong values" this fix is
-                // required to stop; those fields belong to whatever they were set to at insert time.
+                // edits on this screen are touched (DocNo/DocDate/Supplier/Remarks/Broker/CommAgent/BookingPerson).
                 String updateSql = "UPDATE PurchaseOrder SET " +
                         "DocNo = ?, DocDate = ?, SupplierCustomerId = ?, OrderSupCustId = ?, RemarksHeader = ?, " +
+                        "BrokerAgentId = ?, CommissionAgentId = ?, BookingPersonId = ?, " +
                         "ModifyDate = GETDATE(), ModifyUser = ? " +
                         "WHERE Id = ?";
                 jdbcTemplate.update(updateSql, docNo, docDate, dto.getSupplierId(), dto.getSupplierId(),
-                        dto.getRemarksHeader(), effUserId, poMasterId);
+                        dto.getRemarksHeader(), dto.getBrokerAccountId(), dto.getCommissionAgentId(), dto.getBookingPersonId(),
+                        effUserId, poMasterId);
             } else {
                 // Insert
                 String insertSql = "INSERT INTO PurchaseOrder (" +
                         "DocumentTypeId, DocNo, DocDate, SupplierCustomerId, OrderSupCustId, RemarksHeader, " +
+                        "BrokerAgentId, CommissionAgentId, BookingPersonId, " +
                         "IsApproved, IsAproved, OrganizationId, CompanyId, BranchesId, FinancialYearId, EntryUser, EntryDate" +
-                        ") VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, 1, ?, GETDATE())";
+                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, 1, ?, GETDATE())";
 
                 jdbcTemplate.update(insertSql, dto.getDocumentTypeId(), docNo, docDate, dto.getSupplierId(), dto.getSupplierId(),
-                        dto.getRemarksHeader() != null ? dto.getRemarksHeader() : "", orgId, compId, branchId, effUserId);
+                        dto.getRemarksHeader() != null ? dto.getRemarksHeader() : "",
+                        dto.getBrokerAccountId(), dto.getCommissionAgentId(), dto.getBookingPersonId(),
+                        orgId, compId, branchId, effUserId);
 
                 poMasterId = jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
             }
@@ -1233,9 +1296,15 @@ public class PurchaseOrderFullService {
             String headSql = "SELECT po.Id as purchaseOrderMasterId, po.DocumentTypeId as documentTypeId, po.DocNo as docNo, " +
                     "CONVERT(VARCHAR(10), po.DocDate, 120) as docDate, po.SupplierCustomerId as supplierId, " +
                     "po.RemarksHeader as remarksHeader, s.CompanyName as supplierName, " +
-                    "ISNULL(s.SupCustCode, s.ManualPartyCode) as supplierCode " +
+                    "ISNULL(s.SupCustCode, s.ManualPartyCode) as supplierCode, " +
+                    "po.BrokerAgentId as brokerAccountId, brokerAcc.CompanyName as brokerAccountName, " +
+                    "po.CommissionAgentId as commissionAgentId, commAgent.CompanyName as commissionAgentName, " +
+                    "po.BookingPersonId as bookingPersonId, bookingP.ReferencePartyName as bookingPersonName " +
                     "FROM PurchaseOrder po " +
                     "LEFT JOIN SupplierCustomer s ON po.SupplierCustomerId = s.Id " +
+                    "LEFT JOIN SupplierCustomer brokerAcc ON po.BrokerAgentId = brokerAcc.Id " +
+                    "LEFT JOIN SupplierCustomer commAgent ON po.CommissionAgentId = commAgent.Id " +
+                    "LEFT JOIN ReferenceParties bookingP ON po.BookingPersonId = bookingP.Id " +
                     "WHERE po.Id = ?";
             List<Map<String, Object>> list = jdbcTemplate.queryForList(headSql, id);
             if (list == null || list.isEmpty()) {

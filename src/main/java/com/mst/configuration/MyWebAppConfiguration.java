@@ -24,6 +24,8 @@ public class MyWebAppConfiguration implements WebMvcConfigurer {
         String absolutePath = Paths.get(MSTConstants.USER_IMAGES).toAbsolutePath().toString();
         registry.addResourceHandler("/user-image/**")
                 .addResourceLocations("file:" + absolutePath + "/");
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/", "classpath:/public/", "classpath:/resources/", "classpath:/META-INF/resources/");
     }
 
 

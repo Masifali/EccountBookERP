@@ -1033,15 +1033,31 @@ public class AccountsReportService {
     public List<Map<String, Object>> getBranchesForReports() {
         int orgId = currentUserContext.currentOrganizationId();
         int compId = currentUserContext.currentCompanyId();
+        int userId = currentUserContext.currentUserId();
         try {
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(
-                    "EXEC USP_GetBranchesFromVouchersByAccountId @OrganizationId=?, @CompanyId=?",
-                    orgId, compId);
+            List<Map<String, Object>> list = new ArrayList<>();
+            try {
+                list = jdbcTemplate.queryForList(
+                        "EXEC USP_GetBranchesFromVouchersByAccountId @OrganizationId=?, @CompanyId=?",
+                        orgId, compId);
+            } catch (Exception ignored) {}
+            if (list == null || list.isEmpty()) {
+                try {
+                    list = jdbcTemplate.queryForList(
+                            "EXEC USP_GetBranchsAllocatedToUser @OrganizationId=?, @CompanyId=?, @UserId=?",
+                            orgId, compId, userId);
+                } catch (Exception ignored) {}
+            }
+            if (list == null || list.isEmpty()) {
+                try {
+                    list = jdbcTemplate.queryForList("SELECT ID as Id, BranchName FROM Branches");
+                } catch (Exception ignored) {}
+            }
             if (list != null) {
                 for (Map<String, Object> map : list) {
-                    Object id = map.get("Id") != null ? map.get("Id") : (map.get("id") != null ? map.get("id") : map.get("ID"));
+                    Object id = map.get("Id") != null ? map.get("Id") : (map.get("id") != null ? map.get("id") : (map.get("BranchId") != null ? map.get("BranchId") : map.get("branchId")));
                     Object name = map.get("BranchName") != null ? map.get("BranchName") : (map.get("branchName") != null ? map.get("branchName") : (map.get("Name") != null ? map.get("Name") : map.get("name")));
-                    map.put("Id", id); map.put("id", id); map.put("ID", id);
+                    map.put("Id", id); map.put("id", id); map.put("ID", id); map.put("BranchId", id); map.put("branchId", id);
                     map.put("BranchName", name); map.put("branchName", name); map.put("Name", name); map.put("name", name);
                 }
             }

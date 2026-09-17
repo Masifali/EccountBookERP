@@ -7,8 +7,32 @@
 
 var masterLookupsData = {};
 var currentLineItems = [];
+var removedLineItems = [];
+var editingLineIndex = -1;
+var pendingLineUomSelection = null;
+var preBookingRows = [];
 var currentExpenseItems = [];
 var currentPaymentSchedules = [];
+// Real desktop RecId equivalent: 0 = New (btnsave_Click path -> Sp_SaleOrder_Insert), >0 = an
+// existing order currently loaded for edit (btnupdate_Click path -> Sp_SaleOrder_Update). Set by
+// loadOrderIntoForm(); btnSave_Click() must send this as the payload's `id` so Update actually
+// reaches Sp_SaleOrder_Update instead of always inserting a new order.
+var currentEditingOrderId = 0;
+
+function setSaleOrderBusy(on) {
+    $('#saleOrderLoader').prop('hidden', !on);
+    $('button').each(function () {
+        if (on) {
+            this.dataset.saleOrderWasDisabled = this.disabled ? '1' : '0';
+            this.disabled = true;
+        } else {
+            this.disabled = this.dataset.saleOrderWasDisabled === '1';
+            delete this.dataset.saleOrderWasDisabled;
+        }
+    });
+}
+$(document).ajaxStart(function () { setSaleOrderBusy(true); });
+$(document).ajaxStop(function () { setSaleOrderBusy(false); });
 
 $(document).ready(function () {
     var today = new Date().toISOString().split('T')[0];
@@ -69,10 +93,8 @@ function loadMasterLookups() {
         // Detail Line Items - USP_Item_AllItemsWithModal (Id, ItemName, ItemCode)
         bindItemCombo(data.items);
 
-        // Crop Years - Sp_InvCropYear_GetAllMethod (Id, CropYear)
-        if (data.cropYears && data.cropYears.length > 0) {
-            $('#lineCropYear').val(data.cropYears[0].CropYear);
-        }
+        // CmbCropyr stores both its selected Id and its displayed CropYear text in each detail row.
+        bindCombo('#lineCropYear', data.cropYears, 'Id', 'CropYear');
 
         // Job/Lots - USP_GetJobLotsAllocatedToBranch (Id, JobLotDescription), scoped to the current branch
         bindCombo('#lineJobLot', data.jobLots, 'Id', 'JobLotDescription');
@@ -87,14 +109,8 @@ function loadMasterLookups() {
         // Payment Detail dropdown - Sp_InvDueTerms_GetAllMethod (Id, TermsDescription). Real, correct source.
         bindCombo('#payTerm', data.paymentTerms, 'Id', 'TermsDescription', '-- Select Term --');
 
-        // Customer Expense "Other Item" dropdown - KNOWN WRONG, BLOCKED (see SALE-ORDER-PROGRESS.md Pass 3).
-        // Desktop's real source is InventoryItemsOther.GetAll() -> Sp_InventoryItemsOther_GetAllMethod
-        // (Id, OtherItemName) - a completely separate master table from the main Item list. The Java
-        // backend (SaleOrderService/SaleCommonService) could not be reached this session (deeply-nested
-        // file staging blocked - see progress doc), so no /sale/sale-order/api/other-items endpoint exists
-        // yet and this still falls back to the main Item list as a stopgap. Do not treat this dropdown as
-        // fixed; swap this line for a real other-items endpoint the moment backend access is restored.
-        bindCombo('#expItem', data.items, 'Id', 'ItemName', '-- Select Item --');
+        // Desktop OtherItemsBind(): InventoryItemsOther.GetAll -> Sp_InventoryItemsOther_GetAllMethod.
+        bindCombo('#expItem', data.otherItems, 'Id', 'OtherItemName', '-- Select Item --');
 
         // History Customer Search Combo
         bindCombo('#histCustomerCombo', data.customers, 'Id', 'CompanyName', '...Select Customer...');
@@ -114,30 +130,38 @@ function bindCombo(selector, items, valueAttr, textAttr, defaultText) {
             }));
         });
     }
+    // select2 (".so-select2", see sale_order.html) does not notice raw DOM <option> changes made
+    // via jQuery .empty()/.append() - it only refreshes its rendered list/selection on the
+    // underlying <select>'s native 'change' event. Every dropdown on this screen is searchable
+    // now (matching the real desktop's 30 AutoCompleteMode/AutoSuggestFilterMode UltraCombo
+    // controls - see SaleOrder.cs), so this is required after every rebuild, not just cosmetic.
+    $el.trigger('change');
 }
 
 function bindCustomerCombo(customers) {
     var $el = $('#cmbCustomer').empty();
     $el.append('<option value="">...Select Any Value...</option>');
-    if (!customers) return;
-    var searchByCode = $('#radPartyCode').is(':checked');
-    customers.forEach(function (c) {
-        var label = searchByCode ? ((c.PartyCode || '') + ' - ' + c.CompanyName) : c.CompanyName;
-        $el.append($('<option>', { value: c.Id, text: label }));
-    });
+    if (customers) {
+        var searchByCode = $('#radPartyCode').is(':checked');
+        customers.forEach(function (c) {
+            var label = searchByCode ? ((c.PartyCode || '') + ' - ' + c.CompanyName) : c.CompanyName;
+            $el.append($('<option>', { value: c.Id, text: label }));
+        });
+    }
+    $el.trigger('change'); // refresh select2 (".so-select2") after rebuilding options - see bindCombo()
 }
 
 function bindItemCombo(items) {
     var $el = $('#lineItem').empty();
     $el.append('<option value="">-- Select Item --</option>');
-    if (!items) return;
-
-    var searchByCode = $('#radCode').is(':checked');
-
-    items.forEach(function (i) {
-        var label = searchByCode ? (i.ItemCode + ' - ' + i.ItemName) : i.ItemName;
-        $el.append($('<option>', { value: i.Id, text: label, 'data-code': i.ItemCode, 'data-name': i.ItemName }));
-    });
+    if (items) {
+        var searchByCode = $('#radCode').is(':checked');
+        items.forEach(function (i) {
+            var label = searchByCode ? (i.ItemCode + ' - ' + i.ItemName) : i.ItemName;
+            $el.append($('<option>', { value: i.Id, text: label, 'data-code': i.ItemCode, 'data-name': i.ItemName }));
+        });
+    }
+    $el.trigger('change'); // refresh select2 (".so-select2") after rebuilding options - see bindCombo()
 }
 
 // =========================================================
@@ -161,7 +185,9 @@ function setupEventListeners() {
             resetCustomerBalance();
             return;
         }
-        $.get('/sale/sale-order/api/customer-balance/' + custId, function (data) {
+        var balanceUrl = '/sale/sale-order/api/customer-balance/' + custId +
+            (currentEditingOrderId ? '?saleOrderId=' + currentEditingOrderId : '');
+        $.get(balanceUrl, function (data) {
             if (data) {
                 $('#txtPartyGlAmount').val(parseFloat(data.partyGlAmount || 0).toFixed(2));
                 $('#txtOutstandingOrder').val(parseFloat(data.outstandingOrders || 0).toFixed(2));
@@ -178,18 +204,44 @@ function setupEventListeners() {
         if (!itemId) return;
         $.get('/sale/sale-order/api/item-uoms/' + itemId, function (uoms) {
             var $uom = $('#lineRateUom').empty();
+            // Pack Uom (OrderItemUOMId) is a real, required field distinct from Rate Uom - see
+            // SALE-ORDER-PROGRESS.md Pass 3 ("Pack Uom not found in detail grid at row#N"). Both
+            // are drawn from the same real per-item UOMSchedule rows, just auto-defaulted to a
+            // different flag column (BaseRateUom vs BasePackUom), ditto desktop's
+            // CommonServices.GetBaseRateUomId / GetBasePackUomId.
+            var $packUom = $('#linePackUom').empty();
             if (uoms && uoms.length > 0) {
                 var baseUomCode = null;
+                var basePackUomCode = null;
                 uoms.forEach(function (u) {
-                    $uom.append($('<option>', { value: u.Id, text: u.UOMCode }));
+                    $uom.append($('<option>', { value: u.Id, text: u.UOMCode, 'data-equivalent': u.QtyEquivalent }));
+                    $packUom.append($('<option>', { value: u.Id, text: u.UOMCode, 'data-equivalent': u.QtyEquivalent }));
                     if (u.BaseRateUom === true || u.BaseRateUom === 1) {
                         baseUomCode = u.Id;
+                    }
+                    if (u.BasePackUom === true || u.BasePackUom === 1) {
+                        basePackUomCode = u.Id;
                     }
                 });
                 if (baseUomCode !== null) {
                     $uom.val(baseUomCode);
                 }
+                if (basePackUomCode !== null) {
+                    $packUom.val(basePackUomCode);
+                } else if (baseUomCode !== null) {
+                    $packUom.val(baseUomCode); // fall back to the same schedule row desktop uses for Rate Uom
+                }
             }
+            // Refresh select2 (".so-select2") after rebuilding these two dropdowns' options and
+            // selection - see bindCombo() for why trigger('change') is required.
+            $uom.trigger('change');
+            $packUom.trigger('change');
+            if (pendingLineUomSelection) {
+                $uom.val(pendingLineUomSelection.rateUomId).trigger('change');
+                $packUom.val(pendingLineUomSelection.packUomId).trigger('change');
+                pendingLineUomSelection = null;
+            }
+            calcLine('qty');
         });
     });
 
@@ -312,24 +364,40 @@ function recalcNetRecoverable() {
 // =========================================================
 // 3. DETAIL LINE ITEM ENTRY & GRID
 // =========================================================
-function calcLine() {
+function calcLine(source) {
     var qty = parseFloat($('#lineQty').val()) || 0;
     var rate = parseFloat($('#lineRate').val()) || 0;
-    var weight = qty * 40; // Standard 40KG equivalent
-    $('#lineWeight').val(weight.toFixed(2));
-    $('#lineAmount').val((qty * rate).toFixed(2));
+    var weight = parseFloat($('#lineWeight').val()) || 0;
+    var packEquivalent = parseFloat($('#linePackUom option:selected').attr('data-equivalent')) || 0;
+    var rateEquivalent = parseFloat($('#lineRateUom option:selected').attr('data-equivalent')) || 0;
+    if (source === 'weight' && packEquivalent > 0) {
+        qty = weight / packEquivalent;
+        $('#lineQty').val(qty.toFixed(3));
+    } else if (packEquivalent > 0) {
+        weight = qty * packEquivalent;
+        $('#lineWeight').val(weight.toFixed(3));
+    }
+    var amount = (weight > 0 && rateEquivalent > 0 && rate > 0)
+        ? Math.round((weight / rateEquivalent) * rate)
+        : 0;
+    $('#lineAmount').val(amount.toFixed(4));
 }
 
 function btnAddRow_Click() {
     var itemId = $('#lineItem').val();
     var itemName = $('#lineItem option:selected').text();
-    var cropYear = $('#lineCropYear').val() || '2025-26';
+    var itemCode = $('#lineItem option:selected').attr('data-code') || '';
+    var cropYearId = $('#lineCropYear').val() || '';
+    var cropYear = $('#lineCropYear option:selected').text() || '';
     var jobLot = $('#lineJobLot option:selected').text() || 'General';
     var packType = $('#linePackType option:selected').text() || 'PP Bags';
     var packSize = $('#linePackSize').val() || '40 KG';
     var qty = parseFloat($('#lineQty').val()) || 0;
     var weight = parseFloat($('#lineWeight').val()) || 0;
-    var rateUom = $('#lineRateUom').val() || '40KG';
+    var packUomId = $('#linePackUom').val() || '';
+    var packUom = $('#linePackUom option:selected').text() || '';
+    var rateUomId = $('#lineRateUom').val() || '';
+    var rateUom = $('#lineRateUom option:selected').text() || '';
     var rate = parseFloat($('#lineRate').val()) || 0;
     var amount = parseFloat($('#lineAmount').val()) || 0;
     var bagPrice = parseFloat($('#lineBagPrice').val()) || 0;
@@ -355,13 +423,15 @@ function btnAddRow_Click() {
     if (!cropYear) { alert('Crop Year not found in detail grid.'); return; }
     if (!jobLotIdVal) { alert('Job Lot not found in detail grid.'); return; }
     if (!packTypeIdVal) { alert('Pack Type not found in detail grid.'); return; }
+    if (!packUomId) { alert('Pack Uom not found in detail grid.'); return; }
     if (weight <= 0) { alert('New Weight not found in detail grid.'); return; }
     if (rate > 0 && amount <= 0) { alert('Amount not found in detail grid.'); return; }
 
     var itemObj = {
         itemId: itemId,
         itemName: itemName,
-        itemCode: 'ITM-' + itemId,
+        cropYearId: cropYearId ? parseInt(cropYearId) : null,
+        itemCode: itemCode,
         cropYear: cropYear,
         jobLot: jobLot,
         jobLotId: jobLotIdVal,
@@ -370,7 +440,10 @@ function btnAddRow_Click() {
         packSize: packSize,
         quantity: qty,
         weight: weight,
+        packUomId: packUomId,
+        packUom: packUom,
         rateUom: rateUom,
+        rateUomId: rateUomId,
         rate: rate,
         amount: amount,
         bagPrice: bagPrice,
@@ -384,7 +457,17 @@ function btnAddRow_Click() {
         commOnSale: commOnSale
     };
 
-    currentLineItems.push(itemObj);
+    if (editingLineIndex >= 0) {
+        var persisted = currentLineItems[editingLineIndex];
+        itemObj.id = persisted.id || 0;
+        itemObj.actionTypeId = itemObj.id > 0 ? 2 : 1;
+        currentLineItems[editingLineIndex] = itemObj;
+    } else {
+        itemObj.id = 0;
+        itemObj.actionTypeId = 1;
+        currentLineItems.push(itemObj);
+    }
+    editingLineIndex = -1;
     renderDetailGrid();
     clearLineEntry();
 }
@@ -392,13 +475,13 @@ function btnAddRow_Click() {
 function renderDetailGrid() {
     var tbody = $('#tblDetail tbody').empty();
     if (currentLineItems.length === 0) {
-        tbody.append('<tr><td colspan="19" class="text-center text-muted" style="padding: 12px;">No order line items added yet. Record: 0 of 0</td></tr>');
+        tbody.append('<tr><td colspan="20" class="text-center text-muted" style="padding: 12px;">No order line items added yet. Record: 0 of 0</td></tr>');
         recalcTotals();
         return;
     }
 
     currentLineItems.forEach(function (item, index) {
-        var tr = `<tr>
+        var tr = `<tr ondblclick="editLineItem(${index})" title="Double-click to edit">
             <td class="text-center"><button class="btn btn-sm btn-danger p-0 px-1" onclick="removeLineItem(${index})">&times;</button></td>
             <td>${item.itemCode}</td>
             <td>${item.itemName}</td>
@@ -408,6 +491,7 @@ function renderDetailGrid() {
             <td>${item.packSize}</td>
             <td class="text-end qty-val">${item.quantity.toFixed(2)}</td>
             <td class="text-end wt-val">${item.weight.toFixed(2)}</td>
+            <td>${item.packUom || item.packUomId || ''}</td>
             <td>${item.rateUom}</td>
             <td class="text-end">${item.rate.toFixed(2)}</td>
             <td class="text-end amt-val">${item.amount.toFixed(2)}</td>
@@ -425,15 +509,49 @@ function renderDetailGrid() {
     recalcTotals();
 }
 
+function editLineItem(index) {
+    var item = currentLineItems[index];
+    if (!item) return;
+    editingLineIndex = index;
+    pendingLineUomSelection = { packUomId: item.packUomId, rateUomId: item.rateUomId };
+    $('#lineItem').val(item.itemId).trigger('change');
+    $('#lineCropYear').val(item.cropYearId || '').trigger('change');
+    $('#lineJobLot').val(item.jobLotId || '').trigger('change');
+    $('#linePackType').val(item.packingTypeId || '').trigger('change');
+    $('#linePackSize').val(item.packSize || '');
+    $('#lineQty').val(item.quantity);
+    $('#lineWeight').val(item.weight);
+    $('#lineRate').val(item.rate);
+    $('#lineAmount').val(item.amount);
+    $('#lineBagPrice').val(item.bagPrice);
+    $('#lineWtCut').val(item.weightCut);
+    $('#lineCityArea').val(item.cityId || '').trigger('change');
+    $('#lineWarehouse').val(item.warehouseId || '').trigger('change');
+    $('#lineLabSample').val(item.labSample || '');
+    $('#lineRemarks').val(item.remarks || '');
+    $('#lineCommOnSale').prop('checked', !!item.commOnSale);
+}
+
 function removeLineItem(index) {
-    currentLineItems.splice(index, 1);
+    var removed = currentLineItems.splice(index, 1)[0];
+    if (removed && parseInt(removed.id) > 0) {
+        removed.actionTypeId = 3;
+        removedLineItems.push(removed);
+    }
     renderDetailGrid();
 }
 
 function clearLineEntry() {
+    editingLineIndex = -1;
     $('#lineItem').val('');
     $('#lineQty').val('');
     $('#lineWeight').val('');
+    // NOTE: Pack Uom (like Rate Uom, see #lineRateUom below) is intentionally left
+    // populated here. Both dropdowns are (re)populated together from the same
+    // /api/item-uoms/{itemId} response inside the #lineItem change handler; emptying
+    // only #linePackUom here (and not #lineRateUom) left it with zero <option>
+    // elements after every successful "Add Row" click - the reported "UOM pack
+    // dropdown is empty" bug - until the user re-selected an Item to repopulate it.
     $('#lineRate').val('');
     $('#lineAmount').val('0.00');
     $('#lineBagPrice').val('');
@@ -702,14 +820,23 @@ function openStockReportWithValue() {
 
 function openPreBookingModal() {
     $.get('/sale/sale-order/api/pre-booking-orders', function (data) {
+        preBookingRows = data || [];
         var tbody = $('#tblPreBookingModal tbody').empty();
         if (!data || data.length === 0) {
             tbody.append('<tr><td colspan="5" class="text-center text-muted" style="padding:15px;">No pre-booking orders available.</td></tr>');
         } else {
+            var grouped = {};
             data.forEach(function (row) {
+                var id = row.PreBookingOrderId;
+                if (!grouped[id]) grouped[id] = { id: id, docNo: row.DocNo, date: row.DocDate,
+                    customerName: row.CustomerName, totalQty: 0 };
+                grouped[id].totalQty += parseFloat(row.BalQty) || 0;
+            });
+            Object.keys(grouped).forEach(function (key) {
+                var row = grouped[key];
                 tbody.append(`<tr>
-                    <td>BO-${row.id}</td>
-                    <td>${row.date || ''}</td>
+                    <td><button type="button" class="voucher-link" onclick="loadPreBooking(${row.id})">BO-${row.docNo || ''}</button></td>
+                    <td>${formatDateValue(row.date)}</td>
                     <td>${row.customerName || ''}</td>
                     <td class="text-end">${(parseFloat(row.totalQty) || 0).toFixed(2)}</td>
                     <td class="text-center"><button class="btn btn-sm btn-primary" onclick="loadPreBooking(${row.id})">Load</button></td>
@@ -720,8 +847,84 @@ function openPreBookingModal() {
     });
 }
 
+function loadPreBooking(id) {
+    var rows = preBookingRows.filter(function (row) { return parseInt(row.PreBookingOrderId) === parseInt(id); });
+    if (!rows.length) return;
+    var first = rows[0];
+    $('#cmbCustomer').val(first.OrderSupCustId || '').trigger('change');
+    currentLineItems = rows.filter(function (row) { return (parseFloat(row.BalQty) || 0) > 0; }).map(function (row) {
+        return {
+            id: 0, actionTypeId: 1, refDocId: row.PreBookingOrderId, refDocDetailId: row.DetailId,
+            itemId: row.OrderItemId, itemCode: row.ItemCode || '', itemName: row.ItemName || '',
+            cropYearId: row.CropYearId || '', cropYear: row.CropYear || '',
+            jobLotId: row.JobLotId || '', jobLot: row.JobLot || '',
+            packingTypeId: $('#linePackType').val() || '', packingType: $('#linePackType option:selected').text() || '',
+            packUomId: row.OrderItemUOMId || '', packUom: row.PackUom || '', packSize: row.PackUom || '',
+            quantity: parseFloat(row.BalQty) || 0, weight: parseFloat(row.BalWeight) || 0,
+            rateUomId: row.OrderItemRateUOMId || '', rateUom: row.RateUom || '',
+            rate: parseFloat(row.OrderItemRate) || 0, amount: parseFloat(row.BalAmount) || 0,
+            bagPrice: 0, weightCut: 0, cityId: $('#lineCityArea').val() || '',
+            cityArea: $('#lineCityArea option:selected').text() || '', warehouseId: $('#lineWarehouse').val() || '',
+            warehouse: $('#lineWarehouse option:selected').text() || '', labSample: '', remarks: '',
+            commOnSale: false, costCenterId: row.CostCenterId || null
+        };
+    });
+    renderDetailGrid();
+    $('#modalPreBooking').modal('hide');
+}
+
 function openAttachmentsModal() {
+    if (!currentEditingOrderId) {
+        alert('Save or load a Sale Order before managing attachments.');
+        return;
+    }
+    loadAttachments();
     $('#modalAttachments').modal('show');
+}
+
+function loadAttachments(rows) {
+    var request = rows ? $.Deferred().resolve(rows).promise()
+        : $.get('/sale/sale-order/api/' + currentEditingOrderId + '/attachments');
+    request.done(function (data) {
+        var list = $('#attachmentList').empty();
+        if (!data || data.length === 0) {
+            list.append('<div class="text-muted">No attachments.</div>');
+            return;
+        }
+        data.forEach(function (row) {
+            list.append('<label class="d-flex align-items-center gap-2 mb-1">' +
+                '<input type="checkbox" class="remove-sale-order-attachment" value="' + row.Id + '"> Remove ' +
+                '<a href="/sale/sale-order/api/' + currentEditingOrderId + '/attachments/' + row.Id + '">' +
+                $('<div>').text(row.Attachment || 'Attachment').html() + '</a></label>');
+        });
+    });
+}
+
+function fileAsUpload(file) {
+    return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () { resolve({ name: file.name, base64: String(reader.result).split(',')[1] || '' }); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function saveAttachments() {
+    if (!currentEditingOrderId) return;
+    var files = Array.from(document.getElementById('attachmentFile').files || []);
+    var removeIds = $('.remove-sale-order-attachment:checked').map(function () { return parseInt(this.value); }).get();
+    Promise.all(files.map(fileAsUpload)).then(function (uploads) {
+        return $.ajax({
+            url: '/sale/sale-order/api/' + currentEditingOrderId + '/attachments',
+            method: 'POST', contentType: 'application/json',
+            data: JSON.stringify({ files: uploads, removeAttachmentIds: removeIds })
+        });
+    }).then(function (rows) {
+        $('#attachmentFile').val('');
+        loadAttachments(rows);
+    }).catch(function (error) {
+        alert(error.responseJSON && error.responseJSON.message ? error.responseJSON.message : 'Unable to save attachments.');
+    });
 }
 
 // =========================================================
@@ -760,6 +963,7 @@ function btnSave_Click() {
     });
 
     var payload = {
+        id: currentEditingOrderId || null,
         voucherCode: parseInt($('#txtDocNo').val()) || 0,
         orderDate: $('#txtDocDate').val(),
         dueDate: $('#txtDueDate').val(),
@@ -789,7 +993,7 @@ function btnSave_Click() {
         otherCommAmount: parseFloat($('#txtOtherCommAmount').val()) || 0,
         otherCommRemarks: $('#txtOtherCommRemarks').val(),
         remarks: $('#txtRemarks').val(),
-        lineItems: currentLineItems,
+        lineItems: currentLineItems.concat(removedLineItems),
         expenseItems: expenseRowsForSave,
         paymentSchedules: paymentResult.rows
     };
@@ -801,8 +1005,11 @@ function btnSave_Click() {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.success) {
+                currentEditingOrderId = res.id;
+                removedLineItems = [];
+                if (res.docNo != null) $('#txtDocNo').val(res.docNo);
                 alert(res.message || 'Sale Order saved successfully!');
-                location.reload();
+                loadOrderIntoForm(res.id);
             } else {
                 alert('Error: ' + (res.message || 'Failed to save Sale Order.'));
             }
@@ -814,27 +1021,46 @@ function btnSave_Click() {
 }
 
 function btnPrintReport(reportCode) {
+    var id = currentEditingOrderId || 0;
+    if (!id) {
+        alert('Save or load a Sale Order before printing.');
+        return;
+    }
     window.print();
 }
 
+function formatDateValue(value) {
+    if (!value) return '';
+    var date = new Date(value);
+    if (isNaN(date.getTime())) return String(value);
+    return String(date.getDate()).padStart(2, '0') + '-' +
+        date.toLocaleString('en-GB', { month: 'short' }) + '-' +
+        String(date.getFullYear()).slice(-2);
+}
+
 function loadHistoryData() {
-    $.get('/sale/sale-order/api/history', function (data) {
+    var query = $.param({
+        fromDate: $('#histFromDate').val() || '',
+        toDate: $('#histToDate').val() || '',
+        customerId: $('#histCustomerCombo').val() || ''
+    });
+    $.get('/sale/sale-order/api/history?' + query, function (data) {
         var tbody = $('#tblHistory tbody').empty();
         if (!data || data.length === 0) {
             tbody.append('<tr><td colspan="9" class="text-center text-muted" style="padding:15px;">No history records found.</td></tr>');
             return;
         }
         data.forEach(function (item) {
-            var tr = `<tr data-id="${item.id}" ondblclick="loadOrderIntoForm(${item.id})">
-                <td class="text-center"><button class="btn btn-sm btn-primary p-0 px-2" onclick="loadOrderIntoForm(${item.id})">Edit</button></td>
-                <td class="text-center"><button class="btn btn-sm btn-warning p-0 px-2" onclick="btnPrintReport(${item.id})">Print</button></td>
-                <td>SO-${item.voucherCode || ''}</td>
-                <td>${item.orderDate || ''}</td>
-                <td>${item.customerCode || 'CUST-01'}</td>
-                <td>${item.customerName || 'N/A'}</td>
-                <td class="text-end font-weight-bold">${(parseFloat(item.totalAmount) || 0).toFixed(2)}</td>
-                <td>${item.entryDate || item.orderDate || ''}</td>
-                <td class="text-center"><span class="badge bg-success">Approved</span></td>
+            var tr = `<tr data-id="${item.Id}" ondblclick="loadOrderIntoForm(${item.Id})">
+                <td class="text-center"><button class="btn btn-sm btn-primary p-0 px-2" onclick="loadOrderIntoForm(${item.Id})">Edit</button></td>
+                <td class="text-center"><button class="btn btn-sm btn-warning p-0 px-2" onclick="currentEditingOrderId=${item.Id};btnPrintReport('273')">Print</button></td>
+                <td><button type="button" class="voucher-link" onclick="loadOrderIntoForm(${item.Id})">SO-${item.DocNo || ''}</button></td>
+                <td>${formatDateValue(item.DocDate)}</td>
+                <td>${item.PartyCode || item.CustomerCode || ''}</td>
+                <td>${item.CustomerName || ''}</td>
+                <td class="text-end font-weight-bold">${(parseFloat(item.OrderAmount || item.TotalAmount) || 0).toFixed(2)}</td>
+                <td>${formatDateValue(item.EntryDate)}</td>
+                <td class="text-center">${(item.IsAproved === true || item.IsAproved === 1) ? 'Approved' : 'Not Approved'}</td>
             </tr>`;
             tbody.append(tr);
         });
@@ -849,6 +1075,7 @@ function loadOrderIntoForm(id) {
     $.get('/sale/sale-order/api/' + id, function (data) {
         if (!data) return alert('Failed to load order (not found).');
         showFormTab();
+        currentEditingOrderId = data.Id || id;
         $('#txtDocNo').val(data.DocNo != null ? data.DocNo : id);
         $('#txtDocDate').val(data.DocDate ? data.DocDate.substring(0, 10) : '');
         $('#cmbCustomer').val(data.OrderSupCustId || '').trigger('change');
@@ -877,12 +1104,14 @@ function loadOrderIntoForm(id) {
         // Mapped into the existing internal currentLineItems shape the Detail-tab grid code already uses
         // (that grid's own real-schema rebuild is a separate pending task - this only fixes what data feeds it).
         if (data.lineItems && data.lineItems.length > 0) {
+            removedLineItems = [];
             currentLineItems = data.lineItems.map(function (l) {
                 return {
                     itemId: l.OrderItemId,
                     itemName: l.ItemName || 'Item',
                     itemCode: l.ItemCodeNew || ('ITM-' + l.OrderItemId),
                     cropYear: l.Crop || '',
+                    cropYearId: l.CropYearID || l.CropYearId || '',
                     jobLot: l.JobLotDescription || '',
                     jobLotId: l.JobLotId || '',
                     packingType: l.PackingType || '',
@@ -890,7 +1119,10 @@ function loadOrderIntoForm(id) {
                     packSize: '',
                     quantity: parseFloat(l.OrderItemQty) || 0,
                     weight: parseFloat(l.NetWeight) || 0,
+                    packUomId: l.OrderItemUOMId || '',
+                    packUom: l.PackUom || l.PackUomCode || '',
                     rateUom: l.RateUom || l.UOMCode || '',
+                    rateUomId: l.OrderItemRateUOMId || '',
                     rate: parseFloat(l.OrderItemRate) || 0,
                     amount: parseFloat(l.Amount) || 0,
                     bagPrice: parseFloat(l.BagPrice) || 0,
@@ -902,9 +1134,8 @@ function loadOrderIntoForm(id) {
                     labSample: l.LabSampleNo || '',
                     remarks: l.OrderRemarks || '',
                     commOnSale: l.CommOnSale === true || l.CommOnSale === 1,
-                    // Row identity/soft-delete plumbing needed by the real save proc
-                    // (Sp_SaleOrderDetail_Insert branches on ActionTypeId) - not yet consumed by
-                    // the backend (still blocked), kept here so it's ready when unblocked.
+                    // Sp_SaleOrderDetail_Insert branches on ActionTypeId; removed persisted rows
+                    // are retained separately and posted back as ActionTypeId=3.
                     id: l.Id || 0,
                     actionTypeId: 2
                 };
@@ -912,6 +1143,7 @@ function loadOrderIntoForm(id) {
             renderDetailGrid();
         } else {
             currentLineItems = [];
+            removedLineItems = [];
             renderDetailGrid();
         }
 

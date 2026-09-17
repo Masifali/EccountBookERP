@@ -30,7 +30,8 @@
         }
 
         .win-container {
-            width: 1260px;
+            width: 100%;
+            max-width: 1360px;
             margin: 0 auto;
             background-color: var(--win-bg);
             border: 1px solid var(--win-border);
@@ -77,6 +78,16 @@
         }
         .tool-btn:hover { background-color: var(--btn-hover); }
         .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .spinner {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 2px solid rgba(0,0,0,0.3);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Secondary Teal Bar */
         .status-strip {
@@ -113,7 +124,7 @@
 
         .grid-3col {
             display: grid;
-            grid-template-columns: 370px 310px 1fr;
+            grid-template-columns: 370px 320px 1fr;
             gap: 8px;
         }
 
@@ -141,6 +152,19 @@
         }
         .form-control[readonly] { background-color: #eef2f5; }
         select.form-control { height: 21px; }
+
+        /* Searchable Select Container */
+        .search-select-box {
+            position: relative;
+            display: inline-block;
+        }
+        .search-select-box input.search-input {
+            width: 100%;
+            height: 20px;
+            font-size: 11px;
+            border: 1px solid var(--input-border);
+            padding: 1px 4px;
+        }
 
         /* Factory / Supplier / Difference Table */
         .wt-table {
@@ -206,6 +230,7 @@
             max-height: 380px;
             border: 1px solid #999;
             background-color: #fff;
+            width: 100%;
         }
         .data-grid {
             width: 100%;
@@ -228,6 +253,7 @@
         }
         .data-grid tr:hover { background-color: #eef6ff; cursor: pointer; }
         .data-grid tr.selected { background-color: #3399ff; color: #fff; }
+        .code-link { color: #003366; font-weight: bold; text-decoration: underline; cursor: pointer; }
 
         .totals-bar {
             background-color: #f0f0f0;
@@ -239,7 +265,7 @@
             font-size: 11px;
         }
 
-        /* Bottom Mode Tabs (Form / History) */
+        /* Bottom Mode Bar */
         .bottom-mode-bar {
             display: flex;
             background-color: #d4d0c8;
@@ -256,7 +282,7 @@
         }
         .mode-btn.active { background: #fff; font-weight: bold; color: #003366; }
 
-        /* History Filter Panel matching Desktop Screenshot */
+        /* History Filter Panel */
         .history-filter-box {
             border: 1px solid #a0a0a0;
             background-color: #f5f5f5;
@@ -292,7 +318,7 @@
         <div style="font-size: 11px; font-weight: normal;">
             <span id="txtUserTitle">Numan Rasheed (Admin)</span> |
             <span>Golden Ace Rice Mills (Pvt) Ltd.</span> |
-            <span id="txtLiveTime">11:14:11 am</span> |
+            <span id="txtLiveTime">03:47:54 pm</span> |
             <span>2026-27</span>
         </div>
     </div>
@@ -301,10 +327,10 @@
     <div id="viewForm">
         <!-- Toolbar Buttons -->
         <div class="toolbar">
-            <button id="btnnew" class="tool-btn" onclick="onNewRecord()">+ New</button>
-            <button id="btnRefresh" class="tool-btn" onclick="onRefreshForm()">Refresh</button>
-            <button id="btnsave" class="tool-btn" onclick="onSaveRecord()">Save</button>
-            <button id="btnupdate" class="tool-btn" onclick="onSaveRecord()" style="display:none;">Update</button>
+            <button id="btnnew" class="tool-btn" onclick="withButtonLoading(this, onNewRecord)">+ New</button>
+            <button id="btnRefresh" class="tool-btn" onclick="withButtonLoading(this, onRefreshForm)">Refresh</button>
+            <button id="btnsave" class="tool-btn" onclick="withButtonLoading(this, onSaveRecord)">Save</button>
+            <button id="btnupdate" class="tool-btn" onclick="withButtonLoading(this, onSaveRecord)" style="display:none;">Update</button>
             <button id="btnAttachment" class="tool-btn" onclick="onOpenAttachments()">Attachment</button>
             <button id="btndefvehicle" class="tool-btn" onclick="onDefineVehicle()">Define Vehicle</button>
             <button id="btndefinecity" class="tool-btn" onclick="onDefineCity()">Define City</button>
@@ -313,7 +339,7 @@
             <button id="btnLabReport653" class="tool-btn" onclick="onLabReport()">653-LabReport</button>
             <button id="BtnDriverForm" class="tool-btn" onclick="onOpenDriverForm()">Driver Bio</button>
             <button id="btnShortcutKeys" class="tool-btn" onclick="onShowShortcuts()">Shortcut Keys</button>
-            <button id="btnDelete" class="tool-btn" onclick="onDeleteRecord()" style="margin-left: auto; color: red;">Delete</button>
+            <button id="btnDelete" class="tool-btn" onclick="withButtonLoading(this, onDeleteRecord)" style="margin-left: auto; color: red;">Delete</button>
         </div>
 
         <!-- Status Strip -->
@@ -402,11 +428,11 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Vehicle No<span class="req-star">*</span></div>
-                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. KSS-1933" />
+                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. OKB-1254" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty No</div>
-                        <input type="text" id="txtbiltyno" class="form-control" style="width: 170px;" />
+                        <input type="text" id="txtbiltyno" class="form-control" style="width: 170px;" value="*" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty Date</div>
@@ -414,23 +440,23 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty Freight</div>
-                        <input type="number" id="txtfreight" class="form-control" style="width: 170px;" value="0" />
+                        <input type="number" id="txtfreight" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Advance By Party</div>
-                        <input type="number" id="txtAdvanceByParty" class="form-control" style="width: 170px;" value="0" />
+                        <input type="number" id="txtAdvanceByParty" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Advance By Factory</div>
-                        <input type="number" id="txtAdvanceByFactory" class="form-control" style="width: 170px;" value="0" />
+                        <input type="number" id="txtAdvanceByFactory" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Total Payable Freight</div>
-                        <input type="number" id="txtTotalPayablesFreight" class="form-control" style="width: 170px;" value="0" />
+                        <input type="number" id="txtTotalPayablesFreight" class="form-control" style="width: 170px;" value="0" readonly />
                     </div>
                     <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Net Paid</div>
-                        <input type="number" id="txtNetPaid" class="form-control" style="width: 170px;" value="0" />
+                        <div class="form-label" style="width: 110px;">Net Paid<span class="req-star">*</span></div>
+                        <input type="number" id="txtNetPaid" class="form-control" style="width: 170px; font-weight: bold;" value="0" readonly />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Remarks Header</div>
@@ -473,13 +499,13 @@
                     </table>
 
                     <div class="form-row" style="margin-top: 4px;">
-                        <div class="form-label" style="width: 90px;">W.B Slip No</div>
+                        <div class="form-label" style="width: 90px;">W.B Slip No<span class="req-star">*</span></div>
                         <input type="text" id="txtWeighBridgeSlipNo" class="form-control" style="width: 70px;" value="0" />
                         <span class="form-label" style="width: 50px;">In Time</span>
                         <input type="datetime-local" id="txtintime" class="form-control" style="width: 150px;" />
                     </div>
                     <div class="form-row">
-                        <div class="form-label" style="width: 90px;">W.B Status</div>
+                        <div class="form-label" style="width: 90px;">W.B Status<span class="req-star">*</span></div>
                         <select id="cmbWeighBridge" class="form-control" style="width: 70px;">
                             <option value="">-- Select --</option>
                             <option th:each="w : ${weighBridges}" th:value="${w.id}" th:text="${w.name}"></option>
@@ -488,7 +514,7 @@
                         <input type="datetime-local" id="txtouttime" class="form-control" style="width: 150px;" />
                     </div>
                     <div class="form-row">
-                        <div class="form-label" style="width: 90px;">G.P Status</div>
+                        <div class="form-label" style="width: 90px;">G.P Status<span class="req-star">*</span></div>
                         <select id="CmbStatus" class="form-control" style="width: 70px;">
                             <option value="Open">Open</option>
                             <option value="Closed">Closed</option>
@@ -503,8 +529,11 @@
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">P.O Excess Wt</div>
                         <input type="number" id="txtAccessWeight" class="form-control" style="width: 70px;" value="0" />
-                        <span class="form-label" style="width: 70px;">Weight Remarks</span>
-                        <input type="text" id="txtWeightDiffRemarks" class="form-control" style="width: 130px;" />
+                        <span class="form-label" style="width: 70px;">Transit Vehicle</span>
+                        <select id="cmbTransitVehicle" class="form-control" style="width: 130px;">
+                            <option value="">-- Select --</option>
+                            <option th:each="t : ${transitVehicles}" th:value="${t.id}" th:text="${t.name}"></option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -524,11 +553,15 @@
 
                 <!-- Driver Info -->
                 <div class="section-box">
-                    <div class="section-title">Driver Information</div>
+                    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Driver Information</span>
+                        <button class="tool-btn" style="height:18px; padding:0 6px; font-size:10px;" onclick="resetDriverInfoFields()" title="Reset Driver Fields">Reset Driver Info</button>
+                    </div>
                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                        <input type="text" id="txtCNIC" class="form-control" placeholder="CNIC #" style="width: 110px;" />
-                        <input type="text" id="txtDriverCellNo" class="form-control" placeholder="Driver Cell #" style="width: 100px;" />
+                        <input type="text" id="txtCNIC" class="form-control" placeholder="CNIC #" style="width: 110px;" onchange="lookupDriverByCnic()" />
+                        <input type="text" id="txtDriverCellNo" class="form-control" placeholder="Driver Cell #" style="width: 100px;" onchange="lookupDriverByCell()" />
                         <input type="text" id="txtWhatsAppNo" class="form-control" placeholder="WhatsApp #" style="width: 100px;" />
+                        <input type="text" id="txtAlternateCellNo" class="form-control" placeholder="Alternate Cell#" style="width: 100px;" />
                         <input type="text" id="txtDriverName" class="form-control" placeholder="Driver Name" style="width: 110px;" />
                         <input type="text" id="txtFatherName" class="form-control" placeholder="Father Name" style="width: 110px;" />
                         <input type="text" id="txtFatherCNIC" class="form-control" placeholder="Father CNIC" style="width: 110px;" />
@@ -581,7 +614,7 @@
                             <tr th:each="row : ${historyList}" th:attr="ondblclick='loadRecordAndEdit(' + ${row.Id} + ')'">
                                 <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='onPrintReport(' + ${row.Id} + ')'">Print</button></td>
                                 <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'">Edit</button></td>
-                                <td th:text="${row.GpSrNo}"></td>
+                                <td><span class="code-link" th:text="${row.GpSrNo}" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'"></span></td>
                                 <td th:text="${row.GpDate != null ? #strings.substring(row.GpDate.toString(), 0, 10) : ''}"></td>
                                 <td th:text="${row.GatepassType}"></td>
                                 <td th:text="${row.OrderType != null ? row.OrderType : 'Purchase Order'}"></td>
@@ -617,7 +650,7 @@
                     <div class="form-row" style="margin-bottom: 6px;">
                         <span>From Date:</span> <input type="date" id="txtFromPoDate" class="form-control" style="width: 120px; margin: 0 6px;" />
                         <span>To Date:</span> <input type="date" id="txtToPoDate" class="form-control" style="width: 120px; margin: 0 6px;" />
-                        <button class="tool-btn" onclick="loadPoInfoGrid()">Show PO Info</button>
+                        <button id="btnSearchPoInfo" class="tool-btn" onclick="withButtonLoading(this, loadPoInfoGrid)">Show PO Info</button>
                     </div>
                     <div class="grid-wrap">
                         <table class="data-grid" id="grdPoInfo">
@@ -647,7 +680,7 @@
         <!-- History Toolbar -->
         <div class="toolbar">
             <button class="tool-btn" onclick="onSwitchToFormNew()">+ New</button>
-            <button class="tool-btn" onclick="executeFullHistorySearch()">Refresh</button>
+            <button id="btnHistRefresh" class="tool-btn" onclick="withButtonLoading(this, executeFullHistorySearch)">Refresh</button>
         </div>
 
         <!-- History Teal Status Strip -->
@@ -683,7 +716,7 @@
                     </select>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
-                    <button class="tool-btn" style="background-color: #005a5b; color: white; height: 22px; padding: 0 16px;" onclick="executeFullHistorySearch()">Show</button>
+                    <button id="btnHistShow" class="tool-btn" style="background-color: #005a5b; color: white; height: 22px; padding: 0 16px;" onclick="withButtonLoading(this, executeFullHistorySearch)">Show</button>
                 </div>
                 <div style="display: flex; align-items: flex-end; gap: 8px; padding-left: 10px;">
                     <label><input type="radio" name="histDateFilter" value="docDate" checked> Doc Date</label>
@@ -734,7 +767,7 @@
                     <tr th:each="row : ${historyList}" th:attr="ondblclick='loadRecordAndEdit(' + ${row.Id} + ')'">
                         <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='onPrintReport(' + ${row.Id} + ')'">Print</button></td>
                         <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'">Edit</button></td>
-                        <td th:text="${row.GpSrNo}"></td>
+                        <td><span class="code-link" th:text="${row.GpSrNo}" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'"></span></td>
                         <td th:text="${row.GpDate != null ? #strings.substring(row.GpDate.toString(), 0, 10) : ''}"></td>
                         <td th:text="${row.GatepassType}"></td>
                         <td th:text="${row.OrderType != null ? row.OrderType : 'Purchase Order'}"></td>
@@ -787,6 +820,31 @@
         loadMainHistoryGrid();
     });
 
+    function withButtonLoading(btn, asyncFn) {
+        if (!btn || btn.disabled) return;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Loading...`;
+        
+        try {
+            const result = asyncFn();
+            if (result && typeof result.then === 'function') {
+                result.finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                });
+            } else {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }, 300);
+            }
+        } catch(err) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
     function setDefaultDates() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('txtgpdate').value = today;
@@ -797,7 +855,6 @@
         const threeDaysAgo = new Date();
         threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
         const threeDaysAgoIso = threeDaysAgo.toISOString().split('T')[0];
-
         document.getElementById('txtHistFromDate').value = threeDaysAgoIso;
         document.getElementById('txtHistToDate').value = today;
 
@@ -807,7 +864,7 @@
     }
 
     function loadDropdowns() {
-        fetch('/api/inward-gate-pass/dropdowns')
+        return fetch('/api/inward-gate-pass/dropdowns')
             .then(res => res.json())
             .then(data => {
                 bindSelect('cmbsupp', data.suppliers, 'id', 'name');
@@ -817,6 +874,7 @@
                 bindSelect('CmbVariety', data.items, 'id', 'name');
                 bindSelect('cmbWeighBridge', data.weighBridges, 'id', 'name');
                 bindSelect('CmbPackingType', data.packingTypes, 'id', 'name');
+                bindSelect('cmbTransitVehicle', data.transitVehicles, 'id', 'name');
                 bindSelect('cmbHistSupplier', data.suppliers, 'id', 'name');
 
                 selectDefaultByText('cmbgptype', ['Rice', 'Paddy']);
@@ -830,6 +888,7 @@
 
     function bindSelect(elemId, list, valKey, textKey) {
         const sel = document.getElementById(elemId);
+        if (!sel) return;
         sel.innerHTML = '<option value="">-- Select --</option>';
         if (list) {
             list.forEach(item => {
@@ -891,10 +950,17 @@
         document.getElementById('txtqty').value = '0';
         document.getElementById('txtPackUnit').value = '60';
         document.getElementById('txtWeight').value = '0';
+        document.getElementById('txtfreight').value = '0';
+        document.getElementById('txtAdvanceByParty').value = '0';
+        document.getElementById('txtAdvanceByFactory').value = '0';
+        document.getElementById('txtTotalPayablesFreight').value = '0';
+        document.getElementById('txtNetPaid').value = '0';
         document.getElementById('txtFactoryWeight').value = '0';
         document.getElementById('txtSupplierFirstWeight').value = '0';
         document.getElementById('txtsecondWeight').value = '0';
         document.getElementById('txtSupplierSecondWeight').value = '0';
+
+        resetDriverInfoFields();
 
         selectDefaultByText('cmbgptype', ['Rice', 'Paddy']);
         selectDefaultByText('cmbcity', ['Khudian Khas', 'Khudian']);
@@ -904,11 +970,12 @@
         selectDefaultByText('cmbWeighBridge', ['Auto']);
 
         calculateNetWeights();
+        calculateFreight();
 
         document.getElementById('btnsave').style.display = 'inline-flex';
         document.getElementById('btnupdate').style.display = 'none';
 
-        fetch('/api/inward-gate-pass/generate-no')
+        return fetch('/api/inward-gate-pass/generate-no')
             .then(res => res.json())
             .then(data => {
                 document.getElementById('txtgpno').value = data.gpSrNo || 1;
@@ -920,6 +987,15 @@
         const qty = parseFloat(document.getElementById('txtqty').value) || 0;
         const packUnit = parseFloat(document.getElementById('txtPackUnit').value) || 0;
         document.getElementById('txtWeight').value = (qty * packUnit).toFixed(2);
+    }
+
+    function calculateFreight() {
+        const biltyFreight = parseFloat(document.getElementById('txtfreight').value) || 0;
+        const advParty = parseFloat(document.getElementById('txtAdvanceByParty').value) || 0;
+        const advFactory = parseFloat(document.getElementById('txtAdvanceByFactory').value) || 0;
+        const totalPayable = Math.max(0, biltyFreight - advParty - advFactory);
+        document.getElementById('txtTotalPayablesFreight').value = totalPayable.toFixed(2);
+        document.getElementById('txtNetPaid').value = totalPayable.toFixed(2);
     }
 
     function calculateNetWeights() {
@@ -936,6 +1012,50 @@
         document.getElementById('txtFirstWtDifference').value = (supLoad - factLoad).toFixed(2);
         document.getElementById('txtSecondWtDifference').value = (supTare - factTare).toFixed(2);
         document.getElementById('txtDifferenceWeight').value = (supNet - factNet).toFixed(2);
+    }
+
+    function lookupDriverByCnic() {
+        const cnic = document.getElementById('txtCNIC').value.trim();
+        if (!cnic) return;
+        fetch(`/api/inward-gate-pass/driver-bio/cnic?cnic=${encodeURIComponent(cnic)}`)
+            .then(res => res.json())
+            .then(bio => {
+                if (bio && bio.DriverName) {
+                    document.getElementById('txtDriverName').value = bio.DriverName || '';
+                    document.getElementById('txtFatherName').value = bio.FatherName || '';
+                    document.getElementById('txtFatherCNIC').value = bio.FatherCnicNo || '';
+                    document.getElementById('txtDriverCellNo').value = bio.DriverCellNo || '';
+                    document.getElementById('txtWhatsAppNo').value = bio.WhatsappNo || '';
+                    document.getElementById('txtAlternateCellNo').value = bio.AlternateCellNo || '';
+                }
+            });
+    }
+
+    function lookupDriverByCell() {
+        const cell = document.getElementById('txtDriverCellNo').value.trim();
+        if (!cell) return;
+        fetch(`/api/inward-gate-pass/driver-bio/cell?cell=${encodeURIComponent(cell)}`)
+            .then(res => res.json())
+            .then(bio => {
+                if (bio && bio.DriverName) {
+                    document.getElementById('txtDriverName').value = bio.DriverName || '';
+                    document.getElementById('txtFatherName').value = bio.FatherName || '';
+                    document.getElementById('txtFatherCNIC').value = bio.FatherCnicNo || '';
+                    document.getElementById('txtCNIC').value = bio.CnicNo || '';
+                    document.getElementById('txtWhatsAppNo').value = bio.WhatsappNo || '';
+                    document.getElementById('txtAlternateCellNo').value = bio.AlternateCellNo || '';
+                }
+            });
+    }
+
+    function resetDriverInfoFields() {
+        document.getElementById('txtCNIC').value = '';
+        document.getElementById('txtDriverCellNo').value = '';
+        document.getElementById('txtWhatsAppNo').value = '';
+        document.getElementById('txtAlternateCellNo').value = '';
+        document.getElementById('txtDriverName').value = '';
+        document.getElementById('txtFatherName').value = '';
+        document.getElementById('txtFatherCNIC').value = '';
     }
 
     function onSaveRecord() {
@@ -969,6 +1089,7 @@
             driverCNICNO: document.getElementById('txtCNIC').value,
             driverMobileNo: document.getElementById('txtDriverCellNo').value,
             whatsappNo: document.getElementById('txtWhatsAppNo').value,
+            alternateCellNo: document.getElementById('txtAlternateCellNo').value,
             fatherName: document.getElementById('txtFatherName').value,
             fatherCnicNo: document.getElementById('txtFatherCNIC').value,
             gatePassInwardDetails: [
@@ -981,7 +1102,7 @@
             ]
         };
 
-        fetch('/api/inward-gate-pass/save', {
+        return fetch('/api/inward-gate-pass/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1001,7 +1122,7 @@
     }
 
     function loadMainHistoryGrid() {
-        fetch('/api/inward-gate-pass/history', {
+        return fetch('/api/inward-gate-pass/history', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ documentTypeId: 51 })
@@ -1022,7 +1143,7 @@
                     tr.innerHTML = `
                     <td><button class="tool-btn" style="padding:1px 4px;" onclick="onPrintReport(${row.Id})">Print</button></td>
                     <td><button class="tool-btn" style="padding:1px 4px;" onclick="loadRecordAndEdit(${row.Id})">Edit</button></td>
-                    <td>${row.GpSrNo || ''}</td>
+                    <td><span class="code-link" onclick="loadRecordAndEdit(${row.Id})">${row.GpSrNo || ''}</span></td>
                     <td>${row.GpDate ? row.GpDate.split('T')[0] : ''}</td>
                     <td>${row.GatepassType || ''}</td>
                     <td>${row.OrderType || 'Purchase Order'}</td>
@@ -1064,7 +1185,7 @@
             supplierId: document.getElementById('cmbHistSupplier').value
         };
 
-        fetch('/api/inward-gate-pass/history', {
+        return fetch('/api/inward-gate-pass/history', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1080,7 +1201,7 @@
                     tr.innerHTML = `
                     <td><button class="tool-btn" style="padding:1px 4px;" onclick="onPrintReport(${row.Id})">Print</button></td>
                     <td><button class="tool-btn" style="padding:1px 4px;" onclick="loadRecordAndEdit(${row.Id})">Edit</button></td>
-                    <td>${row.GpSrNo || ''}</td>
+                    <td><span class="code-link" onclick="loadRecordAndEdit(${row.Id})">${row.GpSrNo || ''}</span></td>
                     <td>${row.GpDate ? row.GpDate.split('T')[0] : ''}</td>
                     <td>${row.GatepassType || ''}</td>
                     <td>${row.OrderType || 'Purchase Order'}</td>
@@ -1108,9 +1229,40 @@
             });
     }
 
+    function loadPoInfoGrid() {
+        const payload = {
+            fromDate: document.getElementById('txtFromPoDate').value,
+            toDate: document.getElementById('txtToPoDate').value
+        };
+        return fetch('/api/inward-gate-pass/po-info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('grdPoInfoBody');
+                tbody.innerHTML = '';
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                    <td>${row.OrderNo || ''}</td>
+                    <td>${row.PODate ? row.PODate.split('T')[0] : ''}</td>
+                    <td>${row.SupplierName || ''}</td>
+                    <td>${row.ItemName || ''}</td>
+                    <td style="text-align:right;">${row.OrderQty || 0}</td>
+                    <td style="text-align:right;">${row.ReceivedQty || 0}</td>
+                    <td style="text-align:right;">${row.BalanceQty || 0}</td>
+                    <td>${row.Status || 'Open'}</td>
+                `;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
     function loadRecordAndEdit(id) {
         switchViewMode('Form');
-        fetch(`/api/inward-gate-pass/${id}`)
+        return fetch(`/api/inward-gate-pass/${id}`)
             .then(res => res.json())
             .then(res => {
                 if (res.success && res.header) {
@@ -1134,6 +1286,8 @@
                     document.getElementById('txtDriverName').value = h.DriverName || '';
                     document.getElementById('txtCNIC').value = h.DriverCNICNO || '';
                     document.getElementById('txtDriverCellNo').value = h.DriverMobileNo || '';
+                    document.getElementById('txtWhatsAppNo').value = h.WhatsappNo || '';
+                    document.getElementById('txtAlternateCellNo').value = h.AlternateCellNo || '';
 
                     if (res.details && res.details.length > 0) {
                         document.getElementById('txtqty').value = res.details[0].ItemQty || 0;
@@ -1142,6 +1296,7 @@
                     }
 
                     calculateNetWeights();
+                    calculateFreight();
                     document.getElementById('btnsave').style.display = 'none';
                     document.getElementById('btnupdate').style.display = 'inline-flex';
                 }
@@ -1152,10 +1307,10 @@
         const id = parseInt(document.getElementById('txtId').value) || 0;
         if (id <= 0) {
             alert('Please select a record to delete.');
-            return;
+            return Promise.resolve();
         }
         if (confirm('Are you sure you want to delete this Inward Gate Pass?')) {
-            fetch(`/api/inward-gate-pass/delete/${id}`, { method: 'POST' })
+            return fetch(`/api/inward-gate-pass/delete/${id}`, { method: 'POST' })
                 .then(res => res.json())
                 .then(data => {
                     alert(data.message);
@@ -1163,6 +1318,7 @@
                     loadMainHistoryGrid();
                 });
         }
+        return Promise.resolve();
     }
 
     function switchMainSubTab(tabId) {
@@ -1175,10 +1331,11 @@
         } else {
             document.querySelectorAll('.tab-container .tab-btn')[1].classList.add('active');
             document.getElementById('tabPoInfo').classList.add('active');
+            loadPoInfoGrid();
         }
     }
 
-    function onRefreshForm() { loadMainHistoryGrid(); }
+    function onRefreshForm() { return loadMainHistoryGrid(); }
     function onDefineCity() { alert('Define City form dialog placeholder'); }
     function onDefineVehicle() { alert('Define Vehicle form dialog placeholder'); }
     function onOpenDriverForm() { alert('Driver Biodata form dialog placeholder'); }

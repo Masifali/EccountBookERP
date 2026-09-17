@@ -53,6 +53,11 @@
         .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8pt; background-color: #ffffff; }
         .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color: #000000; font-weight: bold; border: 1px solid #999999; padding: 4px 5px; text-align: left; position: sticky; top: 0; z-index: 5; white-space: nowrap; }
         .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; color: #000000; vertical-align: middle; white-space: nowrap; }
+        /* In-cell ValueList (combo) editor, ditto a Janus GridEX EditType=4 column: the cell paints
+           as plain grid text until it is used, and the list is the only source of values. */
+        .win-grid-cell-combo { width: 100%; height: 18px; padding: 0 2px; font-family: "Verdana", sans-serif; font-size: 8pt; color: #000000; background-color: transparent; border: 1px solid transparent; }
+        .win-grid-cell-combo:hover { border-color: #7a9a9e; background-color: #ffffff; }
+        .win-grid-cell-combo:focus { border-color: #316ac5; background-color: #ffffff; outline: none; }
         .win-grid tr:nth-child(even) { background-color: #fcfcf8; }
         .win-grid tr:hover { background-color: #e0f2f1; cursor: pointer; }
 
@@ -109,7 +114,9 @@
     <!-- MAIN FORM BODY -->
     <div class="win-form-body">
         
-        <!-- HEADER & COMMISSION SIDE-BY-SIDE GROUP BOXES (WINFORMS REPLICA) -->
+        <!-- MAIN VIEW: FORM -->
+        <div id="mainViewForm">
+            <!-- HEADER & COMMISSION SIDE-BY-SIDE GROUP BOXES (WINFORMS REPLICA) -->
         <div class="row">
             <!-- LEFT COLUMN: MAIN HEADER & PARTIES -->
             <div class="col-md-6">
@@ -171,11 +178,11 @@
                         <div class="col-md-6">
                             <label class="win-label">Booking Person</label>
                             <div style="display: flex; gap: 2px;">
-                                <select id="cmbBookingPerson" class="win-combo" style="flex: 1;">
-                                    <option value="0">-- Select Person --</option>
-                                </select>
+                                <input type="text" id="txtBookingPersonDisplay" class="win-textbox" placeholder="-- Select --" readonly onclick="openBookingPersonSearchModal()" style="cursor: pointer; background-color: #ffffff; font-weight: bold; color: #004d40; flex: 1;"/>
+                                <button type="button" class="win-btn-action" onclick="openBookingPersonSearchModal()"><i class="fa fa-search"></i></button>
                                 <button type="button" class="win-btn-action" style="background-color: #2e7d32; border-color: #1b5e20;" title="Add Booking Person" onclick="openDefineLookUpPartiesModal()"><i class="fa fa-plus"></i></button>
                             </div>
+                            <input type="hidden" id="hidBookingPersonId" value="0"/>
                         </div>
                     </div>
 
@@ -261,9 +268,11 @@
                     <div class="row">
                         <div class="col-md-12">
                             <label class="win-label">Comm Agent</label>
-                            <select id="cmbCommissionAgent" class="win-combo">
-                                <option value="0">-- Select Comm. Agent --</option>
-                            </select>
+                            <div style="display: flex; gap: 2px;">
+                                <input type="text" id="txtCommAgentDisplay" class="win-textbox" placeholder="Search Comm Agent..." readonly onclick="openCommAgentSearchModal()" style="cursor: pointer; background-color: #ffffff; font-weight: bold; color: #004d40; flex: 1;"/>
+                                <button type="button" class="win-btn-action" onclick="openCommAgentSearchModal()"><i class="fa fa-search"></i></button>
+                            </div>
+                            <input type="hidden" id="hidCommissionAgentId" value="0"/>
                         </div>
                     </div>
 
@@ -299,9 +308,11 @@
                     <div class="row" style="margin-top: 10px;">
                         <div class="col-md-12">
                             <label class="win-label">Broker Ac</label>
-                            <select id="cmbBrokerAc" class="win-combo">
-                                <option value="0">-- Select Broker --</option>
-                            </select>
+                            <div style="display: flex; gap: 2px;">
+                                <input type="text" id="txtBrokerAcDisplay" class="win-textbox" placeholder="Search Broker Ac..." readonly onclick="openBrokerSearchModal()" style="cursor: pointer; background-color: #ffffff; font-weight: bold; color: #004d40; flex: 1;"/>
+                                <button type="button" class="win-btn-action" onclick="openBrokerSearchModal()"><i class="fa fa-search"></i></button>
+                            </div>
+                            <input type="hidden" id="hidBrokerAccountId" value="0"/>
                         </div>
                     </div>
 
@@ -505,59 +516,36 @@
 
             <!-- TAB 2: PACKING MATERIAL (EMPTY BAGS) - ditto of desktop PurchsaeOrder.cs "EmptyBags" TabPage
                  (grdEmptyBags GridEX bound to dtEmptyBags: EmptyBagsType, ItemId, ItemRate, PackingType, WeightCut).
-                 There is no Qty/Amount column on the real desktop screen or in the real [PurchaseOrderEmptyBags]
-                 table - only Type, Item, Packing Type, Rate and Weight Cut. -->
+                 Exactly 5 matching columns: Type, Item Name, Item Rate, PackingType, Weight Cut. -->
             <div id="tabEmptyBags" class="po-tab-pane" style="display: none;">
-                <fieldset class="win-group-box">
-                    <legend>Packing Material Entry</legend>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label class="win-label">Type</label>
-                            <select id="cmbEbType" class="win-combo">
-                                <option value="0">-- Select Type --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="win-label">Item / Packing Name</label>
-                            <select id="cmbEbItem" class="win-combo">
-                                <option value="0">-- Select Empty Bag Item --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Rate</label>
-                            <input type="number" step="0.01" id="txtEbRate" class="win-textbox" placeholder="0.00"/>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Packing Type</label>
-                            <select id="cmbEbPackingType" class="win-combo">
-                                <option value="0">-- Select --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Weight Cut</label>
-                            <input type="number" step="0.001" id="txtEbWeightCut" class="win-textbox" placeholder="0.000"/>
-                        </div>
-                    </div>
-                    <div class="row" style="margin-top: 10px;">
-                        <div class="col-md-12" style="text-align: right;">
-                            <button type="button" id="btnCancelEmptyBagEdit" class="win-btn-action" style="display:none; background:#888;" onclick="cancelEmptyBagEdit()">Cancel</button>
-                            <button type="button" id="btnAddEmptyBag" class="win-btn-action" onclick="btnAddEmptyBag_Click()"><i class="fa fa-plus"></i> Add Bag</button>
-                        </div>
-                    </div>
-                </fieldset>
                 <div class="win-grid-container">
                     <div class="win-grid-scroll">
-                        <table class="win-grid">
+                        <table class="win-grid" id="grdEmptyBagsTable">
                             <thead>
-                                <tr>
-                                    <th>Sr #</th><th>Type</th><th>Item Name</th><th style="text-align: right;">Rate</th><th>Packing Type</th><th style="text-align: right;">Weight Cut</th><th>Actions</th>
+                                <tr style="background: linear-gradient(to bottom, #dceaf7 0%, #cbe2f7 100%); color: #000; font-weight: bold;">
+                                    <th style="width: 250px;">Type</th>
+                                    <th style="width: 250px;">Item Name</th>
+                                    <th style="width: 100px; text-align: right;">Item Rate</th>
+                                    <th style="width: 250px;">PackingType</th>
+                                    <th style="width: 120px; text-align: right;">Weight Cut</th>
                                 </tr>
                             </thead>
                             <tbody id="tblEbTbody">
-                                <tr><td colspan="7" style="text-align: center; padding: 15px; color: #777;">No empty bag packing material specified.</td></tr>
+                                <tr><td colspan="5" style="text-align: center; padding: 15px; color: #777;">No empty bag packing material specified.</td></tr>
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <!-- DESKTOP RECORD NAVIGATOR -->
+                <div class="eb-record-navigator" style="background: #ece9d8; border: 1px solid #7a9a9e; border-top: none; padding: 4px 8px; font-size: 11px; display: flex; align-items: center; gap: 6px;">
+                    <span style="font-weight: bold; color: #333;">Record:</span>
+                    <button type="button" class="win-btn-action" id="btnEbNavFirst" onclick="ebNavFirst()" style="padding: 1px 6px; font-size: 10px;">&lt;|</button>
+                    <button type="button" class="win-btn-action" id="btnEbNavPrev" onclick="ebNavPrev()" style="padding: 1px 6px; font-size: 10px;">&lt;</button>
+                    <input type="number" id="ebNavCurrent" value="1" min="1" style="width: 45px; height: 20px; text-align: center; font-size: 11px; border: 1px solid #999;" onchange="ebNavGoTo(this.value)"/>
+                    <span style="font-weight: bold;">Of</span>
+                    <span id="ebNavTotal" style="font-weight: bold; color: #008080;">0</span>
+                    <button type="button" class="win-btn-action" id="btnEbNavNext" onclick="ebNavNext()" style="padding: 1px 6px; font-size: 10px;">&gt;</button>
+                    <button type="button" class="win-btn-action" id="btnEbNavLast" onclick="ebNavLast()" style="padding: 1px 6px; font-size: 10px;">&gt;|</button>
                 </div>
             </div>
 
@@ -703,8 +691,53 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-        </div></div>
+        <!-- MAIN VIEW: HISTORY -->
+        <div id="mainViewHistory" style="display: none; margin-top: 10px;">
+            <fieldset class="win-group-box">
+                <legend>Purchase Order History Search & Filters</legend>
+                <div class="row" style="align-items: center;">
+                    <div class="col-md-3">
+                        <label class="win-label">From Date</label>
+                        <input type="date" id="txtHistoryFromDate" class="win-textbox"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="win-label">To Date</label>
+                        <input type="date" id="txtHistoryToDate" class="win-textbox"/>
+                    </div>
+                    <div class="col-md-3" style="margin-top: 14px;">
+                        <button type="button" class="win-btn-action" onclick="loadPurchaseOrderHistory()"><i class="fa fa-search"></i> Show History</button>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="win-grid-container" style="margin-top: 10px;">
+                <div class="win-grid-scroll" style="max-height: 420px;">
+                    <table class="win-grid" id="grdHistoryTable">
+                        <thead>
+                            <tr style="background: linear-gradient(to bottom, #dceaf7 0%, #cbe2f7 100%); color: #000; font-weight: bold;">
+                                <th style="width: 130px;">Voucher Code</th>
+                                <th style="width: 110px;">Doc Date</th>
+                                <th style="width: 250px;">Supplier / Party Name</th>
+                                <th>Remarks</th>
+                                <th style="width: 130px; text-align: right;">Total Amount</th>
+                                <th style="width: 80px; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblHistoryTbody">
+                            <tr><td colspan="6" style="text-align: center; padding: 20px; color: #777;">Loading Purchase Order history records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN BOTTOM NAVIGATION TABS: [Form] [History] -->
+        <div class="main-bottom-nav-tabs" style="display: flex; gap: 4px; background: #ece9d8; padding: 6px 12px; border-top: 1px solid #b5b5b5; margin-top: 10px;">
+            <button type="button" id="tabBtnForm" class="win-bottom-tab active" onclick="switchMainView('form')" style="padding: 4px 20px; font-size: 11px; font-weight: bold; border: 1px solid #999; border-bottom: none; background: #fff; color: #000; cursor: pointer; border-radius: 3px 3px 0 0;">Form</button>
+            <button type="button" id="tabBtnHistory" class="win-bottom-tab" onclick="switchMainView('history')" style="padding: 4px 20px; font-size: 11px; font-weight: bold; border: 1px solid #999; border-bottom: none; background: #ece9d8; color: #555; cursor: pointer; border-radius: 3px 3px 0 0;">History</button>
+        </div>
 
     </div>
 
@@ -734,6 +767,112 @@
                                 </thead>
                                 <tbody id="tblSupplierModalTbody">
                                     <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading suppliers from database...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BROKER AC MULTI-COLUMN POPUP -->
+    <div class="modal fade" id="modalBrokerSearch" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document" style="max-width: 900px;">
+            <div class="modal-content" style="border-radius: 0; border: 2px solid #008080;">
+                <div class="modal-winheader display-flex justify-content-between">
+                    <span><i class="fa fa-handshake-o"></i> Select Broker Account</span>
+                    <button type="button" class="close text-white" data-dismiss="modal" style="opacity: 1; color: #fff;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 10px; background-color: #ece9d8;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input type="text" id="txtModalBrokerQuery" class="win-textbox" placeholder="Type broker name, account ID, or party code to filter..." onkeyup="filterBrokerSearchGrid()" style="font-size: 10pt; height: 28px;"/>
+                    </div>
+                    <div class="win-grid-container">
+                        <div class="win-grid-scroll" style="max-height: 320px;">
+                            <table class="win-grid">
+                                <thead>
+                                    <tr style="background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%);">
+                                        <th style="width: 250px;">Broker Ac</th>
+                                        <th style="width: 100px;">GlAccountId</th>
+                                        <th style="width: 100px;">PartyCode</th>
+                                        <th style="width: 80px;">CityId</th>
+                                        <th style="width: 130px;">CityName</th>
+                                        <th style="width: 110px;">MobileNo</th>
+                                        <th style="width: 60px; text-align: center;">Select</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblBrokerModalTbody">
+                                    <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading broker accounts...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: COMM AGENT MULTI-COLUMN POPUP -->
+    <div class="modal fade" id="modalCommAgentSearch" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document" style="max-width: 900px;">
+            <div class="modal-content" style="border-radius: 0; border: 2px solid #008080;">
+                <div class="modal-winheader display-flex justify-content-between">
+                    <span><i class="fa fa-user-secret"></i> Select Commission Agent</span>
+                    <button type="button" class="close text-white" data-dismiss="modal" style="opacity: 1; color: #fff;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 10px; background-color: #ece9d8;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input type="text" id="txtModalCommAgentQuery" class="win-textbox" placeholder="Type agent name, account ID, or party code to filter..." onkeyup="filterCommAgentSearchGrid()" style="font-size: 10pt; height: 28px;"/>
+                    </div>
+                    <div class="win-grid-container">
+                        <div class="win-grid-scroll" style="max-height: 320px;">
+                            <table class="win-grid">
+                                <thead>
+                                    <tr style="background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%);">
+                                        <th style="width: 250px;">Comm Agent</th>
+                                        <th style="width: 100px;">GlAccountId</th>
+                                        <th style="width: 100px;">PartyCode</th>
+                                        <th style="width: 130px;">CityName</th>
+                                        <th style="width: 110px;">MobileNo</th>
+                                        <th style="width: 60px; text-align: center;">Select</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblCommAgentModalTbody">
+                                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Loading commission agents...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BOOKING PERSON TWO-COLUMN POPUP -->
+    <div class="modal fade" id="modalBookingPersonSearch" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document" style="max-width: 600px;">
+            <div class="modal-content" style="border-radius: 0; border: 2px solid #008080;">
+                <div class="modal-winheader display-flex justify-content-between">
+                    <span><i class="fa fa-user"></i> Select Booking Person</span>
+                    <button type="button" class="close text-white" data-dismiss="modal" style="opacity: 1; color: #fff;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 10px; background-color: #ece9d8;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input type="text" id="txtModalBookingPersonQuery" class="win-textbox" placeholder="Type person name to filter..." onkeyup="filterBookingPersonSearchGrid()" style="font-size: 10pt; height: 28px;"/>
+                    </div>
+                    <div class="win-grid-container">
+                        <div class="win-grid-scroll" style="max-height: 300px;">
+                            <table class="win-grid">
+                                <thead>
+                                    <tr style="background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%);">
+                                        <th>Booking Person</th>
+                                        <th style="width: 200px;">ReferencePartyType</th>
+                                        <th style="width: 60px; text-align: center;">Select</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblBookingPersonModalTbody">
+                                    <tr><td colspan="3" style="text-align: center; padding: 20px;">Loading booking persons...</td></tr>
                                 </tbody>
                             </table>
                         </div>

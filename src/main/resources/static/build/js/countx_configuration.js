@@ -175,6 +175,22 @@
         // toggle.
         applyFreightVoucherCoupling(true);
 
+        // Special-case UI coupling (verified: resolved-source Configuration.cs -
+        // (a) chkIsGdnFirstFlow_CheckedChanged(), line 4173-4175:
+        //       chkRequireSaleInvoiceBeforeGatePass_GDNFirstFlow.Enabled = chkIsGdnFirstFlow.Checked
+        //     fires on every CheckedChanged (including the desktop's own initial load-bind), so
+        //     applied here once on load and again on every subsequent user change; and
+        // (b) ControlEventHandler's "IsGdnFirstFlow" branch, line ~3164-3170, which ALSO
+        //     force-unchecks chkRequireSaleInvoiceBeforeGatePass_GDNFirstFlow (and saves that
+        //     False) whenever IsGdnFirstFlow is turned off while it's still checked, and ALSO
+        //     unconditionally calls CmbDefaultFreightVoucherCreditAccountFillFromGlobal() - a
+        //     real (if slightly odd/copy-pasted-looking) desktop side-effect, preserved as-is.
+        //     ControlEventHandler is wired to CheckBox.Click (AssignEventHandlers(), not
+        //     CheckedChanged), i.e. it only runs on a real user interaction, not the initial
+        //     load-bind - ditto that distinction: only the "change" handler above (the user-
+        //     interaction path) does (b); initial page load only does (a).
+        applyGdnFirstFlowCoupling();
+
         // Commission Agent tab (verified Configuration.cs constructor calling
         // CmbCustomGroupForWHTAccounts_Leave(null,null) TWICE on load and
         // CmbCustomGroupForWHTAccountsSale_Leave() never at all - see
@@ -473,6 +489,21 @@
             if (accessibleName === "IncludeBankAccountsInFreightVoucherCreditAccount") {
                 applyFreightVoucherCoupling(false);
             }
+
+            if (accessibleName === "IsGdnFirstFlow") {
+                applyGdnFirstFlowCoupling();
+
+                // Ditto ControlEventHandler's "IsGdnFirstFlow" branch (user-interaction path
+                // only, see applyGdnFirstFlowCoupling()'s own comment): force-uncheck+save the
+                // dependent checkbox when it's still checked as GdnFirstFlow is turned off.
+                var $requireSaleInvoice = $("#chkRequireSaleInvoiceBeforeGatePass_GDNFirstFlow");
+                if (!$el.is(":checked") && $requireSaleInvoice.is(":checked")) {
+                    $requireSaleInvoice.prop("checked", false);
+                    saveControl($requireSaleInvoice, $requireSaleInvoice.attr("data-config-description"),
+                        boolToConfigKey(false));
+                }
+                applyFreightVoucherCoupling(false);
+            }
         });
 
         // Radio: ditto FireRadioButton() on CheckedChanged. WinForms fires CheckedChanged
@@ -563,6 +594,21 @@
         $fieldset.toggleClass("cfg-disabled-group", !enabled);
     }
 
+    // chkRequireSaleInvoiceBeforeGatePass_GDNFirstFlow.Enabled = chkIsGdnFirstFlow.Checked
+    // (verified: resolved-source Configuration.cs, chkIsGdnFirstFlow_CheckedChanged(), line
+    // 4173-4175 - a dedicated CheckedChanged handler, separate from the generic
+    // ControlEventHandler dispatch, so this half runs on both initial load-bind and every
+    // subsequent change; see applyGdnFirstFlowCoupling()'s caller above for the load-time call
+    // and the "IsGdnFirstFlow" branch above for the additional user-interaction-only behavior).
+    function applyGdnFirstFlowCoupling() {
+        var $gdnFirstFlow = $("#chkIsGdnFirstFlow");
+        var $requireSaleInvoice = $("#chkRequireSaleInvoiceBeforeGatePass_GDNFirstFlow");
+        if ($gdnFirstFlow.length === 0 || $requireSaleInvoice.length === 0) {
+            return;
+        }
+        $requireSaleInvoice.prop("disabled", !$gdnFirstFlow.is(":checked"));
+    }
+
     // Ditto Configuration.cs's CmbDefaultFreightVoucherCreditAccountFillFromGlobal(), called
     // from ControlEventHandler's "IncludeBankAccountsInFreightVoucherCreditAccount" branch:
     // rebuilds CmbDefaultFreightVoucherCreditAccountId's option list between AccountTypeId
@@ -611,11 +657,26 @@
                 if (targetVal) {
                     $combo.val(targetVal); // ditto BindAndRetainSelection
                 }
+                // Rebuilt the <option> list in place - reinit select2 (searchable dropdown,
+                // see configuration.html) so its rendered list/label reflect the new options.
+                // Reinit rather than a plain .trigger("change") deliberately, so this doesn't
+                // also re-fire wireGenericControls()'s generic select "change" save handler.
+                reinitSelect2($combo);
             },
             error: function () {
                 showToast("Failed to refresh Default Freight Voucher Credit Account list.", true);
             }
         });
+    }
+
+    // Rebuilds a select2 widget's rendering after its underlying <option> list was replaced
+    // in place, without firing a native "change" event (which would otherwise re-trigger
+    // wireGenericControls()'s generic save handler for this control).
+    function reinitSelect2($select) {
+        if ($select.hasClass("cfg-select") && $select.data("select2")) {
+            $select.select2("destroy");
+            $select.select2({ dropdownAutoWidth: true, width: "100%" });
+        }
     }
 
     // Commission Agent tab (ditto Configuration.cs's CmbCustomGroupForWHTAccounts_Leave()/
@@ -650,6 +711,7 @@
                 if (currentVal) {
                     $accountSelect.val(currentVal);
                 }
+                reinitSelect2($accountSelect);
             },
             error: function () {
                 showToast("Failed to refresh WHT Account list.", true);

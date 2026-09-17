@@ -41,16 +41,46 @@ public class SaleModuleViewController {
         return "sale/driver_bio";
     }
 
+    @GetMapping("/gatepass-vehicle-time-analysis")
+    public String gatePassVehicleTimeAnalysis(Model model) {
+        model.addAttribute("activeMenu", "sale");
+        model.addAttribute("moduleTitle", "GatePass Vehicle Entry And Exit Time Analysis");
+        return "sale/reports/gatepass_vehicle_time_analysis";
+    }
+
+    @GetMapping("/reports/sale-order-report")
+    public String saleOrderReport(Model model) {
+        model.addAttribute("activeMenu", "sale");
+        model.addAttribute("moduleTitle", "Sale Order Report");
+        return "sale/reports/sale_order_report";
+    }
+
+    @GetMapping("/reports/outward-gate-pass-report")
+    public String outwardGatePassReport(Model model) {
+        model.addAttribute("activeMenu", "sale");
+        model.addAttribute("moduleTitle", "Outward Gate Pass Report");
+        return "sale/reports/outward_gate_pass_report";
+    }
+
+    @GetMapping("/reports/gdn-report")
+    public String gdnReport(Model model) {
+        model.addAttribute("activeMenu", "sale");
+        model.addAttribute("moduleTitle", "Gdn Report");
+        return "sale/reports/gdn_report";
+    }
+
+    @GetMapping("/reports/sale-invoice-report-with-activities")
+    public String saleInvoiceReportWithActivities(Model model) {
+        model.addAttribute("activeMenu", "sale");
+        model.addAttribute("moduleTitle", "Sale Invoice Report (With Activites)");
+        return "sale/reports/sale_invoice_report_with_activities";
+    }
+
     @GetMapping("/delivery-order")
     public String deliveryOrder(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Delivery Order");
-        model.addAttribute("documentTypeId", 37);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(37));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
+        model.addAttribute("documentTypeId", 84);
         return "sale/delivery_order";
     }
 
@@ -58,8 +88,8 @@ public class SaleModuleViewController {
     public String outwardGatePass(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Outward Gate Pass");
-        model.addAttribute("documentTypeId", 35);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(35));
+        model.addAttribute("documentTypeId", 91);
+        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(91));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
@@ -71,12 +101,7 @@ public class SaleModuleViewController {
     public String gdn(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Goods Dispatch Note");
-        model.addAttribute("documentTypeId", 36);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(36));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
+        model.addAttribute("documentTypeId", 86);
         return "sale/gdn";
     }
 
@@ -84,12 +109,7 @@ public class SaleModuleViewController {
     public String gdnDirect(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "GDN Direct");
-        model.addAttribute("documentTypeId", 36);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(36));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
+        model.addAttribute("documentTypeId", 124);
         return "sale/gdn_direct";
     }
 
@@ -97,34 +117,16 @@ public class SaleModuleViewController {
     public String gdnPurchaseReturn(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "GDN for Purchase Return");
-        model.addAttribute("documentTypeId", 36);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(36));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
+        model.addAttribute("documentTypeId", 703);
         return "sale/gdn_purchase_return";
-    }
-
-    @GetMapping("/delivery-challan")
-    public String deliveryChallan(Model model) {
-        model.addAttribute("activeMenu", "sale");
-        model.addAttribute("moduleTitle", "Delivery Challan");
-        model.addAttribute("documentTypeId", 38);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(38));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
-        return "sale/delivery_challan";
     }
 
     @GetMapping("/sale-invoice-gdn-no-wb")
     public String saleInvoiceGdnNoWb(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Sale Invoice Against GDN Without WB");
-        model.addAttribute("documentTypeId", 20);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(20));
+        model.addAttribute("documentTypeId", 171);
+        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(171));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
@@ -136,8 +138,8 @@ public class SaleModuleViewController {
     public String saleInvoice(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Sale Invoice");
-        model.addAttribute("documentTypeId", 20);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(20));
+        model.addAttribute("documentTypeId", 95);
+        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(95));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
@@ -149,8 +151,8 @@ public class SaleModuleViewController {
     public String saleInvoiceDirect(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Sale Invoice Direct");
-        model.addAttribute("documentTypeId", 20);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(20));
+        model.addAttribute("documentTypeId", 99);
+        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(99));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
@@ -162,8 +164,8 @@ public class SaleModuleViewController {
     public String saleInvoiceReturn(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Sale Invoice Return");
-        model.addAttribute("documentTypeId", 21);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(21));
+        model.addAttribute("documentTypeId", 98);
+        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(98));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());

@@ -148,10 +148,7 @@
                 <div class="col-md-1" style="width: 10%;">
                     <span class="win-label">Pack UOM</span>
                     <select class="win-input" id="cmbPackUom" onchange="calculateAmount()">
-                        <option value="40">40kg</option>
-                        <option value="50">50kg</option>
-                        <option value="1">1kg</option>
-                        <option value="1000">1000kg</option>
+                        <option value="0">-- Loading... --</option>
                     </select>
                 </div>
                 <div class="col-md-1" style="width: 10%;">
@@ -169,9 +166,7 @@
                 <div class="col-md-1" style="width: 10%;">
                     <span class="win-label">Rate UOM</span>
                     <select class="win-input" id="cmbRateUom" onchange="calculateAmount()">
-                        <option value="40">40 KG</option>
-                        <option value="1000">M.TON</option>
-                        <option value="1">KG</option>
+                        <option value="0">-- Loading... --</option>
                     </select>
                 </div>
                 <div class="col-md-2" style="width: 16%;">
@@ -290,9 +285,54 @@
     <script>
         $(document).ready(function() {
             $('.select2').select2({ width: '100%' });
-            calculateAmount();
+            loadItemUoms(0);
+            $('#cmbItemName').on('change', function() {
+                loadItemUoms($(this).val());
+            });
             loadHistory();
         });
+
+        function loadItemUoms(itemId) {
+            const url = '/api/inventory/opening-stock/uoms/' + (itemId || 0);
+            $.get(url, function(data) {
+                const packCombo = $('#cmbPackUom');
+                const rateCombo = $('#cmbRateUom');
+                const oldPack = packCombo.val();
+                const oldRate = rateCombo.val();
+
+                packCombo.empty();
+                rateCombo.empty();
+
+                if (!data || data.length === 0) {
+                    packCombo.append('<option value="40" data-eq="40">40 KG</option>');
+                    rateCombo.append('<option value="40" data-eq="40">40 KG</option>');
+                    calculateAmount();
+                    return;
+                }
+
+                data.forEach(function(u) {
+                    const id = u.Id || u.id;
+                    const code = u.UOMCode || u.uomCode || u.UOMName || u.Name || 'Unit';
+                    const eq = parseFloat(u.Equivalent || u.equivalent || u.QtyEquivalent || 1.0);
+                    const label = code + (eq > 1 ? ' (' + eq + ')' : '');
+
+                    packCombo.append($('<option>', { value: eq, text: label, 'data-id': id, 'data-eq': eq }));
+                    rateCombo.append($('<option>', { value: eq, text: label, 'data-id': id, 'data-eq': eq }));
+                });
+
+                if (oldPack && packCombo.find('option[value="' + oldPack + '"]').length > 0) packCombo.val(oldPack);
+                else packCombo.prop('selectedIndex', 0);
+
+                if (oldRate && rateCombo.find('option[value="' + oldRate + '"]').length > 0) rateCombo.val(oldRate);
+                else rateCombo.prop('selectedIndex', 0);
+
+                calculateAmount();
+            }).fail(function() {
+                const packCombo = $('#cmbPackUom').empty().append('<option value="40">40 KG</option>');
+                const rateCombo = $('#cmbRateUom').empty().append('<option value="40">40 KG</option>');
+                calculateAmount();
+            });
+        }
 
         function calculateAmount() {
             const packEq = parseFloat($('#cmbPackUom').val() || '40');

@@ -312,4 +312,75 @@ public class InwardGatePassRepository {
             }
         }
     }
+
+    public List<Map<String, Object>> getTransitVehicles(Integer orgId, Integer compId) {
+        try {
+            String sql = "SELECT Id as id, VehicleNo as name FROM Vehicle WHERE (OrganizationId = ? OR OrganizationId IS NULL) AND (CompanyId = ? OR CompanyId IS NULL) ORDER BY VehicleNo";
+            return jdbcTemplate.queryForList(sql, orgId, compId);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public Map<String, Object> findDriverBioByCnic(String cnic) {
+        if (cnic == null || cnic.trim().isEmpty()) return null;
+        try {
+            String clean = cnic.trim();
+            String sql = "SELECT TOP 1 Id, DriverName, FatherName, CnicNo, FatherCnicNo, DriverCellNo, WhatsappNo, AlternateCellNo FROM DriverBiodata WHERE CnicNo = ? OR REPLACE(CnicNo, '-', '') = ?";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql, clean, clean.replaceAll("-", ""));
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public Map<String, Object> findDriverBioByCell(String cell) {
+        if (cell == null || cell.trim().isEmpty()) return null;
+        try {
+            String clean = cell.trim();
+            String sql = "SELECT TOP 1 Id, DriverName, FatherName, CnicNo, FatherCnicNo, DriverCellNo, WhatsappNo, AlternateCellNo FROM DriverBiodata WHERE DriverCellNo = ? OR REPLACE(DriverCellNo, '-', '') = ?";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql, clean, clean.replaceAll("-", ""));
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public List<Map<String, Object>> getPoInfoGrid(Integer orgId, Integer compId, String fromDate, String toDate, Integer supplierId) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT h.PurchaseOrderId as OrderNo, h.OrderDate as PODate, ");
+            sb.append("s.CompanyName as SupplierName, i.ItemName, d.OrderQty, ");
+            sb.append("ISNULL(d.ReceivedQty, 0) as ReceivedQty, ");
+            sb.append("(d.OrderQty - ISNULL(d.ReceivedQty, 0)) as BalanceQty, ");
+            sb.append("ISNULL(h.OrderStatus, 'Open') as Status ");
+            sb.append("FROM PurchaseOrderHeader h ");
+            sb.append("INNER JOIN PurchaseOrderDetail d ON h.Id = d.PurchaseOrderId ");
+            sb.append("LEFT JOIN SupplierCustomer s ON h.SupplierCustomerId = s.Id ");
+            sb.append("LEFT JOIN Item i ON d.ItemId = i.Id ");
+            sb.append("WHERE (h.OrganizationId = ? OR h.OrganizationId IS NULL) ");
+            sb.append("AND (h.CompanyId = ? OR h.CompanyId IS NULL) ");
+            List<Object> params = new ArrayList<>();
+            params.add(orgId);
+            params.add(compId);
+
+            if (fromDate != null && !fromDate.trim().isEmpty()) {
+                sb.append("AND h.OrderDate >= ? ");
+                params.add(fromDate);
+            }
+            if (toDate != null && !toDate.trim().isEmpty()) {
+                sb.append("AND h.OrderDate <= ? ");
+                params.add(toDate + " 23:59:59");
+            }
+            if (supplierId != null && supplierId > 0) {
+                sb.append("AND h.SupplierCustomerId = ? ");
+                params.add(supplierId);
+            }
+
+            sb.append("ORDER BY h.PurchaseOrderId DESC");
+            return jdbcTemplate.queryForList(sb.toString(), params.toArray());
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
 }

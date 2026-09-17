@@ -1,175 +1,24 @@
-<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Golden Ace Rice Mills — Goods Dispatch Note</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <style>
-        body { font-family: "Segoe UI", "Verdana", Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; user-select: none; }
-        .erp-top-banner { background-color: #00796B; color: #ffffff; height: 32px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 600; justify-content: space-between; }
-        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 32px; display: flex; align-items: center; padding: 0 6px; gap: 4px; }
-        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; color: #000000; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; font-weight: 500; }
-        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
-        .win-sep { width: 1px; height: 18px; background-color: #b0b0b0; margin: 0 2px; }
-        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
-        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 11pt; font-weight: bold; text-transform: uppercase; }
-        .win-form-body { background-color: #ece9d8; padding: 6px; }
-        .win-group-box { border: 1px solid #999999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
-        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
-        .win-label { font-size: 8.5pt; font-weight: 600; color: #222222; white-space: nowrap; margin-bottom: 2px; }
-        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 8.5pt; height: 22px; border: 1px solid #7a9a9e; padding: 2px 4px; background-color: #ffffff; color: #000000; width: 100%; }
-        .win-textbox-readonly { background-color: #f0f0f0 !important; font-weight: bold; color: #004d40; }
-        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 8.5pt; font-weight: bold; border: 1px solid #004d40; height: 22px; padding: 0 8px; cursor: pointer; border-radius: 2px; }
-        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; }
-        .win-grid-scroll { max-height: 240px; overflow-x: auto; overflow-y: auto; }
-        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8pt; }
-        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color: #000000; font-weight: bold; border: 1px solid #999999; padding: 4px 5px; text-align: left; }
-        .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; color: #000000; }
-    </style>
-</head>
-<body>
-
-    <div class="erp-top-banner">
-        <div><i class="fa fa-arrow-right me-1"></i> Golden Ace Rice Mills (Pvt) Ltd.</div>
-        <div><i class="fa fa-user me-1"></i> Admin <span class="ms-3"><i class="fa fa-clock-o me-1"></i> 8:20 pm</span></div>
-    </div>
-
-    <div class="win-tool-strip">
-        <button type="button" class="win-btn-tool" onclick="location.reload()"><i class="fa fa-plus text-success"></i> + New</button>
-        <button type="button" class="win-btn-tool" onclick="btnSave_Click()"><i class="fa fa-save text-primary"></i> Save</button>
-        <button type="button" class="win-btn-tool" onclick="btnPrint()"><i class="fa fa-print"></i> Print</button>
-        <div class="win-sep"></div>
-        <div style="margin-left: auto;"><a href="/sale" class="win-btn-tool" style="color: #00796B; font-weight: bold;"><i class="fa fa-arrow-left"></i> Exit Module</a></div>
-    </div>
-
-    <div class="win-teal-header">
-        <span class="win-teal-header-title"><i class="fa fa-cubes me-1"></i> GOODS DISPATCH NOTE (GDN)</span>
-        <span class="badge bg-warning text-dark">GDN-2026</span>
-    </div>
-
-    <div class="win-form-body">
-        <fieldset class="win-group-box">
-            <legend>GDN General Information</legend>
-            <div class="row g-2">
-                <div class="col-md-2">
-                    <label class="win-label">GDN Doc No</label>
-                    <input type="text" id="txtDocNo" class="win-textbox win-textbox-readonly" th:value="${nextDocNo}" readonly/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">GDN Date</label>
-                    <input type="date" id="txtDocDate" class="win-datepicker"/>
-                </div>
-                <div class="col-md-4">
-                    <label class="win-label">Customer / Party *</label>
-                    <select id="cmbCustomer" class="win-combo">
-                        <option value="">-- Select Customer --</option>
-                        <option th:each="c : ${suppliers}" th:value="${c.id}" th:text="${c.customerName}"></option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="win-label">Outward Gate Pass (OGP) Link</label>
-                    <select id="cmbOgp" class="win-combo"><option value="">-- Select OGP --</option></select>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Warehouse *</label>
-                    <select id="cmbWarehouse" class="win-combo">
-                        <option value="">-- Select Warehouse --</option>
-                        <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.warehouseName}"></option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Transporter</label>
-                    <select id="cmbTransporter" class="win-combo"><option value="">-- Select Transporter --</option></select>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Vehicle No</label>
-                    <input type="text" id="txtVehicleNo" class="win-textbox" placeholder="Vehicle No"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Freight Amount (Rs)</label>
-                    <input type="number" step="0.01" id="txtFreight" class="win-textbox"/>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset class="win-group-box" style="background-color: #ffffff;">
-            <legend>Dispatched Items Detail</legend>
-            <div class="row g-2 align-items-center">
-                <div class="col-md-4">
-                    <label class="win-label">Item / Product *</label>
-                    <select id="lineItem" class="win-combo">
-                        <option value="">-- Select Item --</option>
-                        <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.itemName}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Qty</label>
-                    <input type="number" step="0.01" id="lineQty" class="win-textbox" oninput="calcLine()"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Rate</label>
-                    <input type="number" step="0.01" id="lineRate" class="win-textbox" oninput="calcLine()"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Amount</label>
-                    <input type="number" step="0.01" id="lineAmount" class="win-textbox win-textbox-readonly" readonly/>
-                </div>
-                <div class="col-md-2 pt-3">
-                    <button type="button" class="win-btn-action w-100" onclick="btnAddRow_Click()"><i class="fa fa-plus"></i> Add Item</button>
-                </div>
-            </div>
-        </fieldset>
-
-        <div class="win-grid-container">
-            <div class="win-grid-scroll">
-                <table class="win-grid" id="tblItems">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px; text-align: center;">S#</th>
-                            <th>Item Description</th>
-                            <th style="width: 120px; text-align: right;">Qty</th>
-                            <th style="width: 120px; text-align: right;">Rate</th>
-                            <th style="width: 150px; text-align: right;">Amount</th>
-                            <th style="width: 60px; text-align: center;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="6" class="text-center text-muted" style="padding: 12px;">No dispatched items added yet.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            document.getElementById('txtDocDate').valueAsDate = new Date();
-            $.get('/api/sale/outward-gate-passes', function(res) {
-                var $o = $('#cmbOgp').empty().append('<option value="">-- Select OGP --</option>');
-                res.forEach(function(x) { $o.append(`<option value="${x.id}">OGP-${x.docNo} (${x.customerName})</option>`); });
-            });
-        });
-        function calcLine() {
-            var q = parseFloat($('#lineQty').val()) || 0;
-            var r = parseFloat($('#lineRate').val()) || 0;
-            $('#lineAmount').val((q * r).toFixed(2));
-        }
-        function btnAddRow_Click() {
-            var itemId = $('#lineItem').val();
-            var itemName = $('#lineItem option:selected').text();
-            var qty = parseFloat($('#lineQty').val()) || 0;
-            var rate = parseFloat($('#lineRate').val()) || 0;
-            var amt = parseFloat($('#lineAmount').val()) || 0;
-            if(!itemId || qty <= 0) return alert('Select Item & Qty');
-            var tbody = $('#tblItems tbody');
-            if (tbody.find('td[colspan]').length > 0) tbody.empty();
-            tbody.append(`<tr><td class="text-center">1</td><td>${itemName}</td><td class="text-end">${qty.toFixed(2)}</td><td class="text-end">${rate.toFixed(2)}</td><td class="text-end">${amt.toFixed(2)}</td><td class="text-center"><button class="btn btn-sm btn-danger p-0 px-1" onclick="$(this).closest('tr').remove()">&times;</button></td></tr>`);
-        }
-        function btnSave_Click() { alert('Goods Dispatch Note saved successfully!'); }
-    </script>
-</body>
-</html>
+<!doctype html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Goods Dispatch Notes</title>
+<link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}"><style>
+:root{--teal:#087878;--line:#8c8c8c}*{box-sizing:border-box}body{margin:0;background:#fff;color:#000;font:12px Verdana,Arial,sans-serif}.page{width:100%;min-width:1000px}.toolbar{height:31px;background:#f2f2f2;border-bottom:1px solid #aaa;display:flex;align-items:center;gap:2px;padding:2px;white-space:nowrap;overflow-x:auto}.tool{height:25px;border:1px solid transparent;background:#f2f2f2;padding:2px 8px}.tool:hover{border-color:#888;background:#fff2c8}.tool:disabled,.action:disabled{opacity:.5;cursor:wait}.title,.grid-title{background:var(--teal);color:#fff;font-weight:bold}.title{height:25px;padding:3px 6px;font-size:16px}.main{padding:2px}.group{border:1px solid var(--line);background:#eee;padding:5px 7px;margin:2px 0}.group legend{width:auto;border:0;margin:0;padding:0 4px;font-size:12px;font-weight:bold}.head{display:grid;grid-template-columns:90px minmax(155px,1fr) 90px minmax(150px,1fr) 96px minmax(150px,1fr) 88px minmax(115px,.7fr);gap:3px 5px;align-items:center}.ctl{width:100%;height:24px;border:1px solid #7f9db9;border-radius:0;background:#fff;padding:2px 4px;font:12px Verdana}.span3{grid-column:2/7}.tabs{display:flex;gap:2px;background:#e5e5e5;padding:2px 3px 0;border-bottom:1px solid #888}.tab{border:1px solid #888;border-bottom:0;background:#ddd;padding:4px 14px;font-weight:bold}.tab.active{background:var(--teal);color:#fff}.pane{display:none}.pane.active{display:block}.editor{display:grid;grid-template-columns:135px 170px 120px 125px 82px 95px 82px 82px 82px 82px 82px 105px 82px 82px 105px 120px 120px 100px 82px 120px auto;gap:2px;padding:4px 3px;background:#f4f4f4;overflow-x:auto}.field label{display:block;height:17px;font:600 11px 'Segoe UI',Arial}.field .ctl{height:25px}.action{height:25px;border:1px solid #004d4d;background:#008080;color:#fff;font-weight:bold;padding:0 9px}.editor-actions{display:flex;align-items:end;gap:2px}.grid-title{height:22px;padding:3px 5px}.wrap{width:100%;max-width:100vw;overflow:auto;border:1px solid #999;background:#fff;max-height:255px}.data{border-collapse:collapse;min-width:2400px;width:max-content;font-size:11px}.data th{position:sticky;top:0;background:#e7e7e7;border:1px solid #999;padding:4px;white-space:nowrap}.data td{border:1px solid #bbb;padding:3px 5px;height:24px;white-space:nowrap}.data tr:hover{background:#dff4f4}.row-link{color:#075f9f;text-decoration:underline;cursor:pointer}.empty{text-align:center;color:#666}.pending{max-height:130px}.history-filter{display:grid;grid-template-columns:70px 130px 55px 80px 55px 80px 75px minmax(180px,280px) auto;gap:4px;align-items:center;padding:6px;border:1px solid #999;background:#eee}.expense-editor{display:grid;grid-template-columns:280px 120px minmax(260px,1fr) 70px;gap:4px;padding:5px}.expense-table{min-width:700px;width:100%}.bottom{display:flex;gap:2px;background:#e5e5e5;border-top:1px solid #888;position:sticky;bottom:0;padding:2px}.message{min-height:20px;padding:3px 6px;color:#b00000;font-weight:bold}.busy{display:none;position:fixed;inset:0;background:rgba(255,255,255,.55);z-index:5000;align-items:center;justify-content:center}.busy.show{display:flex}.loader{padding:12px 20px;background:#fff;border:1px solid var(--teal);box-shadow:0 2px 8px #777;color:#075f5f;font-weight:bold}.spin{display:inline-block;width:16px;height:16px;border:2px solid #bbb;border-top-color:#008080;border-radius:50%;animation:s .7s linear infinite;vertical-align:middle;margin-right:7px}@keyframes s{to{transform:rotate(360deg)}}.select2-container .select2-selection--single{height:25px!important;border:1px solid #7f9db9!important;border-radius:0!important}.select2-selection__rendered{line-height:23px!important;font-size:12px}.select2-selection__arrow{height:23px!important}@media(max-width:1100px){.page{min-width:100%}.head{grid-template-columns:90px minmax(145px,1fr) 90px minmax(145px,1fr)}}
+</style></head><body><div id="busy" class="busy"><div class="loader"><span class="spin"></span>Loading, please wait…</div></div><div class="page">
+<section id="formPane"><div class="toolbar"><button class="tool" id="btnNew">New</button><button class="tool" id="btnRefresh">Refresh</button><span>|</span><button class="tool" id="btnUpdate" hidden>Update</button><button class="tool" id="btnSave">Save</button><button class="tool" id="btnDelete" hidden>Delete</button><span>|</span><button class="tool" id="btnAttachment">Attachment</button><button class="tool" id="btnPrint">260-Print</button><button class="tool" id="btnStockReport">Stock Report</button><button class="tool" id="btnGenerateStock">Generate Stock</button><button class="tool" id="btnShortcuts">ShortCut Keys</button></div><div class="title">Goods Dispatch Notes</div><div class="main">
+<fieldset class="group"><legend>Main Information</legend><div class="head">
+<label>Doc No &amp; Date</label><div style="display:flex"><input id="docNo" class="ctl" readonly style="width:65px"><input id="docDate" type="date" class="ctl"></div><label>Customer Name</label><select id="customer" class="ctl searchable"></select><label>Stock Party</label><select id="stockParty" class="ctl searchable"></select><label>Supplier Ref</label><input id="supplierRef" class="ctl">
+<label>Reference No</label><input id="referenceNo" class="ctl"><label>Transporter</label><select id="transporter" class="ctl searchable"></select><label>Freight Amount</label><input id="freight" type="number" step="any" class="ctl"><label>Sale Type</label><select id="saleType" class="ctl"><option value="1">Weigh Bridge Based Billing</option><option value="2">Customer Weight Based Billing</option></select>
+<label>Customer Weight</label><input id="customerWeight" type="number" step="any" class="ctl"><label>FactoryWeight</label><input id="factoryWeight" type="number" step="any" class="ctl"><label>Weight Diff</label><input id="weightDiff" class="ctl" readonly><label>Add Less</label><input id="addLess" type="number" step="any" class="ctl">
+<label>GP No &amp; Date</label><div style="display:flex"><select id="gatePass" class="ctl searchable"></select><input id="gpDate" type="date" class="ctl" readonly></div><label>Order Term</label><input id="orderTerm" class="ctl" readonly><label>Vehicle No</label><input id="vehicleNo" class="ctl"><label>Bilty No</label><input id="biltyNo" class="ctl">
+<label>Container 1</label><input id="container1" class="ctl"><label>Container 2</label><input id="container2" class="ctl"><label>Dispatch Weight</label><input id="dispatchWeight" class="ctl" readonly><label>Balance Weight</label><input id="balanceWeight" class="ctl" readonly>
+<label>W.B Ticket Nos</label><input id="ticketNos" class="ctl"><label>Bal Gross Wt</label><input id="balanceGross" class="ctl" readonly><label>Pending Party</label><input id="pendingParty" class="ctl" readonly><label>Short/Excess Wt</label><input id="shortWeight" class="ctl" readonly>
+<label>DO Item Net Wt</label><input id="doNetWeight" class="ctl" readonly><label>Remarks</label><input id="remarks" class="ctl span3"><input id="recordId" type="hidden">
+</div></fieldset>
+<div class="tabs"><button class="tab active" data-sub="detailPane">Detail</button><button class="tab" data-sub="expensePane">Expenses</button></div>
+<div id="detailPane" class="pane active"><div class="editor">
+<div class="field"><label>Order No</label><select id="lineOrder" class="ctl searchable"></select></div><div class="field"><label>Item</label><select id="lineItem" class="ctl searchable"></select></div><div class="field"><label>Brand</label><select id="lineBrand" class="ctl searchable"></select></div><div class="field"><label>Packing Type</label><select id="linePacking" class="ctl searchable"></select></div><div class="field"><label>Qty</label><input id="lineQty" type="number" step="any" class="ctl"></div><div class="field"><label>Lab Sample #</label><input id="lineLab" class="ctl"></div><div class="field"><label>UOM</label><select id="lineUom" class="ctl searchable"></select></div><div class="field"><label>Gross Weight</label><input id="lineGross" type="number" step="any" class="ctl"></div><div class="field"><label>E.b / Unit</label><input id="lineEbUnit" type="number" step="any" class="ctl"></div><div class="field"><label>E.b Total</label><input id="lineEbTotal" type="number" step="any" class="ctl"></div><div class="field"><label>Add Weight</label><input id="lineAddWeight" type="number" step="any" class="ctl"></div><div class="field"><label>City/Area</label><select id="lineCity" class="ctl searchable"></select></div><div class="field"><label>Net Bill Weight</label><input id="lineNet" class="ctl" readonly></div><div class="field"><label>Stock Weight</label><input id="lineStock" class="ctl" readonly></div><div class="field"><label>Crop Year</label><select id="lineCrop" class="ctl searchable"></select></div><div class="field"><label>Job/Lot</label><select id="lineJob" class="ctl searchable"></select></div><div class="field"><label>Warehouse</label><select id="lineWarehouse" class="ctl searchable"></select></div><div class="field"><label>Container No</label><input id="lineContainer" class="ctl"></div><div class="field"><label>Wt/Cut</label><input id="lineWtCut" type="number" step="any" class="ctl"></div><div class="field"><label>Warehouse To</label><select id="lineWarehouseTo" class="ctl searchable"></select></div><div class="editor-actions"><button id="btnAddLine" class="action">+</button><button id="btnCancelLine" class="action" hidden>Cancel</button></div>
+</div><div class="grid-title">Detail</div><div class="wrap"><table class="data"><thead><tr><th>Edit</th><th>Order No</th><th>Item Code</th><th>Item</th><th>Brand</th><th>Packing Type</th><th>Qty</th><th>Lab Sample #</th><th>UOM</th><th>Gross Weight</th><th>E.b / Unit</th><th>E.b Total</th><th>Add Weight</th><th>City/Area</th><th>Net Bill Weight</th><th>Stock Weight</th><th>Crop Year</th><th>Job/Lot</th><th>Warehouse</th><th>Container No</th><th>Wt/Cut</th><th>Cut Total</th><th>Warehouse To</th><th>Voucher/Document</th><th>Delete</th></tr></thead><tbody id="detailRows"></tbody></table></div></div>
+<div id="expensePane" class="pane"><div class="expense-editor"><select id="expenseItem" class="ctl searchable"></select><input id="expenseQty" type="number" step="any" class="ctl" placeholder="Qty"><input id="expenseRemarks" class="ctl" placeholder="Remarks"><button id="btnAddExpense" class="action">+</button></div><div class="wrap"><table class="data expense-table"><thead><tr><th>Expense</th><th>Qty</th><th>Remarks</th><th>Delete</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div>
+<div class="grid-title">This Grid show Pending GPs For GDN Entry, User can Load GatePasses With Accepted Status for Entry From This grid, GP With Open Status Will Not Load</div><div class="wrap pending"><table class="data"><thead><tr><th>Load</th><th>GP No</th><th>GP Date</th><th>Status</th><th>Customer</th><th>Order</th><th>Item</th><th>Qty</th><th>Vehicle</th><th>Bilty</th><th>Factory Weight</th><th>Ticket Nos.</th></tr></thead><tbody id="pendingRows"></tbody></table></div>
+</div></section>
+<section id="historyPane" hidden><div class="toolbar"><button class="tool" id="btnHistoryNew">New</button><button class="tool" id="btnHistoryRefresh">Refresh</button><button class="tool" id="btnGdnHistory">GDN History</button></div><div class="title">Goods Dispatch Notes History</div><div class="history-filter"><label>From Date</label><input id="historyFrom" type="date" class="ctl"><label>To Date</label><input id="historyTo" type="date" class="ctl"><label>From No</label><input id="historyFromNo" class="ctl"><label>To No</label><input id="historyToNo" class="ctl"><label>Customer</label><select id="historyCustomer" class="ctl searchable"></select><button id="btnShowHistory" class="action">Show</button></div><div class="grid-title">Filtered Records</div><div class="wrap" style="max-height:430px"><table class="data"><thead id="historyHead"></thead><tbody id="historyRows"></tbody></table></div></section>
+<div id="message" class="message"></div><div class="bottom"><button class="tab active" data-main="formPane">Form</button><button class="tab" data-main="historyPane">History</button></div></div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script><script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script><script th:src="@{/build/js/sale/gdn.js}"></script></body></html>

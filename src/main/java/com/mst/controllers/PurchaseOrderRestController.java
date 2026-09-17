@@ -36,6 +36,18 @@ public class PurchaseOrderRestController {
         return ResponseEntity.ok(purchaseOrderService.searchSuppliers(query, mode));
     }
 
+    @GetMapping("/brokers")
+    public ResponseEntity<List<Map<String, Object>>> getBrokers(
+            @RequestParam(required = false) String query) {
+        return ResponseEntity.ok(purchaseOrderService.searchBrokers(query));
+    }
+
+    @GetMapping("/commission-agents")
+    public ResponseEntity<List<Map<String, Object>>> getCommissionAgents(
+            @RequestParam(required = false) String query) {
+        return ResponseEntity.ok(purchaseOrderService.searchCommissionAgents(query));
+    }
+
     @GetMapping("/items")
     public ResponseEntity<List<Map<String, Object>>> getItems(
             @RequestParam(required = false) String query,

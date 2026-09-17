@@ -23,6 +23,7 @@ public class PurchaseOrderFullDto {
     private String paymentDueDate;
     private Integer deliveryTermId;
     private Integer bookingPersonId;
+    private String bookingPersonName;
 
     // Commission & Brokery
     private Integer commissionAgentId;
@@ -35,6 +36,7 @@ public class PurchaseOrderFullDto {
     private Integer commissionAccountId;
 
     private Integer brokerAccountId;
+    private String brokerAccountName;
     private Integer brokeryTypeId;
     private String brokeryTypeName;
     private Double brokeryRate = 0.0;
@@ -92,6 +94,8 @@ public class PurchaseOrderFullDto {
     public void setDeliveryTermId(Integer deliveryTermId) { this.deliveryTermId = deliveryTermId; }
     public Integer getBookingPersonId() { return bookingPersonId; }
     public void setBookingPersonId(Integer bookingPersonId) { this.bookingPersonId = bookingPersonId; }
+    public String getBookingPersonName() { return bookingPersonName; }
+    public void setBookingPersonName(String bookingPersonName) { this.bookingPersonName = bookingPersonName; }
 
     public Integer getCommissionAgentId() { return commissionAgentId; }
     public void setCommissionAgentId(Integer commissionAgentId) { this.commissionAgentId = commissionAgentId; }
@@ -112,6 +116,8 @@ public class PurchaseOrderFullDto {
 
     public Integer getBrokerAccountId() { return brokerAccountId; }
     public void setBrokerAccountId(Integer brokerAccountId) { this.brokerAccountId = brokerAccountId; }
+    public String getBrokerAccountName() { return brokerAccountName; }
+    public void setBrokerAccountName(String brokerAccountName) { this.brokerAccountName = brokerAccountName; }
     public Integer getBrokeryTypeId() { return brokeryTypeId; }
     public void setBrokeryTypeId(Integer brokeryTypeId) { this.brokeryTypeId = brokeryTypeId; }
     public String getBrokeryTypeName() { return brokeryTypeName; }

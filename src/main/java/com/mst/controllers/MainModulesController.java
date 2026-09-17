@@ -74,11 +74,16 @@ public class MainModulesController {
         return "lookups/reasons";
     }
 
-    @GetMapping("/commission")
-    public String commissionTrading(Model model) {
-        model.addAttribute("activeMenu", "commission");
-        return "redirect:/purchase/purchase-order";
-    }
+    /*
+     * "/commission" is now owned by CmagtModuleViewController, which serves the real
+     * Commission Trading screen board (Commission Agent Portal + Commission Trading Reports).
+     *
+     * It previously redirected to "/purchase/purchase-order" - an unrelated module - so the
+     * Commission Trading tile in modules.html opened the Purchase Order screen and the
+     * Commission Trading pages were unreachable from the menu. The mapping is removed here
+     * rather than duplicated, because two @GetMapping("/commission") handlers would fail
+     * startup with an ambiguous-mapping error.
+     */
 
     @GetMapping("/packing")
     public String packingMaterial(Model model) {
@@ -191,7 +196,7 @@ public class MainModulesController {
     public String stockRegister(Model model) {
         populateStockOpeningModel(model);
         model.addAttribute("moduleTitle", "Stock Register Report");
-        return "stocks/stock_opening_form";
+        return "stocks/stock_register";
     }
 
     // 16. Warehouse Stock Summary
@@ -207,7 +212,7 @@ public class MainModulesController {
     public String stockAsOnDate(Model model) {
         populateStockOpeningModel(model);
         model.addAttribute("moduleTitle", "Item Stock As On Date");
-        return "stocks/stock_opening_form";
+        return "stocks/stock_as_on_date";
     }
 
     // 19. Lot Wise Stock Report

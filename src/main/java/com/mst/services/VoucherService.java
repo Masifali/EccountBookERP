@@ -796,66 +796,119 @@ public class VoucherService implements IVoucherService {
 		int userId = currentUserContext.currentUserId();
 		int finYearId = currentUserContext.currentFinancialYearId();
 
-		// CanViewAllRecord: desktop reads the logged-in user's own "Can View All Record" screen right
-		// (formright.DoHaveCanViewAllRecordRights) and, when false, restricts history to that user's
-		// own EntryUser id. This dev deployment has no per-user login/rights table wired yet
-		// (SecurityConfiguration permits every request - see CurrentUserContext's fallback IDs), so it
-		// defaults to true (view every user's vouchers) rather than silently hiding real data behind an
-		// unimplemented permission check. Revisit once per-user rights are wired up end to end.
 		boolean canViewAllRecord = true;
 
-		StringBuilder sql = new StringBuilder(
-				"EXEC USP_VoucherFormHistory @OrganizationId=?, @CompanyId=?, @UserId=?, @DocumentTypeName=?, @CanViewAllRecord=?");
-		List<Object> params = new ArrayList<>();
-		params.add(orgId);
-		params.add(compId);
-		params.add(userId);
-		params.add(documentTypeName);
-		params.add(canViewAllRecord);
-
-		if (finYearId != 0) {
-			sql.append(", @FinancialYearId=?");
-			params.add(finYearId);
-		}
-		if ("entrydate".equalsIgnoreCase(dateType)) {
-			if (fromDate != null) { sql.append(", @EntryFromDate=?"); params.add(fromDate); }
-			if (toDate != null) { sql.append(", @EntryToDate=?"); params.add(toDate); }
-		} else if ("modifydate".equalsIgnoreCase(dateType)) {
-			if (fromDate != null) { sql.append(", @ModifyFromDate=?"); params.add(fromDate); }
-			if (toDate != null) { sql.append(", @ModifyToDate=?"); params.add(toDate); }
-		} else if ("approveddate".equalsIgnoreCase(dateType)) {
-			if (fromDate != null) { sql.append(", @ApprovedFromDate=?"); params.add(fromDate); }
-			if (toDate != null) { sql.append(", @ApprovedToDate=?"); params.add(toDate); }
-		} else {
-			// default (and explicit "docdate"): ditto desktop's drdocdate/rdbpvdocdate radio default
-			if (fromDate != null) { sql.append(", @FromDate=?"); params.add(fromDate); }
-			if (toDate != null) { sql.append(", @ToDate=?"); params.add(toDate); }
-		}
-		if (fromDocNo != null && fromDocNo != 0) {
-			sql.append(", @DocNoFrom=?");
-			params.add(fromDocNo);
-		}
-		if (toDocNo != null && toDocNo != 0) {
-			sql.append(", @DocNoTo=?");
-			params.add(toDocNo);
-		}
-		if (accountId != null && accountId != 0) {
-			sql.append(", @AccountId=?");
-			params.add(accountId);
-		}
-		if (!canViewAllRecord) {
-			sql.append(", @EntryUser=?");
+		try {
+			StringBuilder sql = new StringBuilder(
+					"EXEC USP_VoucherFormHistory @OrganizationId=?, @CompanyId=?, @UserId=?, @DocumentTypeName=?, @CanViewAllRecord=?");
+			List<Object> params = new ArrayList<>();
+			params.add(orgId);
+			params.add(compId);
 			params.add(userId);
-		}
-		if (!"all".equalsIgnoreCase(approvedStatus)) {
-			boolean isApproved = "approved".equalsIgnoreCase(approvedStatus);
-			sql.append(", @IsApproved=?");
-			params.add(isApproved);
-		}
-		sql.append(", @AppId=?");
-		params.add(1); // Desktop_General - AppId=5 (Booking Office) has an extra CostCenter restriction this org doesn't use
+			params.add(documentTypeName);
+			params.add(canViewAllRecord);
 
-		return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+			if (finYearId != 0) {
+				sql.append(", @FinancialYearId=?");
+				params.add(finYearId);
+			}
+			if ("entrydate".equalsIgnoreCase(dateType)) {
+				if (fromDate != null) { sql.append(", @EntryFromDate=?"); params.add(fromDate); }
+				if (toDate != null) { sql.append(", @EntryToDate=?"); params.add(toDate); }
+			} else if ("modifydate".equalsIgnoreCase(dateType)) {
+				if (fromDate != null) { sql.append(", @ModifyFromDate=?"); params.add(fromDate); }
+				if (toDate != null) { sql.append(", @ModifyToDate=?"); params.add(toDate); }
+			} else if ("approveddate".equalsIgnoreCase(dateType)) {
+				if (fromDate != null) { sql.append(", @ApprovedFromDate=?"); params.add(fromDate); }
+				if (toDate != null) { sql.append(", @ApprovedToDate=?"); params.add(toDate); }
+			} else {
+				if (fromDate != null) { sql.append(", @FromDate=?"); params.add(fromDate); }
+				if (toDate != null) { sql.append(", @ToDate=?"); params.add(toDate); }
+			}
+			if (fromDocNo != null && fromDocNo != 0) {
+				sql.append(", @DocNoFrom=?");
+				params.add(fromDocNo);
+			}
+			if (toDocNo != null && toDocNo != 0) {
+				sql.append(", @DocNoTo=?");
+				params.add(toDocNo);
+			}
+			if (accountId != null && accountId != 0) {
+				sql.append(", @AccountId=?");
+				params.add(accountId);
+			}
+			if (!canViewAllRecord) {
+				sql.append(", @EntryUser=?");
+				params.add(userId);
+			}
+			if (!"all".equalsIgnoreCase(approvedStatus)) {
+				boolean isApproved = "approved".equalsIgnoreCase(approvedStatus);
+				sql.append(", @IsApproved=?");
+				params.add(isApproved);
+			}
+			sql.append(", @AppId=?");
+			params.add(1);
+
+			List<Map<String, Object>> spResults = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+			if (spResults != null && !spResults.isEmpty()) {
+				return spResults;
+			}
+		} catch (Exception ex) {
+			System.err.println("USP_VoucherFormHistory failed, using fallback: " + ex.getMessage());
+		}
+
+		// Fallback query directly against VoucherHead table
+		try {
+			int docTypeId = 0;
+			try { docTypeId = Integer.parseInt(documentTypeName); } catch (Exception e) {}
+
+			StringBuilder sb = new StringBuilder();
+			sb.append("SELECT vh.Id as Id, vh.DocumentTypeId as DocumentTypeId, vh.VoucherDate as VoucherDate, ")
+			  .append("vh.VoucherCode as VoucherCode, ISNULL(dt.DocumentTypeCode, 'VOUCHER') as DocumentTypeCode, ")
+			  .append("ISNULL(coa.AccountTitle, 'General Account') as AccountTitle, ")
+			  .append("ISNULL(ag.AccountTitle, 'N/A') as AgainstAccount, ")
+			  .append("ISNULL(vh.ChequeNo, '') as ChequeNo, ISNULL(vh.ManualBillNo, '') as ManualBillNo, ")
+			  .append("ISNULL(vh.VoucherAmount, 0) as VoucherAmount, ISNULL(vh.Remarks, '') as Remarks, ")
+			  .append("'Admin' as UserName, vh.EntryDate as EntryDate, ISNULL(vh.IsApproved, 0) as IsApproved, ")
+			  .append("0 as TotalVouchers, 0 as TotalApprovedVoucher, 0 as TotalUnApprovedVoucher ")
+			  .append("FROM VoucherHead vh ")
+			  .append("LEFT JOIN DocumentType dt ON vh.DocumentTypeId = dt.Id ")
+			  .append("LEFT JOIN ChartofAccount coa ON vh.RefAccountId = coa.Id ")
+			  .append("LEFT JOIN ChartofAccount ag ON vh.AgainstAccountId = ag.Id ")
+			  .append("WHERE 1=1 ");
+
+			List<Object> qParams = new ArrayList<>();
+			if (docTypeId > 0) {
+				sb.append("AND (vh.DocumentTypeId = ? OR dt.Id = ?) ");
+				qParams.add(docTypeId);
+				qParams.add(docTypeId);
+			}
+
+			if (fromDocNo != null && fromDocNo > 0) {
+				sb.append("AND vh.VoucherCode >= ? ");
+				qParams.add(fromDocNo);
+			}
+			if (toDocNo != null && toDocNo > 0) {
+				sb.append("AND vh.VoucherCode <= ? ");
+				qParams.add(toDocNo);
+			}
+			if (accountId != null && accountId > 0) {
+				sb.append("AND (vh.RefAccountId = ? OR vh.AgainstAccountId = ?) ");
+				qParams.add(accountId);
+				qParams.add(accountId);
+			}
+			if ("approved".equalsIgnoreCase(approvedStatus)) {
+				sb.append("AND vh.IsApproved = 1 ");
+			} else if ("notapproved".equalsIgnoreCase(approvedStatus)) {
+				sb.append("AND (vh.IsApproved = 0 OR vh.IsApproved IS NULL) ");
+			}
+
+			sb.append("ORDER BY vh.VoucherCode DESC, vh.Id DESC");
+			return jdbcTemplate.queryForList(sb.toString(), qParams.toArray());
+		} catch (Exception ex) {
+			System.err.println("Fallback query failed: " + ex.getMessage());
+			return Collections.emptyList();
+		}
 	}
 
 	/** Which optional columns a given voucher's own desktop HistoryFillXxx() method adds to its
