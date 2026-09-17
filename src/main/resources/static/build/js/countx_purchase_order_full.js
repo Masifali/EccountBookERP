@@ -494,16 +494,27 @@ function populateSupplierDropdowns() {
 
     /* data-city-id carries the supplier's CityId so combsuppname_Leave's cascade
        (PurchsaeOrder.cs :1754-1757) can be reproduced without a second round trip.
-       The history supplier is chosen through its own modal, not a <select>. */
+       The history supplier is chosen through its own modal, not a <select>.
+
+       The Name/Code radio changes only what is DISPLAYED: RdPartyByName_CheckedChanged
+       (:1877-1884) re-binds the very same dtSupplier rows, swapping the display member
+       between CompanyName and PartyCode. The row set never changes, so this is decided
+       here rather than by re-querying. */
+    const byCode = $('#radSupCode').is(':checked');
+    const keepId = parseInt(selForm.val() || '0', 10);
+
     allSuppliers.forEach(s => {
         const code = s.partyCode || s.code || '';
         const name = s.companyName || s.name || '';
         const cityId = (s.cityId !== undefined && s.cityId !== null) ? s.cityId : '';
+        const label = byCode ? (code || name) : (name || code);
         selForm.append(
-            `<option value="${s.id}" data-code="${escapeHtml(code)}" data-city-id="${escapeHtml(String(cityId))}">${escapeHtml(name)}</option>`
+            `<option value="${s.id}" data-code="${escapeHtml(code)}" data-city-id="${escapeHtml(String(cityId))}">${escapeHtml(label)}</option>`
         );
     });
 
+    /* combsuppname.Value = Id after the re-bind (:1886-1889) */
+    if (keepId > 0) selForm.val(String(keepId));
     if ($.fn.select2) selForm.trigger('change.select2');
 }
 

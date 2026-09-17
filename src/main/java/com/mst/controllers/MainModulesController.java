@@ -228,6 +228,6 @@ public class MainModulesController {
     public String brandWiseStock(Model model) {
         model.addAttribute("activeMenu", "inventory");
         model.addAttribute("moduleTitle", "Brand Wise Stock Report");
-        return "inventory/brands";
+        return "stocks/brand_wise_stock";
     }
 }

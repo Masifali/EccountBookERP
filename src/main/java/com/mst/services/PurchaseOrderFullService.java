@@ -171,79 +171,134 @@ public class PurchaseOrderFullService {
         }
     }
 
+    /* ==========================================================================================
+     * PARTY LIST — Supplier Name, Commission Agent and Broker Ac
+     *
+     * The desktop fills ONE table, dtSupplier, and binds all three combos from it
+     * (BindSupplierName(), PurchsaeOrder.cs :1020-1041). That table comes from
+     * SupplierDtFillFromGlobal() (:986-1013), which reads clsGlobalVariables.globalSupplierCustomer
+     * — built by GlobalServicesMethods.getGlobalSupplierCustomer() from the stored procedure
+     * [USP_GetVendorsAndCustomersWithCityName] (GlobalServicesMethods.cs :497) — and then keeps
+     * only rows with CustomerGroupId != 7.
+     *
+     * These three endpoints previously ran a hand-written
+     *     SELECT ... FROM SupplierCustomer s LEFT JOIN City c ON s.CityId = c.Id
+     * whose select list included ISNULL(c.Description, ISNULL(c.CityName, '')). The City table
+     * has Description but NO CityName column (searchCities() below selects "Description as
+     * cityName" and is the query that works), so SQL Server rejected the statement with an
+     * invalid-column error. The catch block returned an empty list, and because it reported the
+     * failure with printStackTrace()/System.err — neither of which goes through the application
+     * logger — nothing appeared in logfile_*.log. The symptom was three permanently empty
+     * dropdowns and a clean log.
+     *
+     * Using the procedure removes the hand-written join entirely: CityName comes back already
+     * resolved, exactly as the desktop receives it.
+     * ========================================================================================== */
+
+    private static final org.slf4j.Logger PARTY_LOG =
+            org.slf4j.LoggerFactory.getLogger(PurchaseOrderFullService.class);
+
+    /** [USP_GetVendorsAndCustomersWithCityName] — @PartyTypeId/@PageSize/@PageNumber/@Keyword are
+     *  omitted here exactly as the desktop omits them when they are zero/empty
+     *  (GlobalServicesMethods.cs :450-496), so the full company list comes back. */
+    private static final String SQL_PARTY_LIST =
+            "EXEC USP_GetVendorsAndCustomersWithCityName @OrganizationId=?, @CompanyId=?";
+
+    /** Result-set keys are read case-insensitively. Column casing coming back from a procedure is
+     *  not something to assume — ADO.NET's DataTable indexer is case-insensitive and Java's Map is
+     *  not, which is the defect class that previously blanked columns on other screens. */
+    private static Object col(Map<String, Object> row, String name) {
+        Object v = row.get(name);
+        if (v != null) return v;
+        for (Map.Entry<String, Object> e : row.entrySet()) {
+            if (e.getKey() != null && e.getKey().equalsIgnoreCase(name)) return e.getValue();
+        }
+        return null;
+    }
+
+    private static String str(Map<String, Object> row, String name) {
+        Object v = col(row, name);
+        return v == null ? "" : String.valueOf(v).trim();
+    }
+
+    private static int num(Map<String, Object> row, String name) {
+        Object v = col(row, name);
+        if (v instanceof Number) return ((Number) v).intValue();
+        try { return Integer.parseInt(String.valueOf(v).trim()); } catch (Exception e) { return 0; }
+    }
+
+    /** The single party list all three combos are bound from, shaped for the front end. */
+    private List<Map<String, Object>> fetchPartyList() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        List<Map<String, Object>> rows;
+        try {
+            rows = jdbcTemplate.queryForList(SQL_PARTY_LIST,
+                    currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId());
+        } catch (Exception e) {
+            /* Logged through the application logger so a failure is visible in logfile_*.log
+               instead of vanishing the way the previous printStackTrace() did. */
+            PARTY_LOG.error("USP_GetVendorsAndCustomersWithCityName failed; "
+                    + "Supplier / Commission Agent / Broker dropdowns will be empty", e);
+            return out;
+        }
+
+        for (Map<String, Object> r : rows) {
+            /* SupplierDtFillFromGlobal(), :989 — the one filter the desktop always applies. */
+            if (num(r, "CustomerGroupId") == 7) continue;
+
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", num(r, "Id"));
+            m.put("companyName", str(r, "CompanyName"));
+            m.put("partyCode", str(r, "PartyCode"));
+            m.put("nickName", str(r, "NickName"));
+            m.put("glAccountId", num(r, "GlAccountId"));
+            m.put("cityId", num(r, "CityId"));           /* drives combsuppname_Leave's City cascade, :1754 */
+            m.put("cityName", str(r, "CityName"));
+            m.put("mobileNo", str(r, "MobilePersonal"));
+            m.put("partyTypeId", num(r, "PartyTypeId"));
+            out.add(m);
+        }
+        out.sort(Comparator.comparing(a -> String.valueOf(a.get("companyName")),
+                                      String.CASE_INSENSITIVE_ORDER));
+        if (out.isEmpty()) {
+            PARTY_LOG.warn("USP_GetVendorsAndCustomersWithCityName returned no usable party rows "
+                    + "(after the CustomerGroupId <> 7 filter) for organization {} / company {}",
+                    currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId());
+        }
+        return out;
+    }
+
+    /** In-memory keyword filter. The desktop filters its already-loaded dtSupplier rather than
+     *  re-querying (RdPartyByName_CheckedChanged, :1867-1896), so this matches. */
+    private List<Map<String, Object>> filterParties(List<Map<String, Object>> rows, String query) {
+        if (query == null || query.trim().isEmpty()) return rows;
+        String q = query.trim().toLowerCase();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            String name = String.valueOf(r.get("companyName")).toLowerCase();
+            String code = String.valueOf(r.get("partyCode")).toLowerCase();
+            String nick = String.valueOf(r.get("nickName")).toLowerCase();
+            if (name.contains(q) || code.contains(q) || nick.contains(q)) out.add(r);
+        }
+        return out;
+    }
+
+    /** Supplier Name (combsuppname). searchMode only decides what the FRONT END displays —
+     *  RdPartyByName_CheckedChanged re-binds the same rows between CompanyName and PartyCode
+     *  (:1877-1884), so both are always returned and the row set never changes. */
     public List<Map<String, Object>> searchSuppliers(String query, String searchMode) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT s.Id as id, ");
-            if ("code".equalsIgnoreCase(searchMode)) {
-                sb.append("ISNULL(s.SupCustCode, ISNULL(s.ManualPartyCode, '')) as partyCode, ISNULL(s.CompanyName, '') as companyName, ");
-            } else {
-                sb.append("ISNULL(s.CompanyName, '') as companyName, ISNULL(s.SupCustCode, ISNULL(s.ManualPartyCode, '')) as partyCode, ");
-            }
-            sb.append("ISNULL(s.GlAccountId, 0) as glAccountId, ISNULL(s.CityId, 0) as cityId, ISNULL(c.Description, ISNULL(c.CityName, '')) as cityName, ISNULL(s.MobilePersonal, ISNULL(s.PhoneOffice, '')) as mobileNo ");
-            sb.append("FROM SupplierCustomer s ");
-            sb.append("LEFT JOIN City c ON s.CityId = c.Id ");
-            sb.append("WHERE 1=1 ");
-
-            if (query != null && !query.trim().isEmpty()) {
-                String q = query.trim().replace("'", "''");
-                if ("code".equalsIgnoreCase(searchMode)) {
-                    sb.append("AND (s.SupCustCode LIKE '%").append(q).append("%' OR s.ManualPartyCode LIKE '%").append(q).append("%' OR s.CompanyName LIKE '%").append(q).append("%') ");
-                } else {
-                    sb.append("AND (s.CompanyName LIKE '%").append(q).append("%' OR s.SupCustCode LIKE '%").append(q).append("%' OR s.ManualPartyCode LIKE '%").append(q).append("%') ");
-                }
-            }
-            sb.append("ORDER BY s.CompanyName");
-            return jdbcTemplate.queryForList(sb.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error in searchSuppliers: " + e.getMessage());
-            return Collections.emptyList();
-        }
+        return filterParties(fetchPartyList(), query);
     }
 
+    /** Broker Ac (CmbBrokeryAccount) — bound from the same dtSupplier, :1036. */
     public List<Map<String, Object>> searchBrokers(String query) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT s.Id as id, ISNULL(s.CompanyName, '') as companyName, ")
-              .append("ISNULL(s.GlAccountId, 0) as glAccountId, ISNULL(s.SupCustCode, ISNULL(s.ManualPartyCode, '')) as partyCode, ")
-              .append("ISNULL(s.CityId, 0) as cityId, ISNULL(c.Description, ISNULL(c.CityName, '')) as cityName, ")
-              .append("ISNULL(s.MobilePersonal, ISNULL(s.PhoneOffice, '')) as mobileNo ")
-              .append("FROM SupplierCustomer s ")
-              .append("LEFT JOIN City c ON s.CityId = c.Id ")
-              .append("WHERE 1=1 ");
-
-            if (query != null && !query.trim().isEmpty()) {
-                String q = query.trim().replace("'", "''");
-                sb.append("AND (s.CompanyName LIKE '%").append(q).append("%' OR s.SupCustCode LIKE '%").append(q).append("%' OR CAST(s.GlAccountId AS VARCHAR) LIKE '%").append(q).append("%') ");
-            }
-            sb.append("ORDER BY s.CompanyName");
-            return jdbcTemplate.queryForList(sb.toString());
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+        return filterParties(fetchPartyList(), query);
     }
 
+    /** Commission Agent (combsalesman) — bound from the same dtSupplier, :1032. */
     public List<Map<String, Object>> searchCommissionAgents(String query) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT s.Id as id, ISNULL(s.CompanyName, '') as companyName, ")
-              .append("ISNULL(s.GlAccountId, 0) as glAccountId, ISNULL(s.SupCustCode, ISNULL(s.ManualPartyCode, '')) as partyCode, ")
-              .append("ISNULL(s.CityId, 0) as cityId, ISNULL(c.Description, ISNULL(c.CityName, '')) as cityName, ")
-              .append("ISNULL(s.MobilePersonal, ISNULL(s.PhoneOffice, '')) as mobileNo ")
-              .append("FROM SupplierCustomer s ")
-              .append("LEFT JOIN City c ON s.CityId = c.Id ")
-              .append("WHERE 1=1 ");
-
-            if (query != null && !query.trim().isEmpty()) {
-                String q = query.trim().replace("'", "''");
-                sb.append("AND (s.CompanyName LIKE '%").append(q).append("%' OR s.SupCustCode LIKE '%").append(q).append("%' OR CAST(s.GlAccountId AS VARCHAR) LIKE '%").append(q).append("%') ");
-            }
-            sb.append("ORDER BY s.CompanyName");
-            return jdbcTemplate.queryForList(sb.toString());
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+        return filterParties(fetchPartyList(), query);
     }
 
     public List<Map<String, Object>> searchItems(String query, String searchMode, Integer parentCategoryId) {
