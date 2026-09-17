@@ -237,7 +237,7 @@
 <body>
 
     <div class="win-sub-header">
-        <i class="fa fa-folder-o"></i> Contractor Wages
+        <i class="fa fa-folder-o"></i> Screens &gt; Contractor Wages &gt; <span th:text="${moduleTitle != null ? moduleTitle : 'Wages Account'}">Wages Account</span>
     </div>
 
     <div class="win-toolbar">
@@ -262,9 +262,9 @@
     </div>
 
     <div class="win-title-bar">
-        <span>Contractor Wages Account</span>
-        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
-            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        <span th:text="${moduleTitle != null ? moduleTitle : 'Wages Account'}">Wages Account</span>
+        <a href="/accounts/vouchers/contractor-wages-dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
+            <i class="fa fa-arrow-left"></i> Back to Contractor Wages Dashboard
         </a>
     </div>
 
@@ -863,6 +863,21 @@
             if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); resetForm(); }
             if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); submitVoucher(); }
             if (e.ctrlKey && e.keyCode === 82) { e.preventDefault(); refreshPage(); }
+        });
+
+        $(document).on('click', '.win-btn, .win-btn-teal, .win-btn-action, button:not([type="submit"])', function(e) {
+            const $btn = $(this);
+            if ($btn.data('busy') || $btn.prop('disabled')) {
+                e.preventDefault();
+                return false;
+            }
+            $btn.data('busy', true).prop('disabled', true);
+            const originalHtml = $btn.html();
+            $btn.html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+
+            setTimeout(function() {
+                $btn.prop('disabled', false).removeData('busy').html(originalHtml);
+            }, 600);
         });
     </script>
 </body>

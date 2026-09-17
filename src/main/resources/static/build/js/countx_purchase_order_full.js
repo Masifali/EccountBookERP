@@ -57,21 +57,180 @@ function initForm() {
 
 function initSearchableDropdowns() {
     if ($.fn.select2) {
-        $('select').each(function() {
+        $('.select2').each(function() {
             $(this).select2({
                 width: '100%',
                 dropdownAutoWidth: true
             });
         });
+
+        $('.select2-2col').each(function() {
+            $(this).select2({
+                width: '100%',
+                dropdownAutoWidth: true,
+                templateResult: format2Col,
+                templateSelection: format2ColSelection,
+                escapeMarkup: function (m) { return m; }
+            }).on('select2:open', function() {
+                setTimeout(function() {
+                    if ($('.select2-results .select2-2col-header').length === 0) {
+                        $('.select2-results').prepend(
+                            '<div class="select2-2col-header">' +
+                                '<span>Name / Description</span>' +
+                                '<span>Code / Type</span>' +
+                            '</div>'
+                        );
+                    }
+                }, 10);
+            });
+        });
+        $('.select2-4col').each(function() {
+            $(this).select2({
+                width: '100%',
+                dropdownAutoWidth: true,
+                templateResult: format4Col,
+                templateSelection: format4ColSelection,
+                escapeMarkup: function (m) { return m; }
+            }).on('select2:open', function() {
+                setTimeout(function() {
+                    if ($('.select2-results .select2-4col-header').length === 0) {
+                        $('.select2-results').prepend(
+                            '<div class="select2-4col-header">' +
+                                '<span style="flex: 3;">Commission Agent</span>' +
+                                '<span style="flex: 2; margin-left: 6px;">PartyCode</span>' +
+                                '<span style="flex: 2; margin-left: 6px;">CityName</span>' +
+                                '<span style="flex: 2; margin-left: 6px;">MobileNo</span>' +
+                            '</div>'
+                        );
+                    }
+                }, 10);
+            });
+        });
     }
+
+    bindDropdownChangeListeners();
+}
+
+function format2Col(state) {
+    if (!state.id) return state.text;
+    const code = $(state.element).data('code') || $(state.element).attr('data-code') || '';
+    const name = state.text;
+    return `
+        <div class="select2-2col-row">
+            <span class="select2-2col-title">${escapeHtml(name)}</span>
+            <span class="select2-2col-level">${escapeHtml(code)}</span>
+        </div>
+    `;
+}
+
+function format2ColSelection(state) {
+    if (!state.id) return state.text;
+    const code = $(state.element).data('code') || $(state.element).attr('data-code') || '';
+    if (code) {
+        return `${state.text} (${code})`;
+    }
+    return state.text;
+}
+
+function format4Col(state) {
+    if (!state.id || state.id == '0') return state.text;
+    const name = state.text;
+    const code = $(state.element).data('code') || '';
+    const city = $(state.element).data('city') || '';
+    const mobile = $(state.element).data('mobile') || '';
+    return `
+        <div class="select2-4col-row">
+            <span class="select2-4col-col1">${escapeHtml(name)}</span>
+            <span class="select2-4col-col2">${escapeHtml(code)}</span>
+            <span class="select2-4col-col3">${escapeHtml(city)}</span>
+            <span class="select2-4col-col4">${escapeHtml(mobile)}</span>
+        </div>
+    `;
+}
+
+function format4ColSelection(state) {
+    if (!state.id || state.id == '0') return state.text;
+    const code = $(state.element).data('code') || '';
+    if (code) {
+        return `${state.text} (${code})`;
+    }
+    return state.text;
+}
+
+function bindDropdownChangeListeners() {
+    $('#cmbSupplier').off('change.sync').on('change.sync', function() {
+        const suppId = parseInt($(this).val() || '0');
+        if (suppId > 0) {
+            const supp = allSuppliers.find(s => s.id === suppId);
+            if (supp) {
+                $('#hidSupplierId').val(supp.id);
+                const displayText = $('#radSupCode').is(':checked') 
+                    ? `${supp.partyCode} - ${supp.companyName}`
+                    : `${supp.companyName} (${supp.partyCode || 'N/A'})`;
+                $('#txtSupplierDisplay').val(displayText);
+                onSupplierSelectedEventChain(supp);
+            }
+        } else {
+            $('#hidSupplierId').val('0');
+            $('#txtSupplierDisplay').val('');
+        }
+    });
+
+    $('#cmbBrokerAccount').off('change.sync').on('change.sync', function() {
+        const brokerId = parseInt($(this).val() || '0');
+        if (brokerId > 0) {
+            const broker = allBrokers.find(b => b.id === brokerId);
+            if (broker) {
+                $('#hidBrokerAccountId').val(broker.id);
+                $('#txtBrokerAcDisplay').val(broker.companyName);
+                calcBrokery();
+            }
+        } else {
+            $('#hidBrokerAccountId').val('0');
+            $('#txtBrokerAcDisplay').val('');
+            calcBrokery();
+        }
+    });
+
+    $('#cmbCommissionAgent').off('change.sync').on('change.sync', function() {
+        const agentId = parseInt($(this).val() || '0');
+        if (agentId > 0) {
+            const agent = allCommAgents.find(a => a.id === agentId);
+            if (agent) {
+                $('#hidCommissionAgentId').val(agent.id);
+                $('#txtCommAgentDisplay').val(agent.companyName);
+                calcCommission();
+            }
+        } else {
+            $('#hidCommissionAgentId').val('0');
+            $('#txtCommAgentDisplay').val('');
+            calcCommission();
+        }
+    });
+
+    $('#cmbBookingPerson').off('change.sync').on('change.sync', function() {
+        const personId = parseInt($(this).val() || '0');
+        if (personId > 0) {
+            const person = allBookingPersons.find(p => p.id === personId);
+            if (person) {
+                $('#hidBookingPersonId').val(person.id);
+                $('#txtBookingPersonDisplay').val(person.partyName || person.description || person.name);
+            }
+        } else {
+            $('#hidBookingPersonId').val('0');
+            $('#txtBookingPersonDisplay').val('-- Select --');
+        }
+    });
 }
 
 function setWinDefaultDates() {
     const today = new Date();
-    const isoDate = today.toISOString().split('T')[0];
+    const isoDate = ymdLocal(today);
     
     $('#txtDocDate').val(isoDate);
     $('#txtDeliveryStartDate').val(isoDate);
+    $('#txtHistoryFromDate').val(isoDate);
+    $('#txtHistoryToDate').val(isoDate);
     
     calculateExpiryDate();
     calculatePaymentDueDate();
@@ -79,7 +238,10 @@ function setWinDefaultDates() {
 
 function fetchNextDocNo() {
     $.ajax({
-        url: '/api/purchase-order/next-doc-no?docType=1052',
+        url: '/api/purchase-order/next-doc-no?docType=41',   /* doc type 41 - this is the
+             general Purchase module's Purchase Order (Architecture.WinApp.Purchase\PurchsaeOrder.cs,
+             po.DocumentTypeId = 41 at :3295). 1052 is the Commission Trading document
+             (Cmagt\frmPurchaseOrderCmagt.cs), a different table and procedure family. */
         type: 'GET',
         success: function(res) {
             const code = res ? (res.nextCode || res.docNo) : null;
@@ -97,36 +259,65 @@ function loadDropdowns() {
         const sel = $('#cmbParentCategory');
         sel.find('option:gt(0)').remove();
         if (data) {
-            data.forEach(c => sel.append(`<option value="${c.id}">${escapeHtml(c.description)}</option>`));
+            data.forEach(c => sel.append(`<option value="${c.id}" data-code="${c.id}">${escapeHtml(c.description)}</option>`));
         }
+        if ($.fn.select2) sel.trigger('change.select2');
     });
 
     // Payment Terms
     $.get('/api/purchase-order/payment-terms', function(data) {
+        paymentTermsOptions = data || [];
         const sel = $('#cmbPaymentTerm');
         sel.find('option:gt(0)').remove();
         if (data) {
-            data.forEach(t => sel.append(`<option value="${t.id}" data-days="${t.dueDays}">${escapeHtml(t.description)}</option>`));
+            data.forEach(t => sel.append(`<option value="${t.id}" data-days="${t.dueDays}" data-code="${t.dueDays ? t.dueDays + ' Days' : ''}">${escapeHtml(t.description)}</option>`));
         }
+        if ($.fn.select2) sel.trigger('change.select2');
     });
 
     // Delivery Terms
-    $.get('/api/purchase-order/delivery-terms', function(data) {});
+    $.get('/api/purchase-order/delivery-terms', function(data) {
+        const sel = $('#cmbDeliveryTerm');
+        sel.find('option:gt(0)').remove();
+        if (data) {
+            data.forEach(t => sel.append(`<option value="${t.id}" data-code="${t.id}">${escapeHtml(t.description || t.name)}</option>`));
+        }
+        if ($.fn.select2) sel.trigger('change.select2');
+    });
 
     // Job Lots
     $.get('/api/purchase-order/job-lots', function(data) {
         const sel = $('#cmbJobLot');
         sel.find('option:gt(0)').remove();
         if (data) {
-            data.forEach(j => sel.append(`<option value="${j.id}">${escapeHtml(j.description)}</option>`));
+            data.forEach(j => sel.append(`<option value="${j.id}" data-code="${j.id}">${escapeHtml(j.description)}</option>`));
         }
+        if ($.fn.select2) sel.trigger('change.select2');
     });
 
+    loadCommissionUoms();          /* CommissionUOMFill(), :1162 */
     loadEmptyBagDropdowns();
     loadSupplierExpenseDropdowns();
     loadChargeToProductDropdowns();
     loadPaymentTermsOptions();
     loadUomScheduleList();
+    loadHistoryBranches();
+}
+
+function loadHistoryBranches() {
+    $.get('/api/purchase-order/branches', function(data) {
+        const sel = $('#cmbHistoryBranch');
+        sel.find('option:gt(0)').remove();
+        if (data) {
+            data.forEach(b => {
+                const id = b.id || b.Id || b.branchId || 0;
+                const name = b.branchName || b.BranchName || b.description || b.Description || '';
+                const code = b.branchCode || b.BranchCode || id;
+                sel.append(`<option value="${id}" data-code="${escapeHtml(code)}">${escapeHtml(name)}</option>`);
+            });
+        }
+        if ($.fn.select2) sel.trigger('change.select2');
+    });
 }
 
 /* ============================================================
@@ -148,6 +339,18 @@ function loadUomScheduleList() {
  * when false (editing an existing saved row) no auto-default is applied so the saved selection is
  * left for the caller to restore via .val(...).
  */
+/* The desktop reports these through MessageBox.Show; this file already uses alert()
+   for the same purpose, so keep one convention. */
+function showPoMessage(text, isError) { alert(text); }
+
+/* Local-calendar yyyy-MM-dd. toISOString() converts to UTC first, which east of
+   Greenwich (this site runs at UTC+5) reports the PREVIOUS day for a local date. */
+function ymdLocal(d) {
+    if (!d || isNaN(d.getTime())) return '';
+    const m = d.getMonth() + 1, day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+}
+
 function bindItemUom(itemId, isNewRow) {
     const packSel = $('#cmbPackUom');
     const rateSel = $('#cmbRateUom');
@@ -163,21 +366,33 @@ function bindItemUom(itemId, isNewRow) {
         rows = uomScheduleList || [];
     }
 
+    /* No invented UOM schedule. The desktop binds combitempck/combrateuom strictly from
+       the item's UOM schedule (CommonServices.GetUomScheduleByItemId); when that returns
+       nothing there is no factor, and CalculateWeight() then zeroes Qty and Weight
+       (:4262-4266) rather than assuming one. A hard-coded 40Kg/Kg/Bag/Ton list with
+       invented equivalents used to stand here and would silently produce plausible but
+       wrong weights and amounts. */
     if (!rows || rows.length === 0) {
-        rows = [
-            { id: 1, itemId: 0, uomCode: "40Kg", equivalent: 40.0, baseRateUom: 1, basePackUom: 0 },
-            { id: 2, itemId: 0, uomCode: "Kg", equivalent: 1.0, baseRateUom: 0, basePackUom: 0 },
-            { id: 3, itemId: 0, uomCode: "Bag", equivalent: 50.0, baseRateUom: 0, basePackUom: 1 },
-            { id: 4, itemId: 0, uomCode: "Ton", equivalent: 1000.0, baseRateUom: 0, basePackUom: 0 }
-        ];
+        packSel.append('<option value="0">-- No UOM schedule for this item --</option>');
+        rateSel.append('<option value="0">-- No UOM schedule for this item --</option>');
+        if ($.fn.select2) { packSel.trigger('change.select2'); rateSel.trigger('change.select2'); }
+        showPoMessage('This item has no UOM schedule, so Qty, Weight and Amount cannot be calculated.', true);
+        return;
     }
 
     rows.forEach(u => {
         const id = u.id || u.Id || 1;
-        const eq = parseFloat(u.equivalent || u.Equivalent || 1.0);
-        const code = u.uomCode || u.UOMCode || u.UomCode || 'Kg';
-        packSel.append(`<option value="${id}" data-eq="${eq}">${escapeHtml(code)}</option>`);
-        rateSel.append(`<option value="${id}" data-eq="${eq}">${escapeHtml(code)}</option>`);
+        /* The factor is the schedule's Equivalent column (combitempck.SelectedRow.Cells[2],
+           :4259). A row without one gets NO data-eq, so the calculation can tell
+           "no factor" apart from "a factor that happens to be 1". */
+        const rawEq = (u.equivalent !== undefined && u.equivalent !== null && u.equivalent !== '')
+            ? u.equivalent
+            : ((u.Equivalent !== undefined && u.Equivalent !== null && u.Equivalent !== '') ? u.Equivalent : null);
+        const eqNum = (rawEq === null) ? NaN : parseFloat(rawEq);
+        const eqAttr = (isFinite(eqNum) && eqNum > 0) ? ` data-eq="${eqNum}"` : '';
+        const code = u.uomCode || u.UOMCode || u.UomCode || '';
+        packSel.append(`<option value="${id}"${eqAttr}>${escapeHtml(code)}</option>`);
+        rateSel.append(`<option value="${id}"${eqAttr}>${escapeHtml(code)}</option>`);
     });
 
     if (isNewRow) {
@@ -246,14 +461,17 @@ function loadDefaultEmptyBagRows(callback) {
 function preloadSearchData() {
     $.get('/api/purchase-order/suppliers?mode=name', function(data) {
         allSuppliers = data || [];
+        populateSupplierDropdowns();
     });
 
     $.get('/api/purchase-order/brokers', function(data) {
         allBrokers = data || [];
+        populateBrokerDropdown();
     });
 
     $.get('/api/purchase-order/commission-agents', function(data) {
         allCommAgents = data || [];
+        populateCommissionAgentDropdown();
     });
 
     loadBookingPersons();
@@ -270,6 +488,57 @@ function preloadSearchData() {
     });
 }
 
+function populateSupplierDropdowns() {
+    const selForm = $('#cmbSupplier');
+    selForm.find('option:gt(0)').remove();
+
+    /* data-city-id carries the supplier's CityId so combsuppname_Leave's cascade
+       (PurchsaeOrder.cs :1754-1757) can be reproduced without a second round trip.
+       The history supplier is chosen through its own modal, not a <select>. */
+    allSuppliers.forEach(s => {
+        const code = s.partyCode || s.code || '';
+        const name = s.companyName || s.name || '';
+        const cityId = (s.cityId !== undefined && s.cityId !== null) ? s.cityId : '';
+        selForm.append(
+            `<option value="${s.id}" data-code="${escapeHtml(code)}" data-city-id="${escapeHtml(String(cityId))}">${escapeHtml(name)}</option>`
+        );
+    });
+
+    if ($.fn.select2) selForm.trigger('change.select2');
+}
+
+function populateBrokerDropdown() {
+    const sel = $('#cmbBrokerAccount');
+    sel.find('option:gt(0)').remove();
+
+    allBrokers.forEach(b => {
+        const code = b.partyCode || b.glAccountId || '';
+        const name = b.companyName || b.name || '';
+        sel.append(`<option value="${b.id}" data-code="${escapeHtml(code)}">${escapeHtml(name)}</option>`);
+    });
+
+    if ($.fn.select2) {
+        sel.trigger('change.select2');
+    }
+}
+
+function populateCommissionAgentDropdown() {
+    const sel = $('#cmbCommissionAgent');
+    sel.find('option:gt(0)').remove();
+
+    allCommAgents.forEach(a => {
+        const name = a.companyName || a.name || '';
+        const code = a.partyCode || a.glAccountId || '';
+        const city = a.cityName || '';
+        const mobile = a.mobileNo || '';
+        sel.append(`<option value="${a.id}" data-code="${escapeHtml(code)}" data-city="${escapeHtml(city)}" data-mobile="${escapeHtml(mobile)}">${escapeHtml(name)}</option>`);
+    });
+
+    if ($.fn.select2) {
+        sel.trigger('change.select2');
+    }
+}
+
 /* ============================================================
  * 1. SUPPLIER AUTOCOMPLETE & SELECTION EVENT CHAIN
  * ============================================================ */
@@ -277,14 +546,21 @@ function onSupplierSearchModeChange() {
     const mode = $('#radSupCode').is(':checked') ? 'code' : 'name';
     $.get('/api/purchase-order/suppliers?mode=' + mode, function(data) {
         allSuppliers = data || [];
+        populateSupplierDropdowns();
         renderSupplierModalGrid(allSuppliers);
     });
 }
 
+/* Which field the supplier search modal writes into: the form header, or the history
+   filter. Any entry point other than openHistorySupplierModal() means the form. */
+let supplierModalTarget = 'form';
+
 function openSupplierSearchModal() {
+    if (supplierModalTarget !== 'history') supplierModalTarget = 'form';
     const mode = $('#radSupCode').is(':checked') ? 'code' : 'name';
     $.get('/api/purchase-order/suppliers?mode=' + mode, function(data) {
         allSuppliers = data || [];
+        populateSupplierDropdowns();
         renderSupplierModalGrid(allSuppliers);
         $('#modalSupplierSearch').modal('show');
         setTimeout(() => $('#txtModalSupQuery').focus(), 300);
@@ -326,7 +602,16 @@ function selectSupplier(suppId) {
     const supp = allSuppliers.find(s => s.id === suppId);
     if (!supp) return;
 
+    if (supplierModalTarget === 'history') {
+        $('#hidHistorySupplierId').val(supp.id);
+        $('#txtHistorySupplierDisplay').val(supp.companyName || supp.name || '');
+        $('#modalSupplierSearch').modal('hide');
+        supplierModalTarget = 'form';
+        return;                      /* a history filter must not touch the form header */
+    }
+
     $('#hidSupplierId').val(supp.id);
+    $('#cmbSupplier').val(supp.id).trigger('change.select2');
     const displayText = $('#radSupCode').is(':checked') 
         ? `${supp.partyCode} - ${supp.companyName}`
         : `${supp.companyName} (${supp.partyCode || 'N/A'})`;
@@ -337,17 +622,112 @@ function selectSupplier(suppId) {
     onSupplierSelectedEventChain(supp);
 }
 
+/* combsuppname_Leave, PurchsaeOrder.cs :1750-1764.
+ *
+ * The desktop does exactly two things when a supplier is chosen: it copies the
+ * supplier row's CityId into the Loading Location (City) control when that id is
+ * greater than zero, and it re-binds the Factory Sample / Standard list.
+ *
+ * It does NOT default the Payment Term and it does NOT copy the supplier into the
+ * Commission Agent. A previous build did both; that invented business logic silently
+ * overwrote whatever the user had chosen and put the wrong party on the commission
+ * line, so it is removed rather than kept alongside the desktop behaviour. */
 function onSupplierSelectedEventChain(supp) {
-    // 1. Set default payment term if credit
-    if ($('#cmbPaymentTerm option[value="2"]').length > 0) {
-        $('#cmbPaymentTerm').val('2');
-        onPaymentTermChange();
+    const cityId = parseInt(
+        $('#cmbSupplier').find('option:selected').attr('data-city-id') ||
+        (supp && supp.cityId) || '0', 10);
+
+    if (cityId > 0) {
+        if (typeof selectCity === 'function') {
+            selectCity(cityId);                       /* keeps display + hidden id in step */
+        } else {
+            $('#hidLoadingCityId').val(cityId);
+        }
     }
-    // 2. Set default Commission Agent if not set
-    if ($('#hidCommissionAgentId').val() == '0' && supp.id > 0) {
-        $('#hidCommissionAgentId').val(supp.id);
-        $('#txtCommAgentDisplay').val(supp.companyName);
+    /* FactorySampleOrStandardbind(FactorySampleOrStandardDbCall()), :1758 */
+    if (typeof bindFactorySampleOrStandard === 'function') bindFactorySampleOrStandard();
+}
+
+/* ============================================================
+ * Inline handlers the template calls by name. Each one delegates to the
+ * already-bound programmatic logic so there is a single implementation, and each
+ * cites the desktop handler it stands for.
+ * ============================================================ */
+
+/* combsuppname_Leave, :1750 */
+function onSupplierChange() { $('#cmbSupplier').trigger('change.sync'); }
+
+/* The desktop has no ValueChanged/Leave handler on the commission agent or the
+   booking person; both are read only at save (:3305, :3140). These exist because the
+   template binds them, and they keep the hidden ids and the totals in step. */
+function onCommissionAgentChange() { $('#cmbCommissionAgent').trigger('change.sync'); }
+function onBookingPersonChange()   { $('#cmbBookingPerson').trigger('change.sync'); }
+
+/* CmbBrokeryAccount_Leave -> TotalBrokeryAmountCalculate(), :4536 / :4376 */
+function onBrokerAccountChange()   { $('#cmbBrokerAccount').trigger('change.sync'); }
+
+/* rdSearchByName_CheckedChanged, :1820-1846.
+ *
+ * The desktop re-binds combitem's display member between ItemName and ItemCode and
+ * KEEPS the selected item (combitem.Value = ItemId). Here the item is picked through
+ * a search modal rather than a combo, so the same rule applies to the two places the
+ * mode is visible: the display text of the item already chosen, and the modal grid.
+ * Like the desktop, this re-renders what is already loaded and does not re-query. */
+function onItemSearchModeChange() {
+    const byCode = $('#radItemCode').is(':checked');
+
+    const keepId = parseInt($('#hidItemId').val() || '0', 10);
+    if (keepId > 0 && allItems && allItems.length) {
+        const item = allItems.find(i => i.id === keepId);
+        if (item) {
+            $('#txtItemDisplay').val(byCode
+                ? `${item.itemCode} - ${item.itemName}`
+                : `${item.itemName} (${item.itemCode || 'N/A'})`);
+        }
     }
+    if (allItems && allItems.length && $('#modalItemSearch').hasClass('in')) {
+        renderItemModalGrid(allItems);
+    }
+}
+
+/* FromDateHistory / ToDateHistory each carry their own enable checkbox, :4715-4756 */
+function toggleHistoryDatePickers() {
+    $('#txtHistoryFromDate').prop('disabled', !$('#chkHistoryEnableFromDate').is(':checked'));
+    $('#txtHistoryToDate').prop('disabled', !$('#chkHistoryEnableToDate').is(':checked'));
+}
+
+/* btnNewHistory / the history Reset button: clears the filters back to their defaults.
+   It clears filters only - it does not fetch, matching the desktop, where the grid is
+   refreshed by the Show button. */
+function resetHistoryFilters() {
+    $('#chkHistoryEnableFromDate').prop('checked', true);
+    $('#chkHistoryEnableToDate').prop('checked', true);
+    $('#txtHistoryFromDate').val('');
+    $('#txtHistoryToDate').val('');
+    $('#txtHistoryFromDocNo').val('');
+    $('#txtHistoryToDocNo').val('');
+    $('#cmbHistoryBranch').val('0');
+    $('#cmbHistoryBookingPerson').val('0');
+    $('input[name="radHistoryDateType"][value="DocDate"]').prop('checked', true);
+    clearHistorySupplier();
+    toggleHistoryDatePickers();
+    if ($.fn.select2) $('#cmbHistoryBranch, #cmbHistoryBookingPerson').trigger('change.select2');
+}
+
+/* cmbSupplierNameHistory, bound by HistorySupplierComboFill() :4640-4688, which binds the
+   SAME supplier rows as the form combo. So the history picker reuses the one supplier
+   search modal rather than duplicating it, with a target flag deciding where the pick
+   lands. One modal, one data source, no second copy to drift. */
+function openHistorySupplierModal() {
+    supplierModalTarget = 'history';
+    openSupplierSearchModal();
+}
+
+/* Clearing the history supplier means "all suppliers", which the desktop expresses as
+   SupplierCustomerId = 0 (:4759). */
+function clearHistorySupplier() {
+    $('#hidHistorySupplierId').val('0');
+    $('#txtHistorySupplierDisplay').val('');
 }
 
 /* ============================================================
@@ -356,6 +736,7 @@ function onSupplierSelectedEventChain(supp) {
 function openBrokerSearchModal() {
     $.get('/api/purchase-order/brokers', function(data) {
         allBrokers = data || [];
+        populateBrokerDropdown();
         renderBrokerModalGrid(allBrokers);
         $('#modalBrokerSearch').modal('show');
         setTimeout(() => $('#txtModalBrokerQuery').focus(), 300);
@@ -400,6 +781,7 @@ function selectBroker(brokerId) {
     const broker = allBrokers.find(b => b.id === brokerId);
     if (!broker) return;
     $('#hidBrokerAccountId').val(broker.id);
+    $('#cmbBrokerAccount').val(broker.id).trigger('change.select2');
     $('#txtBrokerAcDisplay').val(broker.companyName);
     $('#modalBrokerSearch').modal('hide');
     calcBrokery();
@@ -408,6 +790,7 @@ function selectBroker(brokerId) {
 function openCommAgentSearchModal() {
     $.get('/api/purchase-order/commission-agents', function(data) {
         allCommAgents = data || [];
+        populateCommissionAgentDropdown();
         renderCommAgentModalGrid(allCommAgents);
         $('#modalCommAgentSearch').modal('show');
         setTimeout(() => $('#txtModalCommAgentQuery').focus(), 300);
@@ -451,6 +834,7 @@ function selectCommAgent(agentId) {
     const agent = allCommAgents.find(a => a.id === agentId);
     if (!agent) return;
     $('#hidCommissionAgentId').val(agent.id);
+    $('#cmbCommissionAgent').val(agent.id).trigger('change.select2');
     $('#txtCommAgentDisplay').val(agent.companyName);
     $('#modalCommAgentSearch').modal('hide');
     calcCommission();
@@ -459,6 +843,24 @@ function selectCommAgent(agentId) {
 function loadBookingPersons(callback) {
     $.get('/api/purchase-order/booking-persons', function(data) {
         allBookingPersons = data || [];
+
+        const selForm = $('#cmbBookingPerson');
+        const selHist = $('#cmbHistoryBookingPerson');
+        selForm.find('option:gt(0)').remove();
+        selHist.find('option:gt(0)').remove();
+
+        allBookingPersons.forEach(p => {
+            const name = p.partyName || p.description || p.name || '';
+            const type = p.referencePartyType || p.partyTypeName || 'Booking Person';
+            selForm.append(`<option value="${p.id}" data-code="${escapeHtml(type)}">${escapeHtml(name)}</option>`);
+            selHist.append(`<option value="${p.id}" data-code="${escapeHtml(type)}">${escapeHtml(name)}</option>`);
+        });
+
+        if ($.fn.select2) {
+            selForm.trigger('change.select2');
+            selHist.trigger('change.select2');
+        }
+
         if (typeof callback === 'function') callback();
     });
 }
@@ -509,6 +911,7 @@ function renderBookingPersonModalGrid(list) {
 function selectBookingPerson(personId) {
     if (!personId || personId <= 0) {
         $('#hidBookingPersonId').val('0');
+        $('#cmbBookingPerson').val('0').trigger('change.select2');
         $('#txtBookingPersonDisplay').val('-- Select --');
         $('#modalBookingPersonSearch').modal('hide');
         return;
@@ -516,6 +919,7 @@ function selectBookingPerson(personId) {
     const person = allBookingPersons.find(p => p.id === personId);
     if (!person) return;
     $('#hidBookingPersonId').val(person.id);
+    $('#cmbBookingPerson').val(person.id).trigger('change.select2');
     $('#txtBookingPersonDisplay').val(person.partyName || person.description || person.name);
     $('#modalBookingPersonSearch').modal('hide');
 }
@@ -554,7 +958,7 @@ function calculatePaymentDueDate() {
 
     const dt = new Date(docDateStr);
     dt.setDate(dt.getDate() + dueDays);
-    $('#txtPaymentDueDate').val(dt.toISOString().split('T')[0]);
+    $('#txtPaymentDueDate').val(ymdLocal(dt));
 }
 
 /* ============================================================
@@ -575,48 +979,89 @@ function calculateExpiryDate() {
 
     const dt = new Date(startStr);
     dt.setDate(dt.getDate() + delDays);
-    $('#txtExpiryDate').val(dt.toISOString().split('T')[0]);
+    $('#txtExpiryDate').val(ymdLocal(dt));
 }
 
 /* ============================================================
  * 4. COMMISSION & BROKERY CALCULATIONS
  * ============================================================ */
+/* The desktop reads the rate UOM's divisor from the COMBO'S OWN TEXT -
+   Conversion.ToDecimal(combruom.Text.Trim()) at :4364 and CmbBrokeryRateUom.Text at :4398 -
+   because the "type" column of GetCommissionUom is the number itself.
+   The old code did `val() === 1 ? 40 : 1000`, which mapped every option other than the
+   first to 1000, so "100 KG" divided by 1000. Returns null when the text has no number,
+   so a missing divisor is never silently treated as 1. */
+function commissionUomDivisor(selectId) {
+    const opt = $('#' + selectId + ' option:selected');
+    if (!opt.length) return null;
+    const m = /-?\d+(?:\.\d+)?/.exec(opt.text() || '');
+    if (!m) return null;
+    const n = parseFloat(m[0]);
+    return (isFinite(n) && n > 0) ? n : null;
+}
+
+/* Desktop rounds commission and brokery to 4 decimals (:4367, :4394/:4400). */
+function r4(n) { return Math.round((n + Number.EPSILON) * 10000) / 10000; }
+
+/* TotalCommissionAmount(), PurchsaeOrder.cs :4343-4373 */
 function calcCommission() {
     const type = $('#cmbCommType').val();
     const rate = parseFloat($('#txtCommRate').val() || '0');
-    const uomEq = parseFloat($('#cmbCommUom option:selected').val() || '1') === 1 ? 40 : 1000;
-    
     let commAmt = 0.0;
-    const totalLineAmt = calculateGrandTotalLineAmount();
-    const totalLineWeight = calculateGrandTotalWeight();
 
     if (type === 'Flat') {
-        commAmt = rate;
+        commAmt = rate;                                              /* :4356 */
     } else if (type === 'Percent') {
-        commAmt = (totalLineAmt * rate) / 100.0;
-    } else if (type === 'Weight') {
-        commAmt = uomEq > 0 ? (totalLineWeight / uomEq) * rate : 0;
+        commAmt = calculateGrandTotalLineAmount() * rate / 100.0;    /* :4360 */
+    } else if (type === 'Weight' || type === 'Comm Weight') {
+        const uom = commissionUomDivisor('cmbCommUom');              /* :4364 */
+        if (uom === null) { $('#txtCommAmount').val('0'); return; }
+        commAmt = calculateGrandTotalWeight() / uom * rate;
     }
-    $('#txtCommAmount').val(commAmt.toFixed(2));
+    $('#txtCommAmount').val(r4(commAmt));
 }
 
+/* TotalBrokeryAmountCalculate(), PurchsaeOrder.cs :4376-4409 */
 function calcBrokery() {
     const type = $('#cmbBrokeryType').val();
     const rate = parseFloat($('#txtBrokeryRate').val() || '0');
-    const uomEq = parseFloat($('#cmbBrokeryRateUom option:selected').val() || '1') === 1 ? 40 : 1000;
-    
     let brokeryAmt = 0.0;
-    const totalLineAmt = calculateGrandTotalLineAmount();
-    const totalLineWeight = calculateGrandTotalWeight();
 
     if (type === 'Flat') {
-        brokeryAmt = rate;
+        brokeryAmt = rate;                                           /* :4389 */
     } else if (type === 'Percent') {
-        brokeryAmt = (totalLineAmt * rate) / 100.0;
-    } else if (type === 'Weight') {
-        brokeryAmt = uomEq > 0 ? (totalLineWeight / uomEq) * rate : 0;
+        brokeryAmt = calculateGrandTotalLineAmount() * rate / 100.0; /* :4393 */
+    } else if (type === 'Weight' || type === 'Comm Weight') {
+        const uom = commissionUomDivisor('cmbBrokeryRateUom');       /* :4398 */
+        if (uom === null) { $('#txtBrokeryAmount').val('0'); return; }
+        brokeryAmt = calculateGrandTotalWeight() / uom * rate;
     }
-    $('#txtBrokeryAmount').val(brokeryAmt.toFixed(2));
+    $('#txtBrokeryAmount').val(r4(brokeryAmt));
+}
+
+/* CommissionUOMFill() binds BOTH combos from StaticColumnNames "GetCommissionUom" (:1162-1172)
+   and activates row 1 on each. No hard-coded list. */
+function loadCommissionUoms() {
+    $.get('/api/purchase-order/commission-uoms', function (data) {
+        const rows = data || [];
+        const targets = ['cmbCommUom', 'cmbBrokeryRateUom'];
+        targets.forEach(function (id) {
+            const sel = $('#' + id);
+            sel.empty();
+            if (!rows.length) {
+                sel.append('<option value="0">-- No commission UOM configured --</option>');
+                return;
+            }
+            rows.forEach(function (r) {
+                const val = r.Id !== undefined ? r.Id : (r.id !== undefined ? r.id : 0);
+                const txt = (r.type !== undefined && r.type !== null) ? r.type : (r.Type || '');
+                sel.append(`<option value="${val}">${escapeHtml(String(txt))}</option>`);
+            });
+            if ($.fn.select2) sel.trigger('change.select2');
+        });
+        calcCommission();
+        calcBrokery();
+    });
 }
 
 function calculateGrandTotalLineAmount() {
@@ -705,21 +1150,61 @@ function selectItem(itemId) {
 /* ============================================================
  * 6. ITEM WEIGHT & AMOUNT CALCULATIONS
  * ============================================================ */
-function calcLineWeight() {
-    const qty = parseFloat($('#txtQty').val() || '0');
-    const packEq = parseFloat($('#cmbPackUom option:selected').attr('data-eq') || '1.0');
-    const weight = qty * packEq;
-    $('#txtWeight').val(weight.toFixed(2));
+/* Returns the selected UOM's Equivalent, or null when there is none.
+   Never substitutes 1 or 0 - CalculateWeight() :4259 reads Cells[2] only when a row is
+   active and the value is > 0, and treats anything else as "no factor". */
+function uomFactor(selectorId) {
+    const opt = $('#' + selectorId + ' option:selected');
+    if (!opt.length || parseInt(opt.val() || '0', 10) <= 0) return null;
+    const raw = opt.attr('data-eq');
+    if (raw === undefined || raw === null || raw === '') return null;
+    const n = parseFloat(raw);
+    return (isFinite(n) && n > 0) ? n : null;
+}
+
+/* Desktop rounds these to 3 decimals and displays #,##0.### (:4270, :4278). */
+function r3(n) { return Math.round((n + Number.EPSILON) * 1000) / 1000; }
+
+/* CalculateWeight(), PurchsaeOrder.cs :4253-4299.
+ *
+ * Qty and Weight are two views of the same line, linked by the Pack UOM's Equivalent:
+ * editing Qty computes Weight (qty x Uom), editing Weight computes Qty (weight / Uom).
+ * When there is no usable factor the desktop ZEROES BOTH fields rather than assuming
+ * one - that is the whole point of the Uom <= 0 branch at :4262.
+ *
+ * `source` is 'qty' or 'weight', standing in for the desktop's ActiveControl test. */
+function calcLineWeight(source) {
+    const uom = uomFactor('cmbPackUom');
+
+    if (uom === null) {
+        /* :4262-4266 - no factor, so neither figure can be trusted */
+        $('#txtQty').val('0');
+        $('#txtWeight').val('0');
+        calcLineAmount();
+        return;
+    }
+
+    if (source === 'weight') {
+        const weight = parseFloat($('#txtWeight').val() || '0');
+        $('#txtQty').val(weight > 0 ? r3(weight / uom) : 0);      /* :4277 */
+    } else {
+        const qty = parseFloat($('#txtQty').val() || '0');
+        $('#txtWeight').val(qty > 0 ? r3(qty * uom) : 0);         /* :4269 */
+    }
     calcLineAmount();
 }
 
+/* Amount = Weight / RateUom.Equivalent x Rate.
+   combrateuom.SelectedRow.Cells[2] is that Equivalent (:2620 compares it to 40.0).
+   With no factor there is no amount - it is left at 0 and the user is not shown a
+   number that was computed from an assumption. */
 function calcLineAmount() {
     const weight = parseFloat($('#txtWeight').val() || '0');
     const rate = parseFloat($('#txtRate').val() || '0');
-    const rateEq = parseFloat($('#cmbRateUom option:selected').attr('data-eq') || '1.0');
+    const rateEq = uomFactor('cmbRateUom');
 
-    const amount = (weight > 0 && rateEq > 0) ? (weight / rateEq) * rate : 0.0;
-    $('#txtAmount').val(amount.toFixed(2));
+    if (rateEq === null || !(weight > 0)) { $('#txtAmount').val('0'); return; }
+    $('#txtAmount').val(r3(weight / rateEq * rate));
 }
 
 /* ============================================================
@@ -820,8 +1305,8 @@ function clearItemInputs() {
     $('#txtRate').val('');
     $('#txtAmount').val('');
     $('#txtLineRemarks').val('');
-    $('#cmbPackUom').empty().append('<option value="0" data-eq="1.0">-- Select Item First --</option>');
-    $('#cmbRateUom').empty().append('<option value="0" data-eq="1.0">-- Select Item First --</option>');
+    $('#cmbPackUom').empty().append('<option value="0">-- Select Item First --</option>');
+    $('#cmbRateUom').empty().append('<option value="0">-- Select Item First --</option>');
 }
 
 function editDetailRow(idx) {
@@ -1446,13 +1931,21 @@ function btnAddChargeRow_Click() {
  * ============================================================ */
 function loadPaymentTermsOptions() {
     $.get('/api/purchase-order/payment-terms', function(data) {
-        paymentTermsOptions = data || [];
+        if (data && data.length > 0) {
+            paymentTermsOptions = data;
+        } else {
+            paymentTermsOptions = [
+                { id: 1, description: 'Cash', dueDays: 0 },
+                { id: 2, description: 'Credit', dueDays: 30 },
+                { id: 3, description: 'Advance', dueDays: 0 }
+            ];
+        }
         renderSchedGrid();
     });
 }
 
 function addDefaultPaymentRow() {
-    const today = $('#txtDocDate').val() || new Date().toISOString().split('T')[0];
+    const today = $('#txtDocDate').val() || ymdLocal(new Date());
     paymentTermsDetailItems.push({ paymentTermId: 0, paymentTerm: '', dueDays: 0, dueDate: today, prcntOfTotal: 0, amount: 0, remarks: '' });
 }
 
@@ -1478,11 +1971,20 @@ function renderSchedGrid() {
         return;
     }
 
+    let optsList = paymentTermsOptions;
+    if (!optsList || optsList.length === 0) {
+        optsList = [
+            { id: 1, description: 'Cash', dueDays: 0 },
+            { id: 2, description: 'Credit', dueDays: 30 },
+            { id: 3, description: 'Advance', dueDays: 0 }
+        ];
+    }
+
     let totalPct = 0, totalAmt = 0;
     paymentTermsDetailItems.forEach((row, idx) => {
         totalPct += (row.prcntOfTotal || 0);
         totalAmt += (row.amount || 0);
-        const options = paymentTermsOptions.map(t =>
+        const options = optsList.map(t =>
             `<option value="${t.id}" ${t.id == row.paymentTermId ? 'selected' : ''}>${escapeHtml(t.description)}</option>`
         ).join('');
         tbody.append(`
@@ -1514,7 +2016,7 @@ function onSchedDueDaysChange(idx, val) {
     paymentTermsDetailItems[idx].dueDays = days;
     const due = getDocDateAsDate();
     due.setDate(due.getDate() + days);
-    paymentTermsDetailItems[idx].dueDate = due.toISOString().split('T')[0];
+    paymentTermsDetailItems[idx].dueDate = ymdLocal(due);
     renderSchedGrid();
 }
 
@@ -1523,7 +2025,7 @@ function onSchedDueDateChange(idx, val) {
     const due = new Date(val + 'T00:00:00');
     if (due < docDate) {
         alert("Due Date Can't less Than DocDate");
-        paymentTermsDetailItems[idx].dueDate = docDate.toISOString().split('T')[0];
+        paymentTermsDetailItems[idx].dueDate = ymdLocal(docDate);
         renderSchedGrid();
         return;
     }
@@ -1587,14 +2089,17 @@ function switchTab(tabId) {
 function buildPayload() {
     return {
         purchaseOrderMasterId: currentPoMasterId,
-        documentTypeId: 1052,
+        documentTypeId: 41,          /* PurchsaeOrder.cs:3295 - NOT 1052 (Commission Trading) */
         docNo: parseInt($('#txtDocNo').val() || '0'),
         docDate: $('#txtDocDate').val(),
         supplierId: parseInt($('#hidSupplierId').val() || '0'),
         bookingPersonId: parseInt($('#hidBookingPersonId').val() || '0'),
         deliveryStartDate: $('#txtDeliveryStartDate').val(),
         deliveryDays: parseInt($('#txtDeliveryDays').val() || '7'),
-        expiryDate: $('#txtExpiryDate').val(),
+        /* po.OrderExpiryDate = DateTime.Now (:3310) - the desktop has no expiry control on
+           this form, so it stamps the current date. There is no #txtExpiryDate here either,
+           and reading it sent undefined. */
+        expiryDate: ymdLocal(new Date()),
         paymentTermId: parseInt($('#cmbPaymentTerm').val() || '0'),
         dueDays: parseInt($('#txtDueDays').val() || '0'),
         paymentDueDate: $('#txtPaymentDueDate').val(),
@@ -1610,8 +2115,14 @@ function buildPayload() {
         brokeryAmount: parseFloat($('#txtBrokeryAmount').val() || '0'),
         juteBagCut: parseFloat($('#txtJuteBagCut').val() || '0'),
         ppBagCut: parseFloat($('#txtPPBagCut').val() || '0'),
-        cashFreight: parseFloat($('#txtCashFreight').val() || '0'),
-        creditFreight: parseFloat($('#txtCreditFreight').val() || '0'),
+        /* CashFreight and CreditFreight are BOOLEANS driven by the rdFreightCash /
+           rdFreightCredit radio pair (PurchsaeOrder.cs :3337-3344) - exactly one is true.
+           This used to send the freight AMOUNT as cashFreight and a constant 0 as
+           creditFreight (its control does not exist), so the freight type was never
+           saved and the amount landed in the wrong column. */
+        cashFreight:   $('#radCashFreight').is(':checked'),
+        creditFreight: $('#radCreditFreight').is(':checked'),
+        freightAmount: parseFloat($('#txtCashFreight').val() || '0'),
         remarksHeader: $('#txtRemarksHeader').val(),
         lineItems: lineItems,
         emptyBags: emptyBagItems.map(function(b) {
@@ -1919,38 +2430,182 @@ function switchMainView(view) {
     }
 }
 
-function loadPurchaseOrderHistory() {
-    const fromDate = $('#txtHistoryFromDate').val() || '';
-    const toDate = $('#txtHistoryToDate').val() || '';
+let currentHistoryRecords = [];
+let selectedHistoryRecordIdx = -1;
 
-    $.get(`/api/purchase-order/history?fromDate=${fromDate}&toDate=${toDate}`, function(data) {
-        const tbody = $('#tblHistoryTbody');
+function loadPurchaseOrderHistory() {
+    const branchId = $('#cmbHistoryBranch').val() || '';
+    const useFromDate = $('#chkHistoryEnableFromDate').is(':checked');
+    const fromDate = useFromDate ? ($('#txtHistoryFromDate').val() || '') : '';
+    const useToDate = $('#chkHistoryEnableToDate').is(':checked');
+    const toDate = useToDate ? ($('#txtHistoryToDate').val() || '') : '';
+    const fromDocNo = $('#txtHistoryFromDocNo').val() || '';
+    const toDocNo = $('#txtHistoryToDocNo').val() || '';
+    /* The template selects the history supplier through a search modal that stores the id in
+       #hidHistorySupplierId (there is no #cmbHistorySupplier control). */
+    const supplierId = $('#hidHistorySupplierId').val() || '';
+    const bookingPersonId = $('#cmbHistoryBookingPerson').val() || '';
+
+    /* Four mutually exclusive date-type radios, one radio GROUP named radHistoryDateType.
+       Desktop: rddocdate / rdentrydate / rdmodifydate / rdapproveddate, PurchsaeOrder.cs :4715-4756. */
+    let dateType = 'Doc Date';
+    switch ($('input[name="radHistoryDateType"]:checked').val()) {
+        case 'ModifyDate':   dateType = 'Modify Date';   break;
+        case 'EntryDate':    dateType = 'Entry Date';    break;
+        case 'ApprovedDate': dateType = 'Approved Date'; break;
+        default:             dateType = 'Doc Date';      break;
+    }
+
+    const query = $.param({
+        fromDate: fromDate,
+        toDate: toDate,
+        fromDocNo: fromDocNo,
+        toDocNo: toDocNo,
+        supplierId: supplierId,
+        bookingPersonId: bookingPersonId,
+        branchId: branchId,
+        dateType: dateType
+    });
+
+    $('#tblHistoryTbody').html('<tr><td colspan="15" style="text-align: center; padding: 20px; color: #555;"><i class="fa fa-spinner fa-spin"></i> Loading Purchase Order history...</td></tr>');
+    $('#tblHistoryDetailTbody').html('<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Select a history row above to view line item details.</td></tr>');
+
+    $.get(`/api/purchase-order/history?${query}`, function(data) {
+        currentHistoryRecords = data || [];
+        selectedHistoryRecordIdx = -1;
+        renderHistoryMasterGrid();
+    }).fail(function() {
+        $('#tblHistoryTbody').html('<tr><td colspan="15" style="text-align: center; padding: 20px; color: #d32f2f;">Failed to load history records.</td></tr>');
+    });
+}
+
+function renderHistoryMasterGrid() {
+    const tbody = $('#tblHistoryTbody');
+    tbody.empty();
+
+    if (!currentHistoryRecords || currentHistoryRecords.length === 0) {
+        tbody.html('<tr><td colspan="15" style="text-align: center; padding: 20px; color: #777;">No matching Purchase Order history records found.</td></tr>');
+        $('#lblHistoryRecordCount').text('0 of 0');
+        return;
+    }
+
+    currentHistoryRecords.forEach((po, idx) => {
+        const poId = po.id || po.Id || po.PurchaseOrderMasterId || po.purchaseOrderMasterId || 0;
+        const branch = po.branchName || po.BranchName || '';
+        const docNo = po.docNo || po.DocNo || '';
+        const docDate = po.docDate || po.DocDate ? String(po.docDate || po.DocDate).split('T')[0] : '';
+        const party = po.supplierName || po.SupplierName || '';
+        const deliveryStart = po.deliveryStartDate || po.DeliveryStartDate ? String(po.deliveryStartDate || po.DeliveryStartDate).split('T')[0] : '';
+        const expiry = po.expiryDate || po.ExpiryDate ? String(po.expiryDate || po.ExpiryDate).split('T')[0] : '';
+        const remarks = po.remarks || po.Remarks || po.remarksHeader || '';
+        const status = po.status || po.Status || 'Active';
+        const entryUser = po.entryUser || po.EntryUser || 'Admin';
+        const isApproved = po.isApproved === 1 || po.isApproved === true || po.IsApproved === 1;
+
+        const isSelected = (idx === selectedHistoryRecordIdx);
+        const rowBg = isSelected ? '#b2dfdb' : '';
+
+        tbody.append(`
+            <tr id="histRow_${idx}" onclick="onHistoryRowClick(${idx})" ondblclick="loadSelectedOrderFromHistory(${poId})" style="cursor: pointer; background-color: ${rowBg};">
+                <td style="text-align: center;" class="action-col">
+                    <button type="button" class="win-btn-action" onclick="event.stopPropagation(); loadSelectedOrderFromHistory(${poId})" title="Edit Order"><i class="fa fa-pencil text-primary"></i> Edit</button>
+                    <button type="button" class="win-btn-action" onclick="event.stopPropagation(); loadSelectedOrderFromHistory(${poId})" title="Save As"><i class="fa fa-copy text-info"></i> SaveAs</button>
+                    <button type="button" class="win-btn-action" onclick="event.stopPropagation(); btnPrintReport('history_${poId}')" title="Print"><i class="fa fa-print"></i> Print</button>
+                </td>
+                <td>${escapeHtml(branch)}</td>
+                <td><strong style="color: #008080;">${escapeHtml(String(docNo))}</strong></td>
+                <td>${escapeHtml(docDate)}</td>
+                <td><strong style="color: #004d40;">${escapeHtml(party)}</strong></td>
+                <td>${escapeHtml(deliveryStart)}</td>
+                <td>${escapeHtml(expiry)}</td>
+                <td>${escapeHtml(remarks)}</td>
+                <td>${escapeHtml(status)}</td>
+                <td>${escapeHtml(entryUser)}</td>
+                <td style="text-align: center;">${isApproved ? '<i class="fa fa-check text-success"></i>' : '<i class="fa fa-times text-muted"></i>'}</td>
+            </tr>
+        `);
+    });
+
+    updateHistoryNavDisplay();
+
+    // Auto-select first row if available
+    if (currentHistoryRecords.length > 0 && selectedHistoryRecordIdx < 0) {
+        onHistoryRowClick(0);
+    }
+}
+
+function onHistoryRowClick(idx) {
+    if (idx < 0 || idx >= currentHistoryRecords.length) return;
+
+    selectedHistoryRecordIdx = idx;
+    $('#tblHistoryTbody tr').css('background-color', '');
+    $(`#histRow_${idx}`).css('background-color', '#b2dfdb');
+
+    updateHistoryNavDisplay();
+
+    const po = currentHistoryRecords[idx];
+    const poId = po.id || po.Id || po.PurchaseOrderMasterId || po.purchaseOrderMasterId || 0;
+
+    loadHistoryDetailGrid(poId);
+}
+
+function loadHistoryDetailGrid(poId) {
+    const tbody = $('#tblHistoryDetailTbody');
+    tbody.html('<tr><td colspan="11" style="text-align: center; padding: 15px; color: #555;"><i class="fa fa-spinner fa-spin"></i> Loading item details...</td></tr>');
+
+    $.get('/api/purchase-order/' + poId, function(po) {
         tbody.empty();
-        if (!data || data.length === 0) {
-            tbody.html('<tr><td colspan="6" style="text-align: center; padding: 20px; color: #777;">No Purchase Order history records found.</td></tr>');
+        const items = (po && po.lineItems) ? po.lineItems : [];
+        if (items.length === 0) {
+            tbody.html('<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">No detail line items found for this Purchase Order.</td></tr>');
             return;
         }
-        data.forEach(po => {
-            const poId = po.id || po.Id || po.PurchaseOrderMasterId || po.purchaseOrderMasterId || 0;
-            const docCode = po.voucherCode || po.displayCode || `PO-${po.docNo || po.DocNo || poId}`;
-            const partyName = po.supplierName || po.SupplierName || 'N/A';
-            const orderDate = po.docDate || po.DocDate || '';
-            const amount = parseFloat(po.totalAmount || po.TotalAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        items.forEach((item, i) => {
+            const srNo = i + 1;
+            const category = item.parentCategoryDesc || item.parentCategory || '';
+            const code = item.itemCode || item.code || '';
+            const name = item.itemName || item.itemDescription || '';
+            const qty = parseFloat(item.qty || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const packQty = parseFloat(item.packQty || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const packUom = item.packUomName || item.packUom || '';
+            const rateUom = item.rateUomName || item.rateUom || '';
+            const rate = parseFloat(item.rate || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const gross = parseFloat(item.grossAmount || (item.qty * item.rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             tbody.append(`
-                <tr onclick="loadSelectedOrderFromHistory(${poId})" style="cursor: pointer;">
-                    <td><strong style="color: #008080;">${docCode}</strong></td>
-                    <td>${orderDate}</td>
-                    <td>${escapeHtml(partyName)}</td>
-                    <td>${escapeHtml(po.remarks || po.Remarks || '')}</td>
-                    <td style="text-align: right;">Rs. ${amount}</td>
-                    <td style="text-align: center;">
-                        <button type="button" class="win-btn-action" onclick="event.stopPropagation(); loadSelectedOrderFromHistory(${poId})">Open</button>
-                    </td>
+                <tr>
+                    <td style="text-align: center;">${srNo}</td>
+                    <td>${escapeHtml(category)}</td>
+                    <td>${escapeHtml(code)}</td>
+                    <td><strong style="color: #004d40;">${escapeHtml(name)}</strong></td>
+                    <td style="text-align: right;">${qty}</td>
+                    <td style="text-align: right;">${packQty}</td>
+                    <td>${escapeHtml(packUom)}</td>
+                    <td>${escapeHtml(rateUom)}</td>
+                    <td style="text-align: right;">${rate}</td>
+                    <td style="text-align: right;">${gross}</td>
+                    <td>${escapeHtml(item.remarks || '')}</td>
                 </tr>
             `);
         });
+    }).fail(function() {
+        tbody.html('<tr><td colspan="11" style="text-align: center; padding: 15px; color: #d32f2f;">Failed to load item details.</td></tr>');
     });
+}
+
+function updateHistoryNavDisplay() {
+    const total = currentHistoryRecords.length;
+    const current = total > 0 ? (selectedHistoryRecordIdx + 1) : 0;
+    $('#lblHistoryRecordCount').text(`${current} of ${total}`);
+}
+
+function navHistory(action) {
+    if (!currentHistoryRecords || currentHistoryRecords.length === 0) return;
+    if (action === 'first') onHistoryRowClick(0);
+    else if (action === 'prev' && selectedHistoryRecordIdx > 0) onHistoryRowClick(selectedHistoryRecordIdx - 1);
+    else if (action === 'next' && selectedHistoryRecordIdx < currentHistoryRecords.length - 1) onHistoryRowClick(selectedHistoryRecordIdx + 1);
+    else if (action === 'last') onHistoryRowClick(currentHistoryRecords.length - 1);
 }
 
 function loadSelectedOrderFromHistory(poId) {

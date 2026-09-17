@@ -626,6 +626,20 @@ public class PurchaseOrderFullService {
     // ==========================================================================================
 
     /** vEmptyBagTypes via SpStaticColumnNames. Columns: Id, type. */
+    /** Commission / Brokery Rate UOM list.
+     *  Desktop: CommissionUOMFill() -> CommonServices.StaticColumnsService("GetCommissionUom")
+     *  (PurchsaeOrder.cs :1162-1172), which binds BOTH combruom and CmbBrokeryRateUom from the
+     *  same rows, Id + type. Same stored procedure as the empty-bag types, different Activity -
+     *  no new database object. The web form used to hard-code 40 KG / 100 KG / 1 M.Ton with
+     *  invented ids, which both bypassed the database and mis-parsed "1 M.Ton" as 1. */
+    public List<Map<String, Object>> getCommissionUoms() {
+        try {
+            return jdbcTemplate.queryForList(SQL_EMPTY_BAG_TYPES, "GetCommissionUom");
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
     public List<Map<String, Object>> getEmptyBagTypes() {
         try {
             return jdbcTemplate.queryForList(SQL_EMPTY_BAG_TYPES, "PurchaseOrderEmptyBagsType");
@@ -1368,28 +1382,91 @@ public class PurchaseOrderFullService {
         }
     }
 
-    public List<Map<String, Object>> getHistory(String fromDate, String toDate) {
+    public List<Map<String, Object>> getBranches() {
+        try {
+            return jdbcTemplate.queryForList("SELECT Id as id, BranchName as branchName FROM Branch ORDER BY BranchName");
+        } catch (Exception e) {
+            try {
+                return jdbcTemplate.queryForList("SELECT Id as id, BranchName as branchName FROM Branches ORDER BY BranchName");
+            } catch (Exception ex) {
+                return Collections.emptyList();
+            }
+        }
+    }
+
+    public List<Map<String, Object>> getHistory(
+            String fromDate, String toDate,
+            Integer fromDocNo, Integer toDocNo,
+            Integer supplierId, Integer bookingPersonId,
+            Integer branchId, String dateType) {
         try {
             StringBuilder sb = new StringBuilder();
-            sb.append("SELECT po.Id as id, po.DocNo as docNo, CONVERT(VARCHAR(10), po.DocDate, 120) as docDate, ")
+            sb.append("SELECT po.Id as id, po.DocNo as docNo, ")
+              .append("CONVERT(VARCHAR(10), po.DocDate, 120) as docDate, ")
+              .append("CONVERT(VARCHAR(10), po.EntryDate, 120) as entryDate, ")
+              .append("CONVERT(VARCHAR(10), po.ModifyDate, 120) as modifyDate, ")
+              .append("CONVERT(VARCHAR(10), po.ApprovedDate, 120) as approvedDate, ")
               .append("s.CompanyName as supplierName, ISNULL(s.SupCustCode, s.ManualPartyCode) as supplierCode, ")
+              .append("bp.ReferencePartyName as bookingPersonName, ")
+              .append("ISNULL(b.BranchName, '') as branchName, ISNULL(po.BranchSrNo, 0) as branchSrNo, ")
               .append("po.RemarksHeader as remarks, ")
               .append("('PO-' + CAST(po.DocNo AS VARCHAR)) as voucherCode, ")
               .append("('PO-' + CAST(po.DocNo AS VARCHAR)) as displayCode, ")
-              .append("(SELECT ISNULL(SUM(Amount), 0) FROM PurchaseOrderDetail WHERE PurchaseOrderId = po.Id) as totalAmount ")
+              .append("(SELECT ISNULL(SUM(OrderItemQty), 0) FROM PurchaseOrderDetail WHERE PurchaseOrderId = po.Id) as orderQty, ")
+              .append("(SELECT ISNULL(SUM(Amount), 0) FROM PurchaseOrderDetail WHERE PurchaseOrderId = po.Id) as totalAmount, ")
+              .append("po.OrderDueDays as dueDays, CONVERT(VARCHAR(10), po.OrderDueDate, 120) as dueDate, ")
+              .append("po.DeliveryTerm as deliveryTerm, po.DeliveryDays as deliveryDays, ")
+              .append("CONVERT(VARCHAR(10), po.DeliveryStartDate, 120) as deliveryStartDate, ")
+              .append("ISNULL(po.OrderStatus, 'Open') as orderStatus ")
               .append("FROM PurchaseOrder po ")
               .append("LEFT JOIN SupplierCustomer s ON po.SupplierCustomerId = s.Id ")
+              .append("LEFT JOIN ReferenceParties bp ON po.BookingPersonId = bp.Id ")
+              .append("LEFT JOIN Branch b ON po.BranchId = b.Id ")
               .append("WHERE 1=1 ");
 
-            if (fromDate != null && !fromDate.isEmpty()) {
-                sb.append("AND po.DocDate >= '").append(fromDate.replace("'", "''")).append("' ");
+            List<Object> params = new ArrayList<>();
+
+            String dateCol = "po.DocDate";
+            if ("EntryDate".equalsIgnoreCase(dateType)) {
+                dateCol = "po.EntryDate";
+            } else if ("ModifyDate".equalsIgnoreCase(dateType)) {
+                dateCol = "po.ModifyDate";
+            } else if ("ApprovedDate".equalsIgnoreCase(dateType)) {
+                dateCol = "po.ApprovedDate";
             }
-            if (toDate != null && !toDate.isEmpty()) {
-                sb.append("AND po.DocDate <= '").append(toDate.replace("'", "''")).append("' ");
+
+            if (fromDate != null && !fromDate.trim().isEmpty()) {
+                sb.append("AND ").append(dateCol).append(" >= ? ");
+                params.add(fromDate.trim());
+            }
+            if (toDate != null && !toDate.trim().isEmpty()) {
+                sb.append("AND ").append(dateCol).append(" <= ? ");
+                params.add(toDate.trim() + " 23:59:59");
+            }
+            if (fromDocNo != null && fromDocNo > 0) {
+                sb.append("AND po.DocNo >= ? ");
+                params.add(fromDocNo);
+            }
+            if (toDocNo != null && toDocNo > 0) {
+                sb.append("AND po.DocNo <= ? ");
+                params.add(toDocNo);
+            }
+            if (supplierId != null && supplierId > 0) {
+                sb.append("AND po.SupplierCustomerId = ? ");
+                params.add(supplierId);
+            }
+            if (bookingPersonId != null && bookingPersonId > 0) {
+                sb.append("AND po.BookingPersonId = ? ");
+                params.add(bookingPersonId);
+            }
+            if (branchId != null && branchId > 0) {
+                sb.append("AND (po.BranchId = ? OR po.BranchesId = ?) ");
+                params.add(branchId);
+                params.add(branchId);
             }
 
             sb.append("ORDER BY po.DocNo DESC");
-            return jdbcTemplate.queryForList(sb.toString());
+            return jdbcTemplate.queryForList(sb.toString(), params.toArray());
         } catch (Exception e) {
             return Collections.emptyList();
         }

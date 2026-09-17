@@ -17,7 +17,11 @@ public class PurchaseOrderRestController {
 
     @GetMapping("/next-doc-no")
     public ResponseEntity<Map<String, Object>> getNextDocNo(
-            @RequestParam(defaultValue = "1052") int docType,
+            /* 41 = this module's Purchase Order (po.DocumentTypeId = 41, PurchsaeOrder.cs :3295).
+               The default used to be 1052, which is Commission Trading's Purchase Order - a
+               different document in a different schema - so any caller that omitted docType
+               was numbered against the wrong series. */
+            @RequestParam(defaultValue = "41") int docType,
             @RequestParam(defaultValue = "1") int companyId) {
         int docNo = purchaseOrderService.generateNextDocNo(docType, companyId);
         String formattedCode = String.format("PO-%d", docNo);
@@ -125,6 +129,13 @@ public class PurchaseOrderRestController {
     // See PurchaseOrderFullService for the verified stored procedures each of these calls.
     // ==========================================================================================
 
+    /** Commission / Brokery Rate UOM, from the same StaticColumnNames procedure the
+     *  desktop's CommissionUOMFill() uses (PurchsaeOrder.cs :1166). */
+    @GetMapping("/commission-uoms")
+    public ResponseEntity<List<Map<String, Object>>> getCommissionUoms() {
+        return ResponseEntity.ok(purchaseOrderService.getCommissionUoms());
+    }
+
     @GetMapping("/empty-bags/types")
     public ResponseEntity<List<Map<String, Object>>> getEmptyBagTypes() {
         return ResponseEntity.ok(purchaseOrderService.getEmptyBagTypes());
@@ -221,11 +232,22 @@ public class PurchaseOrderRestController {
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/branches")
+    public ResponseEntity<List<Map<String, Object>>> getBranches() {
+        return ResponseEntity.ok(purchaseOrderService.getBranches());
+    }
+
     @GetMapping("/history")
     public ResponseEntity<List<Map<String, Object>>> getHistory(
             @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate) {
-        return ResponseEntity.ok(purchaseOrderService.getHistory(fromDate, toDate));
+            @RequestParam(required = false) String toDate,
+            @RequestParam(required = false) Integer fromDocNo,
+            @RequestParam(required = false) Integer toDocNo,
+            @RequestParam(required = false) Integer supplierId,
+            @RequestParam(required = false) Integer bookingPersonId,
+            @RequestParam(required = false) Integer branchId,
+            @RequestParam(required = false, defaultValue = "DocDate") String dateType) {
+        return ResponseEntity.ok(purchaseOrderService.getHistory(fromDate, toDate, fromDocNo, toDocNo, supplierId, bookingPersonId, branchId, dateType));
     }
 
     @DeleteMapping("/{id}")

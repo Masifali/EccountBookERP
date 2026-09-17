@@ -4,16 +4,30 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Purchase Order — Golden Master Replica</title>
+    <title>Purchase Order</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <style>
         .select2-container--default .select2-selection--single { height: 24px !important; padding: 1px 4px !important; border: 1px solid #7a9a9e !important; border-radius: 0 !important; font-size: 9pt !important; font-family: "Verdana", sans-serif !important; background-color: #ffffff !important; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 20px !important; padding-left: 2px !important; color: #000000 !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 20px !important; padding-left: 2px !important; color: #000000 !important; font-weight: bold; }
         .select2-container--default .select2-selection--single .select2-selection__arrow { height: 22px !important; }
-        .select2-dropdown { border: 1px solid #008080 !important; font-size: 9pt !important; border-radius: 0 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; }
+        .select2-dropdown { border: 1px solid #008080 !important; font-size: 9pt !important; border-radius: 0 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; z-index: 99999 !important; }
         .select2-search__field { font-size: 9pt !important; padding: 3px !important; border: 1px solid #008080 !important; }
+        
+        /* 2-Column Select2 Dropdown Styling */
+        .select2-2col-header { display: flex; justify-content: space-between; font-weight: bold; background-color: #e0f2f1; padding: 4px 8px; border-bottom: 1px solid #008080; color: #004d40; font-size: 9pt; position: sticky; top: 0; z-index: 10; }
+        .select2-2col-row { display: flex; justify-content: space-between; width: 100%; font-size: 9pt; padding: 2px 0; }
+        .select2-2col-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+        .select2-2col-code { width: 110px; text-align: right; font-weight: 700; color: #008080; margin-left: 8px; }
+
+        /* 4-Column Select2 Dropdown Styling */
+        .select2-4col-header { display: flex; font-weight: bold; background-color: #e0f2f1; padding: 4px 8px; border-bottom: 1px solid #008080; color: #004d40; font-size: 9pt; position: sticky; top: 0; z-index: 10; width: 100%; }
+        .select2-4col-row { display: flex; width: 100%; font-size: 9pt; padding: 2px 0; }
+        .select2-4col-col1 { flex: 3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+        .select2-4col-col2 { flex: 2; text-align: left; font-weight: 600; color: #008080; margin-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .select2-4col-col3 { flex: 2; text-align: left; color: #222222; margin-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .select2-4col-col4 { flex: 2; text-align: left; color: #222222; margin-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
     <style>
         body { font-family: "Segoe UI", "Verdana", Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; user-select: none; }
@@ -107,7 +121,12 @@
 
     <!-- TEAL HEADER -->
     <div class="win-teal-header">
-        <div class="win-teal-header-title">Commission Agent Purchase Order Master</div>
+        <!-- This is the PURCHASE module's Purchase Order, document type 41 in the dbo
+             schema (PurchsaeOrder.cs :3295). It is a different document from Commission
+             Trading's Purchase Order (type 1052, cmagt schema), which has its own screen.
+             The header used to read "Commission Agent Purchase Order Master", which named
+             the wrong module. -->
+        <div class="win-teal-header-title">Purchase Order <span style="font-weight:400; opacity:.85;">&mdash; Doc Type 41</span></div>
         <div id="lblDocNoDisplay" class="win-doc-badge">PO-1</div>
     </div>
 
@@ -143,7 +162,7 @@
                         <div class="col-md-12">
                             <label class="win-label">Category & No <span style="color:red;">*</span></label>
                             <div style="display: flex; gap: 2px;">
-                                <select id="cmbParentCategory" class="win-combo" onchange="onParentCategoryChange()" style="flex: 1;">
+                                <select id="cmbParentCategory" class="win-input select2-2col" data-header-col1="Category Name" data-header-col2="Cat Code" onchange="onParentCategoryChange()" style="flex: 1;">
                                     <option value="0">-- Select Category --</option>
                                 </select>
                                 <input type="text" id="txtCategoryNo" class="win-textbox" style="width: 80px;" placeholder="Cat No"/>
@@ -151,20 +170,22 @@
                         </div>
                     </div>
 
-                    <!-- Row 3: Supplier / Code + Search -->
+                    <!-- Row 3: Supplier / Code Dropdown -->
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-12">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label class="win-label">Supplier / Party <span style="color:red;">*</span></label>
+                                <label class="win-label" style="margin-bottom: 0;">Supplier / Party <span style="color:red;">*</span></label>
+                                <!-- RdPartyByName / RdPartyByCode, PurchsaeOrder.cs :1867-1896:
+                                     switches the combo's display between CompanyName and PartyCode
+                                     while keeping the selected supplier. -->
                                 <div>
-                                    <label class="win-radio-inline"><input type="radio" name="radSupplierSearch" id="radSupName" checked onclick="onSupplierSearchModeChange()"> Supplier</label>
-                                    <label class="win-radio-inline"><input type="radio" name="radSupplierSearch" id="radSupCode" onclick="onSupplierSearchModeChange()"> Code</label>
+                                    <label class="win-radio-inline"><input type="radio" name="radSupSearch" id="radSupName" checked onclick="onSupplierSearchModeChange()"> Name</label>
+                                    <label class="win-radio-inline"><input type="radio" name="radSupSearch" id="radSupCode" onclick="onSupplierSearchModeChange()"> Code</label>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 2px;">
-                                <input type="text" id="txtSupplierDisplay" class="win-textbox" placeholder="Click or type to search Supplier..." readonly onclick="openSupplierSearchModal()" style="cursor: pointer; background-color: #fff8e1; font-weight: bold; color: #004d40;"/>
-                                <button type="button" class="win-btn-action" onclick="openSupplierSearchModal()"><i class="fa fa-search"></i></button>
-                            </div>
+                            <select id="cmbSupplier" class="win-input select2-2col" data-header-col1="Supplier Name" data-header-col2="Supplier Code" onchange="onSupplierChange()" style="width: 100%;">
+                                <option value="0">-- Select Supplier / Party --</option>
+                            </select>
                             <input type="hidden" id="hidSupplierId" value="0"/>
                         </div>
                     </div>
@@ -178,8 +199,9 @@
                         <div class="col-md-6">
                             <label class="win-label">Booking Person</label>
                             <div style="display: flex; gap: 2px;">
-                                <input type="text" id="txtBookingPersonDisplay" class="win-textbox" placeholder="-- Select --" readonly onclick="openBookingPersonSearchModal()" style="cursor: pointer; background-color: #ffffff; font-weight: bold; color: #004d40; flex: 1;"/>
-                                <button type="button" class="win-btn-action" onclick="openBookingPersonSearchModal()"><i class="fa fa-search"></i></button>
+                                <select id="cmbBookingPerson" class="win-input select2-2col" data-header-col1="Booking Person" data-header-col2="Party Type" onchange="onBookingPersonChange()" style="flex: 1;">
+                                    <option value="0">-- Select Booking Person --</option>
+                                </select>
                                 <button type="button" class="win-btn-action" style="background-color: #2e7d32; border-color: #1b5e20;" title="Add Booking Person" onclick="openDefineLookUpPartiesModal()"><i class="fa fa-plus"></i></button>
                             </div>
                             <input type="hidden" id="hidBookingPersonId" value="0"/>
@@ -190,7 +212,7 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-6">
                             <label class="win-label">Payment Terms <span style="color:red;">*</span></label>
-                            <select id="cmbPaymentTerm" class="win-combo" onchange="onPaymentTermChange()">
+                            <select id="cmbPaymentTerm" class="win-input select2" onchange="onPaymentTermChange()">
                                 <option value="0">-- Select Payment Term --</option>
                                 <option value="2" data-days="30">Credit</option>
                                 <option value="1" data-days="0">Cash</option>
@@ -209,7 +231,7 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-6">
                             <label class="win-label">Delivery Term <span style="color:red;">*</span></label>
-                            <select id="cmbDeliveryTerm" class="win-combo">
+                            <select id="cmbDeliveryTerm" class="win-input select2">
                                 <option value="0">Delivery Term</option>
                                 <option value="1">Load</option>
                                 <option value="2">Load &amp; PartyWeight</option>
@@ -268,10 +290,9 @@
                     <div class="row">
                         <div class="col-md-12">
                             <label class="win-label">Comm Agent</label>
-                            <div style="display: flex; gap: 2px;">
-                                <input type="text" id="txtCommAgentDisplay" class="win-textbox" placeholder="Search Comm Agent..." readonly onclick="openCommAgentSearchModal()" style="cursor: pointer; background-color: #ffffff; font-weight: bold; color: #004d40; flex: 1;"/>
-                                <button type="button" class="win-btn-action" onclick="openCommAgentSearchModal()"><i class="fa fa-search"></i></button>
-                            </div>
+                            <select id="cmbCommissionAgent" class="win-input select2-4col" onchange="onCommissionAgentChange()" style="width: 100%;">
+                                <option value="0">-- Select Comm Agent --</option>
+                            </select>
                             <input type="hidden" id="hidCommissionAgentId" value="0"/>
                         </div>
                     </div>
@@ -292,10 +313,12 @@
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate UOM</label>
+                            <!-- Filled by loadCommissionUoms() from StaticColumnNames
+                                 "GetCommissionUom", the same source as the desktop's
+                                 CommissionUOMFill() (PurchsaeOrder.cs :1162-1172).
+                                 A hard-coded 40 KG / 100 KG / 1 M.Ton list used to sit here. -->
                             <select id="cmbCommUom" class="win-combo" onchange="calcCommission()">
-                                <option value="1">40 KG</option>
-                                <option value="2">100 KG</option>
-                                <option value="3">1 M.Ton</option>
+                                <option value="0">-- Loading... --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -308,10 +331,9 @@
                     <div class="row" style="margin-top: 10px;">
                         <div class="col-md-12">
                             <label class="win-label">Broker Ac</label>
-                            <div style="display: flex; gap: 2px;">
-                                <input type="text" id="txtBrokerAcDisplay" class="win-textbox" placeholder="Search Broker Ac..." readonly onclick="openBrokerSearchModal()" style="cursor: pointer; background-color: #ffffff; font-weight: bold; color: #004d40; flex: 1;"/>
-                                <button type="button" class="win-btn-action" onclick="openBrokerSearchModal()"><i class="fa fa-search"></i></button>
-                            </div>
+                            <select id="cmbBrokerAccount" class="win-input select2-2col" data-header-col1="Broker Name" data-header-col2="Broker Code" onchange="onBrokerAccountChange()" style="width: 100%;">
+                                <option value="0">-- Select Broker Ac --</option>
+                            </select>
                             <input type="hidden" id="hidBrokerAccountId" value="0"/>
                         </div>
                     </div>
@@ -332,10 +354,9 @@
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate UOM</label>
+                            <!-- Same source as cmbCommUom: CommissionUOMFill() binds both (:1171). -->
                             <select id="cmbBrokeryRateUom" class="win-combo" onchange="calcBrokery()">
-                                <option value="1">40 KG</option>
-                                <option value="2">100 KG</option>
-                                <option value="3">1 M.Ton</option>
+                                <option value="0">-- Loading... --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -410,16 +431,18 @@
                         <div class="col-md-2">
                             <label class="win-label">UOM (Pack UOM)</label>
                             <select id="cmbPackUom" class="win-combo" onchange="calcLineWeight()">
-                                <option value="0" data-eq="1.0">-- Select Item First --</option>
+                                <option value="0">-- Select Item First --</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="win-label">Item Qty</label>
-                            <input type="number" step="0.01" id="txtQty" class="win-textbox" placeholder="0.00" oninput="calcLineWeight()"/>
+                            <input type="number" step="0.001" id="txtQty" class="win-textbox" placeholder="0.000" oninput="calcLineWeight('qty')"/>
                         </div>
                         <div class="col-md-2">
+                            <!-- Editable: the desktop's txtweight drives Qty in reverse
+                                 (CalculateByWeight, PurchsaeOrder.cs :4275-4281). -->
                             <label class="win-label">Gross Weight (KG)</label>
-                            <input type="number" step="0.01" id="txtWeight" class="win-textbox win-textbox-readonly" placeholder="0.00" readonly/>
+                            <input type="number" step="0.001" id="txtWeight" class="win-textbox" placeholder="0.000" oninput="calcLineWeight('weight')"/>
                         </div>
                     </div>
 
@@ -431,7 +454,7 @@
                         <div class="col-md-2">
                             <label class="win-label">Rate UOM</label>
                             <select id="cmbRateUom" class="win-combo" onchange="calcLineAmount()">
-                                <option value="0" data-eq="1.0">-- Select Item First --</option>
+                                <option value="0">-- Select Item First --</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -693,44 +716,171 @@
             </div>
         </div>
 
-        <!-- MAIN VIEW: HISTORY -->
-        <div id="mainViewHistory" style="display: none; margin-top: 10px;">
-            <fieldset class="win-group-box">
-                <legend>Purchase Order History Search & Filters</legend>
-                <div class="row" style="align-items: center;">
+        </div><!-- /#mainViewForm - the History view is a SIBLING of the Form view.
+             It used to be nested inside it, so switchMainView('history'), which hides
+             #mainViewForm, hid the History pane with it and the tab showed nothing. -->
+
+        <!-- MAIN VIEW: HISTORY (WINFORMS DITTO) -->
+        <div id="mainViewHistory" style="display: none; margin-top: 4px;">
+            
+            <!-- TOP BAR FOR HISTORY -->
+            <div class="win-teal-header" style="height: 26px; margin-bottom: 4px;">
+                <div class="win-teal-header-title" style="font-size: 10pt;"><i class="fa fa-history"></i> Purchase Order History</div>
+                <div style="display: flex; gap: 4px;">
+                    <button type="button" class="win-btn-tool" onclick="resetHistoryFilters()" style="background: #ffffff; color: #000; padding: 1px 8px; font-size: 10px;"><i class="fa fa-plus"></i> Reset</button>
+                    <button type="button" class="win-btn-tool" onclick="loadPurchaseOrderHistory()" style="background: #ffffff; color: #000; padding: 1px 8px; font-size: 10px;"><i class="fa fa-refresh"></i> Refresh</button>
+                </div>
+            </div>
+
+            <!-- FILTERS GROUP BOX (DITTO SCREENSHOT 1) -->
+            <fieldset class="win-group-box" style="margin-bottom: 6px; padding: 6px 10px; background-color: #f7f5ed;">
+                <legend style="font-size: 9pt; font-weight: bold; color: #008080; margin-bottom: 4px;">Filters</legend>
+                
+                <div class="row" style="align-items: flex-end;">
+                    <!-- Row 1: Branch Name, From/To Date, From/To Doc No -->
                     <div class="col-md-3">
-                        <label class="win-label">From Date</label>
-                        <input type="date" id="txtHistoryFromDate" class="win-textbox"/>
+                        <label class="win-label">Branch Name</label>
+                        <select id="cmbHistoryBranch" class="win-combo">
+                            <option value="0">Golden Ace Rice Mills (Pvt) Ltd.</option>
+                        </select>
                     </div>
+
+                    <div class="col-md-4">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                            <label class="win-label" style="margin-bottom: 0;">
+                                Date Range
+                            </label>
+                        </div>
+                        <!-- The desktop puts an INDEPENDENT enable checkbox on each of FromDateHistory
+                             and ToDateHistory (PurchsaeOrder.cs :4715-4756 tests .Checked separately),
+                             so an open-ended "from X onwards" filter is possible. One shared checkbox
+                             cannot express that. -->
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <input type="checkbox" id="chkHistoryEnableFromDate" checked onchange="toggleHistoryDatePickers()" title="Apply From date"/>
+                            <input type="date" id="txtHistoryFromDate" class="win-datepicker"/>
+                            <input type="checkbox" id="chkHistoryEnableToDate" checked onchange="toggleHistoryDatePickers()" title="Apply To date"/>
+                            <input type="date" id="txtHistoryToDate" class="win-datepicker"/>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="win-label">From Doc No</label>
+                        <input type="number" id="txtHistoryFromDocNo" class="win-textbox" placeholder="From..."/>
+                    </div>
+
                     <div class="col-md-3">
-                        <label class="win-label">To Date</label>
-                        <input type="date" id="txtHistoryToDate" class="win-textbox"/>
+                        <label class="win-label">To Doc No</label>
+                        <input type="number" id="txtHistoryToDocNo" class="win-textbox" placeholder="To..."/>
                     </div>
-                    <div class="col-md-3" style="margin-top: 14px;">
-                        <button type="button" class="win-btn-action" onclick="loadPurchaseOrderHistory()"><i class="fa fa-search"></i> Show History</button>
+                </div>
+
+                <div class="row" style="align-items: flex-end; margin-top: 6px;">
+                    <!-- Row 2: Supplier Name, Booking Person, Date Type radios, Show button -->
+                    <div class="col-md-3">
+                        <label class="win-label">Supplier Name</label>
+                        <div style="display: flex; gap: 2px;">
+                            <input type="text" id="txtHistorySupplierDisplay" class="win-textbox" placeholder="All Suppliers" readonly onclick="openHistorySupplierModal()" style="cursor: pointer; background: #fff;"/>
+                            <button type="button" class="win-btn-action" onclick="openHistorySupplierModal()"><i class="fa fa-search"></i></button>
+                            <button type="button" class="win-btn-action" style="background: #c62828; border-color: #b71c1c;" title="Clear Supplier" onclick="clearHistorySupplier()"><i class="fa fa-times"></i></button>
+                        </div>
+                        <input type="hidden" id="hidHistorySupplierId" value="0"/>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="win-label">Booking Person</label>
+                        <select id="cmbHistoryBookingPerson" class="win-combo">
+                            <option value="0">-- All Booking Persons --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 8.5pt; font-weight: bold; padding-top: 4px;">
+                            <label class="win-radio-inline" style="margin-right: 0;"><input type="radio" name="radHistoryDateType" value="DocDate" checked/> Doc Date</label>
+                            <label class="win-radio-inline" style="margin-right: 0;"><input type="radio" name="radHistoryDateType" value="ModifyDate"/> Modify Date</label>
+                            <label class="win-radio-inline" style="margin-right: 0;"><input type="radio" name="radHistoryDateType" value="EntryDate"/> Entry Date</label>
+                            <label class="win-radio-inline" style="margin-right: 0;"><input type="radio" name="radHistoryDateType" value="ApprovedDate"/> Approved Date</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2" style="text-align: right;">
+                        <button type="button" class="win-btn-action" onclick="loadPurchaseOrderHistory()" style="background-color: #0a6e6e; font-size: 10pt; height: 26px; width: 100%;"><i class="fa fa-search"></i> Show</button>
                     </div>
                 </div>
             </fieldset>
 
-            <div class="win-grid-container" style="margin-top: 10px;">
-                <div class="win-grid-scroll" style="max-height: 420px;">
+            <!-- MASTER HISTORY GRID CONTAINER -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding: 2px 4px; font-size: 8.5pt; font-weight: bold; color: #004d40;">
+                <span>Record:</span><span id="lblHistoryRecordCount">0 of 0</span>
+            </div>
+            <div class="win-grid-container">
+                <div class="win-grid-scroll" style="max-height: 220px;">
                     <table class="win-grid" id="grdHistoryTable">
                         <thead>
                             <tr style="background: linear-gradient(to bottom, #dceaf7 0%, #cbe2f7 100%); color: #000; font-weight: bold;">
-                                <th style="width: 130px;">Voucher Code</th>
-                                <th style="width: 110px;">Doc Date</th>
-                                <th style="width: 250px;">Supplier / Party Name</th>
-                                <th>Remarks</th>
-                                <th style="width: 130px; text-align: right;">Total Amount</th>
-                                <th style="width: 80px; text-align: center;">Action</th>
+                                <th style="width: 70px; text-align: center;">Action</th>
+                                <th style="width: 90px;">Doc Date</th>
+                                <th style="width: 70px;">Doc No</th>
+                                <th style="width: 140px;">Branch Name</th>
+                                <th style="width: 200px;">Supplier Name</th>
+                                <th style="width: 140px;">Booking Person</th>
+                                <th style="width: 85px; text-align: right;">Order Qty</th>
+                                <th style="width: 105px; text-align: right;">Total Amount</th>
+                                <th style="width: 100px;">Delivery Term</th>
+                                <th style="width: 75px; text-align: center;">Status</th>
+                                <th style="width: 100px;">Entry Date</th>
+                                <th style="width: 180px;">Remarks</th>
                             </tr>
                         </thead>
                         <tbody id="tblHistoryTbody">
-                            <tr><td colspan="6" style="text-align: center; padding: 20px; color: #777;">Loading Purchase Order history records...</td></tr>
+                            <tr><td colspan="12" style="text-align: center; padding: 20px; color: #777;">Click <strong>Show</strong> to load Purchase Order history records.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- DESKTOP RECORD NAVIGATOR FOR MASTER GRID -->
+            <div style="background: #ece9d8; border: 1px solid #7a9a9e; border-top: none; padding: 3px 8px; font-size: 11px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <span style="font-weight: bold; color: #333;">Record:</span>
+                <span id="lblHistoryRecordInfo" style="font-weight: bold; color: #008080;">0 Of 0</span>
+            </div>
+
+            <!-- TEAL SECTION BAR FOR DETAIL OF SELECTED ROW (DITTO SCREENSHOT 1) -->
+            <div class="win-teal-header" style="height: 24px; margin-bottom: 4px;">
+                <div class="win-teal-header-title" style="font-size: 9.5pt; font-weight: bold;">Detail Of Above Selected Row</div>
+            </div>
+
+            <!-- DETAIL OF ABOVE SELECTED ROW GRID -->
+            <div class="win-grid-container">
+                <div class="win-grid-scroll" style="max-height: 180px;">
+                    <table class="win-grid" id="grdHistoryDetailTable">
+                        <thead>
+                            <tr style="background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color: #000; font-weight: bold;">
+                                <th style="width: 100px;">Item Code</th>
+                                <th style="width: 220px;">Item Name</th>
+                                <th style="width: 90px;">Crop Year</th>
+                                <th style="width: 80px;">Pack UOM</th>
+                                <th style="width: 90px; text-align: right;">Item Qty</th>
+                                <th style="width: 90px; text-align: right;">Weight/Qty</th>
+                                <th style="width: 100px; text-align: right;">Total Weight</th>
+                                <th style="width: 90px; text-align: right;">Item Rate</th>
+                                <th style="width: 80px;">Rate UOM</th>
+                                <th style="width: 110px; text-align: right;">Amount</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblHistoryDetailTbody">
+                            <tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Select a row above to view line item details.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DESKTOP RECORD NAVIGATOR FOR DETAIL GRID -->
+            <div style="background: #ece9d8; border: 1px solid #7a9a9e; border-top: none; padding: 3px 8px; font-size: 11px; display: flex; align-items: center; gap: 6px;">
+                <span style="font-weight: bold; color: #333;">Record:</span>
+                <span id="lblHistoryDetailRecordInfo" style="font-weight: bold; color: #008080;">0 Of 0</span>
+            </div>
+
         </div>
 
         <!-- MAIN BOTTOM NAVIGATION TABS: [Form] [History] -->

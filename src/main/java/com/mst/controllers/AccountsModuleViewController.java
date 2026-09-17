@@ -122,7 +122,25 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Contractor Wages Dashboard");
 				return "accounts/vouchers/contractor_wages_dashboard";
 			case "contractor-wages":
-				model.addAttribute("moduleTitle", "Contractor Wages Account");
+			case "wages-account":
+				model.addAttribute("moduleTitle", "Wages Account");
+				model.addAttribute("submoduleKey", "wages-account");
+				return "accounts/vouchers/contractor_wages";
+			case "wages-rate-schedule":
+				model.addAttribute("moduleTitle", "Wages Rate Schedule");
+				model.addAttribute("submoduleKey", "wages-rate-schedule");
+				return "accounts/vouchers/contractor_wages";
+			case "wages-rate-schedule-contractor":
+				model.addAttribute("moduleTitle", "Wages Rate Schedule Contractor Wise");
+				model.addAttribute("submoduleKey", "wages-rate-schedule-contractor");
+				return "accounts/vouchers/contractor_wages";
+			case "labour-wages":
+				model.addAttribute("moduleTitle", "Labour Wages");
+				model.addAttribute("submoduleKey", "labour-wages");
+				return "accounts/vouchers/contractor_wages";
+			case "labour-wages-manual":
+				model.addAttribute("moduleTitle", "Labour Wages Manual");
+				model.addAttribute("submoduleKey", "labour-wages-manual");
 				return "accounts/vouchers/contractor_wages";
 			case "voucher-validation":
 				model.addAttribute("moduleTitle", "Voucher Validation Report");

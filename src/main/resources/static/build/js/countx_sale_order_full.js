@@ -213,9 +213,28 @@ function setupEventListeners() {
             if (uoms && uoms.length > 0) {
                 var baseUomCode = null;
                 var basePackUomCode = null;
+                var uomsWithoutFactor = [];
                 uoms.forEach(function (u) {
-                    $uom.append($('<option>', { value: u.Id, text: u.UOMCode, 'data-equivalent': u.QtyEquivalent }));
-                    $packUom.append($('<option>', { value: u.Id, text: u.UOMCode, 'data-equivalent': u.QtyEquivalent }));
+                    // The desktop's conversion factor is the UOM schedule's **Equivalent**
+                    // column, not QtyEquivalent. CommonServices.GetUomScheduleByItemId
+                    // (Architecture.WinApp.Common/CommonServices.cs:5239) builds the bound
+                    // table as Id, UOMCode, Equivalent, QtyEquivalent, BaseRateUom - and
+                    // SaleOrder.cs's CalculateWeight()/TotalAmount() read Cells[2], i.e.
+                    // Equivalent. dbo.UOMSchedule carries both columns (view
+                    // V_UomScheduleAndUom), so they are different numbers and using
+                    // QtyEquivalent here silently produced wrong weights and amounts.
+                    // A missing Equivalent is never replaced with QtyEquivalent, 1 or 0 -
+                    // the option carries no factor and the screen says so.
+                    var eq = (u.Equivalent === undefined || u.Equivalent === null || u.Equivalent === '')
+                        ? null : parseFloat(u.Equivalent);
+                    if (eq === null || !isFinite(eq) || eq <= 0) {
+                        uomsWithoutFactor.push(u.UOMCode);
+                        eq = null;
+                    }
+                    var attrs = { value: u.Id, text: u.UOMCode };
+                    if (eq !== null) { attrs['data-equivalent'] = eq; }
+                    $uom.append($('<option>', attrs));
+                    $packUom.append($('<option>', $.extend({}, attrs)));
                     if (u.BaseRateUom === true || u.BaseRateUom === 1) {
                         baseUomCode = u.Id;
                     }
@@ -223,6 +242,16 @@ function setupEventListeners() {
                         basePackUomCode = u.Id;
                     }
                 });
+                if (uomsWithoutFactor.length) {
+                    var warn = 'These UOMs have no usable Equivalent from '
+                        + '/sale/sale-order/api/item-uoms/' + itemId + ': '
+                        + uomsWithoutFactor.join(', ')
+                        + '. Weight and Amount cannot be calculated for them, and no '
+                        + 'substitute factor is used.';
+                    if (typeof console !== 'undefined' && console.warn) { console.warn(warn); }
+                    if (typeof showMessage === 'function') { showMessage(warn, 'error'); }
+                    else { alert(warn); }
+                }
                 if (baseUomCode !== null) {
                     $uom.val(baseUomCode);
                 }
