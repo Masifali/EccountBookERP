@@ -1,393 +1,716 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Goods Receipt Notes (GRN) - WinForms Replica</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goods Receiving Notes - EccountBook ERP Desktop Copy</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <style>
-        body { font-family: "Verdana", Tahoma, Arial, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; }
-        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; }
-        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font-family: "Verdana", sans-serif; font-size: 11px; color: #000000; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 22px; border-radius: 2px; }
-        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
-        .win-btn-tool-save { font-weight: bold; color: #004d40; }
-        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
-        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 12pt; font-weight: bold; }
-        .win-form-body { background-color: #ffffff; padding: 6px; }
-        .win-group-box { border: 1px solid #d0d0d0; border-radius: 3px; padding: 8px 10px; margin-bottom: 6px; background-color: #ffffff; }
-        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9.75pt; font-weight: bold; color: #000000; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
-        .win-label { font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-size: 9pt; font-weight: 600; color: #000000; white-space: nowrap; }
-        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 9.75pt; height: 25px; border: 1px solid #7a9a9e; padding: 2px 5px; box-sizing: border-box; background-color: #ffffff; color: #000000; border-radius: 0; width: 100%; }
-        .win-textbox:focus, .win-combo:focus, .win-datepicker:focus { border-color: #008080; outline: none; }
-        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 9.75pt; font-weight: bold; border: none; height: 25px; padding: 0 14px; cursor: pointer; }
-        .win-btn-action:hover { background-color: #005959; }
-        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; margin-top: 4px; }
-        .win-grid-scroll { max-height: 320px; overflow-x: auto; overflow-y: auto; }
-        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8.25pt; background-color: #ffffff; min-width: 950px; }
-        .win-grid th { background-color: #ece9d8; color: #000000; font-weight: normal; border: 1px solid #aca899; padding: 4px 6px; text-align: left; position: sticky; top: 0; z-index: 5; }
-        .win-grid td { border: 1px solid #e0e0e0; padding: 3px 6px; color: #000000; vertical-align: middle; }
-        .win-totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 8px 14px; border: 1px solid #008080; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 6px; }
+        :root {
+            --win-bg: #ece9d8;
+            --win-border: #716f64;
+            --header-bg: #005a5b;
+            --toolbar-bg: linear-gradient(to bottom, #ffffff, #e3e3e3);
+            --btn-bg: #f0f0f0;
+            --btn-border: #707070;
+            --input-border: #7f9db9;
+            --grid-header-bg: #d9e6f2;
+        }
 
-        .select2-container--default .select2-selection--single { height: 25px !important; padding: 1px 4px !important; border: 1px solid #7a9a9e !important; border-radius: 0 !important; font-size: 9.75pt !important; font-family: "Verdana", sans-serif !important; background-color: #ffffff !important; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 22px !important; padding-left: 2px !important; color: #000000 !important; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
-        .select2-dropdown { border: 1px solid #008080 !important; font-size: 9pt !important; border-radius: 0 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; }
-        .select2-search__field { font-size: 9pt !important; padding: 3px !important; border: 1px solid #008080 !important; }
+        * { box-sizing: border-box; }
+        body { font-family: Tahoma, Arial, sans-serif; font-size: 11px; background-color: #d4d0c8; margin: 0; padding: 4px; user-select: none; }
+        .win-container { width: 100%; max-width: 1400px; margin: 0 auto; background-color: var(--win-bg); border: 1px solid var(--win-border); box-shadow: 2px 2px 8px rgba(0,0,0,0.4); }
+
+        .top-banner { background-color: #005a5b; color: #ffffff; padding: 3px 8px; font-weight: bold; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .toolbar { background: var(--toolbar-bg); border-bottom: 1px solid #999; padding: 3px 6px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .tool-btn { height: 23px; padding: 1px 7px; font-size: 11px; font-family: Tahoma, sans-serif; background-color: var(--btn-bg); border: 1px solid var(--btn-border); border-radius: 2px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: bold; color: #000; }
+        .tool-btn:hover { background-color: #ffe4a0; border-color: #e59d00; }
+        .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid rgba(0,0,0,0.3); border-radius: 50%; border-top-color: #000; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .teal-strip { background-color: #005a5b; color: white; padding: 3px 8px; font-weight: bold; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+        .form-body { padding: 4px; }
+        .section-box { border: 1px solid #a0a0a0; background-color: #fcfcfc; padding: 5px; margin-bottom: 4px; border-radius: 2px; }
+        .section-title { font-weight: bold; color: #003366; margin-bottom: 4px; border-bottom: 1px solid #d0d0d0; padding-bottom: 2px; font-size: 11px; }
+
+        .grid-4col { display: grid; grid-template-columns: 310px 240px 320px 1fr; gap: 6px; }
+
+        .form-row { display: flex; align-items: center; margin-bottom: 2px; }
+        .form-label { font-size: 10px; color: #000; text-align: right; padding-right: 4px; white-space: nowrap; }
+
+        .form-control { height: 19px; font-family: Tahoma, sans-serif; font-size: 10px; border: 1px solid var(--input-border); padding: 1px 3px; background-color: #fff; }
+        .form-control[readonly] { background-color: #eef2f5; }
+        select.form-control { height: 20px; }
+
+        /* Grid tables */
+        .grid-wrap { overflow-x: auto; max-height: 240px; border: 1px solid #999; background-color: #fff; width: 100%; }
+        .data-grid { width: 100%; border-collapse: collapse; font-size: 10px; white-space: nowrap; }
+        .data-grid th { background-color: var(--grid-header-bg); border: 1px solid #b0c4de; padding: 3px 5px; text-align: left; position: sticky; top: 0; z-index: 2; }
+        .data-grid td { border: 1px solid #e0e0e0; padding: 2px 5px; }
+        .data-grid tr:hover { background-color: #eef6ff; cursor: pointer; }
+        .data-grid tr.selected { background-color: #3399ff; color: #fff; }
+
+        .bottom-dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+
+        .bottom-mode-bar { display: flex; background-color: #d4d0c8; border-top: 1px solid #999; padding: 2px 6px; gap: 4px; }
+        .mode-btn { padding: 2px 12px; border: 1px solid #888; background: #e0e0e0; cursor: pointer; font-size: 11px; }
+        .mode-btn.active { background: #fff; font-weight: bold; color: #003366; }
     </style>
 </head>
 <body>
 
-    <div class="win-tool-strip">
-        <button type="button" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> &New</button>
-        <button type="button" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> &Save</button>
-        <button type="button" class="win-btn-tool" onclick="btnSave_Click()"><i class="fa fa-pencil"></i> &Update</button>
-        <button type="button" class="win-btn-tool" onclick="btnRefresh_Click()"><i class="fa fa-refresh"></i> &Refresh</button>
-        <button type="button" class="win-btn-tool" onclick="window.print()"><i class="fa fa-print"></i> &Print</button>
-        <div style="margin-left: auto;">
-            <a href="/purchase" style="color: #000; text-decoration: none; font-weight: bold; font-size: 10px;">
-                <i class="fa fa-arrow-left"></i> Back to Purchase Dashboard
-            </a>
+<div class="win-container">
+    <!-- Top Header Banner -->
+    <div class="top-banner">
+        <div>ERP AccountBook ERP</div>
+        <div style="font-size: 11px; font-weight: normal;">
+            <span>Numan Rasheed (Admin)</span> |
+            <span>Golden Ace Rice Mills (Pvt) Ltd.</span> |
+            <span>2026-27</span>
         </div>
     </div>
 
-    <div class="win-teal-header">
-        <div class="win-teal-header-title">Goods Receipt Notes (GRN)</div>
-        <div id="lblVoucherDisplayHeader" style="font-weight: bold; font-size: 11pt; color: #ffeb3b;" th:text="'GRN-2026-' + ${nextDocNo}">GRN-2026-0001</div>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button id="btnNew" class="tool-btn" onclick="withButtonLoading(this, onNewRecord)">+ New</button>
+        <button id="btnRefresh" class="tool-btn" onclick="withButtonLoading(this, onRefreshForm)">Refresh</button>
+        <button id="btnSave" class="tool-btn" onclick="withButtonLoading(this, onSaveRecord)">Save</button>
+        <button id="btnPrint211" class="tool-btn" onclick="window.print()">211-Print</button>
+        <button id="btnSlip257" class="tool-btn" onclick="window.print()">257-GPSlip</button>
+        <button id="btnAttachment" class="tool-btn" onclick="alert('Attachments')">Attachment</button>
+        <button id="btnDefineCity" class="tool-btn" onclick="alert('Define City')">Define City</button>
+        <button id="btnShortcuts" class="tool-btn" onclick="alert('Shortcuts')">ShortCut Keys</button>
     </div>
 
-    <div class="win-form-body">
-        <fieldset class="win-group-box">
-            <legend>GRN Header Information</legend>
-            <div class="row">
-                <div class="col-md-2">
-                    <label class="win-label">GRN Doc No</label>
-                    <input type="text" id="txtDocNo" class="win-textbox" th:value="${nextDocNo}" readonly style="background-color: #f0f0f0; font-weight: bold;"/>
+    <!-- Teal Title Strip -->
+    <div class="teal-strip">
+        <span style="font-size: 13px;">Goods Receiving Notes</span>
+        <div>
+            <label class="me-3"><input type="checkbox" id="chkScaleDeduct"> Scale Short Weight Deduction Apply</label>
+            <label class="me-3"><input type="checkbox" id="chkSupplierDeduct"> Supplier Short Weight Deduction Apply</label>
+            <a href="/purchase" class="text-white text-decoration-none fw-bold">×</a>
+        </div>
+    </div>
+
+    <!-- FORM VIEW -->
+    <div id="viewForm" class="form-body">
+        <input type="hidden" id="txtId" value="0" />
+
+        <div class="grid-4col">
+            <!-- Col 1: Main Information -->
+            <div class="section-box">
+                <div class="section-title">Main Information</div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 80px;">Doc No</span>
+                    <input type="text" id="txtDocNo" class="form-control" style="width: 80px; font-weight: bold;" th:value="${nextDocNo}" readonly />
+                    <span class="form-label" style="width: 50px;">Doc Date</span>
+                    <input type="date" id="txtDocDate" class="form-control" style="width: 90px;" />
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label">GRN Date</label>
-                    <input type="date" id="txtDocDate" class="win-datepicker"/>
-                </div>
-                <div class="col-md-4">
-                    <label class="win-label">Supplier / Party</label>
-                    <select id="cmbSupplier" class="win-combo select2">
+                <div class="form-row">
+                    <span class="form-label" style="width: 80px;">Supplier Name</span>
+                    <select id="cmbSupplier" class="form-control select2" style="width: 210px;">
                         <option value="0">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${(s.supplierCode != null and s.supplierCode != '' and s.supplierCode != 'null' ? s.supplierCode + ' - ' : '') + s.supplierName}"></option>
+                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label">Delivery Note / Bilty</label>
-                    <input type="text" id="txtBiltyNo" class="win-textbox" placeholder="Bilty / DN No"/>
+                <div class="form-row">
+                    <span class="form-label" style="width: 80px;">Gate Pass No</span>
+                    <select id="cmbGatePassNo" class="form-control" style="width: 90px;">
+                        <option value="">-- Select --</option>
+                    </select>
+                    <span class="form-label" style="width: 45px;">Bilty No</span>
+                    <input type="text" id="txtBiltyNo" class="form-control" style="width: 75px;" />
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label">Vehicle No</label>
-                    <input type="text" id="txtVehicleNo" class="win-textbox" placeholder="Vehicle No"/>
+                <div class="form-row">
+                    <span class="form-label" style="width: 80px;">Vehicle Type</span>
+                    <select id="cmbVehicleType" class="form-control" style="width: 90px;">
+                        <option value="">-- Select --</option>
+                        <option value="Truck">Truck</option>
+                        <option value="Tractor">Tractor</option>
+                    </select>
+                    <span class="form-label" style="width: 55px;">Vehicle No</span>
+                    <input type="text" id="txtVehicleNo" class="form-control" style="width: 65px;" />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 80px;">Transit Vehicle</span>
+                    <select id="cmbTransitVehicle" class="form-control" style="width: 210px;">
+                        <option value="">-- Select --</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 80px;">AnalystName</span>
+                    <input type="text" id="txtAnalystName" class="form-control" style="width: 210px;" />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 80px;">Remarks</span>
+                    <input type="text" id="txtRemarks" class="form-control" style="width: 210px;" />
                 </div>
             </div>
 
-            <div class="row" style="margin-top: 6px;">
-                <div class="col-md-12">
-                    <label class="win-label">Remarks / Goods Description</label>
-                    <input type="text" id="txtRemarks" class="win-textbox" placeholder="Enter GRN notes, inspection details, or driver info..."/>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset class="win-group-box">
-            <legend>Received Items Entry</legend>
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="win-label">Item</label>
-                    <select id="cmbItem" class="win-combo select2">
-                        <option value="0">-- Select Item --</option>
-                        <option th:each="i : ${items}" th:value="${i.id}" th:data-price="${i.purchasePrice}" th:text="${(i.itemCode != null and i.itemCode != '' and i.itemCode != 'null' ? i.itemCode + ' - ' : '') + i.itemName}"></option>
+            <!-- Col 2: Delivery & Weight Info -->
+            <div class="section-box">
+                <div class="section-title">Delivery & Weights</div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 95px;">Delivery Term</span>
+                    <select id="cmbDeliveryTerm" class="form-control" style="width: 130px;">
+                        <option value="">-- Select --</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label">Receiving Warehouse</label>
-                    <select id="cmbWarehouse" class="win-combo select2">
-                        <option value="0">-- Select Warehouse --</option>
-                        <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.warehouseName}"></option>
-                    </select>
+                <div class="form-row">
+                    <span class="form-label" style="width: 95px;">Supplier Weight</span>
+                    <input type="number" id="txtSupplierWeight" class="form-control text-end" style="width: 130px;" value="0" oninput="calcWeights()" />
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label">Job / Lot</label>
-                    <select id="cmbJobLot" class="win-combo select2">
-                        <option value="0">-- Select Job/Lot --</option>
-                        <option th:each="j : ${jobLots}" th:value="${j.id}" th:text="${j.description}"></option>
-                    </select>
+                <div class="form-row">
+                    <span class="form-label" style="width: 95px;">Factory Weight</span>
+                    <input type="number" id="txtFactoryWeight" class="form-control text-end" style="width: 130px;" value="0" oninput="calcWeights()" />
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label">Received Qty</label>
-                    <input type="number" step="0.01" id="txtQty" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
+                <div class="form-row">
+                    <span class="form-label" style="width: 95px;">Difference Weight</span>
+                    <input type="number" id="txtDiffWeight" class="form-control text-end" style="width: 80px; color: red;" value="0" readonly />
+                    <span class="ms-1 text-muted">label49</span>
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label">Unit Rate</label>
-                    <input type="number" step="0.01" id="txtRate" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
+                <div class="form-row">
+                    <span class="form-label" style="width: 95px;">GRN Weight</span>
+                    <input type="number" id="txtGrnWeight" class="form-control text-end" style="width: 130px;" value="0" />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 95px;">Received Weight</span>
+                    <input type="number" id="txtReceivedWeight" class="form-control text-end" style="width: 130px;" value="0" />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 95px;">W.B Ticket Nos.</span>
+                    <input type="text" id="txtWbTickets" class="form-control" style="width: 130px;" />
                 </div>
             </div>
 
-            <div class="row" style="margin-top: 6px; align-items: center;">
-                <div class="col-md-2">
-                    <label class="win-label">Line Amount</label>
-                    <input type="number" step="0.01" id="txtAmount" class="win-textbox" placeholder="0.00" readonly style="background-color: #f0f0f0; font-weight: bold; text-align: right; color: #008080;"/>
+            <!-- Col 3: Freight Information -->
+            <div class="section-box">
+                <div class="section-title">Freight Information</div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 100px;">Transporter</span>
+                    <select id="cmbTransporter" class="form-control select2" style="width: 200px;">
+                        <option value="1">ALLAH DITTA CS (KACHA PAKKA)</option>
+                    </select>
                 </div>
-                <div class="col-md-8">
-                    <label class="win-label">Line Remarks</label>
-                    <input type="text" id="txtLineRemarks" class="win-textbox" placeholder="Item line remarks..."/>
+                <div class="form-row">
+                    <span class="form-label" style="width: 100px;">Bilty Freight</span>
+                    <input type="number" id="txtBiltyFreight" class="form-control text-end" style="width: 80px;" value="0" oninput="calcFreight()" />
+                    <span class="form-label" style="width: 65px;">Scale Charges</span>
+                    <input type="number" id="txtScaleCharges" class="form-control text-end" style="width: 55px;" value="0" oninput="calcFreight()" />
                 </div>
-                <div class="col-md-2" style="margin-top: 16px; text-align: right;">
-                    <button type="button" class="win-btn-action" style="width: 100%;" onclick="btnAddRow_Click()"><i class="fa fa-plus"></i> + Add Item</button>
+                <div class="form-row">
+                    <span class="form-label" style="width: 100px;">Advance by Party</span>
+                    <input type="number" id="txtAdvParty" class="form-control text-end" style="width: 80px;" value="0" oninput="calcFreight()" />
+                    <span class="form-label" style="width: 65px;">Adv Factory</span>
+                    <input type="number" id="txtAdvFactory" class="form-control text-end" style="width: 55px;" value="0" oninput="calcFreight()" />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 100px;">Other Deduction</span>
+                    <input type="number" id="txtOtherDeduct" class="form-control text-end" style="width: 80px;" value="0" oninput="calcFreight()" />
+                    <span class="form-label" style="width: 65px;">Total Freight</span>
+                    <input type="number" id="txtTotalFreight" class="form-control text-end fw-bold" style="width: 55px;" value="0" readonly />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 100px;">Shortage Amount</span>
+                    <input type="number" id="txtShortageAmt" class="form-control text-end" style="width: 80px;" value="0" />
+                    <span class="form-label" style="width: 65px;">Discount Amt</span>
+                    <input type="number" id="txtDiscountAmt" class="form-control text-end" style="width: 55px;" value="0" />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 100px;">Remaining Freight</span>
+                    <input type="number" id="txtRemainingFreight" class="form-control text-end" style="width: 80px;" value="0" readonly />
+                    <span class="form-label" style="width: 65px;">Charge Party</span>
+                    <input type="number" id="txtChargeToParty" class="form-control text-end" style="width: 55px;" value="0" />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 100px;">Freight Deduction</span>
+                    <input type="number" id="txtFreightDeduct" class="form-control text-end" style="width: 80px;" value="0" />
+                    <span class="form-label" style="width: 65px;">Paid Amount</span>
+                    <input type="number" id="txtPaidAmount" class="form-control text-end fw-bold" style="width: 55px;" value="0" readonly />
                 </div>
             </div>
-        </fieldset>
 
-        <fieldset class="win-group-box">
-            <legend>Received Items Details Grid</legend>
-            <div class="win-grid-container">
-                <div class="win-grid-scroll">
-                    <table class="win-grid">
+            <!-- Col 4: Empty Bags Breakup Mini Grid -->
+            <div class="section-box">
+                <div class="section-title">Market Purchase Empty Bags BreakUp</div>
+                <div class="grid-wrap" style="max-height: 120px;">
+                    <table class="data-grid">
                         <thead>
-                            <tr>
-                                <th style="width: 45px; text-align: center;">Sr #</th>
-                                <th style="width: 120px;">Item Code</th>
-                                <th style="width: 240px;">Item Name</th>
-                                <th style="width: 100px; text-align: right;">Received Qty</th>
-                                <th style="width: 90px; text-align: right;">Rate</th>
-                                <th style="width: 110px; text-align: right;">Amount</th>
-                                <th style="width: 140px;">Warehouse</th>
-                                <th style="width: 120px;">Job / Lot</th>
-                                <th>Line Remarks</th>
-                                <th style="width: 50px; text-align: center;">Action</th>
-                            </tr>
+                        <tr>
+                            <th style="width:20px;">X</th>
+                            <th style="width:20px;">+</th>
+                            <th>Qty</th>
+                            <th>G...</th>
+                        </tr>
                         </thead>
-                        <tbody id="grdDetailTbody">
-                            <tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No received items added yet. Select an item and click + Add Item.</td></tr>
+                        <tbody>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td class="text-end">0</td>
+                            <td></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Information Row Input Section -->
+        <div class="section-box mt-1">
+            <div class="section-title">Detail Information</div>
+            <div class="form-row flex-wrap" style="gap: 4px;">
+                <span>Warehouse:</span>
+                <select id="cmbWarehouse" class="form-control" style="width: 120px;">
+                    <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}"></option>
+                </select>
+
+                <span class="ms-2">Item:</span>
+                <label class="me-1"><input type="radio" name="itemSearchMode" value="Name" checked> Name</label>
+                <label><input type="radio" name="itemSearchMode" value="Code"> Code</label>
+                <select id="cmbItem" class="form-control select2" style="width: 180px;">
+                    <option value="0">-- Select Item --</option>
+                    <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.name}"></option>
+                </select>
+
+                <span>Crop Year:</span>
+                <select id="cmbCropYear" class="form-control" style="width: 80px;">
+                    <option th:each="c : ${cropYears}" th:value="${c.name}" th:text="${c.name}"></option>
+                </select>
+
+                <span>Job/Lot:</span>
+                <select id="cmbJobLot" class="form-control" style="width: 90px;">
+                    <option th:each="j : ${jobLots}" th:value="${j.id}" th:text="${j.name}"></option>
+                </select>
+
+                <span>Packing Type:</span>
+                <select id="cmbPackingType" class="form-control" style="width: 90px;">
+                    <option value="1">PP Bags</option>
+                </select>
+
+                <span>UOM:</span>
+                <select id="cmbUom" class="form-control" style="width: 60px;">
+                    <option value="KGs">KGs</option>
+                </select>
+
+                <span>Item Qty:</span>
+                <input type="number" id="txtItemQty" class="form-control text-end" style="width: 60px;" value="0" />
+
+                <span>Gross Weight:</span>
+                <input type="number" id="txtGrossWeight" class="form-control text-end" style="width: 70px;" value="0" />
+
+                <span>E.b / Unit:</span>
+                <input type="number" id="txtEbUnit" class="form-control text-end" style="width: 50px;" value="0" />
+
+                <button type="button" class="btn btn-sm btn-success py-0 px-2 fw-bold" onclick="btnAddLine_Click()">+ Add</button>
+            </div>
+            <div class="form-row mt-1 flex-wrap" style="gap: 4px;">
+                <span>City/Area:</span>
+                <select id="cmbCity" class="form-control" style="width: 110px;">
+                    <option value="">-- Select --</option>
+                </select>
+                <button type="button" class="btn btn-sm btn-light py-0 px-1 border">+</button>
+
+                <span class="ms-3 text-danger fw-bold">Selected Lab -----------></span>
+                <label class="ms-2"><input type="checkbox" id="chkWtCutComp"> Weight Cut Compulsory</label>
+                <input type="number" id="txtWtCutComp" class="form-control text-end" style="width: 50px;" value="0" />
+
+                <label class="ms-2"><input type="checkbox" id="chkRateCutComp"> Rate Cut Compulsory</label>
+                <input type="number" id="txtRateCutComp" class="form-control text-end" style="width: 50px;" value="0" />
+
+                <button type="button" class="btn btn-sm text-white fw-bold ms-auto" style="background-color: #005a5b;" onclick="alert('Load Gate Pass')">Load Gate Pass</button>
+            </div>
+        </div>
+
+        <!-- Main Items Table Grid -->
+        <div class="grid-wrap" style="max-height: 220px;">
+            <table class="data-grid" id="grdItems">
+                <thead>
+                <tr>
+                    <th style="width:20px;">X</th>
+                    <th>Order</th>
+                    <th>WareHouse Name</th>
+                    <th>Item</th>
+                    <th>Crop Year</th>
+                    <th>Job Lot</th>
+                    <th>Packing Type</th>
+                    <th>UOM</th>
+                    <th>Qty</th>
+                    <th>Gross Weight</th>
+                    <th>Eb Unit</th>
+                    <th>Eb Total</th>
+                    <th>Eb Pur Against W...</th>
+                    <th>Lab No</th>
+                    <th>Qty For Wt Cut</th>
+                    <th>Wt Cut On</th>
+                    <th>Weight Cut Uom</th>
+                    <th>Wt Cut</th>
+                    <th>Wt Cut Total</th>
+                    <th>Add Less</th>
+                    <th>Scale Short Wt</th>
+                </tr>
+                </thead>
+                <tbody id="grdItemsBody">
+                <tr><td colspan="21" class="text-center text-muted py-2">No received items added yet.</td></tr>
+                </tbody>
+                <tfoot>
+                <tr class="fw-bold bg-light">
+                    <td colspan="8" class="text-end">Summary:</td>
+                    <td class="text-end" id="sumQty">0</td>
+                    <td class="text-end" id="sumGrossWt">0</td>
+                    <td class="text-end" id="sumEbUnit">0</td>
+                    <td class="text-end" id="sumEbTotal">0</td>
+                    <td class="text-end">0</td>
+                    <td></td>
+                    <td class="text-end">0</td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-end">0</td>
+                    <td class="text-end">0</td>
+                    <td class="text-end">0</td>
+                    <td class="text-end">0</td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Bottom Dual Grids -->
+        <div class="bottom-dual-grid">
+            <!-- Left Grid: Empty Bags Info -->
+            <div>
+                <div class="teal-strip" style="font-size: 11px;">
+                    This Grid show Empty Bags Info. User Can Add Empty Bags Info Here
+                </div>
+                <div class="grid-wrap" style="max-height: 140px;">
+                    <table class="data-grid">
+                        <thead>
+                        <tr>
+                            <th style="width:20px;">+</th>
+                            <th>EmptyBags Type</th>
+                            <th>Item Name</th>
+                            <th>Bags_Condition</th>
+                            <th>Received Qty</th>
+                            <th>Purchase Qty</th>
+                            <th>Remarks</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="text-center">+</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td class="text-end">0</td>
+                            <td class="text-end">0</td>
+                            <td></td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="win-totals-bar">
-                <div>Total Received Qty: <span id="lblTotalQty">0.00</span></div>
-                <div>Net Total Amount: <span id="lblNetTotal">0.00</span></div>
+            <!-- Right Grid: Pending Gate Passes -->
+            <div>
+                <div class="teal-strip" style="font-size: 11px;">
+                    <span>This Grid show Pending Gatepases For Grn Entry,User can load GP With Accepted Status for Entry,GP With Open Status Will Not Load</span>
+                    <span class="ms-auto text-warning">Open Gp: 1 | Accepted Gp: 0</span>
+                </div>
+                <div class="grid-wrap" style="max-height: 140px;">
+                    <table class="data-grid">
+                        <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Load</th>
+                            <th>Gp Sr No</th>
+                            <th>Freight Status</th>
+                            <th>Gp Date</th>
+                            <th>Order Type</th>
+                            <th>Supplier Name</th>
+                            <th>Vehicle No</th>
+                            <th>Bilty No</th>
+                            <th>ItemName</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Open</td>
+                            <td><button class="btn btn-sm btn-light py-0 px-1 border">Load</button></td>
+                            <td>437</td>
+                            <td>Pending</td>
+                            <td>2026-09-17</td>
+                            <td>Purchase Order</td>
+                            <td>Al-Rehman Traders</td>
+                            <td>OKB-1254</td>
+                            <td>*</td>
+                            <td>Super Basmati Paddy</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </fieldset>
+        </div>
     </div>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        let lineItems = [];
+    <!-- HISTORY VIEW -->
+    <div id="viewHistory" style="display: none; padding: 6px;">
+        <div class="teal-strip mb-2">
+            Goods Receiving Notes (GRN) History
+        </div>
+        <div class="grid-wrap" style="max-height: 500px;">
+            <table class="data-grid" id="grdHistory">
+                <thead>
+                <tr>
+                    <th>Doc No</th>
+                    <th>Doc Date</th>
+                    <th>Supplier Name</th>
+                    <th>Vehicle No</th>
+                    <th>Bilty No</th>
+                    <th>Remarks</th>
+                    <th>Entry Date</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody id="grdHistoryBody">
+                <tr><td colspan="8" class="text-center text-muted py-3">Loading history records...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-        $(document).ready(function() {
-            setWinDefaultDate();
-            if ($.fn.select2) {
-                $('.select2').select2({ width: '100%' });
+    <!-- Bottom Mode Bar -->
+    <div class="bottom-mode-bar">
+        <button id="btnModeForm" class="mode-btn active" onclick="switchMode('Form')">Form</button>
+        <button id="btnModeHistory" class="mode-btn" onclick="switchMode('History')">History</button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    let lineItems = [];
+
+    $(document).ready(function() {
+        $('.select2').select2({ width: '100%' });
+        var today = new Date().toISOString().split('T')[0];
+        $('#txtDocDate').val(today);
+    });
+
+    function withButtonLoading(btn, asyncFn) {
+        if (!btn || btn.disabled) return;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Loading...`;
+        
+        try {
+            const result = asyncFn();
+            if (result && typeof result.then === 'function') {
+                result.finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                });
+            } else {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }, 400);
             }
-            $('#cmbItem').on('change', function() {
-                onItemChange(this.value);
-            });
+        } catch(err) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    function calcWeights() {
+        const sup = parseFloat($('#txtSupplierWeight').val() || '0');
+        const fact = parseFloat($('#txtFactoryWeight').val() || '0');
+        $('#txtDiffWeight').val((sup - fact).toFixed(2));
+    }
+
+    function calcFreight() {
+        const bilty = parseFloat($('#txtBiltyFreight').val() || '0');
+        const scale = parseFloat($('#txtScaleCharges').val() || '0');
+        const advP = parseFloat($('#txtAdvParty').val() || '0');
+        const advF = parseFloat($('#txtAdvFactory').val() || '0');
+        const other = parseFloat($('#txtOtherDeduct').val() || '0');
+        const total = Math.max(0, bilty + scale - advP - advF - other);
+        $('#txtTotalFreight').val(total.toFixed(2));
+        $('#txtPaidAmount').val(total.toFixed(2));
+    }
+
+    function btnAddLine_Click() {
+        const itemId = parseInt($('#cmbItem').val() || '0');
+        const itemName = $('#cmbItem option:selected').text();
+        const whName = $('#cmbWarehouse option:selected').text();
+        const qty = parseFloat($('#txtItemQty').val() || '0');
+        const gross = parseFloat($('#txtGrossWeight').val() || '0');
+        const ebUnit = parseFloat($('#txtEbUnit').val() || '0');
+
+        if (itemId <= 0) {
+            alert('Please select an Item.');
+            return;
+        }
+
+        lineItems.push({
+            itemId: itemId,
+            itemName: itemName,
+            whName: whName,
+            qty: qty,
+            grossWeight: gross,
+            ebUnit: ebUnit,
+            ebTotal: qty * ebUnit
         });
 
-        function setWinDefaultDate() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('txtDocDate').value = `${year}-${month}-${day}`;
+        renderItemsGrid();
+    }
+
+    function renderItemsGrid() {
+        const tbody = $('#grdItemsBody');
+        tbody.empty();
+        if (lineItems.length === 0) {
+            tbody.html('<tr><td colspan="21" class="text-center text-muted py-2">No received items added yet.</td></tr>');
+            $('#sumQty').text('0');
+            $('#sumGrossWt').text('0');
+            return;
         }
 
-        function onItemChange(val) {
-            const opt = $('#cmbItem option:selected');
-            const price = parseFloat(opt.attr('data-price') || '0');
-            if (price > 0) {
-                $('#txtRate').val(price.toFixed(2));
+        let totalQty = 0, totalGross = 0;
+        lineItems.forEach((item, idx) => {
+            totalQty += item.qty;
+            totalGross += item.grossWeight;
+            tbody.append(`
+                <tr>
+                    <td class="text-center"><button class="btn btn-sm btn-danger py-0 px-1" onclick="removeLine(${idx})">&times;</button></td>
+                    <td>-</td>
+                    <td>${item.whName}</td>
+                    <td>${item.itemName}</td>
+                    <td>2025-26</td>
+                    <td>General</td>
+                    <td>PP Bags</td>
+                    <td>KGs</td>
+                    <td class="text-end">${item.qty}</td>
+                    <td class="text-end">${item.grossWeight}</td>
+                    <td class="text-end">${item.ebUnit}</td>
+                    <td class="text-end">${item.ebTotal}</td>
+                    <td class="text-end">0</td>
+                    <td>-</td>
+                    <td class="text-end">0</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="text-end">0</td>
+                    <td class="text-end">0</td>
+                    <td class="text-end">0</td>
+                    <td class="text-end">0</td>
+                </tr>
+            `);
+        });
+
+        $('#sumQty').text(totalQty.toFixed(2));
+        $('#sumGrossWt').text(totalGross.toFixed(2));
+    }
+
+    function removeLine(idx) {
+        lineItems.splice(idx, 1);
+        renderItemsGrid();
+    }
+
+    function onSaveRecord() {
+        const payload = {
+            id: parseInt($('#txtId').val() || '0'),
+            docNo: parseInt($('#txtDocNo').val() || '0'),
+            docDate: $('#txtDocDate').val(),
+            supplierCustomerId: parseInt($('#cmbSupplier').val() || '0'),
+            vehicleNo: $('#txtVehicleNo').val(),
+            biltyNo: $('#txtBiltyNo').val(),
+            remarksHeader: $('#txtRemarks').val(),
+            details: lineItems
+        };
+
+        return fetch('/api/market-grn/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) {
+                onNewRecord();
             }
-            calcLineAmount();
+        });
+    }
+
+    function onNewRecord() {
+        $('#txtId').val('0');
+        lineItems = [];
+        renderItemsGrid();
+        $('#txtRemarks').val('');
+        $('#txtBiltyNo').val('');
+        $('#txtVehicleNo').val('');
+        $('#cmbSupplier').val('0').trigger('change.select2');
+    }
+
+    function onRefreshForm() { onNewRecord(); }
+
+    function switchMode(mode) {
+        if (mode === 'History') {
+            $('#viewForm').hide();
+            $('#viewHistory').show();
+            $('#btnModeForm').removeClass('active');
+            $('#btnModeHistory').addClass('active');
+            loadHistory();
+        } else {
+            $('#viewForm').show();
+            $('#viewHistory').hide();
+            $('#btnModeForm').addClass('active');
+            $('#btnModeHistory').removeClass('active');
         }
+    }
 
-        function calcLineAmount() {
-            const qty = parseFloat($('#txtQty').val() || '0');
-            const rate = parseFloat($('#txtRate').val() || '0');
-            const amt = qty * rate;
-            $('#txtAmount').val(amt.toFixed(2));
-        }
-
-        function btnAddRow_Click() {
-            const itemId = parseInt($('#cmbItem').val() || '0');
-            const itemCodeText = $('#cmbItem option:selected').text();
-            const parts = itemCodeText.split(' - ');
-            const itemCode = parts[0] || '';
-            const itemName = parts[1] || itemCodeText;
-            const qty = parseFloat($('#txtQty').val() || '0');
-            const rate = parseFloat($('#txtRate').val() || '0');
-            const amount = parseFloat($('#txtAmount').val() || '0');
-            const remarks = $('#txtLineRemarks').val() || '';
-            const whId = parseInt($('#cmbWarehouse').val() || '0');
-            const whName = whId > 0 ? $('#cmbWarehouse option:selected').text() : '';
-            const jobLotId = parseInt($('#cmbJobLot').val() || '0');
-            const jobLotCode = jobLotId > 0 ? $('#cmbJobLot option:selected').text() : '';
-
-            if (itemId <= 0) {
-                alert("Please select a valid Item.");
-                $('#cmbItem').focus();
-                return;
-            }
-            if (qty <= 0) {
-                alert("Received Quantity must be greater than zero.");
-                $('#txtQty').focus();
-                return;
-            }
-
-            const item = {
-                lineId: lineItems.length + 1,
-                itemId: itemId,
-                itemCode: itemCode,
-                itemName: itemName,
-                quantity: qty,
-                itemRate: rate,
-                amount: amount,
-                warehouseId: whId,
-                warehouseName: whName,
-                jobLotId: jobLotId,
-                jobLotCode: jobLotCode,
-                remarks: remarks
-            };
-
-            lineItems.push(item);
-            renderGrid();
-
-            $('#cmbItem').val('0').trigger('change.select2');
-            $('#txtQty').val('');
-            $('#txtRate').val('');
-            $('#txtAmount').val('');
-            $('#txtLineRemarks').val('');
-        }
-
-        function removeLineItem(idx) {
-            lineItems.splice(idx, 1);
-            lineItems.forEach((item, i) => item.lineId = i + 1);
-            renderGrid();
-        }
-
-        function renderGrid() {
-            const tbody = $('#grdDetailTbody');
-            tbody.empty();
-
-            if (lineItems.length === 0) {
-                tbody.html('<tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No received items added yet. Select an item and click + Add Item.</td></tr>');
-                updateTotals(0, 0);
-                return;
-            }
-
-            let grandQty = 0;
-            let grandTotal = 0;
-
-            lineItems.forEach((item, idx) => {
-                grandQty += item.quantity;
-                grandTotal += item.amount;
-
-                tbody.append(`
-                    <tr>
-                        <td style="text-align: center; font-weight: bold;">${item.lineId}</td>
-                        <td><strong style="color: #008080;">${escapeHtml(item.itemCode)}</strong></td>
-                        <td>${escapeHtml(item.itemName)}</td>
-                        <td style="text-align: right;">${item.quantity.toFixed(2)}</td>
-                        <td style="text-align: right;">${item.itemRate.toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: bold;">${item.amount.toFixed(2)}</td>
-                        <td>${escapeHtml(item.warehouseName)}</td>
-                        <td>${escapeHtml(item.jobLotCode)}</td>
-                        <td>${escapeHtml(item.remarks)}</td>
-                        <td style="text-align: center;">
-                            <button type="button" class="btn btn-danger btn-xs" style="padding: 0 5px; font-size: 10px;" onclick="removeLineItem(${idx})">&times;</button>
-                        </td>
-                    </tr>
-                `);
+    function loadHistory() {
+        fetch('/api/market-grn/history')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = $('#grdHistoryBody');
+                tbody.empty();
+                data.forEach(row => {
+                    tbody.append(`
+                        <tr>
+                            <td><a href="#" onclick="loadRecord(${row.id})">${row.docNo}</a></td>
+                            <td>${row.docDate || ''}</td>
+                            <td>${row.supplierName || ''}</td>
+                            <td>${row.vehicleNo || ''}</td>
+                            <td>${row.biltyNo || ''}</td>
+                            <td>${row.remarks || ''}</td>
+                            <td>${row.entryDate || ''}</td>
+                            <td><button class="btn btn-sm btn-primary py-0 px-2" onclick="loadRecord(${row.id})">Edit</button></td>
+                        </tr>
+                    `);
+                });
             });
+    }
 
-            updateTotals(grandQty, grandTotal);
-        }
-
-        function updateTotals(qty, total) {
-            $('#lblTotalQty').text(qty.toFixed(2));
-            $('#lblNetTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
-
-        function btnSave_Click() {
-            const suppId = parseInt($('#cmbSupplier').val() || '0');
-            if (suppId <= 0) {
-                alert("Please select a valid Supplier.");
-                $('#cmbSupplier').focus();
-                return;
-            }
-            if (lineItems.length === 0) {
-                alert("At least one received item is required before saving.");
-                return;
-            }
-
-            const dto = {
-                documentTypeId: 36,
-                docNo: parseInt($('#txtDocNo').val() || '0'),
-                docDate: $('#txtDocDate').val(),
-                supplierId: suppId,
-                biltyNo: $('#txtBiltyNo').val(),
-                vehicleNo: $('#txtVehicleNo').val(),
-                remarks: $('#txtRemarks').val(),
-                lineItems: lineItems
-            };
-
-            $.ajax({
-                url: '/api/purchase/save',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(dto),
-                success: function(res) {
-                    if (res && res.success) {
-                        alert(res.message || "Goods Receipt Note (GRN) saved successfully.");
-                        btnNew_Click();
-                    } else {
-                        alert("Error saving GRN: " + (res.message || "Unknown error"));
-                    }
-                },
-                error: function(xhr) {
-                    alert("Error saving transaction.");
+    function loadRecord(id) {
+        switchMode('Form');
+        fetch(`/api/market-grn/${id}`)
+            .then(res => res.json())
+            .then(res => {
+                if (res) {
+                    $('#txtId').val(res.Id || id);
+                    $('#txtDocNo').val(res.DocNo || '');
+                    $('#txtDocDate').val(res.DocDate ? res.DocDate.split('T')[0] : '');
+                    $('#cmbSupplier').val(res.SupplierCustomerId || 0).trigger('change.select2');
+                    $('#txtVehicleNo').val(res.VehicleNo || '');
+                    $('#txtBiltyNo').val(res.BiltyNo || '');
+                    $('#txtRemarks').val(res.RemarksHeader || '');
                 }
             });
-        }
-
-        function btnNew_Click() {
-            lineItems = [];
-            renderGrid();
-            $('#txtRemarks').val('');
-            $('#txtBiltyNo').val('');
-            $('#txtVehicleNo').val('');
-            $('#cmbSupplier').val('0').trigger('change.select2');
-            $('#cmbItem').val('0').trigger('change.select2');
-            $('#cmbWarehouse').val('0').trigger('change.select2');
-            $('#cmbJobLot').val('0').trigger('change.select2');
-            setWinDefaultDate();
-            $.ajax({
-                url: '/api/purchase/next-code?docType=36',
-                type: 'GET',
-                success: function(res) {
-                    if (res && res.docNo) {
-                        $('#txtDocNo').val(res.docNo);
-                        $('#lblVoucherDisplayHeader').text("GRN-2026-" + String(res.docNo).padStart(4, '0'));
-                    }
-                }
-            });
-        }
-
-        function btnRefresh_Click() { btnNew_Click(); }
-    </script>
+    }
+</script>
 </body>
 </html>

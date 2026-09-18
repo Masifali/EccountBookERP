@@ -33,169 +33,127 @@
     </style>
 </head>
 <body>
-    <div class="erp-header">
-        <div><i class="fa fa-list-alt"></i> Wages Report (With Activities)</div>
-        <div><a href="/contractor-wages?tab=report" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Contractor Wages</a></div>
-    </div>
 
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary" onclick="loadWagesActivityReport()"><i class="fa fa-search"></i> Show Report (F5)</button>
-        <button type="button" class="btn-erp btn-erp-excel" onclick="exportToExcel()"><i class="fa fa-file-excel-o"></i> Export to Excel</button>
-        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-    </div>
+<!-- ==========================================================================
+     Wages Report (With Activities)
+     Ditto Architecture.WinApp.Pcc.Reports\WagesReportWithActivities.cs (116 KB).
+     label23 "Wages Report With Activities" (:2033); groupBox1 "Filters" (:1503).
 
-    <div style="padding: 10px;">
-        <div class="erp-fieldset">
-            <legend>Filter Parameters</legend>
-            <div class="row">
-                <div class="col-md-2">
-                    <label class="form-label-erp">From Date</label>
-                    <input type="date" id="txtFromDate" class="form-control-erp"/>
+     What stood here before was a generic 4-filter page with nine hard-coded columns that POSTed to
+     /accounts/api/reports/wages-report - the PLAIN Wages Report's endpoint, backed by a different
+     procedure - and carried no Report Type selector at all, which is this report's whole point.
+     ========================================================================== -->
+<div class="erp-header">
+    <span>Wages Report With Activities</span>
+    <span th:text="${moduleTitle}">Wages Report (With Activities)</span>
+</div>
+
+<!-- btnNew, btnPrint, btnshortcutkeys (:2046-2067) -->
+<div class="erp-toolbar">
+    <button type="button" class="btn-erp" id="btnNew" onclick="wraNew()"><i class="fa fa-file-o"></i> New</button>
+    <button type="button" class="btn-erp" id="btnPrint" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+    <button type="button" class="btn-erp btn-erp-excel" id="btnExport" onclick="wraExportCsv()"><i class="fa fa-file-excel-o"></i> Export CSV</button>
+    <button type="button" class="btn-erp" id="btnShortcuts" onclick="wraShortcuts()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    <span style="flex:1;"></span>
+    <a class="btn-erp" href="/wages"><i class="fa fa-arrow-left"></i> Contractor Wages</a>
+</div>
+
+<div style="padding:10px;">
+
+    <fieldset class="erp-fieldset">
+        <legend>Filters</legend>
+
+        <div class="row g-2">
+            <!-- label2 "Date Type" - CommonServices.DateType(), Rows[2] active = "This Month" (:432) -->
+            <div class="col-md-2">
+                <label class="form-label-erp">Date Type</label>
+                <select id="cmbDateType" class="form-control-erp" onchange="wraApplyDateType()"></select>
+            </div>
+            <!-- label1 "Date From" / label4 "Date To" -->
+            <div class="col-md-2">
+                <label class="form-label-erp">Date From</label>
+                <input type="date" id="txtDateFrom" class="form-control-erp"/>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-erp">Date To</label>
+                <input type="date" id="txtDateTo" class="form-control-erp"/>
+            </div>
+            <!-- label3 "From Doc && To" - txtFromDoc / txtDocTo -->
+            <div class="col-md-3">
+                <label class="form-label-erp">From Doc &amp; To</label>
+                <div style="display:flex; gap:4px;">
+                    <input type="number" id="txtFromDoc" class="form-control-erp" placeholder="From"/>
+                    <input type="number" id="txtDocTo"   class="form-control-erp" placeholder="To"/>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label-erp">To Date</label>
-                    <input type="date" id="txtToDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Contractor Name</label>
-                    <select id="cmbContractor" class="form-control-erp select2">
-                        <option value="">-- All Contractors --</option>
-                        <option th:each="c : ${contractorsList}" th:value="${c['id'] != null ? c['id'] : (c['Id'] != null ? c['Id'] : '')}" th:text="${c['supplierName'] != null ? c['supplierName'] : (c['SupplierName'] != null ? c['SupplierName'] : (c['companyName'] != null ? c['companyName'] : (c['CompanyName'] != null ? c['CompanyName'] : (c['name'] != null ? c['name'] : ''))))}"></option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Activity Name / Type</label>
-                    <select id="cmbActivity" class="form-control-erp select2">
-                        <option value="">-- All Activities --</option>
-                        <option value="Loading">Loading</option>
-                        <option value="Unloading">Unloading</option>
-                        <option value="Stacking">Stacking</option>
-                        <option value="Stitching">Stitching</option>
-                        <option value="StockTransfer">Stock Transfer</option>
-                    </select>
-                </div>
-                <div class="col-md-2" style="display: flex; align-items: flex-end; padding-bottom: 2px;">
-                    <label style="font-weight: 600; cursor: pointer;">
-                        <input type="checkbox" id="chkIncludeUnposted" checked/> Include Unposted
-                    </label>
+            </div>
+            <!-- RadSales -> ActionId 2, RadProduction -> ActionId 1 (:513-519). Neither checked
+                 leaves ActionId 0, which the BLL omits - kept here as "Both". -->
+            <div class="col-md-3">
+                <label class="form-label-erp">Source</label>
+                <div style="display:flex; gap:10px; align-items:center; height:24px;">
+                    <label style="font-weight:normal; margin:0;"><input type="radio" name="radSource" id="RadBoth" value="0" checked> Both</label>
+                    <label style="font-weight:normal; margin:0;"><input type="radio" name="radSource" id="RadSales" value="2"> Sales</label>
+                    <label style="font-weight:normal; margin:0;"><input type="radio" name="radSource" id="RadProduction" value="1"> Production</label>
                 </div>
             </div>
         </div>
 
-        <div class="erp-table-container">
-            <table class="erp-table" id="tblWagesActivityReport">
-                <thead>
-                    <tr>
-                        <th style="width: 4%; text-align: center;">Sr #</th>
-                        <th style="width: 8%;">Date</th>
-                        <th style="width: 10%;">Doc No</th>
-                        <th style="width: 14%;">Activity Name</th>
-                        <th style="width: 20%;">Contractor Name</th>
-                        <th style="width: 18%;">Item / Commodity</th>
-                        <th style="width: 8%; text-align: right;">Bags / Qty</th>
-                        <th style="width: 8%; text-align: right;">Rate / Bag</th>
-                        <th style="width: 10%; text-align: right;">Wages Amount</th>
-                    </tr>
-                </thead>
-                <tbody id="tblBody">
-                    <tr>
-                        <td colspan="9" style="text-align: center; color: #64748b; padding: 20px;">Click "Show Report" to fetch activity detailed wages report.</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="row g-2" style="margin-top:6px;">
+            <!-- label7 "Plant Name" -->
+            <div class="col-md-2">
+                <label class="form-label-erp">Plant Name</label>
+                <select id="Cmbplant" class="form-control-erp wra-select2"><option value="">...Select Any Value...</option></select>
+            </div>
+            <!-- label9 "Item Name" -->
+            <div class="col-md-2">
+                <label class="form-label-erp">Item Name</label>
+                <select id="cmbItem" class="form-control-erp wra-select2"><option value="">...Select Any Value...</option></select>
+            </div>
+            <!-- label5 "Contractor" -->
+            <div class="col-md-2">
+                <label class="form-label-erp">Contractor</label>
+                <select id="cmbContractor" class="form-control-erp wra-select2"><option value="">...Select Any Value...</option></select>
+            </div>
+            <!-- label6 "Service Activity" -->
+            <div class="col-md-2">
+                <label class="form-label-erp">Service Activity</label>
+                <select id="cmbServiceActivity" class="form-control-erp wra-select2"><option value="">...Select Any Value...</option></select>
+            </div>
+            <!-- label11 "Report Type" - the twelve types from ReportTypeFill() (:338-353) -->
+            <div class="col-md-3">
+                <label class="form-label-erp">Report Type</label>
+                <select id="cmbReportType" class="form-control-erp wra-select2"></select>
+            </div>
+            <div class="col-md-1" style="display:flex; align-items:flex-end;">
+                <!-- btnshow "Show" (:1613) -->
+                <button type="button" class="btn-erp btn-erp-primary" id="btnShow" onclick="wraShow()" style="width:100%; justify-content:center;">Show</button>
+            </div>
         </div>
+    </fieldset>
 
-        <div class="totals-bar">
-            <div>Total Records: <span id="lblTotalRecords">0</span></div>
-            <div>Total Bags / Qty: <span id="lblTotalQty">0.00</span></div>
-            <div>Total Wages Amount: RS <span id="lblTotalAmount">0.00</span></div>
-        </div>
+    <div id="wraMessage" style="display:none; margin-bottom:8px; padding:5px 9px; font-size:11px; font-weight:bold;"></div>
+
+    <!-- Columns are whatever [pcc].[USP_WagesReportWithActivities] returns for the chosen Report
+         Type - the procedure shapes its own result set per @ActivityName, so no per-type column
+         list is hand-written here and none can drift from the procedure. -->
+    <div class="erp-table-container">
+        <table class="erp-table" id="tblWagesActivityReport">
+            <thead><tr id="tblHead"><th>Choose a Report Type and press Show.</th></tr></thead>
+            <tbody id="tblBody">
+                <tr><td style="text-align:center; padding:16px; color:#64748b;">No data yet.</td></tr>
+            </tbody>
+            <tfoot><tr id="tblFoot"></tr></tfoot>
+        </table>
     </div>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            if (!$('#txtFromDate').val()) $('#txtFromDate').val(today);
-            if (!$('#txtToDate').val()) $('#txtToDate').val(today);
-            $('.select2').select2({ width: '100%' });
-        });
-        function loadWagesActivityReport() {
-            const req = {
-                fromDate: $('#txtFromDate').val(),
-                toDate: $('#txtToDate').val(),
-                contractorId: $('#cmbContractor').val(),
-                activityName: $('#cmbActivity').val(),
-                includeUnposted: $('#chkIncludeUnposted').is(':checked')
-            };
+    <div class="totals-bar">
+        <span>Records: <b id="lblTotalRecords">0</b></span>
+        <span>Qty: <b id="lblTotalQty">0.00</b> &nbsp;|&nbsp; Amount: <b id="lblTotalAmount">0.00</b></span>
+    </div>
+</div>
 
-            $('#tblBody').html('<tr><td colspan="9" style="text-align: center; padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading Activity Wages Report...</td></tr>');
-
-            $.ajax({
-                url: '/accounts/api/reports/wages-report',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(req),
-                success: function(res) {
-                    if (res && res.data && res.data.length > 0) {
-                        let html = '';
-                        let totQty = 0, totAmt = 0;
-                        res.data.forEach((r, i) => {
-                            const qty = parseFloat(r.Qty || r.Bags || 0);
-                            const rate = parseFloat(r.Rate || 0);
-                            const amt = parseFloat(r.Amount || r.WagesAmount || r.Debit || 0);
-                            totQty += qty;
-                            totAmt += amt;
-
-                            html += `
-                                <tr>
-                                    <td style="text-align: center;">${i + 1}</td>
-                                    <td>${r.VoucherDate || r.Date || ''}</td>
-                                    <td>${r.VoucherNo || r.DocumentNo || ''}</td>
-                                    <td><span class="badge" style="background-color:#00796B;">${r.ActivityName || r.DocType || 'Wages'}</span></td>
-                                    <td>${r.ContractorName || r.SupplierName || ''}</td>
-                                    <td>${r.ItemName || r.Commodity || ''}</td>
-                                    <td style="text-align: right;">${qty.toFixed(2)}</td>
-                                    <td style="text-align: right;">${rate.toFixed(2)}</td>
-                                    <td style="text-align: right; font-weight: 600;">${amt.toFixed(2)}</td>
-                                </tr>
-                            `;
-                        });
-                        $('#tblBody').html(html);
-                        $('#lblTotalRecords').text(res.data.length);
-                        $('#lblTotalQty').text(totQty.toFixed(2));
-                        $('#lblTotalAmount').text(totAmt.toFixed(2));
-                    } else {
-                        $('#tblBody').html('<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 20px;">No records found for the selected activity criteria.</td></tr>');
-                        $('#lblTotalRecords').text('0');
-                        $('#lblTotalQty').text('0.00');
-                        $('#lblTotalAmount').text('0.00');
-                    }
-                },
-                error: function(err) {
-                    $('#tblBody').html('<tr><td colspan="9" style="text-align: center; color: #dc2626; padding: 20px;">Error loading activity report from database.</td></tr>');
-                }
-            });
-        }
-
-        function exportToExcel() {
-            let table = document.getElementById("tblWagesActivityReport");
-            let html = table.outerHTML;
-            let blob = new Blob([html], { type: "application/vnd.ms-excel" });
-            let a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = "Wages_Activity_Report.xls";
-            a.click();
-        }
-
-        $(document).keydown(function(e) {
-            if (e.keyCode === 116) { // F5
-                e.preventDefault();
-                loadWagesActivityReport();
-            }
-        });
-    </script>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_wages_report_activities.js}"></script>
 </body>
 </html>

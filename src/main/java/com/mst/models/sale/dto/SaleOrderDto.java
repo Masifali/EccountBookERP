@@ -34,6 +34,11 @@ public class SaleOrderDto {
     private String commType = "Flat";
     private BigDecimal commRate = BigDecimal.ZERO;
     private Integer commUomId;
+    /* What the desktop actually persists is the Comm Uom combo's TEXT parsed as a number -
+     * po.UomScheduleIdCmRate = Conversion.ToInt(combruom.Text), SaleOrder.cs :2873 - i.e. the UOM
+     * itself (1/10/25/40/50/60/80/100), NOT the row Id. commUomId is kept only so the screen can
+     * re-select the same row on load. */
+    private Integer commUomValue;
     private BigDecimal commAmount = BigDecimal.ZERO;
     private String commRemarks;
     
@@ -41,6 +46,8 @@ public class SaleOrderDto {
     private String otherCommType = "Flat";
     private BigDecimal otherCommRate = BigDecimal.ZERO;
     private Integer otherCommUomId;
+    /* po.OtherCommissionUom = Conversion.ToInt(CmbOtherCommissionUom.Text), SaleOrder.cs :2888 */
+    private Integer otherCommUomValue;
     private BigDecimal otherCommAmount = BigDecimal.ZERO;
     private String otherCommRemarks;
     

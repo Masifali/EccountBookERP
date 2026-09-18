@@ -27,8 +27,8 @@ public class SaleOrderController {
     @Autowired
     private SaleOrderAttachmentService saleOrderAttachmentService;
 
-    @Autowired(required = false)
-    private com.mst.services.BranchService branchService;
+    @Autowired
+    private com.mst.security.CurrentUserContext currentUserContext;
 
     @GetMapping
     public String showSaleOrderPage(Model model) {
@@ -40,17 +40,23 @@ public class SaleOrderController {
         int nextDocNo = saleOrderService.generateNextSaleOrderDocNo();
         model.addAttribute("nextCode", nextDocNo);
         model.addAttribute("nextDocNo", nextDocNo);
-        if (branchService != null) {
-            model.addAttribute("branches", branchService.getAllBranches());
-        }
+        // Desktop shows a disabled txtBranchSrNo filled by BranchSrNoFill() from the signed-in
+        // user's own branch (SaleOrder.cs :917-924) - there is no branch picker on this screen.
+        model.addAttribute("branchSrNo",
+                saleOrderService.generateNextSaleOrderBranchSrNo(currentUserContext.currentBranchId()));
         model.addAllAttributes(saleOrderService.getMasterLookups());
         return "sale/sale_order";
     }
 
-    @GetMapping("/api/next-branch-sr-no/{branchId}")
+    /**
+     * Branch serial for the signed-in user's own branch. The branch is NOT a request parameter:
+     * the desktop reads UserAccount.BranchesId (SaleOrder.cs :917), so accepting one from the
+     * client would let a caller pull a serial belonging to a branch they are not in.
+     */
+    @GetMapping("/api/next-branch-sr-no")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getNextBranchSrNo(@PathVariable("branchId") int branchId) {
-        int srNo = saleOrderService.generateNextSaleOrderBranchSrNo(branchId);
+    public ResponseEntity<Map<String, Object>> getNextBranchSrNo() {
+        int srNo = saleOrderService.generateNextSaleOrderBranchSrNo(currentUserContext.currentBranchId());
         return ResponseEntity.ok(Map.of("branchSrNo", srNo));
     }
 

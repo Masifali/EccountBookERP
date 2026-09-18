@@ -121,27 +121,41 @@ public class AccountsModuleViewController {
 			case "contractor-wages-dashboard":
 				model.addAttribute("moduleTitle", "Contractor Wages Dashboard");
 				return "accounts/vouchers/contractor_wages_dashboard";
+			/* Contractor Wages.
+			 *
+			 * These five submodules are five DIFFERENT desktop forms in
+			 * Architecture.WinApp.Contractor_Wages. They all used to return
+			 * "accounts/vouchers/contractor_wages", which is a 96%-identical copy of
+			 * contra_voucher.html: it posts documentTypeId 10 to the voucher save endpoint, so
+			 * pressing Save on any of them wrote a CONTRA VOUCHER, not a wages record. The
+			 * submoduleKey attribute they each set was never read by that template, so all five
+			 * URLs rendered the same page under five different headings.
+			 *
+			 * Wages Account is now built from its own desktop form. The other four return a page
+			 * that names the form each still needs, so no URL silently shows an unrelated screen
+			 * and no one can save the wrong document from them. */
 			case "contractor-wages":
 			case "wages-account":
 				model.addAttribute("moduleTitle", "Wages Account");
-				model.addAttribute("submoduleKey", "wages-account");
-				return "accounts/vouchers/contractor_wages";
+				return "accounts/vouchers/contractor_wages_account";
+			/* Built from frmContractWagesSchedule.cs - see ContractorWagesScheduleService for the
+			 * procedure contract (Sp_InvContractorWagesSchedule_Insert / _Update / _GetAllMethod). */
 			case "wages-rate-schedule":
 				model.addAttribute("moduleTitle", "Wages Rate Schedule");
-				model.addAttribute("submoduleKey", "wages-rate-schedule");
-				return "accounts/vouchers/contractor_wages";
+				return "accounts/vouchers/contractor_wages_schedule";
+			/* Built from frmContractWiseWagesSchedule.cs - same model and procedures as the plain
+			 * schedule, plus ContractorId and its own Company Rate box. */
 			case "wages-rate-schedule-contractor":
 				model.addAttribute("moduleTitle", "Wages Rate Schedule Contractor Wise");
-				model.addAttribute("submoduleKey", "wages-rate-schedule-contractor");
-				return "accounts/vouchers/contractor_wages";
+				return "accounts/vouchers/contractor_wise_wages_schedule";
 			case "labour-wages":
 				model.addAttribute("moduleTitle", "Labour Wages");
-				model.addAttribute("submoduleKey", "labour-wages");
-				return "accounts/vouchers/contractor_wages";
+				model.addAttribute("desktopForm", "frmwagesBillHeader.cs");
+				return "accounts/vouchers/contractor_wages_pending";
 			case "labour-wages-manual":
 				model.addAttribute("moduleTitle", "Labour Wages Manual");
-				model.addAttribute("submoduleKey", "labour-wages-manual");
-				return "accounts/vouchers/contractor_wages";
+				model.addAttribute("desktopForm", "frmWagesBillManual.cs");
+				return "accounts/vouchers/contractor_wages_pending";
 			case "voucher-validation":
 				model.addAttribute("moduleTitle", "Voucher Validation Report");
 				model.addAttribute("accountsList", voucherValidationService.getAllDetailAccounts());

@@ -569,7 +569,11 @@ public class SaleOrderService {
         try {
             int orgId = currentUserContext.currentOrganizationId();
             int compId = currentUserContext.currentCompanyId();
-            int branchId = dto.getBranchId() != null && dto.getBranchId() > 0 ? dto.getBranchId() : currentUserContext.currentBranchId();
+            // Desktop takes the branch from the signed-in user only (UserAccount.BranchesId,
+            // SaleOrder.cs :917 BranchSrNoFill / :2843 po.BranchSrNo). A client-supplied branch
+            // is never honoured - that would let a caller draw a serial from another branch and
+            // break branch isolation.
+            int branchId = currentUserContext.currentBranchId();
             int userId = currentUserContext.currentUserId();
             int finYearId = currentUserContext.currentFinancialYearId();
             boolean isUpdate = dto.getId() != null && dto.getId() > 0;
@@ -738,7 +742,12 @@ public class SaleOrderService {
             Integer brokerAgentId = hasAgent ? dto.getSalesManId() : null;
             String commissionType = hasAgent ? dto.getCommType() : null;
             BigDecimal commRate = hasAgent ? dto.getCommRate() : null;
-            Integer commUomId = hasAgent ? dto.getCommUomId() : null;
+            /* @UomScheduleIdCmRate takes the UOM NUMBER, not the combo's row id:
+               po.UomScheduleIdCmRate = Conversion.ToInt(combruom.Text), SaleOrder.cs :2873.
+               The screen sends it as commUomValue; commUomId is only for re-selecting the row. */
+            Integer commUomId = hasAgent
+                    ? (dto.getCommUomValue() != null ? dto.getCommUomValue() : dto.getCommUomId())
+                    : null;
             BigDecimal commAmount = hasAgent ? dto.getCommAmount() : null;
             String commRemarks = hasAgent ? dto.getCommRemarks() : null;
 
@@ -747,8 +756,13 @@ public class SaleOrderService {
             BigDecimal otherCommRate = hasOtherAgent ? dto.getOtherCommRate() : null;
             BigDecimal otherCommUom = null;
             if (hasOtherAgent) {
-                otherCommUom = "Comm Weight".equals(otherCommType) && dto.getOtherCommUomId() != null
-                        ? BigDecimal.valueOf(dto.getOtherCommUomId()) : BigDecimal.ZERO;
+                /* Same rule for the Other Commission box: po.OtherCommissionUom is the combo's
+                   TEXT as a number (SaleOrder.cs :2888), and it is only carried when the type is
+                   "Comm Weight" - otherwise the desktop stores 0. */
+                Integer otherUomNumber = dto.getOtherCommUomValue() != null
+                        ? dto.getOtherCommUomValue() : dto.getOtherCommUomId();
+                otherCommUom = "Comm Weight".equals(otherCommType) && otherUomNumber != null
+                        ? BigDecimal.valueOf(otherUomNumber) : BigDecimal.ZERO;
             }
             BigDecimal otherCommAmount = hasOtherAgent ? dto.getOtherCommAmount() : null;
             String otherCommRemarks = hasOtherAgent ? dto.getOtherCommRemarks() : null;

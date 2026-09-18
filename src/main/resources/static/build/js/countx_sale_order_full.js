@@ -37,14 +37,186 @@ $(document).ajaxStop(function () { setSaleOrderBusy(false); });
 $(document).ready(function () {
     var today = new Date().toISOString().split('T')[0];
     $('#txtDocDate').val(today);
-    $('#txtDueDate').val(today);
+    /* desktop duedate is Enabled=false and only ever set from Due Days (SaleOrder.cs :749,
+       :1643-1655); a blank form leaves it empty, so nothing is defaulted here. */
     $('#txtDeliveryStartDate').val(today);
     $('#histFromDate').val(today);
     $('#histToDate').val(today);
 
+    initMultiColumnSelect2();
     loadMasterLookups();
     setupEventListeners();
 });
+
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* The desktop's UltraCombo dropdowns are grids: BindDDL shows every column of the bound table
+   except the value member, with the display column recaptioned. attachColumnHeader reproduces the
+   header band. It always replaces whatever header is there, because select2 reuses one dropdown
+   container for every combo on the page. */
+function attachColumnHeader(headerHtml) {
+    setTimeout(function () {
+        var $r = $('.select2-results');
+        $r.find('.select2-col-header').remove();
+        $r.prepend(headerHtml);
+    }, 10);
+}
+
+function initMultiColumnSelect2() {
+    /* Item combo - desktop combitem, ItemDetailFill() :1305-1325. dtitem columns are
+       Id, ItemName, ItemCode, InventoryParentCategoriesId, ItemCategoryId, ItemCategory,
+       ItemTypeId, ItemType, ProductionStageId, ProductionStage; columns 3, 4, 6 and 8 are
+       hidden, so five stay visible: Item | ItemCode | ItemCategory | ItemType | ProductionStage. */
+    $('#lineItem').select2({
+        width: '100%',
+        dropdownAutoWidth: true,
+        templateResult: formatItem5Col,
+        templateSelection: function (state) { return state.text; },
+        escapeMarkup: function (m) { return m; }
+    }).on('select2:open', function () {
+        attachColumnHeader(
+            '<div class="select2-col-header select2-item-header">' +
+                '<span style="flex: 4;">Item</span>' +
+                '<span style="flex: 2;">ItemCode</span>' +
+                '<span style="flex: 3;">ItemCategory</span>' +
+                '<span style="flex: 2;">ItemType</span>' +
+                '<span style="flex: 2;">ProductionStage</span>' +
+            '</div>');
+    });
+
+    /* Item Category / Item Type combo - desktop CmbCategory, :1263-1266. One visible column whose
+       caption follows the radio pair ("Item Category" / "ItemType"). */
+    $('#lineItemCategory').select2({
+        width: '100%',
+        dropdownAutoWidth: true
+    }).on('select2:open', function () {
+        attachColumnHeader(
+            '<div class="select2-col-header select2-item-header">' +
+                '<span style="flex: 1;">' +
+                ($('#radType').is(':checked') ? 'ItemType' : 'Item Category') +
+                '</span></div>');
+    });
+
+    /* Rate UOM - desktop combrateuom, bound from the SAME dtUom as Pack Size (:1353), so it shows
+       the same four columns, only the first one recaptioned. It had no column header at all. */
+    $('#lineRateUom').select2({
+        width: '100%',
+        dropdownAutoWidth: true,
+        templateResult: formatUom4Col,
+        templateSelection: function (state) { return state.text; },
+        escapeMarkup: function (m) { return m; }
+    }).on('select2:open', function () {
+        attachColumnHeader(
+            '<div class="select2-col-header select2-uom-header">' +
+                '<span style="flex: 2;">RateUOM</span>' +
+                '<span style="flex: 2; text-align: right;">Equivalent</span>' +
+                '<span style="flex: 2; text-align: right;">QtyEquivalent</span>' +
+                '<span style="flex: 2; text-align: center;">BaseRateUom</span>' +
+            '</div>');
+    });
+
+    /* Comm Type - desktop combcommtype / CmbOtherCommissionType, CommissionTypeFill() :1191-1194,
+       bound with caption "CommissionType" and ZeroIndex: false. Comm Uom - combruom /
+       CmbOtherCommissionUom, CommissionUOMFill() :1209-1212, caption "UOM", ZeroIndex: false.
+       Neither had a column header band before. */
+    $('#cmbCommType, #cmbOtherCommType').select2({ width: '100%', dropdownAutoWidth: true })
+        .on('select2:open', function () {
+            attachColumnHeader('<div class="select2-col-header select2-item-header">' +
+                '<span style="flex: 1;">CommissionType</span></div>');
+        });
+    $('#cmbCommUom, #cmbOtherCommUom').select2({ width: '100%', dropdownAutoWidth: true })
+        .on('select2:open', function () {
+            attachColumnHeader('<div class="select2-col-header select2-item-header">' +
+                '<span style="flex: 1;">UOM</span></div>');
+        });
+
+    // Pack Size / Pack Uom 4-Column Dropdown
+    $('#linePackUom').select2({
+        width: '100%',
+        dropdownAutoWidth: true,
+        templateResult: formatUom4Col,
+        templateSelection: function (state) { return state.text; },
+        escapeMarkup: function (m) { return m; }
+    }).on('select2:open', function () {
+        attachColumnHeader(
+            '<div class="select2-col-header select2-uom-header">' +
+                '<span style="flex: 2;">PackUOM</span>' +
+                '<span style="flex: 2; text-align: right;">Equivalent</span>' +
+                '<span style="flex: 2; text-align: right;">QtyEquivalent</span>' +
+                '<span style="flex: 2; text-align: center;">BaseRateUom</span>' +
+            '</div>');
+    });
+
+    // Party / SalesMan / Booking Person 3-Column Dropdown
+    $('#cmbCustomer, #cmbSalesMan, #cmbOtherSalesMan, #cmbBookingPerson').select2({
+        width: '100%',
+        dropdownAutoWidth: true,
+        templateResult: formatParty3Col,
+        templateSelection: function (state) { return state.text; },
+        escapeMarkup: function (m) { return m; }
+    }).on('select2:open', function () {
+        /* Desktop CompanyNameBind(:1078-1104) uses ONE binding for all three party combos and only
+           the first column's caption changes: "Customer Name"/"Customer Code", "SalesMan Name",
+           "OtherCommissionAgent". Columns 3 (GlAccountId) and 4 (CityId) are hidden, leaving
+           Name | PartyCode | CityName. */
+        var id = $(this).attr('id');
+        var titleHeader = id === 'cmbCustomer' ? ($('#radPartyCode').is(':checked') ? 'Customer Code' : 'Customer Name')
+                        : id === 'cmbBookingPerson' ? 'Booking Person'
+                        : id === 'cmbOtherSalesMan' ? 'OtherCommissionAgent'
+                        : 'SalesMan Name';
+        attachColumnHeader(
+            '<div class="select2-col-header select2-party-header">' +
+                '<span style="flex: 3;">' + titleHeader + '</span>' +
+                '<span style="flex: 2; padding-left: 6px;">PartyCode</span>' +
+                '<span style="flex: 2; padding-left: 6px;">CityName</span>' +
+            '</div>');
+    });
+}
+
+function formatItem5Col(state) {
+    if (!state.id) return state.text;
+    var $el = $(state.element);
+    var a = function (n) { return $el.attr(n) || ''; };
+    return '<div class="select2-item-row">' +
+        '<span style="flex: 4; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + escapeHtml(state.text) + '</span>' +
+        '<span style="flex: 2; color: #555;">' + escapeHtml(a('data-code')) + '</span>' +
+        '<span style="flex: 3; color: #555; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + escapeHtml(a('data-category')) + '</span>' +
+        '<span style="flex: 2; color: #555;">' + escapeHtml(a('data-type')) + '</span>' +
+        '<span style="flex: 2; color: #555;">' + escapeHtml(a('data-stage')) + '</span>' +
+    '</div>';
+}
+
+function formatUom4Col(state) {
+    if (!state.id) return state.text;
+    var $el = $(state.element);
+    var uom = $el.attr('data-uom') || $el.data('uom') || state.text;
+    var eq = $el.attr('data-equivalent') || $el.data('equivalent') || '1';
+    var qtyEq = $el.attr('data-qty-eq') || $el.data('qty-eq') || '1';
+    var isBase = $el.attr('data-base-rate') === '1' || $el.data('base-rate') === '1' || $el.data('base-rate') === 1;
+    var chk = isBase ? '<i class="fa fa-check-square-o text-success"></i>' : '<i class="fa fa-square-o text-muted"></i>';
+    return '<div class="select2-uom-row">' +
+        '<span style="flex: 2; font-weight: 500;">' + escapeHtml(uom) + '</span>' +
+        '<span style="flex: 2; text-align: right;">' + escapeHtml(String(eq)) + '</span>' +
+        '<span style="flex: 2; text-align: right;">' + escapeHtml(String(qtyEq)) + '</span>' +
+        '<span style="flex: 2; text-align: center;">' + chk + '</span>' +
+    '</div>';
+}
+
+function formatParty3Col(state) {
+    if (!state.id) return state.text;
+    var $el = $(state.element);
+    var name = state.text;
+    var code = $el.attr('data-code') || $el.data('code') || '';
+    var city = $el.attr('data-city') || $el.data('city') || '';
+    return '<div class="select2-party-row">' +
+        '<span style="flex: 3; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + escapeHtml(name) + '</span>' +
+        '<span style="flex: 2; color: #555; text-align: left; padding-left: 6px;">' + escapeHtml(code) + '</span>' +
+        '<span style="flex: 2; color: #555; text-align: left; padding-left: 6px;">' + escapeHtml(city) + '</span>' +
+    '</div>';
+}
 
 // =========================================================
 // 1. MASTER LOOKUPS & DROPDOWN BINDING
@@ -54,88 +226,122 @@ function loadMasterLookups() {
         if (!data) return;
         masterLookupsData = data;
 
-        // Location Type - usp_getLocationType (Id, Location). Real DB lookup, not hardcoded.
+        // Location Type
         bindCombo('#cmbLocationType', data.locationTypes, 'Id', 'Location');
 
-        // Order Categories - Sp_InvOrderCategory_GetAllMethod (Id, OrderCategoryName)
+        // Order Categories
         bindCombo('#cmbOrderCategory', data.orderCategories, 'Id', 'OrderCategoryName');
 
-        // Category-I & Category-II - Sp_InvLookup_GetAllMethod (Id, LookupName)
+        // Category-I & Category-II
         bindCombo('#cmbCategoryI', data.categoriesI, 'Id', 'LookupName', '...Select Category-I...');
         bindCombo('#cmbCategoryII', data.categoriesII, 'Id', 'LookupName', '...Select Category-II...');
 
-        // Customers / Parties - USP_GetVendorsAndCustomersWithCityName or Sp_SupplierCustomer_GetAllMethod (Id, CompanyName, PartyCode)
+        // Customers / Parties with PartyCode & CityName
         bindCustomerCombo(data.customers);
 
-        // Booking Persons - Sp_ReferenceParties_GetAllMethod (Id, ReferencePartyName)
-        bindCombo('#cmbBookingPerson', data.bookingPersons, 'Id', 'ReferencePartyName', '...Select Person...');
+        // Booking Persons with PartyCode & CityName
+        bindCombo('#cmbBookingPerson', data.bookingPersons, 'Id', 'ReferencePartyName', '...Select Person...', 'PartyCode', 'CityName');
 
-        // Payment Terms - Sp_InvDueTerms_GetAllMethod (Id, TermsDescription)
+        // Payment Terms
         bindCombo('#cmbPaymentTerm', data.paymentTerms, 'Id', 'TermsDescription');
-        // Delivery Terms - hardcoded in the desktop itself: Load / Ponch (Id, Description)
-        bindCombo('#cmbDeliveryTerm', data.deliveryTerms, 'Id', 'Description');
+        /* desktop binds with insertDefaultRow: true (SaleOrder.cs :1136), which puts a blank row at
+           index 0, then NewEntry() activates Rows[2] - the SECOND real term (:744-748). Reproduced
+           exactly here rather than defaulting to whatever happens to be first. */
+        $('#cmbPaymentTerm').prepend($('<option>', { value: '0', text: '' }));
+        var ptOpts = $('#cmbPaymentTerm option');
+        $('#cmbPaymentTerm').val(ptOpts.length > 2 ? ptOpts.eq(2).val()
+                               : (ptOpts.length > 1 ? ptOpts.eq(1).val() : '0'));
+        applyPaymentTermDueDaysRule();
+        // Delivery Terms
+        /* DeliveryTerms(), SaleOrder.cs :1144-1158, builds this list IN CODE as a fixed
+           two-row table: (1,"Load") (2,"Ponch"), with row 0 activated. The endpoint is used when
+           it supplies rows, but the desktop's own pair is the fallback - the markup previously
+           hard-coded "Load"/"Unload", and "Unload" is not a delivery term this product has. */
+        if (data.deliveryTerms && data.deliveryTerms.length) {
+            bindCombo('#cmbDeliveryTerm', data.deliveryTerms, 'Id', 'Description');
+            /* DeliveryTerms() activates Rows[0], SaleOrder.cs :1154 */
+            var dtOpts = $('#cmbDeliveryTerm option');
+            if (dtOpts.length) { $('#cmbDeliveryTerm').val(dtOpts.eq(0).val()); }
+        } else {
+            bindCombo('#cmbDeliveryTerm',
+                      [{ Id: 1, Description: 'Load' }, { Id: 2, Description: 'Ponch' }],
+                      'Id', 'Description');
+            $('#cmbDeliveryTerm').val('1');
+        }
 
-        // Order Status - hardcoded in the desktop itself (Id, Description)
+        // Order Status
         bindCombo('#cmbOrderStatus', data.orderStatuses, 'Id', 'Description');
 
-        // Commission Agents & Salesmen - SAME customer/supplier list as the Party combo
-        // (desktop's CompanyNameBind binds CmbCustomerName, combsalesman and
-        // CmbOtherCommissionAgent against the identical dtsuppcus DataTable).
-        bindCombo('#cmbSalesMan', data.salesMen, 'Id', 'CompanyName', '...Select Any Value...');
-        bindCombo('#cmbOtherSalesMan', data.otherCommissionAgents, 'Id', 'CompanyName', '...Select Any Value...');
+        // Commission Agents & Salesmen
+        bindCombo('#cmbSalesMan', data.salesMen, 'Id', 'CompanyName', '...Select Any Value...', 'PartyCode', 'CityName');
+        bindCombo('#cmbOtherSalesMan', data.otherCommissionAgents, 'Id', 'CompanyName', '...Select Any Value...', 'PartyCode', 'CityName');
 
-        // Commission Types (hardcoded: Flat/Percent/Comm Weight) & Commission UOMs (SpStaticColumnNames)
+        // Commission Types & Commission UOMs
         bindCombo('#cmbCommType', data.commissionTypes, 'Id', 'Description');
         bindCombo('#cmbOtherCommType', data.commissionTypes, 'Id', 'Description');
         bindCombo('#cmbCommUom', data.commissionUoms, 'Id', 'type');
         bindCombo('#cmbOtherCommUom', data.commissionUoms, 'Id', 'type');
 
-        // Detail Line Items - USP_Item_AllItemsWithModal (Id, ItemName, ItemCode)
+        // Detail Line Items
+        bindItemCategoryCombo();
         bindItemCombo(data.items);
 
-        // CmbCropyr stores both its selected Id and its displayed CropYear text in each detail row.
+        // Crop Years
         bindCombo('#lineCropYear', data.cropYears, 'Id', 'CropYear');
 
-        // Job/Lots - USP_GetJobLotsAllocatedToBranch (Id, JobLotDescription), scoped to the current branch
+        // Job/Lots
         bindCombo('#lineJobLot', data.jobLots, 'Id', 'JobLotDescription');
 
-        // Packing Types - Sp_InvPackingType_GetAllMethod (Id, PackTypeDesc)
+        // Packing Types
         bindCombo('#linePackType', data.packingTypes, 'Id', 'PackTypeDesc');
 
-        // Cities - SP_City_GetAllMethod (Id, CityName) & Warehouses - USP_GetWarehousesAllocatedToBranch (Id, WareHouseName), scoped to the current branch
+        // Cities & Warehouses
         bindCombo('#lineCityArea', data.cities, 'Id', 'CityName');
         bindCombo('#lineWarehouse', data.warehouses, 'Id', 'WareHouseName');
 
-        // Payment Detail dropdown - Sp_InvDueTerms_GetAllMethod (Id, TermsDescription). Real, correct source.
+        // Payment Detail & Expense dropdowns
         bindCombo('#payTerm', data.paymentTerms, 'Id', 'TermsDescription', '-- Select Term --');
-
-        // Desktop OtherItemsBind(): InventoryItemsOther.GetAll -> Sp_InventoryItemsOther_GetAllMethod.
         bindCombo('#expItem', data.otherItems, 'Id', 'OtherItemName', '-- Select Item --');
-
-        // History Customer Search Combo
         bindCombo('#histCustomerCombo', data.customers, 'Id', 'CompanyName', '...Select Customer...');
     });
 }
 
-function bindCombo(selector, items, valueAttr, textAttr, defaultText) {
+function bindCombo(selector, items, valueAttr, textAttr, defaultText, codeAttr, cityAttr) {
     var $el = $(selector).empty();
     if (defaultText) {
         $el.append($('<option>', { value: '', text: defaultText }));
     }
     if (items && items.length > 0) {
         items.forEach(function (item) {
-            $el.append($('<option>', {
+            var opt = $('<option>', {
                 value: item[valueAttr],
                 text: item[textAttr] || item[valueAttr]
-            }));
+            });
+            if (codeAttr && item[codeAttr]) opt.attr('data-code', item[codeAttr]);
+            if (cityAttr && item[cityAttr]) opt.attr('data-city', item[cityAttr]);
+            $el.append(opt);
         });
     }
-    // select2 (".so-select2", see sale_order.html) does not notice raw DOM <option> changes made
-    // via jQuery .empty()/.append() - it only refreshes its rendered list/selection on the
-    // underlying <select>'s native 'change' event. Every dropdown on this screen is searchable
-    // now (matching the real desktop's 30 AutoCompleteMode/AutoSuggestFilterMode UltraCombo
-    // controls - see SaleOrder.cs), so this is required after every rebuild, not just cosmetic.
     $el.trigger('change');
+}
+
+/* combpttrm_Leave, SaleOrder.cs :1643-1655. Due Days is enabled for every payment term except
+   PaymentTermsId 1 and 3, where the desktop clears it AND disables it. Term 2 additionally
+   requires a non-zero Due Days at save time (:1766), which saveSaleOrder already enforces. */
+/* ((UltraGridBase)combruom).Rows[0].Activate(), SaleOrder.cs :3831 / :1210. */
+function resetCommUomToFirstRow(selector) {
+    var $opts = $(selector + ' option');
+    if ($opts.length) { $(selector).val($opts.eq(0).val()).trigger('change.select2'); }
+    recalcCommissionAmounts();
+}
+
+function applyPaymentTermDueDaysRule() {
+    var termId = parseInt($('#cmbPaymentTerm').val(), 10) || 0;
+    if (termId === 1 || termId === 3) {
+        $('#txtDueDays').val('').prop('disabled', true);
+    } else {
+        $('#txtDueDays').prop('disabled', false);
+    }
 }
 
 function bindCustomerCombo(customers) {
@@ -145,22 +351,94 @@ function bindCustomerCombo(customers) {
         var searchByCode = $('#radPartyCode').is(':checked');
         customers.forEach(function (c) {
             var label = searchByCode ? ((c.PartyCode || '') + ' - ' + c.CompanyName) : c.CompanyName;
-            $el.append($('<option>', { value: c.Id, text: label }));
+            var opt = $('<option>', { value: c.Id, text: label });
+            opt.attr('data-code', c.PartyCode || '');
+            opt.attr('data-city', c.CityName || '');
+            $el.append(opt);
         });
     }
-    $el.trigger('change'); // refresh select2 (".so-select2") after rebuilding options - see bindCombo()
+    $el.trigger('change');
+}
+
+/* Case-tolerant field read: these rows come straight from USP_Item_AllItemsWithModal, and the
+   proc's own alias for the production stage is lower-cased ("productionStageName" on
+   Architecture.Model.Main.getGlobalAllItems). No value is invented - a missing column reads ''. */
+function itemField(row, names) {
+    for (var i = 0; i < names.length; i++) {
+        if (row[names[i]] !== undefined && row[names[i]] !== null) return String(row[names[i]]);
+    }
+    var keys = Object.keys(row);
+    for (var j = 0; j < names.length; j++) {
+        for (var k = 0; k < keys.length; k++) {
+            if (keys[k].toLowerCase() === names[j].toLowerCase() &&
+                row[keys[k]] !== undefined && row[keys[k]] !== null) return String(row[keys[k]]);
+        }
+    }
+    return '';
+}
+
+/* ItemdtFillFromAll / CategoryOrTypeFill, SaleOrder.cs :1229 and :1278 - both start from the global
+   item list with ItemTypeOfTypeId 14 and 17 excluded. The web was binding every item, unfiltered. */
+function saleOrderSelectableItems() {
+    var items = (masterLookupsData && masterLookupsData.items) || [];
+    return items.filter(function (i) {
+        var t = parseInt(itemField(i, ['ItemTypeOfTypeId']) || '0', 10) || 0;
+        return t !== 14 && t !== 17;
+    });
+}
+
+/* CategoryOrTypeFill(), SaleOrder.cs :1225-1270: distinct (ItemCategoryId, ItemCategory) when the
+   Category radio is on, distinct (ItemTypeId, ItemType) when Type is on, no blank row
+   (insertDefaultRow: false). This combo did not exist on the web at all. */
+function bindItemCategoryCombo() {
+    var byType = $('#radType').is(':checked');
+    var idKey = byType ? 'ItemTypeId' : 'ItemCategoryId';
+    var txtKey = byType ? 'ItemType' : 'ItemCategory';
+    var previous = $('#lineItemCategory').val();
+    var seen = {}, rows = [];
+    saleOrderSelectableItems().forEach(function (i) {
+        var text = itemField(i, [txtKey]);
+        if (!text) return;
+        if (seen[text]) return;
+        seen[text] = true;
+        rows.push({ id: itemField(i, [idKey]), text: text });
+    });
+    var $el = $('#lineItemCategory').empty();
+    $el.append($('<option>', { value: '', text: '' }));
+    rows.forEach(function (r) { $el.append($('<option>', { value: r.id, text: r.text })); });
+    if (previous && $el.find('option[value="' + previous + '"]').length) { $el.val(previous); }
+    $el.trigger('change');
 }
 
 function bindItemCombo(items) {
     var $el = $('#lineItem').empty();
-    $el.append('<option value="">-- Select Item --</option>');
-    if (items) {
-        var searchByCode = $('#radCode').is(':checked');
-        items.forEach(function (i) {
-            var label = searchByCode ? (i.ItemCode + ' - ' + i.ItemName) : i.ItemName;
-            $el.append($('<option>', { value: i.Id, text: label, 'data-code': i.ItemCode, 'data-name': i.ItemName }));
-        });
-    }
+    /* ZeroIndex: true on the desktop binding (:1314) - the first row is the filter/blank row. */
+    $el.append('<option value="">...Select Any Value...</option>');
+    var searchByCode = $('#radCode').is(':checked');
+    var byType = $('#radType').is(':checked');
+    var filterId = parseInt($('#lineItemCategory').val() || '0', 10) || 0;
+    var source = (items && items.length) ? items : saleOrderSelectableItems();
+    source.forEach(function (i) {
+        var typeOfType = parseInt(itemField(i, ['ItemTypeOfTypeId']) || '0', 10) || 0;
+        if (typeOfType === 14 || typeOfType === 17) return;               /* :1229 */
+        if (filterId > 0) {                                                /* :1293-1296 */
+            var own = parseInt(itemField(i, [byType ? 'ItemTypeId' : 'ItemCategoryId']) || '0', 10) || 0;
+            if (own !== filterId) return;
+        }
+        var itemName = itemField(i, ['ItemName']);
+        var itemCode = itemField(i, ['ItemCode']);
+        /* The desktop swaps the DISPLAY MEMBER between ItemName and ItemCode (:1314 vs :1318);
+           it never concatenates the two into one label. */
+        $el.append($('<option>', {
+            value: itemField(i, ['Id']),
+            text: searchByCode ? itemCode : itemName,
+            'data-code': itemCode,
+            'data-name': itemName,
+            'data-category': itemField(i, ['ItemCategory']),
+            'data-type': itemField(i, ['ItemType']),
+            'data-stage': itemField(i, ['productionStageName', 'ProductionStage', 'ProductionStageName'])
+        }));
+    });
     $el.trigger('change'); // refresh select2 (".so-select2") after rebuilding options - see bindCombo()
 }
 
@@ -173,9 +451,18 @@ function setupEventListeners() {
         if (masterLookupsData.customers) bindCustomerCombo(masterLookupsData.customers);
     });
 
-    // Item Code vs Name radio toggle
-    $('input[name="radItemSelect"], input[name="radItemFilter"]').change(function () {
-        if (masterLookupsData.items) bindItemCombo(masterLookupsData.items);
+    /* Category/Type radio rebuilds the category combo first, then the item list it filters
+       (desktop RadCategory/RadType -> CategoryOrTypeFill() then ItemdtFillFromAll()). The
+       Name/Code radio only re-labels the item list. */
+    $('input[name="radItemFilter"]').change(function () {
+        bindItemCategoryCombo();
+        bindItemCombo(null);
+    });
+    $('input[name="radItemSelect"]').change(function () {
+        bindItemCombo(null);
+    });
+    $('#lineItemCategory').on('change', function () {
+        bindItemCombo(null);
     });
 
     // Customer Selection -> Fetch Balance Summary
@@ -231,8 +518,24 @@ function setupEventListeners() {
                         uomsWithoutFactor.push(u.UOMCode);
                         eq = null;
                     }
-                    var attrs = { value: u.Id, text: u.UOMCode };
-                    if (eq !== null) { attrs['data-equivalent'] = eq; }
+                    var attrs = {
+                        value: u.Id,
+                        text: u.UOMCode,
+                        'data-uom': u.UOMCode || '',
+                        /* No data-equivalent at all when the schedule has no usable Equivalent.
+                           This used to fall back to the string '1', which parseFloat turned into a
+                           real factor of 1 - exactly what the comment above says must never happen,
+                           and what CalculateWeight() :3620 refuses to do (it zeroes Qty and Weight
+                           instead). QtyEquivalent is a DIFFERENT column and is never a substitute
+                           for Equivalent, so it is carried for display only. */
+                        'data-qty-eq': u.QtyEquivalent != null ? u.QtyEquivalent : '',
+                        /* Both dropdowns are bound to the SAME dtUom, so both show the schedule's
+                           BaseRateUom column - the desktop's Pack Size dropdown is headed
+                           "BaseRateUom" too. BasePackUom only drives which row Pack Size defaults
+                           to (below); it is not what this column displays. */
+                        'data-base-rate': (u.BaseRateUom === true || u.BaseRateUom === 1) ? '1' : '0'
+                    };
+                    if (eq !== null) { attrs['data-equivalent'] = eq; }   /* absent when null */
                     $uom.append($('<option>', attrs));
                     $packUom.append($('<option>', $.extend({}, attrs)));
                     if (u.BaseRateUom === true || u.BaseRateUom === 1) {
@@ -272,6 +575,24 @@ function setupEventListeners() {
             }
             calcLine('qty');
         });
+    });
+
+    $('#cmbPaymentTerm').on('change', applyPaymentTermDueDaysRule);
+
+    /* combcommtype_Leave, SaleOrder.cs :3827-3838, does TWO things: recalculate, and
+       ((UltraGridBase)combruom).Rows[0].Activate() - changing Comm Type snaps the Uom back to the
+       first row. Only the recalculation was ported before. */
+    $('#cmbCommType').on('change', function () { resetCommUomToFirstRow('#cmbCommUom'); });
+    $('#cmbOtherCommType').on('change', function () { resetCommUomToFirstRow('#cmbOtherCommUom'); });
+
+    /* combsalesman_Leave (:1613-1617) and CmbOtherCommissionAgent_Leave (:3932-3936) enable the
+       whole commission block once an agent is chosen. Only txtcommamount (:8417) and
+       txtOtherCommissionAmount (:8380) start disabled, so only those two are toggled here. */
+    $('#cmbSalesMan').on('change', function () {
+        $('#txtCommAmount').prop('disabled', !parseInt($(this).val() || '0', 10));
+    });
+    $('#cmbOtherSalesMan').on('change', function () {
+        $('#txtOtherCommAmount').prop('disabled', !parseInt($(this).val() || '0', 10));
     });
 
     // Due Days -> Due Date Calculation
@@ -393,23 +714,60 @@ function recalcNetRecoverable() {
 // =========================================================
 // 3. DETAIL LINE ITEM ENTRY & GRID
 // =========================================================
+/* Returns a combo's Equivalent, or null when it has none. Never substitutes 1 or 0:
+   CalculateWeight() :3617 reads Cells[2] only when a row is active and the value is > 0, and
+   treats anything else as "no factor". */
+function uomFactor(selectorId) {
+    var opt = $(selectorId + ' option:selected');
+    if (!opt.length || !opt.val()) return null;
+    var raw = opt.attr('data-equivalent');
+    if (raw === undefined || raw === null || raw === '') return null;
+    var n = parseFloat(raw);
+    return (isFinite(n) && n > 0) ? n : null;
+}
+
+/* .NET's Math.Round(x, 0, MidpointRounding.AwayFromZero) - JS Math.round is half-UP, which
+   differs from half-away-from-zero on negatives. TotalAmount() :3674. */
+function roundAwayFromZero(n) {
+    return n < 0 ? -Math.round(-n) : Math.round(n);
+}
+
+/* CalculateWeight(), SaleOrder.cs :3611-3652, and TotalAmount(), :3660-3676.
+ *
+ * Qty and Net Weight are two views of one line joined by the Pack UOM's Equivalent. When there is
+ * no usable factor the desktop ZEROES BOTH (:3620-3624) rather than leaving numbers that were
+ * computed from an assumption. */
 function calcLine(source) {
+    var packEquivalent = uomFactor('#linePackUom');
+
+    if (packEquivalent === null) {
+        $('#lineQty').val('0');          /* :3622 */
+        $('#lineWeight').val('0');       /* :3623 */
+        $('#lineAmount').val('0');
+        return;
+    }
+
     var qty = parseFloat($('#lineQty').val()) || 0;
-    var rate = parseFloat($('#lineRate').val()) || 0;
     var weight = parseFloat($('#lineWeight').val()) || 0;
-    var packEquivalent = parseFloat($('#linePackUom option:selected').attr('data-equivalent')) || 0;
-    var rateEquivalent = parseFloat($('#lineRateUom option:selected').attr('data-equivalent')) || 0;
-    if (source === 'weight' && packEquivalent > 0) {
-        qty = weight / packEquivalent;
+
+    if (source === 'weight') {
+        qty = weight > 0 ? weight / packEquivalent : 0;      /* :3635 */
         $('#lineQty').val(qty.toFixed(3));
-    } else if (packEquivalent > 0) {
-        weight = qty * packEquivalent;
+    } else {
+        weight = qty > 0 ? qty * packEquivalent : 0;         /* :3627 */
         $('#lineWeight').val(weight.toFixed(3));
     }
-    var amount = (weight > 0 && rateEquivalent > 0 && rate > 0)
-        ? Math.round((weight / rateEquivalent) * rate)
+
+    var rate = parseFloat($('#lineRate').val()) || 0;
+    var rateEquivalent = uomFactor('#lineRateUom');
+
+    /* TotalAmount() :3667 - all three must be present, else the amount stays 0 */
+    var amount = (weight > 0 && rateEquivalent !== null && rate > 0)
+        ? roundAwayFromZero((weight / rateEquivalent) * rate)
         : 0;
     $('#lineAmount').val(amount.toFixed(4));
+
+    recalcCommissionAmounts();
 }
 
 function btnAddRow_Click() {
@@ -418,13 +776,16 @@ function btnAddRow_Click() {
     var itemCode = $('#lineItem option:selected').attr('data-code') || '';
     var cropYearId = $('#lineCropYear').val() || '';
     var cropYear = $('#lineCropYear option:selected').text() || '';
-    var jobLot = $('#lineJobLot option:selected').text() || 'General';
-    var packType = $('#linePackType option:selected').text() || 'PP Bags';
-    var packSize = $('#linePackSize').val() || '40 KG';
+    var jobLot = $('#lineJobLot option:selected').text() || '';
+    var packType = $('#linePackType option:selected').text() || '';
     var qty = parseFloat($('#lineQty').val()) || 0;
     var weight = parseFloat($('#lineWeight').val()) || 0;
     var packUomId = $('#linePackUom').val() || '';
     var packUom = $('#linePackUom option:selected').text() || '';
+    /* desktop has ONE control here: combitempck, label36 "Pack Size"; the grid column it fills
+       is PackUom with caption "Pack Size" (SaleOrder.cs :2066). Pack Size is that combo's text,
+       so it is read AFTER packUom - never before it. */
+    var packSize = packUom;
     var rateUomId = $('#lineRateUom').val() || '';
     var rateUom = $('#lineRateUom option:selected').text() || '';
     var rate = parseFloat($('#lineRate').val()) || 0;
@@ -439,22 +800,23 @@ function btnAddRow_Click() {
     var remarks = $('#lineRemarks').val() || '';
     var commOnSale = $('#lineCommOnSale').is(':checked');
 
-    if (!itemId || qty <= 0) {
-        alert('Please select an Item and enter Quantity.');
-        return;
-    }
-
     var jobLotIdVal = $('#lineJobLot').val() || '';
     var packTypeIdVal = $('#linePackType').val() || '';
 
-    // Real desktop per-row required fields (SaleOrder.cs Insert(), see SALE-ORDER-PROGRESS.md
-    // Pass 3): Crop Year, Job Lot, Pack Type, Pack Uom, Net Weight are all mandatory per row.
-    if (!cropYear) { alert('Crop Year not found in detail grid.'); return; }
-    if (!jobLotIdVal) { alert('Job Lot not found in detail grid.'); return; }
-    if (!packTypeIdVal) { alert('Pack Type not found in detail grid.'); return; }
-    if (!packUomId) { alert('Pack Uom not found in detail grid.'); return; }
-    if (weight <= 0) { alert('New Weight not found in detail grid.'); return; }
-    if (rate > 0 && amount <= 0) { alert('Amount not found in detail grid.'); return; }
+    /* FormValidationDetail(), SaleOrder.cs :1817-1893 - ten checks, in this order, with the
+       product's own wording. The previous version merged Item with Qty, reworded the rest using
+       the SAVE-time messages (":2932 ... not found in detail grid"), dropped the Item Rate and
+       Rate UOM checks entirely, and made the Amount check conditional on rate > 0. */
+    if (!itemId || parseInt(itemId, 10) === 0) { alert('Item Name Field is Required'); return; }   /* :1819 */
+    if (!cropYearId)    { alert('Crop Year Field is Required'); return; }                          /* :1825 */
+    if (!jobLotIdVal)   { alert('Job Lot Field is Required'); return; }                            /* :1831 */
+    if (!packTypeIdVal) { alert('Pack Type Field is Required'); return; }                          /* :1837 */
+    if (!packUomId)     { alert('Pack Uom Field is Required'); return; }                           /* :1843 */
+    if (qty <= 0)       { alert('Qty Field is Required'); return; }                                /* :1849 */
+    if (weight <= 0)    { alert('Net Weight Field is Required'); return; }                         /* :1855 */
+    if (rate <= 0)      { alert('Item Rate Field is Required'); return; }                          /* :1861 */
+    if (!rateUomId)     { alert('Rate UOM Field is Required'); return; }                           /* :1867 */
+    if (amount <= 0)    { alert('Item amount Field is Required'); return; }                        /* :1873 */
 
     var itemObj = {
         itemId: itemId,
@@ -504,8 +866,9 @@ function btnAddRow_Click() {
 function renderDetailGrid() {
     var tbody = $('#tblDetail tbody').empty();
     if (currentLineItems.length === 0) {
-        tbody.append('<tr><td colspan="20" class="text-center text-muted" style="padding: 12px;">No order line items added yet. Record: 0 of 0</td></tr>');
+        tbody.append('<tr><td colspan="18" class="text-center text-muted" style="padding: 12px;">No order line items added yet. Record: 0 of 0</td></tr>');
         recalcTotals();
+    renderDetailTotals();
         return;
     }
 
@@ -520,7 +883,6 @@ function renderDetailGrid() {
             <td>${item.packSize}</td>
             <td class="text-end qty-val">${item.quantity.toFixed(2)}</td>
             <td class="text-end wt-val">${item.weight.toFixed(2)}</td>
-            <td>${item.packUom || item.packUomId || ''}</td>
             <td>${item.rateUom}</td>
             <td class="text-end">${item.rate.toFixed(2)}</td>
             <td class="text-end amt-val">${item.amount.toFixed(2)}</td>
@@ -530,12 +892,12 @@ function renderDetailGrid() {
             <td>${item.warehouse || ''}</td>
             <td>${item.labSample || ''}</td>
             <td>${item.remarks || ''}</td>
-            <td class="text-center">${item.commOnSale ? '<i class="fa fa-check text-success"></i>' : ''}</td>
         </tr>`;
         tbody.append(tr);
     });
 
     recalcTotals();
+    renderDetailTotals();
 }
 
 function editLineItem(index) {
@@ -547,7 +909,6 @@ function editLineItem(index) {
     $('#lineCropYear').val(item.cropYearId || '').trigger('change');
     $('#lineJobLot').val(item.jobLotId || '').trigger('change');
     $('#linePackType').val(item.packingTypeId || '').trigger('change');
-    $('#linePackSize').val(item.packSize || '');
     $('#lineQty').val(item.quantity);
     $('#lineWeight').val(item.weight);
     $('#lineRate').val(item.rate);
@@ -590,16 +951,112 @@ function clearLineEntry() {
     $('#lineCommOnSale').prop('checked', false);
 }
 
+/* Grid totals the commission formulas read, matching grd.GetTotal(..., AggregateFunction.Sum). */
+function gridTotal(field) {
+    var t = 0;
+    currentLineItems.forEach(function (item) { t += (parseFloat(item[field]) || 0); });
+    return t;
+}
+
+function gridAverage(field) {
+    if (!currentLineItems.length) return 0;
+    return gridTotal(field) / currentLineItems.length;
+}
+
+/* Detail grid aggregate row. SaleOrder.cs :2067-2091 sets AggregateFunction 2 on QTY, Weight,
+   BagRate, BagWeight and Amount, and AggregateFunction 3 on Rate. Across this code base only two
+   numeric values are ever used and the named forms appear as AggregateFunction.Sum (8,475 uses)
+   and AggregateFunction.Average (251), matching the numeric counts for 2 and 3 exactly - and the
+   columns given 3 are Rate / AvgRate / AvgRate40kg. So 2 = Sum, 3 = Average.
+   The web grid had no total row at all. */
+function renderDetailTotals() {
+    var f2 = function (n) { return (isFinite(n) ? n : 0).toLocaleString(undefined,
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    $('#totQty').text(f2(gridTotal('quantity')));
+    $('#totNetWeight').text(f2(gridTotal('weight')));
+    $('#totRate').text(f2(gridAverage('rate')));
+    $('#totAmount').text(f2(gridTotal('amount')));
+    $('#totBagRate').text(f2(gridTotal('bagPrice')));
+    $('#totBagWeight').text(f2(gridTotal('weightCut')));
+}
+
+/* TotalCommissionAmount(), SaleOrder.cs :3758-3796.
+ *
+ * Three branches keyed on the combo's TEXT, not its id. Note two details that are easy to lose:
+ *   - an empty Rate returns EARLY and leaves the amount untouched (:3762) - it does not zero it;
+ *   - "Comm Weight" divides by the Comm Uom combo's TEXT parsed as a number (:3781), because the
+ *     GetCommissionUom list's text is the divisor itself, not a lookup id.
+ * None of this existed on the web: the Amount box was free-typed and never recomputed. */
+function commissionAmountFor(typeSelector, rateSelector, uomSelector, amountSelector, zeroWhenNoRate) {
+    var rateText = String($(rateSelector).val() === undefined ? '' : $(rateSelector).val()).trim();
+
+    if (rateText === '') {
+        /* TotalOtherCommissionAmount has an explicit else that zeroes (:3895); the regular one
+           simply returns (:3762-3765). */
+        if (zeroWhenNoRate) $(amountSelector).val('0');
+        return;
+    }
+
+    var type = ($(typeSelector + ' option:selected').text() || '').trim();
+    var rate = parseFloat(rateText) || 0;
+
+    if (type === 'Flat') {                                          /* :3766 */
+        $(amountSelector).val(String(rate));
+        return;
+    }
+    if (type === 'Percent') {                                       /* :3771 */
+        var amt = gridTotal('amount') * rate / 100.0;
+        $(amountSelector).val(String(roundAwayFromZero(amt)));
+        return;
+    }
+    if (type === 'Comm Weight') {                                   /* :3781 */
+        var uomText = ($(uomSelector + ' option:selected').text() || '').trim();
+        var m = /-?\d+(?:\.\d+)?/.exec(uomText);
+        var uom = m ? parseFloat(m[0]) : 0;
+        var weight = gridTotal('weight');
+        if (weight > 0 && rate > 0 && uom > 0) {
+            $(amountSelector).val(String(roundAwayFromZero(weight / uom * rate)));
+        } else {
+            $(amountSelector).val('0');                              /* :3791 */
+        }
+    }
+}
+
+function recalcCommissionAmounts() {
+    commissionAmountFor('#cmbCommType', '#txtCommRate', '#cmbCommUom', '#txtCommAmount', false);
+    commissionAmountFor('#cmbOtherCommType', '#txtOtherCommRate', '#cmbOtherCommUom', '#txtOtherCommAmount', true);
+}
+
+/* CalculateTotalInformation(), SaleOrder.cs :3529-3557 */
 function recalcTotals() {
-    var totalQty = 0, totalAmt = 0, totalWt = 0;
-    currentLineItems.forEach(function (item) {
-        totalQty += item.quantity;
-        totalWt += item.weight;
-        totalAmt += item.amount;
-    });
-    $('#txtOrderQty').val(totalQty.toFixed(2));
-    $('#txtOrderWeight').val(totalWt.toFixed(2));
-    $('#txtCurrentOrder').val(totalAmt.toFixed(2));
+    var totalQty = gridTotal('quantity');
+    var totalWt = gridTotal('weight');
+    var totalAmt = gridTotal('amount');
+
+    /* Commission must be recomputed from the new grid totals BEFORE the deduction below reads it. */
+    recalcCommissionAmounts();
+
+    /* :3539-3546 - when the customer IS the commission agent, the order amount is taken NET of
+       that commission. Absent from the web before, so the order amount (and therefore the net
+       recoverable) was overstated whenever a party acted as its own agent. */
+    var customerId = parseInt($('#cmbCustomer').val() || '0', 10);
+
+    var salesManId = parseInt($('#cmbSalesMan').val() || '0', 10);
+    var commAmount = parseFloat($('#txtCommAmount').val()) || 0;
+    if (salesManId > 0 && commAmount > 0 && customerId > 0 && customerId === salesManId) {
+        totalAmt -= commAmount;
+    }
+
+    var otherAgentId = parseInt($('#cmbOtherSalesMan').val() || '0', 10);
+    var otherAmount = parseFloat($('#txtOtherCommAmount').val()) || 0;
+    if (otherAgentId > 0 && otherAmount > 0 && customerId > 0 && customerId === otherAgentId) {
+        totalAmt -= otherAmount;
+    }
+
+    $('#txtOrderQty').val(totalQty.toFixed(2));      /* :3547 Math.Round(,2) */
+    $('#txtOrderWeight').val(totalWt.toFixed(2));    /* :3548 */
+    $('#txtCurrentOrder').val(totalAmt.toFixed(2));  /* :3549 txtOrderAmount */
+
     recalcNetRecoverable();
     paymentAmountReCalculate();
 }
@@ -967,14 +1424,93 @@ function btnNew_Click() {
 
 function btnSave_Click() {
     var custId = $('#cmbCustomer').val();
-    if (!custId) {
-        alert('Please select a Customer / Party.');
-        return;
+
+    /* FormValidation(), SaleOrder.cs :1726-1813 - in this order, with the product's own wording.
+       The web previously had only two checks here, both reworded. The multi-currency checks
+       (:1780-1811) are NOT reproduced: this screen has no Fcy Code / Exchange Rate / Fcy Amount
+       controls at all, so there is nothing to validate - see the note in the progress document. */
+    if (!$('#txtDocNo').val() || parseInt($('#txtDocNo').val(), 10) === 0) {
+        alert('Doc No Field is Required'); return;                                    /* :1728 */
     }
+    if (!$('#cmbOrderCategory').val() || parseInt($('#cmbOrderCategory').val(), 10) === 0) {
+        alert('Order Category Field is Required'); return;                            /* :1734 */
+    }
+    /* :1741 / :1748 - required only when the combo actually has rows to choose from. */
+    if ($('#cmbCategoryI option').length > 1 && !$('#cmbCategoryI').val()) {
+        alert('Category-I Field is Required'); return;
+    }
+    if ($('#cmbCategoryII option').length > 1 && !$('#cmbCategoryII').val()) {
+        alert('Category-II Field is Required'); return;
+    }
+    if (!custId || parseInt(custId, 10) === 0) {
+        alert('Customer Name Field is Required'); return;                             /* :1754 */
+    }
+    if (!$('#cmbPaymentTerm').val() || parseInt($('#cmbPaymentTerm').val(), 10) === 0) {
+        alert('Payment Term Field is Required'); return;                              /* :1760 */
+    }
+    /* :1766 - payment term 2 is Credit; due days are then mandatory. */
+    if (parseInt($('#cmbPaymentTerm').val(), 10) === 2 && (parseInt($('#txtDueDays').val(), 10) || 0) === 0) {
+        alert('Due Days Field is Required'); return;
+    }
+    if (!$('#cmbDeliveryTerm').val() || parseInt($('#cmbDeliveryTerm').val(), 10) === 0) {
+        alert('Delivery Term Field is Required'); return;                             /* :1772 */
+    }
+
     if (currentLineItems.length === 0) {
-        alert('At least one line item must be added in the Detail tab.');
-        return;
+        alert('Grid Record Not Found'); return;                                       /* Insert() :2772 */
     }
+
+    /* Insert() :2799-2828 - the commission cross-checks, in the desktop's order. */
+    var commAgent = parseInt($('#cmbSalesMan').val() || '0', 10);
+    var commRateV = parseFloat($('#txtCommRate').val()) || 0;
+    var commAmtV = parseFloat($('#txtCommAmount').val()) || 0;
+    if (commAgent === 0 && (commAmtV > 0 || commRateV > 0)) {
+        alert('Please Select Commission Agent Required when Commission Amount or Rate is Present'); return;
+    }
+    if (commAgent > 0 && commAmtV <= 0) {
+        alert('Commission Amount Required when Commission Agent is Selected'); return;
+    }
+    if (commAgent > 0 && commRateV <= 0) {
+        alert('Commission Rate Required when Commission Agent is Selected'); return;
+    }
+
+    var oAgent = parseInt($('#cmbOtherSalesMan').val() || '0', 10);
+    var oRateV = parseFloat($('#txtOtherCommRate').val()) || 0;
+    var oAmtV = parseFloat($('#txtOtherCommAmount').val()) || 0;
+    if (oAgent === 0 && (oAmtV > 0 || oRateV > 0)) {
+        alert('Please Select OtherCommission Agent when OtherCommission Amount or Rate is Present'); return;
+    }
+    if (oAgent > 0 && oAmtV <= 0) {
+        alert('OtherCommission Amount Required when OtherCommission Agent is Selected'); return;
+    }
+    if (oAgent > 0 && oRateV <= 0) {
+        alert('OtherCommission Rate Required when OtherCommission Agent is Selected'); return;
+    }
+
+    /* Insert() :2988 - a detail row with no rate is refused outright. The web used to accept
+       rate-0 rows straight into the payload. */
+    for (var ri = 0; ri < currentLineItems.length; ri++) {
+        if (!(parseFloat(currentLineItems[ri].rate) > 0)) {
+            alert('Rate Field Required'); return;
+        }
+    }
+
+    /* Insert() :3138 - the party-limit confirmation. The desktop blocks the save unless the user
+       agrees; the web used to save silently over the limit. */
+    var netRec = parseFloat($('#txtNetRecoverable').val()) || 0;
+    if (netRec > 0) {
+        var msg = 'Party Balance Exceeds Define Limit After This Order\n'
+                + 'GlAmount value (Before this Order) is ' + ($('#txtPartyGlAmount').val() || '0') + '\n'
+                + 'OutstandingOrderAmount value is ' + ($('#txtOutstandingOrder').val() || '0') + '\n'
+                + 'Current OrderAmount value is ' + ($('#txtCurrentOrder').val() || '0') + '\n'
+                + 'Party limit value is ' + ($('#txtPartyLimit').val() || '0') + '\n\n'
+                + 'And NetRecoverableAmount value Will be ' + netRec + '\n'
+                + 'are you Sure to Proceed';
+        if (!confirm(msg)) return;
+    }
+
+    /* Insert() :2783 / :2790 */
+    if (!confirm(currentEditingOrderId ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
 
     // Real desktop Payment Detail validation/fallback (Sp_SaleOrder_Insert flow) - see
     // SALE-ORDER-PROGRESS.md Pass 3. Must run before submit; a failure focuses that tab.
@@ -998,7 +1534,8 @@ function btnSave_Click() {
         dueDate: $('#txtDueDate').val(),
         dueDays: parseInt($('#txtDueDays').val()) || 0,
         deliveryStartDate: $('#txtDeliveryStartDate').val(),
-        deliveryDays: parseInt($('#txtDeliveryDays').val()) || 7,
+        deliveryDays: ($('#txtDeliveryDays').val() || '').trim() === ''
+                      ? null : (parseInt($('#txtDeliveryDays').val(), 10) || 0),
         orderCategoryId: parseInt($('#cmbOrderCategory').val()) || null,
         categoryI_Id: parseInt($('#cmbCategoryI').val()) || null,
         categoryII_Id: parseInt($('#cmbCategoryII').val()) || null,
@@ -1007,8 +1544,13 @@ function btnSave_Click() {
         bookingPersonId: parseInt($('#cmbBookingPerson').val()) || null,
         paymentTermId: parseInt($('#cmbPaymentTerm').val()) || null,
         deliveryTermId: parseInt($('#cmbDeliveryTerm').val()) || null,
-        orderStatusId: parseInt($('#cmbOrderStatus').val()) || 1,
-        branchId: parseInt($('#cmbBranch').val()) || null,
+        /* Insert() :2901 - po.OrderStatus = "Open" is a hard constant; the desktop's CmbStatus
+           combo is a filter control the save ignores. This line used to read #cmbOrderStatus,
+           an element that does not exist on this page, and land on 1 by accident. */
+        orderStatus: 'Open',
+        orderStatusId: 1,
+        /* BranchesId comes from the signed-in user server-side (desktop BranchSrNoFill uses
+           UserAccount.BranchesId, SaleOrder.cs :917). A client-supplied branch is not trusted. */
         salesManId: parseInt($('#cmbSalesMan').val()) || null,
         commType: $('#cmbCommType').val(),
         commRate: parseFloat($('#txtCommRate').val()) || 0,
@@ -1022,6 +1564,25 @@ function btnSave_Click() {
         otherCommAmount: parseFloat($('#txtOtherCommAmount').val()) || 0,
         otherCommRemarks: $('#txtOtherCommRemarks').val(),
         remarks: $('#txtRemarks').val(),
+
+        /* Header fields the desktop writes in Insert() that this payload did not carry.
+           Sending them is what makes the saved row match the desktop's. */
+        catagorySrNo: parseInt($('#txtCatNo').val(), 10) || 0,        /* :2845 txtcatsr */
+        isValidate: $('#chkValidateDO').is(':checked'),               /* :2860 ChkIsValidateOrder */
+        locationTypeId: parseInt($('#cmbLocationType').val(), 10) || 0, /* :2980 per detail row */
+        orderQty: parseFloat($('#txtOrderQty').val()) || 0,           /* :2862 */
+        orderWeight: parseFloat($('#txtOrderWeight').val()) || 0,     /* :2863 */
+        orderAmount: parseFloat($('#txtCurrentOrder').val()) || 0,    /* :2864 txtOrderAmount */
+        /* :2857 stores the delivery term's TEXT, not its id - both are sent so the server can
+           write whichever column the procedure expects. */
+        deliveryTerm: $('#cmbDeliveryTerm option:selected').text() || '',
+        /* :2873 UomScheduleIdCmRate is the Comm Uom combo's TEXT parsed as a number, not its id. */
+        commUomValue: parseFloat(($('#cmbCommUom option:selected').text() || '').replace(/[^0-9.\-]/g, '')) || 0,
+        /* :2886-2893 the Other Commission Uom is written ONLY for "Comm Weight", else 0. */
+        otherCommUomValue: (($('#cmbOtherCommType option:selected').text() || '').trim() === 'Comm Weight')
+            ? (parseFloat(($('#cmbOtherCommUom option:selected').text() || '').replace(/[^0-9.\-]/g, '')) || 0)
+            : 0,
+
         lineItems: currentLineItems.concat(removedLineItems),
         expenseItems: expenseRowsForSave,
         paymentSchedules: paymentResult.rows
@@ -1110,20 +1671,24 @@ function loadOrderIntoForm(id) {
         $('#cmbCustomer').val(data.OrderSupCustId || '').trigger('change');
         $('#txtRemarks').val(data.RemarksHeader || '');
         $('#cmbOrderCategory').val(data.OrderCatagoryId || '');
-        $('#cmbBranch').val(data.BranchesId || '');
+        $('#txtBranchSrNo').val(data.BranchSrNo != null ? data.BranchSrNo : '');
         $('#cmbBookingPerson').val(data.BookingPersonId || '');
         $('#cmbPaymentTerm').val(data.PaymentTermsId || '');
-        $('#txtDueDays').val(data.OrderDueDays != null ? data.OrderDueDays : 0);
+        $('#txtDueDays').val(data.OrderDueDays != null ? data.OrderDueDays : '');
         $('#txtDueDate').val(data.OrderDueDate ? data.OrderDueDate.substring(0, 10) : '');
         $('#cmbDeliveryTerm').val(data.DeliveryTerm || '');
         $('#txtDeliveryStartDate').val(data.DeliveryStartDate ? data.DeliveryStartDate.substring(0, 10) : '');
-        $('#txtDeliveryDays').val(data.DeliveryDays != null ? data.DeliveryDays : 0);
+        $('#txtDeliveryDays').val(data.DeliveryDays != null ? data.DeliveryDays : '');
         $('#cmbSalesMan').val(data.BrokerAgentSupCustId || '');
+        /* An order loaded WITH an agent must arrive with its Amount box already enabled -
+           the desktop reaches the same state through combsalesman_Leave (:1616). */
+        $('#txtCommAmount').prop('disabled', !parseInt(data.BrokerAgentSupCustId || '0', 10));
         $('#cmbCommType').val(data.CommissionType || '');
         $('#txtCommRate').val(data.CommRate != null ? data.CommRate : '');
         $('#txtCommAmount').val(data.CommAmount != null ? data.CommAmount : '');
         $('#txtCommRemarks').val(data.CommissionRemarks || '');
         $('#cmbOtherSalesMan').val(data.OtherCommissionAgentId || '');
+        $('#txtOtherCommAmount').prop('disabled', !parseInt(data.OtherCommissionAgentId || '0', 10));
         $('#cmbOtherCommType').val(data.OtherCommissionType || '');
         $('#txtOtherCommRate').val(data.OtherCommissionRate != null ? data.OtherCommissionRate : '');
         $('#txtOtherCommAmount').val(data.OtherCommissionAmount != null ? data.OtherCommissionAmount : 0);

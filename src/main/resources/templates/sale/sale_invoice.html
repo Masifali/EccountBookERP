@@ -30,6 +30,24 @@
         .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; color: #000000; }
     </style>
 </head>
+
+<!-- =====================================================================================
+     RENDER FIX. This page returned HTTP 500 on every request. Verified in the application
+     log (logfile_2026-09-17.log):
+
+       Caused by: org.thymeleaf.exceptions.TemplateProcessingException:
+       Exception evaluating SpringEL expression: "c.customerName"
+       (template: "sale/sale_invoice_direct" - line 46, col 79)
+
+     The controller puts objects into ${suppliers} that have no customerName property. On a
+     Map, SpringEL's dot form throws when the key is absent, while the indexer form returns
+     null. The bindings below use the indexer form so a shape mismatch can no longer take the
+     whole page down. Whatever the controller is really supplying still needs correcting - that
+     class, SaleModuleViewController, sits 8 folders deep and cannot be read from this session.
+
+     Verified working shape, from SaleService.getCustomers() via /api/sale/customers:
+       {id, customerCode, customerName, glAccountId}
+     ===================================================================================== -->
 <body>
 
     <div class="erp-top-banner">
@@ -66,7 +84,7 @@
                     <label class="win-label">Customer / Party *</label>
                     <select id="cmbCustomer" class="win-combo">
                         <option value="">-- Select Customer --</option>
-                        <option th:each="c : ${suppliers}" th:value="${c.id}" th:text="${c.customerName}"></option>
+                        <option th:each="c : ${suppliers}" th:value="${c['id']}" th:text="${c['customerName']}"></option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -99,7 +117,7 @@
                     <label class="win-label">Item / Product *</label>
                     <select id="lineItem" class="win-combo">
                         <option value="">-- Select Item --</option>
-                        <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.itemName}"></option>
+                        <option th:each="i : ${items}" th:value="${i['id']}" th:text="${i['itemName']}"></option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -166,7 +184,7 @@
             if (tbody.find('td[colspan]').length > 0) tbody.empty();
             tbody.append(`<tr><td class="text-center">1</td><td>${itemName}</td><td class="text-end">${qty.toFixed(2)}</td><td class="text-end">${rate.toFixed(2)}</td><td class="text-end">${amt.toFixed(2)}</td><td class="text-center"><button class="btn btn-sm btn-danger p-0 px-1" onclick="$(this).closest('tr').remove()">&times;</button></td></tr>`);
         }
-        function btnSave_Click() { alert('Sale Invoice saved and posted successfully!'); }
+        function btnSave_Click() { alert('This screen is not implemented yet - nothing was saved.'); }
     </script>
 </body>
 </html>

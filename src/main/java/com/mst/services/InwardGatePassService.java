@@ -54,7 +54,7 @@ public class InwardGatePassService {
     public Map<String, Object> saveRecord(InwardGatePass obj) {
         Map<String, Object> res = new HashMap<>();
         try {
-            // Deskop validation rules
+            // Desktop validation rules
             if (obj.getSupplierCustomerId() == null || obj.getSupplierCustomerId() <= 0) {
                 res.put("success", false);
                 res.put("message", "Supplier Name Field is Required!");
@@ -64,6 +64,31 @@ public class InwardGatePassService {
                 res.put("success", false);
                 res.put("message", "City Name Field is Required!");
                 return res;
+            }
+
+            // Calculate and validate noOfPackages (NoofBags) required by Sp_GatePassInward_Insert
+            if (obj.getNoOfPackages() == null || obj.getNoOfPackages() <= 0) {
+                int bags = 0;
+                if (obj.getGatePassInwardDetails() != null && !obj.getGatePassInwardDetails().isEmpty()) {
+                    for (InwardGatePassDetail detail : obj.getGatePassInwardDetails()) {
+                        if (detail.getItemQty() != null && detail.getItemQty() > 0) {
+                            bags += detail.getItemQty().intValue();
+                        }
+                    }
+                }
+                if (bags <= 0 && obj.getGatePassInwardPurchaseBreakUpList() != null && !obj.getGatePassInwardPurchaseBreakUpList().isEmpty()) {
+                    for (InwardGatePassPurchaseBreakUp breakUp : obj.getGatePassInwardPurchaseBreakUpList()) {
+                        if (breakUp.getQty() != null && breakUp.getQty() > 0) {
+                            bags += breakUp.getQty().intValue();
+                        }
+                    }
+                }
+                if (bags <= 0) {
+                    res.put("success", false);
+                    res.put("message", "NoofBags Field Required! Please enter Item Qty / No. of Bags.");
+                    return res;
+                }
+                obj.setNoOfPackages(bags);
             }
 
             // Defaults
