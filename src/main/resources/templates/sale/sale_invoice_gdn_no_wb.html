@@ -15,6 +15,7 @@
         .table-custom { font-size: 12px; }
         .table-custom th { background-color: #2a5298; color: white; text-align: center; }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 
 <!-- =====================================================================================
@@ -144,5 +145,54 @@
         });
     });
 </script>
+
+    <!-- ==================================================================================
+         Form History. The desktop form carries a grdHistory grid (94 references) and this
+         screen had none, so a saved document could not be found again.
+
+         Four mutually exclusive date radios, each end optional - an unticked end is OMITTED
+         rather than defaulted to today (InvfrmPurchaseInvoice.cs:4948-4975). Footer-right,
+         where the desktop puts it.
+
+         There is no user or "view all records" control here on purpose: the desktop derives
+         both from the signed-in user and the screen's grant grid, and so does the endpoint.
+         ================================================================================== -->
+    <div id="invoiceHistoryPanel" style="margin-top:10px;border:1px solid #b9b9b9;background:#f7f7f7;padding:8px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <strong style="font-size:11px;">History</strong>
+            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="doc" checked/> Doc Date</label>
+            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="entry"/> Entry Date</label>
+            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="modify"/> Modify Date</label>
+            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="approved"/> Approved Date</label>
+            <span style="font-size:11px;">From</span><input type="date" id="ihFromDate" style="font-size:11px;"/>
+            <span style="font-size:11px;">To</span><input type="date" id="ihToDate" style="font-size:11px;"/>
+            <span style="font-size:11px;">Doc No</span>
+            <input type="number" id="ihFromDocNo" style="width:70px;font-size:11px;" placeholder="From"/>
+            <input type="number" id="ihToDocNo" style="width:70px;font-size:11px;" placeholder="To"/>
+            <span style="font-size:11px;">Customer</span>
+            <select id="ihParty" style="font-size:11px;min-width:130px;" data-dtcombo="single" data-dtcombo-caption="Customer Name"><option value="0">-- All --</option></select>
+            <span style="font-size:11px;">Payment Term</span>
+            <select id="ihPaymentTerm" style="font-size:11px;min-width:110px;" data-dtcombo="single" data-dtcombo-caption="Payment Term"><option value="0">-- All --</option></select>
+            <span style="font-size:11px;">Rows</span>
+            <input type="number" id="ihNoOfRecords" style="width:60px;font-size:11px;" placeholder="All"/>
+            <input type="hidden" id="ihBranches"/>
+            <!-- Footer right, as on the desktop. -->
+            <button type="button" id="ihSearchBtn" class="win-btn-action" style="margin-left:auto;">
+                <i class="fa fa-search"></i> Search
+            </button>
+        </div>
+        <div id="ihMessage" style="font-size:11px;min-height:14px;margin:4px 0;"></div>
+        <!-- Full page width; the TABLE scrolls, never the page. -->
+        <div style="overflow:auto;max-height:260px;border:1px solid #d0d0d0;background:#fff;min-width:0;">
+            <table style="width:max-content;min-width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap;">
+                <thead id="ihHead" style="position:sticky;top:0;background:#e8e8e8;"></thead>
+                <tbody id="ihBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>window.INVOICE_HISTORY_SCREEN = "sale-invoice-gdn-no-wb";</script>
+    <script th:src="@{/build/js/countx_invoice_history.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

@@ -65,7 +65,21 @@ function attachColumnHeader(headerHtml) {
     }, 10);
 }
 
-function initMultiColumnSelect2() {
+/* SUPERSEDED by build/js/countx_desktop_combo.js.
+ *
+ * The column sets this function hard-coded are now declared on the elements themselves
+ * (data-dtcombo / data-dtcombo-caption) and rendered by the shared component, so Sale Order and
+ * Purchase Order draw their drop grids through one implementation instead of two that disagreed
+ * about markup, CSS and captions.
+ *
+ * Kept as a no-op rather than deleted: it is called from this file's ready handler, and the
+ * shared component skips anything already initialised. Re-initialising a select2 instance
+ * destroys the previous one and silently drops its templateResult - which is exactly how these
+ * combos lost their columns once before (see SALE-ORDER-81-DROPDOWN-GRIDS-AND-ITEM-FILTER.md).
+ */
+function initMultiColumnSelect2() { return; }
+
+function initMultiColumnSelect2_superseded() {
     /* Item combo - desktop combitem, ItemDetailFill() :1305-1325. dtitem columns are
        Id, ItemName, ItemCode, InventoryParentCategoriesId, ItemCategoryId, ItemCategory,
        ItemTypeId, ItemType, ProductionStageId, ProductionStage; columns 3, 4, 6 and 8 are

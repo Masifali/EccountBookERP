@@ -3,6 +3,8 @@ package com.mst.controllers;
 import com.mst.security.CurrentUserContext;
 
 import com.mst.services.InwardGatePassService;
+import com.mst.services.MarketGrnService;
+import com.mst.services.PurchaseOrderFullService;
 import com.mst.services.PurchaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -22,6 +24,17 @@ public class PurchaseModuleViewController {
 
     @Autowired
     private InwardGatePassService inwardGatePassService;
+
+    /* Supplies the GRN screen's database-backed lists - vehicle types, packing types (restricted
+       to ids {1,2,5}), UOMs and crop years - through the same procedures InvFrmGRN.cs uses. */
+    @Autowired
+    private MarketGrnService marketGrnService;
+
+    /* getPaymentTerms() reads Sp_InvDueTerms_GetAllMethod - the same InvDueTerms list
+       InvfrmPurchaseInvoice.cs:1066 binds with value member Id and display member
+       TermsDescription. */
+    @Autowired
+    private PurchaseOrderFullService purchaseOrderFullService;
 
     @Autowired
     private CurrentUserContext currentUserContext;
@@ -126,6 +139,19 @@ public class PurchaseModuleViewController {
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
         model.addAttribute("jobLots", purchaseService.getJobLots());
+
+        /* Vehicle Type, Packing Type and UOM were hard-coded in the template
+           ("Truck"/"Tractor", a single "PP Bags", a single "KGs"). All three are database lists
+           on the desktop (InvFrmGRN.cs:757, :1296-1306), and Packing Type is restricted to ids
+           {1,2,5}. cropYears was referenced by the template but never supplied, so that select
+           rendered empty too. */
+        Map<String, Object> grnLists =
+                marketGrnService.getDropdowns(currentUserContext.currentOrganizationId(),
+                                              currentUserContext.currentCompanyId());
+        model.addAttribute("vehicleTypes", grnLists.get("vehicleTypes"));
+        model.addAttribute("packingTypes", grnLists.get("packingTypes"));
+        model.addAttribute("uoms", grnLists.get("uoms"));
+        model.addAttribute("cropYears", grnLists.get("cropYears"));
         return "purchase/goods_receipt_notes";
     }
 
@@ -146,12 +172,20 @@ public class PurchaseModuleViewController {
     public String purchaseInvoice(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Invoice");
-        model.addAttribute("documentTypeId", 18);
+        /* Was 18. The desktop form declares DocumentTypeId = 56 (InvfrmPurchaseInvoice.cs:501).
+           Three different Purchase Invoice screens all carried 18, which collapsed three
+           distinct document types into one: one shared numbering sequence, and history or
+           search on any of them returning all three. */
+        model.addAttribute("documentTypeId", 56);
         model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(18));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
         model.addAttribute("jobLots", purchaseService.getJobLots());
+        /* Payment Terms used to be three hard-coded STRINGS in the template
+           ("Credit"/"Cash"/"Bank") where the desktop stores an InvDueTerms Id, so nothing saved
+           from that combo could match a real term. InvfrmPurchaseInvoice.cs:1066. */
+        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
         return "purchase/purchase_invoice";
     }
 
@@ -159,12 +193,19 @@ public class PurchaseModuleViewController {
     public String purchaseInvoiceAgainGrnDirect(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Invoice Against GRN Direct");
-        model.addAttribute("documentTypeId", 18);
+        /* Was 18. The desktop form declares DocumentTypeId = 138 (frmPurchaseInvoiceAgaintGrnDirect.cs:1474/:1879/:2315).
+           Three different Purchase Invoice screens all carried 18, which collapsed three
+           distinct document types into one: one shared numbering sequence, and history or
+           search on any of them returning all three. */
+        model.addAttribute("documentTypeId", 138);
         model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(18));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
         model.addAttribute("jobLots", purchaseService.getJobLots());
+        /* Payment Term is a database list on the desktop too - PaymentTermBind binds
+           "Id" / "TermsDescription" from InvDueTerms (InvfrmPurchasedirectInvoice.cs). */
+        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
         return "purchase/purchase_invoice_again_grn_direct";
     }
 
@@ -172,12 +213,19 @@ public class PurchaseModuleViewController {
     public String purchaseInvoiceDirect(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Invoice Direct");
-        model.addAttribute("documentTypeId", 18);
+        /* Was 18. The desktop form declares DocumentTypeId = 57 (InvfrmPurchasedirectInvoice.cs:562/:3197/:4685).
+           Three different Purchase Invoice screens all carried 18, which collapsed three
+           distinct document types into one: one shared numbering sequence, and history or
+           search on any of them returning all three. */
+        model.addAttribute("documentTypeId", 57);
         model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(18));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
         model.addAttribute("jobLots", purchaseService.getJobLots());
+        /* Payment Term is a database list on the desktop too - PaymentTermBind binds
+           "Id" / "TermsDescription" from InvDueTerms (InvfrmPurchasedirectInvoice.cs). */
+        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
         return "purchase/purchase_invoice_direct";
     }
 
@@ -185,12 +233,19 @@ public class PurchaseModuleViewController {
     public String purchaseInvoiceReturn(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Invoice Return");
-        model.addAttribute("documentTypeId", 19);
+        /* Was 19. The desktop form declares DocumentTypeId = 59 (InvfrmInvPurchaseInvoiceReturn.cs:1261/:2488/:3086).
+           Three different Purchase Invoice screens all carried 19, which collapsed three
+           distinct document types into one: one shared numbering sequence, and history or
+           search on any of them returning all three. */
+        model.addAttribute("documentTypeId", 59);
         model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(19));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
         model.addAttribute("jobLots", purchaseService.getJobLots());
+        /* Payment Term is a database list on the desktop too - PaymentTermBind binds
+           "Id" / "TermsDescription" from InvDueTerms (InvfrmPurchasedirectInvoice.cs). */
+        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
         return "purchase/purchase_invoice_return";
     }
 
@@ -202,6 +257,9 @@ public class PurchaseModuleViewController {
         model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(61));
         model.addAttribute("nextBranchSrNo", 1);
         model.addAttribute("nextTaxNo", 1);
+        /* Was a single hard-coded "Cash" option whose VALUE was the string "Cash"; the desktop
+           stores an InvDueTerms Id. Same list as the Purchase Invoice screen. */
+        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());

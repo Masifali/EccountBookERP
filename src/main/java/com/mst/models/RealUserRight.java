@@ -20,7 +20,7 @@ import lombok.Data;
  * never even read by the real app. Every user, including whoever administers the
  * system, only sees what an explicit tblUserRights row (plus a matching
  * {@link RealCompanyRight} row at the tenant level) actually grants. This port's
- * CustomUserDetailsService now reproduces that for every {@link Screen} (MstScreen)
+ * CustomUserDetailsService now reproduces that for every SidebarScreenCatalog entry
  * row that has been linked to a real ScreenDefinition.Id via realScreenDefinitionId.
  *
  * This port never writes to tblUserRights (it's real, already-populated desktop

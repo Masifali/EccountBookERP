@@ -45,8 +45,20 @@ public class PurchaseOrderFullDto {
 
     private Double juteBagCut = 0.0;
     private Double ppBagCut = 0.0;
-    private Double cashFreight = 0.0;
-    private Double creditFreight = 0.0;
+    /* Freight selection is a RADIO PAIR, not an amount.
+     *
+     * Architecture.Model.FeedMill.Purchase.PurchaseOrder declares
+     *     public bool CashFreight   { get; set; }
+     *     public bool CreditFreight { get; set; }
+     * and PurchsaeOrder.cs:3337-3344 sets exactly one of them to true from rdFreightCash /
+     * rdFreightCredit; :3759-3760 reads them back into the same two radios.
+     *
+     * These were declared Double here, so the screen's (correct) `true` could not be
+     * deserialized and every Save failed with
+     *     400 - Cannot deserialize value of type `java.lang.Double` from Boolean value
+     * before the handler was ever entered. Typed as the desktop types them. */
+    private Boolean cashFreight = false;
+    private Boolean creditFreight = false;
 
     private Boolean isSupplierOtherChargesAllowed = false;
     private Boolean isWhtApplied = false;
@@ -133,10 +145,10 @@ public class PurchaseOrderFullDto {
     public void setJuteBagCut(Double juteBagCut) { this.juteBagCut = juteBagCut; }
     public Double getPpBagCut() { return ppBagCut; }
     public void setPpBagCut(Double ppBagCut) { this.ppBagCut = ppBagCut; }
-    public Double getCashFreight() { return cashFreight; }
-    public void setCashFreight(Double cashFreight) { this.cashFreight = cashFreight; }
-    public Double getCreditFreight() { return creditFreight; }
-    public void setCreditFreight(Double creditFreight) { this.creditFreight = creditFreight; }
+    public Boolean getCashFreight() { return cashFreight; }
+    public void setCashFreight(Boolean cashFreight) { this.cashFreight = cashFreight; }
+    public Boolean getCreditFreight() { return creditFreight; }
+    public void setCreditFreight(Boolean creditFreight) { this.creditFreight = creditFreight; }
 
     public Boolean getIsSupplierOtherChargesAllowed() { return isSupplierOtherChargesAllowed; }
     public void setIsSupplierOtherChargesAllowed(Boolean isSupplierOtherChargesAllowed) { this.isSupplierOtherChargesAllowed = isSupplierOtherChargesAllowed; }

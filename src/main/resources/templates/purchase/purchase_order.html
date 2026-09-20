@@ -90,6 +90,7 @@
             .win-grid th { background: #eee !important; color: #000 !important; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body>
 
@@ -162,7 +163,7 @@
                         <div class="col-md-12">
                             <label class="win-label">Category & No <span style="color:red;">*</span></label>
                             <div style="display: flex; gap: 2px;">
-                                <select id="cmbParentCategory" class="win-input select2-2col" data-header-col1="Category Name" data-header-col2="Cat Code" onchange="onParentCategoryChange()" style="flex: 1;">
+                                <select id="cmbParentCategory" class="win-input dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Category" data-header-col1="Category Name" data-header-col2="Cat Code" onchange="onParentCategoryChange()" style="flex: 1;">
                                     <option value="0">-- Select Category --</option>
                                 </select>
                                 <input type="text" id="txtCategoryNo" class="win-textbox" style="width: 80px;" placeholder="Cat No"/>
@@ -183,7 +184,7 @@
                                     <label class="win-radio-inline"><input type="radio" name="radSupSearch" id="radSupCode" onclick="onSupplierSearchModeChange()"> Code</label>
                                 </div>
                             </div>
-                            <select id="cmbSupplier" class="win-input select2-2col" data-header-col1="Supplier Name" data-header-col2="Supplier Code" onchange="onSupplierChange()" style="width: 100%;">
+                            <select id="cmbSupplier" class="win-input dtcombo" data-dtcombo="party4" data-dtcombo-caption="Supplier Name" data-header-col1="Supplier Name" data-header-col2="Supplier Code" onchange="onSupplierChange()" style="width: 100%;">
                                 <option value="0">-- Select Supplier / Party --</option>
                             </select>
                             <input type="hidden" id="hidSupplierId" value="0"/>
@@ -199,7 +200,7 @@
                         <div class="col-md-6">
                             <label class="win-label">Booking Person</label>
                             <div style="display: flex; gap: 2px;">
-                                <select id="cmbBookingPerson" class="win-input select2-2col" data-header-col1="Booking Person" data-header-col2="Party Type" onchange="onBookingPersonChange()" style="flex: 1;">
+                                <select id="cmbBookingPerson" class="win-input dtcombo" data-dtcombo="party4" data-dtcombo-caption="Booking Person" data-header-col1="Booking Person" data-header-col2="Party Type" onchange="onBookingPersonChange()" style="flex: 1;">
                                     <option value="0">-- Select Booking Person --</option>
                                 </select>
                                 <button type="button" class="win-btn-action" style="background-color: #2e7d32; border-color: #1b5e20;" title="Add Booking Person" onclick="openDefineLookUpPartiesModal()"><i class="fa fa-plus"></i></button>
@@ -212,7 +213,7 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-6">
                             <label class="win-label">Payment Terms <span style="color:red;">*</span></label>
-                            <select id="cmbPaymentTerm" class="win-input select2" onchange="onPaymentTermChange()">
+                            <select id="cmbPaymentTerm" class="win-input dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term" onchange="onPaymentTermChange()">
                                 <option value="0">-- Select Payment Term --</option>
                                 <option value="2" data-days="30">Credit</option>
                                 <option value="1" data-days="0">Cash</option>
@@ -221,7 +222,7 @@
                         <div class="col-md-6">
                             <label class="win-label">Due Days & Date <span style="color:red;">*</span></label>
                             <div style="display: flex; gap: 2px;">
-                                <input type="number" id="txtDueDays" class="win-textbox" value="0" style="width: 55px;" oninput="onDueDaysChange()"/>
+                                <input type="number" id="txtDueDays" class="win-textbox" value="0" style="width: 55px;" oninput="onDueDaysChange()" data-guard="integer"/>
                                 <input type="date" id="txtPaymentDueDate" class="win-datepicker win-textbox-readonly" readonly style="flex: 1;"/>
                             </div>
                         </div>
@@ -231,18 +232,22 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-6">
                             <label class="win-label">Delivery Term <span style="color:red;">*</span></label>
-                            <select id="cmbDeliveryTerm" class="win-input select2">
+                            <!-- Options come from /api/purchase-order/delivery-terms only.
+                                 PurchsaeOrder.cs:1093-1098 binds this combo from DeliveryTerm.FormHistory(),
+                                 i.e. the database, so the three literals that used to sit here
+                                 (Load / Load & PartyWeight / Load & FactoryWeight) were invented for the
+                                 web. They are not the whole list - the live data includes terms such as
+                                 "Ponch" - and if the fetch failed the user was shown three plausible but
+                                 wrong terms and could save one. An empty list is the honest failure. -->
+                            <select id="cmbDeliveryTerm" class="win-input dtcombo" data-dtcombo="single" data-dtcombo-caption="Delivery Term">
                                 <option value="0">Delivery Term</option>
-                                <option value="1">Load</option>
-                                <option value="2">Load &amp; PartyWeight</option>
-                                <option value="3">Load &amp; FactoryWeight</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="win-label">Delivery Start Date & Days</label>
                             <div style="display: flex; gap: 2px;">
                                 <input type="date" id="txtDeliveryStartDate" class="win-datepicker" style="flex: 1;" onchange="onDeliveryStartDateChange()"/>
-                                <input type="number" id="txtDeliveryDays" class="win-textbox" value="7" style="width: 55px;" oninput="onDeliveryDaysChange()"/>
+                                <input type="number" id="txtDeliveryDays" class="win-textbox" value="7" style="width: 55px;" oninput="onDeliveryDaysChange()" data-guard="integer"/>
                             </div>
                         </div>
                     </div>
@@ -290,7 +295,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <label class="win-label">Comm Agent</label>
-                            <select id="cmbCommissionAgent" class="win-input select2-4col" onchange="onCommissionAgentChange()" style="width: 100%;">
+                            <select id="cmbCommissionAgent" class="win-input dtcombo" data-dtcombo="party4" data-dtcombo-caption="Commission Agent" onchange="onCommissionAgentChange()" style="width: 100%;">
                                 <option value="0">-- Select Comm Agent --</option>
                             </select>
                             <input type="hidden" id="hidCommissionAgentId" value="0"/>
@@ -301,7 +306,7 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-3">
                             <label class="win-label">Comm Type</label>
-                            <select id="cmbCommType" class="win-combo" onchange="calcCommission()">
+                            <select id="cmbCommType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CommissionType" onchange="calcCommission()">
                                 <option value="Flat">Flat</option>
                                 <option value="Percent">Percent (%)</option>
                                 <option value="Weight">Weight</option>
@@ -309,7 +314,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate</label>
-                            <input type="number" step="0.01" id="txtCommRate" class="win-textbox" value="0.00" oninput="calcCommission()"/>
+                            <input type="number" step="0.01" id="txtCommRate" class="win-textbox" value="0.00" oninput="calcCommission()" data-guard="decimal"/>
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate UOM</label>
@@ -317,7 +322,7 @@
                                  "GetCommissionUom", the same source as the desktop's
                                  CommissionUOMFill() (PurchsaeOrder.cs :1162-1172).
                                  A hard-coded 40 KG / 100 KG / 1 M.Ton list used to sit here. -->
-                            <select id="cmbCommUom" class="win-combo" onchange="calcCommission()">
+                            <select id="cmbCommUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" onchange="calcCommission()">
                                 <option value="0">-- Loading... --</option>
                             </select>
                         </div>
@@ -331,7 +336,7 @@
                     <div class="row" style="margin-top: 10px;">
                         <div class="col-md-12">
                             <label class="win-label">Broker Ac</label>
-                            <select id="cmbBrokerAccount" class="win-input select2-2col" data-header-col1="Broker Name" data-header-col2="Broker Code" onchange="onBrokerAccountChange()" style="width: 100%;">
+                            <select id="cmbBrokerAccount" class="win-input dtcombo" data-dtcombo="party4" data-dtcombo-caption="Brokery Account" data-header-col1="Broker Name" data-header-col2="Broker Code" onchange="onBrokerAccountChange()" style="width: 100%;">
                                 <option value="0">-- Select Broker Ac --</option>
                             </select>
                             <input type="hidden" id="hidBrokerAccountId" value="0"/>
@@ -342,7 +347,7 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-3">
                             <label class="win-label">Brokery Type</label>
-                            <select id="cmbBrokeryType" class="win-combo" onchange="calcBrokery()">
+                            <select id="cmbBrokeryType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="BrokeryType" onchange="calcBrokery()">
                                 <option value="Flat">Flat</option>
                                 <option value="Percent">Percent (%)</option>
                                 <option value="Weight">Weight</option>
@@ -350,12 +355,12 @@
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate</label>
-                            <input type="number" step="0.01" id="txtBrokeryRate" class="win-textbox" value="0.00" oninput="calcBrokery()"/>
+                            <input type="number" step="0.01" id="txtBrokeryRate" class="win-textbox" value="0.00" oninput="calcBrokery()" data-guard="decimal"/>
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate UOM</label>
                             <!-- Same source as cmbCommUom: CommissionUOMFill() binds both (:1171). -->
-                            <select id="cmbBrokeryRateUom" class="win-combo" onchange="calcBrokery()">
+                            <select id="cmbBrokeryRateUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" onchange="calcBrokery()">
                                 <option value="0">-- Loading... --</option>
                             </select>
                         </div>
@@ -410,6 +415,31 @@
                 <fieldset class="win-group-box">
                     <legend>Item Selection & Calculation Line Entry</legend>
                     <div class="row">
+                        <!-- Item Category / Item Type filter - CmbCategory on the desktop's
+                             PurchaseOrderDetail tab, with the RadCategory / RadType pair beside it
+                             (PurchsaeOrder.cs:7697, :7855, :7864).
+
+                             The list is DERIVED from the loaded items, exactly as
+                             ItemCategoryOrTypeBind(:1230-1283) does: distinct non-empty
+                             ItemCategory (or ItemType) over the items already narrowed by the
+                             header's parent category. It is not a separate master lookup, so
+                             there is no endpoint for it and none was invented.
+
+                             Picking a value narrows the item list - ItemdtFillFromAll's
+                             CategoryOrTypeId test at :1302 - then re-binds the item picker
+                             (ItemNameBind, :1313). -->
+                        <div class="col-md-3">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label class="win-label" id="lblItemCategory">Item Category</label>
+                                <div>
+                                    <label class="win-radio-inline"><input type="radio" name="radItemCatMode" id="radItemCatCategory" checked onclick="onItemCategoryModeChange()"> Category</label>
+                                    <label class="win-radio-inline"><input type="radio" name="radItemCatMode" id="radItemCatType" onclick="onItemCategoryModeChange()"> Type</label>
+                                </div>
+                            </div>
+                            <select id="cmbItemCategory" class="win-combo" data-dtcombo="single" data-dtcombo-caption="Item Category" onchange="onItemCategoryChange()">
+                                <option value="0">-- All --</option>
+                            </select>
+                        </div>
                         <div class="col-md-4">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <label class="win-label">Item Selection <span style="color:red;">*</span></label>
@@ -430,30 +460,30 @@
                         </div>
                         <div class="col-md-2">
                             <label class="win-label">UOM (Pack UOM)</label>
-                            <select id="cmbPackUom" class="win-combo" onchange="calcLineWeight()">
+                            <select id="cmbPackUom" class="win-combo dtcombo" data-dtcombo="uom2" data-dtcombo-caption="Pack Uom" onchange="calcLineWeight()">
                                 <option value="0">-- Select Item First --</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="win-label">Item Qty</label>
-                            <input type="number" step="0.001" id="txtQty" class="win-textbox" placeholder="0.000" oninput="calcLineWeight('qty')"/>
+                            <input type="number" step="0.001" id="txtQty" class="win-textbox" placeholder="0.000" oninput="calcLineWeight('qty')" data-guard="decimal"/>
                         </div>
                         <div class="col-md-2">
                             <!-- Editable: the desktop's txtweight drives Qty in reverse
                                  (CalculateByWeight, PurchsaeOrder.cs :4275-4281). -->
                             <label class="win-label">Gross Weight (KG)</label>
-                            <input type="number" step="0.001" id="txtWeight" class="win-textbox" placeholder="0.000" oninput="calcLineWeight('weight')"/>
+                            <input type="number" step="0.001" id="txtWeight" class="win-textbox" placeholder="0.000" oninput="calcLineWeight('weight')" data-guard="decimal"/>
                         </div>
                     </div>
 
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-2">
                             <label class="win-label">Item Rate</label>
-                            <input type="number" step="0.01" id="txtRate" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
+                            <input type="number" step="0.01" id="txtRate" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()" data-guard="decimal"/>
                         </div>
                         <div class="col-md-2">
                             <label class="win-label">Rate UOM</label>
-                            <select id="cmbRateUom" class="win-combo" onchange="calcLineAmount()">
+                            <select id="cmbRateUom" class="win-combo dtcombo" data-dtcombo="uom2" data-dtcombo-caption="RateUOM" onchange="calcLineAmount()">
                                 <option value="0">-- Select Item First --</option>
                             </select>
                         </div>
@@ -463,7 +493,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="win-label">Job / Lot</label>
-                            <select id="cmbJobLot" class="win-combo">
+                            <select id="cmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job/Lot">
                                 <option value="0">-- Select Job/Lot --</option>
                             </select>
                         </div>
@@ -477,7 +507,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="win-label">Moisture %</label>
-                            <input type="number" step="0.1" id="txtMoisture" class="win-textbox" value="14.0"/>
+                            <input type="number" step="0.1" id="txtMoisture" class="win-textbox" value="14.0" data-guard="decimal"/>
                         </div>
                     </div>
 
@@ -741,7 +771,7 @@
                     <div class="col-md-3">
                         <label class="win-label">Branch Name</label>
                         <select id="cmbHistoryBranch" class="win-combo">
-                            <option value="0">Golden Ace Rice Mills (Pvt) Ltd.</option>
+                            <option value="0"></option>
                         </select>
                     </div>
 
@@ -765,12 +795,12 @@
 
                     <div class="col-md-2">
                         <label class="win-label">From Doc No</label>
-                        <input type="number" id="txtHistoryFromDocNo" class="win-textbox" placeholder="From..."/>
+                        <input type="number" id="txtHistoryFromDocNo" class="win-textbox" placeholder="From..." data-guard="integer"/>
                     </div>
 
                     <div class="col-md-3">
                         <label class="win-label">To Doc No</label>
-                        <input type="number" id="txtHistoryToDocNo" class="win-textbox" placeholder="To..."/>
+                        <input type="number" id="txtHistoryToDocNo" class="win-textbox" placeholder="To..." data-guard="integer"/>
                     </div>
                 </div>
 
@@ -778,17 +808,27 @@
                     <!-- Row 2: Supplier Name, Booking Person, Date Type radios, Show button -->
                     <div class="col-md-3">
                         <label class="win-label">Supplier Name</label>
-                        <div style="display: flex; gap: 2px;">
-                            <input type="text" id="txtHistorySupplierDisplay" class="win-textbox" placeholder="All Suppliers" readonly onclick="openHistorySupplierModal()" style="cursor: pointer; background: #fff;"/>
-                            <button type="button" class="win-btn-action" onclick="openHistorySupplierModal()"><i class="fa fa-search"></i></button>
-                            <button type="button" class="win-btn-action" style="background: #c62828; border-color: #b71c1c;" title="Clear Supplier" onclick="clearHistorySupplier()"><i class="fa fa-times"></i></button>
-                        </div>
+                        <!-- The desktop's cmbSupplierNameHistory is a DROPDOWN, not a search box
+                             (HistorySupplierComboFill, PurchsaeOrder.cs:4688). Its rows are the
+                             parties that actually appear on Purchase Orders - from
+                             USP_GetDataForDropDownFromPurchaseOrder split on its Activity column -
+                             NOT the party master, which is why the desktop offers a handful of
+                             names. A search box over the full master was both the wrong control
+                             and the wrong list.
+
+                             #hidHistorySupplierId is kept and mirrored from this select, because
+                             the history query already reads it (:2486). -->
+                        <select id="cmbHistorySupplier" class="win-combo dtcombo"
+                                data-dtcombo="single" data-dtcombo-caption="Supplier Name"
+                                onchange="document.getElementById('hidHistorySupplierId').value = this.value || '0';">
+                            <option value="0">-- All Suppliers --</option>
+                        </select>
                         <input type="hidden" id="hidHistorySupplierId" value="0"/>
                     </div>
 
                     <div class="col-md-3">
                         <label class="win-label">Booking Person</label>
-                        <select id="cmbHistoryBookingPerson" class="win-combo">
+                        <select id="cmbHistoryBookingPerson" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Booking Person">
                             <option value="0">-- All Booking Persons --</option>
                         </select>
                     </div>
@@ -1246,6 +1286,8 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script th:src="@{/build/js/countx_purchase_order_full.js}"></script>
+    <script th:src="@{/build/js/countx_purchase_order_full.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

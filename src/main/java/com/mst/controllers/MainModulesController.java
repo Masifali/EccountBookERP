@@ -23,15 +23,20 @@ public class MainModulesController {
         return "modules";
     }
 
-    @GetMapping("/quality")
-    public String qualityControl(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Quality Control Master");
-        model.addAttribute("production", new HashMap<>());
-        model.addAttribute("companies", new ArrayList<>());
-        model.addAttribute("branches", new ArrayList<>());
-        return "production/production_form";
-    }
+    /*
+     * "/quality" is owned by QualityControlViewController, which is annotated
+     * @RequestMapping("/quality") with @GetMapping({"", "/", "/dashboard"}) and serves the real
+     * Quality Control (Lab) dashboard plus its sixteen screens.
+     *
+     * The handler that used to sit here also claimed GET /quality and returned
+     * "production/production_form" - the Production Entry form, an unrelated page. Two handlers
+     * on the same (method, path) is an Ambiguous mapping, so Spring refused to start the
+     * application at all; and had it started, /quality would have shown the Production screen
+     * while every link on the Quality Control dashboard 404'd.
+     *
+     * Do not re-add a /quality mapping here. Run `python3 mapcheck.py src/main/java` before a
+     * build to catch a collision like this one.
+     */
 
     @GetMapping({"/wages", "/wages/dashboard", "/contractor-wages"})
     public String contractorWages(Model model) {
@@ -39,14 +44,30 @@ public class MainModulesController {
         return "accounts/vouchers/contractor_wages_dashboard";
     }
 
+    /*
+     * This used to return "production/production_form" with a HashMap under the model name
+     * "production". That template opens with th:object="${production}" and then binds fields with
+     * th:field="${production.company}" / "${production.id}" / "${production.productionCode}".
+     * Spring resolves a th:field through a BeanWrapper, and a java.util.HashMap has no readable
+     * "company" property, so every request to /production ended in
+     * NotReadablePropertyException -> HTTP 500. The page could never have rendered.
+     *
+     * The template itself is misfiled scaffolding, not a Production screen: its heading says
+     * "SALE ORDER FORM", it posts to /receivables/add_or_update_sale_order, its element ids are
+     * purchaseOrderForm / purchaseOrderId, and it also reads ${accounts}, ${financialYears},
+     * ${itemSubCategories} and ${millKhate}, none of which any handler supplies. It is the same
+     * template that once made /quality show a Production page (see the note above).
+     *
+     * /production now serves the Production module's own landing page - the screens this port has
+     * actually built, each gated on the authority its sidebar entry uses, so the page can never
+     * offer a screen the signed-in user's rights do not allow. No model attribute is invented for
+     * it; the rights already reach the template as Spring authorities.
+     */
     @GetMapping("/production")
     public String production(Model model) {
         model.addAttribute("activeMenu", "production");
-        model.addAttribute("moduleTitle", "Production Entry & Yield");
-        model.addAttribute("production", new HashMap<>());
-        model.addAttribute("companies", new ArrayList<>());
-        model.addAttribute("branches", new ArrayList<>());
-        return "production/production_form";
+        model.addAttribute("moduleTitle", "Production");
+        return "production/production_module";
     }
 
     @GetMapping("/store")

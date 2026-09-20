@@ -38,16 +38,32 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private LegacyUserPasswordEncoder legacyUserPasswordEncoder;
     @Autowired
     private UserDetailsService userDetailsService;
+    @Autowired
+    private com.mst.security.DesktopLoginAuthenticationProvider desktopLoginAuthenticationProvider;
+    @Autowired
+    private com.mst.security.LoginContextSuccessHandler loginContextSuccessHandler;
+    @Autowired
+    private com.mst.security.LoginContextFilter loginContextFilter;
 
 
+    /**
+     * Authentication goes through the desktop's own stored procedure.
+     *
+     * It used to be {@code auth.userDetailsService(...).passwordEncoder(...)}, i.e. Spring's
+     * DaoAuthenticationProvider: load the row by user name with a JPA SELECT, compare the
+     * password in Java. That applies the password rule and nothing else, while the desktop hands
+     * both values to Sp_UserAccount_Login and treats "no row" as a failed login - so every other
+     * condition inside that procedure was being skipped on the web.
+     *
+     * DesktopLoginAuthenticationProvider calls the procedure instead, and still resolves the
+     * screen authorities through the same UserDetailsService afterwards. The encoder stays a bean
+     * because the provider uses it to encrypt the typed password before the call, exactly as
+     * Architecture.BLL.UserAccount.Login does.
+     */
     @Override
     protected void configure(AuthenticationManagerBuilder auth)
             throws Exception {
-        auth
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(legacyUserPasswordEncoder);
-
-
+        auth.authenticationProvider(desktopLoginAuthenticationProvider);
     }
 
     @Override
@@ -57,6 +73,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.headers().frameOptions().disable()
                 .addHeaderWriter(new com.mst.security.ReportFrameHeaderWriter());
         http.addFilterBefore(receiptMangerAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+        /* After Spring Security has restored the session, so the principal is present. */
+        http.addFilterAfter(loginContextFilter, org.springframework.security.web.access.intercept.FilterSecurityInterceptor.class);
         http.exceptionHandling().defaultAuthenticationEntryPointFor(
                 new org.springframework.security.web.authentication.HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED),
                 new AntPathRequestMatcher("/api/**"));
@@ -67,7 +85,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .loginPage("/login")
-                .defaultSuccessUrl("/dashboard", false)
+                /* LoginNew.cs does not finish at the password: it then works out the company,
+                   branch, financial year and application, asking only where there is a choice.
+                   The success handler reproduces that and sends the operator either straight to
+                   the dashboard or to /login/context. defaultSuccessUrl would jump past it. */
+                .successHandler(loginContextSuccessHandler)
                 .failureUrl("/login?error=true")
                 .permitAll()
                 .and()
@@ -82,6 +104,23 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**",
                         "/images/**", "/vendors/**", "/Whastsapp/**", "/build/**", "/.well-known/**");
 
+    }
+
+    /**
+     * LoginContextFilter is a @Component extending OncePerRequestFilter, so Spring Boot would ALSO
+     * register it as a plain servlet filter - running it twice, and the first time OUTSIDE the
+     * security chain, before the SecurityContext has been restored from the session. There it
+     * would see no authentication on every request and let everything through, which is harmless
+     * but pointless, and the ordering would be a trap for whoever reads it next.
+     *
+     * Disabled as a servlet filter here, exactly as receiptFilterRegistration does for the same
+     * reason; it runs once, inside the chain, via addFilterAfter below.
+     */
+    @Bean
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<com.mst.security.LoginContextFilter> loginContextFilterRegistration() {
+        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(loginContextFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean

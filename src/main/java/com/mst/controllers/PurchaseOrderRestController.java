@@ -99,6 +99,24 @@ public class PurchaseOrderRestController {
         return ResponseEntity.ok(purchaseOrderService.getDeliveryTerms());
     }
 
+    /**
+     * The History tab's Supplier Name and Booking Person pickers - ONE call, two lists.
+     *
+     * HistorySupplierComboFill (PurchsaeOrder.cs:4640-4695) fills both from a single
+     * USP_GetDataForDropDownFromPurchaseOrder result split on its Activity column, so they are
+     * the parties that actually appear on Purchase Orders, not the party master. Keeping it as
+     * one endpoint keeps that relationship visible and matches the desktop's single round trip.
+     *
+     * @param branchesIds CSV of BranchId. The desktop passes the branch the History tab has
+     *                    selected and refuses to run without one; omitted here means the BLL
+     *                    omits the parameter, which is its own documented behaviour.
+     */
+    @GetMapping("/history-parties")
+    public ResponseEntity<Map<String, Object>> getHistoryParties(
+            @RequestParam(required = false) String branchesIds) {
+        return ResponseEntity.ok(purchaseOrderService.getHistoryParties(branchesIds));
+    }
+
     @GetMapping("/booking-persons")
     public ResponseEntity<List<Map<String, Object>>> getBookingPersons() {
         return ResponseEntity.ok(purchaseOrderService.getBookingPersons());

@@ -90,6 +90,10 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Secondary Teal Bar */
+        /* The status-strip captions are LinkLabels on the desktop - teal background,
+           white bold text, clickable. Kept visibly clickable here. */
+        .igp-link { color: #ffffff; text-decoration: underline; cursor: pointer; }
+        .igp-link:hover { color: #ffe4a0; }
         .status-strip {
             background-color: var(--header-bg);
             color: white;
@@ -308,6 +312,7 @@
             .data-grid th { background: #eee !important; color: #000 !important; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body>
 
@@ -316,8 +321,8 @@
     <div class="top-banner">
         <div id="lblFormHeaderTitle">Inward Gate Pass</div>
         <div style="font-size: 11px; font-weight: normal;">
-            <span id="txtUserTitle">Numan Rasheed (Admin)</span> |
-            <span>Golden Ace Rice Mills (Pvt) Ltd.</span> |
+            <span id="txtUserTitle" th:text="${#authentication != null ? #authentication.name : 'User'}">User</span> |
+            <span><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></span> |
             <span id="txtLiveTime">03:47:54 pm</span> |
             <span>2026-27</span>
         </div>
@@ -345,11 +350,35 @@
         <!-- Status Strip -->
         <div class="status-strip">
             <span style="font-size: 12px;">Inward Gate Pass</span>
+            <!-- ==========================================================================
+                 InwardGatePass.cs puts TWO controls side by side for each of these four, and the
+                 web had only the radio - with no handler anywhere, so all five did nothing.
+
+                 1. A LinkLabel whose CAPTION is clickable and opens that screen NOW:
+                      labelLabAnalysisForm.Click  -> RadPurchaseLabFormToOpenOnInsert_Click (:3816)
+                      labelWeightBridgeForm.Click -> RadWBFormToOpenOnInsert_Click          (:3827)
+                      labelGrnForm.Click          -> RadGrnFormToOpenOnInsert_Click         (:3843)
+                      (Freight Voucher)           -> FreightVoucherFormToOpen_Click         (:3865)
+
+                 2. A radio that chooses which screen opens AUTOMATICALLY after a successful
+                    Save - OpenLinkformOnInsert(GatePassId, Status) (:3897-3915), which passes the
+                    NEW gate pass id through so the target opens already filtered to it.
+
+                 So the caption is a link and the radio is a preference. Both are wired below.
+                 ========================================================================== -->
             <label><input type="radio" name="formMode" value="None" checked> None</label>
-            <label><input type="radio" name="formMode" value="LabAnalysis"> Lab Analysis Form</label>
-            <label><input type="radio" name="formMode" value="WeightBridge"> Weight Bridge Form</label>
-            <label><input type="radio" name="formMode" value="Grn"> Grn Form</label>
-            <label><input type="radio" name="formMode" value="FreightVoucher"> Freight Voucher</label>
+            <label><input type="radio" name="formMode" value="LabAnalysis">
+                <a href="#" onclick="return igpOpenLinkedForm('LabAnalysis');"
+                   class="igp-link" title="Open Lab Purchase Analysis">Lab Analysis Form</a></label>
+            <label><input type="radio" name="formMode" value="WeightBridge">
+                <a href="#" onclick="return igpOpenLinkedForm('WeightBridge');"
+                   class="igp-link" title="Open Weigh Bridge">Weight Bridge Form</a></label>
+            <label><input type="radio" name="formMode" value="Grn">
+                <a href="#" onclick="return igpOpenLinkedForm('Grn');"
+                   class="igp-link" title="Open GRN">Grn Form</a></label>
+            <label><input type="radio" name="formMode" value="FreightVoucher">
+                <a href="#" onclick="return igpOpenLinkedForm('FreightVoucher');"
+                   class="igp-link" title="Open Freight Voucher">Freight Voucher</a></label>
             <label style="margin-left: auto;"><input type="checkbox" id="chkPreview" checked> Preview</label>
         </div>
 
@@ -368,47 +397,47 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">G.P Type & No<span class="req-star">*</span></div>
-                        <select id="cmbgptype" class="form-control" style="width: 120px;" onchange="onGpTypeChange()">
+                        <select id="cmbgptype" class="form-control" style="width: 120px;" onchange="onGpTypeChange()" data-dtcombo="single" data-dtcombo-caption="GatePassType">
                             <option value="">-- Select --</option>
-                            <option th:each="g : ${gatePassTypes}" th:value="${g.id}" th:text="${g.name}"></option>
+                            <option th:each="g : ${gatePassTypes}" th:value="${g['id']}" th:text="${g['name']}"></option>
                         </select>
                         <input type="text" id="txtgptypeno" class="form-control" style="width: 80px; margin-left: 4px;" th:value="${nextTypeNo}" readonly />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Purchase Type<span class="req-star">*</span></div>
-                        <select id="CmbOrderType" class="form-control" style="width: 120px;">
+                        <select id="CmbOrderType" class="form-control" style="width: 120px;" data-dtcombo="single" data-dtcombo-caption="Purchase Type">
                             <option value="Purchase Order">Purchase Order</option>
                             <option value="Direct">Direct</option>
                             <option value="Sale Return">Sale Return</option>
                         </select>
-                        <input type="text" id="CmbOrderno" class="form-control" style="width: 80px; margin-left: 4px;" placeholder="PO No" />
+                        <input type="text" id="CmbOrderno" class="form-control" style="width: 80px; margin-left: 4px;" placeholder="PO No"  data-guard="integer"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Supplier Name<span class="req-star">*</span></div>
-                        <select id="cmbsupp" class="form-control" style="width: 204px;">
+                        <select id="cmbsupp" class="form-control" style="width: 204px;" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
                             <option value="">-- Select Supplier --</option>
-                            <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
+                            <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">City Name<span class="req-star">*</span></div>
-                        <select id="cmbcity" class="form-control" style="width: 204px;">
+                        <select id="cmbcity" class="form-control" style="width: 204px;" data-dtcombo="single" data-dtcombo-caption="City Name">
                             <option value="">-- Select City --</option>
-                            <option th:each="c : ${cities}" th:value="${c.id}" th:text="${c.name}"></option>
+                            <option th:each="c : ${cities}" th:value="${c['id']}" th:text="${c['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Item Name<span class="req-star">*</span></div>
-                        <select id="CmbVariety" class="form-control" style="width: 204px;" onchange="onItemChange()">
+                        <select id="CmbVariety" class="form-control" style="width: 204px;" onchange="onItemChange()" data-dtcombo="single" data-dtcombo-caption="Item Name">
                             <option value="">-- Select Item --</option>
-                            <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.name}"></option>
+                            <option th:each="i : ${items}" th:value="${i['id']}" th:text="${i['itemName']} ?: ${i['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Item Qty<span class="req-star">*</span></div>
-                        <input type="number" id="txtqty" class="form-control" style="width: 65px;" value="0" oninput="calculateWeight()" />
+                        <input type="number" id="txtqty" class="form-control" style="width: 65px;" value="0" oninput="calculateWeight()"  data-guard="decimal"/>
                         <span class="form-label" style="width: 60px;">Pack Unit</span>
-                        <input type="number" id="txtPackUnit" class="form-control" style="width: 65px;" value="60" oninput="calculateWeight()" />
+                        <input type="number" id="txtPackUnit" class="form-control" style="width: 65px;" value="60" oninput="calculateWeight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Weight<span class="req-star">*</span></div>
@@ -421,14 +450,14 @@
                     <div class="section-title">Vehicle & Freight</div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Vehicle Type</div>
-                        <select id="cmbvehicletype" class="form-control" style="width: 170px;">
+                        <select id="cmbvehicletype" class="form-control" style="width: 170px;" data-dtcombo="single" data-dtcombo-caption="Vehicle Name">
                             <option value="">-- Select Vehicle Type --</option>
-                            <option th:each="v : ${vehicleTypes}" th:value="${v.id}" th:text="${v.name}"></option>
+                            <option th:each="v : ${vehicleTypes}" th:value="${v['id']}" th:text="${v['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Vehicle No<span class="req-star">*</span></div>
-                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. OKB-1254" />
+                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. OKB-1254"  data-guard="vehicle"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty No</div>
@@ -440,15 +469,15 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty Freight</div>
-                        <input type="number" id="txtfreight" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
+                        <input type="number" id="txtfreight" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Advance By Party</div>
-                        <input type="number" id="txtAdvanceByParty" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
+                        <input type="number" id="txtAdvanceByParty" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Advance By Factory</div>
-                        <input type="number" id="txtAdvanceByFactory" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
+                        <input type="number" id="txtAdvanceByFactory" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Total Payable Freight</div>
@@ -456,7 +485,7 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Net Paid<span class="req-star">*</span></div>
-                        <input type="number" id="txtNetPaid" class="form-control" style="width: 170px; font-weight: bold;" value="0" readonly />
+                        <input type="number" id="txtNetPaid" class="form-control" style="width: 170px; font-weight: bold;" value="0" readonly  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Remarks Header</div>
@@ -480,19 +509,19 @@
                         <tr>
                             <td style="font-weight: bold;">Load Weight</td>
                             <td><input type="number" id="txtFactoryWeight" value="0" oninput="calculateNetWeights()" /></td>
-                            <td><input type="number" id="txtSupplierFirstWeight" value="0" oninput="calculateNetWeights()" /></td>
+                            <td><input type="number" id="txtSupplierFirstWeight" value="0" oninput="calculateNetWeights()"  data-guard="integer"/></td>
                             <td><input type="number" id="txtFirstWtDifference" value="0" readonly /></td>
                         </tr>
                         <tr>
                             <td style="font-weight: bold;">Tare Weight</td>
                             <td><input type="number" id="txtsecondWeight" value="0" oninput="calculateNetWeights()" /></td>
-                            <td><input type="number" id="txtSupplierSecondWeight" value="0" oninput="calculateNetWeights()" /></td>
+                            <td><input type="number" id="txtSupplierSecondWeight" value="0" oninput="calculateNetWeights()"  data-guard="integer"/></td>
                             <td><input type="number" id="txtSecondWtDifference" value="0" readonly /></td>
                         </tr>
                         <tr style="background-color: #eef6ff;">
                             <td style="font-weight: bold; color: #003366;">Net Weight</td>
                             <td><input type="number" id="txtFactoryNetWeight" value="0" readonly /></td>
-                            <td><input type="number" id="txtSupplierNetWeight" value="0" readonly /></td>
+                            <td><input type="number" id="txtSupplierNetWeight" value="0" readonly  data-guard="decimal"/></td>
                             <td><input type="number" id="txtDifferenceWeight" value="0" readonly style="color: red;" /></td>
                         </tr>
                         </tbody>
@@ -506,33 +535,33 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">W.B Status<span class="req-star">*</span></div>
-                        <select id="cmbWeighBridge" class="form-control" style="width: 70px;">
+                        <select id="cmbWeighBridge" class="form-control" style="width: 70px;" data-dtcombo="single" data-dtcombo-caption="Status">
                             <option value="">-- Select --</option>
-                            <option th:each="w : ${weighBridges}" th:value="${w.id}" th:text="${w.name}"></option>
+                            <option th:each="w : ${weighBridges}" th:value="${w['id']}" th:text="${w['name']}"></option>
                         </select>
                         <span class="form-label" style="width: 50px;">Out Time</span>
                         <input type="datetime-local" id="txtouttime" class="form-control" style="width: 150px;" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">G.P Status<span class="req-star">*</span></div>
-                        <select id="CmbStatus" class="form-control" style="width: 70px;">
+                        <select id="CmbStatus" class="form-control" style="width: 70px;" data-dtcombo="single" data-dtcombo-caption="Status">
                             <option value="Open">Open</option>
                             <option value="Closed">Closed</option>
                             <option value="Pending">Pending</option>
                         </select>
                         <span class="form-label" style="width: 70px;">Packing Type</span>
-                        <select id="CmbPackingType" class="form-control" style="width: 130px;">
+                        <select id="CmbPackingType" class="form-control" style="width: 130px;" data-dtcombo="single" data-dtcombo-caption="Packing Type">
                             <option value="">-- Select --</option>
-                            <option th:each="p : ${packingTypes}" th:value="${p.id}" th:text="${p.name}"></option>
+                            <option th:each="p : ${packingTypes}" th:value="${p['id']}" th:text="${p['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">P.O Excess Wt</div>
                         <input type="number" id="txtAccessWeight" class="form-control" style="width: 70px;" value="0" />
                         <span class="form-label" style="width: 70px;">Transit Vehicle</span>
-                        <select id="cmbTransitVehicle" class="form-control" style="width: 130px;">
+                        <select id="cmbTransitVehicle" class="form-control" style="width: 130px;" data-dtcombo="single" data-dtcombo-caption="Transit Vehicle">
                             <option value="">-- Select --</option>
-                            <option th:each="t : ${transitVehicles}" th:value="${t.id}" th:text="${t.name}"></option>
+                            <option th:each="t : ${transitVehicles}" th:value="${t['id']}" th:text="${t['name']}"></option>
                         </select>
                     </div>
                 </div>
@@ -702,17 +731,17 @@
                 </div>
                 <div>
                     <span class="form-label">From Doc No</span><br/>
-                    <input type="number" id="txtHistFromDoc" class="form-control" style="width: 90px;" />
+                    <input type="number" id="txtHistFromDoc" class="form-control" style="width: 90px;"  data-guard="integer"/>
                 </div>
                 <div>
                     <span class="form-label">To Doc No</span><br/>
-                    <input type="number" id="txtHistToDoc" class="form-control" style="width: 90px;" />
+                    <input type="number" id="txtHistToDoc" class="form-control" style="width: 90px;"  data-guard="integer"/>
                 </div>
                 <div>
                     <span class="form-label">Supplier</span><br/>
-                    <select id="cmbHistSupplier" class="form-control" style="width: 220px;">
+                    <select id="cmbHistSupplier" class="form-control" style="width: 220px;" data-dtcombo="single" data-dtcombo-caption="Supplier">
                         <option value="">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
+                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
                     </select>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
@@ -1058,6 +1087,75 @@
         document.getElementById('txtFatherCNIC').value = '';
     }
 
+
+    /* ==================================================================================
+       The four linked screens on the status strip - InwardGatePass.cs.
+
+       Each desktop handler wraps the open in FormHelper.CanOpenForm("<ScreenName>", ...), a
+       per-user screen-rights check. Navigating here hits the web route, whose own controller and
+       security apply, so the check is not duplicated client-side - a client-side one would be
+       decoration anyway.
+
+       Grn Form is conditional on the desktop (:3843-3863):
+           CmbOrderType.Text == "Purchase_Order_PM"  ->  GrnPackingMaterial
+           otherwise                                  ->  InvFrmGRN
+       The web has no Packing Material GRN screen yet, so that branch says so rather than opening
+       the wrong GRN.
+       ================================================================================== */
+    var IGP_LINKED_FORMS = {
+        /* InvLabPurchaseAnalysis  (RadPurchaseLabFormToOpenOnInsert_Click, :3816) */
+        LabAnalysis:    { url: '/quality/purchase-analysis', label: 'Lab Purchase Analysis' },
+        /* frmWeightbridge         (RadWBFormToOpenOnInsert_Click, :3827) */
+        WeightBridge:   { url: '/weighbridge',               label: 'Weigh Bridge' },
+        /* InvFrmGRN               (RadGrnFormToOpenOnInsert_Click, :3843) */
+        Grn:            { url: '/purchase/goods-receipt-notes', label: 'GRN' },
+        /* FreightVoucher          (FreightVoucherFormToOpen_Click, :3865) */
+        FreightVoucher: { url: '/accounts/vouchers/freight', label: 'Freight Voucher' }
+    };
+
+    /* Opens the target screen in a new tab, the way the desktop opens a second form rather than
+       replacing the one you are on - the gate pass you are entering is not lost. */
+    function igpOpenLinkedForm(key, gatePassId) {
+        var target = IGP_LINKED_FORMS[key];
+        if (!target) return false;
+
+        if (key === 'Grn') {
+            var ot = document.getElementById('CmbOrderType');
+            var otText = ot && ot.selectedOptions && ot.selectedOptions.length
+                       ? ot.selectedOptions[0].textContent.trim() : '';
+            if (otText === 'Purchase_Order_PM') {
+                alert('Order Type is Purchase_Order_PM, which opens the Packing Material GRN on the '
+                    + 'desktop (GrnPackingMaterial). That screen has not been built yet, so the '
+                    + 'ordinary GRN was NOT opened in its place.');
+                return false;
+            }
+        }
+
+        var url = target.url;
+        /* OpenLinkformOnInsert passes the new GatePassId to the target so it opens already
+           filtered to this gate pass. Only sent when there is one. */
+        if (gatePassId) {
+            url += (url.indexOf('?') >= 0 ? '&' : '?') + 'gatePassId=' + encodeURIComponent(gatePassId);
+        }
+        window.open(url, '_blank', 'noopener');
+        return false;
+    }
+
+    /* OpenLinkformOnInsert(GatePassId, Status) - :3897-3915. Called after a SUCCESSFUL save.
+       Note the Grn branch alone also requires Status == "Accepted", and that after opening the
+       Grn form the desktop resets the selection to None (:3796-3799). Both reproduced. */
+    function igpOpenLinkedFormAfterSave(gatePassId, status) {
+        var sel = document.querySelector('input[name="formMode"]:checked');
+        var mode = sel ? sel.value : 'None';
+        if (mode === 'None') return;
+        if (mode === 'Grn' && String(status || '').trim() !== 'Accepted') return;
+        igpOpenLinkedForm(mode, gatePassId);
+        if (mode === 'Grn') {
+            var none = document.querySelector('input[name="formMode"][value="None"]');
+            if (none) none.checked = true;
+        }
+    }
+
     function onSaveRecord() {
         const payload = {
             id: parseInt(document.getElementById('txtId').value) || 0,
@@ -1116,6 +1214,11 @@
                     document.getElementById('btnsave').style.display = 'none';
                     document.getElementById('btnupdate').style.display = 'inline-flex';
                     loadMainHistoryGrid();
+                    /* OpenLinkformOnInsert(success, status) - :3791 */
+                    var st = document.getElementById('CmbStatus');
+                    igpOpenLinkedFormAfterSave(data.igpId,
+                        st && st.selectedOptions && st.selectedOptions.length
+                            ? st.selectedOptions[0].textContent.trim() : '');
                 } else {
                     alert(data.message);
                 }
@@ -1347,5 +1450,7 @@
     function onShowShortcuts() { alert('Shortcuts:\nF2: New\nF5: Refresh\nCtrl+S: Save\nCtrl+U: Update\nCtrl+D: Delete'); }
 </script>
 
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

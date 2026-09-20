@@ -51,6 +51,7 @@
         .nav-tabs > li > a { padding: 4px 12px; color: #334155; border-radius: 2px 2px 0 0; }
         .nav-tabs > li.active > a { color: #00796B; border-color: #cbd5e1 #cbd5e1 #ffffff; background-color: #ffffff; }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body>
 
@@ -125,8 +126,14 @@
                         </div>
                         <div class="col-md-2">
                             <label class="win-label">Payment Term</label>
+                            <!-- The desktop stores an InvDueTerms Id here; the single hard-coded
+                                 "Cash" option carried the STRING "Cash" as its value, which no
+                                 term id could ever match. -->
                             <select id="cmbPaymentTerms" class="win-combo">
-                                <option value="Cash">Cash</option>
+                                <option value="0">-- Select --</option>
+                                <option th:each="t : ${paymentTerms}"
+                                        th:value="${t['Id']} ?: ${t['id']}"
+                                        th:text="${t['TermsDescription']} ?: ${t['description']}"></option>
                                 <option value="Credit" selected>Credit</option>
                             </select>
                         </div>
@@ -220,20 +227,26 @@
                                 <option th:each="r : ${racks}" th:value="${r.id != null ? r.id : r.Id}" th:text="${r.rackName != null ? r.rackName : r.name}"></option>
                             </select>
                         </div>
+                        <!-- UOM and Condition are NOT user choices on this form.
+                             PurchaseInvoiceStoreManagement.cs:2028-2035 carries them across from
+                             the pending-GRN row - ItemUomId <- row["UomId"], UOMCodeItem <- row["Uom"],
+                             ItemConditionId <- row["ItemConditionId"], ItemCondition <- row["ItemCondition"] -
+                             and there is no UOM combo and no Condition combo anywhere on the desktop form.
+                             What stood here was a hard-coded list (1=Nos/2=Kg/3=Bags, 1=Fresh/2=Used)
+                             invented for the web screen. Those ids are not the ids in the UOM schedule
+                             or the item-condition table, and the save wrote them to ItemUOMId and
+                             ItemConditionId, so they have been removed rather than left to mislabel
+                             live rows. They are displayed read-only, from the GRN row, once the
+                             Load-GRN dialog is ported. -->
                         <div class="col-md-1">
                             <label class="win-label">UOM</label>
-                            <select id="cmbUom" class="win-combo">
-                                <option value="1">Nos</option>
-                                <option value="2">Kg</option>
-                                <option value="3">Bags</option>
-                            </select>
+                            <input type="text" id="txtUom" class="win-textbox" readonly
+                                   title="Carried from the GRN row - not editable on this form."/>
                         </div>
                         <div class="col-md-1">
                             <label class="win-label">Condition</label>
-                            <select id="cmbCondition" class="win-combo">
-                                <option value="1">Fresh</option>
-                                <option value="2">Used</option>
-                            </select>
+                            <input type="text" id="txtCondition" class="win-textbox" readonly
+                                   title="Carried from the GRN row - not editable on this form."/>
                         </div>
                         <div class="col-md-1">
                             <label class="win-label">Item Qty</label>
@@ -589,8 +602,10 @@
             const whText = whId > 0 ? $('#cmbWarehouse option:selected').text() : '';
             const rackId = parseInt($('#cmbRack').val() || '0');
             const rackText = rackId > 0 ? $('#cmbRack option:selected').text() : '';
-            const uom = $('#cmbUom option:selected').text();
-            const condition = $('#cmbCondition option:selected').text();
+            /* Read-only, and carried from the GRN row - never a hand-picked id. Until the
+               Load-GRN dialog is ported these are blank rather than invented. */
+            const uom = $('#txtUom').val() || '';
+            const condition = $('#txtCondition').val() || '';
             const qty = parseFloat($('#txtLineQty').val() || '0');
             const rate = parseFloat($('#txtLineRate').val() || '0');
 
@@ -820,8 +835,16 @@
             });
         }
 
+        /* frmPendingGrnStoreLoader -> InvGrn.InvGrnStore_PendingDataLoader ->
+           [dbo].[USP_InvGrnStore_PendingDataLoader]. The contract is traced (see
+           PURCHASE-INVOICE-STORE-MANAGEMENT-TRACE) but the dialog is not built yet, and it is the
+           only way the desktop fills this grid. Saying so is better than an alert that reads like
+           a feature description. */
         function loadGrnModal() {
-            alert("Load GRN feature: Pulls pending GRN records into Purchase Invoice Item Details.");
+            alert("Load GRN is not available yet on this screen. On the desktop this dialog is the "
+                + "only way the item grid is filled - it carries the GRN, purchase order, demand, "
+                + "pre-bill and delivery-challan references across with each row. Until it is "
+                + "ported this screen is read-only.");
         }
 
         function openVoucherPrint(code) {
@@ -832,5 +855,7 @@
             window.open(`/accounts/reports/general-ledger/pdf/${code}`, '_blank');
         }
     </script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@ package com.mst.services;
 import com.mst.models.dto.PurchaseLineItemDto;
 import com.mst.models.dto.PurchaseTransactionDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.mst.security.CurrentUserContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,12 @@ public class SaleService {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    /* The signed-in user's organization, company, financial year and id. These used to be the
+       literal 1 in the INSERTs below, which wrote every document into organization 1 / company 1
+       regardless of who was signed in and broke the tenancy isolation the desktop enforces. */
+    @Autowired
+    private CurrentUserContext currentUserContext;
 
     public int generateNextDocNo(int documentTypeId) {
         try {
@@ -141,7 +148,8 @@ public class SaleService {
                 String insertHead = "INSERT INTO VoucherHead (" +
                         "DocumentTypeId, VoucherCode, VoucherDate, RefAccountId, Remarks, VoucherAmount, " +
                         "OrganizationId, CompanyId, FinancialYearId, EntryUser, EntryDate, IsApproved" +
-                        ") VALUES (?, ?, ?, ?, ?, ?, 1, 1, 1, 1, GETDATE(), 1)";
+                        /* IsApproved stays 1 - that is a business rule, reported rather than changed. */
+                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 1)";
 
                 jdbcTemplate.update(insertHead,
                         dto.getDocumentTypeId(),
@@ -149,11 +157,17 @@ public class SaleService {
                         vDate,
                         refAccId != null ? refAccId : 0,
                         dto.getRemarks() != null ? dto.getRemarks() : "",
-                        netTotal.doubleValue()
+                        netTotal.doubleValue(),
+                        currentUserContext.currentOrganizationId(),
+                        currentUserContext.currentCompanyId(),
+                        currentUserContext.currentFinancialYearId(),
+                        currentUserContext.currentUserId()
                 );
             }
 
-            Integer voucherHeadId = dto.getId() != null && dto.getId() > 0 ? dto.getId() : jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
+            Integer voucherHeadId = dto.getId() != null && dto.getId() > 0 ? dto.getId() : /* SCOPE_IDENTITY: @@IDENTITY returns the last identity from ANY scope, including
+                       rows a trigger on VoucherHead inserts elsewhere. */
+                    jdbcTemplate.queryForObject("SELECT CAST(SCOPE_IDENTITY() AS INT)", Integer.class);
 
             int lineNo = 1;
             String detailSql = "INSERT INTO VoucherDetail (" +

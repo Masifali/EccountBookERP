@@ -55,8 +55,20 @@ function initForm() {
     loadDefaultPaymentRows();
 }
 
+/* Superseded by build/js/countx_desktop_combo.js, which renders the multi-column drop grids for
+   every Sale and Purchase screen through one implementation. The bespoke 2-column and 4-column
+   formatters that used to live here are gone: their column sets were wrong for this form anyway -
+   the supplier combo showed two columns where dtSupplier shows four, and the 4-column header was
+   hard-captioned "Commission Agent" for every combo that used it.
+
+   This now only initialises the plain ones and wires the change listeners; DesktopCombo.init()
+   runs afterwards and skips anything already initialised. */
 function initSearchableDropdowns() {
-    if ($.fn.select2) {
+    /* select2 initialisation removed - build/js/countx_desktop_combo.js now renders every combo
+       on this screen, without jQuery or select2, so Purchase Order and Sale Order draw the same
+       control. Leaving select2 on some of them would have produced two different-looking
+       dropdowns on one form. The change listeners below are still wired here. */
+    if (false) {
         $('.select2').each(function() {
             $(this).select2({
                 width: '100%',
@@ -302,9 +314,71 @@ function loadDropdowns() {
     loadPaymentTermsOptions();
     loadUomScheduleList();
     loadHistoryBranches();
+    loadHistoryParties();
+}
+
+/* ============================================================================================
+ * History tab - Supplier Name and Booking Person pickers.
+ *
+ * HistorySupplierComboFill (PurchsaeOrder.cs:4640-4695) fills BOTH from a single
+ * USP_GetDataForDropDownFromPurchaseOrder call and splits the one result set on its Activity
+ * column: "Supplier" rows go to one picker, "BookingPerson" rows to the other (:4676-4686).
+ *
+ * So these are NOT the party master - they are only the parties that actually appear on a
+ * Purchase Order, which is why the desktop offers a handful of names. /api/purchase-order/
+ * history-parties performs that one call and returns the two lists already split.
+ *
+ * The desktop also re-runs this whenever the History branch changes (the branch is a parameter
+ * of the call), so the branch picker re-triggers it here too.
+ * ============================================================================================ */
+function loadHistoryParties() {
+    /* The desktop passes the History tab's chosen branch; with none chosen the BLL omits the
+       parameter, which the endpoint reproduces. No branch is not an error here. */
+    const branchId = $('#cmbHistoryBranch').val() || '';
+    const qs = (branchId && branchId !== '0') ? ('?branchesIds=' + encodeURIComponent(branchId)) : '';
+
+    $.get('/api/purchase-order/history-parties' + qs, function (data) {
+        fillHistoryPartySelect('#cmbHistorySupplier', (data && data.suppliers) || [],
+                               '-- All Suppliers --');
+        fillHistoryPartySelect('#cmbHistoryBookingPerson', (data && data.bookingPersons) || [],
+                               '-- All Booking Persons --');
+    }).fail(function () {
+        /* Left empty rather than filled from the party master: showing every supplier here would
+           be a different list from the desktop's, not a degraded version of it. */
+        console.warn('history-parties failed; the History Supplier and Booking Person pickers '
+                   + 'will stay empty rather than show the full party master.');
+    });
+}
+
+function fillHistoryPartySelect(selector, rows, placeholder) {
+    const sel = $(selector);
+    if (!sel.length) return;
+    const keep = sel.val();
+    sel.empty().append(`<option value="0">${escapeHtml(placeholder)}</option>`);
+    rows.forEach(r => {
+        const id = r.Id !== undefined ? r.Id : r.id;
+        const name = r.ReferenceName !== undefined ? r.ReferenceName : (r.name || r.description || '');
+        if (id === undefined || id === null) return;
+        sel.append(`<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`);
+    });
+    /* Keep the operator's selection across a refresh when it is still offered. */
+    if (keep && sel.find(`option[value="${keep}"]`).length) sel.val(keep);
+    /* Mirror into the hidden field the history query already reads (:2486) - both now and on
+       every later pick. The template also carries an inline onchange doing this, but binding it
+       here means the mirror survives a template edit and works if that attribute is ever
+       dropped; the handler is namespaced so re-filling the list cannot stack duplicates. */
+    if (selector === '#cmbHistorySupplier') {
+        $('#hidHistorySupplierId').val(sel.val() || '0');
+        sel.off('change.histmirror').on('change.histmirror', function () {
+            $('#hidHistorySupplierId').val($(this).val() || '0');
+        });
+    }
 }
 
 function loadHistoryBranches() {
+    /* The branch is a parameter of the history-party call, so changing it re-runs that call -
+       HistorySupplierComboFill reads cmbBranchName every time (:4654-4667). */
+    $('#cmbHistoryBranch').off('change.histparties').on('change.histparties', loadHistoryParties);
     $.get('/api/purchase-order/branches', function(data) {
         const sel = $('#cmbHistoryBranch');
         sel.find('option:gt(0)').remove();
@@ -391,8 +465,14 @@ function bindItemUom(itemId, isNewRow) {
         const eqNum = (rawEq === null) ? NaN : parseFloat(rawEq);
         const eqAttr = (isFinite(eqNum) && eqNum > 0) ? ` data-eq="${eqNum}"` : '';
         const code = u.uomCode || u.UOMCode || u.UomCode || '';
-        packSel.append(`<option value="${id}"${eqAttr}>${escapeHtml(code)}</option>`);
-        rateSel.append(`<option value="${id}"${eqAttr}>${escapeHtml(code)}</option>`);
+        /* data-base drives the BaseRateUom checkbox column - the second visible column of
+           dtUOM once Equivalent is hidden (:1396, :1398). Read as stored; a row without the
+           flag renders an unticked box rather than a guess. */
+        const baseRaw = (u.baseRateUom !== undefined) ? u.baseRateUom
+                      : ((u.BaseRateUom !== undefined) ? u.BaseRateUom : '');
+        const baseAttr = ` data-base="${escapeHtml(String(baseRaw === true ? 1 : baseRaw === false ? 0 : baseRaw))}"`;
+        packSel.append(`<option value="${id}"${eqAttr}${baseAttr}>${escapeHtml(code)}</option>`);
+        rateSel.append(`<option value="${id}"${eqAttr}${baseAttr}>${escapeHtml(code)}</option>`);
     });
 
     if (isNewRow) {
@@ -478,6 +558,7 @@ function preloadSearchData() {
 
     $.get('/api/purchase-order/items?mode=name', function(data) {
         allItems = data || [];
+        rebuildItemCategoryList();
         const ebSel = $('#cmbEbItem');
         ebSel.find('option:gt(0)').remove();
         allItems.forEach(i => ebSel.append(`<option value="${i.id}">${escapeHtml(i.itemName)}</option>`));
@@ -508,8 +589,15 @@ function populateSupplierDropdowns() {
         const name = s.companyName || s.name || '';
         const cityId = (s.cityId !== undefined && s.cityId !== null) ? s.cityId : '';
         const label = byCode ? (code || name) : (name || code);
+        /* data-city / data-mobile feed the 4-column drop grid (Name | PartyCode | CityName |
+           MobileNo), which is what dtSupplier shows once GlAccountId and CityId are hidden
+           (PurchsaeOrder.cs:1031-1032). Absent values render as an empty cell, never a
+           placeholder. data-city-id is separate and still drives the city cascade. */
+        const cityName = s.cityName || s.city || '';
+        const mobile = s.mobileNo || s.mobile || s.mobilePersonal || '';
         selForm.append(
-            `<option value="${s.id}" data-code="${escapeHtml(code)}" data-city-id="${escapeHtml(String(cityId))}">${escapeHtml(label)}</option>`
+            `<option value="${s.id}" data-code="${escapeHtml(code)}" data-city-id="${escapeHtml(String(cityId))}"`
+            + ` data-city="${escapeHtml(cityName)}" data-mobile="${escapeHtml(mobile)}">${escapeHtml(label)}</option>`
         );
     });
 
@@ -613,12 +701,13 @@ function selectSupplier(suppId) {
     const supp = allSuppliers.find(s => s.id === suppId);
     if (!supp) return;
 
+    /* The history branch of this modal is gone: that filter is now #cmbHistorySupplier, fed by
+       /api/purchase-order/history-parties. Routing a pick from the party-master modal into it
+       would put a supplier there that has no Purchase Order, which the desktop never offers. */
     if (supplierModalTarget === 'history') {
-        $('#hidHistorySupplierId').val(supp.id);
-        $('#txtHistorySupplierDisplay').val(supp.companyName || supp.name || '');
-        $('#modalSupplierSearch').modal('hide');
         supplierModalTarget = 'form';
-        return;                      /* a history filter must not touch the form header */
+        $('#modalSupplierSearch').modal('hide');
+        return;
     }
 
     $('#hidSupplierId').val(supp.id);
@@ -697,7 +786,7 @@ function onItemSearchModeChange() {
         }
     }
     if (allItems && allItems.length && $('#modalItemSearch').hasClass('in')) {
-        renderItemModalGrid(allItems);
+        renderItemModalGrid(itemsForPicker());
     }
 }
 
@@ -719,6 +808,7 @@ function resetHistoryFilters() {
     $('#txtHistoryToDocNo').val('');
     $('#cmbHistoryBranch').val('0');
     $('#cmbHistoryBookingPerson').val('0');
+    $('#cmbHistorySupplier').val('0');
     $('input[name="radHistoryDateType"][value="DocDate"]').prop('checked', true);
     clearHistorySupplier();
     toggleHistoryDatePickers();
@@ -729,16 +819,22 @@ function resetHistoryFilters() {
    SAME supplier rows as the form combo. So the history picker reuses the one supplier
    search modal rather than duplicating it, with a target flag deciding where the pick
    lands. One modal, one data source, no second copy to drift. */
-function openHistorySupplierModal() {
-    supplierModalTarget = 'history';
-    openSupplierSearchModal();
-}
+/* SUPERSEDED. The history Supplier filter is now #cmbHistorySupplier, a dropdown fed by
+   /api/purchase-order/history-parties - which is what the desktop has (cmbSupplierNameHistory,
+   PurchsaeOrder.cs:4688) and, more importantly, the right LIST: only parties that actually
+   appear on a Purchase Order, not the party master this modal searches.
+
+   Kept as a no-op because the template may still reference it from an older cached copy; it
+   now does nothing rather than opening a modal that writes into a field that no longer exists. */
+function openHistorySupplierModal() { /* replaced by #cmbHistorySupplier */ }
 
 /* Clearing the history supplier means "all suppliers", which the desktop expresses as
    SupplierCustomerId = 0 (:4759). */
 function clearHistorySupplier() {
     $('#hidHistorySupplierId').val('0');
-    $('#txtHistorySupplierDisplay').val('');
+    /* Now a dropdown; 0 is its "-- All Suppliers --" row. The old display textbox is gone. */
+    const sel = $('#cmbHistorySupplier');
+    if (sel.length) { sel.val('0'); sel[0].dispatchEvent(new Event('change', { bubbles: true })); }
 }
 
 /* ============================================================
@@ -1090,7 +1186,114 @@ function onParentCategoryChange() {
     const parentId = parseInt($('#cmbParentCategory').val() || '0');
     $.get('/api/purchase-order/items?mode=name&parentCategoryId=' + parentId, function(data) {
         allItems = data || [];
+        /* combordercat_Leave (:1663-1686) runs ItemCategoryOrTypeBind THEN ItemdtFillFromAll THEN
+           ItemNameBind - the category list is rebuilt from the newly narrowed items every time the
+           header category changes, not just once at load. */
+        rebuildItemCategoryList();
+        onItemCategoryChange();
     });
+}
+
+/* Item Code / Item Name for a grid row, taken from the item itself.
+
+   Order of preference, and why:
+     1. the loaded item list - the direct equivalent of the desktop reading
+        combitem.SelectedRow.Cells["ItemCode"] / ["ItemName"] (:2635);
+     2. the row currently being edited - so re-saving an existing line whose item has since been
+        filtered out of the list does not blank or corrupt its code;
+     3. the display text, unchanged, as a last resort. It is NOT split here: in Name mode the
+        display is "Name (CODE)" and splitting it is exactly the bug this replaces. */
+function selectedItemField(itemId, field, displayText) {
+    if (itemId > 0 && allItems && allItems.length) {
+        const it = allItems.find(i => i.id === itemId);
+        if (it && it[field] !== undefined && it[field] !== null && it[field] !== '') return it[field];
+    }
+    if (editingLineIdx >= 0 && lineItems[editingLineIdx] && lineItems[editingLineIdx][field]) {
+        return lineItems[editingLineIdx][field];
+    }
+    return displayText || '';
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Item Category / Item Type filter - CmbCategory plus the RadCategory / RadType pair.
+ *
+ * ItemCategoryOrTypeBind, PurchsaeOrder.cs:1230-1283.
+ *   - the list is DERIVED from the items already loaded, not fetched from a master;
+ *   - it is distinct on the NAME, skipping blanks, and carries that row's own id;
+ *   - the caption is "Item Category" when Category is checked and "ItemType" when Type is
+ *     (:1271), which is why the label and the combo caption are both swapped below;
+ *   - when the derived list is empty the desktop clears the combo rather than leaving stale
+ *     values standing (:1277-1279).
+ *
+ * ItemdtFillFromAll, :1289-1310, then narrows the item list itself:
+ *     CategoryOrTypeId == 0                       -> everything
+ *     RadCategory.Checked && == ItemCategoryId    -> that category
+ *     RadType.Checked     && == ItemTypeId        -> that type
+ * and ItemNameBind (:1313) re-binds the item picker afterwards.
+ *
+ * The parent-category narrowing is already done server-side by the items endpoint, so what is
+ * left here is exactly the second stage.
+ * ---------------------------------------------------------------------------------------- */
+function itemCatModeIsCategory() { return $('#radItemCatCategory').is(':checked'); }
+
+function rebuildItemCategoryList() {
+    const byCategory = itemCatModeIsCategory();
+    const idKey   = byCategory ? 'itemCategoryId' : 'itemTypeId';
+    const nameKey = byCategory ? 'itemCategory'   : 'itemType';
+    const caption = byCategory ? 'Item Category'  : 'ItemType';
+
+    $('#lblItemCategory').text(caption);
+    const sel = $('#cmbItemCategory');
+    sel.attr('data-dtcombo-caption', caption);
+
+    const keep = parseInt(sel.val() || '0', 10);
+    const seen = new Map();
+    (allItems || []).forEach(function (i) {
+        const name = (i[nameKey] || '').toString().trim();
+        if (!name) return;                       /* !string.IsNullOrEmpty(row.ItemCategory) */
+        if (!seen.has(name)) seen.set(name, parseInt(i[idKey] || '0', 10));
+    });
+
+    sel.empty().append('<option value="0">-- All --</option>');
+    Array.from(seen.keys()).sort(function (a, b) { return a.localeCompare(b); })
+        .forEach(function (name) {
+            sel.append(`<option value="${seen.get(name)}">${escapeHtml(name)}</option>`);
+        });
+
+    /* Retain the selection when it is still offered - BindAndRetainSelection's whole purpose. */
+    if (keep > 0 && sel.find(`option[value="${keep}"]`).length) sel.val(String(keep));
+    else sel.val('0');
+}
+
+/* The items the picker should show: everything the endpoint returned, narrowed by the
+   category/type selection. Kept separate from allItems so switching the filter back to
+   "-- All --" restores the full list without re-querying, ditto the desktop. */
+function itemsForPicker() {
+    const catOrTypeId = parseInt($('#cmbItemCategory').val() || '0', 10);
+    if (!catOrTypeId) return allItems || [];
+    const key = itemCatModeIsCategory() ? 'itemCategoryId' : 'itemTypeId';
+    return (allItems || []).filter(function (i) { return parseInt(i[key] || '0', 10) === catOrTypeId; });
+}
+
+function onItemCategoryModeChange() {
+    /* Switching Category <-> Type rebuilds the list from the SAME loaded items and drops the old
+       selection, because an ItemCategoryId and an ItemTypeId are not comparable. */
+    $('#cmbItemCategory').val('0');
+    rebuildItemCategoryList();
+    onItemCategoryChange();
+}
+
+function onItemCategoryChange() {
+    /* Narrowing the item list can orphan the item already chosen. The desktop's
+       CommonServices.SetComboValue(combitem, "Id", ID, dtitem) restores the selection only when
+       the id is still present, so a no-longer-offered item is cleared here rather than left
+       displayed over a list it is not in. */
+    const chosen = parseInt($('#hidItemId').val() || '0', 10);
+    if (chosen > 0 && !itemsForPicker().some(function (i) { return i.id === chosen; })) {
+        $('#hidItemId').val('0');
+        $('#txtItemDisplay').val('');
+    }
+    if ($('#modalItemSearch').hasClass('in')) renderItemModalGrid(itemsForPicker());
 }
 
 function openItemSearchModal() {
@@ -1098,7 +1301,8 @@ function openItemSearchModal() {
     const parentId = parseInt($('#cmbParentCategory').val() || '0');
     $.get('/api/purchase-order/items?mode=' + mode + '&parentCategoryId=' + parentId, function(data) {
         allItems = data || [];
-        renderItemModalGrid(allItems);
+        rebuildItemCategoryList();
+        renderItemModalGrid(itemsForPicker());
         $('#modalItemSearch').modal('show');
         setTimeout(() => $('#txtModalItemQuery').focus(), 300);
     });
@@ -1106,7 +1310,9 @@ function openItemSearchModal() {
 
 function filterItemSearchGrid() {
     const q = $('#txtModalItemQuery').val().toLowerCase();
-    const filtered = allItems.filter(i => 
+    /* Text search runs over the CATEGORY-FILTERED list, not the whole one - otherwise typing
+       could surface an item the chosen Item Category has excluded. */
+    const filtered = itemsForPicker().filter(i => 
         (i.itemName && i.itemName.toLowerCase().includes(q)) ||
         (i.itemCode && i.itemCode.toLowerCase().includes(q)) ||
         (i.itemCategory && i.itemCategory.toLowerCase().includes(q))
@@ -1265,8 +1471,21 @@ function btnAddDetailRow_Click() {
     const line = {
         purchaseOrderDetailId: existingDetailId,
         itemId: itemId,
-        itemCode: itemDisplayText.split(' - ')[0] || '',
-        itemName: itemDisplayText.includes(' - ') ? itemDisplayText.split(' - ')[1] : itemDisplayText,
+        /* The desktop reads these as two separate cells of the selected combo row -
+           combitem.SelectedRow.Cells["ItemCode"] and Cells["ItemName"], :2635 - so they are taken
+           from the item here too.
+
+           They used to be RE-PARSED out of the display textbox, which has two different shapes:
+               Code mode: "CODE - Name"      split(' - ') worked
+               Name mode: "Name (CODE)"      no " - " at all
+           so in Name mode - the default - split(' - ')[0] returned the WHOLE string and both grid
+           columns showed the same text: "B1 1509 White Process (732)" under Item Code as well as
+           Item Name. Even in Code mode an item name containing " - " split in the wrong place.
+
+           Falling back to the row being edited (not to the parse) keeps an existing line intact if
+           its item is no longer in the loaded list. */
+        itemCode: selectedItemField(itemId, 'itemCode', itemDisplayText),
+        itemName: selectedItemField(itemId, 'itemName', itemDisplayText),
         cropYear: cropYear,
         packUomId: packUomId,
         packUomCode: packUomCode,
@@ -1875,12 +2094,16 @@ function renderChargeGrid() {
         return;
     }
     chargeToProductItems.forEach((row, idx) => {
-        const options = coaAccountsForCharge.map(a =>
-            `<option value="${a.Id}" ${a.Id == row.accountId ? 'selected' : ''}>${escapeHtml(a.AccountTitle)}</option>`
-        ).join('');
+        /* data-code is the account code, the second column of the drop grid. Published only
+           when the procedure returns one - absent renders an empty cell, not a placeholder. */
+        const options = coaAccountsForCharge.map(a => {
+            const code = a.AccountCode || a.accountCode || '';
+            return `<option value="${a.Id}" data-code="${escapeHtml(code)}"`
+                 + ` ${a.Id == row.accountId ? 'selected' : ''}>${escapeHtml(a.AccountTitle)}</option>`;
+        }).join('');
         tbody.append(`
             <tr>
-                <td><select class="win-combo" onchange="onChargeAccountChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
+                <td><select class="win-combo dtcombo" data-dtcombo="account2" data-dtcombo-caption="Account Title" onchange="onChargeAccountChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.percentage}" onchange="onChargePercentageChange(${idx}, this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.qty}" onchange="onChargeQtyRateChange(${idx}, 'qty', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.rate}" onchange="onChargeQtyRateChange(${idx}, 'rate', this.value)"/></td>
@@ -1941,15 +2164,17 @@ function btnAddChargeRow_Click() {
  * (must not exceed TotalOrderAmount) - ditto grdPaymentDetail_CellUpdated().
  * ============================================================ */
 function loadPaymentTermsOptions() {
+    /* Payment terms come from Sp_InvDueTerms_GetAllMethod (@Activity='GetAll'), the same source
+       the desktop's clsGlobalVariables.globalPaymentTerm is filled from. An empty read used to
+       be replaced here with an invented Cash/Credit/Advance list carrying invented ids and
+       dueDays - which would have let a purchase order be saved against a payment term id that
+       does not exist in the database, and fed a made-up 30 into the due-date arithmetic. An
+       empty read now stays empty and says so. */
     $.get('/api/purchase-order/payment-terms', function(data) {
-        if (data && data.length > 0) {
-            paymentTermsOptions = data;
-        } else {
-            paymentTermsOptions = [
-                { id: 1, description: 'Cash', dueDays: 0 },
-                { id: 2, description: 'Credit', dueDays: 30 },
-                { id: 3, description: 'Advance', dueDays: 0 }
-            ];
+        paymentTermsOptions = (data && data.length) ? data : [];
+        if (!paymentTermsOptions.length) {
+            console.warn('[PO] /api/purchase-order/payment-terms returned no rows - the payment '
+                       + 'term list is empty; nothing is substituted for it.');
         }
         renderSchedGrid();
     });
@@ -1982,25 +2207,23 @@ function renderSchedGrid() {
         return;
     }
 
-    let optsList = paymentTermsOptions;
-    if (!optsList || optsList.length === 0) {
-        optsList = [
-            { id: 1, description: 'Cash', dueDays: 0 },
-            { id: 2, description: 'Credit', dueDays: 30 },
-            { id: 3, description: 'Advance', dueDays: 0 }
-        ];
-    }
+    /* No invented fallback here either - see the loader above. With no terms read, each row's
+       dropdown shows only its placeholder, so a term cannot be picked and nothing bogus is
+       saved. */
+    let optsList = paymentTermsOptions || [];
 
     let totalPct = 0, totalAmt = 0;
     paymentTermsDetailItems.forEach((row, idx) => {
         totalPct += (row.prcntOfTotal || 0);
         totalAmt += (row.amount || 0);
+        /* data-code carries the term's due days, the second column of the drop grid. */
         const options = optsList.map(t =>
-            `<option value="${t.id}" ${t.id == row.paymentTermId ? 'selected' : ''}>${escapeHtml(t.description)}</option>`
+            `<option value="${t.id}" data-code="${t.dueDays !== undefined && t.dueDays !== null ? escapeHtml(t.dueDays) : ''}"`
+            + ` ${t.id == row.paymentTermId ? 'selected' : ''}>${escapeHtml(t.description)}</option>`
         ).join('');
         tbody.append(`
             <tr>
-                <td><select class="win-combo" onchange="onSchedTermChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
+                <td><select class="win-combo dtcombo" data-dtcombo="term2" data-dtcombo-caption="Payment Term" onchange="onSchedTermChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
                 <td><input type="number" class="win-textbox" style="text-align: center;" value="${row.dueDays}" onchange="onSchedDueDaysChange(${idx}, this.value)"/></td>
                 <td><input type="date" class="win-datepicker" value="${row.dueDate}" onchange="onSchedDueDateChange(${idx}, this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.prcntOfTotal}" onchange="onSchedPercentChange(${idx}, this.value)"/></td>
@@ -2115,12 +2338,16 @@ function buildPayload() {
         dueDays: parseInt($('#txtDueDays').val() || '0'),
         paymentDueDate: $('#txtPaymentDueDate').val(),
         commissionAgentId: parseInt($('#hidCommissionAgentId').val() || '0'),
-        commType: $('#cmbCommType').val(),
+        /* The DTO field is commissionTypeName (a String), matching po.CommissionType, which the
+           desktop sets from the combo's TEXT - :3324. Sent as "commType" this was an unknown
+           property and Jackson dropped it silently. */
+        commissionTypeName: $('#cmbCommType option:selected').text(),
         commRate: parseFloat($('#txtCommRate').val() || '0'),
         commUomId: parseInt($('#cmbCommUom').val() || '1'),
         commAmount: parseFloat($('#txtCommAmount').val() || '0'),
         brokerAccountId: parseInt($('#hidBrokerAccountId').val() || '0'),
-        brokeryType: $('#cmbBrokeryType').val(),
+        /* Likewise brokeryTypeName <- po.BrokeryType, also the combo's TEXT - :3332. */
+        brokeryTypeName: $('#cmbBrokeryType option:selected').text(),
         brokeryRate: parseFloat($('#txtBrokeryRate').val() || '0'),
         brokeryRateUomId: parseInt($('#cmbBrokeryRateUom').val() || '1'),
         brokeryAmount: parseFloat($('#txtBrokeryAmount').val() || '0'),
@@ -2133,6 +2360,11 @@ function buildPayload() {
            saved and the amount landed in the wrong column. */
         cashFreight:   $('#radCashFreight').is(':checked'),
         creditFreight: $('#radCreditFreight').is(':checked'),
+        /* freightAmount has NO desktop counterpart: Architecture.Model.FeedMill.Purchase.PurchaseOrder
+           declares only the two booleans above, and PurchsaeOrder.cs has no freight-amount control
+           at all - just rdFreightCash / rdFreightCredit. It is not a DTO field either, so it was
+           being dropped by Jackson. Still sent so the screen's value is not silently invented into
+           some other column; it is recorded as an open question rather than mapped by guesswork. */
         freightAmount: parseFloat($('#txtCashFreight').val() || '0'),
         remarksHeader: $('#txtRemarksHeader').val(),
         lineItems: lineItems,

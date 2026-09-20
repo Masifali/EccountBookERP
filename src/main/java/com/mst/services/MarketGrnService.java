@@ -53,6 +53,68 @@ public class MarketGrnService {
             result.put("jobLots", Collections.emptyList());
         }
 
+        /* ----------------------------------------------------------------------------------
+           The three lists below replace hard-coded options that used to sit in the template
+           (Vehicle Type "Truck"/"Tractor", a single "PP Bags" packing type and a single "KGs"
+           UOM). All three are database-backed on the desktop, and all three are read here
+           through the SAME procedures InvFrmGRN.cs uses - not through a convenient SELECT.
+           ---------------------------------------------------------------------------------- */
+
+        /* InvFrmGRN.cs:757 VehicleType.GetAll() -> Sp_VehicleType_GetAllMethod @Activity='ReadAll'
+           (BLL 0611). Bound at :1208 VehicleTypesBind. The desktop stores a VehicleTypeId, so the
+           template must send the id, never the caption. */
+        try {
+            result.put("vehicleTypes", jdbcTemplate.queryForList(
+                    "EXEC Sp_VehicleType_GetAllMethod @Activity=?", "ReadAll"));
+        } catch (Exception e) {
+            result.put("vehicleTypes", Collections.emptyList());
+        }
+
+        /* InvFrmGRN.cs:1296-1306 PackingTypeDtFillFromGlobalAndBind.
+           The global packing-type list RESTRICTED to ids {1, 2, 5}, value member Id, display
+           member PackTypeDesc.
+
+           The desktop local is named `excludedIds` but the lambda KEEPS those ids -
+               lst.Where(r => excludedIds.Contains(r.Id))
+           - so it is an INCLUDE set, not an exclude set. Reading the variable name instead of
+           the code would invert the filter and show every packing type except the three this
+           screen is supposed to offer. The filter is applied here, in the same order the desktop
+           applies it: fetch the whole list, then keep those three. */
+        try {
+            List<Map<String, Object>> packing = jdbcTemplate.queryForList(
+                    "EXEC [dbo].[Sp_InvPackingType_GetAllMethod] @Activity=?", "ReadAll");
+            Set<Integer> grnPackingTypeIds = new LinkedHashSet<>(Arrays.asList(1, 2, 5));
+            List<Map<String, Object>> kept = new ArrayList<>();
+            for (Map<String, Object> row : packing) {
+                Object id = row.get("Id");
+                if (id == null) {
+                    for (Map.Entry<String, Object> en : row.entrySet())
+                        if ("Id".equalsIgnoreCase(en.getKey())) { id = en.getValue(); break; }
+                }
+                if (id instanceof Number && grnPackingTypeIds.contains(((Number) id).intValue())) {
+                    kept.add(row);
+                }
+            }
+            result.put("packingTypes", kept);
+        } catch (Exception e) {
+            result.put("packingTypes", Collections.emptyList());
+        }
+
+        /* usp_getAllUomsByCompanyId - the same UOM schedule CommonBindings.ItemUomFromGlobalBind
+           reads. Returned whole, with ItemId on each row, so the screen can narrow to the chosen
+           item without a second round trip.
+
+           Equivalent is passed through EXACTLY as stored. It is never defaulted to 1: a missing
+           or non-positive factor has to reach the screen as it is, so the row can be refused the
+           way the desktop refuses it, rather than silently computing a wrong weight. */
+        try {
+            result.put("uoms", jdbcTemplate.queryForList(
+                    "EXEC usp_getAllUomsByCompanyId @OrganizationId=?, @CompanyId=?, @Active=?",
+                    orgId, compId, 1));
+        } catch (Exception e) {
+            result.put("uoms", Collections.emptyList());
+        }
+
         return result;
     }
 
@@ -89,17 +151,26 @@ public class MarketGrnService {
             if (toDocNo != null && toDocNo > 0) {
                 sb.append("AND g.DocNo <= ").append(toDocNo).append(" ");
             }
+            /* fromDate and toDate arrive straight from a request parameter or a JSON body and
+               were being concatenated into a quoted SQL literal, which let a caller close the
+               quote and append their own SQL - against the live database. Bound instead. The
+               column is still chosen by an equalsIgnoreCase test, so it can only ever be one of
+               two fixed identifiers and never reaches the statement as caller text.
+               Behaviour is unchanged for every legitimate value. */
+            List<Object> binds = new ArrayList<>();
             if (fromDate != null && !fromDate.trim().isEmpty()) {
                 String col = "entrydate".equalsIgnoreCase(dateType) ? "g.EntryDate" : "g.DocDate";
-                sb.append("AND ").append(col).append(" >= '").append(fromDate).append("' ");
+                sb.append("AND ").append(col).append(" >= ? ");
+                binds.add(fromDate.trim());
             }
             if (toDate != null && !toDate.trim().isEmpty()) {
                 String col = "entrydate".equalsIgnoreCase(dateType) ? "g.EntryDate" : "g.DocDate";
-                sb.append("AND ").append(col).append(" <= '").append(toDate).append(" 23:59:59' ");
+                sb.append("AND ").append(col).append(" <= ? ");
+                binds.add(toDate.trim() + " 23:59:59");
             }
 
             sb.append("ORDER BY g.DocNo DESC");
-            return jdbcTemplate.queryForList(sb.toString());
+            return jdbcTemplate.queryForList(sb.toString(), binds.toArray());
         } catch (Exception e) {
             return Collections.emptyList();
         }

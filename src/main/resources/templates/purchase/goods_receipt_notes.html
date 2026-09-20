@@ -6,7 +6,6 @@
     <title>Goods Receiving Notes - EccountBook ERP Desktop Copy</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <style>
         :root {
             --win-bg: #ece9d8;
@@ -61,6 +60,7 @@
         .mode-btn { padding: 2px 12px; border: 1px solid #888; background: #e0e0e0; cursor: pointer; font-size: 11px; }
         .mode-btn.active { background: #fff; font-weight: bold; color: #003366; }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body>
 
@@ -69,8 +69,8 @@
     <div class="top-banner">
         <div>ERP AccountBook ERP</div>
         <div style="font-size: 11px; font-weight: normal;">
-            <span>Numan Rasheed (Admin)</span> |
-            <span>Golden Ace Rice Mills (Pvt) Ltd.</span> |
+            <span th:text="${#authentication != null ? #authentication.name : 'User'}">User</span> |
+            <span><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></span> |
             <span>2026-27</span>
         </div>
     </div>
@@ -113,14 +113,22 @@
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 80px;">Supplier Name</span>
-                    <select id="cmbSupplier" class="form-control select2" style="width: 210px;">
+                    <select id="cmbSupplier" class="form-control" style="width: 210px;" data-dtcombo="single" data-dtcombo-caption="SupplierName">
                         <option value="0">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
+                        <!-- EL1008E guard. These loops used the DOT form (${s.name}) against rows that are
+                         LinkedCaseInsensitiveMap, and SpringEL raises on a Map when the key is absent -
+                         taking the whole page to HTTP 500. Four of the five names were also simply
+                         wrong: getSuppliers returns supplierName, getWarehouses warehouseName,
+                         getItems itemName and getJobLots description - not "name". The indexer form
+                         returns null for an absent key instead of raising, so a future shape change
+                         renders a blank option rather than a 500. -->
+                        <option th:each="s : ${suppliers}" th:value="${s['id']}"
+                                th:text="${s['supplierName']} ?: ${s['name']}"></option>
                     </select>
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 80px;">Gate Pass No</span>
-                    <select id="cmbGatePassNo" class="form-control" style="width: 90px;">
+                    <select id="cmbGatePassNo" class="form-control" style="width: 90px;" data-dtcombo="single" data-dtcombo-caption="Gate Pass No">
                         <option value="">-- Select --</option>
                     </select>
                     <span class="form-label" style="width: 45px;">Bilty No</span>
@@ -128,17 +136,22 @@
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 80px;">Vehicle Type</span>
-                    <select id="cmbVehicleType" class="form-control" style="width: 90px;">
-                        <option value="">-- Select --</option>
-                        <option value="Truck">Truck</option>
-                        <option value="Tractor">Tractor</option>
+                    <!-- InvFrmGRN.cs:757 VehicleType.GetAll() -> Sp_VehicleType_GetAllMethod
+                         @Activity='ReadAll', bound at :1208 VehicleTypesBind. A database list, so
+                         "Truck"/"Tractor" were invented here and also sent as TEXT where the
+                         desktop stores a VehicleTypeId. Populated from the API only. -->
+                    <select id="cmbVehicleType" class="form-control" style="width: 90px;" data-dtcombo="single" data-dtcombo-caption="VehicleDescription">
+                        <option value="0">-- Select --</option>
+                        <option th:each="v : ${vehicleTypes}"
+                                th:value="${v['Id']}"
+                                th:text="${v['VehicleType']} ?: ${v['Description']} ?: ${v['Name']}"></option>
                     </select>
                     <span class="form-label" style="width: 55px;">Vehicle No</span>
                     <input type="text" id="txtVehicleNo" class="form-control" style="width: 65px;" />
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 80px;">Transit Vehicle</span>
-                    <select id="cmbTransitVehicle" class="form-control" style="width: 210px;">
+                    <select id="cmbTransitVehicle" class="form-control" style="width: 210px;" data-dtcombo="single" data-dtcombo-caption="Transit Vehicle">
                         <option value="">-- Select --</option>
                     </select>
                 </div>
@@ -157,7 +170,7 @@
                 <div class="section-title">Delivery & Weights</div>
                 <div class="form-row">
                     <span class="form-label" style="width: 95px;">Delivery Term</span>
-                    <select id="cmbDeliveryTerm" class="form-control" style="width: 130px;">
+                    <select id="cmbDeliveryTerm" class="form-control" style="width: 130px;" data-dtcombo="single" data-dtcombo-caption="Delivery Term">
                         <option value="">-- Select --</option>
                     </select>
                 </div>
@@ -193,21 +206,21 @@
                 <div class="section-title">Freight Information</div>
                 <div class="form-row">
                     <span class="form-label" style="width: 100px;">Transporter</span>
-                    <select id="cmbTransporter" class="form-control select2" style="width: 200px;">
+                    <select id="cmbTransporter" class="form-control" style="width: 200px;" data-dtcombo="single" data-dtcombo-caption="Transporter Name">
                         <option value="1">ALLAH DITTA CS (KACHA PAKKA)</option>
                     </select>
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 100px;">Bilty Freight</span>
-                    <input type="number" id="txtBiltyFreight" class="form-control text-end" style="width: 80px;" value="0" oninput="calcFreight()" />
+                    <input type="number" id="txtBiltyFreight" class="form-control text-end" style="width: 80px;" value="0" oninput="calcFreight()"  data-guard="integer"/>
                     <span class="form-label" style="width: 65px;">Scale Charges</span>
                     <input type="number" id="txtScaleCharges" class="form-control text-end" style="width: 55px;" value="0" oninput="calcFreight()" />
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 100px;">Advance by Party</span>
-                    <input type="number" id="txtAdvParty" class="form-control text-end" style="width: 80px;" value="0" oninput="calcFreight()" />
+                    <input type="number" id="txtAdvParty" class="form-control text-end" style="width: 80px;" value="0" oninput="calcFreight()"  data-guard="integer"/>
                     <span class="form-label" style="width: 65px;">Adv Factory</span>
-                    <input type="number" id="txtAdvFactory" class="form-control text-end" style="width: 55px;" value="0" oninput="calcFreight()" />
+                    <input type="number" id="txtAdvFactory" class="form-control text-end" style="width: 55px;" value="0" oninput="calcFreight()"  data-guard="integer"/>
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 100px;">Other Deduction</span>
@@ -229,7 +242,7 @@
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 100px;">Freight Deduction</span>
-                    <input type="number" id="txtFreightDeduct" class="form-control text-end" style="width: 80px;" value="0" />
+                    <input type="number" id="txtFreightDeduct" class="form-control text-end" style="width: 80px;" value="0"  data-guard="integer"/>
                     <span class="form-label" style="width: 65px;">Paid Amount</span>
                     <input type="number" id="txtPaidAmount" class="form-control text-end fw-bold" style="width: 55px;" value="0" readonly />
                 </div>
@@ -266,62 +279,79 @@
             <div class="section-title">Detail Information</div>
             <div class="form-row flex-wrap" style="gap: 4px;">
                 <span>Warehouse:</span>
-                <select id="cmbWarehouse" class="form-control" style="width: 120px;">
-                    <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}"></option>
+                <select id="cmbWarehouse" class="form-control" style="width: 120px;" data-dtcombo="single" data-dtcombo-caption="WareHouse Name">
+                    <option th:each="w : ${warehouses}" th:value="${w['id']}"
+                            th:text="${w['warehouseName']} ?: ${w['name']}"></option>
                 </select>
 
                 <span class="ms-2">Item:</span>
                 <label class="me-1"><input type="radio" name="itemSearchMode" value="Name" checked> Name</label>
                 <label><input type="radio" name="itemSearchMode" value="Code"> Code</label>
-                <select id="cmbItem" class="form-control select2" style="width: 180px;">
+                <select id="cmbItem" class="form-control" style="width: 180px;" data-dtcombo="single" data-dtcombo-caption="Item Name">
                     <option value="0">-- Select Item --</option>
-                    <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.name}"></option>
+                    <option th:each="i : ${items}" th:value="${i['id']}"
+                            th:text="${i['itemName']} ?: ${i['name']}"></option>
                 </select>
 
                 <span>Crop Year:</span>
-                <select id="cmbCropYear" class="form-control" style="width: 80px;">
-                    <option th:each="c : ${cropYears}" th:value="${c.name}" th:text="${c.name}"></option>
+                <select id="cmbCropYear" class="form-control" style="width: 80px;" data-dtcombo="single" data-dtcombo-caption="Crop Year">
+                    <option th:each="c : ${cropYears}" th:value="${c['name']}" th:text="${c['name']}"></option>
                 </select>
 
                 <span>Job/Lot:</span>
-                <select id="cmbJobLot" class="form-control" style="width: 90px;">
-                    <option th:each="j : ${jobLots}" th:value="${j.id}" th:text="${j.name}"></option>
+                <select id="cmbJobLot" class="form-control" style="width: 90px;" data-dtcombo="single" data-dtcombo-caption="JobLot">
+                    <option th:each="j : ${jobLots}" th:value="${j['id']}"
+                            th:text="${j['description']} ?: ${j['name']}"></option>
                 </select>
 
                 <span>Packing Type:</span>
-                <select id="cmbPackingType" class="form-control" style="width: 90px;">
-                    <option value="1">PP Bags</option>
+                <!-- InvFrmGRN.cs:1296-1306 PackingTypeDtFillFromGlobalAndBind: the global packing
+                     type list RESTRICTED to ids {1, 2, 5} (the local is named excludedIds but the
+                     lambda keeps them: Where(r => excludedIds.Contains(r.Id))), value member Id,
+                     display member PackTypeDesc. One hard-coded "PP Bags" was neither the right
+                     list nor the right filter. -->
+                <select id="cmbPackingType" class="form-control" style="width: 90px;" data-dtcombo="single" data-dtcombo-caption="Packing Type">
+                    <option value="0">-- Select --</option>
+                    <option th:each="p : ${packingTypes}"
+                            th:value="${p['Id']}"
+                            th:text="${p['PackTypeDesc']}"></option>
                 </select>
 
                 <span>UOM:</span>
-                <select id="cmbUom" class="form-control" style="width: 60px;">
-                    <option value="KGs">KGs</option>
+                <!-- The item's own UOM schedule, not a global list and not a single literal.
+                     Sent as an id, never as the string "KGs". -->
+                <select id="cmbUom" class="form-control" style="width: 60px;" data-dtcombo="single" data-dtcombo-caption="Uom">
+                    <option value="0">-- Select --</option>
+                    <option th:each="u : ${uoms}"
+                            th:value="${u['Id']}"
+                            th:text="${u['UOMCode']}"
+                            th:attr="data-item-id=${u['ItemId']},data-equivalent=${u['Equivalent']}"></option>
                 </select>
 
                 <span>Item Qty:</span>
-                <input type="number" id="txtItemQty" class="form-control text-end" style="width: 60px;" value="0" />
+                <input type="number" id="txtItemQty" class="form-control text-end" style="width: 60px;" value="0"  data-guard="decimal"/>
 
                 <span>Gross Weight:</span>
-                <input type="number" id="txtGrossWeight" class="form-control text-end" style="width: 70px;" value="0" />
+                <input type="number" id="txtGrossWeight" class="form-control text-end" style="width: 70px;" value="0"  data-guard="decimal"/>
 
                 <span>E.b / Unit:</span>
-                <input type="number" id="txtEbUnit" class="form-control text-end" style="width: 50px;" value="0" />
+                <input type="number" id="txtEbUnit" class="form-control text-end" style="width: 50px;" value="0"  data-guard="decimal"/>
 
                 <button type="button" class="btn btn-sm btn-success py-0 px-2 fw-bold" onclick="btnAddLine_Click()">+ Add</button>
             </div>
             <div class="form-row mt-1 flex-wrap" style="gap: 4px;">
                 <span>City/Area:</span>
-                <select id="cmbCity" class="form-control" style="width: 110px;">
+                <select id="cmbCity" class="form-control" style="width: 110px;" data-dtcombo="single" data-dtcombo-caption="City Name">
                     <option value="">-- Select --</option>
                 </select>
                 <button type="button" class="btn btn-sm btn-light py-0 px-1 border">+</button>
 
                 <span class="ms-3 text-danger fw-bold">Selected Lab -----------></span>
                 <label class="ms-2"><input type="checkbox" id="chkWtCutComp"> Weight Cut Compulsory</label>
-                <input type="number" id="txtWtCutComp" class="form-control text-end" style="width: 50px;" value="0" />
+                <input type="number" id="txtWtCutComp" class="form-control text-end" style="width: 50px;" value="0"  data-guard="decimal"/>
 
                 <label class="ms-2"><input type="checkbox" id="chkRateCutComp"> Rate Cut Compulsory</label>
-                <input type="number" id="txtRateCutComp" class="form-control text-end" style="width: 50px;" value="0" />
+                <input type="number" id="txtRateCutComp" class="form-control text-end" style="width: 50px;" value="0"  data-guard="decimal"/>
 
                 <button type="button" class="btn btn-sm text-white fw-bold ms-auto" style="background-color: #005a5b;" onclick="alert('Load Gate Pass')">Load Gate Pass</button>
             </div>
@@ -491,12 +521,52 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+/* Used by the detail grid, which interpolates item fields straight into innerHTML. */
+function escapeHtml(v) {
+    return String(v === undefined || v === null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
     let lineItems = [];
 
+    /* CommonBindings.ItemUomFromGlobalBind narrows the UOM schedule to the chosen item rather
+       than showing a global list. The whole schedule is rendered once (each option carries its
+       ItemId and its Equivalent) and hidden down to the item's own rows here, so picking an item
+       does not cost a round trip.
+
+       Equivalent is read back exactly as rendered and is never defaulted to 1 - a missing or
+       non-positive factor leaves the row refusable, the way the desktop refuses it, instead of
+       silently producing a wrong weight. */
+    function narrowUomToItem() {
+        var itemId = parseInt($('#cmbItem').val() || '0', 10);
+        var sel = $('#cmbUom');
+        var current = sel.val();
+        var keptCurrent = false;
+        sel.find('option').each(function () {
+            var opt = $(this);
+            if (!opt.attr('data-item-id')) return;               /* the placeholder */
+            var owns = parseInt(opt.attr('data-item-id'), 10) === itemId;
+            opt.prop('hidden', !owns).prop('disabled', !owns);
+            if (owns && opt.val() === current) keptCurrent = true;
+        });
+        if (!keptCurrent) sel.val('0');
+    }
+
+    /* Equivalent for the selected UOM, or null when it is missing or not usable. Null is a real
+       answer here - the caller must refuse the row rather than substitute a factor. */
+    function grnUomEquivalent() {
+        var opt = $('#cmbUom option:selected');
+        if (!opt.length) return null;
+        var raw = opt.attr('data-equivalent');
+        if (raw === undefined || raw === null || raw === '') return null;
+        var v = parseFloat(raw);
+        return (isNaN(v) || v <= 0) ? null : v;
+    }
+
     $(document).ready(function() {
-        $('.select2').select2({ width: '100%' });
+        $('#cmbItem').on('change', narrowUomToItem);
+        narrowUomToItem();
         var today = new Date().toISOString().split('T')[0];
         $('#txtDocDate').val(today);
     });
@@ -589,10 +659,14 @@
                     <td>-</td>
                     <td>${item.whName}</td>
                     <td>${item.itemName}</td>
-                    <td>2025-26</td>
-                    <td>General</td>
-                    <td>PP Bags</td>
-                    <td>KGs</td>
+                    <!-- These four cells printed the literals 2025-26 / General / PP Bags / KGs on
+                         EVERY row regardless of the data behind it - a crop year, an item category,
+                         a packing type and a UOM that were never read from anywhere. They now show
+                         what the row actually carries, and blank when it carries nothing. -->
+                    <td>${escapeHtml(item.cropYear || '')}</td>
+                    <td>${escapeHtml(item.itemCategory || '')}</td>
+                    <td>${escapeHtml(item.packingType || '')}</td>
+                    <td>${escapeHtml(item.uom || '')}</td>
                     <td class="text-end">${item.qty}</td>
                     <td class="text-end">${item.grossWeight}</td>
                     <td class="text-end">${item.ebUnit}</td>
@@ -631,7 +705,7 @@
             details: lineItems
         };
 
-        return fetch('/api/market-grn/save', {
+        return fetch('/api/purchase/market-grn/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -652,7 +726,7 @@
         $('#txtRemarks').val('');
         $('#txtBiltyNo').val('');
         $('#txtVehicleNo').val('');
-        $('#cmbSupplier').val('0').trigger('change.select2');
+        $('#cmbSupplier').val('0');
     }
 
     function onRefreshForm() { onNewRecord(); }
@@ -673,7 +747,7 @@
     }
 
     function loadHistory() {
-        fetch('/api/market-grn/history')
+        fetch('/api/purchase/market-grn/history')
             .then(res => res.json())
             .then(data => {
                 const tbody = $('#grdHistoryBody');
@@ -697,14 +771,14 @@
 
     function loadRecord(id) {
         switchMode('Form');
-        fetch(`/api/market-grn/${id}`)
+        fetch(`/api/purchase/market-grn/${id}`)
             .then(res => res.json())
             .then(res => {
                 if (res) {
                     $('#txtId').val(res.Id || id);
                     $('#txtDocNo').val(res.DocNo || '');
                     $('#txtDocDate').val(res.DocDate ? res.DocDate.split('T')[0] : '');
-                    $('#cmbSupplier').val(res.SupplierCustomerId || 0).trigger('change.select2');
+                    $('#cmbSupplier').val(res.SupplierCustomerId || 0);
                     $('#txtVehicleNo').val(res.VehicleNo || '');
                     $('#txtBiltyNo').val(res.BiltyNo || '');
                     $('#txtRemarks').val(res.RemarksHeader || '');
@@ -712,5 +786,7 @@
             });
     }
 </script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

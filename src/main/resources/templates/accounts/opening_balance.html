@@ -236,8 +236,8 @@
     <div class="erp-system-bar">
         <div>
             <span class="info-item"><i class="fa fa-folder-open-o"></i> ...Select Any Value...</span>
-            <span class="info-item"><i class="fa fa-user"></i> Numan Rasheed (Admin)</span>
-            <span class="info-item"><i class="fa fa-building"></i> Golden Ace Rice Mills (Pvt) Ltd.</span>
+            <span class="info-item"><i class="fa fa-user"></i> <span th:text="${#authentication != null ? #authentication.name : 'User'}">User</span></span>
+            <span class="info-item"><i class="fa fa-building"></i> <span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></span>
         </div>
         <div>
             <span class="info-item"><i class="fa fa-clock-o"></i> 12:31:39 am</span>
@@ -276,7 +276,12 @@
                 <!-- Account Title Combo Dropdown -->
                 <div class="form-item-custom" style="flex: 2; min-width: 320px;">
                     <label for="selAccountTitle">Account_Title</label>
-                    <select id="selAccountTitle" class="form-control-erp" style="width: 100%;">
+                    <!-- Searchable, desktop-style. cmbAccountTitle on AcfrmOpeningBalance.cs:245 is
+                         DDL.BindDDL(dt, cmbAccountTitle, "Id", "AccountTitle", "Account Title", ZeroIndex: true)
+                         - BindDDLNew-style single visible column with that caption, so `single` is
+                         the faithful family here, not a multi-column one. -->
+                    <select id="selAccountTitle" class="form-control-erp" style="width: 100%;"
+                            data-dtcombo="single" data-dtcombo-caption="Account Title">
                         <option value="">(Select Account Title...)</option>
                         <option th:each="r : ${form.rows}" 
                                 th:value="${r.chartOfAccountId}" 
@@ -376,15 +381,13 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
     <script>
         $(document).ready(function () {
-            if ($.fn.select2) {
-                $('#selAccountTitle').select2({
-                    placeholder: '(Select Account Title...)',
-                    allowClear: true,
-                    width: '100%'
-                });
-            }
+            /* select2 is not what enhances this control any more - countx_desktop_combo.js does,
+               and it is the same component the 43 Sale/Purchase screens use, so the picker looks
+               and filters the same everywhere. It keeps the native <select> as the source of
+               truth, so the change handler below is untouched and still fires on a pick. */
 
             recalcTotals();
 

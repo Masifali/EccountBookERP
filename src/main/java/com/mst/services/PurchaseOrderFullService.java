@@ -301,39 +301,90 @@ public class PurchaseOrderFullService {
         return filterParties(fetchPartyList(), query);
     }
 
+    /**
+     * The item list behind combitem, and behind the Item Category / Item Type filter beside it.
+     *
+     * SOURCE. The desktop does not query Item directly - it reads clsGlobalVariables.getGlobalAllItems,
+     * which is USP_Item_AllItemsWithModal. Two sibling repositories in this project already call it
+     * exactly this way (SaleGdnRepository.items, SaleGdnDirectRepository.items), so this is the
+     * project's own established contract, not a new one. It returns the shape the desktop's
+     * getGlobalAllItems model declares: Id, ItemName, ItemCode, InventoryParentCategoriesId,
+     * ItemCategoryId, ItemCategory, ItemTypeId, ItemType, ItemTypeOfTypeId, ...
+     *
+     * WHY IT REPLACED THE HAND-WRITTEN SELECT. The previous version was
+     * "SELECT ... FROM Item i LEFT JOIN ItemCategory cat ... WHERE 1=1" with:
+     *   - NO OrganizationId / CompanyId filter at all, so it returned every tenant's items;
+     *   - no ItemTypeId / ItemType, so the desktop's Item TYPE filter could not be built;
+     *   - no ItemTypeOfTypeId, so the desktop's exclusion below could not be applied;
+     *   - the search term escaped by hand with replace("'", "''") and concatenated into a LIKE.
+     * The procedure is organization- and company-scoped and carries all three missing columns.
+     *
+     * THE 14/17 EXCLUSION IS THE DESKTOP'S, NOT MINE. PurchsaeOrder.cs:1238 and :1293 both filter
+     *     row.ItemTypeOfTypeId != 14 && row.ItemTypeOfTypeId != 17
+     * before the item list or the category list is built. SaleGdnRepository applies the same two
+     * ids. Dropping it would show item types the Purchase Order form never offers.
+     *
+     * Keys are lower-camel to match what the screen's JS already reads; itemTypeId and itemType are
+     * additions, nothing was renamed or removed.
+     */
     public List<Map<String, Object>> searchItems(String query, String searchMode, Integer parentCategoryId) {
         try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT i.Id as id, ISNULL(i.ItemName, '') as itemName, ISNULL(i.ItemCode, '') as itemCode, ")
-              .append("ISNULL(i.ItemCategoryId, 0) as itemCategoryId, ISNULL(cat.CategoryDescription, '') as itemCategory, ")
-              .append("ISNULL(cat.InventoryParentCategoriesId, 0) as inventoryParentCategoriesId, ")
-              .append("ISNULL(i.PurchasePrice, 0) as purchasePrice, ")
-              .append("ISNULL(i.BaseUnitId, 0) as baseUnitId, '' as uomCode ")
-              .append("FROM Item i ")
-              .append("LEFT JOIN ItemCategory cat ON i.ItemCategoryId = cat.Id ")
-              .append("WHERE 1=1 ");
+            List<Map<String, Object>> raw = jdbcTemplate.queryForList(
+                    "EXEC dbo.USP_Item_AllItemsWithModal @OrganizationId=?, @CompanyId=?",
+                    currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId());
 
-            if (parentCategoryId != null && parentCategoryId > 0) {
-                sb.append("AND (cat.Id = ").append(parentCategoryId)
-                  .append(" OR cat.InventoryParentCategoriesId = ").append(parentCategoryId).append(") ");
-            }
+            String q = query == null ? "" : query.trim().toLowerCase();
+            int parent = parentCategoryId == null ? 0 : parentCategoryId;
 
-            if (query != null && !query.trim().isEmpty()) {
-                String q = query.trim().replace("'", "''");
-                if ("code".equalsIgnoreCase(searchMode)) {
-                    sb.append("AND (i.ItemCode LIKE '%").append(q).append("%' OR i.ItemName LIKE '%").append(q).append("%') ");
-                } else {
-                    sb.append("AND (i.ItemName LIKE '%").append(q).append("%' OR i.ItemCode LIKE '%").append(q).append("%') ");
-                }
+            List<Map<String, Object>> out = new ArrayList<>();
+            for (Map<String, Object> r : raw) {
+                int typeOfType = intOf(r.get("ItemTypeOfTypeId"));
+                if (typeOfType == 14 || typeOfType == 17) continue;          /* desktop :1238, :1293 */
+
+                if (parent > 0 && intOf(r.get("InventoryParentCategoriesId")) != parent) continue;
+
+                String name = strOf(r.get("ItemName"));
+                String code = strOf(r.get("ItemCode"));
+                if (!q.isEmpty()
+                        && !name.toLowerCase().contains(q)
+                        && !code.toLowerCase().contains(q)) continue;
+
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", intOf(r.get("Id")));
+                m.put("itemName", name);
+                m.put("itemCode", code);
+                m.put("itemCategoryId", intOf(r.get("ItemCategoryId")));
+                m.put("itemCategory", strOf(r.get("ItemCategory")));
+                m.put("itemTypeId", intOf(r.get("ItemTypeId")));
+                m.put("itemType", strOf(r.get("ItemType")));
+                m.put("inventoryParentCategoriesId", intOf(r.get("InventoryParentCategoriesId")));
+                /* The procedure carries no purchase price; the screen only uses it to prefill the
+                   rate, and a prefilled 0 is what it already did whenever the column was null. */
+                m.put("purchasePrice", 0);
+                out.add(m);
             }
-            sb.append("ORDER BY i.ItemName");
-            return jdbcTemplate.queryForList(sb.toString());
+            /* searchMode changes which column the desktop DISPLAYS (ItemNameBind, :1320-1327), not
+               which rows come back, so it is deliberately not a filter here. */
+            out.sort((a, b) -> String.valueOf(a.get("itemName")).compareToIgnoreCase(String.valueOf(b.get("itemName"))));
+            return out;
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error in searchItems: " + e.getMessage());
+            LOG_ITEMS(e);
             return Collections.emptyList();
         }
     }
+
+    private static void LOG_ITEMS(Exception e) {
+        System.err.println("searchItems failed: " + e.getMessage());
+    }
+
+    private static int intOf(Object o) {
+        if (o == null) return 0;
+        if (o instanceof Number) return ((Number) o).intValue();
+        try { return Integer.parseInt(String.valueOf(o).trim()); } catch (Exception e) { return 0; }
+    }
+
+    private static String strOf(Object o) { return o == null ? "" : String.valueOf(o); }
 
     public List<Map<String, Object>> getParentCategories() {
         try {
@@ -497,80 +548,180 @@ public class PurchaseOrderFullService {
         }
     }
 
+    /**
+     * Payment Terms - InvfrmPurchaseInvoice.cs:1066 / PaymentTermBind bind this from the database
+     * with value member "Id" and display member "TermsDescription".
+     *
+     * TWO defects were fixed here at once:
+     *
+     * 1. The rows came straight back from the procedure, so their keys were the DB column names
+     *    (Id, TermsDescription). The screens read t.id / t.description, got undefined for both,
+     *    and rendered a list of blank options - the dropdown looked EMPTY even though the call
+     *    succeeded. Every row now carries both spellings.
+     *
+     * 2. It INVENTED rows. When the real list contained nothing matching "Cash" or "Credit" it
+     *    appended its own with made-up ids 1 and 2 and dueDays 0 and 30. Those ids would be saved
+     *    into the document as the payment term, pointing at whatever InvDueTerms rows 1 and 2
+     *    really are. Removed: an empty list is the honest answer, and the caller reports it.
+     */
     public List<Map<String, Object>> getPaymentTerms() {
-        List<Map<String, Object>> result = new ArrayList<>();
+        List<Map<String, Object>> raw = new ArrayList<>();
         try {
-            int orgId = currentUserContext.currentOrganizationId();
-            int compId = currentUserContext.currentCompanyId();
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(
+            raw = jdbcTemplate.queryForList(
                     "EXEC Sp_InvDueTerms_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
-                    orgId, compId, "GetAll");
-            if (list != null && !list.isEmpty()) {
-                result.addAll(list);
-            }
-        } catch (Exception e) {}
-
-        if (result.isEmpty()) {
+                    currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId(), "GetAll");
+        } catch (Exception e) {
+            PARTY_LOG.warn("Sp_InvDueTerms_GetAllMethod failed; falling back to InvDueTerms", e);
+        }
+        if (raw == null || raw.isEmpty()) {
+            /* Same table, not a different list - acceptable as a fallback. */
             try {
-                String sql = "SELECT Id as id, TermsDescription as description, ISNULL(DueDays, 0) as dueDays FROM InvDueTerms WHERE IsActive = 1 OR IsActive IS NULL ORDER BY TermsDescription";
-                List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-                if (list != null && !list.isEmpty()) {
-                    result.addAll(list);
-                }
-            } catch (Exception e) {}
+                raw = jdbcTemplate.queryForList(
+                        "SELECT Id, TermsDescription, ISNULL(DueDays, 0) AS DueDays FROM InvDueTerms "
+                        + "WHERE IsActive = 1 OR IsActive IS NULL ORDER BY TermsDescription");
+            } catch (Exception e) {
+                PARTY_LOG.warn("InvDueTerms fallback failed; the payment term list will be empty", e);
+            }
         }
-
-        boolean hasCredit = false;
-        boolean hasCash = false;
-        for (Map<String, Object> m : result) {
-            String desc = m.get("description") != null ? m.get("description").toString() : (m.get("TermsDescription") != null ? m.get("TermsDescription").toString() : "");
-            if ("Credit".equalsIgnoreCase(desc) || desc.toLowerCase().contains("credit")) hasCredit = true;
-            if ("Cash".equalsIgnoreCase(desc) || desc.toLowerCase().contains("cash")) hasCash = true;
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : (raw == null ? new ArrayList<Map<String, Object>>() : raw)) {
+            Map<String, Object> m = new LinkedHashMap<>(r);
+            Object id   = ci(r, "Id");
+            Object desc = ci(r, "TermsDescription");
+            Object days = ci(r, "DueDays");
+            m.put("Id", id);   m.put("id", id);
+            m.put("TermsDescription", desc); m.put("description", desc); m.put("name", desc);
+            m.put("DueDays", days); m.put("dueDays", days);
+            out.add(m);
         }
-
-        if (!hasCredit) {
-            Map<String, Object> p2 = new HashMap<>();
-            p2.put("id", 2);
-            p2.put("description", "Credit");
-            p2.put("TermsDescription", "Credit");
-            p2.put("dueDays", 30);
-            p2.put("DueDays", 30);
-            result.add(p2);
+        if (out.isEmpty()) {
+            PARTY_LOG.warn("No payment terms available for organization {} / company {}",
+                    safeOrg(), safeComp());
         }
-        if (!hasCash) {
-            Map<String, Object> p1 = new HashMap<>();
-            p1.put("id", 1);
-            p1.put("description", "Cash");
-            p1.put("TermsDescription", "Cash");
-            p1.put("dueDays", 0);
-            p1.put("DueDays", 0);
-            result.add(0, p1);
-        }
-
-        return result;
+        return out;
     }
 
+    /**
+     * Delivery Terms - PurchsaeOrder.cs:1093-1098 binds this combo from DeliveryTerm.FormHistory(),
+     * i.e. the database.
+     *
+     * Same two defects as the payment terms above. The invented fallback here was especially
+     * misleading because it looked plausible: ids 1, 2 and 3 captioned "Load",
+     * "Load & PartyWeight" and "Load & FactoryWeight". The live data includes terms the list does
+     * not have (such as "Ponch"), and PurchsaeOrder.cs:3763 branches on DeliveryTermId being 1, 3
+     * or 4 - so a wrong id here changes what the form does, not just what it shows. Removed.
+     */
     public List<Map<String, Object>> getDeliveryTerms() {
+        List<Map<String, Object>> raw = new ArrayList<>();
         try {
-            List<Map<String, Object>> list = jdbcTemplate.queryForList("EXEC [dbo].[USP_DeliveryTerm_GetAllMethod] @Activity=?", "FormHistory");
-            if (list != null && !list.isEmpty()) {
-                return list;
+            raw = jdbcTemplate.queryForList(
+                    "EXEC [dbo].[USP_DeliveryTerm_GetAllMethod] @Activity=?", "FormHistory");
+        } catch (Exception e) {
+            PARTY_LOG.warn("USP_DeliveryTerm_GetAllMethod failed; falling back to DeliveryTerm", e);
+        }
+        if (raw == null || raw.isEmpty()) {
+            try {
+                raw = jdbcTemplate.queryForList(
+                        "SELECT Id, DeliveryTermDescription FROM DeliveryTerm ORDER BY DeliveryTermDescription");
+            } catch (Exception e) {
+                PARTY_LOG.warn("DeliveryTerm fallback failed; the delivery term list will be empty", e);
             }
-        } catch (Exception e) {}
-        try {
-            String sql = "SELECT Id as id, DeliveryTermDescription as description FROM DeliveryTerm ORDER BY DeliveryTermDescription";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-            if (list != null && !list.isEmpty()) {
-                return list;
-            }
-        } catch (Exception e) {}
-
-        List<Map<String, Object>> fallback = new ArrayList<>();
-        Map<String, Object> m1 = new HashMap<>(); m1.put("id", 1); m1.put("description", "Load"); fallback.add(m1);
-        Map<String, Object> m2 = new HashMap<>(); m2.put("id", 2); m2.put("description", "Load & PartyWeight"); fallback.add(m2);
-        Map<String, Object> m3 = new HashMap<>(); m3.put("id", 3); m3.put("description", "Load & FactoryWeight"); fallback.add(m3);
-        return fallback;
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : (raw == null ? new ArrayList<Map<String, Object>>() : raw)) {
+            Map<String, Object> m = new LinkedHashMap<>(r);
+            Object id = ci(r, "Id");
+            /* The procedure calls it Description; the table calls it DeliveryTermDescription. */
+            Object desc = ci(r, "Description");
+            if (desc == null) desc = ci(r, "DeliveryTermDescription");
+            m.put("Id", id); m.put("id", id);
+            m.put("Description", desc); m.put("description", desc); m.put("name", desc);
+            out.add(m);
+        }
+        if (out.isEmpty()) {
+            PARTY_LOG.warn("No delivery terms available - the Delivery Term dropdown will be empty");
+        }
+        return out;
     }
+
+    /**
+     * The History tab's Supplier Name and Booking Person pickers.
+     *
+     * These are NOT the master party lists. HistorySupplierComboFill (PurchsaeOrder.cs:4640-4695)
+     * calls PurchaseOrder.GetDataForDropDownFromPurchaseOrder, i.e.
+     *
+     *     USP_GetDataForDropDownFromPurchaseOrder
+     *         @OrganizationId, @CompanyId          always
+     *         @DocumentTypeIds = "41"              always, set by the form
+     *         @BranchesIds                         only when a branch is chosen
+     *         @Activity                            not set by this form, so OMITTED
+     *
+     * and splits the ONE result set on its Activity column: rows marked "Supplier" fill the
+     * supplier picker, rows marked "BookingPerson" fill the other (:4676-4686). So both lists
+     * contain only parties that actually appear on a Purchase Order - which is why the desktop
+     * offers a handful of names rather than the whole party master.
+     *
+     * Each list is two columns on the desktop - Id (hidden) and the name - so a single captioned
+     * column is what the drop grid shows.
+     *
+     * NOTE the desktop also refuses to run at all when no branch is selected ("Select branch
+     * first", :4670). That guard belongs to the screen; this method simply omits @BranchesIds
+     * when none is given, which is what the BLL does.
+     */
+    public Map<String, Object> getHistoryParties(String branchesIds) {
+        List<Map<String, Object>> suppliers = new ArrayList<>();
+        List<Map<String, Object>> bookingPersons = new ArrayList<>();
+        try {
+            List<String> names = new ArrayList<>();
+            List<Object> args = new ArrayList<>();
+            names.add("@OrganizationId");  args.add(currentUserContext.currentOrganizationId());
+            names.add("@CompanyId");       args.add(currentUserContext.currentCompanyId());
+            names.add("@DocumentTypeIds"); args.add("41");
+            if (branchesIds != null && !branchesIds.trim().isEmpty()) {
+                names.add("@BranchesIds"); args.add(branchesIds.trim());
+            }
+            StringBuilder sql = new StringBuilder("EXEC USP_GetDataForDropDownFromPurchaseOrder ");
+            for (int i = 0; i < names.size(); i++) {
+                if (i > 0) sql.append(", ");
+                sql.append(names.get(i)).append("=?");
+            }
+            for (Map<String, Object> r : jdbcTemplate.queryForList(sql.toString(), args.toArray())) {
+                Object act  = ci(r, "Activity");
+                Object id   = ci(r, "Id");
+                Object name = ci(r, "ReferenceName");
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("Id", id);   m.put("id", id);
+                m.put("ReferenceName", name); m.put("name", name); m.put("description", name);
+                if (act != null && "Supplier".equalsIgnoreCase(String.valueOf(act).trim())) {
+                    suppliers.add(m);
+                } else if (act != null && "BookingPerson".equalsIgnoreCase(String.valueOf(act).trim())) {
+                    bookingPersons.add(m);
+                }
+                /* Any other Activity the procedure returns is ignored, exactly as the desktop
+                   ignores it - it is not silently folded into one of these two lists. */
+            }
+        } catch (Exception e) {
+            PARTY_LOG.error("USP_GetDataForDropDownFromPurchaseOrder failed; the History party "
+                    + "pickers will be empty", e);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("suppliers", suppliers);
+        out.put("bookingPersons", bookingPersons);
+        return out;
+    }
+
+    /** Case-tolerant column read - procedures and tables disagree about capitalisation. */
+    private static Object ci(Map<String, Object> row, String name) {
+        if (row == null) return null;
+        if (row.containsKey(name)) return row.get(name);
+        for (Map.Entry<String, Object> e : row.entrySet())
+            if (e.getKey().equalsIgnoreCase(name)) return e.getValue();
+        return null;
+    }
+
+    private int safeOrg()  { try { return currentUserContext.currentOrganizationId(); } catch (Exception e) { return 0; } }
+    private int safeComp() { try { return currentUserContext.currentCompanyId(); }      catch (Exception e) { return 0; } }
 
     public List<Map<String, Object>> getBookingPersons() {
         try {
