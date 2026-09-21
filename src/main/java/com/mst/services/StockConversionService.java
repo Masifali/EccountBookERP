@@ -112,10 +112,19 @@ public class StockConversionService {
         return repo.storeAndPmItems(currentUserContext.requireAccountingUser());
     }
 
-    /** cmbEntryType — literal in the desktop form (:840), so literal here too. */
+    /**
+     * cmbEntryType — invfrmStockConversionProduction.CmbEntryTypeFill():840.
+     *
+     * The three captions are literals on the desktop, but row 1 "Issue" is conditional: it is
+     * added only when the IssuanceByLoader configuration parses as false. Emitting it
+     * unconditionally offered an entry type the desktop withholds, so the config is read here.
+     */
     public List<Map<String, Object>> entryTypes() {
+        UserAccount u = currentUserContext.requireAccountingUser();
         List<Map<String, Object>> out = new ArrayList<>();
-        out.add(row(1, "Issue"));
+        if (!repo.config(u.getOrganizationId(), u.getCompanyId(), "IssuanceByLoader")) {
+            out.add(row(1, "Issue"));
+        }
         out.add(row(2, "Recovery By Product"));
         out.add(row(3, "Recovery Head Rice"));
         return out;

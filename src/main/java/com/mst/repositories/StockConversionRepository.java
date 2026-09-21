@@ -52,6 +52,7 @@ public class StockConversionRepository {
     private static final String P_PACKING = "Sp_InvStockConversionPackingMaterial_GetAllMethod";
     private static final String P_EXPENSE = "Sp_InvStockConversionAddExpense_GetAllMethod";
     private static final String P_HISTORY = "USP_InvStockConversion_FormHistory";
+    private static final String P_CONFIG  = "Sp_ConfigrationsAllocation_GetAllMethod";
 
     private final JdbcTemplate jdbc;
     public StockConversionRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
@@ -274,5 +275,29 @@ public class StockConversionRepository {
         if (v instanceof Number) return ((Number) v).intValue();
         try { return Integer.parseInt(String.valueOf(v).trim()); }
         catch (NumberFormatException e) { return 0; }
+    }
+
+    /**
+     * cmbEntryType hides "Issue" when the IssuanceByLoader configuration is on.
+     *
+     * invfrmStockConversionProduction.CmbEntryTypeFill():840 reads
+     * clsGlobalVariables.configrationsAllocation - the per-org/company list loaded at login by
+     * ConfigrationsAllocation.History(OrganizationId, CompanyId) - and adds row 1 only when the
+     * matching ConfigKey parses as false. This reads that same list one row at a time through
+     * @Activity='GetConfigurationByOrgCompandConfigDescription', the pattern already used by
+     * ProductionJobOrderMainRepository.config.
+     *
+     * A missing row is not the same as "on": the desktop's Where() returns an empty list and the
+     * guard (list.Count > 0 && !parse) then leaves "Issue" in place, so absent means false here.
+     */
+    public boolean config(Integer organizationId, Integer companyId, String name) {
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "EXEC dbo." + P_CONFIG + " @OrganizationId=?, @CompanyId=?, @ConfigDescription=?, @Activity=?",
+                organizationId, companyId, name, "GetConfigurationByOrgCompandConfigDescription");
+        if (rows.isEmpty()) return false;
+        Object v = rows.get(0).get("ConfigKey");
+        if (v == null) return false;
+        String t = String.valueOf(v).trim();
+        return "1".equals(t) || "true".equalsIgnoreCase(t) || "yes".equalsIgnoreCase(t);
     }
 }
