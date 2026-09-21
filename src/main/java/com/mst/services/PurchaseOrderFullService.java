@@ -487,28 +487,50 @@ public class PurchaseOrderFullService {
         return out;
     }
 
-    /** Real City dropdown, ditto desktop's Architecture.BLL.City.GetAll() -> SP_City_GetAllMethod
-     *  @MethodType='GetAll', org/company scoped. Rows whose OrganizationId/CompanyId are NULL are
-     *  also included (legacy/global city rows created before org/company scoping existed on this
-     *  table) so a real, populated City table never appears empty to the dropdown. */
+    /**
+     * cmbCityFill() - PurchsaeOrder.cs:1542.
+     *
+     * ---------------------------------------------------------------------------------------
+     * THIS WAS RAW SQL, NOT THE DESKTOP'S PROCEDURE
+     * ---------------------------------------------------------------------------------------
+     * The comment here used to claim it was "ditto desktop's City.GetAll() -> SP_City_GetAllMethod",
+     * while the body was a hand-built SELECT over dbo.City. Three things differed from the desktop:
+     *
+     *   1. it never called the procedure, so any filtering, joining or ordering inside
+     *      SP_City_GetAllMethod was lost;
+     *   2. it projected Description as the city name, but the desktop binds the column CityName
+     *      (DDL.BindDDLNew(dt, combcityarea, "Id", "CityName", "City Name", true));
+     *   3. it widened the scope with "OR OrganizationId IS NULL / OR CompanyId IS NULL", which the
+     *      procedure does not do - so the web could offer cities the desktop does not.
+     *
+     * BLL 0060 City.GetAll sends exactly three parameters:
+     *     SP_City_GetAllMethod @OrganizationId, @CompanyId, @MethodType='GetAll'
+     *
+     * The typed filter stays client-side, as it is on the desktop: the combo filters the bound
+     * DataTable as you type, it does not re-query.
+     */
     public List<Map<String, Object>> searchCities(String query) {
-        try {
-            int orgId = currentUserContext.currentOrganizationId();
-            int compId = currentUserContext.currentCompanyId();
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT Id as id, Description as cityName, TehsilId as tehsilId FROM City ")
-              .append("WHERE Description IS NOT NULL ")
-              .append("AND (OrganizationId = ").append(orgId).append(" OR OrganizationId IS NULL) ")
-              .append("AND (CompanyId = ").append(compId).append(" OR CompanyId IS NULL) ");
-            if (query != null && !query.trim().isEmpty()) {
-                String q = query.trim().replace("'", "''");
-                sb.append("AND Description LIKE '%").append(q).append("%' ");
-            }
-            sb.append("ORDER BY Description");
-            return jdbcTemplate.queryForList(sb.toString());
-        } catch (Exception e) {
-            return Collections.emptyList();
+        List<Map<String, Object>> out = new ArrayList<>();
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "EXEC dbo.SP_City_GetAllMethod @OrganizationId=?, @CompanyId=?, @MethodType=?",
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                "GetAll");
+        String q = query == null ? "" : query.trim().toLowerCase();
+        for (Map<String, Object> r : rows) {
+            Object id   = ci(r, "Id");
+            Object name = ci(r, "CityName");
+            if (name == null) continue;
+            if (!q.isEmpty() && !String.valueOf(name).toLowerCase().contains(q)) continue;
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", id);
+            m.put("Id", id);
+            m.put("cityName", name);
+            m.put("CityName", name);
+            m.put("tehsilId", ci(r, "TehsilId"));
+            out.add(m);
         }
+        return out;
     }
 
     /** Real "Define City" persistence, ditto desktop's DefineCity.cs Insert() -> Architecture.BLL.
