@@ -447,19 +447,44 @@ public class PurchaseOrderFullService {
 
     private static String strOf(Object o) { return o == null ? "" : String.valueOf(o); }
 
+    /**
+     * "Catagory & No" - OrderCatagoryfill(), PurchsaeOrder.cs:951.
+     *
+     * ---------------------------------------------------------------------------------------
+     * THIS READ THE WRONG TABLE
+     * ---------------------------------------------------------------------------------------
+     * It used to be a hand-written SELECT over dbo.ItemCategory, which is why the web offered
+     * "BRAND RICE" and "Brown By-Product Process" while the desktop offers General, Paddy, Rice,
+     * By Product and Govt Purchase. Those are two different tables for two different things:
+     * ItemCategory classifies ITEMS; InvOrderCategory classifies the ORDER.
+     *
+     * The desktop reads BLL 0578 InvOrderCategory.GetAll() ->
+     *     Sp_InvOrderCategory_GetAllMethod @Activity='GetAll'
+     *     -> SELECT * FROM dbo.InvOrderCategory WHERE Id in (1,4,5,6,8)
+     * which is exactly those five rows:
+     *     1 General | 4 Paddy | 5 Rice | 6 By Product | 8 Govt Purchase
+     * The fixed id list is the procedure's own - not a filter invented here - so the web now
+     * offers the same five and nothing else.
+     *
+     * This also repairs "Cat No". combordercat_Leave passes the chosen id as @OrderCatagoryId to
+     * Sp_InvOrderCategory_GetAllMethod @Activity='GenerateOrderCategoryCodeById', which counts
+     * PurchaseOrder rows by OrderCatagoryId. Feeding it an ItemCategory id counted nothing.
+     *
+     * The old body also swallowed any failure into printStackTrace + an empty list, so a broken
+     * dropdown looked like an empty one. It now propagates.
+     */
     public List<Map<String, Object>> getParentCategories() {
-        try {
-            String sql = "SELECT Id as id, CategoryDescription as description " +
-                    "FROM ItemCategory " +
-                    "WHERE (CategoryStatus IS NULL OR CategoryStatus = 1 OR CategoryStatus = 'true') " +
-                    "AND CategoryDescription IS NOT NULL AND CategoryDescription <> '' " +
-                    "ORDER BY CategoryDescription";
-            return jdbcTemplate.queryForList(sql);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error in getParentCategories: " + e.getMessage());
-            return Collections.emptyList();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(
+                "EXEC dbo.Sp_InvOrderCategory_GetAllMethod @Activity=?", "GetAll")) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", r.get("Id"));
+            /* The page binds "description"; the column is OrderCategoryName. */
+            m.put("description", r.get("OrderCategoryName"));
+            m.put("orderCategoryName", r.get("OrderCategoryName"));
+            out.add(m);
         }
+        return out;
     }
 
     /** Real City dropdown, ditto desktop's Architecture.BLL.City.GetAll() -> SP_City_GetAllMethod
