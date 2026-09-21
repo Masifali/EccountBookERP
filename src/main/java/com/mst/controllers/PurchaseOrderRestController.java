@@ -276,4 +276,40 @@ public class PurchaseOrderRestController {
         res.put("message", ok ? "Purchase Order deleted successfully." : "Failed to delete Purchase Order.");
         return ResponseEntity.ok(res);
     }
+
+    /**
+     * BranchSrNoFill() - the "Branch #" box beside Doc No. It was blank on the web because
+     * nothing generated it; the desktop fills it as soon as the form opens.
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/next-branch-sr-no")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> nextBranchSrNo(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "41") int docType) {
+        java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+        try {
+            r.put("branchSrNo", purchaseOrderService.generateNextBranchSrNo(docType));
+        } catch (Exception e) {
+            r.put("branchSrNo", 0);
+            r.put("message", e.getMessage());
+        }
+        return r;
+    }
+
+    /**
+     * combordercat_Leave - the "Cat No" box. A DIFFERENT procedure from the two above
+     * (Sp_InvOrderCategory_GetAllMethod), and it fires when the Category combo changes, not on New.
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/next-category-sr-no")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> nextCategorySrNo(
+            @org.springframework.web.bind.annotation.RequestParam int categoryId) {
+        java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+        try {
+            r.put("categorySrNo", purchaseOrderService.generateNextCategorySrNo(categoryId));
+        } catch (Exception e) {
+            r.put("categorySrNo", 0);
+            r.put("message", e.getMessage());
+        }
+        return r;
+    }
 }

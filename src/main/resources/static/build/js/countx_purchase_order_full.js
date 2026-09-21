@@ -1,3 +1,21 @@
+
+/* Reads what a combo is actually showing.
+ *
+ * Deliberately native: selectedIndex + options, never jQuery .val(). jQuery routes a select
+ * through valHooks.select, which the desktop-combo component hooks, and this helper is called
+ * from inside change handlers - exactly the path that was blowing the stack. Reading the DOM
+ * directly cannot re-enter anything. Returns '' only when nothing is chosen. */
+function comboText(sel) {
+    var el = document.querySelector(sel);
+    if (!el) { return ''; }
+    var i = el.selectedIndex;
+    if (i >= 0 && el.options[i]) {
+        var t = (el.options[i].textContent || '').trim();
+        if (t && t !== '0') { return t; }
+    }
+    var v = (el.value || '').toString().trim();
+    return (v && v !== '0') ? v : '';
+}
 /**
  * Purchase Order — Golden Master DitTo Copy Event Controller
  */
@@ -249,6 +267,7 @@ function setWinDefaultDates() {
 }
 
 function fetchNextDocNo() {
+    fetchNextBranchSrNo();          /* BranchSrNoFill() runs alongside DocumentNoFill() */
     $.ajax({
         url: '/api/purchase-order/next-doc-no?docType=41',   /* doc type 41 - this is the
              general Purchase module's Purchase Order (Architecture.WinApp.Purchase\PurchsaeOrder.cs,
@@ -265,6 +284,39 @@ function fetchNextDocNo() {
     });
 }
 
+/*
+ * BranchSrNoFill() - PurchsaeOrder.cs:1205. The desktop fills the "Branch #" box as soon as the
+ * form opens, from Sp_PurchaseOrder_GetAllMethod @Activity='GeneratePurchaseOrderBranchCodeByDocId'
+ * (organization + company + document type + BRANCH + financial year). The web box was blank
+ * because nothing generated it.
+ */
+function fetchNextBranchSrNo() {
+    $.ajax({
+        url: '/api/purchase-order/next-branch-sr-no?docType=41',
+        type: 'GET',
+        success: function (res) {
+            if (res && res.branchSrNo) { $('#txtBranchNo').val(res.branchSrNo); }
+        }
+    });
+}
+
+/*
+ * combordercat_Leave - PurchsaeOrder.cs:1663. The "Cat No" box is filled when the Category combo
+ * changes, from a DIFFERENT procedure and table (Sp_InvOrderCategory_GetAllMethod
+ * @Activity='GenerateOrderCategoryCodeById'). That cascade did not exist on the web at all.
+ */
+function fetchNextCategorySrNo() {
+    var id = parseInt($('#cmbParentCategory').val() || '0');
+    if (!id) { $('#txtCategoryNo').val(''); return; }
+    $.ajax({
+        url: '/api/purchase-order/next-category-sr-no?categoryId=' + id,
+        type: 'GET',
+        success: function (res) {
+            if (res && res.categorySrNo) { $('#txtCategoryNo').val(res.categorySrNo); }
+        }
+    });
+}
+
 function loadDropdowns() {
     // Parent Categories
     $.get('/api/purchase-order/parent-categories', function(data) {
@@ -274,6 +326,8 @@ function loadDropdowns() {
             data.forEach(c => sel.append(`<option value="${c.id}" data-code="${c.id}">${escapeHtml(c.description)}</option>`));
         }
         if ($.fn.select2) sel.trigger('change.select2');
+        /* combordercat_Leave: generate the category serial whenever the category changes. */
+        sel.off('change.catsr').on('change.catsr', fetchNextCategorySrNo);
     });
 
     // Payment Terms
@@ -2376,8 +2430,12 @@ function buildPayload() {
            ------------------------------------------------------------------------------ */
         branchNo:         parseInt($('#txtBranchNo').val() || '0'),
         supplierRefNo:    $('#txtSupplierRefNo').val(),
-        orderStatus:      $('#cmbOrderStatus option:selected').text(),
-        deliveryTermName: $('#cmbDeliveryTerm option:selected').text(),
+        /* comboText(): the desktop sends the combo's TEXT (:3312, :3352) and the procedure
+           RAISERRORs on an empty one. These selects are driven by the shared dtcombo component,
+           so read the selected option, then fall back to the select's own value - never send an
+           empty string just because the option element was not the source of truth. */
+        orderStatus:      comboText('#cmbOrderStatus'),
+        deliveryTermName: comboText('#cmbDeliveryTerm'),
         orderCategoryId:  parseInt($('#cmbParentCategory').val() || '0'),
         categorySrNo:     parseInt($('#txtCategoryNo').val() || '0'),
         orderQty:         parseFloat($('#txtHeaderTotalQty').val() || '0'),

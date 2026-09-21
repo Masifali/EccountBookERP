@@ -156,24 +156,40 @@ public class PurchaseOrderFullService {
     private static final String SQL_PAYMENT_TERMS_DETAIL_BY_HEADER_ID =
             "EXEC Sp_PurchaseOrder_GetAllMethod @Id=?, @Activity=?";
 
+    /**
+     * DocumentNoFill() - BLL 0595 PurchaseOrder.GenerateCode, via
+     * Sp_PurchaseOrder_GetAllMethod @Activity='GenerateDocNoByDocumentTypeId'.
+     *
+     * This used to be a hand-written "SELECT ISNULL(MAX(DocNo),0)+1 FROM PurchaseOrder" that
+     * ignored DocumentTypeId and FinancialYearId entirely, so it returned the maximum across
+     * every document type and every year - which is why the web showed PO-34 where the desktop
+     * showed PO-493.
+     */
     public int generateNextDocNo(int documentTypeId, int companyId) {
-        try {
-            int orgId = currentUserContext.currentOrganizationId();
-            int compId = companyId > 0 ? companyId : currentUserContext.currentCompanyId();
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = companyId > 0 ? companyId : currentUserContext.currentCompanyId();
+        return purchaseOrderHeaderRepository.nextDocNo(
+                orgId, compId, documentTypeId, currentUserContext.currentFinancialYearId());
+    }
 
-            String sql = "SELECT ISNULL(MAX(DocNo), 0) + 1 FROM PurchaseOrder " +
-                         "WHERE (CompanyId = ? OR CompanyId IS NULL OR ? = 0) " +
-                         "AND (OrganizationId = ? OR OrganizationId IS NULL OR ? = 0)";
-            Integer code = jdbcTemplate.queryForObject(sql, Integer.class, compId, compId, orgId, orgId);
-            if (code != null && code > 1) {
-                return code;
-            }
-            sql = "SELECT ISNULL(MAX(DocNo), 0) + 1 FROM PurchaseOrder";
-            code = jdbcTemplate.queryForObject(sql, Integer.class);
-            return (code != null && code > 0) ? code : 1;
-        } catch (Exception e) {
-            return 1;
-        }
+    /** BranchSrNoFill() - the same procedure, scoped by branch as well. */
+    public int generateNextBranchSrNo(int documentTypeId) {
+        return purchaseOrderHeaderRepository.nextBranchSrNo(
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                documentTypeId,
+                currentUserContext.currentBranchId(),
+                currentUserContext.currentFinancialYearId());
+    }
+
+    /** combordercat_Leave - a different procedure, fired when the Category combo changes. */
+    public int generateNextCategorySrNo(int orderCategoryId) {
+        if (orderCategoryId <= 0) return 0;
+        return purchaseOrderHeaderRepository.nextCategorySrNo(
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                orderCategoryId,
+                currentUserContext.currentFinancialYearId());
     }
 
     /* ==========================================================================================
