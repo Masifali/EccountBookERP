@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Order Management Dashboard</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+        .win-input { border:1px solid #7f9db9; font-size:11px; height:24px; padding:1px 4px;
+                     box-sizing:border-box; background:#fff; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #omMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #omMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #omMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        .om-sect { font-weight:700; color:#0f5959; font-size:12px; margin:12px 8px 4px;
+                   padding-bottom:3px; border-bottom:1px solid #b0bec5; }
+        .om-wrap { display:flex; flex-wrap:wrap; gap:10px; padding:0 8px; align-items:flex-start; }
+
+        /* OrderManageMentCardHeader: a title over its OrderManagementInfoCard rows. */
+        .om-card { background:#fff; border:1px solid #b0bec5; border-radius:3px; flex:1 1 560px;
+                   min-width:0; max-width:100%; display:flex; flex-direction:column; }
+        .om-card-head { background:#0f5959; color:#fff; padding:5px 10px; font-size:12px;
+                        font-weight:700; display:flex; justify-content:space-between; gap:8px; }
+        .om-scroll { overflow:auto; max-height:360px; }
+        table.om-grid { width:max-content; min-width:100%; border-collapse:collapse; font-size:11px; background:#fff; }
+        table.om-grid th { background:#eef2f4; border:1px solid #cfd8dc; padding:3px 5px;
+                           font-weight:700; color:#33454e; position:sticky; top:0; z-index:2;
+                           white-space:nowrap; text-align:center; }
+        table.om-grid td { border:1px solid #e0e6ea; padding:3px 5px; white-space:nowrap; }
+        table.om-grid tbody tr:hover { background:#e0f2f1; }
+        .num { text-align:right; }
+        .neg { color:#b00020; }
+        /* lblItemName and lblStockWeight are the two clickable labels (InfoCard :175-183). */
+        .om-link { color:#00564C; text-decoration:underline; cursor:pointer; }
+
+        .om-empty { background:#fff; border:1px dashed #b0bec5; color:#667; padding:12px;
+                    text-align:center; margin:0 8px; font-size:11px; }
+        .om-full { position:fixed; inset:0; z-index:3000; background:#e4e9ed; overflow:auto; }
+
+        /* OrderManagemantPopUpForPurchaseSale.cs - the desktop opens this maximised, so it takes
+           the window here too. Its grid follows the same scroll-inside-the-container rule as the
+           cards behind it. */
+        .om-modal { position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.35); display:none; }
+        .om-modal.open { display:block; }
+        .om-modal-box { position:absolute; inset:14px; background:#fff; border:1px solid #0f5959;
+                        display:flex; flex-direction:column; }
+        .om-modal-head { background:#0f5959; color:#fff; font-size:12px; font-weight:700;
+                         padding:5px 10px; display:flex; align-items:center; gap:10px; }
+        .om-modal-body { flex:1; overflow:auto; min-height:0; }
+        .om-modal-body table.om-grid th { top:0; }
+        tr.om-group td { background:#cfd8dc !important; font-weight:700; color:#0f5959; }
+        tr.om-subtotal td { background:#eef4f4 !important; font-weight:700; color:#0f5959;
+                            border-top:1px solid #b0bec5; }
+        tfoot.om-foot td { position:sticky; bottom:0; background:#e0f2f1; font-weight:700;
+                           color:#0f5959; border-top:1px solid #0f5959; }
+        .om-slip { background:#eceff1; border:1px solid #90a4ae; border-radius:2px; font-size:10px;
+                   padding:0 6px; height:17px; cursor:pointer; white-space:nowrap; }
+        .om-slip:hover { background:#e0f2f1; border-color:#0f5959; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     1001 Order Management Dashboard
+     ditto Architecture.WinApp.Dashboard\OrderManagementDashboard.cs (283 lines)
+     with OrderManageMentCardHeader.cs and OrderManagementInfoCard.cs
+
+     Load -> GetDataAndGenerateCards()  (:53-128)
+       SPU_Invetnory_OrderManagementDashBoards @OrganizationId, @CompanyId, @ToDate = now
+       rows split by TranType into the Purchase and Sale panels, then grouped by CardCount,
+       one card per group titled with that group's ActivityDescription.
+
+     Two labels are clickable on the desktop (OrderManagementInfoCard :175-183):
+       ItemName    -> OrderManagemantPopUpForPurchaseSale (InvoiceType 1 purchase / 2 sale)
+       StockWeight -> frmStockReportWithValues, behind a rights check on
+                      RptGenrateStocks / frmStockReportWithValues
+     Neither of those forms has been ported, so the links say so rather than opening something
+     unrelated - and the rights check is NOT bypassed by pretending otherwise.
+
+     Read-only: no save, update, delete or History button on the desktop form.
+     ========================================================================== -->
+<div class="win-title-bar">1001 Order Management Dashboard</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Purchase &amp; Sales Dashboard &gt; 1001 Order Management Dashboard</span>
+</div>
+
+<div class="win-toolbar">
+    <span style="font-size:10px; color:#41525c; font-weight:600;">As at</span>
+    <input type="date" id="toDate" class="win-input" style="width:150px;">
+    <button type="button" class="win-btn" id="btnShow" onclick="omShow(this)">
+        <i class="fa fa-refresh"></i> Show
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="omToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="omMessage"></div>
+
+<div class="om-sect">Purchase</div>
+<div id="omPurchase" class="om-wrap"></div>
+
+<div class="om-sect">Sales</div>
+<div id="omSales" class="om-wrap"></div>
+
+<div id="omEmpty" class="om-empty" style="display:none; margin-top:10px;">Loading...</div>
+<div style="height:16px;"></div>
+
+<div class="om-modal" id="omModal">
+    <div class="om-modal-box">
+        <div class="om-modal-head">
+            <span id="omModalTitle">Orders</span>
+            <span id="omModalCount" style="font-weight:400;"></span>
+            <span style="flex:1;"></span>
+            <button type="button" class="win-btn" onclick="omCloseModal()">Close</button>
+        </div>
+        <div class="om-modal-body"><table class="om-grid" id="omModalGrid"></table></div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_order_management_dashboard.js?v=20260920a}"></script>
+</body>
+</html>

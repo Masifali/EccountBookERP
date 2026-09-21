@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Report & Certificate - Quality Control</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; }
+        .card { border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; margin-bottom: 15px; }
+        .card-header { background: linear-gradient(135deg, #00796B 0%, #004D40 100%); color: white; font-weight: 600; font-size: 14px; padding: 10px 15px; }
+        .form-label { font-weight: 600; color: #333; margin-bottom: 3px; font-size: 12px; }
+        .form-control, .form-select { font-size: 12px; border-radius: 4px; padding: 4px 8px; }
+        .table-custom { font-size: 12px; width: 100%; }
+        .table-custom th { background-color: #00796B; color: white; text-align: center; }
+        .report-preview { background: #ffffff; border: 1px solid #cccccc; border-radius: 4px; padding: 25px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .report-header-title { font-family: 'Times New Roman', Georgia, serif; font-weight: bold; color: #004D40; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-loading { position: relative; pointer-events: none; opacity: 0.7; }
+    </style>
+</head>
+<body>
+<div class="container-fluid py-3">
+    <!-- Filter Card -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fa fa-file-text-o me-2"></i>Lab Analysis Certificate / Report Generator</span>
+            <div>
+                <a href="/quality/dashboard" class="btn btn-sm btn-outline-light me-1"><i class="fa fa-arrow-left me-1"></i>Back</a>
+                <button type="button" class="btn btn-sm btn-light" id="btnPrint"><i class="fa fa-print me-1"></i>Print Report</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Select Sample Log / Test No</label>
+                    <select class="form-select select2" id="cmbSample">
+                        <option value="1">SA-1001 - Super Basmati Rice (2026-09-17)</option>
+                        <option value="2">PA-2005 - Paddy Arrival LES-1234 (2026-09-16)</option>
+                        <option value="3">IPA-1001 - Milling Lot LOT-2026-09A (2026-09-15)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="txtDateFrom">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="txtDateTo">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Testing Lab Location</label>
+                    <select class="form-select" id="cmbLab">
+                        <option value="ALL">All Labs</option>
+                        <option value="1">Central Quality Control Lab</option>
+                        <option value="2">In-Process Grain Analysis Lab</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-sm btn-success w-100" id="btnGenerate"><i class="fa fa-refresh me-1"></i>Generate Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consolidated Report Certificate Preview -->
+    <div class="report-preview" id="reportCertificate">
+        <div class="text-center mb-4 border-bottom pb-3">
+            <h3 class="report-header-title mb-1">GOLDEN ACE RICE MILLS (PVT) LTD.</h3>
+            <h6 class="text-muted mb-1">CENTRAL QUALITY CONTROL LABORATORY & TESTING CENTER</h6>
+            <h5 class="fw-bold text-dark text-uppercase mt-2">CERTIFICATE OF ANALYSIS (COA)</h5>
+        </div>
+
+        <div class="row mb-4 fs-6">
+            <div class="col-6">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><th style="width: 140px;">Certificate No:</th><td>COA-2026-0917</td></tr>
+                    <tr><th>Sample Code:</th><td>SMP-2026-001 / SA-1001</td></tr>
+                    <tr><th>Item Variety:</th><td>Super Basmati Milled Rice 1121</td></tr>
+                    <tr><th>Party / Supplier:</th><td>Al-Rehman Rice Traders</td></tr>
+                </table>
+            </div>
+            <div class="col-6">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><th style="width: 140px;">Analysis Date:</th><td>September 17, 2026</td></tr>
+                    <tr><th>Vehicle / Container:</th><td>LES-1234</td></tr>
+                    <tr><th>Testing Lab:</th><td>Central Quality Control Lab</td></tr>
+                    <tr><th>Overall Status:</th><td><span class="badge bg-success">PASSED & APPROVED</span></td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Parameters Result Table -->
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fa fa-list-alt me-2"></i>Laboratory Analytical Results</h6>
+        <table class="table table-bordered table-striped table-custom mb-4">
+            <thead>
+            <tr>
+                <th style="width: 50px;">S#</th>
+                <th>Test Parameter</th>
+                <th style="width: 100px;">Unit</th>
+                <th style="width: 120px;">Standard Range</th>
+                <th style="width: 140px;">Observed Result</th>
+                <th style="width: 100px;">Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="text-center">1</td>
+                <td>Moisture Content</td>
+                <td class="text-center">%</td>
+                <td class="text-center">10.00 - 14.00</td>
+                <td class="text-end fw-bold">11.50</td>
+                <td class="text-center"><span class="badge bg-success">PASSED</span></td>
+            </tr>
+            <tr>
+                <td class="text-center">2</td>
+                <td>Average Grain Length (AGL)</td>
+                <td class="text-center">mm</td>
+                <td class="text-center">7.00 - 7.50</td>
+                <td class="text-end fw-bold">7.25</td>
+                <td class="text-center"><span class="badge bg-success">PASSED</span></td>
+            </tr>
+            <tr>
+                <td class="text-center">3</td>
+                <td>Broken Grain Ratio</td>
+                <td class="text-center">%</td>
+                <td class="text-center">0.00 - 5.00</td>
+                <td class="text-end fw-bold">4.20</td>
+                <td class="text-center"><span class="badge bg-success">PASSED</span></td>
+            </tr>
+            <tr>
+                <td class="text-center">4</td>
+                <td>Chalky / Immature Grains</td>
+                <td class="text-center">%</td>
+                <td class="text-center">0.00 - 3.00</td>
+                <td class="text-end fw-bold">1.80</td>
+                <td class="text-center"><span class="badge bg-success">PASSED</span></td>
+            </tr>
+            <tr>
+                <td class="text-center">5</td>
+                <td>Discolored & Damaged Grains</td>
+                <td class="text-center">%</td>
+                <td class="text-center">0.00 - 1.00</td>
+                <td class="text-end fw-bold">0.45</td>
+                <td class="text-center"><span class="badge bg-success">PASSED</span></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="row pt-5 mt-4 border-top">
+            <div class="col-4 text-center">
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 5px;">
+                    <strong>Tested By (Analyst)</strong><br>
+                    <small>QC Chemist</small>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 5px;">
+                    <strong>Verified By (Lab In-Charge)</strong><br>
+                    <small>Senior QC Officer</small>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 5px;">
+                    <strong>Approved By (Factory Manager)</strong><br>
+                    <small>General Manager Quality</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({ width: '100%' });
+        var today = new Date().toISOString().split('T')[0];
+        $('#txtDateFrom').val(today);
+        $('#txtDateTo').val(today);
+
+        $('#btnGenerate').click(function() {
+            var $btn = $(this);
+            var orig = $btn.html();
+            $btn.addClass('btn-loading').attr('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i>Generating...');
+
+            setTimeout(function() {
+                $btn.removeClass('btn-loading').removeAttr('disabled').html(orig);
+            }, 500);
+        });
+
+        $('#btnPrint').click(function() {
+            window.print();
+        });
+    });
+</script>
+</body>
+</html>

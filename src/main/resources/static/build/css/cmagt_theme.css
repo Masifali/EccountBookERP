@@ -1,0 +1,620 @@
+/* ===========================================================================
+   Commission Trading (cmagt) - shared visual theme.
+
+   Purpose
+   -------
+   The Commission Trading transaction and report pages were rendering with no
+   styling at all: four of them declare
+       layout:decorate="~{layout/layout}"
+   but templates/layout/ does not exist in this project, so nothing supplies a
+   page skin, and their own inline <style> blocks never set a body font - which
+   is why the browser fell back to Times New Roman with native controls.
+
+   This file is a self-contained skin for those pages. It styles plain markup
+   (h1-h4, button, input, select, table, fieldset, ul/li tab strips) so a page
+   only has to link it and put class="cmagt" on <body> - no markup rewrite.
+
+   Palette
+   -------
+   Same values already sampled from the real desktop forms in
+   cmagt_screens.css: teal command colour, light neutral canvas, blue-grey grid
+   headers, and the desktop's selected-row blue. Control metrics follow the
+   desktop too (TextBox 23px, combo 26px, date 22px, grid font 11px), so these
+   pages sit beside the Sale Order screen without looking like a different app.
+
+   This file deliberately does NOT restyle sale_order_cmagt.html, which carries
+   its own pixel-exact desktop metrics.
+   =========================================================================== */
+
+body.cmagt {
+    --c-teal:        #00796B;
+    --c-teal-dark:   #00564C;
+    --c-teal-light:  #E0F0EE;
+    --c-accent:      #009688;
+    --c-canvas:      #EFEFEF;
+    --c-surface:     #FFFFFF;
+    --c-border:      #C9D2D1;
+    --c-border-soft: #E2E8E7;
+    --c-head-from:   #F4F7F7;
+    --c-head-to:     #E4EBEA;
+    --c-row-alt:     #F8FAFA;
+    --c-row-sel:     #CDE6F7;
+    --c-row-hover:   #EAF4F3;
+    --c-text:        #15201F;
+    --c-muted:       #5C6B6A;
+    --c-label:       #2A3635;
+    --c-readonly:    #F1F3F3;
+    --c-danger:      #B3261E;
+
+    margin: 0;
+    padding: 0;
+    background: var(--c-canvas);
+    color: var(--c-text);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 12px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- app bar */
+
+body.cmagt .cmagt-appbar {
+    background: linear-gradient(to bottom, var(--c-teal) 0%, var(--c-teal-dark) 100%);
+    color: #FFFFFF;
+    padding: 9px 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .18);
+}
+
+body.cmagt .cmagt-appbar .cmagt-title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: .2px;
+}
+
+body.cmagt .cmagt-appbar .cmagt-doctype {
+    font-size: 11px;
+    font-weight: 600;
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, .18);
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 10px;
+    padding: 1px 9px;
+}
+
+body.cmagt .cmagt-appbar .cmagt-crumb {
+    margin-left: auto;
+    font-size: 11px;
+    color: rgba(255, 255, 255, .85);
+}
+
+body.cmagt .cmagt-appbar a { color: #FFFFFF; text-decoration: none; }
+body.cmagt .cmagt-appbar a:hover { text-decoration: underline; }
+
+/* page body padding for the plain markup that follows the bar */
+body.cmagt > h1,
+body.cmagt > h2,
+body.cmagt > h3,
+body.cmagt > p,
+body.cmagt > div:not(.cmagt-appbar),
+body.cmagt > form,
+body.cmagt > table,
+body.cmagt > ul { margin-left: 14px; margin-right: 14px; }
+
+/* ------------------------------------------------------------- typography */
+
+body.cmagt h1,
+body.cmagt h2,
+body.cmagt h3,
+body.cmagt h4 {
+    font-family: inherit;
+    color: var(--c-text);
+    font-weight: 600;
+    margin: 14px 0 8px 0;
+}
+
+body.cmagt h1 { font-size: 18px; }
+body.cmagt h2 { font-size: 16px; }
+body.cmagt h3 {
+    font-size: 13px;
+    color: var(--c-teal-dark);
+    border-bottom: 2px solid var(--c-teal);
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+}
+body.cmagt h4 { font-size: 12px; color: var(--c-muted); }
+
+body.cmagt a { color: var(--c-teal-dark); }
+
+/* ---------------------------------------------------------------- toolbar */
+
+body.cmagt .cmagt-toolbar,
+body.cmagt .toolbar,
+body.cmagt .tool-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    background: linear-gradient(to bottom, #FFFFFF 0%, #EFF2F2 100%);
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin: 10px 14px;
+}
+
+body.cmagt button,
+body.cmagt .tool-btn,
+body.cmagt input[type="button"],
+body.cmagt input[type="submit"] {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-text);
+    background: linear-gradient(to bottom, #FFFFFF 0%, #ECF0F0 100%);
+    border: 1px solid var(--c-border);
+    border-radius: 3px;
+    padding: 4px 12px;
+    min-height: 26px;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+
+body.cmagt button:hover:not(:disabled),
+body.cmagt .tool-btn:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #FFFFFF 0%, var(--c-teal-light) 100%);
+    border-color: var(--c-accent);
+}
+
+body.cmagt button:active:not(:disabled) {
+    background: var(--c-teal-light);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12);
+}
+
+body.cmagt button:focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 1px;
+}
+
+body.cmagt button:disabled,
+body.cmagt .tool-btn:disabled {
+    color: #9AA6A5;
+    background: #F2F4F4;
+    border-color: var(--c-border-soft);
+    cursor: not-allowed;
+}
+
+/* primary actions read as commands, destructive one reads as a warning */
+body.cmagt button#btnSave,
+body.cmagt button#btnsave,
+body.cmagt button#btnUpdate,
+body.cmagt button#btnupdate,
+body.cmagt button.primary {
+    color: #FFFFFF;
+    background: linear-gradient(to bottom, var(--c-accent) 0%, var(--c-teal) 100%);
+    border-color: var(--c-teal-dark);
+}
+
+body.cmagt button#btnSave:hover:not(:disabled),
+body.cmagt button#btnsave:hover:not(:disabled),
+body.cmagt button#btnUpdate:hover:not(:disabled),
+body.cmagt button#btnupdate:hover:not(:disabled),
+body.cmagt button.primary:hover:not(:disabled) {
+    background: linear-gradient(to bottom, var(--c-teal) 0%, var(--c-teal-dark) 100%);
+}
+
+body.cmagt button#btnDelete:not(:disabled),
+body.cmagt button#btndelete:not(:disabled),
+body.cmagt button.danger:not(:disabled) {
+    color: var(--c-danger);
+    border-color: #DFC2C0;
+}
+
+body.cmagt button#btnDelete:hover:not(:disabled),
+body.cmagt button.danger:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #FFFFFF 0%, #FBEAE9 100%);
+    border-color: var(--c-danger);
+}
+
+/* ------------------------------------------------------------ tab strips */
+
+body.cmagt ul.nav-tabs,
+body.cmagt ul.tabs,
+body.cmagt .cmagt-tabs {
+    list-style: none;
+    display: flex;
+    gap: 2px;
+    margin: 12px 14px 0 14px;
+    padding: 0;
+    border-bottom: 1px solid var(--c-border);
+}
+
+body.cmagt ul.nav-tabs li,
+body.cmagt ul.tabs li,
+body.cmagt .cmagt-tabs li { list-style: none; }
+
+body.cmagt ul.nav-tabs li a,
+body.cmagt ul.tabs li a,
+body.cmagt .cmagt-tabs li a {
+    display: block;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-muted);
+    background: #E9EDED;
+    border: 1px solid var(--c-border);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    text-decoration: none;
+}
+
+body.cmagt ul.nav-tabs li a:hover,
+body.cmagt ul.tabs li a:hover { background: var(--c-teal-light); color: var(--c-teal-dark); }
+
+body.cmagt ul.nav-tabs li a.active,
+body.cmagt ul.tabs li a.active,
+body.cmagt ul.nav-tabs li.active a,
+body.cmagt ul.tabs li.active a {
+    color: var(--c-teal-dark);
+    background: var(--c-surface);
+    border-top: 2px solid var(--c-teal);
+    margin-bottom: -1px;
+    padding-bottom: 7px;
+}
+
+/* ------------------------------------------------------- sections / cards */
+
+body.cmagt .form-section,
+body.cmagt .section-box,
+body.cmagt fieldset,
+body.cmagt .filter-box,
+body.cmagt .cmagt-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 5px;
+    padding: 12px 14px;
+    margin: 12px 14px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+body.cmagt fieldset > legend,
+body.cmagt .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--c-teal-dark);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    border-bottom: 2px solid var(--c-teal);
+    padding: 0 0 5px 0;
+    margin: 0 0 12px 0;
+    display: block;
+    width: 100%;
+}
+
+/* ------------------------------------------------------------ form fields */
+
+body.cmagt label {
+    color: var(--c-label);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 132px;
+    padding-right: 8px;
+    vertical-align: middle;
+}
+
+body.cmagt input[type="text"],
+body.cmagt input[type="number"],
+body.cmagt input[type="date"],
+body.cmagt input[type="search"],
+body.cmagt input[type="tel"],
+body.cmagt select,
+body.cmagt textarea {
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--c-text);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 3px;
+    padding: 2px 6px;
+    height: 23px;
+    box-sizing: border-box;
+    vertical-align: middle;
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+
+body.cmagt select { height: 26px; padding-right: 2px; }
+body.cmagt input[type="date"] { height: 23px; }
+body.cmagt textarea { height: auto; min-height: 46px; padding: 4px 6px; }
+
+body.cmagt input:focus,
+body.cmagt select:focus,
+body.cmagt textarea:focus {
+    outline: none;
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 2px rgba(0, 150, 136, .18);
+}
+
+body.cmagt input[readonly],
+body.cmagt input:disabled,
+body.cmagt select:disabled {
+    background: var(--c-readonly);
+    color: var(--c-muted);
+}
+
+body.cmagt input[type="number"] { text-align: right; }
+body.cmagt input::placeholder { color: #9AA6A5; }
+
+body.cmagt input[type="checkbox"],
+body.cmagt input[type="radio"] {
+    accent-color: var(--c-teal);
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+/* a label that only carries a checkbox should not reserve the field column */
+body.cmagt label.inline,
+body.cmagt label.check { min-width: 0; font-weight: 500; }
+
+/* ----------------------------------------------------------------- grids */
+
+body.cmagt .grid-wrap,
+body.cmagt .table-responsive,
+body.cmagt .cmagt-grid-wrap {
+    width: auto;
+    margin: 0 14px 12px 14px;
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    background: var(--c-surface);
+    overflow-x: auto;          /* scroll inside the grid, never the page */
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+body.cmagt table,
+body.cmagt .data-grid,
+body.cmagt .grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    background: var(--c-surface);
+}
+
+body.cmagt th,
+body.cmagt .data-grid th,
+body.cmagt .grid-table th {
+    background: linear-gradient(to bottom, var(--c-head-from) 0%, var(--c-head-to) 100%);
+    color: var(--c-teal-dark);
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+    padding: 6px 8px;
+    border: 1px solid var(--c-border);
+    border-top: none;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+body.cmagt td,
+body.cmagt .data-grid td,
+body.cmagt .grid-table td {
+    padding: 4px 8px;
+    border: 1px solid var(--c-border-soft);
+    color: var(--c-text);
+    white-space: nowrap;
+}
+
+body.cmagt tbody tr:nth-child(even) { background: var(--c-row-alt); }
+body.cmagt tbody tr:hover { background: var(--c-row-hover); }
+body.cmagt tbody tr.selected,
+body.cmagt tbody tr.sel { background: var(--c-row-sel); }
+
+body.cmagt tfoot td,
+body.cmagt .totals-bar {
+    background: linear-gradient(to bottom, #F2F5F5 0%, #E6ECEB 100%);
+    font-weight: 700;
+    color: var(--c-teal-dark);
+    border-top: 1px solid var(--c-border);
+}
+
+body.cmagt .totals-bar {
+    display: flex;
+    gap: 22px;
+    padding: 7px 12px;
+    margin: 0 14px 14px 14px;
+    border: 1px solid var(--c-border);
+    border-radius: 0 0 4px 4px;
+    font-size: 12px;
+}
+
+/* in-grid controls stay flush with the cell, desktop ValueList style */
+body.cmagt td input[type="text"],
+body.cmagt td input[type="number"],
+body.cmagt td select {
+    width: 100%;
+    height: 20px;
+    font-size: 11px;
+    border-color: transparent;
+    background: transparent;
+    padding: 0 3px;
+}
+
+body.cmagt td input:hover,
+body.cmagt td select:hover { border-color: var(--c-border); background: var(--c-surface); }
+body.cmagt td input:focus,
+body.cmagt td select:focus { border-color: var(--c-accent); background: var(--c-surface); }
+
+/* small per-row action buttons */
+body.cmagt td button {
+    min-height: 20px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* empty-state row */
+body.cmagt td.empty,
+body.cmagt tbody tr td[colspan] {
+    color: var(--c-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 14px 8px;
+    white-space: normal;
+}
+
+/* --------------------------------------------------------------- layout */
+
+body.cmagt .cmagt-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 26px;
+    align-items: center;
+}
+
+body.cmagt .cmagt-row > div { display: flex; align-items: center; }
+
+body.cmagt .cmagt-status {
+    margin: 0 14px 16px 14px;
+    padding: 7px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    border: 1px solid var(--c-border);
+    background: var(--c-teal-light);
+    color: var(--c-teal-dark);
+}
+
+body.cmagt .cmagt-status.error {
+    background: #FBEAE9;
+    border-color: #E6C3C1;
+    color: var(--c-danger);
+}
+
+@media print {
+    body.cmagt { background: #FFFFFF; }
+    body.cmagt .cmagt-appbar,
+    body.cmagt .cmagt-toolbar,
+    body.cmagt button { display: none !important; }
+    body.cmagt .grid-wrap,
+    body.cmagt .table-responsive { max-height: none; overflow: visible; border: none; }
+    body.cmagt th { color: #000; background: #EEE; }
+}
+
+/* ===========================================================================
+   Module boards (Commission Trading / Commission Trading Reports)
+
+   These two pages already carry the cmagt_screens.css classes. The rules below
+   are additive colour work only - they give the cards and tiles a teal accent,
+   a readable hover state and explicit colours that do not depend on a CSS
+   custom property resolving, so the boards look the same whichever sheet the
+   browser has cached.
+   =========================================================================== */
+
+body.cmagt .cards-row,
+body.cmagt .tiles-row { margin: 16px 14px; gap: 14px; }
+
+body.cmagt .erp-card,
+body.cmagt .module-tile {
+    background: #FFFFFF;
+    border: 1px solid #C9D2D1;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+    overflow: hidden;
+    transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+
+body.cmagt .erp-card:hover,
+body.cmagt .module-tile:hover {
+    border-color: #009688;
+    box-shadow: 0 4px 12px rgba(0, 121, 107, .18);
+    transform: translateY(-2px);
+}
+
+body.cmagt .erp-card-header-badge {
+    background: linear-gradient(to bottom, #009688 0%, #00796B 100%);
+    color: #FFFFFF;
+}
+
+body.cmagt .erp-card-body .bank-icon { color: #00796B; }
+body.cmagt .erp-card-body .card-title,
+body.cmagt .module-tile .tile-title { color: #15201F; }
+
+body.cmagt .module-tile {
+    border-top: 3px solid #009688;
+}
+
+body.cmagt .module-tile i { color: #00897B; }
+body.cmagt .module-tile:hover i { color: #00564C; }
+
+/* the board pages put their own banner in the markup; when the shared app bar
+   is used instead, hide the older one so the page has a single heading */
+body.cmagt .cmagt-appbar + .erp-sub-bar,
+body.cmagt .cmagt-appbar ~ .erp-module-banner { display: none; }
+
+/* ===========================================================================
+   Corrections found by rendering the pages before shipping them
+   =========================================================================== */
+
+/* 1. Several templates open with their own <h1>/<h2> carrying the same text as
+      the app bar. Hide that one heading only - any later heading is a real
+      section title and stays. */
+body.cmagt .cmagt-appbar + h1,
+body.cmagt .cmagt-appbar + h2,
+body.cmagt .cmagt-appbar + h3,
+body.cmagt .cmagt-appbar + .page-title,
+body.cmagt .cmagt-appbar + .page-header { display: none; }
+
+/* 2. A wide grid must scroll inside itself, never make the page scroll
+      sideways. Tables already inside a scroll wrapper keep their normal
+      layout; a bare table becomes its own scroll container. */
+body.cmagt { overflow-x: hidden; }
+
+body.cmagt table {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+}
+
+body.cmagt .grid-wrap table,
+body.cmagt .table-responsive table,
+body.cmagt .cmagt-grid-wrap table {
+    display: table;
+    width: 100%;
+    max-width: none;
+    overflow: visible;
+}
+
+/* keep a bare table visually aligned with the cards around it */
+body.cmagt > table,
+body.cmagt > div > table {
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    background: var(--c-surface);
+}
+
+/* 3. These templates were authored against Bootstrap, which this project does
+      not load on them: .card / .card-body / .btn* arrive unstyled. Give the
+      card wrappers the same panel treatment as .form-section, and hide the
+      action-bar heading that repeats the app-bar title. */
+body.cmagt .card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 5px;
+    margin: 12px 14px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+body.cmagt .card-body { padding: 10px 14px; }
+
+body.cmagt .card-body.d-flex,
+body.cmagt .d-flex { display: flex; align-items: center; gap: 8px; }
+body.cmagt .justify-content-between { justify-content: space-between; }
+
+body.cmagt .card-body > h4:first-child,
+body.cmagt .card-body > h3:first-child { display: none; }
+
+body.cmagt .container-fluid { padding: 0; }
+body.cmagt .btn { margin-right: 4px; }

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created for General Ledger Report Jasper Migration (105-AcRptGeneralLedger / 106-AcRptGeneralLedgerB / 107-AcRptQuantativeLedger) -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="GeneralLedgerReport" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="105a0001-gl-rpt-424a-810a-010501050105">
+	<property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
+	<parameter name="CompanyName" class="java.lang.String"/>
+	<parameter name="CompanyAddress" class="java.lang.String"/>
+	<parameter name="AccountCodeTitle" class="java.lang.String"/>
+	<parameter name="FromDate" class="java.lang.String"/>
+	<parameter name="ToDate" class="java.lang.String"/>
+	<parameter name="OpeningBalanceStr" class="java.lang.String"/>
+	<parameter name="ClosingBalanceStr" class="java.lang.String"/>
+	<parameter name="ReportTitle" class="java.lang.String"/>
+	<field name="VoucherDate" class="java.lang.String"/>
+	<field name="DocType" class="java.lang.String"/>
+	<field name="VoucherNo" class="java.lang.String"/>
+	<field name="AccountCode" class="java.lang.String"/>
+	<field name="OffSetTitle" class="java.lang.String"/>
+	<field name="Debit" class="java.lang.Double"/>
+	<field name="Credit" class="java.lang.Double"/>
+	<field name="Balance" class="java.lang.Double"/>
+	<field name="BalType" class="java.lang.String"/>
+	<field name="Comments" class="java.lang.String"/>
+	<field name="VehicleNo" class="java.lang.String"/>
+	<field name="ChequeNo" class="java.lang.String"/>
+	<variable name="TotalDebit" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{Debit} == null ? 0.0 : $F{Debit}]]></variableExpression>
+		<initialValueExpression><![CDATA[0.0]]></initialValueExpression>
+	</variable>
+	<variable name="TotalCredit" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{Credit} == null ? 0.0 : $F{Credit}]]></variableExpression>
+		<initialValueExpression><![CDATA[0.0]]></initialValueExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="75" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="802" height="24" forecolor="#004D40" uuid="title-comp-name"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{CompanyName} != null ? $P{CompanyName} : "Golden Ace Rice Mills (Pvt) Ltd."]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="24" width="802" height="18" forecolor="#334155" uuid="title-comp-addr"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{CompanyAddress} != null ? $P{CompanyAddress} : "Head Office / Factory Address"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="44" width="802" height="22" forecolor="#00796B" uuid="title-rpt-name"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ReportTitle} != null ? $P{ReportTitle} : "GENERAL LEDGER REPORT"]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="70" width="802" height="1" forecolor="#00796B" uuid="header-line"/>
+				<graphicElement>
+					<pen lineWidth="2.0"/>
+				</graphicElement>
+			</line>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="25" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="2" width="400" height="20" uuid="ph-account"/>
+				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<textFieldExpression><![CDATA["Account: " + ($P{AccountCodeTitle} != null ? $P{AccountCodeTitle} : "")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="400" y="2" width="200" height="20" uuid="ph-dates"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
+				<textFieldExpression><![CDATA["Period: " + ($P{FromDate} != null ? $P{FromDate} : "") + " to " + ($P{ToDate} != null ? $P{ToDate} : "")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="600" y="2" width="202" height="20" uuid="ph-opb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<textFieldExpression><![CDATA["Opening Balance: " + ($P{OpeningBalanceStr} != null ? $P{OpeningBalanceStr} : "0")]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="22" splitType="Stretch">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="0" width="70" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-date"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[DATE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="70" y="0" width="50" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-doctype"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[DOC TYPE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="120" y="0" width="60" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-vno"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[VOUCHER NO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="180" y="0" width="140" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-offset"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Left" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[ OFFSET ACCOUNT TITLE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="320" y="0" width="70" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-debit"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[DEBIT ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="390" y="0" width="70" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-credit"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[CREDIT ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="460" y="0" width="75" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-balance"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[BALANCE ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="535" y="0" width="35" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-baltype"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[TYPE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="570" y="0" width="152" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-comments"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Left" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[ COMMENTS / NARRATION]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="722" y="0" width="80" height="22" forecolor="#FFFFFF" backcolor="#00796B" uuid="ch-vehicle"/>
+				<box><pen lineWidth="0.5" lineColor="#004D40"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[VEHICLE NO]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="18" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="70" height="18" uuid="d-date"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{VoucherDate}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="70" y="0" width="50" height="18" uuid="d-doctype"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<textFieldExpression><![CDATA[$F{DocType}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="120" y="0" width="60" height="18" uuid="d-vno"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{VoucherNo}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="180" y="0" width="140" height="18" uuid="d-offset"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[" " + ($F{OffSetTitle} != null ? $F{OffSetTitle} : "")]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="320" y="0" width="70" height="18" uuid="d-debit"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{Debit}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="390" y="0" width="70" height="18" uuid="d-credit"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{Credit}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="460" y="0" width="75" height="18" uuid="d-balance"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<textFieldExpression><![CDATA[$F{Balance}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="535" y="0" width="35" height="18" uuid="d-baltype"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<textFieldExpression><![CDATA[$F{BalType}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="570" y="0" width="152" height="18" uuid="d-comments"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement verticalAlignment="Middle"><font size="7"/></textElement>
+				<textFieldExpression><![CDATA[" " + ($F{Comments} != null ? $F{Comments} : "")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="722" y="0" width="80" height="18" uuid="d-vehicle"/>
+				<box><pen lineWidth="0.5" lineColor="#CBD5E1"/></box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{VehicleNo}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="400" height="20" forecolor="#64748B" uuid="pf-text"/>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<text><![CDATA[Report Template: 105-AcRptGeneralLedger.rpt (Jasper Engine)]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="550" y="0" width="200" height="20" forecolor="#64748B" uuid="pf-page"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="750" y="0" width="52" height="20" forecolor="#64748B" uuid="pf-total-pages"/>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="25" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="320" height="22" uuid="sum-label"/>
+				<box><pen lineWidth="0.5" lineColor="#00796B"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[TOTAL TRANSACTIONS:  ]]></text>
+			</staticText>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="320" y="0" width="70" height="22" uuid="sum-debit"/>
+				<box><pen lineWidth="0.5" lineColor="#00796B"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<textFieldExpression><![CDATA[$V{TotalDebit}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement x="390" y="0" width="70" height="22" uuid="sum-credit"/>
+				<box><pen lineWidth="0.5" lineColor="#00796B"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<textFieldExpression><![CDATA[$V{TotalCredit}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="460" y="0" width="342" height="22" uuid="sum-closing"/>
+				<box><pen lineWidth="0.5" lineColor="#00796B"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<textFieldExpression><![CDATA["Closing Balance: " + ($P{ClosingBalanceStr} != null ? $P{ClosingBalanceStr} : "0")]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

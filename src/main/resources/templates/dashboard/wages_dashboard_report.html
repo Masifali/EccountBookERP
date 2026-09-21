@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wages Dashboard Report</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-group-box { border:1px solid #c7d0d6; border-radius:2px; padding:12px 10px 8px;
+                         position:relative; }
+        .win-group-title { position:absolute; top:-8px; left:8px; background:#fff; padding:0 5px;
+                           font-size:11px; font-weight:700; color:#0f5959; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600;
+                     white-space:nowrap; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #wdMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #wdMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #wdMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        .wd-cap { font-weight:700; color:#0f5959; font-size:11px; margin:0 0 3px; }
+        .wd-panel { margin:8px; }
+        /* Full page width; the only horizontal scrollbar is INSIDE each grid container. */
+        .wd-wrap { background:#fff; border:1px solid #b0bec5; max-height:320px; overflow:auto; }
+        body.wd-full .wd-wrap { max-height:none; }
+
+        table.wd-grid { border-collapse:separate; border-spacing:0; font-size:11px;
+                        width:max-content; min-width:100%; }
+        table.wd-grid thead th { position:sticky; top:0; z-index:2; background:#dde5ea;
+                                 border-right:1px solid #c3ced6; border-bottom:1px solid #90a4ae;
+                                 padding:3px 6px; font-weight:700; color:#23343c; text-align:center;
+                                 white-space:nowrap; }
+        table.wd-grid tbody td { border-right:1px solid #eceff1; border-bottom:1px solid #eceff1;
+                                 padding:2px 6px; white-space:nowrap; }
+        table.wd-grid tbody tr:nth-child(even) td { background:#f7f9fa; }
+        table.wd-grid tbody tr:hover td { background:#e0f2f1; }
+        table.wd-grid tbody tr.wd-group td { background:#cfd8dc !important; font-weight:700;
+                                             color:#0f5959; }
+        table.wd-grid tbody tr.wd-subtotal td { background:#eef4f4 !important; font-weight:700;
+                                                color:#0f5959; border-top:1px solid #b0bec5; }
+        table.wd-grid tfoot td { position:sticky; bottom:0; z-index:2; background:#e0f2f1;
+                                 border-top:1px solid #0f5959; font-weight:700; color:#0f5959;
+                                 padding:3px 6px; white-space:nowrap; }
+        .wd-num { text-align:right; }
+        .wd-neg { color:#b00020; }
+        .wd-link { color:#0d47a1; text-decoration:underline; cursor:pointer; }
+        .wd-link:hover { color:#b00020; }
+
+        .wd-tabs { display:flex; gap:2px; margin:12px 8px 0; }
+        .wd-tab { background:#d8e0e6; border:1px solid #b0bec5; border-bottom:none; padding:3px 12px;
+                  font-size:11px; font-weight:700; color:#41525c; cursor:pointer;
+                  border-radius:2px 2px 0 0; }
+        .wd-tab.active { background:#fff; color:#0f5959; }
+        .wd-tabpanes { background:#fff; border:1px solid #b0bec5; margin:0 8px 8px; padding:8px; }
+
+        .wd-empty { color:#667; padding:10px; text-align:center; font-size:11px; }
+        body.wd-full { position:fixed; inset:0; z-index:3000; overflow:auto; background:#e4e9ed; }
+        .select2-container .select2-selection--single { border-radius:0; border-color:#7f9db9;
+                                                        min-height:24px; font-size:11px; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Wages Dashboard Report
+     ditto Architecture.WinApp.Inventory_Reports\frmWagesDashboardReport.cs (2,101 lines)
+
+     The Load handler is still named frmEvaulationDetailSalesReports_Load - the form was copied
+     from that one and never renamed.
+
+     Controls, in the desktop's own order (groupBox1 "Filters"):
+       label1  "From Date"  txtDateFrom     label2  "To Date"  txtToDate
+       label10 "Document Type"          cmbDocumentType
+       label12 "Labour/Wages Activity"  cmbWagesAccount
+       label3  "Contractor"             cmbContractor
+       btnShow "Show"
+     toolStrip3: btnNew "&Refresh", btnPrint "&Print"
+
+     Three summary grids sit on the form itself:
+       label13 "Summary By Document Type"    grdSummaryByDocType
+       label4  "Summary By Wages Account"    grdSummarybyWagesAc
+       label5  "Summary By Contractor"       grdSummarybyContractor
+     and tabControl1 holds three pages, in this order (:1331-1333):
+       tabPage3 "Activity && Document Type"   label6  "Activity && Document Type"
+       tabPage4 "Document Type && Activity"   label14 "Documnet Type && Activity"  (sic)
+       tabPage2 "Contractor"                  label11 "Detail Summary By Contractor"
+                                              label9  "Detail By Contractor"
+
+     Events ported:
+       frmEvaulationDetailSalesReports_Load  :191-271
+       btnShow_Click -> AllGridFill          :897-907, :345-523
+       btnNew_Click "Refresh"                :947-960   re-reads the three dropdowns only
+       the seven *_LinkClicked handlers      :689-807   all funnel into HandleLinkClicked
+       HandleLinkClicked                     :808-852
+       OpenWagesReportScreen                 :856-895
+
+     btnPrint_Click is an EMPTY STUB on the desktop (:909-912) - PrintButtonManage only renames
+     the button and is never called from anywhere. The button is kept and prints the page.
+
+     Read-only: no save, update, delete or History button on the desktop form.
+     ========================================================================== -->
+<div class="win-title-bar">Wages Dashboard Report</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Purchase &amp; Sales Dashboard &gt; Wages Dashboard Report</span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnNew" onclick="wdRefresh(this)">
+        <i class="fa fa-refresh"></i> Refresh
+    </button>
+    <button type="button" class="win-btn" id="btnPrint" onclick="wdPrint(this)">
+        <i class="fa fa-print"></i> Print
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="wdToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="wdMessage"></div>
+
+<div class="win-form-card">
+    <div class="win-group-box">
+        <div class="win-group-title">Filters</div>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="win-label">From Date</label>
+                <input type="date" id="fromDate" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">To Date</label>
+                <input type="date" id="toDate" class="win-input">
+            </div>
+            <div class="col-md-3">
+                <label class="win-label">Document Type</label>
+                <select id="documentType" class="win-input wd-select2"></select>
+            </div>
+            <div class="col-md-3">
+                <label class="win-label">Labour/Wages Activity</label>
+                <select id="wagesAccount" class="win-input wd-select2"></select>
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">Contractor</label>
+                <select id="contractor" class="win-input wd-select2"></select>
+            </div>
+        </div>
+        <div class="row g-2" style="margin-top:6px;">
+            <div class="col-md-2">
+                <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="wdShow(this)">
+                    <i class="fa fa-search"></i> Show
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-0">
+    <div class="col-lg-4">
+        <div class="wd-panel">
+            <div class="wd-cap">Summary By Document Type</div>
+            <div class="wd-wrap"><table class="wd-grid" id="gridDocType"></table></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="wd-panel">
+            <div class="wd-cap">Summary By Wages Account</div>
+            <div class="wd-wrap"><table class="wd-grid" id="gridWagesAc"></table></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="wd-panel">
+            <div class="wd-cap">Summary By Contractor</div>
+            <div class="wd-wrap"><table class="wd-grid" id="gridContractor"></table></div>
+        </div>
+    </div>
+</div>
+
+<div class="wd-tabs">
+    <div class="wd-tab active" id="tabAD"  onclick="wdTab('AD')">Activity &amp; Document Type</div>
+    <div class="wd-tab"        id="tabDA"  onclick="wdTab('DA')">Document Type &amp; Activity</div>
+    <div class="wd-tab"        id="tabCON" onclick="wdTab('CON')">Contractor</div>
+</div>
+<div class="wd-tabpanes">
+    <div id="paneAD">
+        <div class="wd-cap">Activity &amp; Document Type</div>
+        <div class="wd-wrap"><table class="wd-grid" id="gridActivityDoc"></table></div>
+    </div>
+    <div id="paneDA" style="display:none;">
+        <!-- label14's caption is misspelled on the desktop; kept as it is -->
+        <div class="wd-cap">Documnet Type &amp; Activity</div>
+        <div class="wd-wrap"><table class="wd-grid" id="gridDocActivity"></table></div>
+    </div>
+    <div id="paneCON" style="display:none;">
+        <div class="wd-cap">Detail Summary By Contractor</div>
+        <div class="wd-wrap"><table class="wd-grid" id="gridDetSumContractor"></table></div>
+        <div class="wd-cap" style="margin-top:10px;">Detail By Contractor</div>
+        <div class="wd-wrap"><table class="wd-grid" id="gridDetContractor"></table></div>
+    </div>
+</div>
+
+<div style="height:16px;"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_wages_dashboard_report.js?v=20260920a}"></script>
+</body>
+</html>

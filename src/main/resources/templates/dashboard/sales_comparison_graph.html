@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sales Comparison (Graph) Report</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-group-box { border:1px solid #c7d0d6; border-radius:2px; padding:10px 10px 8px;
+                         position:relative; }
+        .win-group-title { position:absolute; top:-8px; left:8px; background:#fff; padding:0 5px;
+                           font-size:11px; font-weight:700; color:#0f5959; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+        .win-input:disabled { background:#f2f4f6; color:#888; }
+        .win-radio-inline { font-size:11px; display:inline-flex; align-items:center; gap:4px;
+                            margin-right:14px; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #scMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #scMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #scMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        /* The four blocks sit side by side and wrap, using the full page width. */
+        .sc-wrap { display:grid; grid-template-columns:repeat(auto-fit, minmax(540px, 1fr));
+                   gap:10px; padding:0 8px 10px; }
+        .sc-block { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                    display:flex; flex-direction:column; position:relative; }
+        .sc-head { background:#0f5959; color:#fff; padding:5px 10px; font-size:12px; font-weight:700; }
+        .sc-chart { padding:6px 8px 0; overflow-x:auto; }
+
+        svg .grid   { stroke:#e3e9ec; stroke-width:1; stroke-dasharray:2 3; }
+        svg .axis   { stroke:#c3ced4; stroke-width:1; }
+        svg .tick   { fill:#6b7a82; font-size:10px; }
+        svg .catlbl { fill:#41525c; font-size:10px; font-weight:700; }
+        svg .bar    { fill:#0f5959; }
+        svg .bar:hover { fill:#0b4444; }
+        svg .hit    { fill:transparent; cursor:pointer; }
+
+        .sc-tip { position:absolute; display:none; background:#fff; border:1px solid #7a9a9e;
+                  box-shadow:0 2px 8px rgba(0,0,0,.18); padding:5px 8px; font-size:11px;
+                  pointer-events:none; z-index:20; white-space:nowrap; border-radius:2px; }
+        .sc-tip b { color:#0f5959; }
+
+        .sc-scroll { margin:6px 8px 8px; border:1px solid #d5dde1; overflow:auto; max-height:260px; }
+        table.sc-grid { width:max-content; min-width:100%; border-collapse:collapse; font-size:11px; background:#fff; }
+        table.sc-grid th { background:#eef2f4; border:1px solid #cfd8dc; padding:3px 5px;
+                           font-weight:700; color:#33454e; position:sticky; top:0; z-index:2;
+                           white-space:nowrap; }
+        table.sc-grid td { border:1px solid #e8eef1; padding:2px 5px; }
+        table.sc-grid tbody tr:hover { background:#e0f2f1; }
+        table.sc-grid tfoot td { background:#e0f2f1; font-weight:700; color:#0f5959;
+                                 border:1px solid #0f5959; }
+        .num { text-align:right; white-space:nowrap; }
+
+        .sc-empty { color:#667; padding:14px; text-align:center; font-size:11px; }
+        .sc-full { position:fixed; inset:0; z-index:3000; background:#e4e9ed; overflow:auto; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Sales Comparison (Graph) Report
+     ditto Architecture.WinApp.Graph\SalesComparisonReportWithGraph.cs (1,582 lines)
+
+     One procedure returns one flat table, which the form splits four ways on its
+     DescriptionTitle column and renders as four charts with four grids beneath:
+
+       "Customer"     Top N Customers     CustomerName
+       "Item"         Top N Items         ItemName
+       "City"         Top N Cities        CityName
+       "PackingSize"  Top N Pack Size     PackUom     (no space in the value)
+
+     Events ported:
+       Load           :157-200  dates, Top rows = 10, the three lists, then ShowReport()
+       btnshow_Click  :145-155
+       ShowReport     :280-540
+
+     AppId 5 is a special case on the desktop: the cost centre is pinned to its first row and
+     the combo disabled (:181-186), and ShowReport throws "Cost Center Not Found" when it is
+     still 0 (:303-306). Both are reproduced.
+
+     The desktop also docks a second form, MonthlySalesComparisonReport, into a "Monthly" tab
+     (:190-198). That is a separate desktop form and is NOT part of this screen's own code, so
+     it is not reproduced here - the tab would otherwise be an empty promise.
+
+     Read-only: no save, update, delete or History button on the desktop form.
+     ========================================================================== -->
+<div class="win-title-bar">Sales Comparison (Graph) Report</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Purchase &amp; Sales Dashboard &gt; Sales Comparison (Graph) Report</span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnNew" onclick="scRefresh(this)">
+        <i class="fa fa-refresh"></i> Refresh
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="scToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="scMessage"></div>
+
+<div class="win-form-card">
+    <div class="win-group-box">
+        <div class="win-group-title">Filters</div>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="win-label">From Date</label>
+                <input type="date" id="fromDate" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">To Date</label>
+                <input type="date" id="toDate" class="win-input">
+            </div>
+            <div class="col-md-1">
+                <label class="win-label">Top Rows</label>
+                <input type="number" id="topRows" class="win-input num" value="10" min="1">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">Parent Category</label>
+                <select id="cmbCategory" class="win-input"><option value="0">Parent Category</option></select>
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">Item Type</label>
+                <select id="cmbItemType" class="win-input"><option value="0">Item Type</option></select>
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">Cost Center</label>
+                <select id="cmbCostCenter" class="win-input"><option value="0">Cost Center</option></select>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="scShow(this)">
+                    <i class="fa fa-search"></i> Show
+                </button>
+            </div>
+        </div>
+        <div class="row g-2" style="margin-top:6px;">
+            <div class="col-md-12">
+                <!-- btnradTop / btnradBottom feed @OrderByFlag -->
+                <label class="win-radio-inline">
+                    <input type="radio" name="orderBy" id="radTop" value="Top" checked> Top
+                </label>
+                <label class="win-radio-inline">
+                    <input type="radio" name="orderBy" id="radBottom" value="Bottom"> Bottom
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sc-wrap">
+    <div class="sc-block">
+        <div class="sc-head" id="hdCustomers">Top Customers</div>
+        <div class="sc-chart"><svg id="chCustomers" role="img" aria-label="Top customers by sale amount"></svg></div>
+        <div class="sc-tip" id="tipCustomers"></div>
+        <div class="sc-scroll"><table class="sc-grid">
+            <thead><tr id="thCustomers"></tr></thead>
+            <tbody id="tbCustomers"></tbody>
+            <tfoot><tr id="tfCustomers"></tr></tfoot>
+        </table></div>
+    </div>
+
+    <div class="sc-block">
+        <div class="sc-head" id="hdItems">Top Items</div>
+        <div class="sc-chart"><svg id="chItems" role="img" aria-label="Top items by sale amount"></svg></div>
+        <div class="sc-tip" id="tipItems"></div>
+        <div class="sc-scroll"><table class="sc-grid">
+            <thead><tr id="thItems"></tr></thead>
+            <tbody id="tbItems"></tbody>
+            <tfoot><tr id="tfItems"></tr></tfoot>
+        </table></div>
+    </div>
+
+    <div class="sc-block">
+        <div class="sc-head" id="hdCities">Top Cities</div>
+        <div class="sc-chart"><svg id="chCities" role="img" aria-label="Top cities by sale amount"></svg></div>
+        <div class="sc-tip" id="tipCities"></div>
+        <div class="sc-scroll"><table class="sc-grid">
+            <thead><tr id="thCities"></tr></thead>
+            <tbody id="tbCities"></tbody>
+            <tfoot><tr id="tfCities"></tr></tfoot>
+        </table></div>
+    </div>
+
+    <div class="sc-block">
+        <div class="sc-head" id="hdPackSizes">Top Pack Size</div>
+        <div class="sc-chart"><svg id="chPackSizes" role="img" aria-label="Top pack sizes by sale amount"></svg></div>
+        <div class="sc-tip" id="tipPackSizes"></div>
+        <div class="sc-scroll"><table class="sc-grid">
+            <thead><tr id="thPackSizes"></tr></thead>
+            <tbody id="tbPackSizes"></tbody>
+            <tfoot><tr id="tfPackSizes"></tr></tfoot>
+        </table></div>
+    </div>
+</div>
+
+<div style="height:16px;"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_sales_comparison_graph.js?v=20260920a}"></script>
+</body>
+</html>

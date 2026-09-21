@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${moduleTitle}">Agent Trade Bill Register</title>
+    <style>
+        .filter-section { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+        .grid-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .grid-table th { background-color: #ebf8ff; color: #2c5282; border: 1px solid #cbd5e0; padding: 8px; text-align: left; }
+        .grid-table td { border: 1px solid #cbd5e0; padding: 6px 8px; }
+        .grid-table tr:hover { background-color: #f7fafc; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+</head>
+<body class="cmagt">
+<div class="cmagt-appbar">
+    <span class="cmagt-title">Agent Trade Bill Register</span>
+    
+    <span class="cmagt-crumb"><a th:href="@{/commission}">Commission Trading</a> &rsaquo; Reports</span>
+</div>
+
+<div layout:fragment="content" class="container-fluid py-3">
+
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body py-2 d-flex justify-content-between align-items-center bg-light">
+            <h4 class="m-0 text-primary font-weight-bold" th:text="${moduleTitle}">Agent Trade Bill Register</h4>
+            <button type="button" class="btn btn-sm btn-outline-dark" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label font-weight-bold">From Date</label>
+                <input type="date" class="form-control form-control-sm" id="fromDate">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label font-weight-bold">To Date</label>
+                <input type="date" class="form-control form-control-sm" id="toDate">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label font-weight-bold">Commission Agent</label>
+                <select class="form-select form-select-sm" id="agentId">
+                    <option value="0">-- All Agents --</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-sm btn-primary w-100" id="btnFilter"><i class="fas fa-search"></i> Generate Register</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive" style="width: 100%;">
+                <table class="grid-table" id="reportTable" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Bill No</th>
+                            <th>Bill Date</th>
+                            <th>Commission Agent</th>
+                            <th>Supplier Name</th>
+                            <th>Buyer Name</th>
+                            <th>Net Amount</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="text-center text-muted py-3">Click Generate Register to view data.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="script">
+    $(document).ready(function() {
+        const today = new Date().toISOString().split('T')[0];
+        $('#fromDate').val(today);
+        $('#toDate').val(today);
+
+        $.get('/api/commission/dropdowns/commission-agents', function(data) {
+            const el = $('#agentId');
+            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+        });
+
+        $('#btnFilter').on('click', generateReport);
+    });
+
+    function generateReport() {
+        const fromDate = $('#fromDate').val();
+        const toDate = $('#toDate').val();
+        const agentId = $('#agentId').val();
+
+        $.get(`/api/commission/reports/agent-trade-bill-register?fromDate=${fromDate}&toDate=${toDate}&agentId=${agentId}`, function(data) {
+            const tbody = $('#reportTable tbody');
+            tbody.empty();
+            if (!data || data.length === 0) {
+                tbody.append('<tr><td colspan="7" class="text-center text-muted py-3">No register records found.</td></tr>');
+                return;
+            }
+            data.forEach(r => {
+                tbody.append(`
+                    <tr>
+                        <td>${r.docNo || r.id || ''}</td>
+                        <td>${r.docDate ? r.docDate.substring(0, 10) : ''}</td>
+                        <td>${r.commissionAgentName || ''}</td>
+                        <td>${r.supplierName || ''}</td>
+                        <td>${r.buyerName || ''}</td>
+                        <td>${r.netAmount || 0}</td>
+                        <td>${r.remarksHeader || ''}</td>
+                    </tr>
+                `);
+            });
+        });
+    }
+</script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

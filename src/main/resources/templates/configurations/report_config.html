@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>EccountBook</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        /* ------------------------------------------------------------------------------------
+           frmReportConfig.InitializeComponent, 1:1 for the Form tab.
+
+           ClientSize 957x588 - tabControl1 Fill - tabPage1 "Form" / tabPage2 "History".
+           tabPage1 > panel2 (Fill) > panel3 (Top 943x30, toolStrip1) + panel4 (Fill @0,30).
+           Field coordinates below are the designer's, inside panel4.
+
+           The HISTORY tab departs from the desktop's fixed 827px in one respect only, because
+           the brief asks for it: the grid uses the full page width, scrolls inside its own
+           container rather than scrolling the page, and offers fullscreen. Its columns, order
+           and contents are still exactly Sp_ReportConfig_GetAllMethod @Activity='ReadAll'.
+           ------------------------------------------------------------------------------------ */
+        html, body { margin: 0; padding: 0; background: #f0f0f0; }
+        body { font-family: Verdana, "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 8.25pt; color: #000; }
+
+        #tabstrip { height: 25px; background: #f0f0f0; border-bottom: 1px solid #aca899; }
+        #tabstrip .tab { display: inline-block; margin: 2px 0 0 4px; padding: 3px 18px; font-size: 9.75pt;
+                         background: #e8e8e8; border: 1px solid #aca899; border-bottom: none; cursor: pointer; }
+        #tabstrip .tab.on { background: #fff; font-weight: bold; }
+
+        .toolstrip { height: 27px; background: linear-gradient(#fdfdfd, #e6e4dc); border-bottom: 1px solid #aca899; white-space: nowrap; }
+        .toolstrip button { height: 24px; border: 1px solid transparent; background: transparent;
+                            font-family: Verdana; font-size: 9.75pt; cursor: pointer; vertical-align: top; padding: 0 5px; margin-top: 1px; }
+        .toolstrip button:hover:not(:disabled) { border-color: #316ac5; background: #dfe8f6; }
+        .toolstrip button:disabled { color: #9a9a9a; cursor: default; }
+        .toolstrip button .fa { margin-right: 3px; }
+        .toolstrip .spin { width: 11px; height: 11px; border: 2px solid rgba(0,0,0,.15); border-top-color: #316ac5;
+                           border-radius: 50%; display: none; margin-right: 4px; vertical-align: -1px; animation: sp .7s linear infinite; }
+        .toolstrip button.busy .spin { display: inline-block; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+
+        /* ---- Form tab, panel4 (designer coordinates) ---- */
+        #panel4 { position: relative; height: 526px; }
+        #panel4 .lbl { position: absolute; font-size: 8.25pt; height: 15px; line-height: 15px; }
+        #panel4 input.tb { position: absolute; height: 23px; box-sizing: border-box; border: 1px solid #7f9db9;
+                           background: #fff; font-family: Verdana; font-size: 8.25pt; padding: 0 3px; }
+        #panel4 label.cb { position: absolute; height: 17px; line-height: 17px; font-size: 8.25pt; }
+        #panel4 label.cb input { vertical-align: -2px; margin-right: 4px; }
+
+        #label1 { left: 10px;  top: 11px; width: 70px;  }
+        #label3 { left: 236px; top: 11px; width: 109px; }
+        #label6 { left: 376px; top: 11px; width: 81px;  }
+        #label8 { left: 586px; top: 11px; width: 100px; }
+        #label9 { left: 10px;  top: 54px; width: 136px; }
+
+        #txtReportTitle         { left: 10px;  top: 27px; width: 223px; }
+        #txtReportShortName     { left: 236px; top: 27px; width: 139px; }
+        #txtReportFolder        { left: 376px; top: 27px; width: 209px; }
+        #txtReportFileName      { left: 586px; top: 27px; width: 338px; }
+        #txtReportProcedureName { left: 10px;  top: 70px; width: 365px; }
+        #lblIsSubReport { left: 382px; top: 73px; width: 91px; }
+        #lblIsActive    { left: 479px; top: 73px; width: 64px; }
+
+        /* ---- History tab ---- */
+        #historyPane { display: none; }
+        #panel6 { height: 28px; display: flex; align-items: stretch; }
+        #panel6 .toolstrip { flex: 1; border-bottom: none; }
+        #ctrlGrdBar2 { width: 45px; display: flex; align-items: center; justify-content: center; gap: 2px;
+                       background: #ece9d8; border: 1px solid #aca899; margin: 2px 4px 1px 0; }
+        #ctrlGrdBar2 button { border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 0 2px; }
+
+        /* Full available width; scroll inside the container only, never the page. */
+        #gridWrap { border: 1px solid #7f9db9; background: #fff; margin: 0 4px 4px 4px; }
+        #gridScroll { overflow: auto; max-height: calc(100vh - 120px); }
+        #gridWrap.full { position: fixed; inset: 0; margin: 0; z-index: 50; }
+        #gridWrap.full #gridScroll { max-height: calc(100vh - 26px); }
+        table.grd { border-collapse: collapse; width: 100%; font-family: Verdana; font-size: 8.25pt; table-layout: auto; }
+        table.grd th { background: #ece9d8; border: 1px solid #aca899; padding: 3px 5px; text-align: left;
+                       white-space: nowrap; position: sticky; top: 0; font-weight: normal; z-index: 1; }
+        table.grd tr.filter th { top: 22px; background: #fbfbfb; padding: 1px; }
+        table.grd tr.filter input { width: 100%; box-sizing: border-box; border: 1px solid #c8c8c8;
+                                    font-family: Verdana; font-size: 8.25pt; padding: 1px 3px; }
+        table.grd td { border-bottom: 1px solid #e6e6e6; border-right: 1px solid #f0f0f0; padding: 2px 5px; vertical-align: top; }
+        table.grd td.wrap { white-space: normal; word-break: break-word; min-width: 90px; }
+        table.grd td.num { text-align: right; white-space: nowrap; }
+        table.grd td.chk { text-align: center; }
+        table.grd tbody tr:hover { background: #dfe8f6; }
+        table.grd tbody tr.sel { background: #316ac5; color: #fff; }
+        table.grd tbody tr.sel a.code { color: #fff; }
+        a.code { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        #navigator { height: 20px; border-top: 1px solid #aca899; background: #ece9d8;
+                     display: flex; align-items: center; gap: 6px; padding: 0 6px; font-size: 8.25pt; }
+        #navigator button { border: 1px solid #aca899; background: #f5f3ea; cursor: pointer; font-size: 9px; padding: 0 5px; height: 15px; }
+
+        /* MessageBox.Show */
+        #mbMask { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; z-index: 100; }
+        #mbForm { background: #f0f0f0; border: 1px solid #555; min-width: 300px; max-width: 520px; }
+        #mbForm .cap { background: #0A6E6E; color: #fff; padding: 4px 8px; font-weight: bold; }
+        #mbForm .body { padding: 14px 16px; }
+        #mbForm .btns { padding: 8px 16px 12px; text-align: right; }
+        #mbForm .btns button { min-width: 72px; height: 23px; margin-left: 6px; background: #ece9d8;
+                               border: 1px solid #aca899; cursor: pointer; font-family: Verdana; font-size: 8.25pt; }
+
+        #deny { padding: 14px 18px; font-size: 9pt; background: #ffebee; border: 1px solid #e57373; color: #7f0000; margin: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="deny" th:unless="${canOpen}">
+    Define Reports sits on the desktop's Admin Panel, which DashboardNew draws only when RoleName
+    is &quot;Admin&quot;. This page applies the same condition.
+</div>
+
+<div th:if="${canOpen}">
+
+    <div id="tabstrip">
+        <span class="tab on" data-tab="form">Form</span><span class="tab" data-tab="history">History</span>
+    </div>
+
+    <!-- ============================ tabPage1 "Form" ============================ -->
+    <div id="formPane">
+        <!-- toolStrip1: New, Save, Update (Visible=false), Print, Refresh, Report Allocate to Company -->
+        <div class="toolstrip" id="toolStrip1">
+            <button type="button" id="btnnew"><i class="fa fa-plus"></i><u>N</u>ew</button>
+            <button type="button" id="btnsave"><span class="spin"></span><i class="fa fa-floppy-o"></i><u>S</u>ave</button>
+            <button type="button" id="btnupdate" style="display:none;"><span class="spin"></span><i class="fa fa-pencil"></i><u>U</u>pdate</button>
+            <!-- btnPrint and btnRefresh have NO Click handler in the designer - they are inert on
+                 the desktop, so they are inert here too rather than being given behaviour. -->
+            <button type="button" id="btnPrint"><i class="fa fa-print"></i><u>P</u>rint</button>
+            <button type="button" id="btnRefresh"><i class="fa fa-refresh"></i>Refresh</button>
+            <button type="button" id="ReportAllocatToCompany"><i class="fa fa-building-o"></i>Report Allocate to Company</button>
+        </div>
+
+        <div id="panel4">
+            <span class="lbl" id="label1">Report Title</span>
+            <input class="tb" id="txtReportTitle" maxlength="50">
+
+            <span class="lbl" id="label3">Report Short Name</span>
+            <input class="tb" id="txtReportShortName" maxlength="50">
+
+            <span class="lbl" id="label6">Report Folder</span>
+            <input class="tb" id="txtReportFolder" maxlength="50">
+
+            <span class="lbl" id="label8">Report File Name</span>
+            <input class="tb" id="txtReportFileName" maxlength="50">
+
+            <span class="lbl" id="label9">Report Procedure Name</span>
+            <input class="tb" id="txtReportProcedureName" maxlength="150">
+
+            <label class="cb" id="lblIsSubReport"><input type="checkbox" id="IsSubReport">Is Sub Report</label>
+            <label class="cb" id="lblIsActive"><input type="checkbox" id="IsActive">IsActive</label>
+        </div>
+    </div>
+
+    <!-- ============================ tabPage2 "History" ============================ -->
+    <div id="historyPane">
+        <div id="panel6">
+            <!-- toolStrip2: New, Print - neither has a Click handler on the desktop either. -->
+            <div class="toolstrip">
+                <button type="button" id="toolStripButton1"><i class="fa fa-plus"></i><u>N</u>ew</button>
+                <button type="button" id="toolStripButton4"><i class="fa fa-print"></i><u>P</u>rint</button>
+            </div>
+            <div id="ctrlGrdBar2">
+                <button type="button" id="grdFull" title="Fullscreen"><i class="fa fa-arrows-alt"></i></button>
+                <button type="button" id="grdExport" title="Export"><i class="fa fa-file-excel-o"></i></button>
+            </div>
+        </div>
+
+        <div id="gridWrap">
+            <div id="gridScroll">
+                <table class="grd">
+                    <thead>
+                    <tr id="grdHead"></tr>
+                    <tr class="filter" id="grdFilter"></tr>
+                    </thead>
+                    <tbody id="grdBody"></tbody>
+                </table>
+            </div>
+            <div id="navigator">
+                <button type="button" data-nav="first">|&lt;</button>
+                <button type="button" data-nav="prev">&lt;</button>
+                <span id="navPos">0 of 0</span>
+                <button type="button" data-nav="next">&gt;</button>
+                <button type="button" data-nav="last">&gt;|</button>
+                <span style="margin-left:auto; color:#555;">Double-click a row, or click a Report Config Id, to open it.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="mbMask">
+    <div id="mbForm">
+        <div class="cap" id="mbCap">EccountBook</div>
+        <div class="body" id="mbBody"></div>
+        <div class="btns" id="mbBtns"></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_report_config.js}"></script>
+</body>
+</html>

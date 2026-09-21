@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payables And Payment Schedule</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-group-box { border:1px solid #c7d0d6; border-radius:2px; padding:12px 10px 8px;
+                         position:relative; }
+        .win-group-title { position:absolute; top:-8px; left:8px; background:#fff; padding:0 5px;
+                           font-size:11px; font-weight:700; color:#0f5959; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600;
+                     white-space:nowrap; }
+        .win-label input[type=checkbox] { margin-right:3px; vertical-align:-1px; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+        .win-input:disabled { background:#f2f4f6; color:#888; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #psMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #psMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #psMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        .ps-sect { font-weight:700; color:#0f5959; font-size:12px; margin:10px 8px 4px;
+                   padding-bottom:3px; border-bottom:1px solid #b0bec5; }
+
+        /* Full page width; the only horizontal scrollbar is INSIDE these containers. */
+        .ps-grid-wrap { margin:0 8px 8px; background:#fff; border:1px solid #b0bec5;
+                        max-height:calc(100vh - 340px); overflow:auto; }
+        .ps-sum-wrap  { margin:0 8px 8px; background:#fff; border:1px solid #b0bec5; overflow:auto; }
+        body.ps-full .ps-grid-wrap { max-height:calc(100vh - 140px); }
+
+        table.ps-grid { border-collapse:separate; border-spacing:0; font-size:11px;
+                        width:max-content; min-width:100%; }
+        table.ps-grid thead th { position:sticky; top:0; z-index:2; background:#dde5ea;
+                                 border-right:1px solid #c3ced6; border-bottom:1px solid #90a4ae;
+                                 padding:3px 6px; font-weight:700; color:#23343c; text-align:center;
+                                 white-space:nowrap; line-height:1.2; }
+        table.ps-grid tbody td { border-right:1px solid #eceff1; border-bottom:1px solid #eceff1;
+                                 padding:2px 6px; white-space:nowrap; }
+        table.ps-grid tbody tr:nth-child(even) td { background:#f7f9fa; }
+        table.ps-grid tbody tr:hover td { background:#e0f2f1; }
+        table.ps-grid tbody tr.ps-group td { background:#cfd8dc !important; font-weight:700;
+                                             color:#0f5959; }
+        table.ps-grid tfoot td { position:sticky; bottom:0; z-index:2; background:#e0f2f1;
+                                 border-top:1px solid #0f5959; font-weight:700; color:#0f5959;
+                                 padding:3px 6px; white-space:nowrap; }
+        .ps-num { text-align:right; }
+        .ps-ctr { text-align:center; }
+        .ps-neg { color:#b00020; }
+        a.ps-link { color:#0d47a1; text-decoration:underline; cursor:pointer; }
+        a.ps-link:hover { color:#b00020; }
+        .ps-link-off { color:#546e7a; text-decoration:underline dotted; cursor:pointer; }
+        /* PayToday is the one editable column on the desktop grid (EditType 1, :365-369). */
+        input.ps-edit { border:1px solid #bdd3e6; background:#fffde7; font-size:11px; height:18px;
+                        padding:0 3px; width:70px; text-align:right; }
+
+        .ps-empty { background:#fff; border:1px dashed #b0bec5; color:#667; padding:12px;
+                    text-align:center; margin:0 8px; font-size:11px; }
+        .ps-count { font-size:10px; color:#4f5d65; padding:2px 10px; }
+        body.ps-full { position:fixed; inset:0; z-index:3000; overflow:auto; background:#e4e9ed; }
+        .select2-container .select2-selection--single,
+        .select2-container .select2-selection--multiple { border-radius:0; border-color:#7f9db9;
+                                                          min-height:24px; font-size:11px; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Payables And Payment Schedule
+     ditto Architecture.WinApp.Account_Reports\PayablesAndPaymentSchedule.cs (1,864 lines)
+
+     Controls, in the desktop's own order (groupBox1 "Filters"):
+       label9  "Parent Category"  CmbParentCategory
+       label27 "Date From"     datDateFrom       label1 "Date To"      datDateTo
+       label3  "Due From"      datDueFrom        label2 "Due Up To"    datDueUpto
+       label6  "Purchase From" datPurchaseFrom   label4 "Purchase To"  datPurchaseTo
+       label5  "Interval Days" txtIntervalDays   ("30", :1473)
+       label12 "Aging Days"    txtAgingDays      ("30", :1466)
+       label11 "Control Account" cmbAccount      - multi-select, checked list
+       label7  "Custom Group"    CmbCustomGroups
+       label10 "Customer Group"  CmbCustomerGroup
+       Branches "Branches"       CmbBranches     - shown only under ERP feature 17
+       btnshow "Show"
+     Two grids: grdPayablesAndSchedule (detail) and grdSummary (the aging summary, whose four
+     bucket headings are data, not literals - :322-327).
+     toolStrip3: btnNew "&New", print "121_01 Print", btnShortCut "ShortCut Keys"
+
+     Events ported:
+       PayablesAndPaymentSchedule_Load     :146-179
+       btnshow_Click                       :182-197
+       gridHistory                         :199-355   two result sets
+       GridSetting                         :357-436   captions, hidden columns, links, sums
+       btnNew_Click -> Reset               :624-649
+       txtIntervalDays_TextChanged         :801-812   Purchase From = today - interval days
+       PayablesAndPaymentSchedule_KeyDown  :668-714
+       grdPayablesAndSchedule_LinkClicked  :813-897   AccountCode, BalQty, PurchaseAmount
+
+     All six date pickers are tick boxes (:1550-1662); only datDueFrom starts unticked (:1624).
+     An unticked date is NOT SENT AT ALL - see the service for the parameter contract, including
+     the desktop's own defect where Due Up To is gated on the Date To tick box.
+
+     Read-only screen: no save, update, delete or History button on the desktop form. PayToday is
+     editable in the desktop grid but is never written back to the database, so editing it here
+     only re-totals the column.
+     ========================================================================== -->
+<div class="win-title-bar">Payables And Payment Schedule</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Exective DashBoards &gt; Payables And Payment Schedule</span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnNew" onclick="psNew(this)">
+        <i class="fa fa-file-o"></i> New
+    </button>
+    <button type="button" class="win-btn" id="btnPrint" onclick="psPrint(this)">
+        <i class="fa fa-print"></i> Print
+    </button>
+    <button type="button" class="win-btn" onclick="psShortcuts()">
+        <i class="fa fa-keyboard-o"></i> ShortCut Keys
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <span class="ps-count" id="psCount"></span>
+    <button type="button" class="win-btn" onclick="psToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="psMessage"></div>
+
+<div class="win-form-card">
+    <div class="win-group-box">
+        <div class="win-group-title">Filters</div>
+
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="win-label">Parent Category</label>
+                <select id="parentCategory" class="win-input ps-select2"></select>
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">
+                    <input type="checkbox" id="chkFrom" onchange="psDateToggled('From')"> Date From
+                </label>
+                <input type="date" id="fromDate" class="win-input">
+            </div>
+            <!-- NOTE: this tick box also gates Due Up To, exactly as the desktop does at :222-225 -->
+            <div class="col-md-2">
+                <label class="win-label">
+                    <input type="checkbox" id="chkTo" onchange="psDateToggled('To')"> Date To
+                </label>
+                <input type="date" id="toDate" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">
+                    <input type="checkbox" id="chkDueFrom" onchange="psDateToggled('DueFrom')"> Due From
+                </label>
+                <input type="date" id="dueFrom" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">
+                    <input type="checkbox" id="chkDueUpto" onchange="psDateToggled('DueUpto')"> Due Up To
+                </label>
+                <input type="date" id="dueUpto" class="win-input">
+            </div>
+        </div>
+
+        <div class="row g-2 align-items-end" style="margin-top:6px;">
+            <div class="col-md-2">
+                <label class="win-label">
+                    <input type="checkbox" id="chkPurchaseFrom" onchange="psDateToggled('PurchaseFrom')">
+                    Purchase From
+                </label>
+                <input type="date" id="purchaseFrom" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">
+                    <input type="checkbox" id="chkPurchaseTo" onchange="psDateToggled('PurchaseTo')">
+                    Purchase To
+                </label>
+                <input type="date" id="purchaseTo" class="win-input">
+            </div>
+            <div class="col-md-1">
+                <label class="win-label">Interval Days</label>
+                <input type="number" id="intervalDays" class="win-input" value="30"
+                       oninput="psIntervalChanged()">
+            </div>
+            <div class="col-md-1">
+                <label class="win-label">Aging Days</label>
+                <input type="number" id="agingDays" class="win-input" value="30">
+            </div>
+            <div class="col-md-3">
+                <label class="win-label">Control Account</label>
+                <select id="controlAccounts" class="win-input ps-select2" multiple></select>
+            </div>
+            <div class="col-md-3">
+                <label class="win-label">Custom Group</label>
+                <select id="customGroup" class="win-input ps-select2"></select>
+            </div>
+        </div>
+
+        <div class="row g-2 align-items-end" style="margin-top:6px;">
+            <div class="col-md-3">
+                <label class="win-label">Customer Group</label>
+                <select id="customerGroup" class="win-input ps-select2"></select>
+            </div>
+            <div class="col-md-3" id="branchWrap" style="display:none;">
+                <label class="win-label">Branches</label>
+                <select id="branches" class="win-input ps-select2"></select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="psShow(this)">
+                    <i class="fa fa-search"></i> Show
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ps-grid-wrap" id="psGridWrap">
+    <table class="ps-grid" id="psGrid">
+        <thead id="psHead"></thead>
+        <tbody id="psBody"></tbody>
+        <tfoot id="psFoot"></tfoot>
+    </table>
+</div>
+<div id="psEmpty" class="ps-empty" style="display:none;">Press Show to read the schedule.</div>
+
+<!-- grdSummary - hidden until the second result set comes back with rows (:317-321) -->
+<div id="psSumSect" class="ps-sect" style="display:none;">Aging Summary</div>
+<div class="ps-sum-wrap" id="psSumWrap" style="display:none;">
+    <table class="ps-grid" id="psSummary">
+        <thead id="psSumHead"></thead>
+        <tbody id="psSumBody"></tbody>
+        <tfoot id="psSumFoot"></tfoot>
+    </table>
+</div>
+
+<div style="height:16px;"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_payables_payment_schedule.js?v=20260920a}"></script>
+</body>
+</html>

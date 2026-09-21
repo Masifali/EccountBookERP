@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Golden Ace Foods - Quality Control (Lab) Dashboard</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .erp-top-header {
+            background-color: #00796B;
+            color: #ffffff;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .erp-top-header .header-item {
+            margin-right: 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        .erp-top-header select {
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #cccccc;
+            border-radius: 2px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 6px;
+        }
+
+        .erp-top-header .company-title {
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .erp-top-header .right-item {
+            margin-left: auto;
+            color: #ffeb3b;
+        }
+
+        .erp-sub-bar {
+            background-color: #b0bec5;
+            height: 24px;
+            padding: 2px 10px;
+            font-size: 11px;
+            color: #37474f;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #90a4ae;
+        }
+
+        .erp-main-canvas {
+            background-color: #00796B;
+            min-height: calc(100vh - 62px);
+            padding: 15px 25px 40px 25px;
+        }
+
+        .erp-page-title {
+            color: #ffffff;
+            font-family: "Times New Roman", Georgia, serif;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .cards-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .erp-card {
+            background: #ffffff;
+            width: 200px;
+            border: 1px solid #b2dfdb;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: #333333;
+            transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            cursor: pointer;
+            display: block;
+        }
+
+        .erp-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            text-decoration: none;
+            color: #333333;
+        }
+
+        .erp-card-header-badge {
+            background-color: #00796B;
+            color: #ffffff;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 6px 0;
+        }
+
+        .erp-card-body {
+            padding: 15px 10px 15px 10px;
+            text-align: center;
+        }
+
+        .erp-card-body .bank-icon {
+            font-size: 32px;
+            color: #26a69a;
+            margin-bottom: 8px;
+        }
+
+        .erp-card-body .card-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #111111;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 1200px) { .modules-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 800px) { .modules-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .module-tile {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            padding: 22px 10px;
+            text-align: center;
+            color: #111111;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: block;
+            min-height: 100px;
+        }
+
+        .module-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: #00796B;
+            border-color: #00796B;
+        }
+
+        .module-tile i {
+            color: #00796B;
+            font-size: 26px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .module-tile .tile-title {
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="erp-top-header">
+        <div class="header-item">
+            <i class="fa fa-flask" style="margin-right: 8px;"></i>
+            <span>Quality Control (Lab)</span>
+        </div>
+        <div class="header-item">
+            <i class="fa fa-user" style="margin-right: 6px;"></i>
+            <span th:text="${#authentication != null ? #authentication.name : 'User'}">User</span>
+        </div>
+        <div class="header-item company-title">
+            <span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span>
+        </div>
+        <div class="right-item">
+            <i class="fa fa-check-circle" style="margin-right: 4px;"></i>
+            <span>System Online</span>
+        </div>
+    </div>
+
+    <div class="erp-sub-bar">
+        <i class="fa fa-window-maximize" style="margin-right: 6px;"></i>
+        <span>Screens &gt; Quality Control</span>
+    </div>
+
+    <div class="erp-main-canvas">
+        <div class="erp-page-title">Quality Control (Lab)</div>
+
+        <div class="cards-row">
+            <div class="erp-card">
+                <div class="erp-card-header-badge">10</div>
+                <div class="erp-card-body">
+                    <div class="bank-icon"><i class="fa fa-flask"></i></div>
+                    <div class="card-title">Setup & Transactions</div>
+                </div>
+            </div>
+
+            <div class="erp-card">
+                <div class="erp-card-header-badge">6</div>
+                <div class="erp-card-body">
+                    <div class="bank-icon"><i class="fa fa-bar-chart"></i></div>
+                    <div class="card-title">Lab Reports</div>
+                </div>
+            </div>
+        </div>
+
+        <h4 style="color: #ffffff; margin-top: 20px; font-weight: bold; font-size: 16px;">Definitions & Transactions</h4>
+        <div class="modules-grid">
+            <a href="/quality/lab" class="module-tile">
+                <i class="fa fa-building"></i>
+                <div class="tile-title">Lab Master</div>
+            </a>
+            <a href="/quality/item-analysis-parameter" class="module-tile">
+                <i class="fa fa-sliders"></i>
+                <div class="tile-title">Item Analysis Parameter</div>
+            </a>
+            <a href="/quality/analysis-group" class="module-tile">
+                <i class="fa fa-object-group"></i>
+                <div class="tile-title">Analysis Group</div>
+            </a>
+            <a href="/quality/group-analysis-standards" class="module-tile">
+                <i class="fa fa-list-alt"></i>
+                <div class="tile-title">Group Analysis Standards</div>
+            </a>
+            <a href="/quality/sample-log-register" class="module-tile">
+                <i class="fa fa-book"></i>
+                <div class="tile-title">Sample Log Register</div>
+            </a>
+            <a href="/quality/sample-analysis" class="module-tile">
+                <i class="fa fa-microscope"></i>
+                <div class="tile-title">Sample Analysis</div>
+            </a>
+            <a href="/quality/purchase-analysis" class="module-tile">
+                <i class="fa fa-truck"></i>
+                <div class="tile-title">Purchase Analysis</div>
+            </a>
+            <a href="/quality/inprocess-analysis-steps" class="module-tile">
+                <i class="fa fa-cogs"></i>
+                <div class="tile-title">InProcess Analysis Steps</div>
+            </a>
+            <a href="/quality/inprocess-analysis" class="module-tile">
+                <i class="fa fa-refresh"></i>
+                <div class="tile-title">In-Process Analysis</div>
+            </a>
+            <a href="/quality/lab-report" class="module-tile">
+                <i class="fa fa-file-text-o"></i>
+                <div class="tile-title">Lab Report</div>
+            </a>
+        </div>
+
+        <h4 style="color: #ffffff; margin-top: 25px; font-weight: bold; font-size: 16px;">Quality Control Reports</h4>
+        <div class="modules-grid">
+            <a href="/quality/reports/inprocess-analysis-report" class="module-tile">
+                <i class="fa fa-line-chart"></i>
+                <div class="tile-title">In-Process Analysis Report</div>
+            </a>
+            <a href="/quality/reports/lab-sample-analysis-report" class="module-tile">
+                <i class="fa fa-flask"></i>
+                <div class="tile-title">Lab Sample Analysis Report</div>
+            </a>
+            <a href="/quality/reports/sample-analysis-register" class="module-tile">
+                <i class="fa fa-table"></i>
+                <div class="tile-title">Sample Analysis Register</div>
+            </a>
+            <a href="/quality/reports/purchase-analysis-by-vehicle" class="module-tile">
+                <i class="fa fa-car"></i>
+                <div class="tile-title">Purchase Analysis By Vehicle</div>
+            </a>
+            <a href="/quality/reports/purchase-analysis-report" class="module-tile">
+                <i class="fa fa-file-pdf-o"></i>
+                <div class="tile-title">Purchase Analysis Report</div>
+            </a>
+            <a href="/quality/reports/lab-purchase-analysis-periodic-report" class="module-tile">
+                <i class="fa fa-calendar"></i>
+                <div class="tile-title">Lab Purchase Analysis Periodic</div>
+            </a>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+</body>
+</html>

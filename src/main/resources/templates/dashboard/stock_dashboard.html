@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock DashBoard</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600;
+                     white-space:nowrap; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+        .win-radio { font-size:11px; color:#33454e; white-space:nowrap; }
+        .win-radio input { vertical-align:-1px; margin-right:3px; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #sdMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #sdMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #sdMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        /* Each panel is the desktop's Opening / In / Out / Balance block for one stock group,
+           with its heading a LinkLabel that opens the Stock Report With Values. */
+        .sd-panel { background:#fff; border:1px solid #b0bec5; border-radius:3px; margin:8px; }
+        .sd-head { background:#0f5959; padding:5px 10px; }
+        .sd-head a { color:#fff; font-size:12px; font-weight:700; text-decoration:underline;
+                     cursor:pointer; }
+        .sd-head a:hover { color:#b2dfdb; }
+        .sd-body { overflow:auto; }
+        table.sd-grid { width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; font-size:11px;
+                        min-width:420px; }
+        table.sd-grid th { background:#dde5ea; border-right:1px solid #c3ced6;
+                           border-bottom:1px solid #90a4ae; padding:3px 6px; font-weight:700;
+                           color:#23343c; text-align:center; white-space:nowrap; }
+        table.sd-grid th:first-child { text-align:left; }
+        table.sd-grid td { border-right:1px solid #eceff1; border-bottom:1px solid #eceff1;
+                           padding:3px 6px; white-space:nowrap; text-align:right; }
+        table.sd-grid td:first-child { text-align:left; font-weight:700; color:#41525c; }
+        table.sd-grid tr:nth-child(even) td { background:#f7f9fa; }
+        .sd-neg { color:#b00020; }
+
+        body.sd-full { position:fixed; inset:0; z-index:3000; overflow:auto; background:#e4e9ed; }
+        .select2-container .select2-selection--multiple { border-radius:0; border-color:#7f9db9;
+                                                          min-height:24px; font-size:11px; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Stock DashBoard
+     ditto Architecture.WinApp.Dashboard\frmStockDashboard.cs (2,938 lines)
+
+     The Load handler is still named frmPendingWorksRpt_Load - the form was copied from that one
+     and never renamed.
+
+     Controls, in the desktop's own order (panel3):
+       datFromDate, datToDate, rdSaleValue "Sale Value", CmbBranches (ERP feature 11),
+       btnsearch "Show", btnRefresh
+     Six panels, each a LinkLabel heading over an Opening / In / Out / Balance table with Qty,
+     Weight and Amount rows:
+       linkLabel3 "Raw Material Rice"    linkLabel1 "Raw Material Paddy"
+       linkLabel2 "By Product"           linkLabel4 "Finish Goods"
+       linkLabel5 "Packing Material"     linkLabel6 "Store"
+
+     Events ported:
+       frmPendingWorksRpt_Load   :379-393
+       BranchesFill              :395-420
+       GridBind                  :422-708   ONE read, six buckets summed on the client
+       btnsearch_Click           :806-816
+       btnRefresh_Click -> Reset :710-804   every figure back to 0, nothing re-read
+       linkLabel1..6_LinkClicked :818-1038  each opens Stock Report With Values for its own
+                                            ItemClassGroup and Parent Category
+
+     The six buckets are keyed on ItemClassGroupId and InventoryParentCategoriesId (:536-625);
+     a row matching none of them is counted nowhere, exactly as the desktop's if/else leaves it
+     out. Every figure uses the desktop's "#,#;(#,#);0" - thousands, no decimals, NEGATIVES IN
+     PARENTHESES and a bare 0 at zero.
+
+     Read-only: no save, update, delete or History button on the desktop form.
+     ========================================================================== -->
+<div class="win-title-bar">Stock DashBoard</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Accounts Dashboard &gt; Stock DashBoard</span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnRefresh" onclick="sdRefresh(this)">
+        <i class="fa fa-refresh"></i> Refresh
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="sdToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="sdMessage"></div>
+
+<div class="win-form-card">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+            <label class="win-label">From Date</label>
+            <input type="date" id="fromDate" class="win-input">
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">To Date</label>
+            <input type="date" id="toDate" class="win-input">
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">&nbsp;</label>
+            <label class="win-radio">
+                <input type="checkbox" id="rdSaleValue"> Sale Value
+            </label>
+        </div>
+        <div class="col-md-4" id="branchWrap" style="display:none;">
+            <label class="win-label">Branches</label>
+            <select id="branches" class="win-input sd-select2" multiple></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">&nbsp;</label>
+            <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="sdShow(this)">
+                <i class="fa fa-search"></i> Show
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-0" id="sdPanels"></div>
+
+<div style="height:16px;"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_stock_dashboard.js?v=20260920a}"></script>
+</body>
+</html>

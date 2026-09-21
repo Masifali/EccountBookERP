@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sales Analytics Dashboard</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-group-box { border:1px solid #c7d0d6; border-radius:2px; padding:10px 10px 8px;
+                         position:relative; }
+        .win-group-title { position:absolute; top:-8px; left:8px; background:#fff; padding:0 5px;
+                           font-size:11px; font-weight:700; color:#0f5959; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #saMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #saMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #saMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        .caption-bar { background:#0f5959; color:#fff; font-weight:700; font-size:12px;
+                       padding:4px 12px; margin:0 8px; }
+        .totals-bar { background:#e0f2f1; font-weight:bold; color:#0f5959; font-size:12px;
+                      padding:4px 12px; border:1px solid #0f5959; border-radius:2px;
+                      display:flex; justify-content:space-between; margin:6px 8px 0; }
+
+        /* ---- chart ----------------------------------------------------------
+           One series, so no legend: the heading names it. Ink stays in text
+           colours; only the bars carry the series hue. Grid and axis recede. */
+        .sa-chart-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         margin:8px; padding:8px 10px 4px; position:relative; }
+        .sa-chart-ttl { font-size:12px; font-weight:700; color:#0f5959; margin-bottom:2px; }
+        .sa-chart-sub { font-size:10px; color:#6b7a82; margin-bottom:6px; }
+        .sa-chart-wrap { width:100%; overflow-x:auto; }
+        svg .grid   { stroke:#e3e9ec; stroke-width:1; }
+        svg .axis   { stroke:#c3ced4; stroke-width:1; }
+        svg .tick   { fill:#6b7a82; font-size:10px; }
+        svg .catlbl { fill:#41525c; font-size:10px; }
+        svg .vallbl { fill:#33454e; font-size:10px; font-weight:700; }
+        svg .bar    { fill:#0f5959; }
+        svg .bar:hover { fill:#0b4444; }
+        svg .hit    { fill:transparent; cursor:pointer; }
+
+        .sa-tip { position:absolute; display:none; background:#fff; border:1px solid #7a9a9e;
+                  box-shadow:0 2px 8px rgba(0,0,0,.18); padding:5px 8px; font-size:11px;
+                  pointer-events:none; z-index:20; white-space:nowrap; border-radius:2px; }
+        .sa-tip b { color:#0f5959; }
+
+        /* ---- grid (also the chart's table view) ---- */
+        .sa-scroll { margin:8px; border:1px solid #b5b5b5; background:#fff; overflow:auto;
+                     max-height:calc(100vh - 460px); min-height:120px; }
+        table.sa-grid { width:max-content; min-width:100%; border-collapse:collapse; font-size:11px; background:#fff; }
+        table.sa-grid th { background:#eef2f4; border:1px solid #cfd8dc; padding:4px 6px;
+                           font-weight:700; color:#33454e; position:sticky; top:0; z-index:2;
+                           white-space:nowrap; }
+        table.sa-grid td { border:1px solid #e0e6ea; padding:3px 6px; }
+        table.sa-grid tbody tr:hover { background:#e0f2f1; }
+        table.sa-grid tfoot td { background:#e0f2f1; font-weight:700; color:#0f5959;
+                                 border:1px solid #0f5959; }
+        .num { text-align:right; white-space:nowrap; }
+
+        .sa-empty { background:#fff; border:1px dashed #b0bec5; color:#667; padding:14px;
+                    text-align:center; margin:0 8px; font-size:11px; }
+        .sa-full { position:fixed; inset:0; z-index:3000; background:#e4e9ed; overflow:auto; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Sales Analytics Dashboard
+     ditto Architecture.WinApp.Dashboard\SalesAnalytics.cs (523 lines)
+
+     Controls, in the desktop's own order:
+       toolStrip3   btnNew "&Refresh", print, close
+       label23      "Sales Analytics Dashboard"
+       label27 "From Date", label33 "To Date", btnshow "Show"
+       grd                  the grid
+       ChartSalesAnalytics  a bar chart, X = LocationName, Y = OrgLocationPrcnt
+
+     Events ported:
+       VoucherValidation_Load  :95-108   From = financial year start, To = today, then Show
+       btnshow_Click           :199-209  OrganizationTotalSaleComparisonByLocation()
+       btnNew_Click -> reset() :110-113  which is just another Show
+       VoucherValidation_KeyDown :79-93  Ctrl+P print, Ctrl+E / Esc close, Ctrl+N refresh
+
+     Two desktop members are deliberately NOT reproduced because they do nothing there:
+       ShowReport()                      :75-77   an empty method - Print prints nothing
+       ChartSalesAnalytics_MouseHover()  :263-265 an empty method
+     And OrganizationTotalSaleComparisonByItem() (:165-197) is never called by anything, so no
+     control for it is invented here.
+     ========================================================================== -->
+<div class="win-title-bar">Sales Analytics Dashboard</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Purchase &amp; Sales Dashboard &gt; Sales Analytics</span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnNew" onclick="saRefresh(this)">
+        <i class="fa fa-refresh"></i> Refresh
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="saToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<!-- label23 (:332) -->
+<div class="caption-bar">Sales Analytics Dashboard</div>
+
+<div id="saMessage"></div>
+
+<div class="win-form-card">
+    <div class="win-group-box">
+        <div class="win-group-title">Date</div>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="win-label">From Date</label>
+                <input type="date" id="fromDate" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">To Date</label>
+                <input type="date" id="toDate" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="saShow(this)">
+                    <i class="fa fa-search"></i> Show
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="totals-bar">
+    <span>Locations: <b id="saRowCount">0</b></span>
+    <span id="saRange"></span>
+</div>
+
+<div class="sa-chart-card">
+    <div class="sa-chart-ttl">Share of organisation sales by location</div>
+    <div class="sa-chart-sub">Percentage of the organisation total. Hover a bar for its figures.</div>
+    <div class="sa-chart-wrap"><svg id="saChart" role="img" aria-label="Share of organisation sales by location"></svg></div>
+    <div class="sa-tip" id="saTip"></div>
+</div>
+
+<div class="sa-scroll">
+    <table class="sa-grid" id="saGrid">
+        <thead><tr id="saHead"></tr></thead>
+        <tbody id="saBody">
+            <tr><td style="text-align:center; padding:16px; color:#777;">Loading...</td></tr>
+        </tbody>
+        <tfoot><tr id="saFoot"></tr></tfoot>
+    </table>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_sales_analytics.js?v=20260920a}"></script>
+</body>
+</html>

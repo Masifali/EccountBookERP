@@ -1048,11 +1048,14 @@ function loadBookingPersons(callback) {
         selForm.find('option:gt(0)').remove();
         selHist.find('option:gt(0)').remove();
 
+        /* The endpoint returns the procedure's own rows, so the keys are the SQL column
+           spellings (ReferencePartyName / ReferencePartyType), not camelCase. Reading only the
+           camelCase names left every option's text empty and every type literal. */
         allBookingPersons.forEach(p => {
-            const name = p.partyName || p.description || p.name || '';
-            const type = p.referencePartyType || p.partyTypeName || 'Booking Person';
-            selForm.append(`<option value="${p.id}" data-code="${escapeHtml(type)}">${escapeHtml(name)}</option>`);
-            selHist.append(`<option value="${p.id}" data-code="${escapeHtml(type)}">${escapeHtml(name)}</option>`);
+            const name = p.ReferencePartyName || p.partyName || p.description || p.name || '';
+            const type = p.ReferencePartyType || p.referencePartyType || p.partyTypeName || '';
+            selForm.append(`<option value="${p.Id || p.id}" data-code="${escapeHtml(type)}">${escapeHtml(name)}</option>`);
+            selHist.append(`<option value="${p.Id || p.id}" data-code="${escapeHtml(type)}">${escapeHtml(name)}</option>`);
         });
 
         if ($.fn.select2) {
@@ -1075,7 +1078,7 @@ function openBookingPersonSearchModal() {
 function filterBookingPersonSearchGrid() {
     const q = $('#txtModalBookingPersonQuery').val().toLowerCase();
     const filtered = allBookingPersons.filter(p => {
-        const name = p.partyName || p.description || p.name || '';
+        const name = p.ReferencePartyName || p.partyName || p.description || p.name || '';
         return name.toLowerCase().includes(q);
     });
     renderBookingPersonModalGrid(filtered);
@@ -1095,8 +1098,8 @@ function renderBookingPersonModalGrid(list) {
         return;
     }
     list.forEach(p => {
-        const pName = p.partyName || p.description || p.name || '';
-        const pType = p.referencePartyType || p.partyTypeName || 'Booking Person';
+        const pName = p.ReferencePartyName || p.partyName || p.description || p.name || '';
+        const pType = p.ReferencePartyType || p.referencePartyType || p.partyTypeName || '';
         tbody.append(`
             <tr onclick="selectBookingPerson(${p.id})">
                 <td><strong style="color: #004d40;">${escapeHtml(pName)}</strong></td>
@@ -1274,8 +1277,36 @@ function calculateGrandTotalWeight() {
 /* ============================================================
  * 5. ITEM AUTOCOMPLETE & SELECTION EVENT CHAIN
  * ============================================================ */
+/*
+ * combordercat_Leave - PurchsaeOrder.cs:1676-1683.
+ *
+ * The header "Category" combo holds an InvOrderCategory id (1 General, 4 Paddy, 5 Rice,
+ * 6 By Product, 8 Govt Purchase). The ITEM list is filtered on InventoryParentCategoriesId,
+ * which is a different key, and the desktop maps between them with an explicit switch:
+ *
+ *     int CategoryId = val switch { 6 => 4, 1 => 3, 5 => 2, 4 => 1, _ => 0 };
+ *     ItemCategoryOrTypeBind(CategoryId);
+ *     ItemdtFillFromAll(CategoryId, ...);
+ *
+ * This page was sending the raw order-category id straight through as parentCategoryId, so
+ * General asked for parent 1 instead of 3, Paddy for 4 instead of 1, Rice for 5 instead of 2.
+ * Those are real parent categories, so the item list came back populated - with the wrong items.
+ * Govt Purchase (8) falls to 0, which means "no filter", exactly as the desktop's default arm.
+ *
+ * The switch is the desktop's own; it is reproduced, not inferred from the names.
+ */
+function orderCategoryToParentCategory(orderCategoryId) {
+    switch (parseInt(orderCategoryId || '0')) {
+        case 6:  return 4;
+        case 1:  return 3;
+        case 5:  return 2;
+        case 4:  return 1;
+        default: return 0;
+    }
+}
+
 function onParentCategoryChange() {
-    const parentId = parseInt($('#cmbParentCategory').val() || '0');
+    const parentId = orderCategoryToParentCategory($('#cmbParentCategory').val());
     $.get('/api/purchase-order/items?mode=name&parentCategoryId=' + parentId, function(data) {
         allItems = data || [];
         /* combordercat_Leave (:1663-1686) runs ItemCategoryOrTypeBind THEN ItemdtFillFromAll THEN
@@ -1390,7 +1421,11 @@ function onItemCategoryChange() {
 
 function openItemSearchModal() {
     const mode = $('#radItemCode').is(':checked') ? 'code' : 'name';
-    const parentId = parseInt($('#cmbParentCategory').val() || '0');
+    /* Same mapping as onParentCategoryChange: the combo holds an InvOrderCategory id, the item
+       filter wants an InventoryParentCategoriesId. On the desktop this modal's list is the
+       already-filtered dtitem (rdSearchByName_CheckedChanged:1820 rebinds it rather than
+       re-querying), so it must be narrowed by the same key the header last applied. */
+    const parentId = orderCategoryToParentCategory($('#cmbParentCategory').val());
     $.get('/api/purchase-order/items?mode=' + mode + '&parentCategoryId=' + parentId, function(data) {
         allItems = data || [];
         rebuildItemCategoryList();
@@ -1527,9 +1562,11 @@ function btnAddDetailRow_Click() {
     const rate = parseFloat($('#txtRate').val() || '0');
     const amount = parseFloat($('#txtAmount').val() || '0');
     const cropYear = $('#txtCropYear').val() || '';
-    const packUomId = parseInt($('#cmbPackUom').val() || '1');
+    /* No '|| 1' fallback: FormDetailValidation treats 0 as "not chosen" and refuses the row.
+       Defaulting to 1 made the UOM checks below unreachable and could post a wrong factor. */
+    const packUomId = parseInt($('#cmbPackUom').val() || '0');
     const packUomCode = $('#cmbPackUom option:selected').text();
-    const rateUomId = parseInt($('#cmbRateUom').val() || '1');
+    const rateUomId = parseInt($('#cmbRateUom').val() || '0');
     const rateUomCode = $('#cmbRateUom option:selected').text();
     const jobLotId = parseInt($('#cmbJobLot').val() || '0');
     const jobLotName = jobLotId > 0 ? $('#cmbJobLot option:selected').text() : '';
@@ -1538,19 +1575,56 @@ function btnAddDetailRow_Click() {
     const moisture = parseFloat($('#txtMoisture').val() || '0');
     const remarks = $('#txtLineRemarks').val() || '';
 
+    /* ------------------------------------------------------------------------------------
+     * FormDetailValidation() - PurchsaeOrder.cs:1999-2050.
+     *
+     * The desktop runs EIGHT checks, in this order, before btnplus_Click will add a row, and
+     * each one shows its own message and focuses its own control. The web had only three, worded
+     * differently, and was missing Crop Year, Job/Lot, Item Rate and Amount entirely - which is
+     * why a line could be added with Item Rate 0.00 and Amount 0.00, a row the desktop refuses.
+     *
+     * Messages are the desktop's own strings, not paraphrases, so the two apps say the same thing.
+     * Loading Location, Moisture and Remarks are deliberately NOT validated - the desktop does
+     * not validate them either.
+     * ------------------------------------------------------------------------------------ */
     if (itemId <= 0) {
-        alert("Please select an Inventory Item.");
-        openItemSearchModal();
+        alert("Item Field is Required");
+        $('#txtItemDisplay').focus();
         return;
     }
-    if (qty <= 0) {
-        alert("Item Quantity must be greater than zero.");
+    if (!String(cropYear).trim()) {
+        alert("CropYear Field is Required");
+        $('#txtCropYear').focus();
+        return;
+    }
+    if (jobLotId <= 0) {
+        alert("JobLot Field is Required");
+        $('#cmbJobLot').focus();
+        return;
+    }
+    if (packUomId <= 0) {
+        alert("UOM Field is Required");
+        $('#cmbPackUom').focus();
+        return;
+    }
+    if (!(qty > 0)) {
+        alert("Item Qty Field is Required");
         $('#txtQty').focus();
         return;
     }
-
-    if (packUomId <= 0 || rateUomId <= 0) {
-        alert("Please select a valid Pack UOM and Rate UOM for this Item (loaded from the database).");
+    if (!(rate > 0)) {
+        alert("Item Rate Field is Required");
+        $('#txtRate').focus();
+        return;
+    }
+    if (rateUomId <= 0) {
+        alert("Rate UOM Field is Required");
+        $('#cmbRateUom').focus();
+        return;
+    }
+    if (!(amount > 0)) {
+        alert("Amount Field is Required");
+        $('#txtAmount').focus();
         return;
     }
 
@@ -1600,6 +1674,17 @@ function btnAddDetailRow_Click() {
     const dup = lineItems.some((li, i) => i !== editingLineIdx && parseInt(li.itemId) === itemId);
     if (dup) {
         alert("Duplicate Item Not Add in Grid");
+        return;
+    }
+
+    /* btnplus_Click:2625 - when the chosen Rate UOM's Equivalent is not 40, the desktop asks
+       before adding. The factor is the schedule's Equivalent (combrateuom.SelectedRow.Cells[2]),
+       which is what data-eq carries. A row with no factor at all is not second-guessed here: the
+       desktop's test reads the cell and a missing one is not 40 either, so it asks too. */
+    const rateEqForConfirm = uomFactor('cmbRateUom');
+    if (rateEqForConfirm !== 40 &&
+        !confirm("Are you sure to add record because your RateUom not 40Kg?")) {
+        $('#cmbRateUom').focus();
         return;
     }
 

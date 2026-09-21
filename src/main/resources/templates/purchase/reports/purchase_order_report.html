@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Purchase Order Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; font-size: 12px; }
+        .top-banner { background-color: #00796B; color: #fff; padding: 8px 15px; font-size: 14px; font-weight: bold; }
+        .filter-panel { background: #fff; border: 1px solid #ddd; border-radius: 3px; padding: 12px; margin: 10px; }
+        .form-control-sm { height: 26px; padding: 2px 6px; font-size: 11px; }
+        .btn-erp { font-size: 11px; padding: 3px 12px; height: 26px; }
+        .table-responsive { max-height: 520px; overflow-y: auto; overflow-x: auto; }
+        .table-erp { font-size: 11px; width: 100%; border-collapse: collapse; }
+        .table-erp th { background-color: #00796B; color: #fff; position: sticky; top: 0; z-index: 10; padding: 5px; text-align: center; }
+        .table-erp td { padding: 4px 6px; border: 1px solid #e2e8f0; }
+        .table-erp tr:hover { background-color: #f0f7f7; }
+        .text-right { text-align: right; }
+        .total-row { font-weight: bold; background-color: #e2e8f0; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+</head>
+<body>
+    <div class="top-banner">
+        <i class="fa fa-file-text-o"></i> Purchase Order Register / History
+        <a href="/purchase/reports" class="btn btn-sm btn-light pull-right" style="margin-top:-3px; font-size:11px;"><i class="fa fa-arrow-left"></i> Reports Menu</a>
+    </div>
+
+    <div class="filter-panel">
+        <form id="filterForm">
+            <div class="row">
+                <div class="col-md-2">
+                    <label>From Date</label>
+                    <input type="date" id="fromDate" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                    <label>To Date</label>
+                    <input type="date" id="toDate" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label>Supplier / Party</label>
+                    <select id="supplierId" class="form-control form-control-sm select2">
+                        <option value="">-- All Suppliers --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>Status</label>
+                    <select id="statusFilter" class="form-control form-control-sm">
+                        <option value="All">All Statuses</option>
+                        <option value="Open">Open</option>
+                        <option value="Complete">Complete</option>
+                        <option value="Cancel">Cancel</option>
+                    </select>
+                </div>
+                <div class="col-md-3" style="margin-top:18px;">
+                    <button type="button" id="btnShow" class="btn btn-primary btn-erp"><i class="fa fa-search"></i> Show Register</button>
+                    <button type="button" id="btnReset" class="btn btn-default btn-erp"><i class="fa fa-refresh"></i> Reset</button>
+                    <button type="button" id="btnPrint" class="btn btn-success btn-erp"><i class="fa fa-print"></i> Print</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div style="margin:0 10px;">
+        <div class="table-responsive">
+            <table class="table table-bordered table-erp" id="reportTable">
+                <thead>
+                    <tr>
+                        <th>Sr#</th>
+                        <th>PO No</th>
+                        <th>PO Date</th>
+                        <th>Supplier Name</th>
+                        <th>Delivery Date</th>
+                        <th>Item Details</th>
+                        <th class="text-right">Total Qty</th>
+                        <th class="text-right">Total Amount</th>
+                        <th>Status</th>
+                        <th>Approval</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTbody">
+                    <tr><td colspan="10" class="text-center">Select filters and click "Show Register".</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row" id="totalRow" style="display:none;">
+                        <td colspan="6" class="text-right">Total:</td>
+                        <td class="text-right" id="lblTotalQty">0.00</td>
+                        <td class="text-right" id="lblTotalAmount">0.00</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            const today = new Date().toISOString().split('T')[0];
+            const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+            $('#fromDate').val(firstDay);
+            $('#toDate').val(today);
+            loadSuppliers();
+
+            $('#btnShow').click(fetchReport);
+            $('#btnReset').click(function() {
+                $('#fromDate').val(firstDay);
+                $('#toDate').val(today);
+                $('#supplierId').val(null).trigger('change');
+                $('#statusFilter').val('All');
+                $('#reportTbody').html('<tr><td colspan="10" class="text-center">Select filters and click "Show Register".</td></tr>');
+                $('#totalRow').hide();
+            });
+            $('#btnPrint').click(function() { window.print(); });
+        });
+
+        function loadSuppliers() {
+            /* /api/purchase-order/suppliers returns a bare array of
+               {id, companyName, partyCode, nickName, cityName, ...} - no {data:...} wrapper and
+               no accountTitle/name field. It is the same endpoint the Purchase Order form uses
+               (countx_purchase_order_full.js:462). */
+            $.get('/api/purchase-order/suppliers?mode=name', function(res) {
+                let html = '<option value="">-- All Suppliers --</option>';
+                (res || []).forEach(s => {
+                    const label = s.companyName || s.nickName || s.partyCode || ('#' + s.id);
+                    html += `<option value="${s.id}">${label}</option>`;
+                });
+                $('#supplierId').html(html);
+            });
+        }
+
+        function fetchReport() {
+            const btn = $('#btnShow');
+            btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+            
+            const req = {
+                fromDate: $('#fromDate').val(),
+                toDate: $('#toDate').val(),
+                supplierId: $('#supplierId').val() ? parseInt($('#supplierId').val()) : null,
+                status: $('#statusFilter').val()
+            };
+
+            $.ajax({
+                url: '/purchase/api/reports/purchase-orders',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(req),
+                success: function(res) {
+                    if(res && res.success && res.data && res.data.length > 0) {
+                        let rowsHtml = '';
+                        let totQty = 0, totAmt = 0;
+                        res.data.forEach((r, idx) => {
+                            let qty = parseFloat(r.totalQty || r.qty || 0);
+                            let amt = parseFloat(r.totalAmount || r.amount || 0);
+                            totQty += qty; totAmt += amt;
+                            rowsHtml += `<tr>
+                                <td class="text-center">${idx + 1}</td>
+                                <td class="text-center"><a href="/purchase/purchase-order?id=${r.id}">${r.docNo || r.id}</a></td>
+                                <td class="text-center">${r.docDate ? r.docDate.substring(0,10) : ''}</td>
+                                <td>${r.supplierName || ''}</td>
+                                <td class="text-center">${r.deliveryDate ? r.deliveryDate.substring(0,10) : ''}</td>
+                                <td>${r.itemName || r.itemDetails || ''}</td>
+                                <td class="text-right">${qty.toFixed(2)}</td>
+                                <td class="text-right">${amt.toFixed(2)}</td>
+                                <td class="text-center"><span class="badge ${r.status==='Complete'?'badge-success':'badge-info'}">${r.status || 'Open'}</span></td>
+                                <td class="text-center">${r.isApproved ? 'Approved' : 'Pending'}</td>
+                            </tr>`;
+                        });
+                        $('#reportTbody').html(rowsHtml);
+                        $('#lblTotalQty').text(totQty.toFixed(2));
+                        $('#lblTotalAmount').text(totAmt.toFixed(2));
+                        $('#totalRow').show();
+                    } else {
+                        $('#reportTbody').html('<tr><td colspan="10" class="text-center text-muted">No records found matching criteria.</td></tr>');
+                        $('#totalRow').hide();
+                    }
+                },
+                error: function(err) {
+                    alert('Error loading PO register: ' + (err.responseJSON ? err.responseJSON.message : err.statusText));
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="fa fa-search"></i> Show Register');
+                }
+            });
+        }
+    </script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

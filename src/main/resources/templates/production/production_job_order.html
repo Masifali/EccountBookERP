@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Job Order - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        .select2-container--default .select2-selection--single { height: 24px !important; padding: 1px 4px !important; border: 1px solid #7a9a9e !important; border-radius: 0 !important; font-size: 9pt !important; font-family: "Verdana", sans-serif !important; background-color: #ffffff !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 20px !important; padding-left: 2px !important; color: #000000 !important; font-weight: bold; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 22px !important; }
+        .select2-dropdown { border: 1px solid #008080 !important; font-size: 9pt !important; border-radius: 0 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; z-index: 99999 !important; }
+        .select2-search__field { font-size: 9pt !important; padding: 3px !important; border: 1px solid #008080 !important; }
+        
+        /* 2-Column Select2 Dropdown Styling */
+        .select2-2col-header { display: flex; justify-content: space-between; font-weight: bold; background-color: #e0f2f1; padding: 4px 8px; border-bottom: 1px solid #008080; color: #004d40; font-size: 9pt; position: sticky; top: 0; z-index: 10; }
+        .select2-2col-row { display: flex; justify-content: space-between; width: 100%; font-size: 9pt; padding: 2px 0; }
+        .select2-2col-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+        .select2-2col-code { width: 110px; text-align: right; font-weight: 700; color: #008080; margin-left: 8px; }
+
+        /* 4-Column Select2 Dropdown Styling */
+        .select2-4col-header { display: flex; font-weight: bold; background-color: #e0f2f1; padding: 4px 8px; border-bottom: 1px solid #008080; color: #004d40; font-size: 9pt; position: sticky; top: 0; z-index: 10; width: 100%; }
+        .select2-4col-row { display: flex; width: 100%; font-size: 9pt; padding: 2px 0; }
+        .select2-4col-col1 { flex: 3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+        .select2-4col-col2 { flex: 2; text-align: left; font-weight: 600; color: #008080; margin-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .select2-4col-col3 { flex: 2; text-align: left; color: #222222; margin-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .select2-4col-col4 { flex: 2; text-align: left; color: #222222; margin-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    </style>
+    <style>
+        body { font-family: "Segoe UI", "Verdana", Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; user-select: none; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 4px; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; color: #000000; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; font-weight: 500; }
+        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-btn-tool-save { font-weight: bold; color: #004d40; }
+        .win-sep { width: 1px; height: 18px; background-color: #b0b0b0; margin: 0 2px; }
+        
+        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 11pt; font-weight: bold; }
+        .win-doc-badge { font-weight: bold; font-size: 11pt; color: #ffeb3b; }
+
+        .win-form-body { background-color: #ece9d8; padding: 6px; }
+        .win-group-box { border: 1px solid #999999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
+        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        
+        .win-label { font-size: 8.5pt; font-weight: 600; color: #222222; white-space: nowrap; margin-bottom: 2px; }
+        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 9pt; height: 24px; border: 1px solid #7a9a9e; padding: 2px 4px; box-sizing: border-box; background-color: #ffffff; color: #000000; border-radius: 0; width: 100%; }
+        .win-textbox:focus, .win-combo:focus, .win-datepicker:focus { border-color: #008080; outline: 1px solid #008080; }
+        .win-textbox-readonly { background-color: #f0f0f0 !important; font-weight: bold; color: #004d40; }
+        
+        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 9pt; font-weight: bold; border: 1px solid #004d40; height: 24px; padding: 0 10px; cursor: pointer; border-radius: 2px; }
+        .win-btn-action:hover { background-color: #005959; }
+
+        /* Tabs */
+        .win-nav-tabs { border-bottom: 1px solid #999999; background-color: #ece9d8; display: flex; gap: 2px; padding-left: 4px; }
+        .win-nav-tabs li { list-style: none; }
+        .win-nav-tabs li a { display: block; padding: 4px 12px; font-size: 9pt; font-weight: 600; color: #000000; background-color: #d4d0c8; border: 1px solid #999999; border-bottom: none; border-radius: 3px 3px 0 0; text-decoration: none; cursor: pointer; }
+        .win-nav-tabs li a.win-tab-red { color: #cc0000 !important; font-weight: bold; }
+        .win-nav-tabs li.active a { background-color: #ffffff !important; border-bottom: 1px solid #ffffff !important; color: #008080 !important; font-weight: bold !important; }
+        .win-tab-content { border: 1px solid #999999; border-top: none; background-color: #ffffff; padding: 8px; min-height: 260px; }
+
+        /* Grid Styling */
+        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; }
+        .win-grid-scroll { max-height: 220px; overflow-x: auto; overflow-y: auto; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8pt; background-color: #ffffff; }
+        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color: #000000; font-weight: bold; border: 1px solid #999999; padding: 4px 5px; text-align: left; position: sticky; top: 0; z-index: 5; white-space: nowrap; }
+        .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; color: #000000; vertical-align: middle; white-space: nowrap; }
+        /* In-cell ValueList (combo) editor, ditto a Janus GridEX EditType=4 column: the cell paints
+           as plain grid text until it is used, and the list is the only source of values. */
+        .win-grid-cell-combo { width: 100%; height: 18px; padding: 0 2px; font-family: "Verdana", sans-serif; font-size: 8pt; color: #000000; background-color: transparent; border: 1px solid transparent; }
+        .win-grid-cell-combo:hover { border-color: #7a9a9e; background-color: #ffffff; }
+        .win-grid-cell-combo:focus { border-color: #316ac5; background-color: #ffffff; outline: none; }
+        .win-grid tr:nth-child(even) { background-color: #fcfcf8; }
+        .win-grid tr:hover { background-color: #e0f2f1; cursor: pointer; }
+
+        .win-totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 11px; padding: 6px 12px; border: 1px solid #008080; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 4px; }
+        
+        /* Modals */
+        .modal-winheader { background-color: #008080; color: #ffffff; padding: 6px 12px; font-weight: bold; font-size: 10pt; }
+        .win-radio-inline { display: inline-flex; align-items: center; gap: 4px; font-weight: normal; margin-right: 10px; cursor: pointer; }
+
+        @media print {
+            .win-tool-strip, .modal, a, button { display: none !important; }
+            body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+            .win-form-body { background: #fff !important; padding: 0 !important; }
+            .win-grid-scroll { max-height: none !important; overflow: visible !important; }
+            .win-grid th, .win-grid td { border: 1px solid #000 !important; color: #000 !important; }
+            .win-grid th { background: #eee !important; color: #000 !important; }
+        }
+    </style>
+    <style>
+        /* ------------------------------------------------------------------------------------
+           Large grids use the full page width and scroll INSIDE their own container - the page
+           itself never scrolls sideways. .win-grid-scroll already caps the height; this caps the
+           width to the container and puts the horizontal scrollbar there instead of on <body>.
+           ------------------------------------------------------------------------------------ */
+        html, body { overflow-x: hidden; }
+        .win-grid-wide { width: 100%; }
+        .win-grid-wide .win-grid-scroll { overflow-x: auto; max-width: 100%; }
+
+        /* Fullscreen for a grid that is genuinely too wide to read in place. */
+        .win-grid-container.is-fullscreen {
+            position: fixed; inset: 0; z-index: 10000; background: #ffffff;
+            margin: 0; border: none; padding: 6px; display: flex; flex-direction: column;
+        }
+        .win-grid-container.is-fullscreen .win-grid-scroll { max-height: calc(100vh - 80px); flex: 1; }
+        .win-grid-toolbar { display: flex; align-items: center; justify-content: space-between;
+            background: #e0f2f1; border-bottom: 1px solid #7a9a9e; padding: 2px 6px; font-size: 8.5pt;
+            font-weight: 600; color: #004d40; }
+        .win-grid-toolbar button { background: #ffffff; border: 1px solid #7a9a9e; font-size: 8pt;
+            padding: 1px 6px; cursor: pointer; }
+
+        /* The document code on a row is a link back into the record, ditto the desktop's
+           double-click on the history grid. */
+        .win-doc-link { color: #0645ad; text-decoration: underline; cursor: pointer; font-weight: bold; }
+
+        /* Button contract: every action button is disabled and shows a spinner while its request
+           is in flight, and comes back on success OR failure. .is-busy is set by JS. */
+        .is-busy { opacity: .65; cursor: progress !important; }
+        .is-busy .fa:first-child { display: none; }
+        .is-busy::before {
+            content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px;
+            border: 2px solid #004d40; border-top-color: transparent; border-radius: 50%;
+            vertical-align: -1px; animation: cxspin .6s linear infinite;
+        }
+        @keyframes cxspin { to { transform: rotate(360deg); } }
+
+        .win-field { display: flex; flex-direction: column; margin-bottom: 4px; }
+        .win-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .win-row > .win-field { flex: 1 1 150px; min-width: 120px; }
+        .win-note { font-size: 8pt; color: #7a5c00; background: #fff8e1; border: 1px solid #e6c200;
+            padding: 3px 6px; margin-bottom: 4px; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+</head>
+<body>
+
+    <!-- =========================================================================================
+         TOP TOOLBAR - frmProductionJobOrder's own tool strip: New, Save, Update, Refresh, Print.
+         Save and Update are one desktop pair: btnsave is visible for a new plan and btnUpdate
+         replaces it once a plan is loaded (Reset() :1414-1415), so exactly one of them shows here.
+         ========================================================================================= -->
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> &amp;New</button>
+        <button type="button" id="btnSave" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> &amp;Save</button>
+        <button type="button" id="btnUpdate" class="win-btn-tool" style="display:none;" onclick="btnSave_Click()"><i class="fa fa-pencil"></i> &amp;Update</button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="btnRefresh_Click()"><i class="fa fa-refresh"></i> &amp;Refresh</button>
+        <div class="win-sep"></div>
+        <label class="win-radio-inline"><input type="checkbox" id="chkPrint"/> Print after save</label>
+        <div style="margin-left: auto;">
+            <a href="/production" style="color: #004d40; text-decoration: none; font-weight: bold; font-size: 11px;">
+                <i class="fa fa-arrow-left"></i> Exit to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="win-teal-header">
+        <div class="win-teal-header-title"><i class="fa fa-cogs"></i> Production Job Order</div>
+        <div><span style="font-size:9pt;">Plan Code</span> <span class="win-doc-badge" id="lblPlanCode">-</span></div>
+    </div>
+
+    <ul class="win-nav-tabs" style="margin:0;">
+        <li id="tabForm" class="active"><a onclick="showView('form')">Job Order</a></li>
+        <li id="tabHistory"><a onclick="showView('history')">History</a></li>
+    </ul>
+
+    <!-- ===================================== FORM VIEW ===================================== -->
+    <div id="mainViewForm" class="win-tab-content">
+      <div class="win-form-body">
+
+        <fieldset class="win-group-box">
+            <legend>Plan</legend>
+            <div class="win-row">
+                <div class="win-field"><label class="win-label">Plan Date</label>
+                    <input type="date" id="txtPlanDate" class="win-datepicker"/></div>
+                <div class="win-field"><label class="win-label">Plan Code</label>
+                    <input type="text" id="txtPlanCode" class="win-textbox win-textbox-readonly" readonly/></div>
+                <div class="win-field" style="flex:2 1 260px;"><label class="win-label">Plant / Feader</label>
+                    <select id="cmbPlantFeader" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant/Feader "></select></div>
+                <div class="win-field"><label class="win-label">Plan Type</label>
+                    <select id="cmbPlanType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plan Type " onchange="onPlanTypeChange()"></select></div>
+                <div class="win-field"><label class="win-label">Plan Type Sr No</label>
+                    <input type="text" id="txtPlanTypeSrNo" class="win-textbox win-textbox-readonly" readonly/></div>
+            </div>
+            <div class="win-row">
+                <div class="win-field"><label class="win-label">Mannual ReportNo</label>
+                    <input type="text" id="txtInvoiceReference" class="win-textbox"/></div>
+                <div class="win-field"><label class="win-label">Other Reference</label>
+                    <input type="text" id="txtOtherReference" class="win-textbox"/></div>
+                <div class="win-field"><label class="win-label">Production Type</label>
+                    <select id="cmbProductionType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Type "></select></div>
+                <div class="win-field"><label class="win-label">Status</label>
+                    <select id="cmbStatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Status"></select></div>
+                <div class="win-field"><label class="win-label">Start Date</label>
+                    <input type="date" id="txtstartDate" class="win-datepicker"/></div>
+                <div class="win-field"><label class="win-label">End Date</label>
+                    <input type="date" id="txtEndDate" class="win-datepicker"/></div>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box">
+            <legend>Accounts</legend>
+            <!-- cmbSaleOrder and CmbLotAc are present on the desktop form and are NEVER bound to a
+                 data source there - no binder writes to either, and Reset() only clears their text
+                 (:1399, :1404). They are saved as RefSalesOrderId and JobLotId, which therefore go
+                 out as 0 unless something else sets them. Reproduced exactly: empty here too, and
+                 flagged rather than "helpfully" filled from a list the desktop never uses. -->
+            <div class="win-row">
+                <div class="win-field" style="flex:2 1 260px;"><label class="win-label">Work In Process</label>
+                    <select id="CmbWorkInProcess" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WorkInProcess" data-header-col1="Account Title" data-header-col2="Account Code"></select></div>
+                <div class="win-field" style="flex:2 1 260px;"><label class="win-label">Finish Goods A/c</label>
+                    <select id="CmbFinishGoodsAc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="FinishGoodsAc" data-header-col1="Account Title" data-header-col2="Account Code"></select></div>
+                <div class="win-field" style="flex:2 1 260px;"><label class="win-label">By Production A/c</label>
+                    <select id="CmbByProductionAc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ByProductionAc" data-header-col1="Account Title" data-header-col2="Account Code"></select></div>
+                <div class="win-field" style="flex:2 1 260px;"><label class="win-label">WIP Item</label>
+                    <select id="CmbWipItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName" data-header-col1="Item Name" data-header-col2="Item Code"></select></div>
+            </div>
+            <div class="win-row">
+                <div class="win-field"><label class="win-label">Sale Order</label>
+                    <select id="cmbSaleOrder" class="win-combo" disabled title="Not bound on the desktop form either"></select></div>
+                <div class="win-field"><label class="win-label">Lot A/c</label>
+                    <select id="CmbLotAc" class="win-combo" disabled title="Not bound on the desktop form either"></select></div>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box">
+            <legend>Instructions</legend>
+            <div class="win-row">
+                <div class="win-field"><label class="win-label">Packing Instructions</label>
+                    <input type="text" id="txtPlantInstruction" class="win-textbox"/></div>
+                <div class="win-field"><label class="win-label">Production Instruction</label>
+                    <input type="text" id="txtProductionInstruction" class="win-textbox"/></div>
+                <div class="win-field"><label class="win-label">Delivery Instruction</label>
+                    <input type="text" id="txtDeliveryInstruction" class="win-textbox"/></div>
+                <div class="win-field"><label class="win-label">Other Instruction</label>
+                    <input type="text" id="txtOtherInstruction" class="win-textbox"/></div>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box">
+            <legend>Detail Entry</legend>
+            <div class="win-row">
+                <div class="win-field"><label class="win-label">Entry Type</label>
+                    <select id="cmbentrytype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Entry Type" onchange="onEntryTypeChange()"></select></div>
+                <div class="win-field"><label class="win-label">Filter Type</label>
+                    <select id="cmbFiltersType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Filter Type" onchange="onFilterTypeChange()"></select></div>
+                <div class="win-field" style="flex:2 1 260px;"><label class="win-label" id="lblDocNo">Document</label>
+                    <select id="cmbDocNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document" onchange="onDocNoChange()"></select></div>
+            </div>
+
+            <ul class="win-nav-tabs" style="margin-top:6px;">
+                <li id="tabOutput" class="active"><a onclick="selectDetailTab(0)">Planned Output</a></li>
+                <li id="tabInput"><a onclick="selectDetailTab(1)">Input Detail</a></li>
+            </ul>
+
+            <!-- ------------------------------- PLANNED OUTPUT ------------------------------- -->
+            <div id="paneOutput" class="win-tab-content">
+                <div class="win-row">
+                    <div class="win-field" style="flex:3 1 300px;"><label class="win-label">Item Name</label>
+                        <select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" onchange="onOutputItemChange()"></select></div>
+                    <div class="win-field"><label class="win-label">Packing Type</label>
+                        <select id="cmbPackingType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackType"></select></div>
+                    <div class="win-field"><label class="win-label">Inner Qty</label>
+                        <input type="text" id="txtinnerqty" class="win-textbox" data-guard="decimal"/></div>
+                    <div class="win-field"><label class="win-label">Inner UOM</label>
+                        <select id="cmbinneruom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Inner UOM"></select></div>
+                    <div class="win-field"><label class="win-label">Outer Qty</label>
+                        <input type="text" id="txtOuterqty" class="win-textbox" data-guard="decimal" oninput="Getweight()"/></div>
+                    <div class="win-field"><label class="win-label">Outer UOM</label>
+                        <select id="cmbouteruom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Outer UOM" onchange="Getweight()"></select></div>
+                    <div class="win-field"><label class="win-label">Weight</label>
+                        <input type="text" id="txtweight" class="win-textbox" data-guard="decimal"/></div>
+                </div>
+                <div class="win-row">
+                    <div class="win-field"><label class="win-label">Crop Year</label>
+                        <select id="cmbCropYearOutput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+                    <div class="win-field"><label class="win-label">WareHouse</label>
+                        <select id="cmbWareHouseOutPut" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouseName"></select></div>
+                    <div class="win-field"><label class="win-label">Job Lot</label>
+                        <select id="cmbJobLotOutput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLotDescription"></select></div>
+                    <div class="win-field" style="flex:2 1 220px;"><label class="win-label">Pack Remarks</label>
+                        <input type="text" id="txtremarks" class="win-textbox"/></div>
+                    <div class="win-field" style="flex:0 0 240px; justify-content:flex-end;">
+                        <div style="display:flex; gap:4px;">
+                            <button type="button" id="btnplus" class="win-btn-action" onclick="btnplus_Click()"><i class="fa fa-plus"></i> Add</button>
+                            <button type="button" id="btnUpdateDetail" class="win-btn-action" style="display:none;" onclick="btnUpdateDetail_Click()"><i class="fa fa-check"></i> Update</button>
+                            <button type="button" id="btnCancelUpdateDetial" class="win-btn-action" style="display:none;background:#8a8a8a;border-color:#5c5c5c;" onclick="btnCancelUpdateDetial_Click()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="win-grid-container win-grid-wide" id="gridOutputBox">
+                    <div class="win-grid-toolbar">
+                        <span>Planned Output &nbsp;<em style="font-weight:400;">(double-click a row to edit it, ditto the desktop)</em></span>
+                        <span>
+                            <span id="lblOutputTotals"></span>
+                            <button type="button" onclick="toggleFullscreen('gridOutputBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
+                        </span>
+                    </div>
+                    <div class="win-grid-scroll">
+                        <table class="win-grid">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th><th>PackingTypeName</th>
+                                    <th style="text-align:right;">QtyInner</th><th>InnerPackSizeName</th>
+                                    <th style="text-align:right;">QtyOuter</th><th>OuterPackSizeName</th>
+                                    <th style="text-align:right;">Weight</th><th>PackRemarks</th>
+                                    <th>CropYear</th><th>WareHouseName</th><th>JobLotDescription</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gridPlannedOutput"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- -------------------------------- INPUT DETAIL -------------------------------- -->
+            <div id="paneInput" class="win-tab-content" style="display:none;">
+                <div class="win-row">
+                    <div class="win-field" style="flex:3 1 300px;"><label class="win-label">Item Name</label>
+                        <select id="cmbItemInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" onchange="onInputItemChange()"></select></div>
+                    <div class="win-field"><label class="win-label">Crop Year</label>
+                        <select id="cmbcropyearinput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+                    <div class="win-field"><label class="win-label">Job Lot</label>
+                        <select id="cmbjoblotinput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLotDescription"></select></div>
+                    <div class="win-field"><label class="win-label">Qty</label>
+                        <input type="text" id="txtqtyinput" class="win-textbox" data-guard="decimal" oninput="GetweightInput()"/></div>
+                    <div class="win-field"><label class="win-label">Pack Size</label>
+                        <select id="cmbpacksizeinput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Inner UOM" onchange="GetweightInput()"></select></div>
+                    <div class="win-field"><label class="win-label">Weight</label>
+                        <input type="text" id="txtweightinput" class="win-textbox" data-guard="decimal"/></div>
+                </div>
+                <div class="win-row">
+                    <div class="win-field"><label class="win-label">WareHouse</label>
+                        <select id="cmbwarehouseinput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouseName"></select></div>
+                    <div class="win-field"><label class="win-label">Pack Type</label>
+                        <select id="cmbPackTypeInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackType"></select></div>
+                    <div class="win-field" style="flex:2 1 220px;"><label class="win-label">Remarks</label>
+                        <input type="text" id="txtremarksinput" class="win-textbox"/></div>
+                    <div class="win-field" style="flex:0 0 240px; justify-content:flex-end;">
+                        <div style="display:flex; gap:4px;">
+                            <button type="button" id="btnadddetailinputgrd" class="win-btn-action" onclick="btnadddetailinputgrd_Click()"><i class="fa fa-plus"></i> Add</button>
+                            <button type="button" id="btnupdategrdinput" class="win-btn-action" style="display:none;" onclick="btnupdategrdinput_Click()"><i class="fa fa-check"></i> Update</button>
+                            <button type="button" id="btncancelgrdinput" class="win-btn-action" style="display:none;background:#8a8a8a;border-color:#5c5c5c;" onclick="btncancelgrdinput_Click()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="win-grid-container win-grid-wide" id="gridInputBox">
+                    <div class="win-grid-toolbar">
+                        <span>Input Detail &nbsp;<em style="font-weight:400;">(double-click a row to edit it, ditto the desktop)</em></span>
+                        <span>
+                            <span id="lblInputTotals"></span>
+                            <button type="button" onclick="toggleFullscreen('gridInputBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
+                        </span>
+                    </div>
+                    <div class="win-grid-scroll">
+                        <table class="win-grid">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th><th>CropYear</th><th>JobLot</th>
+                                    <th style="text-align:right;">Qty</th><th>PackSize</th>
+                                    <th style="text-align:right;">Weight</th>
+                                    <th>WareHouse</th><th>Remarks</th><th>PackType</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gridInputDetail"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- FOOTER - History sits on the RIGHT of the footer, as asked. -->
+        <div class="win-totals-bar">
+            <span id="lblFormStatus">Ready</span>
+            <span style="display:flex; gap:6px;">
+                <button type="button" id="btnFooterSave" class="win-btn-action" onclick="btnSave_Click()"><i class="fa fa-save"></i> Save</button>
+                <button type="button" id="btnFooterHistory" class="win-btn-action" onclick="showView('history')"><i class="fa fa-history"></i> History</button>
+            </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================== HISTORY VIEW ==================================== -->
+    <div id="mainViewHistory" class="win-tab-content" style="display:none;">
+        <div class="win-teal-header">
+            <div class="win-teal-header-title"><i class="fa fa-history"></i> Production Job Order History</div>
+            <div>
+                <button type="button" id="btnTop50" class="win-btn-tool" style="background:#fff;color:#000;" onclick="loadHistory(50)"><i class="fa fa-refresh"></i> Top 50</button>
+                <button type="button" id="btnloadall" class="win-btn-tool" style="background:#fff;color:#000;" onclick="loadHistory(0)"><i class="fa fa-list"></i> Load All</button>
+            </div>
+        </div>
+        <!-- The desktop's History has NO filters at all: BindHistoryGrid sends only a record count
+             (50 when the tab opens, 0 for Load All). No date or document-number boxes are shown
+             here because adding them would filter a list the desktop never filters. -->
+        <div class="win-grid-container win-grid-wide" id="gridHistoryBox" style="margin-top:4px;">
+            <div class="win-grid-toolbar">
+                <span id="lblHistoryCount">&nbsp;</span>
+                <button type="button" onclick="toggleFullscreen('gridHistoryBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
+            </div>
+            <div class="win-grid-scroll" style="max-height: 420px;">
+                <table class="win-grid">
+                    <thead>
+                        <tr>
+                            <th>Date</th><th>Code</th><th>Type</th><th>InvRef</th><th>PType</th><th>SO</th>
+                            <th>StartDate</th><th>EndDate</th><th>PlanStatus</th>
+                            <th>PlantInst</th><th>DelInst</th><th>ProdInst</th><th>OtherInst</th>
+                            <th>Attachments</th><th>Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gridHistory"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:src="@{/build/js/countx_production_job_order.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

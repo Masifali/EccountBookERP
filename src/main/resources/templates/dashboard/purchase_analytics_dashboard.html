@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${moduleTitle} ?: 'Purchase Analytics Dashboard'">Purchase Analytics Dashboard</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600;
+                     white-space:nowrap; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+        .win-input:disabled { background:#f2f4f6; color:#888; }
+        .win-radio { font-size:11px; color:#33454e; margin-right:10px; white-space:nowrap; }
+        .win-radio input { vertical-align:-1px; margin-right:3px; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #paMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #paMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #paMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        .pa-totals { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+        .pa-total { background:#0f5959; color:#fff; padding:4px 10px; border-radius:2px;
+                    font-size:11px; font-weight:700; }
+        .pa-total span { font-size:13px; margin-left:6px; }
+
+        .pa-tabs { display:flex; gap:2px; margin:10px 8px 0; flex-wrap:wrap; }
+        .pa-tab { background:#d8e0e6; border:1px solid #b0bec5; border-bottom:none; padding:3px 12px;
+                  font-size:11px; font-weight:700; color:#41525c; cursor:pointer;
+                  border-radius:2px 2px 0 0; }
+        .pa-tab.active { background:#fff; color:#0f5959; }
+        .pa-panes { background:#fff; border:1px solid #b0bec5; margin:0 8px 8px; padding:8px; }
+
+        /* Full page width; the only horizontal scrollbar is INSIDE the grid container. */
+        .pa-wrap { background:#fff; border:1px solid #cfd8dc; max-height:420px; overflow:auto; }
+        body.pa-full .pa-wrap { max-height:none; }
+        table.pa-grid { border-collapse:separate; border-spacing:0; font-size:11px;
+                        width:max-content; min-width:100%; }
+        table.pa-grid thead th { position:sticky; top:0; z-index:2; background:#dde5ea;
+                                 border-right:1px solid #c3ced6; border-bottom:1px solid #90a4ae;
+                                 padding:3px 6px; font-weight:700; color:#23343c; text-align:center;
+                                 white-space:nowrap; }
+        table.pa-grid tbody td { border-right:1px solid #eceff1; border-bottom:1px solid #eceff1;
+                                 padding:2px 6px; white-space:nowrap; }
+        table.pa-grid tbody tr:nth-child(even) td { background:#f7f9fa; }
+        table.pa-grid tbody tr:hover td { background:#e0f2f1; }
+        table.pa-grid tfoot td { position:sticky; bottom:0; z-index:2; background:#e0f2f1;
+                                 border-top:1px solid #0f5959; font-weight:700; color:#0f5959;
+                                 padding:3px 6px; white-space:nowrap; }
+        .pa-num { text-align:right; }
+        .pa-neg { color:#b00020; }
+        .pa-link { color:#0d47a1; text-decoration:underline; cursor:pointer; }
+        .pa-link:hover { color:#b00020; }
+        .pa-cellbtn { background:#eceff1; border:1px solid #90a4ae; border-radius:2px; font-size:10px;
+                      padding:0 6px; height:17px; cursor:pointer; white-space:nowrap; }
+        .pa-cellbtn:hover { background:#e0f2f1; border-color:#0f5959; }
+
+        /* ItemAndSupplierWiseAnalyticalInfo, the card control behind the two card tabs. */
+        .pa-cards { display:flex; flex-wrap:wrap; gap:10px; }
+        .pa-card { width:230px; background:#fff; border:1px solid #cfd8dc; border-radius:2px;
+                   box-shadow:0 1px 2px rgba(0,0,0,.08); }
+        .pa-card .t { background:#0f5959; color:#fff; font-size:11px; font-weight:700;
+                      padding:5px 8px; line-height:1.25; min-height:30px; }
+        .pa-card .b { padding:5px 8px 7px; }
+        .pa-crow { display:flex; justify-content:space-between; gap:8px; padding:1px 0;
+                   border-bottom:1px solid #eef2f4; }
+        .pa-crow:last-child { border-bottom:none; }
+        .pa-crow span:first-child { color:#5a6b73; }
+        .pa-crow span:last-child { font-weight:700; color:#23343c; }
+        .pa-cbranch { font-size:10px; color:#5a6b73; padding:0 8px 6px; }
+
+        .pa-empty { color:#667; padding:12px; text-align:center; font-size:11px; }
+        body.pa-full { position:fixed; inset:0; z-index:3000; overflow:auto; background:#e4e9ed; }
+        .select2-container .select2-selection--single,
+        .select2-container .select2-selection--multiple { border-radius:0; border-color:#7f9db9;
+                                                          min-height:24px; font-size:11px; }
+
+        /* The break-up and avg-rate pop-ups (AnalayticalAnalysisPopUp, AvgRateByItemPopUp,
+           AvgRateBySupplierPopUp), which the desktop opens maximised. */
+        .pa-modal { position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.35);
+                    display:none; }
+        .pa-modal.open { display:block; }
+        .pa-modal-box { position:absolute; inset:14px; background:#fff; border:1px solid #0f5959;
+                        display:flex; flex-direction:column; }
+        .pa-modal-head { background:#0f5959; color:#fff; font-size:12px; font-weight:700;
+                         padding:5px 10px; display:flex; align-items:center; }
+        .pa-modal-body { flex:1; overflow:auto; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Purchase Analytics Dashboard
+     ditto Architecture.WinApp.AnalyticDashboard\PurchaseAnalytiicsDashBoard.cs (2,850 lines)
+
+     ONE desktop form, FOUR DashBoard entries - the Form.Tag decides which parent categories the
+     screen offers (:230, :375-384):
+       frmPaddyPurchaseAnalytics  parent category 1,      Short Weight tick box VISIBLE
+       frmRicePurchaseAnalytics   parent categories 2, 4, Short Weight tick box HIDDEN
+     The two neutral routes (the class name and frmAnalyticsDashboard, which is still the form's
+     own caption at :2811) let the user pick, because the tag is not decided by the route there.
+
+     Controls, in the desktop's own order:
+       label10 "Parent Category" cmbparentcategory   label27 "From,To Date" fromdate / todate
+       rdToday "Today", rdThisWeek "This Week", rdThisMonth "This Month",
+       rdPrevious "Previous Days" + txtPreviousDays ("7", :223), rdSeason "This Season"
+       label2 "Item Category", label6 "Item Type", label5 "Item Name", label4 "Crop Year",
+       label3 "Job Lot", label1 "Party Name", Branches "Branches"
+       chkShortWeight "Calculate Short Weight", btnshow "Show", btnRefresh "Refresh"
+       label9 "Total Qty" txtTotalQty, label11 "Total Weight" txtTotalWeight,
+       label13 "Total Amount" txtTotalAmount
+     tabControl1 pages, in the designer's order:
+       tabPage1 "Item Wise "            label8  "Item Wise Tabular View"
+       tabPage2 "Item Wise card View"   label7  "Cards View"
+       tabPage3 "Supplier Wise"         label15 "Supplier Wise Tabular View"
+       tabPage5 "Supplier Wise Card View" label12 "Cards View"
+     toolStrip1: btnPrintItemWise "121_03_ItemWise", btnPrintSupplierWise "121_04_SupplierWise"
+
+     Events ported:
+       frmAnalyticsDashboard_Load        :209-252
+       cmbparentcategory_Leave           :468-494   the Parent Category cascade
+       RadioButtonStatus_Click           :1214-1227 -> FilterData :282-318
+       rdSeason_Click                    :1229-1239 -> GetSeasonScheduleDates :320-347
+       txtPreviousDays_TextChanged       :1241-1260
+       chkShortWeight_CheckedChanged     :1262-1283
+       btnshow_Click                     :496-515
+       btnRefresh_Click                  :1165-1192
+       grdItemWise_ColumnButtonClick     :872-916   "Party Wise" and "Date Wise"
+       grdItemWise_LinkClicked           :919-969   Item Name and Moisture
+       grdCustomerWise_ColumnButtonClick :1048-1063 "Item Wise"
+       grdCustomerWise_LinkClicked       :1065-1098 Party Name
+       GetTotals                         :1100-1115
+
+     Read-only: no save, update, delete or History button on the desktop form.
+     ========================================================================== -->
+<div class="win-title-bar" th:text="${moduleTitle} ?: 'Purchase Analytics Dashboard'">Purchase Analytics Dashboard</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Analytic Dashboard &gt; <span th:text="${moduleTitle} ?: 'Purchase Analytics Dashboard'">Purchase Analytics Dashboard</span></span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnRefresh" onclick="paRefresh(this)">
+        <i class="fa fa-refresh"></i> Refresh
+    </button>
+    <button type="button" class="win-btn" id="btnPrintItem" onclick="paPrint(this,'item')">
+        <i class="fa fa-print"></i> 121_03_ItemWise
+    </button>
+    <button type="button" class="win-btn" id="btnPrintSupplier" onclick="paPrint(this,'supplier')">
+        <i class="fa fa-print"></i> 121_04_SupplierWise
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="paToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="paMessage"></div>
+
+<!-- The tag the route fixed, read by the script. -->
+<input type="hidden" id="screenTag" th:value="${screenTag} ?: 'frmPaddyPurchaseAnalytics'"
+       value="frmPaddyPurchaseAnalytics">
+<input type="hidden" id="tagFixed" th:value="${tagFixed} ?: 'false'" value="false">
+
+<div class="win-form-card">
+    <!-- Shown only on the two neutral routes; on the Paddy and Rice routes the desktop's Tag is
+         already decided, so the picker is not there. -->
+    <div class="row g-2 align-items-end" id="tagPickerRow" style="display:none; margin-bottom:6px;">
+        <div class="col-md-3">
+            <label class="win-label">Analytics Screen</label>
+            <select id="tagPicker" class="win-input" onchange="paTagChanged()">
+                <option value="frmPaddyPurchaseAnalytics">Paddy Purchase Analytics</option>
+                <option value="frmRicePurchaseAnalytics">Rice Purchase Analytics</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+            <label class="win-label">Parent Category</label>
+            <select id="parentCategory" class="win-input pa-select2" onchange="paParentChanged()"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">From,To Date</label>
+            <input type="date" id="fromDate" class="win-input">
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">&nbsp;</label>
+            <input type="date" id="toDate" class="win-input">
+        </div>
+        <div class="col-md-6">
+            <label class="win-label">&nbsp;</label>
+            <div>
+                <label class="win-radio"><input type="radio" name="paRange" id="rdToday"
+                        onchange="paRangeChanged()"> Today</label>
+                <label class="win-radio"><input type="radio" name="paRange" id="rdThisWeek"
+                        onchange="paRangeChanged()"> This Week</label>
+                <label class="win-radio"><input type="radio" name="paRange" id="rdThisMonth"
+                        onchange="paRangeChanged()"> This Month</label>
+                <label class="win-radio"><input type="radio" name="paRange" id="rdPrevious"
+                        onchange="paRangeChanged()"> Previous Days</label>
+                <input type="number" id="previousDays" class="win-input" value="7"
+                       style="width:60px; display:inline-block;" oninput="paPreviousDaysChanged()">
+                <label class="win-radio" style="margin-left:10px;"><input type="radio" name="paRange"
+                        id="rdSeason" onchange="paSeasonChanged()"> This Season</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-2 align-items-end" style="margin-top:6px;">
+        <div class="col-md-2">
+            <label class="win-label">Item Category</label>
+            <select id="itemCategory" class="win-input pa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Item Type</label>
+            <select id="itemType" class="win-input pa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Item Name</label>
+            <select id="itemName" class="win-input pa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Crop Year</label>
+            <select id="cropYear" class="win-input pa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Job Lot</label>
+            <select id="jobLot" class="win-input pa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Party Name</label>
+            <select id="party" class="win-input pa-select2"></select>
+        </div>
+    </div>
+
+    <div class="row g-2 align-items-end" style="margin-top:6px;">
+        <div class="col-md-3" id="branchWrap" style="display:none;">
+            <label class="win-label">Branches</label>
+            <select id="branches" class="win-input pa-select2" multiple></select>
+        </div>
+        <div class="col-md-3" id="shortWeightWrap" style="display:none;">
+            <label class="win-label">&nbsp;</label>
+            <label class="win-radio">
+                <input type="checkbox" id="chkShortWeight" onchange="paShortWeightChanged()">
+                Calculate Short Weight
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">&nbsp;</label>
+            <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="paShow(this)">
+                <i class="fa fa-search"></i> Show
+            </button>
+        </div>
+        <div class="col-md-4">
+            <label class="win-label">&nbsp;</label>
+            <div class="pa-totals">
+                <div class="pa-total">Total Qty<span id="totalQty">0</span></div>
+                <div class="pa-total">Total Weight<span id="totalWeight">0</span></div>
+                <div class="pa-total">Total Amount<span id="totalAmount">0</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pa-tabs">
+    <div class="pa-tab active" id="tabIW"  onclick="paTab('IW')">Item Wise</div>
+    <div class="pa-tab"        id="tabIC"  onclick="paTab('IC')">Item Wise card View</div>
+    <div class="pa-tab"        id="tabSW"  onclick="paTab('SW')">Supplier Wise</div>
+    <div class="pa-tab"        id="tabSC"  onclick="paTab('SC')">Supplier Wise Card View</div>
+</div>
+<div class="pa-panes">
+    <div id="paneIW">
+        <div style="font-weight:700; color:#0f5959; margin-bottom:4px;">Item Wise Tabular View</div>
+        <div class="pa-wrap"><table class="pa-grid" id="gridItemWise"></table></div>
+    </div>
+    <div id="paneIC" style="display:none;">
+        <div style="font-weight:700; color:#0f5959; margin-bottom:4px;">Cards View</div>
+        <div class="pa-cards" id="cardsItemWise"></div>
+    </div>
+    <div id="paneSW" style="display:none;">
+        <div style="font-weight:700; color:#0f5959; margin-bottom:4px;">Supplier Wise Tabular View</div>
+        <div class="pa-wrap"><table class="pa-grid" id="gridCustomerWise"></table></div>
+    </div>
+    <div id="paneSC" style="display:none;">
+        <div style="font-weight:700; color:#0f5959; margin-bottom:4px;">Cards View</div>
+        <div class="pa-cards" id="cardsCustomerWise"></div>
+    </div>
+</div>
+
+<div class="pa-modal" id="paModal">
+    <div class="pa-modal-box">
+        <div class="pa-modal-head">
+            <span id="paModalTitle">Detail</span>
+            <span style="flex:1;"></span>
+            <button type="button" class="win-btn" onclick="paCloseModal()">Close</button>
+        </div>
+        <div class="pa-modal-body"><table class="pa-grid" id="paModalGrid"></table></div>
+    </div>
+</div>
+
+<div style="height:16px;"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_purchase_analytics_dashboard.js?v=20260920a}"></script>
+</body>
+</html>

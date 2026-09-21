@@ -1,0 +1,138 @@
+/* ============================================================================================
+ * Desktop-style multi-column dropdowns - shared by every Sale, Purchase and CMAGT screen.
+ * Pairs with build/js/countx_desktop_combo.js. No jQuery, no select2, no vendor CSS.
+ *
+ * Mirrors the Infragistics UltraCombo drop grid: a teal header band, a light row grid,
+ * right-aligned numerics and read-only checkboxes for boolean columns.
+ * ============================================================================================ */
+
+/* The native <select> stays in the DOM and stays authoritative - it is taken out of the visual
+   flow rather than display:none, so form serialisation, .focus() and any code that measures it
+   keep working. */
+select.dtcombo-native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    border: 0 !important;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.dtcombo-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Matches the app's .win-combo / .form-control metrics so the control keeps each screen's
+   layout instead of imposing its own. */
+.dtcombo-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    height: 22px;
+    padding: 1px 18px 1px 4px;
+    font-family: Verdana, sans-serif;
+    font-size: 11px;
+    color: #000000;
+    background-color: #ffffff;
+    border: 1px solid #7f9db9;
+    border-radius: 0;
+    outline: none;
+}
+.dtcombo-input:focus { border-color: #008080; }
+.dtcombo-input::placeholder { color: #9a9a9a; }
+
+.dtcombo-caret {
+    position: absolute;
+    right: 3px;
+    font-size: 10px;
+    line-height: 1;
+    color: #333333;
+    cursor: pointer;
+    user-select: none;
+    pointer-events: auto;
+}
+
+.dtcombo-disabled .dtcombo-input {
+    background-color: #f0f0f0;
+    color: #6d6d6d;
+    cursor: not-allowed;
+}
+.dtcombo-disabled .dtcombo-caret { color: #9a9a9a; cursor: not-allowed; }
+
+/* ------------------------------------------------------------------ the drop grid */
+
+/* On <body>, so a panel's overflow can never clip it; positioned per open. */
+.dtcombo-pop {
+    position: fixed;
+    z-index: 20000;
+    background: #ffffff;
+    border: 1px solid #7f9db9;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .25);
+    font-family: Verdana, sans-serif;
+    font-size: 11px;
+    /* Width is set per open from the column weights (see position() in the JS), so the grid is
+       as wide as its columns need rather than as wide as its field. */
+    box-sizing: border-box;
+}
+
+.dtcombo-header {
+    display: flex;
+    align-items: center;
+    background: #008080;                 /* the desktop's teal header band */
+    color: #ffffff;
+    font-weight: bold;
+    padding: 3px 0;
+    border-bottom: 1px solid #005959;
+}
+
+.dtcombo-body {
+    max-height: 260px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.dtcombo-row {
+    display: flex;
+    align-items: center;
+    line-height: 17px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+}
+.dtcombo-row:last-child { border-bottom: 0; }
+.dtcombo-active { background-color: #ffe4a0; }
+.dtcombo-row-disabled { color: #9a9a9a; cursor: default; }
+
+/* Cells clip rather than wrap, so every row stays one line high and the columns keep lining up
+   with the header band. */
+.dtcombo-cell {
+    padding: 0 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-right: 1px solid #e3e3e3;
+}
+.dtcombo-cell:last-child { border-right: 0; }
+.dtcombo-header .dtcombo-cell { border-right: 1px solid rgba(255, 255, 255, .35); }
+
+.dtcombo-num   { text-align: right; }
+.dtcombo-check { text-align: center; }
+.dtcombo-check input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
+    cursor: default;      /* read-only: the desktop draws the boolean as a tick, not a toggle */
+}
+
+.dtcombo-empty {
+    padding: 6px 8px;
+    color: #6d6d6d;
+    font-style: italic;
+}

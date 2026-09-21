@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Stock As On Date - Inventory Report</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        body { background-color: #f0f0f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; margin: 0; padding: 0; }
+        .win-nav { height: 27px; background: #f0f0f0; padding: 2px 5px; display: flex; align-items: center; border-bottom: 1px solid #ccc; }
+        .win-nav button { height: 23px; font-size: 12px; padding: 0 10px; margin-right: 4px; background: #e1e1e1; border: 1px solid #adadad; cursor: pointer; }
+        .win-header { background-color: #00796B; color: white; padding: 4px 8px; font-size: 14px; font-weight: bold; font-family: Tahoma, sans-serif; }
+        .form-panel { background: #f9f9f9; padding: 10px 15px; border-bottom: 1px solid #d0d0d0; }
+        .form-label { font-weight: 600; color: #333; margin-bottom: 2px; font-size: 11px; }
+        .form-control, .form-select { font-size: 12px; height: 26px; padding: 2px 6px; border-radius: 2px; border: 1px solid #a6a6a6; }
+        .table-custom { font-size: 11px; width: 100%; border-collapse: collapse; }
+        .table-custom th { background-color: #00796B; color: white; text-align: center; padding: 4px 6px; border: 1px solid #004D40; }
+        .table-custom td { padding: 4px 6px; border: 1px solid #d0d0d0; }
+        .btn-teal { background-color: #00796B; color: white; border: 1px solid #004D40; font-weight: bold; }
+        .btn-teal:hover { background-color: #004D40; color: white; }
+    </style>
+</head>
+<body>
+<div class="win-nav">
+    <button type="button" id="btnRefresh"><i class="fa fa-refresh me-1"></i>Refresh</button>
+    <a href="/modules" class="ms-auto btn btn-sm btn-outline-secondary py-0 px-2">×</a>
+</div>
+
+<div class="win-header">
+    Item Stock As On Date Report
+</div>
+
+<div class="form-panel">
+    <form id="stockAsOnDateForm">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Company</label>
+                <select class="form-select select2" id="companyId">
+                    <option value="0">ALL COMPANIES</option>
+                    <option th:each="c : ${companies}" th:value="${c.id}" th:text="${c.name}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Branch Name</label>
+                <select class="form-select select2" id="branchId">
+                    <option value="0">ALL BRANCHES</option>
+                    <option th:each="b : ${companyBranches}" th:value="${b.id}" th:text="${b.name}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Item Category</label>
+                <select class="form-select select2" id="itemCategoryId">
+                    <option value="0">ALL CATEGORIES</option>
+                    <option th:each="cat : ${itemCategories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Item Code / Name</label>
+                <select class="form-select select2" id="itemDefId">
+                    <option value="0">ALL ITEMS</option>
+                    <option th:each="i : ${itemDefs}" th:value="${i.id}" th:text="${i.name}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">As On Date</label>
+                <input type="date" class="form-control" id="asOnDate">
+            </div>
+            <div class="col-md-3">
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="skipZero" checked>
+                    <label class="form-check-label" for="skipZero">Skip Zero Stock</label>
+                </div>
+            </div>
+            <div class="col-md-2 ms-auto">
+                <button type="button" class="btn btn-sm btn-teal w-100" id="btnExecute"><i class="fa fa-play me-1"></i>Execute</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="p-2">
+    <div class="win-header mb-2" style="font-size: 12px;">
+        Stock As On Date Result
+    </div>
+    <div class="table-responsive bg-white border">
+        <table class="table table-bordered table-striped table-hover table-custom mb-0" id="stockAsOnDateTable">
+            <thead>
+            <tr>
+                <th style="width: 50px;">#</th>
+                <th>Category</th>
+                <th>Item Code</th>
+                <th>Item Name</th>
+                <th style="width: 80px;">UOM</th>
+                <th style="width: 120px;">Available Stock</th>
+                <th style="width: 120px;">Avg Rate</th>
+                <th style="width: 140px;">Total Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="text-center">1</td>
+                <td>Raw Paddy</td>
+                <td>ITM-PAD-001</td>
+                <td>Super Basmati Paddy (Grade A)</td>
+                <td class="text-center">KGs</td>
+                <td class="text-end">125,400.00</td>
+                <td class="text-end">145.00</td>
+                <td class="text-end fw-bold">18,183,000.00</td>
+            </tr>
+            <tr>
+                <td class="text-center">2</td>
+                <td>Milled Rice</td>
+                <td>ITM-RIC-1121</td>
+                <td>Super Basmati Milled Rice 1121</td>
+                <td class="text-center">KGs</td>
+                <td class="text-end">45,800.00</td>
+                <td class="text-end">320.00</td>
+                <td class="text-end fw-bold">14,656,000.00</td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr class="fw-bold bg-light">
+                <td colspan="5" class="text-end">Total Summary:</td>
+                <td class="text-end">171,200.00</td>
+                <td></td>
+                <td class="text-end text-success">32,839,000.00</td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({ width: '100%' });
+        var today = new Date().toISOString().split('T')[0];
+        $('#asOnDate').val(today);
+
+        $('#btnExecute').click(function() {
+            var $btn = $(this);
+            var orig = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i>Executing...');
+            setTimeout(function() {
+                $btn.prop('disabled', false).html(orig);
+            }, 600);
+        });
+
+        $('#btnRefresh').click(function() {
+            location.reload();
+        });
+    });
+</script>
+</body>
+</html>
