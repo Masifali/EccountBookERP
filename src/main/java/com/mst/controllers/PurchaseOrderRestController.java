@@ -21,15 +21,31 @@ public class PurchaseOrderRestController {
                The default used to be 1052, which is Commission Trading's Purchase Order - a
                different document in a different schema - so any caller that omitted docType
                was numbered against the wrong series. */
-            @RequestParam(defaultValue = "41") int docType,
-            @RequestParam(defaultValue = "1") int companyId) {
-        int docNo = purchaseOrderService.generateNextDocNo(docType, companyId);
+            @RequestParam(defaultValue = "41") int docType) {
+        /* ------------------------------------------------------------------------------------
+           companyId USED TO BE A REQUEST PARAMETER, @RequestParam(defaultValue = "1").
+
+           The page calls this as /api/purchase-order/next-doc-no?docType=41 and sends no
+           companyId, so it defaulted to 1 - and the service took it, because its rule was
+           "companyId > 0 ? companyId : session". This company is 78, so
+           Sp_PurchaseOrder_GetAllMethod ran with @CompanyId = 1, matched no rows, and returned
+           MAX(DocNo)+1 = 1. That is the whole of "the desktop shows PO-493, the web shows PO-1".
+
+           The desktop passes clsGlobalVariables.UserAccount.CompanyId and offers no way to
+           override it. Taking a tenancy id from the query string is also exactly what the
+           standing rule forbids: a caller could number a document against another company's
+           series simply by appending ?companyId=. So the parameter is gone, not merely
+           defaulted differently.
+           ------------------------------------------------------------------------------------ */
+        int docNo = purchaseOrderService.generateNextDocNo(docType);
         String formattedCode = String.format("PO-%d", docNo);
         Map<String, Object> res = new HashMap<>();
         res.put("docNo", docNo);
-        res.put("branchNo", docNo);
         res.put("nextCode", formattedCode);
         res.put("displayCode", formattedCode);
+        /* "branchNo" used to echo docNo. BranchSrNo is a different number from a different
+           activity (GeneratePurchaseOrderBranchCodeByDocId, scoped by branch); it has its own
+           endpoint now, so this no longer pretends the two are the same. */
         return ResponseEntity.ok(res);
     }
 
@@ -311,5 +327,35 @@ public class PurchaseOrderRestController {
             r.put("message", e.getMessage());
         }
         return r;
+    }
+
+    /** The configuration-backed defaults a new Purchase Order starts with. */
+    @org.springframework.web.bind.annotation.GetMapping("/screen-defaults")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> screenDefaults() {
+        try {
+            return purchaseOrderService.screenDefaults();
+        } catch (Exception e) {
+            java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("message", e.getMessage());
+            return r;
+        }
+    }
+
+    /**
+     * Diagnostic: the four values the document-number procedure filters on. Read-only.
+     * Use when the generated number does not match the desktop's.
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/doc-no-context")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> docNoContext(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "41") int docType) {
+        try {
+            return purchaseOrderService.docNoContext(docType);
+        } catch (Exception e) {
+            java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("message", e.getMessage());
+            return r;
+        }
     }
 }

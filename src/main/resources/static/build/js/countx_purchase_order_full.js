@@ -268,6 +268,7 @@ function setWinDefaultDates() {
 
 function fetchNextDocNo() {
     fetchNextBranchSrNo();          /* BranchSrNoFill() runs alongside DocumentNoFill() */
+    applyScreenDefaults();          /* defaultConfiquration() */
     $.ajax({
         url: '/api/purchase-order/next-doc-no?docType=41',   /* doc type 41 - this is the
              general Purchase module's Purchase Order (Architecture.WinApp.Purchase\PurchsaeOrder.cs,
@@ -290,6 +291,43 @@ function fetchNextDocNo() {
  * (organization + company + document type + BRANCH + financial year). The web box was blank
  * because nothing generated it.
  */
+/*
+ * defaultConfiquration() - PurchsaeOrder.cs:631/:804/:1641/:1646.
+ *
+ * Three values the desktop reads from the company's CONFIGURATION on a new order. The page had
+ * them written in as literals: Delivery Days 7, JuteBag Cut 0.00, PPBag Cut 0.00 - which is why
+ * the desktop showed 1 / 2.25 / 1.25 and the web showed 7 / 0.00 / 0.00 for the same company.
+ *
+ * The desktop only writes the two cuts when the configured value is non-zero, and formats them
+ * "#,##0.###". Both boxes are Enabled = false there, so they are read-only here too.
+ */
+function applyScreenDefaults() {
+    $.ajax({
+        url: '/api/purchase-order/screen-defaults',
+        type: 'GET',
+        success: function (cfg) {
+            if (!cfg) { return; }
+
+            var days = parseInt(cfg.orderDefaultDeliveryDays || '0', 10);
+            if (!isNaN(days)) { $('#txtDeliveryDays').val(days); }
+
+            var jute = parseFloat(cfg.weightCutForJuteBags || '0');
+            if (jute) { $('#txtJuteBagCut').val(fmtCut(jute)); }      /* :1642 - only when non-zero */
+
+            var pp = parseFloat(cfg.weightCutForPPBags || '0');
+            if (pp) { $('#txtPPBagCut').val(fmtCut(pp)); }            /* :1647 */
+
+            /* txtJuteBagCut.Enabled = false / txtPpBagCut.Enabled = false */
+            $('#txtJuteBagCut, #txtPPBagCut').prop('readonly', true);
+        }
+    });
+}
+
+/* "#,##0.###" - up to three decimals, trailing zeros dropped, thousands separated. */
+function fmtCut(n) {
+    return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+}
+
 function fetchNextBranchSrNo() {
     $.ajax({
         url: '/api/purchase-order/next-branch-sr-no?docType=41',
@@ -2383,7 +2421,7 @@ function buildPayload() {
         supplierId: parseInt($('#hidSupplierId').val() || '0'),
         bookingPersonId: parseInt($('#hidBookingPersonId').val() || '0'),
         deliveryStartDate: $('#txtDeliveryStartDate').val(),
-        deliveryDays: parseInt($('#txtDeliveryDays').val() || '7'),
+        deliveryDays: parseInt($('#txtDeliveryDays').val() || '0'),
         /* po.OrderExpiryDate = DateTime.Now (:3310) - the desktop has no expiry control on
            this form, so it stamps the current date. There is no #txtExpiryDate here either,
            and reading it sent undefined. */

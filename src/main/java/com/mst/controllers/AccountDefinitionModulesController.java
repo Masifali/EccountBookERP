@@ -634,10 +634,14 @@ public class AccountDefinitionModulesController {
 
 	@GetMapping("/opening_balance/print")
 	@ResponseBody
-	public java.util.Map<String, Object> printOpeningBalance(
-			@RequestParam(value = "organizationId", required = false, defaultValue = "1") Integer organizationId,
-			@RequestParam(value = "companyId", required = false, defaultValue = "1") Integer companyId,
-			@RequestParam(value = "financialYearId", required = false, defaultValue = "1") Integer financialYearId) {
+	public java.util.Map<String, Object> printOpeningBalance() {
+		/* Session-scoped, never from the request. See the note on the doc-number endpoint: a
+		   tenancy id taken from a query string lets a caller read another company's data, and when
+		   it is omitted the "1" default reports on a company that does not exist here. */
+		Integer organizationId = currentUserContext.currentOrganizationId();
+		Integer companyId      = currentUserContext.currentCompanyId();
+		Integer financialYearId = currentUserContext.currentFinancialYearId();
+
 
 		java.util.Map<String, Object> res = new java.util.HashMap<>();
 		org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class);
@@ -674,10 +678,14 @@ public class AccountDefinitionModulesController {
 
 	@GetMapping("/opening_balance/print-view")
 	public String viewOpeningBalanceReport(
-			@RequestParam(value = "organizationId", required = false, defaultValue = "1") Integer organizationId,
-			@RequestParam(value = "companyId", required = false, defaultValue = "1") Integer companyId,
-			@RequestParam(value = "financialYearId", required = false, defaultValue = "1") Integer financialYearId,
 			Model model) {
+		/* Session-scoped, never from the request. See the note on the doc-number endpoint: a
+		   tenancy id taken from a query string lets a caller read another company's data, and when
+		   it is omitted the "1" default reports on a company that does not exist here. */
+		Integer organizationId = currentUserContext.currentOrganizationId();
+		Integer companyId      = currentUserContext.currentCompanyId();
+		Integer financialYearId = currentUserContext.currentFinancialYearId();
+
 
 		List<java.util.Map<String, Object>> reportData = new ArrayList<>();
 		try {
@@ -736,10 +744,14 @@ public class AccountDefinitionModulesController {
 	}
 
 	@GetMapping({"/opening_balance/pdf", "/opening_balance/129-OpeningBalanceRpt.pdf"})
-	public org.springframework.http.ResponseEntity<byte[]> exportOpeningBalancePdf(
-			@RequestParam(value = "organizationId", required = false, defaultValue = "1") Integer organizationId,
-			@RequestParam(value = "companyId", required = false, defaultValue = "1") Integer companyId,
-			@RequestParam(value = "financialYearId", required = false, defaultValue = "1") Integer financialYearId) {
+	public org.springframework.http.ResponseEntity<byte[]> exportOpeningBalancePdf() {
+		/* Session-scoped, never from the request. See the note on the doc-number endpoint: a
+		   tenancy id taken from a query string lets a caller read another company's data, and when
+		   it is omitted the "1" default reports on a company that does not exist here. */
+		Integer organizationId = currentUserContext.currentOrganizationId();
+		Integer companyId      = currentUserContext.currentCompanyId();
+		Integer financialYearId = currentUserContext.currentFinancialYearId();
+
 
 		try {
 			List<java.util.Map<String, Object>> reportData = accountOpeningBalanceRepository

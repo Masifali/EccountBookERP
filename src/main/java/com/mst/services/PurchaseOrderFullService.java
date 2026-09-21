@@ -165,11 +165,51 @@ public class PurchaseOrderFullService {
      * every document type and every year - which is why the web showed PO-34 where the desktop
      * showed PO-493.
      */
-    public int generateNextDocNo(int documentTypeId, int companyId) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = companyId > 0 ? companyId : currentUserContext.currentCompanyId();
+    public int generateNextDocNo(int documentTypeId) {
+        /* Organization, company and financial year come from the session only - never from the
+           caller. The desktop reads UserAccount.CompanyId and clsGlobalVariables.ActiveYr.Id and
+           gives the operator no way to override either. */
         return purchaseOrderHeaderRepository.nextDocNo(
-                orgId, compId, documentTypeId, currentUserContext.currentFinancialYearId());
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                documentTypeId,
+                currentUserContext.currentFinancialYearId());
+    }
+
+    /**
+     * The three configuration-backed defaults the desktop puts on a new Purchase Order
+     * (PurchsaeOrder.cs:631, :804, :1641, :1646). The page had 7, 0.00 and 0.00 written into the
+     * JavaScript; these come from the company's own configuration instead.
+     */
+    public Map<String, Object> screenDefaults() {
+        int orgId = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("orderDefaultDeliveryDays", purchaseOrderHeaderRepository.config(orgId, compId, "OrderDefaultDeliveryDays"));
+        out.put("weightCutForJuteBags",     purchaseOrderHeaderRepository.config(orgId, compId, "WeightCutForJuteBags"));
+        out.put("weightCutForPPBags",       purchaseOrderHeaderRepository.config(orgId, compId, "WeightCutForPPBags"));
+        return out;
+    }
+
+    /**
+     * What the document-number procedure was actually asked. The desktop shows PO-493 where the
+     * web showed PO-1, which means the procedure's WHERE (document type + organization + company
+     * + financial year) matched no rows. Returning the four values it filtered on turns that from
+     * guesswork into something visible.
+     */
+    public Map<String, Object> docNoContext(int documentTypeId) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("documentTypeId", documentTypeId);
+        out.put("organizationId", currentUserContext.currentOrganizationId());
+        out.put("companyId", currentUserContext.currentCompanyId());
+        out.put("financialYearId", currentUserContext.currentFinancialYearId());
+        out.put("branchesId", currentUserContext.currentBranchId());
+        out.putAll(purchaseOrderHeaderRepository.docNoDiagnostics(
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                documentTypeId,
+                currentUserContext.currentFinancialYearId()));
+        return out;
     }
 
     /** BranchSrNoFill() - the same procedure, scoped by branch as well. */
@@ -1522,7 +1562,7 @@ public class PurchaseOrderFullService {
             int branchId = currentUserContext.currentBranchId();
             int effUserId = userId != null ? userId : currentUserContext.currentUserId();
 
-            int docNo = dto.getDocNo() != null && dto.getDocNo() > 0 ? dto.getDocNo() : generateNextDocNo(dto.getDocumentTypeId(), compId);
+            int docNo = dto.getDocNo() != null && dto.getDocNo() > 0 ? dto.getDocNo() : generateNextDocNo(dto.getDocumentTypeId());
             String docDate = dto.getDocDate() != null && !dto.getDocDate().isEmpty() ? dto.getDocDate() : new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date());
 
             Integer poMasterId = dto.getPurchaseOrderMasterId();
