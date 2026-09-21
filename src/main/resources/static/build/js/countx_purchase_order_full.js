@@ -2366,6 +2366,26 @@ function buildPayload() {
            being dropped by Jackson. Still sent so the screen's value is not silently invented into
            some other column; it is recorded as an open question rather than mapped by guesswork. */
         freightAmount: parseFloat($('#txtCashFreight').val() || '0'),
+        /* ------------------------------------------------------------------------------
+           Header fields the DESKTOP writes that this payload never sent, so they were lost
+           on every save. PurchsaeOrder.cs:3300-3353.
+
+           Two are mandatory in the procedure itself: Sp_PurchaseOrder_Insert raises
+           "DeliveryTerm Field Required" and "OrderStatus Field Required" on an empty value.
+           Both come from the combo's TEXT on the desktop, not its id (:3312, :3352).
+           ------------------------------------------------------------------------------ */
+        branchNo:         parseInt($('#txtBranchNo').val() || '0'),
+        supplierRefNo:    $('#txtSupplierRefNo').val(),
+        orderStatus:      $('#cmbOrderStatus option:selected').text(),
+        deliveryTermName: $('#cmbDeliveryTerm option:selected').text(),
+        orderCategoryId:  parseInt($('#cmbParentCategory').val() || '0'),
+        categorySrNo:     parseInt($('#txtCategoryNo').val() || '0'),
+        orderQty:         parseFloat($('#txtHeaderTotalQty').val() || '0'),
+        orderWeight:      parseFloat($('#txtHeaderTotalWeight').val() || '0'),
+        orderAmount:      parseFloat($('#txtHeaderTotalAmount').val() || '0'),
+        /* LocationTypeId has no control on this page. The desktop reads cmbLocationType; the
+           procedure defaults a 0 to 1 itself, so 0 is sent rather than a guessed value. */
+        locationTypeId:   0,
         remarksHeader: $('#txtRemarksHeader').val(),
         lineItems: lineItems,
         emptyBags: emptyBagItems.map(function(b) {

@@ -68,6 +68,43 @@ public class PurchaseOrderFullDto {
     private String shipToAddress;
 
     private String remarksHeader;
+
+    /* ------------------------------------------------------------------------------------------
+       Header fields the DESKTOP writes but this DTO never carried, so they were silently dropped
+       on every save even before the raw INSERT was replaced. PurchsaeOrder.cs:3300-3353.
+
+       Two of them are not optional: Sp_PurchaseOrder_Insert RAISERRORs "DeliveryTerm Field
+       Required" and "OrderStatus Field Required" when either arrives empty.
+       ------------------------------------------------------------------------------------------ */
+    private String supplierRefNo;      // po.SupplierRefNo      :3304
+    private String orderStatus;        // po.OrderStatus        :3352
+    private String deliveryTermName;   // po.DeliveryTerm       :3312 (the combo's TEXT, not its id)
+    private Integer orderCategoryId;   // po.OrderCatagoryId    :3301
+    private Integer categorySrNo;      // po.CatagorySrNo       :3302
+    private Double orderQty;           // po.OrderQty           :3315
+    private Double orderWeight;        // po.OrderWeight        :3316
+    private Double orderAmount;        // po.OrderAmount        :3317
+    private Integer locationTypeId;    // po.LocationTypeId     :3353
+
+    public String getSupplierRefNo() { return supplierRefNo; }
+    public void setSupplierRefNo(String v) { this.supplierRefNo = v; }
+    public String getOrderStatus() { return orderStatus; }
+    public void setOrderStatus(String v) { this.orderStatus = v; }
+    public String getDeliveryTermName() { return deliveryTermName; }
+    public void setDeliveryTermName(String v) { this.deliveryTermName = v; }
+    public Integer getOrderCategoryId() { return orderCategoryId; }
+    public void setOrderCategoryId(Integer v) { this.orderCategoryId = v; }
+    public Integer getCategorySrNo() { return categorySrNo; }
+    public void setCategorySrNo(Integer v) { this.categorySrNo = v; }
+    public Double getOrderQty() { return orderQty; }
+    public void setOrderQty(Double v) { this.orderQty = v; }
+    public Double getOrderWeight() { return orderWeight; }
+    public void setOrderWeight(Double v) { this.orderWeight = v; }
+    public Double getOrderAmount() { return orderAmount; }
+    public void setOrderAmount(Double v) { this.orderAmount = v; }
+    public Integer getLocationTypeId() { return locationTypeId; }
+    public void setLocationTypeId(Integer v) { this.locationTypeId = v; }
+
     private String paymentScheduleDescription;
 
     private List<PurchaseOrderDetailItemDto> lineItems = new ArrayList<>();

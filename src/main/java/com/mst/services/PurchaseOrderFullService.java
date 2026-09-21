@@ -1,6 +1,7 @@
 package com.mst.services;
 
 import com.mst.models.dto.PurchaseOrderFullDto;
+import com.mst.repositories.PurchaseOrderHeaderRepository;
 import com.mst.security.CurrentUserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,6 +18,10 @@ public class PurchaseOrderFullService {
 
     @Autowired
     private CurrentUserContext currentUserContext;
+
+    /** The desktop's own header write path - Sp_PurchaseOrder_Insert / _Update. */
+    @Autowired
+    private PurchaseOrderHeaderRepository purchaseOrderHeaderRepository;
 
     // ==========================================================================================
     // Packing Material (Empty Bags) - real stored-procedure / table names, verified directly
@@ -723,58 +728,103 @@ public class PurchaseOrderFullService {
     private int safeOrg()  { try { return currentUserContext.currentOrganizationId(); } catch (Exception e) { return 0; } }
     private int safeComp() { try { return currentUserContext.currentCompanyId(); }      catch (Exception e) { return 0; } }
 
+    /**
+     * The Reference-Party lookups, from the procedure the desktop calls.
+     *
+     * -----------------------------------------------------------------------------------------
+     * WHAT THESE USED TO DO
+     * -----------------------------------------------------------------------------------------
+     * getBookingPersons() called the right procedure and then, if it threw or returned nothing,
+     * fell through TWO silent catch blocks into hand-written SQL over dbo.ReferenceParties with
+     * no OrganizationId or CompanyId predicate — a cross-tenant read that looked like a success.
+     *
+     * getLookupPartyTypes() returned FOUR HARDCODED rows — "Reference Party" 1, "Booking Person" 5,
+     * "Broker" 2, "Agent" 3 — invented in Java. The desktop reads that list from the database
+     * (DefineReferenceParties.cs:151, ReferenceParties.ReadAllReferencePartyType), so any type a
+     * company has defined beyond those four was invisible, and any of those four that a company
+     * does NOT have was offered anyway.
+     *
+     * getLookupParties() ran a tenancy-free join and labelled the type with a CASE expression that
+     * invented the word "Other" for every id it did not recognise.
+     *
+     * saveLookupParty() wrote with a raw INSERT INTO ReferenceParties + SELECT @@IDENTITY,
+     * bypassing Sp_ReferenceParties_Insert entirely.
+     *
+     * All four now go through [Sp_ReferenceParties_GetAllMethod] / Sp_ReferenceParties_Insert |
+     * _Update with the signed-in user's own tenancy, and a failure is reported rather than
+     * answered with invented rows.
+     */
+    private static final String SP_REF_PARTIES = "[Sp_ReferenceParties_GetAllMethod]";
+
+    /** ReferencePArtyByReferencePartyTypeIdOrSupplierCustomerId, type 5 = Booking Person. */
     public List<Map<String, Object>> getBookingPersons() {
-        try {
-            int orgId = currentUserContext.currentOrganizationId();
-            int compId = currentUserContext.currentCompanyId();
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(
-                    "EXEC Sp_ReferenceParties_GetAllMethod @OrganizationId=?, @CompanyId=?, @ReferencePartyTypeId=5, @Activity=?",
-                    orgId, compId, "ReferencePArtyByReferencePartyTypeIdOrSupplierCustomerId");
-            if (list != null && !list.isEmpty()) {
-                return list;
-            }
-        } catch (Exception e) {}
-        try {
-            String sql = "SELECT Id as id, ReferencePartyName as partyName, ReferencePartyName as description FROM ReferenceParties WHERE ReferencePartyTypeId = 5 AND (IsActive = 1 OR IsActive IS NULL) ORDER BY ReferencePartyName";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-            if (list != null && !list.isEmpty()) {
-                return list;
-            }
-        } catch (Exception e) {}
-        try {
-            String sql = "SELECT Id as id, ReferencePartyName as partyName, ReferencePartyName as description FROM ReferenceParties WHERE (IsActive = 1 OR IsActive IS NULL) ORDER BY ReferencePartyName";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-            if (list != null && !list.isEmpty()) {
-                return list;
-            }
-        } catch (Exception e) {}
-        return Collections.emptyList();
+        return referenceParties(5, 0);
     }
 
+    /** DefineReferenceParties.cs:151 — @Activity='ReadAllReferencePartyType'. */
     public List<Map<String, Object>> getLookupPartyTypes() {
-        List<Map<String, Object>> types = new ArrayList<>();
-        Map<String, Object> t1 = new HashMap<>(); t1.put("id", 1); t1.put("description", "Reference Party"); types.add(t1);
-        Map<String, Object> t2 = new HashMap<>(); t2.put("id", 5); t2.put("description", "Booking Person"); types.add(t2);
-        Map<String, Object> t3 = new HashMap<>(); t3.put("id", 2); t3.put("description", "Broker"); types.add(t3);
-        Map<String, Object> t4 = new HashMap<>(); t4.put("id", 3); t4.put("description", "Agent"); types.add(t4);
-        return types;
-    }
-
-    public List<Map<String, Object>> getLookupParties() {
-        try {
-            String sql = "SELECT rp.Id as id, rp.ReferencePartyName as partyName, ISNULL(rp.ReferencePartyTypeId, 1) as partyTypeId, " +
-                    "CASE WHEN rp.ReferencePartyTypeId = 5 THEN 'Booking Person' WHEN rp.ReferencePartyTypeId = 1 THEN 'Reference Party' ELSE 'Other' END as partyTypeName, " +
-                    "CASE WHEN rp.IsActive = 0 THEN 0 ELSE 1 END as isActive, " +
-                    "s.CompanyName as supplierCustomerName " +
-                    "FROM ReferenceParties rp " +
-                    "LEFT JOIN SupplierCustomer s ON rp.SupplierCustomerId = s.Id " +
-                    "ORDER BY rp.ReferencePartyTypeId, rp.ReferencePartyName";
-            return jdbcTemplate.queryForList(sql);
-        } catch (Exception e) {
-            return Collections.emptyList();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(
+                "EXEC " + SP_REF_PARTIES + " @OrganizationId=?, @CompanyId=?, @Activity=?",
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(),
+                "ReadAllReferencePartyType")) {
+            Map<String, Object> o = new HashMap<>();
+            o.put("id",          ci(r, "ReferencePartyTypeId"));
+            o.put("description", ci(r, "ReferencePartyType"));
+            out.add(o);
         }
+        return out;
     }
 
+    /** Every party, whatever its type — the same procedure with no @ReferencePartyTypeId. */
+    public List<Map<String, Object>> getLookupParties() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : referenceParties(0, 0)) {
+            Map<String, Object> o = new HashMap<>();
+            o.put("id",                     ci(r, "Id"));
+            o.put("partyName",              ci(r, "ReferencePartyName"));
+            o.put("partyTypeId",            ci(r, "ReferencePartyTypeId"));
+            /* The procedure returns the type's own name. The old CASE expression invented
+               "Other" for anything it did not recognise. */
+            o.put("partyTypeName",          ci(r, "ReferencePartyType"));
+            o.put("isActive",               ci(r, "IsActive"));
+            o.put("supplierCustomerName",   ci(r, "CompanyName"));
+            out.add(o);
+        }
+        return out;
+    }
+
+    private List<Map<String, Object>> referenceParties(int referencePartyTypeId, int supplierCustomerId) {
+        java.util.LinkedHashMap<String, Object> p = new java.util.LinkedHashMap<>();
+        p.put("OrganizationId", currentUserContext.currentOrganizationId());
+        p.put("CompanyId",      currentUserContext.currentCompanyId());
+        /* Both optional parameters are omitted when unset, as BLL 0074's own guards do. */
+        if (referencePartyTypeId != 0) p.put("ReferencePartyTypeId", referencePartyTypeId);
+        if (supplierCustomerId   != 0) p.put("SupplierCustomerId",   supplierCustomerId);
+        p.put("Activity", "ReferencePArtyByReferencePartyTypeIdOrSupplierCustomerId");
+
+        StringBuilder sql = new StringBuilder("EXEC " + SP_REF_PARTIES + " ");
+        List<Object> args = new ArrayList<>();
+        boolean first = true;
+        for (Map.Entry<String, Object> e : p.entrySet()) {
+            if (!first) sql.append(", ");
+            first = false;
+            sql.append('@').append(e.getKey()).append("=?");
+            args.add(e.getValue());
+        }
+        return jdbcTemplate.queryForList(sql.toString(), args.toArray());
+    }
+
+    /**
+     * BLL 0074 save() — Sp_ReferenceParties_Insert when Id is 0, Sp_ReferenceParties_Update
+     * otherwise. The parameter list is the model's property list in declaration order, which
+     * GenericProvider.SetProc reflects over:
+     *
+     *     IsActive, Id, OrganizationId, CompanyId, SupplierCustomerId,
+     *     ReferencePartyTypeId, ReferencePartyName
+     *
+     * OrganizationId and CompanyId come from the signed-in user, never from the payload.
+     */
     public Map<String, Object> saveLookupParty(Map<String, Object> payload) {
         Map<String, Object> res = new HashMap<>();
         try {
@@ -784,18 +834,35 @@ public class PurchaseOrderFullService {
                 res.put("message", "PartyName Field is Required");
                 return res;
             }
-            int partyTypeId = payload.get("partyTypeId") != null ? Integer.parseInt(payload.get("partyTypeId").toString()) : 1;
-            int supplierCustomerId = payload.get("supplierCustomerId") != null && !payload.get("supplierCustomerId").toString().isEmpty() ? Integer.parseInt(payload.get("supplierCustomerId").toString()) : 0;
-            boolean isActive = payload.get("isActive") == null || Boolean.parseBoolean(payload.get("isActive").toString()) || "1".equals(payload.get("isActive").toString());
+            int id = payload.get("id") != null && !payload.get("id").toString().trim().isEmpty()
+                    ? Integer.parseInt(payload.get("id").toString().trim()) : 0;
+            int partyTypeId = payload.get("partyTypeId") != null && !payload.get("partyTypeId").toString().trim().isEmpty()
+                    ? Integer.parseInt(payload.get("partyTypeId").toString().trim()) : 0;
+            if (partyTypeId == 0) {
+                res.put("success", false);
+                res.put("message", "PartyType Field is Required");
+                return res;
+            }
+            int supplierCustomerId = payload.get("supplierCustomerId") != null
+                    && !payload.get("supplierCustomerId").toString().trim().isEmpty()
+                    ? Integer.parseInt(payload.get("supplierCustomerId").toString().trim()) : 0;
+            boolean isActive = payload.get("isActive") == null
+                    || Boolean.parseBoolean(payload.get("isActive").toString())
+                    || "1".equals(payload.get("isActive").toString());
 
-            int orgId = currentUserContext.currentOrganizationId();
-            int compId = currentUserContext.currentCompanyId();
+            String proc = (id == 0) ? "Sp_ReferenceParties_Insert" : "Sp_ReferenceParties_Update";
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo." + proc + " @IsActive=?, @Id=?, @OrganizationId=?, @CompanyId=?, "
+                  + "@SupplierCustomerId=?, @ReferencePartyTypeId=?, @ReferencePartyName=?",
+                    isActive, id,
+                    currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(),
+                    supplierCustomerId, partyTypeId, partyName);
 
-            String insertSql = "INSERT INTO ReferenceParties (ReferencePartyName, ReferencePartyTypeId, SupplierCustomerId, IsActive, OrganizationId, CompanyId, EntryDate) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
-            jdbcTemplate.update(insertSql, partyName, partyTypeId, supplierCustomerId > 0 ? supplierCustomerId : null, isActive ? 1 : 0, orgId, compId);
-
-            Integer newId = jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
+            int newId = id;
+            if (!rows.isEmpty() && !rows.get(0).isEmpty()) {
+                Object v = rows.get(0).values().iterator().next();
+                if (v instanceof Number && ((Number) v).intValue() > 0) newId = ((Number) v).intValue();
+            }
             res.put("success", true);
             res.put("id", newId);
             res.put("partyName", partyName);
@@ -807,21 +874,40 @@ public class PurchaseOrderFullService {
         return res;
     }
 
+    /**
+     * The chart-of-accounts picker on this form.
+     *
+     * This used to build its WHERE clause by concatenating the caller's text into the statement
+     * after a hand-rolled quote escape, and read dbo.ChartofAccount directly with an "IsDetail = 1"
+     * filter and no tenancy. It now runs the desktop's own procedure — the one the voucher screens
+     * were moved onto in the same pass — and filters the returned rows in memory, so the text
+     * never reaches SQL at all.
+     */
     public List<Map<String, Object>> getAccounts(String query) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT Id as id, AccountCode as accountCode, AccountTitle as accountTitle ")
-              .append("FROM ChartofAccount ")
-              .append("WHERE IsDetail = 1 ");
-            if (query != null && !query.trim().isEmpty()) {
-                String q = query.trim().replace("'", "''");
-                sb.append("AND (AccountTitle LIKE '%").append(q).append("%' OR AccountCode LIKE '%").append(q).append("%') ");
-            }
-            sb.append("ORDER BY AccountTitle");
-            return jdbcTemplate.queryForList(sb.toString());
-        } catch (Exception e) {
-            return Collections.emptyList();
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "EXEC [dbo].[USP_Accounts_GetAccountTitleByAccountTypeIds] "
+              + "@OrganizationId=?, @CompanyId=?, @AppId=?, @UserId=?",
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(),
+                appIdOfCurrentUser(), currentUserContext.currentUserId());
+        String q = query == null ? "" : query.trim().toLowerCase();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            String title = String.valueOf(ci(r, "AccountTitle") == null ? "" : ci(r, "AccountTitle"));
+            String code  = String.valueOf(ci(r, "AccountCode")  == null ? "" : ci(r, "AccountCode"));
+            if (!q.isEmpty() && !title.toLowerCase().contains(q) && !code.toLowerCase().contains(q)) continue;
+            Map<String, Object> o = new HashMap<>();
+            o.put("id",           ci(r, "Id"));
+            o.put("accountCode",  code);
+            o.put("accountTitle", title);
+            out.add(o);
         }
+        return out;
+    }
+
+    /** The raw AppId, the way CommonServices passes clsGlobalVariables.UserAccount.AppId. */
+    private int appIdOfCurrentUser() {
+        com.mst.models.UserAccount u = currentUserContext.requireAccountingUser();
+        return u.getAppId() == null ? 0 : u.getAppId();
     }
 
     // ==========================================================================================
@@ -1424,31 +1510,120 @@ public class PurchaseOrderFullService {
             String docDate = dto.getDocDate() != null && !dto.getDocDate().isEmpty() ? dto.getDocDate() : new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date());
 
             Integer poMasterId = dto.getPurchaseOrderMasterId();
-            if (poMasterId != null && poMasterId > 0) {
-                // Update - ditto Sp_PurchaseOrder_Update: only the header fields the user actually
-                // edits on this screen are touched (DocNo/DocDate/Supplier/Remarks/Broker/CommAgent/BookingPerson).
-                String updateSql = "UPDATE PurchaseOrder SET " +
-                        "DocNo = ?, DocDate = ?, SupplierCustomerId = ?, OrderSupCustId = ?, RemarksHeader = ?, " +
-                        "BrokerAgentId = ?, CommissionAgentId = ?, BookingPersonId = ?, " +
-                        "ModifyDate = GETDATE(), ModifyUser = ? " +
-                        "WHERE Id = ?";
-                jdbcTemplate.update(updateSql, docNo, docDate, dto.getSupplierId(), dto.getSupplierId(),
-                        dto.getRemarksHeader(), dto.getBrokerAccountId(), dto.getCommissionAgentId(), dto.getBookingPersonId(),
-                        effUserId, poMasterId);
+            int recId = (poMasterId != null && poMasterId > 0) ? poMasterId : 0;
+
+            /* ------------------------------------------------------------------------------
+               BLL 0595 Architecture.BLL.Inventory.PurchaseOrder.Save(obj)
+
+               Step 1 - the date lock, BEFORE anything is written. The desktop refuses the whole
+               save when the document date is on or before the configured lock date.
+               ------------------------------------------------------------------------------ */
+            java.sql.Date docDateSql = java.sql.Date.valueOf(docDate);
+            purchaseOrderHeaderRepository.assertNotDateLocked(orgId, compId, docDateSql);
+
+            /* Step 2 - on INSERT the desktop refuses a grid that already carries saved detail ids. */
+            if (recId == 0 && dto.getLineItems() != null) {
+                for (PurchaseOrderFullDto.PurchaseOrderDetailItemDto li : dto.getLineItems()) {
+                    if (li.getPurchaseOrderDetailId() != null && li.getPurchaseOrderDetailId() > 0) {
+                        throw new IllegalArgumentException(
+                                "Record cannot be inserted because detailId greater than zero");
+                    }
+                }
+            }
+
+            /* Step 3 - the header itself, through the procedure. Field mapping is
+               PurchsaeOrder.cs:3285-3355, which is the authority for which control feeds which
+               column. Note in particular:
+                 - the commission agent is BrokerAgentSupCustId (:3323), NOT "CommissionAgentId";
+                   that column belongs to the pcc and FeedMill order models, not this one
+                 - the party is OrderSupCustId only (:3303); there is no SupplierCustomerId here
+                 - IsAproved is false on insert and keeps the row's EXISTING value on update
+                   (:3289-3293); IsApproved is never written through this path
+                 - FinancialYearId is the active year (:4707), never a literal
+               DocNo and BranchSrNo are sent as the screen has them, but Sp_PurchaseOrder_Insert
+               recomputes both as MAX+1 itself, so the procedure remains the single source of
+               document numbering. */
+            Map<String, Object> head = PurchaseOrderHeaderRepository.blankModel();
+            java.sql.Timestamp nowTs = new java.sql.Timestamp(System.currentTimeMillis());
+
+            head.put("Id",             recId);
+            head.put("DocumentTypeId", dto.getDocumentTypeId());
+            head.put("DocNo",          docNo);
+            head.put("DocDate",        docDateSql);
+            head.put("BranchesId",     branchId);
+            head.put("ProjectsId",     branchId);                       // :3296
+            head.put("OrganizationId", orgId);
+            head.put("CompanyId",      compId);
+            head.put("FinancialYearId", currentUserContext.currentFinancialYearId());
+            head.put("BranchSrNo",     dto.getBranchNo() == null ? 0 : dto.getBranchNo());
+            head.put("OrderSupCustId", dto.getSupplierId());
+            head.put("SupplierRefNo",  dto.getSupplierRefNo());
+            head.put("BookingPersonId", zero(dto.getBookingPersonId()));
+            head.put("RemarksHeader",  dto.getRemarksHeader() == null ? "" : dto.getRemarksHeader());
+            head.put("PaymentTermsId", zero(dto.getPaymentTermId()));
+            head.put("OrderDueDays",   zero(dto.getDueDays()));
+            head.put("OrderDueDate",   dateOrNull(dto.getPaymentDueDate()));
+            head.put("OrderExpiryDate", nowTs);                          // :3311 DateTime.Now
+            head.put("DeliveryTermId", zero(dto.getDeliveryTermId()));
+            head.put("DeliveryTerm",   dto.getDeliveryTermName());
+            head.put("DeliveryStartDate", dateOrNull(dto.getDeliveryStartDate()));
+            head.put("DeliveryDays",   zero(dto.getDeliveryDays()));
+            head.put("OrderCatagoryId", zero(dto.getOrderCategoryId()));
+            head.put("CatagorySrNo",   zero(dto.getCategorySrNo()));
+            head.put("OrderStatus",    dto.getOrderStatus());
+            head.put("LocationTypeId", zero(dto.getLocationTypeId()));
+            head.put("OrderQty",       dec(dto.getOrderQty()));
+            head.put("OrderWeight",    dec(dto.getOrderWeight()));
+            head.put("OrderAmount",    dec(dto.getOrderAmount()));
+                                                head.put("EntryUser",      effUserId);
+            head.put("EntryDate",      nowTs);
+            head.put("ModifyUser",     effUserId);
+            head.put("ModifyDate",     nowTs);
+            head.put("PostState",      Boolean.FALSE);
+            head.put("OrderTaxable",   Boolean.FALSE);
+            /* CurrencyId / ExchangeRate / FcyAmount are written by the desktop (:3318-3320) from
+               cmbCurrency, txtExchangeRate and txtFcyAmount. This web page has no such controls,
+               so they are left unsent and the procedure's own defaults apply. Recorded as an open
+               item rather than filled with an invented rate - a fabricated exchange rate of 1 is
+               exactly the kind of default this port has been removing elsewhere. */
+
+            /* :3320-3327 - the commission block is written ONLY when an agent is chosen. */
+            if (dto.getCommissionAgentId() != null && dto.getCommissionAgentId() > 0) {
+                head.put("BrokerAgentSupCustId", dto.getCommissionAgentId());
+                head.put("CommissionType",       dto.getCommissionTypeName());
+                head.put("CommRate",             dbl(dto.getCommRate()));
+                head.put("UomScheduleIdCmRate",  zero(dto.getCommUomId()));
+                head.put("CommAmount",           dbl(dto.getCommAmount()));
+            }
+            /* :3328-3335 - likewise the brokery block. */
+            if (dto.getBrokerAccountId() != null && dto.getBrokerAccountId() > 0) {
+                head.put("BrokerAgentId",  dto.getBrokerAccountId());
+                head.put("BrokeryType",    dto.getBrokeryTypeName());
+                head.put("BrokeryRate",    dbl(dto.getBrokeryRate()));
+                head.put("BrokeryUom",     dbl(dto.getBrokeryRateUomId()));
+                head.put("BrokeryAmount",  dbl(dto.getBrokeryAmount()));
+            }
+            /* :3337-3344 - exactly one of the two freight flags; the page already sends both
+               booleans from the rdFreightCash / rdFreightCredit pair. */
+            boolean creditFreight = Boolean.TRUE.equals(dto.getCreditFreight());
+            head.put("CashFreight",   !creditFreight);
+            head.put("CreditFreight", creditFreight);
+
+            if (recId > 0) {
+                /* :3289 - an update carries the row's existing approval state; it is read back
+                   from the row rather than taken from the client, which must never be able to
+                   approve an order by posting a flag. */
+                Boolean stored = jdbcTemplate.queryForObject(
+                        "SELECT ISNULL(IsAproved,0) FROM PurchaseOrder WHERE Id = ?",
+                        Boolean.class, recId);
+                head.put("IsAproved", Boolean.TRUE.equals(stored));
             } else {
-                // Insert
-                String insertSql = "INSERT INTO PurchaseOrder (" +
-                        "DocumentTypeId, DocNo, DocDate, SupplierCustomerId, OrderSupCustId, RemarksHeader, " +
-                        "BrokerAgentId, CommissionAgentId, BookingPersonId, " +
-                        "IsApproved, IsAproved, OrganizationId, CompanyId, BranchesId, FinancialYearId, EntryUser, EntryDate" +
-                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, 1, ?, GETDATE())";
+                head.put("IsAproved", Boolean.FALSE);   // :3293
+            }
 
-                jdbcTemplate.update(insertSql, dto.getDocumentTypeId(), docNo, docDate, dto.getSupplierId(), dto.getSupplierId(),
-                        dto.getRemarksHeader() != null ? dto.getRemarksHeader() : "",
-                        dto.getBrokerAccountId(), dto.getCommissionAgentId(), dto.getBookingPersonId(),
-                        orgId, compId, branchId, effUserId);
-
-                poMasterId = jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
+            poMasterId = purchaseOrderHeaderRepository.save(head);
+            if (poMasterId == null || poMasterId <= 0) {
+                throw new IllegalStateException("Purchase Order save returned no Id.");
             }
 
             // Purchase Order Detail (main line-items grid) - real per-row Insert/Update/Delete against
@@ -1465,48 +1640,47 @@ public class PurchaseOrderFullService {
                 response.put("detailWarnings", detailWarnings);
             }
 
-            // Packing Material (Empty Bags) - real delete-then-reinsert against the real
-            // PurchaseOrderEmptyBags table / Sp_PurchaseOrderEmptyBags_Insert proc. This part is real
-            // and DB-verified even though the header/detail INSERT/UPDATE above still target a
-            // fabricated schema left over from a previous implementation (see savePurchaseOrder's
-            // known-issues note in PurchaseOrderRestController).
-            try {
-                Map<String, Object> orgCompany = getOrgCompanyForPurchaseOrder(poMasterId);
-                int emptyBagsOrgId = orgCompany != null && orgCompany.get("OrganizationId") != null
-                        ? ((Number) orgCompany.get("OrganizationId")).intValue() : currentUserContext.currentOrganizationId();
-                int emptyBagsCompId = orgCompany != null && orgCompany.get("CompanyId") != null
-                        ? ((Number) orgCompany.get("CompanyId")).intValue() : currentUserContext.currentCompanyId();
-                persistEmptyBags(poMasterId, dto.getEmptyBags(), emptyBagsOrgId, emptyBagsCompId);
-            } catch (Exception emptyBagsEx) {
-                response.put("emptyBagsWarning", "Empty Bags rows were not saved: " + emptyBagsEx.getMessage());
-            }
+            /* Packing Material (Empty Bags), then the three remaining tabs.
 
-            // Supplier Expense / Account Credit _Charge to Product / Payment Detail - real
-            // delete-then-reinsert persistence, each isolated in its own try/catch so a validation
-            // failure on one tab never blocks the header/detail/other tabs from saving.
-            try {
-                persistSupplierExpense(poMasterId, dto.getSupplierExpenses());
-            } catch (Exception ex) {
-                response.put("supplierExpensesWarning", "Supplier Expense rows were not saved: " + ex.getMessage());
-            }
-            try {
-                persistExpensesChargeToProduct(poMasterId, dto.getExpensesChargeToProduct());
-            } catch (Exception ex) {
-                response.put("expensesChargeToProductWarning", "Account Credit _Charge to Product rows were not saved: " + ex.getMessage());
-            }
-            try {
-                persistPaymentTermsDetail(poMasterId, dto.getPaymentTermsDetail());
-            } catch (Exception ex) {
-                response.put("paymentTermsDetailWarning", "Payment Detail rows were not saved: " + ex.getMessage());
-            }
+               These used to sit in four separate try/catch blocks that downgraded any failure to
+               a "...Warning" string in the response, so a half-written order was the normal
+               outcome. They now run inside the one transaction with the header: if any of them
+               fails, the whole save rolls back. */
+            Map<String, Object> orgCompany = getOrgCompanyForPurchaseOrder(poMasterId);
+            int emptyBagsOrgId = orgCompany != null && orgCompany.get("OrganizationId") != null
+                    ? ((Number) orgCompany.get("OrganizationId")).intValue()
+                    : currentUserContext.currentOrganizationId();
+            int emptyBagsCompId = orgCompany != null && orgCompany.get("CompanyId") != null
+                    ? ((Number) orgCompany.get("CompanyId")).intValue()
+                    : currentUserContext.currentCompanyId();
+            persistEmptyBags(poMasterId, dto.getEmptyBags(), emptyBagsOrgId, emptyBagsCompId);
+
+            persistSupplierExpense(poMasterId, dto.getSupplierExpenses());
+            persistExpensesChargeToProduct(poMasterId, dto.getExpensesChargeToProduct());
+            persistPaymentTermsDetail(poMasterId, dto.getPaymentTermsDetail());
 
             response.put("success", true);
             response.put("id", poMasterId);
             response.put("docNo", docNo);
             response.put("message", "Purchase Order " + (dto.getPurchaseOrderMasterId() != null && dto.getPurchaseOrderMasterId() > 0 ? "updated" : "saved") + " successfully (Doc No: " + docNo + ")");
         } catch (Exception e) {
+            /* @Transactional rolls back on a propagating RuntimeException. This method returns a
+               response object instead of throwing, so the rollback has to be asked for
+               explicitly - otherwise the header stayed committed while a child collection had
+               failed, which is how partial orders were being written. */
+            try {
+                org.springframework.transaction.interceptor.TransactionAspectSupport
+                        .currentTransactionStatus().setRollbackOnly();
+            } catch (IllegalStateException noTx) {
+                /* not running in a transaction - nothing to roll back */
+            }
+            response.clear();
             response.put("success", false);
-            response.put("message", "Error saving purchase order: " + e.getMessage());
+            /* RAISERROR text from Sp_PurchaseOrder_Insert / _Update is the desktop's own wording
+               ("Document Date(...) is Not Valid Against Active Financial Year!", "DeliveryTerm
+               Field Required", "OrderStatus Field Required", "DocDate cannot be greater than
+               DeliveryStartDate Please Check") and is passed through unchanged. */
+            response.put("message", e.getMessage());
         }
         return response;
     }
@@ -1687,5 +1861,28 @@ public class PurchaseOrderFullService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // ==========================================================================================
+    // Small conversions used by the Purchase Order header mapping.
+    // ==========================================================================================
+
+    /** The desktop's Conversion.ToInt: a missing value is 0, never null. */
+    private static int zero(Integer v) { return v == null ? 0 : v; }
+
+    /** Conversion.ToDecimal. */
+    private static java.math.BigDecimal dec(Double v) {
+        return v == null ? java.math.BigDecimal.ZERO : java.math.BigDecimal.valueOf(v);
+    }
+
+    /** Conversion.ToDouble. */
+    private static double dbl(Double v) { return v == null ? 0d : v; }
+    private static double dbl(Integer v) { return v == null ? 0d : v.doubleValue(); }
+
+    /** yyyy-MM-dd from the page, or null when the box is empty. */
+    private static java.sql.Date dateOrNull(String ymd) {
+        if (ymd == null || ymd.trim().isEmpty()) return null;
+        try { return java.sql.Date.valueOf(ymd.trim().substring(0, 10)); }
+        catch (RuntimeException e) { return null; }
     }
 }

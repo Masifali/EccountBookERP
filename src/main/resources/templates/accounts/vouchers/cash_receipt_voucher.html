@@ -446,9 +446,17 @@
             const accCode = $('#hdnDebitAccCode').val();
             const accTitle = $('#hdnDebitAccTitle').val();
             const pType = $('#cmbPaymentType option:selected').text();
-            const pTypeId = parseInt($('#cmbPaymentType').val()) || 1;
+            /* The desktop reads this with Conversion.ToInt(cell), which is 0 when the
+               picker is unset — never 1 (ReceiptsVoucherNew.cs:702/698,
+               VoucherEntry.cs:1757). A || 1 default silently posted the line
+               against whatever row happens to hold id 1. */
+            const pTypeId = parseInt($('#cmbPaymentType').val()) || 0;
             const jobLot = $('#cmbJobLot option:selected').text();
-            const jobLotId = parseInt($('#cmbJobLot').val()) || 1;
+            /* The desktop reads this with Conversion.ToInt(cell), which is 0 when the
+               picker is unset — never 1 (ReceiptsVoucherNew.cs:702/698,
+               VoucherEntry.cs:1757). A || 1 default silently posted the line
+               against whatever row happens to hold id 1. */
+            const jobLotId = parseInt($('#cmbJobLot').val()) || 0;
             const remarks = $('#txtLineRemarks').val().trim();
             const amount = parseFloat($('#txtDebitAmount').val()) || 0.0;
 

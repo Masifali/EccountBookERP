@@ -63,12 +63,11 @@ public class MainModulesController {
      * offer a screen the signed-in user's rights do not allow. No model attribute is invented for
      * it; the rights already reach the template as Spring authorities.
      */
-    @GetMapping("/production")
-    public String production(Model model) {
-        model.addAttribute("activeMenu", "production");
-        model.addAttribute("moduleTitle", "Production");
-        return "production/production_module";
-    }
+    /* /production moved to AppMenuController, which renders the desktop's own two levels for
+       the Production APPLICATION — two module cards ("Production 3", "Production Reports 5")
+       and the chosen module's screens underneath. The hand-written landing page this used to
+       return invented its own sections and counts; production_module.html is kept on disk but
+       nothing routes to it. */
 
     @GetMapping("/store")
     public String storeManagement(Model model) {

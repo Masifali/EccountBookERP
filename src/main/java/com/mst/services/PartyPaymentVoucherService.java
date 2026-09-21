@@ -6,6 +6,7 @@ import com.mst.security.CurrentUserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -130,6 +131,19 @@ public class PartyPaymentVoucherService {
         }
     }
 
+    /**
+     * ATOMICITY. This method writes VoucherHead and then, in a loop, VoucherDetail. Without a
+     * transaction each statement autocommits, so a failure part-way through leaves a committed
+     * voucher header with some or none of its lines — a half-posted voucher that no screen shows
+     * as broken. The desktop runs the whole save inside one SqlTransaction
+     * (Architecture.DAL.Accounts.VoucherHead.SetData) and rolls it back on any exception.
+     *
+     * The annotation below is the minimum fix. It does NOT make this method desktop-equivalent:
+     * it still bypasses Sp_VoucherHead_Insert, USP_VoucherBalanceCheck, the history mirror and
+     * the approval row. See PARITY-AUDIT-07 — this screen is queued behind Contra for its own
+     * migration onto the procedure chain.
+     */
+    @Transactional
     public Map<String, Object> saveVoucher(PartyPaymentVoucherDto dto) {
         Map<String, Object> response = new HashMap<>();
         try {
