@@ -146,8 +146,25 @@ function message(text, isError) {
     box.style.display = text ? 'block' : 'none';
 }
 
-function setBusy(on) {
+/*
+ * The five button rules. (1)/(4) every action button is disabled for the whole request and its
+ * prior disabled state is remembered so Update/Delete do not come back enabled on a new
+ * document. (2) the form is marked busy and the button that started it carries a spinner -
+ * previously the buttons simply greyed out with no indicator at all. (3) setBusy is called
+ * synchronously at the top of each action and busyGuard() holds a named lock. (5) every caller
+ * restores through .finally(), so a failed request re-enables exactly like a successful one.
+ */
+function setBusy(on, btnId) {
     busy = on;
+    /* This page has no single form wrapper, so the busy class goes on the toolbar that holds
+       the action buttons rather than on <body>, which would dim the entire page. */
+    var bar = ($('btnSave') && $('btnSave').parentElement) || null;
+    if (bar && bar.classList) bar.classList.toggle('is-busy', !!on);
+    if (on && btnId && $(btnId)) { $(btnId).classList.add('btn-busy'); }
+    if (!on) {
+        Array.prototype.forEach.call(document.querySelectorAll('.btn-busy'),
+            function (b) { b.classList.remove('btn-busy'); });
+    }
     ['btnNew', 'btnRefresh', 'btnSave', 'btnUpdate', 'btnDelete', 'btnLoadSo', 'btnPrint', 'btnHistory', 'btnAddDetail']
         .forEach(function (id) {
             var b = $(id);
@@ -156,6 +173,16 @@ function setBusy(on) {
             else    { b.disabled = b.dataset.wasDisabled === '1'; }
         });
 }
+
+/* Rule 3 - a named lock, so a repeat keypress or a programmatic call cannot re-enter an
+   action that is already running. */
+var poInFlight = {};
+function poGuard(name) {
+    if (poInFlight[name]) return false;
+    poInFlight[name] = true;
+    return true;
+}
+function poRelease(name) { poInFlight[name] = false; }
 
 function getJson(url) {
     return fetch(url, { headers: { 'Accept': 'application/json' } })
@@ -834,12 +861,6 @@ function poAddEmptyBagPmRow() {
     renderEmptyBagsPm();
 }
 
-function poAddEmptyBagPmRow() {
-    /* grdEmptyBagsPm: packing type + material item + rate, entryTypeId = 2 (:3108-3127) */
-    emptyBagPmRows.push({ purchaseOrderEmptyBagDetailId: 0, entryTypeId: 2, packingTypeId: 0, packingType: '', emptyBagPackingMaterialItemId: 0, emptyBagItem: '', rate: 0 });
-    renderEmptyBagsPm();
-}
-
 /* Min/Max weight-cut range for a packing type, as InvPackingType carries it and
    the desktop checks it at save time (:3095-3105). */
 function packingTypeRange(packingTypeId) {
@@ -916,21 +937,12 @@ function renderEmptyBagsPm() {
     });
 }
 
-function renderEmptyBagsPm() {
-    var body = $('grdEmptyBagsPmBody');
-    if (!body) return;
-    body.innerHTML = '';
-    if (!emptyBagPmRows.length) { body.innerHTML = '<tr><td colspan="4">No packing-material rate rows.</td></tr>'; return; }
-    emptyBagPmRows.forEach(function (r, i) {
-        var tr = document.createElement('tr');
-        tr.innerHTML =
-            '<td><button type="button" class="danger" onclick="emptyBagPmRows.splice(' + i + ',1);renderEmptyBagsPm();">X</button></td>' +
-            '<td><select onchange="emptyBagPmRows[' + i + '].packingTypeId=parseInt(this.value,10)||0;emptyBagPmRows[' + i + '].packingType=this.selectedOptions[0].textContent">' + packingTypeOptions(r.packingTypeId) + '</select></td>' +
-            '<td><input type="text" value="' + esc(r.emptyBagItem) + '" oninput="emptyBagPmRows[' + i + '].emptyBagItem=this.value"></td>' +
-            '<td><input type="number" step="0.001" value="' + (r.rate || 0) + '" oninput="emptyBagPmRows[' + i + '].rate=parseFloat(this.value)||0"></td>';
-        body.appendChild(tr);
-    });
-}
+/* NOTE: a SECOND copy of renderEmptyBagsPm() used to follow here and, being later in the
+   file, was the one that actually ran. It drew Empty Bag Item as a free-text box and never
+   set emptyBagPackingMaterialItemId, so the id stayed 0 - and Insert():3111 only keeps a
+   packing-material row when `Conversion.ToInt(r4.Cells["EmptyBagItem"].Value) > 0`. Every
+   packing-material rate row was therefore dropped at save time while the screen reported
+   success. The duplicate is removed; the ValueList version above is the desktop's (:2246-2250). */
 
 function poAddPaymentRow() {
     paymentRows.push({ purchaseOrderPaymentDetailId: 0, paymentTermId: 0, paymentTerm: '', dueDays: 0,
@@ -1062,6 +1074,46 @@ function poValidate() {
 
 /* ------------------------------------------------------------ persistence */
 
+/* ---------------------------------------------------------------------------
+ * The four *Description strings the master carries.
+ *
+ * frmPurchaseOrderCmagt.cs builds them inside the child loops - :3069 (supplier
+ * expense), :3129/:3134 (empty bags, one per entry type) and :3209 (payment
+ * schedule) - and they are real columns on the master, not decoration: a desktop
+ * row always has them populated. The page was sending none, so every web-written
+ * order had four empty columns a desktop-written one does not.
+ *
+ * The formats below are the desktop's own interpolated strings, character for
+ * character, so the stored text matches what the desktop would have stored.
+ * --------------------------------------------------------------------------- */
+function expenseDescription(rows) {
+    return rows.map(function (x) {
+        return '[Item:' + (x.ItemId || x.itemId || 0) + ':' + (x.OtherItemName || x.otherItemName || '')
+             + ', Qty:' + (x.Qty || x.qty || 0) + ',Rate:' + (x.rate || 0) + ',Amount:' + (x.amount || 0) + ']';
+    }).join(', ');
+}
+function emptyBagDescription(rows) {
+    return rows.map(function (x) {
+        return '[PackingType:' + (x.packingTypeId || 0) + ':' + (x.packingType || '')
+             + ', WeightCut:' + (x.weightCutKg || 0) + ']';
+    }).join(', ');
+}
+function emptyBagPmDescription(rows) {
+    return rows.map(function (x) {
+        return '[PackingType:' + (x.packingTypeId || 0) + ':' + (x.packingType || '')
+             + ',Rate:' + (x.rate || 0) + '],EmptyBagItem:' + (x.emptyBagItem || '');
+    }).join(', ');
+}
+function paymentScheduleDescription(rows) {
+    return rows.map(function (x) {
+        return '[Term:' + (x.paymentTermId || 0) + ':' + (x.paymentTerm || '')
+             + ',DueDays:' + (x.dueDays || 0)
+             + ',%OfTotal:' + (x.pctOfTotal || 0)
+             + ',DueAmount:' + (x.dueAmount || 0)
+             + ',BaseDateType:' + (x.baseDueDateTypeId || 0) + ']';
+    }).join(', ');
+}
+
 function buildPayload() {
     var recId = intOf('purchaseOrderMasterId');
 
@@ -1094,9 +1146,21 @@ function buildPayload() {
         isSupplierOtherChargesAllowed: $('chkOtherExpenseAllowed').checked,
         ebWeightDeductionTermId: parseInt((document.querySelector('input[name="ebTerm"]:checked') || {}).value || '3', 10),
 
+        paymentScheduleDescription: paymentScheduleDescription(buildPaymentRows()),
+        purchaseOrderSupplierExpenseDetailDescription:
+            expenseDescription(expenseRows.filter(function (r) { return (+r.amount || 0) !== 0; })),
+        purchaseOrderEmptyBagDetailDescription:   emptyBagDescription(emptyBagRows),
+        purchaseOrderEmptyBagDetailDescriptionII: emptyBagPmDescription(emptyBagPmRows),
+
         purchaseOrderDetailList: details,
         purchaseOrderSupplierExpenseDetailList: expenseRows.filter(function (r) { return (+r.amount || 0) !== 0; }),
-        purchaseOrderEmptyBagDetailList: emptyBagRows.concat(emptyBagPmRows),
+        /* :3111 - a packing-material row only counts when BOTH the packing type and the
+           material item are chosen; the desktop skips the row otherwise. Sending an
+           unfilled row would let the procedure write a zero-id child. */
+        purchaseOrderEmptyBagDetailList: emptyBagRows.concat(
+            emptyBagPmRows.filter(function (r) {
+                return (+r.emptyBagPackingMaterialItemId || 0) > 0 && (+r.packingTypeId || 0) > 0;
+            })),
         purchaseOrderCommissionDetailList: buildCommissionRows(),
         purchaseOrderPaymentDetailList: buildPaymentRows(),
         purchaseOrderSaleOrderMappingList: saleOrderMappings
@@ -1165,14 +1229,14 @@ function buildPaymentRows() {
 var saleOrderMappings = [];
 
 function poSave() {
-    if (busy) return;
+    if (busy || !poGuard('save')) return;
     var err = poValidate();
     if (err) { message(err, true); return; }
 
     var isUpdate = intOf('purchaseOrderMasterId') > 0;
     if (!confirm(isUpdate ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
 
-    setBusy(true);
+    setBusy(true, isUpdate ? 'btnUpdate' : 'btnSave');
     message('');
     fetch(API + '/save', {
         method: 'POST',
@@ -1192,7 +1256,7 @@ function poSave() {
             }
         })
         .catch(function (e) { message('Save failed: ' + e.message, true); })
-        .finally(function () { setBusy(false); });
+        .finally(function () { setBusy(false); poRelease('save'); });
 }
 
 function poLoad(id) {
@@ -1242,10 +1306,11 @@ function poLoad(id) {
 }
 
 function poDelete() {
+    if (busy || !poGuard('delete')) return;
     var id = intOf('purchaseOrderMasterId');
-    if (!id) { message('No record found to Delete', true); return; }
-    if (!confirm('Are you sure to Delete?')) return;
-    setBusy(true);
+    if (!id) { poRelease('delete'); message('No record found to Delete', true); return; }
+    if (!confirm('Are you sure to Delete?')) { poRelease('delete'); return; }
+    setBusy(true, 'btnDelete');
     fetch(API + '/' + id, { method: 'DELETE' })
         .then(function (r) { return r.json().catch(function () { return { success: r.ok }; }); })
         .then(function (d) {
@@ -1253,11 +1318,12 @@ function poDelete() {
             else message((d && d.message) || 'Delete was refused.', true);
         })
         .catch(function (e) { message('Delete failed: ' + e.message, true); })
-        .finally(function () { setBusy(false); });
+        .finally(function () { setBusy(false); poRelease('delete'); });
 }
 
 function poLoadHistory() {
-    setBusy(true);
+    if (busy || !poGuard('history')) return;
+    setBusy(true, 'btnHistory');
     var q = '?fromDate=' + encodeURIComponent(val('histFromDate')) + '&toDate=' + encodeURIComponent(val('histToDate'));
     getJson(API + '/history' + q)
         .then(function (rows) {
@@ -1282,7 +1348,7 @@ function poLoadHistory() {
             });
         })
         .catch(function (e) { message('History failed: ' + e.message, true); })
-        .finally(function () { setBusy(false); });
+        .finally(function () { setBusy(false); poRelease('history'); });
 }
 
 /* --------------------------------------------------------------- toolbar */

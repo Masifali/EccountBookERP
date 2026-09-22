@@ -1,5 +1,7 @@
 package com.mst.services.sale;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.security.CurrentUserContext;
 
 import com.mst.models.sale.dto.*;
@@ -859,14 +861,16 @@ public class SaleOrderService {
                         null, // @SecondaryUomQty
                         null  // @SecondaryUomItemRate
                 };
-                jdbcTemplate.update(SQL_DETAIL_SAVE, dp);
+                ProcExec.call(jdbcTemplate, SQL_DETAIL_SAVE, dp);
             }
 
             // ---- Payment Detail - pure insert, SortNo assigned in list order (ditto desktop) ----
             int sortNo = 1;
             for (SaleOrderPaymentScheduleDto p : paymentRows) {
-                jdbcTemplate.update(SQL_PAYMENT_TERM_INSERT,
-                        null, newId, p.getPaymentTermId(), nz(p.getPercentOfTotal()), nz(p.getAmount()),
+                /* @Id is 0 for a new row, not null: SaleOrderPaymentTermsDetail.Id is `public int`
+                   on the desktop model, and the procedure branches on it. */
+                ProcExec.call(jdbcTemplate, SQL_PAYMENT_TERM_INSERT,
+                        0, newId, p.getPaymentTermId(), nz(p.getPercentOfTotal()), nz(p.getAmount()),
                         p.getDueDays(), p.getRemarks(), sortNo++, parseDate(p.getDueDate()));
             }
 
@@ -889,8 +893,9 @@ public class SaleOrderService {
                 if (remarks == null || remarks.isBlank() || "0".equals(remarks)) {
                     remarks = (e.getItemName() != null ? e.getItemName() : "") + " : " + nz(e.getQuantity()) + "  @" + nz(e.getRate());
                 }
-                jdbcTemplate.update(SQL_CUSTOMER_EXPENSE_INSERT,
-                        null, newId, e.getItemId(), nz(e.getQuantity()), nz(e.getRate()), nz(e.getAmount()), remarks);
+                /* SaleOrderCustomerExpenses.Id is `public int` - 0, not null. */
+                ProcExec.call(jdbcTemplate, SQL_CUSTOMER_EXPENSE_INSERT,
+                        0, newId, e.getItemId(), nz(e.getQuantity()), nz(e.getRate()), nz(e.getAmount()), remarks);
             }
 
             // ---- Document Approval Detail - ditto the real DAL's own explicit call after the
@@ -898,7 +903,7 @@ public class SaleOrderService {
             // this internally with LimitAmount=NULL right after its own INSERT; this second,
             // explicit call is what the DAL does to set the real amount - the proc's own delete-
             // then-reinsert semantics make the two calls safely idempotent together). ----
-            jdbcTemplate.update(SQL_DOCUMENT_APPROVAL_DETAIL_INSERT,
+            ProcExec.call(jdbcTemplate, SQL_DOCUMENT_APPROVAL_DETAIL_INSERT,
                     orgId, compId, SALE_ORDER_DOCUMENT_TYPE_ID, newId, limitAmount);
 
             Map<String, Object> saved = getSaleOrderById(newId);

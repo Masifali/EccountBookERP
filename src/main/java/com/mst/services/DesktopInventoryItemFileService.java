@@ -1,5 +1,7 @@
 package com.mst.services;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.models.UserAccount;
 import com.mst.models.dto.InventoryPosItemRequest;
 import com.mst.models.dto.InventoryGeneralItemRequest;
@@ -37,7 +39,7 @@ public class DesktopInventoryItemFileService {
         var existing=attachments(u,item);
         for(Integer removed:new LinkedHashSet<>(r.removeAttachmentIds)){
             if(removed==null||existing.stream().noneMatch(a->((Number)a.get("Id")).intValue()==removed))throw new IllegalArgumentException("Attachment does not belong to this item");
-            jdbc.update("EXEC dbo.Sp_DMSAttachments_GetAllMethod @Id=?, @Activity=?",removed,"AttachmentDeleteById");
+            ProcExec.call(jdbc, "EXEC dbo.Sp_DMSAttachments_GetAllMethod @Id=?, @Activity=?",removed,"AttachmentDeleteById");
             // Keep existing physical objects: legacy filenames can be shared across forms.
             // Only files created by the current failed transaction are physically cleaned up.
         }

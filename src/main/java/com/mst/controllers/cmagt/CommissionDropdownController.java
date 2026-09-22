@@ -101,6 +101,18 @@ public class CommissionDropdownController {
     // ========================================================== 1052 lookups
 
     /** CmbBranch. The user id comes from the session, never from the caller. */
+    /** vehicleTypefill() - Sp_VehicleType_GetAllMethod @Activity='ReadAll'. */
+    @GetMapping("/vehicle-types")
+    public List<Map<String, Object>> vehicleTypes() {
+        return service.vehicleTypes();
+    }
+
+    /** CityBindFromGlobal() - Loading City and Un-Loading City share this one list. */
+    @GetMapping("/cities")
+    public List<Map<String, Object>> cities() {
+        return service.cities();
+    }
+
     @GetMapping("/branches")
     public List<Map<String, Object>> branches() { return service.branches(); }
 
@@ -167,5 +179,16 @@ public class CommissionDropdownController {
     public List<Map<String, Object>> analysisGroupParameters(
             @RequestParam(defaultValue = "0") int analysisGroupId) {
         return service.analysisGroupParameters(analysisGroupId);
+    }
+
+    /**
+     * GetCommissionAgentConfigurationsFromGlobalandBind — the seven Commission Agent Portal
+     * configuration ids a NEW document pre-selects, plus the two static desktop seeds.
+     * Values of 0 mean "not configured": the page must leave that control alone rather than
+     * substitute anything.
+     */
+    @GetMapping("/config-defaults")
+    public Map<String, Object> configDefaults() {
+        return service.commissionPortalDefaults();
     }
 }

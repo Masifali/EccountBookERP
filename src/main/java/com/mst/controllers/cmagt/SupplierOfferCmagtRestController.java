@@ -1,6 +1,8 @@
 package com.mst.controllers.cmagt;
 
 import com.mst.models.cmagt.dto.SupplierOfferCmagtDto;
+import com.mst.models.cmagt.dto.PurchaseOrderMasterCmagtDto;
+import com.mst.services.cmagt.SupplierOfferCmagtSaveService;
 import com.mst.security.CurrentUserContext;
 import com.mst.services.cmagt.SupplierOfferCmagtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,91 +14,90 @@ import java.util.*;
 @RequestMapping("/api/commission/supplier-offer")
 public class SupplierOfferCmagtRestController {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private SupplierOfferCmagtSaveService saveService;
+
+
     @Autowired
     private SupplierOfferCmagtService service;
 
     @Autowired
     private CurrentUserContext currentUserContext;
 
+    /** DocumentNoFill -> BLL GenerateCode, @DocumentTypeId fixed at this form's own 1051. */
     @GetMapping("/generate-no")
-    public Map<String, Object> generateNextNo(@RequestParam(defaultValue = "1051") Integer docTypeId) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int branchId = currentUserContext.currentBranchId();
-        int yearId = currentUserContext.currentFinancialYearId();
-        int docNo = service.generateNextDocNo(orgId, compId, branchId, yearId, docTypeId);
-        Map<String, Object> res = new HashMap<>();
-        res.put("docNo", docNo);
-        return res;
+    public Map<String, Object> generateNextNo() {
+        Map<String, Object> r = new java.util.LinkedHashMap<>();
+        r.put("docNo", saveService.generateNextDocNo());
+        return r;
     }
 
+    /**
+     * ReadById plus all seven child collections, through
+     * [cmagt].[USP_purchaseOrderMaster_GetAllMethod] - the same family Save now writes to.
+     * It previously read [cmagt].[USP_SupplierOfferMaster_GetAllMethod], so the screen would
+     * have saved to one table family and read from another.
+     */
     @GetMapping("/{id}")
     public Map<String, Object> getById(@PathVariable Integer id) {
-        return service.getById(id);
+        return saveService.getById(id);
     }
 
+    /**
+     * Supplier Offer save — now on the SAME contract the desktop uses.
+     *
+     * frmSupplierOfferCmagt:3357 calls purchaseOrderMaster.Save(obj) with DocumentTypeId 1051.
+     * This endpoint previously posted a SupplierOfferCmagtDto into
+     * [cmagt].[USP_SupplierOfferMaster_InsertAndUpdate], a procedure family belonging to a BLL
+     * and model that NO desktop form constructs — so a web-saved offer landed in a different
+     * table family from the one the desktop reads.
+     *
+     * The old endpoint is kept, disabled, at /save-legacy-donotuse so nothing silently keeps
+     * writing to the orphaned family.
+     */
     @PostMapping("/save")
-    public Map<String, Object> saveRecord(@RequestBody SupplierOfferCmagtDto dto) {
-        if (dto.getOrganizationId() == null || dto.getOrganizationId() == 0) {
-            dto.setOrganizationId(currentUserContext.currentOrganizationId());
-        }
-        if (dto.getCompanyId() == null || dto.getCompanyId() == 0) {
-            dto.setCompanyId(currentUserContext.currentCompanyId());
-        }
-        if (dto.getBranchId() == null || dto.getBranchId() == 0) {
-            dto.setBranchId(currentUserContext.currentBranchId());
-        }
-        if (dto.getFinancialYearId() == null || dto.getFinancialYearId() == 0) {
-            dto.setFinancialYearId(currentUserContext.currentFinancialYearId());
-        }
-        if (dto.getEntryUserId() == null || dto.getEntryUserId() == 0) {
-            dto.setEntryUserId(currentUserContext.currentUserId());
-        }
-        return service.saveRecord(dto);
+    public Map<String, Object> saveRecord(@RequestBody PurchaseOrderMasterCmagtDto dto) {
+        return saveService.saveOrUpdate(dto);
     }
 
-    @PostMapping("/delete/{id}")
+    @PostMapping("/save-legacy-donotuse")
+    public Map<String, Object> saveRecordLegacy(@RequestBody SupplierOfferCmagtDto dto) {
+        throw new UnsupportedOperationException(
+                "Disabled: [cmagt].[USP_SupplierOfferMaster_InsertAndUpdate] belongs to a BLL/model "
+              + "no desktop form constructs. Use POST /api/commission/supplier-offer/save, which "
+              + "writes through [cmagt].[USP_purchaseOrderMaster_InsertAndUpdate] with "
+              + "DocumentTypeId 1051, as frmSupplierOfferCmagt does.");
+    }
+
+    /** BLL DeleteByID - @EntryUserId, @Id, @Activity='DeleteById'. Not a JPA delete. */
+    @RequestMapping(value = {"/delete/{id}", "/{id}"},
+                    method = {RequestMethod.POST, RequestMethod.DELETE})
     public Map<String, Object> deleteRecord(@PathVariable Integer id) {
-        int userId = currentUserContext.currentUserId();
-        return service.deleteRecord(userId, id);
+        Map<String, Object> r = saveService.deleteById(id);
+        r.put("success", !"ERROR".equals(String.valueOf(r.get("status"))));
+        return r;
     }
 
+    /**
+     * FormHistory — [cmagt].[USP_purchaseOrderMaster_GetAllMethod], DocumentTypeId 1051.
+     *
+     * Six parameters are always sent, including @CanViewAllRecord; @EntryUserId, @FromDate and
+     * @ToDate are guarded in the BLL and omitted when unset. When the right is absent the
+     * desktop pins EntryUser to the current user, so the operator sees only their own
+     * documents — reproduced in the service.
+     *
+     * The old body read the orphaned SupplierOffer family and took its own tenancy arguments.
+     */
     @RequestMapping(value = "/history", method = {RequestMethod.GET, RequestMethod.POST})
     public List<Map<String, Object>> getHistory(
             @RequestBody(required = false) Map<String, Object> payload,
             @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate,
-            @RequestParam(required = false) Integer fromDocNo,
-            @RequestParam(required = false) Integer toDocNo,
-            @RequestParam(required = false) Integer commissionAgentId,
-            @RequestParam(required = false) Integer supplierId,
-            @RequestParam(required = false) Integer itemId) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int branchId = currentUserContext.currentBranchId();
-        int yearId = currentUserContext.currentFinancialYearId();
-        int userId = currentUserContext.currentUserId();
-
+            @RequestParam(required = false) String toDate) {
         if (payload != null) {
             if (payload.get("fromDate") != null) fromDate = payload.get("fromDate").toString();
-            if (payload.get("toDate") != null) toDate = payload.get("toDate").toString();
-            if (payload.get("fromDocNo") != null && !payload.get("fromDocNo").toString().isEmpty()) {
-                fromDocNo = Integer.parseInt(payload.get("fromDocNo").toString());
-            }
-            if (payload.get("toDocNo") != null && !payload.get("toDocNo").toString().isEmpty()) {
-                toDocNo = Integer.parseInt(payload.get("toDocNo").toString());
-            }
-            if (payload.get("commissionAgentId") != null && !payload.get("commissionAgentId").toString().isEmpty()) {
-                commissionAgentId = Integer.parseInt(payload.get("commissionAgentId").toString());
-            }
-            if (payload.get("supplierId") != null && !payload.get("supplierId").toString().isEmpty()) {
-                supplierId = Integer.parseInt(payload.get("supplierId").toString());
-            }
-            if (payload.get("itemId") != null && !payload.get("itemId").toString().isEmpty()) {
-                itemId = Integer.parseInt(payload.get("itemId").toString());
-            }
+            if (payload.get("toDate") != null)   toDate   = payload.get("toDate").toString();
         }
-
-        return service.getHistory(orgId, compId, branchId, yearId, true, userId, fromDate, toDate, fromDocNo, toDocNo, null, commissionAgentId, supplierId, itemId);
+        return saveService.formHistory(fromDate, toDate);
     }
+
 }

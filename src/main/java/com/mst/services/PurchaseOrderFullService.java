@@ -1,5 +1,7 @@
 package com.mst.services;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.models.dto.PurchaseOrderFullDto;
 import com.mst.repositories.PurchaseOrderHeaderRepository;
 import com.mst.security.CurrentUserContext;
@@ -12,6 +14,10 @@ import java.util.*;
 
 @Service
 public class PurchaseOrderFullService {
+
+    private static final org.slf4j.Logger CHARGE_ACCT_LOG =
+            org.slf4j.LoggerFactory.getLogger(PurchaseOrderFullService.class);
+
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -189,6 +195,69 @@ public class PurchaseOrderFullService {
         out.put("weightCutForJuteBags",     purchaseOrderHeaderRepository.config(orgId, compId, "WeightCutForJuteBags"));
         out.put("weightCutForPPBags",       purchaseOrderHeaderRepository.config(orgId, compId, "WeightCutForPPBags"));
         return out;
+    }
+
+    /**
+     * CropYear() - PurchsaeOrder.cs:1584.
+     *
+     * The page had NO crop-year source at all: #txtCropYear was a read-only textbox that was only
+     * ever written when an existing line was opened for editing, so on a new line it stayed blank
+     * and the detail row carried an empty Crop with a null CropYearId.
+     *
+     * The desktop binds a combo:
+     *     CommonServices.CropYearGetAllService() -> BLL 0571 InvCropYear.Getall
+     *     -> Sp_InvCropYear_GetAllMethod @OrganizationId, @CompanyId, @Activity='ReadAll'
+     *     -> DDL.BindDDLNew(dtCrop, CmbCropyr, "Id", "CropYear", "Crop Year", true)
+     *
+     * Two columns, Id hidden, one captioned column - and ZeroIndex true, so the list opens on
+     * "...Select Any Value...".
+     */
+    public List<Map<String, Object>> getCropYears() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(
+                "EXEC dbo.Sp_InvCropYear_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                "ReadAll")) {
+            Object id   = ci(r, "Id");
+            Object name = ci(r, "CropYear");
+            if (name == null) continue;
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", id);
+            m.put("cropYear", name);
+            m.put("description", name);
+            out.add(m);
+        }
+        return out;
+    }
+
+    /**
+     * defaultConfiquration() - PurchsaeOrder.cs:1617.
+     *
+     * Three of the five values it reads pick a row in a combo rather than filling a textbox, and
+     * none of them reached the web: Job/Lot, Default Crop Year and City Area. They are returned
+     * as ids for the page to select, exactly as the desktop assigns combjob.Value, CmbCropyr.Value
+     * and combcityarea.Value. A configuration that is absent or 0 selects nothing - the desktop's
+     * own "if (Id > 0)" guard - rather than falling back to the first row.
+     */
+    public Map<String, Object> getComboDefaults() {
+        int orgId  = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("jobLotId",   configInt(orgId, compId, "Job/Lot"));
+        out.put("cropYearId", configInt(orgId, compId, "Default Crop Year"));
+        out.put("cityId",     configInt(orgId, compId, "City Area"));
+        return out;
+    }
+
+    private int configInt(int orgId, int compId, String name) {
+        try {
+            String v = purchaseOrderHeaderRepository.config(orgId, compId, name);
+            if (v == null || v.trim().isEmpty()) return 0;
+            return (int) Double.parseDouble(v.trim());
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     /**
@@ -399,27 +468,33 @@ public class PurchaseOrderFullService {
             int parent = parentCategoryId == null ? 0 : parentCategoryId;
 
             List<Map<String, Object>> out = new ArrayList<>();
+            /* Every column is read through ci() - the case-tolerant reader this class already
+               uses elsewhere "because procedures and tables disagree about capitalisation".
+               r.get() is exact-match, so one differing letter in InventoryParentCategoriesId made
+               intOf(null) = 0 for every row and, the moment a category was chosen (parent > 0),
+               the `!= parent` test dropped the WHOLE list - an empty Item dropdown, and with it an
+               empty Item Category list, since the page derives the categories from these rows. */
             for (Map<String, Object> r : raw) {
-                int typeOfType = intOf(r.get("ItemTypeOfTypeId"));
+                int typeOfType = intOf(ci(r, "ItemTypeOfTypeId"));
                 if (typeOfType == 14 || typeOfType == 17) continue;          /* desktop :1238, :1293 */
 
-                if (parent > 0 && intOf(r.get("InventoryParentCategoriesId")) != parent) continue;
+                if (parent > 0 && intOf(ci(r, "InventoryParentCategoriesId")) != parent) continue;
 
-                String name = strOf(r.get("ItemName"));
-                String code = strOf(r.get("ItemCode"));
+                String name = strOf(ci(r, "ItemName"));
+                String code = strOf(ci(r, "ItemCode"));
                 if (!q.isEmpty()
                         && !name.toLowerCase().contains(q)
                         && !code.toLowerCase().contains(q)) continue;
 
                 Map<String, Object> m = new LinkedHashMap<>();
-                m.put("id", intOf(r.get("Id")));
+                m.put("id", intOf(ci(r, "Id")));
                 m.put("itemName", name);
                 m.put("itemCode", code);
-                m.put("itemCategoryId", intOf(r.get("ItemCategoryId")));
-                m.put("itemCategory", strOf(r.get("ItemCategory")));
-                m.put("itemTypeId", intOf(r.get("ItemTypeId")));
-                m.put("itemType", strOf(r.get("ItemType")));
-                m.put("inventoryParentCategoriesId", intOf(r.get("InventoryParentCategoriesId")));
+                m.put("itemCategoryId", intOf(ci(r, "ItemCategoryId")));
+                m.put("itemCategory", strOf(ci(r, "ItemCategory")));
+                m.put("itemTypeId", intOf(ci(r, "ItemTypeId")));
+                m.put("itemType", strOf(ci(r, "ItemType")));
+                m.put("inventoryParentCategoriesId", intOf(ci(r, "InventoryParentCategoriesId")));
                 /* The procedure carries no purchase price; the screen only uses it to prefill the
                    rate, and a prefilled 0 is what it already did whenever the column was null. */
                 m.put("purchasePrice", 0);
@@ -430,8 +505,11 @@ public class PurchaseOrderFullService {
             out.sort((a, b) -> String.valueOf(a.get("itemName")).compareToIgnoreCase(String.valueOf(b.get("itemName"))));
             return out;
         } catch (Exception e) {
+            /* This used to log and return an empty list. An empty Item dropdown and a failed one
+               then looked identical on the page, and the Item Category list - which the page
+               derives from these rows - went empty with it. The caller now sees the failure. */
             LOG_ITEMS(e);
-            return Collections.emptyList();
+            throw new RuntimeException("Item list failed: " + e.getMessage(), e);
         }
     }
 
@@ -1085,20 +1163,76 @@ public class PurchaseOrderFullService {
         }
     }
 
-    /** Real Chart of Account (4th-level/Detail) dropdown for "Account Credit _Charge to Product",
-     *  based on CommonServices.CoaAllocationAccountTitleByAccountTypeIds(null, "2,11,12,13,14,15,20,21,22"),
-     *  with AccountTypeId=4 ('Inventory') added to the exclusion list to keep per-product Stock A/c
-     *  accounts out of this dropdown - see the comment above SQL_COA_ACCOUNTS_FOR_CHARGE_TO_PRODUCT. */
-    public List<Map<String, Object>> getAccountsForChargeToProduct() {
+    /**
+     * AccountTitleFill() - PurchsaeOrder.cs:1508, feeding grdChargeToProductRefresh():3139.
+     *
+     * ---------------------------------------------------------------------------------------
+     * TWO THINGS WERE WRONG HERE
+     * ---------------------------------------------------------------------------------------
+     * 1. The desktop has TWO sources, chosen by the SubsidiaryAccountAllownOnVouchers feature
+     *    (ERPFeatures id 4), and only the second was implemented:
+     *
+     *      feature ON  -> CommonServices.GetVendorsAndCustomers(1)
+     *                     -> BLL 0600 SupplierCustomer.GetVendorsAndCustomers
+     *                     -> USP_GetVendorsAndCustomers @OrganizationId, @CompanyId, @PartyTypeId=1
+     *                     rows are (GlAccountId, Id, CompanyName) and the grid then binds the
+     *                     value list on SupplierCustomerId (:3150) - PARTIES, not accounts.
+     *      feature OFF -> CoaAllocationAccountTitleByAccountTypeIds(null, "2,11,12,,13,14,15,20,21,22")
+     *                     rows are (Id, 0, AccountTitle) bound on Id (:3155).
+     *
+     *    With the feature on, the web offered chart-of-account titles where the desktop offers
+     *    supplier and customer names, and stored a GlAccountId where the desktop stores a
+     *    SupplierCustomerId.
+     *
+     * 2. The exclusion list had an id the desktop does not exclude. The desktop passes
+     *    "2,11,12,,13,14,15,20,21,22"; this passed "2,4,11,12,13,14,15,20,21,22", adding 4
+     *    ('Inventory') on the reasoning that per-product Stock A/c rows did not belong in the
+     *    list. That is an invented filter - it hides accounts the desktop shows - so the
+     *    desktop's own string is used verbatim, empty element and all.
+     */
+    private static final int ERP_FEATURE_SUBSIDIARY_ACCOUNT_ON_VOUCHERS = 4;
+
+    private boolean subsidiaryAccountAllowedOnVouchers(int orgId, int compId) {
         try {
-            int orgId = currentUserContext.currentOrganizationId();
-            int compId = currentUserContext.currentCompanyId();
-            int userId = currentUserContext.currentUserId();
-            return jdbcTemplate.queryForList(SQL_COA_ACCOUNTS_FOR_CHARGE_TO_PRODUCT,
-                    orgId, compId, userId, 1, "2,4,11,12,13,14,15,20,21,22", "GetAccountTitleByAccountTypeIds");
+            for (Map<String, Object> r : jdbcTemplate.queryForList(
+                    "EXEC Sp_ERPFeatures_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
+                    orgId, compId, "GetErpFeaturesByCompanyId")) {
+                Object id = ci(r, "Id");
+                if (id != null && intOf(id) == ERP_FEATURE_SUBSIDIARY_ACCOUNT_ON_VOUCHERS) return true;
+            }
         } catch (Exception e) {
-            return Collections.emptyList();
+            CHARGE_ACCT_LOG.warn("ERP feature read failed; falling back to the chart-of-accounts "
+                    + "branch, which is what the desktop does when the feature is off", e);
         }
+        return false;
+    }
+
+    public List<Map<String, Object>> getAccountsForChargeToProduct() {
+        int orgId  = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+
+        if (subsidiaryAccountAllowedOnVouchers(orgId, compId)) {
+            List<Map<String, Object>> out = new ArrayList<>();
+            for (Map<String, Object> r : jdbcTemplate.queryForList(
+                    "EXEC USP_GetVendorsAndCustomers @OrganizationId=?, @CompanyId=?, @PartyTypeId=?",
+                    orgId, compId, 1)) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                /* :1520 - Id column carries GlAccountId, SupplierCustomerId carries the party Id,
+                   and :3150 binds the value list on SupplierCustomerId when the feature is on. */
+                m.put("Id",                 intOf(ci(r, "Id")));
+                m.put("GlAccountId",        intOf(ci(r, "GlAccountId")));
+                m.put("SupplierCustomerId", intOf(ci(r, "Id")));
+                m.put("AccountTitle",       strOf(ci(r, "CompanyName")));
+                m.put("AccountCode",        strOf(ci(r, "PartyCode")));
+                m.put("bindOn",             "SupplierCustomerId");
+                out.add(m);
+            }
+            return out;
+        }
+
+        return jdbcTemplate.queryForList(SQL_COA_ACCOUNTS_FOR_CHARGE_TO_PRODUCT,
+                orgId, compId, currentUserContext.currentUserId(), 1,
+                "2,11,12,,13,14,15,20,21,22", "GetAccountTitleByAccountTypeIds");
     }
 
     /** Real read of existing Supplier Expense rows for a given, already-saved Purchase Order Id. */
@@ -1154,8 +1288,15 @@ public class PurchaseOrderFullService {
             if (remarks == null || remarks.trim().isEmpty() || "0".equals(remarks.trim())) {
                 remarks = "Expense : " + (row.getOtherItemName() != null ? row.getOtherItemName() : "") + "  Qty" + row.getQty() + "  @" + row.getRate();
             }
-            jdbcTemplate.update(SQL_SUPPLIER_EXPENSE_INSERT,
-                    null, purchaseOrderId, itemId,
+            /* @Id is 0 for a new row, NEVER null.
+               PurchaseOrderPaymentTermsDetail.Id, PurchaseOrderSupplierExpense.Id,
+               PurchaseOrderExpensesChargeToProduct.Id and PurchaseorderEmptyBags.Id are all
+               declared `public int Id` on the desktop models, so an unassigned Id reaches the
+               procedure as 0 - the CLR default of a value type - and these procedures branch on
+               it to choose INSERT over UPDATE. NULL is not 0 to SQL Server: `@Id = 0` is UNKNOWN
+               when @Id is NULL, so the insert branch would simply not be taken. */
+            ProcExec.call(jdbcTemplate, SQL_SUPPLIER_EXPENSE_INSERT,
+                    0, purchaseOrderId, itemId,
                     row.getQty() != null ? row.getQty() : 0.0,
                     row.getRate() != null ? row.getRate() : 0.0,
                     amount, remarks);
@@ -1183,8 +1324,8 @@ public class PurchaseOrderFullService {
             if (accountId == 0) {
                 throw new IllegalArgumentException("AccountTitle Field Required");
             }
-            jdbcTemplate.update(SQL_CHARGE_TO_PRODUCT_INSERT,
-                    null, purchaseOrderId, accountId,
+            ProcExec.call(jdbcTemplate, SQL_CHARGE_TO_PRODUCT_INSERT,
+                    0, purchaseOrderId, accountId,
                     row.getPercentage() != null ? row.getPercentage() : 0.0,
                     row.getQty() != null ? row.getQty() : 0.0,
                     row.getRate() != null ? row.getRate() : 0.0,
@@ -1216,8 +1357,8 @@ public class PurchaseOrderFullService {
             if (paymentTermId == 2 && dueDays <= 0) {
                 throw new IllegalArgumentException("Due Days Required In case Of Credit row in row#" + sortNo);
             }
-            jdbcTemplate.update(SQL_PAYMENT_TERMS_DETAIL_INSERT,
-                    null, purchaseOrderId, paymentTermId,
+            ProcExec.call(jdbcTemplate, SQL_PAYMENT_TERMS_DETAIL_INSERT,
+                    0, purchaseOrderId, paymentTermId,
                     row.getPrcntOfTotal() != null ? row.getPrcntOfTotal() : 0.0,
                     row.getAmount() != null ? row.getAmount() : 0.0,
                     dueDays,
@@ -1454,8 +1595,8 @@ public class PurchaseOrderFullService {
 
         jdbcTemplate.update(SQL_EMPTY_BAGS_DELETE_BY_HEADER, purchaseOrderId);
         for (PurchaseOrderFullDto.PurchaseOrderEmptyBagDto row : rows) {
-            jdbcTemplate.update(SQL_EMPTY_BAGS_INSERT,
-                    null,
+            ProcExec.call(jdbcTemplate, SQL_EMPTY_BAGS_INSERT,
+                    0,
                     purchaseOrderId,
                     row.getType(),
                     row.getItemId() != null ? row.getItemId() : 0,
@@ -1600,8 +1741,31 @@ public class PurchaseOrderFullService {
             if (dto.getSupplierId() == null || dto.getSupplierId() <= 0) {
                 throw new IllegalArgumentException("Supplier / Party is required.");
             }
+            /* ------------------------------------------------------------------------------
+               PurchsaeOrder.cs btnsave_Click :3257-3284 - the checks the desktop runs, in the
+               desktop's own order, with the desktop's own message strings. These are server-side
+               on purpose: a crafted API request must not be able to bypass them.
+               ------------------------------------------------------------------------------ */
             if (dto.getLineItems() == null || dto.getLineItems().isEmpty()) {
-                throw new IllegalArgumentException("At least one detail item is required.");
+                throw new IllegalArgumentException("Detail Information Required");       // :3260
+            }
+            if (dto.getEmptyBags() == null || dto.getEmptyBags().isEmpty()) {
+                throw new IllegalArgumentException("Empty Bags Information Required");   // :3265
+            }
+            int vAgentId   = zero(dto.getCommissionAgentId());
+            double vCommAmt  = dbl(dto.getCommAmount());
+            double vCommRate = dbl(dto.getCommRate());
+            if ((vCommAmt > 0d || vCommRate > 0d) && vAgentId == 0) {                    // :3270
+                throw new IllegalArgumentException(
+                        "Please Select Commission Agent Required when Commission Amount or Rate is Present...");
+            }
+            if (vAgentId > 0 && (vCommAmt == 0d || vCommRate == 0d)) {                   // :3274
+                if (vCommAmt == 0d) {
+                    throw new IllegalArgumentException(
+                            "Commission Amount Required when Commission Agent is Selected...");
+                }
+                throw new IllegalArgumentException(
+                        "Commission Rate Required when Commission Agent is Selected...");
             }
 
             int orgId = currentUserContext.currentOrganizationId();
@@ -1665,11 +1829,28 @@ public class PurchaseOrderFullService {
             head.put("RemarksHeader",  dto.getRemarksHeader() == null ? "" : dto.getRemarksHeader());
             head.put("PaymentTermsId", zero(dto.getPaymentTermId()));
             head.put("OrderDueDays",   zero(dto.getDueDays()));
-            head.put("OrderDueDate",   dateOrNull(dto.getPaymentDueDate()));
+            /* :3309 `po.OrderDueDate = duedate.Value` - an UltraDateTimeEditor assigned into a
+               non-nullable DateTime, so the desktop can never send null here. The editor's own
+               value is set at :5357-5361: DocDate + OrderDueDays, or DateTime.Now when the days
+               box is empty. That is a desktop-owned default, reproduced rather than invented. */
+            java.sql.Date orderDueDate = dateOrNull(dto.getPaymentDueDate());
+            if (orderDueDate == null) {
+                int dueDays = zero(dto.getDueDays());
+                orderDueDate = dueDays > 0
+                        ? java.sql.Date.valueOf(docDateSql.toLocalDate().plusDays(dueDays))  // :5357
+                        : new java.sql.Date(System.currentTimeMillis());                     // :5361
+            }
+            head.put("OrderDueDate",   orderDueDate);
             head.put("OrderExpiryDate", nowTs);                          // :3311 DateTime.Now
             head.put("DeliveryTermId", zero(dto.getDeliveryTermId()));
             head.put("DeliveryTerm",   dto.getDeliveryTermName());
-            head.put("DeliveryStartDate", dateOrNull(dto.getDeliveryStartDate()));
+            /* :3313 `po.DeliveryStartDate = deliverystartdate.Value` - likewise non-nullable.
+               Reset() seeds that editor with DateTime.Now (:3941). */
+            java.sql.Date deliveryStart = dateOrNull(dto.getDeliveryStartDate());
+            if (deliveryStart == null) {
+                deliveryStart = new java.sql.Date(System.currentTimeMillis());                // :3941
+            }
+            head.put("DeliveryStartDate", deliveryStart);
             head.put("DeliveryDays",   zero(dto.getDeliveryDays()));
             head.put("OrderCatagoryId", zero(dto.getOrderCategoryId()));
             head.put("CatagorySrNo",   zero(dto.getCategorySrNo()));
@@ -1685,10 +1866,12 @@ public class PurchaseOrderFullService {
             head.put("PostState",      Boolean.FALSE);
             head.put("OrderTaxable",   Boolean.FALSE);
             /* CurrencyId / ExchangeRate / FcyAmount are written by the desktop (:3318-3320) from
-               cmbCurrency, txtExchangeRate and txtFcyAmount. This web page has no such controls,
-               so they are left unsent and the procedure's own defaults apply. Recorded as an open
-               item rather than filled with an invented rate - a fabricated exchange rate of 1 is
-               exactly the kind of default this port has been removing elsewhere. */
+               cmbCurrency, txtExchangeRate and txtFcyAmount. This web page has no such controls.
+               They are NOT left to the procedure's defaults: an unselected UltraCombo gives
+               Conversion.ToInt(null) == 0 and an empty textbox gives Conversion.ToDecimal("") == 0,
+               so the desktop sends 0 / 0 / 0 for a form in this state. blankModel() already carries
+               those three as the CLR defaults of `int` and `decimal`, which is exactly that. A
+               fabricated exchange rate of 1 would still be wrong; 0 is what the desktop sends. */
 
             /* :3320-3327 - the commission block is written ONLY when an agent is chosen. */
             if (dto.getCommissionAgentId() != null && dto.getCommissionAgentId() > 0) {

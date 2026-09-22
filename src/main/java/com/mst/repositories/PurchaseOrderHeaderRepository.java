@@ -318,9 +318,83 @@ public class PurchaseOrderHeaderRepository {
         try { return Integer.parseInt(String.valueOf(v).trim()); } catch (NumberFormatException e) { return 0; }
     }
 
-    public static Map<String, Object> blankModel() {
+    /*
+     * -----------------------------------------------------------------------------------------
+     * CLR DEFAULTS - why this map exists
+     * -----------------------------------------------------------------------------------------
+     * PurchsaeOrder.cs:3285 begins the save with `PurchaseOrder po = new PurchaseOrder();` and
+     * then assigns only the fields the form owns. GenericProvider.SetProc
+     * (0207_Architecture.DAL.Common.GenericProvider.cs:293-302) afterwards sends EVERY non-virtual
+     * property through SqlCommand.Parameters.AddWithValue("@" + Name, GetValue(obj)). There is no
+     * null handling there and no "skip if unset" branch.
+     *
+     * So a property the form never assigns is still sent, carrying the CLR default of its DECLARED
+     * TYPE: a double is 0.0, an int is 0, a bool is false. Only reference types (string) and the
+     * single nullable property (DateTime? PostDate) are genuinely null on the desktop.
+     *
+     * This map previously blank-filled null for all 63 parameters, which is NOT what the desktop
+     * sends. That is what produced, on the first real save:
+     *
+     *     Cannot insert the value NULL into column 'CommRate',
+     *     table 'GoldenAcedb.dbo.PurchaseOrder'; column does not allow nulls. INSERT fails.
+     *
+     * PurchsaeOrder.cs:3322-3326 writes CommRate/CommAmount only inside `if (agent > 0)`, but
+     * `double CommRate` is 0.0 from the constructor either way, and dbo.PurchaseOrder declares
+     * CommRate and CommAmount as [float] NOT NULL. The guard decides whether to OVERWRITE the
+     * default - it never suppresses the parameter.
+     *
+     * The same divergence - NULL stored where the desktop stores 0 - was reaching ten further
+     * columns silently, because those happen to be nullable: CityId, RefrenenceParty,
+     * SupplierCustomerIdStockParty, BillCalculateTypeId, BaseDocumentTypeId, PostUser,
+     * BrokerAgentId, BrokeryRate, BrokeryUom, BrokeryAmount.
+     *
+     * Types are Architecture.Model.Inventory.PurchaseOrder
+     * (1058_Architecture.Model.Inventory.PurchaseOrder.cs), declaration order preserved:
+     *     bool      x5   -> false
+     *     DateTime  x6   -> null, see the note below
+     *     DateTime? x1   -> null   (PostDate)
+     *     double    x5   -> 0.0d
+     *     decimal   x5   -> BigDecimal.ZERO
+     *     int       x30  -> 0
+     *     string    x11  -> null
+     *
+     * The six non-nullable DateTime properties are deliberately left null here instead of being
+     * given C#'s DateTime.MinValue: 0001-01-01 lies outside the range of a SQL Server [datetime]
+     * column, so the desktop could not store it either. All six are assigned unconditionally by
+     * the form (:3300, :3309, :3310, :3313, :3348, :3351), so their CLR default is never a value
+     * the desktop actually sends. Null here is a guard that fails loudly if a caller forgets one.
+     */
+    private static final Map<String, Object> CLR_DEFAULTS = clrDefaults();
+
+    private static Map<String, Object> clrDefaults() {
         Map<String, Object> m = new LinkedHashMap<>();
-        for (String p : PARAMS) m.put(p, null);
-        return m;
+        for (String p : PARAMS) m.put(p, Integer.valueOf(0));            // int x30 - the majority
+        for (String p : new String[] {                                    // bool x5
+                "IsAproved", "PostState", "OrderTaxable", "CashFreight", "CreditFreight" })
+            m.put(p, Boolean.FALSE);
+        for (String p : new String[] {                                    // double x5
+                "CommAmount", "CommRate", "BrokeryRate", "BrokeryUom", "BrokeryAmount" })
+            m.put(p, Double.valueOf(0d));
+        for (String p : new String[] {                                    // decimal x5
+                "OrderQty", "OrderWeight", "OrderAmount", "ExchangeRate", "FcyAmount" })
+            m.put(p, java.math.BigDecimal.ZERO);
+        for (String p : new String[] {                                    // string x11
+                "BrokeryType", "CommissionRemarks", "CommissionType", "DeliveryRemarks",
+                "DeliveryTerm", "OrderStatus", "OrderType", "RemarksHeader", "SupplierRefNo",
+                "AttachmentsValues", "CustomAttachmentsValues" })
+            m.put(p, null);
+        for (String p : new String[] {                                    // DateTime x6 + DateTime? x1
+                "DeliveryStartDate", "DocDate", "EntryDate", "ModifyDate",
+                "OrderDueDate", "OrderExpiryDate", "PostDate" })
+            m.put(p, null);
+        return java.util.Collections.unmodifiableMap(m);
+    }
+
+    /**
+     * A fresh `new PurchaseOrder()` as the desktop constructs it at PurchsaeOrder.cs:3285 - every
+     * value-type property already carrying its CLR default, not null.
+     */
+    public static Map<String, Object> blankModel() {
+        return new LinkedHashMap<>(CLR_DEFAULTS);
     }
 }

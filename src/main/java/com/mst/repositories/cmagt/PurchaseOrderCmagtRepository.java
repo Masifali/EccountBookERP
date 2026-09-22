@@ -46,12 +46,15 @@ public class PurchaseOrderCmagtRepository {
             masterParams.addValue("ShipToAddress", dto.getShipToAddress() != null ? dto.getShipToAddress() : "");
             masterParams.addValue("paymentScheduleDescription", dto.getPaymentScheduleDescription() != null ? dto.getPaymentScheduleDescription() : "");
 
-            masterParams.addValue("organizationId", dto.getOrganizationId() != null ? dto.getOrganizationId() : 1);
-            masterParams.addValue("companyId", dto.getCompanyId() != null ? dto.getCompanyId() : 1);
-            masterParams.addValue("branchId", dto.getBranchId() != null ? dto.getBranchId() : 1);
-            masterParams.addValue("financialYearId", dto.getFinancialYearId() != null ? dto.getFinancialYearId() : 1);
-            masterParams.addValue("entryUserId", dto.getEntryUserId() != null ? dto.getEntryUserId() : 1);
-            masterParams.addValue("modifyUserId", dto.getModifyUserId() != null ? dto.getModifyUserId() : 1);
+            /* Set by the service from the session before this runs. The ': 1'
+               fallbacks that used to sit here could file a document against
+               company 1, or under user 1, whenever the payload omitted them. */
+            masterParams.addValue("organizationId", dto.getOrganizationId());
+            masterParams.addValue("companyId", dto.getCompanyId());
+            masterParams.addValue("branchId", dto.getBranchId());
+            masterParams.addValue("financialYearId", dto.getFinancialYearId());
+            masterParams.addValue("entryUserId", dto.getEntryUserId());
+            masterParams.addValue("modifyUserId", dto.getModifyUserId());
             masterParams.addValue("documentTypeId", 1052);
 
             Map<String, Object> masterOut = masterCall.execute(masterParams);
@@ -116,8 +119,11 @@ public class PurchaseOrderCmagtRepository {
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("Activity", "ReadBySearch_purchaseOrderMaster");
-        params.addValue("CompanyId", companyId != null ? companyId : 1);
-        params.addValue("OrganizationId", organizationId != null ? organizationId : 1);
+        /* The controller passes the session's own values. The ': 1' fallbacks that
+           used to sit here would have quietly widened a read to company 1 if one
+           ever arrived null, hiding the fault instead of surfacing it. */
+        params.addValue("CompanyId", companyId);
+        params.addValue("OrganizationId", organizationId);
         params.addValue("DocumentTypeId", 1052);
         params.addValue("FromDate", parseDate(fromDate));
         params.addValue("ToDate", parseDate(toDate));

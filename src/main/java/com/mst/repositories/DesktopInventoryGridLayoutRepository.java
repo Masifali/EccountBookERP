@@ -1,5 +1,7 @@
 package com.mst.repositories;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.models.UserAccount;
 import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,6 +19,6 @@ public class DesktopInventoryGridLayoutRepository {
         jdbc.queryForList("EXEC dbo.Sp_GridLayout_Insert @Id=0, @ScreenName=?, @Layout=?, @EntryUserId=?, @OrganizationId=?, @CompanyId=?",form,name,u.getId(),u.getOrganizationId(),u.getCompanyId());
     }
     public void remove(UserAccount u,String name) {
-        jdbc.update("EXEC dbo.USP_GridLayout_DeleteById @OrganizationId=?, @CompanyId=?, @Layout=?",u.getOrganizationId(),u.getCompanyId(),name);
+        ProcExec.call(jdbc, "EXEC dbo.USP_GridLayout_DeleteById @OrganizationId=?, @CompanyId=?, @Layout=?",u.getOrganizationId(),u.getCompanyId(),name);
     }
 }

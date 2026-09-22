@@ -1,4 +1,6 @@
 package com.mst.services;
+
+import com.mst.repositories.support.ProcExec;
 import com.mst.models.UserAccount;
 import com.mst.models.dto.InventoryOpeningRequest;
 import com.mst.repositories.InventoryOpeningRepository;
@@ -25,7 +27,7 @@ public class InventoryOpeningAttachmentService {
   // The desktop delete procedure has no company predicate. Reject inconsistent ownership before calling it.
   int foreign=jdbc.queryForObject("SELECT COUNT(*) FROM DMSAttachments WITH (UPDLOCK,HOLDLOCK) WHERE ScreenName=? AND RefDocumentNo=? AND (OrganizationId<>? OR CompanyId<>? OR OrganizationId IS NULL OR CompanyId IS NULL)",Integer.class,SCREEN,id,u.getOrganizationId(),u.getCompanyId());
   if(foreign>0)throw new IllegalArgumentException("Opening-stock attachments include another company's record");
-  jdbc.update("EXEC dbo.Sp_DMSAttachments_GetAllMethod @ScreenName=?,@Id=?,@Activity='DeleteById'",SCREEN,id);
+  ProcExec.call(jdbc, "EXEC dbo.Sp_DMSAttachments_GetAllMethod @ScreenName=?,@Id=?,@Activity='DeleteById'",SCREEN,id);
   for(var row:attachments.rows){Timestamp now=new Timestamp(System.currentTimeMillis());Object[] values={item,40,id,row.get("Attachment"),now,u.getId(),now,u.getId(),u.getOrganizationId(),u.getCompanyId(),SCREEN,row.get("UploadedFileCustomName"),row.get("UploadedFileSizeMb")};
    jdbc.execute("EXEC dbo.Proc_DMSAttachments_Insert @Id=0,@RefAccountId=?,@DMSFoldersLabelsId=0,@RefDocumentTypeId=?,@RefDocumentNo=?,@Attachment=?,@EntryDate=?,@EntryUser=?,@ModifyDate=?,@ModifyUser=?,@OrganizationId=?,@CompanyId=?,@BranchId=0,@ScreenName=?,@DetailWiseAttachment=0,@UploadedFileCustomName=?,@UploadedFileSizeMb=?,@LineId=0",(org.springframework.jdbc.core.PreparedStatementCallback<Void>) statement->{for(int i=0;i<values.length;i++)statement.setObject(i+1,values[i]);boolean result=statement.execute();while(true){if(result){try(var rs=statement.getResultSet()){while(rs.next()){}}}else if(statement.getUpdateCount()==-1)break;result=statement.getMoreResults();}return null;});
   }

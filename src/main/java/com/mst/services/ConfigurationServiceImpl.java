@@ -1,5 +1,7 @@
 package com.mst.services;
 
+import com.mst.repositories.support.ProcExec;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -287,7 +289,7 @@ public class ConfigurationServiceImpl implements IConfigurationService {
 						definitionId, "", configKey, true, orgId, compId, userId, userId);
 				result.id = newId;
 			} else {
-				jdbcTemplate.update(SQL_UPDATE,
+				ProcExec.call(jdbcTemplate, SQL_UPDATE,
 						id, definitionId, "", configKey, true, orgId, compId, userId, userId);
 				result.id = id;
 			}

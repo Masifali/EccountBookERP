@@ -1,5 +1,7 @@
 package com.mst.repositories;
 
+import com.mst.repositories.support.ProcExec;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.stereotype.Repository;
@@ -175,7 +177,7 @@ public class ContractorWagesBillWriter {
                 scalar("Sp_VoucherDetail_Insert", line, 0);
             }
 
-            jdbc.update("EXEC dbo.USP_VoucherBalanceCheck @OrganizationId=?, @CompanyId=?, @Id=?",
+            ProcExec.call(jdbc, "EXEC dbo.USP_VoucherBalanceCheck @OrganizationId=?, @CompanyId=?, @Id=?",
                         orgId, compId, voucherId);
 
             int audit = scalar("Sp_VoucherHead_H_Insert", v, 0);
@@ -185,13 +187,13 @@ public class ContractorWagesBillWriter {
                 scalar("Sp_VoucherDetail_H_Insert", line, 0);
             }
         } else {
-            jdbc.update("EXEC dbo.usp_ContractorWagesVoucherDeleteByWagesId "
+            ProcExec.call(jdbc, "EXEC dbo.usp_ContractorWagesVoucherDeleteByWagesId "
                       + "@OrganizationId=?, @CompanyId=?, @DocumentTypeId=?, @Id=?",
                         orgId, compId, documentTypeId, headerId);
         }
 
         if (refDocumentTypeId == 806 || refDocumentTypeId == 68) {
-            jdbc.update("EXEC [dbo].[usp_WagesProportionateToStockEvaluation] "
+            ProcExec.call(jdbc, "EXEC [dbo].[usp_WagesProportionateToStockEvaluation] "
                       + "@OrganizationId=?, @CompanyId=?, @RefDocumentTypeId=?, @RefDocNoId=?",
                         orgId, compId, refDocumentTypeId, i(header.get("RefDocNoId")));
         }

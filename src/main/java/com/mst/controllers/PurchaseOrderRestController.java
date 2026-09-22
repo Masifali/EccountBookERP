@@ -76,6 +76,18 @@ public class PurchaseOrderRestController {
         return ResponseEntity.ok(purchaseOrderService.searchItems(query, mode, parentCategoryId));
     }
 
+    /** CropYear() :1584 - Sp_InvCropYear_GetAllMethod @Activity='ReadAll'. */
+    @GetMapping("/crop-years")
+    public ResponseEntity<List<Map<String, Object>>> getCropYears() {
+        return ResponseEntity.ok(purchaseOrderService.getCropYears());
+    }
+
+    /** defaultConfiquration() :1617 - the combo defaults (Job/Lot, Crop Year, City Area). */
+    @GetMapping("/combo-defaults")
+    public ResponseEntity<Map<String, Object>> getComboDefaults() {
+        return ResponseEntity.ok(purchaseOrderService.getComboDefaults());
+    }
+
     @GetMapping("/parent-categories")
     public ResponseEntity<List<Map<String, Object>>> getParentCategories() {
         return ResponseEntity.ok(purchaseOrderService.getParentCategories());

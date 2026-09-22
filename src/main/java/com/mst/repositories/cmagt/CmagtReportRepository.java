@@ -23,8 +23,11 @@ public class CmagtReportRepository {
                 .withProcedureName("USP_saleOrderMaster_Report");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId != null ? companyId : 1);
-        params.addValue("OrganizationId", organizationId != null ? organizationId : 1);
+        /* The controller passes the session's own values. The ': 1' fallbacks that
+           used to sit here would have quietly widened a read to company 1 if one
+           ever arrived null, hiding the fault instead of surfacing it. */
+        params.addValue("CompanyId", companyId);
+        params.addValue("OrganizationId", organizationId);
         params.addValue("FromDate", parseDate(fromDate));
         params.addValue("ToDate", parseDate(toDate));
         if (buyerId != null && buyerId > 0) params.addValue("BuyerId", buyerId);
@@ -40,8 +43,8 @@ public class CmagtReportRepository {
                 .withProcedureName("USP_purchaseOrderMaster_Report");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId != null ? companyId : 1);
-        params.addValue("OrganizationId", organizationId != null ? organizationId : 1);
+        params.addValue("CompanyId", companyId);
+        params.addValue("OrganizationId", organizationId);
         params.addValue("FromDate", parseDate(fromDate));
         params.addValue("ToDate", parseDate(toDate));
         if (supplierId != null && supplierId > 0) params.addValue("SupplierId", supplierId);
@@ -57,8 +60,8 @@ public class CmagtReportRepository {
                 .withProcedureName("USP_grnSupplierLoadingMaster_Report");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId != null ? companyId : 1);
-        params.addValue("OrganizationId", organizationId != null ? organizationId : 1);
+        params.addValue("CompanyId", companyId);
+        params.addValue("OrganizationId", organizationId);
         params.addValue("FromDate", parseDate(fromDate));
         params.addValue("ToDate", parseDate(toDate));
         if (supplierId != null && supplierId > 0) params.addValue("SupplierId", supplierId);
@@ -73,8 +76,8 @@ public class CmagtReportRepository {
                 .withProcedureName("USP_gdnBuyerDispatchMaster_Report");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId != null ? companyId : 1);
-        params.addValue("OrganizationId", organizationId != null ? organizationId : 1);
+        params.addValue("CompanyId", companyId);
+        params.addValue("OrganizationId", organizationId);
         params.addValue("FromDate", parseDate(fromDate));
         params.addValue("ToDate", parseDate(toDate));
         if (buyerId != null && buyerId > 0) params.addValue("BuyerId", buyerId);
@@ -88,8 +91,8 @@ public class CmagtReportRepository {
                 .withProcedureName("USP_CommissionAgentTrade_Register");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId != null ? companyId : 1);
-        params.addValue("OrganizationId", organizationId != null ? organizationId : 1);
+        params.addValue("CompanyId", companyId);
+        params.addValue("OrganizationId", organizationId);
         params.addValue("FromDate", parseDate(fromDate));
         params.addValue("ToDate", parseDate(toDate));
         if (agentId != null && agentId > 0) params.addValue("CommissionAgentId", agentId);

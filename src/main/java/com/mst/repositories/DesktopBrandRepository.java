@@ -1,5 +1,7 @@
 package com.mst.repositories;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.models.Brand;
 import com.mst.models.UserAccount;
 import java.util.List;
@@ -20,6 +22,6 @@ public class DesktopBrandRepository {
                 Integer.class,b.getId()==null?0:b.getId(),b.getBrandName(),b.getBrandCode(),true,u.getId(),u.getId(),u.getOrganizationId(),u.getCompanyId());
     }
     public void delete(UserAccount u,int id) {
-        jdbc.update("EXEC dbo.USP_Brand_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?, @Id=?",u.getOrganizationId(),u.getCompanyId(),"DeleteById",id);
+        ProcExec.call(jdbc, "EXEC dbo.USP_Brand_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?, @Id=?",u.getOrganizationId(),u.getCompanyId(),"DeleteById",id);
     }
 }

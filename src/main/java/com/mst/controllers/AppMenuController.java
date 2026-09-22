@@ -54,7 +54,19 @@ public class AppMenuController {
     /**
      * Level 1 — every application this user may view.
      */
-    @GetMapping({"/apps", "/modules"})
+    /*
+     * "/apps" only.
+     *
+     * This method also claimed "/modules", which MainModulesController.mainModulesHub already
+     * owns. Two handlers on one identical pattern are not resolved at startup - Spring throws
+     * IllegalStateException: Ambiguous handler methods mapped for '/modules' on the FIRST
+     * request, which is why the application started normally and then answered 500.
+     *
+     * The two pages are different things and must stay on different URLs:
+     *   /apps    -> apps.html    "Applications"  - level 1, one card per application
+     *   /modules -> modules.html "Modules Hub"   - linked from index.html and the stock pages
+     */
+    @GetMapping("/apps")
     public String apps(Model model) {
         model.addAttribute("activeMenu", "apps");
         List<Map<String, Object>> cards = dashboardModuleService.getAppCards();

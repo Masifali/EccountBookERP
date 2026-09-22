@@ -19,66 +19,56 @@ public class TradeBillAgainstGdnCmagtRepository {
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
+    /**
+     * DISABLED — this save wrote a Trade Bill with no accounting voucher.
+     *
+     * ---------------------------------------------------------------------------------------
+     * WHAT THE DESKTOP DOES
+     * ---------------------------------------------------------------------------------------
+     * BLL InvCommAgentTradeBill.Save begins with obj.VoucherHeadInvoices = MakeVoucher(obj),
+     * then DAL SetData runs SIXTEEN procedures inside ONE SqlTransaction:
+     *
+     *   master      USP_InvCommAgentTradeBill_InsertAndUpdate
+     *   details     Sp_InvCommAgentTradeBillDetail_Insert
+     *   children    Sp_InvCommisionAgentBillPurchaseExpense_Insert
+     *               Sp_InvCommisionAgentBillSaleExpense_Insert
+     *               Sp_CommisionAgentBillSaleExpenseCreditToReleventAc_Insert
+     *               USP_CommisionAgentBillPurchaseFreightExpense_Insert
+     *               USP_CommisionAgentBillPaymentDetail_Insert
+     *               USP_CommisionAgentBillCommissionDetail_Insert
+     *               USP_CommisionAgentBillFreightDetail_Insert
+     *               USP_CommisionAgentBillTaxDetail_Insert
+     *   attachments Proc_DMSAttachments_Insert
+     *   ACCOUNTING  Sp_VoucherHead_Insert / Sp_VoucherHead_Update
+     *               Sp_VoucherDetail_Insert
+     *               USP_VoucherBalanceCheck
+     *               Sp_VoucherHead_H_Insert
+     *               Sp_VoucherDetail_H_Insert
+     *
+     * MakeVoucher composes roughly 30 voucher-detail lines across 12 account sources with
+     * debit/credit sign rules. None of that is traced yet.
+     *
+     * ---------------------------------------------------------------------------------------
+     * WHAT THIS CODE DID
+     * ---------------------------------------------------------------------------------------
+     * Two procedures: the master (15 of its parameters) and the detail rows. No child
+     * collections, no attachments, and NO VOUCHER — a grep for VoucherHead / VoucherDetail /
+     * VoucherBalance in this file returned zero. Every web-saved Trade Bill therefore existed
+     * in the commission ledger with no matching accounting entry, and reported "saved".
+     *
+     * Refusing is the safer failure, and it is the same position taken for Stock Conversion
+     * (STOCK-CONVERSION-READ-SIDE-BUILT-SAVE-REFUSED). Reads on this screen are unaffected.
+     */
     public Map<String, Object> saveOrUpdate(TradeBillAgainstGdnCmagtDto dto) {
-        Map<String, Object> result = new HashMap<>();
-        try {
-            SimpleJdbcCall masterCall = new SimpleJdbcCall(jdbcTemplate)
-                    .withProcedureName("USP_InvCommAgentTradeBill_InsertAndUpdate");
-
-            MapSqlParameterSource masterParams = new MapSqlParameterSource();
-            masterParams.addValue("Id", dto.getId() != null ? dto.getId() : 0);
-            masterParams.addValue("DocNo", dto.getDocNo() != null ? dto.getDocNo() : 0);
-            masterParams.addValue("DocDate", parseDate(dto.getDocDate()));
-            masterParams.addValue("SupplierId", dto.getSupplierId() != null ? dto.getSupplierId() : 0);
-            masterParams.addValue("BuyerId", dto.getBuyerId() != null ? dto.getBuyerId() : 0);
-            masterParams.addValue("CommissionAgentId", dto.getCommissionAgentId() != null ? dto.getCommissionAgentId() : 0);
-            masterParams.addValue("NetAmount", dto.getNetAmount() != null ? dto.getNetAmount() : BigDecimal.ZERO);
-            masterParams.addValue("RemarksHeader", dto.getRemarksHeader() != null ? dto.getRemarksHeader() : "");
-
-            masterParams.addValue("OrganizationId", dto.getOrganizationId() != null ? dto.getOrganizationId() : 1);
-            masterParams.addValue("CompanyId", dto.getCompanyId() != null ? dto.getCompanyId() : 1);
-            masterParams.addValue("BranchesId", dto.getBranchId() != null ? dto.getBranchId() : 1);
-            masterParams.addValue("FinancialYearId", dto.getFinancialYearId() != null ? dto.getFinancialYearId() : 1);
-            masterParams.addValue("EnteryUserId", dto.getEntryUserId() != null ? dto.getEntryUserId() : 1);
-            masterParams.addValue("ModifyUserId", dto.getModifyUserId() != null ? dto.getModifyUserId() : 1);
-            masterParams.addValue("DocumentTypeId", 1056);
-
-            Map<String, Object> masterOut = masterCall.execute(masterParams);
-            Integer masterId = extractReturnedId(masterOut);
-            if (masterId == null || masterId <= 0) {
-                masterId = dto.getId();
-            }
-
-            if (dto.getInvCommAgentTradeBillDetailslist() != null) {
-                for (TradeBillAgainstGdnCmagtDto.DetailDto det : dto.getInvCommAgentTradeBillDetailslist()) {
-                    SimpleJdbcCall detCall = new SimpleJdbcCall(jdbcTemplate)
-                            .withProcedureName("Sp_InvCommAgentTradeBillDetail_Insert");
-
-                    MapSqlParameterSource detParams = new MapSqlParameterSource();
-                    detParams.addValue("Id", det.getId() != null ? det.getId() : 0);
-                    detParams.addValue("InvCommAgentTradeBillId", masterId);
-                    detParams.addValue("gdnBuyerDispatchMasterId", det.getGdnBuyerDispatchMasterId() != null ? det.getGdnBuyerDispatchMasterId() : 0);
-                    detParams.addValue("gdnBuyerDispatchDetailId", det.getGdnBuyerDispatchDetailId() != null ? det.getGdnBuyerDispatchDetailId() : 0);
-                    detParams.addValue("itemId", det.getItemId() != null ? det.getItemId() : 0);
-                    detParams.addValue("weight", det.getWeight() != null ? det.getWeight() : BigDecimal.ZERO);
-                    detParams.addValue("qty", det.getQty() != null ? det.getQty() : BigDecimal.ZERO);
-                    detParams.addValue("rate", det.getRate() != null ? det.getRate() : BigDecimal.ZERO);
-                    detParams.addValue("amount", det.getAmount() != null ? det.getAmount() : BigDecimal.ZERO);
-                    detParams.addValue("remarksDetail", det.getRemarksDetail() != null ? det.getRemarksDetail() : "");
-
-                    detCall.execute(detParams);
-                }
-            }
-
-            result.put("status", "SUCCESS");
-            result.put("message", "Trade Bill Against GDN saved successfully!");
-            result.put("id", masterId);
-        } catch (Exception e) {
-            result.put("status", "ERROR");
-            result.put("message", e.getMessage());
-        }
-        return result;
+        throw new UnsupportedOperationException(
+                "Trade Bill save is disabled. The desktop posts an accounting voucher in the same "
+              + "transaction (MakeVoucher -> Sp_VoucherHead_Insert/_Update, Sp_VoucherDetail_Insert, "
+              + "USP_VoucherBalanceCheck, Sp_VoucherHead_H_Insert, Sp_VoucherDetail_H_Insert) plus "
+              + "eight child collections. This implementation wrote only the master and its detail "
+              + "rows, producing a Trade Bill with no accounting entry. It will be re-enabled once "
+              + "MakeVoucher is traced line by line.");
     }
+
 
     public List<Map<String, Object>> getHistory(Integer companyId, Integer organizationId, String fromDate, String toDate) {
         SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate)
@@ -86,8 +76,11 @@ public class TradeBillAgainstGdnCmagtRepository {
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("Activity", "ReadBySearch_InvCommAgentTradeBill");
-        params.addValue("CompanyId", companyId != null ? companyId : 1);
-        params.addValue("OrganizationId", organizationId != null ? organizationId : 1);
+        /* The controller passes the session's own values. The ': 1' fallbacks that
+           used to sit here would have quietly widened a read to company 1 if one
+           ever arrived null, hiding the fault instead of surfacing it. */
+        params.addValue("CompanyId", companyId);
+        params.addValue("OrganizationId", organizationId);
         params.addValue("DocumentTypeId", 1056);
         params.addValue("FromDate", parseDate(fromDate));
         params.addValue("ToDate", parseDate(toDate));

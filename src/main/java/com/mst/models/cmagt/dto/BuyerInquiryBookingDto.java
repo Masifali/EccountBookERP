@@ -1,5 +1,6 @@
 package com.mst.models.cmagt.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,17 +34,53 @@ public class BuyerInquiryBookingDto {
     private Integer organizationId = 0;
     private Integer projectId = 0;
     private Integer validityDays = 0;
+    /* The desktop model spells this with a leading capital, and the page posts it that way.
+       Jackson derives the property name from the getter, so the posted key did not bind and
+       Spring Boot's default (FAIL_ON_UNKNOWN_PROPERTIES=false) dropped it in silence.
+       @JsonAlias accepts the desktop's own spelling. */
+    @JsonAlias({"ShipToAddress"})
     private String shipToAddress;
     private Integer shipToAddressId = 0;
+    @JsonAlias({"DeliveryToPartyId"})
     private Integer deliveryToPartyId = 0;
     private String remarksHeader;
     private String approvalRemarks;
     private String attachmentsValues;
     private String customAttachmentsValues;
+    @JsonAlias({"QualitySpecifications"})
     private String qualitySpecifications;
 
+    /* ------------------------------------------------------------------------------------
+       UI-ONLY header fields.
+
+       CmbPaymentTerm and txtDueDays are controls on the desktop form, but they are NOT
+       properties of Architecture.Model.CommissionAgent.InquiryBookingMaster, so they are never
+       parameters of [cmagt].[USP_inquiryBookingMaster_InsertAndUpdate]. Their only use is to
+       build the single InquiryBookingPaymentSchedule row at Insert():1598-1600.
+
+       They are carried here so the page can post what the operator chose; the master writer
+       must not send them.
+       ------------------------------------------------------------------------------------ */
+    private Integer paymentTermId = 0;
+    private Integer dueDays = 0;
+
+    public Integer getPaymentTermId() { return paymentTermId; }
+    public void setPaymentTermId(Integer paymentTermId) { this.paymentTermId = paymentTermId; }
+
+    public Integer getDueDays() { return dueDays; }
+    public void setDueDays(Integer dueDays) { this.dueDays = dueDays; }
+
+    @JsonAlias({"InquiryBookingDetailList"})
     private List<BuyerInquiryDetailDto> inquiryBookingDetailList = new ArrayList<>();
+    @JsonAlias({"InquiryBookingPartyDetailList"})
     private List<BuyerInquiryPartyDetailDto> inquiryBookingPartyDetailList = new ArrayList<>();
+    /* The DAL writes FOUR child collections in one transaction
+       (0544_Architecture.DAL.CommissionAgent.InquiryBookingMaster.cs:56-75). These two were
+       absent from this DTO, so the rows the desktop writes for every inquiry were never sent. */
+    @JsonAlias({"InquiryBookingPaymentScheduleList"})
+    private List<BuyerInquiryPaymentScheduleDto> inquiryBookingPaymentScheduleList = new ArrayList<>();
+    @JsonAlias({"InquiryBookingQualitySpecificationList"})
+    private List<BuyerInquiryQualitySpecificationDto> inquiryBookingQualitySpecificationList = new ArrayList<>();
 
     public Integer getInquiryBookingMasterId() { return inquiryBookingMasterId; }
     public void setInquiryBookingMasterId(Integer inquiryBookingMasterId) { this.inquiryBookingMasterId = inquiryBookingMasterId; }
@@ -153,6 +190,12 @@ public class BuyerInquiryBookingDto {
     public List<BuyerInquiryDetailDto> getInquiryBookingDetailList() { return inquiryBookingDetailList; }
     public void setInquiryBookingDetailList(List<BuyerInquiryDetailDto> inquiryBookingDetailList) { this.inquiryBookingDetailList = inquiryBookingDetailList; }
 
+    public List<BuyerInquiryPaymentScheduleDto> getInquiryBookingPaymentScheduleList() { return inquiryBookingPaymentScheduleList; }
+    public void setInquiryBookingPaymentScheduleList(List<BuyerInquiryPaymentScheduleDto> v) { this.inquiryBookingPaymentScheduleList = v; }
+
+    public List<BuyerInquiryQualitySpecificationDto> getInquiryBookingQualitySpecificationList() { return inquiryBookingQualitySpecificationList; }
+    public void setInquiryBookingQualitySpecificationList(List<BuyerInquiryQualitySpecificationDto> v) { this.inquiryBookingQualitySpecificationList = v; }
+
     public List<BuyerInquiryPartyDetailDto> getInquiryBookingPartyDetailList() { return inquiryBookingPartyDetailList; }
     public void setInquiryBookingPartyDetailList(List<BuyerInquiryPartyDetailDto> inquiryBookingPartyDetailList) { this.inquiryBookingPartyDetailList = inquiryBookingPartyDetailList; }
 
@@ -166,12 +209,14 @@ public class BuyerInquiryBookingDto {
         private BigDecimal buyerRate = BigDecimal.ZERO;
         private BigDecimal buyerAmount = BigDecimal.ZERO;
         private BigDecimal supplierRate = BigDecimal.ZERO;
+        @JsonAlias({"SupplierAmount"})
         private BigDecimal supplierAmount = BigDecimal.ZERO;
         private Integer packingTypeId = 0;
         private Integer packUomId = 0;
         private Integer rateUomId = 0;
         private Integer cropYearId = 0;
         private String cropYear;
+        @JsonAlias({"QualitySpecifications"})
         private String qualitySpecifications;
         private String remarks;
         private Integer sortNo = 1;
@@ -238,10 +283,13 @@ public class BuyerInquiryBookingDto {
     public static class BuyerInquiryPartyDetailDto {
         private Integer inquiryBookingPartyDetailId = 0;
         private Integer inquiryBookingMasterId = 0;
+        @JsonAlias({"SubPartyId"})
         private Integer subPartyId = 0;
         private BigDecimal itemQty = BigDecimal.ZERO;
+        @JsonAlias({"Rate"})
         private BigDecimal rate = BigDecimal.ZERO;
         private Integer rateUomId = 0;
+        @JsonAlias({"Amount"})
         private BigDecimal amount = BigDecimal.ZERO;
         private Integer sortNo = 1;
         private String remarks;
@@ -276,5 +324,85 @@ public class BuyerInquiryBookingDto {
 
         public Integer getActionTypeId() { return actionTypeId; }
         public void setActionTypeId(Integer actionTypeId) { this.actionTypeId = actionTypeId; }
+    }
+
+    /**
+     * Architecture.Model.CommissionAgent.InquiryBookingPaymentSchedule - 9 non-virtual
+     * properties, declaration order preserved, which IS the parameter list of
+     * [cmagt].[USP_inquiryBookingPaymentSchedule_Insert] (GenericProvider.SetProc reflects over
+     * the model).
+     *
+     * Insert():1596-1604 builds exactly ONE of these per inquiry: the header payment term, its
+     * due days, dueBaseDate = inquiryBookingDate + dueDays, 100% of total, and dueAmount =
+     * the single detail row's buyerAmount.
+     */
+    public static class BuyerInquiryPaymentScheduleDto {
+        private String dueBaseDate;
+        private BigDecimal dueAmount = BigDecimal.ZERO;
+        private BigDecimal pctOfTotal = BigDecimal.ZERO;
+        private Integer dueDays = 0;
+        private Integer inquiryBookingMasterId = 0;
+        private Integer inquiryBookingPaymentScheduleId = 0;
+        private Integer paymentTermId = 0;
+        private Integer sortNo = 0;
+        private String remarks;
+
+        public String getDueBaseDate() { return dueBaseDate; }
+        public void setDueBaseDate(String v) { this.dueBaseDate = v; }
+        public BigDecimal getDueAmount() { return dueAmount; }
+        public void setDueAmount(BigDecimal v) { this.dueAmount = v; }
+        public BigDecimal getPctOfTotal() { return pctOfTotal; }
+        public void setPctOfTotal(BigDecimal v) { this.pctOfTotal = v; }
+        public Integer getDueDays() { return dueDays; }
+        public void setDueDays(Integer v) { this.dueDays = v; }
+        public Integer getInquiryBookingMasterId() { return inquiryBookingMasterId; }
+        public void setInquiryBookingMasterId(Integer v) { this.inquiryBookingMasterId = v; }
+        public Integer getInquiryBookingPaymentScheduleId() { return inquiryBookingPaymentScheduleId; }
+        public void setInquiryBookingPaymentScheduleId(Integer v) { this.inquiryBookingPaymentScheduleId = v; }
+        public Integer getPaymentTermId() { return paymentTermId; }
+        public void setPaymentTermId(Integer v) { this.paymentTermId = v; }
+        public Integer getSortNo() { return sortNo; }
+        public void setSortNo(Integer v) { this.sortNo = v; }
+        public String getRemarks() { return remarks; }
+        public void setRemarks(String v) { this.remarks = v; }
+    }
+
+    /**
+     * Architecture.Model.CommissionAgent.InquiryBookingQualitySpecification - 7 non-virtual
+     * properties = the parameter list of
+     * [cmagt].[USP_inquiryBookingQualitySpecification_Insert].
+     *
+     * qualityParameter is the DISPLAY name and is deliberately NOT one of the seven: it is a
+     * virtual property on the desktop model, so SetProc skips it. It is carried here only
+     * because Insert():1574 uses it to build the master's QualitySpecifications summary string
+     * and to name the parameter in its refusal messages.
+     */
+    public static class BuyerInquiryQualitySpecificationDto {
+        private BigDecimal rangeFrom = BigDecimal.ZERO;
+        private BigDecimal rangeTo = BigDecimal.ZERO;
+        private Integer inquiryBookingMasterId = 0;
+        private Integer inquiryBookingQualitySpecificationId = 0;
+        private Integer qualityParameterId = 0;
+        private Integer sortNo = 0;
+        private String remarks;
+        /** virtual on the desktop model - never sent to the procedure. */
+        private String qualityParameter;
+
+        public BigDecimal getRangeFrom() { return rangeFrom; }
+        public void setRangeFrom(BigDecimal v) { this.rangeFrom = v; }
+        public BigDecimal getRangeTo() { return rangeTo; }
+        public void setRangeTo(BigDecimal v) { this.rangeTo = v; }
+        public Integer getInquiryBookingMasterId() { return inquiryBookingMasterId; }
+        public void setInquiryBookingMasterId(Integer v) { this.inquiryBookingMasterId = v; }
+        public Integer getInquiryBookingQualitySpecificationId() { return inquiryBookingQualitySpecificationId; }
+        public void setInquiryBookingQualitySpecificationId(Integer v) { this.inquiryBookingQualitySpecificationId = v; }
+        public Integer getQualityParameterId() { return qualityParameterId; }
+        public void setQualityParameterId(Integer v) { this.qualityParameterId = v; }
+        public Integer getSortNo() { return sortNo; }
+        public void setSortNo(Integer v) { this.sortNo = v; }
+        public String getRemarks() { return remarks; }
+        public void setRemarks(String v) { this.remarks = v; }
+        public String getQualityParameter() { return qualityParameter; }
+        public void setQualityParameter(String v) { this.qualityParameter = v; }
     }
 }

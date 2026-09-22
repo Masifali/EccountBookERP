@@ -619,6 +619,113 @@ public class CommissionDropdownService {
         return out;
     }
 
+    /**
+     * Vehicle Type - vehicleTypefill(), frmGoodsDispatchingNoteCmagt:658 and
+     * frmGrnLoadingChallanCmagt:744.
+     *
+     * BLL 0611 VehicleType.GetAll() -> Sp_VehicleType_GetAllMethod @Activity='ReadAll'.
+     * No tenancy parameters - the BLL sends the activity alone, and adding org/company
+     * "for safety" would change the call.
+     */
+    public List<Map<String, Object>> vehicleTypes() {
+        return simple("EXEC Sp_VehicleType_GetAllMethod @Activity=?",
+                new Object[]{ "ReadAll" }, "Id", "Description", "vehicle types");
+    }
+
+    /**
+     * Loading City / Un-Loading City - CityBindFromGlobal(), frmGoodsDispatchingNoteCmagt:700
+     * and frmGrnLoadingChallanCmagt:787. Both combos bind the SAME table.
+     *
+     * clsGlobalVariables.globalAllCities
+     *   <- GlobalServicesMethods.getGlobalAllCity(org, comp)
+     *   -> [dbo].[USP_City_GetAllWithCountryAndTehsil] @OrganizationId, @CompanyId
+     *
+     * The desktop projects it to two columns (Id, CityName) through
+     * DatatableHelper.PopulateDataTableAndReturn and then binds "Id" / "Description", so the
+     * display column is the CITY NAME under the name Description - not the City table's own
+     * Description column. Both spellings are published here so a page can read either.
+     */
+    public List<Map<String, Object>> cities() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : run("[dbo].[USP_City_GetAllWithCountryAndTehsil]",
+                new ArrayList<>(java.util.Arrays.asList("@OrganizationId", "@CompanyId")),
+                new ArrayList<>(java.util.Arrays.asList((Object) org(), (Object) comp())),
+                "cities")) {
+            String name = str(col(r, "CityName"));
+            if (name.isEmpty()) continue;
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("Id",          asInt(col(r, "Id")));
+            m.put("CityName",    name);
+            m.put("Description", name);
+            m.put("id",   asInt(col(r, "Id")));
+            m.put("name", name);
+            out.add(m);
+        }
+        return out;
+    }
+
+    /**
+     * GetCommissionAgentConfigurationsFromGlobalandBind (frmSupplierOfferCmagt.cs:1057-1093).
+     *
+     * Seven configuration ids the Commission Agent Portal screens pre-select on a NEW document.
+     * Each is read through GlobalVariables_Helper.GetConfigValueFromGlobal(name), which resolves
+     * against ConfigrationsAllocation for the active organization and company.
+     *
+     * These are DB-backed values, not constants, so they are read - never seeded and never
+     * hard-coded. The desktop applies each one ONLY when it is greater than zero (`if (id > 0)`),
+     * leaving the combo alone otherwise; a zero here therefore means "leave the control as it is",
+     * which is what the page does with it. An unreadable configuration yields zero, exactly as
+     * Conversion.ToInt(null) does on the desktop - it must not become an invented default.
+     */
+    public Map<String, Object> commissionPortalDefaults() {
+        String[] names = {
+                "DefaultCommissionAgentIdForCommissionAgentPortal",
+                "DefaultSubCommissionAccountIdForCommissionAgentPortal",
+                "DefaultSubBrokerageAccountIdForCommissionAgentPortal",
+                "DefaultPaymentTermIdForCommissionAgentPortal",
+                "DefaultDeliveryTermIdForCommissionAgentPortal",
+                "DefaultCropYearIdForCommissionAgentPortal",
+                "DefaultPackingTypeIdForCommissionAgentPortal"
+        };
+        String[] keys = {
+                "commissionAgentId", "commissionAccountId", "brokeryAccountId",
+                "paymentTermId", "deliveryTermId", "cropYearId", "packingTypeId"
+        };
+        Map<String, Object> out = new LinkedHashMap<>();
+        for (int i = 0; i < names.length; i++) out.put(keys[i], configInt(names[i]));
+
+        /* CmbPaymentTerm_ValueChanged (:1101-1117) and InitializeComponentMethod (:686-689) are
+           the desktop's other two seeded values, both static and both reproduced as given:
+             - the form opens with Payment Term 2 when the list is non-empty (:686)
+             - txtDeliveryDays starts at "1" (frmSupplierOfferCmagt_Load:590) */
+        out.put("fallbackPaymentTermId", 2);
+        out.put("defaultDeliveryDays", 1);
+        return out;
+    }
+
+    /**
+     * Sp_ConfigrationsAllocation_GetAllMethod @Activity='GetConfigurationByOrgCompandConfigDescription'
+     * - the same procedure and activity every other configuration read in this port uses. The
+     * value column is ConfigKey.
+     */
+    private int configInt(String configDescription) {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod "
+                  + "@OrganizationId=?, @CompanyId=?, @ConfigDescription=?, @Activity=?",
+                    org(), comp(), configDescription,
+                    "GetConfigurationByOrgCompandConfigDescription");
+            if (rows.isEmpty()) return 0;
+            Object v = col(rows.get(0), "ConfigKey");
+            if (v instanceof Number) return ((Number) v).intValue();
+            if (v == null) return 0;
+            return Integer.parseInt(String.valueOf(v).trim());
+        } catch (Exception e) {
+            LOG.warn("configuration {} unreadable; the screen keeps its own value", configDescription, e);
+            return 0;
+        }
+    }
+
     private List<Map<String, Object>> run(String proc, List<String> names, List<Object> args,
                                           String what) {
         StringBuilder b = new StringBuilder("EXEC ").append(proc).append(' ');

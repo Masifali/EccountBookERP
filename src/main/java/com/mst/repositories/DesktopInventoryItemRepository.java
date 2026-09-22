@@ -1,5 +1,7 @@
 package com.mst.repositories;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.models.UserAccount;
 import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -81,7 +83,7 @@ public class DesktopInventoryItemRepository {
     }
     public void updateName(UserAccount u,int id,String name,String other){
         var old=record(u,id);
-        jdbc.update("EXEC dbo.Sp_Item_GetAllMethod @Id=?, @Activity=?, @ItemName=?, @ItemNameOtherLingo=?, @Code=?",id,"Update",name,other,old.get("ItemCode"));
+        ProcExec.call(jdbc, "EXEC dbo.Sp_Item_GetAllMethod @Id=?, @Activity=?, @ItemName=?, @ItemNameOtherLingo=?, @Code=?",id,"Update",name,other,old.get("ItemCode"));
     }
     public boolean configuration(UserAccount u,String key){var rows=jdbc.queryForList("EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, @ConfigDescription=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),key,"GetConfigurationByOrgCompandConfigDescription");return !rows.isEmpty()&&Set.of("true","1").contains(Objects.toString(rows.get(0).get("ConfigKey"),"").toLowerCase(Locale.ROOT));}
     private List<Map<String,Object>> scoped(UserAccount u,String procedure,String activity){return jdbc.queryForList("EXEC dbo."+procedure+" @OrganizationId=?, @CompanyId=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),activity);}

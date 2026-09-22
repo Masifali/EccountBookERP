@@ -1,4 +1,6 @@
 package com.mst.repositories;
+
+import com.mst.repositories.support.ProcExec;
 import com.mst.models.UserAccount;
 import com.mst.models.dto.InventoryCategoryRequest;
 import java.util.*;
@@ -49,7 +51,7 @@ public class DesktopInventoryCategoryRepository {
   int id=jdbc.execute("EXEC "+proc+" "+String.join(",",names.stream().map(k->"@"+k+"=?").toList()),(PreparedStatementCallback<Integer>) s->{int n=1;for(String name:names)s.setObject(n++,values.get(name));int saved=r.Id;boolean result=s.execute();while(true){if(result){try(var rs=s.getResultSet()){if(rs.next()&&rs.getObject(1) instanceof Number value&&value.intValue()>0)saved=value.intValue();}}else if(s.getUpdateCount()==-1)break;result=s.getMoreResults();}if(saved<=0)throw new IllegalStateException("Category save returned no ID");return saved;});
   // The form's AttributesForItemFeature field is never assigned: no category allocations
   // are submitted. DAL still propagates existing attributes when company feature13 exists.
-  if(feature(u,13))jdbc.update("EXEC item.USP_ItemAttribute_InsertAndUpdateByCategory @OrganizationId=?, @CompanyId=?, @ItemCategoryId=?, @ItemId=?",u.getOrganizationId(),u.getCompanyId(),id,null);
+  if(feature(u,13))ProcExec.call(jdbc, "EXEC item.USP_ItemAttribute_InsertAndUpdateByCategory @OrganizationId=?, @CompanyId=?, @ItemCategoryId=?, @ItemId=?",u.getOrganizationId(),u.getCompanyId(),id,null);
   return record(u,id);
  }
 }

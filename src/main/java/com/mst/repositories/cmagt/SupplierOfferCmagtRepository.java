@@ -1,5 +1,7 @@
 package com.mst.repositories.cmagt;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.models.cmagt.dto.SupplierOfferCmagtDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -133,7 +135,7 @@ public class SupplierOfferCmagtRepository {
     }
 
     public void deleteById(int entryUserId, int id) {
-        jdbc.update(SQL_DELETE_BY_ID, entryUserId, id, "DeleteById");
+        ProcExec.call(jdbc, SQL_DELETE_BY_ID, entryUserId, id, "DeleteById");
     }
 
     public List<Map<String, Object>> formHistory(int orgId, int companyId, int branchId, int financialYearId,

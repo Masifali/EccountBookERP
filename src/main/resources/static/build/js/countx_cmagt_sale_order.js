@@ -106,13 +106,39 @@
      * flight and re-enabled the moment the data has finished loading.
      * ------------------------------------------------------------------- */
     var busyDepth = 0;
+    /* The five button rules. (1) every button in the form is disabled the moment a request
+       starts and (4) stays disabled for as long as busyDepth > 0, so a nested call cannot
+       re-enable the form early. (2) 'is-busy' now has a stylesheet behind it
+       (build/css/countx_button_busy.css) and the button that was clicked carries the spinner -
+       the class used to be toggled against no CSS at all, and the `message` argument every
+       caller passes was accepted and thrown away. (3) busyGuard() below refuses a second call
+       of the same action. (5) every caller restores through .always(), so a rejected request
+       re-enables exactly like a successful one. */
     function busy(on, message) {
         busyDepth += on ? 1 : -1;
         if (busyDepth < 0) busyDepth = 0;
         var isBusy = busyDepth > 0;
         $('#soForm').toggleClass('is-busy', isBusy);
         $('#soForm').find('button').prop('disabled', isBusy);
+        var $msg = $('#soBusyText');
+        if ($msg.length) { $msg.text(isBusy && message ? message : ''); }
+        if (!isBusy) { $('#soForm').find('button.btn-busy').removeClass('btn-busy'); }
         if (message !== undefined) status(message);
+    }
+
+    /* Rule 3 - prevent duplicate requests. Disabling the buttons already stops a second UI
+       click, but a keyboard repeat or a programmatic call can still re-enter before the first
+       response lands, so each action also holds a named lock. */
+    var soInFlight = {};
+    function busyGuard(name, work) {
+        if (soInFlight[name]) return null;
+        soInFlight[name] = true;
+        var release = function () { soInFlight[name] = false; };
+        var r;
+        try { r = work(release); } catch (e) { release(); throw e; }
+        if (r && typeof r.always === 'function') { r.always(release); }
+        else if (r && typeof r.then === 'function') { r.then(release, release); }
+        return r;
     }
     function status(msg, isError) {
         $('#formStatus').text(msg || '').toggleClass('err', !!isError);

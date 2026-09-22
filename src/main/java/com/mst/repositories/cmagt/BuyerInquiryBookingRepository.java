@@ -1,5 +1,7 @@
 package com.mst.repositories.cmagt;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.models.cmagt.dto.BuyerInquiryBookingDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -9,6 +11,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +44,31 @@ public class BuyerInquiryBookingRepository {
             + "@inquiryBookingPartyDetailId=?, @inquiryBookingMasterId=?, @SubPartyId=?, @itemQty=?, "
             + "@Rate=?, @rateUomId=?, @Amount=?, @sortNo=?, @remarks=?, @actionTypeId=?";
 
+    /**
+     * [cmagt].[USP_inquiryBookingPaymentSchedule_Insert] - the 9 non-virtual properties of
+     * Architecture.Model.CommissionAgent.InquiryBookingPaymentSchedule, declaration order.
+     *
+     * This procedure was NEVER CALLED. The DAL writes it for every inquiry
+     * (0544:61-65), so every document saved from the web was missing its payment schedule
+     * while the save reported success.
+     */
+    private static final String SQL_PAYMENT_SCHEDULE_SAVE =
+            "EXEC [cmagt].[USP_inquiryBookingPaymentSchedule_Insert] "
+            + "@dueBaseDate=?, @dueAmount=?, @pctOfTotal=?, @dueDays=?, @inquiryBookingMasterId=?, "
+            + "@inquiryBookingPaymentScheduleId=?, @paymentTermId=?, @sortNo=?, @remarks=?";
+
+    /**
+     * [cmagt].[USP_inquiryBookingQualitySpecification_Insert] - the 7 non-virtual properties of
+     * Architecture.Model.CommissionAgent.InquiryBookingQualitySpecification.
+     *
+     * Also never called. qualityParameter is virtual on the desktop model and is therefore NOT
+     * a parameter - SetProc skips virtual properties.
+     */
+    private static final String SQL_QUALITY_SPEC_SAVE =
+            "EXEC [cmagt].[USP_inquiryBookingQualitySpecification_Insert] "
+            + "@rangeFrom=?, @rangeTo=?, @inquiryBookingMasterId=?, "
+            + "@inquiryBookingQualitySpecificationId=?, @qualityParameterId=?, @sortNo=?, @remarks=?";
+
     private static final String SQL_READ_BY_ID =
             "EXEC [cmagt].[USP_inquiryBookingMaster_GetAllMethod] @Id=?, @Activity=?";
 
@@ -51,14 +79,32 @@ public class BuyerInquiryBookingRepository {
     private static final String SQL_DELETE_BY_ID =
             "EXEC [cmagt].[USP_inquiryBookingMaster_GetAllMethod] @EntryUserId=?, @Id=?, @Activity=?";
 
-    private static final String SQL_FORM_HISTORY =
-            "EXEC [cmagt].[USP_inquiryBookingMaster_FormHistory] "
-            + "@OrganizationId=?, @CompanyId=?, @BranchesId=?, @FinancialYearId=?, "
-            + "@CanViewAllRecord=?, @EntryUserId=?, @FromDate=?, @ToDate=?, "
-            + "@EntryFromDate=?, @EntryToDate=?, @ModifyFromDate=?, @ModifyToDate=?, "
-            + "@ApprovedFromDate=?, @ApprovedToDate=?, @ValidityDateFrom=?, @ValidityDateTo=?, "
-            + "@FromDocNo=?, @ToDocNo=?, @Id=?, @CommissionAgentId=?, @BuyerId=?, @ItemId=?, "
-            + "@ParentItemIds=?";
+    /**
+     * [cmagt].[USP_inquiryBookingMaster_FormHistory].
+     *
+     * FIVE parameters are unconditional; the other eighteen are GUARDED in the BLL
+     * (0492_Architecture.BLL...InquiryBookingMaster.cs:128-340) and are OMITTED when unset,
+     * never sent as NULL:
+     *
+     *     @EntryUserId       only when !CanViewAllRecord
+     *     @FromDate @ToDate @EntryFromDate @EntryToDate @ModifyFromDate @ModifyToDate
+     *     @ApprovedFromDate @ApprovedToDate @ValidityDateFrom @ValidityDateTo
+     *                        only when the date is not null
+     *     @BuyerRateFrom @BuyerRateTo @FromDocNo @ToDocNo
+     *                        only when the number is not 0
+     *     @Id @CommissionAgentId @BuyerId @ItemId
+     *                        only when the id is not 0
+     *     @ParentItemIds     only when the string is non-empty
+     *
+     * The previous version sent all twenty-three every time, with NULL for the unset ones. A
+     * procedure that branches on a parameter's PRESENCE does not treat NULL the same as absent -
+     * this is the same defect class as the GDN under-filled write. Worse here: @EntryUserId was
+     * sent unconditionally, so a user who DOES hold CanViewAllRecord still had their own id
+     * pushed into the filter and saw only their own documents.
+     *
+     * The statement is therefore built per call from the parameters that actually apply.
+     */
+    private static final String FORM_HISTORY_PROC = "[cmagt].[USP_inquiryBookingMaster_FormHistory]";
 
     public int saveMaster(BuyerInquiryBookingDto h) {
         return scalarInt(SQL_MASTER_SAVE,
@@ -139,6 +185,32 @@ public class BuyerInquiryBookingRepository {
         );
     }
 
+    public void savePaymentScheduleRow(BuyerInquiryBookingDto.BuyerInquiryPaymentScheduleDto p) {
+        scalarInt(SQL_PAYMENT_SCHEDULE_SAVE,
+                ts(p.getDueBaseDate()),
+                num(p.getDueAmount()),
+                num(p.getPctOfTotal()),
+                i(p.getDueDays()),
+                i(p.getInquiryBookingMasterId()),
+                i(p.getInquiryBookingPaymentScheduleId()),
+                i(p.getPaymentTermId()),
+                i(p.getSortNo()),
+                s(p.getRemarks())
+        );
+    }
+
+    public void saveQualitySpecificationRow(BuyerInquiryBookingDto.BuyerInquiryQualitySpecificationDto q) {
+        scalarInt(SQL_QUALITY_SPEC_SAVE,
+                num(q.getRangeFrom()),
+                num(q.getRangeTo()),
+                i(q.getInquiryBookingMasterId()),
+                i(q.getInquiryBookingQualitySpecificationId()),
+                i(q.getQualityParameterId()),
+                i(q.getSortNo()),
+                s(q.getRemarks())
+        );
+    }
+
     public List<Map<String, Object>> readHeaderById(int id) {
         return jdbc.queryForList(SQL_READ_BY_ID, id, "ReadById");
     }
@@ -151,6 +223,16 @@ public class BuyerInquiryBookingRepository {
         return jdbc.queryForList(SQL_READ_BY_ID, id, "ReadByHeaderId_InquiryBookingPartyDetail");
     }
 
+    /** DAL ReadById child #2 - activity spelling is the DAL's own (0544:145). */
+    public List<Map<String, Object>> readPaymentScheduleByHeaderId(int id) {
+        return jdbc.queryForList(SQL_READ_BY_ID, id, "ReadByHeaderId_inquiryBookingPaymentSchedule");
+    }
+
+    /** DAL ReadById child #3 (0544:151). */
+    public List<Map<String, Object>> readQualitySpecificationByHeaderId(int id) {
+        return jdbc.queryForList(SQL_READ_BY_ID, id, "ReadByHeaderId_inquiryBookingQualitySpecification");
+    }
+
     public int generateCode(int orgId, int companyId, int branchId, int financialYearId, int documentTypeId) {
         List<Map<String, Object>> rows = jdbc.queryForList(SQL_GENERATE_CODE,
                 orgId, companyId, branchId, financialYearId, documentTypeId, "GenerateCode");
@@ -161,7 +243,7 @@ public class BuyerInquiryBookingRepository {
     }
 
     public void deleteById(int entryUserId, int id) {
-        jdbc.update(SQL_DELETE_BY_ID, entryUserId, id, "DeleteById");
+        ProcExec.call(jdbc, SQL_DELETE_BY_ID, entryUserId, id, "DeleteById");
     }
 
     public List<Map<String, Object>> formHistory(int orgId, int companyId, int branchId, int financialYearId,
@@ -169,14 +251,44 @@ public class BuyerInquiryBookingRepository {
                                                  String fromDate, String toDate,
                                                  Integer fromDocNo, Integer toDocNo, Integer id,
                                                  Integer commissionAgentId, Integer buyerId, Integer itemId) {
-        return jdbc.queryForList(SQL_FORM_HISTORY,
-                orgId, companyId, branchId, financialYearId,
-                (canViewAllRecords ? 1 : 0), entryUserId,
-                dateOrNull(fromDate), dateOrNull(toDate),
-                null, null, null, null, null, null, null, null,
-                intOrNull(fromDocNo), intOrNull(toDocNo), intOrNull(id),
-                intOrNull(commissionAgentId), intOrNull(buyerId), intOrNull(itemId), null);
+        List<String> names = new ArrayList<>();
+        List<Object> args = new ArrayList<>();
+
+        /* always, in the BLL's own order */
+        add(names, args, "@OrganizationId",   orgId);
+        add(names, args, "@CompanyId",        companyId);
+        add(names, args, "@BranchesId",       branchId);
+        add(names, args, "@FinancialYearId",  financialYearId);
+        add(names, args, "@CanViewAllRecord", canViewAllRecords);
+
+        /* guarded - omitted, not nulled */
+        if (!canViewAllRecords)              add(names, args, "@EntryUserId", entryUserId);
+        Object f = dateOrNull(fromDate);
+        if (f != null)                       add(names, args, "@FromDate", f);
+        Object t = dateOrNull(toDate);
+        if (t != null)                       add(names, args, "@ToDate", t);
+        if (nonZero(fromDocNo))              add(names, args, "@FromDocNo", fromDocNo);
+        if (nonZero(toDocNo))                add(names, args, "@ToDocNo", toDocNo);
+        if (nonZero(id))                     add(names, args, "@Id", id);
+        if (nonZero(commissionAgentId))      add(names, args, "@CommissionAgentId", commissionAgentId);
+        if (nonZero(buyerId))                add(names, args, "@BuyerId", buyerId);
+        if (nonZero(itemId))                 add(names, args, "@ItemId", itemId);
+
+        StringBuilder sql = new StringBuilder("EXEC ").append(FORM_HISTORY_PROC).append(' ');
+        for (int k = 0; k < names.size(); k++) {
+            if (k > 0) sql.append(", ");
+            sql.append(names.get(k)).append("=?");
+        }
+        return jdbc.queryForList(sql.toString(), args.toArray());
     }
+
+    private static void add(List<String> names, List<Object> args, String name, Object value) {
+        names.add(name);
+        args.add(value);
+    }
+
+    private static boolean nonZero(Integer v) { return v != null && v != 0; }
+
 
     private int scalarInt(String sql, Object... args) {
         Integer v = jdbc.query(sql, rs -> {

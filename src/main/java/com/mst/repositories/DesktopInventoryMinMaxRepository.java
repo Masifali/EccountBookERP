@@ -1,4 +1,6 @@
 package com.mst.repositories;
+
+import com.mst.repositories.support.ProcExec;
 import com.mst.models.UserAccount;
 import com.mst.models.dto.InventoryMinMaxRequest;
 import java.sql.Timestamp;
@@ -58,7 +60,7 @@ public class DesktopInventoryMinMaxRepository {
         }
         return ids;
     }
-    public void delete(UserAccount u,int id){record(u,id);jdbc.update("EXEC dbo.usp_MinMaxDeletionById @Id=?",id);}
+    public void delete(UserAccount u,int id){record(u,id);ProcExec.call(jdbc, "EXEC dbo.usp_MinMaxDeletionById @Id=?",id);}
     public int year(UserAccount u){var rows=new InventoryOpeningRepository(jdbc).years(u);if(rows.isEmpty())throw new IllegalArgumentException("No active financial year");return number(rows.get(0).get("Id"));}
     private static Object optional(int id){return id==0?null:id;}
     private static void add(StringBuilder sql,List<Object> args,String name,Object value){if(value!=null){sql.append(", @").append(name).append("=?");args.add(value);}}

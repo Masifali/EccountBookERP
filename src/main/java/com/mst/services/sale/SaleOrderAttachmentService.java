@@ -1,5 +1,7 @@
 package com.mst.services.sale;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.models.UserAccount;
 import com.mst.models.dto.InventoryPosItemRequest;
 import com.mst.security.CurrentUserContext;
@@ -58,7 +60,7 @@ public class SaleOrderAttachmentService {
         for (Integer attachmentId : new HashSet<>(request.removeAttachmentIds)) {
             if (attachmentId == null || existing.stream().noneMatch(r -> number(r.get("Id")) == attachmentId))
                 throw new IllegalArgumentException("Attachment does not belong to this Sale Order");
-            jdbc.update("EXEC dbo.Sp_DMSAttachments_GetAllMethod @Id=?,@Activity=?", attachmentId, "AttachmentDeleteById");
+            ProcExec.call(jdbc, "EXEC dbo.Sp_DMSAttachments_GetAllMethod @Id=?,@Activity=?", attachmentId, "AttachmentDeleteById");
         }
         Map<String, Object> order = jdbc.queryForMap(
                 "SELECT OrderSupCustId FROM dbo.SaleOrder WHERE Id=? AND OrganizationId=? AND CompanyId=?",

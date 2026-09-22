@@ -35,23 +35,19 @@ public class BuyerInquiryBookingRestController {
         return service.getById(id);
     }
 
+    /**
+     * Tenancy and authorship are set UNCONDITIONALLY from the authenticated session.
+     *
+     * They used to be applied only when the posted value was null or zero, which meant a caller
+     * could write into another organization, company or branch, or attribute the document to
+     * another user, simply by putting an id in the body. The desktop reads UserAccount and
+     * clsGlobalVariables.ActiveYr and offers no override; this is that, enforced.
+     *
+     * DocumentTypeId is likewise fixed at the form's own 1050 (frmBuyerInquiryBooking.cs:349)
+     * and never taken from the request.
+     */
     @PostMapping("/save")
     public Map<String, Object> saveRecord(@RequestBody BuyerInquiryBookingDto dto) {
-        if (dto.getOrganizationId() == null || dto.getOrganizationId() == 0) {
-            dto.setOrganizationId(currentUserContext.currentOrganizationId());
-        }
-        if (dto.getCompanyId() == null || dto.getCompanyId() == 0) {
-            dto.setCompanyId(currentUserContext.currentCompanyId());
-        }
-        if (dto.getBranchId() == null || dto.getBranchId() == 0) {
-            dto.setBranchId(currentUserContext.currentBranchId());
-        }
-        if (dto.getFinancialYearId() == null || dto.getFinancialYearId() == 0) {
-            dto.setFinancialYearId(currentUserContext.currentFinancialYearId());
-        }
-        if (dto.getEntryUserId() == null || dto.getEntryUserId() == 0) {
-            dto.setEntryUserId(currentUserContext.currentUserId());
-        }
         return service.saveRecord(dto);
     }
 

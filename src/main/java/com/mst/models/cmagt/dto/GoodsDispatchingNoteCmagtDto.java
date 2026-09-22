@@ -28,6 +28,37 @@ public class GoodsDispatchingNoteCmagtDto {
     private Integer modifyUserId;
     private Integer documentTypeId = 1055;
 
+
+    /* ------------------------------------------------------------------------------------
+     * The rest of the header the desktop saves - btnSave_Click, frmGoodsDispatchingNoteCmagt
+     * :1877-1917. Every one of these was absent, so USP_gdnBuyerDispatchMaster_InsertAndUpdate
+     * was called without them and stored its own defaults: no transporter, no cities, no
+     * delivery term, no vehicle type and every freight and weight figure zero, on a document
+     * that looked saved.
+     * ---------------------------------------------------------------------------------- */
+    private String buyerRefDocNo;
+    private Integer deliverToPartyId;
+    private String deliverToPartyName;
+    private Integer deliverToAddressId;
+    private String deliverToAddress;
+    private Integer loadingCityId;
+    private Integer unloadingCityId;
+    private Integer transporterId;
+    private String transporterName;
+    private BigDecimal biltyFreight;
+    private BigDecimal otherAdLesCharges;
+    private BigDecimal totalFreight;
+    private String freightRemarks;
+    private Integer vehicleTypeId;
+    private String biltyDate;
+    private Integer deliveryTermId;
+    private BigDecimal biltyQty;
+    private BigDecimal loadWeight;
+    private BigDecimal tareWeight;
+    private BigDecimal scaleNetWeight;
+    private BigDecimal billWeight;
+    private String warningRemarks;
+
     private List<DetailDto> gdnBuyerDispatchDetailList = new ArrayList<>();
 
     public static class DetailDto {
@@ -115,4 +146,50 @@ public class GoodsDispatchingNoteCmagtDto {
 
     public List<DetailDto> getGdnBuyerDispatchDetailList() { return gdnBuyerDispatchDetailList; }
     public void setGdnBuyerDispatchDetailList(List<DetailDto> gdnBuyerDispatchDetailList) { this.gdnBuyerDispatchDetailList = gdnBuyerDispatchDetailList; }
+
+
+    public String getBuyerRefDocNo() { return buyerRefDocNo; }
+    public void setBuyerRefDocNo(String buyerRefDocNo) { this.buyerRefDocNo = buyerRefDocNo; }
+    public Integer getDeliverToPartyId() { return deliverToPartyId; }
+    public void setDeliverToPartyId(Integer deliverToPartyId) { this.deliverToPartyId = deliverToPartyId; }
+    public String getDeliverToPartyName() { return deliverToPartyName; }
+    public void setDeliverToPartyName(String deliverToPartyName) { this.deliverToPartyName = deliverToPartyName; }
+    public Integer getDeliverToAddressId() { return deliverToAddressId; }
+    public void setDeliverToAddressId(Integer deliverToAddressId) { this.deliverToAddressId = deliverToAddressId; }
+    public String getDeliverToAddress() { return deliverToAddress; }
+    public void setDeliverToAddress(String deliverToAddress) { this.deliverToAddress = deliverToAddress; }
+    public Integer getLoadingCityId() { return loadingCityId; }
+    public void setLoadingCityId(Integer loadingCityId) { this.loadingCityId = loadingCityId; }
+    public Integer getUnloadingCityId() { return unloadingCityId; }
+    public void setUnloadingCityId(Integer unloadingCityId) { this.unloadingCityId = unloadingCityId; }
+    public Integer getTransporterId() { return transporterId; }
+    public void setTransporterId(Integer transporterId) { this.transporterId = transporterId; }
+    public String getTransporterName() { return transporterName; }
+    public void setTransporterName(String transporterName) { this.transporterName = transporterName; }
+    public BigDecimal getBiltyFreight() { return biltyFreight; }
+    public void setBiltyFreight(BigDecimal biltyFreight) { this.biltyFreight = biltyFreight; }
+    public BigDecimal getOtherAdLesCharges() { return otherAdLesCharges; }
+    public void setOtherAdLesCharges(BigDecimal otherAdLesCharges) { this.otherAdLesCharges = otherAdLesCharges; }
+    public BigDecimal getTotalFreight() { return totalFreight; }
+    public void setTotalFreight(BigDecimal totalFreight) { this.totalFreight = totalFreight; }
+    public String getFreightRemarks() { return freightRemarks; }
+    public void setFreightRemarks(String freightRemarks) { this.freightRemarks = freightRemarks; }
+    public Integer getVehicleTypeId() { return vehicleTypeId; }
+    public void setVehicleTypeId(Integer vehicleTypeId) { this.vehicleTypeId = vehicleTypeId; }
+    public String getBiltyDate() { return biltyDate; }
+    public void setBiltyDate(String biltyDate) { this.biltyDate = biltyDate; }
+    public Integer getDeliveryTermId() { return deliveryTermId; }
+    public void setDeliveryTermId(Integer deliveryTermId) { this.deliveryTermId = deliveryTermId; }
+    public BigDecimal getBiltyQty() { return biltyQty; }
+    public void setBiltyQty(BigDecimal biltyQty) { this.biltyQty = biltyQty; }
+    public BigDecimal getLoadWeight() { return loadWeight; }
+    public void setLoadWeight(BigDecimal loadWeight) { this.loadWeight = loadWeight; }
+    public BigDecimal getTareWeight() { return tareWeight; }
+    public void setTareWeight(BigDecimal tareWeight) { this.tareWeight = tareWeight; }
+    public BigDecimal getScaleNetWeight() { return scaleNetWeight; }
+    public void setScaleNetWeight(BigDecimal scaleNetWeight) { this.scaleNetWeight = scaleNetWeight; }
+    public BigDecimal getBillWeight() { return billWeight; }
+    public void setBillWeight(BigDecimal billWeight) { this.billWeight = billWeight; }
+    public String getWarningRemarks() { return warningRemarks; }
+    public void setWarningRemarks(String warningRemarks) { this.warningRemarks = warningRemarks; }
 }

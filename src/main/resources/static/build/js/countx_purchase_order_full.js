@@ -58,6 +58,7 @@ function initForm() {
     setWinDefaultDates();
     fetchNextDocNo();
     loadDropdowns();
+    fetchComboDefaults();
     preloadSearchData();
     initSearchableDropdowns();
 
@@ -355,7 +356,19 @@ function fetchNextCategorySrNo() {
     });
 }
 
+var comboDefaults = { jobLotId: 0, cropYearId: 0, cityId: 0 };
+
 function loadDropdowns() {
+    /* CropYear() :1584 - Sp_InvCropYear_GetAllMethod @Activity='ReadAll'. */
+    $.get('/api/purchase-order/crop-years', function (data) {
+        const sel = $('#cmbCropYear');
+        sel.find('option:gt(0)').remove();
+        (data || []).forEach(function (c) {
+            sel.append(`<option value="${c.id}">${escapeHtml(c.cropYear)}</option>`);
+        });
+        applyComboDefaults();
+    });
+
     // Parent Categories
     $.get('/api/purchase-order/parent-categories', function(data) {
         const sel = $('#cmbParentCategory');
@@ -1295,6 +1308,38 @@ function calculateGrandTotalWeight() {
  *
  * The switch is the desktop's own; it is reproduced, not inferred from the names.
  */
+/*
+ * defaultConfiquration() :1617 - Job/Lot, Default Crop Year and City Area are configuration ids
+ * the desktop assigns to combjob.Value, CmbCropyr.Value and combcityarea.Value on a new order.
+ * Each is applied only when it is > 0 and the list actually offers it, which is the desktop's own
+ * guard; nothing falls back to "the first row".
+ */
+function fetchComboDefaults() {
+    $.get('/api/purchase-order/combo-defaults', function (d) {
+        comboDefaults = {
+            jobLotId:   parseInt((d && d.jobLotId)   || 0),
+            cropYearId: parseInt((d && d.cropYearId) || 0),
+            cityId:     parseInt((d && d.cityId)     || 0)
+        };
+        applyComboDefaults();
+    });
+}
+
+function applyComboDefaults() {
+    if (comboDefaults.cropYearId > 0) {
+        const cy = $('#cmbCropYear');
+        if (cy.find(`option[value="${comboDefaults.cropYearId}"]`).length) {
+            cy.val(String(comboDefaults.cropYearId)).trigger('change');
+        }
+    }
+    if (comboDefaults.jobLotId > 0) {
+        const jl = $('#cmbJobLot');
+        if (jl.find(`option[value="${comboDefaults.jobLotId}"]`).length) {
+            jl.val(String(comboDefaults.jobLotId)).trigger('change');
+        }
+    }
+}
+
 function orderCategoryToParentCategory(orderCategoryId) {
     switch (parseInt(orderCategoryId || '0')) {
         case 6:  return 4;
@@ -1561,7 +1606,9 @@ function btnAddDetailRow_Click() {
     const weight = parseFloat($('#txtWeight').val() || '0');
     const rate = parseFloat($('#txtRate').val() || '0');
     const amount = parseFloat($('#txtAmount').val() || '0');
-    const cropYear = $('#txtCropYear').val() || '';
+    /* The desktop saves the combo's TEXT into Crop and its id into CropYearId (:3289). */
+    const cropYearId = parseInt($('#cmbCropYear').val() || '0');
+    const cropYear = cropYearId > 0 ? $('#cmbCropYear option:selected').text() : '';
     /* No '|| 1' fallback: FormDetailValidation treats 0 as "not chosen" and refuses the row.
        Defaulting to 1 made the UOM checks below unreachable and could post a wrong factor. */
     const packUomId = parseInt($('#cmbPackUom').val() || '0');
@@ -1592,9 +1639,9 @@ function btnAddDetailRow_Click() {
         $('#txtItemDisplay').focus();
         return;
     }
-    if (!String(cropYear).trim()) {
+    if (cropYearId <= 0) {
         alert("CropYear Field is Required");
-        $('#txtCropYear').focus();
+        $('#cmbCropYear').focus();
         return;
     }
     if (jobLotId <= 0) {
@@ -1653,6 +1700,7 @@ function btnAddDetailRow_Click() {
         itemCode: selectedItemField(itemId, 'itemCode', itemDisplayText),
         itemName: selectedItemField(itemId, 'itemName', itemDisplayText),
         cropYear: cropYear,
+        cropYearId: cropYearId,
         packUomId: packUomId,
         packUomCode: packUomCode,
         itemQty: qty,
@@ -1712,6 +1760,7 @@ function clearItemInputs() {
     $('#txtRate').val('');
     $('#txtAmount').val('');
     $('#txtLineRemarks').val('');
+    $('#cmbCropYear').val(String(comboDefaults.cropYearId || 0));
     $('#cmbPackUom').empty().append('<option value="0">-- Select Item First --</option>');
     $('#cmbRateUom').empty().append('<option value="0">-- Select Item First --</option>');
 }
@@ -1723,7 +1772,11 @@ function editDetailRow(idx) {
     editingLineIdx = idx;
     $('#hidItemId').val(item.itemId);
     $('#txtItemDisplay').val(`${item.itemCode} - ${item.itemName}`);
-    $('#txtCropYear').val(item.cropYear);
+    $('#cmbCropYear').val(item.cropYearId || '0');
+    if (parseInt(item.cropYearId || '0') <= 0 && item.cropYear) {
+        /* An older row saved before the combo existed carries the text but no id. */
+        $('#cmbCropYear option').filter(function () { return $(this).text() === item.cropYear; }).prop('selected', true);
+    }
 
     // Re-populate the real, item-specific UOM list before restoring the saved selection - ditto
     // desktop's bindRateUomAndItemPackUom(detailId) called with a non-zero detailId when double-
@@ -2273,10 +2326,15 @@ function renderChargeGrid() {
     chargeToProductItems.forEach((row, idx) => {
         /* data-code is the account code, the second column of the drop grid. Published only
            when the procedure returns one - absent renders an empty cell, not a placeholder. */
+        /* grdChargeToProductRefresh binds this value list on SupplierCustomerId when
+           SubsidiaryAccountAllownOnVouchers is on and on Id when it is off (:3150 / :3155).
+           The server says which by returning bindOn, so the option value follows the desktop
+           rather than always being the account Id. */
         const options = coaAccountsForCharge.map(a => {
             const code = a.AccountCode || a.accountCode || '';
-            return `<option value="${a.Id}" data-code="${escapeHtml(code)}"`
-                 + ` ${a.Id == row.accountId ? 'selected' : ''}>${escapeHtml(a.AccountTitle)}</option>`;
+            const v = (a.bindOn === 'SupplierCustomerId') ? a.SupplierCustomerId : a.Id;
+            return `<option value="${v}" data-code="${escapeHtml(code)}"`
+                 + ` ${v == row.accountId ? 'selected' : ''}>${escapeHtml(a.AccountTitle)}</option>`;
         }).join('');
         tbody.append(`
             <tr>
@@ -2284,7 +2342,7 @@ function renderChargeGrid() {
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.percentage}" onchange="onChargePercentageChange(${idx}, this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.qty}" onchange="onChargeQtyRateChange(${idx}, 'qty', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.rate}" onchange="onChargeQtyRateChange(${idx}, 'rate', this.value)"/></td>
-                <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${(row.amount || 0).toFixed(2)}"/></td>
+                <td><input type="number" step="0.01" class="win-textbox win-textbox-readonly" style="text-align: right;" value="${(row.amount || 0).toFixed(2)}" readonly/></td>
                 <td><input type="text" class="win-textbox" value="${escapeHtml(row.remarks || '')}" onchange="chargeToProductItems[${idx}].remarks = this.value;"/></td>
                 <td style="text-align: center;"><button type="button" class="btn btn-danger btn-xs" onclick="removeChargeRow(${idx})">&times;</button></td>
             </tr>
@@ -2294,7 +2352,8 @@ function renderChargeGrid() {
 
 function onChargeAccountChange(idx, val) {
     const id = parseInt(val || '0');
-    const found = coaAccountsForCharge.find(a => a.Id == id);
+    const found = coaAccountsForCharge.find(a =>
+        (a.bindOn === 'SupplierCustomerId' ? a.SupplierCustomerId : a.Id) == id);
     chargeToProductItems[idx].accountId = id;
     chargeToProductItems[idx].accountTitle = found ? found.AccountTitle : '';
 }
@@ -2794,9 +2853,12 @@ function loadSelectedOrder(poId) {
             return {
                 accountId: c.AccountId,
                 accountTitle: c.AccountTitle,
-                percentage: c.Percentage,
-                qty: c.Qty,
-                rate: c.Rate,
+                percentage: c.Percentage !== undefined ? c.Percentage : c.percentage,
+                /* The table's columns are Qty/Rate; the desktop's in-memory grid calls the same
+                   two ItemQty/ItemRate. Accept either so a rename on the procedure side cannot
+                   silently load them as 0. */
+                qty: (c.Qty !== undefined ? c.Qty : (c.ItemQty !== undefined ? c.ItemQty : 0)),
+                rate: (c.Rate !== undefined ? c.Rate : (c.ItemRate !== undefined ? c.ItemRate : 0)),
                 amount: c.Amount,
                 remarks: c.Remarks
             };

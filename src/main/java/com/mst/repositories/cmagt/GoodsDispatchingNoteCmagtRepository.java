@@ -39,13 +39,44 @@ public class GoodsDispatchingNoteCmagtRepository {
             masterParams.addValue("driverMobileNo", dto.getDriverMobileNo() != null ? dto.getDriverMobileNo() : "");
             masterParams.addValue("remarksHeader", dto.getRemarksHeader() != null ? dto.getRemarksHeader() : "");
 
-            masterParams.addValue("organizationId", dto.getOrganizationId() != null ? dto.getOrganizationId() : 1);
-            masterParams.addValue("companyId", dto.getCompanyId() != null ? dto.getCompanyId() : 1);
-            masterParams.addValue("branchId", dto.getBranchId() != null ? dto.getBranchId() : 1);
-            masterParams.addValue("financialYearId", dto.getFinancialYearId() != null ? dto.getFinancialYearId() : 1);
-            masterParams.addValue("entryUserId", dto.getEntryUserId() != null ? dto.getEntryUserId() : 1);
-            masterParams.addValue("modifyUserId", dto.getModifyUserId() != null ? dto.getModifyUserId() : 1);
+            /* Tenancy and the user are set by the service from the session before this runs.
+               They used to fall back to 1 here - the same fabricated default that made the
+               Purchase Order screen read company 1 - so a payload that omitted them wrote a
+               document into another company. No fallback now: the service guarantees them. */
+            masterParams.addValue("organizationId", dto.getOrganizationId());
+            masterParams.addValue("companyId", dto.getCompanyId());
+            masterParams.addValue("branchId", dto.getBranchId());
+            masterParams.addValue("financialYearId", dto.getFinancialYearId());
+            masterParams.addValue("entryUserId", dto.getEntryUserId());
+            masterParams.addValue("modifyUserId", dto.getModifyUserId());
             masterParams.addValue("documentTypeId", 1055);
+
+            /* btnSave_Click :1877-1917 - the rest of the header. Omitting a parameter on a
+               SimpleJdbcCall lets the procedure apply its own default, which is why freight,
+               weights, transporter, both cities, the delivery term and the vehicle type were
+               silently stored as 0/NULL on every web-saved GDN. */
+            masterParams.addValue("BuyerRefDocNo",      nz(dto.getBuyerRefDocNo()));
+            masterParams.addValue("DeliverToPartyId",   nzi(dto.getDeliverToPartyId()));
+            masterParams.addValue("DeliverToPartyName", nz(dto.getDeliverToPartyName()));
+            masterParams.addValue("DeliverToAddressId", nzi(dto.getDeliverToAddressId()));
+            masterParams.addValue("DeliverToAddress",   nz(dto.getDeliverToAddress()));
+            masterParams.addValue("loadingCityId",      nzi(dto.getLoadingCityId()));
+            masterParams.addValue("unloadingCityId",    nzi(dto.getUnloadingCityId()));
+            masterParams.addValue("transporterId",      nzi(dto.getTransporterId()));
+            masterParams.addValue("transporterName",    nz(dto.getTransporterName()));
+            masterParams.addValue("biltyFreight",       nzd(dto.getBiltyFreight()));
+            masterParams.addValue("otherAdLesCharges",  nzd(dto.getOtherAdLesCharges()));
+            masterParams.addValue("totalFreight",       nzd(dto.getTotalFreight()));
+            masterParams.addValue("FreightRemarks",     nz(dto.getFreightRemarks()));
+            masterParams.addValue("vehicleTypeId",      nzi(dto.getVehicleTypeId()));
+            masterParams.addValue("biltyDate",          parseDate(dto.getBiltyDate()));
+            masterParams.addValue("deliveryTermId",     nzi(dto.getDeliveryTermId()));
+            masterParams.addValue("biltyQty",           nzd(dto.getBiltyQty()));
+            masterParams.addValue("loadWeight",         nzd(dto.getLoadWeight()));
+            masterParams.addValue("tareWeight",         nzd(dto.getTareWeight()));
+            masterParams.addValue("scaleNetWeight",     nzd(dto.getScaleNetWeight()));
+            masterParams.addValue("BillWeight",         nzd(dto.getBillWeight()));
+            masterParams.addValue("warningRemarks",     nz(dto.getWarningRemarks()));
 
             Map<String, Object> masterOut = masterCall.execute(masterParams);
             Integer masterId = extractReturnedId(masterOut);
@@ -93,8 +124,10 @@ public class GoodsDispatchingNoteCmagtRepository {
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("Activity", "ReadBySearch_gdnBuyerDispatchMaster");
-        params.addValue("CompanyId", companyId != null ? companyId : 1);
-        params.addValue("OrganizationId", organizationId != null ? organizationId : 1);
+        /* The controller passes the session's own values. The ': 1' fallbacks that used to sit
+           here would have quietly widened a read to company 1 if one ever arrived null. */
+        params.addValue("CompanyId", companyId);
+        params.addValue("OrganizationId", organizationId);
         params.addValue("DocumentTypeId", 1055);
         params.addValue("FromDate", parseDate(fromDate));
         params.addValue("ToDate", parseDate(toDate));
@@ -163,4 +196,8 @@ public class GoodsDispatchingNoteCmagtRepository {
             return new Date();
         }
     }
+
+    private static String nz(String v)      { return v == null ? "" : v; }
+    private static int    nzi(Integer v)    { return v == null ? 0 : v; }
+    private static BigDecimal nzd(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
 }

@@ -1,5 +1,7 @@
 package com.mst.services;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.security.CurrentUserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,7 +223,7 @@ public class ContractorWagesScheduleService {
     public Map<String, Object> approve(int id, int rowEntryUserId) {
         Map<String, Object> res = new HashMap<>();
         try {
-            jdbcTemplate.update(SQL_APPROVE, id, "Approve",
+            ProcExec.call(jdbcTemplate, SQL_APPROVE, id, "Approve",
                     currentUserContext.currentCompanyId(), rowEntryUserId,
                     currentUserContext.currentOrganizationId(), "ApproveUnApprove");
             res.put("success", true);
