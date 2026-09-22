@@ -24,6 +24,7 @@ let lineItems = [];
 let emptyBagItems = [];
 let expenseItems = [];
 let chargeToProductItems = [];
+let isEditMode = false;
 let paymentTermsDetailItems = [];
 
 let allSuppliers = [];
@@ -188,70 +189,106 @@ function format4ColSelection(state) {
     return state.text;
 }
 
-function bindDropdownChangeListeners() {
-    $('#cmbSupplier').off('change.sync').on('change.sync', function() {
-        const suppId = parseInt($(this).val() || '0');
-        if (suppId > 0) {
-            const supp = allSuppliers.find(s => s.id === suppId);
-            if (supp) {
-                $('#hidSupplierId').val(supp.id);
-                const displayText = $('#radSupCode').is(':checked') 
-                    ? `${supp.partyCode} - ${supp.companyName}`
-                    : `${supp.companyName} (${supp.partyCode || 'N/A'})`;
-                $('#txtSupplierDisplay').val(displayText);
-                onSupplierSelectedEventChain(supp);
-            }
-        } else {
-            $('#hidSupplierId').val('0');
-            $('#txtSupplierDisplay').val('');
-        }
-    });
+/* ============================================================
+ * The four combo change handlers.
+ *
+ * WHY THESE ARE NAMED FUNCTIONS AND NOT ANONYMOUS ONES
+ * ----------------------------------------------------
+ * They used to be anonymous functions bound only as .on('change.sync', function(){...}),
+ * and the template's inline onchange="onSupplierChange()" reached them by calling
+ * $('#cmbSupplier').trigger('change.sync').
+ *
+ * That was an infinite recursion. countx_desktop_combo.js Combo.prototype.fire dispatches a
+ * NATIVE change event, and a native change runs the element's inline onchange attribute.
+ * jQuery's .trigger() also invokes the element's inline attribute during its bubble walk
+ * (handle = ontype && cur[ontype]; handle.apply(cur, data)) - and it resolves the BASE type
+ * "change" for that lookup, so the ".sync" namespace does not protect against it. So:
+ *
+ *     native change -> onSupplierChange() -> trigger('change.sync') -> onSupplierChange() -> ...
+ *
+ * until "Maximum call stack size exceeded".
+ *
+ * The cause is removed rather than guarded: each handler is a named function, jQuery binds
+ * THAT function, and the template no longer carries an inline onchange at all. A native change
+ * - whether from Combo.fire, from a real <select> if the combo failed to initialise, or from
+ * the explicit dispatchEvent at clearForm - reaches the jQuery binding exactly once, which is
+ * the same "exactly once each" contract countx_desktop_combo.js:531 already relies on.
+ * ============================================================ */
 
-    $('#cmbBrokerAccount').off('change.sync').on('change.sync', function() {
-        const brokerId = parseInt($(this).val() || '0');
-        if (brokerId > 0) {
-            const broker = allBrokers.find(b => b.id === brokerId);
-            if (broker) {
-                $('#hidBrokerAccountId').val(broker.id);
-                $('#txtBrokerAcDisplay').val(broker.companyName);
-                calcBrokery();
-            }
-        } else {
-            $('#hidBrokerAccountId').val('0');
-            $('#txtBrokerAcDisplay').val('');
+/* combsuppname_Leave, PurchsaeOrder.cs :1750 */
+function syncSupplierSelection() {
+    const suppId = parseInt($('#cmbSupplier').val() || '0');
+    if (suppId > 0) {
+        const supp = allSuppliers.find(s => s.id === suppId);
+        if (supp) {
+            $('#hidSupplierId').val(supp.id);
+            const displayText = $('#radSupCode').is(':checked')
+                ? `${supp.partyCode} - ${supp.companyName}`
+                : `${supp.companyName} (${supp.partyCode || 'N/A'})`;
+            $('#txtSupplierDisplay').val(displayText);
+            onSupplierSelectedEventChain(supp);
+        }
+    } else {
+        $('#hidSupplierId').val('0');
+        $('#txtSupplierDisplay').val('');
+    }
+}
+
+/* CmbBrokeryAccount_Leave -> TotalBrokeryAmountCalculate(), :4536 / :4376 */
+function syncBrokerAccountSelection() {
+    const brokerId = parseInt($('#cmbBrokerAccount').val() || '0');
+    if (brokerId > 0) {
+        const broker = allBrokers.find(b => b.id === brokerId);
+        if (broker) {
+            $('#hidBrokerAccountId').val(broker.id);
+            $('#txtBrokerAcDisplay').val(broker.companyName);
             calcBrokery();
         }
-    });
+    } else {
+        $('#hidBrokerAccountId').val('0');
+        $('#txtBrokerAcDisplay').val('');
+        calcBrokery();
+    }
+}
 
-    $('#cmbCommissionAgent').off('change.sync').on('change.sync', function() {
-        const agentId = parseInt($(this).val() || '0');
-        if (agentId > 0) {
-            const agent = allCommAgents.find(a => a.id === agentId);
-            if (agent) {
-                $('#hidCommissionAgentId').val(agent.id);
-                $('#txtCommAgentDisplay').val(agent.companyName);
-                calcCommission();
-            }
-        } else {
-            $('#hidCommissionAgentId').val('0');
-            $('#txtCommAgentDisplay').val('');
+/* The desktop has no ValueChanged/Leave handler on the commission agent; it is read only at
+   save (:3305). This keeps the hidden id and the commission total in step with the pick. */
+function syncCommissionAgentSelection() {
+    const agentId = parseInt($('#cmbCommissionAgent').val() || '0');
+    if (agentId > 0) {
+        const agent = allCommAgents.find(a => a.id === agentId);
+        if (agent) {
+            $('#hidCommissionAgentId').val(agent.id);
+            $('#txtCommAgentDisplay').val(agent.companyName);
             calcCommission();
         }
-    });
+    } else {
+        $('#hidCommissionAgentId').val('0');
+        $('#txtCommAgentDisplay').val('');
+        calcCommission();
+    }
+}
 
-    $('#cmbBookingPerson').off('change.sync').on('change.sync', function() {
-        const personId = parseInt($(this).val() || '0');
-        if (personId > 0) {
-            const person = allBookingPersons.find(p => p.id === personId);
-            if (person) {
-                $('#hidBookingPersonId').val(person.id);
-                $('#txtBookingPersonDisplay').val(person.partyName || person.description || person.name);
-            }
-        } else {
-            $('#hidBookingPersonId').val('0');
-            $('#txtBookingPersonDisplay').val('-- Select --');
+/* Likewise the booking person - read only at save (:3140). */
+function syncBookingPersonSelection() {
+    const personId = parseInt($('#cmbBookingPerson').val() || '0');
+    if (personId > 0) {
+        const person = allBookingPersons.find(p => p.id === personId);
+        if (person) {
+            $('#hidBookingPersonId').val(person.id);
+            $('#txtBookingPersonDisplay').val(person.partyName || person.description || person.name);
         }
-    });
+    } else {
+        $('#hidBookingPersonId').val('0');
+        $('#txtBookingPersonDisplay').val('-- Select --');
+    }
+}
+
+function bindDropdownChangeListeners() {
+    $('#cmbSupplier').off('change.sync').on('change.sync', syncSupplierSelection);
+    $('#cmbBrokerAccount').off('change.sync').on('change.sync', syncBrokerAccountSelection);
+    $('#cmbCommissionAgent').off('change.sync').on('change.sync', syncCommissionAgentSelection);
+    $('#cmbBookingPerson').off('change.sync').on('change.sync', syncBookingPersonSelection);
 }
 
 function setWinDefaultDates() {
@@ -418,6 +455,7 @@ function loadDropdowns() {
     loadChargeToProductDropdowns();
     loadPaymentTermsOptions();
     loadUomScheduleList();
+    loadHistoryMeta();
     loadHistoryBranches();
     loadHistoryParties();
 }
@@ -495,6 +533,18 @@ function loadHistoryBranches() {
                 sel.append(`<option value="${id}" data-code="${escapeHtml(code)}">${escapeHtml(name)}</option>`);
             });
         }
+        /* The desktop opens with a branch already chosen - cmbBranchName.Text is non-empty at
+           load, which is why its history grid populates immediately. DDL.BindDDL's ZeroIndex
+           argument decides exactly how, and DDL lives in a compiled library that is not in the
+           recovered source, so its precise semantics are UNVERIFIED. The first option is
+           selected here: for a user allocated a single branch - the case in the report - first,
+           all and "index zero" are the same branch. Revisit if a multi-branch user sees the
+           wrong default. */
+        const firstReal = sel.find('option').filter(function () {
+            return $(this).val() && $(this).val() !== '0';
+        }).first();
+        if (firstReal.length && !(sel.val() || []).length) sel.val([firstReal.val()]);
+
         if ($.fn.select2) sel.trigger('change.select2');
     });
 }
@@ -859,17 +909,23 @@ function onSupplierSelectedEventChain(supp) {
  * cites the desktop handler it stands for.
  * ============================================================ */
 
-/* combsuppname_Leave, :1750 */
-function onSupplierChange() { $('#cmbSupplier').trigger('change.sync'); }
-
-/* The desktop has no ValueChanged/Leave handler on the commission agent or the
-   booking person; both are read only at save (:3305, :3140). These exist because the
-   template binds them, and they keep the hidden ids and the totals in step. */
-function onCommissionAgentChange() { $('#cmbCommissionAgent').trigger('change.sync'); }
-function onBookingPersonChange()   { $('#cmbBookingPerson').trigger('change.sync'); }
-
-/* CmbBrokeryAccount_Leave -> TotalBrokeryAmountCalculate(), :4536 / :4376 */
-function onBrokerAccountChange()   { $('#cmbBrokerAccount').trigger('change.sync'); }
+/* The four combo onchange names the template USED to carry inline.
+ *
+ * They are deliberately empty. The handler for each combo is bound with jQuery in
+ * bindDropdownChangeListeners() and a native change event already runs it; these called
+ * .trigger('change.sync'), and jQuery's trigger re-invokes the element's own inline onchange
+ * attribute - by BASE type, so the namespace did not protect it - which called back into here.
+ * That was the "Maximum call stack size exceeded" on this page.
+ *
+ * purchase_order.html no longer sets onchange on these four selects. These stubs remain only so
+ * that a browser holding an older cached copy of the template degrades to doing nothing rather
+ * than throwing ReferenceError on every keystroke in the combo. Do not put work back in them:
+ * anything added here runs in ADDITION to the jQuery handler, which is the double-execution
+ * countx_desktop_combo.js:531 documents. */
+function onSupplierChange()        { /* bound in bindDropdownChangeListeners - see above */ }
+function onCommissionAgentChange() { /* bound in bindDropdownChangeListeners - see above */ }
+function onBookingPersonChange()   { /* bound in bindDropdownChangeListeners - see above */ }
+function onBrokerAccountChange()   { /* bound in bindDropdownChangeListeners - see above */ }
 
 /* rdSearchByName_CheckedChanged, :1820-1846.
  *
@@ -2250,7 +2306,7 @@ function renderExpGrid() {
         tbody.append(`
             <tr>
                 <td style="text-align: center;">${idx + 1}</td>
-                <td><select class="win-combo" onchange="onExpItemChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
+                <td><select class="win-combo" onchange="onExpItemChange(${idx}, this.value)"><option value="0">${placeholder}</option>${options}</select></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.qty}" onchange="onExpQtyRateChange(${idx}, 'qty', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.rate}" onchange="onExpQtyRateChange(${idx}, 'rate', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${(row.amount || 0).toFixed(2)}" onchange="onExpAmountChange(${idx}, this.value)"/></td>
@@ -2304,11 +2360,43 @@ function btnAddExpenseRow_Click() {
  * Amount = round(TotalOrderAmount / 100 * Percentage) (resets ItemQty/ItemRate to 0), ditto
  * grdExpensesChargeToProduct_CellUpdated().
  * ============================================================ */
+let chargeAccountsError = '';
+
 function loadChargeToProductDropdowns() {
     $.get('/api/purchase-order/charge-to-product/accounts', function(data) {
         coaAccountsForCharge = data || [];
+        chargeAccountsError = coaAccountsForCharge.length ? ''
+            : 'The Account Title list came back empty.';
+        renderChargeGrid();
+    }).fail(function (xhr) {
+        /* There was no .fail() here. A failed load left coaAccountsForCharge as [] and the
+           Account Title cell rendered with nothing but "-- Select --" - indistinguishable, on
+           screen, from a company that simply has no accounts configured. The operator's report
+           was "onChargeAccountChange not working", which is what a silently empty dropdown
+           looks like from the outside. */
+        coaAccountsForCharge = [];
+        chargeAccountsError = (xhr && xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error))
+            || (xhr && xhr.status ? ('the account list request failed with HTTP ' + xhr.status) : 'unknown error');
+        console.error('[PO] Account Title list failed to load:', chargeAccountsError);
         renderChargeGrid();
     });
+}
+
+/* Case-insensitive column read. The server normalises both branches now, but a procedure's
+   column casing is not something to depend on from the page. */
+function acol(row, name) {
+    if (!row) return undefined;
+    if (row[name] !== undefined) return row[name];
+    const k = Object.keys(row).find(x => x.toLowerCase() === String(name).toLowerCase());
+    return k === undefined ? undefined : row[k];
+}
+
+/** The value member the desktop binds this list on - :3150 / :3155. */
+function chargeAccountValue(a) {
+    const v = (acol(a, 'bindOn') === 'SupplierCustomerId')
+        ? acol(a, 'SupplierCustomerId') : acol(a, 'Id');
+    const n = parseInt(v, 10);
+    return isNaN(n) ? 0 : n;
 }
 
 function loadDefaultChargeRows() {
@@ -2330,51 +2418,126 @@ function renderChargeGrid() {
            SubsidiaryAccountAllownOnVouchers is on and on Id when it is off (:3150 / :3155).
            The server says which by returning bindOn, so the option value follows the desktop
            rather than always being the account Id. */
+        /* An account whose value member or title did not resolve is DROPPED rather than drawn
+           as an <option value="undefined"> with empty text - a blank row in the drop grid that
+           selects NaN is worse than a shorter list, and it is what made this cell look broken. */
         const options = coaAccountsForCharge.map(a => {
-            const code = a.AccountCode || a.accountCode || '';
-            const v = (a.bindOn === 'SupplierCustomerId') ? a.SupplierCustomerId : a.Id;
+            const v = chargeAccountValue(a);
+            const title = acol(a, 'AccountTitle');
+            if (!v || !title) return '';
+            const code = acol(a, 'AccountCode') || '';
             return `<option value="${v}" data-code="${escapeHtml(code)}"`
-                 + ` ${v == row.accountId ? 'selected' : ''}>${escapeHtml(a.AccountTitle)}</option>`;
+                 + ` ${v == row.accountId ? 'selected' : ''}>${escapeHtml(title)}</option>`;
         }).join('');
+
+        const placeholder = chargeAccountsError
+            ? `-- ${escapeHtml(chargeAccountsError)} --`
+            : '-- Select --';
         tbody.append(`
-            <tr>
+            <tr data-charge-row="${idx}">
                 <td><select class="win-combo dtcombo" data-dtcombo="account2" data-dtcombo-caption="Account Title" onchange="onChargeAccountChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
-                <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.percentage}" onchange="onChargePercentageChange(${idx}, this.value)"/></td>
-                <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.qty}" onchange="onChargeQtyRateChange(${idx}, 'qty', this.value)"/></td>
-                <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.rate}" onchange="onChargeQtyRateChange(${idx}, 'rate', this.value)"/></td>
-                <td><input type="number" step="0.01" class="win-textbox win-textbox-readonly" style="text-align: right;" value="${(row.amount || 0).toFixed(2)}" readonly/></td>
-                <td><input type="text" class="win-textbox" value="${escapeHtml(row.remarks || '')}" onchange="chargeToProductItems[${idx}].remarks = this.value;"/></td>
+                <td><input type="number" step="0.01" class="win-textbox" data-charge-cell="percentage" style="text-align: right;" value="${row.percentage}" onchange="onChargePercentageChange(${idx}, this.value)"/></td>
+                <td><input type="number" step="0.01" class="win-textbox" data-charge-cell="qty" style="text-align: right;" value="${row.qty}" onchange="onChargeQtyRateChange(${idx}, 'qty', this.value)"/></td>
+                <td><input type="number" step="0.01" class="win-textbox" data-charge-cell="rate" style="text-align: right;" value="${row.rate}" onchange="onChargeQtyRateChange(${idx}, 'rate', this.value)"/></td>
+                <td><input type="number" step="0.01" class="win-textbox win-textbox-readonly" data-charge-cell="amount" style="text-align: right;" value="${(row.amount || 0).toFixed(2)}" readonly/></td>
+                <td><input type="text" class="win-textbox" data-charge-cell="remarks" value="${escapeHtml(row.remarks || '')}" onchange="chargeToProductItems[${idx}].remarks = this.value;"/></td>
                 <td style="text-align: center;"><button type="button" class="btn btn-danger btn-xs" onclick="removeChargeRow(${idx})">&times;</button></td>
             </tr>
         `);
     });
 }
 
+/* :2945 - CellUpdated's AccountId branch. The row keeps BOTH the picked value and the title,
+   because the title is what the desktop matches on in dtAccounts (:2896) and what the grid
+   shows after a re-render. parseInt on an unresolved value used to yield NaN, which JSON
+   serialises as null and the save path then refuses as "AccountTitle Field Required" - a
+   refusal whose stated reason had nothing to do with the actual cause. */
 function onChargeAccountChange(idx, val) {
-    const id = parseInt(val || '0');
-    const found = coaAccountsForCharge.find(a =>
-        (a.bindOn === 'SupplierCustomerId' ? a.SupplierCustomerId : a.Id) == id);
-    chargeToProductItems[idx].accountId = id;
-    chargeToProductItems[idx].accountTitle = found ? found.AccountTitle : '';
+    if (!chargeToProductItems[idx]) return;
+    const id = parseInt(val, 10);
+    const safeId = isNaN(id) ? 0 : id;
+    const found = coaAccountsForCharge.find(a => chargeAccountValue(a) === safeId);
+    chargeToProductItems[idx].accountId = safeId;
+    chargeToProductItems[idx].accountTitle = found ? (acol(found, 'AccountTitle') || '') : '';
+}
+
+/* ============================================================
+ * grdExpensesChargeToProduct_CellUpdated - PurchsaeOrder.cs :2528-2564.
+ *
+ * ---------------------------------------------------------------------------------------
+ * WHAT WAS ACTUALLY WRONG, AND WHAT WAS NOT
+ * ---------------------------------------------------------------------------------------
+ * Reported: "click on Item Qty and it sets 0 automatically". The row read Percentage 0,
+ * Item Qty 230, Item Rate 0, Amount 0.00.
+ *
+ * NOT A DEFECT - that row is what the desktop shows too. dtChargeToProduct seeds a new row
+ * with Rows.Add(0, 0, 0, 0, 0, 0, "") (:2444) and declares ItemQty/ItemRate as
+ * typeof(double) (:589-590), so those two cells are "0" and never empty. The :2540 guard
+ * therefore passes, and the desktop likewise writes Amount = 230 x 0 = 0 and resets
+ * Percentage to 0. Entering a Qty before a Rate is simply an incomplete row on both sides.
+ *
+ * THE REAL DEFECT - renderChargeGrid() was called from inside both change handlers. The
+ * desktop assigns three cell values in place (:2543-2545 / :2553-2556) and never rebuilds
+ * the grid. A change event fires on blur, so rebuilding the tbody destroys and replaces the
+ * very <input> the operator is clicking into: the click lands on an element that no longer
+ * exists, focus is lost, and anything typed into the replacement is discarded. That is the
+ * behaviour being reported - the field is not zeroed by the click, it is replaced
+ * mid-gesture. The rebuild also discarded every .dtcombo wrapper in the account column.
+ * These now write the cells in place instead.
+ *
+ * A SECOND, SEPARATE DEFECT - :2553 is `if (TotlaPercentage > 0.0) { Amount = ... }` with no
+ * else, so a percentage computing to zero or less leaves the existing Amount standing. This
+ * had `amt > 0 ? Math.round(amt) : 0`, inventing a zero the desktop never writes.
+ *
+ * The :2540 and :2547 empty-cell guards are reproduced anyway. :2547 is reachable -
+ * Percentage is an untyped (string) column (:588) and can genuinely be cleared - and :2540
+ * costs nothing and keeps the ported condition honest against its source.
+ * ============================================================ */
+
+/** The raw text of one cell of one row - the web equivalent of item.Cells[k].Value.ToString(). */
+function chargeCellText(idx, cell) {
+    const el = $(`#tblChargesTbody tr[data-charge-row="${idx}"] input[data-charge-cell="${cell}"]`);
+    return el.length ? String(el.val()) : '';
+}
+
+/** Writes one cell in place, model and DOM together, without rebuilding the row. */
+function setChargeCell(idx, cell, value) {
+    chargeToProductItems[idx][cell] = value;
+    const el = $(`#tblChargesTbody tr[data-charge-row="${idx}"] input[data-charge-cell="${cell}"]`);
+    if (el.length) el.val(cell === 'amount' ? (value || 0).toFixed(2) : value);
 }
 
 function onChargeQtyRateChange(idx, field, val) {
-    const num = parseFloat(val || '0') || 0;
-    chargeToProductItems[idx][field] = num;
-    chargeToProductItems[idx].amount = (chargeToProductItems[idx].qty || 0) * (chargeToProductItems[idx].rate || 0);
-    chargeToProductItems[idx].percentage = 0;
-    renderChargeGrid();
+    /* The edited cell itself is always taken, ditto grdExpensesChargeToProduct.UpdateData(). */
+    chargeToProductItems[idx][field] = parseFloat(val || '0') || 0;
+
+    /* :2540 - both cells must be non-empty or the desktop does nothing at all. */
+    const qtyText  = field === 'qty'  ? String(val == null ? '' : val) : chargeCellText(idx, 'qty');
+    const rateText = field === 'rate' ? String(val == null ? '' : val) : chargeCellText(idx, 'rate');
+    if (qtyText.trim() === '' || rateText.trim() === '') return;
+
+    const qty  = parseFloat(qtyText  || '0') || 0;
+    const rate = parseFloat(rateText || '0') || 0;
+    setChargeCell(idx, 'amount', qty * rate);   /* :2543 */
+    setChargeCell(idx, 'percentage', 0);        /* :2544 */
 }
 
 function onChargePercentageChange(idx, val) {
-    const pct = parseFloat(val || '0') || 0;
-    chargeToProductItems[idx].percentage = pct;
+    const pctText = String(val == null ? '' : val);
+    chargeToProductItems[idx].percentage = parseFloat(pctText || '0') || 0;
+
+    /* :2547 - Percentage must be non-empty. */
+    if (pctText.trim() === '') return;
+
+    /* :2549 - grd.GetTotal(Amount, Sum) on the ITEM DETAIL grid, which is what
+       calculateGrandTotalLineAmount() sums. Not the charge grid's own total. */
     const totalOrderAmt = calculateGrandTotalLineAmount();
-    const amt = (totalOrderAmt / 100.0) * pct;
-    chargeToProductItems[idx].amount = amt > 0 ? Math.round(amt) : 0;
-    chargeToProductItems[idx].qty = 0;
-    chargeToProductItems[idx].rate = 0;
-    renderChargeGrid();
+    const amt = (totalOrderAmt / 100.0) * (parseFloat(pctText || '0') || 0);
+
+    /* :2553 - Amount is written ONLY when the computed share is positive. No else branch. */
+    if (amt > 0) setChargeCell(idx, 'amount', Math.round(amt));
+    setChargeCell(idx, 'qty', 0);    /* :2555 */
+    setChargeCell(idx, 'rate', 0);   /* :2556 */
 }
 
 function removeChargeRow(idx) {
@@ -2707,6 +2870,17 @@ function btnSave_Click() {
     });
 }
 
+/* :5085-5104 - by the time this is reachable, applyEditModeState(po,'saveas') has already
+   zeroed every detail Id and currentPoMasterId, so the ordinary save path inserts a new
+   document. That is what SaveAs means on the desktop: a copy, not an update. */
+function btnSaveAs_Click() {
+    if (currentPoMasterId > 0) {
+        alert('Save As expects a copied order. Reload it from History with Save As.');
+        return;
+    }
+    btnSave_Click();
+}
+
 function btnUpdate_Click() {
     if (currentPoMasterId <= 0) {
         alert("No existing Purchase Order loaded for update. Use Load Order first.");
@@ -2717,6 +2891,7 @@ function btnUpdate_Click() {
 }
 
 function btnNew_Click() {
+    clearEditModeState();      /* Reset() :3962-3972 - Save back, Update gone, locks cleared */
     currentPoMasterId = 0;
     lineItems = [];
     expenseItems = [];
@@ -2786,7 +2961,7 @@ function openLoadOrderModal() {
     });
 }
 
-function loadSelectedOrder(poId) {
+function loadSelectedOrder(poId, mode) {
     $.get('/api/purchase-order/' + poId, function(po) {
         if (!po) return;
 
@@ -2888,8 +3063,147 @@ function loadSelectedOrder(poId) {
             renderSchedGrid();
         }
 
+        /* ReadById :3721-3757 - the header fields the port was not filling at all.
+           Every id below was checked to exist in purchase_order.html; writing to a selector
+           that matches nothing is a silent no-op, which is how a field stays blank and looks
+           like missing data. The desktop fields with NO web control yet are listed at the end
+           of this function rather than quietly skipped. */
+        $('#txtBranchNo').val(po.branchSrNo);
+        $('#cmbParentCategory').val(po.orderCategoryId || 0);       /* combordercat :3722 */
+        $('#txtCategoryNo').val(po.categorySrNo);
+        $('#txtSupplierRefNo').val(po.supplierRefNo || '');
+        $('#cmbPaymentTerm').val(po.paymentTermsId || 0);
+        $('#txtDueDays').val(po.orderDueDays);
+        $('#txtPaymentDueDate').val(po.orderDueDate || '');
+        $('#cmbDeliveryTerm').val(po.deliveryTermId || 0);
+        $('#txtDeliveryStartDate').val(po.deliveryStartDate || '');
+        $('#txtDeliveryDays').val(po.deliveryDays);
+        $('#cmbCommType').val(po.commissionType || '');             /* combcommtype :3746 */
+        $('#cmbCommUom').val(po.commissionRateUom || 0);            /* combruom     :3747 */
+        $('#txtCommRate').val(po.commRate);
+        $('#txtCommAmount').val(po.commAmount);
+        $('#cmbBrokeryType').val(po.brokeryType || '');
+        $('#txtBrokeryRate').val(po.brokeryRate);
+        $('#cmbBrokeryRateUom').val(po.brokeryUom || 0);
+        $('#txtBrokeryAmount').val(po.brokeryAmount);
+        $('#cmbOrderStatus').val(po.orderStatus || '');             /* CmbStatus :3755 */
+        $('#radCashFreight').prop('checked', !!po.cashFreight);
+        $('#radCreditFreight').prop('checked', !!po.creditFreight);
+        if ($.fn.select2) {
+            $('#cmbParentCategory, #cmbPaymentTerm, #cmbDeliveryTerm, #cmbCommType, #cmbCommUom, '
+            + '#cmbBrokeryType, #cmbBrokeryRateUom, #cmbOrderStatus').trigger('change.select2');
+        }
+
+        /* NOT FILLED, because this page has no control for them yet - the desktop sets all six
+           in ReadById. Recorded so they are not mistaken for working:
+             cmbCurrency (:3736)   txtExchangeRate (:3737)  txtFcyAmount (:3738)
+             OrderExpiryDate       CommissionRemarks        cmbLocationType (:3774) */
+
+        applyEditModeState(po, mode || 'edit');
+
         $('#modalLoadOrder').modal('hide');
     });
+}
+
+/* ============================================================
+ * The control states an existing record puts the form into.
+ *
+ * grdhistory_ColumnButtonClick :5076-5083 - Edit is Reset(), then ReadById(id), then
+ * btnsave.Visible = false / btnSaveAs.Visible = false / btnUpdate.Visible = true.
+ * ReadById :3860-3865 repeats that and enables CmbStatus.
+ *
+ * WHICH FIELDS LOCK IS A PROPERTY OF THE RECORD, NOT OF "being in edit mode", so the three
+ * flags are computed on the server from the record's own rows and simply applied here:
+ *
+ *   lockOrderCategory  the order has lines                    (:2076, always when rows exist)
+ *   lockSupplier       a line carries a Lab Sample            (:2070)
+ *   lockDeliveryTerm   a supplier dispatch exists             (:3783)
+ *
+ * The desktop disables Supplier at :3781 when a dispatch exists and then RE-ENABLES it at
+ * :2074 when no line has a lab sample. That looks like an oversight; it is reproduced, because
+ * this is a parity port and inventing a stricter rule would be a different application.
+ *
+ * Nothing else is locked. In particular Doc No, Doc Date and the detail grid stay editable -
+ * the desktop does not touch them here, and locking them "because it is an edit" would be a
+ * rule this application does not have.
+ * ============================================================ */
+function applyEditModeState(po, mode) {
+    isEditMode = true;
+    const saveAs = (mode === 'saveas');
+
+    /* :5080-5082 Edit -> Update only. :5088-5091 SaveAs -> SaveAs only. */
+    $('#btnSave').hide();
+    $('#btnUpdate').toggle(!saveAs);
+    $('#btnSaveAs').toggle(saveAs);
+
+    /* :3865 / :5094 - CmbStatus.Enabled = btnUpdate.Visible, so SaveAs leaves it locked. */
+    setFieldLocked('#cmbOrderStatus', saveAs);
+
+    /* :5095-5103 - SaveAs writes the lines as NEW rows. */
+    if (saveAs) {
+        lineItems.forEach(function (l) { l.purchaseOrderDetailId = 0; });
+        currentPoMasterId = 0;
+        renderDetailGrid();
+    }
+
+    setFieldLocked('#cmbParentCategory', !!po.lockOrderCategory);   /* combordercat */
+    setFieldLocked('#cmbSupplier',       !!po.lockSupplier);        /* combsuppname */
+    setFieldLocked('#cmbDeliveryTerm',   !!po.lockDeliveryTerm);    /* combdeliverytrm */
+
+    /* :3969-3972 Reset() disables these four; combsalesman_Leave :1654 is the only thing that
+       enables them, so they are live exactly when a commission agent is set. */
+    const commOn = !!po.commissionFieldsEnabled;
+    ['#cmbCommType', '#txtCommRate', '#cmbCommUom', '#txtCommAmount']
+        .forEach(sel => setFieldLocked(sel, !commOn));
+
+    /* GAP, not silently skipped: :3784 makes the Supplier Loading Detail grid visible once a
+       dispatch exists, and THIS PAGE HAS NO SUCH GRID. po.supplierDispatchDetail carries the
+       rows and po.hasSupplierDispatch the flag, so building it is a UI job only. Until then
+       the operator can see that Delivery Term is locked but not what dispatched against the
+       order. Logged rather than shown, so it does not look like an error to the operator. */
+    if (po.hasSupplierDispatch) {
+        console.info('[PO] This order has supplier dispatch rows (' +
+            (po.supplierDispatchDetail || []).length + '). Delivery Term is locked; the ' +
+            'Supplier Loading Detail grid is not implemented on the web form yet.');
+    }
+}
+
+/* Back to a blank form: btnnew_Click -> Reset() :3922-3999. */
+function clearEditModeState() {
+    isEditMode = false;
+    $('#btnSave').show();
+    $('#btnUpdate').hide();
+    $('#btnSaveAs').hide();
+    setFieldLocked('#cmbParentCategory', false);
+    setFieldLocked('#cmbSupplier', false);
+    setFieldLocked('#cmbDeliveryTerm', false);   /* :3939 combdeliverytrm.Enabled = true */
+    /* :3969-3972 - Reset leaves the commission four DISABLED until an agent is picked. */
+    ['#cmbCommType', '#txtCommRate', '#cmbCommUom', '#txtCommAmount']
+        .forEach(sel => setFieldLocked(sel, true));
+}
+
+/* A <select> cannot be made read-only, only disabled - and a disabled control is not posted,
+   which would silently drop the value on Update. So a locked select is disabled for the user
+   and its value carried in a hidden twin that still posts. Text inputs use readonly, which
+   keeps them in the form data. */
+function setFieldLocked(selector, locked) {
+    const el = $(selector);
+    if (!el.length) return;
+    const isSelect = el.is('select');
+    if (isSelect) {
+        el.prop('disabled', !!locked);
+        const twinId = (el.attr('id') || '') + '_lockedTwin';
+        $('#' + twinId).remove();
+        if (locked) {
+            el.after(`<input type="hidden" id="${twinId}" name="${el.attr('name') || el.attr('id')}" value="${el.val() || ''}">`);
+        }
+    } else if (el.is('input, textarea')) {
+        el.prop('readonly', !!locked);
+    } else {
+        el.prop('disabled', !!locked);
+    }
+    el.css('background-color', locked ? '#ebebe4' : '');
+    el.attr('title', locked ? 'Locked on this Purchase Order — see the record\'s own state' : '');
 }
 
 function btnPrintReport(reportType) {
@@ -2940,7 +3254,11 @@ let currentHistoryRecords = [];
 let selectedHistoryRecordIdx = -1;
 
 function loadPurchaseOrderHistory() {
-    const branchId = $('#cmbHistoryBranch').val() || '';
+    /* The Branch SrNo / Branch Name columns exist or not according to PurchaseOrderBranchWise,
+       and the number formats come from configuration, so the grid cannot be drawn before
+       history-meta has answered. */
+    if (!historyMetaLoaded) { loadHistoryMeta(loadPurchaseOrderHistory); return; }
+
     const useFromDate = $('#chkHistoryEnableFromDate').is(':checked');
     const fromDate = useFromDate ? ($('#txtHistoryFromDate').val() || '') : '';
     const useToDate = $('#chkHistoryEnableToDate').is(':checked');
@@ -2962,6 +3280,20 @@ function loadPurchaseOrderHistory() {
         default:             dateType = 'Doc Date';      break;
     }
 
+    /* PurchsaeOrder.cs :4761-4773 - the branch filter is a comma-separated STRING of branch
+       ids (@BranchesIds), built by splitting the combo's TEXT and looking each name up in
+       dtBranch. It is multi-select on the desktop. A single integer was being sent here, which
+       the server then compared to po.BranchId - and an id that matches no stored Purchase
+       Order returns nothing at all, which is why the grid was empty while the desktop showed
+       three rows for the same filters.
+
+       :4761 also wraps the entire query in `if (cmbBranchName.Text != string.Empty)`: with no
+       branch chosen the desktop does not query. The server reproduces that. */
+    const branchIds = $('#cmbHistoryBranch').val();
+    const branchParam = Array.isArray(branchIds)
+        ? branchIds.filter(v => v && v !== '0').join(',')
+        : (branchIds && branchIds !== '0' ? String(branchIds) : '');
+
     const query = $.param({
         fromDate: fromDate,
         toDate: toDate,
@@ -2969,12 +3301,20 @@ function loadPurchaseOrderHistory() {
         toDocNo: toDocNo,
         supplierId: supplierId,
         bookingPersonId: bookingPersonId,
-        branchId: branchId,
+        branchIds: branchParam,
         dateType: dateType
     });
 
     $('#tblHistoryTbody').html('<tr><td colspan="15" style="text-align: center; padding: 20px; color: #555;"><i class="fa fa-spinner fa-spin"></i> Loading Purchase Order history...</td></tr>');
     $('#tblHistoryDetailTbody').html('<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Select a history row above to view line item details.</td></tr>');
+
+    if (!branchParam) {
+        $('#tblHistoryTbody').html('<tr><td colspan="15" style="text-align: center; padding: 20px; '
+            + 'color: #777;">Select a Branch Name to show history.</td></tr>');
+        currentHistoryRecords = [];
+        selectedHistoryRecordIdx = -1;
+        return;
+    }
 
     $.get(`/api/purchase-order/history?${query}`, function(data) {
         currentHistoryRecords = data || [];
@@ -2985,59 +3325,228 @@ function loadPurchaseOrderHistory() {
     });
 }
 
+/* ============================================================
+ * THE HISTORY GRIDS - PurchsaeOrder.cs :4777-4816 (dtHistory), :4838-4963
+ * (HistoryGridSettings), :4971-5010 (getUpdateForHistory), :5021-5048 (grdDetailSettings).
+ *
+ * -----------------------------------------------------------------------------------------
+ * WHAT WAS WRONG
+ * -----------------------------------------------------------------------------------------
+ * 1. THE HEADER AND THE BODY DISAGREED. The template's <thead> listed
+ *    Action | Doc Date | Doc No | Branch Name | Supplier Name | Booking Person | Order Qty |
+ *    Total Amount | Delivery Term | Status | Entry Date | Remarks   (12 cells)
+ *    while renderHistoryMasterGrid emitted
+ *    action | branch | docNo | docDate | party | deliveryStart | expiry | remarks | status |
+ *    entryUser | approved                                          (11 cells)
+ *    so every value sat one column away from its own heading and the last heading had no cell
+ *    at all. On screen: the branch name under "Doc Date", the doc date under "Branch Name",
+ *    a delivery date under "Booking Person", "Active" under "Delivery Term", and the raw
+ *    EntryUser id 77 under "Status". Nothing was wrong with the DATA - the layout was.
+ *
+ * 2. IT WAS THE WRONG COLUMN SET. The desktop's history grid has 37 data columns; this had 11
+ *    invented ones, several of which (Total Amount, Order Qty as separate notions) the desktop
+ *    does not carry on this grid at all.
+ *
+ * 3. `EntryUser` WAS READ FROM THE WRONG FIELD. :4816 maps the EntryUser COLUMN from
+ *    dt["UserName"], not from dt["EntryUser"] - the latter is the numeric user id, which is
+ *    exactly the 77 that appeared on screen. Several columns have this shape: ApprovedDate
+ *    comes from PostDate, PaymentTerm from TermsDescription, ItemQty from OrderQty,
+ *    DeliveryTerm from DeliveryTermDB, ExpiryDate from OrderExpiryDate, CommAgent from
+ *    CommissionAgentName, BrokeryAc from BrokerAgentName, Remarks from RemarksHeader. Every
+ *    one of them is named in the table below beside the column it feeds.
+ *
+ * 4. THERE WAS NO TOTALS ROW. :4896 / :4903 / :4909 set AggregateFunction Sum on ItemQty,
+ *    CommAmount and BrokeryAmount - the 810 under Item Qty in the desktop grid.
+ *
+ * Header, body and totals are now all generated from HISTORY_COLUMNS, so they cannot drift
+ * apart again.
+ * ============================================================ */
+
+/* Two formats the desktop reads from configuration rather than hardcoding
+   (CommonServices :5397 / :5420). Filled by /api/purchase-order/history-meta. */
+let historyMeta = { branchImplemented: false, amountDecimals: 0, rateDecimals: 2 };
+let historyMetaLoaded = false;
+
+function loadHistoryMeta(done) {
+    $.get('/api/purchase-order/history-meta', function (m) {
+        if (m) historyMeta = m;
+    }).always(function () { historyMetaLoaded = true; if (done) done(); });
+}
+
+/* num  - "#,##0.###"  (ItemQty, Weight)
+   amt  - stringFormatsingle, "#,##0." + amountDecimals
+   rate - DecimalRateFormate, "#,#0." + rateDecimals
+   int  - plain integer, no grouping (DueDays, DeliveryDays, NoOfAttachments)
+   date - ToShortDateString()
+   dt   - "dd-MM-yyyy hh:mm tt" (:4888-4890) */
+function fmtHistory(v, kind) {
+    if (v === null || v === undefined || v === '') return '';
+    if (kind === 'date') return String(v).split('T')[0];
+    if (kind === 'dt') {
+        const d = new Date(v);
+        if (isNaN(d.getTime())) return String(v);
+        const p = n => String(n).padStart(2, '0');
+        let h = d.getHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+        return `${p(d.getDate())}-${p(d.getMonth() + 1)}-${d.getFullYear()} ${p(h)}:${p(d.getMinutes())} ${ap}`;
+    }
+    const n = parseFloat(v);
+    if (isNaN(n)) return String(v);
+    if (kind === 'int')  return String(Math.round(n));
+    if (kind === 'num')  return n.toLocaleString('en-US', { maximumFractionDigits: 3 });
+    if (kind === 'amt')  return n.toLocaleString('en-US', { minimumFractionDigits: historyMeta.amountDecimals, maximumFractionDigits: historyMeta.amountDecimals });
+    if (kind === 'rate') return n.toLocaleString('en-US', { minimumFractionDigits: historyMeta.rateDecimals,   maximumFractionDigits: historyMeta.rateDecimals });
+    return String(v);
+}
+
+/** Case-insensitive column read - a procedure's column casing is not something to assume. */
+function hcol(row, name) {
+    if (!row) return null;
+    if (row[name] !== undefined) return row[name];
+    const k = Object.keys(row).find(x => x.toLowerCase() === String(name).toLowerCase());
+    return k === undefined ? null : row[k];
+}
+
+/* dtHistory, :4777-4816. `caption` is what GridEX shows, `src` is the column of the procedure
+   result the desktop copies into it, and they are NOT always the same word. `sum` marks the
+   three columns HistoryGridSettings gives AggregateFunction Sum. `branchOnly` marks the two
+   columns hidden when PurchaseOrderBranchWise is on (:4842-4846, :4891-4892). */
+const HISTORY_COLUMNS = [
+    { caption: 'Doc No',              src: 'DocNo',               kind: 'int',  w: 70,  align: 'right' },
+    { caption: 'Branch SrNo',         src: 'BranchSrNo',          kind: 'int',  w: 80,  align: 'right', branchOnly: true },
+    { caption: 'Branch Name',         src: 'BranchName',          kind: 'str',  w: 150,                 branchOnly: true },
+    { caption: 'Doc Date',            src: 'DocDate',             kind: 'date', w: 90 },
+    { caption: 'Item Qty',            src: 'OrderQty',            kind: 'num',  w: 90,  align: 'right', sum: true },
+    { caption: 'Supplier Name',       src: 'SupplierName',        kind: 'str',  w: 235 },
+    { caption: 'Booking Person',      src: 'BookingPerson',       kind: 'str',  w: 150 },
+    { caption: 'Payment Term',        src: 'TermsDescription',    kind: 'str',  w: 90 },
+    { caption: 'Due Days',            src: 'DueDays',             kind: 'int',  w: 70,  align: 'right' },
+    { caption: 'Due Date',            src: 'DueDate',             kind: 'date', w: 90 },
+    { caption: 'Delivery Term',       src: 'DeliveryTermDB',      kind: 'str',  w: 90 },
+    { caption: 'Delivery Days',       src: 'DeliveryDays',        kind: 'int',  w: 80,  align: 'right' },
+    { caption: 'Delivery Start Date', src: 'DeliveryStartDate',   kind: 'date', w: 100 },
+    { caption: 'Expiry Date',         src: 'OrderExpiryDate',     kind: 'date', w: 90 },
+    { caption: 'Order Status',        src: 'OrderStatus',         kind: 'str',  w: 90 },
+    { caption: 'Comm Agent',          src: 'CommissionAgentName', kind: 'str',  w: 150 },
+    { caption: 'Comm Type',           src: 'CommissionType',      kind: 'str',  w: 90 },
+    { caption: 'Comm Rate',           src: 'CommRate',            kind: 'rate', w: 80,  align: 'right' },
+    { caption: 'Comm Amount',         src: 'CommAmount',          kind: 'amt',  w: 100, align: 'right', sum: true },
+    { caption: 'Comm Remarks',        src: 'CommissionRemarks',   kind: 'str',  w: 150 },
+    { caption: 'Brokery Ac',          src: 'BrokerAgentName',     kind: 'str',  w: 150 },
+    { caption: 'Brokery Type',        src: 'BrokeryType',         kind: 'str',  w: 90 },
+    { caption: 'Brokery Rate',        src: 'BrokeryRate',         kind: 'rate', w: 80,  align: 'right' },
+    { caption: 'Brokery Amount',      src: 'BrokeryAmount',       kind: 'amt',  w: 100, align: 'right', sum: true },
+    { caption: 'Approved Status',     src: '__approved',          kind: 'str',  w: 90 },
+    { caption: 'PreBill Nos',         src: 'PreBillNos',          kind: 'str',  w: 100 },
+    { caption: 'PreBill Vehicle Nos', src: 'PreBillVehicleNos',   kind: 'str',  w: 100 },
+    { caption: 'Entry User',          src: 'UserName',            kind: 'str',  w: 110 },
+    { caption: 'Entry Date',          src: 'EntryDate',           kind: 'dt',   w: 130 },
+    { caption: 'Modify User',         src: 'ModifyUserName',      kind: 'str',  w: 110 },
+    { caption: 'Modify Date',         src: 'ModifyDate',          kind: 'dt',   w: 130 },
+    { caption: 'Approved User',       src: 'ApprovedUserName',    kind: 'str',  w: 110 },
+    { caption: 'Approved Date',       src: 'PostDate',            kind: 'dt',   w: 130 },
+    { caption: 'No Of Attachments',   src: 'NoOfAttachments',     kind: 'int',  w: 80,  align: 'center' },
+    { caption: 'Remarks',             src: 'RemarksHeader',       kind: 'str',  w: 180 },
+    { caption: 'Location Type',       src: 'LocationType',        kind: 'str',  w: 100 }
+];
+
+function visibleHistoryColumns() {
+    return HISTORY_COLUMNS.filter(c => !(c.branchOnly && historyMeta.branchImplemented));
+}
+
+/* :4911-4962 - six button columns, each inserted at DocNo.Position - 1 in this order, so they
+   all end up to the LEFT of Doc No. Each is gated on its own right; the web has no per-right
+   gate here yet, so all six are drawn and that is recorded as a gap rather than hidden. */
+const HISTORY_BUTTONS = [
+    { key: 'Edit',     label: 'Edit',     w: 40 },
+    { key: 'SaveAs',   label: 'SaveAs',   w: 60 },
+    { key: 'Print',    label: 'Print',    w: 40 },
+    { key: 'Print-A',  label: 'Print-A',  w: 50 },
+    { key: 'PrintII',  label: 'PrintII',  w: 50 },
+    { key: 'PrintIII', label: 'PrintIII', w: 55 }
+];
+
 function renderHistoryMasterGrid() {
+    const cols  = visibleHistoryColumns();
+    const thead = $('#tblHistoryThead');
     const tbody = $('#tblHistoryTbody');
+    const tfoot = $('#tblHistoryTfoot');
+    const span  = cols.length + HISTORY_BUTTONS.length + 1;   /* +1 = Add Attachment (:4960) */
+
+    thead.html('<tr style="background: linear-gradient(to bottom, #dceaf7 0%, #cbe2f7 100%); color: #000; font-weight: bold;">'
+        + HISTORY_BUTTONS.map(b => `<th style="width:${b.w}px; text-align:center;">${escapeHtml(b.label)}</th>`).join('')
+        + cols.map(c => `<th style="width:${c.w}px; text-align:${c.align || 'left'};">${escapeHtml(c.caption)}</th>`).join('')
+        + '<th style="width:105px; text-align:center;">Add Attachment</th>'
+        + '</tr>');
+
     tbody.empty();
+    tfoot.empty();
 
     if (!currentHistoryRecords || currentHistoryRecords.length === 0) {
-        tbody.html('<tr><td colspan="15" style="text-align: center; padding: 20px; color: #777;">No matching Purchase Order history records found.</td></tr>');
-        $('#lblHistoryRecordCount').text('0 of 0');
+        tbody.html(`<tr><td colspan="${span}" style="text-align: center; padding: 20px; color: #777;">No matching Purchase Order history records found.</td></tr>`);
+        updateHistoryNavDisplay();
         return;
     }
 
+    const totals = {};
+    cols.forEach(c => { if (c.sum) totals[c.src] = 0; });
+
     currentHistoryRecords.forEach((po, idx) => {
-        const poId = po.id || po.Id || po.PurchaseOrderMasterId || po.purchaseOrderMasterId || 0;
-        const branch = po.branchName || po.BranchName || '';
-        const docNo = po.docNo || po.DocNo || '';
-        const docDate = po.docDate || po.DocDate ? String(po.docDate || po.DocDate).split('T')[0] : '';
-        const party = po.supplierName || po.SupplierName || '';
-        const deliveryStart = po.deliveryStartDate || po.DeliveryStartDate ? String(po.deliveryStartDate || po.DeliveryStartDate).split('T')[0] : '';
-        const expiry = po.expiryDate || po.ExpiryDate ? String(po.expiryDate || po.ExpiryDate).split('T')[0] : '';
-        const remarks = po.remarks || po.Remarks || po.remarksHeader || '';
-        const status = po.status || po.Status || 'Active';
-        const entryUser = po.entryUser || po.EntryUser || 'Admin';
-        const isApproved = po.isApproved === 1 || po.isApproved === true || po.IsApproved === 1;
+        const poId = parseInt(hcol(po, 'Id') || 0, 10) || 0;
+
+        const cells = cols.map(c => {
+            let raw;
+            if (c.src === '__approved') {
+                /* :4816 - Conversion.ToBool(IsAproved) ? "Approved" : "Not Approved".
+                   Note the desktop's spelling of the column: IsAproved, one 'p'. */
+                const v = hcol(po, 'IsAproved');
+                raw = (v === true || v === 1 || v === '1' || String(v).toLowerCase() === 'true')
+                    ? 'Approved' : 'Not Approved';
+            } else {
+                raw = hcol(po, c.src);
+            }
+            if (c.sum) {
+                const n = parseFloat(raw);
+                if (!isNaN(n)) totals[c.src] += n;
+            }
+            const text = (c.src === '__approved') ? raw : fmtHistory(raw, c.kind);
+            return `<td style="text-align:${c.align || 'left'};">${escapeHtml(String(text))}</td>`;
+        }).join('');
+
+        const buttons = HISTORY_BUTTONS.map(b => `<td style="text-align:center;" class="action-col">`
+            + `<button type="button" class="win-btn-action" onclick="event.stopPropagation(); onHistoryButtonClick('${b.key}', ${poId})">`
+            + `${escapeHtml(b.label)}</button></td>`).join('');
 
         const isSelected = (idx === selectedHistoryRecordIdx);
-        const rowBg = isSelected ? '#b2dfdb' : '';
-
         tbody.append(`
-            <tr id="histRow_${idx}" onclick="onHistoryRowClick(${idx})" ondblclick="loadSelectedOrderFromHistory(${poId})" style="cursor: pointer; background-color: ${rowBg};">
-                <td style="text-align: center;" class="action-col">
-                    <button type="button" class="win-btn-action" onclick="event.stopPropagation(); loadSelectedOrderFromHistory(${poId})" title="Edit Order"><i class="fa fa-pencil text-primary"></i> Edit</button>
-                    <button type="button" class="win-btn-action" onclick="event.stopPropagation(); loadSelectedOrderFromHistory(${poId})" title="Save As"><i class="fa fa-copy text-info"></i> SaveAs</button>
-                    <button type="button" class="win-btn-action" onclick="event.stopPropagation(); btnPrintReport('history_${poId}')" title="Print"><i class="fa fa-print"></i> Print</button>
-                </td>
-                <td>${escapeHtml(branch)}</td>
-                <td><strong style="color: #008080;">${escapeHtml(String(docNo))}</strong></td>
-                <td>${escapeHtml(docDate)}</td>
-                <td><strong style="color: #004d40;">${escapeHtml(party)}</strong></td>
-                <td>${escapeHtml(deliveryStart)}</td>
-                <td>${escapeHtml(expiry)}</td>
-                <td>${escapeHtml(remarks)}</td>
-                <td>${escapeHtml(status)}</td>
-                <td>${escapeHtml(entryUser)}</td>
-                <td style="text-align: center;">${isApproved ? '<i class="fa fa-check text-success"></i>' : '<i class="fa fa-times text-muted"></i>'}</td>
+            <tr id="histRow_${idx}" onclick="onHistoryRowClick(${idx})" ondblclick="loadSelectedOrderFromHistory(${poId})" style="cursor: pointer; background-color: ${isSelected ? '#b2dfdb' : ''};">
+                ${buttons}${cells}
+                <td style="text-align:center;" class="action-col"><button type="button" class="win-btn-action" onclick="event.stopPropagation(); onHistoryButtonClick('AddAttachment', ${poId})"><i class="fa fa-paperclip"></i></button></td>
             </tr>
         `);
     });
 
+    /* :4896 / :4903 / :4909 - Sum on ItemQty, CommAmount, BrokeryAmount. */
+    tfoot.html('<tr style="background:#ece9d8; font-weight:bold; border-top:2px solid #7a9a9e;">'
+        + HISTORY_BUTTONS.map(() => '<td></td>').join('')
+        + cols.map(c => c.sum
+            ? `<td style="text-align:right;">${escapeHtml(fmtHistory(totals[c.src], c.kind))}</td>`
+            : '<td></td>').join('')
+        + '<td></td></tr>');
+
     updateHistoryNavDisplay();
 
-    // Auto-select first row if available
     if (currentHistoryRecords.length > 0 && selectedHistoryRecordIdx < 0) {
         onHistoryRowClick(0);
     }
+}
+
+/* :5063 grdhistory_ColumnButtonClick. Only Edit is wired; the five print variants and the
+   attachment dialog are separate desktop report/dialog paths that are NOT built, and saying so
+   is better than a button that silently does nothing. */
+function onHistoryButtonClick(key, poId) {
+    if (key === 'Edit')   { loadSelectedOrderFromHistory(poId, 'edit');   return; }
+    if (key === 'SaveAs') { loadSelectedOrderFromHistory(poId, 'saveas'); return; }
+    alert(key + ' is not implemented for the web Purchase Order yet.');
 }
 
 function onHistoryRowClick(idx) {
@@ -3048,62 +3557,100 @@ function onHistoryRowClick(idx) {
     $(`#histRow_${idx}`).css('background-color', '#b2dfdb');
 
     updateHistoryNavDisplay();
-
-    const po = currentHistoryRecords[idx];
-    const poId = po.id || po.Id || po.PurchaseOrderMasterId || po.purchaseOrderMasterId || 0;
-
-    loadHistoryDetailGrid(poId);
+    loadHistoryDetailGrid(parseInt(hcol(currentHistoryRecords[idx], 'Id') || 0, 10) || 0);
 }
 
-function loadHistoryDetailGrid(poId) {
-    const tbody = $('#tblHistoryDetailTbody');
-    tbody.html('<tr><td colspan="11" style="text-align: center; padding: 15px; color: #555;"><i class="fa fa-spinner fa-spin"></i> Loading item details...</td></tr>');
+/* getUpdateForHistory() :4986-5000 - the fourteen columns in the desktop's own order.
+   FcyAmount is declared and then hidden at :5021, so it is carried and not drawn. */
+const HISTORY_DETAIL_COLUMNS = [
+    { caption: 'Item Code',  src: 'ItemCode', kind: 'str',  w: 100 },
+    { caption: 'Item Name',  src: 'ItemName', kind: 'str',  w: 220 },
+    { caption: 'Crop Year',  src: 'CropYear', kind: 'str',  w: 90 },
+    { caption: 'UOM',        src: 'UOM',      kind: 'str',  w: 80 },
+    { caption: 'Item QTY',   src: 'ItemQTY',  kind: 'num',  w: 90,  align: 'right', sum: true },
+    { caption: 'Weight',     src: 'Weight',   kind: 'num',  w: 90,  align: 'right', sum: true },
+    { caption: 'Item Rate',  src: 'ItemRate', kind: 'rate', w: 90,  align: 'right' },
+    { caption: 'Rate UOM',   src: 'RateUOM',  kind: 'str',  w: 80 },
+    { caption: 'Amount',     src: 'Amount',   kind: 'amt',  w: 110, align: 'right', sum: true },
+    { caption: 'Job/Lot',    src: 'JobLot',   kind: 'str',  w: 90 },
+    { caption: 'City Name',  src: 'CityName', kind: 'str',  w: 130 },
+    { caption: 'Moisture%',  src: 'Moisture', kind: 'str',  w: 80,  align: 'right' },
+    { caption: 'Remarks',    src: 'Remarks',  kind: 'str',  w: 180 }
+];
 
-    $.get('/api/purchase-order/' + poId, function(po) {
+function loadHistoryDetailGrid(poId) {
+    const thead = $('#tblHistoryDetailThead');
+    const tbody = $('#tblHistoryDetailTbody');
+    const tfoot = $('#tblHistoryDetailTfoot');
+    const cols  = HISTORY_DETAIL_COLUMNS;
+
+    thead.html('<tr style="background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color: #000; font-weight: bold;">'
+        + cols.map(c => `<th style="width:${c.w}px; text-align:${c.align || 'left'};">${escapeHtml(c.caption)}</th>`).join('')
+        + '</tr>');
+    tfoot.empty();
+    tbody.html(`<tr><td colspan="${cols.length}" style="text-align: center; padding: 15px; color: #555;"><i class="fa fa-spinner fa-spin"></i> Loading item details...</td></tr>`);
+
+    if (!poId) {
+        tbody.html(`<tr><td colspan="${cols.length}" style="text-align: center; padding: 15px; color: #d32f2f;">This history row carried no Id, so its detail cannot be read.</td></tr>`);
+        updateHistoryDetailNavDisplay(0);
+        return;
+    }
+
+    /* Its OWN endpoint, not the form-load payload: that one returns null from a bare catch when
+       its hand-written header joins fail, which became a 404 and the bare "Failed to load item
+       details" with no reason anywhere. See PurchaseOrderFullService.historyDetail. */
+    $.get('/api/purchase-order/' + poId + '/history-detail', function (rows) {
         tbody.empty();
-        const items = (po && po.lineItems) ? po.lineItems : [];
+        const items = rows || [];
         if (items.length === 0) {
-            tbody.html('<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">No detail line items found for this Purchase Order.</td></tr>');
+            tbody.html(`<tr><td colspan="${cols.length}" style="text-align: center; padding: 15px; color: #777;">No detail line items found for this Purchase Order.</td></tr>`);
+            updateHistoryDetailNavDisplay(0);
             return;
         }
 
-        items.forEach((item, i) => {
-            const srNo = i + 1;
-            const category = item.parentCategoryDesc || item.parentCategory || '';
-            const code = item.itemCode || item.code || '';
-            const name = item.itemName || item.itemDescription || '';
-            const qty = parseFloat(item.qty || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const packQty = parseFloat(item.packQty || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const packUom = item.packUomName || item.packUom || '';
-            const rateUom = item.rateUomName || item.rateUom || '';
-            const rate = parseFloat(item.rate || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const gross = parseFloat(item.grossAmount || (item.qty * item.rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const totals = {};
+        cols.forEach(c => { if (c.sum) totals[c.src] = 0; });
 
-            tbody.append(`
-                <tr>
-                    <td style="text-align: center;">${srNo}</td>
-                    <td>${escapeHtml(category)}</td>
-                    <td>${escapeHtml(code)}</td>
-                    <td><strong style="color: #004d40;">${escapeHtml(name)}</strong></td>
-                    <td style="text-align: right;">${qty}</td>
-                    <td style="text-align: right;">${packQty}</td>
-                    <td>${escapeHtml(packUom)}</td>
-                    <td>${escapeHtml(rateUom)}</td>
-                    <td style="text-align: right;">${rate}</td>
-                    <td style="text-align: right;">${gross}</td>
-                    <td>${escapeHtml(item.remarks || '')}</td>
-                </tr>
-            `);
+        items.forEach(function (it) {
+            const cells = cols.map(c => {
+                const raw = hcol(it, c.src);
+                if (c.sum) {
+                    const n = parseFloat(raw);
+                    if (!isNaN(n)) totals[c.src] += n;
+                }
+                return `<td style="text-align:${c.align || 'left'};">${escapeHtml(String(fmtHistory(raw, c.kind)))}</td>`;
+            }).join('');
+            tbody.append(`<tr>${cells}</tr>`);
         });
-    }).fail(function() {
-        tbody.html('<tr><td colspan="11" style="text-align: center; padding: 15px; color: #d32f2f;">Failed to load item details.</td></tr>');
+
+        /* :5023 / :5027 / :5034 - Sum on ItemQTY, Weight and Amount. */
+        tfoot.html('<tr style="background:#ece9d8; font-weight:bold; border-top:2px solid #7a9a9e;">'
+            + cols.map(c => c.sum
+                ? `<td style="text-align:right;">${escapeHtml(fmtHistory(totals[c.src], c.kind))}</td>`
+                : '<td></td>').join('')
+            + '</tr>');
+
+        updateHistoryDetailNavDisplay(items.length);
+    }).fail(function (xhr) {
+        const why = (xhr && xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error))
+            || (xhr && xhr.status ? ('HTTP ' + xhr.status) : 'unknown error');
+        tbody.html(`<tr><td colspan="${cols.length}" style="text-align: center; padding: 15px; color: #d32f2f;">Could not load item details — ${escapeHtml(String(why))}</td></tr>`);
+        updateHistoryDetailNavDisplay(0);
     });
+}
+
+function updateHistoryDetailNavDisplay(count) {
+    $('#lblHistoryDetailRecordInfo').text((count > 0 ? 1 : 0) + ' Of ' + count);
 }
 
 function updateHistoryNavDisplay() {
     const total = currentHistoryRecords.length;
     const current = total > 0 ? (selectedHistoryRecordIdx + 1) : 0;
+    /* Two labels carry this, and only one was being written - the record navigator UNDER the
+       grid, which is the one the desktop has, was left reading "0 Of 0" while the grid held
+       three rows. The desktop's navigator reads "1 Of 3", capital Of. */
     $('#lblHistoryRecordCount').text(`${current} of ${total}`);
+    $('#lblHistoryRecordInfo').text(`${current} Of ${total}`);
 }
 
 function navHistory(action) {
@@ -3114,9 +3661,24 @@ function navHistory(action) {
     else if (action === 'last') onHistoryRowClick(currentHistoryRecords.length - 1);
 }
 
-function loadSelectedOrderFromHistory(poId) {
-    loadSelectedOrder(poId);
+/* grdhistory_ColumnButtonClick :5076-5083 (Edit) and :5085-5104 (SaveAs).
+ *
+ * BOTH begin with Reset() before ReadById - :5077 / :5086. Without it the previous record's
+ * values survive in any field the new record does not overwrite, which is how a stale supplier
+ * or remark silently rides along into a different document. btnNew_Click() is this page's
+ * Reset().
+ *
+ * They differ only in what comes after:
+ *   Edit   -> Save and SaveAs hidden, Update shown.
+ *   SaveAs -> Save and Update hidden, SaveAs shown; Status forced to its second row and
+ *             DISABLED (:5093-5094, Enabled = btnUpdate.Visible, and Update is hidden here);
+ *             and every detail row's Id is zeroed (:5095-5103) so the lines are written as new
+ *             rows rather than updating the ones belonging to the order being copied.
+ */
+function loadSelectedOrderFromHistory(poId, mode) {
+    btnNew_Click();                       /* :5077 Reset() */
     switchMainView('form');
+    loadSelectedOrder(poId, mode || 'edit');
 }
 
 /* ============================================================

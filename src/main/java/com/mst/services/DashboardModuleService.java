@@ -118,6 +118,59 @@ public class DashboardModuleService {
          * form and whose name does not match by itself. */
     }
 
+    /**
+     * Where a ported screen lives on the web, keyed by ScreenDefinition.Id.
+     *
+     * ---------------------------------------------------------------------------------------
+     * WHY BY ID, AND WHY THESE ARE NOT GUESSES
+     * ---------------------------------------------------------------------------------------
+     * WEB_ROUTES above is keyed by the desktop class name and is deliberately empty, because the
+     * four entries it once held were all guessed from a tile's wording and all four pointed a
+     * screen at an unrelated page. The rule that replaced them - link only on an exact route-name
+     * match - is right, but it is too strict for a page whose URL reads naturally in English
+     * while the desktop class does not:
+     *
+     *     ScreenName  frmProductionPackingMaterialConsumptionRegister
+     *     route       /production/reports/packing-material-consumption
+     *
+     * Both name the same report; neither normalises to the other. Five Production pages were
+     * built, deployed and working while the hub reported them as not built.
+     *
+     * The id is the strongest key available and the only one that cannot drift: it is the
+     * primary key of the row the hub is already rendering. Every entry below is corroborated
+     * twice over -
+     *
+     *   1. the id and its real ScreenName come from the live GoldenAcedb dump the repository
+     *      holds (migration/user-rights/reconciliation-input.json), recorded in
+     *      claude/PRODUCTION-SCREENS-WIRED-TO-RIGHTS-AND-ALL-8-REAL-IDS-FOUND.md;
+     *   2. each controller method already carries that same id in the section comment written
+     *      when the page was ported - ProductionReportsController "975 Job Order Summary
+     *      Report", "309 Production Summary Report", and so on.
+     *
+     * So each line below joins two independent records that were written months apart and agree.
+     * That is the standard for adding one here: an id confirmed against the database dump AND a
+     * route whose controller was demonstrably built from that form. A tile's wording is not
+     * evidence, and neither is a plausible-looking URL.
+     */
+    private static final Map<Integer, String> WEB_ROUTES_BY_SCREEN_ID = new LinkedHashMap<>();
+    static {
+        /* Production, ModuleId 18 */
+        WEB_ROUTES_BY_SCREEN_ID.put(281, "/production/job-order");            // frmProductionJobOrderMain
+        WEB_ROUTES_BY_SCREEN_ID.put(276, "/production/stock-conversion");     // invfrmStockConversionProduction
+        WEB_ROUTES_BY_SCREEN_ID.put(280, "/production/production-against-job-order"); // FoodProductionWithValues
+        /* 280 is the SHELL only. Six of its eight tabs host a separate desktop form that is not
+           ported; the page names each one rather than pretending the tab works. The route is
+           registered because the shell itself is real - the switches, rights and shared pickers
+           all come from the database, as frmFoodProduction_Load reads them. */
+
+        /* Production Reports, ModuleId 21 */
+        WEB_ROUTES_BY_SCREEN_ID.put(309, "/production/reports/production-summary");            // ProductionSummaryReport
+        WEB_ROUTES_BY_SCREEN_ID.put(310, "/production/reports/production-register");           // ProductionRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(975, "/production/reports/job-order-summary");             // frmProductionJobOrderSummaryRpt
+        WEB_ROUTES_BY_SCREEN_ID.put(308, "/production/reports/production-comparison");         // FoodProductionComparisonRpt
+        WEB_ROUTES_BY_SCREEN_ID.put(306, "/production/reports/packing-material-consumption");  // frmProductionPackingMaterialConsumptionRegister
+    }
+
     /** The desktop forms behind the DashBoard menu, for the placeholder to name (DashboardNew.cs :5161-5196). */
     private static final Map<String, String> DESKTOP_FORMS = new LinkedHashMap<>();
     static {
@@ -165,7 +218,11 @@ public class DashboardModuleService {
                 card.put("iconUrl", "");
                 card.put("isFavorite", false);
 
-                String route = WEB_ROUTES.get(cls);
+                /* One resolver for all three card builders. This site used to consult
+                   WEB_ROUTES alone, so it could not see a route the registered-route index or
+                   the screen-id map had found - the same screen reported "built" on one page of
+                   the hub and "not built" on another. */
+                String route = routeFor(r);
                 card.put("built", route != null);
                 card.put("route", route != null
                         ? route
@@ -324,13 +381,13 @@ public class DashboardModuleService {
 
                 String screenName = str(col(r, "ScreenName"));
                 String alias = str(col(r, "ScreenAlias"));
-                String route = screenRouteIndex.routeFor(screenName, targetUrl);
+                String route;
 
                 String cls = targetUrl.contains(".")
                         ? targetUrl.substring(targetUrl.lastIndexOf('.') + 1) : targetUrl;
-                /* An explicit mapping always wins over the name match. */
-                String explicit = WEB_ROUTES.get(cls);
-                if (explicit != null) route = explicit;
+                /* Same single resolver: screen id, then the explicit class map, then the
+                   registered-route index. */
+                route = routeFor(r);
 
                 Map<String, Object> sc = new LinkedHashMap<>();
                 sc.put("screenId", col(r, "ScreenID"));
@@ -627,6 +684,17 @@ public class DashboardModuleService {
 
     /** The explicit map wins; otherwise the registered-route index, which never guesses a URL. */
     private String routeFor(Map<String, Object> r) {
+        /* The id wins over everything: it is the row's own primary key, and every entry in the
+           map is corroborated against both the live database dump and the controller that was
+           built for it. Checked before TargetUrl because a screen can be built even when its
+           TargetUrl is blank. */
+        Integer screenId = asIntOrNull(col(r, "ScreenID"));
+        if (screenId == null) screenId = asIntOrNull(col(r, "ScreenId"));
+        if (screenId != null) {
+            String byId = WEB_ROUTES_BY_SCREEN_ID.get(screenId);
+            if (byId != null) return byId;
+        }
+
         String targetUrl = str(col(r, "TargetUrl"));
         if (targetUrl.isEmpty()) return null;
         String cls = targetUrl.contains(".")
@@ -634,6 +702,16 @@ public class DashboardModuleService {
         String explicit = WEB_ROUTES.get(cls);
         if (explicit != null) return explicit;
         return screenRouteIndex.routeFor(str(col(r, "ScreenName")), targetUrl);
+    }
+
+    private static Integer asIntOrNull(Object v) {
+        if (v instanceof Number) return ((Number) v).intValue();
+        if (v == null) return null;
+        try {
+            return Integer.valueOf(String.valueOf(v).trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** Lower-case, letters and digits only - "DashBoard", "Dash Board" and "dashboard" all match. */
@@ -662,6 +740,23 @@ public class DashboardModuleService {
     }
 
     /** The desktop form a not-yet-ported screen belongs to, for the placeholder page. */
+    /**
+     * Whether this class is one of the DashBoard menu's own forms.
+     *
+     * /dashboard/screen is the placeholder for EVERY module's unbuilt screen, not just the
+     * DashBoard module's - screenCard() sends them all there. It used to state, for all of them,
+     * that the form lives in `Architecture.WinApp.Dashboard`, which is false for most: screen 280
+     * `FoodProductionWithValues` is in Architecture.WinApp.Production, and the page said
+     * otherwise. DESKTOP_FORMS is the list of forms the DashBoard menu actually owns
+     * (DashboardNew.cs:5161-5196), so it is the only thing that can honestly answer this.
+     *
+     * When the answer is no, the page names the form and says nothing about the assembly, rather
+     * than naming the wrong one.
+     */
+    public boolean isDashboardOwnForm(String className) {
+        return className != null && DESKTOP_FORMS.containsKey(className);
+    }
+
     public String desktopFormFor(String className) {
         if (className == null || className.isEmpty()) return null;
         return DESKTOP_FORMS.getOrDefault(className, className + ".cs");

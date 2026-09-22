@@ -1192,17 +1192,37 @@ public class PurchaseOrderFullService {
      */
     private static final int ERP_FEATURE_SUBSIDIARY_ACCOUNT_ON_VOUCHERS = 4;
 
+    /**
+     * CommonRepository.GetERPFeatureById(OrganizationId, CompanyId, 4) - BLL 0269:372.
+     *
+     * -----------------------------------------------------------------------------------------
+     * THIS WAS CALLING A PROCEDURE THAT DOES NOT EXIST, AND HIDING IT
+     * -----------------------------------------------------------------------------------------
+     * It ran `Sp_ERPFeatures_GetAllMethod @Activity='GetErpFeaturesByCompanyId'`. No such
+     * procedure appears anywhere in the recovered source; the real one is
+     * `USP_GetERPFeaturesByCompanyId @OrganizationId, @CompanyId`, used verbatim by four
+     * separate BLL files (0054:85, 0267:73, 0269:388, 0285:73), after which the check is simply
+     * "is FeatureId among the Ids that came back".
+     *
+     * The call therefore threw on every invocation, the catch returned false, and
+     * SubsidiaryAccountAllownOnVouchers was **permanently reported as OFF** no matter how the
+     * company is actually configured. That is not a cosmetic fault, because this one boolean
+     * chooses between two different worlds:
+     *
+     *   - getAccountsForChargeToProduct picks the Account Title list's SOURCE: vendors and
+     *     customers (feature on) versus chart-of-account titles (feature off). With the feature
+     *     really on, the operator was being offered the wrong list entirely.
+     *   - persistExpensesChargeToProduct uses it to decide which column the picked id is
+     *     written to. So a wrong answer here also mis-files the saved row.
+     *
+     * A failure is now logged at ERROR and re-thrown rather than quietly answering "off": a
+     * default that silently selects a different data source is worse than a visible failure.
+     */
     private boolean subsidiaryAccountAllowedOnVouchers(int orgId, int compId) {
-        try {
-            for (Map<String, Object> r : jdbcTemplate.queryForList(
-                    "EXEC Sp_ERPFeatures_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
-                    orgId, compId, "GetErpFeaturesByCompanyId")) {
-                Object id = ci(r, "Id");
-                if (id != null && intOf(id) == ERP_FEATURE_SUBSIDIARY_ACCOUNT_ON_VOUCHERS) return true;
-            }
-        } catch (Exception e) {
-            CHARGE_ACCT_LOG.warn("ERP feature read failed; falling back to the chart-of-accounts "
-                    + "branch, which is what the desktop does when the feature is off", e);
+        for (Map<String, Object> r : jdbcTemplate.queryForList(
+                "EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?, @CompanyId=?",
+                orgId, compId)) {
+            if (intOf(ci(r, "Id")) == ERP_FEATURE_SUBSIDIARY_ACCOUNT_ON_VOUCHERS) return true;
         }
         return false;
     }
@@ -1230,9 +1250,32 @@ public class PurchaseOrderFullService {
             return out;
         }
 
-        return jdbcTemplate.queryForList(SQL_COA_ACCOUNTS_FOR_CHARGE_TO_PRODUCT,
+        /* Feature OFF - CoaAllocationAccountTitleByAccountTypeIds(null, "2,11,12,,13,14,15,20,21,22"),
+           :1526. The rows used to be handed back RAW, so the page had to guess the procedure's
+           column casing (a.Id / a.AccountTitle). Column casing coming back from a procedure is
+           exactly the thing this codebase has been bitten by before - ADO.NET's DataTable indexer
+           is case-insensitive and a Java Map is not - and an unmatched key here renders an
+           <option> with value "undefined" and no visible text, which reads on screen as an empty
+           dropdown rather than as an error.
+
+           Both branches now return the same normalised shape: Id, GlAccountId,
+           SupplierCustomerId, AccountTitle, AccountCode, bindOn. bindOn is stated explicitly as
+           "Id" instead of being left absent for the page to infer from its own absence. */
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(SQL_COA_ACCOUNTS_FOR_CHARGE_TO_PRODUCT,
                 orgId, compId, currentUserContext.currentUserId(), 1,
-                "2,11,12,,13,14,15,20,21,22", "GetAccountTitleByAccountTypeIds");
+                "2,11,12,,13,14,15,20,21,22", "GetAccountTitleByAccountTypeIds")) {
+            int accId = intOf(ci(r, "Id"));
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("Id",                 accId);
+            m.put("GlAccountId",        accId);   /* :1532 - dtAccounts col 0 IS the Id here */
+            m.put("SupplierCustomerId", 0);       /* :1532 - the desktop stores 0 in this branch */
+            m.put("AccountTitle",       strOf(ci(r, "AccountTitle")));
+            m.put("AccountCode",        strOf(ci(r, "AccountCode")));
+            m.put("bindOn",             "Id");
+            out.add(m);
+        }
+        return out;
     }
 
     /** Real read of existing Supplier Expense rows for a given, already-saved Purchase Order Id. */
@@ -1311,28 +1354,136 @@ public class PurchaseOrderFullService {
      * "if (Amount > 0.0) { ... if (AccountId == 0) throw \"AccountTitle Field Required\" }".
      */
     private void persistExpensesChargeToProduct(int purchaseOrderId, List<PurchaseOrderFullDto.PurchaseOrderExpensesChargeToProductDto> rows) {
+        persistExpensesChargeToProduct(purchaseOrderId, rows, 0);
+    }
+
+    /**
+     * -----------------------------------------------------------------------------------------
+     * THE COLUMN SPLIT THIS FIXES - a wrong value was being written into AccountId
+     * -----------------------------------------------------------------------------------------
+     * PurchsaeOrder.cs :2909-2933 does NOT save the grid's AccountId cell. In BOTH branches it
+     * saves the grid's GlAccountId cell, and only the companion column differs:
+     *
+     *     expensesChargeToProduct.AccountId          = r.Cells["GlAccountId"].Value;   // ALWAYS
+     *     if (SubsidiaryAccountAllownOnVouchers)
+     *          expensesChargeToProduct.SupplierCustomerId = r.Cells["AccountId"].Value;
+     *     else expensesChargeToProduct.SupplierCustomerId = 0;
+     *
+     * The grid's GlAccountId cell is not typed by the operator: SupCustIdUpdateforFreightGrid()
+     * :2487-2496 derives it from dtAccounts whenever the account cell changes. And dtAccounts is
+     * loaded differently by feature (:994 / :1006):
+     *
+     *     feature ON  -> Rows.Add(GlAccountId, Id, CompanyName)  value list bound on
+     *                    SupplierCustomerId (:3150) - so the cell holds a PARTY id and
+     *                    GlAccountId holds that party's GL account.
+     *     feature OFF -> Rows.Add(Id, 0, AccountTitle)           value list bound on Id (:3155)
+     *                    - so the cell and GlAccountId are the same COA id.
+     *
+     * This port took the posted selection and wrote it straight into @AccountId, and sent a
+     * @SupplierCustomerId the page never populates - it is not in the save payload at all, so it
+     * was always 0. With the feature OFF the two happen to coincide and nothing was wrong. With
+     * the feature ON the web was writing a SupplierCustomerId into the AccountId column and 0
+     * into SupplierCustomerId: a party id sitting in a GL account column, on a live table, with
+     * no error and no visible symptom.
+     *
+     * The split is resolved HERE rather than in the browser on purpose. The posted value is an
+     * operator's pick, not authority: the server re-reads the same list the picker was built
+     * from and derives both columns from it, so a crafted request cannot choose which column its
+     * id lands in. This is the same rule the header already follows for tenancy.
+     *
+     * Also ported from :2498-2517, which had no web equivalent at all: a charge account may not
+     * be the supplier's own account. The desktop compares the supplier combo's GlAccountId
+     * against the row's GlAccountId when the feature is off, and the supplier's Id against the
+     * row's party id when it is on, and refuses with "Selected Account Can not be Same As
+     * Supplier Account". Enforced server-side for the same reason.
+     */
+    private void persistExpensesChargeToProduct(
+            int purchaseOrderId,
+            List<PurchaseOrderFullDto.PurchaseOrderExpensesChargeToProductDto> rows,
+            int supplierId) {
+
         jdbcTemplate.update("DELETE FROM PurchaseOrderExpensesChargeToProduct WHERE PurchaseOrderId=?", purchaseOrderId);
         if (rows == null) {
             return;
         }
+
+        int orgId  = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        boolean subsidiary = subsidiaryAccountAllowedOnVouchers(orgId, compId);
+
+        /* The same list getAccountsForChargeToProduct() gives the picker - dtAccounts. */
+        List<Map<String, Object>> accounts = getAccountsForChargeToProduct();
+        String valueMember = subsidiary ? "SupplierCustomerId" : "Id";
+
+        /* combsuppname's own GL account, for the feature-OFF comparison at :2500. */
+        int supplierGlAccountId = subsidiary ? 0 : supplierGlAccountId(supplierId);
+
+        int rowNo = 0;
         for (PurchaseOrderFullDto.PurchaseOrderExpensesChargeToProductDto row : rows) {
+            rowNo++;
             double amount = row.getAmount() != null ? row.getAmount() : 0.0;
             if (amount <= 0.0) {
-                continue;
+                continue;                                     /* :2910 - untouched rows are skipped */
             }
-            int accountId = row.getAccountId() != null ? row.getAccountId() : 0;
-            if (accountId == 0) {
-                throw new IllegalArgumentException("AccountTitle Field Required");
+            int picked = row.getAccountId() != null ? row.getAccountId() : 0;
+            if (picked == 0) {
+                throw new IllegalArgumentException("AccountTitle Field Required");   /* :2916 */
             }
+
+            Map<String, Object> match = null;
+            for (Map<String, Object> a : accounts) {
+                if (intOf(ci(a, valueMember)) == picked) { match = a; break; }
+            }
+            if (match == null) {
+                /* LimitToList is true on this column (:2573), so a value that is not in the list
+                   is not something the desktop can produce. Refused rather than written. */
+                throw new IllegalArgumentException(
+                        "AccountTitle Field Required (row#" + rowNo + ": the selected account is "
+                        + "not in the list this screen offers)");
+            }
+
+            /* :2921 / :2926 - AccountId is the GL account in both branches. */
+            int glAccountId = subsidiary ? intOf(ci(match, "GlAccountId")) : intOf(ci(match, "Id"));
+            int supplierCustomerId = subsidiary ? picked : 0;
+
+            /* :2498-2517 - "Selected Account Can not be Same As Supplier Account". */
+            if (subsidiary) {
+                if (supplierId != 0 && picked == supplierId) {
+                    throw new IllegalArgumentException("Selected Account Can not be Same As Supplier Account");
+                }
+            } else if (supplierGlAccountId != 0 && glAccountId == supplierGlAccountId) {
+                throw new IllegalArgumentException("Selected Account Can not be Same As Supplier Account");
+            }
+
             ProcExec.call(jdbcTemplate, SQL_CHARGE_TO_PRODUCT_INSERT,
-                    0, purchaseOrderId, accountId,
+                    0, purchaseOrderId, glAccountId,
                     row.getPercentage() != null ? row.getPercentage() : 0.0,
                     row.getQty() != null ? row.getQty() : 0.0,
                     row.getRate() != null ? row.getRate() : 0.0,
                     amount,
                     row.getRemarks(),
-                    row.getSupplierCustomerId() != null ? row.getSupplierCustomerId() : 0);
+                    supplierCustomerId);
         }
+    }
+
+    /**
+     * combsuppname.SelectedRow.Cells[2].Value (:2500) - the supplier's GL account, read from the
+     * same USP_GetVendorsAndCustomersWithCityName rows the supplier combo is filled from.
+     * Returns 0 when it cannot be resolved, which makes the comparison a no-op rather than
+     * refusing a save on a lookup failure.
+     */
+    private int supplierGlAccountId(int supplierId) {
+        if (supplierId <= 0) return 0;
+        try {
+            for (Map<String, Object> r : jdbcTemplate.queryForList(SQL_PARTY_LIST,
+                    currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId())) {
+                if (intOf(ci(r, "Id")) == supplierId) return intOf(ci(r, "GlAccountId"));
+            }
+        } catch (Exception e) {
+            CHARGE_ACCT_LOG.warn("Could not resolve the supplier's GL account for the "
+                    + "\"same as supplier account\" check; the check is skipped for this save", e);
+        }
+        return 0;
     }
 
     /**
@@ -1942,7 +2093,8 @@ public class PurchaseOrderFullService {
             persistEmptyBags(poMasterId, dto.getEmptyBags(), emptyBagsOrgId, emptyBagsCompId);
 
             persistSupplierExpense(poMasterId, dto.getSupplierExpenses());
-            persistExpensesChargeToProduct(poMasterId, dto.getExpensesChargeToProduct());
+            persistExpensesChargeToProduct(poMasterId, dto.getExpensesChargeToProduct(),
+                    dto.getSupplierId() != null ? dto.getSupplierId() : 0);
             persistPaymentTermsDetail(poMasterId, dto.getPaymentTermsDetail());
 
             response.put("success", true);
@@ -1971,171 +2123,544 @@ public class PurchaseOrderFullService {
         return response;
     }
 
+    /**
+     * ReadById(ID) - PurchsaeOrder.cs :3706-3875, via PurchaseOrder.GetByID (BLL 0595:46).
+     *
+     * -----------------------------------------------------------------------------------------
+     * WHY THIS RETURNED 404 FOR EVERY PURCHASE ORDER
+     * -----------------------------------------------------------------------------------------
+     * The previous implementation was a hand-written SELECT, and it asked for
+     *
+     *     po.CommissionAgentId as commissionAgentId
+     *
+     * There is no such column. Architecture.Model.Inventory.PurchaseOrder has no
+     * CommissionAgentId, and the save path in this very file already knows why: the commission
+     * agent is stored in BrokerAgentSupCustId (:3323), while BrokerAgentId is the BROKERY
+     * account (:3331). Two deceptively similar names, and the read picked the one that does not
+     * exist. SQL Server raised "Invalid column name", the surrounding `catch (Exception)`
+     * returned null, the controller turned null into 404, and the page reported
+     * "Failed to load item details" - and Edit filled nothing - with the real reason discarded.
+     *
+     * So the save wrote the right column and the read asked for a column that was never there.
+     *
+     * -----------------------------------------------------------------------------------------
+     * WHAT IT DOES NOW
+     * -----------------------------------------------------------------------------------------
+     * The desktop's own contract: Sp_PurchaseOrder_GetAllMethod with @Activity='ReadById' for the
+     * header and @Activity='ReadByPurchaseOrderHeaderId' for the lines (DAL 0448:243), plus
+     * @Activity='ReadByHeaderId_PurchaseOrderSupplierDispatchDetail' (DAL 0448:313) for the
+     * dispatch rows that decide whether this order may still be re-pointed at another supplier.
+     *
+     * GenericProvider maps a procedure's columns onto the model's properties, so the model IS the
+     * column list: every name read below is a property of Architecture.Model.Inventory.
+     * PurchaseOrder or .PurchaseOrderDetail. The keys written out keep the camelCase shape the
+     * page already consumes, so only the SOURCE changed, not the page's contract.
+     *
+     * A failure is raised, not swallowed into a null. A 404 that means "the query was wrong"
+     * cost this screen two defects that looked like missing data.
+     */
     public Map<String, Object> getPurchaseOrderById(Integer id) {
-        try {
-            String headSql = "SELECT po.Id as purchaseOrderMasterId, po.DocumentTypeId as documentTypeId, po.DocNo as docNo, " +
-                    "CONVERT(VARCHAR(10), po.DocDate, 120) as docDate, po.SupplierCustomerId as supplierId, " +
-                    "po.RemarksHeader as remarksHeader, s.CompanyName as supplierName, " +
-                    "ISNULL(s.SupCustCode, s.ManualPartyCode) as supplierCode, " +
-                    "po.BrokerAgentId as brokerAccountId, brokerAcc.CompanyName as brokerAccountName, " +
-                    "po.CommissionAgentId as commissionAgentId, commAgent.CompanyName as commissionAgentName, " +
-                    "po.BookingPersonId as bookingPersonId, bookingP.ReferencePartyName as bookingPersonName " +
-                    "FROM PurchaseOrder po " +
-                    "LEFT JOIN SupplierCustomer s ON po.SupplierCustomerId = s.Id " +
-                    "LEFT JOIN SupplierCustomer brokerAcc ON po.BrokerAgentId = brokerAcc.Id " +
-                    "LEFT JOIN SupplierCustomer commAgent ON po.CommissionAgentId = commAgent.Id " +
-                    "LEFT JOIN ReferenceParties bookingP ON po.BookingPersonId = bookingP.Id " +
-                    "WHERE po.Id = ?";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(headSql, id);
-            if (list == null || list.isEmpty()) {
-                return null;
-            }
-            Map<String, Object> head = new HashMap<>(list.get(0));
-            if (head.get("docNo") != null) {
-                int docNo = ((Number) head.get("docNo")).intValue();
-                head.put("displayCode", String.format("PO-%d", docNo));
-                head.put("branchNo", docNo);
-            }
-
-            try {
-                // Real read, ditto Sp_PurchaseOrderDetail_GetAllMethod's own column list and joins
-                // (Item / JobLot / City / UOMSchedule+UOM for the Pack UOM and Rate UOM display text).
-                // Field names below match the exact camelCase shape the Detail-tab JS already builds
-                // for a freshly-added row (see countx_purchase_order_full.js btnAddDetailRow_Click's
-                // `line` object) so an existing Purchase Order's saved rows render identically to a
-                // row the user just added, and so purchaseOrderDetailId round-trips back on Save/Update.
-                String detailSql = "SELECT d.Id as purchaseOrderDetailId, d.OrderItemId as itemId, " +
-                        "i.ItemCode as itemCode, i.ItemName as itemName, " +
-                        "d.CropYearId as cropYearId, ISNULL(d.Crop, '') as cropYear, " +
-                        "d.OrderItemUOMId as packUomId, packUom.UOMCode as packUomCode, " +
-                        "d.OrderItemQty as itemQty, d.NetWeight as itemWeight, d.OrderItemRate as itemRate, " +
-                        "d.OrderItemRateUOMId as rateUomId, rateUom.UOMCode as rateUomCode, " +
-                        "d.Amount as itemAmount, " +
-                        "d.JobLotId as jobLotId, jl.JobLotDescription as jobLotName, " +
-                        "d.CityId as loadingLocationCityId, ISNULL(c.Description, d.CityArea) as loadingLocationCityName, " +
-                        "d.Moisture as moisturePercent, ISNULL(d.OrderRemarks, '') as remarks " +
-                        "FROM PurchaseOrderDetail d " +
-                        "LEFT JOIN Item i ON d.OrderItemId = i.Id " +
-                        "LEFT JOIN JobLot jl ON d.JobLotId = jl.Id " +
-                        "LEFT JOIN City c ON d.CityId = c.Id " +
-                        "LEFT JOIN UOMSchedule packSched ON d.OrderItemUOMId = packSched.Id " +
-                        "LEFT JOIN UOM packUom ON packSched.ScheduleUnitId = packUom.Id " +
-                        "LEFT JOIN UOMSchedule rateSched ON d.OrderItemRateUOMId = rateSched.Id " +
-                        "LEFT JOIN UOM rateUom ON rateSched.ScheduleUnitId = rateUom.Id " +
-                        "WHERE d.PurchaseOrderId = ? " +
-                        "ORDER BY d.Id";
-                head.put("lineItems", jdbcTemplate.queryForList(detailSql, id));
-            } catch (Exception detailEx) {
-                head.put("lineItems", Collections.emptyList());
-            }
-
-            // Packing Material (Empty Bags) - real, DB-verified read, independent of the (still
-            // legacy/fabricated) header+detail queries above. This is what fixes the reported bug:
-            // an existing Purchase Order's saved Empty Bags rows (e.g. Jute Bags / PP Bags) are now
-            // actually returned instead of always coming back empty.
-            head.put("emptyBags", getEmptyBagsByHeaderId(id));
-
-            // Supplier Expense / Account Credit _Charge to Product / Payment Detail - real,
-            // DB-verified reads, ditto the Empty Bags read above (independent of the legacy
-            // header+detail queries).
-            head.put("supplierExpenses", getSupplierExpenseByHeaderId(id));
-            head.put("expensesChargeToProduct", getExpensesChargeToProductByHeaderId(id));
-            head.put("paymentTermsDetail", getPaymentTermsDetailByHeaderId(id));
-
-            return head;
-        } catch (Exception e) {
-            return null;
+        List<Map<String, Object>> heads = jdbcTemplate.queryForList(
+                "EXEC Sp_PurchaseOrder_GetAllMethod @Id=?, @Activity=?", id, "ReadById");
+        if (heads.isEmpty()) {
+            throw new IllegalArgumentException("Purchase Order " + id + " was not found.");
         }
+        Map<String, Object> h = heads.get(0);
+        Map<String, Object> head = new LinkedHashMap<>();
+
+        /* :3718-3757 - the header assignments, in the desktop's own order. */
+        head.put("purchaseOrderMasterId", intOf(ci(h, "Id")));
+        head.put("documentTypeId",  intOf(ci(h, "DocumentTypeId")));
+        head.put("docNo",           intOf(ci(h, "DocNo")));
+        head.put("branchSrNo",      intOf(ci(h, "BranchSrNo")));
+        head.put("docDate",         ymd(ci(h, "DocDate")));
+        head.put("orderCategoryId", intOf(ci(h, "OrderCatagoryId")));   /* desktop's spelling */
+        head.put("categorySrNo",    intOf(ci(h, "CatagorySrNo")));
+        head.put("supplierId",      intOf(ci(h, "OrderSupCustId")));    /* :3724, NOT SupplierCustomerId */
+        head.put("bookingPersonId", intOf(ci(h, "BookingPersonId")));
+        head.put("supplierRefNo",   strOf(ci(h, "SupplierRefNo")));
+        head.put("remarksHeader",   strOf(ci(h, "RemarksHeader")));
+        head.put("paymentTermsId",  intOf(ci(h, "PaymentTermsId")));
+        head.put("orderDueDays",    intOf(ci(h, "OrderDueDays")));
+        head.put("orderDueDate",    ymd(ci(h, "OrderDueDate")));
+        head.put("orderQty",        ci(h, "OrderQty"));
+        head.put("orderWeight",     ci(h, "OrderWeight"));
+        head.put("orderAmount",     ci(h, "OrderAmount"));
+        head.put("currencyId",      intOf(ci(h, "CurrencyId")));
+        head.put("exchangeRate",    ci(h, "ExchangeRate"));
+        head.put("fcyAmount",       ci(h, "FcyAmount"));
+        head.put("deliveryTermId",  intOf(ci(h, "DeliveryTermId")));
+        head.put("deliveryStartDate", ymd(ci(h, "DeliveryStartDate")));
+        head.put("deliveryDays",    intOf(ci(h, "DeliveryDays")));
+        head.put("orderExpiryDate", ymd(ci(h, "OrderExpiryDate")));
+
+        /* :3745 combsalesman.Value = po.BrokerAgentSupCustId - the COMMISSION AGENT.
+           :3750 CmbBrokeryAccount.Value = po.BrokerAgentId   - the BROKERY ACCOUNT.
+           This pair is the defect described above; they are not interchangeable. */
+        head.put("commissionAgentId", intOf(ci(h, "BrokerAgentSupCustId")));
+        head.put("commissionType",    strOf(ci(h, "CommissionType")));
+        head.put("commissionRateUom", ci(h, "UomScheduleIdCmRate"));
+        head.put("commRate",          ci(h, "CommRate"));
+        head.put("commAmount",        ci(h, "CommAmount"));
+        head.put("commissionRemarks", strOf(ci(h, "CommissionRemarks")));
+
+        head.put("brokerAccountId", intOf(ci(h, "BrokerAgentId")));
+        head.put("brokeryType",     strOf(ci(h, "BrokeryType")));
+        head.put("brokeryRate",     ci(h, "BrokeryRate"));
+        head.put("brokeryUom",      ci(h, "BrokeryUom"));
+        head.put("brokeryAmount",   ci(h, "BrokeryAmount"));
+
+        head.put("orderStatus",    strOf(ci(h, "OrderStatus")));
+        head.put("isApproved",     truthy(ci(h, "IsAproved")));   /* desktop's spelling: one 'p' */
+        head.put("cashFreight",    truthy(ci(h, "CashFreight")));
+        head.put("creditFreight",  truthy(ci(h, "CreditFreight")));
+        head.put("locationTypeId", intOf(ci(h, "LocationTypeId")));
+        head.put("displayCode",    "PO-" + intOf(ci(h, "DocNo")));
+
+        /* DAL 0448:243 - the real line read. Its columns are PurchaseOrderDetail's properties;
+           ItemCode / ItemName / UOMCode / RateUom / JobLotDescription are declared `virtual`,
+           which only excludes them from the WRITE parameter list - the read mapper fills them,
+           which is why the desktop can display them straight from purchaseOrderDetailList. */
+        List<Map<String, Object>> lines = jdbcTemplate.queryForList(
+                "EXEC Sp_PurchaseOrder_GetAllMethod @Id=?, @Activity=?",
+                id, "ReadByPurchaseOrderHeaderId");
+
+        List<Map<String, Object>> lineItems = new ArrayList<>();
+        boolean hasLabSample = false;
+        for (Map<String, Object> d : lines) {
+            if (intOf(ci(d, "InvLabSampleAnalysisHeaderId")) > 0) hasLabSample = true;
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("purchaseOrderDetailId", intOf(ci(d, "Id")));
+            m.put("itemId",        intOf(ci(d, "OrderItemId")));
+            m.put("itemCode",      strOf(ci(d, "ItemCode")));
+            m.put("itemName",      strOf(ci(d, "ItemName")));
+            m.put("cropYearId",    intOf(ci(d, "CropYearId")));
+            m.put("cropYear",      strOf(ci(d, "Crop")));
+            m.put("packUomId",     intOf(ci(d, "OrderItemUOMId")));
+            m.put("packUomCode",   strOf(ci(d, "UOMCode")));
+            m.put("packUomEquivalent", ci(d, "UOMDescription"));
+            m.put("itemQty",       ci(d, "OrderItemQty"));
+            m.put("itemWeight",    ci(d, "NetWeight"));
+            m.put("rateUomId",     intOf(ci(d, "OrderItemRateUOMId")));
+            m.put("rateUomCode",   strOf(ci(d, "RateUom")));
+            m.put("equivalentRate", ci(d, "EquivalentRate"));
+            m.put("itemRate",      ci(d, "OrderItemRate"));
+            m.put("itemAmount",    ci(d, "Amount"));
+            m.put("jobLotId",      intOf(ci(d, "JobLotId")));
+            m.put("jobLotName",    strOf(ci(d, "JobLotDescription")));
+            m.put("loadingLocationCityId",   intOf(ci(d, "CityId")));
+            m.put("loadingLocationCityName", strOf(ci(d, "CityArea")));
+            m.put("moisturePercent", strOf(ci(d, "Moisture")));
+            m.put("labSampleId",   intOf(ci(d, "InvLabSampleAnalysisHeaderId")));
+            m.put("labSampleNo",   strOf(ci(d, "LabSampleNo")));
+            m.put("fcyAmount",     ci(d, "FcyAmount"));
+            m.put("remarks",       strOf(ci(d, "OrderRemarks")));
+            lineItems.add(m);
+        }
+        head.put("lineItems", lineItems);
+
+        /* DAL 0448:313 - dispatch rows against this order. :3779 treats "any row with
+           SupplierDispatchId > 0" as the trigger. */
+        List<Map<String, Object>> dispatch;
+        try {
+            dispatch = jdbcTemplate.queryForList(
+                    "EXEC Sp_PurchaseOrder_GetAllMethod @Id=?, @Activity=?",
+                    id, "ReadByHeaderId_PurchaseOrderSupplierDispatchDetail");
+        } catch (Exception e) {
+            READ_LOG.warn("Supplier dispatch detail could not be read for Purchase Order {}; the "
+                    + "Delivery Term lock is left OFF, which is the state when no dispatch exists", id, e);
+            dispatch = Collections.emptyList();
+        }
+        boolean hasDispatch = false;
+        for (Map<String, Object> r : dispatch) {
+            if (intOf(ci(r, "SupplierDispatchId")) > 0) { hasDispatch = true; break; }
+        }
+        head.put("supplierDispatchDetail", dispatch);
+
+        /* -------------------------------------------------------------------------------------
+         * The control-state rules, computed here because they are decisions about the RECORD.
+         *
+         * ReadById applies them in this order and the ORDER MATTERS:
+         *   :3781-3783  a dispatch row disables Supplier, Order Category and Delivery Term
+         *   :3864       PartyDisableEnableOnLabAnalysis() then RE-EVALUATES two of them (:2052):
+         *                 rows exist -> Order Category is disabled, always (:2076)
+         *                            -> Supplier disabled ONLY if some row has a Lab Sample,
+         *                               and otherwise ENABLED (:2070-2074) - which undoes the
+         *                               dispatch disable from :3781
+         *                 no rows    -> both enabled
+         *   Delivery Term is not revisited, so the dispatch disable stands.
+         *
+         * Reproduced exactly, including the re-enable. It reads like an oversight in the
+         * desktop, but it is the desktop's behaviour and this is a parity port.
+         * ------------------------------------------------------------------------------------- */
+        boolean hasLines = !lineItems.isEmpty();
+        head.put("lockOrderCategory", hasLines);
+        head.put("lockSupplier",      hasLines && hasLabSample);
+        head.put("lockDeliveryTerm",  hasDispatch);
+        head.put("hasSupplierDispatch", hasDispatch);
+
+        /* :3969-3972 Reset() disables the four commission fields, and combsalesman_Leave (:1654)
+           is the only thing that enables them - so they are live exactly when an agent is set. */
+        head.put("commissionFieldsEnabled", intOf(ci(h, "BrokerAgentSupCustId")) > 0);
+
+        head.put("emptyBags",               getEmptyBagsByHeaderId(id));
+        head.put("supplierExpenses",        getSupplierExpenseByHeaderId(id));
+        head.put("expensesChargeToProduct", getExpensesChargeToProductByHeaderId(id));
+        head.put("paymentTermsDetail",      getPaymentTermsDetailByHeaderId(id));
+        return head;
     }
 
+    private static final org.slf4j.Logger READ_LOG =
+            org.slf4j.LoggerFactory.getLogger(PurchaseOrderFullService.class.getName() + ".ReadById");
+
+    private static boolean truthy(Object v) {
+        if (v instanceof Boolean) return (Boolean) v;
+        if (v instanceof Number)  return ((Number) v).intValue() != 0;
+        if (v == null) return false;
+        String t = String.valueOf(v).trim();
+        return "1".equals(t) || "true".equalsIgnoreCase(t);
+    }
+
+    /** yyyy-MM-dd, the shape every date input on this page expects. */
+    private static String ymd(Object v) {
+        if (v == null) return null;
+        String t = String.valueOf(v);
+        return t.length() >= 10 ? t.substring(0, 10) : t;
+    }
+
+    /**
+     * HistoryBranchComboFill() - PurchsaeOrder.cs :4596-4620.
+     *
+     * -----------------------------------------------------------------------------------------
+     * THIS WAS `SELECT Id, BranchName FROM Branch` - a fabricated query
+     * -----------------------------------------------------------------------------------------
+     * The desktop never reads the Branch table directly here. It has two branches of its own,
+     * chosen by the PurchaseOrderBranchWise configuration value (:632):
+     *
+     *   BranchImplemented  -> the list is ONE row, the signed-in user's own branch
+     *                         (UserAccount.BranchesId / BranchName), :4604
+     *   otherwise          -> PurchaseOrder.GetBranchesAllocatedToUserFromPurchaseOrder(
+     *                             OrganizationId, CompanyId, UserId, 41)
+     *                         -> [dbo].[USP_GetBranchsAllocatedToUserFromPurchaseOrder]
+     *                         with @DocumentTypeId GUARDED (BLL 0595:2865), :4609
+     *
+     * So the desktop offers only the branches THIS user is allocated FOR PURCHASE ORDER RICE
+     * (document type 41). The plain table read offered every branch in the database, of every
+     * company - a tenancy leak on a read, and a list the desktop would never show.
+     */
     public List<Map<String, Object>> getBranches() {
-        try {
-            return jdbcTemplate.queryForList("SELECT Id as id, BranchName as branchName FROM Branch ORDER BY BranchName");
-        } catch (Exception e) {
+        int orgId  = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+
+        if (purchaseOrderBranchWise(orgId, compId)) {
+            /* :4604 - the user's own branch, and nothing else. UserAccount.BranchName is a
+               virtual property the desktop fills at login and this port does not carry, so the
+               name is resolved from [dbo].[USP_GetBranchsAllocatedToUser] (BranchId, BranchName)
+               - a real procedure already used by the Sale Order screen - rather than from an
+               invented SELECT against a Branch/Branches table whose spelling varies. */
+            int myBranch = currentUserContext.currentBranchId();
+            String myBranchName = "";
             try {
-                return jdbcTemplate.queryForList("SELECT Id as id, BranchName as branchName FROM Branches ORDER BY BranchName");
-            } catch (Exception ex) {
-                return Collections.emptyList();
+                for (Map<String, Object> r : jdbcTemplate.queryForList(
+                        "EXEC [dbo].[USP_GetBranchsAllocatedToUser] @OrganizationId=?, @CompanyId=?, @UserId=?",
+                        orgId, compId, currentUserContext.currentUserId())) {
+                    if (intOf(ci(r, "BranchId")) == myBranch) {
+                        myBranchName = strOf(ci(r, "BranchName"));
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                HISTORY_LOG.warn("Could not resolve the signed-in user's branch name", e);
             }
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", myBranch);
+            m.put("branchName", myBranchName);
+            List<Map<String, Object>> one = new ArrayList<>();
+            one.add(m);
+            return one;
+        }
+
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(
+                "EXEC [dbo].[USP_GetBranchsAllocatedToUserFromPurchaseOrder] "
+              + "@OrganizationId=?, @CompanyId=?, @UserId=?, @DocumentTypeId=?",
+                orgId, compId, currentUserContext.currentUserId(), PO_DOCUMENT_TYPE_ID)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", intOf(ci(r, "BranchId")));       /* :4613 - BranchId, not Id */
+            m.put("branchName", strOf(ci(r, "BranchName")));
+            out.add(m);
+        }
+        return out;
+    }
+
+    /** GlobalVariables_Helper.GetConfigValueFromGlobal("PurchaseOrderBranchWise"), :632. */
+    private boolean purchaseOrderBranchWise(int orgId, int compId) {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, "
+                  + "@ConfigDescription=?, @Activity=?",
+                    orgId, compId, "PurchaseOrderBranchWise",
+                    "GetConfigurationByOrgCompandConfigDescription");
+            if (rows.isEmpty()) return false;
+            String v = strOf(ci(rows.get(0), "ConfigKey")).trim();
+            return "1".equals(v) || "true".equalsIgnoreCase(v) || "yes".equalsIgnoreCase(v);
+        } catch (Exception e) {
+            HISTORY_LOG.warn("PurchaseOrderBranchWise could not be read; using the allocated-branch "
+                    + "list, which is the desktop's behaviour when the flag is off", e);
+            return false;
         }
     }
 
+    /**
+     * The history grid cannot decide its own shape - three of its decisions are database answers
+     * that the desktop reads at form load, and hardcoding any of them would be a guess:
+     *
+     *   branchImplemented -> HistoryGridSettings :4842-4846 and :4891-4892 HIDE the BranchSrNo and
+     *                        BranchName columns entirely when PurchaseOrderBranchWise is on.
+     *   amountDecimals    -> CommonServices :5397, clsGlobalVariables.stringFormatsingle is
+     *                        "#,##0." + N where N comes from the configuration value
+     *                        "Default NoofDecimal Points For Amount".
+     *   rateDecimals      -> CommonServices :5420, DecimalRateFormate is "#,#0." + N from
+     *                        "Default NoofDecimal Points For Rate".
+     *
+     * The desktop's own switch statements leave the format suffix EMPTY for amount when the
+     * configured value is not 1-4 (so zero decimals), while rate falls through case 0 to "00"
+     * (two decimals). Both defaults are reproduced rather than assumed.
+     */
+    public Map<String, Object> historyMeta() {
+        int orgId  = currentUserContext.currentOrganizationId();
+        int compId = currentUserContext.currentCompanyId();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("branchImplemented", purchaseOrderBranchWise(orgId, compId));
+        m.put("amountDecimals", decimalPoints(orgId, compId, "Default NoofDecimal Points For Amount", 0));
+        m.put("rateDecimals",   decimalPoints(orgId, compId, "Default NoofDecimal Points For Rate", 2));
+        return m;
+    }
+
+    /** CommonServices :5378-5420 - only 1..4 are honoured; anything else takes the stated default. */
+    private int decimalPoints(int orgId, int compId, String configDescription, int fallback) {
+        try {
+            String v = configValueFor(orgId, compId, configDescription);
+            int n = Integer.parseInt(v.trim());
+            return (n >= 1 && n <= 4) ? n : fallback;
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private String configValueFor(int orgId, int compId, String configDescription) {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, "
+              + "@ConfigDescription=?, @Activity=?",
+                orgId, compId, configDescription,
+                "GetConfigurationByOrgCompandConfigDescription");
+        if (rows.isEmpty()) return "";
+        return strOf(ci(rows.get(0), "ConfigKey"));
+    }
+
+    /**
+     * getUpdateForHistory() - PurchsaeOrder.cs :4971-5010. The "Detail Of Above Selected Row" grid.
+     *
+     * -----------------------------------------------------------------------------------------
+     * WHY THIS IS ITS OWN ENDPOINT
+     * -----------------------------------------------------------------------------------------
+     * The page was calling GET /api/purchase-order/{id} - the FORM-LOAD payload - and reading
+     * `lineItems` off it. Two problems:
+     *
+     *   a) getPurchaseOrderById() builds a hand-written header SELECT joining SupplierCustomer
+     *      three times and ReferenceParties, and it returns `null` from a bare `catch (Exception)`
+     *      that swallows the reason. A null becomes 404, the page's .fail() branch fires, and the
+     *      operator sees "Failed to load item details" with nothing anywhere saying why. That is
+     *      what was on screen.
+     *   b) The detail grid does not need the header at all. Coupling it to the most fragile query
+     *      on the screen means any header defect blanks the detail grid too.
+     *
+     * So the detail rows are read on their own, and the fourteen columns are exactly the ones
+     * :4986-5000 declares, in that order, from the same source fields :5004 maps:
+     *
+     *   ItemCode ItemName CropYear UOM ItemQTY Weight ItemRate RateUOM Amount Job/Lot
+     *   FcyAmount(hidden, :5021) CityName Moisture% Remarks
+     *
+     * A failure here is reported, not swallowed - an empty detail grid and a broken query must
+     * not look the same.
+     */
+    public List<Map<String, Object>> historyDetail(int purchaseOrderId) {
+        String sql =
+                "SELECT i.ItemCode AS ItemCode, i.ItemName AS ItemName, "
+              + "ISNULL(d.Crop, '') AS CropYear, packUom.UOMCode AS UOM, "
+              + "d.OrderItemQty AS ItemQTY, d.NetWeight AS Weight, "
+              + "d.OrderItemRate AS ItemRate, rateUom.UOMCode AS RateUOM, "
+              + "d.Amount AS Amount, jl.JobLotDescription AS JobLot, "
+              + "d.FcyAmount AS FcyAmount, "
+              + "ISNULL(c.Description, d.CityArea) AS CityName, "
+              + "d.Moisture AS Moisture, ISNULL(d.OrderRemarks, '') AS Remarks "
+              + "FROM PurchaseOrderDetail d "
+              + "LEFT JOIN Item i ON d.OrderItemId = i.Id "
+              + "LEFT JOIN JobLot jl ON d.JobLotId = jl.Id "
+              + "LEFT JOIN City c ON d.CityId = c.Id "
+              + "LEFT JOIN UOMSchedule packSched ON d.OrderItemUOMId = packSched.Id "
+              + "LEFT JOIN UOM packUom ON packSched.ScheduleUnitId = packUom.Id "
+              + "LEFT JOIN UOMSchedule rateSched ON d.OrderItemRateUOMId = rateSched.Id "
+              + "LEFT JOIN UOM rateUom ON rateSched.ScheduleUnitId = rateUom.Id "
+              + "WHERE d.PurchaseOrderId = ? ORDER BY d.Id";
+        return jdbcTemplate.queryForList(sql, purchaseOrderId);
+    }
+
+    /** PurchsaeOrder.cs :4706 - obj.DocumentTypeId = 41, hard-coded on this form. */
+    private static final int PO_DOCUMENT_TYPE_ID = 41;
+
+    private static final org.slf4j.Logger HISTORY_LOG =
+            org.slf4j.LoggerFactory.getLogger(PurchaseOrderFullService.class.getName() + ".History");
+
+    /**
+     * btnshow_Click's history load - PurchsaeOrder.cs :4700-4774, BLL 0595:119 PurchaseOrder.Getall.
+     *
+     * -----------------------------------------------------------------------------------------
+     * THIS WAS A HAND-WRITTEN SELECT AND IT RETURNED NOTHING
+     * -----------------------------------------------------------------------------------------
+     * The previous implementation built raw SQL over PurchaseOrder/SupplierCustomer/
+     * ReferenceParties/Branch and filtered with `AND (po.BranchId = ? OR po.BranchesId = ?)`
+     * against a single integer. That is not what the desktop runs, and it was wrong in four
+     * independent ways at once:
+     *
+     *   1. WRONG INSTRUMENT. The desktop calls Sp_PurchaseOrder_GetAllMethod with
+     *      @Activity='PurchaseOrderFormHistory'. Whatever that procedure joins, selects and
+     *      orders is the contract; a reimplementation of it in the Java layer is a guess about
+     *      a procedure body nobody read.
+     *
+     *   2. NO TENANCY ON A READ. Not one of @OrganizationId, @CompanyId, @FinancialYearId or
+     *      @DocumentTypeId appeared in the WHERE clause. With the branch filter removed it
+     *      would have listed every Purchase Order in GoldenAcedb, of every company, of every
+     *      year, of every document type - Purchase Order Rice (41) mixed with everything else.
+     *
+     *   3. NO ROW-LEVEL VISIBILITY. :4708 sends @CanViewAllRecord from the form right, and
+     *      when the user does NOT hold it, :4710 pins @EntryUser to that user so they see only
+     *      their own documents. Neither was implemented, so every user saw every row.
+     *
+     *   4. THE BRANCH FILTER WAS THE WRONG SHAPE, AND IS THE REASON THE GRID WAS EMPTY.
+     *      The desktop's branch combo is MULTI-select (:4620 adds a checkbox column) and the
+     *      filter is built by splitting its TEXT on commas and looking each name up in dtBranch
+     *      (:4762-4771), producing a comma-separated STRING sent as @BranchesIds - with a
+     *      leading comma, because it accumulates as `BranchIds + "," + id` from "". A single
+     *      integer compared to po.BranchId cannot express that, and any id that is not a real
+     *      BranchId of a stored Purchase Order silently matches zero rows - which is exactly
+     *      what `branchId=58` did while the desktop, running the real procedure, returned three.
+     *
+     * Every parameter below is guarded exactly as BLL 0595:119-275 guards it. A guarded
+     * parameter is OMITTED when unset, never sent as NULL: the procedure's own defaults are
+     * what the desktop relies on, and NULL is a different question.
+     *
+     * One deliberate behaviour that looks like a bug and is not: when no branch is chosen the
+     * desktop does not query at all - :4761 wraps the entire Getall call in
+     * `if (cmbBranchName.Text != string.Empty)`. An empty result is returned here rather than
+     * an unfiltered one.
+     */
     public List<Map<String, Object>> getHistory(
             String fromDate, String toDate,
             Integer fromDocNo, Integer toDocNo,
             Integer supplierId, Integer bookingPersonId,
-            Integer branchId, String dateType) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT po.Id as id, po.DocNo as docNo, ")
-              .append("CONVERT(VARCHAR(10), po.DocDate, 120) as docDate, ")
-              .append("CONVERT(VARCHAR(10), po.EntryDate, 120) as entryDate, ")
-              .append("CONVERT(VARCHAR(10), po.ModifyDate, 120) as modifyDate, ")
-              .append("CONVERT(VARCHAR(10), po.ApprovedDate, 120) as approvedDate, ")
-              .append("s.CompanyName as supplierName, ISNULL(s.SupCustCode, s.ManualPartyCode) as supplierCode, ")
-              .append("bp.ReferencePartyName as bookingPersonName, ")
-              .append("ISNULL(b.BranchName, '') as branchName, ISNULL(po.BranchSrNo, 0) as branchSrNo, ")
-              .append("po.RemarksHeader as remarks, ")
-              .append("('PO-' + CAST(po.DocNo AS VARCHAR)) as voucherCode, ")
-              .append("('PO-' + CAST(po.DocNo AS VARCHAR)) as displayCode, ")
-              .append("(SELECT ISNULL(SUM(OrderItemQty), 0) FROM PurchaseOrderDetail WHERE PurchaseOrderId = po.Id) as orderQty, ")
-              .append("(SELECT ISNULL(SUM(Amount), 0) FROM PurchaseOrderDetail WHERE PurchaseOrderId = po.Id) as totalAmount, ")
-              .append("po.OrderDueDays as dueDays, CONVERT(VARCHAR(10), po.OrderDueDate, 120) as dueDate, ")
-              .append("po.DeliveryTerm as deliveryTerm, po.DeliveryDays as deliveryDays, ")
-              .append("CONVERT(VARCHAR(10), po.DeliveryStartDate, 120) as deliveryStartDate, ")
-              .append("ISNULL(po.OrderStatus, 'Open') as orderStatus ")
-              .append("FROM PurchaseOrder po ")
-              .append("LEFT JOIN SupplierCustomer s ON po.SupplierCustomerId = s.Id ")
-              .append("LEFT JOIN ReferenceParties bp ON po.BookingPersonId = bp.Id ")
-              .append("LEFT JOIN Branch b ON po.BranchId = b.Id ")
-              .append("WHERE 1=1 ");
+            String branchIds, String dateType) {
 
-            List<Object> params = new ArrayList<>();
-
-            String dateCol = "po.DocDate";
-            if ("EntryDate".equalsIgnoreCase(dateType)) {
-                dateCol = "po.EntryDate";
-            } else if ("ModifyDate".equalsIgnoreCase(dateType)) {
-                dateCol = "po.ModifyDate";
-            } else if ("ApprovedDate".equalsIgnoreCase(dateType)) {
-                dateCol = "po.ApprovedDate";
-            }
-
-            if (fromDate != null && !fromDate.trim().isEmpty()) {
-                sb.append("AND ").append(dateCol).append(" >= ? ");
-                params.add(fromDate.trim());
-            }
-            if (toDate != null && !toDate.trim().isEmpty()) {
-                sb.append("AND ").append(dateCol).append(" <= ? ");
-                params.add(toDate.trim() + " 23:59:59");
-            }
-            if (fromDocNo != null && fromDocNo > 0) {
-                sb.append("AND po.DocNo >= ? ");
-                params.add(fromDocNo);
-            }
-            if (toDocNo != null && toDocNo > 0) {
-                sb.append("AND po.DocNo <= ? ");
-                params.add(toDocNo);
-            }
-            if (supplierId != null && supplierId > 0) {
-                sb.append("AND po.SupplierCustomerId = ? ");
-                params.add(supplierId);
-            }
-            if (bookingPersonId != null && bookingPersonId > 0) {
-                sb.append("AND po.BookingPersonId = ? ");
-                params.add(bookingPersonId);
-            }
-            if (branchId != null && branchId > 0) {
-                sb.append("AND (po.BranchId = ? OR po.BranchesId = ?) ");
-                params.add(branchId);
-                params.add(branchId);
-            }
-
-            sb.append("ORDER BY po.DocNo DESC");
-            return jdbcTemplate.queryForList(sb.toString(), params.toArray());
-        } catch (Exception e) {
+        /* :4761 - no branch selected, no query. */
+        if (branchIds == null || branchIds.trim().isEmpty() || "0".equals(branchIds.trim())) {
             return Collections.emptyList();
         }
+
+        List<String> names = new ArrayList<>();
+        List<Object> args  = new ArrayList<>();
+
+        /* :4704-4708 - always sent. */
+        add(names, args, "@OrganizationId", currentUserContext.currentOrganizationId());
+        add(names, args, "@CompanyId",      currentUserContext.currentCompanyId());
+        add(names, args, "@DocumentTypeId", PO_DOCUMENT_TYPE_ID);
+
+        boolean canViewAll = canViewAllPurchaseOrderRecords();
+        add(names, args, "@CanViewAllRecord", canViewAll);
+
+        /* BLL :144 - guarded on != 0. */
+        int yearId = currentUserContext.currentFinancialYearId();
+        if (yearId != 0) add(names, args, "@FinancialYearId", yearId);
+
+        /* BLL :152 / form :4709 - ONLY when the user may not see everything. */
+        if (!canViewAll) add(names, args, "@EntryUser", currentUserContext.currentUserId());
+
+        /* @NoOfRecords (BLL :160) is guarded on != 0 and this form never sets it - omitted. */
+
+        /* :4713-4755 - the four radios are mutually exclusive and each drives its OWN pair of
+           parameters. Sending a date range on the wrong pair filters the wrong column. */
+        java.sql.Date f = dateOrNull(fromDate), t = dateOrNull(toDate);
+        String kind = dateType == null ? "" : dateType.replace(" ", "").trim();
+        if ("EntryDate".equalsIgnoreCase(kind)) {
+            if (f != null) add(names, args, "@EntryFromDate", f);
+            if (t != null) add(names, args, "@EntryToDate",   t);
+        } else if ("ModifyDate".equalsIgnoreCase(kind)) {
+            if (f != null) add(names, args, "@ModifyFromDate", f);
+            if (t != null) add(names, args, "@ModifyToDate",   t);
+        } else if ("ApprovedDate".equalsIgnoreCase(kind)) {
+            if (f != null) add(names, args, "@ApprovedFromDate", f);
+            if (t != null) add(names, args, "@ApprovedToDate",   t);
+        } else {
+            if (f != null) add(names, args, "@DocDateFrom", f);
+            if (t != null) add(names, args, "@DocDateTo",   t);
+        }
+
+        if (fromDocNo != null && fromDocNo != 0) add(names, args, "@FromDocNo", fromDocNo);
+        if (toDocNo   != null && toDocNo   != 0) add(names, args, "@ToDocNo",   toDocNo);
+
+        /* BLL :246 - the parameter is @OrderSupCustId, NOT @SupplierCustomerId. */
+        if (supplierId       != null && supplierId       != 0) add(names, args, "@OrderSupCustId",  supplierId);
+        if (bookingPersonId  != null && bookingPersonId  != 0) add(names, args, "@BookingPersonId", bookingPersonId);
+
+        /* BLL :262 - a STRING, guarded on IsNullOrEmpty. */
+        add(names, args, "@BranchesIds", branchIds.trim());
+
+        add(names, args, "@Activity", "PurchaseOrderFormHistory");
+
+        StringBuilder sql = new StringBuilder("EXEC dbo.Sp_PurchaseOrder_GetAllMethod ");
+        for (int i = 0; i < names.size(); i++) {
+            if (i > 0) sql.append(", ");
+            sql.append(names.get(i)).append("=?");
+        }
+
+        /* A failed history read is reported, not swallowed into an empty grid: "no rows" and
+           "the query broke" look identical to the operator otherwise, which is how the previous
+           implementation hid its own defect behind "No matching records found". */
+        return jdbcTemplate.queryForList(sql.toString(), args.toArray());
+    }
+
+    private static void add(List<String> names, List<Object> args, String name, Object value) {
+        names.add(name);
+        args.add(value);
+    }
+
+    /**
+     * formright.DoHaveCanViewAllRecordRights (:4708), read against THIS screen's real name.
+     * The rights dump records the desktop form as "PurchsaeOrder" - the misspelling is the
+     * stored ScreenName, not a typo here.
+     */
+    private boolean canViewAllPurchaseOrderRecords() {
+        String role = currentUserContext.currentRoleName();
+        if ("Admin".equalsIgnoreCase(role) || "Administrator".equalsIgnoreCase(role)) return true;
+        try {
+            for (Map<String, Object> r : jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_tblUserRights_GetAllMethod @UserId=?, @ScreenName=?, @RightName=?, "
+                  + "@CompanyId=?, @Activity=?",
+                    currentUserContext.currentUserId(), "PurchsaeOrder", role == null ? "" : role,
+                    currentUserContext.currentCompanyId(), "GetByUserId")) {
+                Object name = ci(r, "RightName");
+                if (name != null && "CanView AllRecord".equalsIgnoreCase(name.toString().trim())) {
+                    Object v = ci(r, "Value");
+                    if (v instanceof Boolean) return (Boolean) v;
+                    if (v instanceof Number)  return ((Number) v).intValue() != 0;
+                    return v != null && ("1".equals(v.toString().trim())
+                            || "true".equalsIgnoreCase(v.toString().trim()));
+                }
+            }
+        } catch (Exception e) {
+            HISTORY_LOG.warn("CanView AllRecord could not be read for PurchsaeOrder; the history "
+                    + "is restricted to this user's own documents, which is the safe side", e);
+        }
+        return false;
     }
 
     public boolean deletePurchaseOrder(Integer id) {

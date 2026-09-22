@@ -278,6 +278,18 @@ public class PurchaseOrderRestController {
         return ResponseEntity.notFound().build();
     }
 
+    /** The three database-driven decisions the history grid's shape depends on. */
+    @GetMapping("/history-meta")
+    public ResponseEntity<Map<String, Object>> historyMeta() {
+        return ResponseEntity.ok(purchaseOrderService.historyMeta());
+    }
+
+    /** getUpdateForHistory() - the "Detail Of Above Selected Row" grid, read on its own. */
+    @GetMapping("/{id}/history-detail")
+    public ResponseEntity<List<Map<String, Object>>> historyDetail(@PathVariable Integer id) {
+        return ResponseEntity.ok(purchaseOrderService.historyDetail(id == null ? 0 : id));
+    }
+
     @GetMapping("/branches")
     public ResponseEntity<List<Map<String, Object>>> getBranches() {
         return ResponseEntity.ok(purchaseOrderService.getBranches());
@@ -291,9 +303,14 @@ public class PurchaseOrderRestController {
             @RequestParam(required = false) Integer toDocNo,
             @RequestParam(required = false) Integer supplierId,
             @RequestParam(required = false) Integer bookingPersonId,
-            @RequestParam(required = false) Integer branchId,
+            /* A comma-separated list, not an id: the desktop's branch combo is multi-select and
+               the BLL parameter is @BranchesIds, a string (BLL 0595:262). `branchId` is still
+               accepted so a cached page keeps working. */
+            @RequestParam(required = false) String branchIds,
+            @RequestParam(required = false) String branchId,
             @RequestParam(required = false, defaultValue = "DocDate") String dateType) {
-        return ResponseEntity.ok(purchaseOrderService.getHistory(fromDate, toDate, fromDocNo, toDocNo, supplierId, bookingPersonId, branchId, dateType));
+        String branches = (branchIds != null && !branchIds.trim().isEmpty()) ? branchIds : branchId;
+        return ResponseEntity.ok(purchaseOrderService.getHistory(fromDate, toDate, fromDocNo, toDocNo, supplierId, bookingPersonId, branches, dateType));
     }
 
     @DeleteMapping("/{id}")

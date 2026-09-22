@@ -180,7 +180,11 @@ public class DashboardController {
         model.addAttribute("moduleHome", "/dashboard");
         model.addAttribute("moduleTitle", name == null || name.isEmpty() ? "DashBoard Screen" : name);
         model.addAttribute("desktopForm", dashboardModuleService.desktopFormFor(name));
-        model.addAttribute("desktopProject", "Architecture.WinApp.Dashboard");
+        /* Only claim an assembly when this really is a DashBoard-menu form. This route is the
+           placeholder for every module's unbuilt screens, and naming the wrong project is a
+           false statement about where the code lives. */
+        model.addAttribute("desktopProject",
+                dashboardModuleService.isDashboardOwnForm(name) ? "Architecture.WinApp.Dashboard" : null);
         return "screen_not_built";
     }
 
