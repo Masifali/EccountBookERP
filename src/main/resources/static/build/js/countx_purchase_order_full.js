@@ -222,15 +222,10 @@ function syncSupplierSelection() {
         const supp = allSuppliers.find(s => s.id === suppId);
         if (supp) {
             $('#hidSupplierId').val(supp.id);
-            const displayText = $('#radSupCode').is(':checked')
-                ? `${supp.partyCode} - ${supp.companyName}`
-                : `${supp.companyName} (${supp.partyCode || 'N/A'})`;
-            $('#txtSupplierDisplay').val(displayText);
             onSupplierSelectedEventChain(supp);
         }
     } else {
         $('#hidSupplierId').val('0');
-        $('#txtSupplierDisplay').val('');
     }
 }
 
@@ -241,12 +236,10 @@ function syncBrokerAccountSelection() {
         const broker = allBrokers.find(b => b.id === brokerId);
         if (broker) {
             $('#hidBrokerAccountId').val(broker.id);
-            $('#txtBrokerAcDisplay').val(broker.companyName);
             calcBrokery();
         }
     } else {
         $('#hidBrokerAccountId').val('0');
-        $('#txtBrokerAcDisplay').val('');
         calcBrokery();
     }
 }
@@ -259,12 +252,10 @@ function syncCommissionAgentSelection() {
         const agent = allCommAgents.find(a => a.id === agentId);
         if (agent) {
             $('#hidCommissionAgentId').val(agent.id);
-            $('#txtCommAgentDisplay').val(agent.companyName);
             calcCommission();
         }
     } else {
         $('#hidCommissionAgentId').val('0');
-        $('#txtCommAgentDisplay').val('');
         calcCommission();
     }
 }
@@ -276,11 +267,9 @@ function syncBookingPersonSelection() {
         const person = allBookingPersons.find(p => p.id === personId);
         if (person) {
             $('#hidBookingPersonId').val(person.id);
-            $('#txtBookingPersonDisplay').val(person.partyName || person.description || person.name);
         }
     } else {
         $('#hidBookingPersonId').val('0');
-        $('#txtBookingPersonDisplay').val('-- Select --');
     }
 }
 
@@ -416,7 +405,9 @@ function loadDropdowns() {
         if ($.fn.select2) sel.trigger('change.select2');
         /* combordercat_Leave: generate the category serial whenever the category changes. */
         sel.off('change.catsr').on('change.catsr', fetchNextCategorySrNo);
+        applyHeaderSelections();
     });
+
 
     // Payment Terms
     $.get('/api/purchase-order/payment-terms', function(data) {
@@ -427,6 +418,7 @@ function loadDropdowns() {
             data.forEach(t => sel.append(`<option value="${t.id}" data-days="${t.dueDays}" data-code="${t.dueDays ? t.dueDays + ' Days' : ''}">${escapeHtml(t.description)}</option>`));
         }
         if ($.fn.select2) sel.trigger('change.select2');
+        applyHeaderSelections();
     });
 
     // Delivery Terms
@@ -437,6 +429,7 @@ function loadDropdowns() {
             data.forEach(t => sel.append(`<option value="${t.id}" data-code="${t.id}">${escapeHtml(t.description || t.name)}</option>`));
         }
         if ($.fn.select2) sel.trigger('change.select2');
+        applyHeaderSelections();
     });
 
     // Job Lots
@@ -693,6 +686,63 @@ function loadDefaultEmptyBagRows(callback) {
     });
 }
 
+/* =========================================================================================
+ * HEADER COMBO SELECTIONS ON A LOADED ORDER
+ * =========================================================================================
+ * ReadById (:3722-3755) sets combordercat, combsuppname, CmbBookingPerson, combpttrm,
+ * combdeliverytrm, combsalesman, CmbBrokeryAccount and CmbStatus from the record. The web port
+ * set NONE of the party combos: it wrote the ids into #hidSupplierId / #hidBrokerAccountId /
+ * #hidCommissionAgentId / #hidBookingPersonId, and the display text into #txtSupplierDisplay,
+ * #txtBrokerAcDisplay, #txtCommAgentDisplay and #txtBookingPersonDisplay - four ids that DO NOT
+ * EXIST in purchase_order.html. Every one of those writes was a silent no-op, and the <select>
+ * the operator actually looks at was never touched. That is why Edit left Supplier, Comm Agent
+ * and Broker Ac showing their placeholders while the plain text fields filled correctly.
+ *
+ * There is also an ordering problem, which a plain .val() would hit intermittently: the option
+ * lists arrive from eight separate $.get calls, so whether a given list is populated when Edit
+ * runs depends on timing. Rather than retry on a timer, the loaded record is REMEMBERED and the
+ * selections are re-applied every time one of those lists finishes populating. Each pass is
+ * idempotent, so the result no longer depends on which response lands first.
+ * ========================================================================================= */
+let loadedHeaderSelection = null;
+
+function applyHeaderSelections() {
+    const po = loadedHeaderSelection;
+    if (!po) return;
+
+    /* :3722 combordercat / :3724 combsuppname / :3726 CmbBookingPerson / :3731 combpttrm
+       :3743 combdeliverytrm / :3745 combsalesman / :3750 CmbBrokeryAccount / :3755 CmbStatus */
+    setComboValue('#cmbParentCategory',  po.orderCategoryId);
+    setComboValue('#cmbSupplier',        po.supplierId);
+    setComboValue('#cmbBookingPerson',   po.bookingPersonId);
+    setComboValue('#cmbPaymentTerm',     po.paymentTermsId);
+    setComboValue('#cmbDeliveryTerm',    po.deliveryTermId);
+    setComboValue('#cmbCommissionAgent', po.commissionAgentId);
+    setComboValue('#cmbBrokerAccount',   po.brokerAccountId);
+
+    /* The hidden mirrors the rest of the page still reads. */
+    $('#hidSupplierId').val(po.supplierId || 0);
+    $('#hidBrokerAccountId').val(po.brokerAccountId || 0);
+    $('#hidCommissionAgentId').val(po.commissionAgentId || 0);
+    $('#hidBookingPersonId').val(po.bookingPersonId || 0);
+}
+
+/* Sets a <select> by value only when the matching <option> is actually present - assigning a
+   value that has no option silently leaves the control on its placeholder, which is
+   indistinguishable on screen from "the record has no value". Returns whether it took. */
+function setComboValue(selector, value) {
+    const el = $(selector);
+    if (!el.length) return false;
+    const v = parseInt(value, 10);
+    if (!v) return false;
+    if (!el.find('option').filter(function () { return String(this.value) === String(v); }).length) {
+        return false;                       /* list not loaded yet - a later pass will catch it */
+    }
+    el.val(String(v));
+    if ($.fn.select2) el.trigger('change.select2');
+    return true;
+}
+
 function preloadSearchData() {
     $.get('/api/purchase-order/suppliers?mode=name', function(data) {
         allSuppliers = data || [];
@@ -759,6 +809,7 @@ function populateSupplierDropdowns() {
     /* combsuppname.Value = Id after the re-bind (:1886-1889) */
     if (keepId > 0) selForm.val(String(keepId));
     if ($.fn.select2) selForm.trigger('change.select2');
+    applyHeaderSelections();
 }
 
 function populateBrokerDropdown() {
@@ -774,6 +825,7 @@ function populateBrokerDropdown() {
     if ($.fn.select2) {
         sel.trigger('change.select2');
     }
+    applyHeaderSelections();
 }
 
 function populateCommissionAgentDropdown() {
@@ -791,6 +843,7 @@ function populateCommissionAgentDropdown() {
     if ($.fn.select2) {
         sel.trigger('change.select2');
     }
+    applyHeaderSelections();
 }
 
 /* ============================================================
@@ -867,10 +920,6 @@ function selectSupplier(suppId) {
 
     $('#hidSupplierId').val(supp.id);
     $('#cmbSupplier').val(supp.id).trigger('change.select2');
-    const displayText = $('#radSupCode').is(':checked') 
-        ? `${supp.partyCode} - ${supp.companyName}`
-        : `${supp.companyName} (${supp.partyCode || 'N/A'})`;
-    $('#txtSupplierDisplay').val(displayText);
     $('#modalSupplierSearch').modal('hide');
 
     // Execute Supplier Selection Event Chain
@@ -1050,7 +1099,6 @@ function selectBroker(brokerId) {
     if (!broker) return;
     $('#hidBrokerAccountId').val(broker.id);
     $('#cmbBrokerAccount').val(broker.id).trigger('change.select2');
-    $('#txtBrokerAcDisplay').val(broker.companyName);
     $('#modalBrokerSearch').modal('hide');
     calcBrokery();
 }
@@ -1103,7 +1151,6 @@ function selectCommAgent(agentId) {
     if (!agent) return;
     $('#hidCommissionAgentId').val(agent.id);
     $('#cmbCommissionAgent').val(agent.id).trigger('change.select2');
-    $('#txtCommAgentDisplay').val(agent.companyName);
     $('#modalCommAgentSearch').modal('hide');
     calcCommission();
 }
@@ -1134,6 +1181,7 @@ function loadBookingPersons(callback) {
 
         if (typeof callback === 'function') callback();
     });
+    applyHeaderSelections();
 }
 
 function openBookingPersonSearchModal() {
@@ -1183,7 +1231,6 @@ function selectBookingPerson(personId) {
     if (!personId || personId <= 0) {
         $('#hidBookingPersonId').val('0');
         $('#cmbBookingPerson').val('0').trigger('change.select2');
-        $('#txtBookingPersonDisplay').val('-- Select --');
         $('#modalBookingPersonSearch').modal('hide');
         return;
     }
@@ -1191,7 +1238,6 @@ function selectBookingPerson(personId) {
     if (!person) return;
     $('#hidBookingPersonId').val(person.id);
     $('#cmbBookingPerson').val(person.id).trigger('change.select2');
-    $('#txtBookingPersonDisplay').val(person.partyName || person.description || person.name);
     $('#modalBookingPersonSearch').modal('hide');
 }
 
@@ -1904,10 +1950,58 @@ function renderDetailGrid() {
     renderSchedGrid();
 }
 
+/* CalculateTotalInformation() - PurchsaeOrder.cs :4200-4222, called after every change to the
+ * detail grid (:2643, :2834, :4128).
+ *
+ * -----------------------------------------------------------------------------------------
+ * THE HEADER TOTALS WERE NEVER WRITTEN, AND THE SAVE POSTED THEM AS ZERO
+ * -----------------------------------------------------------------------------------------
+ * This function filled the three labels under the grid and stopped there. The three boxes in
+ * the header - Item Qty, Order Weight, Order Amount - were written by nothing at all, so they
+ * sat at their template value of 0 however many lines the order had.
+ *
+ * That was not only cosmetic. buildPayload reads those very boxes:
+ *
+ *     orderQty:    parseFloat($('#txtHeaderTotalQty').val()    || '0'),
+ *     orderWeight: parseFloat($('#txtHeaderTotalWeight').val() || '0'),
+ *     orderAmount: parseFloat($('#txtHeaderTotalAmount').val() || '0'),
+ *
+ * and PurchaseOrderFullService writes them straight into the header row. So EVERY Purchase
+ * Order saved from this page stored OrderQty = 0, OrderWeight = 0 and OrderAmount = 0 while
+ * its detail rows carried the real figures - silently, with no error, on a live table.
+ *
+ * The desktop's rounding is reproduced exactly: Qty and Weight are Math.Round(x, 2) shown as
+ * "#,##0.##", Amount uses stringFormatsingle (the configured amount decimals). With no rows
+ * the desktop writes the string "0", not "0.00" (:4217-4219).
+ *
+ * txtFcyAmount (:4213) is NOT set here: this page has no Fcy Amount control, a gap already
+ * recorded against ReadById.
+ */
 function updateDetailTotals(qty, wt, amt) {
     $('#lblTotalQty').text(qty.toFixed(2));
     $('#lblTotalWeight').text(wt.toFixed(2) + " KG");
     $('#lblGrandTotal').text(amt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+    /* "Total Items: 0" was also never updated - :598 in the template. The desktop's grid shows
+       its own row count; here it is the number of detail lines. */
+    $('#lblTotalItemCount').text(lineItems.length);
+
+    const hasRows = lineItems.length > 0;
+    const dp = (historyMeta && typeof historyMeta.amountDecimals === 'number')
+        ? historyMeta.amountDecimals : 0;
+
+    $('#txtHeaderTotalQty').val(hasRows
+        ? round2(qty).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '0');
+    $('#txtHeaderTotalWeight').val(hasRows
+        ? round2(wt).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '0');
+    $('#txtHeaderTotalAmount').val(hasRows
+        ? amt.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }) : '0');
+}
+
+/** Math.Round(x, 2) - :4210. */
+function round2(n) {
+    const v = parseFloat(n);
+    return isNaN(v) ? 0 : Math.round(v * 100) / 100;
 }
 
 /* ============================================================
@@ -2306,7 +2400,7 @@ function renderExpGrid() {
         tbody.append(`
             <tr>
                 <td style="text-align: center;">${idx + 1}</td>
-                <td><select class="win-combo" onchange="onExpItemChange(${idx}, this.value)"><option value="0">${placeholder}</option>${options}</select></td>
+                <td><select class="win-combo" onchange="onExpItemChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.qty}" onchange="onExpQtyRateChange(${idx}, 'qty', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.rate}" onchange="onExpQtyRateChange(${idx}, 'rate', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${(row.amount || 0).toFixed(2)}" onchange="onExpAmountChange(${idx}, this.value)"/></td>
@@ -2435,7 +2529,7 @@ function renderChargeGrid() {
             : '-- Select --';
         tbody.append(`
             <tr data-charge-row="${idx}">
-                <td><select class="win-combo dtcombo" data-dtcombo="account2" data-dtcombo-caption="Account Title" onchange="onChargeAccountChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
+                <td><select class="win-combo dtcombo" data-dtcombo="account2" data-dtcombo-caption="Account Title" onchange="onChargeAccountChange(${idx}, this.value)"><option value="0">${placeholder}</option>${options}</select></td>
                 <td><input type="number" step="0.01" class="win-textbox" data-charge-cell="percentage" style="text-align: right;" value="${row.percentage}" onchange="onChargePercentageChange(${idx}, this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" data-charge-cell="qty" style="text-align: right;" value="${row.qty}" onchange="onChargeQtyRateChange(${idx}, 'qty', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" data-charge-cell="rate" style="text-align: right;" value="${row.rate}" onchange="onChargeQtyRateChange(${idx}, 'rate', this.value)"/></td>
@@ -2494,6 +2588,34 @@ function onChargeAccountChange(idx, val) {
  * costs nothing and keeps the ported condition honest against its source.
  * ============================================================ */
 
+/* =========================================================================================
+ * DELIBERATE DEVIATION FROM THE DESKTOP - requested and confirmed by the operator, 22-09-2026.
+ * DO NOT "fix" this back to parity without asking again.
+ * =========================================================================================
+ * grdExpensesChargeToProduct_CellUpdated (PurchsaeOrder.cs :2949-2966) makes the two entry
+ * modes mutually destructive:
+ *
+ *     edit ItemQty / ItemRate  ->  Amount = Qty x Rate      AND  Percentage := 0   (:2953)
+ *     edit Percentage          ->  Amount = round(share)    AND  ItemQty := 0      (:2964)
+ *                                                           AND  ItemRate := 0     (:2965)
+ *
+ * So on the desktop, typing a Qty silently destroys a Percentage the operator had already
+ * entered, and typing a Percentage silently destroys the Qty and Rate. The operator reported
+ * this as a defect on the web form ("only calculate, not set 0 value") and, when shown what
+ * the desktop does, chose to drop the cross-wiping and keep only the calculation.
+ *
+ * WHAT IS KEPT: both Amount calculations, unchanged - Qty x Rate, and
+ * round(OrderTotal / 100 x Percentage) written only when positive. The empty-cell guards are
+ * kept too. Only the four assignments that write a 0 into a cell the operator did not edit
+ * are removed.
+ *
+ * CONSEQUENCE TO BE AWARE OF: a row may now carry BOTH a Percentage and a Qty/Rate, which the
+ * desktop can never produce. Whichever field is edited last determines Amount. The table has
+ * columns for all four, so such a row stores and reads back without complaint, and the desktop
+ * would simply display both values. Amount - not the inputs - is what the save path and the
+ * voucher depend on, and Amount stays single-valued.
+ * ========================================================================================= */
+
 /** The raw text of one cell of one row - the web equivalent of item.Cells[k].Value.ToString(). */
 function chargeCellText(idx, cell) {
     const el = $(`#tblChargesTbody tr[data-charge-row="${idx}"] input[data-charge-cell="${cell}"]`);
@@ -2511,33 +2633,36 @@ function onChargeQtyRateChange(idx, field, val) {
     /* The edited cell itself is always taken, ditto grdExpensesChargeToProduct.UpdateData(). */
     chargeToProductItems[idx][field] = parseFloat(val || '0') || 0;
 
-    /* :2540 - both cells must be non-empty or the desktop does nothing at all. */
+    /* :2949 - both cells must be non-empty or the desktop does nothing at all. */
     const qtyText  = field === 'qty'  ? String(val == null ? '' : val) : chargeCellText(idx, 'qty');
     const rateText = field === 'rate' ? String(val == null ? '' : val) : chargeCellText(idx, 'rate');
     if (qtyText.trim() === '' || rateText.trim() === '') return;
 
     const qty  = parseFloat(qtyText  || '0') || 0;
     const rate = parseFloat(rateText || '0') || 0;
-    setChargeCell(idx, 'amount', qty * rate);   /* :2543 */
-    setChargeCell(idx, 'percentage', 0);        /* :2544 */
+    setChargeCell(idx, 'amount', qty * rate);   /* :2952 */
+
+    /* DELIBERATE DEVIATION - see the note above onChargePercentageChange. :2953 forces
+       Percentage to 0 here; that line is intentionally NOT ported. */
 }
 
 function onChargePercentageChange(idx, val) {
     const pctText = String(val == null ? '' : val);
     chargeToProductItems[idx].percentage = parseFloat(pctText || '0') || 0;
 
-    /* :2547 - Percentage must be non-empty. */
+    /* :2956 - Percentage must be non-empty. */
     if (pctText.trim() === '') return;
 
-    /* :2549 - grd.GetTotal(Amount, Sum) on the ITEM DETAIL grid, which is what
+    /* :2958 - grd.GetTotal(Amount, Sum) on the ITEM DETAIL grid, which is what
        calculateGrandTotalLineAmount() sums. Not the charge grid's own total. */
     const totalOrderAmt = calculateGrandTotalLineAmount();
     const amt = (totalOrderAmt / 100.0) * (parseFloat(pctText || '0') || 0);
 
-    /* :2553 - Amount is written ONLY when the computed share is positive. No else branch. */
+    /* :2962 - Amount is written ONLY when the computed share is positive. No else branch. */
     if (amt > 0) setChargeCell(idx, 'amount', Math.round(amt));
-    setChargeCell(idx, 'qty', 0);    /* :2555 */
-    setChargeCell(idx, 'rate', 0);   /* :2556 */
+
+    /* DELIBERATE DEVIATION - :2964-2965 force ItemQty and ItemRate to 0 here; those two lines
+       are intentionally NOT ported. See the note above. */
 }
 
 function removeChargeRow(idx) {
@@ -2780,12 +2905,23 @@ function buildPayload() {
            so read the selected option, then fall back to the select's own value - never send an
            empty string just because the option element was not the source of truth. */
         orderStatus:      comboText('#cmbOrderStatus'),
+        /* :3311-3312 - the desktop writes BOTH: DeliveryTermId from the combo's VALUE and
+           DeliveryTerm from its TEXT. Only the name was being sent, so the DTO's
+           deliveryTermId stayed null, zero() turned it into 0, and every Purchase Order saved
+           from this page stored DeliveryTermId = 0 - which is why the History grid's Delivery
+           Term column is blank for web-created orders, and why Edit could not re-select it. */
+        deliveryTermId:   parseInt($('#cmbDeliveryTerm').val() || '0'),
         deliveryTermName: comboText('#cmbDeliveryTerm'),
         orderCategoryId:  parseInt($('#cmbParentCategory').val() || '0'),
         categorySrNo:     parseInt($('#txtCategoryNo').val() || '0'),
-        orderQty:         parseFloat($('#txtHeaderTotalQty').val() || '0'),
-        orderWeight:      parseFloat($('#txtHeaderTotalWeight').val() || '0'),
-        orderAmount:      parseFloat($('#txtHeaderTotalAmount').val() || '0'),
+        /* Summed from the lines, NOT parsed back out of the display boxes. Those boxes are
+           formatted for reading ("7,000.00"), and parseFloat("7,000.00") is 7 - which would
+           have turned a display fix into a far worse data defect than the zeros it replaced.
+           The server recomputes these from the detail rows anyway; this keeps the posted
+           document self-consistent. */
+        orderQty:         lineItems.reduce((a, l) => a + (parseFloat(l.itemQty)    || 0), 0),
+        orderWeight:      lineItems.reduce((a, l) => a + (parseFloat(l.itemWeight) || 0), 0),
+        orderAmount:      lineItems.reduce((a, l) => a + (parseFloat(l.itemAmount) || 0), 0),
         /* LocationTypeId has no control on this page. The desktop reads cmbLocationType; the
            procedure defaults a 0 to 1 itself, so 0 is sent rather than a guessed value. */
         locationTypeId:   0,
@@ -2891,6 +3027,7 @@ function btnUpdate_Click() {
 }
 
 function btnNew_Click() {
+    loadedHeaderSelection = null;   /* Reset() - nothing left to re-apply */
     clearEditModeState();      /* Reset() :3962-3972 - Save back, Update gone, locks cleared */
     currentPoMasterId = 0;
     lineItems = [];
@@ -2906,13 +3043,9 @@ function btnNew_Click() {
     renderSchedGrid();
 
     $('#hidSupplierId').val('0');
-    $('#txtSupplierDisplay').val('');
     $('#hidBrokerAccountId').val('0');
-    $('#txtBrokerAcDisplay').val('');
     $('#hidCommissionAgentId').val('0');
-    $('#txtCommAgentDisplay').val('');
     $('#hidBookingPersonId').val('0');
-    $('#txtBookingPersonDisplay').val('-- Select --');
     $('#txtRemarksHeader').val('');
 
     fetchNextDocNo();
@@ -2969,17 +3102,13 @@ function loadSelectedOrder(poId, mode) {
         $('#txtDocNo').val(po.docNo);
         $('#lblDocNoDisplay').text("PO-2026-" + String(po.docNo).padStart(4, '0'));
         $('#txtDocDate').val(po.docDate);
-        $('#hidSupplierId').val(po.supplierId || 0);
-        $('#txtSupplierDisplay').val(po.supplierName || '');
-        
-        $('#hidBrokerAccountId').val(po.brokerAccountId || 0);
-        $('#txtBrokerAcDisplay').val(po.brokerAccountName || (po.brokerAccountId ? 'Broker Ac #' + po.brokerAccountId : ''));
-        
-        $('#hidCommissionAgentId').val(po.commissionAgentId || 0);
-        $('#txtCommAgentDisplay').val(po.commissionAgentName || (po.commissionAgentId ? 'Agent #' + po.commissionAgentId : ''));
-        
-        $('#hidBookingPersonId').val(po.bookingPersonId || 0);
-        $('#txtBookingPersonDisplay').val(po.bookingPersonName || '-- Select --');
+        /* The record is remembered so the selections can be re-applied as each option list
+           finishes loading - see applyHeaderSelections. The previous code here wrote to
+           #txtSupplierDisplay / #txtBrokerAcDisplay / #txtCommAgentDisplay /
+           #txtBookingPersonDisplay, none of which exist in this template, and never set the
+           <select> elements at all. */
+        loadedHeaderSelection = po;
+        applyHeaderSelections();
 
         $('#txtRemarksHeader').val(po.remarksHeader);
 
@@ -3069,13 +3198,10 @@ function loadSelectedOrder(poId, mode) {
            like missing data. The desktop fields with NO web control yet are listed at the end
            of this function rather than quietly skipped. */
         $('#txtBranchNo').val(po.branchSrNo);
-        $('#cmbParentCategory').val(po.orderCategoryId || 0);       /* combordercat :3722 */
         $('#txtCategoryNo').val(po.categorySrNo);
         $('#txtSupplierRefNo').val(po.supplierRefNo || '');
-        $('#cmbPaymentTerm').val(po.paymentTermsId || 0);
         $('#txtDueDays').val(po.orderDueDays);
         $('#txtPaymentDueDate').val(po.orderDueDate || '');
-        $('#cmbDeliveryTerm').val(po.deliveryTermId || 0);
         $('#txtDeliveryStartDate').val(po.deliveryStartDate || '');
         $('#txtDeliveryDays').val(po.deliveryDays);
         $('#cmbCommType').val(po.commissionType || '');             /* combcommtype :3746 */
@@ -3750,7 +3876,6 @@ function saveLookupParty_Click() {
                 loadBookingPersons(function() {
                     if (newId && newId > 0) {
                         $('#hidBookingPersonId').val(newId);
-                        $('#txtBookingPersonDisplay').val(newName);
                     }
                 });
             } else {

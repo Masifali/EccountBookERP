@@ -2007,9 +2007,19 @@ public class PurchaseOrderFullService {
             head.put("CatagorySrNo",   zero(dto.getCategorySrNo()));
             head.put("OrderStatus",    dto.getOrderStatus());
             head.put("LocationTypeId", zero(dto.getLocationTypeId()));
-            head.put("OrderQty",       dec(dto.getOrderQty()));
-            head.put("OrderWeight",    dec(dto.getOrderWeight()));
-            head.put("OrderAmount",    dec(dto.getOrderAmount()));
+            /* CalculateTotalInformation() - PurchsaeOrder.cs :4200-4222. The desktop SUMS the
+               detail grid's ItemQty / Weight / Amount columns into these three header fields,
+               so they are derived data, never independently entered.
+               
+               They used to be taken verbatim from the posted JSON, and the page never filled
+               the boxes it read them from - so every Purchase Order saved from the web stored
+               OrderQty = 0, OrderWeight = 0, OrderAmount = 0 beside detail rows carrying the
+               real figures. Deriving them here from the detail list means a page defect, a
+               stale field or a crafted request cannot put a header total out of step with the
+               lines it is supposed to total. */
+            head.put("OrderQty",    sumDetails(dto, "qty"));
+            head.put("OrderWeight", sumDetails(dto, "weight"));
+            head.put("OrderAmount", sumDetails(dto, "amount"));
                                                 head.put("EntryUser",      effUserId);
             head.put("EntryDate",      nowTs);
             head.put("ModifyUser",     effUserId);
@@ -2677,6 +2687,27 @@ public class PurchaseOrderFullService {
     // ==========================================================================================
     // Small conversions used by the Purchase Order header mapping.
     // ==========================================================================================
+
+    /**
+     * grd.GetTotal(column, AggregateFunction.Sum) over the detail rows - :4205-4208.
+     * Qty and Weight are rounded to 2 as the desktop rounds them (:4210-4211); Amount is not
+     * rounded here because the desktop only formats it for display.
+     */
+    private static java.math.BigDecimal sumDetails(PurchaseOrderFullDto dto, String which) {
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        if (dto.getLineItems() != null) {
+            for (PurchaseOrderFullDto.PurchaseOrderDetailItemDto d : dto.getLineItems()) {
+                Double v = "qty".equals(which)    ? d.getItemQty()
+                         : "weight".equals(which) ? d.getItemWeight()
+                                                  : d.getItemAmount();
+                if (v != null) total = total.add(java.math.BigDecimal.valueOf(v));
+            }
+        }
+        if (!"amount".equals(which)) {
+            total = total.setScale(2, java.math.RoundingMode.HALF_UP);
+        }
+        return total;
+    }
 
     /** The desktop's Conversion.ToInt: a missing value is 0, never null. */
     private static int zero(Integer v) { return v == null ? 0 : v; }
