@@ -1,457 +1,54 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Purchase Invoice Direct - WinForms Replica</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <style>
-        body { font-family: "Verdana", Tahoma, Arial, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; }
-        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; }
-        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font-family: "Verdana", sans-serif; font-size: 11px; color: #000000; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 22px; border-radius: 2px; }
-        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
-        .win-btn-tool-save { font-weight: bold; color: #004d40; }
-        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
-        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 12pt; font-weight: bold; }
-        .win-form-body { background-color: #ffffff; padding: 6px; }
-        .win-group-box { border: 1px solid #d0d0d0; border-radius: 3px; padding: 8px 10px; margin-bottom: 6px; background-color: #ffffff; }
-        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9.75pt; font-weight: bold; color: #000000; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
-        .win-label { font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-size: 9pt; font-weight: 600; color: #000000; white-space: nowrap; }
-        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 9.75pt; height: 25px; border: 1px solid #7a9a9e; padding: 2px 5px; box-sizing: border-box; background-color: #ffffff; color: #000000; border-radius: 0; width: 100%; }
-        .win-textbox:focus, .win-combo:focus, .win-datepicker:focus { border-color: #008080; outline: none; }
-        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 9.75pt; font-weight: bold; border: none; height: 25px; padding: 0 14px; cursor: pointer; }
-        .win-btn-action:hover { background-color: #005959; }
-        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; margin-top: 4px; }
-        .win-grid-scroll { max-height: 280px; overflow-x: auto; overflow-y: auto; }
-        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8.25pt; background-color: #ffffff; min-width: 950px; }
-        .win-grid th { background-color: #ece9d8; color: #000000; font-weight: normal; border: 1px solid #aca899; padding: 4px 6px; text-align: left; position: sticky; top: 0; z-index: 5; }
-        .win-grid td { border: 1px solid #e0e0e0; padding: 3px 6px; color: #000000; vertical-align: middle; }
-        .win-totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 11px; padding: 6px 12px; border: 1px solid #008080; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 6px; }
-    </style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
-</head>
-<body>
-
-    <div class="win-tool-strip">
-        <button type="button" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> &New</button>
-        <button type="button" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> &Save</button>
-        <button type="button" class="win-btn-tool" onclick="btnSave_Click()"><i class="fa fa-pencil"></i> &Update</button>
-        <button type="button" class="win-btn-tool" onclick="btnRefresh_Click()"><i class="fa fa-refresh"></i> &Refresh</button>
-        <button type="button" class="win-btn-tool" onclick="window.print()"><i class="fa fa-print"></i> &Print</button>
-        <div style="margin-left: auto;">
-            <a href="/purchase" style="color: #000; text-decoration: none; font-weight: bold; font-size: 10px;">
-                <i class="fa fa-arrow-left"></i> Back to Purchase Dashboard
-            </a>
-        </div>
-    </div>
-
-    <div class="win-teal-header">
-        <div class="win-teal-header-title">Purchase Invoice Direct</div>
-        <div id="lblVoucherDisplayHeader" style="font-weight: bold; font-size: 11pt; color: #ffeb3b;" th:text="'PID-2026-' + ${nextDocNo}">PID-2026-0001</div>
-    </div>
-
-    <div class="win-form-body">
-        <fieldset class="win-group-box">
-            <legend>Direct Purchase Invoice Information</legend>
-            <div class="row">
-                <div class="col-md-2">
-                    <label class="win-label">Doc No</label>
-                    <input type="text" id="txtDocNo" class="win-textbox" th:value="${nextDocNo}" readonly style="background-color: #f0f0f0; font-weight: bold;"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Doc Date</label>
-                    <input type="date" id="txtDocDate" class="win-datepicker"/>
-                </div>
-                <div class="col-md-4">
-                    <label class="win-label">Supplier / Party</label>
-                    <select id="cmbSupplier" class="win-combo">
-                        <option value="0">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s.supplierCode + ' - ' + s.supplierName}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Cash / Credit</label>
-                    <!-- PaymentTermBind binds "Id" / "TermsDescription" from InvDueTerms on the
-                         desktop (InvfrmPurchasedirectInvoice.cs). The literals that used to sit
-                         here carried STRING values where an InvDueTerms Id belongs. -->
-                    <select id="cmbPaymentTerms" class="win-combo">
-                        <option value="0">-- Select --</option>
-                        <option th:each="t : ${paymentTerms}"
-                                th:value="${t['Id']} ?: ${t['id']}"
-                                th:text="${t['TermsDescription']} ?: ${t['description']}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Bill / Memo No</label>
-                    <input type="text" id="txtBillNo" class="win-textbox" placeholder="Bill No"/>
-                </div>
-            </div>
-
-            <div class="row" style="margin-top: 6px;">
-                <div class="col-md-12">
-                    <label class="win-label">Remarks / Description</label>
-                    <input type="text" id="txtRemarks" class="win-textbox" placeholder="Direct purchase remarks..."/>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset class="win-group-box">
-            <legend>Purchased Items Entry</legend>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="win-label">Item</label>
-                    <select id="cmbItem" class="win-combo" onchange="onItemChange(this.value)">
-                        <option value="0">-- Select Item --</option>
-                        <option th:each="i : ${items}" th:value="${i['id']}" th:data-price="${i.purchasePrice}" th:text="${i.itemCode + ' - ' + i.itemName}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Warehouse</label>
-                    <select id="cmbWarehouse" class="win-combo">
-                        <option value="0">-- Select Warehouse --</option>
-                        <option th:each="w : ${warehouses}" th:value="${w['id']}" th:text="${w['warehouseName']}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Job / Lot</label>
-                    <select id="cmbJobLot" class="win-combo">
-                        <option value="0">-- Select Job/Lot --</option>
-                        <option th:each="j : ${jobLots}" th:value="${j['id']}" th:text="${j['description']}"></option>
-                    </select>
-                </div>
-                <div class="col-md-1">
-                    <label class="win-label">Qty</label>
-                    <input type="number" step="0.01" id="txtQty" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Rate</label>
-                    <input type="number" step="0.01" id="txtRate" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Amount</label>
-                    <input type="number" step="0.01" id="txtAmount" class="win-textbox" placeholder="0.00" readonly style="background-color: #f0f0f0; font-weight: bold; text-align: right; color: #008080;"/>
-                </div>
-            </div>
-
-            <div class="row" style="margin-top: 6px; align-items: center;">
-                <div class="col-md-10">
-                    <label class="win-label">Line Remarks</label>
-                    <input type="text" id="txtLineRemarks" class="win-textbox" placeholder="Line item remarks..."/>
-                </div>
-                <div class="col-md-2" style="margin-top: 16px; text-align: right;">
-                    <button type="button" class="win-btn-action" style="width: 100%;" onclick="btnAddRow_Click()"><i class="fa fa-plus"></i> + Add Item</button>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset class="win-group-box">
-            <legend>Items Details Grid</legend>
-            <div class="win-grid-container">
-                <div class="win-grid-scroll">
-                    <table class="win-grid">
-                        <thead>
-                            <tr>
-                                <th style="width: 45px; text-align: center;">Sr #</th>
-                                <th style="width: 120px;">Item Code</th>
-                                <th style="width: 240px;">Item Name</th>
-                                <th style="width: 90px; text-align: right;">Qty</th>
-                                <th style="width: 90px; text-align: right;">Rate</th>
-                                <th style="width: 110px; text-align: right;">Amount</th>
-                                <th style="width: 130px;">Warehouse</th>
-                                <th style="width: 110px;">Job / Lot</th>
-                                <th>Line Remarks</th>
-                                <th style="width: 50px; text-align: center;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="grdDetailTbody">
-                            <tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No items added yet. Select an item and click + Add Item.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="row" style="margin-top: 8px;">
-                <div class="col-md-4">
-                    <label class="win-label">Discount Amount</label>
-                    <input type="number" step="0.01" id="txtDiscount" class="win-textbox" value="0.00" oninput="calcNetInvoiceTotal()"/>
-                </div>
-                <div class="col-md-4">
-                    <label class="win-label">Tax / Extra Charges</label>
-                    <input type="number" step="0.01" id="txtSalesTax" class="win-textbox" value="0.00" oninput="calcNetInvoiceTotal()"/>
-                </div>
-                <div class="col-md-4">
-                    <label class="win-label">Net Payable Amount</label>
-                    <input type="number" step="0.01" id="txtNetPayable" class="win-textbox" value="0.00" readonly style="background-color: #e0f2f1; font-weight: bold; text-align: right; color: #004d40; font-size: 11pt;"/>
-                </div>
-            </div>
-
-            <div class="win-totals-bar">
-                <div>Total Qty: <span id="lblTotalQty">0.00</span></div>
-                <div>Gross Total Amount: <span id="lblGrossTotal">0.00</span></div>
-            </div>
-        </fieldset>
-    </div>
-
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script>
-        let lineItems = [];
-
-        $(document).ready(function() {
-            setWinDefaultDate();
-        });
-
-        function setWinDefaultDate() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('txtDocDate').value = `${year}-${month}-${day}`;
-        }
-
-        function onItemChange(val) {
-            const opt = $('#cmbItem option:selected');
-            const price = parseFloat(opt.attr('data-price') || '0');
-            if (price > 0) {
-                $('#txtRate').val(price.toFixed(2));
-            }
-            calcLineAmount();
-        }
-
-        function calcLineAmount() {
-            const qty = parseFloat($('#txtQty').val() || '0');
-            const rate = parseFloat($('#txtRate').val() || '0');
-            const amt = qty * rate;
-            $('#txtAmount').val(amt.toFixed(2));
-        }
-
-        function btnAddRow_Click() {
-            const itemId = parseInt($('#cmbItem').val() || '0');
-            const itemCodeText = $('#cmbItem option:selected').text();
-            const parts = itemCodeText.split(' - ');
-            const itemCode = parts[0] || '';
-            const itemName = parts[1] || itemCodeText;
-            const qty = parseFloat($('#txtQty').val() || '0');
-            const rate = parseFloat($('#txtRate').val() || '0');
-            const amount = parseFloat($('#txtAmount').val() || '0');
-            const remarks = $('#txtLineRemarks').val() || '';
-            const whId = parseInt($('#cmbWarehouse').val() || '0');
-            const whName = whId > 0 ? $('#cmbWarehouse option:selected').text() : '';
-            const jobLotId = parseInt($('#cmbJobLot').val() || '0');
-            const jobLotCode = jobLotId > 0 ? $('#cmbJobLot option:selected').text() : '';
-
-            if (itemId <= 0) {
-                alert("Please select a valid Item.");
-                $('#cmbItem').focus();
-                return;
-            }
-            if (qty <= 0) {
-                alert("Quantity must be greater than zero.");
-                $('#txtQty').focus();
-                return;
-            }
-
-            const item = {
-                lineId: lineItems.length + 1,
-                itemId: itemId,
-                itemCode: itemCode,
-                itemName: itemName,
-                quantity: qty,
-                itemRate: rate,
-                amount: amount,
-                warehouseId: whId,
-                warehouseName: whName,
-                jobLotId: jobLotId,
-                jobLotCode: jobLotCode,
-                remarks: remarks
-            };
-
-            lineItems.push(item);
-            renderGrid();
-
-            $('#cmbItem').val('0');
-            $('#txtQty').val('');
-            $('#txtRate').val('');
-            $('#txtAmount').val('');
-            $('#txtLineRemarks').val('');
-        }
-
-        function removeLineItem(idx) {
-            lineItems.splice(idx, 1);
-            lineItems.forEach((item, i) => item.lineId = i + 1);
-            renderGrid();
-        }
-
-        function renderGrid() {
-            const tbody = $('#grdDetailTbody');
-            tbody.empty();
-
-            if (lineItems.length === 0) {
-                tbody.html('<tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No items added yet. Select an item and click + Add Item.</td></tr>');
-                updateTotals(0, 0);
-                return;
-            }
-
-            let grandQty = 0;
-            let grandTotal = 0;
-
-            lineItems.forEach((item, idx) => {
-                grandQty += item.quantity;
-                grandTotal += item.amount;
-
-                tbody.append(`
-                    <tr>
-                        <td style="text-align: center; font-weight: bold;">${item.lineId}</td>
-                        <td><strong style="color: #008080;">${escapeHtml(item.itemCode)}</strong></td>
-                        <td>${escapeHtml(item.itemName)}</td>
-                        <td style="text-align: right;">${item.quantity.toFixed(2)}</td>
-                        <td style="text-align: right;">${item.itemRate.toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: bold;">${item.amount.toFixed(2)}</td>
-                        <td>${escapeHtml(item.warehouseName)}</td>
-                        <td>${escapeHtml(item.jobLotCode)}</td>
-                        <td>${escapeHtml(item.remarks)}</td>
-                        <td style="text-align: center;">
-                            <button type="button" class="btn btn-danger btn-xs" style="padding: 0 5px; font-size: 10px;" onclick="removeLineItem(${idx})">&times;</button>
-                        </td>
-                    </tr>
-                `);
-            });
-
-            updateTotals(grandQty, grandTotal);
-        }
-
-        function updateTotals(qty, total) {
-            $('#lblTotalQty').text(qty.toFixed(2));
-            $('#lblGrossTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            calcNetInvoiceTotal();
-        }
-
-        function calcNetInvoiceTotal() {
-            let gross = 0;
-            lineItems.forEach(i => gross += i.amount);
-            const discount = parseFloat($('#txtDiscount').val() || '0');
-            const salesTax = parseFloat($('#txtSalesTax').val() || '0');
-            const net = Math.max(0, gross + salesTax - discount);
-            $('#txtNetPayable').val(net.toFixed(2));
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
-
-        function btnSave_Click() {
-            const suppId = parseInt($('#cmbSupplier').val() || '0');
-            if (suppId <= 0) {
-                alert("Please select a valid Supplier.");
-                $('#cmbSupplier').focus();
-                return;
-            }
-            if (lineItems.length === 0) {
-                alert("At least one item is required before saving.");
-                return;
-            }
-
-            const dto = {
-                documentTypeId: 18,
-                docNo: parseInt($('#txtDocNo').val() || '0'),
-                docDate: $('#txtDocDate').val(),
-                supplierId: suppId,
-                remarks: $('#txtRemarks').val() + ($('#txtBillNo').val() ? ' [Bill: ' + $('#txtBillNo').val() + ']' : ''),
-                lineItems: lineItems
-            };
-
-            $.ajax({
-                url: '/api/purchase/save',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(dto),
-                success: function(res) {
-                    if (res && res.success) {
-                        alert(res.message || "Purchase Invoice Direct saved successfully.");
-                        btnNew_Click();
-                    } else {
-                        alert("Error saving transaction: " + (res.message || "Unknown error"));
-                    }
-                },
-                error: function(xhr) {
-                    alert("Error saving transaction.");
-                }
-            });
-        }
-
-        function btnNew_Click() {
-            lineItems = [];
-            renderGrid();
-            $('#txtRemarks').val('');
-            $('#txtBillNo').val('');
-            $('#txtDiscount').val('0.00');
-            $('#txtSalesTax').val('0.00');
-            $('#txtNetPayable').val('0.00');
-            $('#cmbSupplier').val('0');
-            setWinDefaultDate();
-            $.ajax({
-                url: '/api/purchase/next-code?docType=18',
-                type: 'GET',
-                success: function(res) {
-                    if (res && res.docNo) {
-                        $('#txtDocNo').val(res.docNo);
-                        $('#lblVoucherDisplayHeader').text("PID-2026-" + String(res.docNo).padStart(4, '0'));
-                    }
-                }
-            });
-        }
-
-        function btnRefresh_Click() { btnNew_Click(); }
-    </script>
-
-    <!-- ==================================================================================
-         Form History. The desktop form carries a grdHistory grid (124 references) and this
-         screen had none, so a saved document could not be found again.
-
-         Four mutually exclusive date radios, each end optional - an unticked end is OMITTED
-         rather than defaulted to today (InvfrmPurchaseInvoice.cs:4948-4975). Footer-right,
-         where the desktop puts it.
-
-         There is no user or "view all records" control here on purpose: the desktop derives
-         both from the signed-in user and the screen's grant grid, and so does the endpoint.
-         ================================================================================== -->
-    <div id="invoiceHistoryPanel" style="margin-top:10px;border:1px solid #b9b9b9;background:#f7f7f7;padding:8px;">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <strong style="font-size:11px;">History</strong>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="doc" checked/> Doc Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="entry"/> Entry Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="modify"/> Modify Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="approved"/> Approved Date</label>
-            <span style="font-size:11px;">From</span><input type="date" id="ihFromDate" style="font-size:11px;"/>
-            <span style="font-size:11px;">To</span><input type="date" id="ihToDate" style="font-size:11px;"/>
-            <span style="font-size:11px;">Doc No</span>
-            <input type="number" id="ihFromDocNo" style="width:70px;font-size:11px;" placeholder="From"/>
-            <input type="number" id="ihToDocNo" style="width:70px;font-size:11px;" placeholder="To"/>
-            <span style="font-size:11px;">Supplier</span>
-            <select id="ihParty" style="font-size:11px;min-width:130px;" data-dtcombo="single" data-dtcombo-caption="Supplier Name"><option value="0">-- All --</option></select>
-            <span style="font-size:11px;">Rows</span>
-            <input type="number" id="ihNoOfRecords" style="width:60px;font-size:11px;" placeholder="All"/>
-            <input type="hidden" id="ihBranches"/>
-            <!-- Footer right, as on the desktop. -->
-            <button type="button" id="ihSearchBtn" class="win-btn-action" style="margin-left:auto;">
-                <i class="fa fa-search"></i> Search
-            </button>
-        </div>
-        <div id="ihMessage" style="font-size:11px;min-height:14px;margin:4px 0;"></div>
-        <!-- Full page width; the TABLE scrolls, never the page. -->
-        <div style="overflow:auto;max-height:260px;border:1px solid #d0d0d0;background:#fff;min-width:0;">
-            <table style="width:max-content;min-width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap;">
-                <thead id="ihHead" style="position:sticky;top:0;background:#e8e8e8;"></thead>
-                <tbody id="ihBody"></tbody>
-            </table>
-        </div>
-    </div>
-    <script>window.INVOICE_HISTORY_SCREEN = "purchase-invoice-direct";</script>
-    <script th:src="@{/build/js/countx_invoice_history.js?v=20260920a}"></script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
-    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
-</body>
-</html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Direct Purchase Invoice</title>
+<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}"><link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css}"><link rel="stylesheet" th:href="@{/build/css/countx_direct_invoice.css}"></head><body>
+<nav class="invoice-tools"><button id="btnNew" onclick="directInvoice.newRecord(this)">New</button><button id="btnRefresh" onclick="directInvoice.refresh(this)">Refresh</button><button id="btnSave" onclick="directInvoice.save(this)" disabled>Save</button><button id="btnDelete" onclick="directInvoice.remove(this)" hidden>Delete</button><button id="btnAttachments" onclick="directInvoice.attachments(this)">Attachments</button><button id="btnHistory" onclick="directInvoice.history(this)">History</button><a href="/purchase">Purchase</a></nav>
+<h1>Purchase Invoice Direct <span id="lblVoucherDisplayHeader"></span></h1><div id="invoiceMessage" role="status"></div><input id="txtId" type="hidden" value="0">
+<main><section id="invoiceHeader" class="invoice-panel"><div class="invoice-fields"><label class="invoice-field" style="width:73px">Doc No<input id="txtDocNo" type="text"  style="height:23px" readonly/></label>
+<label class="invoice-field" style="width:128px">Doc Date<input id="txtDocDate" type="date"  style="height:23px" /></label>
+<label class="invoice-field" style="width:61px">Branch No<input id="txtBranchSrNo" type="text"  style="height:23px" readonly/></label>
+<label class="invoice-field" style="width:264px">Supplier<select id="cmbSupplier" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:264px">Bill No<input id="txtBillNo" type="text"  style="height:23px" /></label>
+<label class="invoice-field" style="width:136px">Delivery Term<select id="cmbDeliveryTerm" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:136px">Payment Terms<select id="cmbPaymentTerms" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:137px">Due Days<input id="txtDueDays" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:136px">Due Date<input id="txtDueDate" type="date"  style="height:23px" /></label>
+<label class="invoice-field" style="width:264px">Supplier Reference<input id="txtSupplierReference" type="text"  style="height:23px" /></label></div><label class="invoice-remarks">Remarks<input id="txtRemarks"></label></section>
+<section id="lineEditor" class="invoice-panel"><div class="invoice-fields"><label class="invoice-field" style="width:156px">Warehouse<select id="cmbWarehouse" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:199px">Item<select id="cmbItem" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:121px">Crop Year<select id="cmbCropYear" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:118px">Job Lot<select id="cmbJobLot" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:122px">Packing Type<select id="cmbPackingType" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:68px">Pack UOM<select id="cmbPackUom" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:81px">Quantity<input id="txtQty" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:101px">Gross Weight<input id="txtGrossWeight" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:64px">Empty Bag Unit<input id="txtEmptybagsUnit" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:75px">Empty Bag Total<input id="txtEmptyBagsTotal" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:49px">Weight Cut<input id="txtWeightCut" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:79px">Weight Cut Total<input id="txtWeightCutTotal" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:58px">Add/Less<input id="txtAddLss" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:95px">Net Bill Weight<input id="txtNetBillWeight" type="number" step="any" style="height:23px" readonly/></label>
+<label class="invoice-field" style="width:96px">Stock Weight<input id="txtStockWeight" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:85px">Rate<input id="txtRate" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:69px">Rate UOM<select id="cmbRateUom" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:54px">Rate Cut<input id="txtRateCut" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:86px">Rate Cut Amount<input id="txtRateCutAmount" type="number" step="any" style="height:23px" readonly/></label>
+<label class="invoice-field" style="width:117px">Amount<input id="txtAmount" type="number" step="any" style="height:23px" readonly/></label>
+<label class="invoice-field" style="width:104px">GP Date<input id="txtGpDate" type="date"  style="height:23px" /></label>
+<label class="invoice-field" style="width:50px">GP No<input id="txtGpNo" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:79px">Vehicle No<input id="txtVehicleNo" type="text"  style="height:23px" /></label>
+<label class="invoice-field" style="width:95px">Lab Analysis No<input id="txtLabNo" type="number" step="any" style="height:23px" /></label></div><div class="invoice-tools"><button id="btnAddRow" onclick="directInvoice.add(this)" disabled>Add</button><button id="btnCancelRow" onclick="directInvoice.cancelEdit()" hidden>Cancel Update</button></div></section>
+<section class="invoice-panel"><h2>Invoice Details</h2><div class="invoice-scroll"><table><thead id="invoiceDetailHead"></thead><tbody id="invoiceDetailBody"></tbody></table></div><div class="invoice-totals"><span id="invoiceTotals"></span><label>Bill Amount <input id="txtBillAmount" readonly></label></div></section>
+<section class="invoice-panel"><div class="invoice-fields"><label class="invoice-field" style="width:242px">Commission Agent<select id="cmbCommissionAgent" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:81px">Commission Type<select id="cmbCommissionType" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:88px">Commission Rate<input id="txtCommRate" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:81px">Commission UOM<select id="cmbCommUom" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:90px">Commission Amount<input id="txtCommAmount" type="number" step="any" style="height:23px" readonly/></label>
+<label class="invoice-field" style="width:242px">Commission Remarks<input id="txtCommissionRemarks" type="text"  style="height:23px" /></label>
+<label class="invoice-field" style="width:229px">Broker Account<select id="cmbBroker" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:85px">Brokery Type<select id="cmbBrokeryType" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:68px">Brokery Rate<input id="txtBrokeryRate" type="number" step="any" style="height:23px" /></label>
+<label class="invoice-field" style="width:85px">Brokery UOM<select id="cmbBrokeryUom" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
+<label class="invoice-field" style="width:68px">Brokery Amount<input id="txtBrokeryAmount" type="number" step="any" style="height:23px" readonly/></label></div></section>
+<section id="invoiceSupplements" class="invoice-panel"></section>
+<section id="invoiceHistoryPanel" class="invoice-panel" hidden><h2>History</h2><div class="invoice-fields"><label class="invoice-field" style="width:120px">From Date<input id="historyFrom" type="date"  style="height:23px" /></label><label class="invoice-field" style="width:120px">To Date<input id="historyTo" type="date"  style="height:23px" /></label><label class="invoice-field" style="width:120px">From No<input id="historyFromNo" type="number" step="any" style="height:23px" /></label><label class="invoice-field" style="width:120px">To No<input id="historyToNo" type="number" step="any" style="height:23px" /></label><label class="invoice-field">Date Type<select id="historyDateType"><option value="DocDate">Doc Date</option><option value="EntryDate">Entry Date</option><option value="ModifyDate">Modify Date</option><option value="ApprovedDate">Approved Date</option></select></label><button onclick="directInvoice.history(this)">Show</button></div><div class="invoice-scroll"><table><thead id="historyHead"></thead><tbody id="historyBody"></tbody></table></div></section></main>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script><script th:src="@{/build/js/countx_desktop_combo.js}"></script><script th:src="@{/build/js/countx_purchase_request.js}"></script><script th:src="@{/build/js/countx_invoice_attachments.js}"></script><script th:src="@{/build/js/countx_direct_invoice.js}"></script></body></html>

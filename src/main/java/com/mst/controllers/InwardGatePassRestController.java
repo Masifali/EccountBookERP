@@ -25,6 +25,9 @@ public class InwardGatePassRestController {
         return service.getDropdowns(orgId, compId);
     }
 
+    @GetMapping("/open-records")
+    public List<Map<String,Object>> getOpenGatePasses() { return service.getOpenGatePasses(); }
+
     @GetMapping("/generate-no")
     public Map<String, Object> generateNextNumbers(
             @RequestParam(defaultValue = "51") Integer docTypeId,
@@ -41,23 +44,18 @@ public class InwardGatePassRestController {
         return service.getById(id);
     }
 
+    @GetMapping("/order-party-items")
+    public List<Map<String,Object>> getOrderPartyItems(@RequestParam int number,@RequestParam String date,@RequestParam(defaultValue="0") int gatePassId) {
+        return service.getOrderPartyItems(number,date,gatePassId);
+    }
+
+    @GetMapping("/transit-vehicles")
+    public List<Map<String,Object>> getTransitVehicles(@RequestParam(defaultValue="0") int supplierId,@RequestParam(defaultValue="0") int orderId,@RequestParam(defaultValue="0") int gatePassId) {
+        return service.getTransitVehicles(supplierId,orderId,gatePassId);
+    }
+
     @PostMapping("/save")
     public Map<String, Object> saveRecord(@RequestBody InwardGatePass obj) {
-        if (obj.getOrganizationId() == null || obj.getOrganizationId() == 0) {
-            obj.setOrganizationId(currentUserContext.currentOrganizationId());
-        }
-        if (obj.getCompanyId() == null || obj.getCompanyId() == 0) {
-            obj.setCompanyId(currentUserContext.currentCompanyId());
-        }
-        if (obj.getBranchesId() == null || obj.getBranchesId() == 0) {
-            obj.setBranchesId(currentUserContext.currentBranchId());
-        }
-        if (obj.getFinancialYearId() == null || obj.getFinancialYearId() == 0) {
-            obj.setFinancialYearId(currentUserContext.currentFinancialYearId());
-        }
-        if (obj.getEntryUser() == null || obj.getEntryUser() == 0) {
-            obj.setEntryUser(currentUserContext.currentUserId());
-        }
         return service.saveRecord(obj);
     }
 
@@ -76,14 +74,7 @@ public class InwardGatePassRestController {
             @RequestParam(required = false) Double fromDocNo,
             @RequestParam(required = false) Double toDocNo,
             @RequestParam(required = false) Integer supplierId) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int branchId = currentUserContext.currentBranchId();
-        int yearId = currentUserContext.currentFinancialYearId();
-
-        Integer docTypeId = 51;
         if (payload != null) {
-            if (payload.get("documentTypeId") != null) docTypeId = Integer.parseInt(payload.get("documentTypeId").toString());
             if (payload.get("fromDate") != null) fromDate = payload.get("fromDate").toString();
             if (payload.get("toDate") != null) toDate = payload.get("toDate").toString();
             if (payload.get("fromDocNo") != null && !payload.get("fromDocNo").toString().isEmpty()) fromDocNo = Double.parseDouble(payload.get("fromDocNo").toString());
@@ -91,7 +82,8 @@ public class InwardGatePassRestController {
             if (payload.get("supplierId") != null && !payload.get("supplierId").toString().isEmpty()) supplierId = Integer.parseInt(payload.get("supplierId").toString());
         }
 
-        return service.getHistory(orgId, compId, branchId, yearId, docTypeId, fromDate, toDate, fromDocNo, toDocNo, supplierId);
+        String dateField=payload!=null?Objects.toString(payload.get("dateField"),"docDate"):"docDate";
+        return service.getHistory(fromDate, toDate, fromDocNo, toDocNo, supplierId,dateField);
     }
 
     @GetMapping("/driver-bio/cnic")

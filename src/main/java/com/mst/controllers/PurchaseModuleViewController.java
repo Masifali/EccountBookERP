@@ -39,6 +39,21 @@ public class PurchaseModuleViewController {
     @Autowired
     private CurrentUserContext currentUserContext;
 
+    @Autowired
+    private com.mst.repositories.PurchaseInvoiceNumberingRepository invoiceNumbering;
+
+    @Autowired private com.mst.repositories.GrnNumberingRepository grnNumbering;
+
+    private int grnNumber(int type) {
+        return grnNumbering.next(currentUserContext.currentOrganizationId(),currentUserContext.currentCompanyId(),
+                currentUserContext.currentBranchId(),currentUserContext.currentFinancialYearId(),type);
+    }
+
+    private int invoiceNumber(int type) {
+        return invoiceNumbering.next(currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(),
+                currentUserContext.currentFinancialYearId(), type);
+    }
+
     @GetMapping({"", "/", "/dashboard"})
     public String purchaseDashboard(Model model) {
         model.addAttribute("activeMenu", "purchase");
@@ -92,7 +107,7 @@ public class PurchaseModuleViewController {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Order");
         model.addAttribute("documentTypeId", 41);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(41));
+        model.addAttribute("nextDocNo", purchaseOrderFullService.generateNextDocNo(41));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
@@ -109,7 +124,7 @@ public class PurchaseModuleViewController {
 
         Map<String, Object> dropdowns = inwardGatePassService.getDropdowns(orgId, compId);
         Map<String, Object> nextNums = inwardGatePassService.generateNextNumbers(orgId, compId, branchId, yearId, 51, "Paddy");
-        List<Map<String, Object>> historyList = inwardGatePassService.getHistory(orgId, compId, branchId, yearId, 51, null, null, null, null, null);
+        List<Map<String, Object>> historyList = inwardGatePassService.getOpenGatePasses();
 
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Inward Gate Pass");
@@ -122,6 +137,8 @@ public class PurchaseModuleViewController {
         model.addAttribute("items", dropdowns.get("items"));
         model.addAttribute("vehicleTypes", dropdowns.get("vehicleTypes"));
         model.addAttribute("gatePassTypes", dropdowns.get("gatePassTypes"));
+        model.addAttribute("orderTypes", dropdowns.get("orderTypes"));
+        model.addAttribute("transitVehicles", dropdowns.get("transitVehicles"));
         model.addAttribute("weighBridges", dropdowns.get("weighBridges"));
         model.addAttribute("packingTypes", dropdowns.get("packingTypes"));
         model.addAttribute("historyList", historyList);
@@ -133,38 +150,21 @@ public class PurchaseModuleViewController {
     public String goodsReceiptNotes(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Goods Receipt Notes (GRN)");
-        model.addAttribute("documentTypeId", 36);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(36));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
-
-        /* Vehicle Type, Packing Type and UOM were hard-coded in the template
-           ("Truck"/"Tractor", a single "PP Bags", a single "KGs"). All three are database lists
-           on the desktop (InvFrmGRN.cs:757, :1296-1306), and Packing Type is restricted to ids
-           {1,2,5}. cropYears was referenced by the template but never supplied, so that select
-           rendered empty too. */
-        Map<String, Object> grnLists =
-                marketGrnService.getDropdowns(currentUserContext.currentOrganizationId(),
-                                              currentUserContext.currentCompanyId());
-        model.addAttribute("vehicleTypes", grnLists.get("vehicleTypes"));
-        model.addAttribute("packingTypes", grnLists.get("packingTypes"));
-        model.addAttribute("uoms", grnLists.get("uoms"));
-        model.addAttribute("cropYears", grnLists.get("cropYears"));
+        model.addAttribute("documentTypeId", 46);
+        model.addAttribute("nextDocNo", grnNumber(46));
+        model.addAllAttributes(marketGrnService.getDropdowns(currentUserContext.currentOrganizationId(),currentUserContext.currentCompanyId()));
         return "purchase/goods_receipt_notes";
     }
+
+    @org.springframework.beans.factory.annotation.Autowired private com.mst.services.SaleReturnGrnService saleReturnGrnService;
 
     @GetMapping("/grn-sale-return")
     public String grnSaleReturn(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "GRN (Sale Return)");
-        model.addAttribute("documentTypeId", 37);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(37));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
+        model.addAttribute("documentTypeId", 143);
+        model.addAttribute("nextDocNo", grnNumber(143));
+        model.addAllAttributes(saleReturnGrnService.getDropdowns(currentUserContext.currentOrganizationId(),currentUserContext.currentCompanyId()));
         return "purchase/grn_sale_return";
     }
 
@@ -172,20 +172,8 @@ public class PurchaseModuleViewController {
     public String purchaseInvoice(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Invoice");
-        /* Was 18. The desktop form declares DocumentTypeId = 56 (InvfrmPurchaseInvoice.cs:501).
-           Three different Purchase Invoice screens all carried 18, which collapsed three
-           distinct document types into one: one shared numbering sequence, and history or
-           search on any of them returning all three. */
         model.addAttribute("documentTypeId", 56);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(18));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
-        /* Payment Terms used to be three hard-coded STRINGS in the template
-           ("Credit"/"Cash"/"Bank") where the desktop stores an InvDueTerms Id, so nothing saved
-           from that combo could match a real term. InvfrmPurchaseInvoice.cs:1066. */
-        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
+        // The dedicated type-56 API supplies original scoped lists after showing the loader.
         return "purchase/purchase_invoice";
     }
 
@@ -198,7 +186,7 @@ public class PurchaseModuleViewController {
            distinct document types into one: one shared numbering sequence, and history or
            search on any of them returning all three. */
         model.addAttribute("documentTypeId", 138);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(18));
+        model.addAttribute("nextDocNo", invoiceNumber(138));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
@@ -211,24 +199,11 @@ public class PurchaseModuleViewController {
 
     @GetMapping("/purchase-invoice-direct")
     public String purchaseInvoiceDirect(Model model) {
+        // This form loads original scoped desktop lookups and rights through its dedicated API.
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Invoice Direct");
-        /* Was 18. The desktop form declares DocumentTypeId = 57 (InvfrmPurchasedirectInvoice.cs:562/:3197/:4685).
-           Three different Purchase Invoice screens all carried 18, which collapsed three
-           distinct document types into one: one shared numbering sequence, and history or
-           search on any of them returning all three. */
-        model.addAttribute("documentTypeId", 57);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(18));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
-        /* Payment Term is a database list on the desktop too - PaymentTermBind binds
-           "Id" / "TermsDescription" from InvDueTerms (InvfrmPurchasedirectInvoice.cs). */
-        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
         return "purchase/purchase_invoice_direct";
     }
-
     @GetMapping("/purchase-invoice-return")
     public String purchaseInvoiceReturn(Model model) {
         model.addAttribute("activeMenu", "purchase");
@@ -238,7 +213,7 @@ public class PurchaseModuleViewController {
            distinct document types into one: one shared numbering sequence, and history or
            search on any of them returning all three. */
         model.addAttribute("documentTypeId", 59);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(19));
+        model.addAttribute("nextDocNo", invoiceNumber(59));
         model.addAttribute("suppliers", purchaseService.getSuppliers(""));
         model.addAttribute("items", purchaseService.getItems(""));
         model.addAttribute("warehouses", purchaseService.getWarehouses());
@@ -254,8 +229,9 @@ public class PurchaseModuleViewController {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Invoice Store Management");
         model.addAttribute("documentTypeId", 61);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(61));
-        model.addAttribute("nextBranchSrNo", 1);
+        model.addAttribute("nextDocNo", invoiceNumber(61));
+        model.addAttribute("nextBranchSrNo", invoiceNumbering.nextBranch(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(), currentUserContext.currentFinancialYearId(), currentUserContext.currentBranchId(), 61));
         model.addAttribute("nextTaxNo", 1);
         /* Was a single hard-coded "Cash" option whose VALUE was the string "Cash"; the desktop
            stores an InvDueTerms Id. Same list as the Purchase Invoice screen. */

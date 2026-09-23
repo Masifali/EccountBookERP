@@ -19,6 +19,18 @@ public class MarketGrnRestController {
     @Autowired
     private CurrentUserContext currentUserContext;
 
+    @Autowired private com.mst.repositories.PurchaseGrnLookupRepository lookups;
+    @Autowired private com.mst.services.PurchaseGrnSupplementService supplements;
+
+    @PostMapping("/calculate-breakups")
+    public ResponseEntity<?> calculateBreakups(@RequestBody Map<String,Object> payload) { return ResponseEntity.ok(supplements.calculate(payload)); }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> invalidInput(IllegalArgumentException failure) { return ResponseEntity.badRequest().body(Map.of("success",false,"message",failure.getMessage())); }
+
+    @GetMapping("/gate-passes/{id}")
+    public ResponseEntity<?> gatePass(@PathVariable int id) { return ResponseEntity.ok(lookups.gatePass(id,46)); }
+
     @GetMapping("/dropdowns")
     public ResponseEntity<?> getDropdowns() {
         int orgId = currentUserContext.currentOrganizationId();
@@ -93,5 +105,9 @@ public class MarketGrnRestController {
         res.put("success", ok);
         res.put("message", ok ? "Deleted successfully" : "Failed to delete");
         return ResponseEntity.ok(res);
+    }
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<?> databaseFailure(org.springframework.dao.DataAccessException failure) {
+        return ResponseEntity.badRequest().body(Map.of("success",false,"message",failure.getMostSpecificCause().getMessage()));
     }
 }

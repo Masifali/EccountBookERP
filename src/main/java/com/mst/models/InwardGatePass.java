@@ -204,6 +204,10 @@ public class InwardGatePass {
     @Column(name = "PostUser")
     private Integer postUser;
 
+    // Sent to the existing desktop procedure; no schema generation for this field.
+    @Transient
+    private String docAttachment;
+
     // Non-persisted virtual / UI display fields matching desktop model
     @Transient
     private String whatsappNo;

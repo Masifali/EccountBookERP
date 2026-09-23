@@ -26,6 +26,7 @@ let expenseItems = [];
 let chargeToProductItems = [];
 let isEditMode = false;
 let paymentTermsDetailItems = [];
+let paymentByPercent = false;
 
 let allSuppliers = [];
 let allBrokers = [];
@@ -43,6 +44,11 @@ let uomScheduleList = [];
 let editingLineIdx = -1;
 let editingEbIdx = -1;
 let currentPoMasterId = 0;
+let poAttachmentRows = [];
+let poAttachmentFiles = [];
+let poRemovedAttachmentIds = [];
+let poSaving = false;
+let poFormGeneration = 0;
 let emptyBagTypes = [];
 let emptyBagItemOptions = [];
 let emptyBagPackingTypes = [];
@@ -53,6 +59,8 @@ let paymentTermsOptions = [];
 $(document).ready(function() {
     initForm();
     bindKeyboardShortcuts();
+    const recordId = new URLSearchParams(location.search).get('id');
+    if (recordId && /^[1-9]\d*$/.test(recordId)) loadSelectedOrder(parseInt(recordId, 10), 'edit');
 });
 
 function initForm() {
@@ -294,6 +302,7 @@ function setWinDefaultDates() {
 }
 
 function fetchNextDocNo() {
+    const generation = poFormGeneration;
     fetchNextBranchSrNo();          /* BranchSrNoFill() runs alongside DocumentNoFill() */
     applyScreenDefaults();          /* defaultConfiquration() */
     $.ajax({
@@ -303,10 +312,10 @@ function fetchNextDocNo() {
              (Cmagt\frmPurchaseOrderCmagt.cs), a different table and procedure family. */
         type: 'GET',
         success: function(res) {
-            const code = res ? (res.nextCode || res.docNo) : null;
-            if (code) {
+            const code = res ? res.docNo : null;
+            if (code && generation === poFormGeneration) {
                 $('#txtDocNo').val(code);
-                $('#lblDocNoDisplay').text("PO-2026-" + String(code).padStart(4, '0'));
+                $('#lblDocNoDisplay').text(res.displayCode || ('PO-' + code));
             }
         }
     });
@@ -329,6 +338,7 @@ function fetchNextDocNo() {
  * "#,##0.###". Both boxes are Enabled = false there, so they are read-only here too.
  */
 function applyScreenDefaults() {
+    const generation = poFormGeneration;
     $.ajax({
         url: '/api/purchase-order/screen-defaults',
         type: 'GET',
@@ -336,7 +346,7 @@ function applyScreenDefaults() {
             if (!cfg) { return; }
 
             var days = parseInt(cfg.orderDefaultDeliveryDays || '0', 10);
-            if (!isNaN(days)) { $('#txtDeliveryDays').val(days); }
+            if (!isNaN(days) && generation === poFormGeneration) { $('#txtDeliveryDays').val(days); }
 
             var jute = parseFloat(cfg.weightCutForJuteBags || '0');
             if (jute) { $('#txtJuteBagCut').val(fmtCut(jute)); }      /* :1642 - only when non-zero */
@@ -356,11 +366,12 @@ function fmtCut(n) {
 }
 
 function fetchNextBranchSrNo() {
+    const generation = poFormGeneration;
     $.ajax({
         url: '/api/purchase-order/next-branch-sr-no?docType=41',
         type: 'GET',
         success: function (res) {
-            if (res && res.branchSrNo) { $('#txtBranchNo').val(res.branchSrNo); }
+            if (res && res.branchSrNo && generation === poFormGeneration) { $('#txtBranchNo').val(res.branchSrNo); }
         }
     });
 }
@@ -371,13 +382,14 @@ function fetchNextBranchSrNo() {
  * @Activity='GenerateOrderCategoryCodeById'). That cascade did not exist on the web at all.
  */
 function fetchNextCategorySrNo() {
+    const generation = poFormGeneration;
     var id = parseInt($('#cmbParentCategory').val() || '0');
     if (!id) { $('#txtCategoryNo').val(''); return; }
     $.ajax({
         url: '/api/purchase-order/next-category-sr-no?categoryId=' + id,
         type: 'GET',
         success: function (res) {
-            if (res && res.categorySrNo) { $('#txtCategoryNo').val(res.categorySrNo); }
+            if (res && res.categorySrNo && generation === poFormGeneration) { $('#txtCategoryNo').val(res.categorySrNo); }
         }
     });
 }
@@ -679,7 +691,9 @@ function loadEmptyBagDropdowns() {
 }
 
 function loadDefaultEmptyBagRows(callback) {
+    const generation = poFormGeneration;
     $.get('/api/purchase-order/empty-bags/defaults', function(data) {
+        if (generation !== poFormGeneration) return;
         emptyBagItems = data || [];
         renderEbGrid();
         if (typeof callback === 'function') callback();
@@ -1839,7 +1853,7 @@ function btnAddDetailRow_Click() {
     }
 
     if (editingLineIdx >= 0) {
-        lineItems[editingLineIdx] = line;
+        lineItems[editingLineIdx] = Object.assign({}, lineItems[editingLineIdx], line);
         editingLineIdx = -1;
     } else {
         lineItems.push(line);
@@ -2377,9 +2391,10 @@ function loadSupplierExpenseDropdowns() {
 }
 
 function loadDefaultExpenseRows() {
+    const generation = poFormGeneration;
     $.get('/api/purchase-order/supplier-expense/other-items', function(data) {
         otherItemsForExpense = data || [];
-        expenseItems = otherItemsForExpense.map(function(it) {
+        if (generation === poFormGeneration) expenseItems = otherItemsForExpense.map(function(it) {
             return { invRevExpItemId: it.Id, otherItemName: it.OtherItemName, qty: 0, rate: 0, amount: 0, remarks: '' };
         });
         renderExpGrid();
@@ -2710,6 +2725,7 @@ function addDefaultPaymentRow() {
 }
 
 function loadDefaultPaymentRows() {
+    paymentByPercent = false;
     paymentTermsDetailItems = [];
     addDefaultPaymentRow();
     renderSchedGrid();
@@ -2720,7 +2736,24 @@ function getDocDateAsDate() {
     return v ? new Date(v + 'T00:00:00') : new Date();
 }
 
+// Desktop PaymentAmountReCalculate, including its single-row Save override.
+function recalculatePaymentAmounts(saving) {
+    const total = calculateGrandTotalLineAmount();
+    if (saving && paymentTermsDetailItems.length === 1 && Number(paymentTermsDetailItems[0].amount) > 0)
+        paymentByPercent = true;
+    if (!(total > 0) || !paymentByPercent) return;
+    for (const row of paymentTermsDetailItems) {
+        const scaled = total * Number(row.prcntOfTotal || 0) * 100;
+        const lower = Math.floor(scaled), fraction = scaled - lower;
+        // C# decimal Math.Round(..., 4) uses midpoint-to-even.
+        const tolerance = Number.EPSILON * Math.max(1, Math.abs(scaled)) * 2;
+        row.amount = (Math.abs(fraction - 0.5) <= tolerance
+            ? (lower % 2 === 0 ? lower : lower + 1) : Math.round(scaled)) / 10000;
+    }
+}
+
 function renderSchedGrid() {
+    recalculatePaymentAmounts(false);
     const tbody = $('#tblSchedTbody');
     tbody.empty();
 
@@ -2794,6 +2827,7 @@ function onSchedDueDateChange(idx, val) {
 }
 
 function onSchedPercentChange(idx, val) {
+    paymentByPercent = true;
     let pct = parseFloat(val || '0') || 0;
     if (pct > 100) {
         alert("%of Total Can't Greater than 100");
@@ -2806,6 +2840,7 @@ function onSchedPercentChange(idx, val) {
 }
 
 function onSchedAmountChange(idx, val) {
+    paymentByPercent = false;
     let amt = parseFloat(val || '0') || 0;
     const totalOrderAmt = calculateGrandTotalLineAmount();
     if (totalOrderAmt < amt) {
@@ -2845,9 +2880,14 @@ function switchTab(tabId) {
  * 11. TOOLBAR OPERATIONS (SAVE / UPDATE / NEW / LOAD ORDER)
  * ============================================================ */
 function buildPayload() {
+    recalculatePaymentAmounts(true);
     return {
+        paymentByPercent: paymentByPercent,
         purchaseOrderMasterId: currentPoMasterId,
         documentTypeId: 41,          /* PurchsaeOrder.cs:3295 - NOT 1052 (Commission Trading) */
+        currencyId: loadedHeaderSelection?.currencyId || 0,
+        exchangeRate: loadedHeaderSelection?.exchangeRate || 0,
+        fcyAmount: lineItems.reduce((sum, line) => sum + (parseFloat(line.fcyAmount) || 0), 0),
         docNo: parseInt($('#txtDocNo').val() || '0'),
         docDate: $('#txtDocDate').val(),
         supplierId: parseInt($('#hidSupplierId').val() || '0'),
@@ -2924,7 +2964,7 @@ function buildPayload() {
         orderAmount:      lineItems.reduce((a, l) => a + (parseFloat(l.itemAmount) || 0), 0),
         /* LocationTypeId has no control on this page. The desktop reads cmbLocationType; the
            procedure defaults a 0 to 1 itself, so 0 is sent rather than a guessed value. */
-        locationTypeId:   0,
+        locationTypeId:   loadedHeaderSelection?.locationTypeId || 0,
         remarksHeader: $('#txtRemarksHeader').val(),
         lineItems: lineItems,
         emptyBags: emptyBagItems.map(function(b) {
@@ -2968,8 +3008,10 @@ function buildPayload() {
     };
 }
 
-function btnSave_Click() {
+async function btnSave_Click() {
+    if (poSaving) return;
     const payload = buildPayload();
+    payload.attachments = { files: poAttachmentFiles, removeAttachmentIds: poRemovedAttachmentIds };
     
     if (!payload.supplierId || payload.supplierId <= 0) {
         alert("Please select a Supplier / Party.");
@@ -2981,7 +3023,9 @@ function btnSave_Click() {
         return;
     }
 
-    $.ajax({
+    poSaving = true;
+    try { await PurchaseRequest.run(document.getElementById(currentPoMasterId > 0 ? 'btnUpdate' : 'btnSave'), async function () {
+    await $.ajax({
         url: '/api/purchase-order/save',
         type: 'POST',
         contentType: 'application/json',
@@ -2989,7 +3033,7 @@ function btnSave_Click() {
         success: function(res) {
             if (res && (res.success || res.voucherHeadId)) {
                 alert(res.message || "Purchase Order saved successfully.");
-                btnNew_Click();
+                btnNew_Click(true);
                 loadPurchaseOrderHistory();
             } else {
                 alert("Error saving Purchase Order: " + (res.message || "Unknown error"));
@@ -3004,6 +3048,8 @@ function btnSave_Click() {
             alert(errMsg);
         }
     });
+    }); } catch (_) { /* The AJAX error handler shows the server message. */ }
+    finally { poSaving = false; }
 }
 
 /* :5085-5104 - by the time this is reachable, applyEditModeState(po,'saveas') has already
@@ -3026,7 +3072,12 @@ function btnUpdate_Click() {
     btnSave_Click();
 }
 
-function btnNew_Click() {
+function btnNew_Click(afterSave) {
+    if (poSaving && afterSave !== true) return;
+    poFormGeneration++;
+    poAttachmentRows = []; poAttachmentFiles = []; poRemovedAttachmentIds = [];
+    $('#fileAttach').val('');
+    renderPurchaseOrderAttachments();
     loadedHeaderSelection = null;   /* Reset() - nothing left to re-apply */
     clearEditModeState();      /* Reset() :3962-3972 - Save back, Update gone, locks cleared */
     currentPoMasterId = 0;
@@ -3065,8 +3116,11 @@ function btnRefresh_Click() {
     btnNew_Click();
 }
 
-function openLoadOrderModal() {
-    $.get('/api/purchase-order/history', function(data) {
+async function openLoadOrderModal() {
+    try {
+        const branches = await $.get('/api/purchase-order/branches');
+        const branchIds = branches.map(branch => branch.id).filter(id => id > 0).join(',');
+        const data = branchIds ? await $.get('/api/purchase-order/history', {branchIds: branchIds}) : [];
         const tbody = $('#tblLoadOrderTbody');
         tbody.empty();
         if (!data || data.length === 0) {
@@ -3075,32 +3129,37 @@ function openLoadOrderModal() {
             return;
         }
         data.forEach(po => {
-            const docCode = po.voucherCode || po.docNo;
-            const partyName = po.customerName || po.supplierName;
-            const orderDate = po.orderDate || po.docDate;
+            const id = Number(hcol(po, 'Id'));
+            const docCode = hcol(po, 'DocNo');
+            const partyName = hcol(po, 'SupplierName');
+            const orderDate = fmtHistory(hcol(po, 'DocDate'), 'date');
             tbody.append(`
                 <tr>
-                    <td><strong style="color: #008080;">${docCode}</strong></td>
-                    <td>${orderDate}</td>
-                    <td>${escapeHtml(partyName || 'N/A')}</td>
-                    <td>${escapeHtml(po.remarks || '')}</td>
+                    <td><a href="/purchase/purchase-order?id=${id}">${escapeHtml(String(docCode))}</a></td>
+                    <td>${escapeHtml(orderDate)}</td>
+                    <td>${escapeHtml(partyName || '')}</td>
+                    <td>${escapeHtml(hcol(po, 'RemarksHeader') || '')}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="win-btn-action" onclick="loadSelectedOrder(${po.id})">Load</button>
+                        <button type="button" class="win-btn-action" onclick="loadSelectedOrder(${id}, 'edit')">Load</button>
                     </td>
                 </tr>
             `);
         });
         $('#modalLoadOrder').modal('show');
-    });
+    } catch (error) { alert(PurchaseRequest.error(error)); }
 }
 
 function loadSelectedOrder(poId, mode) {
-    $.get('/api/purchase-order/' + poId, function(po) {
-        if (!po) return;
+    if (poSaving) return;
+    const generation = ++poFormGeneration;
+    return $.get('/api/purchase-order/' + poId, function(po) {
+        if (!po || generation !== poFormGeneration) return;
 
         currentPoMasterId = po.purchaseOrderMasterId;
+        poAttachmentRows = []; poAttachmentFiles = []; poRemovedAttachmentIds = [];
+        renderPurchaseOrderAttachments();
         $('#txtDocNo').val(po.docNo);
-        $('#lblDocNoDisplay').text("PO-2026-" + String(po.docNo).padStart(4, '0'));
+        $('#lblDocNoDisplay').text(po.displayCode || ('PO-' + po.docNo));
         $('#txtDocDate').val(po.docDate);
         /* The record is remembered so the selections can be re-applied as each option list
            finishes loading - see applyHeaderSelections. The previous code here wrote to
@@ -3333,11 +3392,61 @@ function setFieldLocked(selector, locked) {
 }
 
 function btnPrintReport(reportType) {
-    alert("Report printing generated for format: " + reportType + " (Doc No: " + $('#txtDocNo').val() + ")");
+    if (!currentPoMasterId) { alert('Load or save an order before printing.'); return; }
+    alert('Printing is unavailable because the original report renderer could not be loaded.');
 }
 
-function openAttachmentsModal() {
+async function openAttachmentsModal() {
     $('#modalAttachments').modal('show');
+    if (currentPoMasterId > 0) {
+        const id = currentPoMasterId;
+        try {
+            const rows = await $.get('/api/purchase-order/' + id + '/attachments');
+            if (currentPoMasterId === id) poAttachmentRows = rows;
+        } catch (error) { alert(PurchaseRequest.error(error)); }
+    }
+    renderPurchaseOrderAttachments();
+}
+
+function renderPurchaseOrderAttachments() {
+    const body = document.getElementById('poAttachmentRows');
+    if (!body) return;
+    body.replaceChildren();
+    function add(name, href, remove) {
+        const row = body.insertRow(), file = row.insertCell(), action = row.insertCell();
+        const label = document.createElement(href ? 'a' : 'span');
+        label.textContent = name;
+        if (href) { label.href = href; label.target = '_blank'; label.rel = 'noopener'; }
+        file.appendChild(label);
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'win-btn-action';
+        button.textContent = 'Remove'; button.onclick = remove; action.appendChild(button);
+    }
+    poAttachmentRows.filter(r => !poRemovedAttachmentIds.includes(r.Id)).forEach(r => add(r.Attachment,
+        '/api/purchase-order/' + currentPoMasterId + '/attachments/' + r.Id,
+        () => { poRemovedAttachmentIds.push(r.Id); renderPurchaseOrderAttachments(); }));
+    poAttachmentFiles.forEach((f, index) => add(f.name + ' (pending save)', null,
+        () => { poAttachmentFiles.splice(index, 1); renderPurchaseOrderAttachments(); }));
+    if (!body.rows.length) body.insertRow().insertCell().textContent = 'No attachments';
+}
+
+async function addPurchaseOrderAttachments(button) {
+    try {
+        await PurchaseRequest.run(button, async function () {
+            const files = Array.from(document.getElementById('fileAttach').files);
+            if (!files.length) throw new Error('Select a file first.');
+            if (files.length + poAttachmentFiles.length > 10) throw new Error('Select at most ten files at once.');
+            const uploads = [];
+            for (const file of files) {
+                if (!file.size || file.size > 5 * 1024 * 1024) throw new Error('Each attachment must be between 1 byte and 5 MB.');
+                const data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader(); reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(new Error('Could not read ' + file.name)); reader.readAsDataURL(file);
+                });
+                uploads.push({name:file.name, base64:data.substring(data.indexOf(',') + 1)});
+            }
+            poAttachmentFiles.push(...uploads); $('#fileAttach').val(''); renderPurchaseOrderAttachments();
+        });
+    } catch (error) { alert(PurchaseRequest.error(error)); }
 }
 
 /* ============================================================
@@ -3635,6 +3744,8 @@ function renderHistoryMasterGrid() {
                 if (!isNaN(n)) totals[c.src] += n;
             }
             const text = (c.src === '__approved') ? raw : fmtHistory(raw, c.kind);
+            if (c.src === 'DocNo') return `<td><a href="/purchase/purchase-order?id=${poId}" onclick="event.stopPropagation();">${escapeHtml(String(text))}</a></td>`;
+            if (c.src === 'NoOfAttachments') return `<td><button type="button" class="win-btn-action" onclick="event.stopPropagation(); onHistoryButtonClick('NoOfAttachments', ${poId})">${escapeHtml(String(text))}</button></td>`;
             return `<td style="text-align:${c.align || 'left'};">${escapeHtml(String(text))}</td>`;
         }).join('');
 
@@ -3672,7 +3783,12 @@ function renderHistoryMasterGrid() {
 function onHistoryButtonClick(key, poId) {
     if (key === 'Edit')   { loadSelectedOrderFromHistory(poId, 'edit');   return; }
     if (key === 'SaveAs') { loadSelectedOrderFromHistory(poId, 'saveas'); return; }
-    alert(key + ' is not implemented for the web Purchase Order yet.');
+    if (key === 'AddAttachment' || key === 'NoOfAttachments') {
+        const request = loadSelectedOrder(poId, 'edit');
+        if (request) request.done(openAttachmentsModal).fail(e => alert(PurchaseRequest.error(e)));
+        return;
+    }
+    alert('Printing is unavailable because the original report renderer could not be loaded.');
 }
 
 function onHistoryRowClick(idx) {

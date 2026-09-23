@@ -9,7 +9,11 @@ import java.util.List;
 @Data
 public class PurchaseOrderFullDto {
     private Integer purchaseOrderMasterId = 0;
-    private Integer documentTypeId = 1052;
+    private Integer documentTypeId = 41;
+    private PurchaseOrderAttachmentsDto attachments;
+    private Integer currencyId = 0;
+    private Double exchangeRate = 0d;
+    private Double fcyAmount = 0d;
     private Integer docNo;
     private Integer branchNo;
     private String docDate;
@@ -106,6 +110,9 @@ public class PurchaseOrderFullDto {
     public void setLocationTypeId(Integer v) { this.locationTypeId = v; }
 
     private String paymentScheduleDescription;
+    private boolean paymentByPercent;
+    public boolean isPaymentByPercent() { return paymentByPercent; }
+    public void setPaymentByPercent(boolean value) { paymentByPercent = value; }
 
     private List<PurchaseOrderDetailItemDto> lineItems = new ArrayList<>();
     private List<PurchaseOrderEmptyBagDto> emptyBags = new ArrayList<>();
@@ -246,6 +253,10 @@ public class PurchaseOrderFullDto {
         private String loadingLocationCityName;
         private Double moisturePercent = 0.0;
         private String factoryType = "Standard"; // Sample or Standard
+        private Integer labSampleId = 0;
+        private String labSampleNo;
+        private Integer labAnalysisStandardScheduleId = 0;
+        private Double fcyAmount = 0d;
         private String remarks;
 
         public Integer getPurchaseOrderDetailId() { return purchaseOrderDetailId; }

@@ -9,8 +9,8 @@ import java.util.*;
 @Service
 public class GrnLoaderService {
 
-    @Autowired
-    private GrnLoaderRepository repository;
+    private final GrnLoaderRepository repository;
+    public GrnLoaderService(GrnLoaderRepository repository){this.repository=repository;}
 
     public List<Map<String, Object>> getPendingGrns(int orgId, int compId, int docTypeId, int yearId,
                                                     String fromDate, String toDate, String branchIds,
@@ -51,13 +51,15 @@ public class GrnLoaderService {
 
         int firstSupplierId = 0;
         int firstRefDocTypeId = 0;
-        int firstOrderId = 1;
+        int firstOrderId = 0;
         int firstDocId = 0;
         String firstDeliveryTerm = "";
+        boolean first = true;
 
         List<Map<String, Object>> validatedGrns = new ArrayList<>();
 
-        for (Map<String, Object> r : selectedRows) {
+        // Approval, supplier and order values come from current pending database rows.
+        for (Map<String, Object> r : repository.selectionRows(selectedRows, documentTypeId)) {
             int supplierCustomer = r.get("SupplierCustomerId") != null ? Integer.parseInt(r.get("SupplierCustomerId").toString()) : 0;
             int orderId = r.get("PurchaseOrderId") != null ? Integer.parseInt(r.get("PurchaseOrderId").toString()) : 0;
             int refDocTypeId = r.get("RefDocumentTypeId") != null ? Integer.parseInt(r.get("RefDocumentTypeId").toString()) : 0;
@@ -77,11 +79,7 @@ public class GrnLoaderService {
             }
 
             if (supplierCustomer != 0) {
-                if (firstSupplierId == 0) firstSupplierId = supplierCustomer;
-                if (firstRefDocTypeId == 0) firstRefDocTypeId = refDocTypeId;
-                if (firstOrderId == 1) firstOrderId = orderId;
-                if (firstDocId == 0) firstDocId = docId;
-                if (firstDeliveryTerm.isEmpty()) firstDeliveryTerm = dTerm;
+                if(first){firstSupplierId=supplierCustomer;firstRefDocTypeId=refDocTypeId;firstOrderId=orderId;firstDocId=docId;firstDeliveryTerm=dTerm;first=false;}
 
                 if (documentTypeId == 166 && docId != firstDocId) {
                     result.put("success", false);
@@ -118,6 +116,7 @@ public class GrnLoaderService {
                 else if ("Market Purchase".equalsIgnoreCase(purchaseAgainst)) grnType = 2;
                 else if ("Gate Purchase".equalsIgnoreCase(purchaseAgainst)) grnType = 3;
                 else if ("Purchase From Party Processing".equalsIgnoreCase(purchaseAgainst)) grnType = 4;
+                else if ("Govt.Purchase".equalsIgnoreCase(purchaseAgainst)) grnType = 5;
 
                 Map<String, Object> item = new HashMap<>();
                 item.put("Id", docId);
@@ -126,6 +125,7 @@ public class GrnLoaderService {
             }
         }
 
+        if(validatedGrns.isEmpty())throw new IllegalArgumentException("Selected GRNs have no supplier");
         result.put("success", true);
         result.put("grns", validatedGrns);
         result.put("supplierCustomerId", firstSupplierId);

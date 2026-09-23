@@ -15,6 +15,22 @@ public class PurchaseOrderRestController {
     @Autowired
     private PurchaseOrderFullService purchaseOrderService;
 
+    @Autowired
+    private com.mst.services.PurchaseOrderAttachmentService attachments;
+
+    @GetMapping("/{id:[0-9]+}/attachments")
+    public List<Map<String, Object>> attachments(@PathVariable int id) {
+        return attachments.list(id);
+    }
+
+    @GetMapping("/{id:[0-9]+}/attachments/{attachmentId:[0-9]+}")
+    public ResponseEntity<byte[]> downloadAttachment(@PathVariable int id, @PathVariable int attachmentId) {
+        var file = attachments.download(id, attachmentId);
+        return ResponseEntity.ok().header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                org.springframework.http.ContentDisposition.attachment().filename(file.name(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM).body(file.bytes());
+    }
+
     @GetMapping("/next-doc-no")
     public ResponseEntity<Map<String, Object>> getNextDocNo(
             /* 41 = this module's Purchase Order (po.DocumentTypeId = 41, PurchsaeOrder.cs :3295).

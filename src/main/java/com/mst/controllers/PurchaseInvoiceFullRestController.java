@@ -19,6 +19,15 @@ public class PurchaseInvoiceFullRestController {
     @Autowired
     private CurrentUserContext currentUserContext;
 
+    @Autowired private com.mst.services.PurchaseInvoiceGrnService grnTransfer;
+
+    @PostMapping("/load-grns")
+    public Map<String,Object> loadGrns(@RequestBody List<Map<String,Object>> selected){return grnTransfer.preview(selected);}
+
+    @PostMapping("/payment-row")
+    @SuppressWarnings("unchecked")
+    public Map<String,Object> paymentRow(@RequestBody Map<String,Object> body){return purchaseInvoiceFullService.paymentRow(body);}
+
     @GetMapping("/dropdowns")
     public ResponseEntity<?> getDropdowns() {
         int orgId = currentUserContext.currentOrganizationId();
@@ -35,8 +44,18 @@ public class PurchaseInvoiceFullRestController {
         int nextNo = purchaseInvoiceFullService.generateNextDocNo(orgId, compId, branchId, yearId, docTypeId);
         Map<String, Object> res = new HashMap<>();
         res.put("docNo", nextNo);
+        res.put("branchSrNo", purchaseInvoiceFullService.generateNextBranchNo());
         return ResponseEntity.ok(res);
     }
+
+    @PostMapping("/calculate-line")
+    public Map<String,Object> calculateLine(@RequestBody Map<String,Object> body){return purchaseInvoiceFullService.calculateLine(body);}
+
+    @PostMapping("/calculate-bill")
+    public Map<String,Object> calculateBill(@RequestBody Map<String,Object> body){return purchaseInvoiceFullService.calculateBill(body);}
+
+    @PostMapping("/supplement-row")
+    public Map<String,Object> supplementRow(@RequestBody Map<String,Object> body){return purchaseInvoiceFullService.supplementRow(body);}
 
     @RequestMapping(value = "/history", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<?> getHistory(@RequestBody(required = false) Map<String, Object> bodyParams,

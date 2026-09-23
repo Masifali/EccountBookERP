@@ -1,7 +1,6 @@
 package com.mst.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,263 +9,39 @@ import java.util.*;
 @Service
 public class MarketGrnService {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private com.mst.repositories.GrnNumberingRepository grnNumbering;
 
-    public Map<String, Object> getDropdowns(int orgId, int compId) {
-        Map<String, Object> result = new HashMap<>();
+    @Autowired private com.mst.repositories.PurchaseGrnRecordRepository records;
+    @Autowired private PurchaseGrnPersistenceService persistence;
 
-        try {
-            String sql = "SELECT Id as id, CompanyName as name, ISNULL(PartyCode, ManualPartyCode) as code " +
-                    "FROM SupplierCustomer WHERE (OrganizationId = ? OR OrganizationId IS NULL) AND (CompanyId = ? OR CompanyId IS NULL) " +
-                    "ORDER BY CompanyName";
-            result.put("suppliers", jdbcTemplate.queryForList(sql, orgId, compId));
-        } catch (Exception e) {
-            result.put("suppliers", Collections.emptyList());
-        }
+    @Autowired private com.mst.repositories.PurchaseGrnLookupRepository lookups;
 
-        try {
-            String sql = "SELECT Id as id, ItemName as name, ItemCode as code FROM Item WHERE (ItemStatus IS NULL OR ItemStatus = 1) ORDER BY ItemName";
-            result.put("items", jdbcTemplate.queryForList(sql));
-        } catch (Exception e) {
-            result.put("items", Collections.emptyList());
-        }
-
-        try {
-            String sql = "SELECT Id as id, WareHouseName as name FROM InvWareHouse WHERE (IsActive IS NULL OR IsActive = 1) ORDER BY WareHouseName";
-            result.put("warehouses", jdbcTemplate.queryForList(sql));
-        } catch (Exception e) {
-            result.put("warehouses", Collections.emptyList());
-        }
-
-        try {
-            String sql = "SELECT Id as id, CropYear as name FROM CropYear ORDER BY CropYear DESC";
-            result.put("cropYears", jdbcTemplate.queryForList(sql));
-        } catch (Exception e) {
-            result.put("cropYears", Collections.emptyList());
-        }
-
-        try {
-            String sql = "SELECT Id as id, JobLotDescription as name FROM JobLot ORDER BY JobLotDescription";
-            result.put("jobLots", jdbcTemplate.queryForList(sql));
-        } catch (Exception e) {
-            result.put("jobLots", Collections.emptyList());
-        }
-
-        /* ----------------------------------------------------------------------------------
-           The three lists below replace hard-coded options that used to sit in the template
-           (Vehicle Type "Truck"/"Tractor", a single "PP Bags" packing type and a single "KGs"
-           UOM). All three are database-backed on the desktop, and all three are read here
-           through the SAME procedures InvFrmGRN.cs uses - not through a convenient SELECT.
-           ---------------------------------------------------------------------------------- */
-
-        /* InvFrmGRN.cs:757 VehicleType.GetAll() -> Sp_VehicleType_GetAllMethod @Activity='ReadAll'
-           (BLL 0611). Bound at :1208 VehicleTypesBind. The desktop stores a VehicleTypeId, so the
-           template must send the id, never the caption. */
-        try {
-            result.put("vehicleTypes", jdbcTemplate.queryForList(
-                    "EXEC Sp_VehicleType_GetAllMethod @Activity=?", "ReadAll"));
-        } catch (Exception e) {
-            result.put("vehicleTypes", Collections.emptyList());
-        }
-
-        /* InvFrmGRN.cs:1296-1306 PackingTypeDtFillFromGlobalAndBind.
-           The global packing-type list RESTRICTED to ids {1, 2, 5}, value member Id, display
-           member PackTypeDesc.
-
-           The desktop local is named `excludedIds` but the lambda KEEPS those ids -
-               lst.Where(r => excludedIds.Contains(r.Id))
-           - so it is an INCLUDE set, not an exclude set. Reading the variable name instead of
-           the code would invert the filter and show every packing type except the three this
-           screen is supposed to offer. The filter is applied here, in the same order the desktop
-           applies it: fetch the whole list, then keep those three. */
-        try {
-            List<Map<String, Object>> packing = jdbcTemplate.queryForList(
-                    "EXEC [dbo].[Sp_InvPackingType_GetAllMethod] @Activity=?", "ReadAll");
-            Set<Integer> grnPackingTypeIds = new LinkedHashSet<>(Arrays.asList(1, 2, 5));
-            List<Map<String, Object>> kept = new ArrayList<>();
-            for (Map<String, Object> row : packing) {
-                Object id = row.get("Id");
-                if (id == null) {
-                    for (Map.Entry<String, Object> en : row.entrySet())
-                        if ("Id".equalsIgnoreCase(en.getKey())) { id = en.getValue(); break; }
-                }
-                if (id instanceof Number && grnPackingTypeIds.contains(((Number) id).intValue())) {
-                    kept.add(row);
-                }
-            }
-            result.put("packingTypes", kept);
-        } catch (Exception e) {
-            result.put("packingTypes", Collections.emptyList());
-        }
-
-        /* usp_getAllUomsByCompanyId - the same UOM schedule CommonBindings.ItemUomFromGlobalBind
-           reads. Returned whole, with ItemId on each row, so the screen can narrow to the chosen
-           item without a second round trip.
-
-           Equivalent is passed through EXACTLY as stored. It is never defaulted to 1: a missing
-           or non-positive factor has to reach the screen as it is, so the row can be refused the
-           way the desktop refuses it, rather than silently computing a wrong weight. */
-        try {
-            result.put("uoms", jdbcTemplate.queryForList(
-                    "EXEC usp_getAllUomsByCompanyId @OrganizationId=?, @CompanyId=?, @Active=?",
-                    orgId, compId, 1));
-        } catch (Exception e) {
-            result.put("uoms", Collections.emptyList());
-        }
-
-        return result;
-    }
+    public Map<String,Object> getDropdowns(int org,int company) { return lookups.all(46); }
 
     public int generateNextDocNo(int orgId, int compId, int branchId, int yearId) {
-        try {
-            String sql = "SELECT ISNULL(MAX(DocNo), 0) + 1 FROM InvGrn WHERE DocumentTypeId = 46 AND (OrganizationId = ? OR OrganizationId IS NULL) AND (CompanyId = ? OR CompanyId IS NULL)";
-            Integer nextNo = jdbcTemplate.queryForObject(sql, Integer.class, orgId, compId);
-            return (nextNo != null && nextNo > 0) ? nextNo : 1;
-        } catch (Exception e) {
-            return 1;
-        }
+        return grnNumbering.next(orgId,compId,branchId,yearId,46);
     }
 
     public List<Map<String, Object>> getHistory(int orgId, int compId, int branchId, int yearId,
                                                 String fromDate, String toDate, Integer supplierId,
                                                 Integer fromDocNo, Integer toDocNo, String dateType) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT g.Id as id, g.DocNo as docNo, CONVERT(VARCHAR(10), g.DocDate, 120) as docDate, ")
-              .append("s.CompanyName as supplierName, g.VehicleNo as vehicleNo, g.BiltyNo as biltyNo, ")
-              .append("g.RemarksHeader as remarks, CONVERT(VARCHAR(10), g.EntryDate, 120) as entryDate ")
-              .append("FROM InvGrn g ")
-              .append("LEFT JOIN SupplierCustomer s ON g.SupplierCustomerId = s.Id ")
-              .append("WHERE g.DocumentTypeId = 46 ")
-              .append("AND (g.OrganizationId = ").append(orgId).append(" OR g.OrganizationId IS NULL) ")
-              .append("AND (g.CompanyId = ").append(compId).append(" OR g.CompanyId IS NULL) ");
-
-            if (supplierId != null && supplierId > 0) {
-                sb.append("AND g.SupplierCustomerId = ").append(supplierId).append(" ");
-            }
-            if (fromDocNo != null && fromDocNo > 0) {
-                sb.append("AND g.DocNo >= ").append(fromDocNo).append(" ");
-            }
-            if (toDocNo != null && toDocNo > 0) {
-                sb.append("AND g.DocNo <= ").append(toDocNo).append(" ");
-            }
-            /* fromDate and toDate arrive straight from a request parameter or a JSON body and
-               were being concatenated into a quoted SQL literal, which let a caller close the
-               quote and append their own SQL - against the live database. Bound instead. The
-               column is still chosen by an equalsIgnoreCase test, so it can only ever be one of
-               two fixed identifiers and never reaches the statement as caller text.
-               Behaviour is unchanged for every legitimate value. */
-            List<Object> binds = new ArrayList<>();
-            if (fromDate != null && !fromDate.trim().isEmpty()) {
-                String col = "entrydate".equalsIgnoreCase(dateType) ? "g.EntryDate" : "g.DocDate";
-                sb.append("AND ").append(col).append(" >= ? ");
-                binds.add(fromDate.trim());
-            }
-            if (toDate != null && !toDate.trim().isEmpty()) {
-                String col = "entrydate".equalsIgnoreCase(dateType) ? "g.EntryDate" : "g.DocDate";
-                sb.append("AND ").append(col).append(" <= ? ");
-                binds.add(toDate.trim() + " 23:59:59");
-            }
-
-            sb.append("ORDER BY g.DocNo DESC");
-            return jdbcTemplate.queryForList(sb.toString(), binds.toArray());
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+        return records.history(46,fromDate,toDate,supplierId,fromDocNo,toDocNo,dateType);
     }
 
-    public Map<String, Object> getById(int id) {
-        try {
-            String sqlHead = "SELECT g.*, s.CompanyName as supplierName FROM InvGrn g " +
-                    "LEFT JOIN SupplierCustomer s ON g.SupplierCustomerId = s.Id WHERE g.Id = ?";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sqlHead, id);
-            if (list == null || list.isEmpty()) return null;
-
-            Map<String, Object> result = new HashMap<>(list.get(0));
-
-            String sqlDetails = "SELECT d.*, it.ItemName, it.ItemCode, w.WareHouseName, jl.JobLotDescription " +
-                    "FROM InvGrnDetail d " +
-                    "LEFT JOIN Item it ON d.ItemId = it.Id " +
-                    "LEFT JOIN InvWareHouse w ON d.WarehouseId = w.Id " +
-                    "LEFT JOIN JobLot jl ON d.JobLotId = jl.Id " +
-                    "WHERE d.InvGrnId = ?";
-            result.put("details", jdbcTemplate.queryForList(sqlDetails, id));
-
-            return result;
-        } catch (Exception e) {
-            return null;
-        }
-    }
+    public Map<String,Object> getById(int id) { return records.load(id,46); }
 
     @Transactional
-    public Map<String, Object> saveMarketGrn(Map<String, Object> payload) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            Integer id = payload.get("id") != null ? ((Number) payload.get("id")).intValue() : 0;
-            Integer orgId = payload.get("organizationId") != null ? ((Number) payload.get("organizationId")).intValue() : 1;
-            Integer compId = payload.get("companyId") != null ? ((Number) payload.get("companyId")).intValue() : 1;
-            Integer branchId = payload.get("branchesId") != null ? ((Number) payload.get("branchesId")).intValue() : 1;
-            Integer yearId = payload.get("financialYearId") != null ? ((Number) payload.get("financialYearId")).intValue() : 1;
-
-            Integer docNo = payload.get("docNo") != null ? ((Number) payload.get("docNo")).intValue() : generateNextDocNo(orgId, compId, branchId, yearId);
-            String docDate = payload.get("docDate") != null ? payload.get("docDate").toString() : new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date());
-            Integer supplierId = payload.get("supplierCustomerId") != null ? ((Number) payload.get("supplierCustomerId")).intValue() : 0;
-            String remarks = payload.get("remarksHeader") != null ? payload.get("remarksHeader").toString() : "";
-            String vehicleNo = payload.get("vehicleNo") != null ? payload.get("vehicleNo").toString() : "";
-            String biltyNo = payload.get("biltyNo") != null ? payload.get("biltyNo").toString() : "";
-
-            if (id > 0) {
-                String updateHead = "UPDATE InvGrn SET DocNo=?, DocDate=?, SupplierCustomerId=?, RemarksHeader=?, VehicleNo=?, BiltyNo=?, ModifyDate=GETDATE() WHERE Id=?";
-                jdbcTemplate.update(updateHead, docNo, docDate, supplierId, remarks, vehicleNo, biltyNo, id);
-                jdbcTemplate.update("DELETE FROM InvGrnDetail WHERE InvGrnId=?", id);
-            } else {
-                String insertHead = "INSERT INTO InvGrn (DocumentTypeId, DocNo, DocDate, SupplierCustomerId, RemarksHeader, VehicleNo, BiltyNo, OrganizationId, CompanyId, BranchesId, FinancialYearId, EntryDate, ModifyDate) " +
-                        "VALUES (46, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
-                jdbcTemplate.update(insertHead, docNo, docDate, supplierId, remarks, vehicleNo, biltyNo, orgId, compId, branchId, yearId);
-                id = jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
-            if (details != null) {
-                String insertDetail = "INSERT INTO InvGrnDetail (InvGrnId, ItemId, ItemQty, GrossWeight, NetBillWeight, StockWeight, WarehouseId, JobLotId, PackingTypeId, CropYear) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                for (Map<String, Object> d : details) {
-                    jdbcTemplate.update(insertDetail,
-                            id,
-                            d.get("itemId") != null ? ((Number) d.get("itemId")).intValue() : 0,
-                            d.get("itemQty") != null ? ((Number) d.get("itemQty")).doubleValue() : 0.0,
-                            d.get("grossWeight") != null ? ((Number) d.get("grossWeight")).doubleValue() : 0.0,
-                            d.get("netBillWeight") != null ? ((Number) d.get("netBillWeight")).doubleValue() : 0.0,
-                            d.get("stockWeight") != null ? ((Number) d.get("stockWeight")).doubleValue() : 0.0,
-                            d.get("warehouseId") != null ? ((Number) d.get("warehouseId")).intValue() : 0,
-                            d.get("jobLotId") != null ? ((Number) d.get("jobLotId")).intValue() : 0,
-                            d.get("packingTypeId") != null ? ((Number) d.get("packingTypeId")).intValue() : 0,
-                            d.get("cropYear") != null ? d.get("cropYear").toString() : ""
-                    );
-                }
-            }
-
-            response.put("success", true);
-            response.put("id", id);
-            response.put("docNo", docNo);
-            response.put("message", "Market GRN saved successfully [" + docNo + "]");
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "Error saving Market GRN: " + e.getMessage());
+    public Map<String,Object> saveMarketGrn(Map<String,Object> payload) {
+        try { return persistence.save(payload,46); }
+        catch(Exception failure) {
+            org.springframework.transaction.interceptor.TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return Map.of("success",false,"message","Error saving Market GRN: "+failure.getMessage());
         }
-        return response;
     }
 
     @Transactional
     public boolean deleteMarketGrn(int id) {
-        try {
-            jdbcTemplate.update("DELETE FROM InvGrnDetail WHERE InvGrnId=?", id);
-            jdbcTemplate.update("DELETE FROM InvGrn WHERE Id=? AND DocumentTypeId=46", id);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        records.delete(id,46);
+        return true;
     }
 }

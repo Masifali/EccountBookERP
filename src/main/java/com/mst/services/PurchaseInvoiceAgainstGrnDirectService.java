@@ -11,6 +11,7 @@ public class PurchaseInvoiceAgainstGrnDirectService {
 
     @Autowired
     private PurchaseInvoiceAgainstGrnDirectRepository repository;
+    @Autowired private com.mst.repositories.PurchaseInvoiceRecordRepository records;
 
     public Map<String, Object> getDropdowns(int orgId, int compId) {
         Map<String, Object> map = new HashMap<>();
@@ -30,33 +31,18 @@ public class PurchaseInvoiceAgainstGrnDirectService {
 
     public List<Map<String, Object>> getHistory(int orgId, int compId, Integer docTypeId, String fromDate, String toDate,
                                                 Double fromDocNo, Double toDocNo, Integer supplierId) {
-        return repository.getHistory(orgId, compId, docTypeId, fromDate, toDate, fromDocNo, toDocNo, supplierId);
+        return records.history(138,fromDate,toDate,supplierId,fromDocNo==null?null:fromDocNo.intValue(),toDocNo==null?null:toDocNo.intValue(),"docdate");
     }
 
     public Map<String, Object> getById(int id) {
-        Map<String, Object> result = new HashMap<>();
-        Map<String, Object> header = repository.getById(id);
-        if (header != null) {
-            result.put("success", true);
-            result.put("header", header);
-            result.put("details", repository.getDetailsByHeaderId(id));
-        } else {
-            result.put("success", false);
-            result.put("message", "Record not found");
-        }
+        Map<String,Object> header=records.load(id,138);
+        Map<String,Object> result=new LinkedHashMap<>(header);
+        result.put("success",true);result.put("header",header);
         return result;
     }
 
     public Map<String, Object> deleteRecord(int id, int orgId, int compId) {
-        Map<String, Object> result = new HashMap<>();
-        try {
-            repository.deleteRecord(id, orgId, compId);
-            result.put("success", true);
-            result.put("message", "Purchase Invoice deleted successfully");
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", "Error deleting Purchase Invoice: " + e.getMessage());
-        }
-        return result;
+        records.delete(id,138);
+        return Map.of("success",true,"message","Purchase Invoice deleted successfully");
     }
 }
