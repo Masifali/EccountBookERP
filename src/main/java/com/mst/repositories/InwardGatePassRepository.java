@@ -234,9 +234,81 @@ public class InwardGatePassRepository {
         return null;
     }
 
-    public List<Map<String,Object>> getPoInfoGrid(Integer orgId,Integer compId,Integer branchId,Integer yearId,String fromDate,String toDate,Integer supplierId) {
-        return jdbcTemplate.queryForList("EXEC dbo.usp_GetPurchaseOrderInformationForGatepassInward @OrganizationId=?,@CompanyId=?,@Ids='41,700',@BranchesId=?,@FinancialYearId=?,@DocDateFrom=?,@DocDateTo=?,@OrderSupCustId=?",
-                orgId,compId,branchId,yearId,new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(fromDate)),new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(toDate)),positive(supplierId));
+    public List<Map<String,Object>> getDocumentTypes(Integer orgId, Integer compId) {
+        List<Map<String,Object>> list = new ArrayList<>();
+        try {
+            List<Map<String,Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.USP_GetDataForDropDownFromPurchaseOrder @OrganizationId=?, @CompanyId=?", orgId, compId);
+            for (Map<String,Object> row : rows) {
+                Object activity = row.get("Activity");
+                if (activity != null && "DocumentType".equalsIgnoreCase(activity.toString().trim())) {
+                    list.add(Map.of("id", row.get("Id"), "name", row.get("ReferenceName")));
+                }
+            }
+        } catch (Exception e) {
+            try {
+                List<Map<String,Object>> rows = jdbcTemplate.queryForList(
+                        "EXEC dbo.Sp_DocumentType_GetAllMethod @Activity='GetAll'");
+                for (Map<String,Object> row : rows) {
+                    list.add(Map.of("id", row.get("Id"), "name", row.get("Description") != null ? row.get("Description") : row.get("DocumentTypeName")));
+                }
+            } catch (Exception ignored) {}
+        }
+        if (list.isEmpty()) {
+            list.add(Map.of("id", 41, "name", "Purchase Order"));
+            list.add(Map.of("id", 700, "name", "Market Purchase Order"));
+            list.add(Map.of("id", 1500, "name", "Purchase Order (Steel)"));
+        }
+        return list;
+    }
+
+    public List<Map<String,Object>> getPoInfoGrid(Integer orgId, Integer compId, Integer branchId, Integer yearId,
+            String fromDate, String toDate, Double fromDocNo, Double toDocNo,
+            Integer supplierId, Integer documentTypeId, Integer expiryDays, String dateField) {
+
+        List<Object> args = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("EXEC dbo.usp_GetPurchaseOrderInformationForGatepassInward ");
+        sql.append("@OrganizationId=?, @CompanyId=?, @Ids='41,700', @BranchesId=?, @FinancialYearId=?");
+        args.add(orgId);
+        args.add(compId);
+        args.add(branchId);
+        args.add(yearId);
+
+        String fromParam = "@DocDateFrom", toParam = "@DocDateTo";
+        if ("entryDate".equals(dateField)) { fromParam = "@EntryFromDate"; toParam = "@EntryToDate"; }
+        else if ("modifyDate".equals(dateField)) { fromParam = "@ModifyFromDate"; toParam = "@ModifyToDate"; }
+        else if ("approvedDate".equals(dateField)) { fromParam = "@ApprovedFromDate"; toParam = "@ApprovedToDate"; }
+
+        if (fromDate != null && !fromDate.isBlank()) {
+            sql.append(", ").append(fromParam).append("=?");
+            args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE, date(fromDate)));
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            sql.append(", ").append(toParam).append("=?");
+            args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE, date(toDate)));
+        }
+        if (fromDocNo != null && fromDocNo > 0) {
+            sql.append(", @FromDocNo=?");
+            args.add(fromDocNo.intValue());
+        }
+        if (toDocNo != null && toDocNo > 0) {
+            sql.append(", @ToDocNo=?");
+            args.add(toDocNo.intValue());
+        }
+        if (supplierId != null && supplierId > 0) {
+            sql.append(", @OrderSupCustId=?");
+            args.add(supplierId);
+        }
+        if (documentTypeId != null && documentTypeId > 0) {
+            sql.append(", @DocumentTypeId=?");
+            args.add(documentTypeId);
+        }
+        if (expiryDays != null && expiryDays > 0) {
+            sql.append(", @ExpiryDays=?");
+            args.add(expiryDays);
+        }
+
+        return jdbcTemplate.queryForList(sql.toString(), args.toArray());
     }
 
     public List<Map<String,Object>> getOrderPartyItems(int org,int company,int branch,int year,int number,String date,int gatePassId) {

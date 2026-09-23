@@ -33,6 +33,7 @@ public class InwardGatePassService {
         map.put("packingTypes", repository.getPackingTypes());
         map.put("transitVehicles", List.of()); // Depends on the selected supplier/order.
         map.put("statuses", repository.getStatuses(orgId, compId));
+        map.put("documentTypes", repository.getDocumentTypes(orgId, compId));
         return map;
     }
 
@@ -48,8 +49,11 @@ public class InwardGatePassService {
         return repository.findDriverBio(context.currentOrganizationId(),context.currentCompanyId(),null,cell);
     }
 
-    public List<Map<String, Object>> getPoInfoGrid(Integer orgId, Integer compId, String fromDate, String toDate, Integer supplierId) {
-        return repository.getPoInfoGrid(orgId, compId, context.currentBranchId(), context.currentFinancialYearId(), fromDate, toDate, supplierId);
+    public List<Map<String, Object>> getPoInfoGrid(Integer orgId, Integer compId,
+            String fromDate, String toDate, Double fromDocNo, Double toDocNo,
+            Integer supplierId, Integer documentTypeId, Integer expiryDays, String dateField) {
+        return repository.getPoInfoGrid(orgId, compId, context.currentBranchId(), context.currentFinancialYearId(),
+                fromDate, toDate, fromDocNo, toDocNo, supplierId, documentTypeId, expiryDays, dateField);
     }
 
     public List<Map<String,Object>> getOrderPartyItems(int number,String date,int gatePassId) {

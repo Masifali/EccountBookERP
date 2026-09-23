@@ -671,12 +671,73 @@
 
                 <!-- Tab 2: Purchase Order Info -->
                 <div id="tabPoInfo" class="tab-content">
-                    <div class="form-row" style="margin-bottom: 6px;">
-                        <span>From Date:</span> <input type="date" id="txtFromPoDate" class="form-control" style="width: 120px; margin: 0 6px;" />
-                        <span>To Date:</span> <input type="date" id="txtToPoDate" class="form-control" style="width: 120px; margin: 0 6px;" />
-                        <button id="btnSearchPoInfo" class="tool-btn" onclick="withButtonLoading(this, loadPoInfoGrid)">Show PO Info</button>
+                    <!-- Filters Panel matching desktop screenshot -->
+                    <div class="history-filter-box" style="margin: 2px 0 6px 0;">
+                        <div style="font-weight: bold; color: #003366; margin-bottom: 4px;">Filters</div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+                            <!-- Column 1: Dates & Docs -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div class="form-row">
+                                    <span class="form-label" style="width: 75px;"><input type="checkbox" id="chkFromPoDate" checked onchange="document.getElementById('txtFromPoDate').disabled=!this.checked"> From Date</span>
+                                    <input type="date" id="txtFromPoDate" class="form-control" style="width: 120px;" />
+                                    <span class="form-label" style="width: 65px; margin-left: 10px;">From Doc</span>
+                                    <input type="number" id="txtFromDocNoPoInfo" class="form-control" style="width: 75px;" data-guard="integer" />
+                                </div>
+                                <div class="form-row">
+                                    <span class="form-label" style="width: 75px;"><input type="checkbox" id="chkToPoDate" checked onchange="document.getElementById('txtToPoDate').disabled=!this.checked"> To Date</span>
+                                    <input type="date" id="txtToPoDate" class="form-control" style="width: 120px;" />
+                                    <span class="form-label" style="width: 65px; margin-left: 10px;">To Doc</span>
+                                    <input type="number" id="txtToDocNoPoInfo" class="form-control" style="width: 75px;" data-guard="integer" />
+                                </div>
+                            </div>
+
+                            <!-- Column 2: Supplier & Document Type -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div class="form-row">
+                                    <span class="form-label" style="width: 95px;">Supplier Name</span>
+                                    <select id="cmbSupplierNamePoInfo" class="form-control" style="width: 200px;" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
+                                        <option value="">-- Select Supplier --</option>
+                                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <span class="form-label" style="width: 95px;">Document Type</span>
+                                    <select id="CmbDocumentTypePoInfo" class="form-control" style="width: 200px;" data-dtcombo="single" data-dtcombo-caption="Document Type">
+                                        <option value="">-- Select --</option>
+                                        <option th:each="d : ${documentTypes}" th:value="${d['id']}" th:text="${d['name']}"></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Column 3: Expired Days & Buttons -->
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="text-align: center;">
+                                    <div style="background-color: #d4e38e; font-weight: bold; padding: 2px 4px; border: 1px solid #a0a0a0; font-size: 10px; line-height: 1.1; max-width: 130px;">Hide Orders Expired<br/>Over Days Ago</div>
+                                    <input type="number" id="txtExpiryDaysPoInfo" class="form-control" style="width: 130px; text-align: center; font-weight: bold; background-color: #ffffcc;" value="7" data-guard="integer" />
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <button id="btnResetPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="resetPoInfoFilters()">Reset</button>
+                                    <button id="btnSearchPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="withButtonLoading(this, loadPoInfoGrid)">Show</button>
+                                </div>
+                            </div>
+
+                            <!-- Column 4: Date Type Radio Buttons -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; background-color: #eef2f5; padding: 6px 10px; border: 1px solid #ccc; border-radius: 3px;">
+                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="docDate" checked> Doc Date</label>
+                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="modifyDate"> Modify Date</label>
+                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="entryDate"> Entry Date</label>
+                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="approvedDate"> Approved Date</label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid-wrap">
+
+                    <!-- Teal Banner Strip -->
+                    <div style="background-color: #005a5b; color: white; font-weight: bold; padding: 4px 8px; margin-bottom: 4px; font-size: 11px;">
+                        This Grid Show The Un-Completed And Approved Purchase Orders.... Complete.Cancel And Un-Approved Orders Will Not Appear here.
+                    </div>
+
+                    <!-- PO Info Grid -->
+                    <div class="grid-wrap" style="max-height: 340px;">
                         <table class="data-grid" id="grdPoInfo">
                             <thead>
                             <tr>

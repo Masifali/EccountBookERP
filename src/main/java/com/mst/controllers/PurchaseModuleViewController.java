@@ -141,6 +141,7 @@ public class PurchaseModuleViewController {
         model.addAttribute("transitVehicles", dropdowns.get("transitVehicles"));
         model.addAttribute("weighBridges", dropdowns.get("weighBridges"));
         model.addAttribute("packingTypes", dropdowns.get("packingTypes"));
+        model.addAttribute("documentTypes", dropdowns.get("documentTypes"));
         model.addAttribute("historyList", historyList);
 
         return "purchase/inward_gate_pass";
