@@ -279,12 +279,32 @@ public class PurchaseOrderHeaderRepository {
             sql.append('@').append(name).append("=?");
             args.add(typed(name, model.get(name)));
         }
-        List<Map<String, Object>> rows = jdbc.queryForList(sql.toString(), args.toArray());
-        if (rows.isEmpty()) return null;
-        for (Object v : rows.get(0).values()) {
-            if (v instanceof Number) return ((Number) v).intValue();
-        }
-        return null;
+        /* -------------------------------------------------------------------------------------
+         * WHY ProcExec AND NOT queryForList
+         * -------------------------------------------------------------------------------------
+         * This used queryForList, which goes through executeQuery() and therefore REQUIRES the
+         * statement to produce a result set. Sp_PurchaseOrder_Insert ends with a SELECT that
+         * hands back the new Id, so inserting worked. Sp_PurchaseOrder_Update returns nothing,
+         * so every Update died with
+         *
+         *     com.microsoft.sqlserver.jdbc.SQLServerException:
+         *     The statement did not return a result set.
+         *
+         * - before writing anything. Save worked, Update could not.
+         *
+         * The desktop has no such split. GenericProvider.SetProc ends every one of these calls
+         * with ExecuteScalar(), which tolerates BOTH shapes: it takes the first column of the
+         * first row when there is one, and returns null when there is not. ProcExec is this
+         * port's equivalent - it walks the whole result/update-count chain and returns the first
+         * scalar it finds, or null.
+         *
+         * This is the same defect class as A-RESULT-SET-WAS-GENERATED-FOR-UPDATE (25 call
+         * sites), seen from the other side: there, update() was used on a procedure that DOES
+         * return rows; here, queryForList() was used on one that does NOT. Both sweeps missed
+         * this call because it matched neither `jdbcTemplate.update(` nor an inline "EXEC ..."
+         * string - the SQL is built with a StringBuilder.
+         * ------------------------------------------------------------------------------------- */
+        return com.mst.repositories.support.ProcExec.call(jdbc, sql.toString(), args.toArray());
     }
 
     private static Object typed(String name, Object value) {

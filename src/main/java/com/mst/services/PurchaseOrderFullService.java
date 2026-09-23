@@ -1493,30 +1493,104 @@ public class PurchaseOrderFullService {
      * DueDays must be > 0 when PaymentTermId=2 (Credit) - ditto PurchsaeOrder.cs's validation
      * ("Payment Term Required in row#.." / "Due Days Required In case Of Credit row in row#..").
      */
-    private void persistPaymentTermsDetail(int purchaseOrderId, List<PurchaseOrderFullDto.PurchaseOrderPaymentTermsDetailDto> rows) {
+    private void persistPaymentTermsDetail(int purchaseOrderId, PurchaseOrderFullDto dto) {
         jdbcTemplate.update("DELETE FROM PurchaseOrderPaymentTermsDetail WHERE PurchaseOrderId=?", purchaseOrderId);
-        if (rows == null) {
-            return;
+
+        List<PurchaseOrderFullDto.PurchaseOrderPaymentTermsDetailDto> rows =
+                dto.getPaymentTermsDetail() == null
+                        ? java.util.Collections.emptyList() : dto.getPaymentTermsDetail();
+
+        /* :3559 - decimal num = GetColumnSum(grdPaymentDetail, "Amount"). The SUM OF THE GRID'S
+           AMOUNT COLUMN is what chooses between the two branches below, and nothing else. */
+        java.math.BigDecimal gridAmountTotal = java.math.BigDecimal.ZERO;
+        for (PurchaseOrderFullDto.PurchaseOrderPaymentTermsDetailDto r : rows) {
+            if (r.getAmount() != null) {
+                gridAmountTotal = gridAmountTotal.add(java.math.BigDecimal.valueOf(r.getAmount()));
+            }
         }
+
+        java.math.BigDecimal detailSum = sumDetails(dto, "amount");   /* DetailSumAmount */
+        java.math.BigDecimal paidTotal = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal pctTotal  = java.math.BigDecimal.ZERO;
+
+        List<Object[]> toWrite = new ArrayList<>();
+
+        if (gridAmountTotal.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            /* :3562-3600 - the grid is used, with both refusals. */
+            int rowNo = 0;
+            for (PurchaseOrderFullDto.PurchaseOrderPaymentTermsDetailDto r : rows) {
+                rowNo++;
+                int termId  = r.getPaymentTermId() != null ? r.getPaymentTermId() : 0;
+                int dueDays = r.getDueDays() != null ? r.getDueDays() : 0;
+                java.math.BigDecimal pct = r.getPrcntOfTotal() != null
+                        ? java.math.BigDecimal.valueOf(r.getPrcntOfTotal()) : java.math.BigDecimal.ZERO;
+                java.math.BigDecimal amt = r.getAmount() != null
+                        ? java.math.BigDecimal.valueOf(r.getAmount()) : java.math.BigDecimal.ZERO;
+
+                if (termId <= 0) {                                           /* :3584 */
+                    throw new IllegalArgumentException("Payment Term Required in row#" + rowNo);
+                }
+                if (termId == 2 && dueDays <= 0) {                           /* :3591 */
+                    throw new IllegalArgumentException("Due Days Required In case Of Credit row in row#" + rowNo);
+                }
+                pctTotal  = pctTotal.add(pct);
+                paidTotal = paidTotal.add(amt);
+                toWrite.add(new Object[]{ termId, pct, amt, dueDays, r.getPaymentRemarks(), r.getDueDate() });
+            }
+        } else {
+            /* -------------------------------------------------------------------------------
+             * :3601-3613 - THE BRANCH THAT WAS NEVER PORTED.
+             *
+             * When the grid's Amount column totals zero - i.e. the operator never touched the
+             * Payment Detail tab and it still holds only the blank row AddRowInPaymentGrid put
+             * there - the desktop IGNORES THE GRID COMPLETELY and writes ONE row built from the
+             * HEADER controls:
+             *
+             *     PaymentTermId = combpttrm.Value     (the header "Payment Terms" combo)
+             *     PaymentTerm   = combpttrm.Text
+             *     DueDays       = txtduedays.Text     (the header "Due Days")
+             *     DueDate       = DocDate + DueDays
+             *     PrcntOfTotal  = 100
+             *     Amount        = DetailSumAmount     (the order total)
+             *
+             * The port instead iterated the blank grid row and threw "Payment Term Required in
+             * row#1", so an order the desktop saves without complaint could not be saved from
+             * the web at all - and when it did write, it wrote the blank row's zeros rather than
+             * the single 100% row the desktop writes.
+             * ------------------------------------------------------------------------------- */
+            int termId  = dto.getPaymentTermId() != null ? dto.getPaymentTermId() : 0;
+            int dueDays = dto.getDueDays() != null ? dto.getDueDays() : 0;
+
+            java.sql.Date docDate = dateOrNull(dto.getDocDate());
+            java.sql.Date dueDate = null;
+            if (docDate != null) {
+                java.time.LocalDate d = docDate.toLocalDate().plusDays(dueDays);
+                dueDate = java.sql.Date.valueOf(d);                          /* :3606 */
+            }
+
+            pctTotal  = java.math.BigDecimal.valueOf(100);
+            paidTotal = detailSum;
+            toWrite.add(new Object[]{ termId, pctTotal, detailSum, dueDays, null,
+                                      dueDate == null ? null : dueDate.toString() });
+        }
+
+        /* :3615 - |PaymentDetailAmount - DetailSumAmount| must be within 0.3 */
+        if (paidTotal.subtract(detailSum).abs().compareTo(new java.math.BigDecimal("0.3")) > 0) {
+            throw new IllegalArgumentException(
+                    "Payment Detail Amount:" + paidTotal.stripTrailingZeros().toPlainString()
+                  + " Not Equal to Total Amount:" + detailSum.stripTrailingZeros().toPlainString());
+        }
+        /* :3622 - the total percentage, rounded to 4, must be within 0.01 of 100 */
+        pctTotal = pctTotal.setScale(4, java.math.RoundingMode.HALF_UP);
+        if (pctTotal.subtract(java.math.BigDecimal.valueOf(100)).abs()
+                .compareTo(new java.math.BigDecimal("0.01")) > 0) {
+            throw new IllegalArgumentException("Payment Detail Total% not near to 100");
+        }
+
         int sortNo = 1;
-        for (PurchaseOrderFullDto.PurchaseOrderPaymentTermsDetailDto row : rows) {
-            int paymentTermId = row.getPaymentTermId() != null ? row.getPaymentTermId() : 0;
-            if (paymentTermId <= 0) {
-                throw new IllegalArgumentException("Payment Term Required in row#" + sortNo);
-            }
-            int dueDays = row.getDueDays() != null ? row.getDueDays() : 0;
-            if (paymentTermId == 2 && dueDays <= 0) {
-                throw new IllegalArgumentException("Due Days Required In case Of Credit row in row#" + sortNo);
-            }
+        for (Object[] w : toWrite) {
             ProcExec.call(jdbcTemplate, SQL_PAYMENT_TERMS_DETAIL_INSERT,
-                    0, purchaseOrderId, paymentTermId,
-                    row.getPrcntOfTotal() != null ? row.getPrcntOfTotal() : 0.0,
-                    row.getAmount() != null ? row.getAmount() : 0.0,
-                    dueDays,
-                    row.getPaymentRemarks(),
-                    sortNo,
-                    row.getDueDate());
-            sortNo++;
+                    0, purchaseOrderId, w[0], w[1], w[2], w[3], w[4], sortNo++, w[5]);
         }
     }
 
@@ -1556,6 +1630,41 @@ public class PurchaseOrderFullService {
         return response;
     }
 
+    /**
+     * The Payment Detail rule (:3559-3613) needs the ORDER's header terms and its detail total,
+     * not just the grid rows. The standalone tab-save has only the rows, so the rest is read
+     * back from the saved order rather than defaulted to zero - defaulting would make the
+     * synthesised branch write PaymentTermId = 0 and the reconciliation compare against 0,
+     * both of which would be wrong in a way that writes rather than refuses.
+     */
+    private PurchaseOrderFullDto dtoOf(int purchaseOrderId,
+                                       List<PurchaseOrderFullDto.PurchaseOrderPaymentTermsDetailDto> rows) {
+        PurchaseOrderFullDto d = new PurchaseOrderFullDto();
+        d.setPaymentTermsDetail(rows);
+        List<Map<String, Object>> h = jdbcTemplate.queryForList(
+                "EXEC Sp_PurchaseOrder_GetAllMethod @Id=?, @Activity=?", purchaseOrderId, "ReadById");
+        if (h.isEmpty()) {
+            throw new IllegalArgumentException("Purchase Order " + purchaseOrderId + " was not found.");
+        }
+        Map<String, Object> head = h.get(0);
+        d.setPaymentTermId(intOf(ci(head, "PaymentTermsId")));
+        d.setDueDays(intOf(ci(head, "OrderDueDays")));
+        d.setDocDate(ymd(ci(head, "DocDate")));
+
+        List<PurchaseOrderFullDto.PurchaseOrderDetailItemDto> lines = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(
+                "EXEC Sp_PurchaseOrder_GetAllMethod @Id=?, @Activity=?",
+                purchaseOrderId, "ReadByPurchaseOrderHeaderId")) {
+            PurchaseOrderFullDto.PurchaseOrderDetailItemDto li =
+                    new PurchaseOrderFullDto.PurchaseOrderDetailItemDto();
+            Object amt = ci(r, "Amount");
+            li.setItemAmount(amt instanceof Number ? ((Number) amt).doubleValue() : 0d);
+            lines.add(li);
+        }
+        d.setLineItems(lines);
+        return d;
+    }
+
     /** Standalone persist for Payment Detail against an EXISTING, already-saved Purchase Order Id. */
     @Transactional
     public Map<String, Object> savePaymentTermsDetail(Integer purchaseOrderId, List<PurchaseOrderFullDto.PurchaseOrderPaymentTermsDetailDto> rows) {
@@ -1564,7 +1673,7 @@ public class PurchaseOrderFullService {
             if (purchaseOrderId == null || purchaseOrderId <= 0) {
                 throw new IllegalArgumentException("A saved Purchase Order Id is required before Payment Detail rows can be persisted.");
             }
-            persistPaymentTermsDetail(purchaseOrderId, rows);
+            persistPaymentTermsDetail(purchaseOrderId, dtoOf(purchaseOrderId, rows));
             response.put("success", true);
             response.put("message", "Payment Detail rows saved successfully.");
         } catch (Exception e) {
@@ -2105,7 +2214,7 @@ public class PurchaseOrderFullService {
             persistSupplierExpense(poMasterId, dto.getSupplierExpenses());
             persistExpensesChargeToProduct(poMasterId, dto.getExpensesChargeToProduct(),
                     dto.getSupplierId() != null ? dto.getSupplierId() : 0);
-            persistPaymentTermsDetail(poMasterId, dto.getPaymentTermsDetail());
+            persistPaymentTermsDetail(poMasterId, dto);
 
             response.put("success", true);
             response.put("id", poMasterId);

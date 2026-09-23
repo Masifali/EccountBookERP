@@ -290,17 +290,24 @@ public class BuyerInquiryBookingRepository {
     private static boolean nonZero(Integer v) { return v != null && v != 0; }
 
 
+    /**
+     * Same defect class as PurchaseOrderHeaderRepository.exec - see the note there.
+     *
+     * This used jdbc.query(sql, ResultSetExtractor), which goes through executeQuery() and so
+     * REQUIRES the statement to produce a result set. These *_InsertAndUpdate procedures return
+     * the id on their INSERT path; whether they also return one on their UPDATE path has not
+     * been verified, and Sp_PurchaseOrder_Update - the same shape - returns nothing, which made
+     * every Purchase Order Update fail with "The statement did not return a result set."
+     *
+     * ProcExec walks the whole result/update-count chain and returns the first scalar it finds
+     * or null, which is what the desktop's GenericProvider.SetProc does via ExecuteScalar().
+     * It behaves identically when a result set IS returned, so this is safe for the insert path
+     * that already works, and removes the latent failure on the update path.
+     *
+     * NOT RUNTIME TESTED on these two screens.
+     */
     private int scalarInt(String sql, Object... args) {
-        Integer v = jdbc.query(sql, rs -> {
-            if (rs.next()) {
-                Object o = rs.getObject(1);
-                if (o instanceof Number) return ((Number) o).intValue();
-                if (o != null) {
-                    try { return Integer.valueOf(o.toString().trim()); } catch (Exception ignored) {}
-                }
-            }
-            return 0;
-        }, args);
+        Integer v = com.mst.repositories.support.ProcExec.call(jdbc, sql, args);
         return v == null ? 0 : v;
     }
 
