@@ -433,6 +433,15 @@ function loadDropdowns() {
         applyHeaderSelections();
     });
 
+    // Location Types - LocationTypeFill() :840, usp_getLocationType (no parameters)
+    $.get('/api/purchase-order/location-types', function (data) {
+        const sel = $('#cmbLocationType');
+        sel.find('option:gt(0)').remove();
+        (data || []).forEach(l => sel.append(`<option value="${l.id}">${escapeHtml(l.name)}</option>`));
+        if ($.fn.select2) sel.trigger('change.select2');
+        applyHeaderSelections();
+    });
+
     // Delivery Terms
     $.get('/api/purchase-order/delivery-terms', function(data) {
         const sel = $('#cmbDeliveryTerm');
@@ -733,6 +742,7 @@ function applyHeaderSelections() {
     setComboValue('#cmbDeliveryTerm',    po.deliveryTermId);
     setComboValue('#cmbCommissionAgent', po.commissionAgentId);
     setComboValue('#cmbBrokerAccount',   po.brokerAccountId);
+    setComboValue('#cmbLocationType',    po.locationTypeId);   /* :3774 */
 
     /* The hidden mirrors the rest of the page still reads. */
     $('#hidSupplierId').val(po.supplierId || 0);
@@ -1282,13 +1292,26 @@ function onDueDaysChange() {
     calculatePaymentDueDate();
 }
 
+/* DueDaysCalculate() - PurchsaeOrder.cs :5351-5361.
+ *
+ *   Due Days entered  -> DueDate = DocDate + DueDays
+ *   Due Days EMPTY    -> DueDate = DateTime.Now          (:5360, the else branch)
+ *
+ * The port collapsed the empty case into parseInt('' || '0') = 0, which yields DocDate rather
+ * than today. They differ whenever the document is back-dated, and the desktop deliberately
+ * jumps to today to signal that no term has been entered yet. */
 function calculatePaymentDueDate() {
     const docDateStr = $('#txtDocDate').val();
-    const dueDays = parseInt($('#txtDueDays').val() || '0');
+    const raw = $('#txtDueDays').val();
+
+    if (raw === null || raw === undefined || String(raw).trim() === '') {
+        $('#txtPaymentDueDate').val(ymdLocal(new Date()));        /* :5360 */
+        return;
+    }
     if (!docDateStr) return;
 
     const dt = new Date(docDateStr);
-    dt.setDate(dt.getDate() + dueDays);
+    dt.setDate(dt.getDate() + (parseInt(raw, 10) || 0));          /* :5357 */
     $('#txtPaymentDueDate').val(ymdLocal(dt));
 }
 
@@ -1750,6 +1773,14 @@ function btnAddDetailRow_Click() {
      * Loading Location, Moisture and Remarks are deliberately NOT validated - the desktop does
      * not validate them either.
      * ------------------------------------------------------------------------------------ */
+    /* btnplus_Click :2603 - the FIRST thing the desktop refuses, before any field check:
+       once a supplier dispatch exists against this order, its lines came from that dispatch and
+       a manual row may not be added. ReadById already returns hasSupplierDispatch (:3779). */
+    if (loadedHeaderSelection && loadedHeaderSelection.hasSupplierDispatch) {
+        alert("You Can Not Add Manual Record. Because record against supplier dispatch already exist");
+        return;
+    }
+
     if (itemId <= 0) {
         alert("Item Field is Required");
         $('#txtItemDisplay').focus();
@@ -1861,8 +1892,29 @@ function btnAddDetailRow_Click() {
 
     renderDetailGrid();
     clearItemInputs();
+    exitDetailEditMode();          /* :2812-2814 - btnplus back, Update/Cancel away */
     calcCommission();
     calcBrokery();
+    recalculatePaymentAmounts();   /* :2823 PaymentAmountReCalculate() */
+}
+
+/* btnUpdateDetail_Click :2800 - commits the edit. The row-replacement logic already lives in
+   btnAddDetailRow_Click (it preserves purchaseOrderDetailId and excludes the edited row from the
+   duplicate check), and the desktop runs the same FormDetailValidation from both buttons, so
+   this delegates rather than duplicating it. */
+function btnUpdateDetail_Click() { btnAddDetailRow_Click(); }
+
+/* btnCancelUpdateDetial_Click - abandons the edit and restores the Add button. */
+function btnCancelUpdateDetial_Click() {
+    editingLineIdx = -1;
+    clearItemInputs();
+    exitDetailEditMode();
+}
+
+function exitDetailEditMode() {
+    $('#btnplus').show();
+    $('#btnUpdateDetail').hide();
+    $('#btnCancelUpdateDetial').hide();
 }
 
 function clearItemInputs() {
@@ -1881,11 +1933,28 @@ function clearItemInputs() {
     $('#cmbRateUom').empty().append('<option value="0">-- Select Item First --</option>');
 }
 
+/* grd_DoubleClick :2740 - opens a saved row for editing.
+ *
+ * The desktop's FIRST act is a guard the port did not have: a row whose
+ * flagForSupplierDispatch is set came from a supplier dispatch and may NOT be edited at all.
+ * ReadById already returns hasSupplierDispatch, so the same rule applies here.
+ *
+ * It then swaps the buttons - btnplus hidden, btnUpdateDetail and btnCancelUpdateDetial shown
+ * (:2786-2788). Both buttons already existed in the template but had no handlers and were never
+ * made visible, so they were dead markup and an edit could only be committed by pressing "+". */
 function editDetailRow(idx) {
     const item = lineItems[idx];
     if (!item) return;
 
+    if (loadedHeaderSelection && loadedHeaderSelection.hasSupplierDispatch) {
+        alert("You Can Not Add Manual Record. Because record against supplier dispatch already exist");
+        return;
+    }
+
     editingLineIdx = idx;
+    $('#btnplus').hide();
+    $('#btnUpdateDetail').show();
+    $('#btnCancelUpdateDetial').show();
     $('#hidItemId').val(item.itemId);
     $('#txtItemDisplay').val(`${item.itemCode} - ${item.itemName}`);
     $('#cmbCropYear').val(item.cropYearId || '0');
@@ -1909,7 +1978,9 @@ function editDetailRow(idx) {
     $('#cmbJobLot').val(item.jobLotId || 0);
     $('#hidLoadingCityId').val(item.loadingLocationCityId || 0);
     $('#txtLoadingCityDisplay').val(item.loadingLocationCityName || '');
-    $('#txtMoisture').val(item.moisturePercent || 14.0);
+    /* :2778 - the row's own Moisture, verbatim. The port defaulted an empty one to 14.0, a
+       value the desktop never supplies; a fabricated default silently becomes stored data. */
+    $('#txtMoisture').val(item.moisturePercent == null ? '' : item.moisturePercent);
     $('#txtLineRemarks').val(item.remarks || '');
 }
 
@@ -2964,7 +3035,9 @@ function buildPayload() {
         orderAmount:      lineItems.reduce((a, l) => a + (parseFloat(l.itemAmount) || 0), 0),
         /* LocationTypeId has no control on this page. The desktop reads cmbLocationType; the
            procedure defaults a 0 to 1 itself, so 0 is sent rather than a guessed value. */
-        locationTypeId:   loadedHeaderSelection?.locationTypeId || 0,
+        /* Was read off the LOADED record, so a NEW order always posted 0 - and
+           FormValidation :1906 requires it whenever the list has rows. Now the control. */
+        locationTypeId:   parseInt($('#cmbLocationType').val() || '0'),
         remarksHeader: $('#txtRemarksHeader').val(),
         lineItems: lineItems,
         emptyBags: emptyBagItems.map(function(b) {

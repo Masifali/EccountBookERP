@@ -306,6 +306,18 @@ public class PurchaseOrderRestController {
         return ResponseEntity.ok(purchaseOrderService.historyDetail(id == null ? 0 : id));
     }
 
+    /** LocationTypeFill() - usp_getLocationType (no parameters). */
+    @GetMapping("/location-types")
+    public ResponseEntity<List<Map<String, Object>>> getLocationTypes() {
+        return ResponseEntity.ok(purchaseOrderService.getLocationTypes());
+    }
+
+    /** CurrencyFill() - Sp_MultiCurrency_GetAllMethod @Activity='ReadAll'. */
+    @GetMapping("/currencies")
+    public ResponseEntity<List<Map<String, Object>>> getCurrencies() {
+        return ResponseEntity.ok(purchaseOrderService.getCurrencies());
+    }
+
     @GetMapping("/branches")
     public ResponseEntity<List<Map<String, Object>>> getBranches() {
         return ResponseEntity.ok(purchaseOrderService.getBranches());
