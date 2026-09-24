@@ -359,19 +359,12 @@ function cwsShowHistory() {
     cwsRun($('#btnShowHistory'), function () {
         var acc = parseInt($('#CmbWagesAccountHistory').val() || '0', 10) || 0;
         var con = parseInt($('#CmbContractoryHistory').val() || '0', 10) || 0;
-        if (!acc && !con) {
-            cwsMessage('Select a Wages Account or a Contractor to show history.', false);
-            return null;
-        }
-        return $.get(API + '/contractor-wise', { wagesAccountId: acc, contractorId: con }, function (rows) {
-            rows = rows || [];
-            var from = $('#histFromDate').val(), to = $('#histToDate').val();
-            var filtered = rows.filter(function (r) {
-                var d = String(cwsCol(r, 'EffectedDate') || '').substring(0, 10);
-                if (from && d && d < from) return false;
-                if (to && d && d > to) return false;
-                return true;
-            });
+        cwsMessage('', true);
+        return $.get(API + '/contractor-wise', {
+            wagesAccountId: acc, contractorId: con,
+            fromDate: $('#histFromDate').val(), toDate: $('#histToDate').val()
+        }, function (rows) {
+            var filtered = rows || [];
             var $b = $('#grdHistoryBody').empty();
             $('#histCount').text(filtered.length);
             if (!filtered.length) {

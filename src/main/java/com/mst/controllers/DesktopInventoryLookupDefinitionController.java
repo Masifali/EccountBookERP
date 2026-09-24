@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 public class DesktopInventoryLookupDefinitionController {
  private final DesktopInventoryLookupDefinitionService service;
  public DesktopInventoryLookupDefinitionController(DesktopInventoryLookupDefinitionService service){this.service=service;}
- @GetMapping("/inventory/lookup-definitions") public String page(){return "inventory/lookup_definitions";}
+ @GetMapping({"/inventory/lookup-definitions", "/master-data-definition", "/lookups/master-data-definition", "/lookups/master-data"}) public String page(){return "inventory/lookup_definitions";}
  @GetMapping("/api/inventory/lookup-definitions/types") @ResponseBody public List<Map<String,Object>> types(){return service.types();}
  @GetMapping("/api/inventory/lookup-definitions/history") @ResponseBody public List<Map<String,Object>> history(){return service.history();}
  @GetMapping("/api/inventory/lookup-definitions/code") @ResponseBody public Map<String,Object> code(@RequestParam int type){return service.code(type);}

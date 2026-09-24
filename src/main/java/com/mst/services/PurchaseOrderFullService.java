@@ -725,13 +725,110 @@ public class PurchaseOrderFullService {
         return result;
     }
 
+    /**
+     * combojoblotfill() - PurchsaeOrder.cs :5196, via
+     * JobLotsAllocationToBranch.GetJobLotsAllocatedToBranchByBranchId (BLL 0019):
+     *
+     *     EXEC [dbo].[USP_GetJobLotsAllocatedToBranch] @OrganizationId, @CompanyId, @BranchId
+     *
+     * @BranchId is GUARDED in the BLL (added only when BranchesId is set) and is SINGULAR -
+     * not @BranchesId, which is the property it is filled from.
+     *
+     * This was `SELECT Id, JobLotDescription FROM JobLot ORDER BY JobLotDescription` - every
+     * Job/Lot in the database, ignoring branch allocation entirely. The desktop offers only the
+     * ones allocated to the signed-in user's branch, so the web was offering Job/Lots the
+     * operator is not entitled to pick and which the desktop would never show. Same defect class
+     * as the Branch list (see PO-HISTORY-GRID-HEADER-AND-BODY-DISAGREED.md).
+     *
+     * :5210-5218 - when the previously selected Job/Lot is NOT in the returned set the desktop
+     * CLEARS the combo rather than leaving a stale value; the page does that from `id`/`description`
+     * as before, so the shape of the response is unchanged.
+     */
     public List<Map<String, Object>> getJobLots() {
-        try {
-            String sql = "SELECT Id as id, JobLotDescription as description FROM JobLot ORDER BY JobLotDescription";
-            return jdbcTemplate.queryForList(sql);
-        } catch (Exception e) {
-            return Collections.emptyList();
+        int branchId = 0;
+        try { branchId = currentUserContext.currentBranchId(); } catch (Exception ignored) { }
+
+        StringBuilder sql = new StringBuilder(
+                "EXEC [dbo].[USP_GetJobLotsAllocatedToBranch] @OrganizationId=?, @CompanyId=?");
+        List<Object> args = new ArrayList<>();
+        args.add(currentUserContext.currentOrganizationId());
+        args.add(currentUserContext.currentCompanyId());
+        if (branchId != 0) { sql.append(", @BranchId=?"); args.add(branchId); }
+
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(sql.toString(), args.toArray())) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id",          intOf(ci(r, "Id")));
+            m.put("description", strOf(ci(r, "JobLotDescription")));
+            out.add(m);
         }
+        return out;
+    }
+
+    /**
+     * GetLabDetailByItemId() - PurchsaeOrder.cs :2290, via
+     * InvLabAnalysisStandardDeductionPolicyHeader.ReadByItemId (BLL 0398):
+     *
+     *     EXEC Sp_InvLabAnalysisStandardDeductionPolicyHeader_GetAllMethod
+     *          @OrganizationId, @CompanyId, @PolicyApplyOn, @ItemId (guarded),
+     *          @FromDate (guarded), @Activity='ReadByItemId'
+     *
+     * @PolicyApplyOn is the literal string "PurchaseOrder" on this form.
+     *
+     * NONE of this existed on the web - the "Lab Deduction Standard" tab was an empty grid
+     * reading "Record: 0 Of 0", because nothing ever populated it. The desktop fills it whenever
+     * a detail line is added or updated, keyed on that line's item, replacing any rows already
+     * held for the same item (:2311-2318).
+     *
+     * Columns the desktop reads, in its own order (:2321): headerId, detailId, ItemId,
+     * AnalysisParameterId, ItemName, AnalysisPerameter, RangeFrom, RangeTo, DeductFrom, WeightKg,
+     * DedValue - and DedValue AGAIN as the twelfth value, which is the editable "deduction"
+     * column seeded from the standard. That duplication is deliberate on the desktop and is
+     * reproduced rather than tidied away.
+     */
+    public List<Map<String, Object>> getLabDeductionStandard(int itemId) {
+        StringBuilder sql = new StringBuilder(
+                "EXEC Sp_InvLabAnalysisStandardDeductionPolicyHeader_GetAllMethod "
+              + "@OrganizationId=?, @CompanyId=?, @PolicyApplyOn=?");
+        List<Object> args = new ArrayList<>();
+        args.add(currentUserContext.currentOrganizationId());
+        args.add(currentUserContext.currentCompanyId());
+        args.add(LAB_POLICY_APPLY_ON);
+        if (itemId != 0) { sql.append(", @ItemId=?"); args.add(itemId); }
+        sql.append(", @Activity=?");
+        args.add("ReadByItemId");
+
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(sql.toString(), args.toArray())) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("headerId",            intOf(ci(r, "headerId")));
+            m.put("detailId",            intOf(ci(r, "detailId")));
+            m.put("itemId",              intOf(ci(r, "ItemId")));
+            m.put("analysisParameterId", intOf(ci(r, "AnalysisParameterId")));
+            m.put("itemName",            strOf(ci(r, "ItemName")));
+            m.put("analysisParameter",   strOf(ci(r, "AnalysisPerameter")));  /* desktop's spelling */
+            m.put("rangeFrom",           ci(r, "RangeFrom"));
+            m.put("rangeTo",             ci(r, "RangeTo"));
+            m.put("deductFrom",          strOf(ci(r, "DeductFrom")));
+            m.put("weightKg",            ci(r, "WeightKg"));
+            m.put("standardValue",       ci(r, "DedValue"));
+            m.put("deductionValue",      ci(r, "DedValue"));   /* :2321 - seeded from the standard */
+            out.add(m);
+        }
+        return out;
+    }
+
+    /** :2296 - the policy is looked up for this form only. */
+    private static final String LAB_POLICY_APPLY_ON = "PurchaseOrder";
+
+    /**
+     * DefaultNoOfDecimalPointsForFcyAmount - CommonServices :5440, used by
+     * txtExchangeRate_TextChanged to round each line's FcyAmount.
+     */
+    public int fcyAmountDecimals() {
+        return decimalPoints(currentUserContext.currentOrganizationId(),
+                             currentUserContext.currentCompanyId(),
+                             "DefaultNoOfDecimalPointsForFcyAmount", 2);
     }
 
     /**
@@ -1485,6 +1582,61 @@ public class PurchaseOrderFullService {
         }
         return 0;
     }
+
+    /**
+     * grdlab -> PurchaseOrderLabDeduction. Desktop: PurchsaeOrder.cs :3510-3524 builds the list,
+     * DAL 0448:84-91 writes each row with GenericProvider.SetProc(..., "Sp_PurchaseOrderLabDeduction_Insert").
+     *
+     * SetProc reflects over the model's NON-VIRTUAL properties in DECLARATION ORDER, so the
+     * parameter list below is Architecture.Model.Inventory.PurchaseOrderLabDeduction's own field
+     * order - not alphabetical, and not the order the save block happens to assign them in.
+     * AnalysisItem and ItemName are `virtual` and are therefore NOT parameters.
+     *
+     * Delete-then-reinsert matches the other child tables and Sp_PurchaseOrder_Update's own
+     * DELETE for this table.
+     *
+     * Two CLR defaults worth naming: the desktop's save block never assigns Id or
+     * PurchaseOrderDetailId on these rows, so both travel as 0 - not NULL. Sending NULL for a
+     * C# value type is the defect class recorded in PO-SAVE-COMMRATE-NULL.
+     */
+    private static final String SQL_LAB_DEDUCTION_INSERT =
+            "EXEC Sp_PurchaseOrderLabDeduction_Insert "
+          + "@DeductionValue=?, @RangeFrom=?, @RangeTo=?, @StandardValue=?, @WeightKgs=?, "
+          + "@AnalysisParameterId=?, @Id=?, @InvLabAnalysisStandardDeductionPolicyHeaderId=?, "
+          + "@ItemId=?, @PurchaseOrderDetailId=?, @PurchaseOrderId=?, @DeductFrom=?";
+
+    private void persistLabDeduction(int purchaseOrderId,
+                                     List<PurchaseOrderFullDto.PurchaseOrderLabDeductionDto> rows) {
+        jdbcTemplate.update("DELETE FROM PurchaseOrderLabDeduction WHERE PurchaseOrderId=?", purchaseOrderId);
+        if (rows == null) return;
+        for (PurchaseOrderFullDto.PurchaseOrderLabDeductionDto r : rows) {
+            ProcExec.call(jdbcTemplate, SQL_LAB_DEDUCTION_INSERT,
+                    dbl(r.getDeductionValue()), dbl(r.getRangeFrom()), dbl(r.getRangeTo()),
+                    dbl(r.getStandardValue()), dbl(r.getWeightKgs()),
+                    zero(r.getAnalysisParameterId()),
+                    0,                                              /* :3513 - never assigned */
+                    zero(r.getInvLabAnalysisStandardDeductionPolicyHeaderId()),
+                    zero(r.getItemId()),
+                    0,                                              /* PurchaseOrderDetailId - idem */
+                    purchaseOrderId,
+                    r.getDeductFrom());
+        }
+    }
+
+    /** Sp_PurchaseOrder_GetAllMethod @Activity='ReadPurchaseOrderLabDeductionByHeaderId' (DAL 0448:285). */
+    private List<Map<String, Object>> getLabDeductionByHeaderId(int purchaseOrderId) {
+        try {
+            return jdbcTemplate.queryForList(
+                    "EXEC Sp_PurchaseOrder_GetAllMethod @Id=?, @Activity=?",
+                    purchaseOrderId, "ReadPurchaseOrderLabDeductionByHeaderId");
+        } catch (Exception e) {
+            LAB_LOG.warn("Lab deduction rows could not be read for Purchase Order {}", purchaseOrderId, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private static final org.slf4j.Logger LAB_LOG =
+            org.slf4j.LoggerFactory.getLogger(PurchaseOrderFullService.class.getName() + ".LabDeduction");
 
     /**
      * Real delete-then-reinsert persistence for Payment Detail rows, ditto Sp_PurchaseOrder_Update's
@@ -2485,6 +2637,7 @@ public class PurchaseOrderFullService {
             persistExpensesChargeToProduct(poMasterId, dto.getExpensesChargeToProduct(),
                     dto.getSupplierId() != null ? dto.getSupplierId() : 0);
             persistPaymentTermsDetail(poMasterId, dto);
+            persistLabDeduction(poMasterId, dto.getLabDeductions());
 
             response.put("success", true);
             response.put("id", poMasterId);
@@ -2696,6 +2849,7 @@ public class PurchaseOrderFullService {
         head.put("supplierExpenses",        getSupplierExpenseByHeaderId(id));
         head.put("expensesChargeToProduct", getExpensesChargeToProductByHeaderId(id));
         head.put("paymentTermsDetail",      getPaymentTermsDetailByHeaderId(id));
+        head.put("labDeductions",           getLabDeductionByHeaderId(id));
         return head;
     }
 
@@ -3052,15 +3206,45 @@ public class PurchaseOrderFullService {
         return false;
     }
 
+    /**
+     * The desktop Purchase Order form CANNOT delete a Purchase Order.
+     *
+     * PurchsaeOrder.cs:3881-3883 is the whole of btnDelete_Click:
+     *
+     *     private void btnDelete_Click(object sender, EventArgs e)
+     *     {
+     *     }
+     *
+     * The button exists and :629 even enables it from formright.DoHaveCanDelete, but the handler
+     * body is empty - clicking Delete on the desktop form does nothing at all. There is no
+     * Sp_PurchaseOrder_Delete in GoldenAcedb either (verified against the full procedure dump,
+     * D:\CShapEccorErp\procdure.sql - the only PO deletion procedure is
+     * USP_DeletePurchaseOrderDetailIfNotExistInGrn, which removes a single DETAIL line, never a
+     * header). Deleting a Purchase Order is not a capability this ERP exposes.
+     *
+     * What used to be here was a fabricated raw-SQL delete with no desktop counterpart. Besides
+     * having no source to port from, it was wrong on its own terms:
+     *
+     *   - it removed only PurchaseOrderDetail and PurchaseOrderEmptyBags, orphaning rows in
+     *     PurchaseOrderExpensesChargeToProduct, PurchaseOrderLabDeduction,
+     *     PurchaseOrderSupplierExpense, PurchaseOrderPaymentTermsDetail,
+     *     PurchaseOrderSupplierDispatchDetail and AdvancePaymentAdjustment - the six further
+     *     children Sp_PurchaseOrder_Update:219107-219114 knows this header owns;
+     *   - it applied no tenancy filter, so any id in any organization/company was deletable;
+     *   - it had none of the GRN / Purchase Invoice consumption guards that
+     *     persistPurchaseOrderDetail() applies before removing even one line;
+     *   - and it swallowed every failure into `return false`, so a partial delete reported the
+     *     same thing as a refused one.
+     *
+     * Reachable over DELETE /api/purchase-order/{id}, that was a crafted request doing
+     * irreversible damage to live data that no desktop user can do. The faithful port of an empty
+     * handler is to refuse, which is what this now does.
+     */
     public boolean deletePurchaseOrder(Integer id) {
-        try {
-            jdbcTemplate.update("DELETE FROM PurchaseOrderDetail WHERE PurchaseOrderId = ?", id);
-            jdbcTemplate.update("DELETE FROM PurchaseOrderEmptyBags WHERE PurchaseOrderId = ?", id);
-            jdbcTemplate.update("DELETE FROM PurchaseOrder WHERE Id = ?", id);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        throw new UnsupportedOperationException(
+                "Purchase Orders cannot be deleted. The desktop form's Delete button does nothing "
+              + "(PurchsaeOrder.cs btnDelete_Click is empty) and GoldenAcedb has no Purchase Order "
+              + "delete procedure. Correct the order with Update, or close it via Order Status.");
     }
 
     // ==========================================================================================

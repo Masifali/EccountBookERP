@@ -273,16 +273,21 @@ public class ContractorWagesScheduleService {
      * simply omits a zero parameter.
      */
     public List<Map<String, Object>> getSchedulesContractorWise(int wagesAccountId, int contractorId) {
-        try {
-            return jdbcTemplate.queryForList(SQL_SCHEDULES_CONTRACTOR_WISE,
-                    currentUserContext.currentOrganizationId(),
-                    currentUserContext.currentCompanyId(),
-                    wagesAccountId, contractorId, 1, "ReadAll");
-        } catch (Exception e) {
-            LOG.error("Contractor-wise schedule grid failed (account {}, contractor {})",
-                      wagesAccountId, contractorId, e);
-            return Collections.emptyList();
-        }
+        return getContractorWiseHistory(wagesAccountId, contractorId, null, null);
+    }
+
+    /** Desktop BindGridHistory: optional filters are omitted, not sent as zero. */
+    public List<Map<String, Object>> getContractorWiseHistory(int wagesAccountId, int contractorId,
+                                                              String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder("EXEC dbo.Sp_InvContractorWagesSchedule_GetAllMethod @OrganizationId=?, @CompanyId=?, @ActionId=1, @Activity='ReadAll'");
+        List<Object> args = new ArrayList<>();
+        args.add(currentUserContext.currentOrganizationId());
+        args.add(currentUserContext.currentCompanyId());
+        if (wagesAccountId > 0) { sql.append(", @InvConractorWagesAccountsId=?"); args.add(wagesAccountId); }
+        if (contractorId > 0) { sql.append(", @ContractorId=?"); args.add(contractorId); }
+        if (fromDate != null && !fromDate.isBlank()) { sql.append(", @EffectedDate=?"); args.add(java.sql.Date.valueOf(fromDate)); }
+        if (toDate != null && !toDate.isBlank()) { sql.append(", @EffectedDateTo=?"); args.add(java.sql.Date.valueOf(toDate)); }
+        return jdbcTemplate.queryForList(sql.toString(), args.toArray());
     }
 
     /**

@@ -103,8 +103,8 @@ public class GearMenuController {
         items.add(item("SQL Query Executer", "SqlLogin -> SqlQueryExecuter", null,
                 "Runs free-text SQL against the live database. Not ported - ask before I build it."));
         /* btnWeighBridge_WeightUpdate_Click -> WeighBridge_WeightUpdate */
-        items.add(item("WeighBridge_WeightsUpdate", "WeighBridge_WeightUpdate", null,
-                "Not ported yet."));
+        items.add(item("WeighBridge_WeightsUpdate", "WeighBridge_WeightUpdate",
+                "/weighbridge/weighbridge-weights-update", null));
         /* BtnThemeForm_Click -> ThemeSelectionForm */
         items.add(item("Theme", "ThemeSelectionForm", null, "Not ported yet."));
         /* btnAccountMovement_Click -> AccountToAccountTransfer */

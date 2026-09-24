@@ -218,6 +218,35 @@ public class ProductionJobOrderMainController {
         }
     }
 
+    // ------------------------------------------------------------------ print / attachments
+
+    /** PrintJobOrder620:14005 — the "No Record Found For Display" pre-check. The PDF itself is
+     *  /api/reports/jo-620/print.pdf. */
+    @GetMapping(API + "/print-check")
+    @ResponseBody
+    public ResponseEntity<?> printCheck(@RequestParam int id) {
+        try {
+            return ResponseEntity.ok(service.printCheck(id));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(fail(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(fail(msg(e, "Print failed.")));
+        }
+    }
+
+    /** DataGridHistory_LinkClicked:2082 — the Attachments link column. */
+    @GetMapping(API + "/attachments")
+    @ResponseBody
+    public ResponseEntity<?> attachments(@RequestParam int id) {
+        try {
+            return ResponseEntity.ok(service.attachments(id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(fail(msg(e, "Could not read the attachments.")));
+        }
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static String msg(Exception e, String fallback) {

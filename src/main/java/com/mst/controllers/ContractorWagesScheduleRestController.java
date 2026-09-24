@@ -68,8 +68,10 @@ public class ContractorWagesScheduleRestController {
     @GetMapping("/contractor-wise")
     public ResponseEntity<List<Map<String, Object>>> getContractorWise(
             @RequestParam(defaultValue = "0") int wagesAccountId,
-            @RequestParam(defaultValue = "0") int contractorId) {
-        return ResponseEntity.ok(scheduleService.getSchedulesContractorWise(wagesAccountId, contractorId));
+            @RequestParam(defaultValue = "0") int contractorId,
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate) {
+        return ResponseEntity.ok(scheduleService.getContractorWiseHistory(wagesAccountId, contractorId, fromDate, toDate));
     }
 
     /** CommonServices.GetWagesRate, used to auto-fill Company Rate (form :379-400) */

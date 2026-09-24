@@ -62,6 +62,18 @@ public class ProductionReportsController {
         }
     }
 
+    /** From-date default and amount format - InitializeComponentMethod:122. */
+    @GetMapping("/api/production/reports/job-order-summary/defaults")
+    @ResponseBody
+    public ResponseEntity<?> jobOrderSummaryDefaults() {
+        try {
+            return ResponseEntity.ok(service.jobOrderSummaryDefaults());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(fail(e.getMessage() == null ? "Defaults failed." : e.getMessage()));
+        }
+    }
+
     /** The drill-down behind a summary row. */
     @GetMapping("/api/production/reports/job-order-summary/detail")
     @ResponseBody

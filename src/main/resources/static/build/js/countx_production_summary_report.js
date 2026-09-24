@@ -23,6 +23,8 @@
 
     /* The last result, kept so CSV export cannot disagree with what is on screen. */
     var data = { values: [], schedule: [], recovery: [], docWise: [] };
+    var lastShow = null;        /* the parameters of the last Show - what 602/625 print */
+    var K = window.ReportKit;
     var branches = [];          /* [{BranchId, BranchName}] from the user's own allocation */
     var jobOrders = [];         /* rows of the job-order picker, with their info columns */
 
@@ -130,7 +132,28 @@
         var b = $id('branchBox');
         if (!b.classList.contains('is-open')) return;
         b.classList.remove('is-open');
+        /* cmbBranchName_Leave:228 - with no branch the job-order picker is simply cleared; the
+           job-order procedure requires @BranchesIds, so no request is made. */
+        if (!branchCsv()) {
+            jobOrders = [];
+            $id('cmbJobOrderNo').innerHTML = '';
+            $id('cmbPlantName').innerHTML = '';
+            return;
+        }
         loadJobOrders();
+    }
+
+    function allBranches(on) {
+        $id('branchRows').querySelectorAll('input[type="checkbox"]').forEach(function (c) {
+            if (c.closest('label').style.display !== 'none') c.checked = on;
+        });
+        renderBranchText();
+    }
+    function filterBranches() {
+        var f = $id('txtBranchFilter').value.trim().toLowerCase();
+        $id('branchRows').querySelectorAll('label').forEach(function (l) {
+            l.style.display = !f || l.textContent.toLowerCase().indexOf(f) >= 0 ? '' : 'none';
+        });
     }
 
     function renderBranches(defaultBranchId) {
@@ -202,7 +225,6 @@
 
     /** cmbsummeryJobOrderNo_TextChanged:291 plus SummaryJobOrderInformationFill:588. */
     function jobOrderChanged() {
-        fillJobOrderInfo();
         var id = val('cmbJobOrderNo');
         var plant = $id('cmbPlantName');
         if (!id) { plant.innerHTML = ''; return; }
@@ -211,11 +233,14 @@
             .then(function (rows) {
                 var list = rows || [];
                 /* BindDDLNew — one visible column, and no blank row is added here either. */
-                plant.innerHTML = list.map(function (r) {
+                /* BindDDLNew(..., false) sets no value, so PlantId is 0 and @PlantId is not
+                   sent - "all plants" until one is picked; AllowNull lets it be cleared again.
+                   A blank option stands for that unset value. */
+                plant.innerHTML = '<option value=""></option>' + list.map(function (r) {
                     return '<option value="' + esc(ci(r, 'PlantId')) + '">'
                          + esc(ci(r, 'PlantName')) + '</option>';
                 }).join('');
-                if (!list.length) plant.innerHTML = '';
+                plant.value = '';
             }).catch(function (e) { plant.innerHTML = ''; box(e.message); });
     }
 
@@ -236,14 +261,14 @@
         show($id('fldStartDate'), true);
         $id('txtJobOrderNo').value = ci(r, 'JobOrderNo');
         $id('txtJobOrderDocNo').value = ci(r, 'JobOrderDocNo');
-        $id('txtJobStartedDate').value = shortDate(ci(r, 'JobStartDate'));
+        $id('txtJobStartedDate').value = K.dMMMyy(ci(r, 'JobStartDate'));
         $id('txtJobOrderStatus').value = ci(r, 'JobOrderStatus');
         var settled = ci(r, 'SettledStatus');
         $id('txtSettlementStatus').value = settled;
         /* :607 — the settlement date shows only for "Settled". */
         var isSettled = String(settled).trim() === 'Settled';
         show($id('fldSettlementDate'), isSettled);
-        $id('txtSettlementDate').value = isSettled ? shortDate(ci(r, 'ApprovedDate')) : '';
+        $id('txtSettlementDate').value = isSettled ? K.dMMMyy(ci(r, 'ApprovedDate')) : '';
         $id('txtLotCode').value = ci(r, 'LotCode');
     }
 
@@ -251,7 +276,11 @@
         var on = $id('chk' + which + 'Date').checked;
         var d = $id('dat' + which + 'Date');
         d.disabled = !on;
-        if (!on) d.value = '';
+        /* A ticked DateTimePicker already holds a date (today by default); unticking keeps it. */
+        if (on && !d.value) d.value = iso(new Date());
+    }
+    function iso(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
     // ------------------------------------------------------------------ the four grids
@@ -272,7 +301,13 @@
             }
 
             $id('lblStatus').textContent = '';
+            var args = { id: parseInt(id, 10), plantId: parseInt(val('cmbPlantName') || '0', 10),
+                         branchesIds: branchCsv() ? ',' + branchCsv() : '' };
+            if ($id('chkFromDate').checked && val('datFromDate')) args.fromDate = val('datFromDate');
+            if ($id('chkToDate').checked && val('datToDate')) args.toDate = val('datToDate');
+            fillJobOrderInfo();
             return getJson(api + '?' + q.join('&')).then(function (d) {
+                lastShow = args;
                 data = {
                     values:   (d && d.values)   || [],
                     schedule: (d && d.schedule) || [],
@@ -282,14 +317,16 @@
                 show($id('noRateNote'), !(d && d.canSeeRateAndAmount));
                 renderFlat('values', data.values, null);
                 renderFlat('schedule', data.schedule, SCHEDULE_HIDDEN);
-                renderGrouped('recovery', data.recovery);
-                renderGrouped('docWise', data.docWise);
+                renderGrouped('recovery', data.recovery, true);
+                renderGrouped('docWise', data.docWise, false);
                 $id('lblStatus').textContent = data.values.length + ' summary row(s)';
             }).catch(function (e) {
                 data = { values: [], schedule: [], recovery: [], docWise: [] };
+                lastShow = null;
                 ['values', 'schedule', 'recovery', 'docWise'].forEach(function (k) {
                     $id(k + 'Head').innerHTML = '';
                     $id(k + 'Body').innerHTML = '';
+                    if ($id(k + 'Foot')) $id(k + 'Foot').innerHTML = '';
                 });
                 box(e.message);
             });
@@ -303,8 +340,9 @@
         });
     }
 
+    /* GridWrappingAndColumnSettings(grd, 2, 2): numbers "#,##0.##"; DocDate a short date. */
     function cell(col, v) {
-        var text = (col === 'DocDate') ? shortDate(v) : v;
+        var text = (col === 'DocDate') ? shortDate(v) : (numeric(col) && col !== 'SortNo' && col !== 'DocNo' ? K.num(v, 2) : v);
         return '<td' + (numeric(col) ? ' class="num"' : '') + '>' + esc(text) + '</td>';
     }
 
@@ -329,14 +367,17 @@
      * column. So the group header carries the value, the column itself is not drawn, and each
      * group ends with a totals line over its numeric columns.
      */
-    function renderGrouped(key, rows) {
-        var head = $id(key + 'Head'), body = $id(key + 'Body');
+    function renderGrouped(key, rows, hideGroupColumn) {
+        var head = $id(key + 'Head'), body = $id(key + 'Body'), foot = $id(key + 'Foot');
+        if (foot) foot.innerHTML = '';
         if (!rows.length) {
             head.innerHTML = '';
             body.innerHTML = '<tr><td>No records</td></tr>';
             return;
         }
-        var cols = visibleColumns(rows, [GROUP_COLUMN]);
+        /* SummeryHistoryGridSetting hides TransactionType after grouping; grdDocWiseSummerySetting
+           groups by it but leaves it visible (:822-826). */
+        var cols = visibleColumns(rows, hideGroupColumn ? [GROUP_COLUMN] : []);
         head.innerHTML = cols.map(function (c) {
             return '<th' + (numeric(c) ? ' class="num"' : '') + '>' + esc(c) + '</th>';
         }).join('');
@@ -350,6 +391,8 @@
             if (!Object.prototype.hasOwnProperty.call(buckets, k)) { buckets[k] = []; order.push(k); }
             buckets[k].push(r);
         });
+        /* Groups.Add sorts the groups ascending by value. */
+        order.sort(function (a, b) { return a < b ? -1 : a > b ? 1 : 0; });
 
         var html = [];
         order.forEach(function (k) {
@@ -364,10 +407,20 @@
                 if (!numeric(c)) return '<td></td>';
                 var t = 0;
                 bucket.forEach(function (r) { t += num(r[c]); });
-                return '<td class="num">' + esc(t.toFixed(2)) + '</td>';
+                return '<td class="num">' + esc(K.num(t, 2)) + '</td>';
             }).join('') + '</tr>');
         });
         body.innerHTML = html.join('');
+        /* The bottom-fixed grand total (:1108-1109, :1149-1150). */
+        if (foot) {
+            foot.innerHTML = '<tr>' + cols.map(function (c, i) {
+                if (i === 0) return '<td>Grand Total</td>';
+                if (!numeric(c) || c === 'SortNo' || c === 'DocNo') return '<td></td>';
+                var t = 0;
+                rows.forEach(function (r) { t += num(r[c]); });
+                return '<td class="num">' + esc(K.num(t, 2)) + '</td>';
+            }).join('') + '</tr>';
+        }
     }
 
     // ------------------------------------------------------------------ export / chrome
@@ -417,13 +470,76 @@
         if (el) el.classList.toggle('is-fullscreen');
     }
 
+    // ------------------------------------------------------------------ toolbar
+
+    /** toolStripButton1_Click:305 - clears the job order and the two lower grids, focuses it. */
+    function reset() {
+        $id('cmbJobOrderNo').value = '';
+        $id('cmbPlantName').innerHTML = '';
+        ['recovery', 'docWise'].forEach(function (k) {
+            $id(k + 'Head').innerHTML = ''; $id(k + 'Body').innerHTML = ''; $id(k + 'Foot').innerHTML = '';
+        });
+        data.recovery = []; data.docWise = [];
+        focusJobOrder();
+    }
+
+    /** btnRefreshSummary_Click:900 - JobOrderNoFillForSummery only. */
+    function refresh() { return busy('btnRefresh', function () { return branchCsv() ? loadJobOrders() : null; }); }
+
+    function focusJobOrder() {
+        var el = $id('cmbJobOrderNo');
+        var host = el.nextElementSibling && el.nextElementSibling.querySelector ? el.nextElementSibling.querySelector('input') : null;
+        (host || el).focus();
+    }
+
+    function recoveryArgs() {
+        /* ProductionRecoveryReportParams:411 - dates go only as a pair (useDateFilter && both). */
+        var a = { id: parseInt(val('cmbJobOrderNo') || '0', 10), plantId: parseInt(val('cmbPlantName') || '0', 10),
+                  branchesIds: branchCsv() ? ',' + branchCsv() : '' };
+        if ($id('chkFromDate').checked && $id('chkToDate').checked && val('datFromDate') && val('datToDate')) {
+            a.fromDate = val('datFromDate'); a.toDate = val('datToDate');
+        }
+        return a;
+    }
+
+    /** btnProductionRecoveryReport_Click / BtnPrintWithLab602_01_Click. */
+    function print602(key, btn) {
+        return window.CrystalPrint.open(key, recoveryArgs(), btn);
+    }
+
+    function toggleInputMenu() { $id('ddInput').classList.toggle('is-open'); }
+
+    /** tsDropDowngrnWiseInput_DropDownItemClicked:320 - runs only when a job order is chosen. */
+    function printInputDetail() {
+        $id('ddInput').classList.remove('is-open');
+        var id = parseInt(val('cmbJobOrderNo') || '0', 10);
+        if (id <= 0) return;
+        var a = { id: id, branchesIds: branchCsv() ? ',' + branchCsv() : '' };
+        if ($id('chkFromDate').checked && val('datFromDate')) a.fromDate = val('datFromDate');
+        if ($id('chkToDate').checked && val('datToDate')) a.toDate = val('datToDate');
+        return window.CrystalPrint.open('prod-607', a, 'btnInputDetail');
+    }
+
+    /** btnPrintForDetailGridData_Click:909 - the last doc-wise result. */
+    function print625() {
+        if (!lastShow || !data.docWise.length) { box('Record Not Found For DisPlay'); return; }
+        return window.CrystalPrint.open('ps-625', lastShow, 'btnPrint625');
+    }
+
+    function tab(paneId) {
+        ['recoveryBox', 'docWiseBox'].forEach(function (p) { $id(p).classList.toggle('is-active', p === paneId); });
+        $id('psTabs').querySelectorAll('.ps-tab').forEach(function (t) {
+            t.classList.toggle('is-active', t.getAttribute('data-pane') === paneId);
+        });
+    }
+
     function boot() {
         /* ProductionSummaryReport_KeyDown:313 — Enter moves on rather than submitting. */
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && e.target && e.target.tagName !== 'BUTTON'
-                && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-            }
+        K.enterToTab();
+        K.keys({ 'ctrl+f5': focusJobOrder });   /* KeyDown:294 - Enter = Tab, Ctrl+F5 = Job Order */
+        document.addEventListener('click', function (e) {
+            var dd = $id('ddInput');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('is-open');
         });
         document.addEventListener('click', function (e) {
             var b = $id('branchBox');
@@ -431,7 +547,7 @@
         });
         toggleDate('From');
         toggleDate('To');
-        loadBranches().catch(function (e) { box(e.message); });
+        loadBranches().then(focusJobOrder).catch(function (e) { box(e.message); });
     }
 
     window.ProductionSummary = {
@@ -440,7 +556,10 @@
         toggleBranches: toggleBranches,
         toggleDate: toggleDate,
         exportCsv: exportCsv,
-        toggleFullscreen: toggleFullscreen
+        toggleFullscreen: toggleFullscreen,
+        allBranches: allBranches, filterBranches: filterBranches,
+        reset: reset, refresh: refresh, print602: print602, toggleInputMenu: toggleInputMenu,
+        printInputDetail: printInputDetail, print625: print625, tab: tab
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

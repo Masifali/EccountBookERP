@@ -13,7 +13,7 @@ public class SaleGdnService {
     public SaleGdnService(SaleGdnRepository repo,CurrentUserContext context){this.repo=repo;this.context=context;}
     private UserAccount user(){return context.requireAccountingUser();}
     public Map<String,Object> initial(){return repo.initial(user(),context.currentFinancialYearId());}
-    public List<Map<String,Object>> uoms(int item){if(item<=0)throw new IllegalArgumentException("Select Item first");return repo.uoms(item);}
+    public List<Map<String,Object>> uoms(int item){if(item<=0)throw new IllegalArgumentException("Select Item first");return repo.uoms(context.requireAccountingUser(),item);}
     public List<Map<String,Object>> advanceOrders(int customer,int gdn){if(customer<=0)return List.of();return repo.advanceOrders(user(),context.currentFinancialYearId(),customer,gdn);}
     public List<Map<String,Object>> deliveryOrder(int customer,int id){if(customer<=0||id<=0)return List.of();return repo.deliveryOrder(user(),customer,id);}
     public List<Map<String,Object>> gatePassCustomers(int id){if(id<=0)return List.of();return repo.gatePassCustomers(user(),id);}

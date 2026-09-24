@@ -8,7 +8,6 @@
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
     <style>
-        html, body { overflow-x: hidden; }
         body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
         .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 4px; }
         .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
@@ -51,6 +50,18 @@
         .win-grid-toolbar { display: flex; align-items: center; justify-content: space-between; background: #e0f2f1; border-bottom: 1px solid #7a9a9e; padding: 2px 6px; font-size: 8.5pt; font-weight: 600; color: #004d40; }
         .win-grid-toolbar button { background: #fff; border: 1px solid #7a9a9e; font-size: 8pt; padding: 1px 6px; cursor: pointer; }
         .win-grid-container.is-fullscreen { position: fixed; inset: 0; z-index: 10000; background: #fff; border: none; padding: 6px; display: flex; flex-direction: column; margin: 0; }
+        .win-grid tfoot td { background: #dbd6c6; font-weight: 700; border-top: 2px solid #999; }
+        .win-dd { position: relative; }
+        .win-dd-menu { position: absolute; top: 100%; left: 0; z-index: 950; background: #fff; border: 1px solid #999; box-shadow: 0 3px 8px rgba(0,0,0,.25); min-width: 280px; display: none; }
+        .win-dd.is-open .win-dd-menu { display: block; }
+        .win-dd-menu button { display: block; width: 100%; text-align: left; background: #fff; border: none; padding: 5px 10px; font-size: 11px; cursor: pointer; }
+        .win-dd-menu button:hover { background: #cce8ff; }
+        .ps-tabs { display: flex; gap: 2px; border-bottom: 1px solid #7a9a9e; margin-top: 4px; }
+        .ps-tab { background: #ececec; border: 1px solid #999; border-bottom: none; padding: 3px 14px; cursor: pointer; font-size: 9pt; border-radius: 3px 3px 0 0; }
+        .ps-tab.is-active { background: #fff; font-weight: 700; position: relative; top: 1px; }
+        .ps-pane { display: none; } .ps-pane.is-active { display: block; }
+        .ps-side { display: flex; gap: 6px; align-items: stretch; flex-wrap: wrap; }
+        .ps-side > * { flex: 1 1 300px; min-width: 0; }
         .win-grid-container.is-fullscreen .win-grid-scroll { max-height: calc(100vh - 80px); flex: 1; }
         .cx-note { font-size: 8pt; color: #7a5c00; background: #fff8e1; border: 1px solid #e6c200; padding: 4px 8px; margin-bottom: 6px; }
         .cx-hidden { display: none; }
@@ -64,8 +75,22 @@
 </head>
 <body>
 
+<!-- ProductionSummaryReport (screen 309). Toolbar: New (toolStripButton1:305), Refresh
+     (btnRefreshSummary:900), 602-RecoveryReport, 602_01 (with lab), Input Detail drop-down (the
+     .rpt files in the GrnInvoiceWiseInput folder), 625-Print For Detail Grid Data. -->
 <div class="win-tool-strip">
-    <button type="button" class="win-btn-tool" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+    <button type="button" class="win-btn-tool" onclick="ProductionSummary.reset()"><i class="fa fa-file-o"></i> New</button>
+    <button type="button" class="win-btn-tool" id="btnRefresh" onclick="ProductionSummary.refresh()"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn-tool" id="btnPrint602" onclick="ProductionSummary.print602('ps-602', 'btnPrint602')"><i class="fa fa-print"></i> 602-RecoveryReport</button>
+    <button type="button" class="win-btn-tool" id="btnPrint60201" onclick="ProductionSummary.print602('ps-602-01', 'btnPrint60201')"><i class="fa fa-print"></i> 602_01-RecoveryReport With Lab</button>
+    <div class="win-dd" id="ddInput">
+        <button type="button" class="win-btn-tool" id="btnInputDetail" onclick="ProductionSummary.toggleInputMenu()"><i class="fa fa-print"></i> Input Detail <i class="fa fa-caret-down"></i></button>
+        <div class="win-dd-menu">
+            <!-- DynamicReportsLoad("GrnInvoiceWiseInput") - the one template in that folder. -->
+            <button type="button" onclick="ProductionSummary.printInputDetail()">607-FoodProductionIssuanceGrnWiseByJobOrderId</button>
+        </div>
+    </div>
+    <button type="button" class="win-btn-tool" id="btnPrint625" onclick="ProductionSummary.print625()"><i class="fa fa-print"></i> 625-Print For Detail Grid Data</button>
     <button type="button" class="win-btn-tool" onclick="ProductionSummary.exportCsv()"><i class="fa fa-file-excel-o"></i> Export CSV</button>
     <div style="margin-left:auto;">
         <a href="/production" style="color:#004d40; text-decoration:none; font-weight:bold; font-size:11px;">
@@ -74,134 +99,135 @@
 </div>
 
 <div class="win-teal-header">
-    <div class="win-teal-header-title"><i class="fa fa-industry"></i> Production Summary Report</div>
+    <div class="win-teal-header-title">Production Summary Report</div>
     <div><span id="lblStatus" style="font-size:9pt;">&nbsp;</span></div>
 </div>
 
 <div class="win-form-body">
-    <!-- The desktop prints these grids through Crystal. The web shows the same rows with browser
-         print and CSV export, which is this port's standing substitution for .rpt output. -->
-    <div class="cx-note">
-        Shows the same four grids as the desktop screen. Printing is browser output rather than the
-        Crystal layout, and CSV export is additional.
-    </div>
-    <!-- Shown only when the signed-in user lacks the screen's "Rate" right, which is what
-         CommonServices maps to DoHaveCanRateandAmount. Those columns are left out of the response
-         entirely, not merely hidden here. -->
+    <!-- The "Rate" right (DoHaveCanRateandAmount): the value columns are left out of the
+         response, not merely hidden. -->
     <div class="cx-note cx-hidden" id="noRateNote">
-        Rate and amount columns are hidden — this screen's "Rate" right is not granted to you.
+        Rate and amount columns are hidden - this screen's "Rate" right is not granted to you.
     </div>
 
     <fieldset class="win-group-box">
         <legend>Filters</legend>
         <div class="win-row">
             <div class="win-field cx-multi" id="branchBox" style="flex:1 1 260px;">
-                <label class="win-label">Branch Name</label>
+                <label class="win-label" for="txtBranchName">Branch Name</label>
                 <input type="text" id="txtBranchName" class="win-textbox" readonly
-                       placeholder="(all allocated branches)" onclick="ProductionSummary.toggleBranches()"/>
+                       onclick="ProductionSummary.toggleBranches()"/>
                 <div class="cx-multi-panel" id="branchPanel">
-                    <div class="cx-multi-head"><span style="width:16px;">&nbsp;</span><span>Branch Name</span></div>
+                    <div class="cx-multi-head"><input type="checkbox" id="chkAllBranches" title="Select all"
+                           onchange="ProductionSummary.allBranches(this.checked)"><span>Branch Name</span></div>
+                    <div style="padding:3px 6px;"><input type="text" id="txtBranchFilter" class="win-textbox" style="height:20px;" placeholder="Filter (contains)" oninput="ProductionSummary.filterBranches()"/></div>
                     <div id="branchRows"></div>
                 </div>
             </div>
             <div class="win-field" style="flex:2 1 320px;">
-                <label class="win-label">Job Order No</label>
+                <label class="win-label" for="cmbJobOrderNo">Job Order No</label>
                 <select id="cmbJobOrderNo" class="win-combo dtcombo"
                         data-dtcombo="jobOrderInfo" data-dtcombo-caption="JobOrderNo"
                         onchange="ProductionSummary.jobOrderChanged()"></select>
             </div>
             <div class="win-field" style="flex:1 1 200px;">
-                <label class="win-label">Plant Name</label>
+                <label class="win-label" for="cmbPlantName">Plant Name</label>
                 <select id="cmbPlantName" class="win-combo dtcombo"
                         data-dtcombo="single" data-dtcombo-caption="Plant Name"></select>
             </div>
-            <!-- Both pickers carry their own checkbox on the desktop, and each end is independent:
-                 an unticked end is omitted from the query, not defaulted. -->
+            <!-- Both pickers carry their own checkbox on the desktop, each end independent. -->
             <div class="win-field">
                 <label class="win-label">
-                    <input type="checkbox" id="chkFromDate" onchange="ProductionSummary.toggleDate('From')"/>
-                    From Date
+                    <input type="checkbox" id="chkFromDate" onchange="ProductionSummary.toggleDate('From')"/> From Date
                 </label>
                 <input type="date" id="datFromDate" class="win-datepicker" disabled/>
             </div>
             <div class="win-field">
                 <label class="win-label">
-                    <input type="checkbox" id="chkToDate" onchange="ProductionSummary.toggleDate('To')"/>
-                    To Date
+                    <input type="checkbox" id="chkToDate" onchange="ProductionSummary.toggleDate('To')"/> To Date
                 </label>
                 <input type="date" id="datToDate" class="win-datepicker" disabled/>
             </div>
             <div class="win-field" style="min-width:0;">
-                <button type="button" id="btnShow" class="win-btn-action" onclick="ProductionSummary.show()">
-                    <i class="fa fa-search"></i> Show</button>
+                <button type="button" id="btnShow" class="win-btn-action" onclick="ProductionSummary.show()">Show</button>
             </div>
         </div>
     </fieldset>
 
-    <!-- SummaryJobOrderInformationFill:588 - read off the selected dropdown row, not a second
-         query. Settlement Date appears only when the status is "Settled", as in the desktop. -->
-    <fieldset class="win-group-box">
-        <legend>Job Order Information</legend>
-        <div class="win-row">
-            <div class="win-field"><label class="win-label">Job Order No</label>
-                <input type="text" id="txtJobOrderNo" class="win-textbox" readonly/></div>
-            <div class="win-field"><label class="win-label">Doc No</label>
-                <input type="text" id="txtJobOrderDocNo" class="win-textbox" readonly/></div>
-            <div class="win-field" id="fldStartDate"><label class="win-label">Job Started Date</label>
-                <input type="text" id="txtJobStartedDate" class="win-textbox" readonly/></div>
-            <div class="win-field"><label class="win-label">Job Order Status</label>
-                <input type="text" id="txtJobOrderStatus" class="win-textbox" readonly/></div>
-            <div class="win-field"><label class="win-label">Settlement Status</label>
-                <input type="text" id="txtSettlementStatus" class="win-textbox" readonly/></div>
-            <div class="win-field cx-hidden" id="fldSettlementDate"><label class="win-label">Settlement Date</label>
-                <input type="text" id="txtSettlementDate" class="win-textbox" readonly/></div>
-            <div class="win-field"><label class="win-label">Lot Code</label>
-                <input type="text" id="txtLotCode" class="win-textbox" readonly/></div>
+    <!-- Summary Values | Job Order information | Export Schedule, side by side (:1167-1343). -->
+    <div class="ps-side">
+        <div class="win-grid-container" id="valuesBox" style="flex:2 1 420px;">
+            <div class="win-grid-toolbar">
+                <span>Summary Values</span>
+                <button type="button" onclick="ProductionSummary.toggleFullscreen('valuesBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
+            </div>
+            <div class="win-grid-scroll" style="max-height:240px;">
+                <table class="win-grid"><thead><tr id="valuesHead"></tr></thead><tbody id="valuesBody"></tbody></table>
+            </div>
         </div>
-    </fieldset>
 
-    <div class="win-grid-container" id="valuesBox">
-        <div class="win-grid-toolbar">
-            <span>Summary Values</span>
-            <button type="button" onclick="ProductionSummary.toggleFullscreen('valuesBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
-        </div>
-        <div class="win-grid-scroll">
-            <table class="win-grid"><thead><tr id="valuesHead"></tr></thead><tbody id="valuesBody"></tbody></table>
+        <!-- SummaryJobOrderInformationFill:588 - read off the selected dropdown row, filled on
+             Show (btnShow_Click:461). Settlement Date only when the status is "Settled". -->
+        <fieldset class="win-group-box" style="flex:1 1 260px; margin:0 0 6px;">
+            <legend>Job Order Information</legend>
+            <div class="win-row">
+                <div class="win-field"><label class="win-label">Job Order No</label>
+                    <input type="text" id="txtJobOrderNo" class="win-textbox" readonly/></div>
+                <div class="win-field"><label class="win-label">Job Order Doc No</label>
+                    <input type="text" id="txtJobOrderDocNo" class="win-textbox" readonly/></div>
+                <div class="win-field" id="fldStartDate"><label class="win-label">Job Started Date</label>
+                    <input type="text" id="txtJobStartedDate" class="win-textbox" readonly/></div>
+                <div class="win-field"><label class="win-label">Job Order Status</label>
+                    <input type="text" id="txtJobOrderStatus" class="win-textbox" readonly/></div>
+                <div class="win-field"><label class="win-label">Settlement Status</label>
+                    <input type="text" id="txtSettlementStatus" class="win-textbox" readonly/></div>
+                <div class="win-field cx-hidden" id="fldSettlementDate"><label class="win-label">Settlement Date</label>
+                    <input type="text" id="txtSettlementDate" class="win-textbox" readonly/></div>
+                <div class="win-field"><label class="win-label">Lot Code</label>
+                    <input type="text" id="txtLotCode" class="win-textbox" readonly/></div>
+            </div>
+        </fieldset>
+
+        <div class="win-grid-container" id="scheduleBox" style="flex:2 1 420px;">
+            <div class="win-grid-toolbar">
+                <span>Export Schedule Information</span>
+                <button type="button" onclick="ProductionSummary.toggleFullscreen('scheduleBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
+            </div>
+            <div class="win-grid-scroll" style="max-height:240px;">
+                <table class="win-grid"><thead><tr id="scheduleHead"></tr></thead><tbody id="scheduleBody"></tbody></table>
+            </div>
         </div>
     </div>
 
-    <div class="win-grid-container" id="scheduleBox">
-        <div class="win-grid-toolbar">
-            <span>Export Schedule Information</span>
-            <button type="button" onclick="ProductionSummary.toggleFullscreen('scheduleBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
-        </div>
-        <div class="win-grid-scroll" style="max-height:180px;">
-            <table class="win-grid"><thead><tr id="scheduleHead"></tr></thead><tbody id="scheduleBody"></tbody></table>
-        </div>
+    <!-- The two lower grids sit on two tabs, "Summary" (grdSummaryDetail) and "Detail"
+         (grdSummaryDocWiseDetail) - :1092 / :1133. -->
+    <div class="ps-tabs" id="psTabs">
+        <div class="ps-tab is-active" data-pane="recoveryBox" onclick="ProductionSummary.tab('recoveryBox')">Summary</div>
+        <div class="ps-tab" data-pane="docWiseBox" onclick="ProductionSummary.tab('docWiseBox')">Detail</div>
     </div>
-
-    <div class="win-grid-container" id="recoveryBox">
+    <div class="win-grid-container ps-pane is-active" id="recoveryBox">
         <div class="win-grid-toolbar">
-            <span>Recovery Summary &nbsp;<em style="font-weight:400;">(grouped by transaction type)</em></span>
+            <span>Summary</span>
             <button type="button" onclick="ProductionSummary.toggleFullscreen('recoveryBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
         </div>
-        <div class="win-grid-scroll">
-            <table class="win-grid"><thead><tr id="recoveryHead"></tr></thead><tbody id="recoveryBody"></tbody></table>
+        <div class="win-grid-scroll" style="max-height:calc(100vh - 260px); min-height:240px;">
+            <table class="win-grid"><thead><tr id="recoveryHead"></tr></thead><tbody id="recoveryBody"></tbody><tfoot id="recoveryFoot"></tfoot></table>
         </div>
     </div>
-
-    <div class="win-grid-container" id="docWiseBox">
+    <div class="win-grid-container ps-pane" id="docWiseBox">
         <div class="win-grid-toolbar">
-            <span>Document-wise Summary &nbsp;<em style="font-weight:400;">(grouped by transaction type)</em></span>
+            <span>Detail</span>
             <button type="button" onclick="ProductionSummary.toggleFullscreen('docWiseBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
         </div>
-        <div class="win-grid-scroll">
-            <table class="win-grid"><thead><tr id="docWiseHead"></tr></thead><tbody id="docWiseBody"></tbody></table>
+        <div class="win-grid-scroll" style="max-height:calc(100vh - 260px); min-height:240px;">
+            <table class="win-grid"><thead><tr id="docWiseHead"></tr></thead><tbody id="docWiseBody"></tbody><tfoot id="docWiseFoot"></tfoot></table>
         </div>
     </div>
 </div>
 
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
 <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
-<script th:src="@{/build/js/countx_production_summary_report.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_production_summary_report.js?v=20260924a}"></script>
 </body>
 </html>

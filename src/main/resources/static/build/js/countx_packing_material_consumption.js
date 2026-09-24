@@ -53,12 +53,14 @@
         var n = parseFloat(String(v === null || v === undefined ? '' : v).replace(/,/g, ''));
         return isNaN(n) ? 0 : n;
     }
-    /** "0,0" — thousands separated, no decimals. */
+    /** .NET "0,0" - thousands separated, no decimals, at least two digits (5 -> "05"). */
     function fmtQty(v) {
         if (v === null || v === undefined || v === '') return '';
-        var n = num(v);
-        return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return window.ReportKit.pad2(num(v));
     }
+    var K = window.ReportKit;
+    var lastArgs = null;
+    var fyStart = '';
     function shortDate(v) {
         if (v === null || v === undefined || v === '') return '';
         var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v));
@@ -69,8 +71,9 @@
         var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v));
         return m ? m[0] : '';
     }
-    /** A column whose name ends in Date gets the desktop's short-date treatment. */
-    function isDate(col) { return /date$/i.test(col); }
+    /** Only DocDate is a date column here (a CalendarDropDown filter, :308); EntryDate has no
+     *  format on the desktop, so it keeps its time. */
+    function isDate(col) { return col === 'DocDate'; }
 
     /* Disable → spinner → ignore repeat clicks → re-enable on success AND failure. */
     function busy(btn, fn) {
@@ -129,12 +132,15 @@
     }
     function toggle() { $id('branchBox').classList.toggle('is-open'); }
 
-    /** cmbBranchName_Leave:454 — closing the list rebuilds both item pickers. */
+    /** cmbBranchName_Leave:430 does nothing - ComboBind runs only at Load (:97). */
     function closeBranches() {
         var b = $id('branchBox');
         if (!b.classList.contains('is-open')) return;
         b.classList.remove('is-open');
-        loadLookups(true).catch(function (e) { box(e.message); });
+    }
+    function all(on) {
+        $id('branchRows').querySelectorAll('input[type="checkbox"]').forEach(function (c) { c.checked = on; });
+        $id('txtBranchName').value = tickedNames().join(',');
     }
 
     // ------------------------------------------------------------------ pickers
@@ -154,8 +160,8 @@
                 if (!keepBranches) {
                     branches = (d && d.branches) || [];
                     renderBranches(d && d.defaultBranchId);
-                    var start = isoDate(d && d.financialYearStart);
-                    if (start) $id('datFromDate').value = start;
+                    fyStart = isoDate(d && d.financialYearStart);
+                    $id('datFromDate').value = fyStart || todayIso();
                 }
             });
     }
@@ -173,15 +179,20 @@
             var q = ['branchIds=' + encodeURIComponent(ticked().join(',')),
                      'itemId=' + encodeURIComponent(val('cmbItem') || '0'),
                      'pmItemId=' + encodeURIComponent(val('cmbPmItem') || '0')];
-            /* The desktop sets both dates unconditionally. */
-            if (val('datFromDate')) q.push('fromDate=' + encodeURIComponent(val('datFromDate')));
-            if (val('datToDate'))   q.push('toDate=' + encodeURIComponent(val('datToDate')));
+            /* The desktop sets both dates unconditionally (:262-263). */
+            if (!val('datFromDate') || !val('datToDate')) { box('From Date and To Date are required'); return; }
+            q.push('fromDate=' + encodeURIComponent(val('datFromDate')));
+            q.push('toDate=' + encodeURIComponent(val('datToDate')));
+            var args = { fromDate: val('datFromDate'), toDate: val('datToDate'),
+                         itemId: +(val('cmbItem') || 0), pmItemId: +(val('cmbPmItem') || 0),
+                         branchesIds: ticked().map(function (x) { return ',' + x; }).join('') };
 
             return getJson(api + '?' + q.join('&')).then(function (data) {
                 rows = data || [];
+                lastArgs = args;
                 render();
             }).catch(function (e) {
-                rows = []; cols = [];
+                rows = []; cols = []; lastArgs = null;
                 $id('gridHead').innerHTML = '';
                 $id('gridBody').innerHTML = '';
                 $id('lblCount').textContent = '';
@@ -222,6 +233,7 @@
         }).join('') + '</tr>';
 
         $id('lblCount').textContent = rows.length + ' record(s)';
+        K.filterRow($id('tblRegister'));
     }
 
     // ------------------------------------------------------------------ chrome
@@ -247,13 +259,26 @@
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     }
 
-    /** Reset:366 — clears the two item pickers. */
+    /** Reset:342 - From = financial-year start, To = today, both item pickers cleared, focus From. */
     function reset() {
+        $id('datFromDate').value = fyStart || todayIso();
+        $id('datToDate').value = todayIso();
         ['cmbItem', 'cmbPmItem'].forEach(function (id) {
             var el = $id(id);
             el.value = '';
             el.dispatchEvent(new Event('change', { bubbles: true }));
         });
+        $id('datFromDate').focus();
+    }
+    function todayIso() {
+        var n = new Date();
+        return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+    }
+
+    /** PrintRegister:321 - the Show result into 812 ("Not Record Found For Display" when empty). */
+    function print() {
+        if (!lastArgs || !rows.length) { box('Not Record Found For Display'); return; }
+        return window.CrystalPrint.open('pm-812', lastArgs, 'btnPrint812');
     }
 
     function toggleFullscreen(boxId) {
@@ -267,18 +292,16 @@
             + String(now.getMonth() + 1).padStart(2, '0') + '-'
             + String(now.getDate()).padStart(2, '0');
 
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && e.target && e.target.tagName !== 'BUTTON'
-                && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-            }
-        });
+        /* KeyDown:358 - Ctrl+P print, Ctrl+E/Esc close, Ctrl+N reset, Ctrl+S show. */
+        K.enterToTab();
+        K.keys({ 'ctrl+p': print, 'ctrl+e': K.close, 'esc': K.close, 'ctrl+n': reset, 'ctrl+s': show_ });
         document.addEventListener('click', function (e) {
             var b = $id('branchBox');
             if (b && !b.contains(e.target)) closeBranches();
         });
 
-        loadLookups(false).catch(function (e) { box(e.message); });
+        /* Load:97-100 - ComboBind, then GridBind straight away. */
+        loadLookups(false).then(show_).catch(function (e) { box(e.message); });
     }
 
     window.PackingMaterialConsumption = {
@@ -286,6 +309,8 @@
         toggle: toggle,
         exportCsv: exportCsv,
         reset: reset,
+        print: print,
+        all: all,
         toggleFullscreen: toggleFullscreen
     };
 

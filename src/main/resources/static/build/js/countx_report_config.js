@@ -261,9 +261,12 @@
         /* btnsave_Click sets RecId = 0 first, so Save always inserts. */
         $('btnsave').addEventListener('click', function () { RecId = 0; Insert($('btnsave')); });
         $('btnupdate').addEventListener('click', function () { Insert($('btnupdate')); });
-        /* ReportAllocatToCompany_Click -> new frmCompanyReport(UserAccount).Show() */
+        /* ReportAllocatToCompany_Click -> new frmCompanyReport(UserAccount).Show()
+           .Show() is modeless on the desktop, so the form opens alongside this one rather than
+           replacing it - a new window here, not a navigation. */
         $('ReportAllocatToCompany').addEventListener('click', function () {
-            messageBox('Report Allocate to Company (frmCompanyReport) is not ported yet.');
+            window.open('/configurations/report-allocate-to-company',
+                        'frmCompanyReport', 'width=915,height=615,resizable=yes,scrollbars=yes');
         });
 
         $('grdFull').addEventListener('click', function () { $('gridWrap').classList.toggle('full'); });

@@ -16,7 +16,7 @@ public class SaleGdnPurchaseReturnService {
     private UserAccount user(){return context.requireAccountingUser();}
     public Map<String,Object> initial(){return repo.initial(user(),context.currentFinancialYearId());}
     public List<Map<String,Object>> items(int supplier){if(supplier<=0)throw new IllegalArgumentException("Select Supplier first");return repo.items(user(),supplier);}
-    public List<Map<String,Object>> uoms(int item){if(item<=0)throw new IllegalArgumentException("Select Item first");return repo.uoms(item);}
+    public List<Map<String,Object>> uoms(int item){if(item<=0)throw new IllegalArgumentException("Select Item first");return repo.uoms(context.requireAccountingUser(),item);}
     public Map<String,Object> record(int id){return repo.record(user(),id);}
     public List<Map<String,Object>> history(){return repo.history(user(),context.currentFinancialYearId());}
     @Transactional public Map<String,Object> save(Map<String,Object> request){validate(request);int id=repo.save(user(),context.currentFinancialYearId(),request);return repo.record(user(),id);}

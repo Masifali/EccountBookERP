@@ -3,6 +3,7 @@ package com.mst.controllers;
 import com.mst.models.dto.PurchaseOrderFullDto;
 import com.mst.services.PurchaseOrderFullService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -306,6 +307,13 @@ public class PurchaseOrderRestController {
         return ResponseEntity.ok(purchaseOrderService.historyDetail(id == null ? 0 : id));
     }
 
+    /** GetLabDetailByItemId() - the Lab Deduction Standard grid for one item. */
+    @GetMapping("/lab-deduction-standard")
+    public ResponseEntity<List<Map<String, Object>>> getLabDeductionStandard(
+            @RequestParam(name = "itemId", defaultValue = "0") int itemId) {
+        return ResponseEntity.ok(purchaseOrderService.getLabDeductionStandard(itemId));
+    }
+
     /** LocationTypeFill() - usp_getLocationType (no parameters). */
     @GetMapping("/location-types")
     public ResponseEntity<List<Map<String, Object>>> getLocationTypes() {
@@ -341,13 +349,23 @@ public class PurchaseOrderRestController {
         return ResponseEntity.ok(purchaseOrderService.getHistory(fromDate, toDate, fromDocNo, toDocNo, supplierId, bookingPersonId, branches, dateType));
     }
 
+    /**
+     * Refused, not performed. The desktop's btnDelete_Click (PurchsaeOrder.cs:3881-3883) has an
+     * empty body and GoldenAcedb carries no Purchase Order delete procedure, so there is no
+     * desktop behaviour to port. This endpoint previously ran a fabricated raw-SQL delete that
+     * orphaned six child tables and ignored tenancy - see
+     * PurchaseOrderFullService.deletePurchaseOrder() for the full reasoning. It is kept mapped
+     * (rather than removed) so an existing caller gets an explicit 405 with the reason instead of
+     * a bare 404 that reads like a routing fault.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deletePurchaseOrder(@PathVariable Integer id) {
-        boolean ok = purchaseOrderService.deletePurchaseOrder(id);
         Map<String, Object> res = new HashMap<>();
-        res.put("success", ok);
-        res.put("message", ok ? "Purchase Order deleted successfully." : "Failed to delete Purchase Order.");
-        return ResponseEntity.ok(res);
+        res.put("success", false);
+        res.put("message", "Purchase Orders cannot be deleted. The desktop form's Delete button "
+                + "performs no action and the database has no Purchase Order delete procedure. "
+                + "Correct the order with Update, or close it via Order Status.");
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(res);
     }
 
     /**

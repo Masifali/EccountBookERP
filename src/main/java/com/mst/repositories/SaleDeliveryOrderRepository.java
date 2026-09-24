@@ -61,13 +61,27 @@ public class SaleDeliveryOrderRepository {
         return result;
     }
 
+    /** DeliveryOrder.cs:530 BranchList = CommonServices.BrancheServiceBind() = Branches.GetAll:
+        Sp_Branches_GetAllMethod @OrganizationId,@CompanyId,@Activity='GetAll' - every branch of the company, not only the
+        user's allocated ones. The form then sets the combo to UserAccount.BranchesId (:654) and on edit to the record's
+        BranchesId (:2038). BranchId is repeated from Id for the page script; UserBranch marks the default row. */
     public List<Map<String,Object>> branches(UserAccount u) {
-        return jdbc.queryForList("EXEC dbo.USP_GetBranchsAllocatedToUser @OrganizationId=?, @CompanyId=?, @UserId=?",
-                u.getOrganizationId(), u.getCompanyId(), u.getId());
+        List<Map<String,Object>> out = new ArrayList<>();
+        for (Map<String,Object> r : jdbc.queryForList("EXEC dbo.Sp_Branches_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity='GetAll'",
+                u.getOrganizationId(), u.getCompanyId())) {
+            Map<String,Object> x = new LinkedHashMap<>(r);
+            x.put("BranchId", r.get("Id"));
+            Object id = r.get("Id");
+            x.put("UserBranch", id instanceof Number && ((Number) id).intValue() == u.getBranchesId());
+            out.add(x);
+        }
+        return out;
     }
 
+    /** DeliveryOrder.cs:527 VehicleType.GetAll() - EXEC Sp_VehicleType_GetAllMethod with no parameters (the BLL builds an
+        @Activity list and never passes it, 0611:13-23). Was a raw SELECT on dbo.VehicleType. */
     public List<Map<String,Object>> vehicleTypes(UserAccount u) {
-        return jdbc.queryForList("SELECT Id,VehicleDescription FROM dbo.VehicleType ORDER BY VehicleDescription");
+        return jdbc.queryForList("EXEC dbo.Sp_VehicleType_GetAllMethod");
     }
 
     public Map<String,Object> save(UserAccount u, int financialYearId, SaleDeliveryOrderRequest r) {

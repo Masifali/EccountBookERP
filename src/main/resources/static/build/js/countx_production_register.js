@@ -26,7 +26,13 @@
     var lookups = null;
 
     /* grdsetting:680 — added to the table, then hidden. */
-    var REGISTER_HIDDEN = ['InvFoodProductionId', 'ModifyDate', 'ModifyUser', 'MainRemarks'];
+    /* ...and EntryType: the register is grouped on it and grd.HideColumnsWhenGrouped is True (:2305). */
+    var REGISTER_HIDDEN = ['InvFoodProductionId', 'ModifyDate', 'ModifyUser', 'MainRemarks', 'EntryType'];
+    var K = window.ReportKit;
+    var lastArgs = null;        /* the parameters of the last Show - what 553/554/562 print */
+    var PRINT_KEYS = { 'Production Register': ['pr-553', '553-ProductionRegisterWithActivity'],
+                       'OutPut By Packing Material': ['pr-554', '554-ProductionRegisterWithActivity(OutPut By Packing Material)'],
+                       'Production_Summary': ['pr-562', '562-ProductionRegisterWithActivity'] };
     /* grdSummarySetting:785. */
     var SUMMARY_HIDDEN = ['JobOrderId', 'PlantId', 'ItemId'];
 
@@ -254,16 +260,32 @@
             if ($id('chkFromDate').checked && val('datFromDate')) {
                 q.push('fromDate=' + encodeURIComponent(val('datFromDate')));
             }
-            if (val('datToDate')) q.push('toDate=' + encodeURIComponent(val('datToDate')));
+            /* datToDate has no checkbox - @ToDate / @EntryToDate is always sent. */
+            if (!val('datToDate')) $id('datToDate').value = iso(new Date());
+            q.push('toDate=' + encodeURIComponent(val('datToDate')));
+
+            var entryMode = mode && mode.value === 'entry';
+            var args = {
+                jobOrderId: +(val('cmbJobOrder') || 0), plantId: +(val('cmbPlant') || 0),
+                itemId: +(val('cmbItem') || 0), stockAccountId: +(val('cmbStockAccount') || 0),
+                warehouseId: +(val('cmbWarehouse') || 0), parentCategoryId: +(val('cmbParentCategory') || 0),
+                wipAccountId: +(val('cmbWipAccount') || 0),
+                entryTypeDetail: tickedValues('entryTypeRows').map(function (x) { return ',' + x; }).join(''),
+                branchesIds: tickedValues('branchRows').map(function (x) { return ',' + x; }).join('')
+            };
+            var fromOn = $id('chkFromDate').checked && val('datFromDate');
+            if (entryMode) { if (fromOn) args.entryFromDate = val('datFromDate'); args.entryToDate = val('datToDate'); }
+            else { if (fromOn) args.fromDate = val('datFromDate'); args.toDate = val('datToDate'); }
 
             return getJson(api + '?' + q.join('&')).then(function (d) {
+                lastArgs = args;
                 activity = (d && d.activity) || act;
                 rows = (d && d.rows) || [];
                 $id('lblGridTitle').textContent = activity;
                 renderTotals(d && d.totals);
                 render();
             }).catch(function (e) {
-                rows = []; cols = [];
+                rows = []; cols = []; lastArgs = null;
                 $id('gridHead').innerHTML = '';
                 $id('gridBody').innerHTML = '';
                 $id('lblCount').textContent = '';
@@ -293,6 +315,8 @@
     function cellText(col, v) {
         if (has(DATE_COLUMNS, col)) return shortDate(v);
         if (col === 'EntryDate') return dateTime(v);
+        /* grdSummarySetting:781 - Weight is "#,##0.###" on the summary. */
+        if (col === 'Weight' && activity === 'Production_Summary') return fmt(v, 3);
         if (Object.prototype.hasOwnProperty.call(FORMATS, col)) return fmt(v, FORMATS[col]);
         return v;
     }
@@ -324,6 +348,7 @@
             }).join('') + grandTotal();
         }
         $id('lblCount').textContent = rows.length + ' record(s)';
+        K.filterRow($id('tblRegister'));
     }
 
     function td(col, v) {
@@ -342,7 +367,8 @@
             var t = 0;
             bucket.forEach(function (r) { t += num(r[c]); });
             if (agg[c] === 'avg' && bucket.length) t = t / bucket.length;
-            return '<td class="num">' + esc(fmt(t, FORMATS[c] === undefined ? 2 : FORMATS[c])) + '</td>';
+            var dec = (c === 'Weight' && activity === 'Production_Summary') ? 3 : (FORMATS[c] === undefined ? 2 : FORMATS[c]);
+            return '<td class="num">' + esc(fmt(t, dec)) + '</td>';
         }).join('') + '</tr>';
     }
 
@@ -410,16 +436,59 @@
     }
 
     /** btnRefresh_Click:848 — reload the pickers from the database. */
+    /** btnRefresh_Click:830 - AllCombobind + JobOrderBind only, each keeping its selection.
+     *  Branch, Entry Type, Activity and the dates are untouched. */
     function refresh() {
-        return busy(null, function () {
-            return loadLookups().catch(function (e) { box(e.message); });
+        return busy('btnRefresh', function () {
+            var keep = {};
+            PICKERS.forEach(function (p) { keep[p[0]] = val(p[0]); });
+            return getJson(api + '/lookups').then(function (d) {
+                d = d || {};
+                PICKERS.forEach(function (p) {
+                    fill(p[0], d[p[1]] || [], 'Id', p[2]);
+                    $id(p[0]).value = keep[p[0]];
+                    if ($id(p[0]).value !== keep[p[0]]) $id(p[0]).value = '';
+                });
+            }).catch(function (e) { box(e.message); });
         });
+    }
+    var PICKERS = [['cmbParentCategory', 'parentCategories', 'Name'], ['cmbWarehouse', 'warehouses', 'Name'],
+                   ['cmbItem', 'items', 'Name'], ['cmbPlant', 'plants', 'Name'],
+                   ['cmbWipAccount', 'wipAccounts', 'Name'], ['cmbStockAccount', 'stockAccounts', 'Name'],
+                   ['cmbJobOrder', 'jobOrders', 'JobOrderNo']];
+
+    /** btnPrintCurrent_Click:1021 - the last Show's rows into the Activity's report. */
+    function print(which) {
+        var act = val('cmbActivity');
+        var k = PRINT_KEYS[act];
+        if (!k) return;
+        if (which && which !== k[0]) return;      /* Alt+1 / Alt+2 only act on their own report */
+        if (!lastArgs || !rows.length || activity !== act) { box('Record Not Found For Display'); return; }
+        return window.CrystalPrint.open(k[0], lastArgs, 'btnPrintCurrent');
+    }
+    /** PrintButtonManage:991 - the button follows the Activity; hidden when none. */
+    function printButtonManage() {
+        var k = PRINT_KEYS[val('cmbActivity')];
+        $id('btnPrintCurrent').style.display = k ? '' : 'none';
+        if (k) $id('lblPrintCurrent').textContent = k[1];
+    }
+
+    function all(hostId, textId, on) {
+        $id(hostId).querySelectorAll('input[type="checkbox"]').forEach(function (c) { c.checked = on; });
+        $id(textId).value = tickedNames(hostId).join(',');
+    }
+
+    function shortcuts() {
+        K.shortcuts([['Ctrl+S', 'For Show'], ['Ctrl+E', 'For Close'], ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'],
+                     ['Alt+2', 'For print 554-ProductionRegisterWithActivity(OutPut By Packing Material)'],
+                     ['Alt+1', 'For Print 553-ProductionRegisterWithActivity'], ['Ctrl+F5', 'For Focus On DateType '],
+                     ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowDown', 'For Focus On Grid'],
+                     ['Ctrl+ArrowUp', 'For Focus On Supplier Customer in Filter']]);
     }
 
     function toggleFrom() {
         var on = $id('chkFromDate').checked;
-        $id('datFromDate').disabled = !on;
-        if (!on) $id('datFromDate').value = '';
+        $id('datFromDate').disabled = !on;       /* unticking keeps the date, as the picker does */
     }
 
     function toggleFullscreen(boxId) {
@@ -440,19 +509,30 @@
         $id('datFromDate').value = iso(from);
         $id('datToDate').value = iso(now);
 
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && e.target && e.target.tagName !== 'BUTTON'
-                && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-            }
+        /* ProductionRegister_KeyDown:855 (KeyPreview on). */
+        K.enterToTab();
+        var focusFrom = function () { $id('chkFromDate').focus(); };
+        K.keys({
+            'ctrl+s': show_, 'ctrl+e': K.close, 'esc': K.close, 'ctrl+r': refresh, 'ctrl+n': reset,
+            'alt+1': function () { print('pr-553'); }, 'alt+2': function () { print('pr-554'); },
+            'ctrl+arrowdown': function () { var t = $id('tblRegister').querySelector('tbody tr'); if (t) { t.tabIndex = 0; t.focus(); } },
+            'ctrl+arrowup': focusFrom, 'ctrl+f5': focusFrom, 'ctrl+alt': shortcuts
         });
         document.addEventListener('click', function (e) {
             ['branchBox', 'entryTypeBox'].forEach(function (id) {
                 var b = $id(id);
-                if (b && !b.contains(e.target)) b.classList.remove('is-open');
+                if (b && !b.contains(e.target) && b.classList.contains('is-open')) {
+                    b.classList.remove('is-open');
+                    /* cmbBranchName_Leave:1080 - an empty branch clears six filters. */
+                    if (id === 'branchBox' && !tickedValues('branchRows').length) {
+                        ['cmbParentCategory', 'cmbWarehouse', 'cmbItem', 'cmbJobOrder', 'cmbPlant'].forEach(function (x) { $id(x).value = ''; });
+                        all('entryTypeRows', 'txtEntryType', false);
+                    }
+                }
             });
         });
-        loadLookups().catch(function (e) { box(e.message); });
+        $id('cmbActivity').addEventListener('change', printButtonManage);
+        loadLookups().then(printButtonManage).catch(function (e) { box(e.message); });
     }
 
     window.ProductionRegister = {
@@ -462,7 +542,10 @@
         toggleFullscreen: toggleFullscreen,
         exportCsv: exportCsv,
         reset: reset,
-        refresh: refresh
+        refresh: refresh,
+        print: function () { return print(); },
+        all: all,
+        shortcuts: shortcuts
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

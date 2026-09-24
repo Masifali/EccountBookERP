@@ -287,8 +287,10 @@ public class StockConversionRepository {
      * @Activity='GetConfigurationByOrgCompandConfigDescription', the pattern already used by
      * ProductionJobOrderMainRepository.config.
      *
-     * A missing row is not the same as "on": the desktop's Where() returns an empty list and the
-     * guard (list.Count > 0 && !parse) then leaves "Issue" in place, so absent means false here.
+     * NO LONGER USED by entryTypes(). It folds a missing row into "false", but the desktop's
+     * guard (list.Count > 0 && !bool.Parse(key)) does NOT add "Issue" when the row is missing.
+     * StockConversionService.entryTypes now reads StockConversionLookupsRepository.configKey,
+     * which keeps "absent" distinct. Kept only so nothing else that may call it breaks.
      */
     public boolean config(Integer organizationId, Integer companyId, String name) {
         List<Map<String, Object>> rows = jdbc.queryForList(

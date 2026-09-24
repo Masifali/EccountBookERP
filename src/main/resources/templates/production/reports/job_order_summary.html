@@ -7,7 +7,6 @@
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <style>
-        html, body { overflow-x: hidden; }
         body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
         .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 4px; }
         .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
@@ -32,8 +31,12 @@
         .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8pt; background: #fff; }
         .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); border: 1px solid #999; padding: 4px 5px; text-align: left; position: sticky; top: 0; z-index: 5; white-space: nowrap; }
         .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; white-space: nowrap; }
+        .win-grid td.num, .win-grid th.num { text-align: right; }
+        .win-grid tfoot td { background: #ececec; font-weight: bold; border-top: 2px solid #999; }
+        .win-grid a.jo-link { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        .win-grid tbody tr.is-current td { background: #cce8ff; }
         .win-grid tr:nth-child(even) { background: #fcfcf8; }
-        .win-grid tbody tr:hover { background: #e0f2f1; cursor: pointer; }
+        .win-grid tbody tr:hover { background: #e0f2f1; }
         .win-grid-toolbar { display: flex; align-items: center; justify-content: space-between; background: #e0f2f1; border-bottom: 1px solid #7a9a9e; padding: 2px 6px; font-size: 8.5pt; font-weight: 600; color: #004d40; }
         .win-grid-toolbar button { background: #fff; border: 1px solid #7a9a9e; font-size: 8pt; padding: 1px 6px; cursor: pointer; }
         .win-grid-container.is-fullscreen { position: fixed; inset: 0; z-index: 10000; background: #fff; border: none; padding: 6px; display: flex; flex-direction: column; }
@@ -49,76 +52,66 @@
 </head>
 <body>
 
+<!-- frmProductionJobOrderSummaryRpt (screen 975). toolStrip3: &New, &Refresh (no Click handler on
+     the desktop - kept, inert), 672-Register, ShortCutKeys. panel3 (Teal): title + the three
+     approval radios on the right, Un Approved checked. panel4 (White): From Date (checkbox,
+     unticked), To Date, Show. panel5: "Filtered Records" bar + grid. -->
 <div class="win-tool-strip">
-    <button type="button" class="win-btn-tool" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+    <button type="button" class="win-btn-tool" id="btnNew" onclick="JobOrderSummary.reset()" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+    <button type="button" class="win-btn-tool" id="btnRefresh" title="The desktop Refresh button has no Click handler."><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    <button type="button" class="win-btn-tool" id="btnPrint" onclick="JobOrderSummary.print()" title="Ctrl+P"><i class="fa fa-print"></i> 672-Register</button>
+    <button type="button" class="win-btn-tool" onclick="JobOrderSummary.shortcuts()" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCutKeys</button>
     <button type="button" class="win-btn-tool" onclick="JobOrderSummary.exportCsv()"><i class="fa fa-file-excel-o"></i> Export CSV</button>
     <div style="margin-left:auto;">
-        <a href="/production" style="color:#004d40; text-decoration:none; font-weight:bold; font-size:11px;">
+        <a href="/production" style="color:#004d40; text-decoration:none; font-weight:bold; font-size:11px;" title="Ctrl+E / Esc">
             <i class="fa fa-arrow-left"></i> Exit to Dashboard</a>
     </div>
 </div>
 
 <div class="win-teal-header">
-    <div class="win-teal-header-title"><i class="fa fa-list-alt"></i> Job Order Summary Report</div>
-    <div><span id="lblCount" style="font-size:9pt;">&nbsp;</span></div>
+    <div class="win-teal-header-title">Production Job Order Summary</div>
+    <div style="display:flex; gap:14px; align-items:center; font-size:9pt;">
+        <label class="win-radio-inline" style="color:#fff;"><input type="radio" name="approval" value="Approved"/> Approved</label>
+        <label class="win-radio-inline" style="color:#fff;"><input type="radio" name="approval" value="Unapproved" checked/> Un Approved</label>
+        <label class="win-radio-inline" style="color:#fff;"><input type="radio" name="approval" value="All"/> All</label>
+    </div>
 </div>
 
-<div class="win-form-body">
-    <!-- The desktop renders this through Crystal (672_JobOrderSummaryReport.rpt). The web shows
-         the same rows as a grid with browser print and CSV, which is this port's standing
-         substitution for .rpt output - stated here rather than left to be discovered. -->
-    <div class="cx-note">
-        Shows the same rows as the desktop report. Printing is browser output rather than the
-        Crystal layout, and CSV export is additional.
+<div class="win-form-body" style="background:#fff;">
+    <div class="win-row" style="padding:2px 6px 6px;">
+        <div class="win-field">
+            <label class="win-label" for="datFromDate">
+                <input type="checkbox" id="chkFromDate" onchange="JobOrderSummary.toggleFrom()"/> From Date
+            </label>
+            <input type="date" id="datFromDate" class="win-datepicker" style="width:140px;"/>
+        </div>
+        <div class="win-field">
+            <label class="win-label" for="datToDate">To Date</label>
+            <input type="date" id="datToDate" class="win-datepicker" style="width:140px;" required/>
+        </div>
+        <div class="win-field">
+            <button type="button" id="btnShow" class="win-btn-action" onclick="JobOrderSummary.load()" title="Ctrl+S">Show</button>
+        </div>
+        <div style="margin-left:auto; align-self:center;"><span id="lblCount" style="font-size:9pt;"></span></div>
     </div>
 
-    <fieldset class="win-group-box">
-        <legend>Filters</legend>
-        <div class="win-row">
-            <!-- The desktop's From picker carries its own checkbox and is UNTICKED by default,
-                 so "no from date" is the normal query, not a missing value. -->
-            <div class="win-field">
-                <label class="win-label">
-                    <input type="checkbox" id="chkFromDate" onchange="JobOrderSummary.toggleFrom()"/>
-                    From Date
-                </label>
-                <input type="date" id="datFromDate" class="win-datepicker" disabled/>
-            </div>
-            <div class="win-field">
-                <label class="win-label">To Date</label>
-                <input type="date" id="datToDate" class="win-datepicker"/>
-            </div>
-            <div class="win-field" style="flex:1 1 260px;">
-                <label class="win-label">Approval</label>
-                <div>
-                    <label class="win-radio-inline"><input type="radio" name="approval" value="All" checked/> All</label>
-                    <label class="win-radio-inline"><input type="radio" name="approval" value="Approved"/> Approved</label>
-                    <label class="win-radio-inline"><input type="radio" name="approval" value="Unapproved"/> Unapproved</label>
-                </div>
-            </div>
-            <div class="win-field">
-                <button type="button" id="btnShow" class="win-btn-action" onclick="JobOrderSummary.load()">
-                    <i class="fa fa-search"></i> Show</button>
-            </div>
-        </div>
-    </fieldset>
-
     <div class="win-grid-container" id="gridBox">
-        <div class="win-grid-toolbar">
-            <span>Summary &nbsp;<em style="font-weight:400;">(click a row for its settlement detail)</em></span>
+        <div class="win-grid-toolbar" style="background:#008080; color:#fff;">
+            <span>Filtered Records</span>
             <button type="button" onclick="JobOrderSummary.toggleFullscreen('gridBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
         </div>
-        <div class="win-grid-scroll">
-            <table class="win-grid">
+        <div class="win-grid-scroll" style="max-height:calc(100vh - 190px); min-height:260px;">
+            <table class="win-grid" id="tblSummary">
                 <thead><tr id="summaryHead"></tr></thead>
                 <tbody id="summaryBody"></tbody>
+                <tfoot id="summaryFoot"></tfoot>
             </table>
         </div>
     </div>
 
     <div class="win-grid-container" id="detailBox" style="margin-top:6px; display:none;">
         <div class="win-grid-toolbar">
-            <span id="lblDetailTitle">Settlement Detail</span>
+            <span id="lblDetailTitle">613_02 Production Settlement</span>
             <button type="button" onclick="JobOrderSummary.toggleFullscreen('detailBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
         </div>
         <div class="win-grid-scroll" style="max-height:300px;">
@@ -130,6 +123,8 @@
     </div>
 </div>
 
-<script th:src="@{/build/js/countx_job_order_summary_report.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_job_order_summary_report.js?v=20260924a}"></script>
 </body>
 </html>

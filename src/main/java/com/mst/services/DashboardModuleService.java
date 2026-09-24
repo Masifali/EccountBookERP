@@ -169,6 +169,29 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(975, "/production/reports/job-order-summary");             // frmProductionJobOrderSummaryRpt
         WEB_ROUTES_BY_SCREEN_ID.put(308, "/production/reports/production-comparison");         // FoodProductionComparisonRpt
         WEB_ROUTES_BY_SCREEN_ID.put(306, "/production/reports/packing-material-consumption");  // frmProductionPackingMaterialConsumptionRegister
+
+        /* Packing Material, ModuleId 54 */
+        WEB_ROUTES_BY_SCREEN_ID.put(496, "/packing-material/item-pm");        // AddItemPM (Architecture.WinApp.StoreManagement)
+
+        /* Store Management, ModuleId 24 — StoreIssuanceController / StoreReturnController carry the
+           same ids in their class notes. */
+        WEB_ROUTES_BY_SCREEN_ID.put(322, "/store/store-issuance");            // frmGSIssuance
+        WEB_ROUTES_BY_SCREEN_ID.put(321, "/store/store-issuance-direct");     // StoreIssuanceDirect
+        WEB_ROUTES_BY_SCREEN_ID.put(330, "/store/store-return");              // StoreReturn
+        WEB_ROUTES_BY_SCREEN_ID.put(338, "/store/department-request");        // frmDepartmentRequest
+        WEB_ROUTES_BY_SCREEN_ID.put(320, "/store/stock-adjustment");          // frmStockAdjustment
+        WEB_ROUTES_BY_SCREEN_ID.put(339, "/store/stock-transfer");            // frmStockTransfer
+        /* Store Purchase, ModuleId 67 */
+        WEB_ROUTES_BY_SCREEN_ID.put(340, "/store/purchase-demand");           // frmPurchaseDemand
+
+        /* Lab, ModuleId 7. Only 156 is built; the other seven screens of the module (155, 157,
+           158, 159, 160, 162, 163) are intentionally left unmapped so the hub keeps showing them
+           as not built rather than sending them to a page that is not theirs. */
+        WEB_ROUTES_BY_SCREEN_ID.put(156, "/lab/item-analysis-parameter");      // InvLabAnalysisItems
+        WEB_ROUTES_BY_SCREEN_ID.put(498, "/packing-material/purchase-order"); // PurchsaeOrderPmNew (Architecture.WinApp.PackingMaterial_Store)
+        WEB_ROUTES_BY_SCREEN_ID.put(500, "/packing-material/grn"); // GrnPackingMaterial (Architecture.WinApp.PackingMaterial_Store)
+        WEB_ROUTES_BY_SCREEN_ID.put(501, "/packing-material/purchase-invoice"); // PurchaseInvoicePackingMaterial
+        WEB_ROUTES_BY_SCREEN_ID.put(495, "/packing-material/purchase-invoice-direct"); // frmPurchaseInvoiceDirectPM
     }
 
     /** The desktop forms behind the DashBoard menu, for the placeholder to name (DashboardNew.cs :5161-5196). */

@@ -311,6 +311,21 @@
                                 <div class="col-md-5"><label class="win-label m-0">Order Weight</label></div>
                                 <div class="col-md-7"><input type="text" id="txtOrderWeight" class="win-textbox win-textbox-readonly" value="0" readonly style="text-align: right;"/></div>
                             </div>
+                            <!-- cmbCurrency / txtExchangeRate / txtFcyAmount - visible only with ERP feature 6
+                                 (HasMultiCurrencyFeature, SaleOrder.cs:597-617). Without it the desktop hides them
+                                 and saves the base currency and rate from configuration (GetBaseCurrencyAndRate). -->
+                            <div class="row mb-1 align-items-center so-fcy" hidden>
+                                <div class="col-md-5"><label class="win-label m-0">Fcy Code</label></div>
+                                <div class="col-md-7"><select id="cmbCurrency" class="win-combo"><option value="">...Select Any Value...</option></select></div>
+                            </div>
+                            <div class="row mb-1 align-items-center so-fcy" hidden>
+                                <div class="col-md-5"><label class="win-label m-0">Exchange Rate</label></div>
+                                <div class="col-md-7"><input type="text" id="txtExchangeRate" class="win-textbox" value="" data-guard="decimal" style="text-align: right;"/></div>
+                            </div>
+                            <div class="row mb-1 align-items-center so-fcy" hidden>
+                                <div class="col-md-5"><label class="win-label m-0">Fcy Amount</label></div>
+                                <div class="col-md-7"><input type="text" id="txtFcyAmount" class="win-textbox win-textbox-readonly" value="0" readonly style="text-align: right;"/></div>
+                            </div>
                         </div>
 
                         <!-- Sub-col 3: Party GL Balance Summary (3/12 width, spacious & non-overlapping) -->
@@ -702,23 +717,55 @@
 
     <!-- HISTORY VIEW CONTAINER (TOGGLED BY HISTORY BUTTON IN FOOTER) -->
     <div id="viewHistoryContainer" class="win-form-body" style="display: none;">
+        <!-- Desktop History tab (SaleOrder.cs gridhistoryfill :4122, HistoryBranchComboFill :3968,
+             HistoryCombosFill :4012): date-mode radio (doc / entry / modify / approved), a tick box on each
+             date end, doc-no range, branch multi-select, customer and booking person - each list fed from
+             the Sale Orders that actually exist in the ticked branches. -->
         <fieldset class="win-group-box">
             <legend><i class="fa fa-history me-1"></i> Sale Order History Search</legend>
-            <div class="row g-2 align-items-center">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="win-label d-block">Date Type</label>
+                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="doc" checked> Doc Date</label>
+                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="entry"> Entry</label>
+                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="modify"> Modify</label>
+                    <label class="win-radio-inline"><input type="radio" name="histDateMode" value="approved"> Approved</label>
+                </div>
                 <div class="col-md-2">
-                    <label class="win-label">From Date</label>
+                    <label class="win-label"><input type="checkbox" id="histUseFrom" checked> From Date</label>
                     <input type="date" id="histFromDate" class="win-datepicker"/>
                 </div>
                 <div class="col-md-2">
-                    <label class="win-label">To Date</label>
+                    <label class="win-label"><input type="checkbox" id="histUseTo" checked> To Date</label>
                     <input type="date" id="histToDate" class="win-datepicker"/>
                 </div>
+                <div class="col-md-1">
+                    <label class="win-label">From No</label>
+                    <input type="number" id="histFromDocNo" class="win-textbox" min="0"/>
+                </div>
+                <div class="col-md-1">
+                    <label class="win-label">To No</label>
+                    <input type="number" id="histToDocNo" class="win-textbox" min="0"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="win-label d-block">Branch</label>
+                    <div id="histBranches" class="d-flex flex-wrap"></div>
+                </div>
+            </div>
+            <div class="row g-2 align-items-end mt-1">
                 <div class="col-md-4">
-                    <label class="win-label">Customer Search Filter</label>
+                    <label class="win-label">Customer</label>
                     <select id="histCustomerCombo" class="win-combo so-select2"><option value="">...Select Customer...</option></select>
                 </div>
-                <div class="col-md-2 pt-3">
-                    <button type="button" class="win-btn-action w-100" onclick="loadHistoryData()"><i class="fa fa-search me-1"></i> Search History</button>
+                <div class="col-md-3">
+                    <label class="win-label">Booking Person</label>
+                    <select id="histBookingPersonCombo" class="win-combo so-select2"><option value="">...Select Booking Person...</option></select>
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="win-btn-action w-100" onclick="loadHistoryBranches()"><i class="fa fa-refresh me-1"></i> Refresh</button>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="win-btn-action w-100" onclick="loadHistoryData()"><i class="fa fa-search me-1"></i> Show</button>
                 </div>
             </div>
         </fieldset>
@@ -728,15 +775,15 @@
                 <table class="win-grid" id="tblHistory">
                     <thead>
                         <tr>
-                            <th style="width: 50px; text-align: center;">Edit</th>
-                            <th style="width: 50px; text-align: center;">Print</th>
-                            <th style="width: 80px;">Doc No</th>
-                            <th style="width: 90px;">Doc Date</th>
-                            <th>Customer Code</th>
-                            <th>Customer Name</th>
-                            <th style="width: 100px; text-align: right;">Total Amount</th>
-                            <th style="width: 130px;">Entry Date</th>
-                            <th style="width: 80px; text-align: center;">Status</th>
+                            <th style="text-align: center;">Edit</th>
+                            <th style="text-align: center;">Print</th>
+                            <th>DocNo</th><th>BranchSrNo</th><th>BranchName</th><th>DocDate</th><th>CustomerName</th>
+                            <th>BookingPerson</th><th>DueDays</th><th>DueDate</th><th>OrderExpiryDate</th><th>CommType</th>
+                            <th style="text-align: right;">CommRate</th><th style="text-align: right;">CommAmount</th><th>CommRemarks</th>
+                            <th>DeliveryTerm</th><th>DeliveryDays</th><th>PaymentTerm</th><th>OrderStatus</th>
+                            <th>Category-I</th><th>Category-II</th><th>IsAproved</th><th>EntryUser</th><th>EntryDate</th>
+                            <th>ModifyUser</th><th>ModifyDate</th><th>ApprovedUser</th><th>ApprovedDate</th>
+                            <th>NoOfAttachments</th><th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -756,7 +803,7 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script th:src="@{/build/js/countx_sale_order_full.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_sale_order_full.js?v=20260924a}"></script>
     <script>
         // Ditto every one of the real desktop's 30 UltraCombo dropdowns on this screen (combitem,
         // combjob, cmbPackType, combitempck, combrateuom, combcityarea, CmbWarehouse, CmbCropyr,

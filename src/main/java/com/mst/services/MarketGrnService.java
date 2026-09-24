@@ -35,6 +35,8 @@ public class MarketGrnService {
         try { return persistence.save(payload,46); }
         catch(Exception failure) {
             org.springframework.transaction.interceptor.TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            // A desktop refusal is shown in the desktop's words, without a prefix.
+            if(failure instanceof IllegalArgumentException)return Map.of("success",false,"message",Objects.toString(failure.getMessage(),"Request failed."));
             return Map.of("success",false,"message","Error saving Market GRN: "+failure.getMessage());
         }
     }

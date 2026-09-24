@@ -91,10 +91,10 @@
 
     <!-- Teal Title Strip -->
     <div class="teal-strip">
-        <span style="font-size: 13px;">Goods Receiving Notes</span>
+        <span id="grnTitle" style="font-size: 13px;">Goods Receiving Notes</span>
         <div>
-            <label class="me-3"><input type="checkbox" id="chkScaleDeduct"> Scale Short Weight Deduction Apply</label>
-            <label class="me-3"><input type="checkbox" id="chkSupplierDeduct"> Supplier Short Weight Deduction Apply</label>
+            <label class="me-3" id="lblScaleDeduct"><input type="checkbox" id="chkScaleDeduct"> Scale Short Weight Deduction Apply</label>
+            <label class="me-3" id="lblSupplierDeduct"><input type="checkbox" id="chkSupplierDeduct"> Supplier Short Weight Deduction Apply</label>
             <a href="/purchase" class="text-white text-decoration-none fw-bold">×</a>
         </div>
     </div>
@@ -135,6 +135,11 @@
                     <option th:each="g : ${gatePasses}" th:value="${g['id']}" th:text="${g['name']}"></option></select>
                     <span class="form-label" style="width: 45px;">Bilty No</span>
                     <input type="text" id="txtBiltyNo" class="form-control" style="width: 75px;" />
+                </div>
+                <div class="form-row">
+                    <!-- CmbSupplierDispatchedPreBillNo: USP_SupplierDispatch_GetNoForGpandGrn (PreBillNoFill :884) -->
+                    <span class="form-label" style="width: 80px;">Pre Bill No</span>
+                    <select id="cmbPreBillNo" class="form-control" style="width: 90px;" data-dtcombo="single" data-dtcombo-caption="Pre Bill No"></select>
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 80px;">Vehicle Type</span>
@@ -187,15 +192,24 @@
                 <div class="form-row">
                     <span class="form-label" style="width: 95px;">Difference Weight</span>
                     <input type="number" id="txtDiffWeight" class="form-control text-end" style="width: 80px; color: red;" value="0" readonly />
+                    <span id="lblDiffWeight" class="ms-1 fw-bold text-danger"></span>
 
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 95px;">GRN Weight</span>
-                    <input type="number" id="txtGrnWeight" class="form-control text-end" style="width: 130px;" value="0" />
+                    <input type="number" id="txtGrnWeight" class="form-control text-end" style="width: 130px;" value="0" readonly />
+                </div>
+                <div class="form-row grn-105-only">
+                    <span class="form-label" style="width: 95px;">Received Weight</span>
+                    <input type="number" id="txtReceivedWeight" class="form-control text-end" style="width: 130px;" value="0" readonly />
                 </div>
                 <div class="form-row">
-                    <span class="form-label" style="width: 95px;">Received Weight</span>
-                    <input type="number" id="txtReceivedWeight" class="form-control text-end" style="width: 130px;" value="0" />
+                    <span class="form-label" style="width: 95px;">Bal Weight</span>
+                    <input type="number" id="txtBalWeight" class="form-control text-end" style="width: 130px;" value="0" readonly />
+                </div>
+                <div class="form-row">
+                    <span class="form-label" style="width: 95px;">Po Excess Weight</span>
+                    <input type="number" id="txtAccessWeight" class="form-control text-end" style="width: 130px;" value="0" readonly />
                 </div>
                 <div class="form-row">
                     <span class="form-label" style="width: 95px;">W.B Ticket Nos.</span>
@@ -246,7 +260,7 @@
                     <span class="form-label" style="width: 100px;">Freight Deduction</span>
                     <input type="number" id="txtFreightDeduct" class="form-control text-end" style="width: 80px;" value="0"  data-guard="integer"/>
                     <span class="form-label" style="width: 65px;">Paid Amount</span>
-                    <input type="number" id="txtPaidAmount" class="form-control text-end fw-bold" style="width: 55px;" value="0" readonly />
+                    <input type="number" id="txtPaidAmount" class="form-control text-end fw-bold" style="width: 55px;" value="0" />
                 </div>
             </div>
 
@@ -323,18 +337,40 @@
                             th:attr="data-item-id=${u['ItemId']},data-equivalent=${u['Equivalent']}"></option>
                 </select>
 
+                <span>Moisture:</span>
+                <input type="number" id="txtMoisture" class="form-control text-end" style="width: 45px;" value="0" readonly />
+                <span>Lab No:</span>
+                <select id="cmbLabNo" class="form-control" style="width: 70px;" data-dtcombo="single" data-dtcombo-caption="Lab No"></select>
+                <span>Wt Cut On:</span>
+                <input type="text" id="txtWtCutOn" class="form-control" style="width: 70px;" readonly />
+            </div>
+            <div class="form-row mt-1 flex-wrap" style="gap: 4px;">
                 <span>Item Qty:</span>
                 <input type="number" id="txtItemQty" class="form-control text-end" style="width: 60px;" value="0"  data-guard="decimal"/>
-
                 <span>Gross Weight:</span>
                 <input type="number" id="txtGrossWeight" class="form-control text-end" style="width: 70px;" value="0"  data-guard="decimal"/>
-
-                <span>Bill Weight:</span><input type="number" step="any" id="txtBillWeight" class="form-control text-end" style="width:70px"/>
-<span>Stock Weight:</span><input type="number" step="any" id="txtStockWeight" class="form-control text-end" style="width:70px"/>
-<span>E.b / Unit:</span>
-                <input type="number" id="txtEbUnit" class="form-control text-end" style="width: 50px;" value="0"  data-guard="decimal"/>
-
+                <span>Avg:</span>
+                <input type="number" id="txtAvgWeight" class="form-control text-end" style="width: 50px;" value="0" readonly />
+                <span>E.b / Unit:</span>
+                <input type="number" id="txtEbUnit" class="form-control text-end" style="width: 50px;" value="0" step="any"/>
+                <span>E.b Total:</span>
+                <input type="number" id="txtEbTotal" class="form-control text-end" style="width: 60px;" value="0" step="any"/>
+                <span>Wt Cut:</span>
+                <input type="number" id="txtWtCut" class="form-control text-end" style="width: 50px;" value="0" step="any"/>
+                <span>Wt Cut Total:</span>
+                <input type="number" id="txtWtCutTotal" class="form-control text-end" style="width: 60px;" value="0" readonly />
+                <span>Add/Less:</span>
+                <input type="number" id="txtAddLess" class="form-control text-end" style="width: 50px;" value="0" step="any"/>
+                <span>Net Bill Wt:</span>
+                <input type="number" step="any" id="txtBillWeight" class="form-control text-end" style="width:70px" value="0" readonly/>
+                <span>Stock E.b / Unit:</span>
+                <input type="number" id="txtEbUnitStock" class="form-control text-end" style="width: 50px;" value="0" step="any"/>
+                <span>Stock E.b Total:</span>
+                <input type="number" id="txtEbTotalStock" class="form-control text-end" style="width: 60px;" value="0" step="any"/>
+                <span>Stock Wt:</span>
+                <input type="number" step="any" id="txtStockWeight" class="form-control text-end" style="width:70px" value="0" readonly/>
                 <button type="button" class="btn btn-sm btn-success py-0 px-2 fw-bold" id="btnAddLine" onclick="btnAddLine_Click()">+ Add</button>
+                <button type="button" class="btn btn-sm btn-light border py-0 px-2" id="btnCancelLine" style="display:none" onclick="cancelEditLine()">Cancel</button>
             </div>
             <div class="form-row mt-1 flex-wrap" style="gap: 4px;">
                 <span>City/Area:</span>
@@ -344,11 +380,12 @@
                 <button type="button" class="btn btn-sm btn-light py-0 px-1 border">+</button>
 
                 <span class="ms-3 text-danger fw-bold">Selected Lab -----------></span>
-                <label class="ms-2"><input type="checkbox" id="chkWtCutComp"> Weight Cut Compulsory</label>
-                <input type="number" id="txtWtCutComp" class="form-control text-end" style="width: 50px;" value="0"  data-guard="decimal"/>
+                <label class="ms-2"><input type="checkbox" id="chkWtCutComp" disabled> Weight Cut Compulsory</label>
+                <input type="number" id="txtWtCutComp" class="form-control text-end" style="width: 50px;" value="0" readonly/>
 
-                <label class="ms-2"><input type="checkbox" id="chkRateCutComp"> Rate Cut Compulsory</label>
-                <input type="number" id="txtRateCutComp" class="form-control text-end" style="width: 50px;" value="0"  data-guard="decimal"/>
+                <label class="ms-2"><input type="checkbox" id="chkRateCutComp" disabled> Rate Cut Compulsory</label>
+                <input type="number" id="txtRateCutComp" class="form-control text-end" style="width: 50px;" value="0" readonly/>
+                <div id="labParamsPanel" style="display:none" class="ms-2"><table class="data-grid" style="width:auto"><thead><tr><th>Parameter</th><th>Result</th></tr></thead><tbody id="labParamsBody"></tbody></table></div>
 
                 <button type="button" class="btn btn-sm text-white fw-bold ms-auto" style="background-color: #005a5b;" onclick="withButtonLoading(this,()=>loadGatePass(document.getElementById('cmbGatePassNo').value))">Load Gate Pass</button>
             </div>
@@ -362,6 +399,7 @@
                     <th style="width:20px;">X</th>
                     <th>Order</th>
                     <th>WareHouse Name</th>
+                    <th>Item Code</th>
                     <th>Item</th>
                     <th>Crop Year</th>
                     <th>Job Lot</th>
@@ -371,7 +409,7 @@
                     <th>Gross Weight</th>
                     <th>Eb Unit</th>
                     <th>Eb Total</th>
-                    <th>Eb Pur Against W...</th>
+                    <th>Eb Pur Against Weight</th>
                     <th>Lab No</th>
                     <th>Qty For Wt Cut</th>
                     <th>Wt Cut On</th>
@@ -380,29 +418,19 @@
                     <th>Wt Cut Total</th>
                     <th>Add Less</th>
                     <th>Scale Short Wt</th>
+                    <th>Supp Short Wt</th>
+                    <th>Net Weight</th>
+                    <th>Stock Eb Unit</th>
+                    <th>Stock Eb Total</th>
+                    <th>Stock Weight</th>
+                    <th>City</th>
+                    <th>Freight Amount</th>
                 </tr>
                 </thead>
                 <tbody id="grdItemsBody">
-                <tr><td colspan="21" class="text-center text-muted py-2">No received items added yet.</td></tr>
+                <tr><td colspan="29" class="text-center text-muted py-2">No received items added yet.</td></tr>
                 </tbody>
-                <tfoot>
-                <tr class="fw-bold bg-light">
-                    <td colspan="8" class="text-end">Summary:</td>
-                    <td class="text-end" id="sumQty">0</td>
-                    <td class="text-end" id="sumGrossWt">0</td>
-                    <td class="text-end" id="sumEbUnit">0</td>
-                    <td class="text-end" id="sumEbTotal">0</td>
-                    <td class="text-end">0</td>
-                    <td></td>
-                    <td class="text-end">0</td>
-                    <td></td>
-                    <td></td>
-                    <td class="text-end">0</td>
-                    <td class="text-end">0</td>
-                    <td class="text-end">0</td>
-                    <td class="text-end">0</td>
-                </tr>
-                </tfoot>
+                <tfoot id="grdItemsFoot"></tfoot>
             </table>
         </div>
 
@@ -451,13 +479,14 @@
                             <th>Vehicle No</th>
                             <th>Bilty No</th>
                             <th>ItemName</th>
+                            <th>Qty</th><th>Supplier Weight</th><th>Factory Weight</th><th>Received Weight</th><th>Po Excess Weight</th>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="grdPendingBody">
                         <tr th:each="g : ${gatePasses}" th:attr="data-gp-status=${g['Status']}">
 <td th:text="${g['Status']}"></td><td><button class="tool-btn" th:attr="data-gp-id=${g['id']}" onclick="withButtonLoading(this,()=>loadGatePass(this.dataset.gpId))">Load</button></td>
 <td><a th:href="@{/purchase/inward-gate-pass(id=${g['id']})}" th:text="${g['name']}"></a></td>
-<td th:text="${g['FVStatus']}"></td><td th:text="${g['GpDate']}"></td><td th:text="${g['OrderType']}"></td><td th:text="${g['SupplierName']}"></td><td th:text="${g['VehicleNo']}"></td><td th:text="${g['BiltyNo']}"></td><td th:text="${g['ItemName']}"></td></tr>
+<td th:text="${g['FVStatus']}"></td><td th:text="${g['GpDate']}"></td><td th:text="${g['OrderType']}"></td><td th:text="${g['SupplierName']}"></td><td th:text="${g['VehicleNo']}"></td><td th:text="${g['BiltyNo']}"></td><td th:text="${g['ItemName']}"></td><td th:text="${g['Qty']}"></td><td th:text="${g['SupplierWeight']}"></td><td th:text="${g['FactoryWeight']}"></td><td th:text="${g['ReceivedWeight']}"></td><td th:text="${g['PoAccessWeight']}"></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -505,7 +534,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
-<script th:src="@{/build/js/countx_market_grn.js?v=20260923b}"></script>
+<script th:src="@{/build/js/countx_market_grn.js?v=20260924a}"></script>
 <script th:src="@{/build/js/countx_grn_supplements.js?v=20260923b}"></script>
 
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>

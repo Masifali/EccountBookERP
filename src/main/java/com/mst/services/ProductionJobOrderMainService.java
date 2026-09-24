@@ -133,7 +133,31 @@ public class ProductionJobOrderMainService {
         /* cmbperemeter_ValueChanged:2228, option 5 "Financial Year" — the desktop reads
            clsGlobalVariables.ActiveYr.Start_Period. */
         out.put("financialYearStart", financialYearStart(u));
+
+        /* clsGlobalVariables.DecimalRateFormate (CommonServices:4937-4958) - the Rate40Kg format
+           of both rate grids and of the rate box after a double-click. */
+        out.put("rateDecimals", rateDecimals(u));
         return out;
+    }
+
+    /**
+     * "Default NoofDecimal Points For Rate": 1-4 give that many decimals, 0 or a missing row gives
+     * 2, and any other number leaves the desktop's format as "#,#0." - no decimals at all.
+     */
+    private int rateDecimals(UserAccount u) {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, "
+                  + "@ConfigDescription=?, @Activity=?",
+                    u.getOrganizationId(), u.getCompanyId(), "Default NoofDecimal Points For Rate",
+                    "GetConfigurationByOrgCompandConfigDescription");
+            int n = rows.isEmpty() ? 0 : intOf(ci(rows.get(0), "ConfigKey"));
+            if (n >= 1 && n <= 4) return n;
+            return n == 0 ? 2 : 0;
+        } catch (Exception e) {
+            LOG.warn("Could not read 'Default NoofDecimal Points For Rate'; using 2", e);
+            return 2;
+        }
     }
 
     /**
@@ -256,6 +280,15 @@ public class ProductionJobOrderMainService {
         }
 
         Map<String, Object> out = new LinkedHashMap<>();
+        /* ReadById:1843 - with GenerateJobOrderNo on, CmbProductionNo is REBOUND with
+           BindJobOrderNo(RefInvoiceNo) before the number is put in it, so a number that is no
+           longer "free" is still in the list for the record that owns it. */
+        UserAccount u = currentUserContext.requireAccountingUser();
+        if (configFlag(u, "GenerateJobOrderNo")) {
+            Object ref = ci(head, "RefInvoiceNo");
+            out.put("generatedJobOrderNos", repo.generatedJobOrderNos(u, DOCUMENT_TYPE_ID,
+                    ref == null ? null : String.valueOf(ref)));
+        }
         out.put("header",      h);
         out.put("plants",      plants);
         out.put("byProduct",   byProduct);
@@ -460,14 +493,14 @@ public class ProductionJobOrderMainService {
             o.put("PlanStatus",     ci(r, "PlanStatus"));
             o.put("OtherInst",      ci(r, "OtherInstructions"));
             o.put("EntryUser",      ci(r, "EntryUserName"));
-            o.put("EntryDate",      day(ci(r, "EntryDate")));
+            o.put("EntryDate",      stamp(ci(r, "EntryDate")));
             o.put("ModifyUser",     ci(r, "ModifyUserName"));
-            o.put("ModifyDate",     day(ci(r, "ModifyDate")));
+            o.put("ModifyDate",     stamp(ci(r, "ModifyDate")));
             o.put("ApprovedStatus", ci(r, "ApprovalStatus"));
             o.put("ApprovedUser",   ci(r, "ApprovedUserName"));
             /* The desktop fills its ApprovedDate column from the PostDate column of the result
                set (:2104). Reproduced, not corrected. */
-            o.put("ApprovedDate",   day(ci(r, "PostDate")));
+            o.put("ApprovedDate",   stamp(ci(r, "PostDate")));
             o.put("Attachments",    ci(r, "NoOfAttachments"));
             rows.add(o);
         }
@@ -577,6 +610,51 @@ public class ProductionJobOrderMainService {
         repo.deleteRateScheduleRow(detailId);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("success", true);
+        return out;
+    }
+
+    // ============================================================================== print
+
+    /**
+     * CommonServices.PrintJobOrder620:14005 runs GetPrintSlipAndReport first and stops with
+     * "No Record Found For Display" when it returns nothing - before any viewer opens. This is
+     * that same call (Sp_InvProductionJobOrder_Slip_Rpt; @hId only when Id != 0, as the BLL
+     * guards it), so the page can give the same message instead of an empty report.
+     * The report itself is rendered by /api/reports/jo-620/print.pdf.
+     */
+    public Map<String, Object> printCheck(int id) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        /* No rights check: the toolbar button is disabled without the Print right (:361), but
+           the history grid's Print column calls PrintJobOrder620 with no check at all (:2131). */
+        List<Map<String, Object>> rows = id != 0
+                ? jdbcTemplate.queryForList(
+                        "EXEC dbo.Sp_InvProductionJobOrder_Slip_Rpt @hId=?, @OrganizationId=?, @CompanyId=?",
+                        id, u.getOrganizationId(), u.getCompanyId())
+                : jdbcTemplate.queryForList(
+                        "EXEC dbo.Sp_InvProductionJobOrder_Slip_Rpt @OrganizationId=?, @CompanyId=?",
+                        u.getOrganizationId(), u.getCompanyId());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("rows", rows.size());
+        if (rows.isEmpty()) out.put("message", "No Record Found For Display");
+        return out;
+    }
+
+    /**
+     * DataGridHistory_LinkClicked:2082 - the Attachments link column.
+     * DMSAttachments.GetByID(id, base.Name): Sp_DMSAttachments_GetAllMethod
+     * @ScreenName, @Id, @Activity='ReadById'. AttachmentView lists the Attachment column; so
+     * does the page.
+     */
+    public List<Map<String, Object>> attachments(int id) {
+        currentUserContext.requireAccountingUser();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : jdbcTemplate.queryForList(
+                "EXEC dbo.Sp_DMSAttachments_GetAllMethod @ScreenName=?, @Id=?, @Activity=?",
+                SCREEN_NAME, id, "ReadById")) {
+            Map<String, Object> o = new LinkedHashMap<>();
+            o.put("Attachment", ci(r, "Attachment"));
+            out.add(o);
+        }
         return out;
     }
 
@@ -693,6 +771,14 @@ public class ProductionJobOrderMainService {
             } catch (java.text.ParseException ignored) { /* try the next shape */ }
         }
         return null;
+    }
+
+    /** Date AND time - HgridSetting gives EntryDate, ModifyDate and ApprovedDate the format
+     *  "dd-MM-yyyy hh:mm tt", so the time of day must reach the page. */
+    private static String stamp(Object v) {
+        Date d = parseDay(v);
+        if (d == null) return v == null ? "" : String.valueOf(v);
+        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH).format(d);
     }
 
     /** Conversion.ToDateTime(x).Date — midnight, so a comparison is day against day. */

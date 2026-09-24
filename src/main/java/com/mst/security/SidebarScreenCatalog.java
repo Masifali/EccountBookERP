@@ -213,6 +213,62 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Production Comparison Report", "Production", "/production/reports/production-comparison", "PRODUCTION_RPT_PRODUCTION_COMPARISON", "PRODUCTION", 308, 21));
         e.add(new Entry("Production PackingMaterial Consumption Register", "Production", "/production/reports/packing-material-consumption", "PRODUCTION_RPT_PM_CONSUMPTION", "PRODUCTION", 306, 21));
 
+        // 8. PACKING MATERIAL (module 54)
+        // Id 496 / ScreenName AddItemPM / alias "Item PM" read from reconciliation-input.json.
+        e.add(new Entry("Item PM", "Packing Material", "/packing-material/item-pm", "PM_ITEM", "PACKING_MATERIAL", 496, 54));
+        // Id 498 / ScreenName PurchsaeOrderPmNew / alias "1002 Purchsae Order" - same dump.
+        e.add(new Entry("1002 Purchsae Order", "Packing Material", "/packing-material/purchase-order", "PM_PURCHASE_ORDER", "PACKING_MATERIAL", 498, 54));
+        e.add(new Entry("Goods Receipt Notes PM", "Packing Material", "/packing-material/grn", "PM_GRN", "PACKING_MATERIAL", 500, 54));
+        e.add(new Entry("Purchase Invoice PM", "Packing Material", "/packing-material/purchase-invoice", "PM_PURCHASE_INVOICE", "PACKING_MATERIAL", 501, 54));
+        e.add(new Entry("Purchase Invoice Direct PM", "Packing Material", "/packing-material/purchase-invoice-direct", "PM_PURCHASE_INVOICE_DIRECT", "PACKING_MATERIAL", 495, 54));
+        // 9. WEIGH BRIDGE (module 44)
+        // Id 411, ScreenName "frmWeightbridge", ScreenAlias "Weigh Bridge", ModuleId 44 - read from
+        // migration/user-rights/reconciliation-input.json, the live GoldenAcedb dump, not matched by
+        // name.
+        e.add(new Entry("Weigh Bridge", "Weigh Bridge", "/weighbridge/weight-bridge", "WEIGH_BRIDGE", "WEIGHBRIDGE", 411, 44));
+        // Id 410, ScreenName "WeightbridgeMannual", ScreenAlias "Weigh Bridge Manual", ModuleId 44 - same dump.
+        e.add(new Entry("Weigh Bridge Manual", "Weigh Bridge", "/weighbridge/weightbridge-mannual", "WEIGH_BRIDGE_MANUAL", "WEIGHBRIDGE", 410, 44));
+        // Weigh bridge reports (module 27 - these two are its only screens). Same dump:
+        //   360 frmWeightBridgeHistory "Weigh Bridge Report",
+        //   359 frmWeighBridgeRejectedTicketNos "WeighBridge History For Rejected Status".
+        e.add(new Entry("Weigh Bridge Report", "Weigh Bridge", "/weighbridge/reports/weight-bridge-history", "WEIGH_BRIDGE_RPT_HISTORY", "WEIGHBRIDGE", 360, 27));
+        e.add(new Entry("WeighBridge History For Rejected Status", "Weigh Bridge", "/weighbridge/reports/weigh-bridge-rejected-ticket-nos", "WEIGH_BRIDGE_RPT_REJECTED", "WEIGHBRIDGE", 359, 27));
+        // The two weigh bridge lookups have their own ScreenDefinition rows (GoldenAceDb(0509)t.sql):
+        //   432 VehicleWeightLookUp "Define Vehicle" module 45, 728 WeighBridgeGeneralLookups "Weigh Bridge Lookups" module 2037.
+        e.add(new Entry("Define Vehicle", "Weigh Bridge", "/weighbridge/vehicle-weight-lookup", "WEIGH_BRIDGE_DEFINE_VEHICLE", "WEIGHBRIDGE", 432, 45));
+        e.add(new Entry("Weigh Bridge Lookups", "Weigh Bridge", "/weighbridge/weigh-bridge-general-lookups", "WEIGH_BRIDGE_LOOKUPS", "WEIGHBRIDGE", 728, 2037));
+
+        // 9. STORE MANAGEMENT (module 24)
+        // Ids / ScreenName / alias read from reconciliation-input.json:
+        //   322 frmGSIssuance "Store Issuance", 321 StoreIssuanceDirect "Store Issuance Direct",
+        //   330 StoreReturn "Store Return".
+        e.add(new Entry("Store Issuance", "Store Management", "/store/store-issuance", "STORE_ISSUANCE", "STORE_MANAGEMENT", 322, 24));
+        e.add(new Entry("Store Issuance Direct", "Store Management", "/store/store-issuance-direct", "STORE_ISSUANCE_DIRECT", "STORE_MANAGEMENT", 321, 24));
+        e.add(new Entry("Store Return", "Store Management", "/store/store-return", "STORE_RETURN", "STORE_MANAGEMENT", 330, 24));
+        //   338 frmDepartmentRequest "Department Request" (DocType 450), 320 frmStockAdjustment "Stock Adjustment" (70),
+        //   339 frmStockTransfer "Stock Transfer" (68); Store Purchase module 67: 340 frmPurchaseDemand "Purchase Demand" (141).
+        //   ScreenName = the form's base.Name, which is its rights key (CommonServices.SetRightsValueInRightsObject(base.Name)).
+        e.add(new Entry("Department Request", "Store Management", "/store/department-request", "STORE_DEPARTMENT_REQUEST", "STORE_MANAGEMENT", 338, 24));
+        e.add(new Entry("Stock Adjustment", "Store Management", "/store/stock-adjustment", "STORE_STOCK_ADJUSTMENT", "STORE_MANAGEMENT", 320, 24));
+        e.add(new Entry("Stock Transfer", "Store Management", "/store/stock-transfer", "STORE_STOCK_TRANSFER", "STORE_MANAGEMENT", 339, 24));
+        e.add(new Entry("Purchase Demand", "Store Purchase", "/store/purchase-demand", "STORE_PURCHASE_DEMAND", "STORE_MANAGEMENT", 340, 67));
+
+        // 10. LAB (module 7)
+        // Ids / ScreenName / alias read from reconciliation-input.json, not name-matched:
+        //   155 InvLabSampleLogRegister "Sample Log Register",
+        //   156 InvLabAnalysisItems "Item Analysis Parameter",
+        //   157 InvLabAnalysisGroup "Analysis Group",
+        //   158 InvLabGroupAnalysisStandards "Group Analysis Standards",
+        //   159 InvLabSampleAnalysis "Sample Analysis",
+        //   160 InvLabPurchaseAnalysis "Purchase Analysis",
+        //   162 InvLabAnalysisInProcess "In-Process Analysis",
+        //   163 LabInProcessAnalysisStepAndParameterSchedule "InProcess Analysis Steps Schedule".
+        // 161 is absent from that dump (it covers one user's grants), so it is left out rather
+        // than guessed. Lab reports are module 1011 and are not listed here.
+        // Only 156 is built; the rest are deliberately NOT registered, because a registered route
+        // with no page behind it is what put unrelated screens behind the same URL elsewhere.
+        e.add(new Entry("Item Analysis Parameter", "Lab", "/lab/item-analysis-parameter", "LAB_ITEM_ANALYSIS_PARAMETER", "LAB", 156, 7));
+
         return Collections.unmodifiableList(e);
     }
 }

@@ -26,16 +26,103 @@ public class SaleGdnPurchaseReturnRepository {
         m.put("gatePasses",q("EXEC dbo.USP_GatePassOutward_PendingForGdnPurchaseReturn @OrganizationId=?,@CompanyId=?,@FinancialYearId=?,@BranchesId=?",u.getOrganizationId(),u.getCompanyId(),year,u.getBranchesId()));
         m.put("warehouses",q("EXEC dbo.USP_GetWarehousesAllocatedToBranch @OrganizationId=?,@CompanyId=?,@BranchId=?",u.getOrganizationId(),u.getCompanyId(),u.getBranchesId()));
         m.put("crops",q("EXEC dbo.Sp_InvCropYear_GetAllMethod @OrganizationId=?,@CompanyId=?,@Activity='ReadAll'",u.getOrganizationId(),u.getCompanyId()));
-        m.put("jobLots",q("EXEC dbo.USP_GetJobLotsAllocatedToBranch @OrganizationId=?,@CompanyId=?,@BranchId=?",u.getOrganizationId(),u.getCompanyId(),u.getBranchesId()));
+        m.put("jobLots",globalJobLots(u));   // cached SP_JobLot_ReadMethod 'GetJobLotGlIdsandName' (IL 454225) - not branch-allocated
         m.put("packingTypes",q("EXEC dbo.Sp_InvPackingType_GetAllMethod @Activity='ReadAll'"));
         m.put("otherItems",q("EXEC dbo.Sp_InventoryItemsOther_GetAllMethod @Activity='ReadAll',@organizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId()));
-        m.put("cities",q("EXEC dbo.SP_City_GetAllMethod @OrganizationId=?,@CompanyId=?,@MethodType='GetAll'",u.getOrganizationId(),u.getCompanyId()));
-        m.put("transporters",q("EXEC dbo.USP_Accounts_GetAccountTitleByAccountTypeIds @OrganizationId=?,@CompanyId=?,@AppId=?,@UserId=?,@AccountTypeIds=?",u.getOrganizationId(),u.getCompanyId(),u.getAppId(),u.getId(),"6,8"));
-        m.put("feature5",q("EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId()).stream().anyMatch(r->number(r.get("Id"))==5));
+        m.put("cities",globalCities(u));     // cached USP_City_GetAllWithCountryAndTehsil (IL 454382)
+        /* frmGdnForPurchaseReturn.BindTransporterDbCall (IL, Architecture.WinApp.Purchase.txt:453783):
+           ERP feature 4 on  -> USP_GetVendorsAndCustomersForTransporter, value GlAccountId;
+           otherwise         -> CoaAllocationGetAllServiceBind (Sp_COAAllocation_GetAllMethod
+                                'COAAllocationSearch' @UserId) keeping AccountTypeId 6 or 8. */
+        m.put("transporters",feature(u,4)?transporterParties(u,true):coaAccounts(u,t->t==6||t==8));
+        m.put("feature5",feature(u,5));
         return m;
     }
+
+    /* ---- Desktop cache sources shared by the GDN family -------------------------------------
+       Each of these is what the desktop reads from a clsGlobalVariables cache or CommonServices
+       helper; the procedure, parameters and in-memory filter are copied, not inferred. */
+
+    /** CommonServices.GetERPFeatureById(id) = ErpFeaturesList contains Id. */
+    protected boolean feature(UserAccount u,int id){
+        return q("EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId()).stream().anyMatch(r->number(r.get("Id"))==id);
+    }
+    /** GlobalVariables_Helper.GetConfigValueFromGlobal(description): the ConfigKey text, or "" when absent. */
+    protected String config(UserAccount u,String description){
+        var rows=q("EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?,@CompanyId=?,@ConfigDescription=?,@DefinitionIds=?,@Activity=?",u.getOrganizationId(),u.getCompanyId(),description,null,"GetConfigurationByOrgCompandConfigDescription");
+        Object v=rows.isEmpty()?null:rows.get(0).get("ConfigKey");return v==null?"":String.valueOf(v).trim();
+    }
+    protected static boolean truthy(String v){return "true".equalsIgnoreCase(v)||"1".equals(v);}
+    /** USP_GetVendorsAndCustomersForTransporter (GlobalServicesMethods:393). The desktop forms disagree
+        on the value member: InvFrmGDN and the purchase return bind GlAccountId, frmGdnDirect binds Id. */
+    protected List<Map<String,Object>> transporterParties(UserAccount u,boolean valueIsGlAccount){
+        List<Map<String,Object>> out=new ArrayList<>();
+        for(var r:q("EXEC dbo.USP_GetVendorsAndCustomersForTransporter @OrganizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId())){
+            Map<String,Object> x=new LinkedHashMap<>();
+            x.put("Id",valueIsGlAccount?r.get("GlAccountId"):r.get("Id"));x.put("AccountTitle",r.get("CompanyName"));x.put("AccountCode",r.get("PartyCode"));x.put("SupplierCustomerId",r.get("Id"));
+            out.add(x);
+        }
+        return out;
+    }
+    /** CommonServices.CoaAllocationGetAllServiceBind = Sp_COAAllocation_GetAllMethod @OrganizationId,@CompanyId,
+        @UserId (sent only when non-zero),@Activity='COAAllocationSearch' (COAAllocation.GetAll:154), filtered by AccountTypeId. */
+    protected List<Map<String,Object>> coaAccounts(UserAccount u,java.util.function.IntPredicate keepType){
+        var rows=u.getId()!=0
+                ?q("EXEC dbo.Sp_COAAllocation_GetAllMethod @OrganizationId=?,@CompanyId=?,@UserId=?,@Activity='COAAllocationSearch'",u.getOrganizationId(),u.getCompanyId(),u.getId())
+                :q("EXEC dbo.Sp_COAAllocation_GetAllMethod @OrganizationId=?,@CompanyId=?,@Activity='COAAllocationSearch'",u.getOrganizationId(),u.getCompanyId());
+        List<Map<String,Object>> out=new ArrayList<>();
+        for(var r:rows){
+            if(!keepType.test(number(r.get("AccountTypeId"))))continue;
+            Map<String,Object> x=new LinkedHashMap<>();
+            x.put("Id",r.get("Id"));x.put("AccountTitle",r.get("AccountTitle"));x.put("AccountCode",r.get("AccountCode"));x.put("SupplierCustomerId",0);
+            out.add(x);
+        }
+        return out;
+    }
+    /** clsGlobalVariables.globalJobLot = DAL CommonServices.GetJobLotGlIdsandName
+        (IL Architecture.DAL.Common.txt:742): SP_JobLot_ReadMethod @OrganizationId,@CompanyId,@Activity. Not branch-filtered. */
+    protected List<Map<String,Object>> globalJobLots(UserAccount u){
+        return q("EXEC dbo.SP_JobLot_ReadMethod @OrganizationId=?,@CompanyId=?,@Activity='GetJobLotGlIdsandName'",u.getOrganizationId(),u.getCompanyId());
+    }
+    /** When config SaleCostingJobOrderWise is on, InvFrmGDN/frmGdnDirect list the lots from
+        jobLot.JobLot_GetWithJobOrderAndItem(org, comp, 0) = usp_JobLot_GetWithJobOrderAndItem (@ItemId omitted
+        when 0), de-duplicated by Id; otherwise the global job-lot cache. */
+    protected List<Map<String,Object>> saleJobLots(UserAccount u){
+        if(!truthy(config(u,"SaleCostingJobOrderWise")))return globalJobLots(u);
+        Map<Integer,Map<String,Object>> byId=new LinkedHashMap<>();
+        for(var r:q("EXEC dbo.usp_JobLot_GetWithJobOrderAndItem @OrganizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId())){
+            int id=number(r.get("Id"));if(byId.containsKey(id))continue;
+            Map<String,Object> x=new LinkedHashMap<>();x.put("Id",r.get("Id"));x.put("JobLotDescription",r.get("JobLotDescription"));byId.put(id,x);
+        }
+        return new ArrayList<>(byId.values());
+    }
+    /** clsGlobalVariables.globalAllCities = USP_City_GetAllWithCountryAndTehsil @OrganizationId,@CompanyId (GlobalServicesMethods:299). */
+    protected List<Map<String,Object>> globalCities(UserAccount u){
+        return q("EXEC dbo.USP_City_GetAllWithCountryAndTehsil @OrganizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId());
+    }
+    /** clsGlobalVariables.getGlobalAllBrands = usp_getBrands @OrganizationId,@CompanyId (GlobalServicesMethods:139). */
+    protected List<Map<String,Object>> globalBrands(UserAccount u){
+        return q("EXEC dbo.usp_getBrands @OrganizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId());
+    }
+
     public List<Map<String,Object>> items(UserAccount u,int supplier){return q("EXEC dbo.USP_GetItemsFromPurchaseInvoiceStoreAgainstPartyId @OrganizationId=?,@CompanyId=?,@SupplierCustomerId=?,@DocumentTypeIds=?",u.getOrganizationId(),u.getCompanyId(),supplier,"56,57,64,702");}
-    public List<Map<String,Object>> uoms(int itemId){return q("EXEC dbo.Sp_UOMSchedule_GetAllMethod @ItemId=?,@Activity='ReadByItemID'",itemId);}
+    /** InvFrmGDN.PackUomFromGlobalBind (:1164) and frmGdnForPurchaseReturn (IL 454349) read
+        CommonServices.dtUomFromGloablUomScheduleByItemId: the clsGlobalVariables.globalUomSchedule cache, loaded as
+        GlobalServicesMethods.getAllUomsByCompanyId(org, comp, ItemId 0 = not sent, Active 1) = usp_getAllUomsByCompanyId
+        @OrganizationId,@CompanyId,@Active=1, then filtered to the item in memory. Row shape = that helper's table
+        (CommonServices:2164): Id, UOMCode, Equivalent, BaseRateUom, BasePackUom. The web used to send
+        Sp_UOMSchedule_GetAllMethod with @ItemId only - no organization or company. */
+    public List<Map<String,Object>> uoms(UserAccount u,int itemId){
+        List<Map<String,Object>> out=new ArrayList<>();
+        /* @ItemId is passed to the procedure instead of filtering the whole company's schedule in Java: its WHERE is
+           (@ItemId IS NULL OR U.ItemId = @ItemId), so the rows are identical to the desktop's cache-then-filter. */
+        for(var r:q("EXEC dbo.usp_getAllUomsByCompanyId @OrganizationId=?,@CompanyId=?,@ItemId=?,@Active=1",u.getOrganizationId(),u.getCompanyId(),itemId)){
+            Map<String,Object> x=new LinkedHashMap<>();
+            x.put("Id",r.get("Id"));x.put("UOMCode",r.get("UOMCode"));x.put("Equivalent",r.get("Equivalent"));x.put("BaseRateUom",r.get("BaseRateUom"));x.put("BasePackUom",r.get("BasePackUom"));
+            out.add(x);
+        }
+        return out;
+    }
     public Map<String,Object> record(UserAccount u,int id){var h=q("EXEC dbo.Sp_InvGdn_GetAllMethod @Id=?,@Activity='GetById'",id);if(h.isEmpty()||number(h.get(0).get("OrganizationId"))!=u.getOrganizationId()||number(h.get(0).get("CompanyId"))!=u.getCompanyId()||number(h.get(0).get("DocumentTypeId"))!=documentTypeId())throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND,recordLabel()+" not found");var out=new LinkedHashMap<>(h.get(0));out.put("details",q("EXEC dbo.Sp_InvGdn_GetAllMethod @InvGdnMainId=?,@Activity='GetGDNDetailByGdnId'",id));out.put("expenses",q("EXEC dbo.Sp_InvGdn_GetAllMethod @Id=?,@Activity='GetInvGdnExpensesByHeaderId'",id));return out;}
     public List<Map<String,Object>> history(UserAccount u,int year){return q("EXEC dbo.Sp_InvGdn_GetAllMethod @OrganizationId=?,@CompanyId=?,@DocumentTypeId=?,@FinancialYearId=?,@BranchesId=?,@CanViewAllRecord=1,@EntryUser=?,@Activity='GDNFormHistory'",u.getOrganizationId(),u.getCompanyId(),documentTypeId(),year,u.getBranchesId(),u.getId());}
     public int save(UserAccount u,int year,Map<String,Object> request){

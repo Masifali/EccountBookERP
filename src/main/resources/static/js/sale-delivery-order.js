@@ -42,7 +42,8 @@
   function configure(data) {
     initial=data;
     fillOptions($('branchFrom'),data.branches||[],'BranchId',r=>text(r,'BranchName','branchName'));
-    const branch=(data.branches||[])[0]; if(branch)$('branchFrom').value=text(branch,'BranchId','branchId','Id','id');
+    /* DeliveryOrder.cs:654 sets Branch From to the signed-in user's branch, not to the first row. */
+    const branch=(data.branches||[]).find(r=>r.UserBranch===true)||(data.branches||[])[0]; if(branch)$('branchFrom').value=text(branch,'BranchId','branchId','Id','id');
     fillOptions($('saleType'),data.saleTypes||[],'Id',r=>text(r,'Name'));
     fillOptions($('vehicleTypeList'),data.vehicleTypes||[],'VehicleDescription',r=>text(r,'VehicleDescription'));
     fillOptions($('saleOrderList'),data.pendingOrders||[],'Id',r=>`${text(r,'DocNo')} — ${text(r,'PartyName')} — ${dateOnly(text(r,'DocDate'))}`);
@@ -100,6 +101,7 @@
   async function save() { const updated=currentId>0; const record=await request(api,{method:'POST',body:JSON.stringify(payload())}); loadRecordObject(record); await refreshHistory(); message(`Delivery Order ${$('docNo').value} ${updated?'updated':'saved'} successfully`,true); }
   function loadRecordObject(record) {
     currentId=num(record,'Id','id','InvDeliveryOrderId','HeaderId'); $('docNo').value=text(record,'DocNo','docNo'); $('docDate').value=dateOnly(text(record,'DocDate','docDate')); $('vehicleType').value=text(record,'VehicleType','vehicleType'); $('vehicleNo').value=text(record,'VehicleNo','vehicleNo'); $('remarks').value=text(record,'LoadingInstructions','loadingInstructions'); $('saleType').value=String(num(record,'SaleTypeId','saleTypeId')||1); $('stockReserved').checked=String(text(record,'IsStockReserved','stockReserved')).toLowerCase()==='true';
+    const recordBranch=num(record,'BranchesId','branchesId'); if(recordBranch)$('branchFrom').value=String(recordBranch); /* DeliveryOrder.cs:2038 */
     rows=(record.lines||[]).map(fromOrderLine); removedLineIds=[]; $('saveButton').hidden=true; $('updateButton').hidden=false; $('deleteButton').hidden=false; renderRows(); window.scrollTo({top:0,behavior:'smooth'});
   }
   async function loadRecord(id) { loadRecordObject(await request(`${api}/${id}`)); }

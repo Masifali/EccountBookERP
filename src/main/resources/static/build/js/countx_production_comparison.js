@@ -1,47 +1,43 @@
 /* ============================================================================================
- * Production Comparison Report — FoodProductionComparisonRpt.cs, ScreenDefinition 308.
+ * Production Comparison Report - FoodProductionComparisonRpt.cs, ScreenDefinition 308.
  *
  *   production types  Sp_ProductionType_GetAllMethod          (no parameters at all)
- *   both tabs' lists  USP_GetDataForDropDownFromFoodProduction
+ *   both tabs' lists  USP_GetDataForDropDownFromFoodProduction (split on Activity)
  *   pack uom          Sp_UOMSchedule_GetAllMethod @Activity='ReadByItemID'
- *   comparison        SpInvFoodProductionComparisons_Rpt
- *   input detail      Sp_InvFoodProductionIssuanceGrnWiseByJobOrderId_rpt
+ *   comparison        SpInvFoodProductionComparisons_Rpt       -> 604 print, row Print -> 602
+ *   input detail      Sp_InvFoodProductionIssuanceGrnWiseByJobOrderId_rpt -> 607 print
  *   gain / loss       SpProduction_GainLossSummary_Rpt
  *
- * Two tabs, each with its own branch tick-list and its own pickers, sharing one grid — the same
- * arrangement as the desktop's tabControl1.
- *
- * The Summary tab's Job Order picker is EMPTY on purpose. ComboBindSummary builds a table for it
- * but its splitting loop only ever matches "Plant" and "ItemName", so the desktop's picker is
- * always empty too and both summary reports run with no job-order filter. Filling it here would
- * return different rows from the desktop.
+ * Two tabs, each with its OWN toolbar, pickers and grid (DataGridHistory / grdInput), so a tab
+ * switch keeps the other tab's result - as the desktop does.
  * ============================================================================================ */
 (function () {
     'use strict';
 
     var api = '/api/production/reports/production-comparison';
+    var K = window.ReportKit;
 
-    var rows = [];
-    var cols = [];
-    var shape = 'comparison';      /* comparison | detail | gainloss */
+    var cmp = { rows: [], cols: [], args: null };             /* DataGridHistory / dtReg */
+    var sum = { rows: [], cols: [], args: null, shape: 'detail' };  /* grdInput / dtInput / dtGainLoss */
     var branches = [];
 
-    /* GridSetting:691 — added and then hidden. */
-    var COMPARISON_HIDDEN = ['Id'];
-
-    var NUMERIC = ['Input', 'BP_Output', 'FG_Output', 'Short_Gain', 'BP_Recovery', 'FG_Recovery',
-                   'Total_Recovery', 'OrderNo', 'GrnNo', 'InvoiceNo', 'IssueQty', 'IssueWeight',
-                   'ItemQty', 'GrossWeight', 'EBWPerUnit', 'EBWTotal', 'AdLsWeight',
-                   'StockWeight', 'NetBillWeight', 'ItemAmount', 'ItemNetAmount',
-                   'CarriageAmount', 'ProductionQty', 'ProductionWeight'];
-
-    /* AggregateFunction 2 = Sum. grdInputSetting:1040, grdGainLossSummarySetting. */
-    var AGGREGATES = {
-        comparison: {},
-        detail:   { IssueQty: 'sum', IssueWeight: 'sum', ItemAmount: 'sum', ItemNetAmount: 'sum' },
-        gainloss: { IssueQty: 'sum', IssueWeight: 'sum', ProductionQty: 'sum', ProductionWeight: 'sum' }
+    /* Column formats (GridSetting:688-715, grdInputSetting:992-1037, gain/loss :1066):
+       p2  = .NET "0,0" (whole, thousands, two digits minimum)   n2 = "#,##0.##"
+       raw = no FormatString - shown as it comes, left aligned. */
+    var FMT = {
+        comparison: { Input: 'p2', BP_Output: 'p2', FG_Output: 'p2', Short_Gain: 'p2', BP_Recovery: 'p2',
+                      FG_Recovery: 'p2', Total_Recovery: 'p2' },
+        detail:     { ItemQty: 'p2', GrossWeight: 'n2', EBWPerUnit: 'n2', EBWTotal: 'n2', AdLsWeight: 'n2',
+                      StockWeight: 'n2', IssueWeight: 'n2', IssueQty: 'n2', ItemAmount: 'n2', ItemNetAmount: 'n2' },
+        gainloss:   { IssueQty: 'p2', IssueWeight: 'n2', ProductionQty: 'n2', ProductionWeight: 'n2' }
     };
-
+    /* Columns carrying a Sum (totals "#,##0.##"). */
+    var SUMS = {
+        comparison: ['Input', 'BP_Output', 'FG_Output', 'Short_Gain', 'BP_Recovery', 'FG_Recovery', 'Total_Recovery'],
+        detail:     ['ItemQty', 'GrossWeight', 'EBWPerUnit', 'EBWTotal', 'AdLsWeight', 'StockWeight', 'IssueWeight',
+                     'IssueQty', 'ItemAmount', 'ItemNetAmount'],
+        gainloss:   ['IssueQty', 'IssueWeight', 'ProductionQty', 'ProductionWeight']
+    };
     var DATE_COLUMNS = ['PlanDate', 'GpDate', 'GrnDate'];
 
     function $id(id) { return document.getElementById(id); }
@@ -136,75 +132,79 @@
     function tickedNames(hostId) {
         var out = [];
         var boxes = $id(hostId).querySelectorAll('input[type="checkbox"]');
-        for (var i = 0; i < boxes.length; i++) {
-            if (boxes[i].checked) out.push(boxes[i].getAttribute('data-name'));
-        }
+        for (var i = 0; i < boxes.length; i++) if (boxes[i].checked) out.push(boxes[i].getAttribute('data-name'));
         return out;
     }
-    function renderTicks(hostId, textId, defaultId, onClose) {
+    function renderTicks(hostId, textId, defaultId) {
         var host = $id(hostId);
+        var keep = ticked(hostId);
         host.innerHTML = branches.map(function (b) {
             var id = ci(b, 'BranchId'), name = ci(b, 'BranchName');
-            var on = String(id) === String(defaultId) ? ' checked' : '';
+            var on = (keep.length ? keep.indexOf(String(id)) >= 0 : String(id) === String(defaultId)) ? ' checked' : '';
             return '<label class="cx-multi-row">'
                  + '<input type="checkbox" value="' + esc(id) + '" data-name="' + esc(name) + '"' + on + '>'
                  + '<span>' + esc(name) + '</span></label>';
         }).join('');
         host.onchange = function () { $id(textId).value = tickedNames(hostId).join(','); };
         $id(textId).value = tickedNames(hostId).join(',');
-        host.setAttribute('data-onclose', onClose);
+    }
+    function all(hostId, textId, on) {
+        $id(hostId).querySelectorAll('input[type="checkbox"]').forEach(function (c) { c.checked = on; });
+        $id(textId).value = tickedNames(hostId).join(',');
     }
     function toggle(id) { $id(id).classList.toggle('is-open'); }
 
+    /** tabControl1_SelectedIndexChanged:592 - only entering Summary does anything: focus From,
+     *  InPut_Detail radio, totals panel hidden. Neither grid is cleared. */
     function tab(which) {
-        var cmp = which === 'comparison';
-        show($id('tabComparison'), cmp);
-        show($id('tabSummary'), !cmp);
-        $id('tabComparisonBtn').classList[cmp ? 'add' : 'remove']('is-active');
-        $id('tabSummaryBtn').classList[cmp ? 'remove' : 'add']('is-active');
-        /* tabControl1_SelectedIndexChanged:608 — switching tabs clears the shared grid, since
-           the two tabs' grids have nothing in common. */
-        rows = []; cols = [];
-        $id('gridHead').innerHTML = '';
-        $id('gridBody').innerHTML = '';
-        $id('lblCount').textContent = '';
-        show($id('panelValues'), false);
-        show($id('noRateNote'), false);
-        $id('lblGridTitle').textContent = cmp ? 'Comparison' : 'Summary';
+        var isCmp = which === 'comparison';
+        show($id('tabComparison'), isCmp);
+        show($id('tabSummary'), !isCmp);
+        $id('tabComparisonBtn').classList[isCmp ? 'add' : 'remove']('is-active');
+        $id('tabSummaryBtn').classList[isCmp ? 'remove' : 'add']('is-active');
+        if (!isCmp) {
+            setMode('detail');
+            show($id('panelValues'), false);
+            $id('datSumFrom').focus();
+        }
+        $id('lblCount').textContent = (isCmp ? cmp.rows.length : sum.rows.length) + ' record(s)';
+    }
+    function currentTab() { return $id('tabSummary').classList.contains('cx-hidden') ? 'comparison' : 'summary'; }
+
+    function setMode(m) {
+        var r = document.querySelector('input[name="sumMode"][value="' + m + '"]');
+        if (r) r.checked = true;
     }
 
     // ------------------------------------------------------------------ pickers
 
     function fill(selectId, list, valueKey, nameKey, blankFirst) {
+        var el = $id(selectId), keep = el.value;
         var head = blankFirst ? '<option value=""></option>' : '';
-        $id(selectId).innerHTML = head + (list || []).map(function (r) {
+        el.innerHTML = head + (list || []).map(function (r) {
             return '<option value="' + esc(ci(r, valueKey)) + '">' + esc(ci(r, nameKey)) + '</option>';
         }).join('');
+        el.value = keep;
+        if (el.value !== keep) el.value = blankFirst ? '' : (el.options.length ? el.options[0].value : '');
     }
 
     function loadForm() {
         return getJson(api + '/lookups').then(function (d) {
             branches = (d && d.branches) || [];
-            renderTicks('cmpBranchRows', 'txtCmpBranch', d && d.defaultBranchId, 'comparison');
-            renderTicks('sumBranchRows', 'txtSumBranch', d && d.defaultBranchId, 'summary');
-
-            /* ProductionTypeBind uses BindDDLNew - one visible column, and NO blank row. The
-               form then activates Rows[1], so the second entry is the opening selection. */
+            renderTicks('cmpBranchRows', 'txtCmpBranch', d && d.defaultBranchId);
+            renderTicks('sumBranchRows', 'txtSumBranch', d && d.defaultBranchId);
+            /* ProductionTypeBind: no blank row; Rows[1] is activated on load. */
             fill('cmbProductionType', d && d.productionTypes, 'Id', 'ProductionTypeDescription', false);
             var pt = $id('cmbProductionType');
             if (pt.options.length > 1) pt.selectedIndex = 1;
-
-            /* frmGPOutward_Load:216 - From opens at the active financial year's start. */
             var start = isoDate(d && d.financialYearStart);
             if (start) $id('datSumFrom').value = start;
-
             return Promise.all([loadComparisonLists(), loadSummaryLists()]);
         });
     }
 
     function loadComparisonLists() {
-        return getJson(api + '/comparison-lookups?branchIds='
-                       + encodeURIComponent(ticked('cmpBranchRows').join(',')))
+        return getJson(api + '/comparison-lookups?branchIds=' + encodeURIComponent(ticked('cmpBranchRows').join(',')))
             .then(function (d) {
                 fill('cmbCmpJobOrder', d && d.jobOrders, 'Id', 'Name', true);
                 fill('cmbCmpPlant',    d && d.plants,    'Id', 'Name', true);
@@ -212,156 +212,205 @@
     }
 
     function loadSummaryLists() {
-        return getJson(api + '/summary-lookups?branchIds='
-                       + encodeURIComponent(ticked('sumBranchRows').join(',')))
+        return getJson(api + '/summary-lookups?branchIds=' + encodeURIComponent(ticked('sumBranchRows').join(',')))
             .then(function (d) {
-                /* Always empty on the desktop — see the header note. */
+                /* ComboBindSummary:385 fills the Job Order picker too (Activity "JobOrder"). */
                 fill('cmbSumJobOrder', d && d.jobOrders, 'Id', 'Name', true);
                 fill('cmbSumPlant',    d && d.plants,    'Id', 'Name', true);
                 fill('cmbSumItem',     d && d.items,     'Id', 'Name', true);
-                $id('cmbSumPackUom').innerHTML = '';
             });
     }
 
-    /** CmbItemName_Leave:461 — the pack UOM list follows the item. */
+    /** CmbItemName_Leave:461 - the pack UOM list follows the item. ZeroIndex:false and no value
+     *  set, so nothing is selected and @PackUomId is not sent until one is picked. */
     function itemChanged() {
         var id = val('cmbSumItem');
         var uom = $id('cmbSumPackUom');
         if (!id) { uom.innerHTML = ''; return; }
-        return getJson(api + '/pack-uoms?itemId=' + encodeURIComponent(id))
-            .then(function (list) {
-                /* ZeroIndex:false — this one has no blank row. */
-                fill('cmbSumPackUom', list, 'Id', 'UOMCode', false);
-                if (!(list || []).length) uom.innerHTML = '';
-            }).catch(function (e) { uom.innerHTML = ''; box(e.message); });
+        return getJson(api + '/pack-uoms?itemId=' + encodeURIComponent(id)).then(function (list) {
+            uom.innerHTML = '<option value=""></option>' + (list || []).map(function (r) {
+                return '<option value="' + esc(ci(r, 'Id')) + '">' + esc(ci(r, 'UOMCode')) + '</option>';
+            }).join('');
+            uom.value = '';
+        }).catch(function (e) { uom.innerHTML = ''; box(e.message); });
     }
 
-    // ------------------------------------------------------------------ the two tabs' reports
+    // ------------------------------------------------------------------ Comparison tab
 
     function showComparison() {
-        return busy('btnShowComparison', function () {
-            var pt = $id('cmbProductionType');
-            var type = pt.selectedIndex >= 0 ? pt.options[pt.selectedIndex].text : '';
-            if (!type) { box('Select a production type'); return; }
+        return busy('btnShowComparison', function () { return runComparison(); });
+    }
+    function runComparison() {
+        var pt = $id('cmbProductionType');
+        var type = pt.selectedIndex >= 0 ? pt.options[pt.selectedIndex].text : '';
+        if (!type) { box('Select a production type'); return; }
+        var args = { productionType: type, docNoFrom: int(val('txtDocNoFrom')), docNoTo: int(val('txtDocNoTo')),
+                     plantId: int(val('cmbCmpPlant')), jobOrderId: int(val('cmbCmpJobOrder')) };
+        /* The procedure takes the production type's CAPTION, not its id. */
+        var q = ['productionType=' + encodeURIComponent(type), 'docNoFrom=' + args.docNoFrom,
+                 'docNoTo=' + args.docNoTo, 'plantId=' + args.plantId, 'jobOrderId=' + args.jobOrderId];
+        return getJson(api + '?' + q.join('&')).then(function (data) {
+            cmp.rows = data || []; cmp.args = args;
+            renderGrid('cmp', 'comparison', cmp, ['Id'], true);
+        }).catch(function (e) { cmp.rows = []; cmp.args = null; renderGrid('cmp', 'comparison', cmp, ['Id'], true); box(e.message); });
+    }
 
-            /* The procedure takes the production type's CAPTION, not its id. */
-            var q = ['productionType=' + encodeURIComponent(type),
-                     'docNoFrom=' + int(val('txtDocNoFrom')),
-                     'docNoTo=' + int(val('txtDocNoTo')),
-                     'plantId=' + encodeURIComponent(val('cmbCmpPlant') || '0'),
-                     'jobOrderId=' + encodeURIComponent(val('cmbCmpJobOrder') || '0')];
+    /** reset:511 - doc numbers and plant cleared, Production Type back to Rows[1], and the
+     *  grid re-run (a desktop quirk, kept). */
+    function resetComparison() {
+        setVal('txtDocNoFrom', ''); setVal('txtDocNoTo', ''); setVal('cmbCmpPlant', '');
+        var pt = $id('cmbProductionType');
+        if (pt.options.length > 1) pt.selectedIndex = 1;
+        return busy('btnShowComparison', function () { return runComparison(); });
+    }
 
-            return getJson(api + '?' + q.join('&')).then(function (data) {
-                shape = 'comparison';
-                rows = data || [];
-                $id('lblGridTitle').textContent = 'Comparison';
-                show($id('panelValues'), false);
-                show($id('noRateNote'), false);
-                render(COMPARISON_HIDDEN);
-            }).catch(fail);
+    /** BtnRefreshComparison_Click:582 - BranchesFill + ComboBindComparison. */
+    function refreshComparison() {
+        return busy('btnRefreshComparison', function () {
+            return getJson(api + '/lookups').then(function (d) {
+                branches = (d && d.branches) || [];
+                renderTicks('cmpBranchRows', 'txtCmpBranch', d && d.defaultBranchId);
+                return loadComparisonLists();
+            }).catch(function (e) { box(e.message); });
         });
+    }
+
+    /** toolStripButton1_Click:1162 - dtReg into 604. */
+    function print604() {
+        if (!cmp.args || !cmp.rows.length) { box('Record Not Found For Display'); return; }
+        return window.CrystalPrint.open('pc-604', cmp.args, 'btnPrint604');
+    }
+
+    /** DataGridHistory_ColumnButtonClick:730 - the row Print column. */
+    function printRow(i) {
+        var r = cmp.rows[i];
+        if (!r) return;
+        return window.CrystalPrint.open('pc-602-row', { id: int(ci(r, 'Id')) });
+    }
+
+    // ------------------------------------------------------------------ Summary tab
+
+    function mode() {
+        var m = document.querySelector('input[name="sumMode"]:checked');
+        return m ? m.value : 'detail';
     }
 
     function showSummary() {
         return busy('btnShowSummary', function () {
-            var mode = document.querySelector('input[name="sumMode"]:checked');
-            var m = mode ? mode.value : 'detail';
-            var q = ['mode=' + encodeURIComponent(m),
-                     'jobOrderId=' + encodeURIComponent(val('cmbSumJobOrder') || '0'),
-                     'plantId=' + encodeURIComponent(val('cmbSumPlant') || '0'),
-                     'itemId=' + encodeURIComponent(val('cmbSumItem') || '0'),
-                     'packUomId=' + encodeURIComponent(val('cmbSumPackUom') || '0')];
-            /* The desktop sets both dates unconditionally on this tab. */
-            if (val('datSumFrom')) q.push('fromDate=' + encodeURIComponent(val('datSumFrom')));
-            if (val('datSumTo'))   q.push('toDate=' + encodeURIComponent(val('datSumTo')));
-
+            var m = mode();
+            var args = { id: int(val('cmbSumJobOrder')), jobOrderId: int(val('cmbSumJobOrder')),
+                         plantId: int(val('cmbSumPlant')), itemId: int(val('cmbSumItem')),
+                         packUomId: int(val('cmbSumPackUom')),
+                         fromDate: val('datSumFrom'), toDate: val('datSumTo') };
+            var q = ['mode=' + encodeURIComponent(m), 'jobOrderId=' + args.jobOrderId, 'plantId=' + args.plantId,
+                     'itemId=' + args.itemId, 'packUomId=' + args.packUomId];
+            /* Both dates are set unconditionally on this tab. */
+            if (args.fromDate) q.push('fromDate=' + encodeURIComponent(args.fromDate));
+            if (args.toDate) q.push('toDate=' + encodeURIComponent(args.toDate));
             return getJson(api + '/summary?' + q.join('&')).then(function (d) {
-                shape = (d && d.mode) === 'gainloss' ? 'gainloss' : 'detail';
-                rows = (d && d.rows) || [];
-                $id('lblGridTitle').textContent =
-                    shape === 'gainloss' ? 'Gain / Loss Summary' : 'Input Detail';
-                show($id('noRateNote'),
-                     shape === 'detail' && !(d && d.canSeeRateAndAmount));
-                renderGainLoss(shape === 'gainloss' ? (d && d.totals) : null);
-                render([]);
-            }).catch(fail);
+                sum.shape = (d && d.mode) === 'gainloss' ? 'gainloss' : 'detail';
+                sum.rows = (d && d.rows) || [];
+                sum.args = args;
+                show($id('noRateNote'), sum.shape === 'detail' && !(d && d.canSeeRateAndAmount));
+                renderGainLoss(sum.shape === 'gainloss' ? (d && d.totals) : null);
+                renderGrid('sum', sum.shape, sum, [], false);
+            }).catch(function (e) {
+                sum.rows = []; sum.args = null;
+                show($id('panelValues'), false);
+                renderGrid('sum', sum.shape, sum, [], false);
+                box(e.message);
+            });
         });
     }
 
-    function fail(e) {
-        rows = []; cols = [];
-        $id('gridHead').innerHTML = '';
-        $id('gridBody').innerHTML = '';
-        $id('lblCount').textContent = '';
+    /** btnNewInput_Click:539 - job order cleared, grid cleared, InPut_Detail, totals hidden. */
+    function resetSummary() {
+        setVal('cmbSumJobOrder', '');
+        clearSummaryGrid();
+        setMode('detail');
         show($id('panelValues'), false);
-        box(e.message);
+    }
+    function clearSummaryGrid() {
+        sum.rows = []; sum.args = null;
+        $id('sumHead').innerHTML = ''; $id('sumBody').innerHTML = ''; $id('sumFoot').innerHTML = '';
+        if (currentTab() === 'summary') $id('lblCount').textContent = '';
     }
 
-    /**
-     * Production_GainLossSummary:926 — the sign of the difference decides the word and its
-     * colour, and the percentage is only computed when the difference is not zero.
-     */
+    /** BtnRefreshSummary_Click:568 - BranchesFill + ComboBindSummary. */
+    function refreshSummary() {
+        return busy('btnRefreshSummary', function () {
+            return getJson(api + '/lookups').then(function (d) {
+                branches = (d && d.branches) || [];
+                renderTicks('sumBranchRows', 'txtSumBranch', d && d.defaultBranchId);
+                return loadSummaryLists();
+            }).catch(function (e) { box(e.message); });
+        });
+    }
+
+    /** btnPrint607Register_Click:1181 - dtInput into 607. */
+    function print607() {
+        if (sum.shape !== 'detail' || !sum.args || !sum.rows.length) { box('Record Not Found For Display'); return; }
+        var a = sum.args;
+        return window.CrystalPrint.open('prod-607', { id: a.jobOrderId, plantId: a.plantId, itemId: a.itemId,
+                                                      packUomId: a.packUomId, fromDate: a.fromDate, toDate: a.toDate },
+                                        'btnPrint607');
+    }
+
+    /** Production_GainLossSummary:926 - word, colour and percentage from the difference. */
     function renderGainLoss(t) {
-        /* LablesStatus(false) when the report came back empty. */
-        var on = !!t && rows.length > 0;
+        var on = !!t && sum.rows.length > 0;
         show($id('panelValues'), on);
         if (!on) return;
         $id('lblSumofTotalIssue').textContent = fmt(t.totalIssueWeight, 0);
         $id('lblSumOfOutPut').textContent = fmt(t.totalProductionWeight, 0);
-        /* "#,#;(#,#);0" — a negative difference is shown in brackets. */
         var d = num(t.difference);
-        $id('lblGainLossDiff').textContent = d === 0 ? '0'
-            : (d < 0 ? '(' + fmt(Math.abs(d), 0) + ')' : fmt(d, 0));
-
+        $id('lblGainLossDiff').textContent = d === 0 ? '0' : (d < 0 ? '(' + fmt(Math.abs(d), 0) + ')' : fmt(d, 0));
         var st = $id('lblGainLossStatus'), pc = $id('lblPercent');
         st.textContent = t.status || '';
-        st.className = 'cx-status ' + (t.status === 'Loss' ? 'cx-loss'
-                                     : t.status === 'Gain' ? 'cx-gain' : 'cx-nill');
+        st.className = 'cx-status ' + (t.status === 'Loss' ? 'cx-loss' : t.status === 'Gain' ? 'cx-gain' : 'cx-nill');
         pc.className = st.className;
         pc.textContent = (t.percent === undefined || t.percent === null) ? '' : (t.percent + ' %');
     }
 
-    function render(hidden) {
-        var head = $id('gridHead'), body = $id('gridBody');
-        if (!rows.length) {
-            cols = [];
+    // ------------------------------------------------------------------ grids
+
+    function cellText(shape, col, v) {
+        if (has(DATE_COLUMNS, col)) return shortDate(v);
+        var f = (FMT[shape] || {})[col];
+        if (f === 'p2') return K.pad2(v);
+        if (f === 'n2') return K.num(v, 2);
+        return v;
+    }
+
+    function renderGrid(prefix, shape, st, hidden, printColumn) {
+        var head = $id(prefix + 'Head'), body = $id(prefix + 'Body'), foot = $id(prefix + 'Foot');
+        foot.innerHTML = '';
+        if (!st.rows.length) {
+            st.cols = [];
             head.innerHTML = '';
             body.innerHTML = '<tr><td>No records</td></tr>';
             $id('lblCount').textContent = '0 record(s)';
             return;
         }
-        cols = Object.keys(rows[0]).filter(function (c) { return !has(hidden || [], c); });
-        head.innerHTML = cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('');
-        body.innerHTML = rows.map(function (r) {
-            return '<tr>' + cols.map(function (c) { return td(c, r[c]); }).join('') + '</tr>';
-        }).join('') + grandTotal();
-        $id('lblCount').textContent = rows.length + ' record(s)';
-    }
-
-    function cellText(col, v) {
-        if (has(DATE_COLUMNS, col)) return shortDate(v);
-        if (has(NUMERIC, col)) return fmt(v, 2);
-        return v;
-    }
-
-    function td(col, v) {
-        return '<td' + (has(NUMERIC, col) ? ' class="num"' : '') + '>'
-             + esc(cellText(col, v)) + '</td>';
-    }
-
-    function grandTotal() {
-        var agg = AGGREGATES[shape] || {};
-        var any = false;
-        for (var k in agg) { if (Object.prototype.hasOwnProperty.call(agg, k)) { any = true; break; } }
-        if (!any) return '';
-        return '<tr class="cx-grand">' + cols.map(function (c, i) {
-            if (!Object.prototype.hasOwnProperty.call(agg, c)) {
-                return i === 0 ? '<td>Total</td>' : '<td></td>';
-            }
+        st.cols = Object.keys(st.rows[0]).filter(function (c) { return !has(hidden || [], c); });
+        var fmts = FMT[shape] || {};
+        head.innerHTML = st.cols.map(function (c) {
+            return '<th' + (fmts[c] ? ' class="num"' : '') + '>' + esc(c) + '</th>';
+        }).join('') + (printColumn ? '<th>Print</th>' : '');
+        body.innerHTML = st.rows.map(function (r, i) {
+            return '<tr>' + st.cols.map(function (c) {
+                return '<td' + (fmts[c] ? ' class="num"' : '') + '>' + esc(cellText(shape, c, r[c])) + '</td>';
+            }).join('') + (printColumn ? '<td><button type="button" class="cx-cellbtn" data-print="' + i + '">Print</button></td>' : '') + '</tr>';
+        }).join('');
+        var sums = SUMS[shape] || [];
+        foot.innerHTML = '<tr class="cx-grand">' + st.cols.map(function (c, i) {
+            if (sums.indexOf(c) < 0) return i === 0 ? '<td>Total</td>' : '<td></td>';
             var t = 0;
-            rows.forEach(function (r) { t += num(r[c]); });
-            return '<td class="num">' + esc(fmt(t, 2)) + '</td>';
-        }).join('') + '</tr>';
+            st.rows.forEach(function (r) { t += num(r[c]); });
+            return '<td class="num">' + esc(K.num(t, 2)) + '</td>';
+        }).join('') + (printColumn ? '<td></td>' : '') + '</tr>';
+        $id('lblCount').textContent = st.rows.length + ' record(s)';
+        K.filterRow($id(prefix === 'cmp' ? 'tblCmp' : 'tblSum'));
     }
 
     // ------------------------------------------------------------------ chrome
@@ -371,85 +420,75 @@
         return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     }
 
-    function exportCsv() {
-        if (!rows.length) { box('Nothing to export yet.'); return; }
-        var lines = [cols.map(csvCell).join(',')];
-        rows.forEach(function (r) {
-            lines.push(cols.map(function (c) { return csvCell(cellText(c, r[c])); }).join(','));
+    function exportCsv(which) {
+        var st = which === 'cmp' ? cmp : sum, shape = which === 'cmp' ? 'comparison' : sum.shape;
+        if (!st.rows.length) { box('Nothing to export yet.'); return; }
+        var lines = [st.cols.map(csvCell).join(',')];
+        st.rows.forEach(function (r) {
+            lines.push(st.cols.map(function (c) { return csvCell(cellText(shape, c, r[c])); }).join(','));
         });
-        var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'production-comparison-' + shape + '.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     }
 
-    /** BtnRefreshComparison_Click:595 / BtnRefreshSummary_Click:582. */
-    function refresh() {
-        return busy(null, function () {
-            return loadForm().catch(function (e) { box(e.message); });
-        });
-    }
+    function toggleFullscreen(boxId) { var el = $id(boxId); if (el) el.classList.toggle('is-fullscreen'); }
+    function setVal(id, v) { var e = $id(id); if (e) e.value = v; }
 
-    function toggleFullscreen(boxId) {
-        var el = $id(boxId);
-        if (el) el.classList.toggle('is-fullscreen');
-    }
-
-    /** GpsNoFrom_KeyPress:1261 / GpsNoTo_KeyPress:1273 — digits only in the doc-no boxes. */
+    /** GpsNoFrom_KeyPress / GpsNoTo_KeyPress - digits only. */
     function digitsOnly(el) {
-        el.addEventListener('keypress', function (e) {
-            if (e.key.length === 1 && !/[0-9]/.test(e.key)) e.preventDefault();
-        });
-        el.addEventListener('input', function () {
-            var c = el.value.replace(/[^0-9]/g, '');
-            if (c !== el.value) el.value = c;
-        });
+        el.addEventListener('keypress', function (e) { if (e.key.length === 1 && !/[0-9]/.test(e.key)) e.preventDefault(); });
+        el.addEventListener('input', function () { var c = el.value.replace(/[^0-9]/g, ''); if (c !== el.value) el.value = c; });
     }
 
     function boot() {
         digitsOnly($id('txtDocNoFrom'));
         digitsOnly($id('txtDocNoTo'));
-
         var now = new Date();
-        $id('datSumTo').value = now.getFullYear() + '-'
-            + String(now.getMonth() + 1).padStart(2, '0') + '-'
-            + String(now.getDate()).padStart(2, '0');
+        $id('datSumTo').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-'
+                              + String(now.getDate()).padStart(2, '0');
 
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && e.target && e.target.tagName !== 'BUTTON'
-                && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-            }
+        /* KeyDown:1243 - Ctrl+P 604, Ctrl+N comparison reset, Ctrl+E / Esc close. */
+        K.enterToTab();
+        K.keys({ 'ctrl+p': print604, 'ctrl+n': resetComparison, 'ctrl+e': K.close, 'esc': K.close });
+
+        /* RdInputDetail / RdGainLoss CheckedChanged:1087 - every toggle clears grdInput. */
+        document.querySelectorAll('input[name="sumMode"]').forEach(function (r) {
+            r.addEventListener('change', function () {
+                clearSummaryGrid();
+                if (mode() === 'detail') show($id('panelValues'), false);
+            });
         });
-        /* cmbBranchNameComparison_Leave:483 / CmbBranchNameSummary_Leave:503 — closing a branch
-           list rebuilds that tab's pickers. */
+        $id('cmpBody').addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-print]');
+            if (b) printRow(+b.getAttribute('data-print'));
+        });
+        /* cmbBranchNameComparison_Leave:476 / CmbBranchNameSummary_Leave:496 - closing a
+           branch list rebuilds that tab's pickers. */
         document.addEventListener('click', function (e) {
-            [['cmpBranchBox', loadComparisonLists], ['sumBranchBox', loadSummaryLists]]
-                .forEach(function (pair) {
-                    var b = $id(pair[0]);
-                    if (b && b.classList.contains('is-open') && !b.contains(e.target)) {
-                        b.classList.remove('is-open');
-                        pair[1]().catch(function (err) { box(err.message); });
-                    }
-                });
+            [['cmpBranchBox', loadComparisonLists], ['sumBranchBox', loadSummaryLists]].forEach(function (pair) {
+                var b = $id(pair[0]);
+                if (b && b.classList.contains('is-open') && !b.contains(e.target)) {
+                    b.classList.remove('is-open');
+                    pair[1]().catch(function (err) { box(err.message); });
+                }
+            });
+            var dd = $id('ddGainLoss');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('is-open');
         });
 
         loadForm().catch(function (e) { box(e.message); });
     }
 
     window.ProductionComparison = {
-        tab: tab,
-        toggle: toggle,
-        itemChanged: itemChanged,
-        showComparison: showComparison,
-        showSummary: showSummary,
-        exportCsv: exportCsv,
-        refresh: refresh,
-        toggleFullscreen: toggleFullscreen
+        tab: tab, toggle: toggle, all: all, itemChanged: itemChanged,
+        showComparison: showComparison, resetComparison: resetComparison, refreshComparison: refreshComparison,
+        print604: print604,
+        showSummary: showSummary, resetSummary: resetSummary, refreshSummary: refreshSummary, print607: print607,
+        exportCsv: exportCsv, toggleFullscreen: toggleFullscreen
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

@@ -8,7 +8,6 @@
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
     <style>
-        html, body { overflow-x: hidden; }
         body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
         .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 4px; }
         .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
@@ -61,9 +60,10 @@
 <body>
 
 <div class="win-tool-strip">
-    <button type="button" class="win-btn-tool" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+    <!-- toolStrip: &Refresh (Reset:342), 812-Print (PrintRegister:321). -->
+    <button type="button" class="win-btn-tool" onclick="PackingMaterialConsumption.reset()" title="Ctrl+N"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    <button type="button" class="win-btn-tool" id="btnPrint812" onclick="PackingMaterialConsumption.print()" title="Ctrl+P"><i class="fa fa-print"></i> 812-Print</button>
     <button type="button" class="win-btn-tool" onclick="PackingMaterialConsumption.exportCsv()"><i class="fa fa-file-excel-o"></i> Export CSV</button>
-    <button type="button" class="win-btn-tool" onclick="PackingMaterialConsumption.reset()"><i class="fa fa-file-o"></i> New</button>
     <div style="margin-left:auto;">
         <a href="/production" style="color:#004d40; text-decoration:none; font-weight:bold; font-size:11px;">
             <i class="fa fa-arrow-left"></i> Exit to Dashboard</a>
@@ -71,15 +71,11 @@
 </div>
 
 <div class="win-teal-header">
-    <div class="win-teal-header-title"><i class="fa fa-cubes"></i> Production PackingMaterial Consumption Register</div>
+    <div class="win-teal-header-title">Production Packing Material Consumption_Register</div>
     <div><span id="lblCount" style="font-size:9pt;">&nbsp;</span></div>
 </div>
 
 <div class="win-form-body">
-    <div class="cx-note">
-        Shows the same rows as the desktop register. Printing is browser output rather than the
-        Crystal layout, and CSV export is additional.
-    </div>
 
     <fieldset class="win-group-box">
         <legend>Filters</legend>
@@ -90,7 +86,7 @@
                 <input type="text" id="txtBranchName" class="win-textbox" readonly
                        placeholder="(required)" onclick="PackingMaterialConsumption.toggle()"/>
                 <div class="cx-multi-panel">
-                    <div class="cx-multi-head">Branch Name</div>
+                    <div class="cx-multi-head"><input type="checkbox" title="Select all" onchange="PackingMaterialConsumption.all(this.checked)"> Branch Name</div>
                     <div id="branchRows"></div>
                 </div>
             </div>
@@ -100,17 +96,17 @@
                         data-dtcombo="single" data-dtcombo-caption="Item Name"></select>
             </div>
             <div class="win-field" style="flex:2 1 240px;">
-                <label class="win-label">PM Item Name</label>
+                <label class="win-label">PM_ItemName</label>
                 <select id="cmbPmItem" class="win-combo dtcombo"
                         data-dtcombo="single" data-dtcombo-caption="PM ItemName"></select>
             </div>
             <div class="win-field" style="flex:0 1 150px;">
                 <label class="win-label">From Date</label>
-                <input type="date" id="datFromDate" class="win-datepicker"/>
+                <input type="date" id="datFromDate" class="win-datepicker" required/>
             </div>
             <div class="win-field" style="flex:0 1 150px;">
                 <label class="win-label">To Date</label>
-                <input type="date" id="datToDate" class="win-datepicker"/>
+                <input type="date" id="datToDate" class="win-datepicker" required/>
             </div>
             <div class="win-field" style="flex:0 0 auto; min-width:0;">
                 <button type="button" id="btnShow" class="win-btn-action"
@@ -122,11 +118,11 @@
 
     <div class="win-grid-container" id="gridBox">
         <div class="win-grid-toolbar">
-            <span>Consumption Register</span>
+            <span>Filtered Records</span>
             <button type="button" onclick="PackingMaterialConsumption.toggleFullscreen('gridBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
         </div>
         <div class="win-grid-scroll">
-            <table class="win-grid">
+            <table class="win-grid" id="tblRegister">
                 <thead><tr id="gridHead"></tr></thead>
                 <tbody id="gridBody"></tbody>
             </table>
@@ -135,6 +131,8 @@
 </div>
 
 <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
-<script th:src="@{/build/js/countx_packing_material_consumption.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_packing_material_consumption.js?v=20260924a}"></script>
 </body>
 </html>

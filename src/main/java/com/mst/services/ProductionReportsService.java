@@ -74,14 +74,85 @@ public class ProductionReportsService {
               || "UnApproved".equalsIgnoreCase(f))           isApproved = Boolean.FALSE;
         else throw new IllegalArgumentException(
                 "Approval filter must be All, Approved or Unapproved");
-        return repo.jobOrderSummary(u, fromDate, toDate, isApproved);
+        /* gridHisory:151-176 copies twelve columns of the result into dtGrid, three of them
+           renamed (BalWeight, BalAmount, LedgerBalAmount); the procedure's other columns
+           (ProductionStartDate, InputQty, ...) are not on the grid. The raw rows still go to the
+           672 print, which the page asks for through /api/reports/jos-672. */
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : repo.jobOrderSummary(u, fromDate, toDate, isApproved)) {
+            Map<String, Object> o = new LinkedHashMap<>();
+            o.put("Id",               civ(r, "Id"));
+            o.put("DocDate",          civ(r, "DocDate"));
+            o.put("JobOrderNo",       civ(r, "JobOrderNo"));
+            o.put("InputWeight",      civ(r, "InputWeight"));
+            o.put("InputAmount",      civ(r, "InputAmount"));
+            o.put("OutPutWeight",     civ(r, "OutPutWeight"));
+            o.put("OutPutAmount",     civ(r, "OutPutAmount"));
+            o.put("BalanceWeight",    civ(r, "BalWeight"));
+            o.put("BalanceAmount",    civ(r, "BalAmount"));
+            o.put("LedgerBalance",    civ(r, "LedgerBalAmount"));
+            o.put("SettlementStatus", civ(r, "SettlementStatus"));
+            o.put("ApprovalStatus",   civ(r, "ApprovalStatus"));
+            o.put("JobOrderStatus",   civ(r, "JobOrderStatus"));
+            out.add(o);
+        }
+        return out;
     }
 
-    /** The row drill-down behind a Job Order Summary line. */
+    /**
+     * InitializeComponentMethod:122 - From = today minus DefaultDaysToLessFromHistoryFromDate
+     * (3 when that is not above 0), unticked; To = today. Plus the amount format behind
+     * stringFormatboth (CommonServices.GetDecimalConfiguration:4914).
+     */
+    public Map<String, Object> jobOrderSummaryDefaults() {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        Map<String, Object> out = new LinkedHashMap<>();
+        int days = intConfig(u, "DefaultDaysToLessFromHistoryFromDate");
+        out.put("fromDaysBack", days > 0 ? days : 3);
+        out.put("amountDecimals", amountDecimals(u));
+        return out;
+    }
+
+    /** "Default NoofDecimal Points For Amount": 1-4 decimals; anything else gives "#,##0." (none). */
+    public int amountDecimals(UserAccount u) {
+        int n = intConfig(u, "Default NoofDecimal Points For Amount");
+        return (n >= 1 && n <= 4) ? n : 0;
+    }
+
+    private int intConfig(UserAccount u, String name) {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, "
+                  + "@ConfigDescription=?, @Activity=?",
+                    u.getOrganizationId(), u.getCompanyId(), name,
+                    "GetConfigurationByOrgCompandConfigDescription");
+            if (rows.isEmpty()) return 0;
+            Object v = civ(rows.get(0), "ConfigKey");
+            return v == null ? 0 : (int) Math.floor(Double.parseDouble(String.valueOf(v).trim()));
+        } catch (Exception e) {
+            LOG.warn("Configuration '{}' could not be read; treating as 0", name, e);
+            return 0;
+        }
+    }
+
+    private static Object civ(Map<String, Object> row, String name) {
+        if (row == null) return null;
+        if (row.containsKey(name)) return row.get(name);
+        for (Map.Entry<String, Object> e : row.entrySet()) {
+            if (e.getKey() != null && e.getKey().equalsIgnoreCase(name)) return e.getValue();
+        }
+        return null;
+    }
+
+    /**
+     * The drill-down behind a Job Order Summary line - DataGridHistory_LinkClicked:210 always
+     * sends actionId = 1, and the procedure returns rows only when ISNULL(@ActionId,0) = 1.
+     * It is fixed here, not taken from the caller.
+     */
     public List<Map<String, Object>> productionSettlementDetail(int jobOrderId, int actionId) {
         UserAccount u = currentUserContext.requireAccountingUser();
         if (jobOrderId <= 0) throw new IllegalArgumentException("Select a job order");
-        return repo.productionSettlementDetail(u, jobOrderId, actionId);
+        return repo.productionSettlementDetail(u, jobOrderId, 1);
     }
 
     // ============================================================ 309 — Production Summary Report
@@ -235,6 +306,25 @@ public class ProductionReportsService {
      * USP_GetBranchsAllocatedToUserFromProduction; anything else is dropped, so a caller cannot
      * widen the report to a branch they were never allocated by editing the request.
      */
+    /**
+     * The @BranchesIds the three report dropdown loaders send (308 ComboBindComparison:277 and
+     * ComboBindSummary:355, 306 ComboBind:143).
+     *
+     * Each one first sets {@code BranchesIds = UserAccount.BranchesId.ToString()} and only
+     * replaces it when the branch box has text. So with nothing ticked the desktop lists the
+     * signed-in user's OWN branch - never every branch.
+     *
+     * Pass 2 correction: with nothing ticked the web sent "", which the repository omits, so the
+     * procedure received NULL and listed job orders, plants and items across ALL branches. Note the fallback is the bare id ("5"), without the
+     * leading comma the ticked form builds - also as the desktop sends it.
+     */
+    private String dropdownBranches(UserAccount u, List<Integer> requested) {
+        String csv = branchIdsCsv(u, requested);
+        if (!csv.isEmpty()) return csv;
+        Integer own = u.getBranchesId();
+        return own == null ? "" : String.valueOf(own);
+    }
+
     private String branchIdsCsv(UserAccount u, List<Integer> requested) {
         if (requested == null || requested.isEmpty()) return "";
         List<Integer> allowed = new ArrayList<>();
@@ -616,7 +706,7 @@ public class ProductionReportsService {
     public Map<String, Object> comparisonLookups(List<Integer> branchIds) {
         UserAccount u = currentUserContext.requireAccountingUser();
         List<Map<String, Object>> src = repo.productionDropdownSource(
-                u, financialYearId(), branchIdsCsv(u, branchIds));
+                u, financialYearId(), dropdownBranches(u, branchIds));
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("jobOrders", bucket(src, "JobOrder"));
@@ -627,20 +717,18 @@ public class ProductionReportsService {
     /**
      * ComboBindSummary:362 — the Summary tab's pickers.
      *
-     * NOTE, and this is deliberate rather than an omission: the desktop builds a {@code dtjob}
-     * table for the Summary tab's Job Order picker but its splitting loop (:399-408) only ever
-     * matches "Plant" and "ItemName" — never "JobOrder". So {@code dtjob.Rows.Count} is always 0
-     * and the desktop's Summary Job Order picker is always EMPTY, which leaves &#64;InvJobOrderId
-     * and &#64;JobOrderId unsent on that tab. Filling it here would change which rows the two
-     * summary reports return, so it is left empty to match, and the page says so on screen.
+     * CORRECTED 2026-09-24: an earlier note here claimed the splitting loop never matches
+     * "JobOrder". It does - resolved-source :385-388 adds Activity == "JobOrder" rows to dataTable,
+     * which :398 binds to cmbJobOrderSummary (confirmed in the compiled IL too). The Summary tab's
+     * Job Order picker is therefore filled, with a blank first row, like the other two.
      */
     public Map<String, Object> comparisonSummaryLookups(List<Integer> branchIds) {
         UserAccount u = currentUserContext.requireAccountingUser();
         List<Map<String, Object>> src = repo.productionDropdownSource(
-                u, financialYearId(), branchIdsCsv(u, branchIds));
+                u, financialYearId(), dropdownBranches(u, branchIds));
 
         Map<String, Object> out = new LinkedHashMap<>();
-        out.put("jobOrders", new ArrayList<Map<String, Object>>());   /* see the note above */
+        out.put("jobOrders", bucket(src, "JobOrder"));
         out.put("plants",    bucket(src, "Plant"));
         out.put("items",     bucket(src, "ItemName"));
         return out;
@@ -854,7 +942,7 @@ public class ProductionReportsService {
     public Map<String, Object> packingMaterialLookups(List<Integer> branchIds) {
         UserAccount u = currentUserContext.requireAccountingUser();
         List<Map<String, Object>> src = repo.packingMaterialDropdownSource(
-                u, financialYearId(), branchIdsCsv(u, branchIds));
+                u, financialYearId(), dropdownBranches(u, branchIds));
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("items",   bucket(src, "BrandItem"));
@@ -878,6 +966,11 @@ public class ProductionReportsService {
         UserAccount u = currentUserContext.requireAccountingUser();
         String csv = branchIdsCsv(u, branchIds);
         if (csv.isEmpty()) throw new IllegalArgumentException("Select Branch First");
+        /* GridBind:262-263 always sends both dates, and the procedure compares DocDate against
+           them without allowing for NULL - an omitted date returns zero rows, silently. */
+        if (fromDate == null || fromDate.trim().isEmpty() || toDate == null || toDate.trim().isEmpty()) {
+            throw new IllegalArgumentException("From Date and To Date are required");
+        }
         return repo.packingMaterialConsumptionRegister(u, fromDate, toDate, itemId, pmItemId, csv);
     }
 

@@ -43,6 +43,21 @@ public class StockConversionController {
         return ResponseEntity.ok(sc);
     }
 
+    /** btnVoucher_Click:6207 - the voucher behind a saved conversion (DocumentTypeId 66). */
+    @GetMapping("/api/production/stock-conversion/voucher-head")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> voucherHead(@RequestParam int id) {
+        Map<String, Object> r = new LinkedHashMap<>();
+        try {
+            r.put("voucherHeadId", service.voucherHeadId(id));
+            return ResponseEntity.ok(r);
+        } catch (Exception e) {
+            r.put("success", false);
+            r.put("message", e.getMessage() == null ? "Voucher lookup failed." : e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(r);
+        }
+    }
+
     @GetMapping("/api/production/stock-conversion/next-code")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> nextCode() {
@@ -86,7 +101,35 @@ public class StockConversionController {
     @GetMapping("/api/production/stock-conversion/entry-types")
     @ResponseBody
     public ResponseEntity<?> entryTypes() {
-        return ResponseEntity.ok(service.entryTypes());
+        try {
+            return ResponseEntity.ok(service.entryTypes());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(fail(e.getMessage()));
+        }
+    }
+
+    /** The thirteen dropdowns Load fills (:749-760), in one read. Nothing in it is request-driven. */
+    @GetMapping("/api/production/stock-conversion/lookups")
+    @ResponseBody
+    public ResponseEntity<?> lookups() {
+        try {
+            return ResponseEntity.ok(service.lookups());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(fail(e.getMessage() == null ? "Lookups failed." : e.getMessage()));
+        }
+    }
+
+    /** cmbUOM / cmbRateUom for the chosen item (bindRateUomAndItemPackUom:1041). */
+    @GetMapping("/api/production/stock-conversion/uoms")
+    @ResponseBody
+    public ResponseEntity<?> uoms(@RequestParam(defaultValue = "0") int itemId) {
+        try {
+            return ResponseEntity.ok(service.uoms(itemId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(fail(e.getMessage() == null ? "UOM list failed." : e.getMessage()));
+        }
     }
 
     @GetMapping("/api/production/stock-conversion/stock-filter")

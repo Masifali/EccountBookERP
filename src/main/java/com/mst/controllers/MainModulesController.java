@@ -69,10 +69,17 @@ public class MainModulesController {
        return invented its own sections and counts; production_module.html is kept on disk but
        nothing routes to it. */
 
-    @GetMapping("/store")
+    /*
+     * The Store Management application landing page. This used to redirect to
+     * /inventory/warehouses, so the "Store Management" tile opened Define Warehouse - one screen of
+     * the Inventory application. The desktop opens the Store Management APPLICATION: three module
+     * cards (Store Purchase, Store Management, Store Management Reports) and their screens. The
+     * generic renderer draws exactly that from the user's rights rows, the same way /kanta does
+     * for Weigh Bridge; screens with no web page show as not built rather than opening another.
+     */
+    @GetMapping({"/store", "/store/", "/store/dashboard"})
     public String storeManagement(Model model) {
-        model.addAttribute("activeMenu", "store");
-        return "redirect:/inventory/warehouses";
+        return "redirect:/app/store-management";
     }
 
     @GetMapping("/taxation")
@@ -81,10 +88,20 @@ public class MainModulesController {
         return "redirect:/accounts/reports/payables-report";
     }
 
+    /*
+     * The Weigh Bridge application landing page. This used to return the hand-written
+     * weighbridge/weigh_bridge_dashboard.html, whose four tiles ALL linked to
+     * /purchase/inward-gate-pass - so "Weigh Bridge", "Weigh Bridge Manual" and both module cards
+     * opened the Inward Gate Pass screen. It now goes to the generic application renderer
+     * (AppMenuController /app/{appName}), which draws the desktop's own module and screen cards
+     * from the rights rows and links each screen through ScreenRouteIndex - so "Weigh Bridge"
+     * (screen 411, frmWeightbridge) opens /weighbridge/weight-bridge, and a screen with no web
+     * page shows as not built instead of opening an unrelated one. The app name is matched on
+     * letters and digits only, so "Weigh Bridge" and "WeighBridge" both resolve.
+     */
     @GetMapping({"/kanta", "/weighbridge", "/weigh-bridge", "/weighbridge/dashboard"})
     public String weighBridge(Model model) {
-        model.addAttribute("activeMenu", "kanta");
-        return "weighbridge/weigh_bridge_dashboard";
+        return "redirect:/app/weighbridge";
     }
 
     @GetMapping({"/lookups/reasons", "/lookups/reasons/list"})
@@ -105,10 +122,9 @@ public class MainModulesController {
      * startup with an ambiguous-mapping error.
      */
 
-    @GetMapping("/packing")
+    @GetMapping({"/packing", "/packing-material", "/packing/dashboard"})
     public String packingMaterial(Model model) {
-        model.addAttribute("activeMenu", "packing");
-        return "redirect:/inventory/item-categories";
+        return "redirect:/app/packing-material";
     }
 
     private void populateStockOpeningModel(Model model) {

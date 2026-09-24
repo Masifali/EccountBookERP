@@ -24,6 +24,7 @@ let lineItems = [];
 let emptyBagItems = [];
 let expenseItems = [];
 let chargeToProductItems = [];
+let labDeductionItems = [];
 let isEditMode = false;
 let paymentTermsDetailItems = [];
 let paymentByPercent = false;
@@ -1893,6 +1894,7 @@ function btnAddDetailRow_Click() {
     renderDetailGrid();
     clearItemInputs();
     exitDetailEditMode();          /* :2812-2814 - btnplus back, Update/Cancel away */
+    loadLabDeductionForItem(itemId);   /* :2670 / :2821 GetLabDetailByItemId() */
     calcCommission();
     calcBrokery();
     recalculatePaymentAmounts();   /* :2823 PaymentAmountReCalculate() */
@@ -1915,6 +1917,61 @@ function exitDetailEditMode() {
     $('#btnplus').show();
     $('#btnUpdateDetail').hide();
     $('#btnCancelUpdateDetial').hide();
+}
+
+/* GetLabDetailByItemId() - PurchsaeOrder.cs :2290.
+ *
+ * Called after a detail line is added or updated (:2670, :2821). It reads the standard deduction
+ * policy for THAT item, removes any rows already held for the same item (:2311-2318), and appends
+ * the new ones. Only the Deduction column is editable; LabGridSetting :2101-2107 sets EditType 0
+ * on every other column. */
+function loadLabDeductionForItem(itemId) {
+    if (!itemId) { renderLabGrid(); return; }
+    $.get('/api/purchase-order/lab-deduction-standard?itemId=' + itemId, function (rows) {
+        if (!rows || !rows.length) { renderLabGrid(); return; }
+        labDeductionItems = labDeductionItems.filter(r => parseInt(r.itemId) !== parseInt(itemId));
+        rows.forEach(r => labDeductionItems.push({
+            invLabAnalysisStandardDeductionPolicyHeaderId: r.headerId,
+            purchaseOrderDetailId: r.detailId,
+            itemId: r.itemId,
+            analysisParameterId: r.analysisParameterId,
+            itemName: r.itemName,
+            analysisItem: r.analysisParameter,
+            rangeFrom: r.rangeFrom,
+            rangeTo: r.rangeTo,
+            deductFrom: r.deductFrom,
+            weightKgs: r.weightKg,
+            standardValue: r.standardValue,
+            deductionValue: r.deductionValue
+        }));
+        renderLabGrid();
+    }).fail(function () { renderLabGrid(); });
+}
+
+function renderLabGrid() {
+    const tb = $('#tblLabTbody');
+    tb.empty();
+    if (!labDeductionItems.length) {
+        tb.html('<tr><td colspan="8" style="text-align:center; padding:15px; color:#777;">No lab deduction standard for the items on this order.</td></tr>');
+        $('#lblLabRecordInfo').text('0 Of 0');
+        return;
+    }
+    labDeductionItems.forEach(function (r, i) {
+        tb.append(`
+            <tr>
+                <td>${escapeHtml(r.itemName || '')}</td>
+                <td>${escapeHtml(r.analysisItem || '')}</td>
+                <td style="text-align:right;">${escapeHtml(String(r.rangeFrom == null ? '' : r.rangeFrom))}</td>
+                <td style="text-align:right;">${escapeHtml(String(r.rangeTo == null ? '' : r.rangeTo))}</td>
+                <td>${escapeHtml(r.deductFrom || '')}</td>
+                <td style="text-align:right;">${escapeHtml(String(r.weightKgs == null ? '' : r.weightKgs))}</td>
+                <td style="text-align:right;">${escapeHtml(String(r.standardValue == null ? '' : r.standardValue))}</td>
+                <td><input type="number" step="0.01" class="win-textbox" style="text-align:right;"
+                           value="${r.deductionValue == null ? '' : r.deductionValue}"
+                           onchange="labDeductionItems[${i}].deductionValue = parseFloat(this.value || '0') || 0;"/></td>
+            </tr>`);
+    });
+    $('#lblLabRecordInfo').text('1 Of ' + labDeductionItems.length);
 }
 
 function clearItemInputs() {
@@ -3068,6 +3125,16 @@ function buildPayload() {
                 remarks: c.remarks
             };
         }),
+        labDeductions: labDeductionItems.map(function (l) {
+            return {
+                invLabAnalysisStandardDeductionPolicyHeaderId: l.invLabAnalysisStandardDeductionPolicyHeaderId,
+                itemId: l.itemId,
+                analysisParameterId: l.analysisParameterId,
+                rangeFrom: l.rangeFrom, rangeTo: l.rangeTo,
+                deductFrom: l.deductFrom, weightKgs: l.weightKgs,
+                standardValue: l.standardValue, deductionValue: l.deductionValue
+            };
+        }),
         paymentTermsDetail: paymentTermsDetailItems.map(function(p) {
             return {
                 paymentTermId: p.paymentTermId,
@@ -3152,6 +3219,7 @@ function btnNew_Click(afterSave) {
     $('#fileAttach').val('');
     renderPurchaseOrderAttachments();
     loadedHeaderSelection = null;   /* Reset() - nothing left to re-apply */
+    labDeductionItems = [];  renderLabGrid();     /* Reset() :4000 dtlab.Rows.Clear() */
     clearEditModeState();      /* Reset() :3962-3972 - Save back, Update gone, locks cleared */
     currentPoMasterId = 0;
     lineItems = [];
@@ -3239,6 +3307,17 @@ function loadSelectedOrder(poId, mode) {
            #txtSupplierDisplay / #txtBrokerAcDisplay / #txtCommAgentDisplay /
            #txtBookingPersonDisplay, none of which exist in this template, and never set the
            <select> elements at all. */
+        labDeductionItems = (po.labDeductions || []).map(function (l) {
+            return {
+                invLabAnalysisStandardDeductionPolicyHeaderId: l.InvLabAnalysisStandardDeductionPolicyHeaderId,
+                itemId: l.ItemId, analysisParameterId: l.AnalysisParameterId,
+                itemName: l.ItemName, analysisItem: l.AnalysisItem,
+                rangeFrom: l.RangeFrom, rangeTo: l.RangeTo, deductFrom: l.DeductFrom,
+                weightKgs: l.WeightKgs, standardValue: l.StandardValue, deductionValue: l.DeductionValue
+            };
+        });
+        renderLabGrid();
+
         loadedHeaderSelection = po;
         applyHeaderSelections();
 

@@ -42,6 +42,7 @@ $(document).ready(function () {
     $('#txtDeliveryStartDate').val(today);
     $('#histFromDate').val(today);
     $('#histToDate').val(today);
+    $('#histUseFrom, #histUseTo').prop('checked', true);
 
     initMultiColumnSelect2();
     loadMasterLookups();
@@ -244,11 +245,21 @@ function loadMasterLookups() {
         bindCombo('#cmbLocationType', data.locationTypes, 'Id', 'Location');
 
         // Order Categories
-        bindCombo('#cmbOrderCategory', data.orderCategories, 'Id', 'OrderCategoryName');
+        /* OrderCatagoryfill (SaleOrder.cs:980): BindDDLNew(..., ZeroIndex true) puts "...Select Any Value..."
+           at row 0, then Rows[3] is activated - the THIRD real category, not the first. */
+        bindCombo('#cmbOrderCategory', data.orderCategories, 'Id', 'OrderCategoryName', '...Select Any Value...');
+        var ocOpts = $('#cmbOrderCategory option');
+        if (ocOpts.length > 3) { $('#cmbOrderCategory').val(ocOpts.eq(3).val()).trigger('change'); }
+        generateOrderCategoryNo();   /* PurchsaeOrder_Load :712 */
 
-        // Category-I & Category-II
-        bindCombo('#cmbCategoryI', data.categoriesI, 'Id', 'LookupName', '...Select Category-I...');
-        bindCombo('#cmbCategoryII', data.categoriesII, 'Id', 'LookupName', '...Select Category-II...');
+        /* OrderCategory_I/_II (SaleOrder.cs:934-972): BindDDLNew(..., false) - no placeholder row - then
+           SetComboValue(..., ActivateRow: true) activates Rows[0], the first real lookup. */
+        bindCombo('#cmbCategoryI', data.categoriesI, 'Id', 'LookupName');
+        bindCombo('#cmbCategoryII', data.categoriesII, 'Id', 'LookupName');
+        ['#cmbCategoryI', '#cmbCategoryII'].forEach(function (sel) {
+            var first = $(sel + ' option').first();
+            if (first.length) { $(sel).val(first.val()).trigger('change'); }
+        });
 
         // Customers / Parties with PartyCode & CityName
         bindCustomerCombo(data.customers);
@@ -316,7 +327,118 @@ function loadMasterLookups() {
         // Payment Detail & Expense dropdowns
         bindCombo('#payTerm', data.paymentTerms, 'Id', 'TermsDescription', '-- Select Term --');
         bindCombo('#expItem', data.otherItems, 'Id', 'OtherItemName', '-- Select Item --');
-        bindCombo('#histCustomerCombo', data.customers, 'Id', 'CompanyName', '...Select Customer...');
+        /* CmbCustomerHistory is NOT the party master: HistoryCombosFill (SaleOrder.cs:4012) lists only the
+           parties that appear on Sale Orders (doc type 81) in the history branch, from
+           USP_GetDataForDropDownFromSaleOrder rows where Activity='Customer'. */
+        loadHistoryBranches();
+
+        /* ConfigurationDefault (SaleOrder.cs:786-826) runs once when the form opens and pre-selects the
+           configured City/Area, Job/Lot, Packing Type, Crop Year and Warehouse on the detail line. */
+        $.get('/sale/sale-order/api/config-defaults', function (c) {
+            if (!c) return;
+            saleOrderConfig = c;
+            /* ERP feature 6: show and fill the currency controls (CurrencyFill :3462). */
+            if (c.hasMultiCurrencyFeature) {
+                $('.so-fcy').prop('hidden', false);
+                $.get('/sale/sale-order/api/currencies', function (rows) {
+                    bindCombo('#cmbCurrency', rows || [], 'Id', 'CurrencyCode', '...Select Any Value...');
+                });
+            }
+            /* ItemSearchByCode (:621-629) chooses the item radio; the item combo rebinds on the radio change. */
+            if (c.itemSearchByCode) { $('#radCode').prop('checked', true).trigger('change'); }
+            /* :751-754 - History From date = today minus DefaultDaysToLessFromHistoryFromDate, else minus 3 days. */
+            var back = c.defaultDaysToLessFromHistoryFromDate > 0 ? c.defaultDaysToLessFromHistoryFromDate : 3;
+            var fromD = new Date(); fromD.setDate(fromD.getDate() - back);
+            $('#histFromDate').val(fromD.toISOString().split('T')[0]);
+            [['#lineCityArea', 'cityAreaId'], ['#lineJobLot', 'jobLotId'], ['#linePackType', 'packingTypeId'],
+             ['#lineCropYear', 'cropYearId'], ['#lineWarehouse', 'warehouseId']].forEach(function (p) {
+                var v = c[p[1]];
+                if (v && $(p[0] + ' option[value="' + v + '"]').length) { $(p[0]).val(String(v)).trigger('change'); }
+            });
+        });
+    });
+}
+
+/* Desktop combos restored with `.Text = value` select the row whose DISPLAY text equals the value.
+   Numeric texts ("40" vs "40.00") are compared as numbers. No match leaves the combo empty, as the
+   desktop's Text assignment does. */
+function selectOptionByText(selector, value) {
+    var want = $.trim(value == null ? '' : String(value));
+    var wantNum = parseFloat(want);
+    var hit = $(selector + ' option').filter(function () {
+        var t = $.trim($(this).text());
+        return t === want || (want !== '' && isFinite(wantNum) && isFinite(parseFloat(t)) && parseFloat(t) === wantNum && /^[0-9.\-]+$/.test(t));
+    }).first();
+    $(selector).val(hit.length ? hit.val() : null).trigger('change');
+}
+
+var saleOrderConfig = {};
+
+/* txtExchangeRate_TextChanged (:3566) + CalculateTotalInformation (:3548): each row's FcyAmount is
+   Math.Round(Amount / ExchangeRate, DefaultNoOfDecimalPointsForFcyAmount) - banker's rounding - or 0 when the rate
+   is not positive; txtFcyAmount is their total. The server recomputes the same figures on save. */
+function roundHalfEven(value, decimals) {
+    var f = Math.pow(10, decimals), x = value * f, r = Math.round(x);
+    if (Math.abs(x % 1) === 0.5) { r = 2 * Math.round(x / 2); }
+    return r / f;
+}
+function recalcFcyAmount() {
+    var rate = parseFloat($('#txtExchangeRate').val()) || 0;
+    var n = saleOrderConfig.fcyDecimals || 0, total = 0;
+    if (rate > 0) {
+        currentLineItems.forEach(function (it) {
+            if (it.actionTypeId === 3) return;
+            total += roundHalfEven((parseFloat(it.amount) || 0) / rate, n);
+        });
+    }
+    $('#txtFcyAmount').val(total.toFixed(n));
+}
+
+/* GenerateOrderCategoryNo (SaleOrder.cs:1012): next CatagorySrNo for the chosen Order Category and financial year;
+   txtcatsr is only overwritten when the answer is > 0. Called on load (:712), on leaving the category combo (:1597)
+   and on reset (:3430). */
+function generateOrderCategoryNo() {
+    var catId = parseInt($('#cmbOrderCategory').val(), 10) || 0;
+    if (!catId) return;
+    $.get('/sale/sale-order/api/category-sr-no', { categoryId: catId }, function (r) {
+        if (r && r.catagorySrNo > 0) { $('#txtCatNo').val(r.catagorySrNo); }
+    });
+}
+
+/* combitem_ValueChanged (SaleOrder.cs:1665-1672): Comm On Sale from the item's commission schedule, and the
+   available stock weight shown in lblStockWeight ("#,##0.###", "0" when not positive). */
+function refreshItemInfo(itemId) {
+    if (!itemId) { $('#lblStockWeight').text('0'); return; }
+    $.get('/sale/sale-order/api/item-info/' + itemId, { docDate: $('#txtDocDate').val() || '' }, function (r) {
+        if (!r) return;
+        $('#lineCommOnSale').prop('checked', !!r.commissionOnSale);
+        var w = parseFloat(r.stockWeight) || 0;
+        $('#lblStockWeight').text(w > 0 ? w.toLocaleString('en-US', { maximumFractionDigits: 3 }) : '0')
+                            .attr('data-stock', w);
+    });
+}
+
+/* HistoryBranchComboFill (:3968): the History tab's branch list, the user's own branch ticked. */
+function loadHistoryBranches() {
+    $.get('/sale/sale-order/api/history-branches', function (rows) {
+        var $box = $('#histBranches').empty();
+        (rows || []).forEach(function (b) {
+            var id = 'histBranch_' + b.Id;
+            $box.append($('<label class="win-radio-inline me-2">').append(
+                $('<input type="checkbox" class="hist-branch">').attr('id', id).val(b.Id).prop('checked', b.UserBranch === true),
+                ' ' + (b.BranchName || b.Id)));
+        });
+        loadHistoryCombos();
+    });
+}
+function selectedHistoryBranchIds() {
+    return $('#histBranches .hist-branch:checked').map(function () { return this.value; }).get().join(',');
+}
+/* HistoryCombosFill (:4012): Customer and Booking Person lists for the ticked branches. */
+function loadHistoryCombos() {
+    $.get('/sale/sale-order/api/history-lookups', { branchIds: selectedHistoryBranchIds() }, function (h) {
+        bindCombo('#histCustomerCombo', (h && h.customers) || [], 'Id', 'ReferenceName', '...Select Customer...');
+        bindCombo('#histBookingPersonCombo', (h && h.bookingPersons) || [], 'Id', 'ReferenceName', '...Select Booking Person...');
     });
 }
 
@@ -460,6 +582,11 @@ function bindItemCombo(items) {
 // 2. EVENT LISTENERS & DEPENDENT CALCULATIONS
 // =========================================================
 function setupEventListeners() {
+    /* combordercat_Leave (:1597) regenerates the category serial number. */
+    $('#cmbOrderCategory').on('change', generateOrderCategoryNo);
+    $('#txtExchangeRate').on('input change', recalcFcyAmount);
+    /* Ticking branches re-reads the history party / booking-person lists (btnRefreshHistory_Click :4090). */
+    $(document).on('change', '#histBranches .hist-branch', loadHistoryCombos);
     // Party Code vs Name radio toggle
     $('input[name="radParty"]').change(function () {
         if (masterLookupsData.customers) bindCustomerCombo(masterLookupsData.customers);
@@ -502,7 +629,12 @@ function setupEventListeners() {
     // BaseRateUom=true marks the row the desktop auto-selects by default (CommonServices.GetBaseRateUomId).
     $('#lineItem').change(function () {
         var itemId = $(this).val();
+        refreshItemInfo(itemId);
         if (!itemId) return;
+        /* bindRateUomAndItemPackUom (SaleOrder.cs:1339) keeps the Pack and Rate UOM TEXT the user had
+           before the item changed, and re-selects it when the new item's schedule has the same code. */
+        var prevRateText = $.trim($('#lineRateUom option:selected').text());
+        var prevPackText = $.trim($('#linePackUom option:selected').text());
         $.get('/sale/sale-order/api/item-uoms/' + itemId, function (uoms) {
             var $uom = $('#lineRateUom').empty();
             // Pack Uom (OrderItemUOMId) is a real, required field distinct from Rate Uom - see
@@ -552,8 +684,8 @@ function setupEventListeners() {
                     if (eq !== null) { attrs['data-equivalent'] = eq; }   /* absent when null */
                     $uom.append($('<option>', attrs));
                     $packUom.append($('<option>', $.extend({}, attrs)));
-                    if (u.BaseRateUom === true || u.BaseRateUom === 1) {
-                        baseUomCode = u.Id;
+                    if ((u.BaseRateUom === true || u.BaseRateUom === 1) && baseUomCode === null) {
+                        baseUomCode = u.Id;   /* GetBaseRateUomId returns the FIRST such row (CommonServices:5316, break) */
                     }
                     if (u.BasePackUom === true || u.BasePackUom === 1) {
                         basePackUomCode = u.Id;
@@ -569,13 +701,41 @@ function setupEventListeners() {
                     if (typeof showMessage === 'function') { showMessage(warn, 'error'); }
                     else { alert(warn); }
                 }
-                if (baseUomCode !== null) {
-                    $uom.val(baseUomCode);
+                /* Desktop defaults, SaleOrder.cs:1355-1387 - ported rule for rule:
+                   1. Pack and Rate UOM keep the previous text if that code exists for the new item,
+                      otherwise they are blank. Pack UOM is NEVER auto-defaulted (the old web code
+                      defaulted it to BasePackUom/BaseRateUom; the desktop has no such rule).
+                   2. On a new line (not an edit of a grid row), when Rate UOM is empty or is not a
+                      40-Equivalent row: take GetBaseRateUomId (first BaseRateUom row) if THAT row is
+                      40-Equivalent, else the first 40-Equivalent row.
+                   3. A Rate UOM whose Equivalent is not 40 is cleared. */
+                function optionByText($sel, txt) {
+                    if (!txt) return null;
+                    var hit = $sel.find('option').filter(function () { return $.trim($(this).text()) === txt; }).first();
+                    return hit.length ? hit.val() : null;
                 }
-                if (basePackUomCode !== null) {
-                    $packUom.val(basePackUomCode);
-                } else if (baseUomCode !== null) {
-                    $packUom.val(baseUomCode); // fall back to the same schedule row desktop uses for Rate Uom
+                function eqOf(id) {
+                    var u = uoms.filter(function (x) { return String(x.Id) === String(id); })[0];
+                    return u ? parseFloat(u.Equivalent) : NaN;
+                }
+                var keptPack = optionByText($packUom, prevPackText);
+                var keptRate = optionByText($uom, prevRateText);
+                $packUom.val(keptPack !== null ? keptPack : null);
+                $uom.val(keptRate !== null ? keptRate : null);
+                if (!pendingLineUomSelection) {
+                    var uom40Ids = uoms.filter(function (x) { return parseFloat(x.Equivalent) === 40; })
+                                       .map(function (x) { return String(x.Id); });
+                    var rateVal = $uom.val();
+                    if (!rateVal || uom40Ids.indexOf(String(rateVal)) < 0) {
+                        if (baseUomCode !== null && uom40Ids.indexOf(String(baseUomCode)) >= 0) {
+                            $uom.val(baseUomCode);
+                        } else if (uom40Ids.length > 0) {
+                            $uom.val(uom40Ids[0]);
+                        }
+                    }
+                    if ($uom.val() && eqOf($uom.val()) !== 40) {
+                        $uom.val(null);
+                    }
                 }
             }
             // Refresh select2 (".so-select2") after rebuilding these two dropdowns' options and
@@ -785,6 +945,16 @@ function calcLine(source) {
 }
 
 function btnAddRow_Click() {
+    /* btnplus_Click (:1905-1908) + FormValidationDetail (:1885-1890): with config
+       CheckStockAndGiveWarningMessageOnSaleOrder on, an item with no stock and no detail remarks asks to continue,
+       and then the detail validation still insists on remarks. */
+    var stockNow = parseFloat($('#lblStockWeight').attr('data-stock') || $('#lblStockWeight').text().replace(/,/g, '')) || 0;
+    if (saleOrderConfig.checkStockAndGiveWarningMessageOnSaleOrder && stockNow <= 0 && !($('#lineRemarks').val() || '').trim()) {
+        if (!confirm('No stock is available for this item. Do you want to continue adding it?')) return;
+        alert('Remarks Field is Required');
+        $('#lineRemarks').focus();
+        return;
+    }
     var itemId = $('#lineItem').val();
     var itemName = $('#lineItem option:selected').text();
     var itemCode = $('#lineItem option:selected').attr('data-code') || '';
@@ -1070,6 +1240,7 @@ function recalcTotals() {
     $('#txtOrderQty').val(totalQty.toFixed(2));      /* :3547 Math.Round(,2) */
     $('#txtOrderWeight').val(totalWt.toFixed(2));    /* :3548 */
     $('#txtCurrentOrder').val(totalAmt.toFixed(2));  /* :3549 txtOrderAmount */
+    recalcFcyAmount();
 
     recalcNetRecoverable();
     paymentAmountReCalculate();
@@ -1509,6 +1680,15 @@ function btnSave_Click() {
         }
     }
 
+    /* FormValidation (:1778-1797) with ERP feature 6. */
+    if (saleOrderConfig.hasMultiCurrencyFeature) {
+        if (!(parseInt($('#cmbCurrency').val(), 10) > 0)) { alert('Fcy Code Field is Required'); $('#cmbCurrency').focus(); return; }
+        var xr = ($('#txtExchangeRate').val() || '').trim();
+        if (xr === '' || xr === '0') { alert('Exchange Rate Field is Required'); $('#txtExchangeRate').focus(); return; }
+        var fa = ($('#txtFcyAmount').val() || '').trim();
+        if (fa === '' || parseFloat(fa) === 0) { alert('Fcy Amount Rate Field is Required'); $('#txtFcyAmount').focus(); return; }
+    }
+
     /* Insert() :3138 - the party-limit confirmation. The desktop blocks the save unless the user
        agrees; the web used to save silently over the limit. */
     var netRec = parseFloat($('#txtNetRecoverable').val()) || 0;
@@ -1521,6 +1701,24 @@ function btnSave_Click() {
                 + 'And NetRecoverableAmount value Will be ' + netRec + '\n'
                 + 'are you Sure to Proceed';
         if (!confirm(msg)) return;
+    }
+
+    /* Insert() :3142-3144 - SaleOrder.CheckOrderExist: USP_SaleOrderValidations on the FIRST detail line (the
+       procedure always returns a row, so the BLL's loop stops there). A warning must be confirmed to save. */
+    var firstLine = currentLineItems[0];
+    if (firstLine) {
+        var warn = '';
+        $.ajax({
+            url: '/sale/sale-order/api/order-exists-warning', type: 'POST', async: false,
+            contentType: 'application/json',
+            data: JSON.stringify({ id: currentEditingOrderId || 0, docDate: $('#txtDocDate').val(),
+                                   customerId: parseInt(custId, 10) || 0, itemId: parseInt(firstLine.itemId, 10) || 0,
+                                   qty: firstLine.quantity, rate: firstLine.rate, amount: firstLine.amount }),
+            success: function (r) { warn = (r && r.warning) || ''; },
+            error: function (xhr) { warn = '\u0000' + (xhr.responseText || 'Order validation failed'); }
+        });
+        if (warn.charAt(0) === '\u0000') { alert(warn.substring(1)); return; }
+        if (warn && !confirm(warn)) return;
     }
 
     /* Insert() :2783 / :2790 */
@@ -1582,6 +1780,10 @@ function btnSave_Click() {
         /* Header fields the desktop writes in Insert() that this payload did not carry.
            Sending them is what makes the saved row match the desktop's. */
         catagorySrNo: parseInt($('#txtCatNo').val(), 10) || 0,        /* :2845 txtcatsr */
+        orderCategoryNo: parseInt($('#txtCatNo').val(), 10) || 0,     /* the DTO field the service writes to @CatagorySrNo */
+        /* :2861/:2865 - sent only with ERP feature 6; without it the server applies GetBaseCurrencyAndRate. */
+        currencyId: saleOrderConfig.hasMultiCurrencyFeature ? (parseInt($('#cmbCurrency').val(), 10) || null) : null,
+        exchangeRate: saleOrderConfig.hasMultiCurrencyFeature ? (parseFloat($('#txtExchangeRate').val()) || null) : null,
         isValidate: $('#chkValidateDO').is(':checked'),               /* :2860 ChkIsValidateOrder */
         locationTypeId: parseInt($('#cmbLocationType').val(), 10) || 0, /* :2980 per detail row */
         orderQty: parseFloat($('#txtOrderQty').val()) || 0,           /* :2862 */
@@ -1643,31 +1845,46 @@ function formatDateValue(value) {
 }
 
 function loadHistoryData() {
+    /* gridhistoryfill (SaleOrder.cs:4122-4246): one date pair chosen by the radio, each end only when its box is
+       ticked; doc-no range; customer; booking person; the ticked branches (required - "Select branch first"). */
+    var branchIds = selectedHistoryBranchIds();
+    if (!branchIds) { alert('Select branch first'); return; }
     var query = $.param({
-        fromDate: $('#histFromDate').val() || '',
-        toDate: $('#histToDate').val() || '',
-        customerId: $('#histCustomerCombo').val() || ''
+        dateMode: $('input[name="histDateMode"]:checked').val() || 'doc',
+        fromDate: $('#histUseFrom').is(':checked') ? ($('#histFromDate').val() || '') : '',
+        toDate: $('#histUseTo').is(':checked') ? ($('#histToDate').val() || '') : '',
+        fromDocNo: $('#histFromDocNo').val() || '',
+        toDocNo: $('#histToDocNo').val() || '',
+        customerId: $('#histCustomerCombo').val() || '',
+        bookingPersonId: $('#histBookingPersonCombo').val() || '',
+        branchIds: branchIds
     });
-    $.get('/sale/sale-order/api/history?' + query, function (data) {
-        var tbody = $('#tblHistory tbody').empty();
+    var tbody = $('#tblHistory tbody').empty();
+    $.get('/sale/sale-order/api/history-search?' + query, function (data) {
         if (!data || data.length === 0) {
-            tbody.append('<tr><td colspan="9" class="text-center text-muted" style="padding:15px;">No history records found.</td></tr>');
+            tbody.append('<tr><td colspan="30" class="text-center text-muted" style="padding:15px;">No history records found.</td></tr>');
             return;
         }
         data.forEach(function (item) {
-            var tr = `<tr data-id="${item.Id}" ondblclick="loadOrderIntoForm(${item.Id})">
-                <td class="text-center"><button class="btn btn-sm btn-primary p-0 px-2" onclick="loadOrderIntoForm(${item.Id})">Edit</button></td>
-                <td class="text-center"><button class="btn btn-sm btn-warning p-0 px-2" onclick="currentEditingOrderId=${item.Id};btnPrintReport('273')">Print</button></td>
-                <td><button type="button" class="voucher-link" onclick="loadOrderIntoForm(${item.Id})">SO-${item.DocNo || ''}</button></td>
-                <td>${formatDateValue(item.DocDate)}</td>
-                <td>${item.PartyCode || item.CustomerCode || ''}</td>
-                <td>${item.CustomerName || ''}</td>
-                <td class="text-end font-weight-bold">${(parseFloat(item.OrderAmount || item.TotalAmount) || 0).toFixed(2)}</td>
-                <td>${formatDateValue(item.EntryDate)}</td>
-                <td class="text-center">${(item.IsAproved === true || item.IsAproved === 1) ? 'Approved' : 'Not Approved'}</td>
-            </tr>`;
+            function c(v) { return '<td>' + escapeHtml(v == null ? '' : String(v)) + '</td>'; }
+            function n(v) { return '<td class="text-end">' + (v == null || v === '' ? '' : (parseFloat(v) || 0).toFixed(2)) + '</td>'; }
+            var tr = '<tr data-id="' + item.Id + '" ondblclick="loadOrderIntoForm(' + item.Id + ')">'
+                + '<td class="text-center"><button class="btn btn-sm btn-primary p-0 px-2" onclick="loadOrderIntoForm(' + item.Id + ')">Edit</button></td>'
+                + '<td class="text-center"><button class="btn btn-sm btn-warning p-0 px-2" onclick="currentEditingOrderId=' + item.Id + ';btnPrintReport(\'273\')">Print</button></td>'
+                + '<td><button type="button" class="voucher-link" onclick="loadOrderIntoForm(' + item.Id + ')">' + escapeHtml(String(item.DocNo || '')) + '</button></td>'
+                + c(item.BranchSrNo) + c(item.BranchName) + c(formatDateValue(item.DocDate)) + c(item.CustomerName)
+                + c(item.BookingPerson) + c(item.DueDays) + c(formatDateValue(item.DueDate)) + c(formatDateValue(item.OrderExpiryDate))
+                + c(item.CommissionType) + n(item.CommRate) + n(item.CommAmount) + c(item.CommissionRemarks)
+                + c(item.DeliveryTerm) + c(item.DeliveryDays) + c(item.TermsDescription) + c(item.OrderStatus)
+                + c(item.OrderType) + c(item.OtherCategory)
+                + c((item.IsAproved === true || item.IsAproved === 1) ? 'Approved' : 'Not Approved')
+                + c(item.UserName) + c(formatDateValue(item.EntryDate)) + c(item.ModifyUserName) + c(formatDateValue(item.ModifyDate))
+                + c(item.ApprovedUser) + c(formatDateValue(item.PostDate)) + c(item.NoOfAttachments) + c(item.RemarksHeader)
+                + '</tr>';
             tbody.append(tr);
         });
+    }).fail(function (xhr) {
+        tbody.append('<tr><td colspan="30" class="text-center text-danger">' + escapeHtml(xhr.responseText || 'History search failed') + '</td></tr>');
     });
 }
 
@@ -1685,12 +1902,23 @@ function loadOrderIntoForm(id) {
         $('#cmbCustomer').val(data.OrderSupCustId || '').trigger('change');
         $('#txtRemarks').val(data.RemarksHeader || '');
         $('#cmbOrderCategory').val(data.OrderCatagoryId || '');
+        $('#txtCatNo').val(data.CatagorySrNo != null ? data.CatagorySrNo : '');   /* ReadById :3225 */
+        if (saleOrderConfig.hasMultiCurrencyFeature) {                              /* :3238 */
+            if (data.CurrencyId != null) $('#cmbCurrency').val(String(data.CurrencyId)).trigger('change');
+            $('#txtExchangeRate').val(data.ExchangeRate != null ? data.ExchangeRate : '');
+        }
+        /* cmbOrderCategory1.Value = po.OrderTypeId / cmbOrderCategory2.Value = po.OtherCategoryId (SaleOrder.cs:3219-3223) -
+           the load never set them, so an edited order showed the first lookup instead of its own. */
+        if (data.OrderTypeId != null) { $('#cmbCategoryI').val(String(data.OrderTypeId)).trigger('change'); }
+        if (data.OtherCategoryId != null) { $('#cmbCategoryII').val(String(data.OtherCategoryId)).trigger('change'); }
         $('#txtBranchSrNo').val(data.BranchSrNo != null ? data.BranchSrNo : '');
         $('#cmbBookingPerson').val(data.BookingPersonId || '');
         $('#cmbPaymentTerm').val(data.PaymentTermsId || '');
         $('#txtDueDays').val(data.OrderDueDays != null ? data.OrderDueDays : '');
         $('#txtDueDate').val(data.OrderDueDate ? data.OrderDueDate.substring(0, 10) : '');
-        $('#cmbDeliveryTerm').val(data.DeliveryTerm || '');
+        /* The desktop stores and restores Delivery Term as TEXT ("Load"/"Ponch"): combdeliverytrm.Text =
+           po.DeliveryTerm (SaleOrder.cs:3244). .val() against option values 1/2 never matched. */
+        selectOptionByText('#cmbDeliveryTerm', data.DeliveryTerm);
         $('#txtDeliveryStartDate').val(data.DeliveryStartDate ? data.DeliveryStartDate.substring(0, 10) : '');
         $('#txtDeliveryDays').val(data.DeliveryDays != null ? data.DeliveryDays : '');
         $('#cmbSalesMan').val(data.BrokerAgentSupCustId || '');
@@ -1698,6 +1926,9 @@ function loadOrderIntoForm(id) {
            the desktop reaches the same state through combsalesman_Leave (:1616). */
         $('#txtCommAmount').prop('disabled', !parseInt(data.BrokerAgentSupCustId || '0', 10));
         $('#cmbCommType').val(data.CommissionType || '');
+        /* combruom.Text = po.UomScheduleIdCmRate (SaleOrder.cs:3250) - restored by text, as the desktop does.
+           Deferred so the cmbCommType change handler's reset-to-first-row runs first. */
+        var loadedCommUom = data.UomScheduleIdCmRate, loadedOtherCommUom = data.OtherCommissionUom;
         $('#txtCommRate').val(data.CommRate != null ? data.CommRate : '');
         $('#txtCommAmount').val(data.CommAmount != null ? data.CommAmount : '');
         $('#txtCommRemarks').val(data.CommissionRemarks || '');
@@ -1707,6 +1938,13 @@ function loadOrderIntoForm(id) {
         $('#txtOtherCommRate').val(data.OtherCommissionRate != null ? data.OtherCommissionRate : '');
         $('#txtOtherCommAmount').val(data.OtherCommissionAmount != null ? data.OtherCommissionAmount : 0);
         $('#txtOtherCommRemarks').val(data.OtherCommissionRemarks || '');
+        if (loadedCommUom != null && loadedCommUom !== '') { selectOptionByText('#cmbCommUom', loadedCommUom); }
+        /* CmbOtherCommissionUom.Text is set only when po.OtherCommissionUom > 0 (SaleOrder.cs:3259-3261). */
+        if (parseFloat(loadedOtherCommUom) > 0) { selectOptionByText('#cmbOtherCommUom', loadedOtherCommUom); }
+        /* cmbLocationType.Value = SaleOrderDetailList[0].LocationTypeId (SaleOrder.cs:3284). */
+        if (data.lineItems && data.lineItems.length && data.lineItems[0].LocationTypeId != null) {
+            $('#cmbLocationType').val(String(data.lineItems[0].LocationTypeId)).trigger('change');
+        }
 
         // Detail tab - real SaleOrderDetail rows (Sp_SaleOrder_GetAllMethod @Activity='ReadBySaleOrderHeaderId').
         // Mapped into the existing internal currentLineItems shape the Detail-tab grid code already uses
