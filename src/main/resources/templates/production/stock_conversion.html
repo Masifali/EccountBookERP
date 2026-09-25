@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
     <title>Stock Conversion - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
@@ -45,7 +47,6 @@
         .win-grid td.num, .win-grid th.num { text-align: right; }
         .win-grid tfoot td { background: #ececec; font-weight: bold; border-top: 2px solid #999; }
         .win-grid tbody tr.is-current td { background: #cce8ff; }
-        .win-grid .sc-x { border: 1px solid #aaa; background: #f3f3f3; font-size: 8pt; padding: 0 5px; color: #999; cursor: not-allowed; }
         .win-grid .sc-cellbtn { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8pt; padding: 1px 6px; cursor: pointer; }
         .win-grid-container.is-fullscreen { position: fixed; inset: 8px; z-index: 10000; background: #fff; display: flex; flex-direction: column; }
         .win-grid-container.is-fullscreen .win-grid-scroll { max-height: none; flex: 1; }
@@ -59,6 +60,24 @@
         .win-doc-link { color: #0645ad; text-decoration: underline; cursor: pointer; font-weight: bold; }
         .cx-banner { background: #fff3cd; border: 1px solid #e6c200; color: #7a5c00; padding: 4px 10px; font-size: 8.5pt; margin: 4px 0; }
         .is-hidden { display: none !important; }
+        .win-grid td.ed { padding: 0; background: #fffde8; }
+        .win-grid td.ed input, .win-grid td.ed select { width: 100%; min-width: 60px; border: 0; background: transparent; font: inherit; padding: 2px 4px; height: 20px; }
+        .win-grid td.ed input.num { text-align: right; }
+        .win-grid td .sc-f1 { border: 1px solid #aaa; background: #f3f3f3; font-size: 7pt; padding: 0 3px; margin-left: 3px; cursor: pointer; }
+        .win-grid tr.sc-group td { background: #dde8f0; font-weight: bold; }
+        .win-grid tr.sc-free td { color: #d00; }
+        .win-grid .sc-x { border: 1px solid #aaa; background: #f3f3f3; font-size: 8pt; padding: 0 5px; cursor: pointer; }
+        .sc-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 11000; display: none; align-items: flex-start; justify-content: center; padding: 20px 8px; overflow: auto; }
+        .sc-modal.is-open { display: flex; }
+        .sc-dialog { background: #ece9d8; border: 1px solid #555; width: min(1300px, 100%); box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+        .sc-dialog.small { width: min(560px, 100%); }
+        .sc-dialog-title { background: #0A6E6E; color: #fff; font-weight: bold; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; }
+        .sc-dialog-title button { background: transparent; border: 0; color: #fff; font-size: 14px; cursor: pointer; }
+        .sc-dialog-body { padding: 6px; }
+        .sc-grid6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px 10px; align-items: end; }
+        .sc-wbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 3px 4px; background: #f4f4f4; border-bottom: 1px solid #ccc; font-size: 8.5pt; }
+        .sc-wbar button { font-size: 8pt; }
+        @media (max-width: 900px) { .sc-grid6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         .sc-summary { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
         .sc-summary > div { flex: 1 1 380px; min-width: 0; }
         .sc-summary .sc-bar { justify-content: flex-start; }
@@ -79,34 +98,30 @@
         <button type="button" id="btnNew" class="win-btn-tool" onclick="StockConversion.btnNew()" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
         <button type="button" id="btnRefresh" class="win-btn-tool" onclick="StockConversion.btnRefresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
         <button type="button" id="btnSave" class="win-btn-tool" onclick="StockConversion.btnSave()" title="Ctrl+S"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
-        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="StockConversion.btnSave()" title="Ctrl+U"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
-        <button type="button" id="btnDelete" class="win-btn-tool is-hidden" disabled><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="StockConversion.btnUpdate()" title="Ctrl+U"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnDelete" class="win-btn-tool is-hidden" onclick="StockConversion.btnDelete()"><i class="fa fa-trash"></i> Delete</button>
         <button type="button" id="btnPrint" class="win-btn-tool" onclick="StockConversion.print()" title="Ctrl+P / Alt+1"><i class="fa fa-print"></i> <span>605-<u>P</u>rint</span></button>
         <button type="button" id="btnVoucher" class="win-btn-tool" onclick="StockConversion.voucher()"><i class="fa fa-print"></i> Voucher-118</button>
         <button type="button" id="btnGenerate" class="win-btn-tool" onclick="StockConversion.generate()" title="handleAverageRateCalculation on the rows shown"><i class="fa fa-calculator"></i> Generate</button>
-        <button type="button" id="btnIssuanceLoad" class="win-btn-tool is-hidden" disabled title="LoadIssuance dialog - not ported to the web yet (edit side)."><i class="fa fa-download"></i> Issuance Load</button>
-        <button type="button" id="btnStockReleaseFromFumigation" class="win-btn-tool is-hidden" disabled title="Not ported to the web yet (edit side)."><i class="fa fa-unlock"></i> Release Fumigation Stock</button>
-        <button type="button" id="btnLoadOutPut" class="win-btn-tool is-hidden" disabled title="Not ported to the web yet (edit side)."><i class="fa fa-download"></i> Load OutPut</button>
+        <button type="button" id="btnIssuanceLoad" class="win-btn-tool is-hidden" onclick="StockConversion.btnIssuanceLoad()"><i class="fa fa-download"></i> Issuance Load</button>
+        <button type="button" id="btnStockReleaseFromFumigation" class="win-btn-tool is-hidden" onclick="StockConversion.notPorted('LoadavailableTransactionsForStockReleaseFromFumigation')"><i class="fa fa-unlock"></i> Release Fumigation Stock</button>
+        <button type="button" id="btnLoadOutPut" class="win-btn-tool is-hidden" onclick="StockConversion.btnLoadOutPut()"><i class="fa fa-download"></i> Load OutPut</button>
         <button type="button" class="win-btn-tool" onclick="StockConversion.shortcuts()" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
-        <button type="button" id="btnWagesSchedule" class="win-btn-tool is-hidden" disabled title="Not ported to the web yet (edit side)."><i class="fa fa-list"></i> Wages Schedule</button>
-        <button type="button" id="btnWagesExempt" class="win-btn-tool is-hidden" disabled title="Not ported to the web yet (edit side)."><i class="fa fa-ban"></i> Wages Exempt Item</button>
+        <button type="button" id="btnWagesSchedule" class="win-btn-tool is-hidden" onclick="StockConversion.notPorted('frmContractWagesSchedule')"><i class="fa fa-list"></i> Wages Schedule</button>
+        <button type="button" id="btnWagesExempt" class="win-btn-tool is-hidden" onclick="StockConversion.notPorted('WagesExemptItemSchedule')"><i class="fa fa-ban"></i> Wages Exempt Item</button>
     </div>
     <div class="sc-title-row">
         <span class="sc-title">Stock Conversion Production <span id="lblDocNo" style="font-size:10pt; margin-left:10px;"></span></span>
         <span>
-            <label id="wrapFumigation" class="is-hidden"><input type="checkbox" id="chkFumigationOnHold" disabled> Stock Hold For Fumigation</label>
-            <label title="After a save the desktop prints 605. Save is not enabled here yet."><input type="checkbox" id="chkPrint"> Preview</label>
+            <label id="wrapFumigation" class="is-hidden"><input type="checkbox" id="chkFumigationOnHold"> Stock Hold For Fumigation</label>
+            <label title="After a save the desktop prints 605 for the saved record."><input type="checkbox" id="chkPrint"> Preview</label>
             <a class="sc-exit" href="/production" title="Ctrl+E / Esc"><i class="fa fa-sign-out"></i> Exit</a>
         </span>
     </div>
 </div>
 
 <div class="sc-body">
-<div class="cx-banner">
-    <strong>Viewer:</strong> Save / Update are not enabled for Stock Conversion yet - the desktop's save also posts
-    stock movements, an accounting voucher and contractor wages bills, and the gain (type 3) voucher cannot balance
-    (see the project note). Documents can be opened, read, recalculated and printed.
-</div>
+
 
 <!-- ================================================================ tabPage1 "Form" -->
 <div id="mainViewForm">
@@ -181,9 +196,9 @@
             <div class="win-field"><label class="win-label" for="txtdeailRemarks">Remarks</label>
                 <input type="text" id="txtdeailRemarks" class="win-textbox"/></div>
             <div class="win-field" style="flex-direction:row; gap:3px;">
-                <button type="button" class="win-btn-action" disabled title="Adding lines builds a document for Save, which is not enabled yet.">+</button>
-                <button type="button" class="win-btn-action is-hidden" disabled>Update</button>
-                <button type="button" class="win-btn-action is-hidden" disabled>Cancel</button>
+                <button type="button" id="Add" class="win-btn-action" onclick="StockConversion.addInGrid()">+</button>
+                <button type="button" id="btnUpdateDetail" class="win-btn-action is-hidden" onclick="StockConversion.updateDetail()">Update</button>
+                <button type="button" id="btnCancelDetail" class="win-btn-action is-hidden" onclick="StockConversion.cancelDetail()">Cancel</button>
             </div>
         </div>
     </fieldset>
@@ -199,18 +214,21 @@
     <div class="sc-pane is-active" id="paneInput">
         <div class="win-grid-container" id="gridInputBox">
             <div class="sc-bar"><span>Click the Forward_Button to Transfer Selected Input Rows Into Output Grid</span>
-                <button type="button" onclick="StockConversion.toggleFullscreen('gridInputBox')"><i class="fa fa-arrows-alt"></i></button></div>
+                <span style="display:flex; gap:4px;">
+                    <button type="button" id="BtnForwardRowsFromInputToOutPut" onclick="StockConversion.forwardRows()" title="Transfer the checked Input rows into the Output grid"><i class="fa fa-forward"></i></button>
+                    <button type="button" onclick="StockConversion.toggleFullscreen('gridInputBox')"><i class="fa fa-arrows-alt"></i></button></span></div>
             <div class="win-grid-scroll"><table class="win-grid" id="tblInput"><thead><tr id="inputHead"></tr></thead><tbody id="gridInput"></tbody><tfoot id="inputFoot"></tfoot></table></div>
         </div>
     </div>
     <div class="sc-pane" id="paneOutput">
         <div class="win-grid-container" id="gridOutputBox">
-            <div class="sc-bar"><span>Click the Forward_Button to generate Output items based on Uom For PM and Overhead</span>
+            <div class="sc-bar"><span>Click the Forward_Button to generate Output items based on Uom For PM and Overhead
+                    <button type="button" id="btnGenerateItemsAndUom" onclick="StockConversion.generateItemsAndUom()" title="Builds the Brand Item / Brand Uom lists (F1 in the PM and Overhead grids) from the Output rows"><i class="fa fa-forward"></i></button></span>
                 <span style="display:flex; gap:4px; align-items:center;">
                     <!-- panel23: CmbJobLotForGrid + BtnUpdateComboValueIngrid "Update". -->
                     <label for="CmbJobLotForGrid" style="margin:0; font-weight:normal;">Job lot</label>
                     <span style="width:220px; color:#000;"><select id="CmbJobLotForGrid" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot Description"></select></span>
-                    <button type="button" id="btnApplyJobLot" onclick="StockConversion.applyJobLotToGrid()" title="Writes this job lot into every output row on screen. Not saved.">Update</button>
+                    <button type="button" id="btnApplyJobLot" onclick="StockConversion.applyJobLotToGrid()">Update</button>
                     <button type="button" onclick="StockConversion.toggleFullscreen('gridOutputBox')"><i class="fa fa-arrows-alt"></i></button>
                 </span></div>
             <div class="win-grid-scroll"><table class="win-grid" id="tblOutput"><thead><tr id="outputHead"></tr></thead><tbody id="gridOutput"></tbody><tfoot id="outputFoot"></tfoot></table></div>
@@ -231,21 +249,35 @@
         </div>
     </div>
     <div class="sc-pane" id="paneWages">
-        <!-- tabPage3 Regular Wages (grdwagesDetail) / tabPage4 Other Wages (grdStiching) -->
-        <div style="display:flex;gap:2px;padding:2px 0;">
-            <div class="sc-tab is-active" id="wagesSubRegular" onclick="StockConversion.wagesTab('regular')">Regular Wages</div>
-            <div class="sc-tab" id="wagesSubOther" onclick="StockConversion.wagesTab('other')">Other Wages</div>
+        <!-- tabControl3: Regular Wages | Other Wages -->
+        <div class="sc-tabs" id="scTabs3">
+            <div class="sc-tab is-active" data-pane="paneRegWages" onclick="StockConversion.tab3('paneRegWages')">Regular Wages</div>
+            <div class="sc-tab" data-pane="paneOtherWages" onclick="StockConversion.tab3('paneOtherWages')">Other Wages</div>
         </div>
-        <div class="win-grid-container" id="gridWagesBox">
-            <div class="sc-bar"><span id="wagesTitle">In this Grid User Will add Regular Wages</span>
-                <span style="font-size:8pt;font-weight:normal;">Click this button To Apply First Row Values for All other Rows
-                    <button type="button" disabled title="Editing wages is part of Save, which is not enabled yet.">Apply All</button></span>
-                <span><button type="button" disabled title="Editing wages is part of Save, which is not enabled yet.">Reset Input Wages</button>
-                    <button type="button" disabled title="Editing wages is part of Save, which is not enabled yet.">Reset Output Wages</button>
-                    <button type="button" onclick="StockConversion.toggleFullscreen('gridWagesBox')"><i class="fa fa-arrows-alt"></i></button></span></div>
-            <div class="win-grid-scroll"><table class="win-grid"><thead><tr id="wagesHead"></tr></thead><tbody id="gridWages"></tbody><tfoot id="wagesFoot"></tfoot></table></div>
+        <div class="sc-pane is-active" id="paneRegWages">
+            <div class="sc-wbar">
+                <span style="white-space:pre-line;">Click this button To Apply First
+Row Values for All other Rows</span>
+                <button type="button" id="btnAddContractorValuesForAllDetailWages" onclick="StockConversion.applyAll('reg')">Apply All</button>
+                <button type="button" id="btnResetRegularWagesForInput" onclick="StockConversion.resetWages('regIn')">Reset Input Wages</button>
+                <button type="button" id="btnResetRegularWagesForOutPut" onclick="StockConversion.resetWages('regOut')">Reset Output Wages</button>
+                <span>In this Grid User Will add Regular Wages</span>
+            </div>
+            <div class="win-grid-container"><div class="win-grid-scroll"><table class="win-grid"><thead><tr id="wagesHead"></tr></thead><tbody id="gridWages"></tbody><tfoot id="wagesFoot"></tfoot></table></div></div>
+        </div>
+        <div class="sc-pane" id="paneOtherWages">
+            <div class="sc-wbar">
+                <span style="white-space:pre-line;">Click this button To Apply First
+Row Values for All other Rows</span>
+                <button type="button" id="btnAddContractorValuesForAllSticingWages" onclick="StockConversion.applyAll('oth')">Apply All</button>
+                <button type="button" id="btnResetOtherWagesForInput" class="is-hidden">Reset Input Wages</button>
+                <button type="button" id="btnResetOtherWagesForOutPut" onclick="StockConversion.resetWages('othOut')">Reset Output Wages</button>
+                <span>In this Grid User Will add Other Wages (Stiching)</span>
+            </div>
+            <div class="win-grid-container"><div class="win-grid-scroll"><table class="win-grid"><thead><tr id="stitchHead"></tr></thead><tbody id="gridStitch"></tbody><tfoot id="stitchFoot"></tfoot></table></div></div>
         </div>
     </div>
+
 
     <!-- groupBox2 "Summery Calculations" - two teal-headed panels (GenerateSummaryForUser:6234). -->
     <div class="sc-summary" id="scSummary"></div>
@@ -297,6 +329,62 @@
 </div>
 </div>
 
+<!-- LoadavailableTransactionsForIssuance - "Available Transactions For Issuance" (modal). -->
+<div class="sc-modal" id="loaderModal" role="dialog" aria-modal="true" aria-labelledby="loaderTitle">
+    <div class="sc-dialog">
+        <div class="sc-dialog-title"><span id="loaderTitle">Available Transactions For Issuance</span>
+            <button type="button" onclick="StockConversion.loaderClose()" title="Esc / Ctrl+E">&times;</button></div>
+        <div class="sc-dialog-body">
+            <div class="sc-grid6">
+                <div class="win-field"><label class="win-label" for="ldFrom">From &amp; To Date</label>
+                    <div style="display:flex; gap:3px;"><input type="date" id="ldFrom" class="win-datepicker"/><input type="date" id="ldTo" class="win-datepicker"/></div></div>
+                <div class="win-field"><label class="win-label" for="ldParent">Parent Category</label>
+                    <select id="ldParent" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Categories"></select></div>
+                <div class="win-field"><label class="win-label" for="ldItemCategory">Item Category</label>
+                    <select id="ldItemCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+                <div class="win-field"><label class="win-label" for="ldItemType">Item Type</label>
+                    <select id="ldItemType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+                <div class="win-field"><label class="win-label" for="ldJobLot">Job Lot</label>
+                    <select id="ldJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot"></select></div>
+                <div class="win-field"><label class="win-label" for="ldCrop">Crop Year</label>
+                    <select id="ldCrop" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+                <div class="win-field"><label class="win-label" for="ldWarehouse">Warehouse</label>
+                    <select id="ldWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WarehouseName"></select></div>
+                <div class="win-field"><label class="win-label" for="ldRefDoc">Ref Document</label>
+                    <select id="ldRefDoc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"></select></div>
+                <div class="win-field"><label class="win-label" for="ldParty">Party Name</label>
+                    <select id="ldParty" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+                <div class="win-field"><label class="win-label" for="ldItem">Item Name</label>
+                    <select id="ldItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div style="display:flex; gap:4px; align-items:flex-end;">
+                    <button type="button" id="btngrnlod" class="win-btn-action" onclick="StockConversion.loaderSearch()" title="Ctrl+S">Search</button>
+                    <button type="button" id="btnReset" class="win-btn-action" onclick="StockConversion.loaderReset()">Reset</button>
+                    <button type="button" id="btnLoadOnInvoice" class="win-btn-action" onclick="StockConversion.loaderLoad()" title="Ctrl+L">Load</button>
+                </div>
+                <div style="display:flex; gap:6px; align-items:flex-end;">
+                    <div class="win-field"><label class="win-label" for="ldSelWeight">Total Selected Weight</label><input type="text" id="ldSelWeight" class="win-textbox" readonly style="text-align:right;"/></div>
+                    <div class="win-field"><label class="win-label" for="ldSelQty">Total Selected Qty</label><input type="text" id="ldSelQty" class="win-textbox" readonly style="text-align:right;"/></div>
+                </div>
+            </div>
+            <div class="win-grid-container" style="margin-top:4px;">
+                <div class="win-grid-scroll" style="max-height:420px;"><table class="win-grid" id="tblLoader"><thead><tr id="loaderHead"></tr></thead><tbody id="gridLoader"></tbody><tfoot id="loaderFoot"></tfoot></table></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GrdPopUp - the F1 pick lists of the Packing Material and Overhead grids. -->
+<div class="sc-modal" id="pickModal" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+    <div class="sc-dialog small">
+        <div class="sc-dialog-title"><span id="pickTitle">Select</span>
+            <button type="button" onclick="StockConversion.pickClose()">&times;</button></div>
+        <div class="sc-dialog-body">
+            <input type="text" id="pickFilter" class="win-textbox" placeholder="Search" style="margin-bottom:4px;"/>
+            <div class="win-grid-container"><div class="win-grid-scroll" style="max-height:360px;"><table class="win-grid"><thead><tr id="pickHead"></tr></thead><tbody id="pickBody"></tbody></table></div></div>
+        </div>
+    </div>
+</div>
+
 <!-- tabControl1 - Form | History, the History button on the right of the footer. -->
 <div class="sc-footer">
     <div class="sc-tab is-active" id="tabForm" onclick="StockConversion.showView('form')" title="Ctrl+T">Form</div>
@@ -307,7 +395,7 @@
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
 <script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
 <script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
-<script th:src="@{/build/js/countx_stock_conversion.js?v=20260924w}"></script>
+<script th:src="@{/build/js/countx_stock_conversion.js?v=20260925b}"></script>
 <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
 <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>

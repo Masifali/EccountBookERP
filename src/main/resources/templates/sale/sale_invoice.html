@@ -1,240 +1,226 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:with="ctx=${session != null ? session['com.mst.security.LoginContext'] : null}" th:text="|${ctx != null and ctx.companyName != null ? ctx.companyName : ''} — Sale Invoice Master|">Golden Ace Rice Mills — Sale Invoice Master</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <title th:with="ctx=${session != null ? session['com.mst.security.LoginContext'] : null}"
+           th:text="|${ctx != null and ctx.companyName != null ? ctx.companyName : ''} — Sale Invoice|">Sale Invoice</title>
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <style>
-        body { font-family: "Segoe UI", "Verdana", Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; user-select: none; }
-        .erp-top-banner { background-color: #00796B; color: #ffffff; height: 32px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 600; justify-content: space-between; }
-        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 32px; display: flex; align-items: center; padding: 0 6px; gap: 4px; }
-        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; color: #000000; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; font-weight: 500; }
-        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
-        .win-sep { width: 1px; height: 18px; background-color: #b0b0b0; margin: 0 2px; }
-        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
-        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 11pt; font-weight: bold; text-transform: uppercase; }
-        .win-form-body { background-color: #ece9d8; padding: 6px; }
-        .win-group-box { border: 1px solid #999999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
-        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
-        .win-label { font-size: 8.5pt; font-weight: 600; color: #222222; white-space: nowrap; margin-bottom: 2px; }
-        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 8.5pt; height: 22px; border: 1px solid #7a9a9e; padding: 2px 4px; background-color: #ffffff; color: #000000; width: 100%; }
-        .win-textbox-readonly { background-color: #f0f0f0 !important; font-weight: bold; color: #004d40; }
-        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 8.5pt; font-weight: bold; border: 1px solid #004d40; height: 22px; padding: 0 8px; cursor: pointer; border-radius: 2px; }
-        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; }
-        .win-grid-scroll { max-height: 240px; overflow-x: auto; overflow-y: auto; }
-        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8pt; }
-        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color: #000000; font-weight: bold; border: 1px solid #999999; padding: 4px 5px; text-align: left; }
-        .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; color: #000000; }
-    </style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css}">
+    <link rel="stylesheet" th:href="@{/build/css/sale/sale_invoice.css?v=20260925a}">
 </head>
-
 <!-- =====================================================================================
-     RENDER FIX. This page returned HTTP 500 on every request. Verified in the application
-     log (logfile_2026-09-17.log):
-
-       Caused by: org.thymeleaf.exceptions.TemplateProcessingException:
-       Exception evaluating SpringEL expression: "c.customerName"
-       (template: "sale/sale_invoice_direct" - line 46, col 79)
-
-     The controller puts objects into ${suppliers} that have no customerName property. On a
-     Map, SpringEL's dot form throws when the key is absent, while the indexer form returns
-     null. The bindings below use the indexer form so a shape mismatch can no longer take the
-     whole page down. Whatever the controller is really supplying still needs correcting - that
-     class, SaleModuleViewController, sits 8 folders deep and cannot be read from this session.
-
-     Verified working shape, from SaleService.getCustomers() via /api/sale/customers:
-       {id, customerCode, customerName, glAccountId}
+     Sale Invoice - InvfrmSaleInvoice (DocumentTypeId 95), ported from the recovered desktop form.
+     Layout follows InitializeComponent: toolStrip1 + panel2 (title, Location Type, check boxes),
+     panel8 (header fields), panel4 (Transporter / Commission grids left, Party Add/Less / Other Item
+     Expenses right), panel9 (Detail / Payment Detail tabs) and the History tab.
      ===================================================================================== -->
 <body>
-
-    <div class="erp-top-banner">
-        <div><i class="fa fa-arrow-right me-1"></i> <span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></div>
-        <div><i class="fa fa-user me-1"></i> Admin <span class="ms-3"><i class="fa fa-clock-o me-1"></i> 8:20 pm</span></div>
+<div class="si-page">
+    <div class="si-tabs" role="tablist">
+        <button type="button" class="si-tab active" id="tabFormBtn" role="tab" aria-selected="true" data-tab="form">Form</button>
+        <button type="button" class="si-tab" id="tabHistoryBtn" role="tab" aria-selected="false" data-tab="history">History</button>
     </div>
 
-    <div class="win-tool-strip">
-        <button type="button" class="win-btn-tool" onclick="location.reload()"><i class="fa fa-plus text-success"></i> + New</button>
-        <button type="button" class="win-btn-tool" onclick="btnSave_Click()"><i class="fa fa-save text-primary"></i> Save & Post</button>
-        <button type="button" class="win-btn-tool" onclick="btnPrint()"><i class="fa fa-print"></i> Print</button>
-        <div class="win-sep"></div>
-        <div style="margin-left: auto;"><a href="/sale" class="win-btn-tool" style="color: #00796B; font-weight: bold;"><i class="fa fa-arrow-left"></i> Exit Module</a></div>
-    </div>
+    <!-- ============================================================== tabForm -->
+    <section id="tabForm" class="si-tabpage" role="tabpanel">
+        <div class="si-toolstrip" id="toolStrip1">
+            <button type="button" id="btnNew" title="Ctrl+N"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+            <button type="button" id="btnRefresh" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <span class="si-sep"></span>
+            <button type="button" id="btnSave" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+            <button type="button" id="btnUpdate" title="Ctrl+U" hidden><i class="fa fa-pencil"></i> <u>U</u>pdate</button>
+            <button type="button" id="btnDelete" title="Ctrl+Shift+Delete" hidden><i class="fa fa-trash"></i> Delete</button>
+            <span class="si-sep"></span>
+            <button type="button" id="btnAttachment" title="Ctrl+F10"><i class="fa fa-paperclip"></i> <u>A</u>ttachment</button>
+            <span class="si-sep"></span>
+            <button type="button" id="toolStripButton1" title="Ctrl+P"><i class="fa fa-print"></i> 301-Slip</button>
+            <button type="button" id="BtnItemSlip" title="Alt+1"><i class="fa fa-print"></i> 303A-Item Slip</button>
+            <button type="button" id="btnSlipFormat2" title="Alt+2"><i class="fa fa-print"></i> 303-Slip</button>
+            <span class="si-sep"></span>
+            <button type="button" id="btnPrint" title="Alt+3"><i class="fa fa-print"></i> 103-Voucher</button>
+            <button type="button" id="toolStripButton3" title="Ctrl+L"><i class="fa fa-download"></i> Load <u>G</u>dn</button>
+            <span class="si-sep"></span>
+            <button type="button" id="btnshortcutkeys" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        </div>
 
-    <div class="win-teal-header">
-        <span class="win-teal-header-title"><i class="fa fa-file-text me-1"></i> SALE INVOICE</span>
-        <span class="badge bg-warning text-dark">SI-2026</span>
-    </div>
+        <div class="si-panel2">
+            <span class="si-title">Sale Invoice</span>
+            <label for="cmbLocationType" class="si-lbl">Location Type</label>
+            <select id="cmbLocationType" class="si-input si-location"></select>
+            <span class="si-grow"></span>
+            <input type="checkbox" id="ChkOpenADOForm" hidden aria-label="Open Advance DO form after save">
+            <a href="#" id="AdvanceDoFormLink" hidden>AdvanceDO Form</a>
+            <label class="si-chk"><input type="checkbox" id="chkCustomAccounts"> Custom Accounts</label>
+            <label class="si-chk"><input type="checkbox" id="ChkPrintSlip"> Print Slip</label>
+            <label class="si-chk"><input type="checkbox" id="ChkBok"> Print Voucher</label>
+        </div>
 
-    <div class="win-form-body">
-        <fieldset class="win-group-box">
-            <legend>Invoice Information</legend>
-            <div class="row g-2">
-                <div class="col-md-2">
-                    <label class="win-label">Invoice Doc No</label>
-                    <input type="text" id="txtDocNo" class="win-textbox win-textbox-readonly" th:value="${nextDocNo}" readonly/>
+        <div class="si-panel8">
+            <div class="si-col si-c1">
+                <label class="si-lbl" for="txtdocno">Br / Inv No &amp; Date</label>
+                <div class="si-row3">
+                    <input id="txtdocno" class="si-input si-ro" readonly aria-label="Invoice No">
+                    <input id="txtBranchSrNo" class="si-input si-ro si-brsr" readonly hidden aria-label="Branch Sr No">
+                    <input id="DocDate" type="date" class="si-input" aria-label="Invoice Date">
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label">Invoice Date</label>
-                    <input type="date" id="txtDocDate" class="win-datepicker"/>
+                <label class="si-lbl" for="cmbsuppliername">Customer Name</label>
+                <select id="cmbsuppliername" class="si-input dtcombo" data-dtcombo="party4" data-dtcombo-caption="Customer Name"></select>
+                <label class="si-lbl" for="txtrefno">Customer Ref No</label>
+                <input id="txtrefno" class="si-input">
+            </div>
+            <div class="si-col si-c2">
+                <label class="si-lbl" for="txtDueDays">Due Days</label>
+                <input id="txtDueDays" class="si-input" inputmode="numeric">
+                <label class="si-lbl" for="DueDate">Due Date</label>
+                <input id="DueDate" type="date" class="si-input">
+                <label class="si-lbl" for="txtbillno">Manual Bill</label>
+                <input id="txtbillno" class="si-input" maxlength="50">
+            </div>
+            <div class="si-col si-c3">
+                <label class="si-lbl" for="txtLedgerBalance">Ledger Balance</label>
+                <input id="txtLedgerBalance" class="si-input si-ro si-num" readonly value="0">
+                <label class="si-lbl" for="txtBillAmount">Bill Amount</label>
+                <input id="txtBillAmount" class="si-input si-ro si-num si-bill" readonly value="0">
+                <label class="si-lbl" for="txtLedgerBalanceAfterBill">After Bill Balance</label>
+                <input id="txtLedgerBalanceAfterBill" class="si-input si-ro si-num" readonly value="0">
+            </div>
+            <div class="si-col si-c4 si-mc" hidden>
+                <label class="si-lbl" for="cmbCurrency">Fcy Code</label>
+                <select id="cmbCurrency" class="si-input"></select>
+                <label class="si-lbl" for="txtExchangeRate">Exchange Rate</label>
+                <input id="txtExchangeRate" class="si-input si-num" inputmode="decimal">
+                <label class="si-lbl" for="txtFcyAmount">Fcy Amount</label>
+                <input id="txtFcyAmount" class="si-input si-num" disabled>
+            </div>
+            <div class="si-col si-c5">
+                <label class="si-lbl" for="txtRemarks">Remarks</label>
+                <textarea id="txtRemarks" class="si-input si-remarks"></textarea>
+            </div>
+        </div>
+
+        <div class="si-panel4">
+            <div class="si-panel15">
+                <div class="si-gridbox" data-grid-box="freight">
+                    <div class="si-gridbar"><span>Transporter Grid</span></div>
+                    <div class="si-gridwrap"><table class="si-grid" id="grdFreight" aria-label="Transporter Grid"></table></div>
                 </div>
-                <div class="col-md-4">
-                    <label class="win-label">Customer / Party *</label>
-                    <select id="cmbCustomer" class="win-combo">
-                        <option value="">-- Select Customer --</option>
-                        <option th:each="c : ${suppliers}" th:value="${c['id']}" th:text="${c['customerName']}"></option>
-                    </select>
+                <div class="si-gridbox" data-grid-box="comm">
+                    <div class="si-gridbar"><span>Commission Grid</span></div>
+                    <div class="si-gridwrap"><table class="si-grid" id="grdComm" aria-label="Commission Grid"></table></div>
                 </div>
-                <div class="col-md-4">
-                    <label class="win-label">Pending GDN Loader</label>
-                    <select id="cmbGdn" class="win-combo"><option value="">-- Select Pending GDN --</option></select>
+            </div>
+            <div class="si-panel10">
+                <div class="si-gridbox" data-grid-box="gl">
+                    <div class="si-gridbar"><span>Party Add/Less</span></div>
+                    <div class="si-gridwrap"><table class="si-grid" id="grdGLedger" aria-label="Party Add/Less"></table></div>
                 </div>
-                <div class="col-md-3">
-                    <label class="win-label">Sales Tax (%)</label>
-                    <input type="number" step="0.01" id="txtSalesTax" class="win-textbox" value="18.00"/>
+                <div class="si-gridbox" data-grid-box="exp">
+                    <div class="si-gridbar"><span>Other Item Expenses</span></div>
+                    <div class="si-gridwrap"><table class="si-grid" id="grdInvExp" aria-label="Other Item Expenses"></table></div>
                 </div>
-                <div class="col-md-3">
-                    <label class="win-label">Further Tax (%)</label>
-                    <input type="number" step="0.01" id="txtFurtherTax" class="win-textbox" value="4.00"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">WHT Deducted (Rs)</label>
-                    <input type="number" step="0.01" id="txtWht" class="win-textbox" value="0.00"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Net Payable Total (Rs)</label>
-                    <input type="number" step="0.01" id="txtNetTotal" class="win-textbox win-textbox-readonly" readonly/>
-                </div>
+            </div>
+        </div>
+
+        <div class="si-panel9">
+            <div class="si-subtabs" role="tablist">
+                <button type="button" class="si-subtab active" data-subtab="detail" role="tab">Detail</button>
+                <button type="button" class="si-subtab" data-subtab="payment" role="tab">Payment Detail</button>
+            </div>
+            <div class="si-gridbox si-subpage" id="tabDetail">
+                <div class="si-gridbar"><span>Detail  Grid</span></div>
+                <div class="si-gridwrap si-wide"><table class="si-grid" id="grd" aria-label="Detail Grid"></table></div>
+            </div>
+            <div class="si-gridbox si-subpage" id="tabPaymentDetail" hidden>
+                <div class="si-gridbar"><span>Payment Detail Grid</span></div>
+                <div class="si-gridwrap si-wide"><table class="si-grid" id="grdPaymentDetail" aria-label="Payment Detail Grid"></table></div>
+            </div>
+        </div>
+
+        <div class="si-footer">
+            <span id="siMessage" class="si-message" role="status" aria-live="polite"></span>
+            <button type="button" id="btnFooterHistory" class="si-footer-history" title="Ctrl+T"><i class="fa fa-history"></i> History</button>
+        </div>
+    </section>
+
+    <!-- ============================================================== tabHistory -->
+    <section id="tabHistory" class="si-tabpage" role="tabpanel" hidden>
+        <div class="si-toolstrip">
+            <button type="button" id="btnNewHistory"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+            <button type="button" id="btnRefreshHistory"><i class="fa fa-refresh"></i> Refresh</button>
+        </div>
+        <div class="si-title si-htitle">Sale Invoice History</div>
+        <fieldset class="si-filters">
+            <legend>Filters</legend>
+            <div class="si-fcol si-fbranch">
+                <span class="si-lbl">Branch Name</span>
+                <div class="si-checklist" id="cmbBranchName" role="group" aria-label="Branch Name"></div>
+            </div>
+            <div class="si-fcol">
+                <label class="si-lbl" for="FromDateHistory"><input type="checkbox" id="FromDateHistoryOn" checked aria-label="Use From Date"> From Date</label>
+                <input id="FromDateHistory" type="date" class="si-input">
+            </div>
+            <div class="si-fcol">
+                <label class="si-lbl" for="ToDateHistory"><input type="checkbox" id="ToDateHistoryOn" checked aria-label="Use To Date"> To Date</label>
+                <input id="ToDateHistory" type="date" class="si-input">
+            </div>
+            <div class="si-fcol si-fnum">
+                <label class="si-lbl" for="FromDocNoHistory">From Doc No</label>
+                <input id="FromDocNoHistory" class="si-input" inputmode="numeric">
+            </div>
+            <div class="si-fcol si-fnum">
+                <label class="si-lbl" for="ToDocNoHistory">To Doc No</label>
+                <input id="ToDocNoHistory" class="si-input" inputmode="numeric">
+            </div>
+            <div class="si-fcol si-fcust">
+                <label class="si-lbl" for="CmbCustomerHistory">Customer</label>
+                <select id="CmbCustomerHistory" class="si-input"></select>
+            </div>
+            <div class="si-fcol si-fbtn">
+                <button type="button" id="btnShowHistory" class="si-action">Show</button>
+            </div>
+            <div class="si-fcol si-radios" role="radiogroup" aria-label="Date type">
+                <label><input type="radio" name="histDate" id="drdocdate" value="doc" checked> Doc Date</label>
+                <label><input type="radio" name="histDate" id="rdmodifydate" value="modify"> Modify Date</label>
+                <label><input type="radio" name="histDate" id="rdentrydate" value="entry"> Entry Date</label>
+                <label><input type="radio" name="histDate" id="rdapproveddate" value="approved"> Approved Date</label>
             </div>
         </fieldset>
-
-        <fieldset class="win-group-box" style="background-color: #ffffff;">
-            <legend>Invoice Items Line Entry</legend>
-            <div class="row g-2 align-items-center">
-                <div class="col-md-4">
-                    <label class="win-label">Item / Product *</label>
-                    <select id="lineItem" class="win-combo">
-                        <option value="">-- Select Item --</option>
-                        <option th:each="i : ${items}" th:value="${i['id']}" th:text="${i['itemName']}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Qty</label>
-                    <input type="number" step="0.01" id="lineQty" class="win-textbox" oninput="calcLine()"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Rate</label>
-                    <input type="number" step="0.01" id="lineRate" class="win-textbox" oninput="calcLine()"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Amount</label>
-                    <input type="number" step="0.01" id="lineAmount" class="win-textbox win-textbox-readonly" readonly/>
-                </div>
-                <div class="col-md-2 pt-3">
-                    <button type="button" class="win-btn-action w-100" onclick="btnAddRow_Click()"><i class="fa fa-plus"></i> Add Item</button>
-                </div>
-            </div>
-        </fieldset>
-
-        <div class="win-grid-container">
-            <div class="win-grid-scroll">
-                <table class="win-grid" id="tblItems">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px; text-align: center;">S#</th>
-                            <th>Item Description</th>
-                            <th style="width: 120px; text-align: right;">Qty</th>
-                            <th style="width: 120px; text-align: right;">Rate</th>
-                            <th style="width: 150px; text-align: right;">Amount</th>
-                            <th style="width: 60px; text-align: center;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="6" class="text-center text-muted" style="padding: 12px;">No invoice line items added yet.</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="si-gridbox">
+            <div class="si-gridbar"><span>Main</span></div>
+            <div class="si-gridwrap si-wide si-hist"><table class="si-grid" id="grdHistory" aria-label="History"></table></div>
         </div>
+        <div class="si-gridbox">
+            <div class="si-gridbar"><span>Invoice Detail Of Above Selected Row</span></div>
+            <div class="si-gridwrap si-wide si-histdetail"><table class="si-grid" id="grdDetail" aria-label="Invoice detail"></table></div>
+        </div>
+    </section>
+</div>
+
+<!-- ============================================================== frmLoadGDN -->
+<div class="si-dialog" id="frmLoadGDN" hidden role="dialog" aria-modal="true" aria-labelledby="loadGdnTitle">
+    <div class="si-dialog-head"><span id="loadGdnTitle">Load GDN</span><button type="button" id="btnclose" aria-label="Close">×</button></div>
+    <div class="si-dialog-filters">
+        <div class="si-fcol si-fbranch"><span class="si-lbl">Branch</span><div class="si-checklist" id="CmbBranch" role="group" aria-label="Branch"></div></div>
+        <div class="si-fcol"><label class="si-lbl" for="LoadFromDate">From Date</label><input id="LoadFromDate" type="date" class="si-input"></div>
+        <div class="si-fcol"><label class="si-lbl" for="LoadToDate">To Date</label><input id="LoadToDate" type="date" class="si-input"></div>
+        <div class="si-fcol si-fbtn"><button type="button" id="BtnShow" class="si-action">Show</button></div>
+        <div class="si-fcol si-fbtn"><button type="button" id="BtnLoadGdn" class="si-action">Load</button></div>
     </div>
+    <div class="si-gridwrap si-dialog-grid"><table class="si-grid" id="grdPendingGdn" aria-label="Pending GDN"></table></div>
+    <div class="si-gridbar"><span>GDN Detail</span></div>
+    <div class="si-gridwrap si-dialog-detail"><table class="si-grid" id="GridDetail" aria-label="GDN detail"></table></div>
+</div>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            document.getElementById('txtDocDate').valueAsDate = new Date();
-            $.get('/api/sale/gdn-list', function(res) {
-                var $g = $('#cmbGdn').empty().append('<option value="">-- Select Pending GDN --</option>');
-                res.forEach(function(x) { $g.append(`<option value="${x.id}">GDN-${x.docNo} (${x.customerName})</option>`); });
-            });
-        });
-        function calcLine() {
-            var q = parseFloat($('#lineQty').val()) || 0;
-            var r = parseFloat($('#lineRate').val()) || 0;
-            $('#lineAmount').val((q * r).toFixed(2));
-        }
-        function btnAddRow_Click() {
-            var itemId = $('#lineItem').val();
-            var itemName = $('#lineItem option:selected').text();
-            var qty = parseFloat($('#lineQty').val()) || 0;
-            var rate = parseFloat($('#lineRate').val()) || 0;
-            var amt = parseFloat($('#lineAmount').val()) || 0;
-            if(!itemId || qty <= 0) return alert('Select Item & Qty');
-            var tbody = $('#tblItems tbody');
-            if (tbody.find('td[colspan]').length > 0) tbody.empty();
-            tbody.append(`<tr><td class="text-center">1</td><td>${itemName}</td><td class="text-end">${qty.toFixed(2)}</td><td class="text-end">${rate.toFixed(2)}</td><td class="text-end">${amt.toFixed(2)}</td><td class="text-center"><button class="btn btn-sm btn-danger p-0 px-1" onclick="$(this).closest('tr').remove()">&times;</button></td></tr>`);
-        }
-        function btnSave_Click() { alert('This screen is not implemented yet - nothing was saved.'); }
-    </script>
+<!-- ============================================================== ShortCutKeyPopUp -->
+<div class="si-dialog si-small" id="shortcutDialog" hidden role="dialog" aria-modal="true" aria-labelledby="shortcutTitle">
+    <div class="si-dialog-head"><span id="shortcutTitle">ShortCut Keys</span><button type="button" id="shortcutClose" aria-label="Close">×</button></div>
+    <div class="si-gridwrap"><table class="si-grid" id="shortcutGrid"></table></div>
+</div>
 
-    <!-- ==================================================================================
-         Form History. The desktop form carries a grdHistory grid (135 references) and this
-         screen had none, so a saved document could not be found again.
-
-         Four mutually exclusive date radios, each end optional - an unticked end is OMITTED
-         rather than defaulted to today (InvfrmPurchaseInvoice.cs:4948-4975). Footer-right,
-         where the desktop puts it.
-
-         There is no user or "view all records" control here on purpose: the desktop derives
-         both from the signed-in user and the screen's grant grid, and so does the endpoint.
-         ================================================================================== -->
-    <div id="invoiceHistoryPanel" style="margin-top:10px;border:1px solid #b9b9b9;background:#f7f7f7;padding:8px;">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <strong style="font-size:11px;">History</strong>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="doc" checked/> Doc Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="entry"/> Entry Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="modify"/> Modify Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="approved"/> Approved Date</label>
-            <span style="font-size:11px;">From</span><input type="date" id="ihFromDate" style="font-size:11px;"/>
-            <span style="font-size:11px;">To</span><input type="date" id="ihToDate" style="font-size:11px;"/>
-            <span style="font-size:11px;">Doc No</span>
-            <input type="number" id="ihFromDocNo" style="width:70px;font-size:11px;" placeholder="From" data-guard="integer"/>
-            <input type="number" id="ihToDocNo" style="width:70px;font-size:11px;" placeholder="To" data-guard="integer"/>
-            <span style="font-size:11px;">Customer</span>
-            <select id="ihParty" style="font-size:11px;min-width:130px;" data-dtcombo="single" data-dtcombo-caption="Customer Name"><option value="0">-- All --</option></select>
-            <span style="font-size:11px;">Payment Term</span>
-            <select id="ihPaymentTerm" style="font-size:11px;min-width:110px;" data-dtcombo="single" data-dtcombo-caption="Payment Term"><option value="0">-- All --</option></select>
-            <span style="font-size:11px;">Rows</span>
-            <input type="number" id="ihNoOfRecords" style="width:60px;font-size:11px;" placeholder="All"/>
-            <input type="hidden" id="ihBranches"/>
-            <!-- Footer right, as on the desktop. -->
-            <button type="button" id="ihSearchBtn" class="win-btn-action" style="margin-left:auto;">
-                <i class="fa fa-search"></i> Search
-            </button>
-        </div>
-        <div id="ihMessage" style="font-size:11px;min-height:14px;margin:4px 0;"></div>
-        <!-- Full page width; the TABLE scrolls, never the page. -->
-        <div style="overflow:auto;max-height:260px;border:1px solid #d0d0d0;background:#fff;min-width:0;">
-            <table style="width:max-content;min-width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap;">
-                <thead id="ihHead" style="position:sticky;top:0;background:#e8e8e8;"></thead>
-                <tbody id="ihBody"></tbody>
-            </table>
-        </div>
-    </div>
-    <script>window.INVOICE_HISTORY_SCREEN = "sale-invoice";</script>
-    <script th:src="@{/build/js/countx_invoice_history.js?v=20260920a}"></script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
-    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js}"></script>
+<script th:src="@{/build/js/countx_purchase_request.js}"></script>
+<script th:src="@{/build/js/sale/sale_invoice.js?v=20260925a}"></script>
 </body>
 </html>

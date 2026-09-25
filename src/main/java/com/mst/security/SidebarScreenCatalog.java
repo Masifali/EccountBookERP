@@ -273,6 +273,11 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Item Category Store", "Store Management", "/store/item-category-store", "STORE_ITEM_CATEGORY_STORE", "STORE_MANAGEMENT", 336, 24));
         e.add(new Entry("Item Type Store", "Store Management", "/store/item-type-store", "STORE_ITEM_TYPE_STORE", "STORE_MANAGEMENT", 337, 24));
         e.add(new Entry("Opening Stock Store", "Store Management", "/store/opening-stock-store", "STORE_OPENING_STOCK_STORE", "STORE_MANAGEMENT", 341, 24));
+        //   batch 5 (the three "(Not Use)" forms, ScreenDefinition aliases verbatim): 335 PartyToPartyPackingMaterialTransfer
+        //   (DocType 125; rights key = ScreenName, the form's base.Name has no ScreenDefinition row), 347 (1616), 349 (1615).
+        e.add(new Entry("Packing Material Transfer (Party to Party) (Not Use)", "Store Management", "/store/party-to-party-pm-transfer", "STORE_PARTY_TO_PARTY_PM_TRANSFER", "STORE_MANAGEMENT", 335, 24));
+        e.add(new Entry("Store Issuance To Cosumable Store (Not Use)", "Store Management", "/store/issuance-to-consumable-store", "STORE_ISSUANCE_TO_CONSUMABLE_STORE", "STORE_MANAGEMENT", 347, 24));
+        e.add(new Entry("Department Request To Consumable Store (Not Use)", "Store Management", "/store/department-request-to-consumable", "STORE_DEPARTMENT_REQUEST_TO_CONSUMABLE", "STORE_MANAGEMENT", 349, 24));
         //   Store Management Reports, AppModules 46 (ScreenDefinition rows read from the dump; aliases verbatim).
         e.add(new Entry("Store Purchase Register", "Store Management Reports", "/store/reports/store-purchase-register", "STORE_RPT_STORE_PURCHASE_REGISTER", "STORE_MANAGEMENT", 333, 46));
         e.add(new Entry("Store Purchase Demand Report", "Store Management Reports", "/store/reports/store-purchase-demand-register", "STORE_RPT_STORE_PURCHASE_DEMAND_REGISTER", "STORE_MANAGEMENT", 452, 46));

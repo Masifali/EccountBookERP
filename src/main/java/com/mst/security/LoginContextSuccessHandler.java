@@ -84,7 +84,7 @@ public class LoginContextSuccessHandler extends SimpleUrlAuthenticationSuccessHa
             return;
         }
 
-        getRedirectStrategy().sendRedirect(request, response, "/dashboard");
+        getRedirectStrategy().sendRedirect(request, response, "/modules");
     }
 
     /** Back to the login form with the desktop's message, and nothing left signed in. */

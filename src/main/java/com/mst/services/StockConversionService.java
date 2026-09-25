@@ -1,7 +1,6 @@
 package com.mst.services;
 
 import com.mst.models.UserAccount;
-import com.mst.models.dto.StockConversionDto;
 import com.mst.repositories.StockConversionLookupsRepository;
 import com.mst.repositories.StockConversionRepository;
 import com.mst.security.CurrentUserContext;
@@ -11,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,8 +21,8 @@ import java.util.Map;
 /**
  * Stock Conversion — invfrmStockConversionProduction.cs, DocTypeId 66.
  *
- * Read side complete; Save refuses. See {@link StockConversionRepository#save} for exactly what is
- * missing and why a partial write would be worse than none.
+ * Read and write. Save / Update run DAL InvStockConversion.SetData through
+ * {@link StockConversionRepository#save}; Delete is InvPurchaseInvoice.RemoveByID for 66.
  *
  * Tenancy, financial year, CanViewAllRecord and EntryUser are all server-derived. Nothing that
  * decides which company's documents are returned comes from the request.
@@ -69,9 +71,6 @@ public class StockConversionService {
                 ? repo.details(id, docTypeId) : new ArrayList<Map<String, Object>>());
         res.put("packings", repo.packings(id));
         res.put("expenses", repo.expenses(id));
-        /* ReadById :4928 - WagesDetailReadbyId(RecId) fills the Contractor Wages grids. */
-        res.put("wages", repo.wages(u.getOrganizationId() == null ? 0 : u.getOrganizationId(),
-                u.getCompanyId() == null ? 0 : u.getCompanyId(), currentUserContext.currentFinancialYearId(), id));
         return res;
     }
 
@@ -207,8 +206,6 @@ public class StockConversionService {
         /* Load:572-602 - the switches that decide what the form shows. */
         out.put("issuanceByLoader", flag(u, "IssuanceByLoader"));
         out.put("contractWagesChargeToProduct", flag(u, "ContractWagesChargetoProductForStockConversion"));
-        /* Load:614 - RateWithoutAddLess / RateAddLess columns are shown only with this switch. */
-        out.put("enableAddLessOnWagesRegular", flag(u, "EnableAddLessOnWagesRegular"));
         out.put("saleMinusAllowedAgainstFifo", lookups.erpFeature(u, 14));
         /* Formats: DecimalRateFormate and stringFormatsingle (CommonServices.GetDecimalConfiguration). */
         out.put("rateDecimals", decimals(u, "Default NoofDecimal Points For Rate", true));
@@ -322,16 +319,490 @@ public class StockConversionService {
         return m;
     }
 
-    // =================================================================================== write
+    // ============================================================================ edit side: setup
+
+    /** The configuration value as GlobalVariables_Helper.GetConfigValueFromGlobal returns it (null when absent). */
+    private String cfg(UserAccount u, String name) {
+        try { return lookups.configKey(u, name); }
+        catch (Exception e) { LOG.warn("Configuration '{}' could not be read", name, e); return null; }
+    }
+    /** Conversion.ToBool(object) on the config value. */
+    private boolean cfgBool(UserAccount u, String name) { return StockConversionRepository.toBoolNet(cfg(u, name)); }
+    /** Conversion.ToDouble(object) on the config value: Convert.ToDouble, 0 on failure or infinity. */
+    private double cfgDouble(UserAccount u, String name) {
+        String v = cfg(u, name);
+        if (v == null || v.trim().isEmpty()) return 0d;
+        try {
+            double d = Double.parseDouble(v.trim().replace(",", ""));
+            return Double.isInfinite(d) ? 0d : d;
+        } catch (NumberFormatException e) { return 0d; }
+    }
+
+    private int branch(UserAccount u) { return u.getBranchesId() == null ? 0 : u.getBranchesId(); }
 
     /**
-     * Refuses. The desktop's Save is a posting engine — see
-     * {@link StockConversionRepository#save}. Wired now so the screen and its contract exist, and
-     * so that turning it on later is a change in one place rather than a new code path.
+     * Everything Load (:597-795) reads besides the thirteen combos, plus the grid value lists that do
+     * not depend on the Conversion Type: the configuration switches, ERP features 5 and 11, the wages
+     * status row for RefDocumentTypeId 66, the wages lists (only when
+     * ContractWagesChargetoProductForStockConversion is on, as Load only fills them then), item
+     * conditions without Id 4, the overhead accounts, the Charge To list and the racks for F1.
      */
-    public Map<String, Object> save(StockConversionDto dto) {
-        currentUserContext.requireAccountingUser();
-        return repo.save(dto) > 0 ? null : null;   // repo.save always throws
+    public Map<String, Object> editSetup() {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        Map<String, Object> out = new LinkedHashMap<>();
+        boolean multiBranch = lookups.erpFeature(u, 11);
+        out.put("fifoCgs", lookups.erpFeature(u, 5));
+        out.put("multiBranchFeature", multiBranch);
+        out.put("saleMinusAllowedAgainstFifo", lookups.erpFeature(u, 14));
+        out.put("stockReleaseFromFumigation", lookups.erpFeature(u, ERP_FEATURE_STOCK_RELEASE_FROM_FUMIGATION));
+        out.put("wagesStatus", cfgBool(u, "WagesCompulsoryOnStockConversion"));
+        out.put("pmCompulsoryForWarning", cfgBool(u, "PackingMaterialCompulsoryOnStockConversionForWarning"));
+        out.put("pmCompulsoryForStop", cfgBool(u, "PackingMaterialCompulsoryOnStockConversionForStop"));
+        out.put("gainLossTolerance", cfgDouble(u, "ToleranceForInPutMinusOutputForConversionInPercent"));
+        out.put("percentageForRateAddLess", cfgDouble(u, "PercentageForRateAddLess"));
+        boolean contractWages = cfgBool(u, "ContractWagesChargetoProductForStockConversion");
+        out.put("contractWagesChargeToProduct", contractWages);
+        out.put("enableAddLessOnWagesRegular", cfgBool(u, "EnableAddLessOnWagesRegular"));
+        out.put("wagesAmountCalculateOnQty", cfgBool(u, "WagesAmountCalculateOnQty"));
+        out.put("issuanceByLoader", cfgBool(u, "IssuanceByLoader"));
+        out.put("stichingWagesCompulsory", cfgBool(u, "OtherWagesCompulsoryForStockConversion"));
+        boolean wagesActive = false;
+        for (Map<String, Object> r : repo.wagesRefDocuments()) {
+            if (asInt(ci(r, "RefDocumentTypeId")) == StockConversionRepository.DOC_TYPE_ID) {
+                wagesActive = toBool(ci(r, "IsActive"));
+                break;
+            }
+        }
+        out.put("wagesActive", wagesActive);
+
+        /* cmbChargeTo():855 - two literal rows. */
+        List<Map<String, Object>> chargeTo = new ArrayList<>();
+        chargeTo.add(kv("Id", "1", "ChargeTo", "Recovery By Product"));
+        chargeTo.add(kv("Id", "2", "ChargeTo", "Recovery Head Rice"));
+        out.put("chargeTo", chargeTo);
+
+        /* GridPmDropdownBind:2942 - globalItemConditions without Id 4, as Id / Description. */
+        List<Map<String, Object>> conds = new ArrayList<>();
+        for (Map<String, Object> r : repo.itemConditions()) {
+            if (asInt(ci(r, "Id")) == 4) continue;
+            conds.add(kv("Id", ci(r, "Id"), "Description", ci(r, "ConditionStatus")));
+        }
+        out.put("itemConditions", conds);
+        out.put("overheadAccounts", pick(repo.overheadAccounts(u), "Id", "AccountTitle"));
+        List<Map<String, Object>> racks = new ArrayList<>();
+        for (Map<String, Object> r : repo.racksWithWarehouseAndItems(u, branch(u))) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("Id", ci(r, "Id"));
+            m.put("RackName", ci(r, "RackName"));
+            m.put("ItemId", ci(r, "ItemId"));
+            m.put("WarehouseId", ci(r, "invWarehouseId"));
+            m.put("WareHouseName", ci(r, "WareHouseName"));
+            racks.add(m);
+        }
+        out.put("racks", racks);
+
+        /* :635-640 and CmbConversionType_Leave:1592 - suppliercustomer() and accountName() only when the
+           wages configuration is on; GridStichingSettings reads its own list with default "35". */
+        if (contractWages) {
+            out.put("contractors", pick(repo.contractors(u, multiBranch, branch(u)), "Id", "CompanyName"));
+            String ids = null;
+            for (Map<String, Object> r : repo.wagesTypeIdsAgainstDocumentType()) {
+                if (asInt(ci(r, "DocumentTypeId")) == StockConversionRepository.DOC_TYPE_ID) {
+                    Object v = ci(r, "WagesActivityIds");
+                    ids = v == null ? "" : String.valueOf(v);
+                    break;
+                }
+            }
+            out.put("wagesAccounts", pick(repo.wagesAccounts(u, ids, 0, 1), "Id", "WagesAccountName"));
+            out.put("stitchingAccounts", pick(repo.wagesAccounts(u, ids == null ? "35" : ids, 0, 1), "Id", "WagesAccountName"));
+        } else {
+            out.put("contractors", new ArrayList<>());
+            out.put("wagesAccounts", new ArrayList<>());
+            out.put("stitchingAccounts", new ArrayList<>());
+        }
+        return out;
+    }
+
+    /** GridPmDropdownBind:2924 - Item.GetItemByItemTypeId with "14,17" for Conversion Type 5, else "14". */
+    public List<Map<String, Object>> pmItems(int conversionTypeId) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        return pick(repo.pmItems(u, conversionTypeId == 5 ? "14,17" : "14"), "Id", "ItemName");
+    }
+
+    /** ScheduleNoDbCall:2896 - pending export schedules for this record (RecId). */
+    public List<Map<String, Object>> schedules(int recId) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : repo.pendingSchedules(u, recId)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("Id", ci(r, "Id"));
+            m.put("ScheduleCode", ci(r, "ScheduleCode"));
+            m.put("InvoiceId", ci(r, "InvoiceId"));
+            out.add(m);
+        }
+        return out;
+    }
+
+    // ================================================================= edit side: per-row lookups
+
+    private static LocalDateTime docDate(String yyyyMmDd) {
+        if (yyyyMmDd == null || yyyyMmDd.trim().isEmpty()) return LocalDate.now().atTime(LocalTime.now());
+        return LocalDate.parse(yyyyMmDd.trim().substring(0, 10)).atTime(LocalTime.now());
+    }
+
+    /** GetAvgRate:1162 - AvgRateOnlyForCGS(item, docDate, 66, RecId, lot, CmbCropyr.Value, null, godown). */
+    public double avgRate(int itemId, String date, int recId, int jobLotId, int cropYearId, int warehouseId) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        return repo.avgRateOnlyForCgs(u, itemId, docDate(date), StockConversionRepository.DOC_TYPE_ID, recId,
+                jobLotId, cropYearId, null, warehouseId, 0);
+    }
+
+    /** grdPackingMaterial_CellUpdated:2864 - Math.Round(AvgRate, 3) of row 0, else 0; DocumentTypeId is
+     *  66 only when RecId > 0. */
+    public double pmRate(int itemId, String date, int itemConditionId, int recId) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        List<Map<String, Object>> r = repo.pmAvgRate(u, itemId, docDate(date), itemConditionId, recId,
+                recId > 0 ? StockConversionRepository.DOC_TYPE_ID : 0);
+        if (r.isEmpty()) return 0d;
+        return new java.math.BigDecimal(StockConversionRepository.dbl(ci(r.get(0), "AvgRate")))
+                .setScale(3, java.math.RoundingMode.HALF_EVEN).doubleValue();
+    }
+
+    /** CommonServices.GetWagesRate - {WagesRate, ScheduleId} or null. */
+    public Map<String, Object> wagesRate(String date, double packSize, int wagesId, int contractorId) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        return repo.wagesRate(u, docDate(date), packSize, wagesId, contractorId);
+    }
+
+    /** CommonServices.CheckItemsFreeofcostforWages(docDate, 66, item, wagesAccount), for a batch of rows. */
+    public List<Boolean> wagesFree(String date, List<Map<String, Object>> rows) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        List<Boolean> out = new ArrayList<>();
+        LocalDateTime d = docDate(date);
+        for (Map<String, Object> r : rows == null ? new ArrayList<Map<String, Object>>() : rows) {
+            out.add(repo.wagesFreeOfCost(u, d, StockConversionRepository.DOC_TYPE_ID,
+                    asInt(r.get("itemId")), asInt(r.get("wagesId"))));
+        }
+        return out;
+    }
+
+    /** WagesDetailReadbyId:5285 - the saved wages lines of a conversion, split by WagesTypeId (2 = other). */
+    public List<Map<String, Object>> wagesDetail(int id) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        if (load(id) == null) return new ArrayList<>();   // tenancy guard, same as ReadById
+        return repo.wagesDetailByRefDocument(u, currentUserContext.currentFinancialYearId(), id);
+    }
+
+    // ============================================================ LoadavailableTransactionsForIssuance
+
+    /**
+     * LoadInvoices_Load:128. Rights row "Rate" of screen LoadavailableTransactionsForIssuance: when rows
+     * exist but none is "Rate", newList[0] throws and Load stops before the dates, combos and the first
+     * search - reported as loadError. FoodProductionWithValues.ValuesShowRights is a static the desktop
+     * only sets when screen 280 has been opened in the session; here it is read from screen 280's own
+     * "Rate" grant (FoodProductionWithValues), the value it would hold once that screen was opened.
+     */
+    public Map<String, Object> loaderSetup() {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        Map<String, Object> out = new LinkedHashMap<>();
+        String role = currentUserContext.currentRoleName();
+        try {
+            List<Map<String, Object>> rights = repo.userRights(u.getId(), "LoadavailableTransactionsForIssuance",
+                    role, u.getCompanyId());
+            if (!rights.isEmpty()) {
+                boolean hasRate = false;
+                for (Map<String, Object> r : rights) if ("Rate".equals(String.valueOf(ci(r, "RightName")))) { hasRate = true; break; }
+                if (!hasRate) {
+                    out.put("loadError", "Index was out of range. Must be non-negative and less than the size of the collection.\r\nParameter name: index");
+                    return out;
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn("Loader rights could not be read", e);
+        }
+        boolean valuesShow = false;
+        try {
+            for (Map<String, Object> r : repo.userRights(u.getId(), "FoodProductionWithValues", role, u.getCompanyId()))
+                if ("Rate".equals(String.valueOf(ci(r, "RightName")))) valuesShow = toBool(ci(r, "Value"));
+        } catch (Exception e) {
+            LOG.warn("Screen 280 Rate right could not be read", e);
+        }
+        out.put("valuesShowRights", valuesShow);
+        Object start = repo.financialYearStart(u, currentUserContext.currentFinancialYearId());
+        out.put("fromDate", start == null ? null : String.valueOf(start).substring(0, Math.min(10, String.valueOf(start).length())));
+        Map<String, List<Map<String, Object>>> lists = new LinkedHashMap<>();
+        for (String k : new String[]{"ParentCategories", "ItemCategories", "ItemTypes", "JobLot", "CropYear",
+                "Warehouse", "DocumentType", "Supplier_Customer", "Items"}) lists.put(k, new ArrayList<>());
+        for (Map<String, Object> r : repo.issuanceDropDowns(u)) {
+            String t = String.valueOf(ci(r, "ActivityType"));
+            List<Map<String, Object>> l = lists.get(t);
+            if (l != null) l.add(kv("Id", ci(r, "Id"), "name", ci(r, "name")));
+        }
+        out.put("lists", lists);
+        return out;
+    }
+
+    /** PendingInventoryTransactionsForIssuanceLoad:319 with the dialog's filters (CropYear is the combo TEXT). */
+    public List<Map<String, Object>> loaderSearch(String fromDate, String toDate, int parentCategoryId,
+                                                  int itemCategoryId, int itemTypeId, int jobLotId,
+                                                  String cropYear, int warehouseId, int refDocumentTypeId,
+                                                  int supplierCustomerId, int itemId) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        List<Map<String, Object>> out = new ArrayList<>();
+        /* FromDate.Value = ActiveYr.Start_Period (midnight); Todate.Value keeps the time it was opened at. */
+        LocalDateTime from = (fromDate == null || fromDate.trim().isEmpty()) ? null
+                : LocalDate.parse(fromDate.trim().substring(0, 10)).atStartOfDay();
+        for (Map<String, Object> r : repo.availableTransactionsForIssuance(u, from, docDate(toDate),
+                parentCategoryId, itemCategoryId, itemTypeId, jobLotId, cropYear, warehouseId,
+                refDocumentTypeId, supplierCustomerId, itemId)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            for (String c : new String[]{"RefDocumentTypeId", "RefDocIdNo", "RefDocSubIdNo", "RefDocumentType",
+                    "DocDate", "DocCodeNo", "ManualNo", "GrnNo", "SupplierCustomerId", "SupplierCustomerName",
+                    "VehicleNo", "GpNo", "WarehouseId", "WareHouseCode", "RefWarehouse", "ItemId", "ItemName",
+                    "ItemCode", "CropYearId", "CropBatch", "JobLotId", "JobLotCode", "InvPackingTypeId",
+                    "PackingType", "ItemUom", "PackUom", "PackSize", "QtyIn", "QtyOut", "QtyBalance", "WeightIn",
+                    "WeightOut", "WeightBalance", "ReserveWeight", "StockWeightOut", "AVgRate", "RateUom",
+                    "Equivalent", "RateUomId", "ItemAmount", "BiltyNo"}) m.put(c, ci(r, c));
+            /* :398 - GrnNo is 0 for RefDocumentTypeId 112 and 80. */
+            int rt = asInt(ci(r, "RefDocumentTypeId"));
+            if (rt == 112 || rt == 80) m.put("GrnNo", 0);
+            m.put("Remarks", ci(r, "TranRemarks"));
+            out.add(m);
+        }
+        return out;
+    }
+
+    // =================================================================================== write
+
+    private static Object v(Map<String, Object> m, String k) { return m == null ? null : m.get(k); }
+    private static int i(Map<String, Object> m, String k) { return asInt(v(m, k)); }
+    private static double d(Map<String, Object> m, String k) { return StockConversionRepository.dbl(v(m, k)); }
+    private static String s(Map<String, Object> m, String k) { Object o = v(m, k); return o == null ? "" : String.valueOf(o); }
+    private static boolean b(Map<String, Object> m, String k) { return toBool(v(m, k)); }
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> list(Map<String, Object> m, String k) {
+        Object o = v(m, k);
+        return o instanceof List ? (List<Map<String, Object>>) o : new ArrayList<>();
+    }
+
+    /**
+     * Insert():4365 posts the model the form built; BLL InvStockConversion.Save -> DAL SetData. The page
+     * runs every form-side check and confirmation first (they are the form's, with its messages) and
+     * sends the model lists; everything that decides WHOSE document it is - organisation, company,
+     * branch, financial year, users, dates, DocTypeId 66, ActionId - is set here and never read from
+     * the request.
+     */
+    public Map<String, Object> save(Map<String, Object> body) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        int recId = i(body, "id");
+        /* btnsave (DoHaveSaveRight) / btnUpdate (DoHaveUpdateRights) are disabled without the grant. */
+        if (recId == 0 && !right(u, "Save")) throw new IllegalStateException("You don't have the Save right on this screen.");
+        if (recId > 0 && !right(u, "Update")) throw new IllegalStateException("You don't have the Update right on this screen.");
+        if (recId > 0 && load(recId) == null) throw new IllegalArgumentException("RecId not found");
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime date = docDate(s(body, "docDate"));
+        int userId = u.getId() == null ? 0 : u.getId();
+        int fy = currentUserContext.currentFinancialYearId();
+
+        StockConversionRepository.SaveModel m = new StockConversionRepository.SaveModel();
+        Map<String, Object> h = m.header;
+        h.put("Id", recId);
+        h.put("OrganizationId", u.getOrganizationId());
+        h.put("CompanyId", u.getCompanyId());
+        h.put("BranchedId", branch(u));
+        h.put("FinancialYearId", fy);
+        h.put("DocTypeId", StockConversionRepository.DOC_TYPE_ID);
+        h.put("EntryUser", userId);
+        h.put("ModifyUser", userId);
+        h.put("EntryDate", now);
+        h.put("ModifyDate", now);
+        h.put("PostDate", now);
+        h.put("PostUser", 0);
+        h.put("PostState", false);
+        h.put("ProjectsId", 0);
+        h.put("ConversionTypeId", i(body, "conversionTypeId"));
+        h.put("DocSrNo", i(body, "docSrNo"));
+        h.put("DocDate", date);
+        h.put("ProductionNo", s(body, "productionNo"));
+        h.put("parentCategoryId", i(body, "parentCategoryId"));
+        h.put("EBDepartmentId", i(body, "ebDepartmentId"));
+        h.put("DocManualRef", "");
+        h.put("Remarks", s(body, "remarks"));
+        h.put("GainLossId", i(body, "gainLossId"));
+        h.put("DifferenceAccountId", i(body, "differenceAccountId"));
+        /* BLL Save: Id == 0 -> ActionId 1, ModifyUser 0; otherwise ActionId 2, EntryUser 0. */
+        if (recId == 0) { h.put("ActionId", 1); h.put("ModifyUser", 0); }
+        else { h.put("ActionId", 2); h.put("EntryUser", 0); }
+        String removeIds = s(body, "inputDetailRowsRemoveIds");
+        m.inputDetailRowsRemoveIds = removeIds.isEmpty() ? null : removeIds;
+
+        for (Map<String, Object> r : list(body, "details")) {
+            Map<String, Object> dd = new LinkedHashMap<>();
+            dd.put("Id", i(r, "Id"));
+            dd.put("InvStockConversionId", 0);
+            dd.put("EntryType", s(r, "EntryType"));
+            dd.put("WarehouseId", i(r, "WarehouseId"));
+            dd.put("ItemId", i(r, "ItemId"));
+            dd.put("ItemUomId", i(r, "ItemUomId"));
+            dd.put("CropBatch", s(r, "CropBatch"));
+            dd.put("JobLotId", i(r, "JobLotId"));
+            dd.put("PackingtypeId", i(r, "PackingtypeId"));
+            dd.put("Qty", d(r, "Qty"));
+            dd.put("PackUnit", 0);
+            dd.put("Weight", d(r, "Weight"));
+            dd.put("Rate", d(r, "Rate"));
+            dd.put("RateUOMId", i(r, "RateUOMId"));
+            dd.put("Amount", d(r, "Amount"));
+            dd.put("ProjectId", 0);
+            dd.put("VoucherHeadId", 0);
+            dd.put("Remarks", s(r, "Remarks"));
+            dd.put("ExpenseAmount", d(r, "ExpenseAmount"));
+            dd.put("PackingMaterialAmount", d(r, "PackingMaterialAmount"));
+            dd.put("Moisture", d(r, "Moisture"));
+            dd.put("MoistureSlabId", i(r, "MoistureSlabId"));
+            dd.put("RefDocumentTypeId", i(r, "RefDocumentTypeId"));
+            dd.put("RefDocNoId", i(r, "RefDocNoId"));
+            dd.put("RefDocSubId", i(r, "RefDocSubId"));
+            dd.put("LineId", i(r, "LineId"));
+            dd.put("WagesAmount", d(r, "WagesAmount"));
+            dd.put("ItemPmCost", d(r, "ItemPmCost"));
+            dd.put("ItemOhCost", d(r, "ItemOhCost"));
+            dd.put("ItemConditionId", 0);
+            dd.put("RackId", 0);
+            dd.put("SortNo", 0);
+            dd.put("labIPmActivityLogId", i(r, "labIPmActivityLogId"));
+            dd.put("IsOnHold", b(r, "IsOnHold"));
+            m.details.add(dd);
+        }
+        for (Map<String, Object> r : list(body, "packings")) {
+            Map<String, Object> p = new LinkedHashMap<>();
+            p.put("Id", 0);
+            p.put("InvStockConversionId", 0);
+            p.put("ItemId", i(r, "ItemId"));
+            p.put("ItemSchUOM", 0);
+            p.put("ItemQty", d(r, "ItemQty"));
+            p.put("ItemRate", d(r, "ItemRate"));
+            p.put("ItemAmount", d(r, "ItemAmount"));
+            p.put("ChargeTo", s(r, "ChargeTo"));
+            p.put("WarehouseId", i(r, "WarehouseId"));
+            p.put("LineId", 0);
+            p.put("BrandItemId", i(r, "BrandItemId"));
+            p.put("BrandItemUomId", i(r, "BrandItemUomId"));
+            p.put("ItemConditionId", i(r, "ItemConditionId"));
+            p.put("ContractScheduleId", i(r, "ContractScheduleId"));
+            p.put("ExImInvoiceId", i(r, "ExImInvoiceId"));
+            p.put("RackId", i(r, "RackId"));
+            m.packings.add(p);
+        }
+        for (Map<String, Object> r : list(body, "expenses")) {
+            Map<String, Object> e = new LinkedHashMap<>();
+            e.put("Id", 0);
+            e.put("InvStockConversionId", 0);
+            e.put("ChartOfAccountId", i(r, "ChartOfAccountId"));
+            e.put("LedgerRemarks", s(r, "LedgerRemarks"));
+            e.put("ExpAmount", d(r, "ExpAmount"));
+            e.put("ChargeTo", s(r, "ChargeTo"));
+            e.put("BrandItemId", i(r, "BrandItemId"));
+            e.put("BrandItemUomId", i(r, "BrandItemUomId"));
+            m.expenses.add(e);
+        }
+        /* AddWagesListInInsert:5008 - the header fields the form sets; tenancy and users from here. */
+        for (Map<String, Object> r : list(body, "wagesBills")) {
+            StockConversionRepository.WagesBill wb = new StockConversionRepository.WagesBill();
+            Map<String, Object> wh = wb.header;
+            wh.put("Id", 0);
+            wh.put("CompanyId", u.getCompanyId());
+            wh.put("OrganizationId", u.getOrganizationId());
+            wh.put("BranchesId", branch(u));
+            wh.put("DocNo", i(body, "docSrNo"));
+            wh.put("DocDate", date);
+            wh.put("DocumentTypeId", 101);
+            wh.put("RefDocumentTypeId", StockConversionRepository.DOC_TYPE_ID);
+            wh.put("RefDocNoId", recId);
+            wh.put("RefDocNo", i(body, "docSrNo"));
+            wh.put("OtherRemarks", s(body, "remarks"));
+            wh.put("EntryUser", userId);
+            wh.put("ModifyUser", userId);
+            wh.put("ScaleSlipNo", 0);
+            wh.put("RefDocument", s(r, "RefDocument"));
+            wh.put("ModifyDate", now);
+            wh.put("EntryDate", now);
+            wh.put("FinancialYearId", fy);
+            wh.put("IsAproved", false);
+            wh.put("ApprovedUserId", 0);
+            wh.put("ProjectsId", 0);
+            wh.put("JobOrderId", 0);
+            wh.put("QtyTotal", d(r, "QtyTotal"));
+            wh.put("WeightTotal", d(r, "WeightTotal"));
+            for (Map<String, Object> l : list(r, "lines")) {
+                Map<String, Object> wl = new LinkedHashMap<>();
+                wl.put("Id", 0);
+                wl.put("InvContractorWagesBillHeaderId", 0);
+                wl.put("ContractorId", i(l, "ContractorId"));
+                wl.put("ItemId", i(l, "ItemId"));
+                wl.put("ItemName", s(l, "ItemName"));
+                wl.put("WagesAccountName", s(l, "WagesAccountName"));
+                wl.put("Crop", s(l, "Crop"));
+                wl.put("JobLotId", i(l, "JobLotId"));
+                wl.put("InvPackingTypeId", i(l, "InvPackingTypeId"));
+                wl.put("WbTransactionsIdDt", 0);
+                wl.put("InvConractorWagesAccountsId", i(l, "InvConractorWagesAccountsId"));
+                wl.put("Weight", d(l, "Weight"));
+                wl.put("PackSize", d(l, "PackSize"));
+                wl.put("Qty", d(l, "Qty"));
+                wl.put("WageRate", d(l, "WageRate"));
+                wl.put("WagesAmount", d(l, "WagesAmount"));
+                wl.put("WareHouseFromId", i(l, "WareHouseFromId"));
+                wl.put("WareHouseToId", i(l, "WareHouseToId"));
+                wl.put("BillQty", d(l, "BillQty"));
+                wl.put("WeightCut", d(l, "WeightCut"));
+                wl.put("BillWeight", d(l, "BillWeight"));
+                String rd = s(l, "RefDocDate");
+                wl.put("RefDocDate", rd.isEmpty() ? LocalDate.of(1900, 1, 1).atStartOfDay()
+                        : LocalDate.parse(rd.substring(0, 10)).atTime(LocalTime.now()));
+                wl.put("WagesTypeId", i(l, "WagesTypeId"));
+                wl.put("FreeOfCost", b(l, "FreeOfCost"));
+                wl.put("RefDocumentTypeId", 0);
+                wl.put("JobOrderId", 0);
+                wl.put("IsCompany", false);
+                wl.put("RateAddLess", d(l, "RateAddLess"));
+                wl.put("RefDocQty", d(l, "RefDocQty"));
+                wl.put("RefDocWeight", d(l, "RefDocWeight"));
+                wl.put("RefLineId", i(l, "RefLineId"));
+                wl.put("InvContractorWagesScheduleId", i(l, "InvContractorWagesScheduleId"));
+                wb.lines.add(wl);
+            }
+            m.wagesBills.add(wb);
+        }
+
+        int code = repo.save(m);
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("success", true);
+        res.put("id", code);
+        res.put("docSrNo", h.get("DocSrNo"));
+        res.put("message", (recId == 0 ? "Record Save Successfully " : "Record Update Successfully ") + h.get("DocSrNo"));
+        return res;
+    }
+
+    /** btnDelete_Click:4967. */
+    public Map<String, Object> delete(int id) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        if (!right(u, "Delete")) throw new IllegalStateException("Record cannot be delete because you don't have right....");
+        if (id <= 0) throw new IllegalArgumentException("RecordId Not Found.....");
+        if (load(id) == null) throw new IllegalArgumentException("RecordId Not Found.....");
+        repo.delete(u, id, u.getId() == null ? 0 : u.getId());
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("success", true);
+        r.put("message", "Delete Record Successfully");
+        return r;
+    }
+
+    private static Map<String, Object> kv(String k1, Object v1, String k2, Object v2) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put(k1, v1);
+        m.put(k2, v2);
+        return m;
     }
 
     // ========================================================================== authorization

@@ -196,6 +196,24 @@
 
     // ------------------------------------------------------------------ pickers
 
+    /* The job-order dropdown's three visible columns (JobOrderBind:250). */
+    if (window.DesktopCombo && window.DesktopCombo.define) {
+        window.DesktopCombo.define('prJobOrder', [
+            { caption: 'JobOrderNo', flex: 5 },
+            { caption: 'StartDate',  flex: 2, key: 'start' },
+            { caption: 'EndDate',    flex: 2, key: 'end' }
+        ]);
+    }
+    /* DateTime cell in an UltraCombo: the short date (dd/MM/yyyy). */
+    function shortD(v) {
+        if (typeof v === 'number') {   /* a Timestamp serialised as epoch millis */
+            var d = new Date(v);
+            return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+        }
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || ''));
+        return m ? m[3] + '/' + m[2] + '/' + m[1] : (v == null ? '' : String(v));
+    }
+
     function fill(selectId, list, valueKey, nameKey) {
         /* ZeroIndex:true on every one of these — the desktop inserts a blank first row so the
            filter can be cleared back to "no restriction". */
@@ -213,7 +231,12 @@
             fill('cmbPlant',          lookups.plants || [],           'Id', 'Name');
             fill('cmbWipAccount',     lookups.wipAccounts || [],      'Id', 'Name');
             fill('cmbStockAccount',   lookups.stockAccounts || [],    'Id', 'Name');
-            fill('cmbJobOrder',       lookups.jobOrders || [],        'Id', 'JobOrderNo');
+            /* JobOrderBind:250 - DDL.BindDDL shows every column usp_getJobOrderFromProduction returns
+               after the hidden Id: JobOrderNo (350 wide), StartDate, EndDate. */
+            $id('cmbJobOrder').innerHTML = '<option value=""></option>' + (lookups.jobOrders || []).map(function (r) {
+                return '<option value="' + esc(ci(r, 'Id')) + '" data-start="' + esc(shortD(ci(r, 'StartDate')))
+                     + '" data-end="' + esc(shortD(ci(r, 'EndDate'))) + '">' + esc(ci(r, 'JobOrderNo')) + '</option>';
+            }).join('');
 
             /* Activityfill:484 activates Rows[1] — row 0 being the blank one, that is the first
                real entry, "Production Register". */

@@ -195,6 +195,9 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(336, "/store/item-category-store");       // ItemCategoryStore → InvDeffrmItemCatagory
         WEB_ROUTES_BY_SCREEN_ID.put(337, "/store/item-type-store");           // ItemTypeStore → InvDeffrmItemType
         WEB_ROUTES_BY_SCREEN_ID.put(341, "/store/opening-stock-store");       // frmStoreOpeningStockBalancing
+        WEB_ROUTES_BY_SCREEN_ID.put(335, "/store/party-to-party-pm-transfer"); // frmPackingMaterialTransferPartyToParty
+        WEB_ROUTES_BY_SCREEN_ID.put(347, "/store/issuance-to-consumable-store"); // frmStoreIssuanceToCosumableStore
+        WEB_ROUTES_BY_SCREEN_ID.put(349, "/store/department-request-to-consumable"); // DepartmentRequestToConsumableStore
         WEB_ROUTES_BY_SCREEN_ID.put(333, "/store/reports/store-purchase-register"); // StorePurchaseRegister
         WEB_ROUTES_BY_SCREEN_ID.put(452, "/store/reports/store-purchase-demand-register"); // StorePurchaseDemandRegister
         WEB_ROUTES_BY_SCREEN_ID.put(453, "/store/reports/store-issuance-return-register"); // StoreIssuanceReturnRegister
