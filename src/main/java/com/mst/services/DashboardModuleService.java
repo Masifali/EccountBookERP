@@ -183,6 +183,26 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(339, "/store/stock-transfer");            // frmStockTransfer
         /* Store Purchase, ModuleId 67 */
         WEB_ROUTES_BY_SCREEN_ID.put(340, "/store/purchase-demand");           // frmPurchaseDemand
+        WEB_ROUTES_BY_SCREEN_ID.put(324, "/store/grn-store");                 // GrnStore
+        WEB_ROUTES_BY_SCREEN_ID.put(334, "/store/purchase-invoice-direct-store");      // frmPurchaseInvoiceDirectStore
+        WEB_ROUTES_BY_SCREEN_ID.put(346, "/store/purchase-invoice-return-store");      // PurchaseInvoiceReturn_Store
+        WEB_ROUTES_BY_SCREEN_ID.put(323, "/store/purchase-invoice-store-management");  // PurchaseInvoiceStoreManagement (the real port)
+        WEB_ROUTES_BY_SCREEN_ID.put(961, "/store/purchase-pre-bill");         // frmPurchasePreBill
+        WEB_ROUTES_BY_SCREEN_ID.put(960, "/store/delivery-challan-prebill");  // frmDeliveryChallanAgainstPurchasePreBill
+        WEB_ROUTES_BY_SCREEN_ID.put(332, "/store/stock-transfer-manual");     // frmStockTransferManual
+        WEB_ROUTES_BY_SCREEN_ID.put(331, "/store/delivery-order-transfer");   // DeliveryOrderTransfer
+        WEB_ROUTES_BY_SCREEN_ID.put(329, "/store/item-store");                // AddItemStore
+        WEB_ROUTES_BY_SCREEN_ID.put(336, "/store/item-category-store");       // ItemCategoryStore → InvDeffrmItemCatagory
+        WEB_ROUTES_BY_SCREEN_ID.put(337, "/store/item-type-store");           // ItemTypeStore → InvDeffrmItemType
+        WEB_ROUTES_BY_SCREEN_ID.put(341, "/store/opening-stock-store");       // frmStoreOpeningStockBalancing
+        WEB_ROUTES_BY_SCREEN_ID.put(333, "/store/reports/store-purchase-register"); // StorePurchaseRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(452, "/store/reports/store-purchase-demand-register"); // StorePurchaseDemandRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(453, "/store/reports/store-issuance-return-register"); // StoreIssuanceReturnRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(454, "/store/reports/stock-adjustment-register"); // StockAdjustmentRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(455, "/store/reports/department-request-history"); // DepartmentRequestHistory
+        WEB_ROUTES_BY_SCREEN_ID.put(456, "/store/reports/stock-transfer-register"); // StockTransferRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(458, "/store/reports/store-issuance-history"); // StoreIssuenceHistory
+        WEB_ROUTES_BY_SCREEN_ID.put(460, "/store/reports/general-gate-pass");      // frmGatePassGeneral
 
         /* Lab, ModuleId 7. Only 156 is built; the other seven screens of the module (155, 157,
            158, 159, 160, 162, 163) are intentionally left unmapped so the hub keeps showing them

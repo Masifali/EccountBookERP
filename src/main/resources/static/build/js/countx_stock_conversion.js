@@ -329,7 +329,7 @@
         UOM_ROWS = [];
     }
 
-    var INPUT_ROWS = [], OUTPUT_ROWS = [], PM_ROWS = [], OH_ROWS = [];
+    var INPUT_ROWS = [], OUTPUT_ROWS = [], PM_ROWS = [], OH_ROWS = [], WAGES_ROWS = [], WAGES_SUB = 'regular';
 
     /* CmbConversionType.Enabled = grdInput.RowCount == 0 && grdByProduct.RowCount == 0. */
     function lockConversionType() {
@@ -437,6 +437,7 @@
             $id('chkFumigationOnHold').checked = onHold;      // the LAST output row's IsOnHold wins
             PM_ROWS = d.packings || [];
             OH_ROWS = d.expenses || [];
+            WAGES_ROWS = d.wages || [];
             /* ReadById:4757 - Generate runs unless the type is 3. */
             if (int(col(h, 'ConversionTypeId')) !== 3) handleAverageRateCalculation(INPUT_ROWS.concat(OUTPUT_ROWS));
             conversionTypeChanged();
@@ -500,7 +501,56 @@
 
     // -------------------------------------------------------------------------------- grids
 
-    function renderAll() { renderInput(); renderOutput(); renderPackings(); renderExpenses(); renderSummary(); lockConversionType(); }
+    function renderAll() { renderInput(); renderOutput(); renderPackings(); renderExpenses(); renderWages(); renderSummary(); lockConversionType(); }
+
+    /* ------------------------------------------------------------ contractor wages (read view)
+     * WagesDetailReadbyId:5285 fills dtdetail (Regular Wages, grdwagesDetail) and dtStiching
+     * (Other Wages, grdStiching - rows with WagesTypeId 2) from
+     * USP_InvContractorWagesBillHeader_DetailByRefDocument. DetailGridSettings / GridStichingSettings:
+     * grouped by TransactionType, visible columns below (SupplierId shows the contractor, captioned
+     * "Contractor Name"; WagesId the activity), RateWithoutAddLess / RateAddLess only with
+     * EnableAddLessOnWagesRegular, Weight/Quantity/BillWeight/Amount summed, Free Of Cost in red. */
+    function wagesCols() {
+        var c = [['CompanyName','Contractor Name','t'],['WagesAccountName','Labour / Wages Activity','t'],['__WagesType','Wages Type','t'],
+            ['PackTypeDesc','packing Type','t'],['Weight','Weight','q',1],['PackSize','Pack Size','t'],['Qty','Quantity','q',1],
+            ['WeightCut','Weight Cut','q'],['BillWeight','Bill Weight','q',1]];
+        if (LK && LK.enableAddLessOnWagesRegular) c.push(['WageRate','Rate Without Add Less','q'], ['RateAddLess','Rate Add Less','q']);
+        c.push(['WageRate','Rate','q'],['WagesAmount','Amount','q',1],['ItemName','Item','t'],['JobLotDescription','job Lot','t'],
+            ['Crop','Crop','t'],['WareHouseFrom','Move From','t'],['RefLineId','RowNo','t']);
+        return c;
+    }
+    function wagesTab(which) {
+        WAGES_SUB = which;
+        $id('wagesSubRegular').classList.toggle('is-active', which === 'regular');
+        $id('wagesSubOther').classList.toggle('is-active', which === 'other');
+        $id('wagesTitle').textContent = which === 'regular' ? 'In this Grid User Will add Regular Wages' : 'In this Grid User Will add Other Wages';
+        renderWages();
+    }
+    function renderWages() {
+        if (!$id('wagesHead')) return;
+        var cols = wagesCols();
+        var rows = WAGES_ROWS.filter(function (r) { return (int(col(r, 'WagesTypeId')) === 2) === (WAGES_SUB === 'other'); });
+        var cell = function (r, c) {
+            if (c[0] === '__WagesType') return (col(r, 'FreeOfCost') === true || int(col(r, 'FreeOfCost')) === 1) ? 'Free Of Cost' : 'Regular';
+            var v = col(r, c[0]);
+            return c[2] === 'q' ? (v === null || v === '' || v === undefined ? '' : fq(v)) : esc(v);
+        };
+        $id('wagesHead').innerHTML = cols.map(function (c) { return '<th' + (c[2] === 'q' ? ' style="text-align:right"' : '') + '>' + esc(c[1]) + '</th>'; }).join('');
+        var groups = [];
+        rows.forEach(function (r) { var t = String(col(r, 'TransactionType') || ''); if (groups.indexOf(t) < 0) groups.push(t); });
+        var html = '';
+        groups.forEach(function (g) {
+            html += '<tr class="sc-group"><td colspan="' + cols.length + '" style="background:#dfe9f5;font-weight:bold;">&#8863; Transaction Type: ' + esc(g) + '</td></tr>';
+            rows.filter(function (r) { return String(col(r, 'TransactionType') || '') === g; }).forEach(function (r) {
+                var foc = cell(r, ['__WagesType']) === 'Free Of Cost';
+                html += '<tr' + (foc ? ' style="color:red"' : '') + '>' + cols.map(function (c) {
+                    return '<td' + (c[2] === 'q' ? ' style="text-align:right"' : '') + '>' + cell(r, c) + '</td>'; }).join('') + '</tr>';
+            });
+        });
+        $id('gridWages').innerHTML = html || '<tr><td colspan="' + cols.length + '" style="color:#777">No wages rows.</td></tr>';
+        $id('wagesFoot').innerHTML = '<tr>' + cols.map(function (c) {
+            return '<td style="text-align:right;font-weight:bold">' + (c[3] ? fq(rows.reduce(function (a, r) { return a + num(col(r, c[0])); }, 0)) : '') + '</td>'; }).join('') + '</tr>';
+    }
 
     /** [name, caption, kind] - kind: q "#,##0.###", r rate, a amount, t text. Totals where the desktop sums. */
     var INPUT_COLS = [['EntryType','EntryType','t'],['WareHouseName','WareHouse','t'],['CropBatch','CropYear','t'],['ItemName','Item','t'],
@@ -746,7 +796,7 @@
             ['txtdocnumber', 'txtProductionNo', 'txtRemarks', 'txtLoadDocNo'].forEach(function (id) { setVal(id, ''); });
             setSel('CmbProductionDepartment', 0);
             resetDetail();
-            INPUT_ROWS = []; OUTPUT_ROWS = []; PM_ROWS = []; OH_ROWS = [];
+            INPUT_ROWS = []; OUTPUT_ROWS = []; PM_ROWS = []; OH_ROWS = []; WAGES_ROWS = [];
             $id('chkFumigationOnHold').checked = false;
             conversionTypeChanged();
             renderAll();
@@ -890,7 +940,7 @@
     }
 
     window.StockConversion = {
-        load: load, loadByDocNo: loadByDocNo, loadHistory: loadHistory, newHistory: newHistory,
+        load: load, loadByDocNo: loadByDocNo, wagesTab: wagesTab, loadHistory: loadHistory, newHistory: newHistory,
         showView: showView, tab2: tab2, toggleFullscreen: toggleFullscreen,
         btnNew: btnNew, btnRefresh: btnRefresh, btnSave: btnSave, generate: generate,
         print: print, voucher: voucher, shortcuts: shortcuts,

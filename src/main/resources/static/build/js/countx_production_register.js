@@ -282,6 +282,9 @@
                 activity = (d && d.activity) || act;
                 rows = (d && d.rows) || [];
                 $id('lblGridTitle').textContent = activity;
+                /* Groups.Add("EntryType") shows its chip in the group-by box; the packing-material shape is ungrouped. */
+                $id('lblGroupBy').textContent = (rows.length && activity !== 'OutPut By Packing Material')
+                    ? 'Entry Type' : 'Drag a column header here to group by that column.';
                 renderTotals(d && d.totals);
                 render();
             }).catch(function (e) {

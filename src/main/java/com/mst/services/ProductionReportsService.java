@@ -113,6 +113,13 @@ public class ProductionReportsService {
         return out;
     }
 
+    /** DecimalRateFormate: "Default NoofDecimal Points For Rate" 1-4, 0 gives 2, anything else 0. */
+    public int rateDecimals(UserAccount u) {
+        int n = intConfig(u, "Default NoofDecimal Points For Rate");
+        if (n == 0) return 2;
+        return (n >= 1 && n <= 4) ? n : 0;
+    }
+
     /** "Default NoofDecimal Points For Amount": 1-4 decimals; anything else gives "#,##0." (none). */
     public int amountDecimals(UserAccount u) {
         int n = intConfig(u, "Default NoofDecimal Points For Amount");
@@ -203,14 +210,18 @@ public class ProductionReportsService {
     public Map<String, Object> productionSummary(int jobOrderId, int plantId, String fromDate,
                                                  String toDate, List<Integer> branchIds) {
         UserAccount u = currentUserContext.requireAccountingUser();
-        if (jobOrderId <= 0) throw new IllegalArgumentException("Select a job order");
-        requireOwnJobOrder(u, jobOrderId, branchIds);
+        /* btnShow_Click has no job-order check: with the picker empty the desktop sends
+           @JobOrderId = 0 and the procedure still returns its seven TranType lines (zeros). */
+        if (jobOrderId > 0) requireOwnJobOrder(u, jobOrderId, branchIds);
 
         String csv = branchIdsCsv(u, branchIds);
         boolean rate = canSeeRateAndAmount();
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canSeeRateAndAmount", rate);
+        /* GridColumnSettings: "Amount" columns use stringFormatsingle, "Rate" columns DecimalRateFormate. */
+        out.put("amountDecimals", amountDecimals(u));
+        out.put("rateDecimals", rateDecimals(u));
 
         /* grdSummery — GrdSummaryValuesFill:527. The desktop copies ten named columns into a new
            table, renaming two of them, and shows nothing else the procedure returns. */

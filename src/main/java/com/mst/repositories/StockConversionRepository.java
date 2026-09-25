@@ -144,6 +144,17 @@ public class StockConversionRepository {
         return exec(P_PACKING, p);
     }
 
+    /**
+     * WagesDetailReadbyId (invfrmStockConversionProduction.cs:5285) —
+     * InvContractorWagesBillHeader_DetailByRefDocument (BLL 0485 :1366) with the ACTIVE financial
+     * year, RefDocumentTypeId 66 and the conversion's Id. WagesTypeId 2 rows go to the Other Wages
+     * grid (grdStiching), every other row to Regular Wages (grdwagesDetail).
+     */
+    public List<Map<String, Object>> wages(int organizationId, int companyId, int financialYearId, int headerId) {
+        return jdbc.queryForList("EXEC dbo.USP_InvContractorWagesBillHeader_DetailByRefDocument @OrganizationId=?, @CompanyId=?, "
+                + "@FinancialYearId=?, @RefDocumentTypeId=66, @RefDocId=?", organizationId, companyId, financialYearId, headerId);
+    }
+
     public List<Map<String, Object>> expenses(int headerId) {
         Map<String, Object> p = params();
         p.put("@Id", headerId);

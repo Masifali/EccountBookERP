@@ -252,6 +252,36 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Stock Adjustment", "Store Management", "/store/stock-adjustment", "STORE_STOCK_ADJUSTMENT", "STORE_MANAGEMENT", 320, 24));
         e.add(new Entry("Stock Transfer", "Store Management", "/store/stock-transfer", "STORE_STOCK_TRANSFER", "STORE_MANAGEMENT", 339, 24));
         e.add(new Entry("Purchase Demand", "Store Purchase", "/store/purchase-demand", "STORE_PURCHASE_DEMAND", "STORE_MANAGEMENT", 340, 67));
+        //   Store Purchase module 67, batch 2: 324 GrnStore "Grn Store" (DocType 48), 334 frmPurchaseInvoiceDirectStore
+        //   "Purchase Invoice Direct Store" (61), 346 PurchaseInvoiceReturn_Store "Purchase Invoice Return Store" (145),
+        //   323 PurchaseInvoiceStoreManagement "Purchase Invoice Store Management" (64) - the real port; the older
+        //   /purchase/purchase-invoice-store-management page (DocType 61, save disabled) is not a port of this form.
+        e.add(new Entry("Grn Store", "Store Purchase", "/store/grn-store", "STORE_GRN_STORE", "STORE_MANAGEMENT", 324, 67));
+        e.add(new Entry("Purchase Invoice Direct Store", "Store Purchase", "/store/purchase-invoice-direct-store", "STORE_PURCHASE_INVOICE_DIRECT", "STORE_MANAGEMENT", 334, 67));
+        e.add(new Entry("Purchase Invoice Return Store", "Store Purchase", "/store/purchase-invoice-return-store", "STORE_PURCHASE_INVOICE_RETURN_STORE", "STORE_MANAGEMENT", 346, 67));
+        e.add(new Entry("Purchase Invoice Store Management", "Store Purchase", "/store/purchase-invoice-store-management", "STORE_PURCHASE_INVOICE_STORE_MANAGEMENT", "STORE_MANAGEMENT", 323, 67));
+        //   Store Management module 24, batch 3 (ScreenNames read from the dump's rights rows):
+        //   961 frmPurchasePreBill (147), 960 frmDeliveryChallanAgainstPurchasePreBill (148),
+        //   332 frmStockTransferManual (806), 331 DeliveryOrderTransfer (84, Architecture.WinApp.Sale.DeliveryOrderTransfer).
+        e.add(new Entry("Store Purchase Pre Bill", "Store Management", "/store/purchase-pre-bill", "STORE_PURCHASE_PRE_BILL", "STORE_MANAGEMENT", 961, 24));
+        e.add(new Entry("Delivery Challan Against PreBill", "Store Management", "/store/delivery-challan-prebill", "STORE_DELIVERY_CHALLAN_PREBILL", "STORE_MANAGEMENT", 960, 24));
+        e.add(new Entry("Stock Transfer Manual", "Store Management", "/store/stock-transfer-manual", "STORE_STOCK_TRANSFER_MANUAL", "STORE_MANAGEMENT", 332, 24));
+        e.add(new Entry("Delivery Order (Stock Transfer)", "Store Management", "/store/delivery-order-transfer", "STORE_DELIVERY_ORDER_TRANSFER", "STORE_MANAGEMENT", 331, 24));
+        //   batch 4: 329 AddItemStore; 336 ItemCategoryStore and 337 ItemTypeStore (TargetUrl = the Inventory forms
+        //   InvDeffrmItemCatagory / InvDeffrmItemType, Tag ignored); 341 frmStoreOpeningStockBalancing (DocType 39).
+        e.add(new Entry("Item Store", "Store Management", "/store/item-store", "STORE_ITEM", "STORE_MANAGEMENT", 329, 24));
+        e.add(new Entry("Item Category Store", "Store Management", "/store/item-category-store", "STORE_ITEM_CATEGORY_STORE", "STORE_MANAGEMENT", 336, 24));
+        e.add(new Entry("Item Type Store", "Store Management", "/store/item-type-store", "STORE_ITEM_TYPE_STORE", "STORE_MANAGEMENT", 337, 24));
+        e.add(new Entry("Opening Stock Store", "Store Management", "/store/opening-stock-store", "STORE_OPENING_STOCK_STORE", "STORE_MANAGEMENT", 341, 24));
+        //   Store Management Reports, AppModules 46 (ScreenDefinition rows read from the dump; aliases verbatim).
+        e.add(new Entry("Store Purchase Register", "Store Management Reports", "/store/reports/store-purchase-register", "STORE_RPT_STORE_PURCHASE_REGISTER", "STORE_MANAGEMENT", 333, 46));
+        e.add(new Entry("Store Purchase Demand Report", "Store Management Reports", "/store/reports/store-purchase-demand-register", "STORE_RPT_STORE_PURCHASE_DEMAND_REGISTER", "STORE_MANAGEMENT", 452, 46));
+        e.add(new Entry("Store Issuance Return Report", "Store Management Reports", "/store/reports/store-issuance-return-register", "STORE_RPT_STORE_ISSUANCE_RETURN_REGISTER", "STORE_MANAGEMENT", 453, 46));
+        e.add(new Entry("Stock Adjustment Report", "Store Management Reports", "/store/reports/stock-adjustment-register", "STORE_RPT_STOCK_ADJUSTMENT_REGISTER", "STORE_MANAGEMENT", 454, 46));
+        e.add(new Entry("Department Request History", "Store Management Reports", "/store/reports/department-request-history", "STORE_RPT_DEPARTMENT_REQUEST_HISTORY", "STORE_MANAGEMENT", 455, 46));
+        e.add(new Entry("Stock Transfer Report", "Store Management Reports", "/store/reports/stock-transfer-register", "STORE_RPT_STOCK_TRANSFER_REGISTER", "STORE_MANAGEMENT", 456, 46));
+        e.add(new Entry("Store Issuance Report", "Store Management Reports", "/store/reports/store-issuance-history", "STORE_RPT_STORE_ISSUANCE_HISTORY", "STORE_MANAGEMENT", 458, 46));
+        e.add(new Entry("General Gate Pass  Report", "Store Management Reports", "/store/reports/general-gate-pass", "STORE_RPT_GENERAL_GATE_PASS", "STORE_MANAGEMENT", 460, 46));
 
         // 10. LAB (module 7)
         // Ids / ScreenName / alias read from reconciliation-input.json, not name-matched:

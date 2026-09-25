@@ -71,6 +71,13 @@
             .win-grid-scroll { max-height: none !important; overflow: visible !important; }
             .win-grid th, .win-grid td { border: 1px solid #000 !important; }
         }
+        .ps-info { background: #f0f0f0; padding: 4px 4px 6px; margin-bottom: 6px; }
+        .ps-info-title { text-align: center; font-weight: bold; font-size: 9.5pt; padding: 6px 0 4px; }
+        .ps-info-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+        .ps-info-row label { flex: 0 0 100px; font-size: 8.5pt; font-weight: 600; margin: 0; }
+        .ps-info-row input { flex: 1 1 auto; }
+        .ps-info-row.cx-hidden { display: flex !important; }
+        .ps-info-row.cx-hidden input { visibility: hidden; }
     </style>
 </head>
 <body>
@@ -138,13 +145,13 @@
             <!-- Both pickers carry their own checkbox on the desktop, each end independent. -->
             <div class="win-field">
                 <label class="win-label">
-                    <input type="checkbox" id="chkFromDate" onchange="ProductionSummary.toggleDate('From')"/> From Date
+                    <input type="checkbox" id="chkFromDate" autocomplete="off" onchange="ProductionSummary.toggleDate('From')"/> From Date
                 </label>
                 <input type="date" id="datFromDate" class="win-datepicker" disabled/>
             </div>
             <div class="win-field">
                 <label class="win-label">
-                    <input type="checkbox" id="chkToDate" onchange="ProductionSummary.toggleDate('To')"/> To Date
+                    <input type="checkbox" id="chkToDate" autocomplete="off" onchange="ProductionSummary.toggleDate('To')"/> To Date
                 </label>
                 <input type="date" id="datToDate" class="win-datepicker" disabled/>
             </div>
@@ -156,7 +163,7 @@
 
     <!-- Summary Values | Job Order information | Export Schedule, side by side (:1167-1343). -->
     <div class="ps-side">
-        <div class="win-grid-container" id="valuesBox" style="flex:2 1 420px;">
+        <div class="win-grid-container" id="valuesBox" style="flex:3 1 480px;">
             <div class="win-grid-toolbar">
                 <span>Summary Values</span>
                 <button type="button" onclick="ProductionSummary.toggleFullscreen('valuesBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
@@ -168,27 +175,20 @@
 
         <!-- SummaryJobOrderInformationFill:588 - read off the selected dropdown row, filled on
              Show (btnShow_Click:461). Settlement Date only when the status is "Settled". -->
-        <fieldset class="win-group-box" style="flex:1 1 260px; margin:0 0 6px;">
-            <legend>Job Order Information</legend>
-            <div class="win-row">
-                <div class="win-field"><label class="win-label">Job Order No</label>
-                    <input type="text" id="txtJobOrderNo" class="win-textbox" readonly/></div>
-                <div class="win-field"><label class="win-label">Job Order Doc No</label>
-                    <input type="text" id="txtJobOrderDocNo" class="win-textbox" readonly/></div>
-                <div class="win-field" id="fldStartDate"><label class="win-label">Job Started Date</label>
-                    <input type="text" id="txtJobStartedDate" class="win-textbox" readonly/></div>
-                <div class="win-field"><label class="win-label">Job Order Status</label>
-                    <input type="text" id="txtJobOrderStatus" class="win-textbox" readonly/></div>
-                <div class="win-field"><label class="win-label">Settlement Status</label>
-                    <input type="text" id="txtSettlementStatus" class="win-textbox" readonly/></div>
-                <div class="win-field cx-hidden" id="fldSettlementDate"><label class="win-label">Settlement Date</label>
-                    <input type="text" id="txtSettlementDate" class="win-textbox" readonly/></div>
-                <div class="win-field"><label class="win-label">Lot Code</label>
-                    <input type="text" id="txtLotCode" class="win-textbox" readonly/></div>
-            </div>
-        </fieldset>
+        <!-- panel "Job Order No" (designer): a centred caption over the job-order box, then
+             label-left rows. Settlement Date only when the status is "Settled". -->
+        <div class="ps-info" style="flex:0 0 228px;">
+            <div class="ps-info-title">Job Order No</div>
+            <input type="text" id="txtJobOrderNo" class="win-textbox" readonly/>
+                <div class="ps-info-row"><label>Job Order Doc No</label><input type="text" id="txtJobOrderDocNo" class="win-textbox" readonly/></div>
+                <div class="ps-info-row" id="fldStartDate"><label>Job Started Date</label><input type="text" id="txtJobStartedDate" class="win-textbox" readonly/></div>
+                <div class="ps-info-row"><label>Job Order Status</label><input type="text" id="txtJobOrderStatus" class="win-textbox" readonly/></div>
+                <div class="ps-info-row"><label>Settlement Status</label><input type="text" id="txtSettlementStatus" class="win-textbox" readonly/></div>
+                <div class="ps-info-row" id="fldSettlementDate"><label>Settlement Date</label><input type="text" id="txtSettlementDate" class="win-textbox" readonly/></div>
+                <div class="ps-info-row"><label>Lot Code</label><input type="text" id="txtLotCode" class="win-textbox" readonly/></div>
+        </div>
 
-        <div class="win-grid-container" id="scheduleBox" style="flex:2 1 420px;">
+        <div class="win-grid-container" id="scheduleBox" style="flex:1 1 280px;">
             <div class="win-grid-toolbar">
                 <span>Export Schedule Information</span>
                 <button type="button" onclick="ProductionSummary.toggleFullscreen('scheduleBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
@@ -228,6 +228,6 @@
 <script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
 <script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
 <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
-<script th:src="@{/build/js/countx_production_summary_report.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_production_summary_report.js?v=20260924b}"></script>
 </body>
 </html>

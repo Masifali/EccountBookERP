@@ -69,6 +69,9 @@ public class StockConversionService {
                 ? repo.details(id, docTypeId) : new ArrayList<Map<String, Object>>());
         res.put("packings", repo.packings(id));
         res.put("expenses", repo.expenses(id));
+        /* ReadById :4928 - WagesDetailReadbyId(RecId) fills the Contractor Wages grids. */
+        res.put("wages", repo.wages(u.getOrganizationId() == null ? 0 : u.getOrganizationId(),
+                u.getCompanyId() == null ? 0 : u.getCompanyId(), currentUserContext.currentFinancialYearId(), id));
         return res;
     }
 
@@ -204,6 +207,8 @@ public class StockConversionService {
         /* Load:572-602 - the switches that decide what the form shows. */
         out.put("issuanceByLoader", flag(u, "IssuanceByLoader"));
         out.put("contractWagesChargeToProduct", flag(u, "ContractWagesChargetoProductForStockConversion"));
+        /* Load:614 - RateWithoutAddLess / RateAddLess columns are shown only with this switch. */
+        out.put("enableAddLessOnWagesRegular", flag(u, "EnableAddLessOnWagesRegular"));
         out.put("saleMinusAllowedAgainstFifo", lookups.erpFeature(u, 14));
         /* Formats: DecimalRateFormate and stringFormatsingle (CommonServices.GetDecimalConfiguration). */
         out.put("rateDecimals", decimals(u, "Default NoofDecimal Points For Rate", true));

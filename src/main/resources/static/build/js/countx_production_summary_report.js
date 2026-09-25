@@ -287,8 +287,8 @@
 
     function show_() {
         return busy('btnShow', function () {
-            var id = val('cmbJobOrderNo');
-            if (!id) { box('Select a job order'); return; }
+            /* btnShow_Click has no job-order check - an empty picker sends 0 (Conversion.ToInt). */
+            var id = val('cmbJobOrderNo') || '0';
 
             var q = ['jobOrderId=' + encodeURIComponent(id),
                      'plantId=' + encodeURIComponent(val('cmbPlantName') || '0'),
@@ -308,6 +308,8 @@
             fillJobOrderInfo();
             return getJson(api + '?' + q.join('&')).then(function (d) {
                 lastShow = args;
+                if (d && d.amountDecimals !== undefined) fmt.amount = d.amountDecimals;
+                if (d && d.rateDecimals !== undefined) fmt.rate = d.rateDecimals;
                 data = {
                     values:   (d && d.values)   || [],
                     schedule: (d && d.schedule) || [],
@@ -340,11 +342,24 @@
         });
     }
 
-    /* GridWrappingAndColumnSettings(grd, 2, 2): numbers "#,##0.##"; DocDate a short date. */
+    /* GridEX_Helper.GridColumnSettings(col, 2): a key containing "Amount" -> stringFormatsingle
+       ("#,##0." + amount decimals); containing "Rate" -> DecimalRateFormate ("#,#0." + rate
+       decimals); Int32 columns (SortNo, DocNo) unformatted; any other number "#,##0.##".
+       DocDate a short date. */
+    var fmt = { amount: 0, rate: 2 };
+    function fmtNum(col, v) {
+        if (col === 'SortNo' || col === 'DocNo') return v;
+        if (col.indexOf('Amount') >= 0) return K.fixed(v, fmt.amount);
+        if (col.indexOf('Rate') >= 0) return K.fixed(v, fmt.rate);
+        return K.num(v, 2);
+    }
     function cell(col, v) {
-        var text = (col === 'DocDate') ? shortDate(v) : (numeric(col) && col !== 'SortNo' && col !== 'DocNo' ? K.num(v, 2) : v);
+        var text = (col === 'DocDate') ? shortDate(v) : (numeric(col) ? fmtNum(col, v) : v);
         return '<td' + (numeric(col) ? ' class="num"' : '') + '>' + esc(text) + '</td>';
     }
+    /* RetrieveStructure captions: the column key with a space before each capital ("AvgRateWoExp"
+       -> "Avg Rate Wo Exp"). HeaderLines = 2 lets them wrap. */
+    function caption(c) { return String(c).replace(/([a-z0-9])([A-Z])/g, '$1 $2'); }
 
     function renderFlat(key, rows, hidden) {
         var head = $id(key + 'Head'), body = $id(key + 'Body');
@@ -355,7 +370,7 @@
         }
         var cols = visibleColumns(rows, hidden);
         head.innerHTML = cols.map(function (c) {
-            return '<th' + (numeric(c) ? ' class="num"' : '') + '>' + esc(c) + '</th>';
+            return '<th' + (numeric(c) ? ' class="num"' : '') + '>' + esc(caption(c)) + '</th>';
         }).join('');
         body.innerHTML = rows.map(function (r) {
             return '<tr>' + cols.map(function (c) { return cell(c, r[c]); }).join('') + '</tr>';
@@ -379,7 +394,7 @@
            groups by it but leaves it visible (:822-826). */
         var cols = visibleColumns(rows, hideGroupColumn ? [GROUP_COLUMN] : []);
         head.innerHTML = cols.map(function (c) {
-            return '<th' + (numeric(c) ? ' class="num"' : '') + '>' + esc(c) + '</th>';
+            return '<th' + (numeric(c) ? ' class="num"' : '') + '>' + esc(caption(c)) + '</th>';
         }).join('');
 
         /* GridEX's Groups.Add COLLECTS every row of a value under one heading rather than
@@ -407,7 +422,7 @@
                 if (!numeric(c)) return '<td></td>';
                 var t = 0;
                 bucket.forEach(function (r) { t += num(r[c]); });
-                return '<td class="num">' + esc(K.num(t, 2)) + '</td>';
+                return '<td class="num">' + esc(fmtNum(c, t)) + '</td>';
             }).join('') + '</tr>');
         });
         body.innerHTML = html.join('');
@@ -418,7 +433,7 @@
                 if (!numeric(c) || c === 'SortNo' || c === 'DocNo') return '<td></td>';
                 var t = 0;
                 rows.forEach(function (r) { t += num(r[c]); });
-                return '<td class="num">' + esc(K.num(t, 2)) + '</td>';
+                return '<td class="num">' + esc(fmtNum(c, t)) + '</td>';
             }).join('') + '</tr>';
         }
     }
@@ -545,8 +560,12 @@
             var b = $id('branchBox');
             if (b && !b.contains(e.target)) closeBranches();
         });
-        toggleDate('From');
-        toggleDate('To');
+        /* Designer: txtDateFromSummary / txtDateToSummary Checked = false, Value = today. */
+        ['From', 'To'].forEach(function (w) {
+            $id('chk' + w + 'Date').checked = false;
+            $id('dat' + w + 'Date').value = iso(new Date());
+            toggleDate(w);
+        });
         loadBranches().then(focusJobOrder).catch(function (e) { box(e.message); });
     }
 
