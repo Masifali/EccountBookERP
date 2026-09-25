@@ -572,6 +572,81 @@ public class StockConversionService {
         return out;
     }
 
+    // ============================================ LoadavailableTransactionsForStockReleaseFromFumigation
+
+    /**
+     * PendingInventoryTransactionsForIssuanceLoad (fumigation loader :325) with the dialog's filters.
+     * Load (:133) is identical to the Issuance loader's, so the page reuses {@link #loaderSetup}.
+     * Rows are the dtcol copy of :381-437: GrnNo 0 for RefDocumentTypeId 112 and 80, Remarks =
+     * TranRemarks, IPMJobLot = JobLotDescription.
+     */
+    public List<Map<String, Object>> fumigationSearch(String fromDate, String toDate, int parentCategoryId,
+                                                      int itemCategoryId, int itemTypeId, int jobLotId,
+                                                      String cropYear, int warehouseId, int refDocumentTypeId,
+                                                      int supplierCustomerId, int itemId) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        List<Map<String, Object>> out = new ArrayList<>();
+        LocalDateTime from = (fromDate == null || fromDate.trim().isEmpty()) ? null
+                : LocalDate.parse(fromDate.trim().substring(0, 10)).atStartOfDay();
+        for (Map<String, Object> r : repo.holdStockForFumigation(u, from, docDate(toDate),
+                parentCategoryId, itemCategoryId, itemTypeId, jobLotId, cropYear, warehouseId,
+                refDocumentTypeId, supplierCustomerId, itemId)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            for (String c : new String[]{"labIPmActivityLogId", "RefDocumentTypeId", "RefDocIdNo", "RefDocSubIdNo",
+                    "RefDocumentType", "DocDate", "DocCodeNo", "ManualNo", "GrnNo", "SupplierCustomerId",
+                    "SupplierCustomerName", "VehicleNo", "GpNo", "GPDate", "WarehouseId", "WareHouseCode",
+                    "RefWarehouse", "ItemId", "ItemName", "ItemCode", "CropYearId", "CropBatch", "JobLotId",
+                    "JobLotCode", "InvPackingTypeId", "PackingType", "ItemUom", "PackUom", "PackSize", "QtyIn",
+                    "QtyOut", "QtyBalance", "WeightIn", "WeightOut", "WeightBalance", "ReserveWeight",
+                    "StockWeightOut", "AVgRate", "RateUom", "Equivalent", "RateUomId", "ItemAmount", "BiltyNo"})
+                m.put(c, ci(r, c));
+            int rt = asInt(ci(r, "RefDocumentTypeId"));
+            if (rt == 112 || rt == 80) m.put("GrnNo", 0);
+            m.put("Remarks", ci(r, "TranRemarks"));
+            m.put("IPMJobLot", ci(r, "JobLotDescription"));
+            for (String c : new String[]{"StepDescription", "qcActivityDate", "StatusDescription", "nextActivityPlanDate",
+                    "fumigatedBy", "checkBy", "verifiedBy", "ReleaseHoldStatus", "qcActivityDescription"})
+                m.put(c, ci(r, c));
+            out.add(m);
+        }
+        return out;
+    }
+
+    // ===================================================================== frmLoadStockShortFallForSales
+
+    /** StockComboFill (:125) - the same DropDownAndLists call; five of its lists are bound. */
+    public Map<String, Object> shortfallSetup() {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        Map<String, List<Map<String, Object>>> lists = new LinkedHashMap<>();
+        for (String k : new String[]{"ParentCategories", "JobLot", "CropYear", "Warehouse", "Items"}) lists.put(k, new ArrayList<>());
+        for (Map<String, Object> r : repo.issuanceDropDowns(u)) {
+            List<Map<String, Object>> l = lists.get(String.valueOf(ci(r, "ActivityType")));
+            if (l != null) l.add(kv("Id", ci(r, "Id"), "name", ci(r, "name")));
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("lists", lists);
+        return out;
+    }
+
+    /**
+     * PendingOrderLoad (:224). DocDate is the loader's DateTime.Now taken when it was constructed; the
+     * page passes the moment the dialog opened (yyyy-MM-ddTHH:mm:ss). CropYear is the combo TEXT.
+     * The rows are returned as the procedure gives them (dtHistory); the grid copy is the page's.
+     */
+    public List<Map<String, Object>> shortfallSearch(String docDate, int parentCategoryId, int itemId,
+                                                     int warehouseId, int jobLotId, String cropYear) {
+        UserAccount u = currentUserContext.requireAccountingUser();
+        LocalDateTime d;
+        if (docDate == null || docDate.trim().isEmpty()) d = LocalDateTime.now();
+        else {
+            String s = docDate.trim();
+            d = s.length() > 10 ? LocalDateTime.parse(s.length() > 19 ? s.substring(0, 19) : s)
+                                : LocalDate.parse(s).atTime(LocalTime.now());
+        }
+        return repo.balanceSalesForStock(u, d, warehouseId, parentCategoryId, itemId, jobLotId,
+                cropYear == null ? "" : cropYear);
+    }
+
     // =================================================================================== write
 
     private static Object v(Map<String, Object> m, String k) { return m == null ? null : m.get(k); }

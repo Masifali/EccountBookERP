@@ -56,6 +56,53 @@ public class BuyerInquiryBookingService {
 
     @Autowired private BuyerInquiryBookingRepository repository;
     @Autowired private CurrentUserContext currentUserContext;
+    /** Only for the shared grant-grid read (Sp_tblUserRights_GetAllMethod) - same as Supplier Offer. */
+    @Autowired private com.mst.repositories.cmagt.SaleOrderCmagtRepository rightsRepo;
+
+    private static final String RIGHT_CAN_VIEW_ALL_RECORDS = "CanView AllRecord";
+
+    /**
+     * HistoryFill() (:2093) obj.CanViewAllRecord = formright.DoHaveCanViewAllRecordRights, and the
+     * BLL sends @EntryUserId only when the right is absent. Resolved per call against this
+     * screen's own name, exactly as SaleOrderCmagtService / SupplierOfferCmagtSaveService do.
+     * An unreadable grant grid must not become an implicit grant.
+     */
+    public boolean canViewAllRecords() {
+        String role = currentUserContext.currentRoleName();
+        if ("Admin".equalsIgnoreCase(role) || "Administrator".equalsIgnoreCase(role)) return true;
+        try {
+            for (Map<String, Object> r : rightsRepo.userRightsForScreen(
+                    currentUserContext.currentUserId(), DESKTOP_SCREEN_NAME, role,
+                    currentUserContext.currentCompanyId())) {
+                Object name = ci(r, "RightName");
+                if (name != null && RIGHT_CAN_VIEW_ALL_RECORDS.equalsIgnoreCase(name.toString().trim())) {
+                    Object v = ci(r, "Value");
+                    if (v instanceof Boolean) return (Boolean) v;
+                    if (v instanceof Number)  return ((Number) v).intValue() != 0;
+                    return v != null && ("1".equals(v.toString().trim())
+                            || "true".equalsIgnoreCase(v.toString().trim()));
+                }
+            }
+        } catch (Exception ignored) { }
+        return false;
+    }
+
+    /**
+     * ReadById / DeleteById / the UPDATE branch of InsertAndUpdate filter by id only (no org,
+     * company or user predicate). Over HTTP the id comes from the caller, so tenancy and - without
+     * "CanView AllRecord" - ownership are enforced here, the same scope History gives the user.
+     */
+    private void assertAccess(Map<String, Object> h) {
+        if (toInt(ci(h, "organizationId")) != currentUserContext.currentOrganizationId()
+                || toInt(ci(h, "companyId")) != currentUserContext.currentCompanyId()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "This Buyer Inquiry belongs to another organization or company.");
+        }
+        if (!canViewAllRecords() && toInt(ci(h, "entryUserId")) != currentUserContext.currentUserId()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You do not have permission to open Buyer Inquiries entered by another user.");
+        }
+    }
 
     public int generateNextDocNo(int orgId, int companyId, int branchId, int yearId, int docTypeId) {
         return repository.generateCode(orgId, companyId, branchId, yearId, docTypeId);
@@ -89,6 +136,12 @@ public class BuyerInquiryBookingService {
         boolean isNew = dto.getInquiryBookingMasterId() == null || dto.getInquiryBookingMasterId() == 0;
         /* BLL Save:20 - actionId = inquiryBookingMasterId == 0 ? 1 : 2, from the record's state. */
         dto.setActionId(isNew ? 1 : 2);
+        if (!isNew) {
+            /* The UPDATE branch writes WHERE inquiryBookingMasterId = @id only. */
+            List<Map<String, Object>> existing = repository.readHeaderById(dto.getInquiryBookingMasterId());
+            if (existing == null || existing.isEmpty()) fail("Record not update because Id not found");
+            assertAccess(existing.get(0));
+        }
 
         String today = LocalDate.now().toString();
         if (dto.getEntryDate() == null || dto.getEntryDate().isEmpty()) dto.setEntryDate(today);
@@ -253,6 +306,8 @@ public class BuyerInquiryBookingService {
             if (zero(d.getRateUomId()))                 fail("Rate Uom Field is Required");
             if (zero(d.getCropYearId()))                fail("Please Select Crop Year");
             if (!pos(d.getBuyerRate()))                 fail("Buyer Target Price Field Required");
+            /* formvalidation() :1480 - the last check, previously missing here. */
+            if (!pos(d.getSupplierRate()))              fail("Target Purchase Price Field Required");
         }
 
         /* :1607-1615 - a sub-party row that counts must name its party and carry an amount. */
@@ -263,8 +318,13 @@ public class BuyerInquiryBookingService {
             boolean counts = (pd.getSubPartyId() != null && pd.getSubPartyId() > 0)
                           || (pd.getAmount() != null && pd.getAmount().compareTo(BigDecimal.ZERO) > 0);
             if (!counts) continue;
-            if (zero(pd.getSubPartyId())) fail("Sub Party Name Field Required in row#" + (i + 1));
-            if (!pos(pd.getAmount()))     fail("amount Field Required in row#" + (i + 1));
+            /* a removed saved row (actionTypeId 3) is not re-validated - DeleteDetailRow :1171 */
+            if (pd.getActionTypeId() != null && pd.getActionTypeId() == 3) continue;
+            /* FormHelper.ValidateField(value, name, r.RowIndex) - its own wording (FormHelper.cs:507) */
+            if (zero(pd.getSubPartyId()))
+                fail("Sub Party Name is required in Detail Grid at row No: " + (i + 1));
+            if (!pos(pd.getAmount()))
+                fail("amount is required in Detail Grid at row No: " + (i + 1));
         }
 
         /* :1549-1568 - checked over EVERY posted row, before the valid ones are filtered out.
@@ -322,6 +382,7 @@ public class BuyerInquiryBookingService {
             res.put("message", "Record not found");
             return res;
         }
+        assertAccess(header.get(0));
         res.put("success", true);
         res.put("header", header.get(0));
         res.put("details",          repository.readDetailByHeaderId(id));
@@ -334,19 +395,46 @@ public class BuyerInquiryBookingService {
     /** DeleteByID - @EntryUserId, @Id, @Activity='DeleteById'. Not a JPA delete. */
     public Map<String, Object> deleteRecord(int entryUserId, int id) {
         Map<String, Object> res = new LinkedHashMap<>();
+        List<Map<String, Object>> header = repository.readHeaderById(id);
+        if (header == null || header.isEmpty()) {
+            res.put("success", false);
+            res.put("message", "No record found to Delete");
+            return res;
+        }
+        assertAccess(header.get(0));
         repository.deleteById(entryUserId, id);
         res.put("success", true);
         res.put("message", "Delete Record Successfully");
         return res;
     }
 
-    public List<Map<String, Object>> getHistory(int orgId, int companyId, int branchId, int yearId,
-                                                boolean canViewAllRecords, int entryUserId,
-                                                String fromDate, String toDate,
-                                                Integer fromDocNo, Integer toDocNo, Integer id,
-                                                Integer commissionAgentId, Integer buyerId, Integer itemId) {
-        return repository.formHistory(orgId, companyId, branchId, yearId, canViewAllRecords, entryUserId,
-                fromDate, toDate, fromDocNo, toDocNo, id, commissionAgentId, buyerId, itemId);
+    /**
+     * BLL FormHistory (0492:128-332). Tenancy and CanViewAllRecord come from the session; the
+     * filters (all optional) come from the page: fromDate/toDate, entryFromDate/entryToDate,
+     * modifyFromDate/modifyToDate, approvedFromDate/approvedToDate, validityDateFrom/To,
+     * buyerRateFrom/To, fromDocNo/toDocNo, id, commissionAgentId, buyerId, itemId, parentItemIds.
+     */
+    public List<Map<String, Object>> getHistory(Map<String, Object> filters) {
+        return repository.formHistory(
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                currentUserContext.currentBranchId(),
+                currentUserContext.currentFinancialYearId(),
+                canViewAllRecords(),
+                currentUserContext.currentUserId(),
+                filters == null ? new LinkedHashMap<>() : filters);
+    }
+
+    /**
+     * FilldtLastAnalysisByParentItem (:991) -> BLL GetByParentCategoryId_LastinquiryBookingQualitySpecification
+     * (0492:334): @OrganizationId, @CompanyId, @Id = parent category, @Activity.
+     */
+    public List<Map<String, Object>> lastAnalysisByParentCategory(int parentCategoryId) {
+        if (parentCategoryId <= 0) return new ArrayList<>();
+        return repository.lastAnalysisByParentCategory(
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                parentCategoryId);
     }
 
     /* ---------------------------------------------------------------------------- helpers */
@@ -360,4 +448,15 @@ public class BuyerInquiryBookingService {
         return v == null ? "0" : v.stripTrailingZeros().toPlainString();
     }
     private static void fail(String message) { throw new IllegalArgumentException(message); }
+    private static Object ci(Map<String, Object> m, String key) {
+        if (m == null) return null;
+        if (m.containsKey(key)) return m.get(key);
+        for (Map.Entry<String, Object> e : m.entrySet()) if (e.getKey().equalsIgnoreCase(key)) return e.getValue();
+        return null;
+    }
+    private static int toInt(Object o) {
+        if (o instanceof Number) return ((Number) o).intValue();
+        if (o == null) return 0;
+        try { return Integer.parseInt(o.toString().trim()); } catch (NumberFormatException e) { return 0; }
+    }
 }

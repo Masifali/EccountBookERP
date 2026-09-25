@@ -208,10 +208,20 @@ public class CommissionDropdownService {
 
     // ============================================================== the rest
 
-    /** CommonServices.CompanyServiceBind -> Company.GetAlldt(OrgCompanyTypeId = OrganizationId). */
+    /**
+     * CommonServices.CompanyServiceBind (CommonServices.cs:806-821)
+     *   -> Company.GetAlldt(new Company { OrgCompanyTypeId = UserAccount.OrganizationId })
+     *   (0062_Architecture.BLL.Company.cs:110-133)
+     *   -> Sp_Company_GetAllMethod @OrgCompanyTypeId, @Id (only when != 0 - omitted here),
+     *                              @Activity = 'ReadByOrganizationId'
+     *
+     * The procedure has no @OrganizationId parameter (it is @OrgCompanyTypeId), and its 'ReadAll'
+     * branch returns every company in the database with no organization filter; the previous call
+     * used both, so it either failed or listed other organizations' companies.
+     */
     public List<Map<String, Object>> companies() {
-        return simple("EXEC Sp_Company_GetAllMethod @OrganizationId=?, @Activity=?",
-                new Object[]{ org(), "ReadAll" }, "Id", "CompName", "companies");
+        return simple("EXEC Sp_Company_GetAllMethod @OrgCompanyTypeId=?, @Activity=?",
+                new Object[]{ org(), "ReadByOrganizationId" }, "Id", "CompName", "companies");
     }
 
     /**
@@ -623,13 +633,29 @@ public class CommissionDropdownService {
      * Vehicle Type - vehicleTypefill(), frmGoodsDispatchingNoteCmagt:658 and
      * frmGrnLoadingChallanCmagt:744.
      *
-     * BLL 0611 VehicleType.GetAll() -> Sp_VehicleType_GetAllMethod @Activity='ReadAll'.
-     * No tenancy parameters - the BLL sends the activity alone, and adding org/company
-     * "for safety" would change the call.
+     * BLL 0611 VehicleType.GetAll() -> Sp_VehicleType_GetAllMethod with NO parameters.
+     * No tenancy parameters either - adding org/company "for safety" would change the call.
      */
     public List<Map<String, Object>> vehicleTypes() {
-        return simple("EXEC Sp_VehicleType_GetAllMethod @Activity=?",
-                new Object[]{ "ReadAll" }, "Id", "Description", "vehicle types");
+        /* Correction: VehicleType.GetAll (0611:13-24) builds an @Activity parameter list and then
+           DISCARDS it - GetDataTableProc is called with the procedure name only - and
+           [dbo].[Sp_VehicleType_GetAllMethod] declares no parameters at all, so sending @Activity
+           fails ("has no parameters and arguments were supplied") and the combo came back empty.
+           The display member is VehicleDescription (frmGrnLoadingChallanCmagt:744); "Description"
+           is kept as an alias for existing callers. */
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : run("[dbo].[Sp_VehicleType_GetAllMethod]",
+                new ArrayList<>(), new ArrayList<>(), "vehicle types")) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            String name = str(col(r, "VehicleDescription"));
+            m.put("Id", asInt(col(r, "Id")));
+            m.put("VehicleDescription", name);
+            m.put("Description", name);
+            m.put("id", asInt(col(r, "Id")));
+            m.put("name", name);
+            out.add(m);
+        }
+        return out;
     }
 
     /**

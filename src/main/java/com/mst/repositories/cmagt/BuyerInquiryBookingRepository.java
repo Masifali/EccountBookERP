@@ -248,9 +248,7 @@ public class BuyerInquiryBookingRepository {
 
     public List<Map<String, Object>> formHistory(int orgId, int companyId, int branchId, int financialYearId,
                                                  boolean canViewAllRecords, int entryUserId,
-                                                 String fromDate, String toDate,
-                                                 Integer fromDocNo, Integer toDocNo, Integer id,
-                                                 Integer commissionAgentId, Integer buyerId, Integer itemId) {
+                                                 Map<String, Object> f) {
         List<String> names = new ArrayList<>();
         List<Object> args = new ArrayList<>();
 
@@ -261,18 +259,33 @@ public class BuyerInquiryBookingRepository {
         add(names, args, "@FinancialYearId",  financialYearId);
         add(names, args, "@CanViewAllRecord", canViewAllRecords);
 
-        /* guarded - omitted, not nulled */
-        if (!canViewAllRecords)              add(names, args, "@EntryUserId", entryUserId);
-        Object f = dateOrNull(fromDate);
-        if (f != null)                       add(names, args, "@FromDate", f);
-        Object t = dateOrNull(toDate);
-        if (t != null)                       add(names, args, "@ToDate", t);
-        if (nonZero(fromDocNo))              add(names, args, "@FromDocNo", fromDocNo);
-        if (nonZero(toDocNo))                add(names, args, "@ToDocNo", toDocNo);
-        if (nonZero(id))                     add(names, args, "@Id", id);
-        if (nonZero(commissionAgentId))      add(names, args, "@CommissionAgentId", commissionAgentId);
-        if (nonZero(buyerId))                add(names, args, "@BuyerId", buyerId);
-        if (nonZero(itemId))                 add(names, args, "@ItemId", itemId);
+        /* guarded - omitted, not nulled (0492:158-325) */
+        if (!canViewAllRecords) add(names, args, "@EntryUserId", entryUserId);
+        String[][] dates = {
+                {"fromDate", "@FromDate"}, {"toDate", "@ToDate"},
+                {"entryFromDate", "@EntryFromDate"}, {"entryToDate", "@EntryToDate"},
+                {"modifyFromDate", "@ModifyFromDate"}, {"modifyToDate", "@ModifyToDate"},
+                {"approvedFromDate", "@ApprovedFromDate"}, {"approvedToDate", "@ApprovedToDate"},
+                {"validityDateFrom", "@ValidityDateFrom"}, {"validityDateTo", "@ValidityDateTo"}};
+        for (String[] d : dates) {
+            LocalDateTime t = parse(str(f, d[0]));
+            if (t != null) add(names, args, d[1], Timestamp.valueOf(t));
+        }
+        Double rateFrom = dbl(f, "buyerRateFrom");
+        if (rateFrom != null && rateFrom != 0.0) add(names, args, "@BuyerRateFrom", rateFrom);
+        Double rateTo = dbl(f, "buyerRateTo");
+        if (rateTo != null && rateTo != 0.0)     add(names, args, "@BuyerRateTo", rateTo);
+        String[][] ints = {
+                {"fromDocNo", "@FromDocNo"}, {"toDocNo", "@ToDocNo"}, {"id", "@Id"},
+                {"commissionAgentId", "@CommissionAgentId"}, {"buyerId", "@BuyerId"}, {"itemId", "@ItemId"}};
+        for (String[] k : ints) {
+            Integer v = intg(f, k[0]);
+            if (nonZero(v)) add(names, args, k[1], v);
+        }
+        String parentIds = str(f, "parentItemIds");
+        if (parentIds != null && !parentIds.trim().isEmpty() && parentIds.trim().matches("[0-9,]+")) {
+            add(names, args, "@ParentItemIds", parentIds.trim());
+        }
 
         StringBuilder sql = new StringBuilder("EXEC ").append(FORM_HISTORY_PROC).append(' ');
         for (int k = 0; k < names.size(); k++) {
@@ -280,6 +293,37 @@ public class BuyerInquiryBookingRepository {
             sql.append(names.get(k)).append("=?");
         }
         return jdbc.queryForList(sql.toString(), args.toArray());
+    }
+
+    /** BLL GetByParentCategoryId_LastinquiryBookingQualitySpecification (0492:334-360). */
+    public List<Map<String, Object>> lastAnalysisByParentCategory(int orgId, int companyId, int parentCategoryId) {
+        return jdbc.queryForList(
+                "EXEC [cmagt].[USP_inquiryBookingMaster_GetAllMethod] @OrganizationId=?, @CompanyId=?, @Id=?, @Activity=?",
+                orgId, companyId, parentCategoryId,
+                "GetByParentCategoryId_LastinquiryBookingQualitySpecification");
+    }
+
+    private static String str(Map<String, Object> f, String key) {
+        if (f == null) return null;
+        Object v = f.get(key);
+        if (v == null) {
+            for (Map.Entry<String, Object> e : f.entrySet()) {
+                if (e.getKey().equalsIgnoreCase(key)) { v = e.getValue(); break; }
+            }
+        }
+        return v == null ? null : v.toString().trim();
+    }
+
+    private static Integer intg(Map<String, Object> f, String key) {
+        String v = str(f, key);
+        if (v == null || v.isEmpty()) return null;
+        try { return (int) Double.parseDouble(v); } catch (NumberFormatException e) { return null; }
+    }
+
+    private static Double dbl(Map<String, Object> f, String key) {
+        String v = str(f, key);
+        if (v == null || v.isEmpty()) return null;
+        try { return Double.parseDouble(v); } catch (NumberFormatException e) { return null; }
     }
 
     private static void add(List<String> names, List<Object> args, String name, Object value) {
@@ -311,7 +355,11 @@ public class BuyerInquiryBookingRepository {
         return v == null ? 0 : v;
     }
 
-    private static Object s(String v) { return v == null ? "" : v; }
+    /* GenericProvider.SetProc uses AddWithValue: a null CLR string is an unsupplied parameter, so
+       the procedure's default (NULL) is stored - not ''. */
+    private static Object s(String v) {
+        return v == null ? new org.springframework.jdbc.core.SqlParameterValue(Types.NVARCHAR, null) : v;
+    }
     private static Object i(Integer v) { return v == null ? 0 : v; }
     private static Object num(java.math.BigDecimal v) { return v == null ? java.math.BigDecimal.ZERO : v; }
     private static Object bool(Boolean v) { return v != null && v; }

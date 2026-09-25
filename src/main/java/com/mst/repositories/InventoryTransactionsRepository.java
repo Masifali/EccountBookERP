@@ -36,47 +36,15 @@ public class InventoryTransactionsRepository {
             choices.addAll(jdbc.queryForList("EXEC dbo.Sp_Inventory_InventoryTransactions_DropDownAndLists @OrganizationId=?, @CompanyId=?",u.getOrganizationId(),u.getCompanyId()));
         } catch (Exception e) { LOG.warn("Sp_Inventory_InventoryTransactions_DropDownAndLists failed", e); }
 
-        Set<String> existingActivities = new HashSet<>();
-        for (Map<String, Object> choice : choices) {
-            Object act = choice.get("ActivityType");
-            if (act != null) existingActivities.add(act.toString());
-        }
-
-        if (!existingActivities.contains("ParentCategories")) {
-            try { choices.addAll(jdbc.queryForList("SELECT ID as Id, InvParentCateDescription as Name, 'ParentCategories' as ActivityType FROM InventoryParentCategory")); } catch (Exception e) { LOG.warn("InventoryParentCategory fallback failed", e); }
-        }
-        if (!existingActivities.contains("ItemCategories")) {
-            try { choices.addAll(jdbc.queryForList("SELECT ID as Id, CategoryDescription as Name, 'ItemCategories' as ActivityType FROM ItemCategory")); } catch (Exception e) { LOG.warn("ItemCategory fallback failed", e); }
-        }
-        if (!existingActivities.contains("ItemTypes")) {
-            try { choices.addAll(jdbc.queryForList("SELECT ID as Id, TypeDescription as Name, 'ItemTypes' as ActivityType FROM ItemType")); } catch (Exception e) { LOG.warn("ItemType fallback failed", e); }
-        }
-        if (!existingActivities.contains("ItemClassGroup")) {
-            try { choices.addAll(jdbc.queryForList("SELECT ID as Id, CategoryGroupDescription as Name, 'ItemClassGroup' as ActivityType FROM ItemCategoryGroup")); } catch (Exception e) { LOG.warn("ItemCategoryGroup fallback failed", e); }
-        }
-        if (!existingActivities.contains("Warehouse")) {
-            try { choices.addAll(jdbc.queryForList("SELECT ID as Id, WareHouseName as Name, 'Warehouse' as ActivityType FROM WareHouse")); } catch (Exception e) { LOG.warn("WareHouse fallback failed", e); }
-        }
-        if (!existingActivities.contains("Items")) {
-            try { choices.addAll(jdbc.queryForList("SELECT ID as Id, ItemName as Name, 'Items' as ActivityType FROM Item")); } catch (Exception e) { LOG.warn("Item fallback failed", e); }
-        }
-        if (!existingActivities.contains("JobLot")) {
-            try { choices.addAll(jdbc.queryForList("SELECT ID as Id, JobLotDescription as Name, 'JobLot' as ActivityType FROM JobLotHeader")); } catch (Exception e) { LOG.warn("JobLotHeader fallback failed", e); }
-        }
-        if (!existingActivities.contains("Supplier_Customer")) {
-            try { choices.addAll(jdbc.queryForList("SELECT ID as Id, PartyName as Name, 'Supplier_Customer' as ActivityType FROM Party")); } catch (Exception e) { LOG.warn("Party fallback failed", e); }
-        }
+        /* InventoryStockTransactionsReport.cs:236-339 binds only this procedure's rows; an empty
+           activity leaves its picker empty. The former table fallbacks read every company's rows. */
 
         result.put("choices", choices);
 
         List<Map<String, Object>> documents = new ArrayList<>();
         try {
             documents = jdbc.queryForList("EXEC dbo.Sp_Vouchers_GetMethods @OrganizationId=?, @CompanyId=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),"DocumentTypeGetFromInventoryTransactions");
-        } catch (Exception e) {
-            try {
-                documents = jdbc.queryForList("SELECT ID as RefDocumentTypeId, DocumentTypeDescription FROM DocumentType");
-            } catch (Exception e5) { LOG.warn("inventory lookup failed", e5); }
-        }
+        } catch (Exception e) { LOG.warn("Sp_Vouchers_GetMethods DocumentTypeGetFromInventoryTransactions failed", e); }
         result.put("documents", documents);
 
         List<Map<String,Object>> dates = new ArrayList<>();

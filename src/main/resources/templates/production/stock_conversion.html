@@ -9,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
     <style>
         /* invfrmStockConversionProduction (DocTypeId 66). panel3 is rgb(10,110,110). */
         body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #ece9d8; font-size: 11px; color: #000; margin: 0; }
@@ -38,7 +39,7 @@
         .sc-pane { display: none; background: #fff; border: 1px solid #999; border-top: none; padding: 3px; }
         .sc-pane.is-active { display: block; }
         .sc-bar { background: #0A6E6E; color: #fff; min-height: 24px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px; font-weight: bold; font-size: 9pt; gap: 8px; flex-wrap: wrap; }
-        .sc-bar button { background: #fff; border: 1px solid #999; font-size: 8pt; padding: 1px 6px; cursor: pointer; color: #000; }
+        .sc-bar button:not(.gb-gear) { background: #fff; border: 1px solid #999; font-size: 8pt; padding: 1px 6px; cursor: pointer; color: #000; }
         .win-grid-container { border: 1px solid #7a9a9e; background: #fff; width: 100%; }
         .win-grid-scroll { max-height: 300px; overflow: auto; max-width: 100%; }
         .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8pt; background: #fff; }
@@ -88,6 +89,10 @@
         .sc-hist-side > div { flex: 1 1 420px; min-width: 0; }
         @media (max-width: 1100px) { .sc-grid9 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .sc-grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (max-width: 600px) { .sc-grid9, .sc-grid4 { grid-template-columns: 1fr; } }
+        .sc-fum-filter { display: flex; gap: 6px 12px; flex-wrap: wrap; align-items: flex-start; }
+        .sc-fum-col { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+        .sc-sf-filter { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 10px; align-items: end; }
+        @media (max-width: 700px) { .sc-sf-filter { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -104,11 +109,11 @@
         <button type="button" id="btnVoucher" class="win-btn-tool" onclick="StockConversion.voucher()"><i class="fa fa-print"></i> Voucher-118</button>
         <button type="button" id="btnGenerate" class="win-btn-tool" onclick="StockConversion.generate()" title="handleAverageRateCalculation on the rows shown"><i class="fa fa-calculator"></i> Generate</button>
         <button type="button" id="btnIssuanceLoad" class="win-btn-tool is-hidden" onclick="StockConversion.btnIssuanceLoad()"><i class="fa fa-download"></i> Issuance Load</button>
-        <button type="button" id="btnStockReleaseFromFumigation" class="win-btn-tool is-hidden" onclick="StockConversion.notPorted('LoadavailableTransactionsForStockReleaseFromFumigation')"><i class="fa fa-unlock"></i> Release Fumigation Stock</button>
+        <button type="button" id="btnStockReleaseFromFumigation" class="win-btn-tool is-hidden" onclick="StockConversion.btnStockReleaseFromFumigation()"><i class="fa fa-unlock"></i> Release Fumigation Stock</button>
         <button type="button" id="btnLoadOutPut" class="win-btn-tool is-hidden" onclick="StockConversion.btnLoadOutPut()"><i class="fa fa-download"></i> Load OutPut</button>
         <button type="button" class="win-btn-tool" onclick="StockConversion.shortcuts()" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
-        <button type="button" id="btnWagesSchedule" class="win-btn-tool is-hidden" onclick="StockConversion.notPorted('frmContractWagesSchedule')"><i class="fa fa-list"></i> Wages Schedule</button>
-        <button type="button" id="btnWagesExempt" class="win-btn-tool is-hidden" onclick="StockConversion.notPorted('WagesExemptItemSchedule')"><i class="fa fa-ban"></i> Wages Exempt Item</button>
+        <button type="button" id="btnWagesSchedule" class="win-btn-tool is-hidden" onclick="StockConversion.btnWagesSchedule()"><i class="fa fa-list"></i> Wages Schedule</button>
+        <button type="button" id="btnWagesExempt" class="win-btn-tool is-hidden" onclick="StockConversion.btnWagesExempt()"><i class="fa fa-ban"></i> Wages Exempt Item</button>
     </div>
     <div class="sc-title-row">
         <span class="sc-title">Stock Conversion Production <span id="lblDocNo" style="font-size:10pt; margin-left:10px;"></span></span>
@@ -217,7 +222,7 @@
                 <span style="display:flex; gap:4px;">
                     <button type="button" id="BtnForwardRowsFromInputToOutPut" onclick="StockConversion.forwardRows()" title="Transfer the checked Input rows into the Output grid"><i class="fa fa-forward"></i></button>
                     <button type="button" onclick="StockConversion.toggleFullscreen('gridInputBox')"><i class="fa fa-arrows-alt"></i></button></span></div>
-            <div class="win-grid-scroll"><table class="win-grid" id="tblInput"><thead><tr id="inputHead"></tr></thead><tbody id="gridInput"></tbody><tfoot id="inputFoot"></tfoot></table></div>
+            <div class="win-grid-scroll"><table class="win-grid" id="tblInput" data-gridbar="invfrmStockConversionProduction:grdInput" data-gridbar-mount="#gridInputBox > .sc-bar > span:last-child"><thead><tr id="inputHead"></tr></thead><tbody id="gridInput"></tbody><tfoot id="inputFoot"></tfoot></table></div>
         </div>
     </div>
     <div class="sc-pane" id="paneOutput">
@@ -231,7 +236,7 @@
                     <button type="button" id="btnApplyJobLot" onclick="StockConversion.applyJobLotToGrid()">Update</button>
                     <button type="button" onclick="StockConversion.toggleFullscreen('gridOutputBox')"><i class="fa fa-arrows-alt"></i></button>
                 </span></div>
-            <div class="win-grid-scroll"><table class="win-grid" id="tblOutput"><thead><tr id="outputHead"></tr></thead><tbody id="gridOutput"></tbody><tfoot id="outputFoot"></tfoot></table></div>
+            <div class="win-grid-scroll"><table class="win-grid" id="tblOutput" data-gridbar="invfrmStockConversionProduction:grdByProduct" data-gridbar-mount="#gridOutputBox > .sc-bar > span:last-child"><thead><tr id="outputHead"></tr></thead><tbody id="gridOutput"></tbody><tfoot id="outputFoot"></tfoot></table></div>
         </div>
     </div>
     <div class="sc-pane" id="panePm">
@@ -310,9 +315,9 @@ Row Values for All other Rows</span>
 
     <div class="win-grid-container" id="gridHistoryBox" style="margin-top:4px;">
         <div class="sc-bar"><span>Filtered Records <span id="lblHistoryCount" style="font-weight:normal; margin-left:8px;"></span></span>
-            <button type="button" onclick="StockConversion.toggleFullscreen('gridHistoryBox')"><i class="fa fa-arrows-alt"></i></button></div>
+            <span id="gbHistoryTools" style="display:flex; gap:4px; align-items:center;"><button type="button" onclick="StockConversion.toggleFullscreen('gridHistoryBox')"><i class="fa fa-arrows-alt"></i></button></span></div>
         <div class="win-grid-scroll" style="max-height:340px;">
-            <table class="win-grid" id="tblHistory"><thead><tr id="historyHead"></tr></thead><tbody id="gridHistory"></tbody></table>
+            <table class="win-grid" id="tblHistory" data-gridbar="invfrmStockConversionProduction:grdHistoryMain" data-gridbar-mount="#gbHistoryTools"><thead><tr id="historyHead"></tr></thead><tbody id="gridHistory"></tbody></table>
         </div>
     </div>
     <!-- BindDetailsByHeaderId:5451 - I/O detail full width; Overheads left, Packing right. -->
@@ -367,8 +372,100 @@ Row Values for All other Rows</span>
                 </div>
             </div>
             <div class="win-grid-container" style="margin-top:4px;">
-                <div class="win-grid-scroll" style="max-height:420px;"><table class="win-grid" id="tblLoader"><thead><tr id="loaderHead"></tr></thead><tbody id="gridLoader"></tbody><tfoot id="loaderFoot"></tfoot></table></div>
+                <div class="win-grid-scroll" style="max-height:420px;"><table class="win-grid" id="tblLoader" data-gridbar="LoadavailableTransactionsForIssuance:grd"><thead><tr id="loaderHead"></tr></thead><tbody id="gridLoader"></tbody><tfoot id="loaderFoot"></tfoot></table></div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- LoadavailableTransactionsForStockReleaseFromFumigation - "Available Transactions For Issuance" (modal, ShowDialog).
+     panel2 is three columns: dates / Parent Category / Item Category / Item Type / Job Lot | Crop Year / Warehouse /
+     Ref Document / Party Name / Item Name | Search / Load / Reset and the two totals. No Close button: the title-bar
+     X, Esc and Ctrl+E Close() the dialog. -->
+<div class="sc-modal" id="fumModal" role="dialog" aria-modal="true" aria-labelledby="fumTitle">
+    <div class="sc-dialog">
+        <div class="sc-dialog-title"><span id="fumTitle">Available Transactions For Issuance</span>
+            <button type="button" onclick="StockConversion.fumClose()" title="Esc / Ctrl+E">&times;</button></div>
+        <div style="background:#0A6E6E; color:#fff; font:bold 12pt Tahoma, sans-serif; padding:4px 6px;">Available Transactions For Stock Release From Fumigation</div>
+        <div class="sc-dialog-body">
+            <div class="sc-fum-filter">
+                <div class="sc-fum-col">
+                    <div class="win-field"><label class="win-label" for="fmFrom">From &amp; To Date</label>
+                        <div style="display:flex; gap:3px;"><input type="date" id="fmFrom" class="win-datepicker"/><input type="date" id="fmTo" class="win-datepicker"/></div></div>
+                    <div class="win-field"><label class="win-label" for="fmParent">Parent Category</label>
+                        <select id="fmParent" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Categories"></select></div>
+                    <div class="win-field"><label class="win-label" for="fmItemCategory">Item Category</label>
+                        <select id="fmItemCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+                    <div class="win-field"><label class="win-label" for="fmItemType">Item Type</label>
+                        <select id="fmItemType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+                    <div class="win-field"><label class="win-label" for="fmJobLot">Job Lot</label>
+                        <select id="fmJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot"></select></div>
+                </div>
+                <div class="sc-fum-col">
+                    <div class="win-field"><label class="win-label" for="fmCrop">Crop Year</label>
+                        <select id="fmCrop" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+                    <div class="win-field"><label class="win-label" for="fmWarehouse">Warehouse</label>
+                        <select id="fmWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WarehouseName"></select></div>
+                    <div class="win-field"><label class="win-label" for="fmRefDoc">Ref Document</label>
+                        <select id="fmRefDoc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"></select></div>
+                    <div class="win-field"><label class="win-label" for="fmParty">Party Name</label>
+                        <select id="fmParty" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+                    <div class="win-field"><label class="win-label" for="fmItem">Item Name</label>
+                        <select id="fmItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                </div>
+                <div class="sc-fum-col" style="max-width:320px;">
+                    <div class="win-field"><label class="win-label" for="fmSelWeight">Total Selected Weight</label><input type="text" id="fmSelWeight" class="win-textbox" readonly tabindex="-1" style="text-align:right;"/></div>
+                    <div class="win-field"><label class="win-label" for="fmSelQty">Total Selected Qty</label><input type="text" id="fmSelQty" class="win-textbox" readonly tabindex="-1" style="text-align:right;"/></div>
+                    <div style="display:flex; flex-direction:column; gap:3px; width:90px;">
+                        <button type="button" id="fmSearch" class="win-btn-action" onclick="StockConversion.fumSearch()" title="Ctrl+S">Search</button>
+                        <button type="button" id="fmLoad" class="win-btn-action" onclick="StockConversion.fumLoad()" title="Ctrl+L">Load</button>
+                        <button type="button" id="fmReset" class="win-btn-action" onclick="StockConversion.fumReset()">Reset</button>
+                    </div>
+                </div>
+            </div>
+            <div class="win-grid-container" style="margin-top:4px;">
+                <div class="win-grid-scroll" style="max-height:460px;"><table class="win-grid" id="tblFum" data-gridbar="LoadavailableTransactionsForStockReleaseFromFumigation:grd"><thead><tr id="fumHead"></tr></thead><tbody id="gridFum"></tbody><tfoot id="fumFoot"></tfoot></table></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- frmLoadStockShortFallForSales - "Get Stock Short Fall For Sales" (modal, ShowDialog). toolStrip1: New / Refresh /
+     ShortCut Keys; panel2: Parent Category, Item Name | WareHouse, JobLot | CropYear, Load, Search. The form has no
+     KeyPreview/KeyDown wiring and no Close button: only the title-bar X closes it. -->
+<div class="sc-modal" id="sfModal" role="dialog" aria-modal="true" aria-labelledby="sfTitle">
+    <div class="sc-dialog" style="width:min(1000px, 100%);">
+        <div class="sc-dialog-title"><span id="sfTitle">EccountBookERP</span>
+            <button type="button" onclick="StockConversion.sfClose()">&times;</button></div>
+        <div style="background:teal;">
+            <div class="win-tool-strip">
+                <button type="button" id="sfNew" class="win-btn-tool" onclick="StockConversion.sfNew()" accesskey="n"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="sfRefresh" class="win-btn-tool" onclick="StockConversion.sfRefresh()"><i class="fa fa-refresh"></i> Refresh</button>
+                <button type="button" class="win-btn-tool" onclick="StockConversion.sfShortcuts()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+            </div>
+            <div style="color:#fff; font:bold 12pt Tahoma, sans-serif; padding:3px 6px;">Get Stock Short Fall For Sales</div>
+        </div>
+        <div class="sc-dialog-body" style="background:#fff;">
+            <div class="sc-sf-filter">
+                <div class="win-field"><label class="win-label" for="sfParent">Parent Category</label>
+                    <select id="sfParent" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Categories"></select></div>
+                <div class="win-field"><label class="win-label" for="sfWarehouse">WareHouse</label>
+                    <select id="sfWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WarehouseName"></select></div>
+                <div class="win-field"><label class="win-label" for="sfCrop">CropYear</label>
+                    <select id="sfCrop" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+                <div class="win-field"><label class="win-label" for="sfItem">Item Name</label>
+                    <select id="sfItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="win-field"><label class="win-label" for="sfJobLot">JobLot</label>
+                    <select id="sfJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot"></select></div>
+                <div style="display:flex; gap:4px; align-items:flex-end;">
+                    <button type="button" id="sfLoad" class="win-btn-action" onclick="StockConversion.sfLoad()">Load</button>
+                    <button type="button" id="sfSearch" class="win-btn-action" onclick="StockConversion.sfSearch()">Search</button>
+                </div>
+            </div>
+        </div>
+        <div style="background:teal; height:22px;"></div>
+        <div class="win-grid-container">
+            <div class="win-grid-scroll" style="max-height:400px;"><table class="win-grid" id="tblSf"><thead><tr id="sfHead"></tr></thead><tbody id="gridSf"></tbody><tfoot id="sfFoot"></tfoot></table></div>
         </div>
     </div>
 </div>
@@ -395,7 +492,8 @@ Row Values for All other Rows</span>
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
 <script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
 <script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
-<script th:src="@{/build/js/countx_stock_conversion.js?v=20260925b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_stock_conversion.js?v=20260925g}"></script>
 <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
 <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>

@@ -52,8 +52,47 @@ public class PurchaseOrderCmagtRestController {
     @GetMapping("/history")
     public ResponseEntity<List<Map<String, Object>>> getHistory(
             @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate) {
-        return ResponseEntity.ok(saveService.formHistory(fromDate, toDate));
+            @RequestParam(required = false) String toDate,
+            @RequestParam(required = false) String dateType,
+            @RequestParam(required = false) String validityFrom,
+            @RequestParam(required = false) String validityTo,
+            @RequestParam(required = false) Integer commissionAgentId,
+            @RequestParam(required = false) Integer supplierId,
+            @RequestParam(required = false) Integer itemId,
+            @RequestParam(required = false) String parentItemIds,
+            @RequestParam(required = false) Integer deliveryToPartyId,
+            @RequestParam(required = false) String shipToAddress) {
+        /* HistoryFill's optional filters (frmPurchaseOrderCmagt.cs:3931-3993). All optional, so
+           the existing ?fromDate=&toDate= call is unchanged. */
+        Map<String, Object> extra = new java.util.LinkedHashMap<>();
+        extra.put("dateType", dateType);
+        extra.put("ValidityDateFrom", validityFrom);
+        extra.put("ValidityDateTo", validityTo);
+        extra.put("CommissionAgentId", commissionAgentId);
+        extra.put("SupplierId", supplierId);
+        extra.put("ItemId", itemId);
+        extra.put("ParentItemIds", parentItemIds);
+        extra.put("DeliveryToPartyId", deliveryToPartyId);
+        extra.put("ShipToAddress", shipToAddress);
+        return ResponseEntity.ok(saveService.formHistory(fromDate, toDate, extra));
+    }
+
+    /**
+     * The procedures refuse with RAISERROR - approved record, referred in GRN Loading, document
+     * date outside the active financial year, order weight below the weight already used. The
+     * desktop shows ex.Message. Without this the refusal surfaced as a bare 500 and the page
+     * could only say "Internal Server Error". Scoped to this controller only.
+     */
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<Map<String, Object>> procedureRefused(org.springframework.dao.DataAccessException e) {
+        Throwable t = e.getMostSpecificCause() != null ? e.getMostSpecificCause() : e;
+        String msg = t.getMessage() == null ? "The database refused the operation." : t.getMessage().trim();
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("success", false);
+        body.put("status", "ERROR");
+        body.put("message", msg);
+        body.put("error", msg);
+        return ResponseEntity.badRequest().body(body);
     }
 
     /** ReadById plus all seven child collections, same family Save writes to. */

@@ -24,7 +24,10 @@ public class BuyerInquiryBookingRestController {
         int compId = currentUserContext.currentCompanyId();
         int branchId = currentUserContext.currentBranchId();
         int yearId = currentUserContext.currentFinancialYearId();
-        int docNo = service.generateNextDocNo(orgId, compId, branchId, yearId, docTypeId);
+        /* The form's own DocumentTypeId (frmBuyerInquiryBooking.cs:349); the request parameter is
+           kept for URL compatibility but never trusted. */
+        int docNo = service.generateNextDocNo(orgId, compId, branchId, yearId,
+                BuyerInquiryBookingService.DOCUMENT_TYPE_ID);
         Map<String, Object> res = new HashMap<>();
         res.put("docNo", docNo);
         return res;
@@ -57,42 +60,23 @@ public class BuyerInquiryBookingRestController {
         return service.deleteRecord(userId, id);
     }
 
+    /** FilldtLastAnalysisByParentItem (:991). The literal path takes precedence over /{id}. */
+    @GetMapping("/last-analysis")
+    public List<Map<String, Object>> lastAnalysis(@RequestParam(defaultValue = "0") int parentCategoryId) {
+        return service.lastAnalysisByParentCategory(parentCategoryId);
+    }
+
+    /**
+     * HistoryFill() (:2081). Filters may come as query parameters (what the page sends) or as a
+     * JSON body; tenancy, CanViewAllRecord and the user are always taken from the session.
+     */
     @RequestMapping(value = "/history", method = {RequestMethod.GET, RequestMethod.POST})
     public List<Map<String, Object>> getHistory(
             @RequestBody(required = false) Map<String, Object> payload,
-            @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate,
-            @RequestParam(required = false) Integer fromDocNo,
-            @RequestParam(required = false) Integer toDocNo,
-            @RequestParam(required = false) Integer commissionAgentId,
-            @RequestParam(required = false) Integer buyerId,
-            @RequestParam(required = false) Integer itemId) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int branchId = currentUserContext.currentBranchId();
-        int yearId = currentUserContext.currentFinancialYearId();
-        int userId = currentUserContext.currentUserId();
-
-        if (payload != null) {
-            if (payload.get("fromDate") != null) fromDate = payload.get("fromDate").toString();
-            if (payload.get("toDate") != null) toDate = payload.get("toDate").toString();
-            if (payload.get("fromDocNo") != null && !payload.get("fromDocNo").toString().isEmpty()) {
-                fromDocNo = Integer.parseInt(payload.get("fromDocNo").toString());
-            }
-            if (payload.get("toDocNo") != null && !payload.get("toDocNo").toString().isEmpty()) {
-                toDocNo = Integer.parseInt(payload.get("toDocNo").toString());
-            }
-            if (payload.get("commissionAgentId") != null && !payload.get("commissionAgentId").toString().isEmpty()) {
-                commissionAgentId = Integer.parseInt(payload.get("commissionAgentId").toString());
-            }
-            if (payload.get("buyerId") != null && !payload.get("buyerId").toString().isEmpty()) {
-                buyerId = Integer.parseInt(payload.get("buyerId").toString());
-            }
-            if (payload.get("itemId") != null && !payload.get("itemId").toString().isEmpty()) {
-                itemId = Integer.parseInt(payload.get("itemId").toString());
-            }
-        }
-
-        return service.getHistory(orgId, compId, branchId, yearId, true, userId, fromDate, toDate, fromDocNo, toDocNo, null, commissionAgentId, buyerId, itemId);
+            @RequestParam Map<String, String> query) {
+        Map<String, Object> filters = new HashMap<>();
+        if (query != null) filters.putAll(query);
+        if (payload != null) filters.putAll(payload);
+        return service.getHistory(filters);
     }
 }

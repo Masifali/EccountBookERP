@@ -443,7 +443,7 @@
         $('.calc-trigger').on('input change', grnRecalc);
         $('#btnAddDetail').on('click', addDetailRow);
         $('#btnLoadPo').on('click', loadPurchaseOrders);
-        $('#detPoNo').on('change', bindDetailItemCombo);
+        $('#detPoNo').on('change', function () { poNoChanged(); bindDetailItemCombo(); });
         $('#detParentItemId').on('change', bindDetailItemCombo);
         $('#detItemId').on('change', detailItemChanged);
         $('#detPackUomId').on('change', calcGrossWeight);
@@ -455,12 +455,41 @@
         $('#btnSave').on('click', function() { saveOrder(false); });
         $('#btnUpdate').on('click', function() { saveOrder(true); });
         $('#btnNew').on('click', resetForm);
+        $('#btnDelete').on('click', deleteRecord);
         $('#btnLoadHistory').on('click', fetchHistory);
+        /* datDocDate_ValueChanged (:4316): Bilty Date follows Doc Date. */
+        $('#docDate').on('change', function () { $('#biltyDate').val($('#docDate').val()); });
+        loadDocNo();
     });
+
+    /* Rows removed from a SAVED challan: DeleteDetailRow (:2142) keeps them with
+       actionTypeId 3 and Insert() (:2593) sends them first, so the procedure soft-deletes. */
+    let removedRows = [];
+
+    /* DocumentNoDbCall (:752) -> GenerateCode. The procedure allocates the real number at
+       save time; this fills the box the form validates as required. */
+    function loadDocNo() {
+        $.get('/api/commission/grn-loading-challan/generate-no', function (r) {
+            if (r && r.docNo && !(parseInt($('#grnSupplierLoadingMasterId').val(), 10) > 0)) {
+                $('#docNo').val(r.docNo);
+            }
+        });
+    }
+
+    function deleteRecord() {
+        const id = parseInt($('#grnSupplierLoadingMasterId').val(), 10) || 0;
+        if (!id) { alert('No record found to Delete'); return; }
+        if (!confirm('Are you sure to Delete?')) return;
+        $.post('/api/commission/grn-loading-challan/' + id + '/delete', function (res) {
+            if (res && res.status === 'SUCCESS') { alert('Delete Record Successfully'); resetForm(); }
+            else alert((res && res.message) || 'Delete failed');
+        }).fail(function () { alert('Server error while deleting.'); });
+    }
 
     function setDefaultDates() {
         const today = new Date().toISOString().split('T')[0];
         $('#docDate').val(today);
+        $('#biltyDate').val(today);
         $('#histFromDate').val(today);
         $('#histToDate').val(today);
     }
@@ -500,9 +529,9 @@
         const btn = $('#btnLoadPo');
         const orig = btn.html();
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Loading...');
+        /* OutstandingOrdersdtFillDbCall (:890) passes only the tenancy four and RecId; the
+           supplier filter is applied client-side in OrderNoBind, not in the procedure. */
         $.get('/api/commission/grn-loading-challan/pending-purchase-order-tables', {
-            supplierId: iOf('#supplierId'),
-            commissionAgentId: iOf('#commissionAgentId'),
             recId: iOf('#grnSupplierLoadingMasterId')
         })
         .done(function (d) {
@@ -516,6 +545,27 @@
         .fail(function () { alert('Could not load pending purchase orders.'); })
         .always(function () { btn.prop('disabled', false).html(orig); });
     }
+
+    function selectedPoRow() {
+        const poId = iOf('#detPoNo');
+        if (!poId) return null;
+        return (poTables.pendingOrders || []).find(function (r) {
+            return (parseInt(col(r, 'purchaseOrderMasterId'), 10) || 0) === poId;
+        }) || null;
+    }
+
+    /* CmbPoNoDetail_Leave (:1300): Empty Bag Term comes from the order and is locked;
+       supplier / agent default from it when still empty. */
+    function poNoChanged() {
+        const po = selectedPoRow();
+        $('#detEmptyBagTermId, #detParentItemId').prop('disabled', !!po);
+        if (!po) return;
+        $('#detEmptyBagTermId').val(parseInt(col(po, 'EBWeightDeductionTermId'), 10) || 0);
+        if (!iOf('#supplierId')) $('#supplierId').val(parseInt(col(po, 'supplierId'), 10) || 0).trigger('change');
+        if (!iOf('#commissionAgentId')) $('#commissionAgentId').val(parseInt(col(po, 'commissionAgentId'), 10) || 0).trigger('change');
+    }
+
+    function dOnly(v) { return v ? String(v).substring(0, 10) : ''; }
 
     function col(row, name) {
         if (row == null) return null;
@@ -552,12 +602,15 @@
         const parentId = iOf('#detParentItemId');
         const rows = (poTables.pendingOrders || []).filter(function (r) {
             if (poId > 0 && (parseInt(col(r, 'purchaseOrderMasterId'), 10) || 0) !== poId) return false;
-            if (parentId > 0 && (parseInt(col(r, 'InventoryParentCategoriesId'), 10) || 0) !== parentId) return false;
+            /* ItemdtFillAgainstOder (:987) lists every mapping of the chosen order; the parent
+               combo is locked, not a filter, once an order is picked. */
+            if (poId === 0 && parentId > 0 && (parseInt(col(r, 'inventoryParentCategoryId'), 10) || 0) !== parentId) return false;
             return true;
         });
         const sel = $('#detItemId').empty().append('<option value="0">-- Select Item --</option>');
         rows.forEach(function (r) {
-            const mappingId = parseInt(col(r, 'MappingId'), 10) || 0;
+            /* MappingId in the desktop's dtItem is the procedure's purchaseOrderSaleOrderMappingId. */
+            const mappingId = parseInt(col(r, 'purchaseOrderSaleOrderMappingId'), 10) || 0;
             const opt = $('<option>')
                 .val(mappingId)
                 .text(col(r, 'ItemName') || '')
@@ -577,7 +630,14 @@
             return;
         }
         $('#detBuyerName').val(col(r, 'BuyerName') || '');
-        $('#detDeliverToPartyName').val(col(r, 'DeliveryToParty') || col(r, 'DeliverToPartyName') || '');
+        $('#detDeliverToPartyName').val(col(r, 'DeliveryToPartyName') || '');
+        /* CmbItemName_Leave (:1351): parent category from the row; Loading Qty defaults to the
+           balance qty when empty or above it. */
+        const pc = parseInt(col(r, 'inventoryParentCategoryId'), 10) || 0;
+        if (pc) $('#detParentItemId').val(pc);
+        const balQty = parseFloat(col(r, 'BalanceQty')) || 0;
+        const lq = nOf('#detLoadingQty');
+        if (lq === 0 || lq > balQty) $('#detLoadingQty').val(r3(balQty));
         $('#detDeliverToAddress').val(col(r, 'ShipToAddress') || '');
         const cropId = parseInt(col(r, 'cropYearId'), 10) || 0;
         if (cropId) $('#detCropYearId').val(cropId);
@@ -653,6 +713,23 @@
         if (!(nOf('#detLoadingQty') > 0))   return 'Loading Qty Field Required';
         if (!(nOf('#detGrossWeight') > 0))  return 'Gross Weight Field Required';
         if (!(nOf('#detNetBillWeight') > 0))return 'Net Bill Weight Field Required';
+        if (!iOf('#detEmptyBagTermId')) return 'Empty Bag Term Field Required';
+        const po = selectedPoRow();
+        if (po) {
+            const exp = dOnly(col(po, 'ValidityDate')), start = dOnly(col(po, 'DeliveryStartDate'));
+            const doc = $('#docDate').val();
+            if (exp && exp < doc) return 'Selected Purchase Order is Expired On: ' + exp;
+            if (exp && exp === doc && !$.trim($('#detWarningRemarks').val()))
+                return 'Document Date is the same as the selected Purchase Order Expiry Date.\n'
+                     + 'Please enter warning remarks before proceeding.';
+            if (start && start > doc)
+                return 'Document Date is the Less then DeliveryStartDate of selected Purchase Order.';
+        }
+        const mid = iOf('#detItemId');
+        const src0 = $('#detItemId option:selected').data('row') || {};
+        const itm0 = parseInt(col(src0, 'itemId'), 10) || 0;
+        if (detailRows.some(function (r) { return r.purchaseOrderSaleOrderMappingId === mid && r.itemId === itm0; }))
+            return $('#detItemId option:selected').text() + ' already in detail. So can\'t add this item';
         if (packUomEquivalent() === null)
             return 'The selected Pack Uom has no usable conversion factor, so Gross Weight '
                  + 'cannot be computed. It is not assumed to be 1.';
@@ -673,10 +750,10 @@
             actionTypeId: 1,
 
             purchaseOrderMasterId:  parseInt(col(src, 'purchaseOrderMasterId'), 10) || 0,
-            purchaseOrderDetailId:  parseInt(col(src, 'OrderDetailId'), 10) || 0,
+            purchaseOrderDetailId:  parseInt(col(src, 'DetailId'), 10) || 0,
             purchaseOrderSaleOrderMappingId: parseInt(opt.val(), 10) || 0,
-            saleOrderMasterId:      parseInt(col(src, 'SoId'), 10) || 0,
-            saleOrderDetailId:      parseInt(col(src, 'SoDetailId'), 10) || 0,
+            saleOrderMasterId:      parseInt(col(src, 'saleOrderMasterId'), 10) || 0,
+            saleOrderDetailId:      parseInt(col(src, 'saleOrderDetailId'), 10) || 0,
             supplierOfferId:        parseInt(col(src, 'supplierOfferId'), 10) || 0,
             supplierOfferDetailId:  parseInt(col(src, 'supplierOfferDetailId'), 10) || 0,
             inquiryBookingMasterId: parseInt(col(src, 'inquiryBookingMasterId'), 10) || 0,
@@ -711,7 +788,9 @@
 
             /* display only - not procedure parameters */
             _poNo: col(src, 'DocNo'),
-            _soNo: col(src, 'SoNo'),
+            _soNo: col(src, 'SaleOrderNo'),
+            _poExpiry: dOnly(col(selectedPoRow(), 'ValidityDate')),
+            _poStart: dOnly(col(selectedPoRow(), 'DeliveryStartDate')),
             _parentItem: $('#detParentItemId option:selected').text(),
             _packingType: $('#detPackingTypeId option:selected').text(),
             _packUom: $('#detPackUomId option:selected').text(),
@@ -774,6 +853,11 @@
     }
 
     function removeDetailRow(index) {
+        const r = detailRows[index];
+        if (r && (parseInt(r.grnSupplierLoadingDetailId, 10) || 0) > 0) {
+            if (!confirm('Are you sure to Delete?')) return;
+            removedRows.push(Object.assign({}, r, { actionTypeId: 3 }));
+        }
         detailRows.splice(index, 1);
         renderDetailGrid();
     }
@@ -820,7 +904,7 @@
             el.empty().append('<option value="0">-- Select --</option>');
             (data || []).filter(function (r) {
                 const a = String(r.Activity || '');
-                return a === 'EBWeightDeductionTerm' || a === 'AllocatedPackingType';
+                return a === 'EmptyBagTypes';
             }).forEach(function (r) {
                 el.append('<option value="' + r.Id + '">' + escHtml(r.ReferenceName) + '</option>');
             });
@@ -885,10 +969,10 @@
     function grnRecalc() {
         const f = parseFloat($('#biltyFreight').val()) || 0;
         const o = parseFloat($('#otherAdLesCharges').val()) || 0;
-        $('#totalFreight').val((f + o).toFixed(2));
+        $('#totalFreight').val(r3(f + o));
         const lw = parseFloat($('#loadWeight').val()) || 0;
         const tw = parseFloat($('#tareWeight').val()) || 0;
-        $('#scaleNetWeight').val((lw - tw).toFixed(2));
+        $('#scaleNetWeight').val(r3(Math.abs(lw - tw)));
     }
     $(document).on('input change',
         '#biltyFreight, #otherAdLesCharges, #loadWeight, #tareWeight', grnRecalc);
@@ -898,6 +982,29 @@
             alert('Please add at least one item detail row.');
             return;
         }
+
+        /* Insert() :2551-2590 */
+        const vno = $.trim($('#vehicleNo').val()).toUpperCase();
+        if (!/^[A-Z]{1,6}-\d{1,6}$/.test(vno)) { alert('Vehicle no is not valid. Please check!'); $('#vehicleNo').focus(); return; }
+        const vp = vno.split('-');
+        if ((vp[0].length <= 2 || vp[1].length <= 2)
+                && !confirm('The vehicle number is unusually short (letters or digits less than or equal to 2).\nAre you sure you want to proceed?')) {
+            $('#vehicleNo').focus(); return;
+        }
+        const doc = $('#docDate').val();
+        for (let i = 0; i < detailRows.length; i++) {
+            const r = detailRows[i];
+            if (!(r.purchaseOrderMasterId > 0)) continue;
+            if (r._poExpiry && doc === r._poExpiry && !$.trim(r.warningRemarks || '')) {
+                const w = prompt('Vehicle has reached late compared to PO Expiry Date.\n\nRemarks are required to proceed.', '');
+                if (!w || !$.trim(w)) { alert('Remarks are required for late vehicle entry.'); return; }
+                r.warningRemarks = $.trim(w);
+            } else {
+                if (r._poExpiry && doc > r._poExpiry) { alert('Grn Date is greater than Purchase Order Expiry date.'); return; }
+                if (r._poStart && doc < r._poStart) { alert('Grn Date is less than Purchase Order Delivery Start date.'); return; }
+            }
+        }
+        if (!confirm(isUpdate ? 'Are you sure to Update' : 'Are you sure to Save')) return;
 
         const btn = isUpdate ? $('#btnUpdate') : $('#btnSave');
         const origText = btn.html();
@@ -939,7 +1046,7 @@
             totalFreight:       parseFloat($('#totalFreight').val()) || 0,
             approvalRemarks:    $('#approvalRemarks').val(),
 
-            grnSupplierLoadingDetailList: detailRows
+            grnSupplierLoadingDetailList: (isUpdate ? removedRows : []).concat(detailRows)
         };
 
         $.ajax({
@@ -950,7 +1057,7 @@
             success: function(res) {
                 btn.prop('disabled', false).html(origText);
                 if (res.status === 'SUCCESS') {
-                    alert('GRN Loading Challan saved successfully!');
+                    alert(isUpdate ? 'Update Successfully' : 'Save Successfully');
                     resetForm();
                 } else {
                     alert('Error saving record: ' + res.message);
@@ -958,7 +1065,7 @@
             },
             error: function(err) {
                 btn.prop('disabled', false).html(origText);
-                alert('Server error while saving.');
+                alert((err && err.responseJSON && err.responseJSON.message) || 'Server error while saving.');
             }
         });
     }
@@ -976,13 +1083,13 @@
             data.forEach(r => {
                 tbody.append(`
                     <tr>
-                        <td><span class="clickable-code" onclick="loadRecord(${r.grnSupplierLoadingMasterId})">${r.docNo || r.grnSupplierLoadingMasterId}</span></td>
-                        <td>${r.docDate ? r.docDate.substring(0, 10) : ''}</td>
-                        <td>${r.supplierName || ''}</td>
-                        <td>${r.commissionAgentName || ''}</td>
-                        <td>${r.vehicleNo || ''}</td>
-                        <td>${r.biltyNo || ''}</td>
-                        <td>${r.transporterName || ''}</td>
+                        <td><span class="clickable-code" onclick="loadRecord(${parseInt(col(r, 'grnSupplierLoadingMasterId'), 10) || 0})">${escHtml(col(r, 'docNo') || col(r, 'grnSupplierLoadingMasterId'))}</span></td>
+                        <td>${dOnly(col(r, 'docDate'))}</td>
+                        <td>${escHtml(col(r, 'SupplierName') || '')}</td>
+                        <td>${escHtml(col(r, 'CommissionAgentName') || '')}</td>
+                        <td>${escHtml(col(r, 'vehicleNo') || '')}</td>
+                        <td>${escHtml(col(r, 'biltyNo') || '')}</td>
+                        <td>${escHtml(col(r, 'Transporter') || col(r, 'transporterName') || '')}</td>
                     </tr>
                 `);
             });
@@ -1000,9 +1107,42 @@
                 $('#commissionAgentId').val(d.commissionAgentId || 0);
                 $('#vehicleNo').val(d.vehicleNo || '');
                 $('#biltyNo').val(d.biltyNo || '');
-                                $('#remarksHeader').val(d.remarksHeader || '');
+                $('#remarksHeader').val(d.remarksHeader || '');
+                /* ReadById (:2810-2850) restores every header control; an Update after a
+                   partial load would have written 0 / blank over them. */
+                $('#companyId').val(d.companyId || 0);
+                $('#branchId').val(d.branchId || 0);
+                $('#loadingCityId').val(d.loadingCityId || 0);
+                $('#unloadingCityId').val(d.unloadingCityId || 0);
+                $('#transporterId').val(d.transporterId || 0);
+                $('#transporterName').val(d.transporterName || '');
+                $('#biltyFreight').val(r3(d.biltyFreight));
+                $('#otherAdLesCharges').val(r3(d.otherAdLesCharges));
+                $('#totalFreight').val(r3(d.totalFreight));
+                $('#vehicleTypeId').val(d.vehicleTypeId || 0);
+                $('#biltyDate').val(dOnly(d.biltyDate));
+                $('#deliveryTermId').val(d.deliveryTermId || 0);
+                $('#loadWeight').val(r3(d.loadWeight));
+                $('#tareWeight').val(r3(d.tareWeight));
+                $('#scaleNetWeight').val(r3(d.scaleNetWeight));
+                $('#biltyQty').val(r3(d.biltyQty));
+                $('#companyId, #branchId, #supplierId, #commissionAgentId, #loadingCityId, #unloadingCityId, #transporterId, #vehicleTypeId, #deliveryTermId').trigger('change');
 
-                detailRows = d.grnSupplierLoadingDetailList || [];
+                removedRows = [];
+                detailRows = (d.grnSupplierLoadingDetailList || []).map(function (x) {
+                    return Object.assign({}, x, {
+                        itemName: col(x, 'ItemName'),
+                        _poNo: col(x, 'PurchaseOrderNo'),
+                        _soNo: col(x, 'SaleOrderNo'),
+                        _parentItem: col(x, 'InvParentCateDescription'),
+                        _packingType: col(x, 'PackingType'),
+                        _packUom: col(x, 'PackSize'),
+                        _buyerName: col(x, 'BuyerName'),
+                        _deliverTo: col(x, 'DeliverToPartyName'),
+                        _poExpiry: dOnly(col(x, 'POExpiryDate')),
+                        _poStart: dOnly(col(x, 'PODeliveryStartDate'))
+                    });
+                });
                 renderDetailGrid();
 
                 $('#btnSave').prop('disabled', true);
@@ -1010,6 +1150,8 @@
                 $('#btnDelete').prop('disabled', false);
 
                 $('#tab-form-link').tab('show');
+            } else {
+                alert((res && res.message) || 'Record Not Found');
             }
         });
     }
@@ -1025,8 +1167,12 @@
         $('#remarksHeader').val('');
 
         detailRows = [];
+        removedRows = [];
         renderDetailGrid();
         clearDetailInputs();
+        $('#detPoNo').val(0);
+        $('#detEmptyBagTermId, #detParentItemId').prop('disabled', false);
+        loadDocNo();
 
         $('#btnSave').prop('disabled', false);
         $('#btnUpdate').prop('disabled', true);

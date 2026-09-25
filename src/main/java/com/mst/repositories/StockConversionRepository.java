@@ -594,6 +594,66 @@ public class StockConversionRepository {
         return rows("SpInventoryTransactionEvaluation_GetAvailableTransactionsForIssuance", p);
     }
 
+    // ------------------------------------------ LoadavailableTransactionsForStockReleaseFromFumigation
+
+    /**
+     * PendingInventoryTransactionsForIssuanceLoad (fumigation loader :325) -> labIPmActivityLog
+     * .HoldStockForFumigation (BLL, IPM): @OrganizationId, @CompanyId always; @BranchesId, @SupplierCustomerId,
+     * @WarehouseId, @ItemId, @ReferenceDocumentTypeId, @JobLotId, @InventoryParentCategories,
+     * @ItemCategoryId, @ItemTypeId when != 0; @DateFrom / @DateTo by CheckDateTimeNull; @CropYear when
+     * not null/empty. RefWarehouseId, PackingTypeId, ItemUomId, WarehouseIds, ItemIds (JobOrderItems is
+     * never set by Stock Conversion) and ParentCategoryIds are never set, so never sent.
+     * AvailableForFumigation is never set by the caller (0): the form then sets
+     * StockReleaseFromFumigation = 1 (sent) and AvailableForFumigation = 0 (guarded out).
+     */
+    public List<Map<String, Object>> holdStockForFumigation(
+            UserAccount u, LocalDateTime fromDate, LocalDateTime toDate, int inventoryParentCategories,
+            int itemCategoryId, int itemTypeId, int jobLotId, String cropYear, int warehouseId,
+            int refDocumentTypeId, int supplierCustomerId, int itemId) {
+        Map<String, Object> p = params();
+        p.put("@OrganizationId", u.getOrganizationId());
+        p.put("@CompanyId", u.getCompanyId());
+        int branch = u.getBranchesId() == null ? 0 : u.getBranchesId();
+        if (branch != 0) p.put("@BranchesId", branch);
+        if (fromDate != null) p.put("@DateFrom", fromDate);
+        if (toDate != null) p.put("@DateTo", toDate);
+        if (supplierCustomerId != 0) p.put("@SupplierCustomerId", supplierCustomerId);
+        if (warehouseId != 0) p.put("@WarehouseId", warehouseId);
+        if (itemId != 0) p.put("@ItemId", itemId);
+        if (refDocumentTypeId != 0) p.put("@ReferenceDocumentTypeId", refDocumentTypeId);
+        if (jobLotId != 0) p.put("@JobLotId", jobLotId);
+        if (inventoryParentCategories != 0) p.put("@InventoryParentCategories", inventoryParentCategories);
+        if (itemCategoryId != 0) p.put("@ItemCategoryId", itemCategoryId);
+        if (itemTypeId != 0) p.put("@ItemTypeId", itemTypeId);
+        if (set(cropYear)) p.put("@CropYear", cropYear);
+        p.put("@StockReleaseFromFumigation", 1);
+        return rows("[dbo].[getHoldStockForFumigation]", p);
+    }
+
+    // ------------------------------------------------------------- frmLoadStockShortFallForSales
+
+    /**
+     * PendingOrderLoad (frmLoadStockShortFallForSales :224) -> InventoryStockEvalautionDetail
+     * .StockConversion_BalanceSalesForStock (BLL): @OrganizationId, @CompanyId always; @DocDate by
+     * CheckDateTimeNull; @WarehouseId, @InventoryParentCategoryId, @ItemId, @JobLotId when != 0;
+     * @CropYear when != string.Empty. The form also sets FinancialYearId, which the BLL does not send;
+     * ItemUomId (@PackUomId) and PackingTypeId are never set by the form.
+     */
+    public List<Map<String, Object>> balanceSalesForStock(UserAccount u, LocalDateTime docDate, int warehouseId,
+                                                          int inventoryParentCategoryId, int itemId, int jobLotId,
+                                                          String cropYear) {
+        Map<String, Object> p = params();
+        p.put("@OrganizationId", u.getOrganizationId());
+        p.put("@CompanyId", u.getCompanyId());
+        if (docDate != null) p.put("@DocDate", docDate);
+        if (warehouseId != 0) p.put("@WarehouseId", warehouseId);
+        if (inventoryParentCategoryId != 0) p.put("@InventoryParentCategoryId", inventoryParentCategoryId);
+        if (itemId != 0) p.put("@ItemId", itemId);
+        if (jobLotId != 0) p.put("@JobLotId", jobLotId);
+        if (cropYear != null && !cropYear.isEmpty()) p.put("@CropYear", cropYear);
+        return rows("[dbo].[USP_StockConversion_BalanceSalesForStock]", p);
+    }
+
     // =================================================================================== write
 
     /**
@@ -767,6 +827,17 @@ public class StockConversionRepository {
         t.put("@RefDocumentTypeId", docTypeId);
         t.put("@RefDocIdNo", id);
         scalar("Sp_InventoryTransactions_GetALLMethod", t);
+
+        /* DAL 0275 :101 - for 67 / 808 (Store Stock Conversion, screen 502) the evaluation update runs
+           after the transactions rebuild, on insert and update alike. */
+        if (docTypeId == 67 || docTypeId == 808) {
+            Map<String, Object> ev = withAt(InventoryOpeningDefaults.evaluation());
+            ev.put("@OrganizationId", org);
+            ev.put("@CompanyId", comp);
+            ev.put("@RefDocumentTypeId", docTypeId);
+            ev.put("@RefDocIdNo", id);
+            scalar("Sp_InventoryStockEvalautionDetail_Update", ev);
+        }
 
         if (docTypeId == DOC_TYPE_ID) {
             /* IL_0453 - removed input rows, when the list is non-empty. */

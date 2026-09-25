@@ -77,12 +77,23 @@
         return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
                         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-    function today() { return new Date().toISOString().slice(0, 10); }
+    /*
+     * Calendar dates are handled in LOCAL time throughout. toISOString() converts to UTC first,
+     * so at the site's UTC+5 a local midnight became the previous day: every Expiry Date and
+     * payment Due Date was one day early, and every DATETIME loaded from the server
+     * (deliveryStartDate, ValidityDate, DueDate - serialised as UTC instants) was shown one
+     * day early and then saved back one day early on Update.
+     */
+    function ymd(d) {
+        return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    }
+    function today() { return ymd(new Date()); }
     function addDays(iso, days) {
         if (!iso) return '';
-        var d = new Date(iso + 'T00:00:00');
+        var d = new Date(String(iso).slice(0, 10) + 'T00:00:00');
+        if (isNaN(d.getTime())) return '';
         d.setDate(d.getDate() + int(days));
-        return d.toISOString().slice(0, 10);
+        return ymd(d);
     }
     function daysBetween(a, b) {
         if (!a || !b) return 0;
@@ -97,8 +108,17 @@
     }
     function toIsoDate(v) {
         if (!v) return '';
+        // A bare calendar date, or a zone-less local date-time: take the calendar part as is.
+        if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}(T[0-9:.]*)?$/.test(v)) return v.slice(0, 10);
+        // An instant (epoch number or ISO string with a zone): read it in local time.
         var d = new Date(v);
-        return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+        return isNaN(d.getTime()) ? '' : ymd(d);
+    }
+    /** C# Math.Round(double) - MidpointRounding.ToEven, the default the desktop uses. */
+    function roundEven(v) {
+        var x = num(v), r = Math.round(x);
+        if (Math.abs(x % 1) === 0.5 && r % 2 !== 0) r -= 1;
+        return r;
     }
 
     /* ---------------------------------------------------------------------
@@ -457,12 +477,12 @@
         } else if (typeText === 'Percent') {
             if (rate > 100) { rate = 100; $rate.val('100'); }
             var totalAmount = sumDetail('Amount');
-            $amount.val(fmt3(Math.round(totalAmount * rate / 100)));
+            $amount.val(fmt3(roundEven(totalAmount * rate / 100)));
         } else if (typeText === 'Weight') {
             var totalWeight = sumDetail('Weight');
             var uomText = ($uom.find('option:selected').text() || '').trim();
             var uomVal = num(uomText);
-            if (uomVal > 0) $amount.val(fmt3(Math.round(totalWeight / uomVal * rate)));
+            if (uomVal > 0) $amount.val(fmt3(roundEven(totalWeight / uomVal * rate)));
             else $amount.val('0');
         }
     }
@@ -1502,7 +1522,7 @@
           '#cmbPaymentTerm,#cmbCommissionAc,#cmbCommType,#cmbCommUom,' +
           '#cmbBrokeryAc,#cmbBrokeryType,#cmbBrokeryRateUom').val('').trigger('change.select2');
 
-        $('#txtDeliveryDays').val('1');
+        $('#txtDeliveryDays').val('');     // Reset():2264 empties it (the designer's "1" is first-open only)
         $('#txtDueDays,#txtRemarks,#txtCommRate,#txtCommAmount,#txtBrokeryRate,' +
           '#txtBrokeryAmount,#txtPaymentScheduleRemarks,#txtBuyerReference,#txtShipToAddress').val('');
         $('#chkWithHoldingTaxApplied,#chkOtherExpenseAllowed').prop('checked', false);
@@ -1514,8 +1534,36 @@
 
         resetDetailEntry();
         renderAllGrids();
-        if (!skipDocNo) loadNextDocNo();
+        if (!skipDocNo) {
+            loadNextDocNo();
+            applyPortalDefaults();         // Reset() -> GetCommissionAgentConfigurationsFromGlobalandBind
+        }
         status('');
+    }
+
+    /**
+     * GetCommissionAgentConfigurationsFromGlobalandBind (:4040): the seven Commission Agent
+     * Portal configuration ids a NEW document pre-selects, each applied only when > 0.
+     * Served by the shared /api/commission/dropdowns/config-defaults. This screen has no
+     * static payment-term fallback, so fallbackPaymentTermId is deliberately not used.
+     */
+    var portalDefaults = null;
+    function applyPortalDefaults() {
+        var apply = function () {
+            var d = portalDefaults || {};
+            [['commissionAgentId', '#cmbCommissionAgent'], ['commissionAccountId', '#cmbCommissionAc'],
+             ['brokeryAccountId', '#cmbBrokeryAc'], ['deliveryTermId', '#cmbDeliveryTerm'],
+             ['cropYearId', '#cmbCropYear'], ['packingTypeId', '#cmbPackingType']]
+                .forEach(function (p) {
+                    if (int(d[p[0]]) > 0) $(p[1]).val(int(d[p[0]])).trigger('change.select2');
+                });
+            // Setting CmbPaymentTerm.Value raises CmbPaymentTerm_ValueChanged on the desktop.
+            if (int(d.paymentTermId) > 0) $('#cmbPaymentTerm').val(int(d.paymentTermId)).trigger('change');
+        };
+        if (portalDefaults) { apply(); return; }
+        $.getJSON('/api/commission/dropdowns/config-defaults')
+            .done(function (d) { portalDefaults = d || {}; apply(); })
+            .fail(function () { portalDefaults = null; });
     }
 
     /** CalculateExpiryDate(): Delivery Start Date + Delivery Days. */
@@ -1535,7 +1583,7 @@
         $('#datDeliveryStartDate').val(today());
         calculateExpiryDate();
 
-        loadLookups().always(function () { loadNextDocNo(); });
+        loadLookups().always(function () { loadNextDocNo(); applyPortalDefaults(); });
 
         // ---- main tabs (Form / History) ----
         $(document).on('click', '.win-tab[data-maintab]', function () {
@@ -1625,17 +1673,20 @@
         });
 
         // ---- ship-to-address <-> deliver-to-party ----
+        // CmbDeliveryToParty_Leave (:841): rebind the addresses; a cleared party clears the
+        // Ship To Address COMBO. The free-text txtShipToAddress is never touched by the desktop.
         $('#cmbDeliveryToParty').on('change', function () {
             var partyId = int($(this).val());
             bindShipToAddresses(partyId);
-            if (partyId === 0) $('#txtShipToAddress').val('');
+            if (partyId === 0) $('#cmbShipToAddress').val('').trigger('change.select2');
         });
 
         $('#cmbShipToAddress').on('change', function () {
             var id = int($(this).val());
             var row = (LK.shipToAddresses || []).filter(function (r) { return int(r.Id) === id; })[0];
+            // CmbShipToAddress_Leave (:858) only back-fills the Deliver / Ship To Party. It does
+            // not write the address into txtShipToAddress, which is saved as ShipToAddress.
             if (row) {
-                $('#txtShipToAddress').val(row.AddressLine1 || '');
                 if (int(row.SupplierCustomerId) > 0) {
                     $('#cmbDeliveryToParty').val(row.SupplierCustomerId).trigger('change.select2');
                 }

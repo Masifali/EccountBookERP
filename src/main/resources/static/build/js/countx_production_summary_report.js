@@ -175,6 +175,7 @@
         return getJson(api + '/lookups').then(function (d) {
             branches = (d && d.branches) || [];
             show($id('noRateNote'), !(d && d.canSeeRateAndAmount));
+            gridBarRights(!!(d && d.canSeeRateAndAmount));
             renderBranches(d && d.defaultBranchId);
             return loadJobOrders();
         });
@@ -377,6 +378,16 @@
         }).join('');
     }
 
+    /** ctrlGrdBar over grdSummery (the shared GridBar, countx_grid_bar.js). Desktop quirk reproduced:
+     *  WITH the Rate right the bar's Field Chooser / Save Layout / Remove Layout are hidden;
+     *  WITHOUT it the Field Chooser is only disabled. */
+    function gridBarRights(canSeeRate) {
+        if (!window.GridBar) return;
+        window.GridBar.attach($id('tblValues'), null, canSeeRate
+            ? { showChooseFields: false, showSaveLayout: false, showRemoveLayout: false, canChooseFields: true }
+            : { showChooseFields: true, showSaveLayout: true, showRemoveLayout: true, canChooseFields: false });
+    }
+
     /**
      * The desktop groups these two by TransactionType with GroupTotals on, then hides the grouped
      * column. So the group header carries the value, the column itself is not drawn, and each
@@ -412,12 +423,14 @@
         var html = [];
         order.forEach(function (k) {
             var bucket = buckets[k];
-            html.push('<tr class="cx-group"><td colspan="' + cols.length + '">'
-                    + esc(k) + ' &nbsp;(' + bucket.length + ')</td></tr>');
+            /* tr.gb-group / tr[data-gb-member]: GridBar's Group Collapse / Group Expand. */
+            var gk = esc(k);
+            html.push('<tr class="cx-group gb-group" data-gb-group="' + gk + '"><td colspan="' + cols.length + '">'
+                    + gk + ' &nbsp;(' + bucket.length + ')</td></tr>');
             bucket.forEach(function (r) {
-                html.push('<tr>' + cols.map(function (c) { return cell(c, r[c]); }).join('') + '</tr>');
+                html.push('<tr data-gb-member="' + gk + '">' + cols.map(function (c) { return cell(c, r[c]); }).join('') + '</tr>');
             });
-            html.push('<tr class="cx-total">' + cols.map(function (c, i) {
+            html.push('<tr class="cx-total" data-gb-member="' + gk + '">' + cols.map(function (c, i) {
                 if (i === 0) return '<td>Total</td>';
                 if (!numeric(c)) return '<td></td>';
                 var t = 0;

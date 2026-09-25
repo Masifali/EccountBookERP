@@ -138,6 +138,42 @@ function r3(x) {
 
 function fmt(x) { return r3(x).toFixed(3).replace(/\.?0+$/, '') || '0'; }
 
+/* Local-calendar yyyy-MM-dd. toISOString() converts to UTC first, which at the site's UTC+5
+ * turns local midnight into the previous day - every computed date (expiry, due date, the new
+ * document's date) came out one day early. Same defect and fix as Buyer Inquiry (1050). */
+function ymd(d) {
+    var m = d.getMonth() + 1, day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+}
+function addDays(dateStr, days) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + (parseInt(days, 10) || 0));
+    return ymd(d);
+}
+/* A date as the API returns it: a DATE column arrives as "yyyy-MM-dd", a DATETIME column as an
+ * ISO instant in UTC ("...T19:00:00.000+00:00" for local midnight), sometimes epoch millis.
+ * Instants are converted to the local calendar day; a bare date is taken as is. */
+function dstr(v) {
+    if (v === undefined || v === null || v === '') return '';
+    if (typeof v === 'number') return ymd(new Date(v));
+    var t = String(v);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+    if (/T.*(Z|[+-]\d{2}:?\d{2})$/.test(t)) { var d = new Date(t); return isNaN(d.getTime()) ? t.slice(0, 10) : ymd(d); }
+    return t.slice(0, 10);
+}
+/* Read a column whatever casing the procedure gave it (DeliveryToPartyId vs deliveryToPartyId). */
+function col(row, name) {
+    if (!row) return undefined;
+    if (row[name] !== undefined) return row[name];
+    var lower = name.toLowerCase();
+    for (var k in row) { if (Object.prototype.hasOwnProperty.call(row, k) && k.toLowerCase() === lower) return row[k]; }
+    return undefined;
+}
+function colNum(row, name) { var n = parseFloat(col(row, name)); return isNaN(n) ? 0 : n; }
+function colInt(row, name) { var n = parseInt(col(row, name), 10); return isNaN(n) ? 0 : n; }
+function colStr(row, name) { var v = col(row, name); return v === undefined || v === null ? '' : String(v); }
+
 function message(text, isError) {
     var box = $('poMessage');
     if (!box) return;
@@ -433,9 +469,7 @@ function poCalculateExpiryDate() {
     var start = val('datDeliveryStartDate');
     if (!start) { $('datExpiryDate').value = ''; return; }
     var days = intOf('txtDeliveryDays');
-    var d = new Date(start + 'T00:00:00');
-    if (days > 0) d.setDate(d.getDate() + days);
-    $('datExpiryDate').value = d.toISOString().slice(0, 10);
+    $('datExpiryDate').value = days === 0 ? start : addDays(start, days);
 }
 
 /* payment term 1 or 3 -> due days 0 and locked; term 2 -> default 2  (:769 in
@@ -622,6 +656,7 @@ function poAddOrUpdateDetail() {
     clearDetailEntry();
     poCalcCommission();
     poCalcBrokery();
+    poPaymentAmountReCalculate();
 }
 
 function clearDetailEntry() {
@@ -677,6 +712,16 @@ function poDeleteDetail(i) {
     renderDetail();
     poCalcCommission();
     poCalcBrokery();
+    poPaymentAmountReCalculate();
+}
+
+/* PaymentAmountReCalculate (:1573-1592), called after every detail add/update/delete
+ * (:1737, :1913, :1989): each schedule row's Amount = %OfTotal x Sum(detail TotalAmount) / 100. */
+function poPaymentAmountReCalculate() {
+    var total = detailTotals().total;
+    if (!(total > 0) || !paymentRows.length) return;
+    paymentRows.forEach(function (r) { r.dueAmount = (+r.pctOfTotal || 0) * total / 100; });
+    renderPayment();
 }
 
 function detailTotals() {
@@ -770,8 +815,13 @@ function seedExpenseRows() {
     expenseRows.forEach(function (r) { existing[r.itemId] = r; });
     expenseRows = items.map(function (it) {
         var e = existing[it.Id];
+        /* ReadById (:3485-3500) writes the saved row's Id, SoId and SoExpenseId back onto the
+           seeded row, and Insert() re-sends SoId / SoExpenseId (:3053-3054). */
         return {
-            purchaseOrderExpenseDetailId: e ? e.purchaseOrderExpenseDetailId : 0,
+            purchaseOrderSupplierExpenseDetailId: e ? (e.purchaseOrderSupplierExpenseDetailId || 0) : 0,
+            saleOrderMasterId: e ? (e.saleOrderMasterId || 0) : 0,
+            saleOrderBuyerOtherExpenseDetailId: e ? (e.saleOrderBuyerOtherExpenseDetailId || 0) : 0,
+            saleOrderNo: e ? (e.saleOrderNo || '') : '',
             itemId: it.Id,
             otherItemName: it.OtherItemName || it.ItemName,
             qty: e ? e.qty : 0,
@@ -812,7 +862,7 @@ function renderSaleOrderMapping() {
     saleOrderMappings.forEach(function (m, i) {
         var tr = document.createElement('tr');
         tr.innerHTML =
-            '<td><button type="button" class="danger" onclick="saleOrderMappings.splice(' + i + ',1);renderSaleOrderMapping();">X</button></td>' +
+            '<td><button type="button" class="danger" onclick="poRemoveMapping(' + i + ')">X</button></td>' +
             '<td>' + esc(m.saleOrderNo || m.saleOrderMasterId) + '</td>' +
             '<td>' + esc(m.buyerName || m.buyerId) + '</td>' +
             '<td>' + esc(m.itemName || m.itemId) + '</td>' +
@@ -820,6 +870,29 @@ function renderSaleOrderMapping() {
             '<td>' + esc((m.validityDate || '').slice(0, 10)) + '</td>';
         body.appendChild(tr);
     });
+}
+
+/* DeleteSoMappingRow (:2644-2680): an unsaved row is simply dropped; a saved one is queued with
+ * actionTypeId = 3 (lstRemoveRecordMappingDetail) so the procedure soft-deletes it. Splicing it
+ * away, as before, left the stale mapping in the database after Update. */
+var removedMappings = [];
+function poRemoveMapping(i) {
+    var m = saleOrderMappings[i];
+    if (!m) return;
+    if (!confirm('Are you sure to Delete?')) return;
+    if (+m.purchaseOrderSaleOrderMappingId > 0) {
+        removedMappings.push({
+            purchaseOrderSaleOrderMappingId: +m.purchaseOrderSaleOrderMappingId,
+            actionTypeId: 3,
+            saleOrderMasterId: +m.saleOrderMasterId || 0,
+            saleOrderDetailId: +m.saleOrderDetailId || 0,
+            buyerId: +m.buyerId || 0,
+            itemId: +m.itemId || 0,
+            itemNetWeight: +m.itemNetWeight || 0
+        });
+    }
+    saleOrderMappings.splice(i, 1);
+    renderSaleOrderMapping();
 }
 
 /* amount = qty x rate on this grid only - that is what grdInvExp does on the
@@ -964,18 +1037,18 @@ function renderPayment() {
         var opts = '<option value="0">-- Select --</option>' + terms.map(function (t) {
             return '<option value="' + t.Id + '"' + (parseInt(t.Id, 10) === parseInt(r.paymentTermId, 10) ? ' selected' : '') + '>' + esc(t.TermsDescription) + '</option>';
         }).join('');
-        /* BaseDueDateTypeId drives the due date: 1 = document date + due days,
-           4 = the date typed in the row (frmPurchaseOrderCmagt.cs:3175) */
+        /* BaseDueDateTypeId drives the saved due date: 1 = document date + due days,
+           4 = the date typed in the row, anything else none (Insert():3176) */
         var baseOpts = viewComboOptions('PaymentBaseDate', r.baseDueDateTypeId);
         var tr = document.createElement('tr');
         tr.innerHTML =
             '<td><button type="button" class="danger" onclick="paymentRows.splice(' + i + ',1);renderPayment();">X</button></td>' +
             '<td><select onchange="paymentRows[' + i + '].paymentTermId=parseInt(this.value,10)||0;paymentRows[' + i + '].paymentTerm=this.selectedOptions[0].textContent;renderPayment()">' + opts + '</select></td>' +
-            '<td><input type="number" value="' + (r.dueDays || 0) + '" oninput="paymentRows[' + i + '].dueDays=parseInt(this.value,10)||0;recalcPaymentDueDate(' + i + ')"></td>' +
-            '<td><input type="date" value="' + esc(r.dueDate || '') + '" ' + (parseInt(r.baseDueDateTypeId, 10) === 4 ? '' : 'readonly') + ' onchange="paymentRows[' + i + '].dueDate=this.value"></td>' +
-            '<td><select onchange="paymentRows[' + i + '].baseDueDateTypeId=parseInt(this.value,10)||1;recalcPaymentDueDate(' + i + ')">' + baseOpts + '</select></td>' +
-            '<td><input type="number" step="0.001" value="' + (r.pctOfTotal || 0) + '" oninput="paymentRows[' + i + '].pctOfTotal=parseFloat(this.value)||0;renderPayment()"></td>' +
-            '<td><input type="number" step="0.001" value="' + (r.dueAmount || 0) + '" oninput="paymentRows[' + i + '].dueAmount=parseFloat(this.value)||0;renderPayment()"></td>';
+            '<td><input type="number" value="' + (r.dueDays || 0) + '" onchange="poPayCell(' + i + ',\'DueDays\',this.value)"></td>' +
+            '<td><input type="date" value="' + esc(r.dueDate || '') + '" ' + (parseInt(r.baseDueDateTypeId, 10) === 4 ? '' : 'readonly') + ' onchange="poPayCell(' + i + ',\'DueDate\',this.value)"></td>' +
+            '<td><select onchange="paymentRows[' + i + '].baseDueDateTypeId=parseInt(this.value,10)||0;renderPayment()">' + baseOpts + '</select></td>' +
+            '<td><input type="number" step="0.001" value="' + (r.pctOfTotal || 0) + '" onchange="poPayCell(' + i + ',\'%OfTotal\',this.value)"></td>' +
+            '<td><input type="number" step="0.001" value="' + (r.dueAmount || 0) + '" onchange="poPayCell(' + i + ',\'Amount\',this.value)"></td>';
         body.appendChild(tr);
     });
     $('totPct').textContent = fmt(paymentRows.reduce(function (s2, r) { return s2 + (+r.pctOfTotal || 0); }, 0));
@@ -983,17 +1056,45 @@ function renderPayment() {
     refreshScheduleDescription();
 }
 
+/* grdPaymentTerm_CellUpdated (:2479-2546), cell by cell. The base is Sum(detail TotalAmount),
+ * tax included. %OfTotal is capped at 100 and drives Amount (rounded 4); Amount may not exceed
+ * the order and drives %OfTotal (rounded 8); DueDays sets DueDate = doc date + days; a DueDate
+ * before the doc date is reset to it, otherwise it sets DueDays. */
+function poPayCell(i, key, value) {
+    var r = paymentRows[i];
+    if (!r) return;
+    if (!detailRows.length) { message('No Detail Record Found', true); renderPayment(); return; }
+    var total = detailTotals().total;
+    var doc = val('datDocDate');
+    if (key === '%OfTotal') {
+        var pc = parseFloat(value) || 0;
+        if (pc > 100) { message("%of Total Can't Greater than 100", true); pc = 100; }
+        r.pctOfTotal = pc;
+        r.dueAmount = Math.round(total * pc / 100 * 10000) / 10000;
+    } else if (key === 'Amount') {
+        var a = parseFloat(value) || 0;
+        if (total < a) { message('Amount Cant be Greater than Order Amount:' + total, true); a = 0; }
+        r.dueAmount = a;
+        r.pctOfTotal = total ? Math.round(a * 100 / total * 1e8) / 1e8 : 0;
+    } else if (key === 'DueDays') {
+        r.dueDays = parseInt(value, 10) || 0;
+        r.dueDate = addDays(doc, r.dueDays);
+    } else if (key === 'DueDate') {
+        if (value && doc && value < doc) {
+            r.dueDate = doc;
+            message("Due Date Can't less Than DocDate", true);
+        } else if (value) {
+            r.dueDate = value;
+            r.dueDays = Math.round((new Date(value + 'T00:00:00') - new Date(doc + 'T00:00:00')) / 86400000);
+        }
+    }
+    renderPayment();
+}
+
 function recalcPaymentDueDate(i) {
     var r = paymentRows[i];
     if (!r) return;
-    if (parseInt(r.baseDueDateTypeId, 10) === 1) {
-        var doc = val('datDocDate');
-        if (doc) {
-            var d = new Date(doc + 'T00:00:00');
-            d.setDate(d.getDate() + (parseInt(r.dueDays, 10) || 0));
-            r.dueDate = d.toISOString().slice(0, 10);
-        }
-    }
+    if (parseInt(r.baseDueDateTypeId, 10) === 1) r.dueDate = addDays(val('datDocDate'), r.dueDays);
     renderPayment();
 }
 
@@ -1015,6 +1116,10 @@ function refreshScheduleDescription() {
 
 /* formvalidation(), frmPurchaseOrderCmagt.cs:2845-2887, in the desktop's order
  * and with the desktop's exact messages (including the "Paymrnt" typo). */
+function ebTermId() {
+    return parseInt((document.querySelector('input[name="ebTerm"]:checked') || {}).value || '0', 10) || 0;
+}
+
 function poValidate() {
     if (!intOf('cmbCommissionAgent')) return 'Please Select Commission Agent / Broker';
     if (!intOf('cmbSupplierName')) return 'Please Select Supplier Name';
@@ -1035,20 +1140,30 @@ function poValidate() {
         if (!d.totalAmount) return 'Total Amount Field Required in row#' + n;
     }
 
-    /* weight-cut range per packing type, :3095-3105 */
-    for (var j = 0; j < emptyBagRows.length; j++) {
-        var e = emptyBagRows[j];
-        if (!e.packingTypeId) return 'PackingType filed required In Empty bags Grid row#' + (j + 1);
-        var range = packingTypeRange(e.packingTypeId);
-        if (range && (e.weightCutKg < range.min || e.weightCutKg > range.max)) {
-            return 'Weight Cut Should be in Range of: ' + range.min + ' to ' + range.max + ' For Packing Type:' + range.name;
+    /* Insert():3088-3105. Skipped entirely under "Bag FOC and Weight Cut Not Apply" (:3091) -
+       which is the default term, so the old unconditional range check refused a new document
+       with untouched zero weight cuts that the desktop saves. Otherwise the cut must be > 0 and
+       within the range of a SUBSTITUTED packing type: 1, 2 and 5 validate against themselves,
+       every other type against 2 (:3097-3102). */
+    if (ebTermId() !== 3) {
+        for (var j = 0; j < emptyBagRows.length; j++) {
+            var e = emptyBagRows[j];
+            var cut = +e.weightCutKg || 0;
+            if (cut <= 0) return 'WeightCut filed required In Empty bags Grid...';
+            var pt = parseInt(e.packingTypeId, 10) || 0;
+            var range = packingTypeRange((pt === 1 || pt === 2 || pt === 5) ? pt : 2);
+            if (range && (cut < range.min || cut > range.max)) {
+                return 'Weight Cut Should be in Range of: ' + range.min + ' to ' + range.max + '\nFor Packing Type:' + range.name;
+            }
         }
     }
 
-    /* packing-material rows need a rate, :3120-3123 */
+    /* :3108-3123 - a packing-material row counts only when BOTH its item and its packing type
+       are chosen (others are skipped, not refused); a counted row needs a rate. */
     for (var k = 0; k < emptyBagPmRows.length; k++) {
-        if (!emptyBagPmRows[k].packingTypeId) return 'PackingType filed required In Packing Material Grid row#' + (k + 1);
-        if (!(emptyBagPmRows[k].rate > 0)) return 'Rate filed required In Packing Material Grid row#' + (k + 1);
+        var pm = emptyBagPmRows[k];
+        if (!((+pm.emptyBagPackingMaterialItemId || 0) > 0 && (+pm.packingTypeId || 0) > 0)) continue;
+        if (!((+pm.rate || 0) > 0)) return 'Rate filed required In Empty bags Pm Grid...';
     }
 
     /* per payment row, :3175-3190 */
@@ -1063,7 +1178,7 @@ function poValidate() {
     var rows = buildPaymentRows();
     var paid = rows.reduce(function (s2, r) { return s2 + (+r.dueAmount || 0); }, 0);
     var pct = Math.round(rows.reduce(function (s2, r) { return s2 + (+r.pctOfTotal || 0); }, 0) * 10000) / 10000;
-    var detailSum = detailTotals().amount;
+    var detailSum = detailTotals().total;   /* DetailSumAmount += vd.TotalAmount (:3045) - tax included */
     if (Math.abs(paid - detailSum) > 0.3) {
         return 'Payment Detail Amount:' + fmt(paid) + ' Not Equal to Total Amount:' + fmt(detailSum);
     }
@@ -1116,18 +1231,115 @@ function paymentScheduleDescription(rows) {
 
 function buildPayload() {
     var recId = intOf('purchaseOrderMasterId');
+    var docDate = val('datDocDate');
 
-    var details = detailRows.map(function (r) {
-        var copy = Object.assign({}, r);
-        copy.actionTypeId = copy.purchaseOrderDetailId ? 2 : 1;
-        return copy;
-    }).concat(removedDetailRows);
+    /* FillDetailListCommonForInsertAndDelete (:2911-2932) - exactly the fields the desktop row
+       carries. Removed saved rows go FIRST with actionTypeId 3 and only on an update (:3009-3015);
+       grid rows follow, id kept only when RecId != 0 (:3019), actionTypeId = id <= 0 ? 1 : 2. */
+    function detailOut(r, keepId) {
+        var id = keepId ? (+r.purchaseOrderDetailId || 0) : 0;
+        return {
+            purchaseOrderDetailId: id,
+            actionTypeId: id <= 0 ? 1 : 2,
+            inventoryParentCategoryId: +r.inventoryParentCategoryId || 0,
+            itemId: +r.itemId || 0,
+            itemName: r.itemName || '',
+            cropYearId: +r.cropYearId || 0,
+            cropYear: r.cropYear || '',
+            packingTypeId: +r.packingTypeId || 0,
+            packUomId: +r.packUomId || 0,
+            itemQty: +r.itemQty || 0,
+            itemWeight: +r.itemWeight || 0,
+            itemRate: +r.itemRate || 0,
+            rateUomId: +r.rateUomId || 0,
+            itemAmount: +r.itemAmount || 0,
+            taxNameId: +r.taxNameId || 0,
+            taxPercent: +r.taxPercent || 0,
+            taxAmount: +r.taxAmount || 0,
+            totalAmount: +r.totalAmount || 0,
+            remarks: r.remarks || ''
+        };
+    }
+    var details = [];
+    if (recId > 0) {
+        removedDetailRows.forEach(function (r) {
+            var d = detailOut(r, true); d.actionTypeId = 3; details.push(d);
+        });
+    }
+    detailRows.forEach(function (r) { details.push(detailOut(r, recId !== 0)); });
+
+    /* :2995 then :3037-3040 - a blank header remark takes the detail rows' remarks in order. */
+    var remarksHeader = val('txtRemarks');
+    detailRows.forEach(function (r) { if (!String(remarksHeader || '').trim()) remarksHeader = r.remarks || ''; });
+
+    /* grdInvExp (:3048-3065): ItemId != 0 AND Amount > 0; a blank or "0" remark becomes
+       "Expense : <item>  Qty<qty>  @<rate>". */
+    var expenses = expenseRows.filter(function (r) { return (+r.itemId || 0) !== 0 && (+r.amount || 0) > 0; })
+        .map(function (r) {
+            var rem = String(r.remarks || '').trim();
+            if (rem === '0' || rem === '') rem = 'Expense : ' + (r.otherItemName || '') + '  Qty' + (+r.qty || 0) + '  @' + (+r.rate || 0);
+            return {
+                saleOrderMasterId: +r.saleOrderMasterId || 0,
+                saleOrderBuyerOtherExpenseDetailId: +r.saleOrderBuyerOtherExpenseDetailId || 0,
+                itemId: +r.itemId || 0,
+                otherItemName: r.otherItemName || '',
+                qty: +r.qty || 0,
+                rate: +r.rate || 0,
+                amount: +r.amount || 0,
+                remarks: rem
+            };
+        });
+
+    /* grdEmptyBags (:3088-3107): every row, entryTypeId 1. grdEmptyBagsPm (:3108-3125): only rows
+       with both item and packing type, entryTypeId 2. */
+    var ebRows = emptyBagRows.map(function (r) {
+        return { packingTypeId: +r.packingTypeId || 0, packingType: r.packingType || '',
+                 weightCutKg: +r.weightCutKg || 0, entryTypeId: 1 };
+    });
+    var ebPmRows = emptyBagPmRows.filter(function (r) {
+        return (+r.emptyBagPackingMaterialItemId || 0) > 0 && (+r.packingTypeId || 0) > 0;
+    }).map(function (r) {
+        return { packingTypeId: +r.packingTypeId || 0, packingType: r.packingType || '', rate: +r.rate || 0,
+                 emptyBagPackingMaterialItemId: +r.emptyBagPackingMaterialItemId || 0,
+                 emptyBagItem: r.emptyBagItem || '', entryTypeId: 2 };
+    });
+
+    /* :3170-3177 - DueDate = doc date + DueDays for base type 1, the row's own date for type 4,
+       otherwise none. */
+    var payments = buildPaymentRows().map(function (r) {
+        var base = parseInt(r.baseDueDateTypeId, 10) || 0;
+        return {
+            paymentTermId: +r.paymentTermId || 0,
+            paymentTerm: r.paymentTerm || '',
+            dueDays: +r.dueDays || 0,
+            pctOfTotal: +r.pctOfTotal || 0,
+            dueAmount: +r.dueAmount || 0,
+            baseDueDateTypeId: base,
+            dueDate: base === 1 ? addDays(docDate, r.dueDays) : (base === 4 ? (r.dueDate || null) : null)
+        };
+    });
+
+    /* grdSaleOrderMapping (:3226-3272), then the removed saved rows appended after validation
+       (:3302-3308). The server sets actionTypeId and, as the DAL does, the header and detail ids. */
+    var mappings = saleOrderMappings.map(function (m) {
+        return {
+            purchaseOrderSaleOrderMappingId: +m.purchaseOrderSaleOrderMappingId || 0,
+            saleOrderMasterId: +m.saleOrderMasterId || 0,
+            saleOrderDetailId: +m.saleOrderDetailId || 0,
+            buyerId: +m.buyerId || 0,
+            itemId: +m.itemId || 0,
+            itemName: m.itemName || '',
+            itemNetWeight: +m.itemNetWeight || 0,
+            validityDate: m.validityDate || ''
+        };
+    });
+    if (recId > 0) mappings = mappings.concat(removedMappings);
 
     return {
         purchaseOrderMasterId: recId,
         documentTypeId: 1052,
         docNo: intOf('txtDocNo'),
-        docDate: val('datDocDate'),
+        docDate: docDate,
         validityDate: val('datExpiryDate'),          /* desktop saves the computed expiry here */
         statusId: 1,
         commissionAgentId: intOf('cmbCommissionAgent'),
@@ -1138,32 +1350,25 @@ function buildPayload() {
         deliveryTermId: intOf('cmbDeliveryTerm'),
         deliveryDays: intOf('txtDeliveryDays'),
         deliveryStartDate: val('datDeliveryStartDate'),
-        remarksHeader: val('txtRemarks'),
+        remarksHeader: remarksHeader,
         companyId: intOf('cmbCompany'),
         branchId: intOf('cmbBranch'),
         isApproved: false,
         isWhtApplied: $('chkWithHoldingTaxApplied').checked,
         isSupplierOtherChargesAllowed: $('chkOtherExpenseAllowed').checked,
-        ebWeightDeductionTermId: parseInt((document.querySelector('input[name="ebTerm"]:checked') || {}).value || '3', 10),
+        ebWeightDeductionTermId: ebTermId(),         /* :3005 - 0 when no radio is set */
 
-        paymentScheduleDescription: paymentScheduleDescription(buildPaymentRows()),
-        purchaseOrderSupplierExpenseDetailDescription:
-            expenseDescription(expenseRows.filter(function (r) { return (+r.amount || 0) !== 0; })),
-        purchaseOrderEmptyBagDetailDescription:   emptyBagDescription(emptyBagRows),
-        purchaseOrderEmptyBagDetailDescriptionII: emptyBagPmDescription(emptyBagPmRows),
+        paymentScheduleDescription: paymentScheduleDescription(payments),
+        purchaseOrderSupplierExpenseDetailDescription: expenseDescription(expenses),
+        purchaseOrderEmptyBagDetailDescription:   emptyBagDescription(ebRows),
+        purchaseOrderEmptyBagDetailDescriptionII: emptyBagPmDescription(ebPmRows),
 
         purchaseOrderDetailList: details,
-        purchaseOrderSupplierExpenseDetailList: expenseRows.filter(function (r) { return (+r.amount || 0) !== 0; }),
-        /* :3111 - a packing-material row only counts when BOTH the packing type and the
-           material item are chosen; the desktop skips the row otherwise. Sending an
-           unfilled row would let the procedure write a zero-id child. */
-        purchaseOrderEmptyBagDetailList: emptyBagRows.concat(
-            emptyBagPmRows.filter(function (r) {
-                return (+r.emptyBagPackingMaterialItemId || 0) > 0 && (+r.packingTypeId || 0) > 0;
-            })),
+        purchaseOrderSupplierExpenseDetailList: expenses,
+        purchaseOrderEmptyBagDetailList: ebRows.concat(ebPmRows),
         purchaseOrderCommissionDetailList: buildCommissionRows(),
-        purchaseOrderPaymentDetailList: buildPaymentRows(),
-        purchaseOrderSaleOrderMappingList: saleOrderMappings
+        purchaseOrderPaymentDetailList: payments,
+        purchaseOrderSaleOrderMappingList: mappings
     };
 }
 
@@ -1205,13 +1410,7 @@ function buildPaymentRows() {
     /* :3193-3208 - one synthesized row: base type 1, due date = doc date + due days,
        100% of total, amount = the detail sum */
     var t = detailTotals();
-    var doc = val('datDocDate');
-    var due = '';
-    if (doc) {
-        var d = new Date(doc + 'T00:00:00');
-        d.setDate(d.getDate() + intOf('txtDueDays'));
-        due = d.toISOString().slice(0, 10);
-    }
+    var due = addDays(val('datDocDate'), intOf('txtDueDays'));
     return [{
         purchaseOrderPaymentDetailId: 0,
         paymentTermId: intOf('cmbPaymentTerm'),
@@ -1220,7 +1419,7 @@ function buildPaymentRows() {
         baseDueDateTypeId: 1,
         dueDate: due,
         pctOfTotal: 100,
-        dueAmount: r3(t.amount)
+        dueAmount: t.total           /* psD.dueAmount = DetailSumAmount = Sum(TotalAmount) (:3202) */
     }];
 }
 
@@ -1245,10 +1444,10 @@ function poSave() {
     })
         .then(function (r) { return r.json().catch(function () { return { success: r.ok }; }); })
         .then(function (data) {
-            if (data && data.success) {
+            if (data && (data.success === true || data.status === 'SUCCESS')) {
                 if (data.id) $('purchaseOrderMasterId').value = data.id;
                 message(isUpdate ? 'Update Successfully' : 'Save Successfully');
-                removedDetailRows = [];
+                removedDetailRows = []; removedMappings = [];
                 if ($('chkPreview') && $('chkPreview').checked) window.print();   /* chkPrint, :3332 */
                 poLoad(data.id || intOf('purchaseOrderMasterId'));
             } else {
@@ -1263,40 +1462,148 @@ function poLoad(id) {
     if (!id) return;
     setBusy(true);
     getJson(API + '/' + id)
-        .then(function (po) {
-            if (!po) { message('Record Not Found', true); return; }
-            $('purchaseOrderMasterId').value = po.purchaseOrderMasterId || id;
-            $('txtDocNo').value = po.docNo || '';
-            $('datDocDate').value = (po.docDate || '').slice(0, 10);
-            $('cmbCommissionAgent').value = po.commissionAgentId || 0;
-            $('cmbSupplierName').value = po.supplierId || 0;
-            $('cmbDeliveryToParty').value = po.deliveryToPartyId || 0;
+        .then(function (resp) {
+            /* GET /{id} answers { status, data } - the header and its seven lists are under data.
+               The page used to read the wrapper itself, so every field loaded blank. */
+            var po = resp && resp.data ? resp.data : null;
+            if (!po || (resp && resp.status === 'ERROR')) { message('Record Not Found', true); return; }
+            /* Keys are the procedure's column names (DeliveryToPartyId, ValidityDate,
+               EBWeightDeductionTermId, ItemAmount ...), so every read goes through col(). */
+            $('purchaseOrderMasterId').value = colInt(po, 'purchaseOrderMasterId') || id;
+            $('txtDocNo').value = colStr(po, 'docNo');
+            $('datDocDate').value = dstr(col(po, 'docDate'));
+            $('cmbCommissionAgent').value = colInt(po, 'commissionAgentId');
+            $('cmbSupplierName').value = colInt(po, 'supplierId');
+            $('cmbDeliveryToParty').value = colInt(po, 'DeliveryToPartyId');
             poDeliveryPartyChanged();
-            $('cmbShipToAddress').value = po.shipToAddressId || 0;
-            $('txtShipToAddress').value = po.shipToAddress || '';
-            $('cmbDeliveryTerm').value = po.deliveryTermId || 0;
-            $('txtDeliveryDays').value = po.deliveryDays || 0;
-            $('datDeliveryStartDate').value = (po.deliveryStartDate || '').slice(0, 10);
-            $('datExpiryDate').value = (po.validityDate || '').slice(0, 10);
-            $('txtRemarks').value = po.remarksHeader || '';
-            $('chkWithHoldingTaxApplied').checked = !!po.isWhtApplied;
-            $('chkOtherExpenseAllowed').checked = !!po.isSupplierOtherChargesAllowed;
+            if (colInt(po, 'shipToAddressId') > 0) $('cmbShipToAddress').value = colInt(po, 'shipToAddressId');
+            $('txtShipToAddress').value = colStr(po, 'ShipToAddress');
+            $('cmbDeliveryTerm').value = colInt(po, 'deliveryTermId');
+            $('txtDeliveryDays').value = colInt(po, 'deliveryDays');
+            $('datDeliveryStartDate').value = dstr(col(po, 'deliveryStartDate'));
+            $('datExpiryDate').value = dstr(col(po, 'ValidityDate'));
+            $('txtRemarks').value = colStr(po, 'remarksHeader');
+            $('chkWithHoldingTaxApplied').checked = !!col(po, 'isWhtApplied');
+            $('chkOtherExpenseAllowed').checked = !!col(po, 'isSupplierOtherChargesAllowed');
 
-            detailRows = po.purchaseOrderDetailList || [];
-            expenseRows = po.purchaseOrderSupplierExpenseDetailList || [];
-            var allBags = po.purchaseOrderEmptyBagDetailList || [];
-            emptyBagRows   = allBags.filter(function (b) { return parseInt(b.entryTypeId, 10) !== 2; });
-            emptyBagPmRows = allBags.filter(function (b) { return parseInt(b.entryTypeId, 10) === 2; });
-            paymentRows = po.purchaseOrderPaymentDetailList || [];
-            saleOrderMappings = po.purchaseOrderSaleOrderMappingList || [];
-            removedDetailRows = [];
+            /* ReadById :3421-3448 - commission (agentTypeId 1) and brokery (2) rows go back into
+               their header controls. Not restoring them meant an Update re-sent nothing, and
+               the procedure (which deletes the commission rows on update) lost them. */
+            ['txtCommRate', 'txtCommAmount', 'txtBrokeryRate', 'txtBrokeryAmount'].forEach(function (x) { $(x).value = 0; });
+            (col(po, 'purchaseOrderCommissionDetailList') || []).forEach(function (c) {
+                var t = colInt(c, 'agentTypeId');
+                var ids = t === 1 ? ['cmbCommissionAc', 'cmbCommType', 'txtCommRate', 'cmbCommUom', 'txtCommAmount']
+                        : t === 2 ? ['cmbBrokeryAc', 'cmbBrokeryType', 'txtBrokeryRate', 'cmbBrokeryRateUom', 'txtBrokeryAmount'] : null;
+                if (!ids) return;
+                $(ids[0]).value = colInt(c, 'commissionAgentId');
+                $(ids[1]).value = colInt(c, 'commissionTypeId');
+                $(ids[2]).value = colNum(c, 'commissionRate');
+                if (colInt(c, 'rateUomId') > 0) $(ids[3]).value = colInt(c, 'rateUomId');
+                $(ids[4]).value = colNum(c, 'commissionAmount');
+            });
 
-            seedExpenseRows(); seedEmptyBagRows();
-            renderDetail(); renderEmptyBagsPm(); renderPayment(); renderSaleOrderMapping();
-            if (po.ebWeightDeductionTermId) {
-                var rb = document.querySelector('input[name="ebTerm"][value="' + po.ebWeightDeductionTermId + '"]');
-                if (rb) rb.checked = true;
+            var eb = colInt(po, 'EBWeightDeductionTermId');
+            Array.prototype.forEach.call(document.querySelectorAll('input[name="ebTerm"]'), function (rb) {
+                rb.checked = parseInt(rb.value, 10) === eb;
+            });
+
+            detailRows = (col(po, 'purchaseOrderDetailList') || []).map(function (d) {
+                return {
+                    purchaseOrderDetailId: colInt(d, 'purchaseOrderDetailId'),
+                    actionTypeId: 0,
+                    inventoryParentCategoryId: colInt(d, 'inventoryParentCategoryId'),
+                    parentItemName: colStr(d, 'inventoryParentCategory'),
+                    itemId: colInt(d, 'itemId'),
+                    itemName: colStr(d, 'ItemName'),
+                    cropYearId: colInt(d, 'cropYearId'),
+                    cropYear: colStr(d, 'cropYear'),
+                    packingTypeId: colInt(d, 'packingTypeId'),
+                    packingType: colStr(d, 'PackingType'),
+                    packUomId: colInt(d, 'packUomId'),
+                    packUomCode: colStr(d, 'PackUomCode'),
+                    packUomEquivalent: colNum(d, 'PackUomEquivalent'),
+                    itemQty: colNum(d, 'itemQty'),
+                    itemWeight: colNum(d, 'itemWeight'),
+                    itemRate: colNum(d, 'itemRate'),
+                    rateUomId: colInt(d, 'rateUomId'),
+                    rateUomCode: colStr(d, 'RateUomCode'),
+                    itemAmount: colNum(d, 'ItemAmount'),
+                    taxNameId: colInt(d, 'TaxNameId'),
+                    taxName: colStr(d, 'TaxName'),
+                    taxPercent: colNum(d, 'TaxPercent'),
+                    taxAmount: colNum(d, 'TaxAmount'),
+                    totalAmount: colNum(d, 'TotalAmount'),
+                    remarks: colStr(d, 'remarks')
+                };
+            });
+            expenseRows = (col(po, 'purchaseOrderSupplierExpenseDetailList') || []).map(function (x) {
+                return {
+                    purchaseOrderSupplierExpenseDetailId: colInt(x, 'purchaseOrderSupplierExpenseDetailId'),
+                    saleOrderMasterId: colInt(x, 'saleOrderMasterId'),
+                    saleOrderBuyerOtherExpenseDetailId: colInt(x, 'saleOrderBuyerOtherExpenseDetailId'),
+                    saleOrderNo: colStr(x, 'SaleOrderNo'),
+                    itemId: colInt(x, 'ItemId'),
+                    otherItemName: colStr(x, 'OtherItemName'),
+                    qty: colNum(x, 'Qty'),
+                    rate: colNum(x, 'rate'),
+                    amount: colNum(x, 'amount'),
+                    remarks: colStr(x, 'remarks')
+                };
+            });
+            /* :3469-3484 - the two empty-bag grids show the SAVED rows, split by entryTypeId; they
+               are not re-seeded from the allocated packing types. */
+            var allBags = (col(po, 'purchaseOrderEmptyBagDetailList') || []).map(function (b) {
+                return {
+                    purchaseOrderEmptyBagDetailId: colInt(b, 'purchaseOrderEmptyBagDetailId'),
+                    entryTypeId: colInt(b, 'entryTypeId'),
+                    packingTypeId: colInt(b, 'PackingTypeId'),
+                    packingType: colStr(b, 'PackingType'),
+                    weightCutKg: colNum(b, 'weightCutKg'),
+                    rate: colNum(b, 'Rate'),
+                    emptyBagPackingMaterialItemId: colInt(b, 'emptyBagPackingMaterialItemId'),
+                    emptyBagItem: colStr(b, 'EmptyBagItem'),
+                    saleOrderMasterId: colInt(b, 'saleOrderMasterId'),
+                    saleOrderNo: colStr(b, 'SaleOrderNo')
+                };
+            });
+            emptyBagRows   = allBags.filter(function (b) { return b.entryTypeId === 1; });
+            emptyBagPmRows = allBags.filter(function (b) { return b.entryTypeId === 2; });
+            paymentRows = (col(po, 'purchaseOrderPaymentDetailList') || []).map(function (x) {
+                return {
+                    purchaseOrderPaymentDetailId: colInt(x, 'purchaseOrderPaymentDetailId'),
+                    paymentTermId: colInt(x, 'PaymentTermId'),
+                    paymentTerm: colStr(x, 'PaymentTerm'),
+                    dueDays: colInt(x, 'DueDays'),
+                    pctOfTotal: colNum(x, 'pctOfTotal'),
+                    dueAmount: colNum(x, 'dueAmount'),
+                    baseDueDateTypeId: colInt(x, 'BaseDueDateTypeId'),
+                    dueDate: dstr(col(x, 'DueDate'))
+                };
+            });
+            /* :3505-3510 - a single schedule row also goes back into the header term / due days. */
+            if (paymentRows.length === 1) {
+                $('cmbPaymentTerm').value = paymentRows[0].paymentTermId;
+                $('txtDueDays').value = paymentRows[0].dueDays;
             }
+            saleOrderMappings = (col(po, 'purchaseOrderSaleOrderMappingList') || []).map(function (m) {
+                return {
+                    purchaseOrderSaleOrderMappingId: colInt(m, 'purchaseOrderSaleOrderMappingId'),
+                    saleOrderMasterId: colInt(m, 'saleOrderMasterId'),
+                    saleOrderDetailId: colInt(m, 'saleOrderDetailId'),
+                    saleOrderNo: colStr(m, 'SaleOrderNo'),
+                    buyerId: colInt(m, 'buyerId'),
+                    buyerName: colStr(m, 'BuyerName'),
+                    itemId: colInt(m, 'itemId'),
+                    itemName: colStr(m, 'ItemName'),
+                    itemNetWeight: colNum(m, 'itemNetWeight'),
+                    validityDate: dstr(col(m, 'ValidityDate'))
+                };
+            });
+            removedDetailRows = [];
+            removedMappings = [];
+
+            seedExpenseRows();
+            renderDetail(); renderEmptyBags(); renderEmptyBagsPm(); renderPayment(); renderSaleOrderMapping();
             $('btnUpdate').disabled = false;
             $('btnDelete').disabled = false;
             $('btnSave').disabled = true;
@@ -1337,11 +1644,11 @@ function poLoadHistory() {
                 tr.onclick = function () { poLoad(id); };
                 tr.innerHTML =
                     '<td><a href="#" onclick="event.preventDefault();poLoad(' + id + ')">' + esc(r.docNo || r.DocNo) + '</a></td>' +
-                    '<td>' + esc((r.docDate || r.DocDate || '').slice(0, 10)) + '</td>' +
+                    '<td>' + esc(dstr(r.docDate || r.DocDate)) + '</td>' +
                     '<td>' + esc(r.supplierName || r.SupplierName) + '</td>' +
                     '<td>' + esc(r.commissionAgentName || r.CommissionAgentName) + '</td>' +
-                    '<td>' + esc(r.deliveryToParty || r.DeliveryToParty) + '</td>' +
-                    '<td>' + esc((r.validityDate || r.ValidityDate || '').slice(0, 10)) + '</td>' +
+                    '<td>' + esc(r.DeliveryToPartyName || r.deliveryToPartyName) + '</td>' +   /* FormHistory column */
+                    '<td>' + esc(dstr(r.ValidityDate || r.validityDate)) + '</td>' +
                     '<td>' + esc(r.status || r.Status) + '</td>' +
                     '<td>' + esc(r.entryUserName || r.EntryUserName) + '</td>';
                 body.appendChild(tr);
@@ -1357,12 +1664,12 @@ function poNew() {
     $('purchaseOrderMasterId').value = 0;
     $('txtDocNo').value = '';
     detailRows = []; expenseRows = []; emptyBagRows = []; emptyBagPmRows = []; paymentRows = [];
-    saleOrderMappings = []; removedDetailRows = [];
+    saleOrderMappings = []; removedDetailRows = []; removedMappings = [];
     selectedIdx = 0; editingIdx = -1;
     ['txtShipToAddress', 'txtRemarks', 'txtPaymentScheduleRemarks', 'txtRemarksDetail'].forEach(function (id) { $(id).value = ''; });
     ['txtCommRate', 'txtCommAmount', 'txtBrokeryRate', 'txtBrokeryAmount'].forEach(function (id) { $(id).value = 0; });
     clearDetailEntry();
-    var today = new Date().toISOString().slice(0, 10);
+    var today = ymd(new Date());
     $('datDocDate').value = today;
     $('datDeliveryStartDate').value = today;
     $('txtDeliveryDays').value = 1;

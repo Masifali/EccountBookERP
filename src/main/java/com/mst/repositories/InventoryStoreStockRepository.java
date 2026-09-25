@@ -13,28 +13,14 @@ public class InventoryStoreStockRepository {
  private final JdbcTemplate jdbc;
  public InventoryStoreStockRepository(JdbcTemplate jdbc){this.jdbc=jdbc;}
  public List<Map<String,Object>> branches(UserAccount u){
-  /* Three fallbacks, and every one of them used to swallow its exception, so "the procedure
-     failed" and "this company has no branches" both arrived at the screen as an empty list and
-     select2 said "No results found" either way. Each step now says what happened. Behaviour is
-     unchanged - the same list is returned - but a failure is no longer invisible.
-
-     Note the last fallback reads Branches with NO OrganizationId/CompanyId filter at all, i.e.
-     every tenant's branches. Left in place because removing a fallback changes which branches the
-     screen offers, but it is flagged: see the note in the project docs. */
+  /* A failure of the branch procedure is logged, not swallowed. */
   List<Map<String,Object>> list = new ArrayList<>();
   try {
       list = jdbc.queryForList("EXEC dbo.USP_GetBranchsAllocatedToUser @OrganizationId=?, @CompanyId=?, @UserId=?",u.getOrganizationId(),u.getCompanyId(),u.getId());
       if (list.isEmpty()) LOG.info("USP_GetBranchsAllocatedToUser returned no branches for user {} (org {}, company {})",u.getId(),u.getOrganizationId(),u.getCompanyId());
   } catch (Exception e) { LOG.warn("USP_GetBranchsAllocatedToUser failed for user {}",u.getId(),e); }
-  if (list.isEmpty()) {
-      try { list = jdbc.queryForList("EXEC dbo.USP_GetBranchesFromVouchersByAccountId @OrganizationId=?, @CompanyId=?",u.getOrganizationId(),u.getCompanyId()); }
-      catch (Exception e) { LOG.warn("USP_GetBranchesFromVouchersByAccountId fallback failed",e); }
-  }
-  if (list.isEmpty()) {
-      try { list = jdbc.queryForList("SELECT ID as Id, BranchName FROM Branches"); }
-      catch (Exception e) { LOG.warn("Branches table fallback failed",e); }
-      if (list.isEmpty()) LOG.warn("No branches from ANY of the three sources - the Branch Name picker will show 'No results found'");
-  }
+  /* frmStockReportWithValuesForStore.cs:251-277 uses only USP_GetBranchsAllocatedToUser. The former
+     fallbacks (vouchers, then the whole Branches table with no company filter) are removed. */
   for (Map<String, Object> map : list) {
       Object id = map.get("Id") != null ? map.get("Id") : (map.get("id") != null ? map.get("id") : (map.get("BranchId") != null ? map.get("BranchId") : map.get("branchId")));
       Object name = map.get("BranchName") != null ? map.get("BranchName") : (map.get("branchName") != null ? map.get("branchName") : (map.get("Name") != null ? map.get("Name") : map.get("name")));

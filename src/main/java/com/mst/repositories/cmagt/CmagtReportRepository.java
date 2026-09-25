@@ -2,121 +2,61 @@ package com.mst.repositories.cmagt;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * Commission Trading reports - the five desktop report procedures and their filter-combo
+ * procedures, executed with EXACTLY the parameters the desktop BLL adds.
+ *
+ * The desktop BLL builds a List<SqlParameter> and only adds an optional parameter when it has a
+ * value (e.g. `if (obj.ItemId != 0)`), so an omitted parameter falls back to the procedure's own
+ * default. That matters here: @Activity defaults to 'Detail' in the four [cmagt] procedures, and
+ * SimpleJdbcCall (used before) binds every metadata parameter it is not given as NULL, which is
+ * not the same thing. The call is therefore built as a named-parameter EXEC containing only the
+ * entries the service put in the map, in the BLL's order.
+ *
+ * GenericProvider.GetDataTableProc fills a DataTable from the FIRST result set; queryForList does
+ * the same.
+ */
 @Repository
 public class CmagtReportRepository {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-
-    public List<Map<String, Object>> getSaleOrderReport(Integer companyId, Integer organizationId, String fromDate, String toDate, Integer buyerId, Integer agentId) {
-        SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate)
-                .withSchemaName("cmagt")
-                .withProcedureName("USP_saleOrderMaster_Report");
-
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        /* The controller passes the session's own values. The ': 1' fallbacks that
-           used to sit here would have quietly widened a read to company 1 if one
-           ever arrived null, hiding the fault instead of surfacing it. */
-        params.addValue("CompanyId", companyId);
-        params.addValue("OrganizationId", organizationId);
-        params.addValue("FromDate", parseDate(fromDate));
-        params.addValue("ToDate", parseDate(toDate));
-        if (buyerId != null && buyerId > 0) params.addValue("BuyerId", buyerId);
-        if (agentId != null && agentId > 0) params.addValue("CommissionAgentId", agentId);
-
-        Map<String, Object> out = call.execute(params);
-        return extractList(out);
-    }
-
-    public List<Map<String, Object>> getPurchaseOrderReport(Integer companyId, Integer organizationId, String fromDate, String toDate, Integer supplierId, Integer agentId) {
-        SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate)
-                .withSchemaName("cmagt")
-                .withProcedureName("USP_purchaseOrderMaster_Report");
-
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId);
-        params.addValue("OrganizationId", organizationId);
-        params.addValue("FromDate", parseDate(fromDate));
-        params.addValue("ToDate", parseDate(toDate));
-        if (supplierId != null && supplierId > 0) params.addValue("SupplierId", supplierId);
-        if (agentId != null && agentId > 0) params.addValue("CommissionAgentId", agentId);
-
-        Map<String, Object> out = call.execute(params);
-        return extractList(out);
-    }
-
-    public List<Map<String, Object>> getGrnSupplierLoadingReport(Integer companyId, Integer organizationId, String fromDate, String toDate, Integer supplierId) {
-        SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate)
-                .withSchemaName("cmagt")
-                .withProcedureName("USP_grnSupplierLoadingMaster_Report");
-
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId);
-        params.addValue("OrganizationId", organizationId);
-        params.addValue("FromDate", parseDate(fromDate));
-        params.addValue("ToDate", parseDate(toDate));
-        if (supplierId != null && supplierId > 0) params.addValue("SupplierId", supplierId);
-
-        Map<String, Object> out = call.execute(params);
-        return extractList(out);
-    }
-
-    public List<Map<String, Object>> getGdnBuyerDispatchReport(Integer companyId, Integer organizationId, String fromDate, String toDate, Integer buyerId) {
-        SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate)
-                .withSchemaName("cmagt")
-                .withProcedureName("USP_gdnBuyerDispatchMaster_Report");
-
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId);
-        params.addValue("OrganizationId", organizationId);
-        params.addValue("FromDate", parseDate(fromDate));
-        params.addValue("ToDate", parseDate(toDate));
-        if (buyerId != null && buyerId > 0) params.addValue("BuyerId", buyerId);
-
-        Map<String, Object> out = call.execute(params);
-        return extractList(out);
-    }
-
-    public List<Map<String, Object>> getAgentTradeBillRegister(Integer companyId, Integer organizationId, String fromDate, String toDate, Integer agentId) {
-        SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("USP_CommissionAgentTrade_Register");
-
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("CompanyId", companyId);
-        params.addValue("OrganizationId", organizationId);
-        params.addValue("FromDate", parseDate(fromDate));
-        params.addValue("ToDate", parseDate(toDate));
-        if (agentId != null && agentId > 0) params.addValue("CommissionAgentId", agentId);
-
-        Map<String, Object> out = call.execute(params);
-        return extractList(out);
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<Map<String, Object>> extractList(Map<String, Object> out) {
-        for (Object val : out.values()) {
-            if (val instanceof List) {
-                return (List<Map<String, Object>>) val;
-            }
+    /** Runs {@code proc} with the given named parameters (names without '@'); nothing else is sent. */
+    public List<Map<String, Object>> exec(String proc, LinkedHashMap<String, Object> params) {
+        StringBuilder sql = new StringBuilder("EXEC ").append(proc);
+        List<Object> args = new ArrayList<>();
+        boolean first = true;
+        for (Map.Entry<String, Object> e : params.entrySet()) {
+            sql.append(first ? " " : ", ").append('@').append(e.getKey()).append("=?");
+            args.add(e.getValue());
+            first = false;
         }
-        return Collections.emptyList();
+        return jdbcTemplate.queryForList(sql.toString(), args.toArray());
     }
 
-    private Date parseDate(String dateStr) {
-        if (dateStr == null || dateStr.trim().isEmpty()) return new Date();
+    /**
+     * GlobalVariables_Helper.GetConfigValueFromGlobal(description) - the same procedure/activity the
+     * other ported screens use (SaleOrderHistoryLookupsRepository.config). Empty string when unset.
+     */
+    public String config(int organizationId, int companyId, String description) {
         try {
-            return DATE_FORMAT.parse(dateStr);
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, "
+                            + "@ConfigDescription=?, @DefinitionIds=?, @Activity=?",
+                    organizationId, companyId, description, null,
+                    "GetConfigurationByOrgCompandConfigDescription");
+            Object v = rows.isEmpty() ? null : rows.get(0).get("ConfigKey");
+            return v == null ? "" : String.valueOf(v).trim();
         } catch (Exception e) {
-            return new Date();
+            return "";
         }
     }
 }

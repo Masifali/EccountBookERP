@@ -72,7 +72,7 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label font-weight-bold">Buyer Name</label>
+                            <label class="form-label font-weight-bold">Customer (Buyer)</label>
                             <select class="form-select form-select-sm search-select" id="buyerId">
                                 <option value="0">-- Select Buyer --</option>
                             </select>
@@ -89,7 +89,7 @@
                             <input type="text" class="form-control form-control-sm" id="remarksHeader">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label font-weight-bold">Net Amount</label>
+                            <label class="form-label font-weight-bold">Total Item Amount</label>
                             <input type="number" step="0.01" class="form-control form-control-sm" id="netAmount" value="0.00" readonly>
                         </div>
                     </div>
@@ -169,17 +169,29 @@
                         <table class="grid-table" id="gridHistory" style="width: 100%;">
                             <thead>
                                 <tr>
+                                    <!-- HistoryGridFill (desktop 5943-6039) column set -->
                                     <th>Doc No</th>
+                                    <th>Branch Sr No</th>
                                     <th>Doc Date</th>
-                                    <th>Supplier Name</th>
-                                    <th>Buyer Name</th>
-                                    <th>Commission Agent</th>
-                                    <th>Net Amount</th>
+                                    <th>Supplier</th>
+                                    <th>Customer</th>
+                                    <th>Ref Doc Nos</th>
+                                    <th>Vehicle Nos</th>
+                                    <th>Pur Delivery Term</th>
+                                    <th>Sale Delivery Term</th>
+                                    <th>Purchase Bill Amount</th>
+                                    <th>Sale Bill Amount</th>
+                                    <th>P/L Amount</th>
                                     <th>Remarks</th>
+                                    <th>Entry User</th>
+                                    <th>Entry Date</th>
+                                    <th>Modify User</th>
+                                    <th>Modify Date</th>
+                                    <th>Attachments</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td colspan="7" class="text-center text-muted">Click Search to load history.</td></tr>
+                                <tr><td colspan="18" class="text-center text-muted">Click Search to load history.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -203,7 +215,44 @@
         $('#btnUpdate').on('click', function() { saveOrder(true); });
         $('#btnNew').on('click', resetForm);
         $('#btnLoadHistory').on('click', fetchHistory);
+        $('#btnDelete').on('click', deleteRecord);
+        fillDocNos();
     });
+
+    /* Procedure result sets arrive with the database's own column casing (Id, DocNo, ...). */
+    function pick(o, key) {
+        if (!o) return undefined;
+        if (key in o) return o[key];
+        const k = Object.keys(o).find(x => x.toLowerCase() === key.toLowerCase());
+        return k === undefined ? undefined : o[k];
+    }
+    function esc(v) {
+        return (v === null || v === undefined) ? '' : String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function d10(v) { return v ? String(v).substring(0, 10) : ''; }
+
+    /* DocumentNoDbCall / BranchSrNoDbCall. */
+    function fillDocNos() {
+        $.get('/api/commission/trade-bill-against-gdn/generate-no', function(r) {
+            if (r && r.docNo) $('#docNo').val(r.docNo);
+        });
+    }
+
+    /* BtnDelete_Click -> DeleteByID. */
+    function deleteRecord() {
+        const id = parseInt($('#billId').val()) || 0;
+        if (id === 0) { alert('Record Id Not Found'); return; }
+        if (!confirm('Are you sure to Delete?')) return;
+        $.ajax({
+            url: `/api/commission/trade-bill-against-gdn/${id}`,
+            type: 'DELETE',
+            success: function(res) {
+                if (res && res.status === 'SUCCESS') { alert('Delete Record Successfully'); resetForm(); }
+                else alert((res && res.message) || 'Delete failed.');
+            },
+            error: function() { alert('Server error while deleting.'); }
+        });
+    }
 
     function setDefaultDates() {
         const today = new Date().toISOString().split('T')[0];
@@ -254,7 +303,7 @@
             tbody.append(`
                 <tr>
                     <td>${idx + 1}</td>
-                    <td>${r.itemName}</td>
+                    <td>${esc(r.itemName)}</td>
                     <td>${r.weight}</td>
                     <td>${r.qty}</td>
                     <td>${r.rate}</td>
@@ -350,28 +399,46 @@
     }
 
     function fetchHistory() {
+        /* A blank date is omitted - the desktop omits an unchecked date picker. */
+        const q = [];
         const fromDate = $('#histFromDate').val();
         const toDate = $('#histToDate').val();
-        $.get(`/api/commission/trade-bill-against-gdn/history?fromDate=${fromDate}&toDate=${toDate}`, function(data) {
+        if (fromDate) q.push('fromDate=' + encodeURIComponent(fromDate));
+        if (toDate) q.push('toDate=' + encodeURIComponent(toDate));
+        $.get('/api/commission/trade-bill-against-gdn/history' + (q.length ? '?' + q.join('&') : ''), function(data) {
             const tbody = $('#gridHistory tbody');
             tbody.empty();
             if (!data || data.length === 0) {
-                tbody.append('<tr><td colspan="7" class="text-center text-muted">No history records found.</td></tr>');
+                tbody.append('<tr><td colspan="18" class="text-center text-muted">No history records found.</td></tr>');
                 return;
             }
             data.forEach(r => {
+                const id = parseInt(pick(r, 'Id')) || 0;
                 tbody.append(`
                     <tr>
-                        <td><span class="clickable-code" onclick="loadRecord(${r.id})">${r.docNo || r.id}</span></td>
-                        <td>${r.docDate ? r.docDate.substring(0, 10) : ''}</td>
-                        <td>${r.supplierName || ''}</td>
-                        <td>${r.buyerName || ''}</td>
-                        <td>${r.commissionAgentName || ''}</td>
-                        <td>${r.netAmount || 0}</td>
-                        <td>${r.remarksHeader || ''}</td>
+                        <td><span class="clickable-code" onclick="loadRecord(${id})">${esc(pick(r, 'DocNo'))}</span></td>
+                        <td>${esc(pick(r, 'BranchSrNo'))}</td>
+                        <td>${d10(pick(r, 'DocDate'))}</td>
+                        <td>${esc(pick(r, 'SupplierName'))}</td>
+                        <td>${esc(pick(r, 'CustomerName'))}</td>
+                        <td>${esc(pick(r, 'RefDocNos'))}</td>
+                        <td>${esc(pick(r, 'VehicleNos'))}</td>
+                        <td>${esc(pick(r, 'DeliveryTerm'))}</td>
+                        <td>${esc(pick(r, 'DeliveryTermSale'))}</td>
+                        <td>${esc(pick(r, 'PurchaseBillAmount'))}</td>
+                        <td>${esc(pick(r, 'SaleBillAmount'))}</td>
+                        <td>${esc(pick(r, 'PLAmount'))}</td>
+                        <td>${esc(pick(r, 'RemarksHeader'))}</td>
+                        <td>${esc(pick(r, 'EntryUserName'))}</td>
+                        <td>${d10(pick(r, 'EnteryDate'))}</td>
+                        <td>${esc(pick(r, 'ModifyUserName'))}</td>
+                        <td>${d10(pick(r, 'ModifyDate'))}</td>
+                        <td>${esc(pick(r, 'NoOfAttachments'))}</td>
                     </tr>
                 `);
             });
+        }).fail(function(x) {
+            alert((x.responseJSON && x.responseJSON.message) || 'Server error while loading history.');
         });
     }
 
@@ -379,16 +446,24 @@
         $.get(`/api/commission/trade-bill-against-gdn/${id}`, function(res) {
             if (res.status === 'SUCCESS' && res.data) {
                 const d = res.data;
-                $('#billId').val(d.id);
-                $('#docNo').val(d.docNo);
-                if (d.docDate) $('#docDate').val(d.docDate.substring(0, 10));
-                $('#supplierId').val(d.supplierId || 0);
-                $('#buyerId').val(d.buyerId || 0);
-                $('#commissionAgentId').val(d.commissionAgentId || 0);
-                $('#netAmount').val(d.netAmount || 0);
-                $('#remarksHeader').val(d.remarksHeader || '');
+                $('#billId').val(pick(d, 'Id'));
+                $('#docNo').val(pick(d, 'DocNo'));
+                if (pick(d, 'DocDate')) $('#docDate').val(d10(pick(d, 'DocDate')));
+                $('#supplierId').val(pick(d, 'SupplierId') || 0);
+                $('#buyerId').val(pick(d, 'CustomerId') || 0);
+                $('#commissionAgentId').val(pick(d, 'CommissionAgentId') || 0);
+                $('#remarksHeader').val(pick(d, 'RemarksHeader') || '');
 
-                detailRows = d.invCommAgentTradeBillDetailslist || [];
+                /* ReadByHeaderId_InvCommAgentTradeBillDetail row -> this grid's row shape
+                   (purchase side: BillWeight, RatePurchase, ItemAmount). */
+                detailRows = (pick(d, 'InvCommAgentTradeBillDetailslist') || []).map(r => ({
+                    itemId: pick(r, 'ItemId'),
+                    itemName: pick(r, 'ItemName'),
+                    weight: parseFloat(pick(r, 'BillWeight')) || 0,
+                    qty: parseFloat(pick(r, 'Qty')) || 0,
+                    rate: parseFloat(pick(r, 'RatePurchase')) || 0,
+                    amount: parseFloat(pick(r, 'ItemAmount')) || 0
+                }));
                 renderDetailGrid();
 
                 $('#btnSave').prop('disabled', true);
@@ -396,6 +471,8 @@
                 $('#btnDelete').prop('disabled', false);
 
                 $('#tab-form-link').tab('show');
+            } else {
+                alert((res && res.message) || 'Record not found');
             }
         });
     }
@@ -417,6 +494,7 @@
         $('#btnSave').prop('disabled', false);
         $('#btnUpdate').prop('disabled', true);
         $('#btnDelete').prop('disabled', true);
+        fillDocNos();
     }
 </script>
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>

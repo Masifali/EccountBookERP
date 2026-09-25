@@ -86,14 +86,9 @@
                             <label class="form-label font-weight-bold">Bilty No</label>
                             <input type="text" class="form-control form-control-sm" id="biltyNo">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label font-weight-bold">Driver Name</label>
-                            <input type="text" class="form-control form-control-sm" id="driverName">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label font-weight-bold">Driver Mobile No</label>
-                            <input type="text" class="form-control form-control-sm" id="driverMobileNo">
-                        </div>
+                        <!-- Driver Name / Driver Mobile No removed: neither exists on
+                             frmGoodsDispatchingNoteCmagt nor in USP_gdnBuyerDispatchMaster_InsertAndUpdate. -->
+                        <input type="hidden" id="grnDate" value="">
 
 
                         <!-- ==========================================================================
@@ -262,11 +257,11 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>GRN No</th>
                                     <th>Item Name</th>
-                                    <th>Weight</th>
-                                    <th>Qty</th>
-                                    <th>Rate</th>
-                                    <th>Amount</th>
+                                    <th>Loading Qty</th>
+                                    <th>Gross Weight</th>
+                                    <th>Net Bill Weight</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -307,7 +302,7 @@
                                     <th>Commission Agent</th>
                                     <th>Vehicle No</th>
                                     <th>Bilty No</th>
-                                    <th>Driver Name</th>
+                                    <th>Transporter</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -323,6 +318,27 @@
 
 <script layout:fragment="script">
     let detailRows = [];
+    /* The master procedure's update branch DELETES the empty-bag and expense rows and the DAL
+       re-inserts whatever the payload carries, so a loaded document must send them back. */
+    let emptyBagRows = [];
+    let expenseRows = [];
+
+    /* The header as read back, so a combo whose list lacks the stored id (e.g. Ship To
+       Address, which no list fills yet) posts the stored id instead of wiping it to 0. */
+    let loadedHeader = null;
+    function comboVal(el, col) {
+        const v = $('#' + el).val();
+        if (v === null || v === undefined) return parseInt(pick(loadedHeader, col)) || 0;
+        return parseInt(v) || 0;
+    }
+
+    function pick(o, k) {
+        if (!o) return undefined;
+        if (o[k] !== undefined) return o[k];
+        const lk = k.toLowerCase();
+        for (const key in o) if (key.toLowerCase() === lk) return o[key];
+        return undefined;
+    }
 
     $(document).ready(function() {
         setDefaultDates();
@@ -334,8 +350,33 @@
         $('#btnSave').on('click', function() { saveOrder(false); });
         $('#btnUpdate').on('click', function() { saveOrder(true); });
         $('#btnNew').on('click', resetForm);
+        $('#btnDelete').on('click', deleteRecord);
         $('#btnLoadHistory').on('click', fetchHistory);
+        loadDocNo();
     });
+
+    /* GenerateCode (:677) - the procedure re-numbers on insert; this is the preview. */
+    function loadDocNo() {
+        $.get('/api/commission/goods-dispatching-note/generate-code', function (r) {
+            if (r && r.docNo && !(parseInt($('#gdnBuyerDispatchMasterId').val()) > 0)) $('#docNo').val(r.docNo);
+        });
+    }
+
+    /* btnDelete_Click :2191-2212 */
+    function deleteRecord() {
+        const id = parseInt($('#gdnBuyerDispatchMasterId').val()) || 0;
+        if (id <= 0) { alert('No record found to Delete'); return; }
+        if (!confirm('Are you sure to Delete?')) return;
+        $.ajax({
+            url: '/api/commission/goods-dispatching-note/' + id,
+            type: 'DELETE',
+            success: function (res) {
+                if (res.status === 'SUCCESS') { alert(res.message); resetForm(); }
+                else alert(res.message);
+            },
+            error: function () { alert('Server error while deleting.'); }
+        });
+    }
 
     function setDefaultDates() {
         const today = new Date().toISOString().split('T')[0];
@@ -383,11 +424,11 @@
             tbody.append(`
                 <tr>
                     <td>${idx + 1}</td>
-                    <td>${r.itemName}</td>
-                    <td>${r.weight}</td>
-                    <td>${r.qty}</td>
-                    <td>${r.rate}</td>
-                    <td>${r.amount}</td>
+                    <td>${esc(pick(r, 'GrnNo') ?? '')}</td>
+                    <td>${esc(pick(r, 'itemName') ?? '')}</td>
+                    <td>${esc(pick(r, 'loadingQty') ?? '')}</td>
+                    <td>${esc(pick(r, 'wbGrossWeight') ?? '')}</td>
+                    <td>${esc(pick(r, 'netBillWeight') ?? '')}</td>
                     <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDetailRow(${idx})"><i class="fas fa-times"></i></button></td>
                 </tr>
             `);
@@ -501,33 +542,31 @@
             gdnBuyerDispatchMasterId: parseInt($('#gdnBuyerDispatchMasterId').val()) || 0,
             docNo: parseInt($('#docNo').val()) || 0,
             docDate: $('#docDate').val(),
-            buyerId: parseInt($('#buyerId').val()) || 0,
-            commissionAgentId: parseInt($('#commissionAgentId').val()) || 0,
+            buyerId: comboVal('buyerId', 'BuyerId'),
+            commissionAgentId: comboVal('commissionAgentId', 'commissionAgentId'),
             vehicleNo: $('#vehicleNo').val(),
             biltyNo: $('#biltyNo').val(),
-            driverName: $('#driverName').val(),
-            driverMobileNo: $('#driverMobileNo').val(),
             remarksHeader: $('#remarksHeader').val(),
 
             /* The rest of the header the desktop saves (:1877-1917). None of it used to be
                sent, so the procedure applied its own defaults. Tenancy and the user are NOT
                sent - the server takes those from the session. */
             buyerRefDocNo:      $('#buyerRefDocNo').val(),
-            deliverToPartyId:   parseInt($('#deliverToPartyId').val()) || 0,
+            deliverToPartyId:   comboVal('deliverToPartyId', 'DeliverToPartyId'),
             deliverToPartyName: $('#deliverToPartyId option:selected').text(),
-            deliverToAddressId: parseInt($('#deliverToAddressId').val()) || 0,
+            deliverToAddressId: comboVal('deliverToAddressId', 'DeliverToAddressId'),
             deliverToAddress:   $('#deliverToAddress').val(),
-            loadingCityId:      parseInt($('#loadingCityId').val()) || 0,
-            unloadingCityId:    parseInt($('#unloadingCityId').val()) || 0,
-            transporterId:      parseInt($('#transporterId').val()) || 0,
+            loadingCityId:      comboVal('loadingCityId', 'loadingCityId'),
+            unloadingCityId:    comboVal('unloadingCityId', 'unloadingCityId'),
+            transporterId:      comboVal('transporterId', 'transporterId'),
             transporterName:    $('#transporterName').val(),
             biltyFreight:       parseFloat($('#biltyFreight').val()) || 0,
             otherAdLesCharges:  parseFloat($('#otherAdLesCharges').val()) || 0,
             totalFreight:       parseFloat($('#totalFreight').val()) || 0,
             freightRemarks:     $('#freightRemarks').val(),
-            vehicleTypeId:      parseInt($('#vehicleTypeId').val()) || 0,
+            vehicleTypeId:      comboVal('vehicleTypeId', 'vehicleTypeId'),
             biltyDate:          $('#biltyDate').val(),
-            deliveryTermId:     parseInt($('#deliveryTermId').val()) || 0,
+            deliveryTermId:     comboVal('deliveryTermId', 'deliveryTermId'),
             biltyQty:           parseFloat($('#biltyQty').val()) || 0,
             loadWeight:         parseFloat($('#loadWeight').val()) || 0,
             tareWeight:         parseFloat($('#tareWeight').val()) || 0,
@@ -535,19 +574,21 @@
             billWeight:         parseFloat($('#billWeight').val()) || 0,
             warningRemarks:     $('#warningRemarks').val(),
 
-            documentTypeId: 1055,
-            gdnBuyerDispatchDetailList: detailRows
+            grnDate:            $('#grnDate').val(),
+            gdnBuyerDispatchDetailList: detailRows,
+            gdnBuyerDispatchEmptyBagDetailList: emptyBagRows,
+            gdnBuyerDispatchExpenseDetailList: expenseRows
         };
 
         $.ajax({
-            url: '/api/commission/goods-dispatching-note/save',
+            url: '/api/commission/goods-dispatching-note/' + (isUpdate ? 'update' : 'save'),
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(payload),
             success: function(res) {
                 btn.prop('disabled', false).html(origText);
                 if (res.status === 'SUCCESS') {
-                    alert('Goods Dispatching Note saved successfully!');
+                    alert(res.message || 'Save Successfully');
                     resetForm();
                 } else {
                     alert('Error saving record: ' + res.message);
@@ -575,11 +616,11 @@
                     <tr>
                         <td><span class="clickable-code" onclick="loadRecord(${r.gdnBuyerDispatchMasterId})">${r.docNo || r.gdnBuyerDispatchMasterId}</span></td>
                         <td>${r.docDate ? r.docDate.substring(0, 10) : ''}</td>
-                        <td>${r.buyerName || ''}</td>
-                        <td>${r.commissionAgentName || ''}</td>
-                        <td>${r.vehicleNo || ''}</td>
-                        <td>${r.biltyNo || ''}</td>
-                        <td>${r.driverName || ''}</td>
+                        <td>${esc(pick(r, 'BuyerName') || '')}</td>
+                        <td>${esc(pick(r, 'CommissionAgentName') || '')}</td>
+                        <td>${esc(pick(r, 'vehicleNo') || '')}</td>
+                        <td>${esc(pick(r, 'biltyNo') || '')}</td>
+                        <td>${esc(pick(r, 'Transporter') || pick(r, 'transporterName') || '')}</td>
                     </tr>
                 `);
             });
@@ -590,18 +631,40 @@
         $.get(`/api/commission/goods-dispatching-note/${id}`, function(res) {
             if (res.status === 'SUCCESS' && res.data) {
                 const d = res.data;
+                loadedHeader = d;
                 $('#gdnBuyerDispatchMasterId').val(d.gdnBuyerDispatchMasterId);
                 $('#docNo').val(d.docNo);
                 if (d.docDate) $('#docDate').val(d.docDate.substring(0, 10));
-                $('#buyerId').val(d.buyerId || 0);
-                $('#commissionAgentId').val(d.commissionAgentId || 0);
-                $('#vehicleNo').val(d.vehicleNo || '');
-                $('#biltyNo').val(d.biltyNo || '');
-                $('#driverName').val(d.driverName || '');
-                $('#driverMobileNo').val(d.driverMobileNo || '');
-                $('#remarksHeader').val(d.remarksHeader || '');
+                /* Every header field is reloaded: Update posts the whole header, so a field
+                   left blank here would be overwritten with blank. */
+                const ids = ['buyerId:BuyerId', 'commissionAgentId', 'deliverToPartyId:DeliverToPartyId',
+                             'deliverToAddressId:DeliverToAddressId', 'loadingCityId', 'unloadingCityId',
+                             'transporterId', 'vehicleTypeId', 'deliveryTermId'];
+                ids.forEach(function (x) {
+                    const [el, col] = x.split(':');
+                    $('#' + el).val(pick(d, col || el) || 0).trigger('change.select2');
+                });
+                const txt = ['vehicleNo', 'biltyNo', 'remarksHeader', 'buyerRefDocNo:BuyerRefDocNo',
+                             'deliverToAddress:DeliverToAddress', 'transporterName',
+                             'freightRemarks:FreightRemarks', 'warningRemarks'];
+                txt.forEach(function (x) {
+                    const [el, col] = x.split(':');
+                    $('#' + el).val(pick(d, col || el) || '');
+                });
+                const num = ['biltyFreight', 'otherAdLesCharges', 'totalFreight', 'biltyQty',
+                             'loadWeight', 'tareWeight', 'scaleNetWeight', 'billWeight:BillWeight'];
+                num.forEach(function (x) {
+                    const [el, col] = x.split(':');
+                    $('#' + el).val(pick(d, col || el) ?? 0);
+                });
+                const bd = pick(d, 'biltyDate');
+                $('#biltyDate').val(bd ? String(bd).substring(0, 10) : '');
 
                 detailRows = d.gdnBuyerDispatchDetailList || [];
+                emptyBagRows = d.gdnBuyerDispatchEmptyBagDetailList || [];
+                expenseRows = d.gdnBuyerDispatchExpenseDetailList || [];
+                const g = detailRows.length ? pick(detailRows[0], 'GrnDate') : '';
+                $('#grnDate').val(g ? String(g).substring(0, 10) : '');
                 renderDetailGrid();
 
                 $('#btnSave').prop('disabled', true);
@@ -621,17 +684,25 @@
         $('#commissionAgentId').val(0);
         $('#vehicleNo').val('');
         $('#biltyNo').val('');
-        $('#driverName').val('');
-        $('#driverMobileNo').val('');
         $('#remarksHeader').val('');
+        ['deliverToPartyId', 'deliverToAddressId', 'loadingCityId', 'unloadingCityId',
+         'transporterId', 'vehicleTypeId', 'deliveryTermId'].forEach(function (id) { $('#' + id).val(0); });
+        ['buyerRefDocNo', 'deliverToAddress', 'transporterName', 'freightRemarks',
+         'warningRemarks', 'biltyDate', 'grnDate'].forEach(function (id) { $('#' + id).val(''); });
+        ['biltyFreight', 'otherAdLesCharges', 'totalFreight', 'biltyQty', 'loadWeight',
+         'tareWeight', 'scaleNetWeight', 'billWeight'].forEach(function (id) { $('#' + id).val('0.00'); });
 
+        loadedHeader = null;
         detailRows = [];
+        emptyBagRows = [];
+        expenseRows = [];
         renderDetailGrid();
         clearDetailInputs();
 
         $('#btnSave').prop('disabled', false);
         $('#btnUpdate').prop('disabled', true);
         $('#btnDelete').prop('disabled', true);
+        loadDocNo();
     }
 </script>
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>

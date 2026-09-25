@@ -197,6 +197,18 @@ function applyComboColumns(opt, row) {
     if (bp !== undefined && bp !== null) put('base-pack', bp === true ? 1 : bp === false ? 0 : bp);
 }
 
+/* Refreshes a select2 caption WITHOUT running the element's inline onchange.
+   jQuery's trigger('change.select2') still calls elem.onchange (the namespace only filters
+   jQuery-bound handlers), so refilling Item Name ran bibItemChanged, which set Parent Item and
+   ran bibParentItemChanged, which refilled Item Name ... -> "Maximum call stack size exceeded".
+   Every caller here sets a value programmatically and calls any follow-up handler itself. */
+function bibRefreshSelect2(sel) {
+    if (!sel || !(window.jQuery && jQuery.fn.select2)) return;
+    var h = sel.onchange;
+    sel.onchange = null;
+    try { jQuery(sel).trigger('change.select2'); } finally { sel.onchange = h; }
+}
+
 function fillSelect(elId, rows, valueKey, textKey) {
     var sel = $(elId);
     if (!sel) return;
@@ -212,9 +224,7 @@ function fillSelect(elId, rows, valueKey, textKey) {
     /* a saved selection is restored even when it is not in the first page of
        results, because the whole list is in the DOM */
     if (keep) sel.value = keep;
-    if (window.jQuery && jQuery.fn.select2 && sel.classList.contains('searchable')) {
-        jQuery(sel).trigger('change.select2');
-    }
+    if (sel.classList.contains('searchable')) bibRefreshSelect2(sel);
 }
 
 function makeSearchable() {
@@ -402,7 +412,7 @@ function bibPartyNameModeChanged() {
             });
             fillSelect(pair[0], rows, 'Id', 'Label');
             sel.value = keep;
-            if (window.jQuery && jQuery.fn.select2) jQuery(sel).trigger('change.select2');
+            bibRefreshSelect2(sel);
         });
 }
 
@@ -426,7 +436,7 @@ function bibShipToAddressChanged() {
         if (parseInt(rows[i].Id, 10) === id) {
             if (rows[i].SupplierCustomerId) {
                 $('cmbDeliveryToParty').value = rows[i].SupplierCustomerId;
-                if (window.jQuery && jQuery.fn.select2) jQuery($('cmbDeliveryToParty')).trigger('change.select2');
+                bibRefreshSelect2($('cmbDeliveryToParty'));
             }
             $('txtShipToAddressText').value = rows[i].AddressLine1 || '';
             break;
@@ -457,7 +467,7 @@ function bibItemChanged() {
     }
     if (parentId) {
         $('cmbParentItem').value = parentId;
-        if (window.jQuery && jQuery.fn.select2) jQuery($('cmbParentItem')).trigger('change.select2');
+        bibRefreshSelect2($('cmbParentItem'));
         loadAnalysisGroups(parentId).then(function () { return loadLastAnalysis(parentId, true); });
     }
     loadItemUoms(itemId);
@@ -488,7 +498,7 @@ function loadLastAnalysis(parentCategoryId, ask) {
                 return;
             }
             $('cmbAnalysisGroup').value = groupId;
-            if (window.jQuery && jQuery.fn.select2) jQuery($('cmbAnalysisGroup')).trigger('change.select2');
+            bibRefreshSelect2($('cmbAnalysisGroup'));
             return bibAnalysisGroupChanged().then(function () {
                 var byId = {};
                 paramRows.forEach(function (p) { byId[p.qualityParameterId] = p; });
@@ -865,6 +875,19 @@ function bibLoad(id) {
     if (!id) return Promise.resolve();
     return getJson(API + '/' + id)
         .then(function (o) {
+            /* The service answers {success, header, details, paymentSchedule, qualitySpecs,
+               partyDetails}. Reading the envelope as if it were the header left every field
+               blank on Edit, so Update then posted an empty document. Unwrap it into the
+               desktop model's shape (ReadById + the four ReadByHeaderId_* lists). */
+            if (o && o.success === false) { message(o.message || 'Record Not Found', true); return; }
+            if (o && o.header) {
+                var h = o.header;
+                h.InquiryBookingDetailList = o.details || [];
+                h.InquiryBookingPaymentScheduleList = o.paymentSchedule || [];
+                h.InquiryBookingQualitySpecificationList = o.qualitySpecs || [];
+                h.InquiryBookingPartyDetailList = o.partyDetails || [];
+                o = h;
+            }
             if (!o) { message('Record Not Found', true); return; }
             bibResetFields();
             $('inquiryBookingMasterId').value = o.inquiryBookingMasterId || id;
@@ -987,7 +1010,8 @@ function bibDelete() {
         var id = intOf('inquiryBookingMasterId');
         if (!id) { message('No record found to Delete', true); return; }
         if (!confirm('Are you sure to Delete?')) return;
-        return fetch(API + '/' + id, { method: 'DELETE' })
+        /* the controller maps POST /delete/{id}; DELETE /{id} was answered 405 */
+        return fetch(API + '/delete/' + id, { method: 'POST' })
             .then(function (r) { return r.json().catch(function () { return { success: r.ok }; }); })
             .then(function (d) {
                 if (d && d.success) { message('Delete Record Successfully'); return bibNew(); }
@@ -1091,7 +1115,7 @@ function bibClearHistoryFilters() {
     ['histFromDate', 'histToDate', 'histValidityFrom', 'histValidityTo', 'txtRateFrom', 'txtRateTo'].forEach(function (id) { $(id).value = ''; });
     ['cmbHistParentItem', 'cmbHistCommissionAgent', 'cmbHistBuyer', 'cmbHistItem'].forEach(function (id) {
         $(id).value = 0;
-        if (window.jQuery && jQuery.fn.select2) jQuery($(id)).trigger('change.select2');
+        bibRefreshSelect2($(id));
     });
     historyRows = [];
     renderHistory();
@@ -1156,10 +1180,33 @@ function bibNew() {
         makeSearchable();
         message('');
         applyButtonState();
-        return getJson(API + '/generate-no')
-            .then(function (d) { $('txtInquiryNo').value = (d && (d.docNo || d.DocNo || d.documentNo)) || ''; })
-            .catch(function () { /* the server allocates the real number at save time */ });
+        return Promise.all([
+            getJson(API + '/generate-no')
+                .then(function (d) { $('txtInquiryNo').value = (d && (d.docNo || d.DocNo || d.documentNo)) || ''; })
+                .catch(function () { /* the server allocates the real number at save time */ }),
+            applyPortalDefaults()
+        ]);
     });
+}
+
+/* Reset() ends with GetCommissionAgentConfigurationsFromGlobalandBind() (:615): the five
+   Commission Agent Portal configuration ids, each applied only when > 0. */
+function applyPortalDefaults() {
+    return getJson(LOOKUP + '/config-defaults')
+        .then(function (d) {
+            if (!d) return;
+            [['cmbCommissionAgent', 'commissionAgentId'], ['cmbPaymentTerm', 'paymentTermId'],
+             ['cmbDeliveryTerm', 'deliveryTermId'], ['cmbCropYear', 'cropYearId'],
+             ['cmbPackingType', 'packingTypeId']].forEach(function (p) {
+                var v = parseInt(d[p[1]], 10);
+                if (v > 0 && $(p[0])) {
+                    $(p[0]).value = v;
+                    bibRefreshSelect2($(p[0]));
+                    if (p[0] === 'cmbPaymentTerm') bibPaymentTermChanged();
+                }
+            });
+        })
+        .catch(function () { /* no configuration is not an error */ });
 }
 
 function bibRefresh() { return withButton('btnRefresh', function () { return loadLookups(); }); }

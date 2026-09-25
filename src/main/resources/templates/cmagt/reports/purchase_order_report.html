@@ -1,124 +1,247 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
     <title th:text="${moduleTitle}">Purchase Order Report</title>
-    <style>
-        .filter-section { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
-        .grid-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        .grid-table th { background-color: #ebf8ff; color: #2c5282; border: 1px solid #cbd5e0; padding: 8px; text-align: left; }
-        .grid-table td { border: 1px solid #cbd5e0; padding: 6px 8px; }
-        .grid-table tr:hover { background-color: #f7fafc; }
-    </style>
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <style>
+        body.cmagt { font-family: Segoe UI, Tahoma, Arial, sans-serif; font-size: 12px; margin: 0; }
+        .rpt-wrap { padding: 8px 12px; }
+        .rpt-filters { border: 1px solid #c9d3e0; background: #f7f9fc; padding: 8px; display: grid;
+                       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px 12px; }
+        .rpt-filters label { display: block; font-weight: 600; color: #2c3e50; margin-bottom: 2px; }
+        .rpt-filters input, .rpt-filters select { width: 100%; box-sizing: border-box; font-size: 12px; padding: 2px 4px; }
+        .rpt-filters select[multiple] { height: 64px; }
+        .rpt-radios label { display: inline; font-weight: normal; margin-right: 8px; }
+        .rpt-radios input { width: auto; }
+        .rpt-actions { margin: 8px 0; display: flex; gap: 8px; align-items: center; }
+        .rpt-actions button { font-size: 12px; padding: 4px 14px; cursor: pointer; }
+        .rpt-msg { color: #b00020; }
+        .rpt-count { color: #555; }
+        .rpt-grid-wrap { overflow: auto; max-height: calc(100vh - 290px); border: 1px solid #c9d3e0; }
+        table.rpt-grid { border-collapse: collapse; white-space: nowrap; }
+        table.rpt-grid th { position: sticky; top: 0; background: #dfe8f5; border: 1px solid #b8c6d9; padding: 3px 6px; text-align: left; }
+        table.rpt-grid td { border: 1px solid #dde3ea; padding: 2px 6px; }
+        table.rpt-grid td.num { text-align: right; }
+        table.rpt-grid tfoot td { background: #eef3fa; font-weight: 600; position: sticky; bottom: 0; }
+        @media print { .rpt-filters, .rpt-actions, .cmagt-appbar { display: none; } .rpt-grid-wrap { max-height: none; overflow: visible; } }
+    </style>
 </head>
 <body class="cmagt">
 <div class="cmagt-appbar">
     <span class="cmagt-title">Purchase Order Report</span>
-    
-    <span class="cmagt-crumb"><a th:href="@{/commission}">Commission Trading</a> &rsaquo; Reports</span>
+    <span class="cmagt-crumb"><a th:href="@{/commission}">Commission Trading</a> &rsaquo; <a th:href="@{/commission/reports}">Reports</a></span>
 </div>
-
-<div layout:fragment="content" class="container-fluid py-3">
-
-    <div class="card mb-3 shadow-sm">
-        <div class="card-body py-2 d-flex justify-content-between align-items-center bg-light">
-            <h4 class="m-0 text-primary font-weight-bold" th:text="${moduleTitle}">Purchase Order Report</h4>
-            <button type="button" class="btn btn-sm btn-outline-dark" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
-        </div>
+<!-- Desktop source: frmPurchaseOrderCmagtReport.cs -->
+<div class="rpt-wrap">
+    <div class="rpt-filters" id="filters"></div>
+    <div class="rpt-actions">
+        <button type="button" id="btnShow">Show</button>
+        <button type="button" id="btnRefresh">Refresh</button>
+        <button type="button" onclick="window.print()">Print</button>
+        <span class="rpt-count" id="rowCount"></span>
+        <span class="rpt-msg" id="msg"></span>
     </div>
-
-    <div class="filter-section">
-        <div class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label font-weight-bold">From Date</label>
-                <input type="date" class="form-control form-control-sm" id="fromDate">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label font-weight-bold">To Date</label>
-                <input type="date" class="form-control form-control-sm" id="toDate">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label font-weight-bold">Supplier</label>
-                <select class="form-select form-select-sm" id="supplierId">
-                    <option value="0">-- All Suppliers --</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-sm btn-primary w-100" id="btnFilter"><i class="fas fa-search"></i> Generate Report</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive" style="width: 100%;">
-                <table class="grid-table" id="reportTable" style="width: 100%;">
-                    <thead>
-                        <tr>
-                            <th>Doc No</th>
-                            <th>Doc Date</th>
-                            <th>Supplier Name</th>
-                            <th>Commission Agent</th>
-                            <th>Item Name</th>
-                            <th>Qty</th>
-                            <th>Rate</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="8" class="text-center text-muted py-3">Click Generate Report to view data.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <div class="rpt-grid-wrap"><table class="rpt-grid" id="grid"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
 </div>
+<script th:inline="none">
+(function () {
+    'use strict';
+    var CFG = {"key":"purchase-order","title":"Purchase Order Report","form":"frmPurchaseOrderCmagtReport.cs","docNo":true,"approval":true,"approvedDefault":"Approved","status":true,"parentSent":false,"combos":[["agentId","Commission Agent","CommissionAgent"],["supplierId","Supplier","SupplierName"],["deliverToPartyId","Deliver To Party","DeliveryToParty"],["shipToAddress","Deliver To Address","DeliverToAddress"],["itemCategoryId","Category","ItemCategories"],["itemId","Item Name","Item"],["statusId","Status","Status"]],"types":["Detail","DocWise_Summary","ItemCommissionAndSupplierWise_Summary","ItemWise_Summary"],"cols":[["Id","PurchaseOrderMasterId"],["DocNo","DocNo"],["DocDate","DocDate"],["CommissionAgentId","CommissionAgentId"],["CommissionAgentName","CommissionAgentName"],["SupplierId","SupplierId"],["SupplierName","SupplierName"],["DeliveryToParty","DeliveryToPartyName"],["ShipToAddress","ShipToAddress"],["DeliveryStartDate","DeliveryStartDate"],["DeliveryDays","DeliveryDays"],["Status","Status"],["ItemId","ItemId"],["ItemCode","ItemCode"],["ItemName","ItemName"],["ItemQty","ItemQty"],["GrnQty","GrnQty"],["BalanceQtyAgainstGrn","BalanceQty"],["MappedQty","MappedQty"],["BalanceQtyAgainstMapping","BalanceQtyAgainstMapping"],["ItemWeight","ItemWeight"],["GrnGrossWeight","GrnGrossWeight"],["GrnEbUnit","GrnEbUnit"],["GrnEbTotal","GrnEbTotal"],["GrnAddLess","GrnAddLess"],["GrnWeight","GrnWeight"],["BalanceWeightAgainstGrn","BalanceWeight"],["MappedWeight","MappedWeight"],["BalanceWeightAgainstMapping","BalanceWeightAgainstMapping"],["ItemRate","ItemRate"],["ItemAmount","ItemAmount"],["Tax%","TaxPercent"],["TaxAmount","TaxAmount"],["TotalAmount","TotalAmount"],["EntryDate","EntryDate"],["EntryUserName","EntryUserName"],["ModifyDate","ModifyDate"],["ModifyUserName","ModifyUserName"],["ApprovedDate","ApprovedDate"],["ApprovalUserName","ApprovalUserName"],["IsApproved","IsApproved"],["NoOfAttachments","NoOfAttachments"],["IsWhtApplied","IsWhtApplied"],["IsSupplierOtherChargesAllowed","IsSupplierOtherChargesAllowed"],["EBWeightDeductionTerm","EBWeightDeductionTerm"],["RemarksHeader","RemarksHeader"],["QualitySpecification","QualitySpecification"],["RemarksDetail","RemarksDetail"],["ValidityDate","ValidityDate"]],"hidden":{"_base":["Id","CommissionAgentId","SupplierId","IsWhtApplied","IsSupplierOtherChargesAllowed","ItemId"],"DocWise_Summary":["ItemName","ItemCode","ItemRate","Tax%","QualitySpecification","GrnEbUnit","RemarksDetail"],"ItemCommissionAndSupplierWise_Summary":["ItemRate","Tax%","QualitySpecification","RemarksDetail","DocNo","DocDate","Status","RemarksHeader","ValidityDate","DeliveryStartDate","DeliveryDays","GrnEbUnit","IsWhtApplied","IsSupplierOtherChargesAllowed","EBWeightDeductionTerm","EntryDate","EntryUserName","ModifyDate","ModifyUserName","ApprovedDate","ApprovalUserName","IsApproved","NoOfAttachments"],"ItemWise_Summary":["ItemRate","Tax%","QualitySpecification","RemarksDetail","CommissionAgentId","CommissionAgentName","SupplierId","SupplierName","DeliveryToParty","ShipToAddress","DocNo","DocDate","Status","RemarksHeader","ValidityDate","DeliveryStartDate","DeliveryDays","IsWhtApplied","GrnEbUnit","IsSupplierOtherChargesAllowed","EBWeightDeductionTerm","EntryDate","EntryUserName","ModifyDate","ModifyUserName","ApprovedDate","ApprovalUserName","IsApproved","NoOfAttachments"]},"textValue":["shipToAddress"]};
+    var API = '/api/commission/reports/' + CFG.key;
+    var rows = [];                   // raw filter-combo rows (Id, ReferenceName, ParentCategoryId, Activity)
+    var el = function (id) { return document.getElementById(id); };
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
+    function iso(d) { var m = d.getMonth() + 1, dd = d.getDate();
+        return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (dd < 10 ? '0' : '') + dd; }
+    function field(label, html) { return '<div><label>' + esc(label) + '</label>' + html + '</div>'; }
 
-<script layout:fragment="script">
-    $(document).ready(function() {
-        const today = new Date().toISOString().split('T')[0];
-        $('#fromDate').val(today);
-        $('#toDate').val(today);
-
-        $.get('/api/commission/dropdowns/suppliers', function(data) {
-            const el = $('#supplierId');
-            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
-        });
-
-        $('#btnFilter').on('click', generateReport);
-    });
-
-    function generateReport() {
-        const fromDate = $('#fromDate').val();
-        const toDate = $('#toDate').val();
-        const supplierId = $('#supplierId').val();
-
-        $.get(`/api/commission/reports/purchase-order?fromDate=${fromDate}&toDate=${toDate}&supplierId=${supplierId}`, function(data) {
-            const tbody = $('#reportTable tbody');
-            tbody.empty();
-            if (!data || data.length === 0) {
-                tbody.append('<tr><td colspan="8" class="text-center text-muted py-3">No report data found.</td></tr>');
-                return;
-            }
-            data.forEach(r => {
-                tbody.append(`
-                    <tr>
-                        <td>${r.docNo || r.purchaseOrderMasterId || ''}</td>
-                        <td>${r.docDate ? r.docDate.substring(0, 10) : ''}</td>
-                        <td>${r.supplierName || ''}</td>
-                        <td>${r.commissionAgentName || ''}</td>
-                        <td>${r.itemName || ''}</td>
-                        <td>${r.qty || 0}</td>
-                        <td>${r.rate || 0}</td>
-                        <td>${r.amount || 0}</td>
-                    </tr>
-                `);
-            });
-        });
+    // ------------------------------------------------------------------ filter panel
+    function buildFilters() {
+        var h = '';
+        if (CFG.tb) {
+            h += field('Date Type', '<select id="datePreset"><option value="1">Today</option><option value="2">Last 7 Days</option>' +
+                '<option value="3" selected>Current Month</option><option value="4">Current Year</option><option value="5">Financial Year</option></select>');
+        }
+        h += field('Date On', '<div class="rpt-radios"><label><input type="radio" name="dateType" value="doc" checked> Doc Date</label>' +
+            '<label><input type="radio" name="dateType" value="entry"> Entry Date</label>' +
+            '<label><input type="radio" name="dateType" value="modify"> Modify Date</label></div>');
+        h += field('From Date', '<input type="date" id="fromDate">');
+        h += field('To Date', '<input type="date" id="toDate">');
+        if (CFG.docNo) {
+            h += field('Doc No From', '<input type="number" min="0" step="1" id="fromDocNo">');
+            h += field('Doc No To', '<input type="number" min="0" step="1" id="toDocNo">');
+        }
+        if (!CFG.tb) {
+            h += field('Parent Categories' + (CFG.parentSent ? '' : ' (narrows the lists only)'),
+                '<select id="parentItemIds" multiple></select>');
+        }
+        CFG.combos.forEach(function (c) { h += field(c[1], '<select id="' + c[0] + '"></select>'); });
+        if (CFG.approval) {
+            h += field('Approval', '<select id="approved"><option value=""></option><option>UnApproved</option>' +
+                '<option>Approved</option><option>All</option></select>');
+        }
+        h += field('Report Type', '<select id="reportType">' + CFG.types.map(function (t) {
+            return '<option>' + esc(t) + '</option>'; }).join('') + '</select>');
+        el('filters').innerHTML = h;
+        if (CFG.approval) el('approved').value = CFG.approvedDefault || '';
+        if (!CFG.tb) el('parentItemIds').addEventListener('change', bindCombos);
+        if (CFG.tb) el('datePreset').addEventListener('change', applyPreset);
     }
+
+    function applyPreset() {
+        var v = el('datePreset').value, t = new Date(), f = new Date(t.getTime());
+        if (v === '1') f = t;
+        else if (v === '2') f.setDate(t.getDate() - 7);
+        else if (v === '3') f = new Date(t.getFullYear(), t.getMonth(), 1);
+        else if (v === '4') f = new Date(t.getFullYear(), 0, 1);
+        else if (v === '5') return;          // ActiveYr.Start_Period - left to the user
+        el('fromDate').value = iso(f);
+        el('toDate').value = iso(t);
+    }
+
+    // ------------------------------------------------------------------ combos
+    function selectedParents() {
+        var s = el('parentItemIds'); if (!s) return [];
+        return Array.prototype.filter.call(s.options, function (o) { return o.selected; }).map(function (o) { return o.value; });
+    }
+    function fill(sel, list, byText, keepFirst) {
+        var keep = sel.value;
+        sel.innerHTML = '<option value=""></option>' + list.map(function (r) {
+            var v = byText ? r.name : r.id;
+            return '<option value="' + esc(v) + '">' + esc(r.name) + '</option>';
+        }).join('');
+        if (keep && Array.prototype.some.call(sel.options, function (o) { return o.value === keep; })) sel.value = keep;
+        else if (keepFirst && sel.options.length > 1) sel.selectedIndex = 1;
+    }
+    function listFor(activity, parents) {
+        var seen = {}, out = [];
+        rows.forEach(function (r) {
+            if (String(r.Activity) !== activity) return;
+            if (parents.length && parents.indexOf(String(r.ParentCategoryId)) < 0) return;
+            if (seen[r.Id]) return; seen[r.Id] = 1;
+            out.push({id: r.Id, name: r.ReferenceName});
+        });
+        return out;
+    }
+    var firstBind = true;
+    function bindCombos() {
+        var parents = selectedParents();
+        CFG.combos.forEach(function (c) {
+            /* CmbStatus.Rows[0].Activate() - the desktop pre-selects the first status. */
+            fill(el(c[0]), listFor(c[2], parents), CFG.textValue.indexOf(c[0]) >= 0, firstBind && c[0] === 'statusId');
+        });
+        firstBind = false;
+    }
+    function loadFilters() {
+        el('msg').textContent = '';
+        return fetch(API + '/filters', {credentials: 'same-origin'}).then(function (r) {
+            if (!r.ok) throw new Error('Filter lists could not be loaded (' + r.status + ')');
+            return r.json();
+        }).then(function (d) {
+            rows = (d && d.rows) || [];
+            if (!CFG.tb) {
+                var ps = el('parentItemIds'), keep = selectedParents();
+                ps.innerHTML = listFor('ParentCategories', []).map(function (p) {
+                    return '<option value="' + esc(p.id) + '"' + (keep.indexOf(String(p.id)) >= 0 ? ' selected' : '') + '>' + esc(p.name) + '</option>';
+                }).join('');
+                if (!el('fromDate').value) {
+                    var days = d.defaultDaysToLessFromHistoryFromDate > 0 ? d.defaultDaysToLessFromHistoryFromDate : 3;
+                    var t = new Date(), f = new Date(t.getTime()); f.setDate(t.getDate() - days);
+                    el('fromDate').value = iso(f); el('toDate').value = iso(t);
+                }
+            }
+            bindCombos();
+        }).catch(function (e) { el('msg').textContent = e.message; });
+    }
+
+    // ------------------------------------------------------------------ grid
+    function lc(row) { var m = {}; Object.keys(row).forEach(function (k) { m[k.toLowerCase()] = row[k]; }); return m; }
+    function fmt(key, v) {
+        if (v == null || v === '') return {t: '', n: false};
+        if (typeof v === 'boolean') return {t: v ? '&#10003;' : '', n: false};
+        if (/date/i.test(key)) {
+            var d = typeof v === 'number' ? new Date(v) : new Date(String(v));
+            if (!isNaN(d.getTime())) {
+                var s = typeof v === 'string' ? v.substring(0, 10).split('-') : [d.getFullYear(), d.getMonth() + 1, d.getDate()];
+                if (s.length === 3) return {t: ('0' + s[2]).slice(-2) + '/' + ('0' + s[1]).slice(-2) + '/' + s[0], n: false};
+            }
+        }
+        if (typeof v === 'number') {
+            return {t: (Math.round(v) === v) ? String(v) : v.toFixed(2), n: true};
+        }
+        return {t: esc(v), n: false};
+    }
+    function summable(key) { return !/(id|no|days|%|percent|year)$/i.test(key) && !/rate/i.test(key); }
+    function render(data) {
+        var type = el('reportType').value;
+        var cols = (CFG.colsByType && CFG.colsByType[type]) || CFG.cols;
+        var hid = {}; (CFG.hidden._base || []).concat(CFG.hidden[type] || []).forEach(function (h) { hid[h] = 1; });
+        var shown = cols.filter(function (c) { return !hid[c[0]]; });
+        var lrows = data.map(lc);
+        /* PurchaseSaleRegister: ExpenseNameN / ExpenseAmountN pairs become one column per expense
+           name (BindTradingRegisterActivity). */
+        var extra = [];
+        if (type === 'PurchaseSaleRegister') {
+            lrows.forEach(function (r) {
+                Object.keys(r).forEach(function (k) {
+                    var m = /^expensename(.*)$/.exec(k);
+                    if (!m || !(('expenseamount' + m[1]) in r)) return;
+                    var n = r[k]; if (n == null || String(n).trim() === '') return;
+                    n = String(n).trim(); if (extra.indexOf(n) < 0) extra.push(n);
+                    r['__exp__' + n] = r['expenseamount' + m[1]];
+                });
+            });
+            extra.forEach(function (n) { shown.push([n, '__exp__' + n]); });
+        }
+        el('grid').tHead.innerHTML = '<tr>' + shown.map(function (c) { return '<th>' + esc(c[0]) + '</th>'; }).join('') + '</tr>';
+        var tot = {}, any = {};
+        el('grid').tBodies[0].innerHTML = lrows.map(function (r) {
+            return '<tr>' + shown.map(function (c) {
+                var v = c[1].indexOf('__exp__') === 0 ? r[c[1]] : r[c[1].toLowerCase()];
+                var f = fmt(c[1], v);
+                if (f.n && summable(c[0])) { tot[c[0]] = (tot[c[0]] || 0) + v; any[c[0]] = 1; }
+                return '<td' + (f.n ? ' class="num"' : '') + '>' + f.t + '</td>';
+            }).join('') + '</tr>';
+        }).join('');
+        el('grid').tFoot.innerHTML = lrows.length ? '<tr>' + shown.map(function (c) {
+            return any[c[0]] ? '<td class="num">' + tot[c[0]].toFixed(2) + '</td>' : '<td></td>';
+        }).join('') + '</tr>' : '';
+        el('rowCount').textContent = lrows.length + ' row(s)';
+    }
+    function show() {
+        el('msg').textContent = '';
+        var q = new URLSearchParams();
+        var dt = document.querySelector('input[name="dateType"]:checked');
+        q.set('dateType', dt ? dt.value : 'doc');
+        ['fromDate', 'toDate', 'fromDocNo', 'toDocNo', 'approved', 'reportType'].forEach(function (k) {
+            if (el(k) && el(k).value !== '') q.set(k, el(k).value);
+        });
+        CFG.combos.forEach(function (c) { var v = el(c[0]).value; if (v !== '') q.set(c[0], v); });
+        if (CFG.parentSent) { var p = selectedParents(); if (p.length) q.set('parentItemIds', p.join(',')); }
+        if (CFG.tb && !el('reportType').value) { el('msg').textContent = 'Please Select Activity First...'; return; }
+        el('btnShow').disabled = true;
+        fetch(API + '?' + q.toString(), {credentials: 'same-origin'}).then(function (r) {
+            return r.json().catch(function () { return null; }).then(function (b) {
+                if (!r.ok) throw new Error((b && b.message) || ('Report failed (' + r.status + ')'));
+                return b || [];
+            });
+        }).then(render).catch(function (e) {
+            el('msg').textContent = e.message; render([]);
+        }).then(function () { el('btnShow').disabled = false; });
+    }
+
+    buildFilters();
+    if (CFG.tb) applyPreset();
+    loadFilters();
+    el('btnShow').addEventListener('click', show);
+    el('btnRefresh').addEventListener('click', loadFilters);
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); show(); }
+        if (e.ctrlKey && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); loadFilters(); }
+    });
+})();
 </script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
-    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

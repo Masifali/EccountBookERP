@@ -27,7 +27,43 @@ public class GrnLoadingChallanCmagtRestController {
 
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> save(@RequestBody GrnLoadingChallanCmagtDto dto) {
-        return ResponseEntity.ok(service.saveOrUpdate(dto));
+        /* The desktop shows ex.Message (Insert() catch). The procedure's own RAISERRORs
+           (financial year, approved, already dispatched in a GDN) and the form's refusals are
+           returned the same way instead of a bare 500. The repository transaction has already
+           rolled back by the time the exception reaches here. */
+        try {
+            return ResponseEntity.ok(service.saveOrUpdate(dto));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.ok(error(ex));
+        }
+    }
+
+    /** btnDelete_Click -> BLL DeleteByID(UserAccount.ID, RecId). */
+    @PostMapping("/{id}/delete")
+    public ResponseEntity<Map<String, Object>> delete(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.deleteById(id == null ? 0 : id));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.ok(error(ex));
+        }
+    }
+
+    /** DocumentNoDbCall -> BLL GenerateCode, DocumentTypeId 1054. */
+    @GetMapping("/generate-no")
+    public ResponseEntity<Map<String, Object>> generateNo() {
+        Map<String, Object> r = new java.util.LinkedHashMap<>();
+        r.put("docNo", service.generateNextDocNo());
+        return ResponseEntity.ok(r);
+    }
+
+    private static Map<String, Object> error(Throwable ex) {
+        Throwable t = ex;
+        while (t.getCause() != null && t.getCause() != t) t = t.getCause();
+        String msg = t.getMessage() != null ? t.getMessage() : ex.getMessage();
+        Map<String, Object> r = new java.util.LinkedHashMap<>();
+        r.put("status", "ERROR");
+        r.put("message", msg);
+        return r;
     }
 
     /** The "Load Purchase Order" picker - pending POs available to this GRN. */
@@ -52,7 +88,7 @@ public class GrnLoadingChallanCmagtRestController {
     public ResponseEntity<List<Map<String, Object>>> getHistory(
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate) {
-        return ResponseEntity.ok(service.getHistory(currentUserContext.currentCompanyId(), currentUserContext.currentOrganizationId(), fromDate, toDate));
+        return ResponseEntity.ok(service.getHistory(fromDate, toDate));
     }
 
     @GetMapping("/{id}")

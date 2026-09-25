@@ -3,7 +3,10 @@
  *
  * The whole form: Detail entry (Add / Update / Cancel), the Input, Output, Packing Material,
  * Overhead and Contractor Wages grids with their cell events, the Issuance loader
- * (LoadavailableTransactionsForIssuance, a modal), Save / Update (Insert():4365) / Delete, the
+ * (LoadavailableTransactionsForIssuance, a modal), the Release Fumigation Stock loader
+ * (LoadavailableTransactionsForStockReleaseFromFumigation, a modal), the Load OutPut loader
+ * (frmLoadStockShortFallForSales, a modal), Wages Schedule / Wages Exempt (new windows, as the
+ * desktop .Show()s them), Save / Update (Insert():4365) / Delete, the
  * history, the 605 print and the 118 voucher. Line numbers are src280/invfrmStockConversionProduction.cs.
  *
  * Every grid row keeps the desktop DataTable's own column names (table, tableByProduct,
@@ -178,6 +181,10 @@
     var checkPackingMaterialAmountTotal = false;
     var docDateTag = null;          // txtDocdate.Tag
     var saveVisible = true;         // btnsave.Visible (Update visible = !saveVisible)
+    /* gridsettings(FromFumigation: true):2169 - after a fumigation load grdInput is rebuilt WITHOUT its
+       "Delete" (X) button column; the next plain gridsettings() (Load, AddInGrid, the Issuance loader,
+       ReadById) puts it back. New/Refresh do not re-run gridsettings, so it stays off until then. */
+    var inputNoDelete = false;
 
     var INPUT = [];     // table
     var OUTPUT = [];    // tableByProduct
@@ -447,6 +454,7 @@
                     Rate: netD(val('txtRate')), RateUOMId: netI(val('cmbRateUom')), RateUOM: selText('cmbRateUom'), RateEquivalent: uomEquivalent('cmbRateUom'),
                     Amount: netD(val('txtAmount')), Moisture: val('txtMoisture').trim(), MoistureSlabId: nullIfZero('cmbMoistureSlab'),
                     Remarks: val('txtdeailRemarks'), LineId: maxLine + 1, labIPmActivityLogId: null, _chk: false });
+                inputNoDelete = false;          // gridsettings():1926
                 renderInput();
                 afterDetail(ES.contractWagesChargeToProduct ? wagesFill('in') : null);
                 resetDetail();
@@ -1500,8 +1508,8 @@
         var allChecked = INPUT.length > 0 && INPUT.every(function (r) { return r._chk; });
         drawGrid({ key: 'in', head: 'inputHead', body: 'gridInput', foot: 'inputFoot', cols: inputCols(), rows: INPUT,
             editable: function () { return true; },
-            preHead: '<th><input type="checkbox" id="chkInputAll"' + (allChecked ? ' checked' : '') + ' title="Select all"></th><th>X</th>',
-            pre: function (r, i) { return '<td style="text-align:center;"><input type="checkbox" data-act="chk" data-i="' + i + '"' + (r._chk ? ' checked' : '') + '></td><td><button type="button" class="sc-x" data-act="del" data-i="' + i + '">X</button></td>'; } });
+            preHead: '<th><input type="checkbox" id="chkInputAll"' + (allChecked ? ' checked' : '') + ' title="Select all"></th>' + (inputNoDelete ? '' : '<th>X</th>'),
+            pre: function (r, i) { return '<td style="text-align:center;"><input type="checkbox" data-act="chk" data-i="' + i + '"' + (r._chk ? ' checked' : '') + '></td>' + (inputNoDelete ? '' : '<td><button type="button" class="sc-x" data-act="del" data-i="' + i + '">X</button></td>'); } });
     }
     function outputCols() {
         var t = convType();
@@ -1711,6 +1719,7 @@
                     Amount: netD(col(d, 'ItemAmount')), Moisture: '', MoistureSlabId: 0, Remarks: '', LineId: maxLine, labIPmActivityLogId: 0, _chk: false });
                 existing[sub] = 1;
             });
+            inputNoDelete = false;              // gridsettings():6665
             proportionateOverheadGrid();
             proportionatedPackingMaterialAmountInOutputGrid();
             generateSummaryForUser();
@@ -1720,14 +1729,371 @@
         if (ES.contractWagesChargeToProduct) afterDetail(wagesFill('in'));
     }
 
-    /** BtnLoadOutPut_Click:7355 - frmLoadStockShortFallForSales is not among the ported forms. */
-    function btnLoadOutPut() {
-        var t = convType();
-        if (t === 0 || t === 3) { $id('CmbConversionType').focus(); box("You Can't Select Conversion Type [Value Gain/Loss]"); return; }
-        notPorted('frmLoadStockShortFallForSales');
+    // ======================================================== .NET DataTable typed Rows.Add
+
+    /* DataRowCollection.Add(params object[]) into a TYPED DataTable: each value is stored through the
+       column's storage (IConvertible.ToXxx); a value that does not convert throws ArgumentException
+       "<inner message>Couldn't store <value> in <Column> Column.  Expected type is <Type>." and the row
+       is not added. null -> DBNull. Missing trailing values stay DBNull. schema: [[name, 's'|'i'|'d'|'dt'], ...] */
+    var NET_TYPE = { s: 'String', i: 'Int32', d: 'Double', dt: 'DateTime' };
+    function dtRow(schema, values) {
+        if (values.length > schema.length) throw new Error('Input array is longer than the number of columns in this table.');
+        var row = {};
+        schema.forEach(function (c, k) {
+            var v = k < values.length ? values[k] : null, name = c[0], t = c[1];
+            if (v === null || v === undefined) { row[name] = null; return; }
+            var shown = typeof v === 'number' ? csStr(v) : (typeof v === 'boolean' ? (v ? 'True' : 'False') : String(v));
+            function fail(inner) { throw new Error(inner + "Couldn't store <" + shown + '> in ' + name + ' Column.  Expected type is ' + NET_TYPE[t] + '.'); }
+            if (t === 's') { row[name] = shown; return; }
+            if (t === 'i') {
+                if (typeof v === 'number') { row[name] = rnd(v, 0); return; }
+                if (typeof v === 'boolean') { row[name] = v ? 1 : 0; return; }
+                if (!/^\s*[+-]?\d+\s*$/.test(shown)) fail('Input string was not in a correct format.');
+                row[name] = parseInt(shown, 10); return;
+            }
+            if (t === 'd') {
+                if (typeof v === 'number') { row[name] = v; return; }
+                if (typeof v === 'boolean') { row[name] = v ? 1 : 0; return; }
+                if (!/^\s*[+-]?(\d[\d,]*\.?\d*|\.\d+)([eE][+-]?\d+)?\s*$/.test(shown)) fail('Input string was not in a correct format.');
+                row[name] = parseFloat(shown.replace(/,/g, '')); return;
+            }
+            /* DateTime */
+            if (!/^\s*\d{4}-\d{2}-\d{2}/.test(shown) || isNaN(new Date(shown.trim().slice(0, 19)).getTime())) fail('String was not recognized as a valid DateTime.');
+            row[name] = shown.trim();
+        });
+        return row;
     }
-    function notPorted(form) {
-        box(form + ' is a separate desktop form that has not been ported to the web yet; nothing was loaded.');
+    /** cell.Value.ToString() - DBNull.Value.ToString() is "". */
+    function vs(v) { return (v === null || v === undefined) ? '' : (typeof v === 'number' ? csStr(v) : String(v)); }
+    /** Conversion.ToString - "" for null. */
+    function cs(v) { return (v === null || v === undefined) ? '' : (typeof v === 'number' ? csStr(v) : String(v)); }
+
+    /* table (grdInput) - Load:644-674. */
+    var INPUT_SCHEMA = [['Id', 'i'], ['RefDocumentTypeId', 'i'], ['RefDocNoId', 'i'], ['RefDocSubId', 'i'], ['EntryType', 's'],
+        ['WareHouseId', 'i'], ['WareHouse', 's'], ['CropYear', 's'], ['ItemId', 'i'], ['Item', 's'], ['JobLotId', 'i'], ['JobLot', 's'],
+        ['ItemUOMId', 'i'], ['UOM', 's'], ['PackEquivalent', 'd'], ['PackingTypeId', 'i'], ['PackingType', 's'], ['BalQty', 'd'],
+        ['BalWeight', 'd'], ['Quantity', 'd'], ['Weight', 'd'], ['Rate', 'd'], ['RateUOMId', 'i'], ['RateUOM', 's'], ['RateEquivalent', 'd'],
+        ['Amount', 'd'], ['Moisture', 's'], ['MoistureSlabId', 'i'], ['Remarks', 's'], ['LineId', 'i'], ['labIPmActivityLogId', 'i']];
+    /* tableByProduct (grdByProduct) - Load:678-711. */
+    var OUTPUT_SCHEMA = [['Id', 'i'], ['EntryType', 's'], ['WareHouseId', 'i'], ['WareHouse', 's'], ['CropYear', 's'], ['ItemId', 'i'],
+        ['Item', 's'], ['JobLotId', 'i'], ['JobLot', 's'], ['ItemUOMId', 'i'], ['UOM', 's'], ['PackEquivalent', 'd'], ['PackingTypeId', 'i'],
+        ['PackingType', 's'], ['Quantity', 'd'], ['Weight', 'd'], ['Rate', 'd'], ['RateUOMId', 'i'], ['RateUOM', 's'], ['RateEquivalent', 'd'],
+        ['AmountWithoutExpenses', 'd'], ['Moisture', 's'], ['MoistureSlabId', 'i'], ['MoistureSlabDescription', 's'], ['PMAmount', 'd'],
+        ['ItemPMAmount', 'd'], ['ExpAmount', 'd'], ['ItemExpAmount', 'd'], ['Amount', 'd'], ['Remarks', 's'], ['IssueWeight', 'd'],
+        ['LineId', 'i'], ['WagesAmount', 'd'], ['labIPmActivityLogId', 'i']];
+
+    // ============================== LoadavailableTransactionsForStockReleaseFromFumigation (modal)
+
+    /* dtIssuance - LoadInvoices_Load:163-196 (33 columns; untyped ones are String). */
+    var FUM_DT_SCHEMA = [['RefDocumentTypeId', 's'], ['RefDocumentType', 's'], ['RefDocIdNo', 's'], ['RefDocSubIdNo', 's'],
+        ['SupplierCustomerId', 'i'], ['PartyName', 's'], ['DocDate', 'dt'], ['DocNo', 'i'], ['WareHouseId', 's'], ['WareHouse', 's'],
+        ['ItemId', 's'], ['ItemName', 's'], ['ItemCode', 's'], ['ItemUOMId', 's'], ['PackUom', 's'], ['ItemUOM', 's'], ['CropYearId', 's'],
+        ['CropYear', 's'], ['JobLotId', 's'], ['JobLotCode', 's'], ['PackingTypeId', 's'], ['PackTypeCode', 's'], ['BalQty', 'd'],
+        ['BalWeight', 'd'], ['ItemQty', 'd'], ['Weight', 'd'], ['ItemRate', 's'], ['RateUOMId', 's'], ['RateUOM', 's'], ['Equivalent', 's'],
+        ['ItemAmount', 'd'], ['Remarks', 's'], ['labIPmActivityLogId', 'i']];
+    /* grdSettings:438 - the visible columns in their order (BiltyNo moved after VehicleNo; the hidden ones
+       dropped). [key, fmt, total?, valuesRight?]. ConfigureNumericalColumn: "Amount" -> stringFormatsingle
+       + Sum; "Rate" -> DecimalRateFormate; other decimals "#,##0.##" + Sum. */
+    var FUM_COLS = [['RefDocumentType', 't'], ['DocDate', 'd'], ['DocCodeNo', 't'], ['GrnNo', 't'], ['SupplierCustomerName', 't'],
+        ['VehicleNo', 't'], ['BiltyNo', 't'], ['GpNo', 't'], ['GPDate', 'd'], ['WareHouseCode', 't'], ['ItemName', 't'], ['ItemCode', 't'],
+        ['CropBatch', 't'], ['JobLotCode', 't'], ['PackingType', 't'], ['PackUom', 't'], ['QtyIn', 'q2', 1], ['QtyOut', 'q2', 1],
+        ['QtyBalance', 'q2', 1], ['WeightIn', 'q2', 1], ['WeightOut', 'q2', 1], ['WeightBalance', 'q2', 1], ['AVgRate', 'r', 0, 1],
+        ['RateUom', 't'], ['ItemAmount', 'a', 1, 1], ['Remarks', 't'], ['IPMJobLot', 't'], ['StepDescription', 't'], ['qcActivityDate', 'D'],
+        ['StatusDescription', 't'], ['nextActivityPlanDate', 'D'], ['fumigatedBy', 't'], ['checkBy', 't'], ['verifiedBy', 't'],
+        ['ReleaseHoldStatus', 't'], ['qcActivityDescription', 't']];
+    var FM = { open: false, rows: [], setup: null, dt: [], hasColumns: false };
+    function fumOpen() { return FM.open; }
+
+    /** btnStockReleaseFromFumigation_Click:7710. */
+    function btnStockReleaseFromFumigation() {
+        try {
+            if (convType() === 0) { $id('CmbConversionType').focus(); throw new Error('Please Select Conversion Type'); }
+        } catch (e) { box(e.message); return; }
+        /* new LoadavailableTransactionsForStockReleaseFromFumigation(UserAccount): AvailableForFumigation,
+           JobOrderItems and CanLoadOnlyPurchaseAndSingleItemRows are left at 0 / "" / false by the caller. */
+        FM = { open: true, rows: [], setup: null, dt: [], hasColumns: false };
+        $id('fumModal').classList.add('is-open');
+        $id('fumHead').innerHTML = ''; $id('gridFum').innerHTML = ''; $id('fumFoot').innerHTML = '';
+        setVal('fmTo', today()); setVal('fmFrom', today()); setVal('fmSelWeight', ''); setVal('fmSelQty', '');
+        ['fmParent', 'fmItemCategory', 'fmItemType', 'fmJobLot', 'fmCrop', 'fmWarehouse', 'fmRefDoc', 'fmParty', 'fmItem'].forEach(function (id) { fill(id, [], 'Id', 'name'); });
+        refreshCombos();
+        /* LoadInvoices_Load:133 - the same rights read, FromDate and StockComboFill as the Issuance loader. */
+        return busy('btnStockReleaseFromFumigation', function () {
+            return getJson(api + '/loader/setup').then(function (d) {
+                FM.setup = d || {};
+                if (FM.setup.loadError) { box(FM.setup.loadError); return; }       // Load stops: no columns, combos or search
+                if (FM.setup.fromDate) setVal('fmFrom', dateOnly(FM.setup.fromDate));
+                $id('fmParent').focus();
+                FM.hasColumns = true;
+                var l = FM.setup.lists || {};
+                fill('fmParent', l.ParentCategories, 'Id', 'name'); fill('fmItemCategory', l.ItemCategories, 'Id', 'name');
+                fill('fmItemType', l.ItemTypes, 'Id', 'name'); fill('fmJobLot', l.JobLot, 'Id', 'name'); fill('fmCrop', l.CropYear, 'Id', 'name');
+                fill('fmWarehouse', l.Warehouse, 'Id', 'name'); fill('fmRefDoc', l.DocumentType, 'Id', 'name'); fill('fmParty', l.Supplier_Customer, 'Id', 'name');
+                fill('fmItem', l.Items, 'Id', 'name');
+                refreshCombos();
+                return fumSearchNow().then(function () { $id('fmFrom').focus(); });
+            }).catch(function (e) { box(e.message); });
+        });
+    }
+    /** btngrnlod_Click / PendingInventoryTransactionsForIssuanceLoad:325 - labIPmActivityLog.HoldStockForFumigation. */
+    function fumSearch() { if (!FM.open) return; return busy('fmSearch', fumSearchNow); }
+    function fumSearchNow() {
+        return getJson(api + '/fumigation/search' + qs({ fromDate: val('fmFrom'), toDate: val('fmTo'), parentCategoryId: netI(val('fmParent')),
+            itemCategoryId: netI(val('fmItemCategory')), itemTypeId: netI(val('fmItemType')), jobLotId: netI(val('fmJobLot')),
+            cropYear: selText('fmCrop'), warehouseId: netI(val('fmWarehouse')), refDocumentTypeId: netI(val('fmRefDoc')),
+            supplierCustomerId: netI(val('fmParty')), itemId: netI(val('fmItem')) }))
+            .then(function (rows) { FM.rows = (rows || []).map(function (r) { r._chk = false; return r; }); drawFum(); })
+            .catch(function (e) { box(e.message); });
+    }
+    function fumCell(c, v) {
+        if (c[1] === 'd') { var p = dateOnly(v); return p ? p.slice(8, 10) + '/' + p.slice(5, 7) + '/' + p.slice(0, 4) : (v === null || v === undefined ? '' : String(v)); }
+        if (c[1] === 'D') return (v === null || v === undefined || v === '') ? '' : K.dMMMyyyy(v);       // "dd-MMM-yyyy"
+        if (c[1] === 't') return v === null || v === undefined ? '' : String(v);
+        return (v === null || v === undefined || v === '') ? '' : F(c[1], v);
+    }
+    /** grd.DataSource = dtcol; grdSettings:438 (Select column first, frozen; header selector; filter row). */
+    function drawFum() {
+        var showValues = !!(FM.setup && FM.setup.valuesShowRights);
+        var cols = FUM_COLS.filter(function (c) { return showValues || !c[3]; });
+        if (!FM.rows.length) { $id('fumHead').innerHTML = ''; $id('gridFum').innerHTML = ''; $id('fumFoot').innerHTML = ''; return; }
+        var all = FM.rows.every(function (r) { return r._chk; });
+        $id('fumHead').innerHTML = '<th><input type="checkbox" id="fmAll"' + (all ? ' checked' : '') + '> Select</th>'
+            + cols.map(function (c) { return '<th' + (/^(q2|r|a)$/.test(c[1]) ? ' class="num"' : '') + '>' + esc(c[0]) + '</th>'; }).join('');
+        $id('gridFum').innerHTML = FM.rows.map(function (r, i) {
+            return '<tr data-i="' + i + '" tabindex="-1"><td style="text-align:center;"><input type="checkbox" data-i="' + i + '"' + (r._chk ? ' checked' : '') + '></td>'
+                + cols.map(function (c) { return '<td' + (/^(q2|r|a)$/.test(c[1]) ? ' class="num"' : '') + '>' + esc(fumCell(c, col(r, c[0]))) + '</td>'; }).join('') + '</tr>';
+        }).join('');
+        $id('fumFoot').innerHTML = '<tr><td></td>' + cols.map(function (c) {
+            return c[2] ? '<td class="num">' + esc(F(c[1], FM.rows.reduce(function (a, r) { return a + netD(col(r, c[0])); }, 0))) + '</td>' : '<td></td>';
+        }).join('') + '</tr>';
+        K.filterRow($id('tblFum'));
+    }
+    /** SelectedWeightCalculation:701 - Math.Round(x).ToString("0,0"). */
+    function fumSelectedWeight() {
+        var w = 0, q = 0;
+        FM.rows.forEach(function (r) { if (r._chk) { w += netD(col(r, 'WeightBalance')); q += netD(col(r, 'QtyBalance')); } });
+        setVal('fmSelWeight', K.pad2(rnd(w, 0))); setVal('fmSelQty', K.pad2(rnd(q, 0)));
+    }
+    /** btnReset_Click:590 - Party and Item cleared, the grid structure cleared; the rest stays. */
+    function fumReset() {
+        $id('fmParent').focus();
+        setSel('fmParty', 0); setSel('fmItem', 0);
+        FM.rows = []; drawFum(); refreshCombos();
+    }
+    /** btnLoadOnInvoice_Click_1:604, AvailableForFumigation == 0 branch (CanLoadOnlyPurchaseAndSingleItemRows false). */
+    function fumLoad() {
+        if (!FM.open) return;
+        try {
+            var sel = FM.rows.filter(function (r) { return r._chk; });
+            if (sel.length === 0) { box('Please Select Row first'); return; }
+            sel.forEach(function (r) {
+                /* Load stopped before the 33 columns were added (loadError): Rows.Add on a table with no columns. */
+                if (!FM.hasColumns) throw new Error('Input array is longer than the number of columns in this table.');
+                FM.dt.push(dtRow(FUM_DT_SCHEMA, [vs(col(r, 'RefDocumentTypeId')), vs(col(r, 'RefDocumentType')), vs(col(r, 'RefDocIdNo')),
+                    vs(col(r, 'RefDocSubIdNo')), vs(col(r, 'SupplierCustomerId')), vs(col(r, 'SupplierCustomerName')), vs(col(r, 'DocDate')),
+                    vs(col(r, 'DocCodeNo')), netI(col(r, 'WarehouseId')), vs(col(r, 'WareHouseCode')), netI(col(r, 'ItemId')),
+                    vs(col(r, 'ItemName')), vs(col(r, 'ItemCode')), netI(col(r, 'ItemUom')), col(r, 'PackUom'), netD(col(r, 'PackSize')),
+                    netI(col(r, 'CropYearId')), vs(col(r, 'CropBatch')), netI(col(r, 'JobLotId')), vs(col(r, 'JobLotCode')),
+                    netI(col(r, 'InvPackingTypeId')), vs(col(r, 'PackingType')), netD(col(r, 'QtyBalance')), netD(col(r, 'WeightBalance')),
+                    netD(col(r, 'QtyBalance')), netD(col(r, 'WeightBalance')), netD(col(r, 'AVgRate')), netI(col(r, 'RateUomId')),
+                    col(r, 'RateUom'), netD(col(r, 'Equivalent')), netD(col(r, 'ItemAmount')), '', netI(col(r, 'labIPmActivityLogId'))]));
+            });
+        } catch (e) { box(e.message); return; }        // the dialog stays open; rows added before the failure stay in dtIssuance
+        fumClose();                                     // Hide()
+    }
+    /** The dialog is gone (Load's Hide(), the title-bar X, Esc / Ctrl+E Close()): ShowDialog returns and the
+     *  caller continues - LoadDataDetailfromFumigation(loadFumigation.dtIssuance), then the Conversion Type lock. */
+    function fumClose() {
+        if (!FM.open) return;
+        FM.open = false;
+        $id('fumModal').classList.remove('is-open');
+        loadDataDetailfromFumigation(FM.dt);
+        lockConversionType();
+        renderAll();
+    }
+    /** LoadDataDetailfromFumigation:7733. */
+    function loadDataDetailfromFumigation(dt) {
+        try {
+            if (dt.length === 0) return;
+            var existing = {};
+            INPUT.forEach(function (r) { existing[netI(r.RefDocSubId)] = 1; });
+            var maxLineId = INPUT.length ? Math.max.apply(null, INPUT.map(function (r) { return netI(r.LineId); })) : 0;
+            for (var i = 0; i < dt.length; i++) {
+                var d = dt[i], sub = netI(d.RefDocSubIdNo);
+                if (existing[sub]) continue;
+                maxLineId++;
+                var row = dtRow(INPUT_SCHEMA, [0, d.RefDocumentTypeId, d.RefDocIdNo, d.RefDocSubIdNo, 'Issue', d.WareHouseId, d.WareHouse,
+                    d.CropYear, d.ItemId, d.ItemName, d.JobLotId, d.JobLotCode, d.ItemUOMId, d.PackUom, d.ItemUOM, d.PackingTypeId,
+                    d.PackTypeCode, d.ItemQty, d.Weight, d.ItemQty, d.Weight, d.ItemRate, d.RateUOMId, d.RateUOM, d.Equivalent,
+                    d.ItemAmount, '', 0, '', maxLineId, d.labIPmActivityLogId]);
+                row._chk = false;
+                INPUT.push(row);
+                existing[sub] = 1;
+            }
+            inputNoDelete = true;                                   // gridsettings(FromFumigation: true)
+            INPUT.forEach(function (r) { r._chk = true; });          // every record row IsChecked = true
+            inputRowsForwardToOutput();
+            proportionateOverheadGrid();
+            proportionatedPackingMaterialAmountInOutputGrid();
+            generateSummaryForUser();
+        } catch (e) { box(e.message); }
+    }
+
+    // ================================================== frmLoadStockShortFallForSales (modal)
+
+    /* dtGrid - PendingOrderLoad:239-262, grdSettings:285 (seven Ids hidden, GridWrappingAndColumnSettings(grd,3,3):
+       decimals "#,##0.###" + Sum, "Amount" columns stringFormatsingle + Sum). */
+    var SF_COLS = [['ItemName', 't'], ['ItemCode', 't'], ['WareHouseName', 't'], ['ItemUom', 't'], ['JobLot', 't'],
+        ['PackingType', 't'], ['CropYear', 't'], ['AvailableQty', 'q', 1], ['AvailableWeight', 'q', 1], ['AvailableAmount', 'a', 1],
+        ['SaleQty', 'q', 1], ['SaleWeight', 'q', 1], ['SaleAmount', 'a', 1], ['RequiredQty', 'q', 1], ['RequiredWeight', 'q', 1],
+        ['RequiredAmount', 'a', 1]];
+    var SF = { open: false, history: [], rows: [], loader: [], docDate: '' };
+    function sfOpen() { return SF.open; }
+
+    /** BtnLoadOutPut_Click:7355. */
+    function btnLoadOutPut() {
+        try {
+            var t = convType();
+            if (t === 0 || t === 3) { $id('CmbConversionType').focus(); throw new Error("You Can't Select Conversion Type [Value Gain/Loss]"); }
+        } catch (e) { box(e.message); return; }
+        /* new frmLoadStockShortFallForSales(UserAccount): DocDate = DateTime.Now, dtLoader an empty table. */
+        SF = { open: true, history: [], rows: [], loader: [], docDate: nowIso() };
+        $id('sfModal').classList.add('is-open');
+        $id('sfHead').innerHTML = ''; $id('gridSf').innerHTML = ''; $id('sfFoot').innerHTML = '';
+        ['sfParent', 'sfJobLot', 'sfCrop', 'sfWarehouse', 'sfItem'].forEach(function (id) { fill(id, [], 'Id', 'name'); });
+        refreshCombos();
+        /* LoadInvoices_Load:95 - StockComboFill, PendingOrderLoad, focus Parent Category. */
+        return busy('btnLoadOutPut', function () {
+            return sfComboFill().then(sfPendingOrderLoad).then(function () { $id('sfParent').focus(); });
+        });
+    }
+    /** StockComboFill:125 (also btnRefresh_Click) - a fresh bind drops the selections. */
+    function sfComboFill() {
+        return getJson(api + '/shortfall/setup').then(function (d) {
+            var l = (d && d.lists) || {};
+            fill('sfParent', l.ParentCategories, 'Id', 'name'); fill('sfJobLot', l.JobLot, 'Id', 'name');
+            fill('sfCrop', l.CropYear, 'Id', 'name'); fill('sfWarehouse', l.Warehouse, 'Id', 'name'); fill('sfItem', l.Items, 'Id', 'name');
+            refreshCombos();
+        }).catch(function (e) { box(e.message); });
+    }
+    /** PendingOrderLoad:224 - InventoryStockEvalautionDetail.StockConversion_BalanceSalesForStock. */
+    function sfPendingOrderLoad() {
+        SF.history = [];                                            // dtHistory.Rows.Clear()
+        return getJson(api + '/shortfall/search' + qs({ docDate: SF.docDate, parentCategoryId: netI(val('sfParent')),
+            itemId: netI(val('sfItem')), warehouseId: netI(val('sfWarehouse')), jobLotId: netI(val('sfJobLot')), cropYear: selText('sfCrop') }))
+            .then(function (rows) {
+                SF.history = rows || [];
+                if (SF.history.length > 0) {
+                    SF.rows = SF.history.map(function (r) {
+                        var g = {};
+                        ['ItemId', 'ItemName', 'ItemCode', 'WarehouseId', 'WareHouseName', 'ItemUomId', 'ItemUom', 'ItemEquivalent', 'JobLotId',
+                         'JobLot', 'PackingTypeId', 'PackingType', 'CropYear', 'CropYearId', 'AvailableQty', 'AvailableWeight', 'AvailableAmount',
+                         'SaleQty', 'SaleWeight', 'SaleAmount', 'RequiredQty', 'RequiredWeight', 'RequiredAmount'].forEach(function (k) { g[k] = col(r, k); });
+                        g._chk = false;
+                        return g;
+                    });
+                } else {
+                    SF.rows = [];                                       // grd.ClearStructure()
+                }
+                drawSf();
+            }).catch(function (e) { box(e.message); });           // the grid keeps what it showed
+    }
+    function drawSf() {
+        if (!SF.rows.length) { $id('sfHead').innerHTML = ''; $id('gridSf').innerHTML = ''; $id('sfFoot').innerHTML = ''; return; }
+        var all = SF.rows.every(function (r) { return r._chk; });
+        $id('sfHead').innerHTML = '<th><input type="checkbox" id="sfAll"' + (all ? ' checked' : '') + '></th>'
+            + SF_COLS.map(function (c) { return '<th' + (c[1] !== 't' ? ' class="num"' : '') + '>' + esc(c[0]) + '</th>'; }).join('');
+        $id('gridSf').innerHTML = SF.rows.map(function (r, i) {
+            return '<tr data-i="' + i + '" tabindex="-1"><td style="text-align:center;"><input type="checkbox" data-i="' + i + '"' + (r._chk ? ' checked' : '') + '></td>'
+                + SF_COLS.map(function (c) {
+                    var v = r[c[0]];
+                    return '<td' + (c[1] !== 't' ? ' class="num"' : '') + '>' + esc(c[1] === 't' ? (v === null || v === undefined ? '' : v) : ((v === null || v === undefined || v === '') ? '' : F(c[1], v))) + '</td>';
+                }).join('') + '</tr>';
+        }).join('');
+        $id('sfFoot').innerHTML = '<tr><td></td>' + SF_COLS.map(function (c) {
+            return c[2] ? '<td class="num">' + esc(F(c[1], SF.rows.reduce(function (a, r) { return a + netD(r[c[0]]); }, 0))) + '</td>' : '<td></td>';
+        }).join('') + '</tr>';
+    }
+    function sfSearch() { if (!SF.open) return; return busy('sfSearch', sfPendingOrderLoad); }
+    /** btnNew -> btnReset_Click:304 - focus Parent Category and search again. */
+    function sfNew() { if (!SF.open) return; $id('sfParent').focus(); return busy('sfNew', sfPendingOrderLoad); }
+    /** btnRefresh_Click:317 - StockComboFill. */
+    function sfRefresh() { if (!SF.open) return; return busy('sfRefresh', sfComboFill); }
+    /** MakeShortCutKeys:356 (the list is shown; the form itself never wires its KeyDown). */
+    function sfShortcuts() {
+        K.shortcuts([['Ctrl+E', 'For Close'], ['Ctrl+N', 'For New'], ['Ctrl+R', 'For Refresh'], ['Ctrl+L', 'To Press Load Button'],
+                     ['Ctrl+S', 'For Search'], ['Ctrl+alt', 'To Show ShortCut Keys Form'],
+                     ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]]);
+    }
+    /** btnLoadOnInvoice_Click_1:329 - one dtHistory row per distinct Warehouse|Item|Uom|JobLot|PackingType|CropYear. */
+    function sfLoad() {
+        if (!SF.open) return;
+        var checked = SF.rows.filter(function (r) { return r._chk; });
+        if (checked.length > 0) {
+            SF.loader = [];
+            var seen = {};
+            function key(o) { return [o.WarehouseId, o.ItemId, o.ItemUomId, o.JobLotId, o.PackingTypeId, o.CropYear].map(vs).join('|'); }
+            checked.forEach(function (r) {
+                var k = key(r);
+                if (seen[k]) return;
+                seen[k] = 1;
+                var m = SF.history.filter(function (h) {
+                    return key({ WarehouseId: col(h, 'WarehouseId'), ItemId: col(h, 'ItemId'), ItemUomId: col(h, 'ItemUomId'), JobLotId: col(h, 'JobLotId'),
+                                 PackingTypeId: col(h, 'PackingTypeId'), CropYear: col(h, 'CropYear') }) === k;
+                })[0];
+                if (m) SF.loader.push(m);
+            });
+            sfClose();                                                  // Hide()
+        } else {
+            SF.loader = [];                                             // dtLoader.Clear()
+            box('Check the row first');
+        }
+    }
+    /** The dialog is gone (Load's Hide() or the title-bar X): the rest of BtnLoadOutPut_Click:7367 runs. */
+    function sfClose() {
+        if (!SF.open) return;
+        SF.open = false;
+        $id('sfModal').classList.remove('is-open');
+        loadOutPutDataFromStockShortFallForSales();
+        lockConversionType();
+        var p = ES.contractWagesChargeToProduct ? wagesFill('out') : null;
+        renderAll();
+        afterDetail(p);
+    }
+    /** LoadOutPutDataFromStockShortFallForSales:7379 - tableByProduct.Rows.Add with THIRTY values, as written. */
+    function loadOutPutDataFromStockShortFallForSales() {
+        try {
+            if (SF.loader.length <= 0) return;
+            SF.loader.forEach(function (dr) {
+                /* Value 28 is "" and lands in ItemExpAmount (Double): the desktop's Rows.Add throws there
+                   ("Input string was not in a correct format.Couldn't store <> in ItemExpAmount Column.
+                   Expected type is Double.") for the first row, so nothing is added. Reproduced, not fixed. */
+                var row = dtRow(OUTPUT_SCHEMA, [0, 'Recovery Head Rice', netI(col(dr, 'WarehouseId')), cs(col(dr, 'WareHouseName')),
+                    cs(col(dr, 'CropYear')), netI(col(dr, 'ItemId')), cs(col(dr, 'ItemName')), netI(col(dr, 'JobLotId')), cs(col(dr, 'JobLot')),
+                    netI(col(dr, 'ItemUomId')), cs(col(dr, 'ItemUom')), netD(col(dr, 'ItemEquivalent')), netI(col(dr, 'PackingTypeId')),
+                    cs(col(dr, 'PackingType')), netD(col(dr, 'RequiredQty')), netD(col(dr, 'RequiredWeight')), 0, netI(col(dr, 'ItemUomId')),
+                    cs(col(dr, 'ItemUom')), netD(col(dr, 'ItemEquivalent')), netD(col(dr, 'RequiredAmount')), 0, 0, '', 0, 0,
+                    netD(col(dr, 'RequiredAmount')), '', 0, 0]);
+                OUTPUT.push(row);
+            });
+            proportionateOverheadGrid();
+            proportionatedPackingMaterialAmountInOutputGrid();
+            generateSummaryForUser();
+        } catch (e) { box(e.message); }
+    }
+
+    // ============================================================ Wages Schedule / Wages Exempt
+
+    /** btnWagesSchedule_Click:7531 - new frmContractWagesSchedule(UserAccount).Show(): the ported page
+     *  (AccountsModuleViewController /accounts/vouchers/wages-rate-schedule) in a new window. */
+    function btnWagesSchedule() {
+        try { var w = window.open('/accounts/vouchers/wages-rate-schedule', '_blank'); if (w) w.focus(); }
+        catch (e) { box(e.message); }
+    }
+    /** btnWagesExempt_Click:7545 - new WagesExemptItemSchedule(UserAccount).Show(), in a new window. */
+    function btnWagesExempt() {
+        try { var w = window.open('/production/wages-exempt-item-schedule', '_blank'); if (w) w.focus(); }
+        catch (e) { box(e.message); }
     }
 
     // ============================================================================ Save
@@ -2108,6 +2474,7 @@
             });
             if (!OHR.length) OHR.push(newOhRow());
             INPUT = []; OUTPUT = [];
+            inputNoDelete = false;              // gridsettings():4914
             var issueLine = 1, outLine = 1;
             (d.details || []).forEach(function (x) {
                 var lineId = netI(col(x, 'LineId'));
@@ -2327,6 +2694,28 @@
     function onForm() { return $id('mainViewForm').style.display !== 'none'; }
     function focusFirstRow(bodyId) { var t = $id(bodyId).querySelector('tr[data-i]'); if (t) { t.tabIndex = 0; t.focus(); } }
 
+    /* The two ShowDialog loaders block the form under them. LoadavailableTransactionsForStockReleaseFromFumigation
+       has KeyPreview + KeyDown (:662): Esc / Ctrl+E Close, Ctrl+Up From date, Ctrl+Down grid, Ctrl+F5 Parent
+       Category, Ctrl+L Load, Ctrl+S Search. frmLoadStockShortFallForSales wires no KeyDown at all, so no
+       shortcut does anything while it is open. */
+    function guardKeys(map) {
+        var FUM_KEYS = {
+            'esc': fumClose, 'ctrl+e': fumClose, 'ctrl+s': fumSearch, 'ctrl+l': fumLoad,
+            'ctrl+arrowup': function () { $id('fmFrom').focus(); },
+            'ctrl+arrowdown': function () { var t = $id('gridFum').querySelector('tr[data-i]'); if (t) t.focus(); },
+            'ctrl+f5': function () { $id('fmParent').focus(); }
+        };
+        var out = {};
+        Object.keys(map).forEach(function (k) {
+            out[k] = function (e) {
+                if (sfOpen()) return;
+                if (fumOpen()) { if (FUM_KEYS[k]) FUM_KEYS[k](e); return; }
+                map[k](e);
+            };
+        });
+        return out;
+    }
+
     function boot() {
         setVal('txtDocdate', today());
         docDateTag = val('txtDocdate');
@@ -2334,7 +2723,7 @@
         summeryreset();
 
         K.enterToTab();
-        K.keys({
+        K.keys(guardKeys({
             'ctrl+t': function () { showView(onForm() ? 'history' : 'form'); },
             'ctrl+e': function () { if ($id('loaderModal').classList.contains('is-open')) loaderClose(); else K.close(); },
             'esc': function () {
@@ -2363,7 +2752,7 @@
                 else if (a && a.closest && a.closest('#gridOutput')) { tab2('panePm'); focusFirstRow('gridPacking'); }
                 else { tab2('paneInput'); focusFirstRow('gridInput'); }
             }
-        });
+        }));
 
         /* Detail TextChanged / Leave events. */
         $id('txtQty').addEventListener('input', function () { calculateWeight(); amountCalculation(); });
@@ -2422,6 +2811,37 @@
             });
             selectedWeightCalculation();
         });
+        /* the fumigation loader grid - CellValueChanged / ColumnHeaderClick -> SelectedWeightCalculation */
+        $id('gridFum').addEventListener('change', function (e) {
+            var i = e.target.getAttribute('data-i');
+            if (i === null) return;
+            FM.rows[+i]._chk = e.target.checked;
+            fumSelectedWeight();
+            var all = $id('fmAll'); if (all) all.checked = FM.rows.every(function (r) { return r._chk; });
+        });
+        $id('fumHead').addEventListener('change', function (e) {
+            if (e.target.id !== 'fmAll') return;
+            var on = e.target.checked;
+            $id('gridFum').querySelectorAll('tr[data-i]').forEach(function (tr) {
+                if (tr.style.display === 'none') return;
+                FM.rows[+tr.getAttribute('data-i')]._chk = on;
+                var cb = tr.querySelector('input[type="checkbox"]'); if (cb) cb.checked = on;
+            });
+            fumSelectedWeight();
+        });
+        /* the short-fall loader grid */
+        $id('gridSf').addEventListener('change', function (e) {
+            var i = e.target.getAttribute('data-i');
+            if (i === null) return;
+            SF.rows[+i]._chk = e.target.checked;
+            var all = $id('sfAll'); if (all) all.checked = SF.rows.every(function (r) { return r._chk; });
+        });
+        $id('sfHead').addEventListener('change', function (e) {
+            if (e.target.id !== 'sfAll') return;
+            var on = e.target.checked;
+            SF.rows.forEach(function (r) { r._chk = on; });
+            $id('gridSf').querySelectorAll('input[type="checkbox"]').forEach(function (cb) { cb.checked = on; });
+        });
         /* the pick list */
         $id('pickFilter').addEventListener('input', drawPick);
         $id('pickBody').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-i]'); if (tr) pickDone(+tr.getAttribute('data-i')); });
@@ -2470,7 +2890,10 @@
         addInGrid: addInGrid, updateDetail: updateDetail, cancelDetail: cancelDetail, forwardRows: forwardRows,
         generateItemsAndUom: generateItemsAndUom, applyAll: applyAll, resetWages: resetWages,
         btnIssuanceLoad: btnIssuanceLoad, loaderSearch: loaderSearch, loaderReset: loaderReset, loaderClose: loaderClose, loaderLoad: loaderLoad,
-        btnLoadOutPut: btnLoadOutPut, notPorted: notPorted, pickClose: pickClose
+        btnLoadOutPut: btnLoadOutPut, pickClose: pickClose,
+        btnStockReleaseFromFumigation: btnStockReleaseFromFumigation, fumSearch: fumSearch, fumLoad: fumLoad, fumReset: fumReset, fumClose: fumClose,
+        sfClose: sfClose, sfLoad: sfLoad, sfSearch: sfSearch, sfNew: sfNew, sfRefresh: sfRefresh, sfShortcuts: sfShortcuts,
+        btnWagesSchedule: btnWagesSchedule, btnWagesExempt: btnWagesExempt
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

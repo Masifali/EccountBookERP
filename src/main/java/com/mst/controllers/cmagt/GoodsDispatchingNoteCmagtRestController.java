@@ -16,25 +16,38 @@ public class GoodsDispatchingNoteCmagtRestController {
     @Autowired
     private GoodsDispatchingNoteCmagtService service;
 
-    /* Company and organization are NEVER taken from the request. They used to arrive as
-       @RequestParam(defaultValue = "1"), which meant two things at once: a caller could read
-       another company's data by appending ?companyId=, and a caller that omitted it silently
-       queried company 1 - which in this database does not exist, so the screen showed nothing and
-       said nothing. The desktop reads UserAccount.OrganizationId / .CompanyId and offers no
-       override; this is that, enforced server-side. */
-    @org.springframework.beans.factory.annotation.Autowired
-    private com.mst.security.CurrentUserContext currentUserContext;
+    /* Company, organization, branch, year and user are NEVER taken from the request; the
+       service reads them from the session (desktop UserAccount / clsGlobalVariables.ActiveYr). */
 
+    /** btnsave_Click :2072 - always a new document (RecId = 0). */
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> save(@RequestBody GoodsDispatchingNoteCmagtDto dto) {
-        return ResponseEntity.ok(service.saveOrUpdate(dto));
+        return ResponseEntity.ok(service.saveOrUpdate(dto, false));
+    }
+
+    /** btnUpdate_Click :2085 - updates the loaded document; refused without an id. */
+    @PostMapping("/update")
+    public ResponseEntity<Map<String, Object>> update(@RequestBody GoodsDispatchingNoteCmagtDto dto) {
+        return ResponseEntity.ok(service.saveOrUpdate(dto, true));
+    }
+
+    /** btnDelete_Click :2191 -> BLL DeleteByID. */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> delete(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.delete(id));
+    }
+
+    /** GenerateCode (:677) for the Doc No box on New. */
+    @GetMapping("/generate-code")
+    public ResponseEntity<Map<String, Object>> generateCode() {
+        return ResponseEntity.ok(service.generateCode());
     }
 
     @GetMapping("/history")
     public ResponseEntity<List<Map<String, Object>>> getHistory(
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate) {
-        return ResponseEntity.ok(service.getHistory(currentUserContext.currentCompanyId(), currentUserContext.currentOrganizationId(), fromDate, toDate));
+        return ResponseEntity.ok(service.getHistory(fromDate, toDate));
     }
 
     @GetMapping("/{id}")

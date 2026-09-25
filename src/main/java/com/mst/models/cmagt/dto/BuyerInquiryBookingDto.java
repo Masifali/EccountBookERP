@@ -219,7 +219,7 @@ public class BuyerInquiryBookingDto {
         @JsonAlias({"QualitySpecifications"})
         private String qualitySpecifications;
         private String remarks;
-        private Integer sortNo = 1;
+        private Integer sortNo = 0;   /* Insert() never sets it: CLR default 0 (:1577-1620) */
         private Integer actionTypeId = 1;
 
         public Integer getInquiryBookingDetailId() { return inquiryBookingDetailId; }
@@ -291,7 +291,7 @@ public class BuyerInquiryBookingDto {
         private Integer rateUomId = 0;
         @JsonAlias({"Amount"})
         private BigDecimal amount = BigDecimal.ZERO;
-        private Integer sortNo = 1;
+        private Integer sortNo = 0;   /* Insert() never sets it: CLR default 0 (:1577-1620) */
         private String remarks;
         private Integer actionTypeId = 1;
 

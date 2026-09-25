@@ -366,6 +366,13 @@ public class SaleOrderCmagtService {
     private static final class CalcContext {
         final Map<Integer, List<Map<String, Object>>> uom = new HashMap<>();
         final Map<Integer, Map<Integer, BigDecimal>> tax = new HashMap<>();
+        /** CmbItemName_Leave -> TaxTypeDbCall(ItemId, datDocDate.Value): the schedule is read
+         *  as of the DOCUMENT date, never today. */
+        final String docDate;
+        CalcContext(String docDate) {
+            this.docDate = (docDate == null || docDate.trim().length() < 10)
+                    ? LocalDate.now().format(ISO) : docDate.trim().substring(0, 10);
+        }
     }
 
     private List<Map<String, Object>> uomRowsFor(CalcContext ctx, int itemId) {
@@ -383,7 +390,7 @@ public class SaleOrderCmagtService {
      */
     private BigDecimal requireUomFactor(CalcContext ctx, int itemId, int uomId, String which, int rowIndex) {
         if (uomId <= 0) {
-            throw new ValidationException(which + " not found in detail grid at row#" + (rowIndex + 1), "detail");
+            throw new ValidationException(which + " is required in Detail Grid at row No: " + (rowIndex + 1), "detail");
         }
         for (Map<String, Object> r : uomRowsFor(ctx, itemId)) {
             if (toInt(r.get("Id")) == uomId) {
@@ -474,7 +481,7 @@ public class SaleOrderCmagtService {
                 for (Map<String, Object> r : repo.itemTaxSchedule(
                         currentUserContext.currentOrganizationId(),
                         currentUserContext.currentCompanyId(),
-                        id, LocalDate.now().format(ISO))) {
+                        id, ctx.docDate)) {
                     m.put(toInt(r.get("TaxNameId")), decimalOrNull(r.get("TaxPercent")));
                 }
             } catch (Exception ignored) {
@@ -596,6 +603,31 @@ public class SaleOrderCmagtService {
      * Hiding the row or the link in the browser is not a control; this is the control.
      */
     public Map<String, Object> getSaleOrderById(int id) {
+        Map<String, Object> h = scopedHeader(id);
+        if (h == null) return null;
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("header", h);
+        out.put("detail", repo.readDetailByHeaderId(id));
+        out.put("expenses", repo.readExpensesByHeaderId(id));
+        out.put("emptyBags", repo.readEmptyBagsByHeaderId(id));
+        out.put("commissions", repo.readCommissionsByHeaderId(id));
+        out.put("payments", repo.readPaymentsByHeaderId(id));
+        return out;
+    }
+
+    /**
+     * The stored header of one order, or null when it does not exist (ReadById filters
+     * ActionId <> 3). Throws AccessDeniedException when it belongs to another organization /
+     * company, or to another user and the caller lacks "CanView AllRecord".
+     *
+     * Used by the read, and - since 2026-09-25 - by Update and Delete as well. Both
+     * USP_saleOrderMaster_InsertAndUpdate (ActionId 2) and the DeleteById activity act on
+     * `saleOrderMasterId = @Id` alone, and the Update branch even rewrites organizationId /
+     * companyId to the caller's, so without this check any signed-in user could overwrite or
+     * delete another tenant's order by posting its id.
+     */
+    private Map<String, Object> scopedHeader(int id) {
         List<Map<String, Object>> header = repo.readHeaderById(id);
         if (header == null || header.isEmpty()) return null;
 
@@ -621,15 +653,7 @@ public class SaleOrderCmagtService {
                         "You do not have permission to open Sale Orders entered by another user.");
             }
         }
-
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("header", h);
-        out.put("detail", repo.readDetailByHeaderId(id));
-        out.put("expenses", repo.readExpensesByHeaderId(id));
-        out.put("emptyBags", repo.readEmptyBagsByHeaderId(id));
-        out.put("commissions", repo.readCommissionsByHeaderId(id));
-        out.put("payments", repo.readPaymentsByHeaderId(id));
-        return out;
+        return h;
     }
 
     // =======================================================================
@@ -728,6 +752,12 @@ public class SaleOrderCmagtService {
             return r;
         }
         try {
+            // Same tenant / ownership scope as the read - see scopedHeader().
+            if (scopedHeader(id) == null) {
+                r.put("success", false);
+                r.put("message", "No record found to Delete");
+                return r;
+            }
             repo.deleteById(currentUserContext.currentUserId(), id);
             r.put("success", true);
             r.put("message", "Delete Record Successfully");
@@ -797,6 +827,21 @@ public class SaleOrderCmagtService {
         String now = LocalDateTime.now().toString();
         boolean isUpdate = iv(h.getSaleOrderMasterId()) > 0;
 
+        // Update may only touch an order the caller could have opened (tenant + ownership),
+        // and only that order's own detail rows: USP_saleOrderDetail_Insert updates / soft-
+        // deletes by saleOrderDetailId alone and re-points the row at @saleOrderMasterId.
+        Set<Integer> ownDetailIds = new HashSet<>();
+        if (isUpdate) {
+            Map<String, Object> stored = scopedHeader(iv(h.getSaleOrderMasterId()));
+            if (stored == null) throw new ValidationException("Record not update because Id not found");
+            // txtDocNo is loaded from the record and read-only on the desktop, so Update always
+            // re-sends the stored number; never let a posted value renumber the document.
+            if (toInt(stored.get("docNo")) > 0) h.setDocNo(toInt(stored.get("docNo")));
+            for (Map<String, Object> r : repo.readDetailByHeaderId(iv(h.getSaleOrderMasterId()))) {
+                ownDetailIds.add(toInt(ci(r, "saleOrderDetailId")));
+            }
+        }
+
         h.setDocumentTypeId(DOCUMENT_TYPE_ID);
         h.setStatusId(1);                                  // desktop hardcodes statusId = 1
         h.setActionId(isUpdate ? 2 : 1);                   // BLL Save(): 1 insert, 2 update
@@ -824,37 +869,39 @@ public class SaleOrderCmagtService {
         // does exactly this with lstRemoveRecordDetail; deletion is never "omit the row".
         if (isUpdate) {
             for (SaleOrderCmagtDetailDto d : nz(h.getRemovedDetailRows())) {
+                requireOwnDetail(ownDetailIds, iv(d.getSaleOrderDetailId()));
                 d.setActionTypeId(3);
                 detailToSave.add(d);
             }
         }
 
         // One lookup cache for this save only - never shared between requests.
-        CalcContext calc = new CalcContext();
+        CalcContext calc = new CalcContext(h.getDocDate());
 
         BigDecimal detailSumAmount = BigDecimal.ZERO;
         int rowIndex = 0;
         for (SaleOrderCmagtDetailDto d : nz(h.getSaleOrderDetailList())) {
             d.setSaleOrderDetailId(isUpdate ? iv(d.getSaleOrderDetailId()) : 0);
             d.setActionTypeId(iv(d.getSaleOrderDetailId()) <= 0 ? 1 : 2);
+            if (iv(d.getSaleOrderDetailId()) > 0) requireOwnDetail(ownDetailIds, iv(d.getSaleOrderDetailId()));
 
+            // frmSaleOrderCmagt.Insert():2542-2558, in the desktop's own order.
             requireField(iv(d.getInventoryParentCategoryId()), "Parent Category", rowIndex);
             requireField(iv(d.getItemId()), "Item Name", rowIndex);
             requireField(iv(d.getCropYearId()), "Crop Year", rowIndex);
             requireField(iv(d.getPackingTypeId()), "Packing Type", rowIndex);
             requireField(iv(d.getPackUomId()), "Pack Uom", rowIndex);
             requireField(nz(d.getItemQty()), "Qty", rowIndex);
+            requireField(nz(d.getItemWeight()), "Weight", rowIndex);
             requireField(nz(d.getItemRate()), "Rate", rowIndex);
             requireField(iv(d.getRateUomId()), "Rate Uom", rowIndex);
+            requireField(nz(d.getItemAmount()), "Amount", rowIndex);
 
             // Authoritative server-side recalculation. It refuses the row outright when a
             // required conversion factor is unavailable, rather than letting that become a
             // zero that looks like a legitimate amount, and it rejects any browser figure
             // that disagrees with the server's own arithmetic.
             recomputeAndVerifyRow(calc, d, rowIndex);
-
-            requireField(nz(d.getItemWeight()), "Weight", rowIndex);
-            requireField(nz(d.getItemAmount()), "Amount", rowIndex);
 
             if (iv(d.getTaxNameId()) > 0
                     || nz(d.getTaxPercent()).compareTo(BigDecimal.ZERO) > 0
@@ -1076,14 +1123,25 @@ public class SaleOrderCmagtService {
         return m;
     }
 
-    /** FormHelper.ValidateField - "<Field> is required in row#<n>" semantics. */
+    /**
+     * FormHelper.ValidateField (FormHelper.cs:503-508), message verbatim:
+     * "{fieldName} is required in {GridName} at row No: {rowIndex + 1}", GridName "Detail Grid".
+     * int fails only on == 0; decimal fails on <= 0.
+     */
     private static void requireField(int value, String field, int rowIndex) {
-        if (value <= 0) throw new ValidationException(field + " not found in detail grid at row#" + (rowIndex + 1), "detail");
+        if (value == 0) throw new ValidationException(field + " is required in Detail Grid at row No: " + (rowIndex + 1), "detail");
     }
 
     private static void requireField(BigDecimal value, String field, int rowIndex) {
         if (value == null || value.compareTo(BigDecimal.ZERO) <= 0)
-            throw new ValidationException(field + " not found in detail grid at row#" + (rowIndex + 1), "detail");
+            throw new ValidationException(field + " is required in Detail Grid at row No: " + (rowIndex + 1), "detail");
+    }
+
+    /** A posted saleOrderDetailId must be one of this order's own live detail rows. */
+    private static void requireOwnDetail(Set<Integer> ownDetailIds, int detailId) {
+        if (detailId <= 0 || !ownDetailIds.contains(detailId)) {
+            throw new ValidationException("Detail row " + detailId + " does not belong to this Sale Order.", "detail");
+        }
     }
 
     private static <T> List<T> nz(List<T> l) { return l == null ? Collections.emptyList() : l; }

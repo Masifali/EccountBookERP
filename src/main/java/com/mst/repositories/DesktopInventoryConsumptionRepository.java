@@ -39,8 +39,10 @@ public class DesktopInventoryConsumptionRepository {
                 "EXEC dbo.Sp_Item_GetAllMethod @OrganizationId=?, @CompanyId=?, @ParentIds=?, @Activity=?",
                 u.getOrganizationId(), u.getCompanyId(), null, "ReadByOrganizationCompanyId"),
             "types", jdbc.queryForList(
-                "EXEC dbo.Sp_ItemType_GetAllMethod @OrganizationId=?, @CompanyId=?, @Type=?, @ParentCategoryIds=?, @Activity=?",
-                u.getOrganizationId(), u.getCompanyId(), 0, "", "ReadByOrganizationCompanyId"));
+                // BLL ItemType.Getall sends @Type only when non-zero and @ParentCategoryIds only when non-empty (BLL.Inventory IL 83263);
+                // @Type=0 / '' would match no rows in Sp_ItemType_GetAllMethod.
+                "EXEC dbo.Sp_ItemType_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",
+                u.getOrganizationId(), u.getCompanyId(), "ReadByOrganizationCompanyId"));
     }
     public List<Map<String,Object>> available(UserAccount u,int category,int type){
         StringBuilder sql=new StringBuilder("EXEC dbo.USP_GetItemsAllocationForConsumption @OrganizationId=?, @CompanyId=?");var args=new ArrayList<Object>(List.of(u.getOrganizationId(),u.getCompanyId()));

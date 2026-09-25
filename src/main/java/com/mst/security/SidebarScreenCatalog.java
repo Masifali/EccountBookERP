@@ -221,6 +221,11 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Goods Receipt Notes PM", "Packing Material", "/packing-material/grn", "PM_GRN", "PACKING_MATERIAL", 500, 54));
         e.add(new Entry("Purchase Invoice PM", "Packing Material", "/packing-material/purchase-invoice", "PM_PURCHASE_INVOICE", "PACKING_MATERIAL", 501, 54));
         e.add(new Entry("Purchase Invoice Direct PM", "Packing Material", "/packing-material/purchase-invoice-direct", "PM_PURCHASE_INVOICE_DIRECT", "PACKING_MATERIAL", 495, 54));
+        e.add(new Entry("Store Send Receipt", "Packing Material", "/packing-material/store-send-receipt", "PM_STORE_SEND_RECEIPT", "PACKING_MATERIAL", 504, 54));
+        e.add(new Entry("Stock Transfer Store", "Packing Material", "/packing-material/stock-transfer-store", "PM_STOCK_TRANSFER_STORE", "PACKING_MATERIAL", 505, 54));
+        e.add(new Entry("Stock Adjustment For PM", "Packing Material", "/packing-material/stock-adjustment", "PM_STOCK_ADJUSTMENT", "PACKING_MATERIAL", 492, 54));
+        e.add(new Entry("Store Stock Conversion", "Packing Material", "/packing-material/store-stock-conversion", "PM_STORE_STOCK_CONVERSION", "PACKING_MATERIAL", 502, 54));
+        e.add(new Entry("Delivery Order PM", "Packing Material", "/packing-material/delivery-order", "PM_DELIVERY_ORDER", "PACKING_MATERIAL", 506, 54));
         // 9. WEIGH BRIDGE (module 44)
         // Id 411, ScreenName "frmWeightbridge", ScreenAlias "Weigh Bridge", ModuleId 44 - read from
         // migration/user-rights/reconciliation-input.json, the live GoldenAcedb dump, not matched by

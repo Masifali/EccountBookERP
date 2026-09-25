@@ -40,7 +40,7 @@ public class DesktopInventoryItemService {
     public Map<String,Object> save(InventoryGeneralItemRequest r){
         if(r==null||r.Id<0)throw new IllegalArgumentException("Invalid item");
         var u=user(r.Id==0?"Save":"Update");var old=r.Id>0?repo.record(u,r.Id):null;var choices=repo.lookups(u);
-        text(r.ItemName,100,"Item Name");text(r.ItemCode,50,"Item Code");text(r.ItemCodeNew,Integer.MAX_VALUE,"Item Code");
+        text(r.ItemName,100,"Item Name");/* InvDefrmAddItem.cs:1239-1310 does not require either code */if(r.ItemCode==null)r.ItemCode="";if(r.ItemCodeNew==null)r.ItemCodeNew="";length(r.ItemCode,50,"Item Code");length(r.ItemCodeNew,Integer.MAX_VALUE,"Item Code");
         
         length(r.HSCode,50,"HS Code");length(r.ManufacturePartNo,50,"Manufacturer Part No");length(r.BuyerPartNo,50,"Buyer Part No");length(r.ProductNo,50,"Product No");length(r.ModelName,300,"Model Name");
         selected(choices,"categories","Id",r.ItemCategoryId);selected(choices,"types","Id",r.ItemTypeId);
@@ -70,7 +70,8 @@ public class DesktopInventoryItemService {
         else if(r.WholeSalePrice==null||!Double.isFinite(r.WholeSalePrice.doubleValue()))throw new IllegalArgumentException("Enter a valid Purchase Rate");
         var years=shared.years(u);if(years.isEmpty())throw new IllegalArgumentException("No active financial year allocated to this company");
         var images=files.prepareImages(u,r);var equivalent=new BigDecimal(unit.get("Equivalent").toString());
-        int id=writer.save(u,years.get(0),r,old,images,equivalent);files.persist(u,id,r.ItemTypeId,r);return repo.details(u,id);
+        int chosenYear=context.currentFinancialYearId();var year=years.stream().filter(y->y.get("Id") instanceof Number n&&n.intValue()==chosenYear).findFirst().orElseThrow(()->new IllegalArgumentException("The financial year selected at login is not active for this company"));
+        int id=writer.save(u,year,r,old,images,equivalent);files.persist(u,id,r.ItemTypeId,r);return repo.details(u,id);
     }
     @Transactional(isolation=Isolation.SERIALIZABLE)
     public Map<String,Object> updateNames(List<InventoryGeneralItemRequest.Name> changes){

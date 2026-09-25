@@ -52,7 +52,9 @@ public class GrnLoadingChallanCmagtRepository {
         masterParams.addValue("isSupplierOtherChargesAllowed", nb(dto.isSupplierOtherChargesAllowed()));
         masterParams.addValue("approvedDate", parseDate(dto.getApprovedDate()));
         masterParams.addValue("biltyDate", parseDate(dto.getBiltyDate()));
-        masterParams.addValue("deliveryStartDate", parseDate(dto.getDeliveryStartDate()));
+        /* Nullable DateTime? on the model; frmGrnLoadingChallanCmagt.Insert() never assigns it, so
+           the desktop sends NULL. parseDate() would have stamped today. */
+        masterParams.addValue("deliveryStartDate", parseDateOrNull(dto.getDeliveryStartDate()));
         masterParams.addValue("docDate", parseDate(dto.getDocDate()));
         masterParams.addValue("entryDate", parseDate(dto.getEntryDate()));
         masterParams.addValue("modifyDate", parseDate(dto.getModifyDate()));
@@ -83,13 +85,13 @@ public class GrnLoadingChallanCmagtRepository {
         masterParams.addValue("transporterId", ni(dto.getTransporterId()));
         masterParams.addValue("unloadingCityId", ni(dto.getUnloadingCityId()));
         masterParams.addValue("vehicleTypeId", ni(dto.getVehicleTypeId()));
-        masterParams.addValue("approvalRemarks", ns(dto.getApprovalRemarks()));
-        masterParams.addValue("attachmentsValues", ns(dto.getAttachmentsValues()));
+        masterParams.addValue("approvalRemarks", dto.getApprovalRemarks());
+        masterParams.addValue("attachmentsValues", dto.getAttachmentsValues());
         masterParams.addValue("biltyNo", ns(dto.getBiltyNo()));
-        masterParams.addValue("customAttachmentsValues", ns(dto.getCustomAttachmentsValues()));
+        masterParams.addValue("customAttachmentsValues", dto.getCustomAttachmentsValues());
         masterParams.addValue("remarksHeader", ns(dto.getRemarksHeader()));
-        masterParams.addValue("supplierRefDocNo", ns(dto.getSupplierRefDocNo()));
-        masterParams.addValue("transporterName", ns(dto.getTransporterName()));
+        masterParams.addValue("supplierRefDocNo", dto.getSupplierRefDocNo());
+        masterParams.addValue("transporterName", dto.getTransporterName());
         masterParams.addValue("vehicleNo", ns(dto.getVehicleNo()));
 
         Map<String, Object> masterOut = masterCall.execute(masterParams);
@@ -97,13 +99,26 @@ public class GrnLoadingChallanCmagtRepository {
         if (masterId == null || masterId <= 0) {
             masterId = dto.getGrnSupplierLoadingMasterId();
         }
+        if (masterId == null || masterId <= 0) {
+            /* Never write children against master 0 - the DAL would not either, because
+               ExecuteScalar always yields the id the procedure SELECTs. */
+            throw new IllegalStateException("Master id was not returned by USP_grnSupplierLoadingMaster_InsertAndUpdate");
+        }
 
         /* SetData assigns the returned master id onto every child before inserting it. */
         for (GrnLoadingChallanCmagtDto.DetailDto d : dto.getGrnSupplierLoadingDetailList()) {
             d.setGrnSupplierLoadingMasterId(masterId);
             /* BLL: actionTypeId = detailId <= 0 ? 1 : 2 (btnSave_Click :2680). */
-            d.setActionTypeId((d.getGrnSupplierLoadingDetailId() == null
-                    || d.getGrnSupplierLoadingDetailId() <= 0) ? 1 : 2);
+            /* Rows the operator removed from a saved challan arrive with actionTypeId 3
+               (DeleteDetailRow :2142 -> lstRemoveRecordDetail, added in Insert() :2593) and
+               must stay 3 - recomputing them to 2 re-saved a deleted row instead of
+               soft-deleting it. */
+            if (d.getActionTypeId() == null || d.getActionTypeId() != 3) {
+                d.setActionTypeId((d.getGrnSupplierLoadingDetailId() == null
+                        || d.getGrnSupplierLoadingDetailId() <= 0) ? 1 : 2);
+            } else if (d.getGrnSupplierLoadingDetailId() == null || d.getGrnSupplierLoadingDetailId() <= 0) {
+                continue;   /* an unsaved row that was removed never reaches the procedure */
+            }
             MapSqlParameterSource p = new MapSqlParameterSource();
             p.addValue("addLessWeight", nd(d.getAddLessWeight()));
             p.addValue("ebwPerUnit", nd(d.getEbwPerUnit()));
@@ -313,58 +328,144 @@ public class GrnLoadingChallanCmagtRepository {
 
     private static boolean notBlank(String v) { return v != null && !v.trim().isEmpty(); }
 
-    public List<Map<String, Object>> getHistory(Integer companyId, Integer organizationId, String fromDate, String toDate) {
-        SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate)
-                .withSchemaName("cmagt")
-                .withProcedureName("usp_grnSupplierLoadingMaster_GetAllMethod");
-
+    /**
+     * BLL grnSupplierLoadingMaster.FormHistory -> usp_grnSupplierLoadingMaster_GetAllMethod
+     * @Activity='FormHistory'. The old call used 'ReadBySearch_grnSupplierLoadingMaster', an
+     * Activity the procedure has no branch for, so the history grid was always empty.
+     *
+     * Always sent: OrganizationId, CompanyId, BranchesId, FinancialYearId, CanViewAllRecord.
+     * EntryUserId only when !CanViewAllRecord; FromDate / ToDate only when set. The BLL sends
+     * no DocumentTypeId on this path.
+     */
+    public List<Map<String, Object>> formHistory(int organizationId, int companyId, int branchId,
+                                                 int financialYearId, boolean canViewAllRecord,
+                                                 int entryUserId, String fromDate, String toDate) {
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("Activity", "ReadBySearch_grnSupplierLoadingMaster");
-        /* The controller passes the session's own values. The ': 1' fallbacks that
-           used to sit here would have quietly widened a read to company 1 if one
-           ever arrived null, hiding the fault instead of surfacing it. */
-        params.addValue("CompanyId", companyId);
         params.addValue("OrganizationId", organizationId);
-        params.addValue("DocumentTypeId", 1054);
-        params.addValue("FromDate", parseDate(fromDate));
-        params.addValue("ToDate", parseDate(toDate));
-
-        Map<String, Object> out = call.execute(params);
-        return extractList(out);
+        params.addValue("CompanyId", companyId);
+        params.addValue("BranchesId", branchId);
+        params.addValue("FinancialYearId", financialYearId);
+        params.addValue("CanViewAllRecord", canViewAllRecord ? 1 : 0);
+        if (!canViewAllRecord) params.addValue("EntryUserId", entryUserId);
+        if (notBlank(fromDate)) params.addValue("FromDate", parseDateOrNull(fromDate));
+        if (notBlank(toDate))   params.addValue("ToDate", parseDateOrNull(toDate));
+        params.addValue("Activity", "FormHistory");
+        return extractList(getAll().execute(params));
     }
 
-    public Map<String, Object> getById(Integer id) {
-        Map<String, Object> result = new HashMap<>();
-
-        SimpleJdbcCall headerCall = new SimpleJdbcCall(jdbcTemplate)
+    private SimpleJdbcCall getAll() {
+        return new SimpleJdbcCall(jdbcTemplate)
                 .withSchemaName("cmagt")
                 .withProcedureName("usp_grnSupplierLoadingMaster_GetAllMethod");
+    }
 
-        MapSqlParameterSource headerParams = new MapSqlParameterSource();
-        headerParams.addValue("Activity", "ReadById_grnSupplierLoadingMaster");
-        headerParams.addValue("Id", id);
+    /**
+     * ReadDetailByHeaderId selects DeliverToAddress TWICE - first the CASE (AddressTitle when an
+     * address id is set, else the stored text), then sta.AddressLine1. The desktop's reader
+     * binds by name and SqlDataReader resolves a duplicate name to the FIRST column; Spring's
+     * ColumnMapRowMapper keeps the LAST, so an Update after a load wrote AddressLine1 (or NULL)
+     * back over the stored address. This mapper keeps the first occurrence, as the desktop does.
+     */
+    private static final org.springframework.jdbc.core.RowMapper<Map<String, Object>> FIRST_COLUMN_WINS =
+            (rs, rowNum) -> {
+                java.sql.ResultSetMetaData md = rs.getMetaData();
+                int n = md.getColumnCount();
+                Map<String, Object> m = new org.springframework.util.LinkedCaseInsensitiveMap<>(n);
+                for (int i = 1; i <= n; i++) {
+                    String k = org.springframework.jdbc.support.JdbcUtils.lookupColumnName(md, i);
+                    if (!m.containsKey(k)) {
+                        m.put(k, org.springframework.jdbc.support.JdbcUtils.getResultSetValue(rs, i));
+                    }
+                }
+                return m;
+            };
 
-        Map<String, Object> headerOut = headerCall.execute(headerParams);
-        List<Map<String, Object>> headers = extractList(headerOut);
+    private List<Map<String, Object>> readActivity(String activity, int id) {
+        MapSqlParameterSource p = new MapSqlParameterSource();
+        p.addValue("Id", id);
+        p.addValue("Activity", activity);
+        return extractList(getAll().returningResultSet("rows", FIRST_COLUMN_WINS).execute(p));
+    }
 
-        if (headers != null && !headers.isEmpty()) {
-            Map<String, Object> header = new HashMap<>(headers.get(0));
-
-            SimpleJdbcCall detCall = new SimpleJdbcCall(jdbcTemplate)
-                    .withSchemaName("cmagt")
-                    .withProcedureName("usp_grnSupplierLoadingMaster_GetAllMethod");
-            MapSqlParameterSource detParams = new MapSqlParameterSource();
-            detParams.addValue("Activity", "ReadDetailByHeaderId");
-            detParams.addValue("Id", id);
-            header.put("grnSupplierLoadingDetailList", extractList(detCall.execute(detParams)));
-
-            result.put("status", "SUCCESS");
-            result.put("data", header);
-        } else {
-            result.put("status", "ERROR");
-            result.put("message", "Record not found");
+    /**
+     * BLL ReadById -> DAL GetData: @Activity='ReadById' for the header, then per header
+     * 'ReadDetailByHeaderId', 'grnSupplierLoadingExpensesDetailByHeaderId' and
+     * 'grnSupplierLoadingEmptyBagDetailByHeaderId'. The old call used
+     * 'ReadById_grnSupplierLoadingMaster', which the procedure does not handle, so every open
+     * from history answered "Record not found".
+     *
+     * ReadById has no tenancy filter in the procedure, so the header's organization and
+     * company are checked against the session here. The form refuses a record with no detail
+     * rows ("Record Not Found", ReadById :2818).
+     */
+    public Map<String, Object> getById(Integer id, int organizationId, int companyId) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> headers = (id == null || id <= 0)
+                ? Collections.emptyList() : readActivity("ReadById", id);
+        Map<String, Object> header = headers.isEmpty() ? null : new HashMap<>(headers.get(0));
+        if (header != null && !(sameInt(header.get("organizationId"), organizationId)
+                && sameInt(header.get("companyId"), companyId))) {
+            header = null;
         }
+        List<Map<String, Object>> details = header == null
+                ? Collections.emptyList() : readActivity("ReadDetailByHeaderId", id);
+        if (header == null || details.isEmpty()) {
+            result.put("status", "ERROR");
+            result.put("message", "Record Not Found");
+            return result;
+        }
+        header.put("grnSupplierLoadingDetailList", details);
+        header.put("grnSupplierLoadingExpenseDetailList",
+                readActivity("grnSupplierLoadingExpensesDetailByHeaderId", id));
+        header.put("grnSupplierLoadingEmptyBagDetailList",
+                readActivity("grnSupplierLoadingEmptyBagDetailByHeaderId", id));
+        result.put("status", "SUCCESS");
+        result.put("data", header);
         return result;
+    }
+
+    /** True when the saved header belongs to this organization and company. */
+    public boolean belongsTo(int id, int organizationId, int companyId) {
+        List<Map<String, Object>> h = readActivity("ReadById", id);
+        return !h.isEmpty() && sameInt(h.get(0).get("organizationId"), organizationId)
+                && sameInt(h.get(0).get("companyId"), companyId);
+    }
+
+    /**
+     * BLL DeleteByID: @EntryUserId, @Id, @Activity='DeleteById' in its own transaction.
+     * The procedure refuses approved records and records already dispatched in a GDN.
+     */
+    @Transactional
+    public void deleteById(int entryUserId, int id) {
+        MapSqlParameterSource p = new MapSqlParameterSource();
+        p.addValue("EntryUserId", entryUserId);
+        p.addValue("Id", id);
+        p.addValue("Activity", "DeleteById");
+        getAll().execute(p);
+    }
+
+    /** BLL GenerateCode: org, company, branch, year, DocumentTypeId, @Activity='GenerateCode'. */
+    public int generateCode(int organizationId, int companyId, int branchId,
+                            int financialYearId, int documentTypeId) {
+        MapSqlParameterSource p = new MapSqlParameterSource();
+        p.addValue("OrganizationId", organizationId);
+        p.addValue("CompanyId", companyId);
+        p.addValue("BranchesId", branchId);
+        p.addValue("FinancialYearId", financialYearId);
+        p.addValue("DocumentTypeId", documentTypeId);
+        p.addValue("Activity", "GenerateCode");
+        List<Map<String, Object>> rows = extractList(getAll().execute(p));
+        if (rows.isEmpty()) return 0;
+        for (Map.Entry<String, Object> e : rows.get(0).entrySet()) {
+            if ("DocNo".equalsIgnoreCase(e.getKey()) && e.getValue() instanceof Number) {
+                return ((Number) e.getValue()).intValue();
+            }
+        }
+        return 0;
+    }
+
+    private static boolean sameInt(Object v, int expected) {
+        return v instanceof Number && ((Number) v).intValue() == expected;
     }
 
     @SuppressWarnings("unchecked")
@@ -377,12 +478,46 @@ public class GrnLoadingChallanCmagtRepository {
         return Collections.emptyList();
     }
 
+    /**
+     * The DAL reads the new id with ExecuteScalar - first column of the first row of the
+     * first result set, which here is the procedure's closing SELECT @grnSupplierLoadingMasterId.
+     * SimpleJdbcCall returns that as "#result-set-1" -> List<Map>, never as a bare Number
+     * (the RETURN_VALUE is bypassed for procedures on SQL Server), so the old loop found
+     * nothing and every INSERT fell back to masterId 0: the children were written against
+     * master 0. Read the scalar the way ExecuteScalar does.
+     */
+    @SuppressWarnings("unchecked")
     private Integer extractReturnedId(Map<String, Object> out) {
+        java.util.List<String> keys = new java.util.ArrayList<>();
+        for (Map.Entry<String, Object> e : out.entrySet()) {
+            if (e.getValue() instanceof List) keys.add(e.getKey());
+        }
+        java.util.Collections.sort(keys);
+        for (String k : keys) {
+            List<Map<String, Object>> rows = (List<Map<String, Object>>) out.get(k);
+            if (rows == null || rows.isEmpty()) continue;
+            for (Object v : rows.get(0).values()) {
+                if (v instanceof Number) return ((Number) v).intValue();
+                if (v != null) {
+                    try { return Integer.valueOf(v.toString().trim()); } catch (NumberFormatException ignored) { }
+                }
+                break;
+            }
+            break;
+        }
         for (Object val : out.values()) {
-            if (val instanceof Integer) return (Integer) val;
             if (val instanceof Number) return ((Number) val).intValue();
         }
         return null;
+    }
+
+    private Date parseDateOrNull(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) return null;
+        try {
+            return DATE_FORMAT.parse(dateStr.length() > 10 ? dateStr.substring(0, 10) : dateStr);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private Date parseDate(String dateStr) {

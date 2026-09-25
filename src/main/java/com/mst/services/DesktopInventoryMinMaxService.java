@@ -23,9 +23,9 @@ public class DesktopInventoryMinMaxService {
         var u=user();rights.require(u,104,"Save");
         if(r.effectedDate==null||r.rows==null||r.rows.isEmpty())throw new IllegalArgumentException("Enter an effective date and grid rows");
         var seen=new HashSet<Integer>();boolean hasRates=false;
-        for(var row:r.rows){if(row==null||row.itemId<=0||!seen.add(row.itemId))throw new IllegalArgumentException("You cannot add the same item in the grid");repo.requireItem(u,row.itemId);if(row.minRate==null||row.maxRate==null||row.rateUom==null||row.rateUom.signum()<=0)throw new IllegalArgumentException("Enter numeric rates and a positive Rate UOM");if(row.minRate.signum()>0&&row.maxRate.signum()>0){hasRates=true;if(!Double.isFinite(row.minRate.doubleValue())||!Double.isFinite(row.maxRate.doubleValue()))throw new IllegalArgumentException("Rate is too large");}}
+        for(var row:r.rows){if(row==null||row.itemId<=0||!seen.add(row.itemId))throw new IllegalArgumentException("You cannot add the same item in the grid");repo.requireItem(u,row.itemId);if(row.minRate==null||row.maxRate==null)throw new IllegalArgumentException("Enter numeric rates");if(row.minRate.signum()>0&&row.maxRate.signum()>0){/* desktop skips rows without both rates (ItemMinMaxRateSchedule.cs:709-712); only saved rows need a Rate UOM */if(row.rateUom==null||row.rateUom.signum()<=0)throw new IllegalArgumentException("Enter a positive Rate UOM");hasRates=true;if(!Double.isFinite(row.minRate.doubleValue())||!Double.isFinite(row.maxRate.doubleValue()))throw new IllegalArgumentException("Rate is too large");}}
         if(!hasRates)throw new IllegalArgumentException("Please Write New MinRate And New MaxRate For at least one Item");
-        return Map.of("ids",repo.save(u,repo.year(u),r));
+        return Map.of("ids",repo.save(u,context.currentFinancialYearId(),r));
     }
     @Transactional(isolation=Isolation.SERIALIZABLE) public Map<String,Object> delete(InventoryMinMaxRequest.Delete r){var u=user();rights.require(u,104,"Delete");if(r.ids==null||r.ids.isEmpty()||r.ids.stream().anyMatch(i->i==null||i<=0))throw new IllegalArgumentException("Please check any row first");for(int id:new LinkedHashSet<>(r.ids))repo.delete(u,id);return Map.of("deleted",new HashSet<>(r.ids).size());}
 }

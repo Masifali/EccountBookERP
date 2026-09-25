@@ -384,9 +384,9 @@
         return '<td' + (right ? ' class="num"' : '') + '>' + esc(cellText(col, v)) + '</td>';
     }
 
-    function aggregateRow(bucket, cls, label) {
+    function aggregateRow(bucket, cls, label, member) {
         var agg = AGGREGATES[activity] || {};
-        return '<tr class="' + cls + '">' + cols.map(function (c, i) {
+        return '<tr class="' + cls + '"' + (member !== undefined ? ' data-gb-member="' + esc(member) + '"' : '') + '>' + cols.map(function (c, i) {
             if (!Object.prototype.hasOwnProperty.call(agg, c)) {
                 return i === 0 ? '<td>' + esc(label) + '</td>' : '<td></td>';
             }
@@ -417,12 +417,14 @@
         var html = [];
         order.forEach(function (k) {
             var bucket = buckets[k];
-            html.push('<tr class="cx-group"><td colspan="' + cols.length + '">'
-                    + esc(k) + ' &nbsp;(' + bucket.length + ')</td></tr>');
+            /* tr.gb-group / tr[data-gb-member]: GridBar's Group Collapse / Group Expand. */
+            var gk = esc(k);
+            html.push('<tr class="cx-group gb-group" data-gb-group="' + gk + '"><td colspan="' + cols.length + '">'
+                    + gk + ' &nbsp;(' + bucket.length + ')</td></tr>');
             bucket.forEach(function (r) {
-                html.push('<tr>' + cols.map(function (c) { return td(c, r[c]); }).join('') + '</tr>');
+                html.push('<tr data-gb-member="' + gk + '">' + cols.map(function (c) { return td(c, r[c]); }).join('') + '</tr>');
             });
-            html.push(aggregateRow(bucket, 'cx-total', 'Total'));
+            html.push(aggregateRow(bucket, 'cx-total', 'Total', k));
         });
         html.push(grandTotal());
         return html.join('');

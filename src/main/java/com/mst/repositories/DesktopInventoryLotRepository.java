@@ -29,10 +29,10 @@ public class DesktopInventoryLotRepository {
     public Map<String,Object> lookups(UserAccount u) {
         var result = new LinkedHashMap<String,Object>();
         var config = jdbc.queryForList("EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, @ConfigDescription=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),"AllowCoaAccountForJobLots","GetConfigurationByOrgCompandConfigDescription");
-        boolean accounts = !config.isEmpty() && Boolean.parseBoolean(Objects.toString(config.get(0).get("ConfigKey"),"false"));
+        boolean accounts = !config.isEmpty() && DesktopInventoryCategoryRepository.toBool(config.get(0).get("ConfigKey"));
         result.put("accountsVisible",accounts);
         result.put("partyProcessing",new DesktopInventoryCategoryRepository(jdbc).feature(u,8));
-        result.put("accounts",accounts ? jdbc.queryForList("EXEC dbo.USP_Accounts_GetAccountTitleByAccountTypeIds @OrganizationId=?, @CompanyId=?, @AppId=?, @UserId=?, @AccountTypeIds=?",u.getOrganizationId(),u.getCompanyId(),u.getAppId(),u.getId(),"4") : List.of());
+        result.put("accounts",accounts ? /* AcfrmDefineLots.cs:240 -> CommonServices.CoaAllocationAccountTitleByAccountTypeIds("4") -> Sp_COAAllocation_GetAllMethod GetAccountTitleByAccountTypeIds */ jdbc.queryForList("EXEC dbo.Sp_COAAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, @AppId=?, @UserId=?, @AccountTypeIds=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),u.getAppId(),u.getId(),"4","GetAccountTitleByAccountTypeIds") : List.of());
         result.put("jobTypes",jdbc.queryForList("EXEC dbo.Sp_InvLookup_GetAllMethod @OrganizationId=?, @CompanyId=?, @InvLookupTypeId=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),4,"ReadByInvlookTypeId"));
         result.put("documentTypes",jdbc.queryForList("EXEC dbo.usp_getDocumentsForJobLot"));
         result.put("branches",branches(u));

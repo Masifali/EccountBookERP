@@ -117,9 +117,7 @@ public class GrnLoadingChallanCmagtDto {
         private Integer actionTypeId;
         private Integer buyerId;
         private Integer cropYearId;
-        @JsonAlias({"DeliverToAddressId"})
         private Integer DeliverToAddressId;
-        @JsonAlias({"DeliverToPartyId"})
         private Integer DeliverToPartyId;
         private Integer grnSupplierLoadingDetailId;
         private Integer grnSupplierLoadingMasterId;
@@ -135,7 +133,6 @@ public class GrnLoadingChallanCmagtDto {
         private Integer purchaseOrderMasterId;
         private Integer saleOrderDetailId;
         private Integer saleOrderMasterId;
-        @JsonAlias({"EBWeightDeductionTermId", "ebWeightDeductionTermId"})
         private Integer EBWeightDeductionTermId;
         private Integer purchaseOrderSaleOrderMappingId;
         private Integer sortNo;
@@ -145,7 +142,6 @@ public class GrnLoadingChallanCmagtDto {
         private String cropYear;
         private String remarks;
         private String warningRemarks;
-        @JsonAlias({"DeliverToAddress"})
         private String DeliverToAddress;
 
         /* Display only - not procedure parameters. */
@@ -170,8 +166,10 @@ public class GrnLoadingChallanCmagtDto {
         public Integer getCropYearId() { return cropYearId; }
         public void setCropYearId(Integer cropYearId) { this.cropYearId = cropYearId; }
         public Integer getDeliverToAddressId() { return DeliverToAddressId; }
+        @JsonAlias({"DeliverToAddressId"})
         public void setDeliverToAddressId(Integer DeliverToAddressId) { this.DeliverToAddressId = DeliverToAddressId; }
         public Integer getDeliverToPartyId() { return DeliverToPartyId; }
+        @JsonAlias({"DeliverToPartyId"})
         public void setDeliverToPartyId(Integer DeliverToPartyId) { this.DeliverToPartyId = DeliverToPartyId; }
         public Integer getGrnSupplierLoadingDetailId() { return grnSupplierLoadingDetailId; }
         public void setGrnSupplierLoadingDetailId(Integer grnSupplierLoadingDetailId) { this.grnSupplierLoadingDetailId = grnSupplierLoadingDetailId; }
@@ -202,6 +200,7 @@ public class GrnLoadingChallanCmagtDto {
         public Integer getSaleOrderMasterId() { return saleOrderMasterId; }
         public void setSaleOrderMasterId(Integer saleOrderMasterId) { this.saleOrderMasterId = saleOrderMasterId; }
         public Integer getEBWeightDeductionTermId() { return EBWeightDeductionTermId; }
+        @JsonAlias({"EBWeightDeductionTermId", "ebWeightDeductionTermId"})
         public void setEBWeightDeductionTermId(Integer EBWeightDeductionTermId) { this.EBWeightDeductionTermId = EBWeightDeductionTermId; }
         public Integer getPurchaseOrderSaleOrderMappingId() { return purchaseOrderSaleOrderMappingId; }
         public void setPurchaseOrderSaleOrderMappingId(Integer purchaseOrderSaleOrderMappingId) { this.purchaseOrderSaleOrderMappingId = purchaseOrderSaleOrderMappingId; }
@@ -220,6 +219,7 @@ public class GrnLoadingChallanCmagtDto {
         public String getWarningRemarks() { return warningRemarks; }
         public void setWarningRemarks(String warningRemarks) { this.warningRemarks = warningRemarks; }
         public String getDeliverToAddress() { return DeliverToAddress; }
+        @JsonAlias({"DeliverToAddress"})
         public void setDeliverToAddress(String DeliverToAddress) { this.DeliverToAddress = DeliverToAddress; }
         public String getItemName() { return itemName; }
         public void setItemName(String itemName) { this.itemName = itemName; }
@@ -233,14 +233,12 @@ public class GrnLoadingChallanCmagtDto {
      * signature - not a subset chosen here.
      */
     public static class EmptyBagDto {
-        @JsonAlias({"Rate"})
         private BigDecimal Rate;
         private BigDecimal weightCutKg;
         private Integer grnSupplierLoadingEmptyBagDetailId;
         private Integer grnSupplierLoadingMasterId;
         private Integer purchaseOrderMasterId;
         private Integer purchaseOrderEmptyBagDetailId;
-        @JsonAlias({"PackingTypeId"})
         private Integer PackingTypeId;
         private Integer emptyBagPackingMaterialItemId;
         private Integer sortNo;
@@ -250,6 +248,7 @@ public class GrnLoadingChallanCmagtDto {
 
 
         public BigDecimal getRate() { return Rate; }
+        @JsonAlias({"Rate"})
         public void setRate(BigDecimal Rate) { this.Rate = Rate; }
         public BigDecimal getWeightCutKg() { return weightCutKg; }
         public void setWeightCutKg(BigDecimal weightCutKg) { this.weightCutKg = weightCutKg; }
@@ -262,6 +261,7 @@ public class GrnLoadingChallanCmagtDto {
         public Integer getPurchaseOrderEmptyBagDetailId() { return purchaseOrderEmptyBagDetailId; }
         public void setPurchaseOrderEmptyBagDetailId(Integer purchaseOrderEmptyBagDetailId) { this.purchaseOrderEmptyBagDetailId = purchaseOrderEmptyBagDetailId; }
         public Integer getPackingTypeId() { return PackingTypeId; }
+        @JsonAlias({"PackingTypeId"})
         public void setPackingTypeId(Integer PackingTypeId) { this.PackingTypeId = PackingTypeId; }
         public Integer getEmptyBagPackingMaterialItemId() { return emptyBagPackingMaterialItemId; }
         public void setEmptyBagPackingMaterialItemId(Integer emptyBagPackingMaterialItemId) { this.emptyBagPackingMaterialItemId = emptyBagPackingMaterialItemId; }
@@ -279,7 +279,6 @@ public class GrnLoadingChallanCmagtDto {
      * signature - not a subset chosen here.
      */
     public static class ExpenseDto {
-        @JsonAlias({"Qty"})
         private BigDecimal Qty;
         private Double amount;
         private Double rate;
@@ -287,7 +286,6 @@ public class GrnLoadingChallanCmagtDto {
         private Integer grnSupplierLoadingMasterId;
         private Integer purchaseOrderMasterId;
         private Integer purchaseOrderExpenseDetailId;
-        @JsonAlias({"ItemId"})
         private Integer ItemId;
         private Integer sortNo;
         private String remarks;
@@ -296,6 +294,7 @@ public class GrnLoadingChallanCmagtDto {
 
 
         public BigDecimal getQty() { return Qty; }
+        @JsonAlias({"Qty"})
         public void setQty(BigDecimal Qty) { this.Qty = Qty; }
         public Double getAmount() { return amount; }
         public void setAmount(Double amount) { this.amount = amount; }
@@ -310,6 +309,7 @@ public class GrnLoadingChallanCmagtDto {
         public Integer getPurchaseOrderExpenseDetailId() { return purchaseOrderExpenseDetailId; }
         public void setPurchaseOrderExpenseDetailId(Integer purchaseOrderExpenseDetailId) { this.purchaseOrderExpenseDetailId = purchaseOrderExpenseDetailId; }
         public Integer getItemId() { return ItemId; }
+        @JsonAlias({"ItemId"})
         public void setItemId(Integer ItemId) { this.ItemId = ItemId; }
         public Integer getSortNo() { return sortNo; }
         public void setSortNo(Integer sortNo) { this.sortNo = sortNo; }

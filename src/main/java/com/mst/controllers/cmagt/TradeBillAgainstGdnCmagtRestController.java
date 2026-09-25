@@ -27,14 +27,52 @@ public class TradeBillAgainstGdnCmagtRestController {
 
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> save(@RequestBody TradeBillAgainstGdnCmagtDto dto) {
-        return ResponseEntity.ok(service.saveOrUpdate(dto));
+        /* The repository refuses (no voucher engine yet). Surface that refusal as the page's
+           own {status, message} shape instead of a bare 500 the page reports as "Server error". */
+        try {
+            return ResponseEntity.ok(service.saveOrUpdate(dto));
+        } catch (UnsupportedOperationException e) {
+            Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("status", "ERROR");
+            r.put("message", e.getMessage());
+            return ResponseEntity.ok(r);
+        }
     }
 
+    /** HistoryGridFill -> BLL FormHistory. Tenancy, year, branch and rights from the session. */
     @GetMapping("/history")
     public ResponseEntity<List<Map<String, Object>>> getHistory(
             @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate) {
-        return ResponseEntity.ok(service.getHistory(currentUserContext.currentCompanyId(), currentUserContext.currentOrganizationId(), fromDate, toDate));
+            @RequestParam(required = false) String toDate,
+            @RequestParam(required = false) Integer docNoFrom,
+            @RequestParam(required = false) Integer docNoTo,
+            @RequestParam(required = false) Integer tradingAccountId,
+            @RequestParam(required = false) Integer supplierId,
+            @RequestParam(required = false) Integer customerId) {
+        return ResponseEntity.ok(service.getHistory(fromDate, toDate, docNoFrom, docNoTo,
+                tradingAccountId, supplierId, customerId));
+    }
+
+    /** DocumentNoDbCall / BranchSrNoDbCall - the next Doc No and Branch Sr No. */
+    @GetMapping("/generate-no")
+    public ResponseEntity<Map<String, Object>> generateNo() {
+        return ResponseEntity.ok(service.generateCodes());
+    }
+
+    /** BtnDelete_Click -> BLL DeleteByID(UserAccount.ID, RecId). */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> delete(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(service.deleteById(id));
+        } catch (org.springframework.dao.DataAccessException e) {
+            /* e.g. the procedure's RAISERROR 'Record cannot be deleted because record has
+               approved' - shown to the operator as the desktop's MessageBox shows ex.Message. */
+            Throwable root = e.getMostSpecificCause();
+            Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("status", "ERROR");
+            r.put("message", root != null ? root.getMessage() : e.getMessage());
+            return ResponseEntity.ok(r);
+        }
     }
 
     @GetMapping("/{id}")

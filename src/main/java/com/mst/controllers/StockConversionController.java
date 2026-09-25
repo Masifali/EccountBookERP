@@ -289,6 +289,49 @@ public class StockConversionController {
         } catch (Exception e) { return error(e, "Search failed."); }
     }
 
+    /** LoadavailableTransactionsForStockReleaseFromFumigation - Search (btngrnlod). Load is /loader/setup. */
+    @GetMapping("/api/production/stock-conversion/fumigation/search")
+    @ResponseBody
+    public ResponseEntity<?> fumigationSearch(@RequestParam(required = false) String fromDate,
+                                              @RequestParam(required = false) String toDate,
+                                              @RequestParam(defaultValue = "0") int parentCategoryId,
+                                              @RequestParam(defaultValue = "0") int itemCategoryId,
+                                              @RequestParam(defaultValue = "0") int itemTypeId,
+                                              @RequestParam(defaultValue = "0") int jobLotId,
+                                              @RequestParam(required = false) String cropYear,
+                                              @RequestParam(defaultValue = "0") int warehouseId,
+                                              @RequestParam(defaultValue = "0") int refDocumentTypeId,
+                                              @RequestParam(defaultValue = "0") int supplierCustomerId,
+                                              @RequestParam(defaultValue = "0") int itemId) {
+        try {
+            return ResponseEntity.ok(service.fumigationSearch(fromDate, toDate, parentCategoryId, itemCategoryId,
+                    itemTypeId, jobLotId, cropYear, warehouseId, refDocumentTypeId, supplierCustomerId, itemId));
+        } catch (Exception e) { return error(e, "Search failed."); }
+    }
+
+    /** frmLoadStockShortFallForSales - StockComboFill (Load and Refresh). */
+    @GetMapping("/api/production/stock-conversion/shortfall/setup")
+    @ResponseBody
+    public ResponseEntity<?> shortfallSetup() {
+        try { return ResponseEntity.ok(service.shortfallSetup()); }
+        catch (Exception e) { return error(e, "Loader failed."); }
+    }
+
+    /** frmLoadStockShortFallForSales - PendingOrderLoad (Load, Search, New). */
+    @GetMapping("/api/production/stock-conversion/shortfall/search")
+    @ResponseBody
+    public ResponseEntity<?> shortfallSearch(@RequestParam(required = false) String docDate,
+                                             @RequestParam(defaultValue = "0") int parentCategoryId,
+                                             @RequestParam(defaultValue = "0") int itemId,
+                                             @RequestParam(defaultValue = "0") int warehouseId,
+                                             @RequestParam(defaultValue = "0") int jobLotId,
+                                             @RequestParam(required = false) String cropYear) {
+        try {
+            return ResponseEntity.ok(service.shortfallSearch(docDate, parentCategoryId, itemId, warehouseId,
+                    jobLotId, cropYear));
+        } catch (Exception e) { return error(e, "Search failed."); }
+    }
+
     /**
      * Save (btnsave, RecId = 0) and Update (btnUpdate, RecId > 0): DAL InvStockConversion.SetData in one
      * transaction. A RAISERROR from any guard procedure (usp_StockConversionValidation,

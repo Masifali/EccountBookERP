@@ -278,7 +278,7 @@
         });
     }
 
-    /** ctrlGrdBar - the grid tool on each bar. On the web: the container goes full screen. */
+    /** Optional web Full screen on each bar. The desktop ctrlGrdBar itself is the shared GridBar (countx_grid_bar.js). */
     function full(hostId) {
         var h = $id(hostId);
         if (!h) return;

@@ -276,10 +276,13 @@ public class SaleOrderCmagtRepository {
                 i(h.getProjectId()),
                 i(h.getSaleOrderMasterId()),
                 i(h.getStatusId()),
-                s(h.getApprovalRemarks()),
-                s(h.getAttachmentsValues()),
+                // Never assigned by frmSaleOrderCmagt.Insert() (attachments are not ported), so the
+                // desktop hands SetProc a null string and AddWithValue(null) omits the parameter:
+                // the procedure's own NULL default is stored, not ''.
+                nullStr(h.getApprovalRemarks()),
+                nullStr(h.getAttachmentsValues()),
                 s(h.getBuyerReferenceNo()),
-                s(h.getCustomAttachmentsValues()),
+                nullStr(h.getCustomAttachmentsValues()),
                 s(h.getPaymentScheduleDescription()),
                 s(h.getRemarksHeader()),
                 s(h.getSaleOrderbuyerExpenseDetailDescription()),
@@ -322,7 +325,7 @@ public class SaleOrderCmagtRepository {
                 i(d.getSupplierOfferId()),
                 i(d.getTaxNameId()),
                 s(d.getCropYear()),
-                s(d.getQualitySpecification()),
+                nullStr(d.getQualitySpecification()),   // never set by Insert() -> NULL
                 s(d.getRemarks()));
     }
 
@@ -337,7 +340,7 @@ public class SaleOrderCmagtRepository {
                 i(p.getSaleOrderMasterId()),
                 i(p.getSaleOrderPaymentDetailId()),
                 i(p.getSortNo()),
-                s(p.getRemarks()));
+                nullStr(p.getRemarks()));               // never set by Insert() -> NULL
     }
 
     public void saveEmptyBagRow(SaleOrderCmagtEmptyBagDto e) {
@@ -350,7 +353,7 @@ public class SaleOrderCmagtRepository {
                 i(e.getSaleOrderEmptyBagDetailId()),
                 i(e.getSaleOrderMasterId()),
                 i(e.getSortNo()),
-                s(e.getRemarks()));
+                nullStr(e.getRemarks()));               // never set by Insert() -> NULL
     }
 
     public void saveExpenseRow(SaleOrderCmagtExpenseDto x) {
@@ -378,7 +381,7 @@ public class SaleOrderCmagtRepository {
                 i(c.getSaleOrderCommissionDetailId()),
                 i(c.getSaleOrderMasterId()),
                 i(c.getSortNo()),
-                s(c.getCommissionRemarks()));
+                nullStr(c.getCommissionRemarks()));     // never set by Insert() -> NULL
     }
 
     /** Whole-order soft delete, exactly as BLL saleOrderMaster.DeleteByID does. */
@@ -555,6 +558,16 @@ public class SaleOrderCmagtRepository {
     }
 
     private static Object s(String v) { return v == null ? "" : v; }
+
+    /**
+     * A string property the desktop never assigns. SqlCommand.Parameters.AddWithValue(name, null)
+     * is not sent at all, so the procedure's declared default (NULL) applies. Blank -> typed NULL.
+     */
+    private static Object nullStr(String v) {
+        return (v == null || v.isEmpty())
+                ? new org.springframework.jdbc.core.SqlParameterValue(Types.NVARCHAR, null)
+                : v;
+    }
     private static Object i(Integer v) { return v == null ? 0 : v; }
     private static Object num(java.math.BigDecimal v) { return v == null ? java.math.BigDecimal.ZERO : v; }
     private static Object dbl(Double v) { return v == null ? 0d : v; }
