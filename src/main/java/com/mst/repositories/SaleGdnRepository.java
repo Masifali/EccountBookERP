@@ -1,6 +1,7 @@
 package com.mst.repositories;
 
 import com.mst.models.UserAccount;
+import com.mst.models.SaleGdnStockRequest;
 import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -31,6 +32,8 @@ public class SaleGdnRepository extends SaleGdnPurchaseReturnRepository {
         m.put("cities",globalCities(u));        // CityDtFillFromGlobalAndBind, InvFrmGDN:1182
         m.put("transporters",subsidiaryAccounts?transporterParties(u,true):accountTransporters(u));
         m.put("feature5",feature(u,5));
+        m.put("stockReservationEnabled",truthy(config(u,"IsStockReservedPerParty")));
+        m.put("ebWeightEditableForPackBilling",truthy(config(u,"EbWeightEditableForSaleTypePackWise")));
         return m;
     }
 
@@ -78,6 +81,16 @@ public class SaleGdnRepository extends SaleGdnPurchaseReturnRepository {
     public List<Map<String,Object>> advanceOrders(UserAccount u,int year,int customerId,int gdnId){
         return q("EXEC dbo.USP_DeliveryOrder_GetAdvanceDo @OrganizationId=?,@CompanyId=?,@FinancialYearId=?,@BranchesId=?,@SupplierCustomerId=?,@GdnRecId=?",u.getOrganizationId(),u.getCompanyId(),year,u.getBranchesId(),customerId,gdnId);
     }
+
+    /** InvFrmGDN.GetByID/LoadGpRow use the GP's billing basis, never PartyWeight - FactoryWeight. */
+    public Map<String,Object> gatePassBilling(UserAccount u,int year,int id){
+        var rows=q("EXEC dbo.Sp_GatePassOutward_GetAllMethod @OrganizationId=?,@CompanyId=?,@FinancialYearId=?,@Id=?,@Activity='ReadByGpNoForGdnDeliveryOrder'",u.getOrganizationId(),u.getCompanyId(),year,id);
+        if(rows.isEmpty())return Map.of();
+        var out=new LinkedHashMap<>(rows.get(0));
+        var dispatched=q("EXEC dbo.Sp_InvGdn_GetAllMethod @OrganizationId=?,@CompanyId=?,@DocumentTypeId=86,@Id=?,@Activity='GetGdnGrossWeightForValidation'",u.getOrganizationId(),u.getCompanyId(),id);
+        out.put("DispatchedGrossWeight",dispatched.isEmpty()?0:dispatched.get(0).get("GrossWeight"));
+        return out;
+    }
     public List<Map<String,Object>> deliveryOrder(UserAccount u,int customerId,int id){
         return q("EXEC dbo.Sp_InvDeliveryOrder_GetAllMethod @OrganizationId=?,@CompanyId=?,@DocumentTypeId=84,@SupplierCustomerId=?,@Id=?,@Activity='DeliveryOrderLoad'",u.getOrganizationId(),u.getCompanyId(),customerId,id);
     }
@@ -86,5 +99,30 @@ public class SaleGdnRepository extends SaleGdnPurchaseReturnRepository {
     }
     public List<Map<String,Object>> expenses(String deliveryOrderIds){
         return q("EXEC dbo.USP_InvDeliveryOrderExpensesByDoIds @DeliveryOrderIds=?",deliveryOrderIds);
+    }
+
+    public List<Double> availableStock(UserAccount u, SaleGdnStockRequest request) {
+        boolean fifo = feature(u, 5);
+        return request.lines().stream().map(line -> availableStock(u, request.docDate(), line, fifo)).toList();
+    }
+
+    /** Same optional parameters and BalWeight total as InvFrmGDN:6129, including the
+     * non-FIFO BLL's ItemUomId/stockUOM distinction. No document identity is supplied. */
+    protected double availableStock(UserAccount u, java.time.LocalDate date,
+                                    SaleGdnStockRequest.Line line, boolean fifo) {
+        StringBuilder sql = new StringBuilder(fifo ? "EXEC dbo.USP_GetStockByFifoMethod" : "EXEC dbo.usp_getAvailableStock");
+        sql.append(" @OrganizationId=?,@CompanyId=?,@ItemId=?,").append(fifo ? "@DocDate=?" : "@DateTo=?");
+        List<Object> args = new ArrayList<>(Arrays.asList(u.getOrganizationId(), u.getCompanyId(), line.itemId(), date.toString()));
+        if (line.warehouseId() != 0) { sql.append(",@WarehouseId=?"); args.add(line.warehouseId()); }
+        if (line.jobLotId() != 0) { sql.append(",@JobLotId=?"); args.add(line.jobLotId()); }
+        if (line.cropYear() != null && !line.cropYear().isEmpty()) { sql.append(",@CropYear=?"); args.add(line.cropYear()); }
+        if (line.packingTypeId() != 0) { sql.append(",@PackingTypeId=?"); args.add(line.packingTypeId()); }
+        // The form sets stockUOM. GetStockByFifoMethod reads it, whereas GetAvailableStock reads ItemUomId (unset).
+        if (fifo && line.itemUomId() != 0) { sql.append(",@PackUomId=?"); args.add(line.itemUomId()); }
+        if (!fifo) sql.append(",@ActionId=1");
+        var rows = q(sql.toString(), args.toArray());
+        if (rows.isEmpty()) return 0;
+        var weights = (fifo ? rows : rows.subList(0, 1)).stream().map(r -> r.get("BalWeight"));
+        return weights.mapToDouble(value -> value instanceof Number n ? n.doubleValue() : 0).sum();
     }
 }

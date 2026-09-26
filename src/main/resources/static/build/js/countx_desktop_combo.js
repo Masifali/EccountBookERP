@@ -236,7 +236,9 @@
         var inlinePos = sel.style.position || (attrStyle.match(/position\s*:\s*([^;]+)/i) || [])[1];
 
         var cs = global.getComputedStyle ? global.getComputedStyle(sel) : null;
-        var isAbsolute = (inlinePos === 'absolute') || (cs && cs.position === 'absolute') || sel.classList.contains('ctl') || (!!inlineLeft && !!inlineTop);
+        // .ctl is also used by grid/flex forms. Preserve the actual positioning;
+        // treating that shared class as absolute removes the field from its cell.
+        var isAbsolute = (inlinePos === 'absolute') || (cs && cs.position === 'absolute') || (!!inlineLeft && !!inlineTop);
 
         /* Hide native select */
         sel.classList.add('dtcombo-native');

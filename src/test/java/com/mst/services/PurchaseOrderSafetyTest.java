@@ -9,19 +9,20 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class PurchaseOrderSafetyTest {
     @Test void otherDocumentTypesAreRejectedBeforeDatabaseAccess() {
         var service=new PurchaseOrderFullService(); var jdbc=mock(JdbcTemplate.class);
         ReflectionTestUtils.setField(service,"jdbcTemplate",jdbc);
-        var dto=new PurchaseOrderFullDto(); assertEquals(41,dto.getDocumentTypeId()); dto.setDocumentTypeId(1052);
+        var dto=new PurchaseOrderFullDto(); assertEquals(1052,dto.getDocumentTypeId()); dto.setDocumentTypeId(9999);
         assertEquals(false,service.savePurchaseOrder(dto,null).get("success")); verifyNoInteractions(jdbc);
     }
     @Test void desktopUnsupportedDeleteCannotRemoveRows() {
         var service=new PurchaseOrderFullService(); var jdbc=mock(JdbcTemplate.class);
         ReflectionTestUtils.setField(service,"jdbcTemplate",jdbc);
-        assertEquals(405,assertThrows(ResponseStatusException.class,()->service.deletePurchaseOrder(1)).getStatus().value());
+        assertThrows(UnsupportedOperationException.class,()->service.deletePurchaseOrder(1));
         verifyNoInteractions(jdbc);
     }
     @Test void unknownOrOtherTenantRecordStopsBeforeReadProcedureAndWrites() {

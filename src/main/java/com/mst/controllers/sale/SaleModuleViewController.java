@@ -24,6 +24,13 @@ public class SaleModuleViewController {
     public String customerSales(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Customer Sales");
+        return "sale/customer_sales_menu";
+    }
+
+    @GetMapping("/customer-directory")
+    public String customerDirectory(Model model) {
+        model.addAttribute("activeMenu", "sale");
+        model.addAttribute("moduleTitle", "Customer Directory");
         return "sale/customer_sales";
     }
 
@@ -31,6 +38,13 @@ public class SaleModuleViewController {
     public String saleReports(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Sales Reports");
+        return "sale/sales_reports_menu";
+    }
+
+    @GetMapping("/report-summary")
+    public String reportSummary(Model model) {
+        model.addAttribute("activeMenu", "sale");
+        model.addAttribute("moduleTitle", "Sales Summary");
         return "sale/sales_reports";
     }
 
@@ -89,11 +103,8 @@ public class SaleModuleViewController {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Outward Gate Pass");
         model.addAttribute("documentTypeId", 91);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(91));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
+        // OutwardGatePass.cs loads its own document 91 lookups via /api/initial.
+        // The template does not use purchase master data or purchase document numbering.
         return "sale/outward_gate_pass";
     }
 

@@ -1177,7 +1177,32 @@
     }
 
     /* ------------------------------------------------------------------ wiring */
+    const pendingCurrencyRates = new Set();
+    async function currencyLeave() {
+        const cur = toInt(el('cmbCurrency').value);
+        if (!cur || toDouble(el('txtExchangeRate').value) !== 0 || pendingCurrencyRates.has(cur)) return;
+        pendingCurrencyRates.add(cur);
+        try {
+            const rate = cur === toInt(S.cfg.BaseCurrencyId)
+                ? S.cfg.BaseCurrencyRate
+                : (await api('/exchange-rate/' + cur)).rate;
+            if (cur !== toInt(el('cmbCurrency').value) || toDouble(el('txtExchangeRate').value) !== 0) return;
+            el('txtExchangeRate').value = rate == null ? '0' : String(rate);
+            exchangeRateChanged();
+            renderAll();
+        } catch (e) { alert(e.message); }
+        finally { pendingCurrencyRates.delete(cur); }
+    }
+
     function init() {
+        // The searchable combo focuses its text input, not its hidden native select.
+        document.addEventListener('focusout', event => {
+            if (!event.target.matches('.dtcombo-input')) return;
+            const select = event.target.closest('.dtcombo-wrap')?.querySelector('select');
+            if (!select) return;
+            if (select.id === 'cmbCurrency') currencyLeave();
+        });
+
         document.addEventListener('keydown', keyDown);
         document.querySelectorAll('.si-tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
         document.querySelectorAll('.si-subtab').forEach(b => b.addEventListener('click', () => {
@@ -1202,14 +1227,8 @@
         el('DocDate').addEventListener('change', async () => { dueDateGenerate(); try { await supplierChanged(); await commissionAmountCalculateInCaseofPolicy(); } catch (e) { alert(e.message); } renderAll(); });
         el('txtDueDays').addEventListener('input', () => { el('txtDueDays').value = el('txtDueDays').value.replace(/[^0-9]/g, ''); dueDateGenerate(); });
         el('cmbsuppliername').addEventListener('change', () => supplierChanged().then(renderAll).catch(e => alert(e.message)));
-        el('cmbCurrency').addEventListener('change', async () => {
-            /* cmbCurrency_Leave (:1210) - only when a currency is chosen and the rate is still 0. */
-            const cur = toInt(el('cmbCurrency').value);
-            if (cur === 0 || toDouble(el('txtExchangeRate').value) !== 0) return;
-            if (cur !== toInt(S.cfg.BaseCurrencyId)) { const r = await api('/exchange-rate/' + cur); el('txtExchangeRate').value = r.rate != null ? String(r.rate) : '0'; }
-            else el('txtExchangeRate').value = String(S.cfg.BaseCurrencyRate ?? '');
-            exchangeRateChanged(); renderAll();
-        });
+        el('cmbCurrency').addEventListener('change', currencyLeave);
+        el('cmbCurrency').addEventListener('blur', currencyLeave);
         el('txtExchangeRate').addEventListener('input', () => { el('txtExchangeRate').value = el('txtExchangeRate').value.replace(/[^0-9.]/g, ''); exchangeRateChanged(); renderAll(); });
         for (const id of Object.values(ELEMENTS)) { el(id).addEventListener('change', onCellChange); el(id).addEventListener('click', onGridClick); }
         document.querySelector('.si-panel9').addEventListener('keydown', e => {

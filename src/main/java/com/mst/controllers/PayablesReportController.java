@@ -15,6 +15,21 @@ public class PayablesReportController {
         this.service = service;
     }
 
+    @GetMapping("/api/accounts/payables-invoice-wise/lookups")
+    @ResponseBody
+    public Map<String,Object> invoiceLookups() { return service.invoiceLookups(); }
+
+    @GetMapping("/api/accounts/payables-invoice-wise")
+    @ResponseBody
+    public Map<String,Object> invoiceWise(
+            @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(defaultValue="0") int partyId, @RequestParam(defaultValue="0") int agentId,
+            @RequestParam(defaultValue="0") int parentId, @RequestParam(defaultValue="0") int groupId,
+            @RequestParam(defaultValue="0") int actionId) {
+        return service.invoiceWise(fromDate,toDate,partyId,agentId,parentId,groupId,actionId);
+    }
+
     @GetMapping({"/api/accounts/payables-report/lookups", "/api/accounts/payables-report-new/lookups"})
     @ResponseBody
     public Map<String, Object> lookups() {

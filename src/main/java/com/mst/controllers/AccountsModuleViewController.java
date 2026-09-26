@@ -185,6 +185,15 @@ public class AccountsModuleViewController {
 		model.addAttribute("selectedAccountId", accountId);
 		model.addAttribute("selectedFromDate", fromDate);
 		model.addAttribute("selectedToDate", toDate);
+        // The ledger template binds only these two lookups. Avoid loading unrelated
+        // report filters (and loading the same filters again in the switch below).
+        String normalized = reportType.toLowerCase().trim();
+        if (normalized.equals("general-ledger") || normalized.equals("general_ledger")) {
+            model.addAttribute("moduleTitle", "General Ledger");
+            model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
+            model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
+            return "accounts/reports/general_ledger";
+        }
 		model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
 		model.addAttribute("customGroupsList", accountsReportService.getCustomGroups());
 		model.addAttribute("citiesList", accountsReportService.getCities());
@@ -194,7 +203,6 @@ public class AccountsModuleViewController {
 		model.addAttribute("languagesList", accountsReportService.getLanguages());
 		model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
 
-		String normalized = reportType.toLowerCase().trim();
 
 		switch (normalized) {
 			case "all-payables":
@@ -208,15 +216,6 @@ public class AccountsModuleViewController {
 			case "general-ledger-statement":
 				model.addAttribute("moduleTitle", "General Ledger Statement");
 				return "accounts/reports/general_ledger_statement";
-			case "general-ledger":
-			case "general_ledger":
-				model.addAttribute("moduleTitle", "General Ledger");
-				model.addAttribute("costCentersList", accountsReportService.getCostCenters());
-				model.addAttribute("subsidiaryAccountsList", accountsReportService.getSubsidiaryAccounts(null));
-				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
-				model.addAttribute("languagesList", accountsReportService.getLanguages());
-				model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
-				return "accounts/reports/general_ledger";
 			case "customer-ledger":
 			case "customer_ledger":
 				model.addAttribute("moduleTitle", "Customer Ledger Report");
@@ -309,8 +308,6 @@ public class AccountsModuleViewController {
 				return "accounts/reports/receivables_aging_new";
 			case "payables-report-invoice-wise":
 				model.addAttribute("moduleTitle", "Payables Report Invoice Wise");
-				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
-				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
 				return "accounts/reports/payables_report_invoice_wise";
 			case "receivables-by-due-dates":
 				model.addAttribute("moduleTitle", "Receivables By Due Dates");

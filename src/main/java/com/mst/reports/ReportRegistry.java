@@ -333,6 +333,23 @@ public class ReportRegistry {
                    P("@Id","arg:id")),
                 Collections.emptyList()));
 
+        // InvFrmGDN.printToolStripButton_Click and btnPrint260A_Click use the same original dataset.
+        for (String[] gdn : new String[][]{{"gdn-260", "260-InvRptGdnRiceSlip.rpt"},
+                {"gdn-260a", "260A-DeliveryChallansByGDN.rpt"}}) {
+            add(new ReportDefinition(gdn[0], gdn[1], "Sp_InvGdn_SlipAndRegisterRice_Rpt",
+                    "CommonServices.InvGdnSlip260 / InvFrmGDN.btnPrint260A_Click",
+                    ps(P("@OrganizationId", "session:organizationId"), P("@CompanyId", "session:companyId"),
+                       P("@gdnId", "arg:id"),
+                       P("rpt:CompanyName", "same:@CompanyName"), P("rpt:CompanyAddress", "same:@CompanyAddress")),
+                    Collections.emptyList()));
+        }
+        add(new ReportDefinition("gdn-261", "261-InvRptGdnRegister.rpt", "Sp_InvGdn_Register_Rpt",
+                "frmGDNHistory.btnRegister_Click / InvGrnandGdnReports.InvGdnRegister261",
+                ps(P("@OrganizationId", "session:organizationId"), P("@CompanyId", "session:companyId"),
+                   G("@FromDate", "arg:fromDate"), G("@ToDate", "arg:toDate"),
+                   G("@FromDocNo", "arg:fromNo"), G("@ToDocNo", "arg:toNo"),
+                   G("@SupplierCustomerId", "arg:customerId")), Collections.emptyList()));
+
         add(new ReportDefinition("gdn-1866", "1866-InvGdnDirect_Slip.rpt",
                 "[pcc].[USP_InvGdn_Slip]", "CommonServices.GenerateCustomerSlip",
                 ps(P("@OrganizationId","session:organizationId"),

@@ -3,6 +3,8 @@
   const api = '/sale/delivery-order/api';
   const $ = id => document.getElementById(id);
   let initial = null, currentId = 0, rows = [], removedLineIds = [], activeRequests = 0;
+  let currentOrderType = 'Local', currentToBranchId = 0;
+  const disabledBefore = new Map();
   const text = (o, ...keys) => { for (const k of keys) if (o && o[k] != null) return String(o[k]); return ''; };
   const num = (o, ...keys) => Number(text(o, ...keys) || 0);
   const html = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -11,20 +13,32 @@
     activeRequests += start ? 1 : -1;
     activeRequests = Math.max(0, activeRequests);
     $('requestLoader').hidden = activeRequests === 0;
-    document.querySelectorAll('button').forEach(button => button.disabled = activeRequests > 0);
+    if (activeRequests) {
+      document.querySelectorAll('button').forEach(button => {
+        if (!disabledBefore.has(button)) disabledBefore.set(button, {disabled:button.disabled,busy:button.getAttribute('aria-busy')});
+        button.disabled=true; button.setAttribute('aria-busy','true');
+      });
+    } else {
+      for (const [button,state] of disabledBefore) {
+        button.disabled=state.disabled;
+        if (state.busy===null) button.removeAttribute('aria-busy'); else button.setAttribute('aria-busy',state.busy);
+      }
+      disabledBefore.clear();
+    }
   }
   async function request(url, options = {}) {
     busy(true); clearMessage();
     try {
       const response = await fetch(url, {headers:{'Content-Type':'application/json'}, ...options});
-      const body = response.status === 204 ? null : await response.json().catch(() => null);
+      if (response.redirected && /\/login(?:[?#]|$)/.test(response.url)) throw new Error('Your session has expired. Please sign in again.');
+      const body = response.status === 204 ? null : await response.json().catch(() => {throw new Error('The server did not return valid data. Please refresh or sign in again.');});
       if (!response.ok) throw new Error(body?.message || body?.detail || `Request failed (${response.status})`);
       return body;
     } finally { busy(false); }
   }
   function message(value, ok=false) { const box=$('message'); box.textContent=value; box.className=ok?'ok':''; }
   function clearMessage() { message(''); }
-  function today() { return new Date().toISOString().slice(0,10); }
+  function today() { const now=new Date();return new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10); }
   function dateOnly(value) { return value ? String(value).slice(0,10) : ''; }
   function displayDate(value) { const v=dateOnly(value); if(!v)return ''; const [y,m,d]=v.split('-'); return `${d}-${m}-${y}`; }
 
@@ -33,6 +47,7 @@
   }
   function reset() {
     currentId=0; rows=[]; removedLineIds=[];
+    currentOrderType='Local'; currentToBranchId=0;
     $('docNo').value=initial?.nextDocNo || '';
     $('docDate').value=today(); $('deliveryOrderType').value='Local';
     $('saleType').value='1'; $('vehicleType').value=''; $('vehicleNo').value=''; $('remarks').value=''; $('stockReserved').checked=false;
@@ -54,6 +69,7 @@
     return {
       id:num(source,'Id','id'), supplierCustomerId:num(source,'SupplierCustomerId','supplierCustomerId'), customer:text(source,'SupplierCustomer','supplierCustomer'),
       saleOrderId:num(source,'OrderId','SaleOrderId','saleOrderId'), orderNo:text(source,'OrderNo','orderNo'), saleOrderDetailId:num(source,'SaleOrderDetailId','saleOrderDetailId'),
+      deliveryScheduleId:num(source,'DeliveryScheduleId','DeliveryScheduleCustomerId','deliveryScheduleId'), deliveryScheduleDetailId:num(source,'DeliveryScheduleDetailId','DeliveryScheduleCustomerDetailId','deliveryScheduleDetailId'),
       itemId:num(source,'ItemId','itemId'), itemCode:text(source,'ItemCode','itemCode'), itemName:text(source,'Item','ItemName','itemName'), packUomId:num(source,'ItemUOMId','PackUomId','packUomId'), packUom:text(source,'ItemUOM','PackUOM','packUom'),
       cropYearId:num(source,'CropYearId','cropYearId'), crop:text(source,'CropYear','crop'), packingTypeId:num(source,'PackingTypeId','InvPackingTypeId','packingTypeId'), packingType:text(source,'PackTypeDesc','PackingType','packingType'),
       warehouseId:num(source,'WareHouseId','WarehouseId','warehouseId'), warehouse:text(source,'WareHouseName','Warehouse','warehouse'), jobLotId:num(source,'JobLotId','jobLotId'), jobLot:text(source,'JobLotDescription','JobLot','jobLot'),
@@ -96,10 +112,15 @@
     const existing=new Set(rows.map(row=>row.saleOrderDetailId)); loaded.map(fromOrderLine).filter(row=>!existing.has(row.saleOrderDetailId)).forEach(row=>rows.push(row));
     renderRows(); $('orderLoader').hidden=true;
   }
-  function payload() { return {id:currentId,docDate:$('docDate').value,deliveryOrderType:'Local',saleTypeId:Number($('saleType').value),toBranchId:0,transporterId:0,vehicleType:$('vehicleType').value,vehicleNo:$('vehicleNo').value,loadingInstructions:$('remarks').value,stockReserved:$('stockReserved').checked,removedLineIds,
-    lines:rows.map(row=>({id:row.id,supplierCustomerId:row.supplierCustomerId,saleOrderId:row.saleOrderId,saleOrderDetailId:row.saleOrderDetailId,itemId:row.itemId,packUomId:row.packUomId,packingTypeId:row.packingTypeId,warehouseId:row.warehouseId,jobLotId:row.jobLotId,cropYearId:row.cropYearId,refPartyId:row.refPartyId,refDocumentTypeId:row.refDocumentTypeId,refDocIdNo:row.refDocIdNo,refDocSubIdNo:row.refDocSubIdNo,quantity:row.quantity,weight:row.weight,packingUnit:row.packingUnit,packingWeight:row.packingWeight,grossWeight:row.grossWeight,rate:row.rate,rateUom:row.rateUom,rateUomId:row.rateUomId,remarks:row.remarks}))}; }
+  function payload() { return {id:currentId,docDate:$('docDate').value,deliveryOrderType:currentOrderType,branchesId:Number($('branchFrom').value),saleTypeId:Number($('saleType').value),toBranchId:currentToBranchId,transporterId:0,vehicleType:$('vehicleType').value,vehicleNo:$('vehicleNo').value,loadingInstructions:$('remarks').value,stockReserved:$('stockReserved').checked,removedLineIds,
+    lines:rows.map(row=>({id:row.id,supplierCustomerId:row.supplierCustomerId,saleOrderId:row.saleOrderId,saleOrderDetailId:row.saleOrderDetailId,deliveryScheduleId:row.deliveryScheduleId,deliveryScheduleDetailId:row.deliveryScheduleDetailId,itemId:row.itemId,packUomId:row.packUomId,packingTypeId:row.packingTypeId,warehouseId:row.warehouseId,jobLotId:row.jobLotId,cropYearId:row.cropYearId,refPartyId:row.refPartyId,refDocumentTypeId:row.refDocumentTypeId,refDocIdNo:row.refDocIdNo,refDocSubIdNo:row.refDocSubIdNo,quantity:row.quantity,weight:row.weight,packingUnit:row.packingUnit,packingWeight:row.packingWeight,grossWeight:row.grossWeight,rate:row.rate,rateUom:row.rateUom,rateUomId:row.rateUomId,remarks:row.remarks}))}; }
   async function save() { const updated=currentId>0; const record=await request(api,{method:'POST',body:JSON.stringify(payload())}); loadRecordObject(record); await refreshHistory(); message(`Delivery Order ${$('docNo').value} ${updated?'updated':'saved'} successfully`,true); }
   function loadRecordObject(record) {
+    currentOrderType=text(record,'DeliveryOrderType','deliveryOrderType')||'Local';
+    currentToBranchId=num(record,'ToBranchId','toBranchId');
+    if(!Array.from($('deliveryOrderType').options).some(option=>option.value===currentOrderType))
+      $('deliveryOrderType').add(new Option(currentOrderType,currentOrderType));
+    $('deliveryOrderType').value=currentOrderType;
     currentId=num(record,'Id','id','InvDeliveryOrderId','HeaderId'); $('docNo').value=text(record,'DocNo','docNo'); $('docDate').value=dateOnly(text(record,'DocDate','docDate')); $('vehicleType').value=text(record,'VehicleType','vehicleType'); $('vehicleNo').value=text(record,'VehicleNo','vehicleNo'); $('remarks').value=text(record,'LoadingInstructions','loadingInstructions'); $('saleType').value=String(num(record,'SaleTypeId','saleTypeId')||1); $('stockReserved').checked=String(text(record,'IsStockReserved','stockReserved')).toLowerCase()==='true';
     const recordBranch=num(record,'BranchesId','branchesId'); if(recordBranch)$('branchFrom').value=String(recordBranch); /* DeliveryOrder.cs:2038 */
     rows=(record.lines||[]).map(fromOrderLine); removedLineIds=[]; $('saveButton').hidden=true; $('updateButton').hidden=false; $('deleteButton').hidden=false; renderRows(); window.scrollTo({top:0,behavior:'smooth'});
@@ -129,7 +150,11 @@
     }).join('');
   }
   async function reload() { configure(await request(`${api}/initial`)); await refreshHistory(); }
-  async function run(action) { try{await action();}catch(error){message(error.message||String(error));} }
+  async function run(action) {
+    if(activeRequests)return;
+    busy(true);
+    try{await action();}catch(error){message(error.message||String(error));}finally{busy(false);}
+  }
 
   $('detailTable').addEventListener('input',lineInput); $('detailTable').addEventListener('click',event=>{deleteRow(event);editRow(event);});
   $('historyTable').addEventListener('click',event=>{
@@ -139,9 +164,9 @@
       if (id > 0) run(() => loadRecord(id));
     }
   });
-  $('newButton').addEventListener('click',reset); $('saveButton').addEventListener('click',()=>run(save)); $('updateButton').addEventListener('click',()=>run(save)); $('deleteButton').addEventListener('click',()=>run(remove));
+  $('newButton').addEventListener('click',()=>run(reset)); $('saveButton').addEventListener('click',()=>run(save)); $('updateButton').addEventListener('click',()=>run(save)); $('deleteButton').addEventListener('click',()=>run(remove));
   $('loadOrderButton').addEventListener('click',()=>{$('orderLoader').hidden=false;$('saleOrderSearch').focus();}); $('closeOrderLoader').addEventListener('click',()=>{$('orderLoader').hidden=true;}); $('loadSelectedOrder').addEventListener('click',()=>run(loadOrder));
   $('historyButton').addEventListener('click',()=>$('historyPanel').scrollIntoView({behavior:'smooth'})); $('refreshButton').addEventListener('click',()=>run(reload));
-  document.addEventListener('keydown',event=>{if(event.ctrlKey&&event.key.toLowerCase()==='s'){event.preventDefault();run(save);}if(event.ctrlKey&&event.key.toLowerCase()==='n'){event.preventDefault();reset();}if(event.ctrlKey&&event.key==='Delete'&&currentId){event.preventDefault();run(remove);}});
-  run(reload);
+  document.addEventListener('keydown',event=>{if(event.ctrlKey&&event.key.toLowerCase()==='s'){event.preventDefault();run(save);}if(event.ctrlKey&&event.key.toLowerCase()==='n'){event.preventDefault();run(reset);}if(event.ctrlKey&&event.key==='Delete'&&currentId){event.preventDefault();run(remove);}});
+  run(async()=>{await reload();const q=new URLSearchParams(location.search),id=Number(q.get('id')||q.get('record')||q.get('Id')||0);if(Number.isSafeInteger(id)&&id>0)await loadRecord(id);});
 })();

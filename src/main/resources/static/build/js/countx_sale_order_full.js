@@ -327,6 +327,13 @@ function loadMasterLookups() {
         // Payment Detail & Expense dropdowns
         bindCombo('#payTerm', data.paymentTerms, 'Id', 'TermsDescription', '-- Select Term --');
         bindCombo('#expItem', data.otherItems, 'Id', 'OtherItemName', '-- Select Item --');
+        if (!currentEditingOrderId && !currentExpenseItems.length) {
+            currentExpenseItems = (data.otherItems || []).map(function (r) {
+                return {itemId:r.Id, itemName:r.OtherItemName, quantity:0, rate:0, amount:0, remarks:''};
+            });
+        }
+        renderExpenseGrid();
+        renderPaymentGrid();
         /* CmbCustomerHistory is NOT the party master: HistoryCombosFill (SaleOrder.cs:4012) lists only the
            parties that appear on Sale Orders (doc type 81) in the history branch, from
            USP_GetDataForDropDownFromSaleOrder rows where Activity='Customer'. */
@@ -337,6 +344,9 @@ function loadMasterLookups() {
         $.get('/sale/sale-order/api/config-defaults', function (c) {
             if (!c) return;
             saleOrderConfig = c;
+            $.ajax({url:'/api/configurations/by-key', data:{configDescription:'Default NoofDecimal Points For Amount'}})
+                .done(function (setting) { saleOrderConfig.amountDecimals = Math.max(0, Math.min(15, parseInt(setting.configKey, 10) || 0)); })
+                .fail(function (xhr) { if (xhr.status !== 404) alert('Unable to load expense amount precision. Please Refresh before editing expenses.'); });
             /* ERP feature 6: show and fill the currency controls (CurrencyFill :3462). */
             if (c.hasMultiCurrencyFeature) {
                 $('.so-fcy').prop('hidden', false);
@@ -791,62 +801,7 @@ function setupEventListeners() {
         }
     });
 
-    // -------- Customer Expense entry bar: Qty/Rate -> Amount, Amount(manual) resets Qty/Rate --------
-    // Ports desktop grdInvExp_CellUpdated verbatim: editing Qty or Rate recomputes Amount = round(Qty*Rate);
-    // editing Amount directly makes Amount authoritative and zeroes Qty/Rate.
-    $('#expQty, #expRate').on('input', function () {
-        var qty = parseFloat($('#expQty').val()) || 0;
-        var rate = parseFloat($('#expRate').val()) || 0;
-        $('#expAmount').val((qty * rate).toFixed(2));
-    });
-    $('#expAmount').on('input', function () {
-        $('#expQty').val('0');
-        $('#expRate').val('0');
-    });
 
-    // -------- Payment Detail entry bar: two-way %OfTotal <-> Amount, DueDays <-> DueDate --------
-    // Ports desktop grdPaymentDetail_CellUpdated verbatim (see SALE-ORDER-PROGRESS.md Pass 3).
-    $('#payPercent').on('input', function () {
-        var pct = parseFloat($(this).val()) || 0;
-        if (pct > 100) { pct = 100; $(this).val(100); }
-        var total = getDetailOrderTotal();
-        var amt = Math.round((pct * total / 100) * 10000) / 10000;
-        if (total > 0 && amt > total) { amt = total; }
-        $('#payAmount').val(amt.toFixed(2));
-    });
-    $('#payAmount').on('input', function () {
-        var total = getDetailOrderTotal();
-        var amt = parseFloat($(this).val()) || 0;
-        if (total > 0 && amt > total) { amt = total; $(this).val(amt.toFixed(2)); }
-        if (total > 0) {
-            var pct = Math.round((amt / total * 100) * 10000) / 10000;
-            $('#payPercent').val(pct);
-        }
-    });
-    $('#payDueDays').on('input', function () {
-        var days = parseInt($(this).val()) || 0;
-        var docDateVal = $('#txtDocDate').val();
-        if (docDateVal) {
-            var d = new Date(docDateVal);
-            d.setDate(d.getDate() + days);
-            $('#payDueDate').val(d.toISOString().split('T')[0]);
-        }
-    });
-    $('#payDueDate').on('change', function () {
-        var docDateVal = $('#txtDocDate').val();
-        var dueDateVal = $(this).val();
-        if (!docDateVal || !dueDateVal) return;
-        var docDate = new Date(docDateVal);
-        var dueDate = new Date(dueDateVal);
-        if (dueDate < docDate) {
-            alert("Due Date Can't less Than DocDate");
-            $(this).val(docDateVal);
-            $('#payDueDays').val(0);
-            return;
-        }
-        var days = Math.round((dueDate - docDate) / (1000 * 60 * 60 * 24));
-        $('#payDueDays').val(days);
-    });
 }
 
 // Detail tab order total (desktop: GridEX_Helper.GetColumnSum(grd, "Amount")) - the base that
@@ -861,9 +816,8 @@ function getDetailOrderTotal() {
 // tab total changes, that row's Amount is kept in sync from its %OfTotal against the fresh total.
 function paymentAmountReCalculate() {
     var total = getDetailOrderTotal();
-    if (total > 0 && currentPaymentSchedules.length === 1) {
-        var row = currentPaymentSchedules[0];
-        row.amount = Math.round((row.percentOfTotal * total / 100) * 10000) / 10000;
+    if (total > 0 && (currentPaymentSchedules.length === 1 || paymentCalculationMode === 'percent')) {
+        currentPaymentSchedules.forEach(function(row) { row.amount = roundHalfEven(row.percentOfTotal * total / 100,4); });
         renderPaymentGrid();
     }
 }
@@ -1249,91 +1203,6 @@ function recalcTotals() {
 // =========================================================
 // 4. CUSTOMER EXPENSE TAB LOGIC
 // =========================================================
-function btnAddExpenseRow_Click() {
-    var itemId = $('#expItem').val();
-    var itemName = $('#expItem option:selected').text();
-    var qty = parseFloat($('#expQty').val()) || 0;
-    var rate = parseFloat($('#expRate').val()) || 0;
-    var amt = parseFloat($('#expAmount').val()) || 0;
-    var remarks = $('#expRemarks').val() || '';
-
-    if (!itemId || amt <= 0) {
-        alert('Select Item and enter Qty/Rate or Amount for Expense.');
-        return;
-    }
-
-    // Desktop auto-fills Remarks when left blank: "OtherItemName : {name}  {qty}  @{rate}"
-    if (!remarks || remarks === '0') {
-        remarks = 'OtherItemName : ' + itemName + '  ' + qty + '  @' + rate;
-    }
-
-    currentExpenseItems.push({
-        itemId: itemId,
-        itemName: itemName,
-        quantity: qty,
-        rate: rate,
-        amount: amt,
-        remarks: remarks
-    });
-
-    renderExpenseGrid();
-    $('#expItem').val(''); $('#expQty').val(''); $('#expRate').val(''); $('#expAmount').val('0.00'); $('#expRemarks').val('');
-}
-
-function renderExpenseGrid() {
-    var tbody = $('#tblCustomerExpense tbody').empty();
-    if (currentExpenseItems.length === 0) {
-        tbody.append('<tr><td colspan="6" class="text-center text-muted" style="padding: 10px;">No customer expenses added.</td></tr>');
-        return;
-    }
-    currentExpenseItems.forEach(function (item, index) {
-        tbody.append(`<tr>
-            <td class="text-center"><button class="btn btn-sm btn-danger p-0 px-1" onclick="removeExpenseItem(${index})">&times;</button></td>
-            <td>${item.itemName}</td>
-            <td class="text-end">${item.quantity.toFixed(2)}</td>
-            <td class="text-end">${item.rate.toFixed(2)}</td>
-            <td class="text-end">${item.amount.toFixed(2)}</td>
-            <td>${item.remarks}</td>
-        </tr>`);
-    });
-}
-
-function removeExpenseItem(index) {
-    currentExpenseItems.splice(index, 1);
-    renderExpenseGrid();
-}
-
-// =========================================================
-// 5. PAYMENT DETAIL TAB LOGIC
-// =========================================================
-function btnAddPaymentRow_Click() {
-    var termId = $('#payTerm').val();
-    var termName = $('#payTerm option:selected').text();
-    var dueDays = parseInt($('#payDueDays').val()) || 0;
-    var dueDate = $('#payDueDate').val();
-    var percent = parseFloat($('#payPercent').val()) || 0;
-    var amt = parseFloat($('#payAmount').val()) || 0;
-    var remarks = $('#payRemarks').val() || '';
-
-    if (!termId) {
-        alert('Select Payment Term.');
-        return;
-    }
-
-    currentPaymentSchedules.push({
-        paymentTermId: termId,
-        paymentTerm: termName,
-        dueDays: dueDays,
-        dueDate: dueDate,
-        percentOfTotal: percent,
-        amount: amt,
-        remarks: remarks
-    });
-
-    renderPaymentGrid();
-    $('#payTerm').val(''); $('#payDueDays').val('0'); $('#payDueDate').val(''); $('#payPercent').val('0'); $('#payAmount').val('0.00'); $('#payRemarks').val('');
-}
-
 // Real desktop save-time validation + fallback (Sale Order Insert(), see SALE-ORDER-PROGRESS.md
 // Pass 3). Returns {ok:true} or {ok:false, message} - never silently drops a validation.
 // If the grid was never touched (sum of Amount == 0), synthesizes a single implicit 100% row
@@ -1382,30 +1251,6 @@ function buildPaymentTermsForSave() {
         return { ok: false, message: 'Payment Detail Total% not near to 100' };
     }
     return { ok: true, rows: rows };
-}
-
-function renderPaymentGrid() {
-    var tbody = $('#tblPaymentDetail tbody').empty();
-    if (currentPaymentSchedules.length === 0) {
-        tbody.append('<tr><td colspan="7" class="text-center text-muted" style="padding: 10px;">No payment schedules added.</td></tr>');
-        return;
-    }
-    currentPaymentSchedules.forEach(function (p, index) {
-        tbody.append(`<tr>
-            <td class="text-center"><button class="btn btn-sm btn-danger p-0 px-1" onclick="removePaymentSchedule(${index})">&times;</button></td>
-            <td>${p.paymentTerm}</td>
-            <td class="text-center">${p.dueDays}</td>
-            <td>${p.dueDate || ''}</td>
-            <td class="text-end">${p.percentOfTotal.toFixed(2)}%</td>
-            <td class="text-end">${p.amount.toFixed(2)}</td>
-            <td>${p.remarks}</td>
-        </tr>`);
-    });
-}
-
-function removePaymentSchedule(index) {
-    currentPaymentSchedules.splice(index, 1);
-    renderPaymentGrid();
 }
 
 // =========================================================
@@ -1739,6 +1584,10 @@ function btnSave_Click() {
         return e.itemId && parseFloat(e.amount) > 0;
     });
 
+    expenseRowsForSave = expenseRowsForSave.map(function(e) {
+        return Object.assign({}, e, {remarks:!e.remarks || e.remarks === '0'
+            ? 'OtherItemName : '+e.itemName+'  '+e.quantity+'  @'+e.rate : e.remarks});
+    });
     var payload = {
         id: currentEditingOrderId || null,
         voucherCode: parseInt($('#txtDocNo').val()) || 0,
@@ -1813,7 +1662,7 @@ function btnSave_Click() {
             if (res.success) {
                 currentEditingOrderId = res.id;
                 removedLineItems = [];
-                if (res.docNo != null) $('#txtDocNo').val(res.docNo);
+                if (res.docNo != null) { $('#txtDocNo').val(res.docNo); $('#txtDocPrefix').val('SO-' + res.docNo); }
                 alert(res.message || 'Sale Order saved successfully!');
                 loadOrderIntoForm(res.id);
             } else {
@@ -1898,6 +1747,7 @@ function loadOrderIntoForm(id) {
         showFormTab();
         currentEditingOrderId = data.Id || id;
         $('#txtDocNo').val(data.DocNo != null ? data.DocNo : id);
+        $('#txtDocPrefix').val('SO-' + $('#txtDocNo').val());
         $('#txtDocDate').val(data.DocDate ? data.DocDate.substring(0, 10) : '');
         $('#cmbCustomer').val(data.OrderSupCustId || '').trigger('change');
         $('#txtRemarks').val(data.RemarksHeader || '');
@@ -2006,6 +1856,14 @@ function loadOrderIntoForm(id) {
                 remarks: e.Remarks || ''
             };
         });
+        var savedExpenses = currentExpenseItems;
+        currentExpenseItems = (masterLookupsData.otherItems || []).map(function(r) {
+            return savedExpenses.find(function(e){return Number(e.itemId) === Number(r.Id);}) ||
+                {itemId:r.Id,itemName:r.OtherItemName,quantity:0,rate:0,amount:0,remarks:''};
+        });
+        savedExpenses.forEach(function(e){
+            if(!currentExpenseItems.some(function(r){return Number(r.itemId)===Number(e.itemId);})) currentExpenseItems.push(e);
+        });
         renderExpenseGrid();
         currentPaymentSchedules = (data.paymentSchedules || []).map(function (p) {
             return {
@@ -2020,4 +1878,114 @@ function loadOrderIntoForm(id) {
         });
         renderPaymentGrid();
     });
+}
+
+// SaleOrder.cs grdInvExp / grdPaymentDetail cell events. Rows remain part of the order transaction.
+// Desktop starts in amount mode (SaleOrder.cs:85-87); loaded installments keep their amounts.
+var paymentCalculationMode = 'amount';
+function blankPaymentRow() {
+    return {paymentTermId:0, paymentTerm:'', dueDays:0, dueDate:new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0'), percentOfTotal:0, amount:0, remarks:''};
+}
+function gridInput(row, key, type, change) {
+    return $('<input>', {type:type || 'text', 'aria-label':key, value:row[key] == null ? '' : row[key]})
+        .attr(type === 'number' ? {min:0, step:key === 'dueDays' ? '1' : 'any'} : {})
+        .on('change', function () { change(type === 'number' ? Math.max(0, Number(this.value) || 0) : this.value); });
+}
+function gridSelect(source, value, label, change) {
+    var select = $('<select>', {'data-dtcombo':'single', 'aria-label':label});
+    select.append($(source).children().clone()).val(String(value || ''));
+    return select.on('change', function () { change(this.value, this.options[this.selectedIndex]?.text || ''); });
+}
+function renderExpenseGrid() {
+    var body = $('#tblCustomerExpense tbody').empty();
+    currentExpenseItems.forEach(function (row, index) {
+        var tr = $('<tr>').appendTo(body);
+        $('<td>').append(gridSelect('#expItem', row.itemId, 'Item', function (id, name) {
+            row.itemId = Number(id); row.itemName = name;
+        })).appendTo(tr);
+        ['quantity','rate','amount','remarks'].forEach(function (key) {
+            $('<td>').append(gridInput(row, key, key === 'remarks' ? 'text' : 'number', function (value) {
+                updateExpenseCell(index, key, value); refreshEditedGrid(tr, row); refreshExpenseTotals();
+            })).appendTo(tr);
+        });
+    });
+    refreshExpenseTotals();
+    if (window.DesktopCombo) DesktopCombo.init();
+}
+function refreshExpenseTotals() {
+    var qty = currentExpenseItems.reduce(function (n,r) { return n + Number(r.quantity || 0); },0);
+    var amount = currentExpenseItems.reduce(function (n,r) { return n + Number(r.amount || 0); },0);
+    $('#tblCustomerExpense tfoot').html('<tr><td>Total</td><td>'+qty.toLocaleString(undefined,{maximumFractionDigits:3})+'</td><td></td><td>'+amount.toLocaleString(undefined,{maximumFractionDigits:2})+'</td><td></td></tr>');
+}
+function updateExpenseCell(index, key, value) {
+    var r = currentExpenseItems[index]; r[key] = value;
+    var digits = Number(saleOrderConfig.amountDecimals || 0), factor = Math.pow(10,digits);
+    function rounded(n) { return Math.round((n + Number.EPSILON) * factor) / factor; }
+    if ((key === 'quantity' || key === 'rate') && r.quantity > 0 && r.rate > 0) r.amount = rounded(r.quantity * r.rate);
+    if (key === 'amount') { r.quantity = 0; r.rate = 0; r.amount = rounded(value); }
+}
+function renderPaymentGrid() {
+    if (!currentPaymentSchedules.length) currentPaymentSchedules.push(blankPaymentRow());
+    var body = $('#tblPaymentDetail tbody').empty();
+    currentPaymentSchedules.forEach(function (row,index) {
+        var tr = $('<tr>').appendTo(body).on('keydown',function(e){
+            if(!e.ctrlKey) return;
+            if(e.key==='Delete'){e.preventDefault();removePaymentSchedule(index);}
+            else if(e.key.toLowerCase()==='d'){e.preventDefault();btnAddPaymentRow_Click();}
+            else if(e.key===' ' && e.target.tagName==='BUTTON'){e.preventDefault();e.target.click();}
+        });
+        $('<td>').append($('<button>', {type:'button',text:'X','aria-label':'Delete payment row '+(index+1)}).on('click',function(){removePaymentSchedule(index);})).appendTo(tr);
+        $('<td>').append($('<button>', {type:'button',text:'+','aria-label':'Add payment row'}).on('click',btnAddPaymentRow_Click)).appendTo(tr);
+        $('<td>').append(gridSelect('#payTerm',row.paymentTermId,'Payment Term',function(id,name){row.paymentTermId=Number(id);row.paymentTerm=name;})).appendTo(tr);
+        ['dueDays','dueDate','percentOfTotal','amount','remarks'].forEach(function (key) {
+            var type = key === 'remarks' ? 'text' : key === 'dueDate' ? 'date' : 'number';
+            $('<td>').append(gridInput(row,key,type,function(value){updatePaymentCell(index,key,value);refreshEditedGrid(tr,row);refreshPaymentTotals();})).appendTo(tr);
+        });
+    });
+    refreshPaymentTotals();
+    if (window.DesktopCombo) DesktopCombo.init();
+}
+function refreshPaymentTotals() {
+    var pct = currentPaymentSchedules.reduce(function(n,r){return n+Number(r.percentOfTotal||0);},0);
+    var amount = currentPaymentSchedules.reduce(function(n,r){return n+Number(r.amount||0);},0);
+    $('#tblPaymentDetail tfoot').html('<tr><td colspan="3">Total</td><td></td><td></td><td>'+pct.toLocaleString(undefined,{maximumFractionDigits:4})+'</td><td>'+amount.toLocaleString(undefined,{maximumFractionDigits:4})+'</td><td></td></tr>');
+}
+function updatePaymentCell(index,key,value) {
+    var r=currentPaymentSchedules[index], total=getDetailOrderTotal(); r[key]=value;
+    if (key==='percentOfTotal' && total>0) {
+        if(value>100){alert("%of Total Can't Greater than 100");r.percentOfTotal=100;}
+        r.amount=roundHalfEven(total*r.percentOfTotal/100,4); paymentCalculationMode='percent';
+    }
+    if (key==='amount' && total>0) {
+        if(value>total){alert('Amount Cant be Greater than Order Amount:'+total);r.amount=0;}
+        r.percentOfTotal=roundHalfEven(r.amount*100/total,8); paymentCalculationMode='amount';
+    }
+    var doc=$('#txtDocDate').val();
+    if(key==='dueDays' && doc){var d=new Date(doc+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+Math.trunc(value));r.dueDate=d.toISOString().slice(0,10);}
+    if(key==='dueDate' && doc && value){
+        if(value<doc){alert("Due Date Can't less Than DocDate");r.dueDate=doc;}
+        r.dueDays=Math.round((new Date(r.dueDate)-new Date(doc))/86400000);
+    }
+}
+function btnAddPaymentRow_Click() {
+    var total=getDetailOrderTotal(), rows=currentPaymentSchedules;
+    var used=rows.reduce(function(n,r){return n+Number(r.amount||0);},0);
+    if(!used){rows.push(blankPaymentRow());renderPaymentGrid();return;}
+    if(total<=0){alert('Order amount is zero. Cannot distribute payment.');return;}
+    var last=rows[rows.length-1];
+    if(!last.amount && !last.percentOfTotal){alert('Please fill the current row first.');return;}
+    if(paymentCalculationMode==='amount') last.percentOfTotal=roundHalfEven(last.amount/total*100,4);
+    else last.amount=roundHalfEven(total*last.percentOfTotal/100,3);
+    used=rows.reduce(function(n,r){return n+Number(r.amount||0);},0);
+    var percent=rows.reduce(function(n,r){return n+Number(r.percentOfTotal||0);},0);
+    if(paymentCalculationMode==='amount' && used>total){alert('Total Amount exceeds Order Amount!');return;}
+    if(paymentCalculationMode==='percent' && percent>100){alert('Total % exceeds 100%!');return;}
+    var amount=roundHalfEven(total-used,3), remaining=roundHalfEven(100-percent,4);
+    if(amount<=0 && remaining<=0){alert('Payment is fully allocated. No new row needed.');renderPaymentGrid();return;}
+    var r=blankPaymentRow();r.amount=amount;r.percentOfTotal=remaining;rows.push(r);renderPaymentGrid();
+}
+function removePaymentSchedule(index) {currentPaymentSchedules.splice(index,1);renderPaymentGrid();}
+
+function refreshEditedGrid(tr,row) {
+    tr.find('input[aria-label]').each(function(){var key=this.getAttribute('aria-label');if(Object.prototype.hasOwnProperty.call(row,key)) this.value=row[key];});
 }

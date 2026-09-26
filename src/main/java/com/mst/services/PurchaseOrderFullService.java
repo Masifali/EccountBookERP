@@ -2651,7 +2651,7 @@ public class PurchaseOrderFullService {
             try {
                 org.springframework.transaction.interceptor.TransactionAspectSupport
                         .currentTransactionStatus().setRollbackOnly();
-            } catch (IllegalStateException noTx) {
+            } catch (RuntimeException noTx) {
                 /* not running in a transaction - nothing to roll back */
             }
             response.clear();

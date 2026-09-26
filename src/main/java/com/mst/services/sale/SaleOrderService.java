@@ -935,7 +935,7 @@ public class SaleOrderService {
                 if (nz(e.getAmount()).compareTo(BigDecimal.ZERO) <= 0) continue;
                 String remarks = e.getRemarks();
                 if (remarks == null || remarks.isBlank() || "0".equals(remarks)) {
-                    remarks = (e.getItemName() != null ? e.getItemName() : "") + " : " + nz(e.getQuantity()) + "  @" + nz(e.getRate());
+                    remarks = "OtherItemName : " + (e.getItemName() != null ? e.getItemName().trim() : "") + "  " + nz(e.getQuantity()) + "  @" + nz(e.getRate());
                 }
                 /* SaleOrderCustomerExpenses.Id is `public int` - 0, not null. */
                 ProcExec.call(jdbcTemplate, SQL_CUSTOMER_EXPENSE_INSERT,

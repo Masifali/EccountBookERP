@@ -220,6 +220,11 @@
         'Purchase.InvfrmPurchaseInvoice|InvfrmPurchaseInvoice': { q: '/purchase/purchase-invoice' },
         /* countx_direct_invoice.js:61 - load(id). */
         'Purchase.InvfrmPurchasedirectInvoice|InvfrmPurchasedirectInvoice': { q: '/purchase/purchase-invoice-direct' },
+        /* These dedicated pages read ?id= only after their own initial lookups complete. */
+        'Sale.OutwardGatePass|OutwardGatePass': { q: '/sale/outward-gate-pass' },
+        'Sale.DeliveryOrder|DeliveryOrder': { q: '/sale/delivery-order' },
+        'Sale.InvFrmGDN|InvFrmGDN': { q: '/sale/gdn' },
+        'Sale.frmGdnDirect|frmGdnDirect': { q: '/sale/gdn-direct' },
         /* sale/sale_invoice.js:1258 - readById(id). */
         'Sale.InvfrmSaleInvoice|InvfrmSaleInvoice': { q: '/sale/sale-invoice' },
         /* sale/sale_invoice_gdn_no_wb.js:936 - readById(id). */

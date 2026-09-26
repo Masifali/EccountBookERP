@@ -1,137 +1,19 @@
-<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Payables Report Invoice Wise - EccountBookERP</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
-        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .report-summary-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
-    </style>
-</head>
-<body>
-    <div class="erp-header">
-        <div><i class="fa fa-line-chart"></i> Payables Report Invoice Wise</div>
-        <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
-    </div>
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary" onclick="loadReport()"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp" onclick="alert('Exporting Excel...')"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp" onclick="resetFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
-    </div>
-    <div style="padding: 10px;">
-        <div class="erp-fieldset">
-            <legend>Report Filter Criteria</legend>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label-erp">From Date</label>
-                    <input type="date" id="txtFromDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">To Date</label>
-                    <input type="date" id="txtToDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Supplier / Vendor</label>
-                    <select id="cmbSupplier" class="form-control-erp select2">
-                        <option value="">-- All Suppliers --</option>
-                        <option th:each="sc : ${supplierCustomersList}" th:value="${sc['id'] != null ? sc['id'] : (sc['Id'] != null ? sc['Id'] : '')}" th:text="${sc['supplierName'] != null ? sc['supplierName'] : (sc['SupplierName'] != null ? sc['SupplierName'] : (sc['companyName'] != null ? sc['companyName'] : (sc['CompanyName'] != null ? sc['CompanyName'] : (sc['name'] != null ? sc['name'] : ''))))}"></option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Invoice No Search</label>
-                    <input type="text" id="txtInvoiceNo" class="form-control-erp" placeholder="Invoice No..."/>
-                </div>
-            </div>
-        </div>
-
-        <div class="erp-fieldset">
-            <legend>Invoice Wise Payables Data Output</legend>
-            <div style="text-align: center; margin-bottom: 10px;">
-                <h4 style="margin: 0; font-weight: bold; color: #00796B;"><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></h4>
-                <h5 style="margin: 2px 0; font-weight: bold;">Payables Report Invoice Wise</h5>
-                <small style="color: #64748b;" id="lblPeriod">Period: Current Date To Current Date | Currency: PKR</small>
-            </div>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 12%;">Invoice No</th>
-                        <th style="width: 12%;">Invoice Date</th>
-                        <th style="width: 24%;">Supplier Name</th>
-                        <th style="width: 13%; text-align: right;">Bill Amount</th>
-                        <th style="width: 13%; text-align: right;">Paid Amount</th>
-                        <th style="width: 13%; text-align: right;">Balance Amount</th>
-                        <th style="width: 13%;">Due Date</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTbody">
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">PINV-2026-081</td>
-                        <td>2026-09-01</td>
-                        <td>AL-HABIB TRADERS (PVT) LTD</td>
-                        <td style="text-align: right;">450,000.00</td>
-                        <td style="text-align: right;">300,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">150,000.00</td>
-                        <td>2026-09-30</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="report-summary-bar">
-                <div>Total Invoices: 1</div>
-                <div>Total Bill Amount: 450,000.00</div>
-                <div>Total Paid: 300,000.00</div>
-                <div>Total Balance: 150,000.00 PKR</div>
-            </div>
-        </div>
-    </div>
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate, #txtToDate').val(today);
-            $('.select2').select2({ width: '100%' });
-            updatePeriodLabel();
-        });
-
-        function updatePeriodLabel() {
-            const fd = $('#txtFromDate').val();
-            const td = $('#txtToDate').val();
-            $('#lblPeriod').text(`Period: ${fd} To ${td} | Currency: PKR`);
-        }
-
-        function loadReport() {
-            updatePeriodLabel();
-        }
-
-        function resetFilters() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate, #txtToDate').val(today);
-            $('#txtInvoiceNo').val('');
-            $('.select2').val('').trigger('change');
-            updatePeriodLabel();
-        }
-    </script>
-</body>
-</html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payables Report Invoice Wise</title>
+<link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+<style>body{margin:0;background:#f0f0f0;font:13px Tahoma,Arial}header{background:teal;color:white;padding:8px;font-weight:bold}header a{float:right;color:white}main{padding:10px}fieldset{border:1px solid #aaa;display:flex;flex-wrap:wrap;gap:12px;margin:0 0 12px}label{display:block}input,select,button{font:inherit;box-sizing:border-box;min-height:26px}select{width:230px}button{padding:4px 12px;cursor:pointer}button:disabled{cursor:wait;opacity:.6}#show{background:teal;color:white;border:1px solid #006060}.grid{max-width:100%;overflow:auto;background:white}table{border-collapse:collapse;min-width:100%;white-space:nowrap}th,td{border:1px solid #bbb;padding:5px 8px}th{background:teal;color:white;text-align:left}#status{padding:10px 0}#status[aria-busy=true]:before{content:'◌ ';display:inline-block;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.toolbar{padding:8px;display:flex;gap:8px}.select2-container{max-width:100%}</style></head><body>
+<header>Payables Report Invoice Wise <a href="/accounts/dashboard">Accounts</a></header>
+<div class="toolbar"><button id="reset">New / Reset</button><button id="refresh">Refresh</button><button id="export">Export CSV</button></div>
+<main><fieldset><legend>Filters</legend>
+<div><label><input type="checkbox" id="useFrom" checked> From Date</label><input type="date" id="fromDate"></div>
+<div><label><input type="checkbox" id="useTo" checked> To Date</label><input type="date" id="toDate"></div>
+<div><label for="partyId">Party Name</label><select id="partyId"></select></div>
+<div><label for="agentId">Commission Agent</label><select id="agentId"></select></div>
+<div><label for="parentId">Parent Account</label><select id="parentId"></select></div>
+<div><label for="groupId">Custom Group</label><select id="groupId"></select></div>
+<div><label for="actionId">Status</label><select id="actionId"><option value="0">All</option><option value="1">Paid</option><option value="2">Balance</option></select></div>
+<button id="show">Show</button></fieldset>
+<div id="status" role="status" aria-live="polite">Select filters and press Show.</div>
+<div class="grid"><table><thead id="head"></thead><tbody id="rows"></tbody></table></div></main>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script><script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_payables_invoice_wise.js}"></script></body></html>

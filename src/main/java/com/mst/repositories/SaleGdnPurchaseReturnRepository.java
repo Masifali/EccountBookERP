@@ -124,38 +124,144 @@ public class SaleGdnPurchaseReturnRepository {
         return out;
     }
     public Map<String,Object> record(UserAccount u,int id){var h=q("EXEC dbo.Sp_InvGdn_GetAllMethod @Id=?,@Activity='GetById'",id);if(h.isEmpty()||number(h.get(0).get("OrganizationId"))!=u.getOrganizationId()||number(h.get(0).get("CompanyId"))!=u.getCompanyId()||number(h.get(0).get("DocumentTypeId"))!=documentTypeId())throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND,recordLabel()+" not found");var out=new LinkedHashMap<>(h.get(0));out.put("details",q("EXEC dbo.Sp_InvGdn_GetAllMethod @InvGdnMainId=?,@Activity='GetGDNDetailByGdnId'",id));out.put("expenses",q("EXEC dbo.Sp_InvGdn_GetAllMethod @Id=?,@Activity='GetInvGdnExpensesByHeaderId'",id));return out;}
-    public List<Map<String,Object>> history(UserAccount u,int year){return q("EXEC dbo.Sp_InvGdn_GetAllMethod @OrganizationId=?,@CompanyId=?,@DocumentTypeId=?,@FinancialYearId=?,@BranchesId=?,@CanViewAllRecord=1,@EntryUser=?,@Activity='GDNFormHistory'",u.getOrganizationId(),u.getCompanyId(),documentTypeId(),year,u.getBranchesId(),u.getId());}
+    public boolean canViewAllRecords(UserAccount u,String role){
+        if("Admin".equalsIgnoreCase(role))return true;
+        return q("EXEC dbo.Sp_tblUserRights_GetAllMethod @UserId=?,@ScreenName=?,@RightName=?,@CompanyId=?,@Activity='GetByUserId'",u.getId(),screenName(),role==null?"":role,u.getCompanyId())
+            .stream().anyMatch(r->"CanView AllRecord".equalsIgnoreCase(String.valueOf(r.get("RightName")).trim())&&truthy(String.valueOf(r.get("Value"))));
+    }
+    public List<Map<String,Object>> history(UserAccount u,int year){return history(u,year,false);}
+    public List<Map<String,Object>> history(UserAccount u,int year,boolean canViewAll){
+        return q("EXEC dbo.Sp_InvGdn_GetAllMethod @OrganizationId=?,@CompanyId=?,@DocumentTypeId=?,@FinancialYearId=?,@BranchesId=?,@CanViewAllRecord=?,@EntryUser=?,@Activity='GDNFormHistory'",u.getOrganizationId(),u.getCompanyId(),documentTypeId(),year,u.getBranchesId(),canViewAll?1:0,canViewAll?null:u.getId());
+    }
     public int save(UserAccount u,int year,Map<String,Object> request){
         int requestedId=number(request.get("id"));
+        @SuppressWarnings("unchecked") List<Map<String,Object>> details=(List<Map<String,Object>>)request.getOrDefault("details",List.of());
+        if(details==null||details.isEmpty())throw new IllegalArgumentException("Detail list not found");
+        // Architecture.BLL.Inventory.InvGdn.Save rejects copied persisted detail IDs on INSERT.
+        if(requestedId==0&&details.stream().anyMatch(d->number(d.get("Id"))>0))
+            throw new IllegalArgumentException("Record cannot be inserted because detailId greater than zero");
         Map<String,Object> old=requestedId>0?record(u,requestedId):Map.of();
         Map<String,Object> h=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        h.putAll(request);h.put("Id",requestedId);h.put("DocumentTypeId",documentTypeId());h.put("OrganizationId",u.getOrganizationId());h.put("CompanyId",u.getCompanyId());h.put("BranchesId",u.getBranchesId());h.put("ProjectsId",u.getBranchesId());h.put("FinancialYearId",year);h.put("EntryUser",requestedId>0?number(old.get("EntryUser")):u.getId());h.put("ModifyUser",u.getId());h.put("EntryDate",requestedId>0?old.get("EntryDate"):new Timestamp(System.currentTimeMillis()));h.put("ModifyDate",new Timestamp(System.currentTimeMillis()));h.put("IsApproved",false);h.put("ScreenName",screenName());h.put("ActionId",1);h.put("AutoUpdateId",0);h.put("IsStockReserved",false);
+        h.putAll(old);h.putAll(request);h.put("Id",requestedId);h.put("DocumentTypeId",documentTypeId());h.put("OrganizationId",u.getOrganizationId());h.put("CompanyId",u.getCompanyId());h.put("BranchesId",u.getBranchesId());h.put("ProjectsId",u.getBranchesId());h.put("FinancialYearId",year);h.put("EntryUser",requestedId>0?0:u.getId());h.put("ModifyUser",requestedId>0?u.getId():0);h.put("EntryDate",new Timestamp(System.currentTimeMillis()));h.put("ModifyDate",new Timestamp(System.currentTimeMillis()));h.put("IsApproved",false);h.put("ScreenName",screenName());h.put("ActionId",requestedId>0?2:1);h.put("AutoUpdateId",0);h.putIfAbsent("IsStockReserved",false);
         int id=call(requestedId>0?"Sp_InvGdn_Update":"Sp_InvGdn_Insert",h,true);if(id<=0)id=requestedId;if(id<=0)throw new IllegalStateException("GDN identity was not returned");
-        @SuppressWarnings("unchecked") List<Map<String,Object>> details=(List<Map<String,Object>>)request.getOrDefault("details",List.of());
-        int line=0;for(Map<String,Object> source:details){Map<String,Object>d=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);d.putAll(source);d.put("InvGdnId",id);d.put("LineId",++line);d.put("GpDate",request.get("GPDate"));d.put("GpNo",request.get("GpNo"));d.put("VehicleNo",request.get("VehicleNo"));int detailId=call("Sp_InvGdnDetail_Insert",d,true);source.put("LineId",line);source.put("InvGdnId",id);if(detailId>0)source.put("Id",detailId);}
+        int line=0;for(Map<String,Object> source:details){Map<String,Object>d=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);d.putAll(source);d.put("InvGdnId",id);d.put("LineId",++line);if(number(d.get("ActionTypeId"))!=3)applyReferencedStockRate(u,d);d.put("GpDate",request.get("GPDate"));d.put("GpNo",request.get("GpNo"));d.put("VehicleNo",request.get("VehicleNo"));int detailId=call("Sp_InvGdnDetail_Insert",d,true);source.put("LineId",line);source.put("InvGdnId",id);if(detailId>0)source.put("Id",detailId);for(String cost:List.of("ItemRate","RateUomId","ItemAmount"))if(d.containsKey(cost))source.put(cost,d.get(cost));}
         @SuppressWarnings("unchecked") List<Map<String,Object>> expenses=(List<Map<String,Object>>)request.getOrDefault("expenses",List.of());
         for(Map<String,Object> source:expenses){Map<String,Object>x=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);x.putAll(source);x.put("InvGdnId",id);call("Sp_InvGdnExpense_Insert",x,true);}
         call("Sp_InventoryTransactions_GetALLMethod",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"RefDocumentTypeId",documentTypeId(),"RefDocIdNo",id),false);
-        boolean hasReferences=details.stream().filter(d->number(d.get("ActionTypeId"))!=3).allMatch(d->number(d.get("RefDocumentTypeId"))>0&&number(d.get("RefDocIdNo"))>0&&number(d.get("RefDocSubIdNo"))>0);
+        boolean hasReferences=details.stream().filter(d->number(d.get("ActionTypeId"))!=3).anyMatch(d->number(d.get("RefDocumentTypeId"))>0&&number(d.get("RefDocIdNo"))>0&&number(d.get("RefDocSubIdNo"))>0);
         boolean feature5=q("EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId()).stream().anyMatch(r->number(r.get("Id"))==5);
         if(hasReferences)call("usp_StockEvalautionInsert_FromGdn",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"RefDocumentTypeId",documentTypeId(),"RefDocIdNo",id),false);
         else if(!feature5)call("Sp_InventoryStockEvalautionDetail_Update",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"RefDocumentTypeId",documentTypeId(),"RefDocIdNo",id),false);
-        else fifo(u,id,requestedId>0,request,details);
+        else fifo(u,id,requestedId>0,h,details);
         for(Map<String,Object>d:details)if(number(d.get("ActionTypeId"))!=3){Map<String,Object>x=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);x.putAll(d);x.put("OrganizationId",u.getOrganizationId());x.put("CompanyId",u.getCompanyId());x.put("DocumentTypeId",documentTypeId());x.put("DocDate",request.get("DocDate"));x.put("NetWeight",d.get("StockWeight"));x.put("InvPackingTypeId",d.get("PackingTypeId"));x.put("PackUomId",d.get("ItemUomId"));x.put("RefDocNoId",d.get("RefDocIdNo"));call("USP_InventoryValidation",x,false);}
         call("usp_StockInTransitUpdate_VoucherInsertFromGdnOrForwarding",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"DocumentTypeId",documentTypeId(),"Id",id),false);
+        // Architecture.DAL.Inventory.InvGdn.SetData: order completion and reserved-party posting.
+        if(documentTypeId()==86){
+            double net=details.stream().filter(d->number(d.get("ActionTypeId"))!=3).mapToDouble(d->decimal(d.get("NetBillWeight"))).sum();
+            for(var d:details)if(number(d.get("ActionTypeId"))!=3)
+                call("USP_SaleOrderAutoComplete",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"DocumentTypeId",documentTypeId(),"SaleOrderId",number(d.get("SaleOrderId")),"NetWeight",net),false);
+            if(Boolean.TRUE.equals(h.get("IsStockReserved")))
+                call("Sp_InventoryTransactionsPartyProcessing_Insert",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"RefDocumentTypeId",documentTypeId(),"RefDocIdNo",id),false);
+        }
         return id;
     }
+    /** Architecture.DAL.Inventory.InvGdn.SetData resolves cost from the original stock reference. */
+    protected void applyReferencedStockRate(UserAccount u,Map<String,Object> detail){
+        int type=number(detail.get("RefDocumentTypeId")),id=number(detail.get("RefDocIdNo")),sub=number(detail.get("RefDocSubIdNo"));
+        if(type<=0||id<=0||sub<=0)return;
+        var rows=q("EXEC dbo.usp_getItemRateFromStockEvalaution @OrganizationId=?,@CompanyId=?,@RefDocumentTypeId=?,@RefDocIdNo=?,@RefDocSubIdNo=?",u.getOrganizationId(),u.getCompanyId(),type,id,sub);
+        if(rows.isEmpty())throw new IllegalStateException("Item Rate not found from stock Evaluation against references");
+        var rate=rows.get(0);double equivalent=decimal(rate.get("REquivalent"));
+        if(equivalent==0)throw new IllegalStateException("Rate UOM equivalent not found against stock reference");
+        detail.put("ItemRate",decimal(rate.get("ItemRate")));detail.put("RateUomId",number(rate.get("RateUomId")));
+        detail.put("ItemAmount",decimal(detail.get("StockWeight"))/equivalent*decimal(rate.get("ItemRate")));
+    }
+    protected List<Map<String,Object>> fifoStocks(UserAccount u,int id,boolean update,Map<String,Object> header,Map<String,Object> d){
+        return fifoStocks(u,id,update,header,d,List.of());
+    }
+    /** CommonServices.FIFOImplemention: the original procedure deducts prior rows via FIFOXML. */
+    protected List<Map<String,Object>> fifoStocks(UserAccount u,int id,boolean update,Map<String,Object> header,
+                                                 Map<String,Object> d,List<Map<String,Object>> reserved){
+        StringBuilder sql=new StringBuilder("EXEC dbo.USP_GetStockByFifoMethod @OrganizationId=?,@CompanyId=?,@ItemId=?,@DocDate=?");
+        List<Object> args=new ArrayList<>(Arrays.asList(u.getOrganizationId(),u.getCompanyId(),number(d.get("ItemId")),header.get("DocDate")));
+        for(String[] parameter:new String[][]{{"PackUomId","ItemUomId"},{"WarehouseId","WarehouseId"},{"JobLotId","JobLotId"},{"PackingTypeId","PackingTypeId"}}){
+            int value=number(d.get(parameter[1]));
+            if(value!=0){sql.append(",@").append(parameter[0]).append("=?");args.add(value);}
+        }
+        if(!text(d.get("CropYear")).isEmpty()){sql.append(",@CropYear=?");args.add(d.get("CropYear"));}
+        // FIFOImplemention sends the document identity only during update. Sending type with Id=0
+        // takes a different SQL branch and excludes every previous issue from the available balance.
+        if(update){sql.append(",@DocumentTypeId=?,@Id=?");args.add(documentTypeId());args.add(id);}
+        if(!reserved.isEmpty()){sql.append(",@FIFOXML=?");args.add(fifoXml(reserved));}
+        return q(sql.toString(),args.toArray());
+    }
     private void fifo(UserAccount u,int id,boolean update,Map<String,Object> header,List<Map<String,Object>> details){
-        if(update)call("USP_InventoryQtyReverseAndDeleteByReferenceId",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"RefDocumentTypeId",documentTypeId(),"RefDocIdNo",id),false);
-        Map<String,double[]> reserved=new HashMap<>();
-        for(Map<String,Object>d:details){if(number(d.get("ActionTypeId"))==3)continue;List<Map<String,Object>> stocks=q("EXEC dbo.USP_GetStockByFifoMethod @OrganizationId=?,@CompanyId=?,@ItemId=?,@DocDate=?,@PackUomId=?,@WarehouseId=?,@CropYearId=?,@JobLotId=?,@PackingTypeId=?,@CropYear=?,@DocumentTypeId=?,@Id=?",u.getOrganizationId(),u.getCompanyId(),number(d.get("ItemId")),header.get("DocDate"),number(d.get("ItemUomId")),number(d.get("WarehouseId")),number(d.get("CropYearId")),number(d.get("JobLotId")),number(d.get("PackingTypeId")),text(d.get("CropYear")),documentTypeId(),id);
-            double needWeight=decimal(d.get("StockWeight")),needQty=decimal(d.get("ItemQty")),available=0;for(Map<String,Object>stock:stocks){String key=fifoKey(stock);double used=reserved.getOrDefault(key,new double[2])[1];available+=Math.max(0,decimal(stock.get("NetBalWeight"))-used);}if(needWeight>Math.round(available*100d)/100d)throw new IllegalStateException("Weight available is "+available+" and row Weight is "+needWeight+" this item "+text(d.get("Item"))+" against FIFO");
-            double usedWeight=0,usedQty=0;for(Map<String,Object>stock:stocks){if(Math.abs(needWeight-usedWeight)<0.000001)break;String key=fifoKey(stock);double[] prior=reserved.computeIfAbsent(key,k->new double[2]);double stockQty=Math.max(0,decimal(stock.get("NetBalQty"))-prior[0]),stockWeight=Math.max(0,decimal(stock.get("NetBalWeight"))-prior[1]);if(stockWeight<=0)continue;double takeWeight=Math.min(stockWeight,needWeight-usedWeight);double takeQty=takeWeight==stockWeight?stockQty:needQty-usedQty;int rateUom=number(stock.get("RateUomId"));double avgRate=decimal(stock.get("AvgRate"));if(avgRate<=0)throw new IllegalStateException("Rate Not Found this Item "+text(d.get("Item"))+" against FIFO Method");if(rateUom<=0)throw new IllegalStateException("RateUomId not found this "+text(d.get("Item"))+" against FIFO Method");var equivalents=q("EXEC dbo.Sp_Item_GetAllMethod @OrganizationId=?,@CompanyId=?,@ItemId=?,@ScheduleId=?,@Activity='GetEqvilentByItemIdAndUomScheduleId'",u.getOrganizationId(),u.getCompanyId(),number(d.get("ItemId")),rateUom);double equivalent=equivalents.isEmpty()?0:decimal(equivalents.get(0).get("Equivalent"));if(equivalent==0)throw new IllegalStateException("RateUom Not Found");
-                Map<String,Object>x=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);x.put("OrganizationId",u.getOrganizationId());x.put("CompanyId",u.getCompanyId());x.put("RefDocumentTypeId",documentTypeId());x.put("RefDocIdNo",id);x.put("DocCodeNo",number(header.get("DocNo")));x.put("SupplierCustomerId",number(header.get("SupplierCustomerId")));x.put("BranchesId",u.getBranchesId());x.put("ProjectsId",u.getBranchesId());x.put("EntryUser",u.getId());x.put("ModifyUser",u.getId());x.put("OtherDocumentTypeId",documentTypeId());x.put("OtherDocNoId",id);x.put("DocDate",header.get("DocDate"));x.put("VehicleNo",header.get("VehicleNo"));x.put("GpNoDcNo",header.get("GpNo"));x.put("BiltyNo",header.get("BiltyNo"));x.put("OtherSubDocNoId",number(d.get("Id")));x.put("LineId",number(d.get("LineId")));x.put("ItemId",d.get("ItemId"));x.put("WarehouseId",d.get("WarehouseId"));x.put("JobLotId",d.get("JobLotId"));x.put("InvPackingTypeId",d.get("PackingTypeId"));x.put("ItemUom",d.get("ItemUomId"));x.put("CropBatch",d.get("CropYear"));x.put("CityId",d.get("CityId"));x.put("RefRefDocumentTypeId",stock.get("RefDocumentTypeId"));x.put("RefRefDocIdNo",stock.get("RefDocIdNo"));x.put("RefRefDocSubIdNo",stock.get("RefDocSubIdNo"));x.put("QtyOut",takeQty);x.put("BillWeightOut",takeWeight);x.put("StockWeightOut",takeWeight);x.put("CgsRate",avgRate*equivalent);x.put("CgsAmount",takeWeight/equivalent*(avgRate*equivalent));x.put("RateUom",rateUom);x.put("CalcType","Weight");call("USP_InventoryStockEvalautionDetail_Insert",x,true);prior[0]+=takeQty;prior[1]+=takeWeight;usedQty+=takeQty;usedWeight+=takeWeight;
+        List<Map<String,Object>> allocations=new ArrayList<>();
+        Map<Integer,Map<String,Object>> items=new LinkedHashMap<>();
+        for(var item:q("EXEC dbo.Sp_Item_GetAllMethod @OrganizationId=?,@CompanyId=?,@Activity='GetItemGlIdsandItemName'",u.getOrganizationId(),u.getCompanyId()))
+            items.putIfAbsent(number(item.get("Id")),item);
+        for(Map<String,Object>d:details){
+            if(number(d.get("ActionTypeId"))==3)continue;
+            var item=items.get(number(d.get("ItemId")));
+            if(item==null)continue; // InvGdn.SetData only costs items present in GetItemGlIdsandItemName.
+            String itemName=text(item.get("ItemName"));
+            List<Map<String,Object>> stocks=fifoStocks(u,id,update,header,d,allocations);
+            if(stocks.isEmpty())throw new IllegalStateException("Stock Not Found this Item "+itemName+" against FIFO Method .....");
+            double needWeight=decimal(d.get("StockWeight")),needQty=decimal(d.get("ItemQty"));
+            double available=0;
+            for(var stock:stocks)available+=decimal(stock.get("NetBalWeight"));
+            // .NET Math.Round(double, 2) uses midpoint-to-even, not Java Math.round's half-up rule.
+            double roundedAvailable=Math.abs(available)<1e16?Math.rint(available*100d)/100d:available;
+            if(!(needWeight<=roundedAvailable))
+                throw new IllegalStateException("Weight available is "+available+" and row Weight is "+needWeight+" this item "+itemName+" against FIFO....");
+            double usedWeight=0,usedQty=0;
+            for(Map<String,Object>stock:stocks){
+                double stockQty=decimal(stock.get("NetBalQty")),stockWeight=decimal(stock.get("NetBalWeight"));
+                int rateUom=number(stock.get("RateUomId"));double avgRate=decimal(stock.get("AvgRate"));
+                if(avgRate<=0)throw new IllegalStateException("Rate Not Found this Item "+itemName+" against FIFO Method");
+                if(rateUom==0)throw new IllegalStateException("RateUomId not found  this "+itemName+" against FIFO Method");
+                var equivalents=q("EXEC dbo.Sp_Item_GetAllMethod @OrganizationId=?,@CompanyId=?,@ItemId=?,@ScheduleId=?,@Activity='GetEqvilentByItemIdAndUomScheduleId'",u.getOrganizationId(),u.getCompanyId(),number(d.get("ItemId")),rateUom);
+                double equivalent=equivalents.isEmpty()?0:decimal(equivalents.get(0).get("Equivalent"));
+                if(equivalent==0)throw new IllegalStateException("RateUom Not Found");
+                boolean wholeLayer=stockWeight<=needWeight-usedWeight;
+                double takeWeight=wholeLayer?stockWeight:needWeight-usedWeight;
+                double takeQty=wholeLayer?stockQty:needQty-usedQty;
+                Map<String,Object>x=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                x.put("Id",number(stock.get("Id")));
+                for(String field:List.of("OrganizationId","CompanyId","SupplierCustomerId","BranchesId","EntryUser","ModifyUser","DocDate","VehicleNo","BiltyNo"))
+                    x.put(field,header.get(field));
+                x.put("DocCodeNo",number(header.get("DocNo")));x.put("GpNoDcNo",header.get("GpNo"));
+                // Native GDN allocations use Other* for this document; Ref* and ProjectsId stay at model defaults.
+                x.put("OtherDocumentTypeId",documentTypeId());x.put("OtherDocNoId",id);x.put("OtherSubDocNoId",number(d.get("Id")));
+                x.put("LineId",number(d.get("LineId")));x.put("ItemId",d.get("ItemId"));x.put("WarehouseId",d.get("WarehouseId"));
+                x.put("JobLotId",d.get("JobLotId"));x.put("InvPackingTypeId",d.get("PackingTypeId"));x.put("ItemUom",d.get("ItemUomId"));
+                x.put("CropBatch",d.get("CropYear"));x.put("CityId",d.get("CityId"));
+                x.put("RefRefDocumentTypeId",stock.get("RefDocumentTypeId"));x.put("RefRefDocIdNo",stock.get("RefDocIdNo"));x.put("RefRefDocSubIdNo",stock.get("RefDocSubIdNo"));
+                x.put("QtyOut",takeQty);x.put("BillWeightOut",takeWeight);x.put("StockWeightOut",takeWeight);
+                x.put("CgsRate",avgRate*equivalent);x.put("CgsAmount",takeWeight/equivalent*(avgRate*equivalent));x.put("RateUom",rateUom);x.put("CalcType","Weight");
+                allocations.add(x);usedQty+=takeQty;usedWeight+=takeWeight;
+                if(needWeight==usedWeight)break;
             }
         }
+        // Native DAL plans every row before reversing/replacing the prior document allocations.
+        if(!allocations.isEmpty()){
+            if(update)call("USP_InventoryQtyReverseAndDeleteByReferenceId",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"RefDocumentTypeId",documentTypeId(),"RefDocIdNo",id),false);
+            for(var allocation:allocations)call("USP_InventoryStockEvalautionDetail_Insert",allocation,true);
+        }
     }
-    private String fifoKey(Map<String,Object> r){return number(r.get("RefDocumentTypeId"))+":"+number(r.get("RefDocIdNo"))+":"+number(r.get("RefDocSubIdNo"));}
+    private String fifoXml(List<Map<String,Object>> reserved){
+        StringBuilder xml=new StringBuilder("<ArrayOfFIFOStockEvaluation>");
+        for(var allocation:reserved){
+            xml.append("<FIFOStockEvaluation>")
+                .append("<RefDocumentTypeId>").append(number(allocation.get("RefRefDocumentTypeId"))).append("</RefDocumentTypeId>")
+                .append("<RefDocIdNo>").append(number(allocation.get("RefRefDocIdNo"))).append("</RefDocIdNo>")
+                .append("<RefDocSubIdNo>").append(number(allocation.get("RefRefDocSubIdNo"))).append("</RefDocSubIdNo>")
+                .append("<ReserveQty>").append(decimal(allocation.get("QtyOut"))).append("</ReserveQty>")
+                .append("<ReserveWeight>").append(decimal(allocation.get("StockWeightOut"))).append("</ReserveWeight>")
+                .append("</FIFOStockEvaluation>");
+        }
+        return xml.append("</ArrayOfFIFOStockEvaluation>").toString();
+    }
     public void delete(UserAccount u,int id){record(u,id);call("Sp_InvoicesVouchersandStocksDelete",Map.of("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId(),"Id",id,"DocumentTypeId",documentTypeId(),"UserId",u.getId()),false);}
     private int call(String procedure,Map<String,Object> values,boolean scalar){
         List<ProcParam> params=procedureParameters.computeIfAbsent(procedure,this::loadParams);String marks=String.join(",",Collections.nCopies(params.size(),"?"));

@@ -863,8 +863,35 @@
     }
     function closeLoadGdn() { el('frmLoadGDN').hidden = true; loadInGridDetail([]).catch(e => alert(e.message)); }
 
+    // Desktop cmbCurrency_Leave (:891). Keep an entered rate and ignore stale responses.
+    const pendingCurrencyRates = new Set();
+    async function currencyLeave() {
+        const cur = toInt(el('cmbCurrency').value);
+        if (!cur || toDouble(el('txtExchangeRate').value) !== 0 || pendingCurrencyRates.has(cur)) return;
+        pendingCurrencyRates.add(cur);
+        try {
+            const rate = cur === toInt(S.cfg.BaseCurrencyId)
+                ? S.cfg.BaseCurrencyRate
+                : (await api('/exchange-rate/' + cur)).rate;
+            if (cur !== toInt(el('cmbCurrency').value) || toDouble(el('txtExchangeRate').value) !== 0) return;
+            el('txtExchangeRate').value = rate == null ? '0' : String(rate);
+            exchangeRateChanged();
+            renderAll();
+        } catch (e) { alert(e.message); }
+        finally { pendingCurrencyRates.delete(cur); }
+    }
+
     /* ------------------------------------------------------------------ wiring */
     function init() {
+        // The searchable combo focuses its text input, not its hidden native select.
+        document.addEventListener('focusout', event => {
+            if (!event.target.matches('.dtcombo-input')) return;
+            const select = event.target.closest('.dtcombo-wrap')?.querySelector('select');
+            if (!select) return;
+            if (select.id === 'cmbCurrency') currencyLeave();
+            if (['cmbcommtype', 'cmbcommuom', 'cmbcommagent'].includes(select.id)) commissionChanged();
+        });
+
         document.addEventListener('keydown', keyDown);
         document.querySelectorAll('.si-tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
         el('btnFooterHistory').addEventListener('click', () => showTab('history'));
@@ -884,16 +911,10 @@
         el('txtDueDays').addEventListener('input', () => { el('txtDueDays').value = el('txtDueDays').value.replace(/[^0-9]/g, ''); dueDaysChanged(); });
         el('txtcommrate').addEventListener('input', () => { el('txtcommrate').value = el('txtcommrate').value.replace(/[^0-9.]/g, ''); commissionChanged(); });
         for (const id of ['cmbcommtype', 'cmbcommuom', 'cmbcommagent', 'CmbCommDebitAccount']) el(id).addEventListener('change', commissionChanged);
-        el('cmbCurrency').addEventListener('change', async () => {
-            /* cmbCurrency_Leave (:891) - only when a currency is chosen and the rate is still 0. */
-            const cur = toInt(el('cmbCurrency').value);
-            if (cur === 0 || toDouble(el('txtExchangeRate').value) !== 0) return;
-            try {
-                if (cur !== toInt(S.cfg.BaseCurrencyId)) { const r = await api('/exchange-rate/' + cur); el('txtExchangeRate').value = r.rate != null ? String(r.rate) : '0'; }
-                else el('txtExchangeRate').value = String(S.cfg.BaseCurrencyRate ?? '');
-            } catch (e) { alert(e.message); }
-            exchangeRateChanged(); renderAll();
-        });
+        // Desktop commission combos recalculate on Leave as well as value changes.
+        for (const id of ['cmbcommtype', 'cmbcommuom', 'cmbcommagent']) el(id).addEventListener('blur', commissionChanged);
+        el('cmbCurrency').addEventListener('change', currencyLeave);
+        el('cmbCurrency').addEventListener('blur', currencyLeave);
         el('txtExchangeRate').addEventListener('input', () => { el('txtExchangeRate').value = el('txtExchangeRate').value.replace(/[^0-9.]/g, ''); exchangeRateChanged(); renderAll(); });
         for (const id of Object.values(ELEMENTS)) { el(id).addEventListener('change', onCellChange); el(id).addEventListener('click', onGridClick); el(id).addEventListener('keydown', onGridKey); }
         /* History */

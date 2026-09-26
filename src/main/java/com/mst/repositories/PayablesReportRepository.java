@@ -16,6 +16,27 @@ public class PayablesReportRepository {
         this.jdbc = jdbc;
     }
 
+    // VoucherReports.PayablesReportInvoiceWise: omit optional zero/unchecked filters.
+    public List<List<Map<String, Object>>> invoiceWise(UserAccount u, LocalDate from, LocalDate to,
+            int party, int agent, int parent, int group, int action) {
+        StringBuilder sql = new StringBuilder("EXEC dbo.usp_PayablesReportInvoiceWise @OrganizationId=?, @CompanyId=?");
+        List<Object> args = new ArrayList<>(Arrays.asList(u.getOrganizationId(), u.getCompanyId()));
+        if (from != null) { sql.append(", @FromDate=?"); args.add(java.sql.Date.valueOf(from)); }
+        if (to != null) { sql.append(", @ToDate=?"); args.add(java.sql.Date.valueOf(to)); }
+        add(sql,args,"SupplierCustomerId",party); add(sql,args,"CommissionAgentId",agent);
+        add(sql,args,"ParentAccountId",parent); add(sql,args,"CustomGruopId",group);
+        add(sql,args,"ActionId",action);
+        return executeProcedure(sql.toString(),args);
+    }
+
+    public Map<String,Object> invoiceLookups(UserAccount u, int year) {
+        Map<String,Object> result = new LinkedHashMap<>();
+        result.put("parties",jdbc.queryForList("EXEC dbo.Usp_AllComboAgainstPurchaseInvoice @OrganizationId=?, @CompanyId=?",u.getOrganizationId(),u.getCompanyId()));
+        result.put("parents",jdbc.queryForList("EXEC dbo.Sp_ChartofAccount_GetAllMethodFromCOA @OrganizationId=?, @CompanyId=?, @FinancialYearId=?, @Account_Level=3, @AccountTypeId=3, @AccountClassIds='2,3', @CoaType='ReadAllAccountGroup'",u.getOrganizationId(),u.getCompanyId(),year));
+        result.put("groups",jdbc.queryForList("EXEC dbo.Sp_AcLookUps_GetAllMethod @OrganizationId=?, @CompanyId=?, @AcLookUpTypesId=1, @Activity='ReadAll'",u.getOrganizationId(),u.getCompanyId()));
+        return result;
+    }
+
     public List<List<Map<String, Object>>> load(UserAccount u, LocalDate fromDate, LocalDate toDate, int controlAccountId, int accountId, int customGroupId, int inventoryGroupId, int cityId, double closingFrom, double closingTo, boolean onlyCredit, boolean onlyDebit, boolean tradeParties, boolean approvedTransactions, String classification, String typeNature, String sortField, String sortOrder) {
         List<Map<String,Object>> years=jdbc.queryForList("EXEC dbo.Proc_FinancialYear_ReadActiveByOrganizationIdNCompanyId @OrganizationId=?, @CompanyId=?",u.getOrganizationId(),u.getCompanyId());
         if(years.size()!=1) throw new IllegalStateException("Select a single active financial year");

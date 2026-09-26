@@ -65,7 +65,9 @@
         .win-groupbox-title { position: absolute; top: -7px; left: 8px; background: #ffffff; padding: 0 4px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 10px; color: #000; }
         
         .gb-filters { width: 360px; flex: 0 0 360px; max-width: 100%; box-sizing: border-box; }
-        .gb-detail { width: 360px; flex: 0 0 360px; max-width: 100%; }
+        .gb-detail { width: max-content; flex: 0 1 auto; max-width: 100%; box-sizing: border-box; }
+        .account-detail-grid { display:grid; grid-template-columns:max-content minmax(100px,max-content) max-content minmax(95px,max-content) max-content; gap:3px 10px; font-size:10px; align-items:center; }
+        @media(max-width:560px) { .account-detail-grid { grid-template-columns:minmax(60px,1fr) minmax(70px,1fr) minmax(55px,1fr) minmax(70px,1fr) 20px; gap:3px; overflow-wrap:anywhere; } }
         .gb-other { width: 320px; flex: 0 0 320px; max-width: 100%; }
         .gb-opb { width: 170px; flex: 0 0 170px; max-width: 100%; }
 
@@ -256,7 +258,7 @@
         <!-- Account Detail Box -->
         <div class="win-groupbox gb-detail">
             <span class="win-groupbox-title">Account Detail</span>
-            <div style="display:grid; grid-template-columns:80px 1fr 65px 95px 25px; gap:3px 4px; font-size:10px; align-items:center;">
+            <div class="account-detail-grid">
                 <div style="font-weight:bold;">Account Code</div><div id="infoAccountCode" style="font-weight:bold;">-</div>
                 <div style="font-weight:bold;">Opening</div><div id="infoOpening" style="font-weight:bold; text-align:right;">0</div><div id="infoOpeningDrCr" style="font-weight:bold;"></div>
                 
@@ -476,91 +478,35 @@
             }
         }
 
-        function executeGL() {
-            if (activeTab === 'single') {
-                executeSingleGL();
-            } else if (activeTab === 'multi') {
-                executeMultiGL();
-            } else if (activeTab === 'bank') {
-                executeBankSummaryGL();
+        let ledgerRequestPending = false;
+        async function executeGL() {
+            if (ledgerRequestPending) return;
+            ledgerRequestPending = true;
+            const buttons = Array.from(document.querySelectorAll('.win-btn-show'));
+            const states = buttons.map(b => ({disabled:b.disabled,html:b.innerHTML}));
+            buttons.forEach(b => { b.disabled=true; b.innerHTML='<i class="fa fa-spinner fa-spin"></i> Loading…'; b.setAttribute('aria-busy','true'); });
+            try {
+                if (activeTab === 'single') await executeSingleGL();
+                else if (activeTab === 'multi') await executeMultiGL();
+                else if (activeTab === 'bank') await executeBankSummaryGL();
+            } catch (error) {
+                $('#lblStatus').text('Unable to load the ledger. Please retry.');
+            } finally {
+                buttons.forEach((b,i) => { b.disabled=states[i].disabled; b.innerHTML=states[i].html; b.removeAttribute('aria-busy'); });
+                ledgerRequestPending = false;
             }
         }
 
         function extractDocType(r) {
             if (!r) return '';
-            
-            // 1. Direct field checks (both case variations & all standard field names)
-            let dt = r.typeVoucher || r.TypeVoucher || r.type_voucher || r.DocTypeCode || r.docTypeCode || r.DocType || r.docType || r.DocumentTypeCode || r.documentTypeCode || 
-                     r.DocTypeShort || r.DocumentTypeShort || r.DocTypeAbbreviation || r.Doc_Type ||
-                     r.VoucherType || r.voucherType || 
-                     r.VType || r.vType || r.DocumentTypeDescription || r.documentTypeDescription || 
-                     r.DocumentType || r.documentType || r.DocTypeDescription || r.docTypeDescription ||
-                     r.DocTypeName || r.docTypeName || r.DocumentTypeName || r.documentTypeName || '';
-
-            if (dt && typeof dt === 'string') {
-                dt = dt.trim();
-                const upper = dt.toUpperCase();
-                if (upper === 'P1-R' || upper === 'P1R' || upper === 'PI-R' || upper === 'IP-R' || upper === 'PIR' || upper === 'IPR') return 'P1-R';
-                if (upper.includes('BANK PAYMENT') || upper === 'BPV') return 'BPV';
-                if (upper.includes('CASH PAYMENT') || upper === 'CPV') return 'CPV';
-                if (upper.includes('BANK RECEIPT') || upper === 'BRV') return 'BRV';
-                if (upper.includes('CASH RECEIPT') || upper === 'CRV') return 'CRV';
-                if (upper.includes('JOURNAL') || upper === 'JV') return 'JV';
-                if (upper.includes('CONTRA') || upper === 'CV') return 'CONT';
-                if (upper.includes('EXPENSE') || upper === 'EV') return 'EV';
-                if (upper.includes('PARTY RECEIPT') || upper === 'PRV') return 'PRV';
-                if (upper.includes('PARTY PAYMENT') || upper === 'PPV') return 'PPV';
-                if (upper.includes('INVOICE') || upper.includes('PURCHASE')) return 'P1-R';
-                if (upper.includes('FREIGHT') || upper === 'FRT') return 'FRT';
-                if (upper.includes('CONTRACTOR') || upper === 'CW') return 'CW';
-                if (upper.includes('PDC') || upper === 'CHEQUE') return 'PDC';
-                return dt;
+            // GeneralLedger.cs binds DocTypeCode unchanged, including PI-R and SI-R.
+            const fields = ['doctypecode', 'documenttypecode', 'typevoucher'];
+            for (const field of fields) {
+                const key = Object.keys(r).find(k => k.toLowerCase() === field);
+                if (key && r[key] != null && String(r[key]).trim()) return String(r[key]).trim();
             }
-
-            // 2. Numeric DocumentTypeId mapping
-            const dtId = parseInt(r.DocumentTypeId != null ? r.DocumentTypeId : (r.documentTypeId != null ? r.documentTypeId : (r.DocTypeId != null ? r.DocTypeId : r.docTypeId)));
-            if (!isNaN(dtId)) {
-                const dtMap = {
-                    1: 'CPV',
-                    2: 'BPV',
-                    3: 'CRV',
-                    4: 'BRV',
-                    5: 'JV',
-                    6: 'CONT',
-                    7: 'EV',
-                    8: 'PRV',
-                    9: 'PPV',
-                    10: 'CONT',
-                    11: 'PDC',
-                    12: 'INV-ADJ',
-                    13: 'FRT',
-                    14: 'CW',
-                    18: 'P1-R',
-                    19: 'P1-R',
-                    26: 'EV',
-                    34: 'PRV',
-                    35: 'PPV'
-                };
-                if (dtMap[dtId]) return dtMap[dtId];
-            }
-
-            // 3. Fallback: Parse prefix from VoucherNo / VoucherCode (e.g. BPV-101, JV-45, CPV-3, P1-R-76)
-            const vNo = (r.VoucherNo || r.voucherNo || r.VoucherCode || r.voucherCode || r.VNo || r.vNo || '').toString().trim();
-            if (vNo) {
-                const match = vNo.match(/^([A-Za-z0-9\-]+)[-\/\s_\d]/);
-                if (match && match[1]) {
-                    const prefix = match[1].toUpperCase();
-                    if (['BPV', 'CPV', 'BRV', 'CRV', 'JV', 'EV', 'PRV', 'PPV', 'PDC', 'FRT', 'CW', 'CONT', 'CV', 'PI', 'PI-R', 'P1-R', 'P1R', 'IP-R', 'PIR', 'IPR'].includes(prefix)) {
-                        if (prefix === 'CV') return 'CONT';
-                        if (['PI', 'PIR', 'IP-R', 'IPR', 'PI-R', 'P1R', 'P1-R'].includes(prefix)) return 'P1-R';
-                        return prefix;
-                    }
-                }
-            }
-
             return '';
         }
-
         function getVoucherUrl(docType, voucherNo, id) {
             if (!voucherNo || voucherNo === '0' || voucherNo === 0 || voucherNo === 'OPB') return '#';
             const dt = (docType || '').toString().trim().toUpperCase();
@@ -717,7 +663,7 @@
                 subsidiaryAccountId: drilldown.get('subsidiaryAccountId') || null,
                 includeUnposted: $('#chkIncludeUnposted').is(':checked')
             };
-            $.ajax({
+            return $.ajax({
                 url: '/accounts/api/reports/general-ledger',
                 type: 'POST',
                 contentType: 'application/json',
@@ -751,7 +697,7 @@
                 toDate: $('#txtToDate').val(),
                 includeUnposted: $('#chkIncludeUnposted').is(':checked')
             };
-            $.ajax({
+            return $.ajax({
                 url: '/accounts/api/reports/multi-accounts-ledger',
                 type: 'POST',
                 contentType: 'application/json',
@@ -779,7 +725,7 @@
                 fromDate: $('#txtFromDate').val(),
                 toDate: $('#txtToDate').val()
             };
-            $.ajax({
+            return $.ajax({
                 url: '/accounts/api/reports/bank-summary-ledger',
                 type: 'POST',
                 contentType: 'application/json',
@@ -849,7 +795,7 @@
                 tbody.append(`
                     <tr>
                         <td>${vDate}</td>
-                        <td><a href="#" style="color:#00796B; text-decoration:underline;">${r.DocType || r.DocumentTypeDescription || ''}</a></td>
+                        <td><a href="#" style="color:#00796B; text-decoration:underline;">${extractDocType(r)}</a></td>
                         <td>${r.VoucherNo || r.VoucherCode || ''}</td>
                         <td>${r.AccountCode || ''}</td>
                         <td><b>${r.AccountTitle || ''}</b></td>
@@ -1318,7 +1264,7 @@
             if (paramAccountId) {
                 $('#cmbAccountTitle').val(paramAccountId).trigger('change.select2');
                 loadAccountInfo();
-                executeSingleGL();
+                executeGL();
             }
         });
     </script>

@@ -1,6 +1,7 @@
 package com.mst.controllers.sale;
 
 import com.mst.services.SaleGdnService;
+import com.mst.models.SaleGdnStockRequest;
 import java.util.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -15,8 +16,10 @@ public class SaleGdnController {
     @GetMapping("/advance-orders") @ResponseBody public List<Map<String,Object>> orders(@RequestParam int customerId,@RequestParam(defaultValue="0") int gdnId){return service.advanceOrders(customerId,gdnId);}
     @GetMapping("/delivery-order/{id}") @ResponseBody public List<Map<String,Object>> order(@PathVariable int id,@RequestParam int customerId){return service.deliveryOrder(customerId,id);}
     @GetMapping("/gate-pass/{id}/customers") @ResponseBody public List<Map<String,Object>> customers(@PathVariable int id){return service.gatePassCustomers(id);}
+    @GetMapping("/gate-pass/{id}/billing") @ResponseBody public Map<String,Object> billing(@PathVariable int id){return service.gatePassBilling(id);}
     @GetMapping("/expenses") @ResponseBody public List<Map<String,Object>> expenses(@RequestParam String deliveryOrderIds){return service.expenses(deliveryOrderIds);}
     @GetMapping("/history") @ResponseBody public List<Map<String,Object>> history(){return service.history();}
+    @PostMapping("/available-stock") @ResponseBody public List<Double> availableStock(@RequestBody SaleGdnStockRequest request){return service.availableStock(request);}
     @GetMapping("/{id:[0-9]+}") @ResponseBody public Map<String,Object> record(@PathVariable int id){return service.record(id);}
     @PostMapping @ResponseBody public Map<String,Object> save(@RequestBody Map<String,Object> r){r.put("id",0);return service.save(r);}
     @PutMapping("/{id:[0-9]+}") @ResponseBody public Map<String,Object> update(@PathVariable int id,@RequestBody Map<String,Object> r){r.put("id",id);return service.save(r);}
