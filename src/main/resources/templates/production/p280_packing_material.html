@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Packing Material - Production Against (Job Order)</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <style>
+        /* frmProductionPackingMaterial (screen 280, tab PackingMaterial). Teal panels are Color.Teal. */
+        html, body { height: 100%; }
+        body { font-family: Verdana, Tahoma, sans-serif; background: #fff; font-size: 11px; color: #000; margin: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .pm-root { display: flex; flex-direction: column; height: 100vh; min-height: 520px; }
+        .pm-page { flex: 1 1 auto; display: none; flex-direction: column; min-height: 0; padding: 3px; }
+        .pm-page.is-active { display: flex; }
+        /* panel41 - Teal, 54px: toolStrip4 above, label96 "Packing Material" below. */
+        .pm-panel41 { background: #008080; flex: 0 0 auto; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; min-height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; flex-wrap: wrap; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font-family: Verdana, sans-serif; font-size: 9.75pt; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; color: #000; }
+        .win-btn-tool:hover:not(:disabled) { background-color: #cce8ff; border-color: #99d1ff; }
+        .win-btn-tool:disabled { color: #999; cursor: not-allowed; }
+        .win-tool-sep { width: 1px; height: 20px; background: #aaa; margin: 0 4px; }
+        .pm-title { font-family: Tahoma, sans-serif; font-weight: bold; font-size: 11.75pt; color: #fff; padding: 3px 6px 4px; }
+        .pm-panel42 { flex: 0 0 auto; padding: 1px 0 2px; }
+        .win-group-box { border: 1px solid #999; border-radius: 3px; padding: 2px 8px 6px; margin: 0 0 2px; background: #fff; max-width: 1016px; min-width: 0; }
+        .win-group-box legend { font-size: 9.75pt; font-weight: bold; width: auto; padding: 0 4px; margin: 0; border: none; font-family: Tahoma, sans-serif; }
+        .win-group-box.gb-detail legend { font-family: Verdana, sans-serif; }
+        .win-label { font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-size: 9pt; font-weight: bold; color: #000; white-space: nowrap; margin: 0 0 1px; display: block; }
+        .win-textbox, .win-combo, .win-datepicker { font-family: Verdana, sans-serif; font-size: 9.75pt; height: 24px; border: 1px solid #7a9a9e; padding: 1px 4px; background: #fff; border-radius: 0; width: 100%; }
+        .win-textbox[readonly], .win-textbox:disabled { background-color: #f0f0f0; color: #333; }
+        #txtDocNoPackingMaterial { background: #f5f5f5; }
+        #txtAmountPackingMaterial { background: #fff; }
+        .pm-row { display: flex; flex-wrap: wrap; gap: 2px 1px; align-items: flex-end; }
+        .pm-f { display: flex; flex-direction: column; min-width: 0; flex: 0 0 auto; }
+        .pm-inline { display: flex; align-items: center; gap: 4px; }
+        .pm-inline .win-label { margin: 0; text-align: right; }
+        /* groupBox5 "Main": two rows, labels to the left (desktop x positions 5/93/178, 348/455, 563/680, 788/899). */
+        .pm-main { display: grid; grid-template-columns: 88px 84px 167px 107px 108px 117px 108px 111px 106px; gap: 3px 1px; align-items: center; }
+        .pm-main .win-label { margin: 0; }
+        .pm-main .span2 { grid-column: span 2; }
+        .pm-btn-teal { background: #008080; color: #fff; font-family: Verdana, sans-serif; font-size: 8.25pt; font-weight: bold; border: 1px solid #006060; height: 22px; padding: 0 6px; cursor: pointer; }
+        .pm-btn-teal:disabled { background: #9e9e9e; cursor: not-allowed; }
+        .pm-bar { background: #008080; color: #fff; min-height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 10pt; gap: 8px; flex-wrap: wrap; flex: 0 0 auto; }
+        .pm-bar button:not(.gb-gear) { background: #fff; border: 1px solid #999; font-size: 8pt; padding: 1px 6px; cursor: pointer; color: #000; }
+        .pm-bar label { font-family: Verdana, sans-serif; font-size: 9.75pt; margin: 0; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+        .win-grid-container { border: 1px solid #7a9a9e; background: #fff; width: 100%; display: flex; flex-direction: column; min-height: 120px; flex: 1 1 auto; }
+        .win-grid-scroll { flex: 1 1 auto; overflow: auto; max-width: 100%; min-height: 0; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8.25pt; background: #fff; }
+        .win-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 2px 5px; text-align: center; position: sticky; top: 0; z-index: 5; white-space: normal; font-weight: normal; line-height: 1.15; }
+        .win-grid td { border: 1px solid #dcdcdc; padding: 2px 5px; white-space: nowrap; }
+        .win-grid td.num { text-align: right; }
+        .win-grid td.ctr { text-align: center; }
+        .win-grid tfoot td { background: #ececec; font-weight: bold; border-top: 2px solid #999; position: sticky; bottom: 0; }
+        .win-grid tbody tr { cursor: default; }
+        .win-grid tbody tr.is-current td { background: #cce8ff; }
+        .win-grid .pm-x { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8pt; padding: 0 6px; cursor: pointer; }
+        .win-grid .pm-edit { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8pt; padding: 0 8px; cursor: pointer; }
+        .win-doc-link { color: #0645ad; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .win-grid-container.is-fullscreen { position: fixed; inset: 8px; z-index: 10000; background: #fff; }
+        .pm-count { font-weight: normal; font-size: 8.5pt; margin-left: 8px; }
+        .is-busy { opacity: .65; cursor: progress !important; pointer-events: none; }
+        .is-busy::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; vertical-align: -1px; animation: cxspin .6s linear infinite; }
+        @keyframes cxspin { to { transform: rotate(360deg); } }
+        .is-hidden { display: none !important; }
+        /* panel15 / groupBox3 "Filters" (973 x 66). */
+        .pm-filters { display: flex; flex-wrap: wrap; gap: 2px 2px; align-items: flex-end; }
+        .pm-filters .pm-radios { display: grid; grid-template-columns: auto auto; gap: 1px 8px; font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-size: 9pt; font-weight: bold; white-space: nowrap; }
+        .pm-filters .pm-radios label { margin: 0; display: inline-flex; gap: 3px; align-items: center; cursor: pointer; }
+        .pm-show { background: #0A6E6E; color: #fff; font-family: "Segoe UI", sans-serif; font-size: 9.75pt; font-weight: bold; border: 1px solid #064; height: 26px; width: 53px; cursor: pointer; }
+        /* tabControlPm - Alignment Bottom: Form | History. History sits on the right, per the page contract. */
+        .pm-footer { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; background: #e9e9e9; border-top: 1px solid #999; padding: 0 4px; height: 28px; font-family: Verdana, sans-serif; font-size: 9.75pt; }
+        .pm-tab { background: #e4e4e4; border: 1px solid #999; border-top: none; padding: 3px 12px; cursor: pointer; border-radius: 0 0 3px 3px; user-select: none; }
+        .pm-tab.is-active { background: #fff; font-weight: bold; }
+        #lblStatus { font-size: 8.5pt; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        @media (max-width: 1040px) { .pm-main { grid-template-columns: 88px 84px 1fr; } .pm-main > * { grid-column: auto !important; } }
+        @media (max-width: 600px) { .pm-main { grid-template-columns: 1fr; } .pm-f { flex: 1 1 100% !important; } .pm-f > * { width: 100% !important; } }
+    </style>
+</head>
+<body>
+<div class="pm-root">
+
+<!-- ============================================================ PmForm "Form" (tabControlPm page 0) -->
+<div class="pm-page is-active" id="PmForm">
+    <div class="pm-panel41">
+        <!-- toolStrip4 (:3729): New, Refresh, Save, Update, |, Print-606, 118-Voucher, Generate Rate. -->
+        <div class="win-tool-strip" id="toolStrip4">
+            <button type="button" id="btnNewpackingmaterial" class="win-btn-tool" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshPackingMaterial" class="win-btn-tool" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" id="btnsavepackingmaterial" class="win-btn-tool" title="Ctrl+S"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdatepackingmaterial" class="win-btn-tool is-hidden" title="Ctrl+U"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <span class="win-tool-sep"></span>
+            <button type="button" id="btnPackingMaterialSlip" class="win-btn-tool"><i class="fa fa-print"></i> <span><u>P</u>rint-606</span></button>
+            <button type="button" id="btnVoucherPM" class="win-btn-tool"><i class="fa fa-print"></i> 118-Voucher</button>
+            <button type="button" id="btnGenerateRate" class="win-btn-tool"><i class="fa fa-calculator"></i> Generate Rate</button>
+        </div>
+        <div class="pm-title">Packing Material</div>
+    </div>
+
+    <div class="pm-panel42">
+        <!-- groupBox5 "Main" (3,1 1016x74) -->
+        <fieldset class="win-group-box">
+            <legend>Main</legend>
+            <div class="pm-main">
+                <label class="win-label" for="txtDocNoPackingMaterial">Doc No &amp; Date</label>
+                <input type="text" id="txtDocNoPackingMaterial" class="win-textbox" readonly tabindex="0"/>
+                <input type="date" id="txtdocdatePackingMaterial" class="win-datepicker" tabindex="0"/>
+                <label class="win-label" style="text-align:right;padding-right:4px;" for="txtTotalInputQtyPm">Total InPut Qty</label>
+                <input type="text" id="txtTotalInputQtyPm" class="win-textbox" readonly tabindex="-1"/>
+                <label class="win-label" style="text-align:right;padding-right:4px;" for="txtTotaloutputQtyPm">Total OutPut Qty</label>
+                <input type="text" id="txtTotaloutputQtyPm" class="win-textbox" readonly tabindex="-1"/>
+                <label class="win-label" style="text-align:right;padding-right:4px;" for="txtTotalFinishQtyPm">Total Finish Qty</label>
+                <input type="text" id="txtTotalFinishQtyPm" class="win-textbox" readonly tabindex="-1"/>
+
+                <label class="win-label" for="cmbJobOrderPackingMaterial">Job Order No</label>
+                <div class="span2"><select id="cmbJobOrderPackingMaterial" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo"></select></div>
+                <label class="win-label" style="text-align:right;padding-right:4px;" for="txtTotalInputWeightPm">Total InPut Weight</label>
+                <input type="text" id="txtTotalInputWeightPm" class="win-textbox" readonly tabindex="-1"/>
+                <label class="win-label" style="text-align:right;padding-right:4px;" for="txtTotalOutPutWeightPm">Total OutPut Weight</label>
+                <input type="text" id="txtTotalOutPutWeightPm" class="win-textbox" readonly tabindex="-1"/>
+                <label class="win-label" style="text-align:right;padding-right:4px;" for="txtTotalFinishWeightPm">Total Finish Weight</label>
+                <input type="text" id="txtTotalFinishWeightPm" class="win-textbox" readonly tabindex="-1"/>
+            </div>
+        </fieldset>
+
+        <!-- groupBox8 "Detail" (3,76 1016x111) -->
+        <fieldset class="win-group-box gb-detail">
+            <legend>Detail</legend>
+            <input type="hidden" id="txtIdPMRec"/>
+            <div class="pm-row">
+                <div class="pm-f" style="width:170px;"><label class="win-label" for="CmbPlantFeederPackingMaterial">Plant Name</label>
+                    <select id="CmbPlantFeederPackingMaterial" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name"></select></div>
+                <div class="pm-f" style="width:216px;"><label class="win-label" for="cmbItemPackingMaterial">Packing Material Item Name</label>
+                    <select id="cmbItemPackingMaterial" class="win-combo dtcombo" data-dtcombo="p280pmItem" data-dtcombo-caption="Item Name"></select></div>
+                <div class="pm-f" style="width:143px;"><label class="win-label" for="CmbWarehousePackingMaterial">Warehouse</label>
+                    <select id="CmbWarehousePackingMaterial" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Warehouse"></select></div>
+                <div class="pm-f" style="width:132px;"><label class="win-label" for="CmbRackName">Rack Name</label>
+                    <select id="CmbRackName" class="win-combo dtcombo" data-dtcombo="p280pmRack" data-dtcombo-caption="Rack Name"></select></div>
+                <div class="pm-f" style="width:129px;"><label class="win-label" for="cmbItemCondition">Item Condition</label>
+                    <select id="cmbItemCondition" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Condition"></select></div>
+                <div class="pm-f" style="width:201px;"><label class="win-label" for="CmbBrandNamePackingMaterial">OutPut Item  Name</label>
+                    <select id="CmbBrandNamePackingMaterial" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName"></select></div>
+            </div>
+            <div class="pm-row" style="margin-top:2px;">
+                <div class="pm-f" style="width:101px;"><label class="win-label" for="CmbBrandUomPackingMaterial">Item Uom</label>
+                    <select id="CmbBrandUomPackingMaterial" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackUom"></select></div>
+                <div class="pm-f" style="width:81px;"><label class="win-label" for="txtPackingMaterialQTY">Item Qty</label>
+                    <input type="text" id="txtPackingMaterialQTY" class="win-textbox" autocomplete="off"/></div>
+                <div class="pm-f" style="width:92px;" id="wrapRate"><label class="win-label" id="lblRatePackingMaterial" for="txtPackingMaterialRate">Item Rate</label>
+                    <input type="text" id="txtPackingMaterialRate" class="win-textbox" autocomplete="off"/></div>
+                <div class="pm-f" style="width:111px;" id="wrapAmount"><label class="win-label" id="lblAmountPackingMaterial" for="txtAmountPackingMaterial">Amount</label>
+                    <input type="text" id="txtAmountPackingMaterial" class="win-textbox" readonly disabled/></div>
+                <div class="pm-f" style="width:407px;" id="wrapRemarks"><label class="win-label" id="lblRemarksPackingMaterial" for="txtremarksPackingMaterial">Remarks</label>
+                    <input type="text" id="txtremarksPackingMaterial" class="win-textbox" autocomplete="off"/></div>
+                <div class="pm-f" style="width:134px;"><label class="win-label" for="CmbInvoiceNo">Schedule / Invoice No</label>
+                    <select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="p280pmSchedule" data-dtcombo-caption="Schedule / Invoice No"></select></div>
+                <div class="pm-f" style="width:70px; gap:1px;">
+                    <button type="button" id="btnCancelDetailPm" class="pm-btn-teal is-hidden" style="height:24px;">Cancel</button>
+                    <button type="button" id="btnAddDetailPm" class="pm-btn-teal" style="width:38px;" title="Add to grid">+</button>
+                    <button type="button" id="btnUpdateDetailPm" class="pm-btn-teal is-hidden">Update </button>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- panel6 + grddetailPackingMaterial (Dock Fill, TotalRow, FilterMode Automatic) -->
+    <div class="win-grid-container" id="boxDetail">
+        <div class="pm-bar"><span>Packing Material Detail <span class="pm-count" id="lblDetailCount"></span></span>
+            <span style="display:inline-flex;gap:3px;align-items:center;"><button type="button" data-fullscreen="boxDetail" title="Full screen"><i class="fa fa-arrows-alt"></i></button><span id="gbPmDetail"></span></span></div>
+        <div class="win-grid-scroll">
+            <table class="win-grid" id="grddetailPackingMaterial" data-gridbar="frmProductionPackingMaterial:grddetailPackingMaterial" data-gridbar-mount="#gbPmDetail"><thead><tr id="detailHead"></tr></thead>
+                <tbody id="detailBody"></tbody><tfoot id="detailFoot"></tfoot></table>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= PmHistory "History" (tabControlPm page 1) -->
+<div class="pm-page" id="PmHistory">
+    <!-- toolStrip2: &Reset, &Refresh -->
+    <div class="win-tool-strip" style="border:1px solid #999;">
+        <button type="button" id="btnNewHistory" class="win-btn-tool"><i class="fa fa-file-o"></i> <span><u>R</u>eset</span></button>
+        <button type="button" id="btnRefreshHistory" class="win-btn-tool"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    </div>
+    <!-- panel71 (Teal): label88 + chkPendingForRates -->
+    <div class="pm-bar">
+        <span style="font-size:11.75pt;">Packing Material History</span>
+        <span style="display:flex;gap:10px;align-items:center;">
+            <label id="wrapPendingForRates"><input type="checkbox" id="chkPendingForRates"> Show Only Zero-Rated Entry</label>
+            <button type="button" data-fullscreen="boxHistory" title="Full screen"><i class="fa fa-arrows-alt"></i></button>
+        </span>
+    </div>
+    <!-- panel15 / groupBox3 "Filters" -->
+    <fieldset class="win-group-box" style="max-width:980px; flex:0 0 auto;">
+        <legend>Filters</legend>
+        <div class="pm-filters">
+            <div class="pm-f" style="width:137px;"><label class="win-label"><input type="checkbox" id="chkFromDateHistory" checked> From Date</label>
+                <input type="date" id="FromDateHistory" class="win-datepicker"/></div>
+            <div class="pm-f" style="width:131px;"><label class="win-label"><input type="checkbox" id="chkToDateHistory" checked> To Date</label>
+                <input type="date" id="ToDateHistory" class="win-datepicker"/></div>
+            <div class="pm-f" style="width:100px;"><label class="win-label" for="txtFromDocNoHistory">From Doc No</label>
+                <input type="text" id="txtFromDocNoHistory" class="win-textbox"/></div>
+            <div class="pm-f" style="width:100px;"><label class="win-label" for="txtToDocNoHistory">To Doc No</label>
+                <input type="text" id="txtToDocNoHistory" class="win-textbox"/></div>
+            <div class="pm-f" style="width:240px;"><label class="win-label" for="CmbJobOrder">Job Order</label>
+                <select id="CmbJobOrder" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order"></select></div>
+            <div class="pm-f"><button type="button" id="btnshow" class="pm-show">Show</button></div>
+            <div class="pm-radios" style="margin-left:6px;">
+                <label><input type="radio" name="pmDateMode" id="drdocdate" value="doc" checked> Doc Date</label>
+                <label><input type="radio" name="pmDateMode" id="rdmodifydate" value="modify"> Modify Date</label>
+                <label><input type="radio" name="pmDateMode" id="rdentrydate" value="entry"> Entry Date</label>
+                <label><input type="radio" name="pmDateMode" id="rdapproveddate" value="approved"> Approved Date</label>
+            </div>
+        </div>
+    </fieldset>
+    <!-- grdPackingMaterialHistory (Dock Fill, TotalRow). panel73 and grddetailHistoryPM are Visible=false on the desktop. -->
+    <div class="win-grid-container" id="boxHistory">
+        <div class="win-grid-scroll">
+            <table class="win-grid" id="grdPackingMaterialHistory" data-gridbar="frmProductionPackingMaterial:grdPackingMaterialHistory"><thead><tr id="historyHead"></tr></thead>
+                <tbody id="historyBody"></tbody><tfoot id="historyFoot"></tfoot></table>
+        </div>
+    </div>
+</div>
+
+<!-- tabControlPm tab strip (Alignment = Bottom) -->
+<div class="pm-footer">
+    <div class="pm-tab is-active" id="tabPmForm">Form</div>
+    <span id="lblStatus">Ready</span>
+    <div class="pm-tab" id="tabPmHistory"><i class="fa fa-history"></i> History</div>
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_p280_packing_material.js?v=20260925g}"></script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Order PM - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260923pm2}"/>
+    <!-- Screen 498 "1002 Purchsae Order", Packing Material module 54.
+         Desktop: Architecture.WinApp.PackingMaterial_Store.PurchsaeOrderPmNew, DocumentTypeId 700. -->
+    <style>
+        html, body { overflow-x: hidden; }
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; min-height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 2px; flex-wrap: wrap; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
+        .win-btn-tool:hover:not(:disabled) { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-btn-tool:disabled { color: #888; cursor: not-allowed; }
+        .win-teal-header { background-color: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+        .win-teal-header-title { font-family: Tahoma, sans-serif; font-size: 11pt; font-weight: bold; }
+        .win-doc-badge { font-weight: bold; font-size: 11pt; color: #ffeb3b; }
+        .win-form-body { background-color: #ece9d8; padding: 6px; }
+        .win-group-box { border: 1px solid #999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
+        .win-group-box legend { font-family: Tahoma, sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .win-label { font-size: 8.5pt; font-weight: 600; color: #222; white-space: nowrap; margin-bottom: 2px; display: block; }
+        .win-textbox, .win-combo { font-family: Verdana, sans-serif; font-size: 9pt; height: 24px; border: 1px solid #7a9a9e; padding: 2px 4px; box-sizing: border-box; background: #fff; border-radius: 0; width: 100%; }
+        .win-textbox-readonly { background-color: #f0f0f0 !important; font-weight: bold; color: #004d40; }
+        .win-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .win-field { display: flex; flex-direction: column; margin-bottom: 4px; flex: 1 1 140px; min-width: 110px; }
+        .win-pair { display: flex; gap: 4px; }
+        .win-check { display: inline-flex; align-items: center; gap: 4px; font-size: 8.5pt; font-weight: 600; margin-right: 8px; }
+        .win-nav-tabs { border-bottom: 1px solid #999; background-color: #ece9d8; display: flex; gap: 2px; padding-left: 4px; margin: 0; }
+        .win-nav-tabs li { list-style: none; }
+        .win-nav-tabs li a { display: block; padding: 4px 12px; font-size: 9pt; font-weight: 600; color: #000; background: #d4d0c8; border: 1px solid #999; border-bottom: none; border-radius: 3px 3px 0 0; text-decoration: none; cursor: pointer; }
+        .win-nav-tabs li.active a { background: #fff !important; color: #008080 !important; }
+        .win-tab-content { border: 1px solid #999; border-top: none; background: #fff; padding: 8px; }
+        .win-grid-container { border: 1px solid #7a9a9e; background: #fff; width: 100%; margin-bottom: 6px; }
+        .win-grid-scroll { max-height: 300px; overflow: auto; max-width: 100%; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8pt; background: #fff; }
+        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); border: 1px solid #999; padding: 4px 5px; text-align: left; position: sticky; top: 0; z-index: 5; white-space: nowrap; }
+        .win-grid td { border: 1px solid #d0d0d0; padding: 2px 4px; white-space: nowrap; }
+        .win-grid td.num { text-align: right; }
+        .win-grid tr.data-row:hover { background: #e0f2f1; cursor: pointer; }
+        .win-grid tr.sel { background: #cfe8e6; }
+        .win-grid tfoot td { background: #e0f2f1; font-weight: bold; }
+        .win-grid input.cell { width: 80px; height: 20px; font-size: 8pt; border: 1px solid #7a9a9e; text-align: right; }
+        .win-grid input.cell-text { width: 140px; height: 20px; font-size: 8pt; border: 1px solid #7a9a9e; }
+        .win-grid input.cell-date { width: 125px; height: 20px; font-size: 8pt; border: 1px solid #7a9a9e; }
+        .win-grid-toolbar { display: flex; align-items: center; justify-content: space-between; background: #e0f2f1; border-bottom: 1px solid #7a9a9e; padding: 2px 6px; font-size: 8.5pt; font-weight: 600; color: #004d40; }
+        .win-btn-action { background-color: #008080; color: #fff; font-family: Verdana, sans-serif; font-size: 9pt; font-weight: bold; border: 1px solid #004d40; height: 24px; padding: 0 10px; cursor: pointer; border-radius: 2px; }
+        .win-btn-action:hover { background-color: #005959; }
+        .win-btn-mini { background: #fff; border: 1px solid #7a9a9e; font-size: 8pt; padding: 0 6px; cursor: pointer; }
+        .is-busy { opacity: .65; cursor: progress !important; }
+        .win-link { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        .status-line { font-size: 8.5pt; color: #004d40; padding: 3px 8px; min-height: 18px; }
+        .branch-list { max-height: 90px; overflow: auto; border: 1px solid #7a9a9e; background: #fff; padding: 2px 4px; }
+        .win-footer-strip { background: linear-gradient(to bottom, #ece9d8 0%, #dcd8c8 100%); border-top: 1px solid #999; padding: 6px 10px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+        .win-btn-history { background-color: #004d40; color: #fff; font-family: Verdana, sans-serif; font-size: 9pt; font-weight: bold; border: 1px solid #00251a; height: 26px; padding: 0 14px; cursor: pointer; border-radius: 2px; display: flex; align-items: center; gap: 5px; }
+        .win-btn-history:hover:not(:disabled) { background-color: #00251a; }
+    </style>
+</head>
+<body>
+
+<div class="win-tool-strip">
+    <button type="button" id="btnnew" class="win-btn-tool" onclick="PoPm.btnnew_Click()"><i class="fa fa-file-o"></i> &amp;New</button>
+    <button type="button" id="toolStripButton1" class="win-btn-tool" onclick="PoPm.toolStripButton1_Click()"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" id="btnsave" class="win-btn-tool" onclick="PoPm.btnsave_Click()"><i class="fa fa-save"></i> &amp;Save</button>
+    <button type="button" id="BtnSaveAs" class="win-btn-tool" style="display:none" onclick="PoPm.BtnSaveAs_Click()"><i class="fa fa-copy"></i> &amp;SaveAs</button>
+    <button type="button" id="btnUpdate" class="win-btn-tool" style="display:none" onclick="PoPm.btnupdate_Click()"><i class="fa fa-pencil"></i> &amp;Update</button>
+    <button type="button" id="btnprint" class="win-btn-tool" onclick="PoPm.btnprint_Click()"><i class="fa fa-print"></i> 215-&amp;Print</button>
+    <button type="button" id="btnattachment" class="win-btn-tool" onclick="PoPm.btnattachment_Click()"><i class="fa fa-paperclip"></i> &amp;Attachment</button>
+    <button type="button" id="btnLoader" class="win-btn-tool" style="display:none" disabled
+            title="Opens frmPackingMaterialRequirementPlanning - not ported yet">MRP Loader</button>
+    <label class="win-check" style="margin-left:6px;"><input type="checkbox" id="ChkBoxPrint"/> Preview</label>
+    <div style="margin-left:auto;">
+        <a href="/dashboard" style="color:#004d40; text-decoration:none; font-weight:bold; font-size:11px;"><i class="fa fa-arrow-left"></i> Exit to Dashboard</a>
+    </div>
+</div>
+
+<div class="win-teal-header">
+    <div class="win-teal-header-title"><i class="fa fa-shopping-cart"></i> PURCHASE ORDER</div>
+    <div><span class="win-doc-badge" id="txtDocNoShow">PO-</span></div>
+</div>
+
+<ul class="win-nav-tabs">
+    <li id="tabForm" class="active"><a onclick="PoPm.showTab(0)">Form</a></li>
+    <li id="tabHistory"><a onclick="PoPm.showTab(1)">History</a></li>
+</ul>
+
+<!-- ============================================ FORM ============================================ -->
+<div id="tabPage1" class="win-tab-content">
+ <div class="win-form-body">
+  <fieldset class="win-group-box">
+    <legend>Main</legend>
+    <div class="win-row">
+        <div class="win-field"><label class="win-label">Doc No,Date</label>
+            <div class="win-pair">
+                <input type="text" id="txtdocno" class="win-textbox win-textbox-readonly" readonly style="max-width:70px"/>
+                <input type="text" id="txtBranchSrNo" class="win-textbox win-textbox-readonly" readonly style="max-width:60px" title="Branch Sr No"/>
+                <input type="date" id="DocDate" class="win-textbox"/>
+            </div></div>
+        <div class="win-field" style="flex:2 1 260px;"><label class="win-label">Supplier Name</label>
+            <select id="combsuppname" class="win-combo dtcombo" data-dtcombo="party4" data-dtcombo-caption="Customer Name"></select></div>
+        <div class="win-field"><label class="win-label">Supplier Ref No</label>
+            <input type="text" id="txtsupprefno" class="win-textbox"/></div>
+    </div>
+    <div class="win-row">
+        <div class="win-field"><label class="win-label">Payment Terms</label>
+            <select id="combpttrm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PaymentTerm"></select></div>
+        <div class="win-field"><label class="win-label">Due Days ,Date</label>
+            <div class="win-pair">
+                <input type="text" id="txtduedays" class="win-textbox" data-guard="integer" style="max-width:60px"/>
+                <input type="date" id="duedate" class="win-textbox win-textbox-readonly" readonly/>
+            </div></div>
+        <div class="win-field"><label class="win-label">Delivery Term</label>
+            <select id="combdeliverytrm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Delivery Term">
+                <option value="1">Load</option><option value="2">Ponch</option></select></div>
+        <div class="win-field"><label class="win-label">Delivery Days &amp; Start Date</label>
+            <div class="win-pair">
+                <input type="text" id="txtdeliverydays" class="win-textbox" data-guard="integer" style="max-width:60px"/>
+                <input type="date" id="deliverystartdate" class="win-textbox"/>
+            </div></div>
+        <div class="win-field"><label class="win-label">Bill Type</label>
+            <select id="CmbBillType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Bill Type">
+                <option value="1">On Weight</option><option value="2">On Qty</option></select></div>
+    </div>
+    <div class="win-row">
+        <div class="win-field fcy"><label class="win-label" id="label56">Fcy Code</label>
+            <select id="cmbCurrency" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Currency"></select></div>
+        <div class="win-field fcy"><label class="win-label" id="label57">Exchange Rate</label>
+            <input type="text" id="txtExchangeRate" class="win-textbox" data-guard="decimal"/></div>
+        <div class="win-field fcy"><label class="win-label" id="label58">Fcy Amount</label>
+            <input type="text" id="txtFcyAmount" class="win-textbox win-textbox-readonly" readonly/></div>
+        <div class="win-field" style="flex:3 1 300px;"><label class="win-label">Remarks</label>
+            <input type="text" id="txtremarks" class="win-textbox"/></div>
+    </div>
+  </fieldset>
+
+  <fieldset class="win-group-box">
+    <legend>Detail</legend>
+    <div class="win-row">
+        <div class="win-field" style="flex:0 1 150px;"><label class="win-label">
+                <label class="win-check"><input type="radio" name="rdCatType" id="RadCategory" checked/> Category</label>
+                <label class="win-check"><input type="radio" name="rdCatType" id="RadType"/> Type</label></label>
+            <select id="CmbCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+        <div class="win-field" style="flex:2 1 280px;"><label class="win-label">Item
+                <label class="win-check" style="margin-left:8px;"><input type="radio" name="rdSearch" id="rdSearchByName" checked/> Name</label>
+                <label class="win-check"><input type="radio" name="rdSearch" id="rdSearchByCode"/> Code</label></label>
+            <select id="combitem" class="win-combo dtcombo" data-dtcombo="itemPm" data-dtcombo-caption="Item Name"></select></div>
+        <div class="win-field"><label class="win-label">Crop Year</label>
+            <select id="CmbCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+        <div class="win-field"><label class="win-label">Weight Capacity</label>
+            <input type="text" id="txtWeightCapacity" class="win-textbox"/></div>
+        <div class="win-field"><label class="win-label">Packing Date</label>
+            <input type="date" id="txtPackingDate" class="win-textbox"/></div>
+        <div class="win-field"><label class="win-label">Expiry Date</label>
+            <input type="date" id="txtExpiryDateDetail" class="win-textbox"/></div>
+    </div>
+    <div class="win-row">
+        <div class="win-field"><label class="win-label">UOM</label>
+            <select id="CmbUomDetail" class="win-combo dtcombo" data-dtcombo="uomCmagt" data-dtcombo-caption="Pack Uom"></select></div>
+        <div class="win-field"><label class="win-label">Item Qty</label>
+            <input type="text" id="txtqty" class="win-textbox" data-guard="decimal"/></div>
+        <div class="win-field"><label class="win-label">Weight/Qty</label>
+            <input type="text" id="txtWtPerQty" class="win-textbox" data-guard="decimal"/></div>
+        <div class="win-field"><label class="win-label">Total Weight</label>
+            <input type="text" id="txtTotalWeight" class="win-textbox win-textbox-readonly" readonly/></div>
+        <div class="win-field"><label class="win-label">Item Rate</label>
+            <input type="text" id="txtRate" class="win-textbox" data-guard="decimal"/></div>
+        <div class="win-field"><label class="win-label">Rate UOM</label>
+            <select id="combrateuom" class="win-combo dtcombo" data-dtcombo="uomCmagt" data-dtcombo-caption="Rate Uom"></select></div>
+        <div class="win-field"><label class="win-label">Item Amount</label>
+            <input type="text" id="txtItemAmount" class="win-textbox win-textbox-readonly" readonly/></div>
+    </div>
+    <div class="win-row">
+        <div class="win-field"><label class="win-label">Tax Name</label>
+            <select id="CmbTaxName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Tax Name"></select></div>
+        <div class="win-field"><label class="win-label">Tax%</label>
+            <input type="text" id="txtTaxPercnt" class="win-textbox" data-guard="decimal"/></div>
+        <div class="win-field"><label class="win-label">Tax Amount</label>
+            <input type="text" id="txtTaxAmount" class="win-textbox win-textbox-readonly" readonly/></div>
+        <div class="win-field"><label class="win-label">Total Amount</label>
+            <input type="text" id="txtTotalAmount" class="win-textbox win-textbox-readonly" readonly/></div>
+        <div class="win-field"><label class="win-label" id="label7">LeadTime</label>
+            <input type="text" id="txtLeadtimeDetail" class="win-textbox" data-guard="integer"/></div>
+    </div>
+    <div class="win-row">
+        <div class="win-field"><label class="win-label">Ref Document Type</label>
+            <select id="CmbRefDocumentType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"></select></div>
+        <div class="win-field"><label class="win-label">Ref Doc No</label>
+            <select id="CmbRefDocNo" class="win-combo dtcombo" data-dtcombo="refPm" data-dtcombo-caption="RefDoc No"></select></div>
+        <div class="win-field"><label class="win-label">Ref Doc Invoice #</label>
+            <select id="CmbRefDocInvoiceNo" class="win-combo dtcombo" data-dtcombo="refPm" data-dtcombo-caption="Invoice No"></select></div>
+        <div class="win-field" style="flex:2 1 240px;"><label class="win-label">Remarks</label>
+            <input type="text" id="txtremarksdetail" class="win-textbox"/></div>
+        <div class="win-field" style="flex:0 1 180px;"><label class="win-label">&nbsp;</label>
+            <div class="win-pair">
+                <button type="button" id="btnplus" class="win-btn-action" onclick="PoPm.btnplus_Click()">+</button>
+                <button type="button" id="btnUpdateDetail" class="win-btn-action" style="display:none" onclick="PoPm.btnUpdateDetail_Click()">Update</button>
+                <button type="button" id="btnCancelUpdateDetial" class="win-btn-action" style="display:none" onclick="PoPm.btnCancelUpdateDetial_Click()">Cancel</button>
+            </div></div>
+    </div>
+  </fieldset>
+
+  <div class="win-grid-container">
+    <div class="win-grid-scroll">
+      <table class="win-grid">
+        <thead><tr id="grdHead"></tr></thead>
+        <tbody id="grd"></tbody>
+        <tfoot><tr id="grdFoot"></tr></tfoot>
+      </table>
+    </div>
+  </div>
+  <div class="win-row">
+    <div class="win-field" style="flex:0 1 160px;"><label class="win-label">Order Qty</label>
+        <input type="text" id="txtOrderQty" class="win-textbox win-textbox-readonly" readonly/></div>
+    <div class="win-field" style="flex:0 1 180px;"><label class="win-label">Order Amount</label>
+        <input type="text" id="txtOrderAmount" class="win-textbox win-textbox-readonly" readonly/></div>
+  </div>
+  <fieldset class="win-group-box" id="grpAttachments" style="display:none">
+    <legend>Attachments</legend>
+    <input type="file" id="fileAttachment" multiple/>
+    <div id="lstAttachments" style="margin-top:4px;"></div>
+  </fieldset>
+  <div class="win-footer-strip">
+    <button type="button" class="win-btn-history" onclick="PoPm.showTab(1)"><i class="fa fa-history"></i> History</button>
+  </div>
+  <div class="status-line" id="lblFormStatus"></div>
+ </div>
+</div>
+
+<!-- ============================================ HISTORY ============================================ -->
+<div id="tabPage2" class="win-tab-content" style="display:none">
+  <div class="win-tool-strip">
+    <button type="button" id="btnNewHistory" class="win-btn-tool" onclick="PoPm.btnNewHistory_Click()"><i class="fa fa-file-o"></i> &amp;New</button>
+    <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="PoPm.btnRefreshHistory_Click()"><i class="fa fa-refresh"></i> Refresh</button>
+  </div>
+  <div class="win-form-body">
+    <fieldset class="win-group-box">
+      <legend>Filters</legend>
+      <div class="win-row">
+        <div class="win-field" style="flex:2 1 300px;"><label class="win-label">
+            <label class="win-check"><input type="radio" name="rdDate" id="drdocdate" value="doc" checked/> Doc Date</label>
+            <label class="win-check"><input type="radio" name="rdDate" id="rdentrydate" value="entry"/> Entry Date</label>
+            <label class="win-check"><input type="radio" name="rdDate" id="rdmodifydate" value="modify"/> Modify Date</label>
+            <label class="win-check"><input type="radio" name="rdDate" id="rdapproveddate" value="approved"/> Approved Date</label></label>
+          <div class="win-pair">
+            <label class="win-check"><input type="checkbox" id="chkFromDate" checked/></label>
+            <input type="date" id="FromDateHistory" class="win-textbox"/>
+            <label class="win-check"><input type="checkbox" id="chkToDate" checked/></label>
+            <input type="date" id="ToDateHistory" class="win-textbox"/>
+          </div></div>
+        <div class="win-field"><label class="win-label">From &amp; To Doc</label>
+          <div class="win-pair">
+            <input type="text" id="txtFromDocNoHistory" class="win-textbox" data-guard="integer"/>
+            <input type="text" id="txtToDocNoHistory" class="win-textbox" data-guard="integer"/>
+          </div></div>
+        <div class="win-field"><label class="win-label">Supplier</label>
+          <select id="cmbSupplierNameHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select></div>
+        <div class="win-field"><label class="win-label">Branch</label>
+          <div class="branch-list" id="cmbBranchName"></div></div>
+        <div class="win-field" style="flex:0 1 90px;"><label class="win-label">&nbsp;</label>
+          <button type="button" id="btnshow" class="win-btn-action" onclick="PoPm.btnshow_Click()">Show</button></div>
+      </div>
+    </fieldset>
+    <div class="win-grid-container">
+      <div class="win-grid-toolbar"><span>Purchase Order History</span><span id="label11"></span></div>
+      <div class="win-grid-scroll"><table class="win-grid"><thead><tr id="histHead"></tr></thead><tbody id="grdhistory"></tbody></table></div>
+    </div>
+    <div class="win-grid-container">
+      <div class="win-grid-toolbar"><span>Detail of above selected row</span></div>
+      <div class="win-grid-scroll" style="max-height:200px;"><table class="win-grid"><thead><tr id="histDetailHead"></tr></thead><tbody id="grdDetail"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260923pm2}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260923pm2}"></script>
+<script th:src="@{/build/js/countx_purchase_order_pm.js?v=20260923pm2}"></script>
+</body>
+</html>

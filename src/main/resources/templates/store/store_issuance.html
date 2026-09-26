@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Store Issuance - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* frmGSIssuance designer geometry, 1:1 in px (ClientSize 964 x 623).
+           tabControlGsIssuance (Alignment Bottom): tabPage1 "Form" / tabPage2 "History", 956 x 594, Padding 3. */
+        body { background: #fff; padding-bottom: 36px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .fx-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .fx-txt[readonly] { background: #f0f0f0; }
+        .fx-txt:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .fx-txt.r { text-align: right; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dtc { display: flex; align-items: center; gap: 2px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dtc input[type=date] { border: none; font-family: Verdana, sans-serif; font-size: 12px; height: 18px; width: 100%; min-width: 0; padding: 0; }
+        .fx-gb { position: absolute; box-sizing: border-box; }
+        .fx-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .fx-gb > .fx-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+        .fx-chk { display: inline-flex; align-items: center; gap: 3px; font-family: Verdana, sans-serif; font-weight: bold; font-size: 13px; white-space: nowrap; }
+        .fx-chk input { margin: 0; }
+        .fx-teal { background: #008080; position: relative; }
+        .fx-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .fx-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; white-space: nowrap; color: #000; text-decoration: none; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-tool:disabled { color: #9a9a9a; cursor: default; }
+        .fx-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; }
+        .fx-btn { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; padding: 0; cursor: pointer; border-radius: 0; height: auto; }
+        .fx-btn:hover:not(:disabled) { background: #005959; }
+        .fx-lb { background: #d3d3d3; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+        .fx-grid-host { overflow: auto; border-top: 1px solid #9eb6ce; background: #fff; box-sizing: border-box; }
+        .fx-grid-host.win-grid-scroll { max-height: none; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e1f0; }
+        .fx-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .fx-gbar { width: 38px; height: 23px; background: transparent; color: #fff; border: 1px solid transparent; font-size: 14px; cursor: default; }
+        /* desktop TabControl, Alignment = Bottom */
+        .fx-tabs { display: flex; gap: 2px; padding-left: 2px; margin: 0; border-bottom: none; border-top: 1px solid #7a9a9e; background: #f0f0f0; height: 25px; box-sizing: border-box; font-family: Verdana, sans-serif; }
+        .fx-tabs .win-tab { border: 1px solid #999; border-top: none; border-radius: 0 0 3px 3px; padding: 3px 12px; font-size: 13px; font-weight: normal; height: 22px; box-sizing: border-box; line-height: 15px; }
+        .fx-tabs .win-tab.is-active { top: -1px; height: 24px; background: #fff; color: #000; }
+        .fx-modal-box { width: 964px; max-width: 98vw; background: #fff; max-height: 96vh; }
+        .fx-modal-box .cx-modal-body { padding: 0; }
+    </style>
+</head>
+<body>
+<div class="fx-scroll">
+<div class="fx-root" style="width:964px;">
+
+    <div id="rightsNote" class="cx-denied is-hidden" style="margin:0;"></div>
+
+    <!-- ============================================================== tabPage1 "Form" -->
+    <div id="tabForm" class="win-tab-panel is-active" style="padding:3px;">
+
+        <!-- panel3 (0,0) 950 x 29 / toolStrip1 950 x 27 -->
+        <div style="height:29px;">
+            <div class="fx-strip">
+                <button type="button" class="fx-tool" style="width:59px" onclick="GsIssuance.reset()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+                <button type="button" class="fx-tool" style="width:80px" onclick="GsIssuance.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+                <button type="button" class="fx-tool" id="btnSave" style="width:64px" onclick="GsIssuance.save()"><i class="fa fa-save"></i> Save</button>
+                <button type="button" class="fx-tool is-hidden" id="btnDelete" style="width:73px" onclick="GsIssuance.remove()"><i class="fa fa-trash"></i> Delete</button>
+                <button type="button" class="fx-tool is-hidden" id="btnUpdate" style="width:78px" onclick="GsIssuance.update()"><i class="fa fa-pencil"></i> Update</button>
+                <button type="button" class="fx-tool" id="btnPrint" style="width:92px" onclick="GsIssuance.print()"><i class="fa fa-print"></i> 452-Print</button>
+                <button type="button" class="fx-tool" style="width:109px" disabled title="Attachments are not ported"><i class="fa fa-paperclip"></i> Attachment</button>
+                <button type="button" class="fx-tool" id="btnLoadDepRequest" style="width:120px" onclick="GsIssuance.openDeptLoader()"><i class="fa fa-download"></i> Load Request</button>
+                <button type="button" class="fx-tool" id="btnLoadDO" style="width:110px" onclick="GsIssuance.openDoLoader()"><i class="fa fa-truck"></i> Load DO PM</button>
+                <button type="button" class="fx-tool" style="width:126px" disabled title="The shortcut-key popup is not ported"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+                <a href="/modules" class="fx-tool" style="margin-left:auto;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+            </div>
+        </div>
+
+        <!-- panel4 (0,29) 950 x 24, teal -->
+        <div class="fx-teal" style="height:24px;">
+            <span class="fx-teal-title" style="left:3px;top:2px;">Store Issuance</span>
+            <span id="lblRecId" class="is-hidden"></span>
+            <!-- BtnStoreReturnLink (714,0) 144 x 25 "Add Replacement" with ChkStoreReturnLink (717,6) on it -->
+            <button type="button" class="fx-abs" style="left:714px;top:0;width:144px;height:25px;background:#fff;color:#00f;border:1px solid #000;font-family:Verdana,sans-serif;font-size:12px;font-weight:bold;text-align:right;padding:0 4px;cursor:pointer;"
+                    onclick="window.open('/store/store-return','_blank')">Add Replacement</button>
+            <input type="checkbox" id="chkStoreReturnLink" class="fx-abs" style="left:717px;top:6px;width:13px;height:13px;" checked title="Open Store Return after saving a Department Request issuance">
+            <!-- checkBox1 "Preview" (864,3) -->
+            <label class="fx-abs fx-chk" style="left:864px;top:3px;height:20px;color:#fff;"><input type="checkbox" id="chkPrint" checked> Preview</label>
+        </div>
+
+        <!-- panel5 (0,53) 950 x 52, white -->
+        <div class="fx-rel" style="height:52px;">
+            <!-- groupBox1 (4,2) 942 x 47 "Main" -->
+            <div class="fx-gb" style="left:4px;top:2px;width:942px;height:47px;">
+                <span class="fx-cap">Main</span>
+                <label class="fx-abs fx-lbl" for="txtDocNo" style="left:4px;top:19px;">Doc No &amp; Date</label>
+                <input type="text" id="txtDocNo" class="fx-abs fx-txt" style="left:92px;top:15px;width:71px;" readonly tabindex="-1">
+                <input type="text" id="txtBranchSrNo" class="fx-abs fx-txt" style="left:165px;top:15px;width:64px;background:#fff;" readonly tabindex="-1">
+                <input type="date" id="txtDocdate" class="fx-abs fx-dt" style="left:231px;top:15px;width:116px;" onchange="GsIssuance.docDateChanged()">
+                <label class="fx-abs fx-lbl" for="txtRemarks" style="left:348px;top:19px;">Remarks</label>
+                <input type="text" id="txtRemarks" class="fx-abs fx-txt" style="left:405px;top:15px;width:532px;font-family:Tahoma,sans-serif;font-weight:bold;">
+            </div>
+        </div>
+
+        <!-- panel6 (0,105) 950 x 25, teal -->
+        <div class="fx-teal" style="height:25px;">
+            <span class="fx-teal-title" id="lblGridTitle" style="left:4px;top:4px;">Detail</span>
+            <span class="fx-teal-title" id="lblRequestType" style="left:80px;top:5px;font-size:12px;font-weight:normal;"></span>
+            <button type="button" class="fx-abs fx-gbar" style="left:910px;top:0;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+        </div>
+
+        <!-- panel11 (0,130) 950 x 458 / grdDetail -->
+        <div class="fx-grid-host win-grid-scroll" style="height:458px;">
+            <table class="win-grid" id="grdDetail"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <!-- ============================================================== tabPage2 "History" -->
+    <div id="tabHistory" class="win-tab-panel" style="padding:3px;">
+
+        <!-- panel8 (3,3) 950 x 47, teal: toolStrip2 (0,0) 950 x 25 + label6 (5,26) -->
+        <div class="fx-teal" style="height:47px;">
+            <div class="fx-strip" style="height:25px;">
+                <button type="button" class="fx-tool" style="width:55px;height:22px;" onclick="GsIssuance.newHistory()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            </div>
+            <span class="fx-teal-title" style="left:5px;top:26px;">Store Issuance History</span>
+        </div>
+
+        <!-- panel9 (3,50) 950 x 54 -->
+        <div class="fx-rel" style="height:54px;">
+            <!-- groupBox3 (1,1) 755 x 47 "Filters" -->
+            <div class="fx-gb" style="left:1px;top:1px;width:755px;height:47px;">
+                <span class="fx-cap">Filters</span>
+                <label class="fx-abs fx-lbl" style="left:5px;top:19px;">From Date</label>
+                <div class="fx-abs fx-dtc" style="left:71px;top:15px;width:142px;"><input type="checkbox" id="chkFromDate" checked><input type="date" id="FromDateHistory"></div>
+                <label class="fx-abs fx-lbl" style="left:216px;top:19px;">To Date</label>
+                <div class="fx-abs fx-dtc" style="left:264px;top:15px;width:142px;"><input type="checkbox" id="chkToDate" checked><input type="date" id="ToDateHistory"></div>
+                <label class="fx-abs fx-lbl" for="FromDocNoHistory" style="left:410px;top:19px;">From Doc No</label>
+                <input type="text" id="FromDocNoHistory" class="fx-abs fx-txt" style="left:491px;top:15px;width:62px;" inputmode="numeric">
+                <label class="fx-abs fx-lbl" for="ToDocNoHistory" style="left:557px;top:19px;">To Doc No</label>
+                <input type="text" id="ToDocNoHistory" class="fx-abs fx-txt" style="left:624px;top:15px;width:62px;" inputmode="numeric">
+                <button type="button" id="btnShowHistory" class="fx-abs fx-btn win-btn-action" style="left:688px;top:14px;width:62px;height:25px;" onclick="GsIssuance.showHistory(this)">Show</button>
+            </div>
+        </div>
+
+        <!-- panel12 (3,104) 950 x 24, teal -->
+        <div class="fx-teal" style="height:24px;">
+            <button type="button" class="fx-abs fx-gbar" style="left:906px;top:0;width:37px;height:21px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+        </div>
+
+        <!-- DataGridHistory (3,128) 950 x 214 -->
+        <div class="fx-grid-host win-grid-scroll" style="height:214px;">
+            <table class="win-grid" id="DataGridHistory"><thead></thead><tbody></tbody></table>
+        </div>
+
+        <!-- label7 (3,342) 950 x 18, teal, Tahoma 10pt bold -->
+        <div style="height:18px;background:#008080;color:#fff;font-family:Tahoma,sans-serif;font-size:13px;font-weight:bold;line-height:18px;">Detail of the Above Selected Row</div>
+
+        <!-- grddetailHistory (3,360) 950 x 231 -->
+        <div class="fx-grid-host win-grid-scroll" style="height:231px;">
+            <table class="win-grid" id="grddetailHistory"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <!-- tabControlGsIssuance tab headers (Alignment Bottom) -->
+    <div class="win-tabs fx-tabs">
+        <div class="win-tab is-active" data-tab="tabForm" onclick="GsIssuance.tab('tabForm')">Form</div>
+        <div class="win-tab" data-tab="tabHistory" onclick="GsIssuance.tab('tabHistory')">History</div>
+    </div>
+</div>
+</div>
+
+<!-- Footer: right-aligned History button -->
+<div class="cx-footer">
+    <span class="cx-footer-left"></span>
+    <button type="button" class="win-btn-action cx-footer-history" id="btnFooterHistory" onclick="GsIssuance.tab('tabHistory'); GsIssuance.showHistory();"><i class="fa fa-history"></i> <span>History</span></button>
+</div>
+
+
+<!-- ============================================================== PendingDoPmForIssuance (ClientSize 964 x 661) -->
+<div class="cx-modal" id="dlgDo">
+    <div class="cx-modal-box fx-modal-box">
+        <div class="cx-modal-head"><span>Pending Delivery Order (Packing Material) For Issuance</span>
+            <button type="button" onclick="StoreCommon.closeModal('dlgDo')">&times;</button></div>
+        <div class="cx-modal-body fx-root">
+            <!-- panel1 (0,0) 964 x 52, teal: toolStrip1 25 + label23 (3,29) -->
+            <div class="fx-teal" style="height:52px;">
+                <div class="fx-strip" style="height:25px;">
+                    <button type="button" class="fx-tool" style="width:55px;height:22px;" onclick="GsIssuance.doReset()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+                    <button type="button" class="fx-tool" style="width:76px;height:22px;"><i class="fa fa-repeat"></i> Refresh</button>
+                    <span class="fx-sep"></span>
+                    <button type="button" class="fx-tool" style="width:58px;height:22px;" onclick="GsIssuance.loadDo()"><i class="fa fa-download"></i> Load</button>
+                    <button type="button" class="fx-tool" style="width:122px;height:22px;" disabled title="The shortcut-key popup is not ported"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+                    <span class="fx-sep"></span>
+                </div>
+                <span class="fx-teal-title" style="left:3px;top:29px;">Pending Delivery Order Packing Material</span>
+            </div>
+            <!-- panel2 (0,52) 964 x 38, white -->
+            <div class="fx-rel" style="height:38px;">
+                <label class="fx-abs fx-lbl" for="doFrom" style="left:9px;top:13px;">From Date</label>
+                <input type="date" id="doFrom" class="fx-abs fx-dt" style="left:79px;top:9px;width:130px;height:22px;">
+                <label class="fx-abs fx-lbl" for="doTo" style="left:214px;top:13px;">To Date</label>
+                <input type="date" id="doTo" class="fx-abs fx-dt" style="left:263px;top:9px;width:130px;height:22px;">
+                <label class="fx-abs fx-lbl" for="doNoFrom" style="left:397px;top:13px;">From Doc</label>
+                <input type="text" id="doNoFrom" class="fx-abs fx-txt r" style="left:460px;top:9px;width:64px;">
+                <label class="fx-abs fx-lbl" for="doNoTo" style="left:526px;top:13px;">To&nbsp; Doc</label>
+                <input type="text" id="doNoTo" class="fx-abs fx-txt r" style="left:575px;top:9px;width:65px;">
+                <button type="button" class="fx-abs fx-btn" style="left:644px;top:8px;width:68px;height:24px;" onclick="GsIssuance.searchDo()">Search</button>
+                <button type="button" class="fx-abs fx-btn" style="left:712px;top:8px;width:56px;height:24px;" onclick="GsIssuance.loadDo()">Load</button>
+                <button type="button" class="fx-abs fx-btn" style="left:769px;top:8px;width:61px;height:24px;" onclick="GsIssuance.doReset()">Reset</button>
+            </div>
+            <!-- panel3 (0,90) 964 x 26, teal -->
+            <div class="fx-teal" style="height:26px;">
+                <span class="fx-teal-title" style="left:4px;top:3px;">Filtered Records</span>
+                <button type="button" class="fx-abs fx-gbar" style="left:915px;top:1px;width:45px;height:22px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+            </div>
+            <!-- grd (0,116) 964 x 545 -->
+            <div class="fx-grid-host win-grid-scroll" style="height:545px;max-height:calc(96vh - 150px);">
+                <table class="win-grid" id="grdDo"><thead></thead><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== LoadDepRequestToConsumableStore (ClientSize 964 x 661) -->
+<div class="cx-modal" id="dlgDept">
+    <div class="cx-modal-box fx-modal-box">
+        <div class="cx-modal-head"><span>Pending Department Request For Issuance</span>
+            <button type="button" onclick="GsIssuance.closeDept()">&times;</button></div>
+        <div class="cx-modal-body fx-root">
+            <!-- panel1 (0,0) 964 x 47, teal: toolStrip1 25 + label23 (4,25) -->
+            <div class="fx-teal" style="height:47px;">
+                <div class="fx-strip" style="height:25px;">
+                    <button type="button" class="fx-tool" style="width:55px;height:22px;" onclick="GsIssuance.deptReset()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+                    <button type="button" class="fx-tool" style="width:76px;height:22px;" disabled title="Re-binding the loader's combos is not ported"><i class="fa fa-repeat"></i> Refresh</button>
+                    <span class="fx-sep"></span>
+                    <button type="button" class="fx-tool" style="width:58px;height:22px;" onclick="GsIssuance.loadDept()"><i class="fa fa-download"></i> Load</button>
+                    <button type="button" class="fx-tool" style="width:122px;height:22px;" disabled title="The shortcut-key popup is not ported"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+                    <span class="fx-sep"></span>
+                </div>
+                <span class="fx-teal-title" style="left:4px;top:25px;">Pending Department Request For Issuance</span>
+            </div>
+            <!-- panel2 (0,47) 964 x 134, white; groupBox1 (4,2) 956 x 130 "Filters" -->
+            <div class="fx-rel" style="height:134px;">
+                <div class="fx-gb" style="left:4px;top:2px;width:956px;height:130px;">
+                    <span class="fx-cap">Filters</span>
+                    <label class="fx-abs fx-lbl" for="depPeremeter" style="left:4px;top:19px;">Date Type</label>
+                    <select id="depPeremeter" class="fx-abs fx-cmb win-combo" style="left:81px;top:13px;width:130px;" onchange="GsIssuance.deptPeremeter()">
+                        <option value="1">This Day</option><option value="2">This Week</option>
+                        <option value="3" selected>This Month</option><option value="4">This Year</option>
+                        <option value="5">Financial Year</option></select>
+                    <label class="fx-abs fx-lbl" for="depFrom" style="left:4px;top:47px;">From Date</label>
+                    <input type="date" id="depFrom" class="fx-abs fx-dt" style="left:81px;top:43px;width:130px;height:22px;">
+                    <label class="fx-abs fx-lbl" for="depTo" style="left:4px;top:75px;">To Date</label>
+                    <input type="date" id="depTo" class="fx-abs fx-dt" style="left:81px;top:71px;width:130px;height:22px;">
+                    <label class="fx-abs fx-lbl" for="depNoFrom" style="left:4px;top:103px;">From,To Doc</label>
+                    <input type="text" id="depNoFrom" class="fx-abs fx-txt r" style="left:81px;top:99px;width:64px;">
+                    <input type="text" id="depNoTo" class="fx-abs fx-txt r" style="left:146px;top:99px;width:65px;">
+                    <label class="fx-abs fx-lbl" for="cmbDepartmentFrom" style="left:214px;top:19px;">Department From</label>
+                    <select id="cmbDepartmentFrom" class="fx-abs fx-cmb win-combo" style="left:318px;top:13px;width:246px;"></select>
+                    <label class="fx-abs fx-lbl" for="cmbDepartmentTo" style="left:214px;top:47px;">Department To</label>
+                    <select id="cmbDepartmentTo" class="fx-abs fx-cmb win-combo" style="left:318px;top:41px;width:246px;"></select>
+                    <label class="fx-abs fx-lbl" for="cmbDepItem" style="left:214px;top:75px;">Item Name</label>
+                    <select id="cmbDepItem" class="fx-abs fx-cmb win-combo" style="left:318px;top:69px;width:246px;"></select>
+                    <!-- From/To Work Station and Work Order No: Visible only for DocumentTypeId 1615 (Load:130) -->
+                    <button type="button" class="fx-abs fx-btn" style="left:566px;top:96px;width:72px;height:27px;" onclick="GsIssuance.searchDept()">Search</button>
+                </div>
+            </div>
+            <!-- panel3 (0,181) 964 x 26, teal -->
+            <div class="fx-teal" style="height:26px;">
+                <span class="fx-teal-title" style="left:4px;top:3px;">Records Detail</span>
+                <button type="button" class="fx-abs fx-gbar" style="left:915px;top:1px;width:45px;height:22px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+            </div>
+            <!-- grd (0,207) 964 x 454 -->
+            <div class="fx-grid-host win-grid-scroll" style="height:454px;max-height:calc(96vh - 240px);">
+                <table class="win-grid" id="grdDept"><thead></thead><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_issuance.js?v=20260925c}"></script>
+</body>
+</html>

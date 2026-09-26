@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Department Request History - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* DepartmentRequestHistory designer geometry, 1:1 in px (ClientSize 978 x 610, opened Maximized).
+           Docked panels stretch with the window; every control keeps its designer Location/Size. */
+        body { background: #fff; padding-bottom: 36px; margin: 0; }
+        .rb-scroll { overflow-x: auto; }
+        .rb-root { min-width: 978px; position: relative; font-family: Verdana, sans-serif; font-size: 13px; }
+        .rb-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .rb-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; }
+        .rb-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .rb-dt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .rb-show { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; cursor: pointer; padding: 0; }
+        .rb-teal { background: #008080; position: relative; }
+        .rb-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .rb-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; }
+        .rb-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; }
+        .rb-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .rb-gear { width: 45px; height: 24px; background: transparent; color: #fff; border: 1px solid transparent; font-size: 14px; }
+        .rb-grid-host { height: calc(100vh - 212px); min-height: 250px; overflow: auto; background: #fff; }
+        .rb-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .rb-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .rb-grid-host .win-grid td { border: 1px solid #d5e1f0; white-space: nowrap; }
+        .rb-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .win-grid td.rb-center { text-align: center; }
+        .win-grid .rb-frozen { position: sticky; left: 0; z-index: 1; background: #fff; }
+        .win-grid th.rb-frozen { z-index: 2; background: #d4e6fb; }
+        .win-grid tfoot tr.rb-total td { font-weight: bold; background: #f0f0f0; border-top: 2px solid #999; }
+    </style>
+</head>
+<body>
+<!-- Screen 455 "Department Request History", DepartmentRequestHistory.cs (ScreenName DepartmentRequestHistory). -->
+<div class="rb-scroll">
+<div class="rb-root">
+
+    <!-- panel1 (0,0) 978 x 30 white / toolStrip1 978 x 27: toolStripButton1 "New" 59, btnRefresh 80, btnPrint 115 -->
+    <div style="height:30px;background:#fff;">
+        <div class="rb-strip">
+            <!-- toolStripButton1 has no Click handler on the desktop (only the form's Ctrl+N, which never fires:
+                 KeyPreview is off) - the button is reproduced without an action. -->
+            <button type="button" class="rb-tool" id="toolStripButton1" style="width:59px"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            <button type="button" class="rb-tool" id="btnRefresh" style="width:80px" onclick="RptDR.refresh()"><i class="fa fa-refresh" style="color:#1565c0"></i> Refresh</button>
+            <button type="button" class="rb-tool" id="btnPrint" style="width:115px" onclick="RptDR.printRegister()"><i class="fa fa-print"></i> 450-Register</button>
+            <a href="/modules" class="rb-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+    </div>
+
+    <!-- panel3 (0,30) 978 x 27 teal; lblCaption (4,2) Tahoma 12pt bold -->
+    <div class="rb-teal" style="height:27px;">
+        <span class="rb-teal-title" style="left:4px;top:2px;">Department Request</span>
+    </div>
+
+    <!-- panel5 (0,57) 978 x 92, Verdana 9.75pt -->
+    <div style="position:relative;height:92px;background:#fff;">
+        <label class="rb-abs rb-lbl" for="FromDate" style="left:8px;top:9px;">Date From &amp; To</label>
+        <input type="date" id="FromDate" class="rb-abs rb-dt" style="left:118px;top:5px;width:115px;">
+        <input type="date" id="ToDate" class="rb-abs rb-dt" style="left:234px;top:5px;width:115px;">
+        <label class="rb-abs rb-lbl" for="CmbDepartmentName" style="left:8px;top:36px;">Department Name</label>
+        <select id="CmbDepartmentName" class="rb-abs rb-cmb win-combo" style="left:118px;top:30px;width:231px;"></select>
+        <label class="rb-abs rb-lbl" for="CmbAssetName" style="left:8px;top:63px;">Asset Name</label>
+        <select id="CmbAssetName" class="rb-abs rb-cmb win-combo" style="left:118px;top:57px;width:231px;"></select>
+
+        <label class="rb-abs rb-lbl" for="CmbItemName" style="left:353px;top:9px;">Item Name</label>
+        <select id="CmbItemName" class="rb-abs rb-cmb win-combo" style="left:442px;top:3px;width:217px;"></select>
+        <label class="rb-abs rb-lbl" for="cmbItemCondition" style="left:353px;top:36px;">Item Condition</label>
+        <select id="cmbItemCondition" class="rb-abs rb-cmb win-combo" style="left:442px;top:30px;width:217px;"></select>
+        <label class="rb-abs rb-lbl" for="CmbApproved" style="left:353px;top:63px;">IsApproved</label>
+        <select id="CmbApproved" class="rb-abs rb-cmb win-combo" style="left:442px;top:57px;width:217px;"></select>
+        <button type="button" id="btnshow" class="rb-abs rb-show" style="left:661px;top:57px;width:56px;height:26px;" onclick="RptDR.show()">Show</button>
+    </div>
+
+    <!-- panel2 (0,149) fill: panel4 teal 27 "History" (4,2) + ctrlGrdBar1 (926,1) 45 x 24 anchored right; grdfrm fill -->
+    <div id="historySection">
+        <div class="rb-teal" style="height:27px;">
+            <span class="rb-teal-title" style="left:4px;top:2px;">History</span>
+            <button type="button" class="rb-abs rb-gear" id="ctrlGrdBar1" title="Grid layout / print / export options are not ported" style="right:7px;top:1px;" disabled><i class="fa fa-cog"></i></button>
+        </div>
+        <div class="rb-grid-host win-grid-scroll" style="max-height:none;">
+            <table class="win-grid" id="grdfrm"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Footer: right-aligned History button (scrolls to the history grid). -->
+<div class="cx-footer">
+    <span class="cx-footer-left"></span>
+    <button type="button" class="win-btn-action cx-footer-history" onclick="RptDR.gotoHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_rpt_b_kit.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_store_rpt_department_request_history.js?v=20260925a}"></script>
+</body>
+</html>

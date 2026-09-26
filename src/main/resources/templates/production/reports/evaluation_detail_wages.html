@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Wages Register</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <style>
+        /* frmEvaulationDetailWagesReports.cs - ClientSize 1216 x 561, maximized, AutoScrollMinSize
+           1050 x 600. panel1 (Fill): panel2 (29, toolStrip3) / panel3 (132: panel5 teal 27
+           "Wages Register" + groupBox1 "Filters" 1204 x 104) / panel4 (teal 25) / DataGridHistory (Fill). */
+        html, body { margin: 0; padding: 0; }
+        body { font-family: Verdana, "Segoe UI", sans-serif; background: #fff; font-size: 9.75pt; color: #000; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .wr-form { min-width: 1216px; height: max(100vh, 600px); display: flex; flex-direction: column; }
+        .teal { background: #008080; color: #fff; }
+
+        #panel2 { flex: 0 0 29px; }
+        .tool { height: 27px; display: flex; align-items: stretch; gap: 1px; background: linear-gradient(#f7f9fb, #e3e8ee); border-bottom: 1px solid #c9d1da; font: 9.75pt Verdana, sans-serif; }
+        .tool button { background: none; border: 1px solid transparent; font: inherit; padding: 0 8px; cursor: pointer; color: #000; }
+        .tool button:hover:not(:disabled) { background: #c2e0ff; border-color: #3399ff; }
+        .tool button:disabled { color: #888; }
+
+        #panel3 { flex: 0 0 132px; position: relative; background: #fff; }
+        #panel5 { position: absolute; left: 0; top: 0; right: 0; height: 27px; }
+        #panel5 span { position: absolute; left: 4px; top: 3px; font: bold 12pt Tahoma, sans-serif; color: #fff; }
+        #groupBox1 { position: absolute; left: 0; top: 27px; width: 1204px; height: 104px; margin: 0; padding: 0;
+                     border: 1px solid #b7c3cc; font: bold 9.75pt Tahoma, sans-serif; }
+        #groupBox1 legend { padding: 0 3px; margin-left: 6px; }
+        #groupBox1 .g { position: absolute; }
+        #groupBox1 .dtcombo-wrap { position: absolute; }
+        .lbl { font: bold 9pt "Segoe UI Semibold", "Segoe UI", sans-serif; white-space: nowrap; }
+        .win-combo { font: 9.75pt Verdana, sans-serif; height: 26px; }
+        .dt { font: 9.75pt Verdana, sans-serif; height: 23px; border: 1px solid #7a9a9e; }
+        .rd { font: bold 9pt "Segoe UI Semibold", "Segoe UI", sans-serif; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; cursor: pointer; }
+        #btnShow { background: #008080; color: #fff; font: bold 9.75pt Tahoma, sans-serif; border: 1px solid #008080; cursor: pointer; }
+        #btnShow:disabled { background: #9e9e9e; }
+
+        /* CmbBranchName - an UltraCombo with a CheckedList ("Selected" column, header check box,
+           ListSeparator ","): its Text is the ticked names, and that TEXT is what the form reads. */
+        .bc { position: absolute; }
+        .bc input.bc-text { width: 100%; height: 26px; font: 10.2pt "Microsoft Sans Serif", sans-serif; border: 1px solid #7a9a9e; padding: 1px 22px 1px 3px; }
+        .bc button.bc-drop { position: absolute; right: 1px; top: 1px; width: 20px; height: 24px; border: none; background: #eef2f5; cursor: pointer; }
+        .bc-pop { position: absolute; left: 0; top: 27px; min-width: 100%; max-height: 240px; overflow: auto; background: #fff; border: 1px solid #555;
+                  box-shadow: 0 4px 12px rgba(0,0,0,.25); z-index: 50; font: 9pt Verdana, sans-serif; }
+        .bc-pop table { border-collapse: collapse; width: 100%; }
+        .bc-pop th { background: #e9e9e9; border: 1px solid #c8c8c8; padding: 2px 4px; font-weight: normal; text-align: left; white-space: nowrap; }
+        .bc-pop td { border: 1px solid #e0e0e0; padding: 2px 4px; white-space: nowrap; cursor: pointer; }
+        .bc-pop tr.act td { background: #cce8ff; }
+
+        #panel4 { flex: 0 0 25px; display: flex; justify-content: flex-end; align-items: center; padding: 0 3px; }
+        .grid-wrap { flex: 1 1 auto; min-height: 120px; overflow: auto; border: 1px solid #7a9a9e; width: 100%; }
+        .grid-wrap:focus { outline: 1px dotted #008080; }
+        .grid { border-collapse: collapse; font: 8.25pt Verdana, sans-serif; table-layout: fixed; }
+        .grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 2px 4px; text-align: center;
+                   font-weight: normal; position: sticky; top: 0; z-index: 3; white-space: normal; line-height: 1.15; overflow: hidden; height: 32px; }
+        .grid td { border: 1px solid #dcdcdc; padding: 1px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 19px; }
+        .grid td.num { text-align: right; }
+        .grid td.ctr { text-align: center; }
+        .grid tbody tr.cur td { background: #cce8ff; }
+        .grid tr.grp td { background: #eef3f6; font-weight: bold; color: #003f4f; }
+        .grid tfoot td { background: #ececec; font-weight: bold; border-top: 2px solid #999; position: sticky; bottom: 0; }
+        .grid a.lnk { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        .grid button.cb { width: 100%; height: 17px; font: 8pt Verdana, sans-serif; padding: 0; cursor: pointer; }
+
+        .status { font: 8.5pt "Segoe UI", sans-serif; color: #333; padding: 2px 6px; min-height: 18px; background: #f4f4f4; border-top: 1px solid #ccc; }
+        .is-hidden { display: none !important; }
+        .is-busy { opacity: .65; cursor: progress !important; }
+        .is-busy::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 4px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; vertical-align: -1px; animation: wrspin .6s linear infinite; }
+        @keyframes wrspin { to { transform: rotate(360deg); } }
+
+        .wr-modal { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 9000; display: flex; align-items: center; justify-content: center; }
+        .wr-dlg { background: #fff; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); font: 9pt "Segoe UI", sans-serif; max-width: 94vw; }
+        .wr-dlg .cap { height: 26px; display: flex; align-items: center; padding: 0 8px; background: #f0f0f0; border-bottom: 1px solid #ccc; }
+        .wr-dlg .msg { padding: 14px 16px; white-space: pre-wrap; max-width: 560px; }
+        .wr-dlg .btns { padding: 8px 12px; background: #f0f0f0; text-align: right; }
+        .wr-dlg .btns button { min-width: 72px; height: 24px; }
+    </style>
+</head>
+<body>
+<div class="wr-form" id="frmEvaulationDetailWagesReports">
+    <div id="panel2">
+        <div class="tool" id="toolStrip3">
+            <button type="button" id="btnNew"><u>R</u>eset</button>
+            <button type="button" id="btnRefresh">Refresh</button>
+            <button type="button" id="btnPrint"><u>P</u>rint</button>
+            <button type="button" id="btnShortCut">ShortCut Keys</button>
+        </div>
+    </div>
+
+    <div id="panel3">
+        <div id="panel5" class="teal"><span>Wages Register</span></div>
+        <fieldset id="groupBox1">
+            <legend>Filters</legend>
+            <span class="g lbl" style="left:4px; top:20px;">Branch Name</span>
+            <div class="g bc" id="CmbBranchName" style="left:83px; top:14px; width:163px;">
+                <input type="text" class="bc-text" id="CmbBranchNameText" autocomplete="off" tabindex="1">
+                <button type="button" class="bc-drop" tabindex="-1"><i class="fa fa-caret-down"></i></button>
+                <div class="bc-pop is-hidden" id="CmbBranchNamePop"></div>
+            </div>
+            <span class="g lbl" style="left:4px; top:49px;">From Date</span>
+            <input type="date" id="txtDateFrom" class="g dt" style="left:83px; top:45px; width:163px;" tabindex="2">
+            <span class="g lbl" style="left:6px; top:78px;">To Date</span>
+            <input type="date" id="txtToDate" class="g dt" style="left:83px; top:74px; width:163px;" tabindex="3">
+
+            <span class="g lbl" style="left:249px; top:20px;">Document Type</span>
+            <select id="cmbDocumentType" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"
+                    style="left:340px; top:14px; width:189px;" tabindex="4"></select>
+            <span class="g lbl" style="left:249px; top:49px;">Wages Type</span>
+            <select id="cmbWagesType" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WagesType"
+                    style="left:340px; top:43px; width:189px;" tabindex="5"></select>
+            <span class="g lbl" style="left:249px; top:78px;">Wages Account</span>
+            <select id="CmbWagesAccount" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WagesAccount"
+                    style="left:340px; top:72px; width:189px;" tabindex="6"></select>
+
+            <span class="g lbl" style="left:532px; top:20px;">Job Order</span>
+            <select id="CmbJobOrderNo" class="g win-combo dtcombo" data-dtcombo="evalJobOrder" data-dtcombo-caption="Job Order No"
+                    style="left:597px; top:14px; width:223px;" tabindex="7"></select>
+            <span class="g lbl" style="left:532px; top:49px;">Contractor</span>
+            <select id="CmbContractorName" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contractor"
+                    style="left:597px; top:43px; width:223px;" tabindex="8"></select>
+            <span class="g lbl" style="left:532px; top:78px;">Stock Party</span>
+            <select id="CmbStockParty" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Stock Party"
+                    style="left:597px; top:72px; width:223px;" tabindex="9"></select>
+
+            <span class="g lbl" style="left:822px; top:20px;">Account Title</span>
+            <select id="CmbWagesVoucherAccount" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Wages Debit Account"
+                    style="left:902px; top:14px; width:199px;" tabindex="10"></select>
+            <span class="g lbl" style="left:822px; top:49px;">Activity</span>
+            <select id="cmbActivity" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Activity"
+                    style="left:902px; top:43px; width:199px;" tabindex="11"></select>
+            <button type="button" id="btnShow" class="g" style="left:1046px; top:72px; width:55px; height:26px;" tabindex="12">Show</button>
+
+            <label class="g rd is-hidden" id="lblrdAll" style="left:1106px; top:13px;"><input type="radio" name="party" id="rdAll" value="all" checked>All</label>
+            <label class="g rd is-hidden" id="lblrdIsCompany" style="left:1106px; top:31px;"><input type="radio" name="party" id="rdIsCompany" value="company">Is Company</label>
+            <label class="g rd is-hidden" id="lblrdIsThirdParty" style="left:1106px; top:50px;"><input type="radio" name="party" id="rdIsThirdParty" value="thirdParty">Is Third Party</label>
+            <label class="g rd is-hidden" id="lblchkBranchWise" style="left:1106px; top:74px;"><input type="checkbox" id="chkBranchWise">Branch Wise</label>
+        </fieldset>
+    </div>
+
+    <div id="panel4" class="teal"></div>
+    <div class="grid-wrap" id="wrapGrid" tabindex="13"><table class="grid" id="DataGridHistory" data-gridbar="frmEvaulationDetailWagesReports:DataGridHistory" data-gridbar-mount="#panel4"></table></div>
+    <div class="status" id="lblStatus"></div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_evaluation_wages.js?v=20260925g}"></script>
+</body>
+</html>

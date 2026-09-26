@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Over Heads - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <style>
+        /* frmProductionOverhead.cs (screen 280, Overhead tab). Designer :1894-3390.
+           Form back colour is SystemColors.Control; the three bars are Color.Teal. */
+        html, body { height: 100%; }
+        body { font-family: Verdana, Tahoma, sans-serif; background-color: #f0f0f0; font-size: 9pt; color: #000; margin: 0; display: flex; flex-direction: column; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .is-hidden { display: none !important; }
+        .oh-page { flex: 1 1 auto; min-height: 0; display: none; flex-direction: column; overflow: auto; padding: 3px; }
+        .oh-page.is-active { display: flex; }
+
+        /* panel69 - Teal, 54 high: toolStrip5 then label44 "Over Heads". */
+        .oh-teal { background: #008080; color: #fff; }
+        .oh-top { min-height: 54px; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; min-height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; flex-wrap: wrap; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font-family: Verdana, sans-serif; font-size: 9.75pt; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; color: #000; }
+        .win-btn-tool:hover:not(:disabled) { background-color: #cce8ff; border-color: #99d1ff; }
+        .win-btn-tool:disabled { color: #999; cursor: default; }
+        .win-tool-sep { width: 1px; height: 20px; background: #b0b0b0; margin: 0 3px; }
+        .oh-title { font-family: Tahoma, sans-serif; font-weight: bold; font-size: 11.75pt; padding: 3px 3px 2px; }
+
+        /* groupBox6 "Main" / groupBox7 "Detail" - Tahoma 9.75 bold captions, 982 wide. */
+        .oh-panel9 { padding: 3px 4px 4px; }
+        .win-group-box { border: 1px solid #b9b9b9; border-radius: 3px; padding: 2px 6px 6px; margin: 0 0 3px; max-width: 982px; min-width: 0; }
+        .win-group-box legend { font-family: Tahoma, sans-serif; font-size: 9.75pt; font-weight: bold; width: auto; padding: 0 3px; margin: 0; border: none; }
+        .win-label { font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-size: 9pt; font-weight: 600; color: #000; white-space: nowrap; margin: 0; }
+        .win-textbox, .win-combo, .win-datepicker { font-family: Verdana, sans-serif; font-size: 9.75pt; height: 23px; border: 1px solid #7a7a7a; padding: 1px 4px; background: #fff; border-radius: 0; width: 100%; }
+        .win-textbox[readonly] { background-color: #f0f0f0; }
+        .win-textbox:disabled, .win-datepicker:disabled { background-color: #f0f0f0; color: #6d6d6d; }
+        #txtDocNoOverHead { background-color: #f5f5f5; }
+        .num { text-align: right; }
+
+        /* groupBox6 rows: label beside field (label56 x=4 / txtDocNo x=84). */
+        .oh-main { display: grid; grid-template-columns: 80px 66px 148px 108px 106px 118px 106px 112px 106px; gap: 3px 4px; align-items: center; }
+        .oh-main .win-label.right { text-align: right; padding-right: 2px; }
+        .oh-main .span2 { grid-column: span 2; }
+
+        /* groupBox7 rows: label over field. */
+        .oh-row { display: flex; gap: 1px; align-items: flex-end; flex-wrap: wrap; }
+        .oh-row + .oh-row { margin-top: 4px; }
+        .oh-f { display: flex; flex-direction: column; min-width: 0; }
+        .oh-f > .win-label, .oh-f > .oh-radios { height: 18px; display: flex; align-items: flex-end; }
+        .oh-radios { gap: 10px; font-family: Tahoma, sans-serif; font-size: 9.75pt; font-weight: bold; white-space: nowrap; }
+        .oh-radios label { margin: 0; display: inline-flex; gap: 3px; align-items: center; cursor: pointer; }
+        .win-btn-action { background-color: #008080; color: #fff; font-family: Verdana, sans-serif; font-size: 9.75pt; font-weight: bold; border: 1px solid #006666; height: 26px; padding: 0 8px; cursor: pointer; border-radius: 0; }
+        .win-btn-action:hover:not(:disabled) { background-color: #006a6a; }
+        .win-btn-action:disabled { background: #9e9e9e; border-color: #7a7a7a; cursor: default; }
+
+        /* panel25 / panel8 / panel27 - Teal bars over the grids (Tahoma 10 bold, white). */
+        .oh-bar { background: #008080; color: #fff; min-height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 10pt; gap: 8px; }
+        .oh-bar .big { font-size: 11.75pt; }
+        .oh-bar button:not(.gb-gear) { background: #fff; border: 1px solid #999; font-size: 8pt; padding: 1px 6px; cursor: pointer; color: #000; }
+
+        /* Janus GridEX, VisualStyle Office2007-ish; Verdana 8.25. Full width, scroll inside. */
+        .win-grid-container { border: 1px solid #7a9a9e; background: #fff; width: 100%; display: flex; flex-direction: column; min-height: 0; }
+        .win-grid-scroll { overflow: auto; max-width: 100%; flex: 1 1 auto; min-height: 120px; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8.25pt; background: #fff; }
+        .win-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 3px 5px; text-align: center; position: sticky; top: 0; z-index: 5; white-space: nowrap; font-weight: normal; }
+        .win-grid td { border: 1px solid #dcdcdc; padding: 2px 5px; white-space: nowrap; height: 22px; }
+        .win-grid td.num { text-align: right; }
+        .win-grid tbody tr { cursor: default; }
+        .win-grid tbody tr.is-current td { background: #cce8ff; }
+        .win-grid tfoot td { background: #ececec; font-weight: bold; border-top: 2px solid #999; position: sticky; bottom: 0; }
+        .win-grid .cellbtn { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8pt; padding: 0 6px; cursor: pointer; }
+        .win-grid td input.cell-edit { width: 100%; min-width: 120px; border: 1px solid #c8c8c8; font-family: Verdana, sans-serif; font-size: 8.25pt; height: 19px; padding: 0 3px; }
+        .win-grid-nav { font-size: 8pt; padding: 1px 6px; background: #f4f4f4; border-top: 1px solid #ccc; }
+        .win-doc-link { color: #0645ad; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .win-grid-container.is-fullscreen { position: fixed; inset: 8px; z-index: 9000; }
+        #boxDetail { flex: 1 1 auto; min-height: 220px; }
+        #boxHistory { flex: 0 0 auto; }
+        #boxHistory .win-grid-scroll { height: 322px; flex: none; }
+        #boxHistoryDetail { flex: 1 1 auto; min-height: 200px; }
+
+        /* tabControl1 - Alignment Bottom; History on the right of the footer. */
+        .oh-footer { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; background: #e9e9e9; border-top: 1px solid #999; padding: 0 4px; height: 28px; }
+        .oh-tab { background: #e4e4e4; border: 1px solid #999; border-top: none; padding: 3px 14px; font-family: Verdana, sans-serif; font-size: 9.75pt; cursor: pointer; border-radius: 0 0 3px 3px; }
+        .oh-tab.is-active { background: #fff; font-weight: bold; }
+
+        .is-busy { opacity: .65; cursor: progress !important; pointer-events: none; }
+        .is-busy::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; vertical-align: -1px; animation: cxspin .6s linear infinite; }
+        @keyframes cxspin { to { transform: rotate(360deg); } }
+
+        /* Modal dialogs: GrdPopUpToReturndt (maximised) and FormulasPopUp (576 x 571). */
+        .oh-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 9500; display: none; }
+        .oh-modal.is-open { display: block; }
+        .oh-dialog { position: absolute; background: #f0f0f0; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); display: flex; flex-direction: column; }
+        .oh-dialog.max { inset: 6px; }
+        .oh-dialog.formulas { top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(576px, 96vw); height: min(571px, 92vh); }
+        .oh-dialog-title { background: #fff; border-bottom: 1px solid #999; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; font-family: "Segoe UI", sans-serif; font-size: 9pt; }
+        .oh-dialog-title button { background: none; border: none; font-size: 16px; cursor: pointer; }
+        .oh-dialog .win-grid-container { flex: 1 1 auto; border: none; }
+        .oh-formulas-head { background: #008080; color: #fff; font-family: Tahoma, sans-serif; font-size: 12pt; padding: 6px 8px; }
+        .oh-dialog .win-grid td.wrap { white-space: normal; }
+
+        @media (max-width: 1000px) {
+            .oh-main { grid-template-columns: 110px minmax(0, 1fr) minmax(0, 1fr); }
+            .oh-main .win-label.right { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ======================================================================= tabPage2 "Form" -->
+<div class="oh-page is-active" id="pageForm">
+    <!-- panel69 (Teal): toolStrip5 + label44 -->
+    <div class="oh-teal oh-top">
+        <div class="win-tool-strip" id="toolStrip5">
+            <button type="button" id="btnNewOverHead" class="win-btn-tool" title="Ctrl+N"><i class="fa fa-plus-circle"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshOverHead" class="win-btn-tool" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" id="btnSaveOverHead" class="win-btn-tool" title="Ctrl+S"><span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdateOverHead" class="win-btn-tool is-hidden" title="Ctrl+U"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <span class="win-tool-sep"></span>
+            <button type="button" id="btnPrintOverHead" class="win-btn-tool"><i class="fa fa-print"></i> <span><u>P</u>rint-606</span></button>
+            <button type="button" id="btnVoucherOH" class="win-btn-tool"><i class="fa fa-print"></i> 118-Voucher</button>
+            <button type="button" id="BtnLoadFohOverHeads" class="win-btn-tool"><i class="fa fa-download"></i> FOH Expenses</button>
+            <button type="button" id="btnOverHeadFormulas" class="win-btn-tool"><i class="fa fa-calculator"></i> Formulas</button>
+        </div>
+        <div class="oh-title">Over Heads</div>
+    </div>
+
+    <!-- panel9: groupBox6 "Main" and groupBox7 "Detail" -->
+    <div class="oh-panel9">
+        <fieldset class="win-group-box">
+            <legend>Main</legend>
+            <div class="oh-main">
+                <label class="win-label" for="txtDocNoOverHead">Doc No</label>
+                <input type="text" id="txtDocNoOverHead" class="win-textbox" readonly/>
+                <input type="date" id="txtDocDateOverHead" class="win-datepicker" title="dd-MMM-yy"/>
+                <label class="win-label right" for="txtInputQtyTotalOH">Total InPut Qty</label>
+                <input type="text" id="txtInputQtyTotalOH" class="win-textbox num" readonly tabindex="-1"/>
+                <label class="win-label right" for="txtOutputQtyTotalOH">Total OutPut Qty</label>
+                <input type="text" id="txtOutputQtyTotalOH" class="win-textbox num" readonly tabindex="-1"/>
+                <label class="win-label right" for="txtfinishQtyOh">Total Finish Qty</label>
+                <input type="text" id="txtfinishQtyOh" class="win-textbox num" readonly tabindex="-1"/>
+
+                <label class="win-label" for="cmbJobOrderOverHead">Job Order No</label>
+                <div class="span2"><select id="cmbJobOrderOverHead" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo"></select></div>
+                <label class="win-label right" for="txtInputWeightTotalOH">Total InPut Weight</label>
+                <input type="text" id="txtInputWeightTotalOH" class="win-textbox num" readonly tabindex="-1"/>
+                <label class="win-label right" for="txtOutputWeightTotalOH">Total OutPut Weight</label>
+                <input type="text" id="txtOutputWeightTotalOH" class="win-textbox num" readonly tabindex="-1"/>
+                <label class="win-label right" for="txtfinishWeightOh">Total Finish Weight</label>
+                <input type="text" id="txtfinishWeightOh" class="win-textbox num" readonly tabindex="-1"/>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box">
+            <legend>Detail</legend>
+            <div class="oh-row">
+                <div class="oh-f" style="flex:0 0 218px;"><label class="win-label" for="CmbPlantFeederOverHead">Plant Name</label>
+                    <select id="CmbPlantFeederOverHead" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name"></select></div>
+                <div class="oh-f" style="flex:0 0 209px;"><label class="win-label" for="cmbChargestypeOverheads">Charges Type</label>
+                    <select id="cmbChargestypeOverheads" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Charges Type"></select></div>
+                <div class="oh-f" style="flex:0 0 228px;"><label class="win-label" for="cmbChartofAccountOverHead">OverHead Account (Cr)</label>
+                    <select id="cmbChartofAccountOverHead" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Account Title"></select></div>
+                <div class="oh-f" style="flex:0 0 227px;">
+                    <div class="oh-radios">
+                        <label><input type="radio" name="ohItemSide" id="RadOutputItemOH" value="112" checked> Output</label>
+                        <label><input type="radio" name="ohItemSide" id="RadInputItemOH" value="80"> Input Item Name</label>
+                    </div>
+                    <select id="CmbBrandNameOverHead" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName"></select></div>
+                <div class="oh-f" style="flex:0 0 82px;"><label class="win-label" for="CmbBrandUomOverHead">Item Uom</label>
+                    <select id="CmbBrandUomOverHead" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackUom"></select></div>
+            </div>
+            <div class="oh-row">
+                <div class="oh-f" style="flex:0 0 70px;"><label class="win-label" for="txtItemQtyOverHead">Item Qty</label>
+                    <input type="text" id="txtItemQtyOverHead" class="win-textbox"/></div>
+                <div class="oh-f" style="flex:0 0 75px;"><label class="win-label" for="txtItemRateOverHeads">Rate</label>
+                    <input type="text" id="txtItemRateOverHeads" class="win-textbox"/></div>
+                <div class="oh-f" style="flex:0 0 69px;"><label class="win-label" for="cmbRateUomOverHeads">RateUom</label>
+                    <select id="cmbRateUomOverHeads" class="win-combo dtcombo" data-dtcombo="ohRateUom" data-dtcombo-caption="Rate UOM"></select></div>
+                <div class="oh-f" style="flex:0 0 113px;"><label class="win-label" for="txtExpAmountOverHead">Amount</label>
+                    <input type="text" id="txtExpAmountOverHead" class="win-textbox"/></div>
+                <div class="oh-f" style="flex:0 1 500px;"><label class="win-label" for="txtLedgerRemarksOverHead">Ledger Remarks</label>
+                    <input type="text" id="txtLedgerRemarksOverHead" class="win-textbox" maxlength="250"/></div>
+                <div class="oh-f" style="flex-direction:row; gap:2px; margin-left:2px;">
+                    <button type="button" id="btnAddOH" class="win-btn-action" style="width:38px;">+</button>
+                    <button type="button" id="btnUpdateOH" class="win-btn-action is-hidden" style="width:70px;">Update</button>
+                    <button type="button" id="BtnCancelOH" class="win-btn-action is-hidden" style="width:67px;">Cancel</button>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- panel25 "Over Heads Detail" + panel31 grdDetailOverhead (Dock Fill) -->
+    <div class="win-grid-container" id="boxDetail">
+        <div class="oh-bar"><span>Over Heads Detail</span>
+            <span style="display:inline-flex;gap:3px;align-items:center;"><button type="button" data-full="boxDetail" title="Full screen"><i class="fa fa-arrows-alt"></i></button><span id="gbOhDetail"></span></span></div>
+        <div class="win-grid-scroll"><table class="win-grid" id="grdDetailOverhead" data-gridbar="frmProductionOverhead:grdDetailOverhead" data-gridbar-mount="#gbOhDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="win-grid-nav" id="navDetail"></div>
+    </div>
+</div>
+
+<!-- ==================================================================== tabPage3 "History" -->
+<div class="oh-page" id="pageHistory">
+    <!-- panel8: "Over Heads History" + "(Job Order Wise)" -->
+    <div class="win-grid-container" id="boxHistory">
+        <div class="oh-bar"><span><span class="big">Over Heads History</span> <span style="margin-left:6px;">(Job Order Wise)</span></span>
+            <span style="display:inline-flex;gap:3px;align-items:center;"><button type="button" data-full="boxHistory" title="Full screen"><i class="fa fa-arrows-alt"></i></button><span id="gbOhHistory"></span></span></div>
+        <div class="win-grid-scroll"><table class="win-grid" id="grdOverHeadHistory" data-gridbar="frmProductionOverhead:grdOverHeadHistory" data-gridbar-mount="#gbOhHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="win-grid-nav" id="navHistory"></div>
+    </div>
+    <!-- panel27: "Selected Job Order Detail" + grddetailOhHistory -->
+    <div class="win-grid-container" id="boxHistoryDetail" style="margin-top:0;">
+        <div class="oh-bar"><span>Selected Job Order Detail</span>
+            <span style="display:inline-flex;gap:3px;align-items:center;"><button type="button" data-full="boxHistoryDetail" title="Full screen"><i class="fa fa-arrows-alt"></i></button><span id="gbOhHistoryDetail"></span></span></div>
+        <div class="win-grid-scroll"><table class="win-grid" id="grddetailOhHistory" data-gridbar="frmProductionOverhead:grddetailOhHistory" data-gridbar-mount="#gbOhHistoryDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="win-grid-nav" id="navHistoryDetail"></div>
+    </div>
+</div>
+
+<!-- tabControl1 - Alignment Bottom -->
+<div class="oh-footer">
+    <div class="oh-tab is-active" id="tabForm">Form</div>
+    <span id="lblStatus" style="font-size:8.5pt;"></span>
+    <div class="oh-tab" id="tabHistory"><i class="fa fa-history"></i> History</div>
+</div>
+
+<!-- GrdPopUpToReturndt - "Please double-click any row to Load Data." (maximised, modal) -->
+<div class="oh-modal" id="dlgFoh">
+    <div class="oh-dialog max">
+        <div class="oh-dialog-title"><span>Please double-click any row to Load Data.</span>
+            <button type="button" data-close="dlgFoh" title="Esc">&times;</button></div>
+        <div class="win-grid-container">
+            <div class="win-grid-scroll"><table class="win-grid" id="grdFoh"><thead></thead><tbody></tbody></table></div>
+        </div>
+    </div>
+</div>
+
+<!-- FormulasPopUp -->
+<div class="oh-modal" id="dlgFormulas">
+    <div class="oh-dialog formulas">
+        <div class="oh-dialog-title"><span>FormulasPopUp</span>
+            <button type="button" data-close="dlgFormulas">&times;</button></div>
+        <div class="oh-formulas-head">Formulas</div>
+        <div class="win-grid-container">
+            <div class="win-grid-scroll"><table class="win-grid" id="grdFormulas"><thead></thead><tbody></tbody></table></div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_p280_overhead.js?v=20260925g}"></script>
+</body>
+</html>

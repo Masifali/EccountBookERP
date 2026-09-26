@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Adjustment Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* StockAdjustmentRegister designer geometry, 1:1 in px (ClientSize 964 x 661, opened Maximized).
+           Docked panels stretch with the window; every control keeps its designer Location/Size. */
+        body { background: #fff; padding-bottom: 36px; margin: 0; }
+        .rb-scroll { overflow-x: auto; }
+        .rb-root { min-width: 964px; position: relative; font-family: Verdana, sans-serif; font-size: 13px; }
+        .rb-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .rb-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; }
+        .rb-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .rb-dt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .rb-show { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; cursor: pointer; padding: 0; }
+        .rb-teal { background: #008080; position: relative; }
+        .rb-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .rb-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; }
+        .rb-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; }
+        .rb-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .rb-gear { width: 40px; height: 25px; background: transparent; color: #fff; border: 1px solid transparent; font-size: 14px; }
+        .rb-grid-host { height: calc(100vh - 238px); min-height: 250px; overflow: auto; background: #fff; }
+        .rb-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .rb-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; white-space: nowrap; }
+        .rb-grid-host .win-grid td { border: 1px solid #d5e1f0; white-space: nowrap; }
+        .rb-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .win-grid td.rb-center { text-align: center; }
+        .win-grid .rb-frozen { position: sticky; left: 0; z-index: 1; background: #fff; }
+        .win-grid th.rb-frozen { z-index: 2; background: #d4e6fb; }
+        .win-grid tfoot tr.rb-total td { font-weight: bold; background: #f0f0f0; border-top: 2px solid #999; }
+    </style>
+</head>
+<body>
+<!-- Screen 454 "Stock Adjustment Report", StockAdjustmentRegister.cs (ScreenName StockAdjustmentRegister). -->
+<div class="rb-scroll">
+<div class="rb-root">
+
+    <!-- panel2 (0,0) 964 x 29 / toolStrip3 964 x 27: btnNew 59, toolStripButton1 80, btn410Register 115 -->
+    <div style="height:29px;">
+        <div class="rb-strip">
+            <button type="button" class="rb-tool" id="btnNew" style="width:59px" onclick="RptSA.reset()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            <button type="button" class="rb-tool" id="toolStripButton1" style="width:80px" onclick="RptSA.refresh()"><i class="fa fa-refresh" style="color:#1565c0"></i> Refresh</button>
+            <button type="button" class="rb-tool" id="btn410Register" style="width:115px" onclick="RptSA.printRegister()"><i class="fa fa-print"></i> 410-Register</button>
+            <a href="/modules" class="rb-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+    </div>
+
+    <!-- panel3 (0,29) 964 x 32 teal; label23 (5,6) Tahoma 12pt bold -->
+    <div class="rb-teal" style="height:32px;">
+        <span class="rb-teal-title" style="left:5px;top:6px;">Stock Adjustment Register</span>
+    </div>
+
+    <!-- panel4 (0,61) 964 x 109, white, Verdana 9.75pt -->
+    <div style="position:relative;height:109px;background:#fff;">
+        <label class="rb-abs rb-lbl" for="datFromDate" style="left:13px;top:6px;">Date From</label>
+        <input type="date" id="datFromDate" class="rb-abs rb-dt" style="left:16px;top:29px;width:101px;">
+        <label class="rb-abs rb-lbl" for="datToDate" style="left:120px;top:6px;">Date To</label>
+        <input type="date" id="datToDate" class="rb-abs rb-dt" style="left:120px;top:29px;width:101px;">
+        <label class="rb-abs rb-lbl" for="CmbItem" style="left:220px;top:6px;">Item Name</label>
+        <select id="CmbItem" class="rb-abs rb-cmb win-combo" style="left:224px;top:26px;width:258px;"></select>
+        <label class="rb-abs rb-lbl" for="CmbCropYear" style="left:480px;top:6px;">Crop Year</label>
+        <select id="CmbCropYear" class="rb-abs rb-cmb win-combo" style="left:484px;top:26px;width:145px;"></select>
+        <label class="rb-abs rb-lbl" for="CmbJobLotName" style="left:630px;top:6px;">JobLot</label>
+        <select id="CmbJobLotName" class="rb-abs rb-cmb win-combo" style="left:633px;top:26px;width:145px;"></select>
+
+        <label class="rb-abs rb-lbl" for="CmbWarehouseName" style="left:13px;top:55px;">Warehouse</label>
+        <select id="CmbWarehouseName" class="rb-abs rb-cmb win-combo" style="left:16px;top:76px;width:195px;"></select>
+        <label class="rb-abs rb-lbl" for="CmbEntryType" style="left:212px;top:55px;">EntryType</label>
+        <select id="CmbEntryType" class="rb-abs rb-cmb win-combo" style="left:215px;top:76px;width:195px;"></select>
+        <button type="button" id="btnshow" class="rb-abs rb-show" style="left:413px;top:76px;width:58px;height:26px;" onclick="RptSA.show()">Show</button>
+    </div>
+
+    <!-- panel5 (0,170) fill: panel6 teal 32 "History" + ctrlGrdBar2 (916,3) 40 x 25; DataGridHistory fill -->
+    <div id="historySection">
+        <div class="rb-teal" style="height:32px;">
+            <span class="rb-teal-title" style="left:5px;top:6px;">History</span>
+            <button type="button" class="rb-abs rb-gear" id="ctrlGrdBar2" title="Grid layout / print / export options are not ported" style="right:8px;top:3px;" disabled><i class="fa fa-cog"></i></button>
+        </div>
+        <div class="rb-grid-host win-grid-scroll" style="max-height:none;">
+            <table class="win-grid" id="DataGridHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Footer: right-aligned History button (scrolls to the history grid). -->
+<div class="cx-footer">
+    <span class="cx-footer-left"></span>
+    <button type="button" class="win-btn-action cx-footer-history" onclick="RptSA.gotoHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_rpt_b_kit.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_store_rpt_stock_adjustment_register.js?v=20260925a}"></script>
+</body>
+</html>

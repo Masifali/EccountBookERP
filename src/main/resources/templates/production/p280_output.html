@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Production Output - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <!-- frmProductionOutput.cs (screen 280, Output tab, DocumentTypeId 112). Every position and
+         size below is InitializeComponent's; the form sets AutoScrollMinSize 1280 x 820 (:405), so
+         the page scrolls instead of reflowing, exactly as the desktop form does. -->
+    <style>
+        html, body { margin: 0; padding: 0; }
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background: #f0f0f0; font-size: 11px; color: #000; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .po-root { min-width: 1180px; display: flex; flex-direction: column; min-height: 100vh; }
+        .po-view { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+        .is-hidden { display: none !important; }
+
+        /* ToolStrip */
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; height: 31px; display: flex; align-items: center; padding: 0 4px; gap: 2px; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font: 9pt "Segoe UI", sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; color: #000; }
+        .win-btn-tool:hover:not(:disabled) { background-color: #cce8ff; border-color: #99d1ff; }
+        .win-btn-tool:disabled { color: #999; cursor: default; }
+        .win-sep { width: 1px; height: 20px; background: #aaa; margin: 0 3px; }
+
+        /* Teal title panels (panel64, panel22, panel84, panel85) */
+        .po-teal { background: #008080; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+        .po-teal .po-caption { font: bold 12pt Tahoma, sans-serif; }
+        .po-teal .po-caption-sm { font: bold 11.75pt Tahoma, sans-serif; }
+        .po-teal .po-caption-xs { font: bold 10pt Tahoma, sans-serif; }
+        .po-gridbar { display: flex; gap: 3px; align-items: center; }
+        .po-gridbar > button { background: #fff; border: 1px solid #999; font-size: 8pt; padding: 1px 5px; cursor: pointer; color: #000; height: 20px; }
+        .po-gridbar > button:disabled { color: #aaa; cursor: default; }
+
+        /* panel30 - absolutely laid out, as the designer lays it out */
+        .po-panel30 { position: relative; height: 287px; width: 1168px; flex: 0 0 auto; }
+        /* A GroupBox's Location is the top of its caption; the frame is drawn half a line lower. */
+        .gb { position: absolute; margin: 0; padding: 0; background: #f0f0f0; }
+        .gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #b0b0b0; border-radius: 3px; pointer-events: none; }
+        .gb > .gb-title { position: absolute; left: 6px; top: 0; z-index: 1; background: #f0f0f0; font: bold 9.75pt Tahoma, sans-serif; padding: 0 3px; line-height: 16px; }
+        .gb.gb-segoe > .gb-title { font: bold 9pt "Segoe UI", sans-serif; }
+        .gb .in { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+        .lbl { position: absolute; font: 600 9pt "Segoe UI Semibold", "Segoe UI", sans-serif; white-space: pre; line-height: 15px; }
+        .ctl { position: absolute; font: 9.75pt Verdana, sans-serif; height: 23px; border: 1px solid #7a9a9e; padding: 1px 3px; background: #fff; border-radius: 0; }
+        .ctl[readonly] { background: #f0f0f0; }
+        .ctl.ro-white[readonly] { background: #fff; }
+        .ctl:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .num { text-align: right; }
+        select.ctl { height: 26px; }
+        .dtcombo-wrap.ctl { padding: 0; border: 0; background: transparent; height: 26px; }
+        .dtcombo-wrap.ctl .dtcombo-input { height: 26px; font: 9.75pt Verdana, sans-serif; }
+        .btn-teal { position: absolute; background: #008080; color: #fff; border: 1px solid #005f5f; font: bold 9pt Verdana, sans-serif; cursor: pointer; border-radius: 2px; }
+        .btn-teal:disabled { background: #9e9e9e; border-color: #7a7a7a; cursor: default; }
+        .btn-plus { font: bold 9.75pt Verdana, sans-serif; }
+        .pic-reset { position: absolute; border: 1px solid #999; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #b00; }
+
+        /* Grids */
+        .win-grid-container { border: 1px solid #7a9a9e; background: #fff; width: 100%; display: flex; flex-direction: column; min-height: 0; }
+        .win-grid-scroll { overflow: auto; flex: 1 1 auto; min-height: 120px; }
+        .win-grid { width: 100%; border-collapse: collapse; font: 8.25pt Verdana, sans-serif; background: #fff; }
+        .win-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 3px 5px; text-align: left; position: sticky; top: 0; z-index: 3; white-space: nowrap; font-weight: normal; }
+        .win-grid td { border: 1px solid #dcdcdc; padding: 2px 5px; white-space: nowrap; }
+        .win-grid td.num, .win-grid th.num { text-align: right; }
+        .win-grid tr.alt td { background: #f5f9fa; }
+        .win-grid tfoot td { background: #ececec; font-weight: bold; border-top: 2px solid #999; position: sticky; bottom: 0; }
+        .win-grid tbody tr.is-current td { background: #cce8ff; }
+        .win-grid tr.filter-row td { padding: 1px; background: #fafafa; }
+        .win-grid tr.filter-row input { width: 100%; font-size: 8pt; border: 1px solid #ccc; padding: 1px 3px; }
+        .win-grid .cellbtn { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8pt; padding: 0 6px; cursor: pointer; }
+        .win-grid td.frozen, .win-grid th.frozen { position: sticky; z-index: 2; background: #fff; }
+        .win-grid th.frozen { z-index: 4; background: #eee; }
+        .doc-link { color: #0645ad; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .fullscreen { position: fixed !important; inset: 6px; z-index: 9000; background: #fff; }
+
+        /* History tab */
+        .po-hist-filter { position: relative; height: 50px; width: 1170px; }
+        .po-hist-filter .gb { left: 6px; top: 2px; width: 1038px; height: 46px; }
+
+        /* Footer: tabControl3 with Alignment=Bottom; History on the right, per the page contract. */
+        .po-footer { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center; background: #e9e9e9; border-top: 1px solid #999; padding: 0 4px; height: 26px; z-index: 20; }
+        .po-tab { background: #e4e4e4; border: 1px solid #999; border-top: none; padding: 3px 14px; font-size: 9pt; cursor: pointer; border-radius: 0 0 3px 3px; }
+        .po-tab.is-active { background: #fff; font-weight: 700; }
+
+        /* busy contract */
+        .is-busy { opacity: .65; cursor: progress !important; pointer-events: none; }
+        .is-busy::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; vertical-align: -1px; animation: cxspin .6s linear infinite; }
+        @keyframes cxspin { to { transform: rotate(360deg); } }
+
+        /* Modal dialogs (ShowDialog) */
+        .po-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 8000; display: none; align-items: flex-start; justify-content: center; padding-top: 18px; }
+        .po-modal.is-open { display: flex; }
+        .po-dialog { background: #f0f0f0; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); display: flex; flex-direction: column; max-width: calc(100vw - 16px); max-height: calc(100vh - 30px); }
+        .po-dialog-title { background: #fff; border-bottom: 1px solid #aaa; display: flex; justify-content: space-between; align-items: center; padding: 3px 6px; font: 9pt "Segoe UI", sans-serif; }
+        .po-dialog-title button { border: 0; background: transparent; font-size: 14px; cursor: pointer; }
+        .po-dialog-body { overflow: auto; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+        .po-filter-row { position: relative; background: #fff; flex: 0 0 auto; }
+        .po-msg { font: 9pt "Segoe UI", sans-serif; padding: 2px 6px; color: #333; }
+        .po-shortcuts table { border-collapse: collapse; font: 9pt "Segoe UI", sans-serif; }
+        .po-shortcuts td, .po-shortcuts th { border: 1px solid #ccc; padding: 3px 8px; }
+    </style>
+</head>
+<body>
+<div class="po-root">
+
+<!-- ======================================================================= tabPage5 "Form" -->
+<div class="po-view" id="viewForm">
+    <!-- panel4 / toolStrip6 (:5522): New, Refresh, Save, Update, |, 601-Print, 118-Voucher,
+         Pending For Rates, Daily Plant Consumed Hours. -->
+    <div class="win-tool-strip" id="toolStrip6">
+        <button type="button" id="btnNewOutPut" class="win-btn-tool" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefreshOutPut" class="win-btn-tool" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" id="btnSaveOutPut" class="win-btn-tool" title="Ctrl+S"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdateOutPut" class="win-btn-tool is-hidden" title="Ctrl+U"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <span class="win-sep"></span>
+        <button type="button" id="btnPrintOutPut" class="win-btn-tool"><i class="fa fa-print"></i> 601-Print</button>
+        <button type="button" id="btnVoucherOutPut" class="win-btn-tool"><i class="fa fa-print"></i> 118-Voucher</button>
+        <button type="button" id="btnPenForRateEntries" class="win-btn-tool"><i class="fa fa-list"></i> Pending For Rates </button>
+        <button type="button" id="btnDailyPlantConsumedHours" class="win-btn-tool"><i class="fa fa-clock-o"></i> Daily Plant Consumed Hours</button>
+    </div>
+
+    <!-- panel30 (Dock Top, 1168 x 287) -->
+    <div class="po-panel30">
+        <!-- panel64: title + chkStockHoldForLabApproval (Visible=false in the designer; nothing shows it). -->
+        <div class="po-teal" style="position:absolute; left:0; top:0; width:1168px; height:29px;">
+            <span class="po-caption" style="padding-left:2px;">Production  Output         </span>
+            <label id="wrapStockHold" class="is-hidden" style="font:9pt 'Segoe UI'; margin:0 2px 0 0;"><input type="checkbox" id="chkStockHoldForLabApproval"> Stock Hold For Lab Approval</label>
+        </div>
+
+        <!-- groupBox3 "Main" (4,30) 871 x 126 -->
+        <div class="gb" style="left:4px; top:30px; width:871px; height:126px;">
+            <span class="gb-title">Main</span>
+            <div class="in">
+                <span class="lbl" style="left:6px; top:23px;">Doc No,Date</span>
+                <input type="text" id="txtDocNoOutPut" class="ctl ro-white" readonly style="left:82px; top:19px; width:79px;" tabindex="1">
+                <input type="date" id="DocDateOutPut" class="ctl" style="left:162px; top:19px; width:122px; font-size:8.5pt;" tabindex="2">
+                <span class="lbl" style="left:6px; top:50px;">Job Order No</span>
+                <select id="CmbJobOrderNoOutput" class="ctl win-combo dtcombo" data-dtcombo="p280JobOrder" data-dtcombo-caption="Job Order No" style="position:absolute; left:82px; top:44px; width:202px;" tabindex="3"></select>
+                <span class="lbl" style="left:6px; top:77px;">Plant Name</span>
+                <select id="CmbPlantFeederOutput" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name" style="position:absolute; left:82px; top:71px; width:202px;" tabindex="4"></select>
+                <span class="lbl" style="left:6px; top:102px; background:#fff;">Remarks</span>
+                <input type="text" id="txtRemarksHeaderOutPut" class="ctl" style="left:82px; top:98px; width:785px;" tabindex="5" maxlength="200">
+
+                <span class="lbl" style="left:287px; top:23px;">Export Contract</span>
+                <select id="CmbExportContractSchedule" class="ctl win-combo dtcombo" data-dtcombo="p280Contract" data-dtcombo-caption="Contract Schedule" style="position:absolute; left:378px; top:17px; width:180px;" tabindex="6"></select>
+                <span class="lbl" style="left:287px; top:50px;">WIP Account</span>
+                <input type="text" id="txtWIPAccount" class="ctl" readonly style="left:378px; top:46px; width:180px;" tabindex="-1">
+                <span class="lbl" style="left:287px; top:77px;">WIP Item</span>
+                <input type="text" id="txtWIPItem" class="ctl" readonly style="left:378px; top:73px; width:180px;" tabindex="-1">
+
+                <span class="lbl" style="left:562px; top:23px;">In Qty</span>
+                <input type="text" id="txtInPutTotalQty" class="ctl num" readonly style="left:612px; top:19px; width:80px;" tabindex="-1">
+                <span class="lbl" style="left:562px; top:50px;">Out Qty</span>
+                <input type="text" id="txtOutQtyTotal" class="ctl num" readonly style="left:612px; top:46px; width:80px;" tabindex="-1">
+                <span class="lbl" style="left:562px; top:77px;">Bal Qty</span>
+                <input type="text" id="txtBalQtyTotal" class="ctl num" readonly style="left:612px; top:73px; width:80px;" tabindex="-1">
+                <span class="lbl" style="left:696px; top:23px;">In Weight</span>
+                <input type="text" id="txtInPutTotalWeight" class="ctl num" readonly style="left:767px; top:19px; width:100px;" tabindex="-1">
+                <span class="lbl" style="left:696px; top:50px;">Out Weight</span>
+                <input type="text" id="txtOutWeightTotal" class="ctl num" readonly style="left:767px; top:46px; width:100px;" tabindex="-1">
+                <span class="lbl" style="left:696px; top:77px;">Bal Weight</span>
+                <input type="text" id="txtBalWeightTotal" class="ctl num" readonly style="left:767px; top:73px; width:100px;" tabindex="-1">
+            </div>
+        </div>
+
+        <!-- groupBox1 "Link Any Move Order Here" (876,30) 290 x 126 -->
+        <div class="gb gb-segoe" style="left:876px; top:30px; width:290px; height:126px;">
+            <span class="gb-title">Link Any Move Order Here</span>
+            <div class="in">
+                <span class="lbl" style="left:3px; top:22px; width:58px;">W.B
+Ticket No</span>
+                <span id="BtnResetMoveOrder" class="pic-reset" style="left:69px; top:30px; width:28px; height:22px;" title="Clear the linked move order"><i class="fa fa-times"></i></span>
+                <select id="CmbMoveOrderTicket" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Ticket No" disabled style="position:absolute; left:3px; top:54px; width:94px;"></select>
+                <button type="button" id="BtnLoadMoveOrder" class="btn-teal" style="left:3px; top:80px; width:94px; height:39px;">Load Move Order</button>
+                <span class="lbl" style="left:105px; top:23px;">Net Weight</span>
+                <input type="text" id="txtMoveOrderNetWeight" class="ctl num" readonly value="0" style="left:176px; top:18px; width:110px;" tabindex="-1">
+                <span class="lbl" style="left:102px; top:51px;">Used Weight</span>
+                <input type="text" id="txtMoveOrderAlreadUsedWeight" class="ctl num" readonly value="0" style="left:176px; top:46px; width:110px;" tabindex="-1">
+                <span class="lbl" style="left:102px; top:79px;">Bal Weight</span>
+                <input type="text" id="txtMoveOrderBalWeight" class="ctl num" readonly value="0" style="left:176px; top:74px; width:110px;" tabindex="-1">
+            </div>
+        </div>
+
+        <!-- groupBox4 "Detail" (4,158) 1028 x 125 -->
+        <div class="gb" style="left:4px; top:158px; width:1028px; height:125px;">
+            <span class="gb-title">Detail</span>
+            <div class="in">
+                <span class="lbl" style="left:4px; top:17px;">Entry Type</span>
+                <select id="CmbEntryType" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Entry Type" style="position:absolute; left:4px; top:36px; width:115px;" tabindex="10"></select>
+                <span class="lbl" style="left:120px; top:17px;">WareHouse</span>
+                <select id="CmbWarehouseOutput" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Issue From " style="position:absolute; left:120px; top:36px; width:160px;" tabindex="11"></select>
+                <span class="lbl" style="left:281px; top:17px;">Item Name</span>
+                <select id="CmbItemOutput" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName" style="position:absolute; left:281px; top:36px; width:220px;" tabindex="12"></select>
+                <span class="lbl" style="left:502px; top:17px;">Pack UOM</span>
+                <select id="CmbUomOutPut" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" style="position:absolute; left:502px; top:36px; width:81px;" tabindex="13"></select>
+                <span class="lbl" style="left:584px; top:17px;">Crop Year</span>
+                <select id="CmbCropYearOutPut" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year" style="position:absolute; left:584px; top:36px; width:92px;" tabindex="14"></select>
+                <span class="lbl" style="left:677px; top:17px;">Job Lot</span>
+                <select id="CmbLotOutPut" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot Description" style="position:absolute; left:677px; top:36px; width:159px;" tabindex="15"></select>
+                <span class="lbl" style="left:837px; top:17px;">Pack Type</span>
+                <select id="CmbPackTypeOutPut" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Packing Type" style="position:absolute; left:837px; top:36px; width:105px;" tabindex="16"></select>
+                <span class="lbl" style="left:943px; top:17px;">Item Qty</span>
+                <input type="text" id="txtQtyOutPut" class="ctl num" data-guard="decimal" style="left:943px; top:38px; width:79px;" tabindex="17">
+
+                <span class="lbl" style="left:4px; top:75px;">Gross Weight</span>
+                <input type="text" id="txtGrossWeight" class="ctl num" data-guard="decimal" data-tag="GrossWeight" style="left:4px; top:95px; width:85px;" tabindex="18">
+                <span class="lbl" style="left:90px; top:75px;">EbUnit</span>
+                <input type="text" id="txtEbUnit" class="ctl num" data-guard="decimal" data-tag="EbUnit" value="0" style="left:90px; top:95px; width:70px;" tabindex="19">
+                <span class="lbl" style="left:161px; top:75px;">EbTotal</span>
+                <input type="text" id="txtEbTotal" class="ctl num" data-guard="decimal" data-tag="EbTotal" value="0" style="left:161px; top:95px; width:86px;" tabindex="20">
+                <span class="lbl" style="left:248px; top:72px;">Net Weight</span>
+                <input type="text" id="txtNetWeightOutPut" class="ctl num" data-guard="decimal" disabled style="left:248px; top:95px; width:93px;" tabindex="21">
+                <span class="lbl" style="left:342px; top:75px;">Remarks</span>
+                <input type="text" id="txtRemarksOutPut" class="ctl" style="left:342px; top:95px; width:298px;" tabindex="22" maxlength="500">
+                <span class="lbl" id="lblRateOutPUt" style="left:642px; top:72px;">Rate</span>
+                <input type="text" id="txtRateOutPut" class="ctl num" data-guard="decimal" disabled style="left:642px; top:95px; width:70px;" tabindex="23">
+                <span class="lbl" id="lblRateUOMOUtPut" style="left:714px; top:72px;">Rate UOM</span>
+                <select id="CmbRateUomOutPut" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" disabled style="position:absolute; left:714px; top:93px; width:76px;" tabindex="24"></select>
+                <span class="lbl" id="lblAmountOUtPUt" style="left:792px; top:72px;">Amount</span>
+                <input type="text" id="txtAmountOutPut" class="ctl num ro-white" readonly style="left:792px; top:95px; width:92px;" tabindex="25">
+                <button type="button" id="btnAddOutPut" class="btn-teal btn-plus" style="left:886px; top:94px; width:32px; height:26px;" tabindex="26">+</button>
+                <button type="button" id="btnUpdateDetailOutPut" class="btn-teal is-hidden" style="left:885px; top:94px; width:70px; height:26px;" tabindex="27">Update </button>
+                <button type="button" id="btnCancelOutPut" class="btn-teal is-hidden" style="left:955px; top:94px; width:67px; height:26px;" tabindex="28">Cancel</button>
+            </div>
+        </div>
+
+        <!-- FG Weight / FG Rate / ApplyRate / txtAvgFinishGoodRate: Visible=false in the designer
+             (:672-704) and never made visible; kept so their handlers exist, exactly as unused. -->
+        <div class="is-hidden">
+            <input type="text" id="txtAvgFinishGoodRate" readonly>
+            <input type="text" id="txtFGWeight">
+            <input type="text" id="txtFGRate" readonly>
+            <button type="button" id="btnApplyRate">ApplyRate</button>
+        </div>
+    </div>
+
+    <!-- panel22 "Output Detail" + ctrlGrdBar7 -->
+    <div class="po-teal" style="height:26px; flex:0 0 auto;">
+        <span class="po-caption-sm">Output Detail</span>
+        <span class="po-gridbar">
+            <button type="button" id="gbOutputFull" title="Full screen"><i class="fa fa-arrows-alt"></i></button>
+            <span id="gbOutputMount"></span>
+        </span>
+    </div>
+    <!-- panel24 / grdByProduct (Dock Fill) -->
+    <div class="win-grid-container" id="boxByProduct" style="flex:1 1 auto;">
+        <div class="win-grid-scroll" id="scrollByProduct" tabindex="0">
+            <table class="win-grid" id="grdByProduct" data-gridbar="frmProductionOutput:grdByProduct" data-gridbar-mount="#gbOutputMount"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== tabPage6 "History" -->
+<div class="po-view is-hidden" id="viewHistory">
+    <!-- panel60 / toolStrip8: New, |, Refresh -->
+    <div class="win-tool-strip" style="background:#fff;">
+        <button type="button" id="BtnNewOutPuthistory" class="win-btn-tool"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+        <span class="win-sep"></span>
+        <button type="button" id="BtnRefereshOutPutHistory" class="win-btn-tool"><i class="fa fa-refresh"></i> Refresh</button>
+    </div>
+    <!-- panel81 / groupBox12 "Filters" (6,2) 1038 x 46 -->
+    <div class="po-hist-filter">
+        <div class="gb">
+            <span class="gb-title">Filters</span>
+            <div class="in">
+                <span class="lbl" style="left:2px; top:20px;">Date From</span>
+                <input type="date" id="txtFromDateOutPuthistory" class="ctl" style="left:66px; top:16px; width:148px; font-size:8.5pt;">
+                <span class="lbl" style="left:217px; top:20px;">Date To</span>
+                <input type="date" id="txttoDateOutPuthistory" class="ctl" style="left:268px; top:16px; width:148px; font-size:8.5pt;">
+                <span class="lbl" style="left:429px; top:20px;">Doc From</span>
+                <input type="text" id="txtDocNoFromOutPuthistory" class="ctl" style="left:490px; top:16px; width:72px;">
+                <span class="lbl" style="left:564px; top:20px;">Doc To</span>
+                <input type="text" id="txtDocnotoOutPuthistory" class="ctl" style="left:609px; top:16px; width:72px;">
+                <span class="lbl" style="left:683px; top:20px;">Job Order</span>
+                <select id="CmbJobOrderOutPuthistory" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order" style="position:absolute; left:765px; top:14px; width:198px;"></select>
+                <button type="button" id="BtnShowOutPuthistory" class="btn-teal" style="left:969px; top:15px; width:61px; height:25px; font:bold 10pt Verdana;">Show</button>
+            </div>
+        </div>
+    </div>
+    <!-- panel84 "Main" + ctrlGrdBar11 -->
+    <div class="po-teal" style="height:24px;">
+        <span class="po-caption-xs">Main</span>
+        <span class="po-gridbar">
+            <button type="button" id="gbHistFull" title="Full screen"><i class="fa fa-arrows-alt"></i></button>
+            <span id="gbHistMount"></span>
+        </span>
+    </div>
+    <div class="win-grid-container" id="boxHistory" style="flex:1 1 auto;">
+        <div class="win-grid-scroll"><table class="win-grid" id="grdOutputHistory" data-gridbar="frmProductionOutput:grdOutputHistory" data-gridbar-mount="#gbHistMount"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <!-- panel85 (Dock Bottom) + grdOutPutDetail (Dock Bottom, 187 high) -->
+    <div class="po-teal" style="height:20px;"><span class="po-caption-xs">Detail of the Selected above row</span></div>
+    <div class="win-grid-container" style="height:187px; flex:0 0 auto;">
+        <div class="win-grid-scroll"><table class="win-grid" id="grdOutPutDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+</div>
+
+<!-- tabControl3 (Alignment Bottom): Form | History -->
+<div class="po-footer">
+    <div class="po-tab is-active" id="tabForm">Form</div>
+    <span id="lblStatus" style="font-size:9pt;">Loading...</span>
+    <div class="po-tab" id="tabHistory"><i class="fa fa-history"></i> History</div>
+</div>
+</div>
+
+<!-- ================================================ LoadOutPutPendingforRates (ShowDialog) -->
+<div class="po-modal" id="dlgPendingRates" role="dialog" aria-modal="true">
+    <div class="po-dialog" style="width:1117px; height:674px;">
+        <div class="po-dialog-title"><span>ProductionOutPutLoader</span><button type="button" data-close="dlgPendingRates" title="Close">&times;</button></div>
+        <div class="po-dialog-body">
+            <div class="po-teal" style="height:29px;"><span class="po-caption" id="prTitle">Pending OutPuts For Rates</span></div>
+            <!-- panel4 (69 high) -->
+            <div class="po-filter-row" style="height:69px;">
+                <span class="lbl" style="left:12px; top:12px;">From Date</span>
+                <input type="date" id="prFromDate" class="ctl" style="left:86px; top:9px; width:187px; font-size:8.5pt;">
+                <span class="lbl" style="left:12px; top:40px;">To Date</span>
+                <input type="date" id="prToDate" class="ctl" style="left:86px; top:37px; width:187px; font-size:8.5pt;">
+                <span class="lbl" style="left:280px; top:13px;">Doc No from</span>
+                <input type="text" id="prFromDoc" class="ctl" data-guard="integer" style="left:357px; top:9px; width:88px;">
+                <span class="lbl" style="left:280px; top:41px;">Doc No To</span>
+                <input type="text" id="prToDoc" class="ctl" data-guard="integer" style="left:357px; top:37px; width:88px;">
+                <span class="lbl" style="left:452px; top:12px;">Job Order</span>
+                <select id="prJobOrder" class="ctl win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo" style="position:absolute; left:526px; top:7px; width:236px;"></select>
+                <button type="button" id="prSearch" class="btn-teal" style="left:768px; top:6px; width:72px; height:26px;">Search</button>
+                <button type="button" id="prReset" class="btn-teal" style="left:841px; top:6px; width:61px; height:26px;">Reset</button>
+            </div>
+            <div class="po-teal" style="height:28px;"><span class="po-caption-xs">Main</span></div>
+            <div class="win-grid-container" style="height:290px; flex:0 0 auto;">
+                <div class="win-grid-scroll"><table class="win-grid" id="prGrid" data-gridbar="LoadOutPutPendingforRates:grd"><thead></thead><tbody></tbody></table></div>
+            </div>
+            <div class="po-teal" style="height:24px;"><span class="po-caption-xs">Detail Of Above Selected Row</span></div>
+            <div class="win-grid-container" style="flex:1 1 auto;">
+                <div class="win-grid-scroll"><table class="win-grid" id="prDetail"><thead></thead><tbody></tbody></table></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ frmPendingMoveOrderDocuments (ShowDialog) -->
+<div class="po-modal" id="dlgMoveOrder" role="dialog" aria-modal="true">
+    <div class="po-dialog" style="width:984px; height:611px;">
+        <div class="po-dialog-title"><span>EccountBookERP</span><button type="button" data-close="dlgMoveOrder" title="Close (Esc)">&times;</button></div>
+        <div class="po-dialog-body">
+            <!-- panel1 (50 high): toolStrip1 + label23 -->
+            <div class="po-teal" style="height:50px; flex-direction:column; align-items:stretch; justify-content:flex-start; padding:0;">
+                <div class="win-tool-strip" style="height:25px; background:#fff;">
+                    <button type="button" id="moNew" class="win-btn-tool" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+                    <button type="button" id="moRefresh" class="win-btn-tool" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+                    <span class="win-sep"></span>
+                    <button type="button" id="moLoad" class="win-btn-tool" title="Ctrl+L"><i class="fa fa-download"></i> Load</button>
+                    <button type="button" id="moShortcuts" class="win-btn-tool" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+                </div>
+                <span class="po-caption" style="font-size:12pt; padding:1px 5px;">Pending Move Order (Weight Bridge)</span>
+            </div>
+            <!-- panel2 (34 high) -->
+            <div class="po-filter-row" style="height:34px;">
+                <span class="lbl" style="left:4px; top:10px;">Date From,To</span>
+                <input type="date" id="moFromDate" class="ctl" style="left:82px; top:6px; width:140px; height:22px; font-size:8.5pt;">
+                <input type="date" id="moToDate" class="ctl" style="left:223px; top:6px; width:140px; height:22px; font-size:8.5pt;">
+                <span class="lbl" style="left:366px; top:10px;">Ticket From,To</span>
+                <input type="text" id="moDocNoFrom" class="ctl" data-guard="integer" style="left:449px; top:6px; width:80px;">
+                <input type="text" id="moDocNoTo" class="ctl" data-guard="integer" style="left:530px; top:6px; width:80px;">
+                <span class="lbl" style="left:612px; top:10px;">Vehicle No</span>
+                <input type="text" id="moVehicleNo" class="ctl" style="left:676px; top:6px; width:100px;">
+                <span class="lbl" style="left:778px; top:10px;">Bilty No</span>
+                <input type="text" id="moBiltyNo" class="ctl" style="left:830px; top:6px; width:100px;">
+                <button type="button" id="moShow" class="btn-teal" style="left:930px; top:4px; width:52px; height:26px; font:bold 9pt Tahoma;">Show</button>
+            </div>
+            <div class="po-teal" style="height:25px;"><span class="po-msg" id="moMsg" style="color:#fff;"></span></div>
+            <div class="win-grid-container" style="flex:1 1 auto;">
+                <div class="win-grid-scroll"><table class="win-grid" id="moGrid"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="po-modal" id="dlgShortcuts" role="dialog" aria-modal="true">
+    <div class="po-dialog" style="width:520px;">
+        <div class="po-dialog-title"><span>ShortCut Keys</span><button type="button" data-close="dlgShortcuts">&times;</button></div>
+        <div class="po-dialog-body po-shortcuts" id="shortcutsBody" style="padding:8px;"></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_p280_output.js?v=20260925g}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

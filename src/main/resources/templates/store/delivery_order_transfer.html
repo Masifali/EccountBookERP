@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delivery Order (Stock Transfer) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* Architecture.WinApp.Sale.DeliveryOrder designer geometry, 1:1 in px (ClientSize 1411 x 661), as it runs for
+           ScreenName "DeliveryOrderTransfer". tabControl1 (Alignment Bottom) fills the form; each TabPage is (4,4)
+           1403 x 632 with Padding 2. DetailGridPanel is a second TabControl ("Do Detail" / "Expense Grid", tabs on top). */
+        body { background: #fff; padding-bottom: 36px; margin: 0; }
+        .wf-scroll { overflow-x: auto; }
+        .wf-root { position: relative; width: 1411px; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; }
+        .wf-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .wf-rel { position: relative; }
+        .wf-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .wf-txt { box-sizing: border-box; font-family: "Segoe UI", Tahoma, sans-serif; font-size: 13px; height: 25px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .wf-txt.ms { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 13px; height: 23px; }
+        .wf-txt[readonly] { background: #f0f0f0; }
+        .wf-txt:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .wf-txt.r { text-align: right; }
+        .wf-cmb { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .wf-cmb:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .wf-dt { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .wf-dtc { display: flex; align-items: center; gap: 2px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .wf-dtc input[type=date] { border: none; font-family: Verdana, sans-serif; font-size: 12px; height: 19px; width: 100%; min-width: 0; padding: 0; }
+        .wf-gb { position: absolute; box-sizing: border-box; background: #fff; }
+        .wf-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .wf-gb > .wf-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 12px; font-weight: bold; line-height: 14px; color: #000; }
+        .wf-radio, .wf-check { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; height: 19px; white-space: nowrap; }
+        .wf-radio input, .wf-check input { margin: 0; }
+        .wf-w { color: #fff; font-family: Verdana, sans-serif; font-size: 12px; }
+        .wf-w13 { color: #fff; font-family: Verdana, sans-serif; font-size: 13px; }
+        .wf-link { color: #fff; font-family: Verdana, sans-serif; font-size: 12px; font-weight: bold; text-decoration: underline; cursor: pointer; background: #008080; line-height: 14px; }
+        .wf-teal { background: #008080; position: relative; }
+        .do-teal { background: #0a6e6e; position: relative; }
+        .wf-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .wf-teal-sub { position: absolute; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 17px; }
+        .wf-strip { height: 25px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .wf-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 5px; cursor: pointer; box-sizing: border-box; white-space: nowrap; color: #000; text-decoration: none; }
+        .wf-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .wf-tool:disabled { color: #9a9a9a; cursor: default; }
+        .wf-tool.checked { background: #fff2cc; border-color: #c9a227; }
+        .wf-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; }
+        .wf-exit { margin-left: auto; color: #004d40; font-size: 11px; font-weight: bold; }
+        .wf-gbar { height: 21px; border: 1px solid transparent; background: transparent; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+        .wf-btn { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .wf-grey { background: #d3d3d3; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+        .wf-grid.win-grid-scroll { overflow: auto; background: #fff; border: 1px solid #9eb6ce; box-sizing: border-box; max-height: none; max-width: none; }
+        .wf-grid .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; border-collapse: collapse; }
+        .wf-grid .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; text-align: center; white-space: normal; padding: 1px 3px; }
+        .wf-grid .win-grid td { border: 1px solid #d5e1f0; padding: 1px 3px; white-space: nowrap; }
+        .wf-grid .win-grid td.n { text-align: right; }
+        .wf-grid .win-grid td.c { text-align: center; }
+        .wf-grid .win-grid tbody tr:hover { background: #fff0cf; }
+        .wf-grid .win-grid tbody tr.sel { background: #cfe3fb; }
+        .wf-grid .win-grid tfoot td { font-weight: bold; background: #eef4fb; }
+        .wf-grid .win-grid td input, .wf-grid .win-grid td select { font-family: Verdana, sans-serif; font-size: 11px; height: 18px; border: 1px solid #b5c7dc; box-sizing: border-box; width: 100%; }
+        .wf-grid .win-grid td input.n { text-align: right; }
+        .wf-grid .gbtn { font-family: Verdana, sans-serif; font-size: 11px; padding: 0 4px; height: 18px; cursor: pointer; }
+        .wf-grid .glink { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        .wf-nav { font-family: Verdana, sans-serif; font-size: 11px; padding: 1px 6px; border: 1px solid #9eb6ce; border-top: none; background: #eef4fb; }
+        .wf-tabctl { border: 1px solid #a0a0a0; background: #fff; box-sizing: border-box; }
+        .wf-tabs { display: flex; gap: 0; padding-left: 2px; border-top: 1px solid #a0a0a0; background: #f0f0f0; height: 25px; }
+        .wf-tabs .win-tab { width: 62px; text-align: center; padding: 3px 0; font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; background: #f0f0f0; border: 1px solid #a0a0a0; border-top: none; border-radius: 0 0 3px 3px; color: #000; cursor: pointer; }
+        .wf-tabs .win-tab.is-active { background: #fff; }
+        .do-page { position: relative; margin-left: 4px; width: 1403px; padding: 2px; box-sizing: border-box; background: #fff; }
+        .do-tabs2 { height: 25px; display: flex; align-items: flex-end; padding-left: 2px; border-bottom: 1px solid #a0a0a0; box-sizing: border-box; }
+        .do-tabs2 .do-tab2 { display: inline-block; height: 21px; line-height: 19px; padding: 0 8px; border: 1px solid #a0a0a0; border-bottom: none; background: #f0f0f0; font-family: Verdana, sans-serif; font-size: 13px; position: relative; top: 1px; cursor: pointer; margin-right: -1px; }
+        .do-tabs2 .do-tab2.is-active { background: #fff; height: 23px; }
+        .do-tab2-page { display: none; padding: 3px; border: 1px solid #a0a0a0; border-top: none; }
+        .do-tab2-page.is-active { display: block; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div class="wf-scroll">
+<div class="wf-root wf-tabctl">
+
+<!-- ======================================================================= tabPage1 "Form" -->
+<div id="tabForm" class="win-tab-panel is-active do-page">
+
+    <!-- panel2 / toolStrip1 (2,2) 1399 x 25 — btnnew, btnRefresh, sep6, btnupdate, btnattachment, btnSaveAs, btnsave,
+         btnDelete, sep5, sep4, btnprint, sep2, btnLoadSaleOrder, sep3, btnLoaderView2, btnDefineReferenceParties, sep1,
+         BtnLoadCustomerSchedule, BtnShortCutkeys -->
+    <div class="wf-strip">
+        <button type="button" class="wf-tool" id="btnnew" style="width:59px" onclick="DoTransfer.newClick()"><i class="fa fa-file-o"></i> New</button>
+        <button type="button" class="wf-tool" id="btnRefresh" style="width:80px" onclick="DoTransfer.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+        <span class="wf-sep"></span>
+        <button type="button" class="wf-tool is-hidden" id="btnupdate" style="width:78px" onclick="DoTransfer.update()"><i class="fa fa-refresh"></i> Update</button>
+        <button type="button" class="wf-tool" id="btnattachment" style="width:109px" disabled title="Attachments are not ported to the web"><i class="fa fa-paperclip"></i> Attachment</button>
+        <button type="button" class="wf-tool is-hidden" id="btnSaveAs" style="width:80px" onclick="DoTransfer.saveAs()"><i class="fa fa-copy"></i> SaveAs</button>
+        <button type="button" class="wf-tool" id="btnsave" style="width:64px" onclick="DoTransfer.save()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="wf-tool is-hidden" id="btnDelete" style="width:73px" onclick="DoTransfer.del()"><i class="fa fa-trash"></i> Delete</button>
+        <span class="wf-sep"></span><span class="wf-sep"></span>
+        <button type="button" class="wf-tool" id="btnprint" style="width:92px" onclick="DoTransfer.print()"><i class="fa fa-print"></i> 262-Print</button>
+        <span class="wf-sep"></span>
+        <button type="button" class="wf-tool is-hidden" id="btnLoadSaleOrder" style="width:164px" disabled>Load_SO_MainDetail</button>
+        <span class="wf-sep is-hidden"></span>
+        <button type="button" class="wf-tool is-hidden" id="btnLoaderView2" style="width:127px" disabled>Load_SO_Main</button>
+        <button type="button" class="wf-tool" id="btnDefineReferenceParties" style="width:147px" disabled title="Opens DefineReferenceParties, a definition screen that is not ported to the web"><i class="fa fa-users"></i> Reference Parties</button>
+        <span class="wf-sep"></span>
+        <button type="button" class="wf-tool is-hidden" id="BtnLoadCustomerSchedule" style="width:200px" onclick="DoTransfer.loadCustomerSchedule()">Load_Customer_Schedule</button>
+        <button type="button" class="wf-tool" id="BtnShortCutkeys" style="width:126px" disabled title="Keyboard shortcuts are not ported to the web"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        <a href="/modules" class="wf-tool wf-exit"><i class="fa fa-arrow-left"></i> Exit</a>
+    </div>
+
+    <!-- panel3 (2,27) 1399 x 22, rgb(10,110,110) -->
+    <div class="do-teal" style="height:22px;">
+        <span class="wf-teal-title" style="left:2px;top:1px;">Delivery Order</span>
+        <label class="wf-abs wf-radio wf-w" style="left:324px;top:2px;height:18px;"><input type="radio" name="linkedForm" id="RadNoneFormToOpenOnInsert" checked> None</label>
+        <input type="radio" name="linkedForm" id="RadGpOutwardToOpenOnInsert" class="wf-abs" style="left:392px;top:5px;width:13px;height:13px;">
+        <span class="wf-abs wf-link" id="labelGpOutwardForm" style="left:407px;top:4px;" onclick="DoTransfer.openOutwardGatePass(0)">Outward Gate Pass</span>
+        <label class="wf-abs wf-check wf-w13 is-hidden" id="lblChkIsStockReservedPerParty" style="left:1148px;top:1px;height:20px;"><input type="checkbox" id="ChkIsStockReservedPerParty"> Stock Reserved</label>
+        <label class="wf-abs wf-check wf-w13" style="left:1295px;top:1px;height:20px;"><input type="checkbox" id="ChkPrint"> Is Preview</label>
+    </div>
+
+    <!-- panel4 (2,49) 1399 x 227, white -->
+    <div class="wf-rel" style="height:227px;">
+        <!-- groupBox1 (4,2) 1146 x 107 "Main", Tahoma 9pt bold -->
+        <div class="wf-gb" style="left:4px;top:2px;width:1146px;height:107px;">
+            <span class="wf-cap">Main</span>
+            <label class="wf-abs wf-lbl" for="txtdocno" style="left:4px;top:23px;">Doc No</label>
+            <input type="text" id="txtdocno" class="wf-abs wf-txt ms" style="left:95px;top:19px;width:59px;background:#fff;" readonly tabindex="-1">
+            <input type="date" id="DocDate" class="wf-abs wf-dt" style="left:157px;top:19px;width:130px;" onchange="DoTransfer.docDateChanged()">
+            <label class="wf-abs wf-lbl" for="CmbDeliveryOrderType" style="left:4px;top:51px;">DO Type</label>
+            <select id="CmbDeliveryOrderType" class="wf-abs wf-cmb win-combo" style="left:95px;top:45px;width:192px;" disabled></select>
+            <label class="wf-abs wf-lbl" id="label13" for="cmbBranchFrom" style="left:4px;top:79px;">Branch</label>
+            <select id="cmbBranchFrom" class="wf-abs wf-cmb win-combo" style="left:95px;top:73px;width:192px;" disabled></select>
+
+            <label class="wf-abs wf-lbl" for="CmbVehicleType" style="left:290px;top:15px;width:64px;height:32px;white-space:normal;background:#fff;">Vehicle Type &amp; No</label>
+            <select id="CmbVehicleType" class="wf-abs wf-cmb win-combo" style="left:359px;top:17px;width:131px;"></select>
+            <input type="text" id="txtVehicleNo" class="wf-abs wf-txt ms" style="left:492px;top:19px;width:95px;height:22px;" oninput="DoTransfer.vehicleNoChanged()">
+            <label class="wf-abs wf-lbl" for="CmbSaleType" style="left:290px;top:51px;">Sale Type</label>
+            <select id="CmbSaleType" class="wf-abs wf-cmb win-combo" style="left:359px;top:45px;width:228px;" onchange="DoTransfer.saleTypeLeave()"></select>
+            <label class="wf-abs wf-lbl is-hidden" id="label18" for="cmbBranchTo" style="left:290px;top:79px;">Branch To</label>
+            <select id="cmbBranchTo" class="wf-abs wf-cmb win-combo is-hidden" style="left:359px;top:73px;width:228px;"></select>
+
+            <span class="wf-abs wf-grey" style="left:595px;top:17px;width:535px;height:26px;font-size:15px;">Remarks</span>
+            <textarea id="txtremarks" class="wf-abs wf-txt" style="left:595px;top:48px;width:535px;height:51px;resize:none;font-family:'Microsoft Sans Serif',Tahoma,sans-serif;font-size:12px;" maxlength="500"></textarea>
+        </div>
+
+        <!-- groupBox3 (4,109) 1146 x 118 "Detail", Tahoma 9pt bold -->
+        <div class="wf-gb" style="left:4px;top:109px;width:1146px;height:118px;">
+            <span class="wf-cap">Detail</span>
+            <label class="wf-abs wf-lbl" for="CmbSupplierCustomer" style="left:9px;top:16px;">Customer Name</label>
+            <select id="CmbSupplierCustomer" class="wf-abs wf-cmb win-combo" style="left:10px;top:36px;width:221px;" onchange="DoTransfer.supplierLeave()"></select>
+            <label class="wf-abs wf-lbl" for="CmbOrderNo" style="left:234px;top:16px;">OrderNo</label>
+            <select id="CmbOrderNo" class="wf-abs wf-cmb win-combo" style="left:232px;top:36px;width:89px;"></select>
+            <label class="wf-abs wf-lbl" for="CmbWareHouse" style="left:324px;top:16px;">WareHouse</label>
+            <select id="CmbWareHouse" class="wf-abs wf-cmb win-combo" style="left:322px;top:36px;width:180px;" onchange="DoTransfer.stockInputsChanged()"></select>
+            <label class="wf-abs wf-lbl" for="CmbItemName" style="left:505px;top:16px;">Item</label>
+            <label class="wf-abs wf-radio" style="left:538px;top:14px;"><input type="radio" name="rdSearch" id="rdSearchByName" checked onchange="DoTransfer.searchModeChanged()"> Name</label>
+            <label class="wf-abs wf-radio" style="left:597px;top:14px;"><input type="radio" name="rdSearch" id="rdSearchByCode" onchange="DoTransfer.searchModeChanged()"> Code</label>
+            <span class="wf-abs wf-lbl" id="lblBalance" style="left:679px;top:16px;"></span>
+            <select id="CmbItemName" class="wf-abs wf-cmb win-combo" style="left:504px;top:36px;width:200px;" onchange="DoTransfer.itemLeave()"></select>
+            <label class="wf-abs wf-lbl" for="CmbCropYear" style="left:706px;top:16px;">CropYear</label>
+            <select id="CmbCropYear" class="wf-abs wf-cmb win-combo" style="left:705px;top:36px;width:94px;" onchange="DoTransfer.stockInputsChanged()"></select>
+            <label class="wf-abs wf-lbl" for="CmbJobLot" style="left:800px;top:16px;">JobLot</label>
+            <select id="CmbJobLot" class="wf-abs wf-cmb win-combo" style="left:800px;top:36px;width:150px;" onchange="DoTransfer.stockInputsChanged()"></select>
+            <label class="wf-abs wf-lbl" for="CmbPackUom" style="left:951px;top:16px;">Pack UOM</label>
+            <select id="CmbPackUom" class="wf-abs wf-cmb win-combo" style="left:951px;top:36px;width:75px;" onchange="DoTransfer.packUomLeave()"></select>
+            <label class="wf-abs wf-lbl" for="CmbPackingType" style="left:1027px;top:16px;">PackingType</label>
+            <select id="CmbPackingType" class="wf-abs wf-cmb win-combo" style="left:1027px;top:36px;width:103px;" onchange="DoTransfer.stockInputsChanged()"></select>
+
+            <label class="wf-abs wf-lbl" for="txtqty" style="left:10px;top:66px;">Qty</label>
+            <input type="text" id="txtqty" class="wf-abs wf-txt" style="left:10px;top:88px;width:64px;" autocomplete="off" oninput="DoTransfer.qtyChanged()" onkeypress="return DoTransfer.decimalOnly(event)">
+            <label class="wf-abs wf-lbl" for="txtweight" style="left:75px;top:66px;">Weight</label>
+            <input type="text" id="txtweight" class="wf-abs wf-txt" style="left:75px;top:88px;width:79px;" autocomplete="off" oninput="DoTransfer.weightChanged()" onkeypress="return DoTransfer.decimalOnly(event)">
+            <label class="wf-abs wf-lbl" for="txtBalQty" style="left:156px;top:67px;">BalQty</label>
+            <input type="text" id="txtBalQty" class="wf-abs wf-txt" style="left:156px;top:88px;width:75px;" readonly tabindex="-1" value="0">
+            <label class="wf-abs wf-lbl" for="txtBalWeight" style="left:233px;top:69px;">BalWeight</label>
+            <input type="text" id="txtBalWeight" class="wf-abs wf-txt" style="left:232px;top:88px;width:89px;" readonly tabindex="-1" value="0">
+            <label class="wf-abs wf-lbl" for="txtPackUnit" style="left:323px;top:68px;">Packing Unit</label>
+            <input type="text" id="txtPackUnit" data-tag="PackUnit" class="wf-abs wf-txt" style="left:322px;top:88px;width:85px;" autocomplete="off" value="0" oninput="DoTransfer.packUnitChanged()" onkeypress="return DoTransfer.decimalOnly(event)">
+            <label class="wf-abs wf-lbl" for="txtPackWeight" style="left:403px;top:68px;">Packing Weight</label>
+            <input type="text" id="txtPackWeight" data-tag="PackWeight" class="wf-abs wf-txt" style="left:408px;top:88px;width:82px;" autocomplete="off" value="0" oninput="DoTransfer.packWeightChanged()" onkeypress="return DoTransfer.decimalOnly(event)">
+            <label class="wf-abs wf-lbl" for="txtGrossWeight" style="left:493px;top:67px;">GrossWeight</label>
+            <input type="text" id="txtGrossWeight" class="wf-abs wf-txt" style="left:491px;top:88px;width:122px;" readonly tabindex="-1" value="0">
+            <label class="wf-abs wf-lbl" for="txtremarksdetail" style="left:615px;top:68px;">Comments</label>
+            <input type="text" id="txtremarksdetail" class="wf-abs wf-txt" style="left:615px;top:88px;width:340px;" autocomplete="off">
+            <button type="button" class="wf-abs wf-btn" id="btnplus" style="left:962px;top:88px;width:39px;height:25px;" onclick="DoTransfer.add()">+</button>
+            <button type="button" class="wf-abs wf-btn is-hidden" id="btnUpdateDetail" style="left:1003px;top:88px;width:68px;height:25px;" onclick="DoTransfer.updateDetail()">Update</button>
+            <button type="button" class="wf-abs wf-btn is-hidden" id="btnCancelUpdateDetial" style="left:1073px;top:88px;width:65px;height:25px;" onclick="DoTransfer.cancelUpdateDetail()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- panel13 / DetailGridPanel (2,276) Fill 1399 x 199: tabPage3 "Do Detail", tabPage4 "Expense Grid" (4,25) 1391 x 170, Padding 3.
+         LoaderInformationPanel / grdLoader are hidden in the StockTransfer mode (CmbDeliveryOrderType_Leave:3459-3461). -->
+    <div class="do-tabs2">
+        <span class="do-tab2 is-active" data-tab2="tabPage3" onclick="DoTransfer.tab2('tabPage3')">Do Detail</span>
+        <span class="do-tab2" data-tab2="tabPage4" onclick="DoTransfer.tab2('tabPage4')">Expense Grid</span>
+    </div>
+    <div id="tabPage3" class="do-tab2-page is-active">
+        <!-- panel5 (3,3) 1385 x 23 rgb(10,110,110): label15 "Detail" Tahoma 11pt bold, ctrlGrdBar1 (1345,1) -->
+        <div class="do-teal" style="height:23px;">
+            <span class="wf-teal-title" style="left:6px;top:3px;font-size:15px;line-height:18px;">Detail</span>
+            <button type="button" class="wf-abs wf-gbar" id="ctrlGrdBar1" style="left:1345px;top:1px;width:38px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+        </div>
+        <!-- grd (3,26) Fill 1385 x 141 -->
+        <div class="wf-grid win-grid-scroll" id="grdHost" style="height:calc(100vh - 470px);min-height:141px;"><table class="win-grid" id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="wf-nav" id="grdNav">&nbsp;</div>
+    </div>
+    <div id="tabPage4" class="do-tab2-page">
+        <!-- panel10 (3,3) 1385 x 23: label17 "Expense" -->
+        <div class="do-teal" style="height:23px;">
+            <span class="wf-teal-title" style="left:5px;top:3px;font-size:15px;line-height:18px;">Expense</span>
+        </div>
+        <!-- GridExpense (3,26) Fill 1385 x 141 -->
+        <div class="wf-grid win-grid-scroll" style="height:calc(100vh - 470px);min-height:141px;"><table class="win-grid" id="GridExpense"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="wf-nav" id="expNav">&nbsp;</div>
+    </div>
+</div>
+
+<!-- ==================================================================== tabPage2 "History" -->
+<div id="tabHistory" class="win-tab-panel do-page">
+    <!-- panel8 (2,2) 1399 x 51 teal: toolStrip2 (0,0) + label16 (6,28) -->
+    <div class="wf-teal" style="height:51px;">
+        <div class="wf-strip" style="height:27px;">
+            <button type="button" class="wf-tool" id="btnNewHistory" style="width:61px" onclick="DoTransfer.resetHistory()"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="wf-tool" id="btnRefreshHistory" style="width:80px" onclick="DoTransfer.refreshHistory()"><i class="fa fa-repeat"></i> Refresh</button>
+        </div>
+        <span class="wf-teal-title" style="left:6px;top:28px;">Delivery Order History</span>
+    </div>
+    <!-- panel7 (2,53) 1399 x 74: groupBox2 (2,2) 1057 x 70 "Filters", Tahoma 9.75pt bold -->
+    <div class="wf-rel" style="height:74px;">
+        <div class="wf-gb" style="left:2px;top:2px;width:1057px;height:70px;">
+            <span class="wf-cap" style="font-size:13px;">Filters</span>
+            <label class="wf-abs wf-lbl" style="left:3px;top:19px;">From Date</label>
+            <div class="wf-abs wf-dtc" style="left:6px;top:38px;width:142px;"><input type="checkbox" id="chkFromDateHistory" checked><input type="date" id="FromDateHistory"></div>
+            <label class="wf-abs wf-lbl" style="left:151px;top:19px;">To Date</label>
+            <div class="wf-abs wf-dtc" style="left:154px;top:38px;width:142px;"><input type="checkbox" id="chkToDateHistory" checked><input type="date" id="ToDateHistory"></div>
+            <label class="wf-abs wf-lbl" for="FromDocNoHistory" style="left:296px;top:19px;">From Doc No</label>
+            <input type="text" id="FromDocNoHistory" class="wf-abs wf-txt" style="left:299px;top:38px;width:99px;height:23px;font-family:Verdana,sans-serif;" onkeypress="return DoTransfer.numberOnly(event)">
+            <label class="wf-abs wf-lbl" for="ToDocNoHistory" style="left:397px;top:19px;">To Doc No</label>
+            <input type="text" id="ToDocNoHistory" class="wf-abs wf-txt" style="left:400px;top:38px;width:99px;height:23px;font-family:Verdana,sans-serif;" onkeypress="return DoTransfer.numberOnly(event)">
+            <label class="wf-abs wf-lbl" for="CmbCustomerHistory" style="left:499px;top:19px;">Customer</label>
+            <select id="CmbCustomerHistory" class="wf-abs wf-cmb win-combo" style="left:502px;top:36px;width:296px;font-family:Verdana,sans-serif;"></select>
+            <button type="button" class="wf-abs wf-btn" id="btnShowHistory" style="left:800px;top:36px;width:62px;height:26px;" onclick="DoTransfer.showHistory()">Show</button>
+            <label class="wf-abs wf-radio" style="left:865px;top:19px;"><input type="radio" name="rdHistDate" id="drdocdate" checked> Doc Date</label>
+            <label class="wf-abs wf-radio" style="left:946px;top:19px;"><input type="radio" name="rdHistDate" id="rdmodifydate"> Modify Date</label>
+            <label class="wf-abs wf-radio" style="left:865px;top:42px;"><input type="radio" name="rdHistDate" id="rdentrydate"> Entry Date</label>
+            <label class="wf-abs wf-radio" style="left:946px;top:42px;"><input type="radio" name="rdHistDate" id="rdapproveddate"> Approved Date</label>
+        </div>
+    </div>
+    <!-- panel12 (2,127) 1399 x 22 teal: label19 "Main", ctrlGrdBar2 (1353,-1) -->
+    <div class="wf-teal" style="height:22px;">
+        <span class="wf-teal-sub" style="left:3px;top:1px;">Main</span>
+        <button type="button" class="wf-abs wf-gbar" id="ctrlGrdBar2" style="left:1353px;top:0;width:43px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+    </div>
+    <!-- panel9 / grdhistory (2,149) Fill 1399 x 251 -->
+    <div class="wf-grid win-grid-scroll" style="height:calc(100vh - 470px);min-height:251px;"><table class="win-grid" id="grdhistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    <div class="wf-nav" id="histNav">&nbsp;</div>
+    <!-- panel6 (2,400) 1399 x 22 teal, Bottom: label27 -->
+    <div class="wf-teal" style="height:22px;"><span class="wf-teal-sub" style="left:2px;top:3px;">Detail Of Above Selected Row</span></div>
+    <!-- GrdHistoryDetail (2,422) 1399 x 208, Bottom -->
+    <div class="wf-grid win-grid-scroll" style="height:208px;"><table class="win-grid" id="GrdHistoryDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+</div>
+
+<!-- tabControl1 headers (Alignment = Bottom) -->
+<div class="wf-tabs">
+    <div class="win-tab is-active" data-tab="tabForm" onclick="DoTransfer.tab('tabForm')">Form</div>
+    <div class="win-tab" data-tab="tabHistory" onclick="DoTransfer.tab('tabHistory')">History</div>
+</div>
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_delivery_order_transfer.js?v=20260925e}"></script>
+</body>
+</html>

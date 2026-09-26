@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Transfer Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* frmStockTranfserRegister designer geometry, 1:1 in px (ClientSize 998 x 610, opened Maximized,
+           AutoScrollMinSize 950 x 600). Docked panels stretch with the window; every control keeps its
+           designer Location/Size inside its container. */
+        body { background: #fff; padding-bottom: 36px; margin: 0; }
+        .rb-scroll { overflow-x: auto; }
+        .rb-root { min-width: 998px; position: relative; font-family: Verdana, sans-serif; font-size: 13px; }
+        .rb-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .rb-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; background: #fff; }
+        .rb-cmb { font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .rb-dt { font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .rb-show { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; cursor: pointer; padding: 0; }
+        .rb-gb { position: absolute; box-sizing: border-box; }
+        .rb-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .rb-gb > .rb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+        .rb-teal { background: #008080; position: relative; }
+        .rb-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .rb-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; }
+        .rb-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; }
+        .rb-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .rb-gear { width: 45px; height: 24px; background: transparent; color: #fff; border: 1px solid transparent; font-size: 14px; }
+        .rb-grid-host { height: calc(100vh - 286px); min-height: 250px; overflow: auto; background: #fff; }
+        .rb-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .rb-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; white-space: nowrap; }
+        .rb-grid-host .win-grid td { border: 1px solid #d5e1f0; white-space: nowrap; }
+        .rb-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .win-grid td.rb-center { text-align: center; }
+        .win-grid tfoot tr.rb-total td { font-weight: bold; background: #f0f0f0; border-top: 2px solid #999; }
+        /* CmbBranchName: UltraCombo with a CheckedList ("Selected" check column, ListSeparator ","). */
+        .rb-multi { position: absolute; }
+        .rb-multi-box { width: 100%; height: 26px; text-align: left; background: #fff; border: 1px solid #7a7a7a;
+                        font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; padding: 0 18px 0 3px; cursor: pointer;
+                        overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box; }
+        .rb-multi-box:after { content: '\25BE'; position: absolute; right: 5px; top: 5px; color: #444; }
+        .rb-multi-panel { display: none; position: absolute; z-index: 20; left: 0; top: 26px; min-width: 100%; max-height: 220px; overflow: auto;
+                          background: #fff; border: 1px solid #7a7a7a; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+        .rb-multi.is-open .rb-multi-panel { display: block; }
+        .rb-multi-panel label { display: block; padding: 2px 6px; font-family: Verdana, sans-serif; font-size: 12px; font-weight: normal; cursor: pointer; white-space: nowrap; }
+        .rb-multi-panel label:hover { background: #ffe4a0; }
+        .rb-multi-head { font-weight: bold !important; border-bottom: 1px solid #ccc; background: #eef4fb; }
+    </style>
+</head>
+<body>
+<!-- Screen 456 "Stock Transfer Report", frmStockTranfserRegister.cs (ScreenName StockTransferRegister). -->
+<div class="rb-scroll">
+<div class="rb-root">
+
+    <!-- panel1 (0,0) 998 x 28 white / toolStrip1 (0,0) 266 x 27: btnRefresh "New" 59, toolStripButton1 "Refresh" 80, btnPrint 115 -->
+    <div style="height:28px;background:#fff;">
+        <div class="rb-strip">
+            <button type="button" class="rb-tool" id="btnRefresh" style="width:59px" onclick="RptST.newClick()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            <button type="button" class="rb-tool" id="toolStripButton1" style="width:80px" onclick="RptST.refresh()"><i class="fa fa-refresh" style="color:#1565c0"></i> Refresh</button>
+            <button type="button" class="rb-tool" id="btnPrint" style="width:115px" onclick="RptST.printRegister()"><i class="fa fa-print"></i> 408-Register</button>
+            <a href="/modules" class="rb-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+    </div>
+
+    <!-- panel3 (0,28) 998 x 27 teal; lblCaption (7,3) Tahoma 12pt bold -->
+    <div class="rb-teal" style="height:27px;">
+        <span class="rb-teal-title" style="left:7px;top:3px;">Stock Tranfer Register</span>
+    </div>
+
+    <!-- panel5 (0,55) 998 x 168 -->
+    <div style="position:relative;height:168px;background:#fff;">
+        <!-- groupBox1 (3,5) 694 x 157 "Filters", Verdana 9.75pt bold -->
+        <div class="rb-gb" style="left:3px;top:5px;width:694px;height:157px;background:#fff;">
+            <span class="rb-cap">Filters</span>
+
+            <label class="rb-abs rb-lbl" style="left:9px;top:22px;">Branch Name</label>
+            <div class="rb-multi" id="CmbBranchName" style="left:113px;top:16px;width:184px;height:26px;">
+                <button type="button" class="rb-multi-box" id="CmbBranchNameText" onclick="RptST.toggleBranches()"></button>
+                <div class="rb-multi-panel" id="CmbBranchNamePanel"></div>
+            </div>
+            <label class="rb-abs rb-lbl" for="gpFromDate" style="left:9px;top:48px;">Date From</label>
+            <input type="date" id="gpFromDate" class="rb-abs rb-dt" style="left:113px;top:44px;width:184px;">
+            <label class="rb-abs rb-lbl" for="gpToDate" style="left:9px;top:74px;">Date To</label>
+            <input type="date" id="gpToDate" class="rb-abs rb-dt" style="left:113px;top:70px;width:184px;">
+            <label class="rb-abs rb-lbl" for="CmbFromWareHouse" style="left:9px;top:101px;">From WareHouse</label>
+            <select id="CmbFromWareHouse" class="rb-abs rb-cmb win-combo" style="left:113px;top:95px;width:184px;"></select>
+            <label class="rb-abs rb-lbl" for="CmbToWareHouse" style="left:9px;top:129px;">To WareHouse</label>
+            <select id="CmbToWareHouse" class="rb-abs rb-cmb win-combo" style="left:113px;top:123px;width:184px;"></select>
+
+            <label class="rb-abs rb-lbl" for="cmbItem" style="left:304px;top:22px;">Item Name</label>
+            <select id="cmbItem" class="rb-abs rb-cmb win-combo" style="left:401px;top:16px;width:234px;"></select>
+            <label class="rb-abs rb-lbl" for="CmbFromJobLot" style="left:304px;top:50px;">From JobLot</label>
+            <select id="CmbFromJobLot" class="rb-abs rb-cmb win-combo" style="left:401px;top:44px;width:234px;"></select>
+            <label class="rb-abs rb-lbl" for="CmbJobLotTo" style="left:304px;top:78px;">To JobLot</label>
+            <select id="CmbJobLotTo" class="rb-abs rb-cmb win-combo" style="left:401px;top:72px;width:234px;"></select>
+            <label class="rb-abs rb-lbl" for="cmbDocumenttype" style="left:304px;top:107px;">Document Type</label>
+            <select id="cmbDocumenttype" class="rb-abs rb-cmb win-combo" style="left:401px;top:100px;width:170px;"></select>
+            <button type="button" id="btnshow" class="rb-abs rb-show" style="left:574px;top:101px;width:61px;height:25px;" onclick="RptST.show()">Show</button>
+        </div>
+    </div>
+
+    <!-- panel2 (0,223) fill: panel4 teal 27 "History" (7,3) + ctrlGrdBar1 (950,1) 45 x 24 anchored right; grdfrm fill -->
+    <div id="historySection">
+        <div class="rb-teal" style="height:27px;">
+            <span class="rb-teal-title" style="left:7px;top:3px;">History</span>
+            <button type="button" class="rb-abs rb-gear" id="ctrlGrdBar1" title="Grid print / export options are not ported" style="right:3px;top:1px;" disabled><i class="fa fa-cog"></i></button>
+        </div>
+        <div class="rb-grid-host win-grid-scroll" style="max-height:none;">
+            <table class="win-grid" id="grdfrm"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Footer: right-aligned History button (scrolls to the history grid). -->
+<div class="cx-footer">
+    <span class="cx-footer-left"></span>
+    <button type="button" class="win-btn-action cx-footer-history" onclick="RptST.gotoHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_rpt_b_kit.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_store_rpt_stock_transfer_register.js?v=20260925a}"></script>
+</body>
+</html>

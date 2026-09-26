@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Store Return - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* StoreReturn designer geometry, 1:1 in px (ClientSize 1144 x 661).
+           tabControlGsIssuance (Alignment Bottom): tabPage1 "Form" / tabPage2 "History", 1136 x 632, Padding 3. */
+        body { background: #fff; padding-bottom: 36px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .fx-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .fx-txt[readonly] { background: #f0f0f0; }
+        .fx-txt:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .fx-txt.r { text-align: right; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dtc { display: flex; align-items: center; gap: 2px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dtc input[type=date] { border: none; font-family: Verdana, sans-serif; font-size: 12px; height: 18px; width: 100%; min-width: 0; padding: 0; }
+        .fx-gb { position: absolute; box-sizing: border-box; }
+        .fx-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .fx-gb > .fx-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+        .fx-chk { display: inline-flex; align-items: center; gap: 3px; font-family: Verdana, sans-serif; font-weight: bold; font-size: 13px; white-space: nowrap; }
+        .fx-chk input { margin: 0; }
+        .fx-teal { background: #008080; position: relative; }
+        .fx-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .fx-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; white-space: nowrap; color: #000; text-decoration: none; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-tool:disabled { color: #9a9a9a; cursor: default; }
+        .fx-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; }
+        .fx-btn { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; padding: 0; cursor: pointer; border-radius: 0; height: auto; }
+        .fx-btn:hover:not(:disabled) { background: #005959; }
+        .fx-lb { background: #d3d3d3; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+        .fx-grid-host { overflow: auto; border-top: 1px solid #9eb6ce; background: #fff; box-sizing: border-box; }
+        .fx-grid-host.win-grid-scroll { max-height: none; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e1f0; }
+        .fx-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .fx-gbar { width: 38px; height: 23px; background: transparent; color: #fff; border: 1px solid transparent; font-size: 14px; cursor: default; }
+        /* desktop TabControl, Alignment = Bottom */
+        .fx-tabs { display: flex; gap: 2px; padding-left: 2px; margin: 0; border-bottom: none; border-top: 1px solid #7a9a9e; background: #f0f0f0; height: 25px; box-sizing: border-box; font-family: Verdana, sans-serif; }
+        .fx-tabs .win-tab { border: 1px solid #999; border-top: none; border-radius: 0 0 3px 3px; padding: 3px 12px; font-size: 13px; font-weight: normal; height: 22px; box-sizing: border-box; line-height: 15px; }
+        .fx-tabs .win-tab.is-active { top: -1px; height: 24px; background: #fff; color: #000; }
+        .fx-modal-box { width: 964px; max-width: 98vw; background: #fff; max-height: 96vh; }
+        .fx-modal-box .cx-modal-body { padding: 0; }
+        .fx-cmb-ms { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="fx-scroll">
+<div class="fx-root" style="width:1144px;">
+
+    <div id="rightsNote" class="cx-denied is-hidden" style="margin:0;"></div>
+
+    <!-- ============================================================== tabPage1 "Form" -->
+    <div id="tabForm" class="win-tab-panel is-active" style="padding:3px;">
+
+        <!-- panel3 (0,0) 1130 x 29 / toolStrip1 1130 x 27 -->
+        <div style="height:29px;">
+            <div class="fx-strip">
+                <button type="button" class="fx-tool" style="width:59px" onclick="StoreRet.reset()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+                <button type="button" class="fx-tool" style="width:80px" onclick="StoreRet.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+                <button type="button" class="fx-tool" id="btnsave" style="width:64px" onclick="StoreRet.save()"><i class="fa fa-save"></i> Save</button>
+                <button type="button" class="fx-tool is-hidden" id="btnUpdate" style="width:78px" onclick="StoreRet.update()"><i class="fa fa-pencil"></i> Update</button>
+                <button type="button" class="fx-tool" style="width:109px" disabled title="Attachments are not ported"><i class="fa fa-paperclip"></i> Attachment</button>
+                <button type="button" class="fx-tool" id="Print" style="width:92px" onclick="StoreRet.print()"><i class="fa fa-print"></i> 457-Print</button>
+                <button type="button" class="fx-tool" style="width:115px" disabled title="The voucher view is not ported"><i class="fa fa-file-text-o"></i> 118-Voucher</button>
+                <span id="lblVoucher" style="font-family:Verdana,sans-serif;font-size:11px;color:#004d40;padding:0 4px;white-space:nowrap;"></span>
+                <button type="button" class="fx-tool" id="btnLoadIssuance" style="width:126px;font-size:12px;" onclick="StoreRet.openLoader()"><i class="fa fa-download"></i> Load Issuance</button>
+                <button type="button" class="fx-tool" style="width:126px" disabled title="The shortcut-key popup is not ported"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+                <button type="button" class="fx-tool is-hidden" id="btnIssuanceSlip" onclick="StoreRet.printIssuance()"><i class="fa fa-print"></i> Issuance Slip</button>
+                <a href="/modules" class="fx-tool" style="margin-left:auto;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+            </div>
+        </div>
+
+        <!-- panel4 (0,29) 1130 x 28, teal -->
+        <div class="fx-teal" style="height:28px;">
+            <span class="fx-teal-title" style="left:9px;top:4px;">Store Return</span>
+            <span id="lblRecId" class="is-hidden"></span>
+            <!-- ChkPrintPreview "Preview" (1054,6), Segoe UI 9pt bold -->
+            <label class="fx-abs fx-chk" style="left:1054px;top:6px;height:19px;color:#fff;font-family:'Segoe UI',Tahoma,sans-serif;font-size:12px;"><input type="checkbox" id="ChkPrintPreview" checked> Preview</label>
+        </div>
+
+        <!-- panel5 (0,57) 1130 x 206, white -->
+        <div class="fx-rel" style="height:206px;">
+
+            <!-- groupBox1 (4,3) 1119 x 81 "Main Information" (Verdana 9.75pt bold) -->
+            <div class="fx-gb" style="left:4px;top:3px;width:1119px;height:81px;">
+                <span class="fx-cap" style="font-family:Verdana,sans-serif;">Main Information</span>
+                <label class="fx-abs fx-lbl" for="txtDocNo" style="left:4px;top:27px;">Doc No</label>
+                <input type="text" id="txtDocNo" class="fx-abs fx-txt" style="left:86px;top:23px;width:124px;" readonly tabindex="-1">
+                <label class="fx-abs fx-lbl" for="txtDocdate" style="left:4px;top:53px;">Doc Date</label>
+                <input type="date" id="txtDocdate" class="fx-abs fx-dt" style="left:86px;top:49px;width:124px;" onchange="StoreRet.docDateChanged()">
+                <label class="fx-abs fx-lbl" for="txtRemarks" style="left:216px;top:27px;">Remarks</label>
+                <textarea id="txtRemarks" class="fx-abs fx-txt" style="left:277px;top:23px;width:839px;height:48px;resize:none;"></textarea>
+            </div>
+
+            <!-- DetailGBox (4,85) 1119 x 119 "Detail Information" (Verdana 9.75pt bold) -->
+            <div class="fx-gb" id="DetailGBox" style="left:4px;top:85px;width:1119px;height:119px;">
+                <span class="fx-cap" style="font-family:Verdana,sans-serif;">Detail Information</span>
+                <!-- row 1 -->
+                <label class="fx-abs fx-lbl" for="cmbItem" style="left:4px;top:21px;">Item</label>
+                <label class="fx-abs fx-chk fx-lbl" style="left:36px;top:19px;height:19px;"><input type="radio" name="srch" id="rdSearchByName" checked onchange="StoreRet.searchModeChanged()"> By Name</label>
+                <label class="fx-abs fx-chk fx-lbl" style="left:107px;top:19px;height:19px;"><input type="radio" name="srch" id="rdSearchByCode" onchange="StoreRet.searchModeChanged()"> By Code</label>
+                <select id="cmbItem" class="fx-abs fx-cmb win-combo" style="left:3px;top:40px;width:220px;" onchange="StoreRet.itemLeave()"></select>
+                <label class="fx-abs fx-lbl" for="CmbWarehouse" style="left:224px;top:21px;">WareHouseName</label>
+                <select id="CmbWarehouse" class="fx-abs fx-cmb win-combo" style="left:224px;top:40px;width:160px;"></select>
+                <label class="fx-abs fx-lbl" for="CmbRackName" style="left:385px;top:21px;">Rack Name</label>
+                <select id="CmbRackName" class="fx-abs fx-cmb win-combo" style="left:385px;top:40px;width:140px;" onchange="StoreRet.rackLeave()"></select>
+                <label class="fx-abs fx-lbl" for="CmbItemCondition" style="left:526px;top:21px;">Condition</label>
+                <select id="CmbItemCondition" class="fx-abs fx-cmb win-combo" style="left:526px;top:40px;width:140px;" onchange="StoreRet.conditionLeave()"></select>
+                <label class="fx-abs fx-lbl" for="cmbUOM" style="left:668px;top:21px;">Pack Uom</label>
+                <select id="cmbUOM" class="fx-abs fx-cmb win-combo" style="left:668px;top:40px;width:80px;"></select>
+                <label class="fx-abs fx-lbl" for="txtItemQty" style="left:760px;top:10px;width:54px;text-align:center;white-space:normal;">Recevied Qty</label>
+                <input type="text" id="txtItemQty" class="fx-abs fx-txt" style="left:750px;top:42px;width:75px;" oninput="StoreRet.qtyChanged()">
+                <label class="fx-abs fx-lbl" for="CmbSecondaryUom" style="left:836px;top:10px;width:63px;text-align:center;white-space:normal;">Secondary Uom</label>
+                <select id="CmbSecondaryUom" class="fx-abs fx-cmb win-combo" style="left:827px;top:40px;width:80px;"></select>
+                <label class="fx-abs fx-lbl" for="txtSecondaryUomQty" style="left:914px;top:10px;width:75px;text-align:center;white-space:normal;">Secondary Uom Weight</label>
+                <input type="text" id="txtSecondaryUomQty" class="fx-abs fx-txt" style="left:908px;top:42px;width:75px;" oninput="StoreRet.secQtyChanged('txtSecondaryUomQty')">
+                <label class="fx-abs fx-lbl" for="txtPerItemWeight" style="left:988px;top:10px;width:55px;white-space:normal;">Per Item Weight</label>
+                <input type="text" id="txtPerItemWeight" class="fx-abs fx-txt" style="left:985px;top:42px;width:60px;" oninput="StoreRet.secQtyChanged('txtPerItemWeight')">
+                <label class="fx-abs fx-lbl" for="txtSecondaryUomRate" style="left:1046px;top:10px;width:63px;white-space:normal;">Secondary Uom Rate</label>
+                <input type="text" id="txtSecondaryUomRate" class="fx-abs fx-txt" style="left:1046px;top:42px;width:70px;" oninput="StoreRet.rateChanged('txtSecondaryUomRate')">
+                <!-- row 2 -->
+                <label class="fx-abs fx-lbl" for="txtItemRate" style="left:3px;top:70px;">Item Rate</label>
+                <input type="text" id="txtItemRate" class="fx-abs fx-txt" style="left:3px;top:89px;width:75px;" oninput="StoreRet.rateChanged('txtItemRate')">
+                <label class="fx-abs fx-lbl" for="txtItemAmount" style="left:79px;top:70px;">Total Amount</label>
+                <input type="text" id="txtItemAmount" class="fx-abs fx-txt" style="left:79px;top:89px;width:90px;" readonly>
+                <label class="fx-abs fx-lbl" for="txtIssuanceRate" style="left:171px;top:70px;">Issuance Rate</label>
+                <input type="text" id="txtIssuanceRate" class="fx-abs fx-txt" style="left:171px;top:89px;width:75px;" readonly tabindex="-1">
+                <label class="fx-abs fx-lbl" for="CmbDepartment" style="left:248px;top:70px;">Department</label>
+                <select id="CmbDepartment" class="fx-abs fx-cmb win-combo" style="left:248px;top:87px;width:150px;"></select>
+                <label class="fx-abs fx-lbl" for="cmbAssetsRef" style="left:400px;top:70px;">Assets Ref</label>
+                <select id="cmbAssetsRef" class="fx-abs fx-cmb win-combo" style="left:400px;top:87px;width:150px;"></select>
+                <label class="fx-abs fx-lbl" for="txtRemarksDetail" style="left:552px;top:70px;">Remarks</label>
+                <input type="text" id="txtRemarksDetail" class="fx-abs fx-txt" style="left:552px;top:89px;width:279px;">
+                <div id="fldCrAc" class="fx-abs" style="left:833px;top:70px;width:155px;height:43px;">
+                    <label class="fx-abs fx-lbl" for="cmbCrAc" style="left:0;top:0;">Credit Account</label>
+                    <select id="cmbCrAc" class="fx-abs fx-cmb win-combo" style="left:0;top:17px;width:155px;"></select>
+                </div>
+                <button type="button" id="Add" class="fx-abs fx-btn" style="left:990px;top:87px;width:37px;height:26px;" onclick="StoreRet.add()">+</button>
+                <button type="button" id="btnUpdateDetail" class="fx-abs fx-btn is-hidden" style="left:990px;top:87px;width:66px;height:26px;font-size:12px;" onclick="StoreRet.updateDetail()">Update</button>
+                <button type="button" id="btnCancelDetail" class="fx-abs fx-btn is-hidden" style="left:1057px;top:88px;width:64px;height:25px;font-size:12px;" onclick="StoreRet.resetDetail()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- panel6 (0,263) 1130 x 363: panel9 teal 28 + grdDetail 335 -->
+        <div class="fx-teal" style="height:28px;">
+            <span class="fx-teal-title" style="left:4px;top:4px;">Detail</span>
+            <button type="button" class="fx-abs fx-gbar" style="left:1091px;top:1px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+        </div>
+        <div class="fx-grid-host win-grid-scroll" style="height:335px;">
+            <table class="win-grid" id="grdDetail"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <!-- ============================================================== tabPage2 "History" -->
+    <div id="tabHistory" class="win-tab-panel" style="padding:3px;">
+
+        <!-- toolStrip2 (3,3) 1130 x 25 -->
+        <div class="fx-strip" style="height:25px;">
+            <button type="button" class="fx-tool" style="width:55px;height:22px;" onclick="StoreRet.newHistory()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            <button type="button" class="fx-tool" style="width:76px;height:22px;" onclick="StoreRet.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+        </div>
+
+        <!-- panel7 (3,28) 1130 x 29, teal -->
+        <div class="fx-teal" style="height:29px;">
+            <span class="fx-teal-title" style="left:4px;top:4px;">Store Return History</span>
+            <button type="button" class="fx-abs fx-gbar" style="left:1090px;top:3px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+        </div>
+
+        <!-- panel10 (3,57) 1130 x 107; groupBox3 (5,1) 754 x 100 "Filters" -->
+        <div class="fx-rel" style="height:107px;">
+            <div class="fx-gb" style="left:5px;top:1px;width:754px;height:100px;">
+                <span class="fx-cap">Filters</span>
+                <label class="fx-abs fx-lbl" style="left:6px;top:20px;">From Date</label>
+                <div class="fx-abs fx-dtc" style="left:88px;top:16px;width:157px;"><input type="checkbox" id="chkFromDate" checked><input type="date" id="FromDateHistory"></div>
+                <label class="fx-abs fx-lbl" style="left:6px;top:47px;">To Date</label>
+                <div class="fx-abs fx-dtc" style="left:88px;top:43px;width:157px;"><input type="checkbox" id="chkToDate" checked><input type="date" id="ToDateHistory"></div>
+                <label class="fx-abs fx-lbl" for="FromDocNoHistory" style="left:7px;top:66px;white-space:normal;width:66px;">From &amp; To Doc No</label>
+                <input type="text" id="FromDocNoHistory" class="fx-abs fx-txt" style="left:88px;top:70px;width:78px;" inputmode="numeric">
+                <input type="text" id="ToDocNoHistory" class="fx-abs fx-txt" style="left:167px;top:70px;width:78px;" inputmode="numeric">
+                <label class="fx-abs fx-lbl" for="CmbWarehouseHistory" style="left:249px;top:20px;">Warehouse</label>
+                <select id="CmbWarehouseHistory" class="fx-abs fx-cmb fx-cmb-ms win-combo" style="left:326px;top:14px;width:165px;"></select>
+                <label class="fx-abs fx-lbl" for="CmbItemNameHistory" style="left:249px;top:47px;">Item Name</label>
+                <select id="CmbItemNameHistory" class="fx-abs fx-cmb fx-cmb-ms win-combo" style="left:326px;top:41px;width:165px;"></select>
+                <label class="fx-abs fx-lbl" for="CmbDepartmentHistory" style="left:249px;top:74px;">Department</label>
+                <select id="CmbDepartmentHistory" class="fx-abs fx-cmb fx-cmb-ms win-combo" style="left:326px;top:68px;width:165px;"></select>
+                <label class="fx-abs fx-lbl" for="CmbAssetNameHistory" style="left:497px;top:20px;">Asset Name</label>
+                <select id="CmbAssetNameHistory" class="fx-abs fx-cmb fx-cmb-ms win-combo" style="left:585px;top:14px;width:165px;"></select>
+                <label class="fx-abs fx-lbl" for="CmbCreditAccountHistory" style="left:497px;top:47px;">Credit Account</label>
+                <select id="CmbCreditAccountHistory" class="fx-abs fx-cmb fx-cmb-ms win-combo" style="left:585px;top:41px;width:165px;"></select>
+                <button type="button" id="btnShowHistory" class="fx-abs fx-btn win-btn-action" style="left:688px;top:68px;width:62px;height:26px;" onclick="StoreRet.showHistory(this)">Show</button>
+            </div>
+        </div>
+
+        <!-- DataGridHistory (3,164) 1130 x 281 -->
+        <div class="fx-grid-host win-grid-scroll" style="height:281px;">
+            <table class="win-grid" id="DataGridHistory"><thead></thead><tbody></tbody></table>
+        </div>
+
+        <!-- panel8 (3,445) 1130 x 29, teal -->
+        <div class="fx-teal" style="height:29px;">
+            <span class="fx-teal-title" style="left:4px;top:4px;">Detail of Above Selected Row</span>
+        </div>
+
+        <!-- gridHistory (3,474) 1130 x 155 -->
+        <div class="fx-grid-host win-grid-scroll" style="height:155px;">
+            <table class="win-grid" id="gridHistory"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <!-- tabControlGsIssuance tab headers (Alignment Bottom) -->
+    <div class="win-tabs fx-tabs">
+        <div class="win-tab is-active" data-tab="tabForm" onclick="StoreRet.tab('tabForm')">Form</div>
+        <div class="win-tab" data-tab="tabHistory" onclick="StoreRet.tab('tabHistory')">History</div>
+    </div>
+</div>
+</div>
+
+<!-- Footer: right-aligned History button -->
+<div class="cx-footer">
+    <span class="cx-footer-left"></span>
+    <button type="button" class="win-btn-action cx-footer-history" id="btnFooterHistory" onclick="StoreRet.tab('tabHistory'); StoreRet.showHistory();"><i class="fa fa-history"></i> <span>History</span></button>
+</div>
+
+
+<!-- ============================================================== frmLoadIssuanceForReturn (ClientSize 1149 x 648) -->
+<div class="cx-modal" id="dlgIss">
+    <div class="cx-modal-box fx-modal-box" style="width:1149px;">
+        <div class="cx-modal-head"><span>Load Store Issuance For Return</span><button type="button" onclick="StoreCommon.closeModal('dlgIss')">&times;</button></div>
+        <div class="cx-modal-body fx-root">
+            <!-- panelheading (0,0) 1149 x 33, RGB(10,110,110) -->
+            <div class="fx-teal" style="height:33px;background:rgb(10,110,110);">
+                <span class="fx-teal-title" style="left:4px;top:6px;">Issuance Load For Store Return</span>
+                <button type="button" class="fx-abs fx-gbar" style="left:1107px;top:5px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+            </div>
+            <!-- panel2 (0,33) 1149 x 50, white -->
+            <div class="fx-rel" style="height:50px;">
+                <label class="fx-abs fx-lbl" for="issFrom" style="left:8px;top:5px;">From Date</label>
+                <input type="date" id="issFrom" class="fx-abs fx-dt" style="left:8px;top:23px;width:128px;">
+                <label class="fx-abs fx-lbl" for="issTo" style="left:137px;top:5px;">To Date</label>
+                <input type="date" id="issTo" class="fx-abs fx-dt" style="left:137px;top:23px;width:128px;">
+                <button type="button" class="fx-abs fx-btn" style="left:267px;top:21px;width:65px;height:27px;font-family:Tahoma,sans-serif;" onclick="StoreRet.searchLoader()">Search</button>
+                <button type="button" class="fx-abs fx-btn" style="left:332px;top:21px;width:61px;height:27px;font-family:Tahoma,sans-serif;" onclick="StoreRet.loadChecked()">Load</button>
+                <button type="button" class="fx-abs fx-btn" style="left:393px;top:21px;width:56px;height:27px;font-family:Tahoma,sans-serif;" onclick="StoreRet.loaderReset()">Reset</button>
+            </div>
+            <!-- panel3: grd (0,0) 1149 x 333 / label2 22 / GridDetail 210 -->
+            <div class="fx-grid-host win-grid-scroll" style="height:333px;max-height:calc(50vh - 60px);">
+                <table class="win-grid" id="grdIss"><thead></thead><tbody></tbody></table>
+            </div>
+            <div class="fx-teal" style="height:22px;">
+                <span class="fx-teal-title" style="left:0;top:1px;">Header Record's Details To Load</span>
+                <button type="button" class="fx-abs fx-gbar" style="left:1109px;top:0;height:21px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+            </div>
+            <div class="fx-grid-host win-grid-scroll" style="height:210px;max-height:calc(46vh - 120px);">
+                <table class="win-grid" id="grdIssDetail"><thead></thead><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_return.js?v=20260925c}"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}">
+    <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>Store Issuance Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* IssuanceHistory designer geometry, 1:1 in px (ClientSize 896 x 566). Docked panels
+           stretch with the window like the maximized form; every control keeps its designer
+           Location/Size inside its container. */
+        body { background: #fff; padding-bottom: 36px; margin: 0; }
+        .rc-scroll { overflow-x: auto; }
+        .rc-root { min-width: 896px; position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; }
+        .rc-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .rc-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; background: #fff; }
+        .rc-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .rc-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .rc-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .rc-gb { position: absolute; box-sizing: border-box; }
+        .rc-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .rc-gb > .rc-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+        .rc-teal { background: #008080; position: relative; }
+        .rc-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .rc-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; }
+        .rc-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; white-space: nowrap; }
+        .rc-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .rc-show { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; cursor: pointer; padding: 0; }
+        .rc-hbtn { height: 24px; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; background: transparent; color: #fff; }
+        .rc-grid-host { height: calc(100vh - 300px); min-height: 250px; overflow: auto; background: #fff; }
+        .rc-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; table-layout: fixed; }
+        .rc-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; text-align: center; white-space: normal; }
+        .rc-grid-host .win-grid td { border: 1px solid #d5e1f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rc-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .rc-grid-host .cx-filter-row th { padding: 1px; background: #f4f8f8; }
+        .rc-grid-host .cx-filter-row input { height: 20px; font-size: 8pt; width: 100%; box-sizing: border-box; }
+        .rc-grid-host tfoot td { background: #eef5f5; border-top: 2px solid #7a9a9e; position: sticky; bottom: 0; }
+        .rc-nav { font-family: Verdana, sans-serif; font-size: 11px; padding: 2px 6px; border-top: 1px solid #9eb6ce; background: #eef4fb; }
+    </style>
+</head>
+<body>
+<!-- Screen 458 "Store Issuance Report", IssuanceHistory.cs, ScreenName StoreIssuenceHistory (base.Name IssuanceHistory). -->
+<div class="rc-scroll">
+<div class="rc-root">
+
+    <!-- panel1 (0,0) 896 x 30 white / toolStrip1 896 x 27: Reset, Refresh, Print (drop-down), ShortCut Keys -->
+    <div style="height:30px;background:#fff;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnReset" style="width:68px" onclick="RptIssuance.reset()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> Reset</button>
+            <button type="button" class="rc-tool" id="btnRefresh" style="width:80px" onclick="RptIssuance.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="tsPrintDropDown" style="width:70px" onclick="RptIssuance.printRegister()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="rc-tool" id="btnShortCutKey" style="width:126px" onclick="RptIssuance.shortcutKeys()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+            <a href="/modules" class="rc-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+    </div>
+
+    <!-- panel3 (0,30) 896 x 28 teal; lblCaption (3,4) Tahoma 12pt bold -->
+    <div class="rc-teal" style="height:28px;">
+        <span class="rc-teal-title" style="left:3px;top:4px;">Store Issuance History</span>
+    </div>
+
+    <!-- panel5 (0,58) 896 x 132 -->
+    <div style="position:relative;height:132px;background:#fff;">
+        <!-- groupBox1 (3,2) 693 x 126 "Filters", Tahoma 9.75pt bold. DOM order = designer TabIndex. -->
+        <div class="rc-gb" style="left:3px;top:2px;width:693px;height:126px;background:#fff;">
+            <span class="rc-cap">Filters</span>
+            <label class="rc-abs rc-lbl" for="FromDate" style="left:5px;top:20px;">Date From &amp; To</label>
+            <input type="date" id="FromDate" class="rc-abs rc-dt" style="left:112px;top:16px;width:113px;">
+            <input type="date" id="ToDate" class="rc-abs rc-dt" style="left:226px;top:16px;width:111px;">
+            <label class="rc-abs rc-lbl" for="txtFromDocNo" style="left:5px;top:47px;">DocNo From &amp; To</label>
+            <input type="text" id="txtFromDocNo" class="rc-abs rc-txt" style="left:112px;top:43px;width:113px;" inputmode="numeric" autocomplete="off">
+            <input type="text" id="txtDocNoTo" class="rc-abs rc-txt" style="left:226px;top:43px;width:111px;" inputmode="numeric" autocomplete="off">
+            <label class="rc-abs rc-lbl" for="CmbWareHouse" style="left:5px;top:74px;">WareHouse Name</label>
+            <select id="CmbWareHouse" class="rc-abs rc-cmb win-combo" style="left:112px;top:68px;width:225px;"></select>
+            <label class="rc-abs rc-lbl" for="CmbDepartmentName" style="left:5px;top:101px;">Department Name</label>
+            <select id="CmbDepartmentName" class="rc-abs rc-cmb win-combo" style="left:112px;top:95px;width:225px;"></select>
+            <label class="rc-abs rc-lbl" for="CmbItemName" style="left:342px;top:20px;">Item Name</label>
+            <select id="CmbItemName" class="rc-abs rc-cmb win-combo" style="left:432px;top:14px;width:200px;"></select>
+            <label class="rc-abs rc-lbl" for="cmbItemCondition" style="left:342px;top:47px;">Item Condition</label>
+            <select id="cmbItemCondition" class="rc-abs rc-cmb win-combo" style="left:432px;top:41px;width:200px;"></select>
+            <label class="rc-abs rc-lbl" for="CmbAccountTitle" style="left:342px;top:74px;">Account Title</label>
+            <select id="CmbAccountTitle" class="rc-abs rc-cmb win-combo" style="left:432px;top:68px;width:200px;"></select>
+            <label class="rc-abs rc-lbl" for="CmbAssetName" style="left:342px;top:101px;">Asset Name</label>
+            <select id="CmbAssetName" class="rc-abs rc-cmb win-combo" style="left:432px;top:95px;width:200px;"></select>
+            <button type="button" id="btnshow" class="rc-abs rc-show" style="left:633px;top:95px;width:56px;height:26px;" onclick="RptIssuance.show()">Show</button>
+        </div>
+    </div>
+
+    <!-- panel2 (0,190) fill: panel4 teal 28 "History" + ctrlGrdBar1 (847,1) 42x24 Top|Right; panel6 / grdfrm fill -->
+    <div id="historySection">
+        <div class="rc-teal" style="height:28px;">
+            <span class="rc-teal-title" style="left:2px;top:3px;">History</span>
+            <button type="button" class="rc-abs rc-hbtn" id="ctrlGrdBar1" title="Grid layout / print / export options are not ported" style="right:7px;top:1px;width:42px;" disabled><i class="fa fa-cog"></i></button>
+        </div>
+        <div class="rc-grid-host win-grid-scroll" style="max-height:none;">
+            <table class="win-grid" id="grdfrm"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="rc-nav" id="grdfrmNavigator">&nbsp;</div>
+    </div>
+</div>
+</div>
+
+<!-- Footer: right-aligned History button (the history grid is on the same screen, below the filters). -->
+<div class="cx-footer">
+    <span class="cx-footer-left"></span>
+    <button type="button" class="win-btn-action cx-footer-history" onclick="RptIssuance.gotoHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_rpt_store_issuance_history.js?v=20260925a}"></script>
+</body>
+</html>
