@@ -18,8 +18,8 @@ import lombok.Data;
  * dbo.tblUserRights.RightId is a straight FK to this table's Id - see
  * {@link RealUserRight}. This port never writes to ScreenRights (it's real,
  * already-populated desktop data); it only reads the handful of rows needed to
- * resolve "the View right's Id" for whichever real screens {@link Screen}
- * (MstScreen) has been linked to via realScreenDefinitionId.
+ * resolve "the View right's Id" for the real screens behind SidebarScreenCatalog,
+ * the in-code list of screens this port has built (MstScreen is gone).
  */
 @Entity
 @Table(name = "ScreenRights")

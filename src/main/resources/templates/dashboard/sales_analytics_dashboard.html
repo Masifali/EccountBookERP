@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sales Analytics Dashboard</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600;
+                     white-space:nowrap; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #saMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #saMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #saMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        .sa-totals { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+        .sa-total { background:#0f5959; color:#fff; padding:4px 10px; border-radius:2px;
+                    font-size:11px; font-weight:700; }
+        .sa-total span { font-size:13px; margin-left:6px; }
+
+        .sa-tabs { display:flex; gap:2px; margin:10px 8px 0; flex-wrap:wrap; }
+        .sa-tab { background:#d8e0e6; border:1px solid #b0bec5; border-bottom:none; padding:3px 12px;
+                  font-size:11px; font-weight:700; color:#41525c; cursor:pointer;
+                  border-radius:2px 2px 0 0; }
+        .sa-tab.active { background:#fff; color:#0f5959; }
+        .sa-panes { background:#fff; border:1px solid #b0bec5; margin:0 8px 8px; padding:8px; }
+
+        /* Full page width; the only horizontal scrollbar is INSIDE the grid container. */
+        .sa-wrap { background:#fff; border:1px solid #cfd8dc; max-height:430px; overflow:auto; }
+        body.sa-full .sa-wrap { max-height:none; }
+        table.sa-grid { border-collapse:separate; border-spacing:0; font-size:11px;
+                        width:max-content; min-width:100%; }
+        table.sa-grid thead th { position:sticky; top:0; z-index:2; background:#dde5ea;
+                                 border-right:1px solid #c3ced6; border-bottom:1px solid #90a4ae;
+                                 padding:3px 6px; font-weight:700; color:#23343c; text-align:center;
+                                 white-space:nowrap; }
+        table.sa-grid tbody td { border-right:1px solid #eceff1; border-bottom:1px solid #eceff1;
+                                 padding:2px 6px; white-space:nowrap; }
+        table.sa-grid tbody tr:nth-child(even) td { background:#f7f9fa; }
+        table.sa-grid tbody tr:hover td { background:#e0f2f1; }
+        table.sa-grid tfoot td { position:sticky; bottom:0; z-index:2; background:#e0f2f1;
+                                 border-top:1px solid #0f5959; font-weight:700; color:#0f5959;
+                                 padding:3px 6px; white-space:nowrap; }
+        .sa-num { text-align:right; }
+        .sa-neg { color:#b00020; }
+        .sa-link { color:#0d47a1; text-decoration:underline; cursor:pointer; }
+        .sa-link:hover { color:#b00020; }
+        a.sa-link { text-decoration:underline; }
+        .sa-cellbtn { background:#eceff1; border:1px solid #90a4ae; border-radius:2px; font-size:10px;
+                      padding:0 6px; height:17px; cursor:pointer; white-space:nowrap; }
+        .sa-cellbtn:hover { background:#e0f2f1; border-color:#0f5959; }
+
+        .sa-empty { color:#667; padding:12px; text-align:center; font-size:11px; }
+        body.sa-full { position:fixed; inset:0; z-index:3000; overflow:auto; background:#e4e9ed; }
+        .select2-container .select2-selection--single,
+        .select2-container .select2-selection--multiple { border-radius:0; border-color:#7f9db9;
+                                                          min-height:24px; font-size:11px; }
+
+        /* AnalayticalAnalysisPopUp, which the desktop opens maximised. */
+        .sa-modal { position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.35); display:none; }
+        .sa-modal.open { display:block; }
+        .sa-modal-box { position:absolute; inset:14px; background:#fff; border:1px solid #0f5959;
+                        display:flex; flex-direction:column; }
+        .sa-modal-head { background:#0f5959; color:#fff; font-size:12px; font-weight:700;
+                         padding:5px 10px; display:flex; align-items:center; }
+        .sa-modal-body { flex:1; overflow:auto; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Sales Analytics Dashboard
+     ditto Architecture.WinApp.AnalyticDashboard\SalesAnalyticsDashBoard.cs (2,375 lines)
+
+     NOT the same screen as Architecture.WinApp.Dashboard\SalesAnalytics.cs (523 lines), which is
+     served at /dashboard/sales-analytics. Two different desktop forms, two different procedures.
+
+     Its Load handler and window caption are both "frmAnalyticsDashboard" (:160, :2343) - as are
+     the purchase form's. No type of that name exists; it is a ScreenName the desktop puts in
+     Form.Tag (DashboardNew.cs:1572), never a TargetUrl.
+
+     Controls, in the desktop's own order:
+       cmbparentcategory "Parent Category", fromdate / todate,
+       CmbItemCategory, CmbItemType, CmbItemName, CmbCropYear, CmbJotLot, CmbParty,
+       CmbBranches (ERP feature 11), btnshow "Show", btnRefresh "Refresh"
+       txtTotalQty / txtTotalWeight / txtTotalAmount
+     Grids: grdItemWise (Item Wise) and grdCustomerWise (Customer Wise), each with a BreakUp
+     button column pinned at position 0.
+
+     Events ported:
+       frmAnalyticsDashboard_Load        :160-192
+       AllComboBind                      :256-320   one call, six dropdowns
+       cmbparentcategory_Leave           :322-348   the cascade
+       btnshow_Click                     :350-368
+       GetComparisonData                 :371-393   both summaries AND both break-up sets
+       GetComparisonDataAgainstSummary   :443-563
+       ItemWiseGridSettings              :566-654
+       grdItemWise_LinkClicked           :656-686   Item Name and Sales Account
+       grdItemWise_ColumnButtonClick     :688-729   filters the in-memory break-up
+       CustomerWiseGridSettings          :732-816
+       grdCustomerWise_ColumnButtonClick :818-855
+       grdCustomerWise_LinkClicked       :857-876
+       GetTotals                         :878-914   including the Avg Rate 40Kg total
+
+     Unlike the purchase form: no Paddy/Rice Tag split, no Short Weight tick box, and the break-up
+     buttons filter data already in memory rather than re-querying.
+
+     Read-only: no save, update, delete or History button on the desktop form.
+     ========================================================================== -->
+<div class="win-title-bar">Sales Analytics Dashboard</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Analytic Dashboard &gt; Sales Analytics Dashboard</span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnRefresh" onclick="saRefresh(this)">
+        <i class="fa fa-refresh"></i> Refresh
+    </button>
+    <a class="win-btn" href="/dashboard/sales-analytics">
+        <i class="fa fa-exchange"></i> Sales Analytics (org level)
+    </a>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="saToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="saMessage"></div>
+
+<div class="win-form-card">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+            <label class="win-label">Parent Category</label>
+            <select id="parentCategory" class="win-input sa-select2" onchange="saParentChanged()"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">From Date</label>
+            <input type="date" id="fromDate" class="win-input">
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">To Date</label>
+            <input type="date" id="toDate" class="win-input">
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Item Category</label>
+            <select id="itemCategory" class="win-input sa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Item Type</label>
+            <select id="itemType" class="win-input sa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Item Name</label>
+            <select id="itemName" class="win-input sa-select2"></select>
+        </div>
+    </div>
+
+    <div class="row g-2 align-items-end" style="margin-top:6px;">
+        <div class="col-md-2">
+            <label class="win-label">Crop Year</label>
+            <select id="cropYear" class="win-input sa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Job Lot</label>
+            <select id="jobLot" class="win-input sa-select2"></select>
+        </div>
+        <div class="col-md-2">
+            <label class="win-label">Party Name</label>
+            <select id="party" class="win-input sa-select2"></select>
+        </div>
+        <div class="col-md-2" id="branchWrap" style="display:none;">
+            <label class="win-label">Branches</label>
+            <select id="branches" class="win-input sa-select2" multiple></select>
+        </div>
+        <div class="col-md-1">
+            <label class="win-label">&nbsp;</label>
+            <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="saShow(this)">
+                <i class="fa fa-search"></i> Show
+            </button>
+        </div>
+        <div class="col-md-3">
+            <label class="win-label">&nbsp;</label>
+            <div class="sa-totals">
+                <div class="sa-total">Total Qty<span id="totalQty">0</span></div>
+                <div class="sa-total">Total Weight<span id="totalWeight">0</span></div>
+                <div class="sa-total">Total Amount<span id="totalAmount">0</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sa-tabs">
+    <div class="sa-tab active" id="tabIW" onclick="saTab('IW')">Item Wise</div>
+    <div class="sa-tab"        id="tabCW" onclick="saTab('CW')">Customer Wise</div>
+</div>
+<div class="sa-panes">
+    <div id="paneIW">
+        <div class="sa-wrap"><table class="sa-grid" id="gridItemWise"></table></div>
+    </div>
+    <div id="paneCW" style="display:none;">
+        <div class="sa-wrap"><table class="sa-grid" id="gridCustomerWise"></table></div>
+    </div>
+</div>
+
+<div class="sa-modal" id="saModal">
+    <div class="sa-modal-box">
+        <div class="sa-modal-head">
+            <span id="saModalTitle">Break Up</span>
+            <span style="flex:1;"></span>
+            <button type="button" class="win-btn" onclick="saCloseModal()">Close</button>
+        </div>
+        <div class="sa-modal-body"><table class="sa-grid" id="saModalGrid"></table></div>
+    </div>
+</div>
+
+<div style="height:16px;"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_sales_analytics_dashboard.js?v=20260920a}"></script>
+</body>
+</html>

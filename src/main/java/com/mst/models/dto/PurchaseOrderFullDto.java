@@ -45,8 +45,20 @@ public class PurchaseOrderFullDto {
 
     private Double juteBagCut = 0.0;
     private Double ppBagCut = 0.0;
-    private Double cashFreight = 0.0;
-    private Double creditFreight = 0.0;
+    /* Freight selection is a RADIO PAIR, not an amount.
+     *
+     * Architecture.Model.FeedMill.Purchase.PurchaseOrder declares
+     *     public bool CashFreight   { get; set; }
+     *     public bool CreditFreight { get; set; }
+     * and PurchsaeOrder.cs:3337-3344 sets exactly one of them to true from rdFreightCash /
+     * rdFreightCredit; :3759-3760 reads them back into the same two radios.
+     *
+     * These were declared Double here, so the screen's (correct) `true` could not be
+     * deserialized and every Save failed with
+     *     400 - Cannot deserialize value of type `java.lang.Double` from Boolean value
+     * before the handler was ever entered. Typed as the desktop types them. */
+    private Boolean cashFreight = false;
+    private Boolean creditFreight = false;
 
     private Boolean isSupplierOtherChargesAllowed = false;
     private Boolean isWhtApplied = false;
@@ -56,6 +68,43 @@ public class PurchaseOrderFullDto {
     private String shipToAddress;
 
     private String remarksHeader;
+
+    /* ------------------------------------------------------------------------------------------
+       Header fields the DESKTOP writes but this DTO never carried, so they were silently dropped
+       on every save even before the raw INSERT was replaced. PurchsaeOrder.cs:3300-3353.
+
+       Two of them are not optional: Sp_PurchaseOrder_Insert RAISERRORs "DeliveryTerm Field
+       Required" and "OrderStatus Field Required" when either arrives empty.
+       ------------------------------------------------------------------------------------------ */
+    private String supplierRefNo;      // po.SupplierRefNo      :3304
+    private String orderStatus;        // po.OrderStatus        :3352
+    private String deliveryTermName;   // po.DeliveryTerm       :3312 (the combo's TEXT, not its id)
+    private Integer orderCategoryId;   // po.OrderCatagoryId    :3301
+    private Integer categorySrNo;      // po.CatagorySrNo       :3302
+    private Double orderQty;           // po.OrderQty           :3315
+    private Double orderWeight;        // po.OrderWeight        :3316
+    private Double orderAmount;        // po.OrderAmount        :3317
+    private Integer locationTypeId;    // po.LocationTypeId     :3353
+
+    public String getSupplierRefNo() { return supplierRefNo; }
+    public void setSupplierRefNo(String v) { this.supplierRefNo = v; }
+    public String getOrderStatus() { return orderStatus; }
+    public void setOrderStatus(String v) { this.orderStatus = v; }
+    public String getDeliveryTermName() { return deliveryTermName; }
+    public void setDeliveryTermName(String v) { this.deliveryTermName = v; }
+    public Integer getOrderCategoryId() { return orderCategoryId; }
+    public void setOrderCategoryId(Integer v) { this.orderCategoryId = v; }
+    public Integer getCategorySrNo() { return categorySrNo; }
+    public void setCategorySrNo(Integer v) { this.categorySrNo = v; }
+    public Double getOrderQty() { return orderQty; }
+    public void setOrderQty(Double v) { this.orderQty = v; }
+    public Double getOrderWeight() { return orderWeight; }
+    public void setOrderWeight(Double v) { this.orderWeight = v; }
+    public Double getOrderAmount() { return orderAmount; }
+    public void setOrderAmount(Double v) { this.orderAmount = v; }
+    public Integer getLocationTypeId() { return locationTypeId; }
+    public void setLocationTypeId(Integer v) { this.locationTypeId = v; }
+
     private String paymentScheduleDescription;
 
     private List<PurchaseOrderDetailItemDto> lineItems = new ArrayList<>();
@@ -63,6 +112,7 @@ public class PurchaseOrderFullDto {
     private List<PurchaseOrderSupplierExpenseDto> supplierExpenses = new ArrayList<>();
     private List<PurchaseOrderExpensesChargeToProductDto> expensesChargeToProduct = new ArrayList<>();
     private List<PurchaseOrderPaymentTermsDetailDto> paymentTermsDetail = new ArrayList<>();
+    private List<PurchaseOrderLabDeductionDto> labDeductions = new ArrayList<>();
 
     public Integer getPurchaseOrderMasterId() { return purchaseOrderMasterId; }
     public void setPurchaseOrderMasterId(Integer purchaseOrderMasterId) { this.purchaseOrderMasterId = purchaseOrderMasterId; }
@@ -133,10 +183,10 @@ public class PurchaseOrderFullDto {
     public void setJuteBagCut(Double juteBagCut) { this.juteBagCut = juteBagCut; }
     public Double getPpBagCut() { return ppBagCut; }
     public void setPpBagCut(Double ppBagCut) { this.ppBagCut = ppBagCut; }
-    public Double getCashFreight() { return cashFreight; }
-    public void setCashFreight(Double cashFreight) { this.cashFreight = cashFreight; }
-    public Double getCreditFreight() { return creditFreight; }
-    public void setCreditFreight(Double creditFreight) { this.creditFreight = creditFreight; }
+    public Boolean getCashFreight() { return cashFreight; }
+    public void setCashFreight(Boolean cashFreight) { this.cashFreight = cashFreight; }
+    public Boolean getCreditFreight() { return creditFreight; }
+    public void setCreditFreight(Boolean creditFreight) { this.creditFreight = creditFreight; }
 
     public Boolean getIsSupplierOtherChargesAllowed() { return isSupplierOtherChargesAllowed; }
     public void setIsSupplierOtherChargesAllowed(Boolean isSupplierOtherChargesAllowed) { this.isSupplierOtherChargesAllowed = isSupplierOtherChargesAllowed; }
@@ -165,6 +215,25 @@ public class PurchaseOrderFullDto {
     public void setExpensesChargeToProduct(List<PurchaseOrderExpensesChargeToProductDto> expensesChargeToProduct) { this.expensesChargeToProduct = expensesChargeToProduct; }
     public List<PurchaseOrderPaymentTermsDetailDto> getPaymentTermsDetail() { return paymentTermsDetail; }
     public void setPaymentTermsDetail(List<PurchaseOrderPaymentTermsDetailDto> paymentTermsDetail) { this.paymentTermsDetail = paymentTermsDetail; }
+
+    /* PurchsaeOrder.cs:3376-3377 - cmbCurrency and txtExchangeRate are HEADER controls, but the
+       desktop copies both onto EVERY PurchaseOrderDetail row before saving, so they live here and
+       are read per line by PurchaseOrderDetailRepository. Conversion.ToInt(null) == 0 and
+       Conversion.ToDecimal("") == 0, so an untouched form sends 0 / 0 - not null. */
+    private Integer currencyId = 0;
+    private Double exchangeRate = 0.0;
+
+    public Integer getCurrencyId() { return currencyId; }
+    public void setCurrencyId(Integer currencyId) { this.currencyId = currencyId; }
+    public Double getExchangeRate() { return exchangeRate; }
+    public void setExchangeRate(Double exchangeRate) { this.exchangeRate = exchangeRate; }
+
+    public List<PurchaseOrderLabDeductionDto> getLabDeductions() { return labDeductions; }
+    public void setLabDeductions(List<PurchaseOrderLabDeductionDto> labDeductions) { this.labDeductions = labDeductions; }
+
+    private PurchaseOrderAttachmentsDto attachments;
+    public PurchaseOrderAttachmentsDto getAttachments() { return attachments; }
+    public void setAttachments(PurchaseOrderAttachmentsDto attachments) { this.attachments = attachments; }
 
     @Data
     public static class PurchaseOrderDetailItemDto {
@@ -198,6 +267,15 @@ public class PurchaseOrderFullDto {
         private Double moisturePercent = 0.0;
         private String factoryType = "Standard"; // Sample or Standard
         private String remarks;
+
+        /* PurchsaeOrder.cs:3378,3394-3396 - written unconditionally for every grid row, so they
+           are sent on every save. C# value types: an unset control yields 0 / "", never null,
+           which is why the repository sends 0 rather than omitting the parameter (the procedure
+           default is NULL, and NULL != 0). All four are declared by Sp_PurchaseOrderDetail_Insert. */
+        private Double fcyAmount = 0.0;                        // r.Cells["FcyAmount"]                 :3378
+        private Integer labSampleId = 0;                       // r.Cells["LabSampleId"]               :3394
+        private String labSampleNo;                            // r.Cells["LabSample"]                 :3395
+        private Integer labAnalysisStandardScheduleId = 0;     // r.Cells["LabAnalysisStandardScheduleId"] :3396
 
         public Integer getPurchaseOrderDetailId() { return purchaseOrderDetailId; }
         public void setPurchaseOrderDetailId(Integer purchaseOrderDetailId) { this.purchaseOrderDetailId = purchaseOrderDetailId; }
@@ -259,6 +337,14 @@ public class PurchaseOrderFullDto {
         public void setFactoryType(String factoryType) { this.factoryType = factoryType; }
         public String getRemarks() { return remarks; }
         public void setRemarks(String remarks) { this.remarks = remarks; }
+        public Double getFcyAmount() { return fcyAmount; }
+        public void setFcyAmount(Double fcyAmount) { this.fcyAmount = fcyAmount; }
+        public Integer getLabSampleId() { return labSampleId; }
+        public void setLabSampleId(Integer labSampleId) { this.labSampleId = labSampleId; }
+        public String getLabSampleNo() { return labSampleNo; }
+        public void setLabSampleNo(String labSampleNo) { this.labSampleNo = labSampleNo; }
+        public Integer getLabAnalysisStandardScheduleId() { return labAnalysisStandardScheduleId; }
+        public void setLabAnalysisStandardScheduleId(Integer labAnalysisStandardScheduleId) { this.labAnalysisStandardScheduleId = labAnalysisStandardScheduleId; }
     }
 
     /**
@@ -432,5 +518,59 @@ public class PurchaseOrderFullDto {
         public void setSortNo(Integer sortNo) { this.sortNo = sortNo; }
         public String getPaymentRemarks() { return paymentRemarks; }
         public void setPaymentRemarks(String paymentRemarks) { this.paymentRemarks = paymentRemarks; }
+    }
+
+    /**
+     * Sp_PurchaseOrderLabDeduction_Insert's 12 parameters, in the declaration order of the C#
+     * Inventory.PurchaseOrderLabDeduction model - GenericProvider.SetProc reflects over the
+     * NON-VIRTUAL properties in declaration order, so that order IS the procedure signature.
+     * analysisItem and itemName are the model's `virtual` display properties: SetProc skips them,
+     * so they are read back for the grid but never sent.
+     */
+    @Data
+    public static class PurchaseOrderLabDeductionDto {
+        private Double deductionValue = 0.0;
+        private Double rangeFrom = 0.0;
+        private Double rangeTo = 0.0;
+        private Double standardValue = 0.0;
+        private Double weightKgs = 0.0;
+        private Integer analysisParameterId = 0;
+        private Integer id = 0;
+        private Integer invLabAnalysisStandardDeductionPolicyHeaderId = 0;
+        private Integer itemId = 0;
+        private Integer purchaseOrderDetailId = 0;
+        private Integer purchaseOrderId = 0;
+        private String deductFrom;
+        private String analysisItem;
+        private String itemName;
+
+        public Double getDeductionValue() { return deductionValue; }
+        public void setDeductionValue(Double deductionValue) { this.deductionValue = deductionValue; }
+        public Double getRangeFrom() { return rangeFrom; }
+        public void setRangeFrom(Double rangeFrom) { this.rangeFrom = rangeFrom; }
+        public Double getRangeTo() { return rangeTo; }
+        public void setRangeTo(Double rangeTo) { this.rangeTo = rangeTo; }
+        public Double getStandardValue() { return standardValue; }
+        public void setStandardValue(Double standardValue) { this.standardValue = standardValue; }
+        public Double getWeightKgs() { return weightKgs; }
+        public void setWeightKgs(Double weightKgs) { this.weightKgs = weightKgs; }
+        public Integer getAnalysisParameterId() { return analysisParameterId; }
+        public void setAnalysisParameterId(Integer analysisParameterId) { this.analysisParameterId = analysisParameterId; }
+        public Integer getId() { return id; }
+        public void setId(Integer id) { this.id = id; }
+        public Integer getInvLabAnalysisStandardDeductionPolicyHeaderId() { return invLabAnalysisStandardDeductionPolicyHeaderId; }
+        public void setInvLabAnalysisStandardDeductionPolicyHeaderId(Integer invLabAnalysisStandardDeductionPolicyHeaderId) { this.invLabAnalysisStandardDeductionPolicyHeaderId = invLabAnalysisStandardDeductionPolicyHeaderId; }
+        public Integer getItemId() { return itemId; }
+        public void setItemId(Integer itemId) { this.itemId = itemId; }
+        public Integer getPurchaseOrderDetailId() { return purchaseOrderDetailId; }
+        public void setPurchaseOrderDetailId(Integer purchaseOrderDetailId) { this.purchaseOrderDetailId = purchaseOrderDetailId; }
+        public Integer getPurchaseOrderId() { return purchaseOrderId; }
+        public void setPurchaseOrderId(Integer purchaseOrderId) { this.purchaseOrderId = purchaseOrderId; }
+        public String getDeductFrom() { return deductFrom; }
+        public void setDeductFrom(String deductFrom) { this.deductFrom = deductFrom; }
+        public String getAnalysisItem() { return analysisItem; }
+        public void setAnalysisItem(String analysisItem) { this.analysisItem = analysisItem; }
+        public String getItemName() { return itemName; }
+        public void setItemName(String itemName) { this.itemName = itemName; }
     }
 }

@@ -3,6 +3,7 @@ package com.mst.controllers;
 import com.mst.models.dto.PurchaseOrderFullDto;
 import com.mst.services.PurchaseOrderFullService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,21 +16,53 @@ public class PurchaseOrderRestController {
     @Autowired
     private PurchaseOrderFullService purchaseOrderService;
 
+    @Autowired
+    private com.mst.services.PurchaseOrderAttachmentService attachments;
+
+    @GetMapping("/{id:[0-9]+}/attachments")
+    public List<Map<String, Object>> attachments(@PathVariable int id) {
+        return attachments.list(id);
+    }
+
+    @GetMapping("/{id:[0-9]+}/attachments/{attachmentId:[0-9]+}")
+    public ResponseEntity<byte[]> downloadAttachment(@PathVariable int id, @PathVariable int attachmentId) {
+        var file = attachments.download(id, attachmentId);
+        return ResponseEntity.ok().header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                org.springframework.http.ContentDisposition.attachment().filename(file.name(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM).body(file.bytes());
+    }
+
     @GetMapping("/next-doc-no")
     public ResponseEntity<Map<String, Object>> getNextDocNo(
             /* 41 = this module's Purchase Order (po.DocumentTypeId = 41, PurchsaeOrder.cs :3295).
                The default used to be 1052, which is Commission Trading's Purchase Order - a
                different document in a different schema - so any caller that omitted docType
                was numbered against the wrong series. */
-            @RequestParam(defaultValue = "41") int docType,
-            @RequestParam(defaultValue = "1") int companyId) {
-        int docNo = purchaseOrderService.generateNextDocNo(docType, companyId);
+            @RequestParam(defaultValue = "41") int docType) {
+        /* ------------------------------------------------------------------------------------
+           companyId USED TO BE A REQUEST PARAMETER, @RequestParam(defaultValue = "1").
+
+           The page calls this as /api/purchase-order/next-doc-no?docType=41 and sends no
+           companyId, so it defaulted to 1 - and the service took it, because its rule was
+           "companyId > 0 ? companyId : session". This company is 78, so
+           Sp_PurchaseOrder_GetAllMethod ran with @CompanyId = 1, matched no rows, and returned
+           MAX(DocNo)+1 = 1. That is the whole of "the desktop shows PO-493, the web shows PO-1".
+
+           The desktop passes clsGlobalVariables.UserAccount.CompanyId and offers no way to
+           override it. Taking a tenancy id from the query string is also exactly what the
+           standing rule forbids: a caller could number a document against another company's
+           series simply by appending ?companyId=. So the parameter is gone, not merely
+           defaulted differently.
+           ------------------------------------------------------------------------------------ */
+        int docNo = purchaseOrderService.generateNextDocNo(docType);
         String formattedCode = String.format("PO-%d", docNo);
         Map<String, Object> res = new HashMap<>();
         res.put("docNo", docNo);
-        res.put("branchNo", docNo);
         res.put("nextCode", formattedCode);
         res.put("displayCode", formattedCode);
+        /* "branchNo" used to echo docNo. BranchSrNo is a different number from a different
+           activity (GeneratePurchaseOrderBranchCodeByDocId, scoped by branch); it has its own
+           endpoint now, so this no longer pretends the two are the same. */
         return ResponseEntity.ok(res);
     }
 
@@ -58,6 +91,18 @@ public class PurchaseOrderRestController {
             @RequestParam(defaultValue = "name") String mode,
             @RequestParam(required = false) Integer parentCategoryId) {
         return ResponseEntity.ok(purchaseOrderService.searchItems(query, mode, parentCategoryId));
+    }
+
+    /** CropYear() :1584 - Sp_InvCropYear_GetAllMethod @Activity='ReadAll'. */
+    @GetMapping("/crop-years")
+    public ResponseEntity<List<Map<String, Object>>> getCropYears() {
+        return ResponseEntity.ok(purchaseOrderService.getCropYears());
+    }
+
+    /** defaultConfiquration() :1617 - the combo defaults (Job/Lot, Crop Year, City Area). */
+    @GetMapping("/combo-defaults")
+    public ResponseEntity<Map<String, Object>> getComboDefaults() {
+        return ResponseEntity.ok(purchaseOrderService.getComboDefaults());
     }
 
     @GetMapping("/parent-categories")
@@ -97,6 +142,24 @@ public class PurchaseOrderRestController {
     @GetMapping("/delivery-terms")
     public ResponseEntity<List<Map<String, Object>>> getDeliveryTerms() {
         return ResponseEntity.ok(purchaseOrderService.getDeliveryTerms());
+    }
+
+    /**
+     * The History tab's Supplier Name and Booking Person pickers - ONE call, two lists.
+     *
+     * HistorySupplierComboFill (PurchsaeOrder.cs:4640-4695) fills both from a single
+     * USP_GetDataForDropDownFromPurchaseOrder result split on its Activity column, so they are
+     * the parties that actually appear on Purchase Orders, not the party master. Keeping it as
+     * one endpoint keeps that relationship visible and matches the desktop's single round trip.
+     *
+     * @param branchesIds CSV of BranchId. The desktop passes the branch the History tab has
+     *                    selected and refuses to run without one; omitted here means the BLL
+     *                    omits the parameter, which is its own documented behaviour.
+     */
+    @GetMapping("/history-parties")
+    public ResponseEntity<Map<String, Object>> getHistoryParties(
+            @RequestParam(required = false) String branchesIds) {
+        return ResponseEntity.ok(purchaseOrderService.getHistoryParties(branchesIds));
     }
 
     @GetMapping("/booking-persons")
@@ -232,6 +295,37 @@ public class PurchaseOrderRestController {
         return ResponseEntity.notFound().build();
     }
 
+    /** The three database-driven decisions the history grid's shape depends on. */
+    @GetMapping("/history-meta")
+    public ResponseEntity<Map<String, Object>> historyMeta() {
+        return ResponseEntity.ok(purchaseOrderService.historyMeta());
+    }
+
+    /** getUpdateForHistory() - the "Detail Of Above Selected Row" grid, read on its own. */
+    @GetMapping("/{id}/history-detail")
+    public ResponseEntity<List<Map<String, Object>>> historyDetail(@PathVariable Integer id) {
+        return ResponseEntity.ok(purchaseOrderService.historyDetail(id == null ? 0 : id));
+    }
+
+    /** GetLabDetailByItemId() - the Lab Deduction Standard grid for one item. */
+    @GetMapping("/lab-deduction-standard")
+    public ResponseEntity<List<Map<String, Object>>> getLabDeductionStandard(
+            @RequestParam(name = "itemId", defaultValue = "0") int itemId) {
+        return ResponseEntity.ok(purchaseOrderService.getLabDeductionStandard(itemId));
+    }
+
+    /** LocationTypeFill() - usp_getLocationType (no parameters). */
+    @GetMapping("/location-types")
+    public ResponseEntity<List<Map<String, Object>>> getLocationTypes() {
+        return ResponseEntity.ok(purchaseOrderService.getLocationTypes());
+    }
+
+    /** CurrencyFill() - Sp_MultiCurrency_GetAllMethod @Activity='ReadAll'. */
+    @GetMapping("/currencies")
+    public ResponseEntity<List<Map<String, Object>>> getCurrencies() {
+        return ResponseEntity.ok(purchaseOrderService.getCurrencies());
+    }
+
     @GetMapping("/branches")
     public ResponseEntity<List<Map<String, Object>>> getBranches() {
         return ResponseEntity.ok(purchaseOrderService.getBranches());
@@ -245,17 +339,98 @@ public class PurchaseOrderRestController {
             @RequestParam(required = false) Integer toDocNo,
             @RequestParam(required = false) Integer supplierId,
             @RequestParam(required = false) Integer bookingPersonId,
-            @RequestParam(required = false) Integer branchId,
+            /* A comma-separated list, not an id: the desktop's branch combo is multi-select and
+               the BLL parameter is @BranchesIds, a string (BLL 0595:262). `branchId` is still
+               accepted so a cached page keeps working. */
+            @RequestParam(required = false) String branchIds,
+            @RequestParam(required = false) String branchId,
             @RequestParam(required = false, defaultValue = "DocDate") String dateType) {
-        return ResponseEntity.ok(purchaseOrderService.getHistory(fromDate, toDate, fromDocNo, toDocNo, supplierId, bookingPersonId, branchId, dateType));
+        String branches = (branchIds != null && !branchIds.trim().isEmpty()) ? branchIds : branchId;
+        return ResponseEntity.ok(purchaseOrderService.getHistory(fromDate, toDate, fromDocNo, toDocNo, supplierId, bookingPersonId, branches, dateType));
     }
 
+    /**
+     * Refused, not performed. The desktop's btnDelete_Click (PurchsaeOrder.cs:3881-3883) has an
+     * empty body and GoldenAcedb carries no Purchase Order delete procedure, so there is no
+     * desktop behaviour to port. This endpoint previously ran a fabricated raw-SQL delete that
+     * orphaned six child tables and ignored tenancy - see
+     * PurchaseOrderFullService.deletePurchaseOrder() for the full reasoning. It is kept mapped
+     * (rather than removed) so an existing caller gets an explicit 405 with the reason instead of
+     * a bare 404 that reads like a routing fault.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deletePurchaseOrder(@PathVariable Integer id) {
-        boolean ok = purchaseOrderService.deletePurchaseOrder(id);
         Map<String, Object> res = new HashMap<>();
-        res.put("success", ok);
-        res.put("message", ok ? "Purchase Order deleted successfully." : "Failed to delete Purchase Order.");
-        return ResponseEntity.ok(res);
+        res.put("success", false);
+        res.put("message", "Purchase Orders cannot be deleted. The desktop form's Delete button "
+                + "performs no action and the database has no Purchase Order delete procedure. "
+                + "Correct the order with Update, or close it via Order Status.");
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(res);
+    }
+
+    /**
+     * BranchSrNoFill() - the "Branch #" box beside Doc No. It was blank on the web because
+     * nothing generated it; the desktop fills it as soon as the form opens.
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/next-branch-sr-no")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> nextBranchSrNo(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "41") int docType) {
+        java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+        try {
+            r.put("branchSrNo", purchaseOrderService.generateNextBranchSrNo(docType));
+        } catch (Exception e) {
+            r.put("branchSrNo", 0);
+            r.put("message", e.getMessage());
+        }
+        return r;
+    }
+
+    /**
+     * combordercat_Leave - the "Cat No" box. A DIFFERENT procedure from the two above
+     * (Sp_InvOrderCategory_GetAllMethod), and it fires when the Category combo changes, not on New.
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/next-category-sr-no")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> nextCategorySrNo(
+            @org.springframework.web.bind.annotation.RequestParam int categoryId) {
+        java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+        try {
+            r.put("categorySrNo", purchaseOrderService.generateNextCategorySrNo(categoryId));
+        } catch (Exception e) {
+            r.put("categorySrNo", 0);
+            r.put("message", e.getMessage());
+        }
+        return r;
+    }
+
+    /** The configuration-backed defaults a new Purchase Order starts with. */
+    @org.springframework.web.bind.annotation.GetMapping("/screen-defaults")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> screenDefaults() {
+        try {
+            return purchaseOrderService.screenDefaults();
+        } catch (Exception e) {
+            java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("message", e.getMessage());
+            return r;
+        }
+    }
+
+    /**
+     * Diagnostic: the four values the document-number procedure filters on. Read-only.
+     * Use when the generated number does not match the desktop's.
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/doc-no-context")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> docNoContext(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "41") int docType) {
+        try {
+            return purchaseOrderService.docNoContext(docType);
+        } catch (Exception e) {
+            java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("message", e.getMessage());
+            return r;
+        }
     }
 }

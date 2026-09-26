@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Settlement - Production Against (Job Order)</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <style>
+        /* frmProductionSettlement.cs - ClientSize 1164 x 739, AutoScrollMinSize 1280 x 820 (Load:268).
+           Teal = Color.Teal (#008080); the two strip buttons are Color.FromArgb(0,64,64). */
+        html, body { margin: 0; padding: 0; }
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background: #fff; font-size: 11px; color: #000; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .st-form { min-width: 1164px; display: flex; flex-direction: column; min-height: 100vh; }
+        .teal { background: #008080; color: #fff; }
+
+        /* panel32 - 64px, every control at its designer Location. */
+        .st-top { position: relative; height: 64px; flex: 0 0 64px; }
+        .st-top > * { position: absolute; }
+        .st-lbl { font: bold 9pt "Segoe UI", sans-serif; color: #000; white-space: nowrap; }
+        .st-top .win-combo, .st-top .st-date { font: 9.75pt Verdana, sans-serif; border: 1px solid #7a9a9e; height: 26px; background: #fff; }
+        .st-top .st-date { height: 23px; }
+        .st-top .dtcombo-wrap { position: absolute; }
+        .st-btn { background: #008080; color: #fff; font: bold 9pt Verdana, sans-serif; border: 1px solid #008080; height: 26px; padding: 0 2px; cursor: pointer; }
+        .st-btn:hover:not(:disabled) { background: #006666; }
+        .st-btn:disabled { background: #9e9e9e; border-color: #7a7a7a; cursor: not-allowed; }
+        .st-btn.dark { background: #004040; border-color: #004040; height: 22px; }
+        .st-chk { font: bold 9.75pt "Segoe UI Semibold", "Segoe UI", sans-serif; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer; }
+        .st-wages { font: bold 8.25pt Verdana, sans-serif; width: 64px; height: 57px; display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.15; cursor: pointer; }
+
+        .st-bar { height: 21px; display: flex; align-items: center; padding: 0 3px; font: bold 9pt "Segoe UI", sans-serif; color: #fff; background: #008080; position: relative; }
+        .st-bar.input { font: bold 9.75pt Tahoma, sans-serif; }
+        .st-bar.out { height: 22px; }
+        .st-bar .right { position: absolute; right: 1px; top: 0; display: flex; align-items: center; gap: 6px; }
+
+        .st-grid-wrap { border: 1px solid #7a9a9e; background: #fff; overflow: auto; width: 100%; }
+        .st-grid { border-collapse: collapse; font: 8.25pt Verdana, sans-serif; background: #fff; table-layout: fixed; }
+        .st-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 2px 4px; text-align: center; font-weight: normal; position: sticky; top: 0; z-index: 3; white-space: normal; line-height: 1.15; overflow: hidden; }
+        .st-grid td { border: 1px solid #dcdcdc; padding: 1px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 19px; }
+        .st-grid td.num { text-align: right; }
+        .st-grid tbody tr.cur td { background: #cce8ff; }
+        .st-grid tfoot td { background: #ececec; font-weight: bold; border-top: 2px solid #999; position: sticky; bottom: 0; }
+        .st-grid tr.flt th { background: #fff; padding: 1px; position: sticky; top: 36px; z-index: 3; }
+        .st-grid tr.flt input { width: 100%; height: 18px; font-size: 8pt; border: 1px solid #c8c8c8; padding: 0 2px; }
+        .st-grid a.lnk { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        .st-grid input.edit { width: 100%; height: 17px; border: 1px solid #7a9a9e; font: 8.25pt Verdana, sans-serif; text-align: right; padding: 0 2px; }
+        .st-nav { font: 8pt Verdana, sans-serif; color: #333; padding: 1px 4px; border-top: 1px solid #ddd; background: #f4f4f4; }
+
+        #wrapInput { height: 170px; }
+        .st-out { flex: 1 1 auto; min-height: 140px; display: flex; flex-direction: column; }
+        #wrapOutput { flex: 1 1 auto; min-height: 140px; }
+
+        .st-ohpm { flex: 0 0 143px; display: flex; flex-direction: column; }
+        .st-ohpm .st-bar { height: 23px; }
+        .st-ohpm-body { flex: 1; display: flex; min-height: 0; }
+        .st-ohpm-body > .st-grid-wrap { height: 120px; }
+        #wrapOverHead { flex: 0 0 628px; }
+        #wrapPacking { flex: 1 1 auto; }
+
+        /* panel40 - 179px, four fixed-position group panels. */
+        .st-sum { position: relative; height: 179px; flex: 0 0 179px; }
+        .st-pnl { position: absolute; border: 1px solid #000; background: #fff; }
+        .st-pnl .hd { background: #008080; color: #fff; font: bold 9.75pt "Segoe UI", sans-serif; position: relative; }
+        .st-pnl .hd span { position: absolute; top: 1px; white-space: nowrap; }
+        .st-pnl > .l { position: absolute; white-space: nowrap; }
+        .st-pnl > input { position: absolute; background: #fff; border: 1px solid #7a9a9e; color: #000; padding: 1px 3px; }
+        .l9 { font: bold 9pt "Segoe UI Semibold", "Segoe UI", sans-serif; }
+        .l95 { font: bold 9.5pt "Segoe UI Semibold", "Segoe UI", sans-serif; }
+        .l10 { font: bold 10pt "Segoe UI Semibold", "Segoe UI", sans-serif; }
+        .t975 { font: 9.75pt Verdana, sans-serif; height: 23px; }
+        .t11 { font: 11pt Verdana, sans-serif; height: 25px; }
+        .t1175 { font: 11.75pt Verdana, sans-serif; height: 27px; }
+
+        .st-status { font: 8.5pt "Segoe UI", sans-serif; color: #333; padding: 2px 6px; min-height: 18px; background: #f4f4f4; border-top: 1px solid #ccc; }
+        .is-hidden { display: none !important; }
+        .is-busy { opacity: .65; cursor: progress !important; }
+        .is-busy::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 4px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; vertical-align: -1px; animation: stspin .6s linear infinite; }
+        @keyframes stspin { to { transform: rotate(360deg); } }
+
+        /* MessageBox and GrdPopUpToReturndt - page-local modal dialogs. */
+        .st-modal { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 9000; display: flex; align-items: center; justify-content: center; }
+        .st-dlg { background: #fff; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); font: 9pt "Segoe UI", sans-serif; max-width: 94vw; }
+        .st-dlg .cap { height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; background: #f0f0f0; border-bottom: 1px solid #ccc; }
+        .st-dlg .cap button { border: none; background: none; font-size: 15px; cursor: pointer; }
+        .st-dlg .msg { padding: 14px 16px; white-space: pre-wrap; display: flex; gap: 10px; max-width: 560px; }
+        .st-dlg .msg i { font-size: 22px; }
+        .st-dlg .btns { padding: 8px 12px; background: #f0f0f0; text-align: right; }
+        .st-dlg .btns button { min-width: 72px; margin-left: 6px; height: 24px; }
+        #dlgByProduct .st-grid-wrap { width: 511px; height: 415px; max-width: 94vw; }
+    </style>
+</head>
+<body>
+<div class="st-form" id="frmProductionSettlement">
+
+    <!-- ============================================================== panel32 (0,0,1164x64) -->
+    <div class="st-top" id="panel32">
+        <span class="st-lbl" style="left:8px; top:11px;">Job Order No</span>
+        <label class="st-chk" style="left:121px; top:6px;"><input type="checkbox" id="chkAllJobOrderOnSettlement" tabindex="1"> All Job Orders</label>
+        <select id="CmbJobOrderSettlement" class="win-combo dtcombo" data-dtcombo="p280SettleJobOrder" data-dtcombo-caption="JobOrderNo"
+                style="left:8px; top:32px; width:227px;" tabindex="0"></select>
+
+        <span class="st-lbl" style="left:234px; top:11px;">Difference Account</span>
+        <select id="CmbDifferenceAccountTitle" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Difference Account"
+                style="left:237px; top:32px; width:185px;" tabindex="2"></select>
+
+        <span class="st-lbl" style="left:421px; top:11px;">Settlement Date</span>
+        <input type="date" id="txtSettlementDate" class="st-date" style="left:424px; top:34px; width:123px;" tabindex="3">
+
+        <button type="button" id="btnGeneralSettlement" class="st-btn" style="left:549px; top:4px; width:85px;" tabindex="4">Generate</button>
+        <button type="button" id="btnApplyAvgRateFG" class="st-btn" style="left:549px; top:32px; width:85px;" tabindex="5">ApplyRate</button>
+        <button type="button" id="btnUpdateSettlement" class="st-btn" style="left:633px; top:4px; width:75px;" tabindex="6">Update</button>
+        <button type="button" id="btnApproveSettlement" class="st-btn is-hidden" style="left:633px; top:32px; width:75px;" tabindex="7">Approve</button>
+        <button type="button" id="btnResetSettlement" class="st-btn" style="left:708px; top:4px; width:75px;" tabindex="8">Reset</button>
+        <button type="button" id="btnSettlementVoucher" class="st-btn" style="left:708px; top:32px; width:75px;" tabindex="9">Voucher</button>
+        <button type="button" id="btnRecoveryReport" class="st-btn" style="left:792px; top:4px; width:100px;" tabindex="10">602A_Print</button>
+        <button type="button" id="btn613SummaryReport" class="st-btn" style="left:792px; top:32px; width:100px;" tabindex="11">613_Print</button>
+        <button type="button" id="BtnPrint613A" class="st-btn" style="left:892px; top:4px; width:105px;" tabindex="12">613_A_Print</button>
+        <button type="button" id="BtnPrint613B" class="st-btn" style="left:892px; top:32px; width:105px;" tabindex="13">613_B_Print</button>
+        <button type="button" id="btn615Report" class="st-btn" style="left:997px; top:4px; width:105px;" tabindex="14">615_Print</button>
+        <button type="button" id="BtnPrint615A" class="st-btn" style="left:997px; top:32px; width:105px;" tabindex="15">615_A_Print</button>
+        <label class="st-wages" style="left:1105px; top:3px;"><input type="checkbox" id="chkIncludeWages" checked tabindex="16">Include<br>Wages<br>In Print</label>
+    </div>
+
+    <!-- ============================================================ panel49 + grdInputsettlement -->
+    <div class="st-bar input" id="panel49"><span>Input Raw Material</span></div>
+    <div class="st-grid-wrap" id="wrapInput" tabindex="-1"><table class="st-grid" id="grdInputsettlement"></table></div>
+
+    <!-- ============================================================ panel34 + grdOutPutSettlement -->
+    <div class="st-bar out" id="panel34">
+        <span>OutPut By-Product <u>&nbsp;</u>Finish Goods</span>
+        <button type="button" id="btnAllocateExportInvoiceToJobOrder" class="st-btn dark" style="position:absolute; left:206px; top:0; width:259px;">Export Invoice Allocate To JobOrder</button>
+        <span class="right">
+            <span id="label171" class="is-hidden">Click Update By-Product Rates Item Wise</span>
+            <button type="button" id="BtnByProductSettlementPopUp" class="st-btn dark is-hidden" style="width:165px;">BY-Product Item Wise</button>
+        </span>
+    </div>
+    <div class="st-out">
+        <div class="st-grid-wrap" id="wrapOutput" tabindex="0"><table class="st-grid" id="grdOutPutSettlement"></table></div>
+        <div class="st-nav" id="navOutput"></div>
+    </div>
+
+    <!-- ============================================================ panel36: Over Heads | Packing Material -->
+    <div class="st-ohpm" id="panel36">
+        <div class="st-bar" id="panel37"><span style="position:absolute; left:10px;">Over Heads</span><span style="position:absolute; left:639px;">Packing Material</span></div>
+        <div class="st-ohpm-body">
+            <div class="st-grid-wrap" id="wrapOverHead"><table class="st-grid" id="grdOverHeadSettlement"></table></div>
+            <div class="st-grid-wrap" id="wrapPacking"><table class="st-grid" id="grdPackingMaterialSettlement"></table></div>
+        </div>
+    </div>
+
+    <!-- ============================================================ panel40: the four summary panels -->
+    <div class="st-sum" id="panel40">
+        <div class="st-pnl" id="panel51" style="left:4px; top:3px; width:426px; height:171px;">
+            <div class="hd" style="height:24px;">
+                <span style="left:2px;">Description</span><span style="left:113px;">ItemQty</span>
+                <span style="left:198px;">NetWeight</span><span style="left:312px;">Amount</span>
+            </div>
+            <span class="l l9" style="left:2px; top:41px;">Raw Material</span>
+            <input class="t975" id="txtItemQtyRM" readonly style="left:109px; top:37px; width:82px;">
+            <input class="t975" id="txtNetWeightRM" readonly style="left:195px; top:37px; width:107px;">
+            <input class="t975" id="txtAmountRM" readonly style="left:305px; top:37px; width:116px;">
+            <span class="l l9" style="left:2px; top:73px;">By Product - Exp</span>
+            <input class="t975" id="txtItemQtyBP" readonly style="left:109px; top:69px; width:82px;">
+            <input class="t975" id="txtNetWeightBP" readonly style="left:195px; top:69px; width:107px;">
+            <input class="t975" id="txtAmountBP" readonly style="left:305px; top:69px; width:116px;">
+            <span class="l l9" style="left:2px; top:105px;">BP+OH+PM Exp</span>
+            <input class="t975" id="txtBPOverHead" readonly style="left:109px; top:101px; width:82px;">
+            <input class="t975" id="txtBPPMCharges" readonly style="left:195px; top:101px; width:107px;">
+            <input class="t975" id="txtBPTotalAmountWithExpenses" readonly style="left:305px; top:101px; width:116px;">
+            <span class="l l9" style="left:2px; top:137px;">Finish Goods</span>
+            <input class="t975" id="txtItemQtyFG" readonly style="left:109px; top:133px; width:82px;">
+            <input class="t975" id="txtNetWeightFG" readonly style="left:195px; top:133px; width:107px;">
+            <input class="t975" id="txtAmountFG" readonly style="left:305px; top:133px; width:116px;">
+        </div>
+
+        <div class="st-pnl" id="panel53" style="left:436px; top:3px; width:274px; height:85px;">
+            <div class="hd" style="height:20px;"><span style="left:6px; top:0;">OverHeads &amp; Packing Mateial Totals</span></div>
+            <span class="l l10" style="left:5px; top:27px;">Over Heads</span>
+            <input class="t1175" id="txtOverHeadsSettlement" readonly style="left:117px; top:23px; width:150px;">
+            <span class="l l10" style="left:5px; top:58px;">Packing Material</span>
+            <input class="t1175" id="txtPackingMaterialSettlement" readonly style="left:117px; top:54px; width:150px;">
+        </div>
+
+        <div class="st-pnl" id="panel55" style="left:436px; top:89px; width:274px; height:85px;">
+            <div class="hd" style="height:20px;"><span style="left:6px;">Finish Good Average Rate / Kg</span></div>
+            <span class="l l10" style="left:4px; top:26px;">WithOut Exp</span>
+            <input class="t1175" id="txtFinishGoodRateWithOutExp" readonly style="left:117px; top:22px; width:150px;">
+            <span class="l l10" style="left:4px; top:57px;">With Exp</span>
+            <input class="t1175" id="txtAvgRateFG" readonly style="left:117px; top:53px; width:150px;">
+        </div>
+
+        <div class="st-pnl" id="panelDifferenceAmounts" style="left:715px; top:3px; width:260px; height:171px;">
+            <div class="hd" style="height:20px;"><span style="left:6px; top:0;">Difference</span></div>
+            <span class="l l95" style="left:8px; top:24px;">Actual Finish Amount</span>
+            <input class="t11" id="txtActualFinishGoodsAmount" readonly style="left:8px; top:42px; width:235px;">
+            <span class="l l95" style="left:8px; top:72px;">Finish Amount against Job Order Rate</span>
+            <input class="t11" id="txtFinishAmountAgainstJobOrder" readonly style="left:8px; top:91px; width:235px;">
+            <span class="l l95" style="left:8px; top:118px;">Difference Amount</span>
+            <input class="t11" id="txtDifferenceAmount" readonly style="left:8px; top:137px; width:235px;">
+        </div>
+    </div>
+    <div class="st-status" id="lblStatus"></div>
+</div>
+
+<!-- GrdPopUpToReturndt (511 x 415) - "Please double-click any row to update values." -->
+<div class="st-modal is-hidden" id="dlgByProduct">
+    <div class="st-dlg">
+        <div class="cap"><span>Please double-click any row to update values.</span><button type="button" data-close>&times;</button></div>
+        <div class="st-grid-wrap"><table class="st-grid" id="grdByProductPopup"></table></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_p280_settlement.js?v=20260925b}"></script>
+</body>
+</html>

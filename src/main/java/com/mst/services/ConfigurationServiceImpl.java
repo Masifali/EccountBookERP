@@ -1,5 +1,7 @@
 package com.mst.services;
 
+import com.mst.repositories.support.ProcExec;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -287,7 +289,7 @@ public class ConfigurationServiceImpl implements IConfigurationService {
 						definitionId, "", configKey, true, orgId, compId, userId, userId);
 				result.id = newId;
 			} else {
-				jdbcTemplate.update(SQL_UPDATE,
+				ProcExec.call(jdbcTemplate, SQL_UPDATE,
 						id, definitionId, "", configKey, true, orgId, compId, userId, userId);
 				result.id = id;
 			}
@@ -306,40 +308,16 @@ public class ConfigurationServiceImpl implements IConfigurationService {
 
 	@Override
 	public List<Map<String, Object>> getCurrencies() {
-		int orgId = currentUserContext.currentOrganizationId();
-		int compId = currentUserContext.currentCompanyId();
-		try {
-			List<Map<String, Object>> list = jdbcTemplate.queryForList(
-					"SELECT Id, CurrencyName, CurrencyCode FROM dbo.MultiCurrency WHERE OrganizationId=? AND CompanyId=? ORDER BY CurrencyName",
-					orgId, compId);
-			if (list != null && !list.isEmpty()) {
-				return list;
-			}
-		} catch (Exception ex) {
-		}
-
-		List<Map<String, Object>> fallback = new ArrayList<>();
-		Map<String, Object> c1 = new HashMap<>(); c1.put("Id", 1); c1.put("CurrencyName", "Pakistani Rupee"); c1.put("CurrencyCode", "PKR"); fallback.add(c1);
-		Map<String, Object> c2 = new HashMap<>(); c2.put("Id", 2); c2.put("CurrencyName", "US Dollar"); c2.put("CurrencyCode", "USD"); fallback.add(c2);
-		return fallback;
-	}
+        return jdbcTemplate.queryForList(
+                "EXEC dbo.Sp_MultiCurrency_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity='ReadAll'",
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId());
+    }
 
 	@Override
 	public List<Map<String, Object>> getGlobalAccounts(int[] withTypeIds, int[] withoutTypeIds, String exactAccountTitle) {
 		int orgId = currentUserContext.currentOrganizationId();
 		int compId = currentUserContext.currentCompanyId();
-		List<Map<String, Object>> rows = new ArrayList<>();
-		try {
-			rows = jdbcTemplate.queryForList(SQL_GLOBAL_ACCOUNTS, orgId, compId);
-		} catch (Exception ex) {
-		}
-
-		if (rows == null || rows.isEmpty()) {
-			try {
-				rows = jdbcTemplate.queryForList("SELECT Id as ChartOfAccountId, AccountCode, AccountTitle, AccountTypeId, ParentAccountCode as ParentAccountTitle FROM ChartofAccount");
-			} catch (Exception e) {
-			}
-		}
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_GLOBAL_ACCOUNTS, orgId, compId);
 
 		Set<Integer> withSet = toSet(withTypeIds);
 		Set<Integer> withoutSet = toSet(withoutTypeIds);
@@ -532,28 +510,9 @@ public class ConfigurationServiceImpl implements IConfigurationService {
 
 	@Override
 	public List<Map<String, Object>> getJobLots() {
-		int orgId = currentUserContext.currentOrganizationId();
-		int compId = currentUserContext.currentCompanyId();
-		try {
-			List<Map<String, Object>> list = jdbcTemplate.queryForList(SQL_JOB_LOTS, orgId, compId, "GetJobLotGlIdsandName");
-			if (list != null && !list.isEmpty()) {
-				return list;
-			}
-		} catch (Exception ex) {
-		}
-		try {
-			List<Map<String, Object>> tableList = jdbcTemplate.queryForList("SELECT Id as Id, JobLotName as JobLotName FROM JobLot");
-			if (tableList != null && !tableList.isEmpty()) {
-				return tableList;
-			}
-		} catch (Exception e) {}
-
-		List<Map<String, Object>> fallback = new ArrayList<>();
-		Map<String, Object> j1 = new HashMap<>(); j1.put("Id", 1); j1.put("JobLotName", "General / Main Lot"); fallback.add(j1);
-		Map<String, Object> j2 = new HashMap<>(); j2.put("Id", 2); j2.put("JobLotName", "Job Lot A"); fallback.add(j2);
-		Map<String, Object> j3 = new HashMap<>(); j3.put("Id", 3); j3.put("JobLotName", "Job Lot B"); fallback.add(j3);
-		return fallback;
-	}
+        return jdbcTemplate.queryForList(SQL_JOB_LOTS,
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(), "GetJobLotGlIdsandName");
+    }
 
 	@Override
 	public List<Map<String, Object>> getCropYears() {

@@ -3,6 +3,7 @@ package com.mst.services;
 import com.mst.models.dto.PurchaseLineItemDto;
 import com.mst.models.dto.PurchaseTransactionDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.mst.security.CurrentUserContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,12 @@ public class PurchaseService {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    /* The signed-in user's organization, company, financial year and id. These used to be the
+       literal 1 in the INSERTs below, which wrote every document into organization 1 / company 1
+       regardless of who was signed in and broke the tenancy isolation the desktop enforces. */
+    @Autowired
+    private CurrentUserContext currentUserContext;
 
     public int generateNextDocNo(int documentTypeId) {
         try {
@@ -141,7 +148,8 @@ public class PurchaseService {
                 String insertHead = "INSERT INTO VoucherHead (" +
                         "DocumentTypeId, VoucherCode, VoucherDate, RefAccountId, Remarks, VoucherAmount, " +
                         "OrganizationId, CompanyId, FinancialYearId, EntryUser, EntryDate, IsApproved" +
-                        ") VALUES (?, ?, ?, ?, ?, ?, 1, 1, 1, 1, GETDATE(), 1)";
+                        /* IsApproved stays 1 - that is a business rule, reported rather than changed. */
+                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 1)";
 
                 jdbcTemplate.update(insertHead,
                         dto.getDocumentTypeId(),
@@ -149,11 +157,17 @@ public class PurchaseService {
                         vDate,
                         refAccId != null ? refAccId : 0,
                         dto.getRemarks() != null ? dto.getRemarks() : "",
-                        netTotal.doubleValue()
+                        netTotal.doubleValue(),
+                        currentUserContext.currentOrganizationId(),
+                        currentUserContext.currentCompanyId(),
+                        currentUserContext.currentFinancialYearId(),
+                        currentUserContext.currentUserId()
                 );
             }
 
-            Integer voucherHeadId = dto.getId() != null && dto.getId() > 0 ? dto.getId() : jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
+            Integer voucherHeadId = dto.getId() != null && dto.getId() > 0 ? dto.getId() : /* SCOPE_IDENTITY: @@IDENTITY returns the last identity from ANY scope, including
+                       rows a trigger on VoucherHead inserts elsewhere. */
+                    jdbcTemplate.queryForObject("SELECT CAST(SCOPE_IDENTITY() AS INT)", Integer.class);
 
             int lineNo = 1;
             String detailSql = "INSERT INTO VoucherDetail (" +
@@ -278,34 +292,44 @@ public class PurchaseService {
         }
     }
 
+    /**
+     * Purchase Invoice (Store Management) - SAVE IS REFUSED. See the block comment below.
+     *
+     * The desktop form is Architecture.WinApp.StoreManagement\PurchaseInvoiceStoreManagement.cs
+     * (5,195 lines). Its detail grid is NOT typed by hand: it is populated only by the Load-GRN
+     * dialog (frmPendingGrnStoreLoader), and LoadInGridDetailFromGrn (:1940-2065) carries roughly
+     * thirty columns per row across from the pending-GRN result set - among them the whole
+     * source-document linkage chain:
+     *
+     *     InvGrnId, InvGrnDetailId, InvGrnDocumentTypeId, GrnNo,
+     *     PurchaseOrderId / PurchaseOrderDocumentTypeId / PurchaseOrderNo,
+     *     PurchaseDemandId / PurchaseDemandDocumentTypeId / PurchaseDemandNo,
+     *     PreBillId / PreBillDocumentTypeId / PreBillNo,
+     *     DeliveryChallanId / DeliveryChallanDocumentTypeId / DeliveryChallanNo
+     *
+     * plus ItemUomId/UOMCodeItem and ItemConditionId/ItemCondition, which are INHERITED from the
+     * GRN row (:2028-2035) and are not choices the user makes on this form at all.
+     *
+     * The implementation that stood here wrote a single row into VoucherHead with raw SQL and
+     * reported success. It wrote NO detail rows, no GL entries, no freight and no expense rows,
+     * and it hard-coded OrganizationId, CompanyId, FinancialYearId and EntryUser to the literal 1
+     * with IsApproved = 1. Against the live GoldenAcedb that produces an approved, headerless
+     * purchase invoice attributed to the wrong organization - a corrupt document that the desktop
+     * can neither display nor reverse, and one that consumes a VoucherCode.
+     *
+     * Refusing is therefore the safe state: the screen can still search and read history, and the
+     * save returns a clear message instead of writing a partial document. Restoring a working save
+     * means porting the real posting routine (header + details + the linkage columns + GL/freight/
+     * expense proportioning), not re-enabling this method.
+     */
     public Map<String, Object> saveStorePurchaseInvoice(Map<String, Object> req) {
         Map<String, Object> res = new HashMap<>();
-        try {
-            Integer docNo = req.get("docNo") != null ? Integer.parseInt(req.get("docNo").toString()) : generateNextDocNo(61);
-            Integer branchSrNo = req.get("branchSrNo") != null ? Integer.parseInt(req.get("branchSrNo").toString()) : 1;
-            Integer salesTaxNo = req.get("salesTaxNo") != null ? Integer.parseInt(req.get("salesTaxNo").toString()) : 1;
-            Integer supplierCustomerId = req.get("supplierCustomerId") != null ? Integer.parseInt(req.get("supplierCustomerId").toString()) : 0;
-            String docDate = req.get("docDate") != null ? req.get("docDate").toString() : LocalDate.now().toString();
-            String manualBillNo = req.get("manualBillNo") != null ? req.get("manualBillNo").toString() : "";
-            String remarksHeader = req.get("remarksHeader") != null ? req.get("remarksHeader").toString() : "";
-            Double billAmount = req.get("billAmount") != null ? Double.parseDouble(req.get("billAmount").toString()) : 0.0;
-
-            String insertHead = "INSERT INTO VoucherHead (" +
-                    "DocumentTypeId, VoucherCode, VoucherDate, RefAccountId, Remarks, VoucherAmount, " +
-                    "OrganizationId, CompanyId, FinancialYearId, EntryUser, EntryDate, IsApproved, ManualBillNo" +
-                    ") VALUES (61, ?, ?, ?, ?, ?, 1, 1, 1, 1, GETDATE(), 1, ?)";
-
-            jdbcTemplate.update(insertHead, docNo, docDate, supplierCustomerId, remarksHeader, billAmount, manualBillNo);
-            Integer headId = jdbcTemplate.queryForObject("SELECT @@IDENTITY", Integer.class);
-
-            res.put("success", true);
-            res.put("id", headId);
-            res.put("docNo", docNo);
-            res.put("message", "Purchase Invoice Store Management saved successfully (Doc No: " + docNo + ")");
-        } catch (Exception e) {
-            res.put("success", false);
-            res.put("message", "Error saving Purchase Invoice Store Management: " + e.getMessage());
-        }
+        res.put("success", false);
+        res.put("message",
+                "Purchase Invoice (Store Management) cannot be saved yet: the posting routine is "
+                + "not implemented. The previous version wrote an incomplete, auto-approved "
+                + "document into VoucherHead with no detail rows and no source-document linkage, "
+                + "so it has been disabled rather than left to corrupt live data.");
         return res;
     }
 
@@ -321,17 +345,24 @@ public class PurchaseService {
             sb.append("FROM VoucherHead h ");
             sb.append("LEFT JOIN SupplierCustomer s ON h.RefAccountId = s.Id OR h.RefAccountId = s.GlAccountId ");
             sb.append("WHERE h.DocumentTypeId = 61 ");
+            /* Bound, not concatenated: fromDate and toDate arrive straight off the request body,
+               so building them into the SQL text made this query injectable. */
+            List<Object> args = new ArrayList<>();
             if (fromDate != null && !fromDate.isBlank()) {
-                sb.append("AND h.VoucherDate >= '").append(fromDate).append(" 00:00:00' ");
+                sb.append("AND h.VoucherDate >= ? ");
+                args.add(fromDate.trim() + " 00:00:00");
             }
             if (toDate != null && !toDate.isBlank()) {
-                sb.append("AND h.VoucherDate <= '").append(toDate).append(" 23:59:59' ");
+                sb.append("AND h.VoucherDate <= ? ");
+                args.add(toDate.trim() + " 23:59:59");
             }
             if (suppId != null && suppId > 0) {
-                sb.append("AND (s.Id = ").append(suppId).append(" OR s.GlAccountId = ").append(suppId).append(") ");
+                sb.append("AND (s.Id = ? OR s.GlAccountId = ?) ");
+                args.add(suppId);
+                args.add(suppId);
             }
             sb.append("ORDER BY h.VoucherCode DESC");
-            return jdbcTemplate.queryForList(sb.toString());
+            return jdbcTemplate.queryForList(sb.toString(), args.toArray());
         } catch (Exception e) {
             return Collections.emptyList();
         }

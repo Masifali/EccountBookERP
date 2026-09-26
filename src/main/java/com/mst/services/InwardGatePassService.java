@@ -4,6 +4,8 @@ import com.mst.models.InwardGatePass;
 import com.mst.models.InwardGatePassDetail;
 import com.mst.models.InwardGatePassPurchaseBreakUp;
 import com.mst.repositories.InwardGatePassRepository;
+import com.mst.repositories.InwardGatePassRecordRepository;
+import com.mst.security.CurrentUserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,32 +18,51 @@ public class InwardGatePassService {
     @Autowired
     private InwardGatePassRepository repository;
 
+    @Autowired private InwardGatePassRecordRepository records;
+    @Autowired private CurrentUserContext context;
+
     public Map<String, Object> getDropdowns(Integer orgId, Integer compId) {
         Map<String, Object> map = new HashMap<>();
         map.put("suppliers", repository.getSuppliers(orgId, compId));
         map.put("cities", repository.getCities(orgId, compId));
         map.put("vehicleTypes", repository.getVehicleTypes(orgId, compId));
-        map.put("gatePassTypes", repository.getGatePassTypes());
+        map.put("gatePassTypes", repository.getGatePassTypes(orgId, compId));
+        map.put("orderTypes", repository.getOrderTypes(orgId, compId, context.currentBranchId()));
         map.put("items", repository.getItems(orgId, compId));
         map.put("weighBridges", repository.getWeighBridges());
         map.put("packingTypes", repository.getPackingTypes());
-        map.put("transitVehicles", repository.getTransitVehicles(orgId, compId));
+        map.put("transitVehicles", List.of()); // Depends on the selected supplier/order.
+        map.put("statuses", repository.getStatuses(orgId, compId));
+        map.put("documentTypes", repository.getDocumentTypes(orgId, compId));
         return map;
     }
 
     public Map<String, Object> findDriverBioByCnic(String cnic) {
-        return repository.findDriverBioByCnic(cnic);
+        return repository.findDriverBio(context.currentOrganizationId(),context.currentCompanyId(),cnic,null);
+    }
+
+    public List<Map<String,Object>> getOpenGatePasses() {
+        return repository.getOpenGatePasses(context.currentOrganizationId(),context.currentCompanyId(),context.currentBranchId(),context.currentFinancialYearId());
     }
 
     public Map<String, Object> findDriverBioByCell(String cell) {
-        return repository.findDriverBioByCell(cell);
+        return repository.findDriverBio(context.currentOrganizationId(),context.currentCompanyId(),null,cell);
     }
 
-    public List<Map<String, Object>> getPoInfoGrid(Integer orgId, Integer compId, String fromDate, String toDate, Integer supplierId) {
-        return repository.getPoInfoGrid(orgId, compId, fromDate, toDate, supplierId);
+    public List<Map<String, Object>> getPoInfoGrid(Integer orgId, Integer compId,
+            String fromDate, String toDate, Double fromDocNo, Double toDocNo,
+            Integer supplierId, Integer documentTypeId, Integer expiryDays, String dateField) {
+        return repository.getPoInfoGrid(orgId, compId, context.currentBranchId(), context.currentFinancialYearId(),
+                fromDate, toDate, fromDocNo, toDocNo, supplierId, documentTypeId, expiryDays, dateField);
+    }
+
+    public List<Map<String,Object>> getOrderPartyItems(int number,String date,int gatePassId) {
+        if (gatePassId>0) records.require(gatePassId);
+        return repository.getOrderPartyItems(context.currentOrganizationId(),context.currentCompanyId(),context.currentBranchId(),context.currentFinancialYearId(),number,date,gatePassId);
     }
 
     public Map<String, Object> generateNextNumbers(Integer orgId, Integer compId, Integer branchId, Integer yearId, Integer docTypeId, String gatepassType) {
+        if (docTypeId!=51) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"This form uses document type 51 only");
         Map<String, Object> res = new HashMap<>();
         Integer gpSrNo = repository.generateGpCode(orgId, compId, branchId, yearId, docTypeId);
         Integer gpTypeSrNo = repository.generateGpTypeCode(orgId, compId, branchId, yearId, gatepassType);
@@ -52,6 +73,25 @@ public class InwardGatePassService {
 
     @Transactional
     public Map<String, Object> saveRecord(InwardGatePass obj) {
+        if (obj.getDocumentTypeId()!=null && obj.getDocumentTypeId()!=51)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"This form saves Inward Gate Pass document type 51 only");
+        obj.setDocumentTypeId(51);
+        obj.setOrganizationId(context.currentOrganizationId()); obj.setCompanyId(context.currentCompanyId());
+        obj.setBranchesId(context.currentBranchId()); obj.setFinancialYearId(context.currentFinancialYearId());
+        obj.setModifyUser(context.currentUserId());
+        boolean updating=obj.getId()!=null && obj.getId()>0;
+        if (updating) {
+            Map<String,Object> previous=records.require(obj.getId());
+            obj.setEntryUser(((Number)previous.get("EntryUser")).intValue());
+            obj.setEntryDate((Date)previous.get("EntryDate"));
+            obj.setIsApproved(Boolean.TRUE.equals(previous.get("IsApproved")));
+            obj.setPostState(Boolean.TRUE.equals(previous.get("PostState")));
+            obj.setPostDate((Date)previous.get("PostDate"));
+            obj.setPostUser(previous.get("PostUser") instanceof Number?((Number)previous.get("PostUser")).intValue():0);
+        } else {
+            obj.setEntryUser(context.currentUserId()); obj.setEntryDate(new Date());
+            obj.setIsApproved(false); obj.setPostState(false); obj.setPostUser(0); obj.setPostDate(null);
+        }
         Map<String, Object> res = new HashMap<>();
         try {
             // Desktop validation rules
@@ -99,10 +139,10 @@ public class InwardGatePassService {
             // Auto-calculate Difference Weight
             double supplierWt = obj.getSupplierWeight() != null ? obj.getSupplierWeight() : 0.0;
             double factoryWt = obj.getFactoryWeight() != null ? obj.getFactoryWeight() : 0.0;
-            obj.setDifferenceWeight(supplierWt - factoryWt);
+            obj.setDifferenceWeight(Math.abs(supplierWt - factoryWt));
 
             // Driver Biodata save/link
-            if (obj.getDriverName() != null && !obj.getDriverName().trim().isEmpty()) {
+            if ((obj.getDriverBioDataId()==null || obj.getDriverBioDataId()==0) && obj.getDriverName() != null && !obj.getDriverName().trim().isEmpty()) {
                 Integer bioId = repository.saveDriverBio(obj);
                 if (bioId != null && bioId > 0) {
                     obj.setDriverBioDataId(bioId);
@@ -128,7 +168,7 @@ public class InwardGatePassService {
 
             // Save Details
             if (obj.getId() != null && obj.getId() > 0) {
-                repository.deleteDetailsByHeaderId(headerId);
+                // Sp_GatePassInward_Update already rebuilds both child collections.
                 if (obj.getGatePassInwardDetails() != null) {
                     for (InwardGatePassDetail detail : obj.getGatePassInwardDetails()) {
                         detail.setGatePassInwardId(headerId);
@@ -139,7 +179,6 @@ public class InwardGatePassService {
                 }
 
                 // Save Purchase BreakUp
-                repository.deletePurchaseBreakUpsByHeaderId(headerId);
                 if (obj.getGatePassInwardPurchaseBreakUpList() != null) {
                     for (InwardGatePassPurchaseBreakUp breakUp : obj.getGatePassInwardPurchaseBreakUpList()) {
                         breakUp.setInwardGatePassId(headerId);
@@ -150,9 +189,11 @@ public class InwardGatePassService {
 
             res.put("success", true);
             res.put("igpId", headerId);
-            res.put("message", "Record Saved Successfully! Document No: " + obj.getGpSrNo());
+            Map<String,Object> persisted=repository.getHeaderById(headerId);
+            res.put("gpSrNo",persisted.get("GpSrNo")); res.put("gpTypeSrNo",persisted.get("GpTypeSrNo"));
+            res.put("message", "Record Saved Successfully! Document No: " + persisted.get("GpSrNo"));
         } catch (Exception e) {
-            e.printStackTrace();
+            org.springframework.transaction.interceptor.TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             res.put("success", false);
             res.put("message", "Error saving Inward Gate Pass: " + e.getMessage());
         }
@@ -160,6 +201,7 @@ public class InwardGatePassService {
     }
 
     public Map<String, Object> getById(Integer id) {
+        records.require(id);
         Map<String, Object> res = new HashMap<>();
         Map<String, Object> header = repository.getHeaderById(id);
         if (header != null) {
@@ -168,6 +210,7 @@ public class InwardGatePassService {
             res.put("header", header);
             res.put("details", details);
             res.put("purchaseBreakUps", breakUps);
+            res.put("weighBridgeWeights", repository.getWeighBridgeWeights(context.currentOrganizationId(),context.currentCompanyId(),id));
             res.put("success", true);
         } else {
             res.put("success", false);
@@ -176,22 +219,23 @@ public class InwardGatePassService {
         return res;
     }
 
+    public List<Map<String,Object>> getTransitVehicles(int supplier,int order,int gatePass) {
+        if (gatePass>0) records.require(gatePass);
+        return repository.getTransitVehicles(context.currentOrganizationId(),context.currentCompanyId(),supplier,order,gatePass);
+    }
+
     public Map<String, Object> deleteRecord(Integer id, Integer orgId, Integer compId) {
-        Map<String, Object> res = new HashMap<>();
-        try {
-            repository.deleteRecord(id, orgId, compId);
-            res.put("success", true);
-            res.put("message", "Record Deleted Successfully!");
-        } catch (Exception e) {
-            res.put("success", false);
-            res.put("message", "Error deleting record: " + e.getMessage());
-        }
-        return res;
+        // Desktop btnDelete_Click is empty and InitializeComponent hides the button.
+        throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED,"The desktop Inward Gate Pass form does not support header deletion");
     }
 
     public List<Map<String, Object>> getHistory(Integer orgId, Integer compId, Integer branchId, Integer yearId,
                                                 Integer docTypeId, String fromDate, String toDate,
                                                 Double fromDocNo, Double toDocNo, Integer supplierId) {
-        return repository.getHistory(orgId, compId, branchId, yearId, docTypeId, fromDate, toDate, fromDocNo, toDocNo, supplierId);
+        return getHistory(fromDate,toDate,fromDocNo,toDocNo,supplierId,"docDate");
+    }
+
+    public List<Map<String,Object>> getHistory(String fromDate,String toDate,Double fromDocNo,Double toDocNo,Integer supplierId,String dateField) {
+        return repository.getHistory(context.currentOrganizationId(), context.currentCompanyId(), context.currentBranchId(), context.currentFinancialYearId(), 51, fromDate, toDate, fromDocNo, toDocNo, supplierId, records.canViewAll(), context.currentUserId(),dateField);
     }
 }

@@ -1,12 +1,7 @@
 package com.mst.security;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,44 +11,46 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.mst.constants.RightType;
-import com.mst.models.RealCompanyRight;
-import com.mst.models.RealScreenRight;
-import com.mst.models.RealUserRight;
-import com.mst.models.Screen;
 import com.mst.models.UserAccount;
-import com.mst.models.UserRight;
-import com.mst.repositories.IRealCompanyRightRepository;
-import com.mst.repositories.IRealScreenRightRepository;
-import com.mst.repositories.IRealUserRightRepository;
-import com.mst.repositories.IScreenRepository;
 import com.mst.repositories.IUserAccountRepository;
-import com.mst.repositories.IUserRightRepository;
 
 /**
- * Bridges com.mst.models.UserAccount (this port's ditto of the desktop's login-user
- * model) into Spring Security, and is also where the menu/rights actually take
- * effect: fixed_sidebar.html gates every menu item with hasAuthority('SOME_CODE'),
- * so a signed-in user's menu is exactly the set of authorities loaded here.
+ * Bridges com.mst.models.UserAccount into Spring Security, and is where the menu takes effect:
+ * fixed_sidebar.html gates every item with {@code hasAuthority('SOME_CODE')}, so a signed-in
+ * user's menu is exactly the set of authorities loaded here.
  *
- * IMPORTANT, per investigation of the real decompiled desktop source: there is NO
- * "admin sees everything" shortcut anywhere in Architecture.BLL/DAL -
- * UserGroup.UserGroupRole (this port's earlier "ADMIN" bypass column) is declared on
- * the model but never actually read by the real app. Every real user, including
- * whoever administers the system, only sees what real dbo.tblUserRights (the
- * per-user grant grid) plus real dbo.CompanyRights (the tenant-level "is this screen
- * even enabled for this company" gate) actually grant them, resolved through real
- * dbo.ScreenRights' "View" right - see resolveScreenAuthorities() below, and the
- * Javadoc on RealUserRight/RealCompanyRight/RealScreenRight for how those three real,
- * read-only tables fit together.
+ * ---------------------------------------------------------------------------------------------
+ * THE RIGHTS NOW COME ENTIRELY FROM THE DESKTOP'S OWN TABLES
+ * ---------------------------------------------------------------------------------------------
+ * This used to gate screens two different ways: the ones linked to a confirmed real
+ * dbo.ScreenDefinition.Id went through the real chain, and everything else fell back to
+ * MstUserRight - a table this port invented, joined to MstScreen, another one. Two tables the
+ * desktop does not have, and two answers to the same question.
  *
- * Screens this port has linked to a confirmed real dbo.ScreenDefinition.Id (see
- * Screen.realScreenDefinitionId) are gated that way, exactly like the desktop.
- * Screens not yet linked keep using this port's own additively-new MstUserRight grid
- * as a fallback (see UserRight.java) until they're mapped too.
+ * Now there is one answer. {@link SidebarScreenCatalog} lists the screens this port has built (in
+ * code, not in a table) and {@link DesktopScreenRightsService} asks the real chain about each:
+ *
+ *     dbo.CompanyRights   is the screen enabled for this user's company
+ *     dbo.ScreenRights    the screen's "View" right
+ *     dbo.tblUserRights   has THIS user been granted it
+ *
+ * MstScreen and MstUserRight are no longer read by anything.
+ *
+ * ---------------------------------------------------------------------------------------------
+ * NO "ADMIN SEES EVERYTHING" FOR View - THAT IS THE DESKTOP'S RULE, NOT AN OVERSIGHT
+ * ---------------------------------------------------------------------------------------------
+ * CommonServices.SetRightsValueInRightsObject grants an Admin a blanket Save, Update, Delete,
+ * Print and CanView AllRecord - but NOT View. View is read from the grant grid for every user,
+ * administrator included. So an admin with no View grant on a screen does not see it on the
+ * desktop, and does not see it here.
+ *
+ * The ROLE_ authority below is not used by any rights check; it is kept because templates and
+ * older code refer to it.
  *
  * Password: read directly from the real dbo.UserAccount.Password column, which is
- * Rijndael/AES-encrypted, Base64-encoded - see {@link LegacyUserPasswordEncoder}.
+ * Rijndael/AES-encrypted and Base64-encoded - see {@link LegacyUserPasswordEncoder}. The password
+ * is not verified here: DesktopLoginAuthenticationProvider does that through
+ * Sp_UserAccount_Login, the way the desktop does.
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -61,15 +58,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 	@Autowired
 	private IUserAccountRepository userAccountRepository;
 	@Autowired
-	private IUserRightRepository userRightRepository;
-	@Autowired
-	private IScreenRepository screenRepository;
-	@Autowired
-	private IRealScreenRightRepository realScreenRightRepository;
-	@Autowired
-	private IRealUserRightRepository realUserRightRepository;
-	@Autowired
-	private IRealCompanyRightRepository realCompanyRightRepository;
+	private DesktopScreenRightsService screenRights;
 	@Autowired
 	private LegacyUserPasswordEncoder legacyUserPasswordEncoder;
 
@@ -100,71 +89,25 @@ public class CustomUserDetailsService implements UserDetailsService {
 				.build();
 	}
 
+	/**
+	 * One authority per built screen the real chain grants, plus its section so the menu heading
+	 * appears. A screen whose real ScreenDefinition row is not yet confirmed is not granted - see
+	 * DesktopScreenRightsService for why hiding is the only safe default, and for the log line
+	 * that names each one.
+	 */
 	private List<GrantedAuthority> resolveScreenAuthorities(UserAccount account) {
 		List<GrantedAuthority> authorities = new ArrayList<>();
-		List<Screen> allScreens = screenRepository.findAll();
+		if (account.getId() == null) return authorities;
 
-		List<Screen> realGated = allScreens.stream()
-				.filter(s -> s.getRealScreenDefinitionId() != null)
-				.collect(Collectors.toList());
-
-		// --- Screens linked to a real dbo.ScreenDefinition.Id: gate exactly like the
-		// desktop does, through real CompanyRights + tblUserRights + ScreenRights. ---
-		if (!realGated.isEmpty()) {
-			List<Integer> realScreenIds = realGated.stream()
-					.map(Screen::getRealScreenDefinitionId)
-					.collect(Collectors.toList());
-
-			Set<Integer> companyEnabledScreenIds = realCompanyRightRepository
-					.findByCompanyIdAndScreenIdInAndIsActiveTrue(account.getCompanyId(), realScreenIds)
-					.stream().map(RealCompanyRight::getScreenId).collect(Collectors.toSet());
-
-			Map<Integer, Integer> viewRightIdByScreenId = new HashMap<>();
-			for (RealScreenRight sr : realScreenRightRepository.findByScreenIdInAndRightName(realScreenIds, "View")) {
-				viewRightIdByScreenId.put(sr.getScreenId(), sr.getId());
+		for (SidebarScreenCatalog.Entry entry :
+				screenRights.viewableScreens(account.getId(), account.getCompanyId())) {
+			if (entry.authorityCode != null && !entry.authorityCode.isEmpty()) {
+				authorities.add(new SimpleGrantedAuthority(entry.authorityCode));
 			}
-
-			List<Integer> viewRightIds = new ArrayList<>(viewRightIdByScreenId.values());
-			Set<Integer> grantedRightIds = viewRightIds.isEmpty()
-					? new HashSet<>()
-					: realUserRightRepository
-							.findByUserIdAndCompanyIdAndRightIdInAndValueTrue(account.getId(), account.getCompanyId(), viewRightIds)
-							.stream().map(RealUserRight::getRightId).collect(Collectors.toSet());
-
-			for (Screen screen : realGated) {
-				Integer realId = screen.getRealScreenDefinitionId();
-				if (!companyEnabledScreenIds.contains(realId)) {
-					continue;
-				}
-				Integer viewRightId = viewRightIdByScreenId.get(realId);
-				if (viewRightId == null || !grantedRightIds.contains(viewRightId)) {
-					continue;
-				}
-				addScreenAuthorities(authorities, screen);
+			if (entry.sectionAuthorityCode != null && !entry.sectionAuthorityCode.isEmpty()) {
+				authorities.add(new SimpleGrantedAuthority(entry.sectionAuthorityCode));
 			}
 		}
-
-		// --- Screens not yet mapped to a real Id: this port's own MstUserRight grid. ---
-		for (UserRight right : userRightRepository.findByUserId(account.getId())) {
-			if (right.getRightType() != RightType.VIEW || !Boolean.TRUE.equals(right.getValue())) {
-				continue;
-			}
-			Screen screen = right.getScreen();
-			if (screen.getRealScreenDefinitionId() != null) {
-				continue; // already handled by the real-rights block above
-			}
-			addScreenAuthorities(authorities, screen);
-		}
-
 		return authorities;
-	}
-
-	private void addScreenAuthorities(List<GrantedAuthority> authorities, Screen screen) {
-		if (screen.getAuthorityCode() != null) {
-			authorities.add(new SimpleGrantedAuthority(screen.getAuthorityCode()));
-		}
-		if (screen.getSectionAuthorityCode() != null) {
-			authorities.add(new SimpleGrantedAuthority(screen.getSectionAuthorityCode()));
-		}
 	}
 }

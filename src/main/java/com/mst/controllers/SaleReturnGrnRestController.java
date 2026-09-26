@@ -18,6 +18,14 @@ public class SaleReturnGrnRestController {
     @Autowired
     private CurrentUserContext currentUserContext;
 
+    @Autowired private com.mst.repositories.PurchaseGrnLookupRepository lookups;
+
+    @GetMapping("/gate-passes/{id}")
+    public ResponseEntity<?> gatePass(@PathVariable int id) { return ResponseEntity.ok(lookups.gatePass(id,143)); }
+
+    @GetMapping("/items")
+    public ResponseEntity<?> items(@RequestParam int supplierId) { return ResponseEntity.ok(lookups.returnItems(supplierId)); }
+
     @GetMapping("/dropdowns")
     public ResponseEntity<?> getDropdowns() {
         int orgId = currentUserContext.currentOrganizationId();
@@ -92,5 +100,9 @@ public class SaleReturnGrnRestController {
         res.put("success", ok);
         res.put("message", ok ? "Deleted successfully" : "Failed to delete");
         return ResponseEntity.ok(res);
+    }
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<?> databaseFailure(org.springframework.dao.DataAccessException failure) {
+        return ResponseEntity.badRequest().body(Map.of("success",false,"message",failure.getMostSpecificCause().getMessage()));
     }
 }

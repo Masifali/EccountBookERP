@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>1003 Payables & PaymentSchedule - EccountBookERP</title>
+    
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; font-size: 11px; color: #1e293b; margin: 0; padding: 0; }
+        
+        /* WinForms App Header */
+        .erp-app-banner { background-color: #00796B; color: white; padding: 5px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #004d40; }
+        .erp-app-banner .banner-title { display: flex; align-items: center; gap: 8px; }
+        
+        /* WinForms Toolbar */
+        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; }
+        .btn-win { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 26px; }
+        .btn-win:hover { background-color: #f1f5f9; border-color: #64748b; }
+        .btn-win-teal { background-color: #00796B; color: white; border: 1px solid #004d40; }
+        .btn-win-teal:hover { background-color: #004d40; color: white; }
+        .btn-win-teal:disabled, .btn-win-teal.disabled { background-color: #80cbc4 !important; border-color: #80cbc4 !important; cursor: not-allowed; }
+
+        /* Filter Panel & Layout */
+        .panel-container { padding: 8px; }
+        .erp-section-title { background-color: #00796B; color: white; font-weight: bold; padding: 5px 10px; font-size: 12px; border-radius: 2px 2px 0 0; }
+        
+        .filter-card { background: white; border: 1px solid #cbd5e1; padding: 8px; border-radius: 0 0 3px 3px; margin-bottom: 8px; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+        .form-group-win { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+        .form-label-win { font-weight: 600; color: #334155; font-size: 11px; min-width: 85px; margin: 0; }
+        .form-control-win { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; }
+        .form-control-win:focus { border-color: #00796B; outline: none; }
+        
+        /* Select2 Fixes for WinForms height */
+        .select2-container--default .select2-selection--single { height: 24px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 22px !important; font-size: 11px !important; padding-left: 2px !important; color: #1e293b !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 22px !important; }
+        .select2-container--default .select2-selection--multiple { height: 24px !important; min-height: 24px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; overflow: hidden !important; }
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered { line-height: 22px !important; font-size: 11px !important; padding: 0 !important; color: #1e293b !important; }
+        .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field { height: 20px !important; margin: 0 !important; font-size: 11px !important; }
+
+        /* Summary Matrix Table Top Right */
+        .summary-table-win { width: 100%; border-collapse: collapse; font-size: 10.5px; background: white; border: 1px solid #cbd5e1; }
+        .summary-table-win th { background-color: #e2e8f0; color: #334155; padding: 3px 6px; border: 1px solid #cbd5e1; font-weight: 600; }
+        .summary-table-win td { padding: 3px 6px; border: 1px solid #cbd5e1; }
+        .nav-bar-win { background-color: #f1f5f9; border: 1px solid #cbd5e1; border-top: none; padding: 2px 8px; font-size: 10px; color: #475569; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Main Data Table */
+        .table-responsive-win { overflow-x: auto; background: white; border: 1px solid #cbd5e1; max-height: calc(100vh - 270px); }
+        .erp-table-grid { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+        .erp-table-grid th { background-color: #dbeafe; color: #1e3a8a; padding: 6px 8px; text-align: left; border: 1px solid #cbd5e1; font-weight: 700; position: sticky; top: 0; z-index: 10; }
+        .erp-table-grid td { padding: 4px 8px; border: 1px solid #e2e8f0; vertical-align: middle; }
+        .erp-table-grid tr:hover { background-color: #f0fdf4; }
+        
+        .pill-dropdown { background-color: #e2e8f0; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: bold; color: #00796B; display: inline-flex; align-items: center; gap: 6px; margin: 4px 0; cursor: pointer; }
+
+        /* Modal Styles */
+        .modal-header-win { background-color: #00796B; color: white; padding: 8px 12px; }
+        .modal-header-win .modal-title { font-size: 13px; font-weight: bold; }
+    </style>
+<link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script></head>
+<body>
+
+    <!-- Header Banner -->
+    <div class="erp-app-banner">
+        <div class="banner-title">
+            <i class="fa fa-calculator"></i>
+            <span>ERP 1003 Payables & PaymentSchedule</span>
+        </div>
+        <div>
+            <a href="/accounts/dashboard" style="color: white; text-decoration: underline; font-size: 11px;"><i class="fa fa-arrow-left"></i> Back to Accounts</a>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="erp-toolbar">
+        <button type="button" class="btn-win" onclick="resetFilters()"><i class="fa fa-plus-circle" style="color:#00796B;"></i> New</button>
+        <button type="button" class="btn-win" onclick="window.print()"><i class="fa fa-print"></i> 121_01 Print</button>
+        <button type="button" class="btn-win" onclick="openShortcutModal()"><i class="fa fa-keyboard-o"></i> Shortcut Keys</button>
+    </div>
+
+    <div class="panel-container">
+        
+        <!-- Filter Banner -->
+        <div class="erp-section-title">Payables And Payment Schedule</div>
+        
+        <div class="filter-card">
+            <div class="row">
+                <!-- Filters Left Column -->
+                <div class="col-md-8">
+                    <div style="font-weight: bold; color: #00796B; margin-bottom: 4px;">Filters</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-win">
+                                <label class="form-label-win">Date From</label>
+                                <input type="checkbox" id="chkFromDate" checked>
+                                <input type="date" id="txtDateFrom" class="form-control-win" style="width: 140px;">
+                            </div>
+                            <div class="form-group-win">
+                                <label class="form-label-win">Date To</label>
+                                <input type="checkbox" id="chkToDate" checked>
+                                <input type="date" id="txtDateTo" class="form-control-win" style="width: 140px;">
+                            </div>
+                            <div class="form-group-win">
+                                <label class="form-label-win">Due From</label>
+                                <input type="checkbox" id="chkDueFrom">
+                                <input type="date" id="txtDueFrom" class="form-control-win" style="width: 140px;" disabled>
+                            </div>
+                            <div class="form-group-win">
+                                <label class="form-label-win">Due Up To</label>
+                                <input type="checkbox" id="chkDueUpTo" checked>
+                                <input type="date" id="txtDueUpTo" class="form-control-win" style="width: 140px;">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group-win">
+                                <label class="form-label-win">Purchase From</label>
+                                <input type="checkbox" id="chkPurchaseFrom" checked>
+                                <input type="date" id="txtPurchaseFrom" class="form-control-win" style="width: 130px;">
+                            </div>
+                            <div class="form-group-win">
+                                <label class="form-label-win">Interval Days</label>
+                                <input type="number" id="txtIntervalDays" class="form-control-win" style="width: 130px;" value="30">
+                            </div>
+                            <div class="form-group-win">
+                                <label class="form-label-win">Purchase To</label>
+                                <input type="checkbox" id="chkPurchaseTo" checked>
+                                <input type="date" id="txtPurchaseTo" class="form-control-win" style="width: 130px;">
+                            </div>
+                            <div class="form-group-win">
+                                <label class="form-label-win">Custom Group</label>
+                                <select id="cmbCustomGroup" class="form-control-win select2" style="width: 180px;">
+                                    <option value="0">Custom Group</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 4px;">
+                        <div class="col-md-6">
+                            <div class="form-group-win">
+                                <label class="form-label-win">Customer Group</label>
+                                <select id="cmbCustomerGroup" class="form-control-win select2" style="width: 200px;">
+                                    <option value="0">Customer Group</option>
+                                </select>
+                            </div>
+                            <div class="form-group-win">
+                                <label class="form-label-win">Control Account</label>
+                                <select id="cmbControlAccount" class="form-control-win select2" multiple="multiple" style="width: 200px;" data-placeholder="Account Title">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group-win" style="align-items: center;">
+                                <label class="form-label-win">Aging Days</label>
+                                <input type="number" id="txtAgingDays" class="form-control-win" style="width: 100px;" value="30">
+                                <button type="button" id="btnShow" class="btn-win btn-win-teal" style="margin-left: 10px; width: 70px; justify-content: center;" onclick="loadReport()">Show</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters Summary Grid Right Column -->
+                <div class="col-md-4">
+                    <table class="summary-table-win">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="text-align: right;">Amount</th>
+                                <th style="text-align: right;">0 30</th>
+                                <th style="text-align: right;">31 60</th>
+                                <th style="text-align: right;">61 90</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTbody">
+                            <tr><td>Net Payables</td><td style="text-align:right">0</td><td style="text-align:right">0</td><td style="text-align:right">0</td><td style="text-align:right">0</td></tr>
+                            <tr><td>OverDue Payables</td><td style="text-align:right">0</td><td style="text-align:right">0</td><td style="text-align:right">0</td><td style="text-align:right">0</td></tr>
+                            <tr><td>NotYetDue Payables</td><td style="text-align:right">0</td><td style="text-align:right">0</td><td style="text-align:right">0</td><td style="text-align:right">0</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="nav-bar-win">
+                        <span>Record: |&lt; &lt; 1 Of 3 &gt; &gt;|</span>
+                        <i class="fa fa-sliders"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Schedule Section -->
+        <div class="erp-section-title">Payment Schedule</div>
+        <div style="background: white; border: 1px solid #cbd5e1; border-top: none; padding: 4px 8px;">
+            <div class="pill-dropdown">
+                <span>Parent Account Title</span>
+                <i class="fa fa-caret-down"></i>
+            </div>
+
+            <div class="table-responsive-win">
+                <table class="erp-table-grid">
+                    <thead>
+                        <tr>
+                            <th style="width: 90px; text-align: center;">Account Code</th>
+                            <th style="min-width: 180px;">Account Title / Party</th>
+                            <th style="width: 80px; text-align: center;">Account Type</th>
+                            <th style="width: 100px; text-align: right;">Opening Balance</th>
+                            <th style="width: 100px; text-align: right;">Debit</th>
+                            <th style="width: 100px; text-align: right;">Credit</th>
+                            <th style="width: 100px; text-align: right;">Closing Balance</th>
+                            <th style="width: 100px; text-align: right;">Due Balance</th>
+                            <th style="width: 90px; text-align: right;">Not Yet Due</th>
+                            <th style="width: 80px; text-align: right;">Pay Today</th>
+                            <th style="width: 100px; text-align: right;">Short/Excess</th>
+                            <th style="width: 100px; text-align: center;">Increase/Decrease</th>
+                            <th style="width: 100px; text-align: center;">Last Payment Date</th>
+                            <th style="width: 110px; text-align: right;">Last Payment Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mainTbody">
+                        <tr>
+                            <td colspan="14" style="text-align: center; padding: 20px; color: #64748b;">Loading payment schedule data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voucher Details Modal -->
+    <div class="modal fade" id="voucherDetailModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header modal-header-win">
+                    <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                    <h4 class="modal-title" id="voucherModalTitle">Voucher Details</h4>
+                </div>
+                <div class="modal-body" style="padding: 10px;">
+                    <div class="table-responsive" style="max-height: 350px;">
+                        <table class="table table-bordered table-striped table-condensed" style="font-size: 11px;">
+                            <thead>
+                                <tr style="background-color: #00796B; color: white;">
+                                    <th>Document Type</th>
+                                    <th>Voucher Code</th>
+                                    <th style="text-align: center;">Voucher Date</th>
+                                    <th style="text-align: center;">Due Days</th>
+                                    <th style="text-align: center;">Due Date</th>
+                                    <th style="text-align: center;">Overdue By</th>
+                                    <th style="text-align: right;">Amount (PKR)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="voucherModalTbody">
+                                <tr><td colspan="7" style="text-align:center;">No details available</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 6px 12px;">
+                    <button type="button" class="btn btn-default btn-xs" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shortcut Keys Modal -->
+    <div class="modal fade" id="shortcutModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header modal-header-win">
+                    <button type="button" class="close" data-dismiss="modal" style="color:white;">&times;</button>
+                    <h4 class="modal-title">Shortcut Keys</h4>
+                </div>
+                <div class="modal-body" style="font-size: 11px;">
+                    <table class="table table-bordered">
+                        <tr><td><strong>Alt + S</strong></td><td>Show / Refresh Data</td></tr>
+                        <tr><td><strong>Alt + P</strong></td><td>Print Report</td></tr>
+                        <tr><td><strong>Alt + N</strong></td><td>New / Reset Filters</td></tr>
+                        <tr><td><strong>Esc</strong></td><td>Close Dialogs</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:src="@{/js/payables-payment-schedule.js}"></script>
+</body>
+</html>

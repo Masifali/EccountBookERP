@@ -23,15 +23,20 @@ public class MainModulesController {
         return "modules";
     }
 
-    @GetMapping("/quality")
-    public String qualityControl(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Quality Control Master");
-        model.addAttribute("production", new HashMap<>());
-        model.addAttribute("companies", new ArrayList<>());
-        model.addAttribute("branches", new ArrayList<>());
-        return "production/production_form";
-    }
+    /*
+     * "/quality" is owned by QualityControlViewController, which is annotated
+     * @RequestMapping("/quality") with @GetMapping({"", "/", "/dashboard"}) and serves the real
+     * Quality Control (Lab) dashboard plus its sixteen screens.
+     *
+     * The handler that used to sit here also claimed GET /quality and returned
+     * "production/production_form" - the Production Entry form, an unrelated page. Two handlers
+     * on the same (method, path) is an Ambiguous mapping, so Spring refused to start the
+     * application at all; and had it started, /quality would have shown the Production screen
+     * while every link on the Quality Control dashboard 404'd.
+     *
+     * Do not re-add a /quality mapping here. Run `python3 mapcheck.py src/main/java` before a
+     * build to catch a collision like this one.
+     */
 
     @GetMapping({"/wages", "/wages/dashboard", "/contractor-wages"})
     public String contractorWages(Model model) {
@@ -39,20 +44,42 @@ public class MainModulesController {
         return "accounts/vouchers/contractor_wages_dashboard";
     }
 
-    @GetMapping("/production")
-    public String production(Model model) {
-        model.addAttribute("activeMenu", "production");
-        model.addAttribute("moduleTitle", "Production Entry & Yield");
-        model.addAttribute("production", new HashMap<>());
-        model.addAttribute("companies", new ArrayList<>());
-        model.addAttribute("branches", new ArrayList<>());
-        return "production/production_form";
-    }
+    /*
+     * This used to return "production/production_form" with a HashMap under the model name
+     * "production". That template opens with th:object="${production}" and then binds fields with
+     * th:field="${production.company}" / "${production.id}" / "${production.productionCode}".
+     * Spring resolves a th:field through a BeanWrapper, and a java.util.HashMap has no readable
+     * "company" property, so every request to /production ended in
+     * NotReadablePropertyException -> HTTP 500. The page could never have rendered.
+     *
+     * The template itself is misfiled scaffolding, not a Production screen: its heading says
+     * "SALE ORDER FORM", it posts to /receivables/add_or_update_sale_order, its element ids are
+     * purchaseOrderForm / purchaseOrderId, and it also reads ${accounts}, ${financialYears},
+     * ${itemSubCategories} and ${millKhate}, none of which any handler supplies. It is the same
+     * template that once made /quality show a Production page (see the note above).
+     *
+     * /production now serves the Production module's own landing page - the screens this port has
+     * actually built, each gated on the authority its sidebar entry uses, so the page can never
+     * offer a screen the signed-in user's rights do not allow. No model attribute is invented for
+     * it; the rights already reach the template as Spring authorities.
+     */
+    /* /production moved to AppMenuController, which renders the desktop's own two levels for
+       the Production APPLICATION — two module cards ("Production 3", "Production Reports 5")
+       and the chosen module's screens underneath. The hand-written landing page this used to
+       return invented its own sections and counts; production_module.html is kept on disk but
+       nothing routes to it. */
 
-    @GetMapping("/store")
+    /*
+     * The Store Management application landing page. This used to redirect to
+     * /inventory/warehouses, so the "Store Management" tile opened Define Warehouse - one screen of
+     * the Inventory application. The desktop opens the Store Management APPLICATION: three module
+     * cards (Store Purchase, Store Management, Store Management Reports) and their screens. The
+     * generic renderer draws exactly that from the user's rights rows, the same way /kanta does
+     * for Weigh Bridge; screens with no web page show as not built rather than opening another.
+     */
+    @GetMapping({"/store", "/store/", "/store/dashboard"})
     public String storeManagement(Model model) {
-        model.addAttribute("activeMenu", "store");
-        return "redirect:/inventory/warehouses";
+        return "redirect:/app/store-management";
     }
 
     @GetMapping("/taxation")
@@ -61,10 +88,20 @@ public class MainModulesController {
         return "redirect:/accounts/reports/payables-report";
     }
 
+    /*
+     * The Weigh Bridge application landing page. This used to return the hand-written
+     * weighbridge/weigh_bridge_dashboard.html, whose four tiles ALL linked to
+     * /purchase/inward-gate-pass - so "Weigh Bridge", "Weigh Bridge Manual" and both module cards
+     * opened the Inward Gate Pass screen. It now goes to the generic application renderer
+     * (AppMenuController /app/{appName}), which draws the desktop's own module and screen cards
+     * from the rights rows and links each screen through ScreenRouteIndex - so "Weigh Bridge"
+     * (screen 411, frmWeightbridge) opens /weighbridge/weight-bridge, and a screen with no web
+     * page shows as not built instead of opening an unrelated one. The app name is matched on
+     * letters and digits only, so "Weigh Bridge" and "WeighBridge" both resolve.
+     */
     @GetMapping({"/kanta", "/weighbridge", "/weigh-bridge", "/weighbridge/dashboard"})
     public String weighBridge(Model model) {
-        model.addAttribute("activeMenu", "kanta");
-        return "weighbridge/weigh_bridge_dashboard";
+        return "redirect:/app/weighbridge";
     }
 
     @GetMapping({"/lookups/reasons", "/lookups/reasons/list"})
@@ -85,10 +122,9 @@ public class MainModulesController {
      * startup with an ambiguous-mapping error.
      */
 
-    @GetMapping("/packing")
+    @GetMapping({"/packing", "/packing-material", "/packing/dashboard"})
     public String packingMaterial(Model model) {
-        model.addAttribute("activeMenu", "packing");
-        return "redirect:/inventory/item-categories";
+        return "redirect:/app/packing-material";
     }
 
     private void populateStockOpeningModel(Model model) {

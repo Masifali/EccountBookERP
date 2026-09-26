@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Golden Ace Rice Mills — Sale Order Master</title>
+    <title th:with="ctx=${session != null ? session['com.mst.security.LoginContext'] : null}" th:text="|${ctx != null and ctx.companyName != null ? ctx.companyName : ''} — Sale Order Master|">Golden Ace Rice Mills — Sale Order Master</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
@@ -95,6 +95,7 @@
             .win-grid th { background: #eee !important; color: #000 !important; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body><div id="saleOrderLoader" class="sale-order-loader" hidden style="position:fixed;inset:0;z-index:99999;background:rgba(255,255,255,.65);align-items:center;justify-content:center;font-weight:bold;font-size:16px;color:#007f7f">Loading...</div><style>.sale-order-loader{display:flex}.sale-order-loader[hidden]{display:none!important}</style>
 
@@ -102,13 +103,13 @@
     <div class="erp-top-banner">
         <div>
             <i class="fa fa-arrow-right me-1"></i>
-            <span>Golden Ace Rice Mills (Pvt) Ltd.</span>
+            <span><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></span>
             <select>
                 <option>...Select Any Value...</option>
             </select>
         </div>
         <div>
-            <i class="fa fa-user me-1"></i> Numan Rasheed (Admin)
+            <i class="fa fa-user me-1"></i> <span th:text="${#authentication != null ? #authentication.name : 'User'}">User</span>
             <span class="ms-3 me-3"><i class="fa fa-clock-o me-1"></i> 8:17:51 pm</span>
             <span class="badge bg-warning text-dark me-2">2026-27</span>
             <span class="text-warning"><i class="fa fa-bell me-1"></i> New Update Available! Current Version: 1.0.0.14</span>
@@ -138,7 +139,7 @@
         <div class="d-flex align-items-center gap-2">
             <span class="win-teal-header-title"><i class="fa fa-shopping-cart me-1"></i> SALE ORDER</span>
             <span class="ms-3 me-1 font-weight-bold" style="font-size: 8.5pt;">Location Type</span>
-            <select id="cmbLocationType" class="win-combo so-select2" style="width: 140px; height: 20px; font-size: 8pt;">
+            <select id="cmbLocationType" class="win-combo dtcombo" style="width: 140px; height: 20px; font-size: 8pt;" data-dtcombo="single" data-dtcombo-caption="Location Type">
                     <!-- VoucherHead.GetLocationType(), SaleOrder.cs :772 - a database list,
                          bound ZeroIndex:true with Rows[1] activated. "Pakistan"/"International"
                          used to be written in here as constants. -->
@@ -202,7 +203,7 @@
                                 <div class="col-md-4"><label class="win-label m-0">Order Catagory &amp; No</label></div>
                                 <div class="col-md-8">
                                     <div class="d-flex gap-1">
-                                        <select id="cmbOrderCategory" class="win-combo so-select2" style="flex: 1;">
+                                        <select id="cmbOrderCategory" class="win-combo dtcombo" style="flex: 1;" data-dtcombo="single" data-dtcombo-caption="Order Category">
                         <option value="">-- Select Order Category --</option>
 </select>
                                         <input type="text" id="txtCatNo" class="win-textbox" style="width: 50px;" value="1"/>
@@ -236,9 +237,9 @@
                                     </div>
                                 </div>
                                 <div class="col-md-8">
-                                    <select id="cmbCustomer" class="win-combo so-select2">
+                                    <select id="cmbCustomer" class="win-combo dtcombo" data-dtcombo="party3" data-dtcombo-caption="Customer Name">
                                         <option value="">...Select Any Value...</option>
-                                        <option th:each="c : ${suppliers}" th:value="${c.id}" th:text="${c.customerName}"></option>
+                                        <option th:each="c : ${suppliers}" th:value="${c['id']}" th:text="${c['supplierName']} ?: ${c['customerName']}"></option>
                                     </select>
                                 </div>
                             </div>
@@ -254,7 +255,7 @@
                                 <div class="col-md-4"><label class="win-label m-0">Booking Person</label></div>
                                 <div class="col-md-8">
                                     <div class="d-flex gap-1">
-                                        <select id="cmbBookingPerson" class="win-combo so-select2" style="flex: 1;"><option value="">...Select Any Value...</option></select>
+                                        <select id="cmbBookingPerson" class="win-combo dtcombo" style="flex: 1;" data-dtcombo="party3" data-dtcombo-caption="Booking Person"><option value="">...Select Any Value...</option></select>
                                         <button type="button" class="win-btn-action" style="background: #2e7d32;"><i class="fa fa-plus"></i></button>
                                     </div>
                                 </div>
@@ -272,14 +273,14 @@
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Payment Terms</label></div>
                                 <div class="col-md-7">
-                                    <select id="cmbPaymentTerm" class="win-combo so-select2">
+                                    <select id="cmbPaymentTerm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term">
                         <option value="">-- Select Payment Term --</option>
 </select>
                                 </div>
                             </div>
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Due Days</label></div>
-                                <div class="col-md-7"><input type="number" id="txtDueDays" class="win-textbox" value=""/></div>
+                                <div class="col-md-7"><input type="number" id="txtDueDays" class="win-textbox" value="" data-guard="integer"/></div>
                             </div>
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Due Date</label></div>
@@ -289,7 +290,7 @@
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Delivery Term</label></div>
                                 <div class="col-md-7">
-                                    <select id="cmbDeliveryTerm" class="win-combo so-select2">
+                                    <select id="cmbDeliveryTerm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Delivery Term">
                         <option value="">-- Select Delivery Term --</option>
 </select>
                                 </div>
@@ -300,7 +301,7 @@
                             </div>
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Delivery Days</label></div>
-                                <div class="col-md-7"><input type="number" id="txtDeliveryDays" class="win-textbox" value=""/></div>
+                                <div class="col-md-7"><input type="number" id="txtDeliveryDays" class="win-textbox" value="" data-guard="integer"/></div>
                             </div>
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Order Qty</label></div>
@@ -309,6 +310,21 @@
                             <div class="row mb-1 align-items-center">
                                 <div class="col-md-5"><label class="win-label m-0">Order Weight</label></div>
                                 <div class="col-md-7"><input type="text" id="txtOrderWeight" class="win-textbox win-textbox-readonly" value="0" readonly style="text-align: right;"/></div>
+                            </div>
+                            <!-- cmbCurrency / txtExchangeRate / txtFcyAmount - visible only with ERP feature 6
+                                 (HasMultiCurrencyFeature, SaleOrder.cs:597-617). Without it the desktop hides them
+                                 and saves the base currency and rate from configuration (GetBaseCurrencyAndRate). -->
+                            <div class="row mb-1 align-items-center so-fcy" hidden>
+                                <div class="col-md-5"><label class="win-label m-0">Fcy Code</label></div>
+                                <div class="col-md-7"><select id="cmbCurrency" class="win-combo"><option value="">...Select Any Value...</option></select></div>
+                            </div>
+                            <div class="row mb-1 align-items-center so-fcy" hidden>
+                                <div class="col-md-5"><label class="win-label m-0">Exchange Rate</label></div>
+                                <div class="col-md-7"><input type="text" id="txtExchangeRate" class="win-textbox" value="" data-guard="decimal" style="text-align: right;"/></div>
+                            </div>
+                            <div class="row mb-1 align-items-center so-fcy" hidden>
+                                <div class="col-md-5"><label class="win-label m-0">Fcy Amount</label></div>
+                                <div class="col-md-7"><input type="text" id="txtFcyAmount" class="win-textbox win-textbox-readonly" value="0" readonly style="text-align: right;"/></div>
                             </div>
                         </div>
 
@@ -350,12 +366,12 @@
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Sales Man/Agent</label></div>
                         <div class="col-md-8">
-                            <select id="cmbSalesMan" class="win-combo so-select2"><option value="">...Select Any Value...</option></select>
+                            <select id="cmbSalesMan" class="win-combo dtcombo" data-dtcombo="party3" data-dtcombo-caption="SalesMan Name"><option value="">...Select Any Value...</option></select>
                         </div>
                     </div>
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Comm Type</label></div>
-                        <div class="col-md-4"><select id="cmbCommType" class="win-combo so-select2" onchange="recalcCommissionAmounts()">
+                        <div class="col-md-4"><select id="cmbCommType" class="win-combo dtcombo" onchange="recalcCommissionAmounts()" data-dtcombo="single" data-dtcombo-caption="CommissionType">
                         <!-- CommissionTypeFill(), SaleOrder.cs :1185-1190 - a fixed list built in
                              code: (1,"Flat") (2,"Percent") (3,"Comm Weight"). Row 0 is activated,
                              so Flat is the default. "Comm Weight" was missing here before. -->
@@ -363,11 +379,11 @@
                         <option value="2">Percent</option>
                         <option value="3">Comm Weight</option>
                     </select></div>
-                        <div class="col-md-4 d-flex align-items-center gap-1"><label class="win-label m-0">Rate</label><input type="number" id="txtCommRate" class="win-textbox" oninput="recalcCommissionAmounts()"/></div>
+                        <div class="col-md-4 d-flex align-items-center gap-1"><label class="win-label m-0">Rate</label><input type="number" id="txtCommRate" class="win-textbox" oninput="recalcCommissionAmounts()" data-guard="decimal"/></div>
                     </div>
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Comm Uom</label></div>
-                        <div class="col-md-4"><select id="cmbCommUom" class="win-combo so-select2" onchange="recalcCommissionAmounts()">
+                        <div class="col-md-4"><select id="cmbCommUom" class="win-combo dtcombo" onchange="recalcCommissionAmounts()" data-dtcombo="single" data-dtcombo-caption="UOM">
                         
 </select></div>
                         <div class="col-md-4 d-flex align-items-center gap-1"><label class="win-label m-0">Amount</label><input type="number" id="txtCommAmount" class="win-textbox win-textbox-readonly" disabled/></div>
@@ -384,12 +400,12 @@
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Sales Man/Agent</label></div>
                         <div class="col-md-8">
-                            <select id="cmbOtherSalesMan" class="win-combo so-select2"><option value="">...Select Any Value...</option></select>
+                            <select id="cmbOtherSalesMan" class="win-combo dtcombo" data-dtcombo="party3" data-dtcombo-caption="OtherCommissionAgent"><option value="">...Select Any Value...</option></select>
                         </div>
                     </div>
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Comm Type</label></div>
-                        <div class="col-md-4"><select id="cmbOtherCommType" class="win-combo so-select2" onchange="recalcCommissionAmounts()">
+                        <div class="col-md-4"><select id="cmbOtherCommType" class="win-combo dtcombo" onchange="recalcCommissionAmounts()" data-dtcombo="single" data-dtcombo-caption="CommissionType">
                         <!-- CommissionTypeFill(), SaleOrder.cs :1185-1190 - a fixed list built in
                              code: (1,"Flat") (2,"Percent") (3,"Comm Weight"). Row 0 is activated,
                              so Flat is the default. "Comm Weight" was missing here before. -->
@@ -401,7 +417,7 @@
                     </div>
                     <div class="row mb-1 align-items-center">
                         <div class="col-md-4"><label class="win-label m-0">Comm Uom</label></div>
-                        <div class="col-md-4"><select id="cmbOtherCommUom" class="win-combo so-select2" onchange="recalcCommissionAmounts()">
+                        <div class="col-md-4"><select id="cmbOtherCommUom" class="win-combo dtcombo" onchange="recalcCommissionAmounts()" data-dtcombo="single" data-dtcombo-caption="UOM">
                         
 </select></div>
                         <div class="col-md-4 d-flex align-items-center gap-1"><label class="win-label m-0">Amount</label><input type="number" id="txtOtherCommAmount" class="win-textbox win-textbox-readonly" value="0" disabled/></div>
@@ -432,7 +448,7 @@
                         <label class="win-radio-inline m-0"><input type="radio" name="radItemFilter" id="radCategory" checked> Category</label>
                         <label class="win-radio-inline m-0"><input type="radio" name="radItemFilter" id="radType"> Type</label>
                     </div>
-                    <select id="lineItemCategory" class="win-combo so-select2"><option value=""></option></select>
+                    <select id="lineItemCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category"><option value=""></option></select>
                 </div>
                 <div class="col-md-2">
                     <div class="win-label m-0 d-flex align-items-center gap-1">
@@ -443,25 +459,25 @@
                              for the selected item, "0" when none. -->
                         <span id="lblStockWeight" class="win-label m-0 fw-bold ms-auto text-end">0</span>
                     </div>
-                    <select id="lineItem" class="win-combo so-select2">
+                    <select id="lineItem" class="win-combo dtcombo" data-dtcombo="item" data-dtcombo-caption="Item">
                         <option value="">...Select Any Value...</option>
                     </select>
                 </div>
                 <div class="col-md-1">
                     <label class="win-label m-0">Crop Year</label>
-                    <select id="lineCropYear" class="win-combo so-select2">
+                    <select id="lineCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year">
                         <option value="">-- Select Crop Year --</option>
 </select>
                 </div>
                 <div class="col-md-1">
                     <label class="win-label m-0">Job/Lot</label>
-                    <select id="lineJobLot" class="win-combo so-select2">
+                    <select id="lineJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job/Lot">
                         <option value="">-- Select Job / Lot --</option>
 </select>
                 </div>
                 <div class="col-md-1">
                     <label class="win-label m-0">Pack Type</label>
-                    <select id="linePackType" class="win-combo so-select2">
+                    <select id="linePackType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Packing Type">
                         <option value="">-- Select Pack Type --</option>
 </select>
                 </div>
@@ -470,11 +486,11 @@
                          schedule (DDL.BindDDL(dtUom, combitempck, "Id","UOMCode","PackUOM"), :1350).
                          It supplies PackUomId / PackUom / PUomEquivalent. -->
                     <label class="win-label m-0">Pack Size</label>
-                    <select id="linePackUom" class="win-combo so-select2"><option value=""></option></select>
+                    <select id="linePackUom" class="win-combo dtcombo" data-dtcombo="uom4" data-dtcombo-caption="PackUOM"><option value=""></option></select>
                 </div>
                 <div class="col-md-1">
                     <label class="win-label m-0">Qty</label>
-                    <input type="number" step="0.001" id="lineQty" class="win-textbox" placeholder="Qty" oninput="calcLine('qty')"/>
+                    <input type="number" step="0.001" id="lineQty" class="win-textbox" placeholder="Qty" oninput="calcLine('qty')" data-guard="decimal"/>
                 </div>
                 <div class="col-md-1">
                     <label class="win-label m-0">Net Weight</label>
@@ -482,11 +498,11 @@
                 </div>
                 <div class="col-md-1">
                     <label class="win-label m-0">Rate</label>
-                    <input type="number" step="0.01" id="lineRate" class="win-textbox" value="0" placeholder="Rate" oninput="calcLine('rate')"/>
+                    <input type="number" step="0.01" id="lineRate" class="win-textbox" value="0" placeholder="Rate" oninput="calcLine('rate')" data-guard="decimal"/>
                 </div>
                 <div class="col-md-1">
                     <label class="win-label m-0">Rate UOM</label>
-                    <select id="lineRateUom" class="win-combo so-select2">
+                    <select id="lineRateUom" class="win-combo dtcombo" data-dtcombo="uom4" data-dtcombo-caption="RateUOM">
                         <option value="">-- Select Item First --</option>
 </select>
                 </div>
@@ -516,7 +532,7 @@
                     <label class="win-label m-0">Warehouse</label>
                     <select id="lineWarehouse" class="win-combo so-select2">
                         <option value="">-- Select Warehouse --</option>
-<option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.warehouseName}"></option></select>
+<option th:each="w : ${warehouses}" th:value="${w['id']}" th:text="${w['warehouseName']}"></option></select>
                 </div>
                 <div class="col-md-1">
                     <label class="win-label m-0">Lab Sample #</label>
@@ -701,23 +717,55 @@
 
     <!-- HISTORY VIEW CONTAINER (TOGGLED BY HISTORY BUTTON IN FOOTER) -->
     <div id="viewHistoryContainer" class="win-form-body" style="display: none;">
+        <!-- Desktop History tab (SaleOrder.cs gridhistoryfill :4122, HistoryBranchComboFill :3968,
+             HistoryCombosFill :4012): date-mode radio (doc / entry / modify / approved), a tick box on each
+             date end, doc-no range, branch multi-select, customer and booking person - each list fed from
+             the Sale Orders that actually exist in the ticked branches. -->
         <fieldset class="win-group-box">
             <legend><i class="fa fa-history me-1"></i> Sale Order History Search</legend>
-            <div class="row g-2 align-items-center">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="win-label d-block">Date Type</label>
+                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="doc" checked> Doc Date</label>
+                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="entry"> Entry</label>
+                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="modify"> Modify</label>
+                    <label class="win-radio-inline"><input type="radio" name="histDateMode" value="approved"> Approved</label>
+                </div>
                 <div class="col-md-2">
-                    <label class="win-label">From Date</label>
+                    <label class="win-label"><input type="checkbox" id="histUseFrom" checked> From Date</label>
                     <input type="date" id="histFromDate" class="win-datepicker"/>
                 </div>
                 <div class="col-md-2">
-                    <label class="win-label">To Date</label>
+                    <label class="win-label"><input type="checkbox" id="histUseTo" checked> To Date</label>
                     <input type="date" id="histToDate" class="win-datepicker"/>
                 </div>
+                <div class="col-md-1">
+                    <label class="win-label">From No</label>
+                    <input type="number" id="histFromDocNo" class="win-textbox" min="0"/>
+                </div>
+                <div class="col-md-1">
+                    <label class="win-label">To No</label>
+                    <input type="number" id="histToDocNo" class="win-textbox" min="0"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="win-label d-block">Branch</label>
+                    <div id="histBranches" class="d-flex flex-wrap"></div>
+                </div>
+            </div>
+            <div class="row g-2 align-items-end mt-1">
                 <div class="col-md-4">
-                    <label class="win-label">Customer Search Filter</label>
+                    <label class="win-label">Customer</label>
                     <select id="histCustomerCombo" class="win-combo so-select2"><option value="">...Select Customer...</option></select>
                 </div>
-                <div class="col-md-2 pt-3">
-                    <button type="button" class="win-btn-action w-100" onclick="loadHistoryData()"><i class="fa fa-search me-1"></i> Search History</button>
+                <div class="col-md-3">
+                    <label class="win-label">Booking Person</label>
+                    <select id="histBookingPersonCombo" class="win-combo so-select2"><option value="">...Select Booking Person...</option></select>
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="win-btn-action w-100" onclick="loadHistoryBranches()"><i class="fa fa-refresh me-1"></i> Refresh</button>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="win-btn-action w-100" onclick="loadHistoryData()"><i class="fa fa-search me-1"></i> Show</button>
                 </div>
             </div>
         </fieldset>
@@ -727,15 +775,15 @@
                 <table class="win-grid" id="tblHistory">
                     <thead>
                         <tr>
-                            <th style="width: 50px; text-align: center;">Edit</th>
-                            <th style="width: 50px; text-align: center;">Print</th>
-                            <th style="width: 80px;">Doc No</th>
-                            <th style="width: 90px;">Doc Date</th>
-                            <th>Customer Code</th>
-                            <th>Customer Name</th>
-                            <th style="width: 100px; text-align: right;">Total Amount</th>
-                            <th style="width: 130px;">Entry Date</th>
-                            <th style="width: 80px; text-align: center;">Status</th>
+                            <th style="text-align: center;">Edit</th>
+                            <th style="text-align: center;">Print</th>
+                            <th>DocNo</th><th>BranchSrNo</th><th>BranchName</th><th>DocDate</th><th>CustomerName</th>
+                            <th>BookingPerson</th><th>DueDays</th><th>DueDate</th><th>OrderExpiryDate</th><th>CommType</th>
+                            <th style="text-align: right;">CommRate</th><th style="text-align: right;">CommAmount</th><th>CommRemarks</th>
+                            <th>DeliveryTerm</th><th>DeliveryDays</th><th>PaymentTerm</th><th>OrderStatus</th>
+                            <th>Category-I</th><th>Category-II</th><th>IsAproved</th><th>EntryUser</th><th>EntryDate</th>
+                            <th>ModifyUser</th><th>ModifyDate</th><th>ApprovedUser</th><th>ApprovedDate</th>
+                            <th>NoOfAttachments</th><th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -755,7 +803,7 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script th:src="@{/build/js/countx_sale_order_full.js}"></script>
+    <script th:src="@{/build/js/countx_sale_order_full.js?v=20260924a}"></script>
     <script>
         // Ditto every one of the real desktop's 30 UltraCombo dropdowns on this screen (combitem,
         // combjob, cmbPackType, combitempck, combrateuom, combcityarea, CmbWarehouse, CmbCropyr,
@@ -777,11 +825,16 @@
         // three party combos) their multi-column templateResult. Re-calling .select2() on those
         // elements replaces that instance with a plain one, which is why the column headers never
         // appeared. Only the still-uninitialised selects are wired up here.
-        $(function () {
-            $('.so-select2').filter(function () {
-                return !$(this).data('select2');
-            }).select2({ dropdownAutoWidth: true, width: '100%' });
-        });
+        // SUPERSEDED by build/js/countx_desktop_combo.js, which claims '.so-select2' along with
+        // every other dropdown marker used across Sale, Purchase and CMAGT and renders them all
+        // through one implementation - so a combo here looks the same as the matching one on
+        // Purchase Order. It skips anything already initialised, so nothing is clobbered.
+        //
+        // Left as a no-op rather than deleted so the reasoning above stays with the screen: the
+        // ORDER mattered. This block used to run after countx_sale_order_full.js and re-called
+        // .select2() on combos that already had a multi-column templateResult, replacing the
+        // instance and silently dropping the columns.
+        $(function () { /* handled by DesktopCombo */ });
     </script>
     <!-- Modal Attachments -->
     <div class="modal fade" id="modalAttachments" tabindex="-1" role="dialog">
@@ -858,5 +911,7 @@
             </div>
         </div>
     </div>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

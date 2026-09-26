@@ -19,6 +19,59 @@ public class MarketGrnRestController {
     @Autowired
     private CurrentUserContext currentUserContext;
 
+    @Autowired private com.mst.repositories.PurchaseGrnLookupRepository lookups;
+    @Autowired private com.mst.services.PurchaseGrnSupplementService supplements;
+
+    @Autowired private com.mst.repositories.PurchaseGrnFormRepository form;
+
+    /* InvFrmGRN form-time lookups — see PurchaseGrnFormRepository for the desktop line of each. */
+    @GetMapping("/form/config")
+    public ResponseEntity<?> formConfig() { return ResponseEntity.ok(form.config()); }
+
+    @GetMapping("/form/pending")
+    public ResponseEntity<?> formPending() { return ResponseEntity.ok(form.pendingRows()); }
+
+    @GetMapping("/form/load/{gpId}")
+    public ResponseEntity<?> formLoad(@PathVariable int gpId) { return ResponseEntity.ok(form.load(gpId,form.configValues())); }
+
+    @GetMapping("/form/items/{gpId}")
+    public ResponseEntity<?> formItems(@PathVariable int gpId) { return ResponseEntity.ok(form.items(gpId)); }
+
+    @GetMapping("/form/lab")
+    public ResponseEntity<?> formLab(@RequestParam int gpId,@RequestParam int itemId) { return ResponseEntity.ok(form.lab(gpId,itemId)); }
+
+    @GetMapping("/form/lab-parameters/{labId}")
+    public ResponseEntity<?> formLabParameters(@PathVariable int labId) { return ResponseEntity.ok(form.labParameters(labId)); }
+
+    @GetMapping("/form/pre-bills")
+    public ResponseEntity<?> formPreBills(@RequestParam(defaultValue="0") int supplierId,@RequestParam(defaultValue="0") int grnId,
+                                          @RequestParam(defaultValue="0") int gpId,@RequestParam(defaultValue="0") int orderId) {
+        return ResponseEntity.ok(form.preBills(supplierId,grnId,gpId,orderId));
+    }
+
+    @GetMapping("/form/purchase-order/{orderId}")
+    public ResponseEntity<?> formPurchaseOrder(@PathVariable int orderId) { return ResponseEntity.ok(form.purchaseOrder(orderId)); }
+
+    @GetMapping("/form/received-weight/{gpId}")
+    public ResponseEntity<?> formReceivedWeight(@PathVariable int gpId) { return ResponseEntity.ok(form.receivedWeight(gpId)); }
+
+    @GetMapping("/form/previous-data/{gpId}")
+    public ResponseEntity<?> formPreviousData(@PathVariable int gpId,@RequestParam(defaultValue="0") int recId) { return ResponseEntity.ok(form.previousData(gpId,recId)); }
+
+    @GetMapping("/form/deduction-policy")
+    public ResponseEntity<?> formDeductionPolicy(@RequestParam(required=false) String date,@RequestParam double difference) {
+        return ResponseEntity.ok(form.deductionPolicy(date,difference));
+    }
+
+    @PostMapping("/calculate-breakups")
+    public ResponseEntity<?> calculateBreakups(@RequestBody Map<String,Object> payload) { return ResponseEntity.ok(supplements.calculate(payload)); }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> invalidInput(IllegalArgumentException failure) { return ResponseEntity.badRequest().body(Map.of("success",false,"message",failure.getMessage())); }
+
+    @GetMapping("/gate-passes/{id}")
+    public ResponseEntity<?> gatePass(@PathVariable int id) { return ResponseEntity.ok(lookups.gatePass(id,46)); }
+
     @GetMapping("/dropdowns")
     public ResponseEntity<?> getDropdowns() {
         int orgId = currentUserContext.currentOrganizationId();
@@ -93,5 +146,9 @@ public class MarketGrnRestController {
         res.put("success", ok);
         res.put("message", ok ? "Deleted successfully" : "Failed to delete");
         return ResponseEntity.ok(res);
+    }
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<?> databaseFailure(org.springframework.dao.DataAccessException failure) {
+        return ResponseEntity.badRequest().body(Map.of("success",false,"message",failure.getMostSpecificCause().getMessage()));
     }
 }

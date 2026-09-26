@@ -148,10 +148,12 @@ public class AccountsModuleViewController {
 			case "wages-rate-schedule-contractor":
 				model.addAttribute("moduleTitle", "Wages Rate Schedule Contractor Wise");
 				return "accounts/vouchers/contractor_wise_wages_schedule";
+			/* Built from frmwagesBillHeader.cs (5,407 lines) - Contractor Wages Bill,
+			 * DocumentTypeId 101. Procedure contract in LabourWagesService; the voucher
+			 * posting, audit copies and stock-evaluation call in ContractorWagesBillWriter. */
 			case "labour-wages":
 				model.addAttribute("moduleTitle", "Labour Wages");
-				model.addAttribute("desktopForm", "frmwagesBillHeader.cs");
-				return "accounts/vouchers/contractor_wages_pending";
+				return "accounts/vouchers/labour_wages";
 			case "labour-wages-manual":
 				model.addAttribute("moduleTitle", "Labour Wages Manual");
 				model.addAttribute("desktopForm", "frmWagesBillManual.cs");

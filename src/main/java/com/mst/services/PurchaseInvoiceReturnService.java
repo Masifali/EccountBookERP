@@ -10,8 +10,13 @@ import java.util.*;
 @Service
 public class PurchaseInvoiceReturnService {
 
+    @Autowired private com.mst.repositories.PurchaseInvoiceRecordRepository records;
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private com.mst.repositories.PurchaseInvoiceNumberingRepository numbering;
 
     public Map<String, Object> getDropdowns(int orgId, int compId) {
         Map<String, Object> result = new HashMap<>();
@@ -70,81 +75,24 @@ public class PurchaseInvoiceReturnService {
     }
 
     public int generateNextDocNo(int orgId, int compId, int branchId, int yearId) {
-        try {
-            String sql = "SELECT ISNULL(MAX(DocNo), 0) + 1 FROM InvPurchaseInvoice WHERE DocumentTypeId = 59 AND (OrganizationId = ? OR OrganizationId IS NULL) AND (CompanyId = ? OR CompanyId IS NULL)";
-            Integer nextNo = jdbcTemplate.queryForObject(sql, Integer.class, orgId, compId);
-            return (nextNo != null && nextNo > 0) ? nextNo : 1;
-        } catch (Exception e) {
-            return 1;
-        }
+        return numbering.next(orgId, compId, yearId, 59);
     }
 
     public List<Map<String, Object>> getHistory(int orgId, int compId, int branchId, int yearId,
                                                 String fromDate, String toDate, Integer supplierId,
                                                 Integer fromDocNo, Integer toDocNo, String dateType) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT i.Id as id, i.DocNo as docNo, CONVERT(VARCHAR(10), i.DocDate, 120) as docDate, ")
-              .append("s.CompanyName as supplierName, i.BillAmount as billAmount, i.ManualBillNo as manualBillNo, ")
-              .append("i.RemarksHeader as remarks, CONVERT(VARCHAR(10), i.EntryDate, 120) as entryDate ")
-              .append("FROM InvPurchaseInvoice i ")
-              .append("LEFT JOIN SupplierCustomer s ON i.SupplierCustomerId = s.Id ")
-              .append("WHERE i.DocumentTypeId = 59 ")
-              .append("AND (i.OrganizationId = ").append(orgId).append(" OR i.OrganizationId IS NULL) ")
-              .append("AND (i.CompanyId = ").append(compId).append(" OR i.CompanyId IS NULL) ");
-
-            if (supplierId != null && supplierId > 0) {
-                sb.append("AND i.SupplierCustomerId = ").append(supplierId).append(" ");
-            }
-            if (fromDocNo != null && fromDocNo > 0) {
-                sb.append("AND i.DocNo >= ").append(fromDocNo).append(" ");
-            }
-            if (toDocNo != null && toDocNo > 0) {
-                sb.append("AND i.DocNo <= ").append(toDocNo).append(" ");
-            }
-            if (fromDate != null && !fromDate.trim().isEmpty()) {
-                String col = "entrydate".equalsIgnoreCase(dateType) ? "i.EntryDate" : "i.DocDate";
-                sb.append("AND ").append(col).append(" >= '").append(fromDate).append("' ");
-            }
-            if (toDate != null && !toDate.trim().isEmpty()) {
-                String col = "entrydate".equalsIgnoreCase(dateType) ? "i.EntryDate" : "i.DocDate";
-                sb.append("AND ").append(col).append(" <= '").append(toDate).append(" 23:59:59' ");
-            }
-
-            sb.append("ORDER BY i.DocNo DESC");
-            return jdbcTemplate.queryForList(sb.toString());
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+        return records.history(59,fromDate,toDate,supplierId,fromDocNo,toDocNo,dateType);
     }
 
     public Map<String, Object> getById(int id) {
-        try {
-            String sqlHead = "SELECT i.*, s.CompanyName as supplierName FROM InvPurchaseInvoice i " +
-                    "LEFT JOIN SupplierCustomer s ON i.SupplierCustomerId = s.Id WHERE i.Id = ?";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sqlHead, id);
-            if (list == null || list.isEmpty()) return null;
-
-            Map<String, Object> result = new HashMap<>(list.get(0));
-
-            String sqlDetails = "SELECT d.*, it.ItemName, it.ItemCode, w.WareHouseName, jl.JobLotDescription " +
-                    "FROM InvPurchaseInvoiceDetail d " +
-                    "LEFT JOIN Item it ON d.ItemId = it.Id " +
-                    "LEFT JOIN InvWareHouse w ON d.WarehouseId = w.Id " +
-                    "LEFT JOIN JobLot jl ON d.JobLotId = jl.Id " +
-                    "WHERE d.InvPurchaseInvoiceId = ?";
-            result.put("details", jdbcTemplate.queryForList(sqlDetails, id));
-
-            return result;
-        } catch (Exception e) {
-            return null;
-        }
+        return records.load(id,59);
     }
 
     @Transactional
     public Map<String, Object> savePurchaseReturn(Map<String, Object> payload) {
         Map<String, Object> response = new HashMap<>();
         try {
+            records.scopeWrite(payload,59);
             Integer id = payload.get("id") != null ? ((Number) payload.get("id")).intValue() : 0;
             Integer orgId = payload.get("organizationId") != null ? ((Number) payload.get("organizationId")).intValue() : 1;
             Integer compId = payload.get("companyId") != null ? ((Number) payload.get("companyId")).intValue() : 1;
@@ -198,6 +146,7 @@ public class PurchaseInvoiceReturnService {
             response.put("docNo", docNo);
             response.put("message", "Purchase Invoice Return saved successfully [" + docNo + "]");
         } catch (Exception e) {
+            org.springframework.transaction.interceptor.TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             response.put("success", false);
             response.put("message", "Error saving Purchase Invoice Return: " + e.getMessage());
         }
@@ -206,12 +155,7 @@ public class PurchaseInvoiceReturnService {
 
     @Transactional
     public boolean deletePurchaseReturn(int id) {
-        try {
-            jdbcTemplate.update("DELETE FROM InvPurchaseInvoiceDetail WHERE InvPurchaseInvoiceId=?", id);
-            jdbcTemplate.update("DELETE FROM InvPurchaseInvoice WHERE Id=? AND DocumentTypeId=59", id);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        records.delete(id,59);
+        return true;
     }
 }

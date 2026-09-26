@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        /* The module-dashboard look already used by accounts_dashboard.html, so the Production
+           module reads as the same application rather than a page of its own invention. */
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
+        .erp-top-header { background-color: #00796B; color: #fff; height: 38px; display: flex; align-items: center; padding: 0 12px; font-size: 13px; font-weight: 600; }
+        .erp-top-header .header-item { margin-right: 18px; display: flex; align-items: center; }
+        .erp-top-header .company-title { text-align: center; font-weight: bold; line-height: 1.1; }
+        .erp-top-header .right-item { margin-left: auto; color: #ffeb3b; }
+        .erp-sub-bar { background-color: #b0bec5; height: 24px; padding: 2px 10px; font-size: 11px; color: #37474f; display: flex; align-items: center; border-bottom: 1px solid #90a4ae; }
+        .erp-main-canvas { background-color: #00796B; min-height: calc(100vh - 62px); padding: 15px 25px 40px 25px; }
+        .erp-page-title { color: #fff; font-family: "Times New Roman", Georgia, serif; font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+        .erp-section-title { color: #b2dfdb; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; margin: 18px 0 8px; }
+        .cards-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .erp-card { background: #fff; width: 220px; border: 1px solid #b2dfdb; box-shadow: 0 2px 5px rgba(0,0,0,.15); text-decoration: none; color: #333; display: block; transition: transform .15s ease-in-out, box-shadow .15s ease-in-out; cursor: pointer; }
+        .erp-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.25); text-decoration: none; color: #333; }
+        .erp-card-body { padding: 20px 10px 15px; text-align: center; }
+        .erp-card-body .bank-icon { font-size: 32px; color: #26a69a; margin-bottom: 12px; }
+        .erp-card-body .card-title { font-size: 14px; font-weight: bold; color: #111; line-height: 1.25; }
+        .erp-empty { background: #fff; border: 1px solid #b2dfdb; padding: 14px 18px; color: #444; font-size: 12px; max-width: 640px; }
+    </style>
+</head>
+<body>
+
+<!-- Company, branch and financial year come from the LoginContext this session's user chose at
+     login - the same object the company/branch pickers write. They are NOT written into the page:
+     a hardcoded company name would read correctly for one organisation and lie to every other. -->
+<div class="erp-top-header" th:with="ctx=${session != null ? session['com.mst.security.LoginContext'] : null}">
+    <div class="header-item">
+        <i class="fa fa-user" style="margin-right:6px;"></i>
+        <span th:text="${#authentication != null ? #authentication.name : 'User'}">User</span>
+    </div>
+    <div class="header-item company-title" th:if="${ctx != null and ctx.companyName != null}"
+         th:text="${ctx.companyName}">Company</div>
+    <div class="header-item" th:if="${ctx != null and ctx.branchName != null}">
+        <i class="fa fa-building-o" style="margin-right:6px;"></i>
+        <span th:text="${ctx.branchName}">Branch</span>
+    </div>
+    <div class="header-item" th:if="${ctx != null and ctx.financialYearCode != null}">
+        <i class="fa fa-calendar" style="margin-right:6px;"></i>
+        <span th:text="${ctx.financialYearCode}">Year</span>
+    </div>
+    <div class="header-item">
+        <i class="fa fa-clock-o" style="margin-right:6px;"></i>
+        <span id="liveClock">&nbsp;</span>
+    </div>
+    <div class="right-item">
+        <a href="/dashboard" style="color:#ffeb3b; text-decoration:none;">
+            <i class="fa fa-th-large" style="margin-right:4px;"></i> All Modules</a>
+    </div>
+</div>
+
+<div class="erp-sub-bar">
+    <i class="fa fa-window-maximize" style="margin-right:6px;"></i>
+    <span>Screens &gt; Production</span>
+</div>
+
+<div class="erp-main-canvas">
+    <div class="erp-page-title">Production</div>
+
+    <!-- Every card below is gated on the same authority its sidebar entry uses, so this page can
+         never offer a screen the signed-in user's rights do not allow. The authority codes come
+         from SidebarScreenCatalog, which carries each screen's real dbo.ScreenDefinition id. -->
+
+    <div class="erp-section-title">Transactions (Module 18)</div>
+    <div class="cards-row">
+        <a class="erp-card" href="/production/job-order"
+           th:if="${#authorization.expression('hasAuthority(''PRODUCTION_JOB_ORDER'')')}">
+            <div class="erp-card-body">
+                <div class="bank-icon"><i class="fa fa-tasks"></i></div>
+                <div class="card-title">Production Job Order</div>
+            </div>
+        </a>
+        <a class="erp-card" href="/production/stock-conversion"
+           th:if="${#authorization.expression('hasAuthority(''PRODUCTION_STOCK_CONVERSION'')')}">
+            <div class="erp-card-body">
+                <div class="bank-icon"><i class="fa fa-exchange"></i></div>
+                <div class="card-title">Stock Conversion</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="erp-section-title">Reports (Module 21)</div>
+    <div class="cards-row">
+        <a class="erp-card" href="/production/reports/job-order-summary"
+           th:if="${#authorization.expression('hasAuthority(''PRODUCTION_RPT_JOB_ORDER_SUMMARY'')')}">
+            <div class="erp-card-body">
+                <div class="bank-icon"><i class="fa fa-list-alt"></i></div>
+                <div class="card-title">Job Order Summary Report</div>
+            </div>
+        </a>
+        <a class="erp-card" href="/production/reports/production-summary"
+           th:if="${#authorization.expression('hasAuthority(''PRODUCTION_RPT_PRODUCTION_SUMMARY'')')}">
+            <div class="erp-card-body">
+                <div class="bank-icon"><i class="fa fa-industry"></i></div>
+                <div class="card-title">Production Summary Report</div>
+            </div>
+        </a>
+        <a class="erp-card" href="/production/reports/production-register"
+           th:if="${#authorization.expression('hasAuthority(''PRODUCTION_RPT_PRODUCTION_REGISTER'')')}">
+            <div class="erp-card-body">
+                <div class="bank-icon"><i class="fa fa-book"></i></div>
+                <div class="card-title">Production Register</div>
+            </div>
+        </a>
+        <a class="erp-card" href="/production/reports/production-comparison"
+           th:if="${#authorization.expression('hasAuthority(''PRODUCTION_RPT_PRODUCTION_COMPARISON'')')}">
+            <div class="erp-card-body">
+                <div class="bank-icon"><i class="fa fa-balance-scale"></i></div>
+                <div class="card-title">Production Comparison Report</div>
+            </div>
+        </a>
+        <a class="erp-card" href="/production/reports/packing-material-consumption"
+           th:if="${#authorization.expression('hasAuthority(''PRODUCTION_RPT_PM_CONSUMPTION'')')}">
+            <div class="erp-card-body">
+                <div class="bank-icon"><i class="fa fa-cubes"></i></div>
+                <div class="card-title">Production PackingMaterial Consumption Register</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="erp-section-title">Not yet built</div>
+    <div class="erp-empty">
+        Production Against (Job Order) — desktop screen 280, <code>FoodProductionWithValues</code>
+        — is a container of seven desktop forms (Input, Output, Consumption, PackingMaterial,
+        Overhead, Settlement, Summary). Its Summary tab is the Production Summary Report above.
+        The remaining tabs are being ported one at a time.
+    </div>
+</div>
+
+<script>
+    (function () {
+        function tick() {
+            var d = new Date();
+            var h = d.getHours(), ap = h < 12 ? 'am' : 'pm';
+            h = h % 12; if (h === 0) h = 12;
+            document.getElementById('liveClock').textContent =
+                h + ':' + String(d.getMinutes()).padStart(2, '0')
+                  + ':' + String(d.getSeconds()).padStart(2, '0') + ' ' + ap;
+        }
+        tick();
+        setInterval(tick, 1000);
+    }());
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Purchase Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; font-size: 12px; }
+        .top-banner { background-color: #00796B; color: #fff; padding: 8px 15px; font-size: 14px; font-weight: bold; }
+        .filter-panel { background: #fff; border: 1px solid #ddd; border-radius: 3px; padding: 12px; margin: 10px; }
+        .form-control-sm { height: 26px; padding: 2px 6px; font-size: 11px; }
+        .btn-erp { font-size: 11px; padding: 3px 12px; height: 26px; }
+        .table-responsive { max-height: 520px; overflow-y: auto; overflow-x: auto; }
+        .table-erp { font-size: 11px; width: 100%; border-collapse: collapse; }
+        .table-erp th { background-color: #00796B; color: #fff; position: sticky; top: 0; z-index: 10; padding: 5px; text-align: center; }
+        .table-erp td { padding: 4px 6px; border: 1px solid #e2e8f0; }
+        .table-erp tr:hover { background-color: #f0f7f7; }
+        .text-right { text-align: right; }
+        .total-row { font-weight: bold; background-color: #e2e8f0; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+</head>
+<body>
+    <div class="top-banner">
+        <i class="fa fa-calculator"></i> Purchase Register / Invoice History
+        <a href="/purchase/reports" class="btn btn-sm btn-light pull-right" style="margin-top:-3px; font-size:11px;"><i class="fa fa-arrow-left"></i> Reports Menu</a>
+    </div>
+
+    <div class="filter-panel">
+        <form id="filterForm">
+            <div class="row">
+                <div class="col-md-2">
+                    <label>As On Date / To Date</label>
+                    <input type="date" id="asOnDate" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                    <label>Aging Days</label>
+                    <input type="number" id="agingDays" class="form-control form-control-sm" value="30">
+                </div>
+                <div class="col-md-3">
+                    <label>Supplier / Account</label>
+                    <select id="accountId" class="form-control form-control-sm select2">
+                        <option value="">-- All Accounts --</option>
+                    </select>
+                </div>
+                <div class="col-md-5" style="margin-top:18px;">
+                    <button type="button" id="btnShow" class="btn btn-primary btn-erp"><i class="fa fa-search"></i> Show Register</button>
+                    <button type="button" id="btnReset" class="btn btn-default btn-erp"><i class="fa fa-refresh"></i> Reset</button>
+                    <button type="button" id="btnPrint" class="btn btn-success btn-erp"><i class="fa fa-print"></i> Print</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div style="margin:0 10px;">
+        <div class="table-responsive">
+            <table class="table table-bordered table-erp" id="reportTable">
+                <thead>
+                    <tr>
+                        <th>Sr#</th>
+                        <th>Invoice / Voucher No</th>
+                        <th>Invoice Date</th>
+                        <th>Due Date</th>
+                        <th>Account Code</th>
+                        <th>Supplier / Party Name</th>
+                        <th class="text-right">Due Amount</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTbody">
+                    <tr><td colspan="8" class="text-center">Select filters and click "Show Register".</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row" id="totalRow" style="display:none;">
+                        <td colspan="6" class="text-right">Total Due:</td>
+                        <td class="text-right" id="lblTotalDue">0.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({ width: '100%' });
+            const today = new Date().toISOString().split('T')[0];
+            $('#asOnDate').val(today);
+            loadAccounts();
+
+            $('#btnShow').click(fetchReport);
+            $('#btnReset').click(function() {
+                $('#asOnDate').val(today);
+                $('#agingDays').val(30);
+                $('#accountId').val(null).trigger('change');
+                $('#reportTbody').html('<tr><td colspan="8" class="text-center">Select filters and click "Show Register".</td></tr>');
+                $('#totalRow').hide();
+            });
+            $('#btnPrint').click(function() { window.print(); });
+        });
+
+        function loadAccounts() {
+            $.get('/api/inward-gate-pass/dropdowns', function(res) {
+                let html = '<option value="">-- All Accounts --</option>';
+                if(res && res.suppliers) {
+                    res.suppliers.forEach(s => { html += `<option value="${s.id}">${s.referenceName || s.name}</option>`; });
+                }
+                $('#accountId').html(html);
+            });
+        }
+
+        function fetchReport() {
+            const btn = $('#btnShow');
+            btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+            
+            const req = {
+                asOnDate: $('#asOnDate').val(),
+                agingDays: $('#agingDays').val() ? parseInt($('#agingDays').val()) : 30,
+                accountId: $('#accountId').val() ? parseInt($('#accountId').val()) : null
+            };
+
+            $.ajax({
+                url: '/purchase/api/reports/supplier-aging',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(req),
+                success: function(res) {
+                    if(res && res.success && res.data && res.data.length > 0) {
+                        let rowsHtml = '';
+                        let totDue = 0;
+                        res.data.forEach((r, idx) => {
+                            let due = parseFloat(r.dueAmount || r.DueAmount || r.amount || 0);
+                            totDue += due;
+                            rowsHtml += `<tr>
+                                <td class="text-center">${idx + 1}</td>
+                                <td class="text-center"><a href="/purchase/purchase-invoice?id=${r.id}">${r.invoiceNo || r.InvoiceNo || r.voucherCode || r.id}</a></td>
+                                <td class="text-center">${r.invoiceDate || r.InvoiceDate ? String(r.invoiceDate || r.InvoiceDate).substring(0,10) : ''}</td>
+                                <td class="text-center">${r.invoiceDueDate || r.InvoiceDueDate ? String(r.invoiceDueDate || r.InvoiceDueDate).substring(0,10) : ''}</td>
+                                <td class="text-center">${r.accountCode || r.AccountCode || ''}</td>
+                                <td>${r.partyName || r.PartyName || r.supplierName || ''}</td>
+                                <td class="text-right">${due.toFixed(2)}</td>
+                                <td>${r.remarks || r.Remarks || ''}</td>
+                            </tr>`;
+                        });
+                        $('#reportTbody').html(rowsHtml);
+                        $('#lblTotalDue').text(totDue.toFixed(2));
+                        $('#totalRow').show();
+                    } else {
+                        $('#reportTbody').html('<tr><td colspan="8" class="text-center text-muted">No records found matching criteria.</td></tr>');
+                        $('#totalRow').hide();
+                    }
+                },
+                error: function(err) {
+                    alert('Error loading Purchase register: ' + (err.responseJSON ? err.responseJSON.message : err.statusText));
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="fa fa-search"></i> Show Register');
+                }
+            });
+        }
+    </script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

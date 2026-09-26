@@ -1,5 +1,7 @@
 package com.mst.services.sale;
 
+import com.mst.repositories.support.ProcExec;
+
 import com.mst.security.CurrentUserContext;
 
 import com.mst.models.sale.dto.*;
@@ -498,26 +500,42 @@ public class SaleOrderService {
     /** Real base currency/exchange-rate default, matching desktop's GetBaseCurrencyAndRate() -
      *  only consulted when the caller hasn't supplied a currency/rate itself. */
     private Map<String, Object> getBaseCurrencyAndRate(int orgId, int compId) {
+        /* GetBaseCurrencyAndRate (SaleOrder.cs:3504) makes TWO lookups - GetConfigurationsByDefinitionIds("1") for the
+           currency and ("160") for the rate - and reads Rows[0] of each. One combined "1,160" call returned both rows
+           in whatever order the procedure produced and relied on position to tell them apart. */
         Map<String, Object> result = new HashMap<>();
         try {
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_BASE_CURRENCY_AND_RATE,
-                    orgId, compId, "1,160", "GetConfigurationsByDefinitionIds");
-            for (Map<String, Object> row : rows) {
-                Object key = row.get("ConfigKey");
-                if (key == null) continue;
-                // Definition Id itself isn't returned by this activity - both rows come back
-                // keyed by ConfigDescription; whichever the real config rows are named, the
-                // first is treated as currency and the second as rate, matching desktop's own
-                // dtCurren.Rows[0]/dtRate.Rows[0] positional access against the same 2-row set.
-                if (!result.containsKey("currencyId")) {
-                    result.put("currencyId", toInt(key));
-                } else if (!result.containsKey("exchangeRateRaw")) {
-                    result.put("exchangeRateRaw", key);
-                }
-            }
+            List<Map<String, Object>> cur = jdbcTemplate.queryForList(SQL_BASE_CURRENCY_AND_RATE,
+                    orgId, compId, "1", "GetConfigurationsByDefinitionIds");
+            if (!cur.isEmpty() && cur.get(0).get("ConfigKey") != null) result.put("currencyId", toInt(cur.get(0).get("ConfigKey")));
+            List<Map<String, Object>> rate = jdbcTemplate.queryForList(SQL_BASE_CURRENCY_AND_RATE,
+                    orgId, compId, "160", "GetConfigurationsByDefinitionIds");
+            if (!rate.isEmpty() && rate.get(0).get("ConfigKey") != null) result.put("exchangeRateRaw", rate.get(0).get("ConfigKey"));
         } catch (Exception ignored) {
         }
         return result;
+    }
+
+    /** clsGlobalVariables.DefaultNoofDecimalPointsForFcyAmount = Conversion.ToInt(config
+     *  "DefaultNoOfDecimalPointsForFcyAmount") (CommonServices.cs:5440); 0 when the entry is missing. */
+    private int fcyDecimalPoints(int orgId, int compId) {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, @ConfigDescription=?, @DefinitionIds=?, @Activity=?",
+                    orgId, compId, "DefaultNoOfDecimalPointsForFcyAmount", null, "GetConfigurationByOrgCompandConfigDescription");
+            if (rows.isEmpty() || rows.get(0).get("ConfigKey") == null) return 0;
+            return (int) Double.parseDouble(String.valueOf(rows.get(0).get("ConfigKey")).trim());
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /** Amount / ExchangeRate rounded with C#'s Math.Round(decimal, n) - banker's rounding (HALF_EVEN); 0 when the
+     *  rate is not positive, ditto txtExchangeRate_TextChanged. */
+    private static BigDecimal fcyOf(BigDecimal amount, BigDecimal rate, int decimals) {
+        if (amount == null || rate == null || rate.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+        return amount.divide(rate, Math.max(decimals, 0) + 10, java.math.RoundingMode.HALF_EVEN)
+                     .setScale(Math.max(decimals, 0), java.math.RoundingMode.HALF_EVEN);
     }
 
     /** Delivery Term is stored as its display label, not its Id (ditto desktop's
@@ -673,6 +691,9 @@ public class SaleOrderService {
 
             BigDecimal totalQty = BigDecimal.ZERO, totalWeight = BigDecimal.ZERO, totalAmount = BigDecimal.ZERO;
             for (SaleOrderDetailDto r : validRows) {
+                /* CalculateTotalInformation (SaleOrder.cs:3529) totals the rows still in the grid. A removed
+                   persisted row travels to the procedure as ActionTypeId 3 but is not part of the order total. */
+                if (Integer.valueOf(3).equals(r.getActionTypeId())) continue;
                 totalQty = totalQty.add(nz(r.getQuantity()));
                 totalWeight = totalWeight.add(nz(r.getWeight()));
                 totalAmount = totalAmount.add(nz(r.getAmount()));
@@ -735,7 +756,16 @@ public class SaleOrderService {
                     exchangeRate = (rateFromCfg != null && rateFromCfg.compareTo(BigDecimal.ZERO) > 0) ? rateFromCfg : BigDecimal.ONE;
                 }
             }
-            BigDecimal fcyAmount = totalAmount.multiply(exchangeRate);
+            /* FCY, ditto txtExchangeRate_TextChanged (SaleOrder.cs:3566): per row
+               FcyAmount = Math.Round(Amount / ExchangeRate, DefaultNoOfDecimalPointsForFcyAmount) when the rate is
+               positive, else 0; the header FcyAmount is the grid total of that column (CalculateTotalInformation,
+               :3535 / :3548). It used to be Amount x Rate, which is only right when the rate is 1. */
+            int fcyDecimals = fcyDecimalPoints(orgId, compId);
+            BigDecimal fcyAmount = BigDecimal.ZERO;
+            for (SaleOrderDetailDto r : validRows) {
+                if (Integer.valueOf(3).equals(r.getActionTypeId())) continue;
+                fcyAmount = fcyAmount.add(fcyOf(r.getAmount(), exchangeRate, fcyDecimals));
+            }
 
             // ---- Header commission blocks - only populated when an agent is actually selected,
             // ditto desktop's `if (ActiveRow != null)` guards. ----
@@ -767,12 +797,28 @@ public class SaleOrderService {
             BigDecimal otherCommAmount = hasOtherAgent ? dto.getOtherCommAmount() : null;
             String otherCommRemarks = hasOtherAgent ? dto.getOtherCommRemarks() : null;
 
+            /* Header totals exactly as CalculateTotalInformation (SaleOrder.cs:3529-3549) leaves them in the three
+               boxes Insert() reads (:2862-2864): Qty and Weight Math.Round(,2); the Amount NET of a commission whose
+               agent is the customer himself (:3539-3546). The payment-detail check above keeps the gross grid sum,
+               as the desktop's DetailSumAmount does (:2978, :3095). */
+            BigDecimal orderAmount = totalAmount;
+            if (hasAgent && dto.getCustomerId() != null && dto.getCustomerId().equals(dto.getSalesManId())
+                    && nz(dto.getCommAmount()).compareTo(BigDecimal.ZERO) > 0) {
+                orderAmount = orderAmount.subtract(dto.getCommAmount());
+            }
+            if (hasOtherAgent && dto.getCustomerId() != null && dto.getCustomerId().equals(dto.getOtherSalesManId())
+                    && nz(dto.getOtherCommAmount()).compareTo(BigDecimal.ZERO) > 0) {
+                orderAmount = orderAmount.subtract(dto.getOtherCommAmount());
+            }
+            BigDecimal orderQty = totalQty.setScale(2, java.math.RoundingMode.HALF_EVEN);
+            BigDecimal orderWeight = totalWeight.setScale(2, java.math.RoundingMode.HALF_EVEN);
+
             int newId;
             if (!isUpdate) {
                 Object[] p = headerParams(dto, null, orgId, compId, branchId, userId, finYearId,
                         docDate, deliveryStartDate, brokerAgentId, commissionType, commRate, commUomId, commAmount, commRemarks,
                         otherAgentId, otherCommType, otherCommUom, otherCommRate, otherCommAmount, otherCommRemarks,
-                        currencyId, exchangeRate, fcyAmount, totalQty, totalWeight, totalAmount, false);
+                        currencyId, exchangeRate, fcyAmount, orderQty, orderWeight, orderAmount, false);
                 Integer identity = jdbcTemplate.queryForObject(SQL_INSERT_HEADER, Integer.class, p);
                 if (identity == null || identity <= 0) {
                     throw new IllegalStateException("Sp_SaleOrder_Insert did not return a new Sale Order Id.");
@@ -783,7 +829,7 @@ public class SaleOrderService {
                 Object[] p = headerParams(dto, newId, orgId, compId, branchId, userId, finYearId,
                         docDate, deliveryStartDate, brokerAgentId, commissionType, commRate, commUomId, commAmount, commRemarks,
                         otherAgentId, otherCommType, otherCommUom, otherCommRate, otherCommAmount, otherCommRemarks,
-                        currencyId, exchangeRate, fcyAmount, totalQty, totalWeight, totalAmount, true);
+                        currencyId, exchangeRate, fcyAmount, orderQty, orderWeight, orderAmount, true);
                 jdbcTemplate.update(SQL_UPDATE_HEADER, p);
                 // Sp_SaleOrder_Update's own body deletes SaleOrderPaymentTermsDetail /
                 // SaleOrderExtraItemsDetail / SaleOrderCustomerExpenses for this Id immediately
@@ -843,7 +889,7 @@ public class SaleOrderService {
                         row.getPackingTypeId(), // @PackingTypeID
                         currencyId, // @CurrencyId (inherited from header - real desktop mapping, Pass 3)
                         exchangeRate, // @ExchangeRate (inherited from header)
-                        row.getAmount() == null ? null : row.getAmount().multiply(exchangeRate), // @FcyAmount
+                        fcyOf(row.getAmount(), exchangeRate, fcyDecimals), // @FcyAmount - Amount / Rate, see header note
                         null, // @ReferencePartyId
                         null, // @DiscountTypeId
                         null, // @ItemDiscription
@@ -859,14 +905,16 @@ public class SaleOrderService {
                         null, // @SecondaryUomQty
                         null  // @SecondaryUomItemRate
                 };
-                jdbcTemplate.update(SQL_DETAIL_SAVE, dp);
+                ProcExec.call(jdbcTemplate, SQL_DETAIL_SAVE, dp);
             }
 
             // ---- Payment Detail - pure insert, SortNo assigned in list order (ditto desktop) ----
             int sortNo = 1;
             for (SaleOrderPaymentScheduleDto p : paymentRows) {
-                jdbcTemplate.update(SQL_PAYMENT_TERM_INSERT,
-                        null, newId, p.getPaymentTermId(), nz(p.getPercentOfTotal()), nz(p.getAmount()),
+                /* @Id is 0 for a new row, not null: SaleOrderPaymentTermsDetail.Id is `public int`
+                   on the desktop model, and the procedure branches on it. */
+                ProcExec.call(jdbcTemplate, SQL_PAYMENT_TERM_INSERT,
+                        0, newId, p.getPaymentTermId(), nz(p.getPercentOfTotal()), nz(p.getAmount()),
                         p.getDueDays(), p.getRemarks(), sortNo++, parseDate(p.getDueDate()));
             }
 
@@ -889,8 +937,9 @@ public class SaleOrderService {
                 if (remarks == null || remarks.isBlank() || "0".equals(remarks)) {
                     remarks = (e.getItemName() != null ? e.getItemName() : "") + " : " + nz(e.getQuantity()) + "  @" + nz(e.getRate());
                 }
-                jdbcTemplate.update(SQL_CUSTOMER_EXPENSE_INSERT,
-                        null, newId, e.getItemId(), nz(e.getQuantity()), nz(e.getRate()), nz(e.getAmount()), remarks);
+                /* SaleOrderCustomerExpenses.Id is `public int` - 0, not null. */
+                ProcExec.call(jdbcTemplate, SQL_CUSTOMER_EXPENSE_INSERT,
+                        0, newId, e.getItemId(), nz(e.getQuantity()), nz(e.getRate()), nz(e.getAmount()), remarks);
             }
 
             // ---- Document Approval Detail - ditto the real DAL's own explicit call after the
@@ -898,7 +947,7 @@ public class SaleOrderService {
             // this internally with LimitAmount=NULL right after its own INSERT; this second,
             // explicit call is what the DAL does to set the real amount - the proc's own delete-
             // then-reinsert semantics make the two calls safely idempotent together). ----
-            jdbcTemplate.update(SQL_DOCUMENT_APPROVAL_DETAIL_INSERT,
+            ProcExec.call(jdbcTemplate, SQL_DOCUMENT_APPROVAL_DETAIL_INSERT,
                     orgId, compId, SALE_ORDER_DOCUMENT_TYPE_ID, newId, limitAmount);
 
             Map<String, Object> saved = getSaleOrderById(newId);
@@ -951,7 +1000,7 @@ public class SaleOrderService {
                 storedBranchSrNo, // @BranchSrNo - insert proc generates; update retains the loaded number
                 docDate, // @DocDate
                 dto.getOrderCategoryId(), // @OrderCatagoryId
-                null, // @CatagorySrNo - desktop's txtcatsr control not yet exposed in this web page
+                dto.getOrderCategoryNo() == null ? 0 : dto.getOrderCategoryNo(), // @CatagorySrNo - po.CatagorySrNo = Conversion.ToInt(txtcatsr.Text), :2845 (blank -> 0)
                 dto.getCustomerId(), // @OrderSupCustId
                 dto.getPartyRefNo(), // @SupplierRefNo
                 null, // @RefrenenceParty - desktop's combrefparty control not yet exposed in this web page

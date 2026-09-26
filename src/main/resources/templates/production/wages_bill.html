@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contractor Labour Wages - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/js/countx_wages_bill.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+</head>
+<!-- frmwagesBillHeader.cs (Architecture.WinApp.Contractor_Wages), Text "Contractor Labour Wages", 1137 x 715,
+     KeyPreview, maximised. RefDocTypeId / RefDocId / GrossWeightTotal are the public fields the callers set. -->
+<body th:attr="data-ref-doc-type-id=${refDocTypeId},data-ref-doc-id=${refDocId},data-gross-weight-total=${grossWeightTotal}">
+
+<!-- The window caption, drawn only when the page is a dialog (iframe): its X is the form's close box. -->
+<div class="wb-caption is-hidden" id="wbCaption">
+    <span>Contractor Labour Wages</span>
+    <button type="button" id="btnCloseDialog" title="Close">&times;</button>
+</div>
+
+<!-- ====================================================================== tabPage1 "Form" -->
+<div class="wb-page is-active" id="pageForm">
+    <!-- panel2: toolStrip1 -->
+    <div class="win-tool-strip" id="toolStrip1">
+        <button type="button" id="btnnew" class="win-btn-tool" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" id="btnsave" class="win-btn-tool" title="Ctrl+S"><i class="fa fa-floppy-o"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" title="Ctrl+U"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="Print" class="win-btn-tool" title="Ctrl+P"><i class="fa fa-print"></i> <span><u>P</u>rint-002</span></button>
+        <button type="button" id="btnWagesSchedule" class="win-btn-tool"><i class="fa fa-calendar"></i> Wages Schedule</button>
+        <button type="button" id="btnWagesExempt" class="win-btn-tool"><i class="fa fa-ban"></i> Wages Exempt Item</button>
+    </div>
+    <!-- panel3 (Teal, 31): label15 -->
+    <div class="wb-teal-title">Labour Wages</div>
+
+    <!-- panel4 (White, 138): groupBox1 "Main Information" + the hidden EntryType / GRN Id -->
+    <div class="wb-panel4">
+        <fieldset class="win-group-box wb-main-box">
+            <legend>Main Information</legend>
+            <div class="wb-main">
+                <label class="win-label" for="txtDocdate">Doc Date &amp; No</label>
+                <input type="date" id="txtDocdate" class="win-datepicker" disabled/>
+                <input type="text" id="txtdocnumber" class="win-textbox" readonly tabindex="-1"/>
+                <div class="wb-remarks-cap">Other Remarks</div>
+
+                <label class="win-label" for="cmbReferenceDocType">Ref Doc Type &amp; No</label>
+                <div><select id="cmbReferenceDocType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Reference Doc Type"></select></div>
+                <input type="text" id="txtDocNo" class="win-textbox" readonly disabled/>
+                <textarea id="txtRemarks" class="win-textbox wb-remarks"></textarea>
+
+                <label class="win-label" for="txtQty">Total Qty</label>
+                <div class="wb-pair">
+                    <input type="text" id="txtQty" class="win-textbox" readonly disabled/>
+                    <label class="win-label" for="txtGrossWeight">Gross Weight</label>
+                </div>
+                <input type="text" id="txtGrossWeight" class="win-textbox" readonly disabled/>
+
+                <label class="win-label" for="txtGpNo">Gp No</label>
+                <div class="wb-pair">
+                    <input type="text" id="txtGpNo" class="win-textbox" readonly disabled/>
+                </div>
+                <label class="wb-check is-hidden"><input type="checkbox" id="chkisapprove"/> Is Approved</label>
+            </div>
+        </fieldset>
+        <div class="is-hidden">
+            <label for="txtEntryType">EntryType</label><input type="text" id="txtEntryType" readonly/>
+            <label for="txtGRNId">GRN Id</label><input type="text" id="txtGRNId" readonly/>
+        </div>
+    </div>
+
+    <!-- panel6 (291): tabControl1 - Regular Wages / Other Wages -->
+    <div class="wb-tabs" id="tabControl1">
+        <div class="wb-tab-head">
+            <div class="wb-tab is-active" data-tab="tabPage3">Regular Wages</div>
+            <div class="wb-tab is-hidden" data-tab="tabPage4">Other Wages</div>
+        </div>
+        <div class="wb-tab-page is-active" id="tabPage3">
+            <div class="wb-bar">
+                <span class="wb-bar-cap">In this Grid User Will add Regular Wages</span>
+                <button type="button" id="btnAddContractorValuesForAllDetailWages" class="wb-apply">Apply All</button>
+                <span class="wb-bar-hint">Click this button To Apply First Row Values for All other Rows</span>
+                <span class="wb-bar-tools" id="gbRegular"><button type="button" data-full="boxRegular" title="Full screen"><i class="fa fa-arrows-alt"></i></button></span>
+            </div>
+            <div class="win-grid-container" id="boxRegular" data-grid-tag="WagesGrid">
+                <div class="win-grid-scroll"><table class="win-grid" id="grdwagesDetail" data-gridbar="frmwagesBillHeader:grdwagesDetail" data-gridbar-mount="#gbRegular"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+                <div class="win-grid-nav" id="navRegular"></div>
+            </div>
+        </div>
+        <div class="wb-tab-page" id="tabPage4">
+            <div class="wb-bar">
+                <span class="wb-bar-cap">In this Grid User Will add Other Wages (Stiching &amp; OutPut etc)</span>
+                <button type="button" id="btnAddContractorValuesForAllSticingWages" class="wb-apply">Apply All</button>
+                <span class="wb-bar-hint">Click this button To Apply First Row Values for All other Rows</span>
+                <span class="wb-bar-tools" id="gbOther"><button type="button" data-full="boxOther" title="Full screen"><i class="fa fa-arrows-alt"></i></button></span>
+            </div>
+            <div class="win-grid-container" id="boxOther" data-grid-tag="StichingGrid">
+                <div class="win-grid-scroll"><table class="win-grid" id="grdStiching" data-gridbar="frmwagesBillHeader:grdStiching" data-gridbar-mount="#gbOther"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+                <div class="win-grid-nav" id="navOther"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- panel5 (Fill): tabControl2 - Pending Data For Load / Wages Detail -->
+    <div class="wb-tabs wb-fill" id="tabControl2">
+        <div class="wb-tab-head">
+            <div class="wb-tab is-active" data-tab="tabPage5">Pending Data For Load</div>
+            <div class="wb-tab is-hidden" data-tab="tabPage6">Wages Detail</div>
+        </div>
+        <div class="wb-tab-page is-active" id="tabPage5">
+            <div class="wb-bar">
+                <span class="wb-bar-cap">This grid shows the pending data to load for wages entries.</span>
+                <span class="wb-bar-tools" id="gbPending">
+                    <button type="button" id="BtnCancelPendingRecords" class="wb-cancel is-hidden">Cancel Records</button>
+                    <button type="button" data-full="boxPending" title="Full screen"><i class="fa fa-arrows-alt"></i></button>
+                </span>
+            </div>
+            <div class="win-grid-container" id="boxPending">
+                <div class="win-grid-scroll"><table class="win-grid" id="gridPendingWagesSlip" data-gridbar="frmwagesBillHeader:gridPendingWagesSlip" data-gridbar-mount="#gbPending"><thead></thead><tbody></tbody></table></div>
+                <div class="win-grid-nav" id="navPending"></div>
+            </div>
+        </div>
+        <div class="wb-tab-page" id="tabPage6">
+            <div class="wb-bar">
+                <span class="wb-bar-cap">This grid shows the previous entry details against this document</span>
+                <span class="wb-bar-tools" id="gbRetrieve"><button type="button" data-full="boxRetrieve" title="Full screen"><i class="fa fa-arrows-alt"></i></button></span>
+            </div>
+            <div class="win-grid-container" id="boxRetrieve">
+                <div class="win-grid-scroll"><table class="win-grid" id="grdDataRetrieve" data-gridbar="frmwagesBillHeader:grdDataRetrieve" data-gridbar-mount="#gbRetrieve"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+                <div class="win-grid-nav" id="navRetrieve"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =================================================================== tabPage2 "History" -->
+<div class="wb-page" id="pageHistory">
+    <!-- panel9: toolStrip2 -->
+    <div class="win-tool-strip" id="toolStrip2">
+        <span class="win-tool-sep"></span>
+        <button type="button" id="btnResetHistory" class="win-btn-tool" title="Ctrl+N"><i class="fa fa-eraser"></i> Reset</button>
+        <button type="button" id="btnRefreshHistory" class="win-btn-tool"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" id="btnLoadAll" class="win-btn-tool is-hidden">Load All</button>
+    </div>
+    <!-- panel10 (Teal): label26 -->
+    <div class="wb-teal-title">Labour Wages History</div>
+    <!-- panel11: groupBox2 "Filters" -->
+    <div class="wb-panel11">
+        <fieldset class="win-group-box wb-filter-box">
+            <legend>Filters</legend>
+            <div class="wb-filters">
+                <div class="wb-f" style="flex:0 0 143px;"><label class="win-label" for="FromDateHistory">From Date</label>
+                    <div class="wb-dt"><input type="checkbox" id="FromDateHistoryChk" checked title="Filter by this date"/><input type="date" id="FromDateHistory" class="win-datepicker"/></div></div>
+                <div class="wb-f" style="flex:0 0 138px;"><label class="win-label" for="ToDateHistory">To Date</label>
+                    <div class="wb-dt"><input type="checkbox" id="ToDateHistoryChk" checked title="Filter by this date"/><input type="date" id="ToDateHistory" class="win-datepicker"/></div></div>
+                <div class="wb-f" style="flex:0 0 81px;"><label class="win-label" for="FromDocNoHistory">From Doc No</label>
+                    <input type="text" id="FromDocNoHistory" class="win-textbox" inputmode="numeric"/></div>
+                <div class="wb-f" style="flex:0 0 85px;"><label class="win-label" for="ToDocNoHistory">To Doc No</label>
+                    <input type="text" id="ToDocNoHistory" class="win-textbox" inputmode="numeric"/></div>
+                <div class="wb-f" style="flex:0 0 236px;"><label class="win-label" for="CmbDocumentTypeHistory">Document Type</label>
+                    <select id="CmbDocumentTypeHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"></select></div>
+                <div class="wb-f" style="flex:0 0 58px; justify-content:flex-end;">
+                    <button type="button" id="btnShow" class="win-btn-action" title="Ctrl+S">Show</button></div>
+            </div>
+        </fieldset>
+    </div>
+    <!-- panel14 (338): DataGridHistory -->
+    <div class="win-grid-container" id="boxHistory">
+        <div class="wb-bar"><span class="wb-bar-cap">Labour Wages History</span>
+            <span class="wb-bar-tools" id="gbHistory"><button type="button" data-full="boxHistory" title="Full screen"><i class="fa fa-arrows-alt"></i></button></span></div>
+        <div class="win-grid-scroll"><table class="win-grid" id="DataGridHistory" data-gridbar="frmwagesBillHeader:DataGridHistory" data-gridbar-mount="#gbHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="win-grid-nav" id="navHistory"></div>
+    </div>
+    <!-- panel12 (Teal): label10 + panel21 GrdHistoryDetail -->
+    <div class="win-grid-container wb-fill" id="boxHistoryDetail">
+        <div class="wb-bar"><span class="wb-bar-cap">This grid shows the Detail of above Selected row</span>
+            <span class="wb-bar-tools"><button type="button" data-full="boxHistoryDetail" title="Full screen"><i class="fa fa-arrows-alt"></i></button></span></div>
+        <div class="win-grid-scroll"><table class="win-grid" id="GrdHistoryDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="win-grid-nav" id="navHistoryDetail"></div>
+    </div>
+</div>
+
+<!-- tabIncomingLabourwages - Alignment Bottom; History on the right of the footer. -->
+<div class="wb-footer">
+    <div class="wb-foot-tab is-active" id="tabForm">Form</div>
+    <span id="lblStatus" class="wb-status"></span>
+    <div class="wb-foot-tab" id="tabHistory"><i class="fa fa-history"></i> History</div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_wages_bill.js?v=20260925g}"></script>
+</body>
+</html>

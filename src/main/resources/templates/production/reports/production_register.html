@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <style>
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 4px; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
+        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-teal-header { background-color: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+        .win-teal-header-title { font-family: Tahoma, sans-serif; font-size: 11pt; font-weight: bold; }
+        .win-form-body { background-color: #ece9d8; padding: 6px; }
+        .win-group-box { border: 1px solid #999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
+        .win-group-box legend { font-family: Tahoma, sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .win-label { font-size: 8.5pt; font-weight: 600; color: #222; white-space: nowrap; margin-bottom: 2px; display: block; }
+        .win-textbox, .win-datepicker, .win-combo { font-family: Verdana, sans-serif; font-size: 9pt; height: 24px; border: 1px solid #7a9a9e; padding: 2px 4px; box-sizing: border-box; background: #fff; width: 100%; }
+        .win-textbox[readonly] { background: #f0f0f0; color: #333; }
+        .win-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+        .win-field { display: flex; flex-direction: column; min-width: 150px; flex: 1 1 170px; }
+        .win-radio-inline { display: inline-flex; align-items: center; gap: 4px; font-weight: normal; margin-right: 12px; cursor: pointer; font-size: 9pt; }
+        .win-btn-action { background-color: #008080; color: #fff; font-family: Verdana, sans-serif; font-size: 9pt; font-weight: bold; border: 1px solid #004d40; height: 26px; padding: 0 14px; cursor: pointer; border-radius: 2px; }
+        .win-btn-action:hover { background-color: #005959; }
+        .win-btn-action:disabled { cursor: not-allowed; }
+        .win-btn-plain { background: #f0f0f0; color: #222; border: 1px solid #999; height: 26px; padding: 0 12px; font-size: 9pt; cursor: pointer; border-radius: 2px; }
+        .is-busy { opacity: .65; cursor: progress !important; }
+        .is-busy::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; vertical-align: -1px; animation: cxspin .6s linear infinite; }
+        @keyframes cxspin { to { transform: rotate(360deg); } }
+
+        /* Branch and Entry Type are both UltraCombos with a "Selected" checkbox column and a
+           comma-separated text box on the desktop. */
+        .cx-multi { position: relative; }
+        .cx-multi-panel { position: absolute; z-index: 900; top: 100%; left: 0; min-width: 230px; max-height: 260px; overflow: auto; background: #fff; border: 1px solid #7a9a9e; box-shadow: 0 3px 8px rgba(0,0,0,.25); display: none; }
+        .cx-multi.is-open .cx-multi-panel { display: block; }
+        .cx-multi-head { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); border-bottom: 1px solid #999; font-size: 8pt; font-weight: 700; color: #004d40; padding: 3px 6px; display: flex; gap: 8px; }
+        .cx-multi-row { display: flex; align-items: center; gap: 6px; padding: 3px 6px; font-size: 8.5pt; cursor: pointer; }
+        .cx-multi-row:hover { background: #e0f2f1; }
+
+        /* SummaryInfoBox - shown only for the Production_Summary activity, as in the desktop. */
+        .cx-totals { display: flex; gap: 10px; flex-wrap: wrap; }
+        .cx-total-box { border: 1px solid #7a9a9e; background: #fff; padding: 4px 8px; min-width: 140px; }
+        .cx-total-box .k { font-size: 8pt; font-weight: 700; color: #004d40; display: block; }
+        .cx-total-box .v { font-family: Verdana, sans-serif; font-size: 10pt; font-weight: 700; text-align: right; display: block; }
+
+        .win-grid-container { border: 1px solid #7a9a9e; background: #fff; width: 100%; }
+        .win-grid-scroll { max-height: 440px; overflow: auto; max-width: 100%; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8pt; background: #fff; }
+        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); border: 1px solid #999; padding: 4px 5px; text-align: center; position: sticky; top: 0; z-index: 5; white-space: nowrap; }
+        .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; white-space: nowrap; }
+        .win-grid td.num { text-align: right; }
+        .win-grid tr:nth-child(even) { background: #fcfcf8; }
+        .win-grid tr.cx-group td { background: #e0f2f1; font-weight: 700; color: #004d40; text-align: left; }
+        .win-grid tr.cx-total td { background: #f5f5dc; font-weight: 700; }
+        .win-grid tr.cx-grand td { background: #dbd6c6; font-weight: 700; border-top: 2px solid #999; }
+        .win-grid-toolbar { display: flex; align-items: center; justify-content: space-between; background: #e0f2f1; border-bottom: 1px solid #7a9a9e; padding: 2px 6px; font-size: 8.5pt; font-weight: 600; color: #004d40; }
+        .win-grid-toolbar button { background: #fff; border: 1px solid #7a9a9e; font-size: 8pt; padding: 1px 6px; cursor: pointer; }
+        .win-grid-container.is-fullscreen { position: fixed; inset: 0; z-index: 10000; background: #fff; border: none; padding: 6px; display: flex; flex-direction: column; }
+        .win-grid-container.is-fullscreen .win-grid-scroll { max-height: calc(100vh - 80px); flex: 1; }
+        .cx-note { font-size: 8pt; color: #7a5c00; background: #fff8e1; border: 1px solid #e6c200; padding: 4px 8px; margin-bottom: 6px; }
+        .cx-hidden { display: none; }
+        @media print {
+            .win-tool-strip, .win-grid-toolbar, button { display: none !important; }
+            body { background: #fff !important; }
+            .win-grid-scroll { max-height: none !important; overflow: visible !important; }
+            .win-grid th, .win-grid td { border: 1px solid #000 !important; }
+        }
+        .pr-filters { display: inline-block; max-width: 100%; }
+        .pr-grid { display: grid; grid-template-columns: 90px 225px 95px 225px 90px 190px auto; gap: 3px 6px; align-items: center; }
+        .pr-l { font-size: 8.5pt; font-weight: 600; color: #222; white-space: nowrap; margin: 0; }
+        .pr-f { min-width: 0; }
+        .pr-dates { display: flex; gap: 2px; }
+        .pr-chkdate { display: flex; align-items: center; gap: 2px; border: 1px solid #7a9a9e; background: #fff; padding-left: 2px; }
+        .pr-chkdate .win-datepicker { border: none; }
+        .pr-r { padding-left: 6px; }
+        .pr-history-head { background-color: #008080; color: #fff; font-family: Tahoma, sans-serif; font-size: 11pt; font-weight: bold; padding: 3px 10px; display: flex; justify-content: space-between; align-items: center; }
+        .pr-history-head button:not(.gb-gear) { background: #fff; border: 1px solid #7a9a9e; font-size: 8pt; padding: 1px 6px; cursor: pointer; color: #004d40; font-weight: normal; }
+        .pr-groupbox { background: #a7c0e0; padding: 4px 6px; }
+        .pr-groupbox span { background: #dbe7f5; border: 1px solid #7a9ac0; color: #1f3f6f; font-size: 8pt; padding: 2px 6px; display: inline-block; }
+        @media (max-width: 1100px) { .pr-grid { grid-template-columns: 90px 1fr 95px 1fr; } .pr-r { grid-column: span 4; } }
+    </style>
+</head>
+<body>
+
+<div class="win-tool-strip">
+    <!-- toolStrip (:1328-1350): &Reset, &Refresh, the Print button captioned by the Activity
+         (PrintButtonManage:991), ShortCut Keys. -->
+    <button type="button" class="win-btn-tool" onclick="ProductionRegister.reset()" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>R</u>eset</span></button>
+    <button type="button" class="win-btn-tool" id="btnRefresh" onclick="ProductionRegister.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    <button type="button" class="win-btn-tool" id="btnPrintCurrent" onclick="ProductionRegister.print()"><i class="fa fa-print"></i> <span id="lblPrintCurrent">553-ProductionRegisterWithActivity</span></button>
+    <button type="button" class="win-btn-tool" onclick="ProductionRegister.shortcuts()" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    <button type="button" class="win-btn-tool" onclick="ProductionRegister.exportCsv()"><i class="fa fa-file-excel-o"></i> Export CSV</button>
+    <div style="margin-left:auto;">
+        <a href="/production" style="color:#004d40; text-decoration:none; font-weight:bold; font-size:11px;">
+            <i class="fa fa-arrow-left"></i> Exit to Dashboard</a>
+    </div>
+</div>
+
+<div class="win-teal-header">
+    <div class="win-teal-header-title"><i class="fa fa-book"></i> Production Register</div>
+    <div><span id="lblCount" style="font-size:9pt;">&nbsp;</span></div>
+</div>
+
+<div class="win-form-body">
+
+    <!-- groupBox "Filters" (designer): label-left grid, four columns -
+         col 1 Branch Name / Date From & To / Job Order / Plant,
+         col 2 Entry Type / Parent Category / Item Name / Warehouse,
+         col 3 Wip Ac / Stock Account / Activity Type / Show,
+         col 4 the Doc Date / Entry Date radios. -->
+    <fieldset class="win-group-box pr-filters">
+        <legend>Filters</legend>
+        <div class="pr-grid">
+            <label class="pr-l">Branch Name</label>
+            <div class="pr-f cx-multi" id="branchBox">
+                <input type="text" id="txtBranchName" class="win-textbox" readonly onclick="ProductionRegister.toggle('branchBox')"/>
+                <div class="cx-multi-panel">
+                    <div class="cx-multi-head"><input type="checkbox" title="Select all" onchange="ProductionRegister.all('branchRows', 'txtBranchName', this.checked)"><span>Branch Name</span></div>
+                    <div id="branchRows"></div>
+                </div>
+            </div>
+            <label class="pr-l">Entry Type</label>
+            <div class="pr-f cx-multi" id="entryTypeBox">
+                <input type="text" id="txtEntryType" class="win-textbox" readonly onclick="ProductionRegister.toggle('entryTypeBox')"/>
+                <div class="cx-multi-panel">
+                    <div class="cx-multi-head"><input type="checkbox" title="Select all" onchange="ProductionRegister.all('entryTypeRows', 'txtEntryType', this.checked)"><span>Entry Type</span></div>
+                    <div id="entryTypeRows"></div>
+                </div>
+            </div>
+            <label class="pr-l">Wip Ac</label>
+            <div class="pr-f"><select id="cmbWipAccount" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WipAccount"></select></div>
+            <div class="pr-r"><label class="win-radio-inline"><input type="radio" name="dateMode" value="doc" checked/> Doc Date</label></div>
+
+            <label class="pr-l">Date From &amp; To</label>
+            <div class="pr-f pr-dates">
+                <span class="pr-chkdate"><input type="checkbox" id="chkFromDate" checked autocomplete="off" onchange="ProductionRegister.toggleFrom()"/><input type="date" id="datFromDate" class="win-datepicker"/></span>
+                <input type="date" id="datToDate" class="win-datepicker" required/>
+            </div>
+            <label class="pr-l">Parent Category</label>
+            <div class="pr-f"><select id="cmbParentCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select></div>
+            <label class="pr-l">Stock Account</label>
+            <div class="pr-f"><select id="cmbStockAccount" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Stock Account"></select></div>
+            <div class="pr-r"><label class="win-radio-inline"><input type="radio" name="dateMode" value="entry"/> Entry Date</label></div>
+
+            <label class="pr-l">Job Order</label>
+            <div class="pr-f"><select id="cmbJobOrder" class="win-combo dtcombo" data-dtcombo="prJobOrder"></select></div>
+            <label class="pr-l">Item Name</label>
+            <div class="pr-f"><select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></div>
+            <label class="pr-l">Activity Type</label>
+            <div class="pr-f"><select id="cmbActivity" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Activity Type"></select></div>
+            <div class="pr-r"></div>
+
+            <label class="pr-l">Plant</label>
+            <div class="pr-f"><select id="cmbPlant" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant"></select></div>
+            <label class="pr-l">Warehouse</label>
+            <div class="pr-f"><select id="cmbWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Warehouse"></select></div>
+            <span></span>
+            <div class="pr-f" style="text-align:right;">
+                <button type="button" id="btnShow" class="win-btn-action" onclick="ProductionRegister.show()">Show</button>
+            </div>
+            <div class="pr-r"></div>
+        </div>
+    </fieldset>
+
+    <!-- SummaryInfoBox.Visible is true only for the Production_Summary activity. -->
+    <fieldset class="win-group-box cx-hidden" id="summaryInfoBox">
+        <legend>Production Information</legend>
+        <div class="cx-totals">
+            <div class="cx-total-box"><span class="k">Issuance</span><span class="v" id="totalIssuance">0</span></div>
+            <div class="cx-total-box"><span class="k">By Product</span><span class="v" id="totalByProduct">0</span></div>
+            <div class="cx-total-box"><span class="k">Finish Goods</span><span class="v" id="totalFinishGoods">0</span></div>
+            <div class="cx-total-box"><span class="k">Total Input</span><span class="v" id="totalInput">0</span></div>
+            <div class="cx-total-box"><span class="k">Total Output</span><span class="v" id="totalOutPut">0</span></div>
+            <div class="cx-total-box"><span class="k">Difference</span><span class="v" id="totalDifference">0</span></div>
+        </div>
+    </fieldset>
+
+    <div class="win-grid-container" id="gridBox">
+        <!-- the teal "History" caption bar over grd, and its group-by box (GroupByBoxVisible). -->
+        <div class="pr-history-head">
+            <span>History <small id="lblGridTitle" style="font-weight:normal;font-size:8pt;opacity:.85;"></small></span>
+            <span style="display:inline-flex;gap:4px;align-items:center;"><button type="button" onclick="ProductionRegister.toggleFullscreen('gridBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button><span id="gbRegister"></span></span>
+        </div>
+        <div class="pr-groupbox"><span id="lblGroupBy">Drag a column header here to group by that column.</span></div>
+        <div class="win-grid-scroll">
+            <table class="win-grid" id="tblRegister" data-gridbar="ProductionRegister:grd" data-gridbar-mount="#gbRegister">
+                <thead><tr id="gridHead"></tr></thead>
+                <tbody id="gridBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_production_register.js?v=20260925g}"></script>
+</body>
+</html>

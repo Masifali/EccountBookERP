@@ -121,29 +121,24 @@ public class SaleModuleViewController {
         return "sale/gdn_purchase_return";
     }
 
+    /* frmSaleInvoiceAgainstGdnWithoutWb (171). Everything the form binds comes from
+       /sale/sale-invoice-gdn-no-wb/api/lookups (SaleInvoiceGdnNoWbController), as its Load event does. */
     @GetMapping("/sale-invoice-gdn-no-wb")
     public String saleInvoiceGdnNoWb(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Sale Invoice Against GDN Without WB");
         model.addAttribute("documentTypeId", 171);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(171));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
         return "sale/sale_invoice_gdn_no_wb";
     }
 
+    /* InvfrmSaleInvoice (95). The page loads everything it binds from /sale/sale-invoice/api/lookups
+       (SaleInvoiceController), exactly as the form's InitializeComponentMethod does; the purchase-side
+       suppliers/items/warehouses/job lots this used to pre-load were never the desktop's sources. */
     @GetMapping("/sale-invoice")
     public String saleInvoice(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Sale Invoice");
         model.addAttribute("documentTypeId", 95);
-        model.addAttribute("nextDocNo", purchaseService.generateNextDocNo(95));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
         return "sale/sale_invoice";
     }
 

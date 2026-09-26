@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Golden Ace Foods - Sale Order / Deal With Buyer</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_screens.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20260921a}"/>
+</head>
+<body>
+
+<!--
+  Sale Order / Deal With Buyer  -  Commission Trading (cmagt), DocumentTypeId = 1053.
+  Desktop original: Architecture.WinApp.Cmagt/frmSaleOrderCmagt.cs
+
+  Control sizes are the desktop's own, read from InitializeComponent():
+  TextBox 23px high, UltraCombo 26px, DateTimePicker 22px, labels 15px/12px, and every
+  width below is the literal Size value of the matching desktop control.
+-->
+
+<div class="erp-sub-bar">
+    <i class="fa fa-window-maximize"></i>
+    <span>Screens &gt; Commission Trading &gt; Sale Order / Deal With Buyer</span>
+</div>
+
+<div class="win-form" id="soForm">
+        <!-- busy() writes its "Saving…" / "Loading…" text here; it used to accept the
+             message and drop it on the floor. -->
+        <span id="soBusyText" class="text-muted small" style="display:inline-block;min-height:1em;"></span>
+
+    <!-- ================= toolStrip1 ================= -->
+    <div class="win-toolbar">
+        <button type="button" id="btnNew"><i class="fa fa-file-o"></i> New</button>
+        <button type="button" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
+        <span class="sep"></span>
+        <button type="button" id="btnSave"><i class="fa fa-floppy-o"></i> Save</button>
+        <button type="button" id="btnSaveAs" style="display:none;"><i class="fa fa-files-o"></i> SaveAs</button>
+        <button type="button" id="btnUpdate" style="display:none;"><i class="fa fa-pencil"></i> Update</button>
+        <button type="button" id="btnDelete" style="display:none;"><i class="fa fa-trash"></i> Delete</button>
+        <button type="button" id="btnShortCutKeys"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        <span class="sep"></span>
+        <button type="button" id="btnAttachments"><i class="fa fa-paperclip"></i> Attachments</button>
+        <button type="button" id="btnPrint"><i class="fa fa-print"></i> Print</button>
+    </div>
+
+    <!-- ================= panel3 : title / company / branch ================= -->
+    <div class="win-header-strip">
+        <span class="win-screen-title">Sale Order / Deal With Buyer</span>
+        <span class="win-label" style="margin-left:24px;">Company</span>
+        <select id="cmbCompanyName" class="win-combo so-select2" style="width:220px;" data-dtcombo="single" data-dtcombo-caption="Company"></select>
+        <span class="win-label" style="margin-left:20px;">Branch</span>
+        <select id="cmbBranch" class="win-combo so-select2" style="width:220px;" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select>
+        <label class="win-check" style="margin-left:auto;">
+            <input type="checkbox" id="chkPrint"> Preview
+        </label>
+    </div>
+
+    <!-- ================= main tabs : Form | History ================= -->
+    <div class="win-tabs">
+        <div class="win-tab active" data-maintab="form">Form</div>
+        <div class="win-tab" data-maintab="history">History</div>
+    </div>
+
+    <!-- ===================================================================
+         FORM TAB
+         =================================================================== -->
+    <div class="win-tabpanel active" id="mainpanel-form">
+
+        <!-- ---------- panel1 : header group boxes ---------- -->
+        <div style="display:flex; gap:4px; align-items:flex-start; flex-wrap:wrap;">
+
+            <!-- groupBox2 "Main Information"  (desktop 406 x 275) -->
+            <fieldset class="win-group" style="width:406px;">
+                <legend>Main Information</legend>
+
+                <div class="win-row">
+                    <span class="win-label" style="width:125px;">Doc No,Date</span>
+                    <input type="text" id="txtDocNo" class="win-textbox" style="width:81px;" readonly>
+                    <span class="win-label" style="width:57px; margin-left:5px;">Doc Date</span>
+                    <input type="date" id="datDocDate" class="win-date" style="width:125px;">
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label" style="width:125px;"></span>
+                    <label class="win-radio"><input type="radio" name="partyNameMode" id="radBusinessName" value="company" checked> Business Name</label>
+                    <label class="win-radio"><input type="radio" name="partyNameMode" id="radNickName" value="nick"> Nick Name</label>
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label req" style="width:125px;">Commission<br>Agent / Broker</span>
+                    <select id="cmbCommissionAgent" class="win-combo so-select2" style="width:272px;" data-dtcombo="party4" data-dtcombo-caption="Commission Agent"></select>
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label req" style="width:125px;">Buyer / Bill To Party</span>
+                    <select id="cmbBuyerName" class="win-combo so-select2" style="width:272px;" data-dtcombo="party4" data-dtcombo-caption="Buyer Name"></select>
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label" style="width:125px;">Buyer Ref Doc No</span>
+                    <input type="text" id="txtBuyerReference" class="win-textbox" style="width:272px;">
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label req" style="width:125px;">Deliver / Ship To Party</span>
+                    <select id="cmbDeliveryToParty" class="win-combo so-select2" style="width:272px;" data-dtcombo="party4" data-dtcombo-caption="Deliver To Party"></select>
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label" style="width:125px;">Delivery / Ship<br>To Address</span>
+                    <select id="cmbShipToAddress" class="win-combo so-select2" style="width:244px;" data-dtcombo="single" data-dtcombo-caption="Ship To Address"></select>
+                    <button type="button" id="btnAddShipToAddress" class="win-btn tall" style="width:25px;" title="Add Ship To Address">+</button>
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label" style="width:125px;"></span>
+                    <input type="text" id="txtShipToAddress" class="win-textbox" style="width:272px;">
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label req" style="width:125px;">Delivery Term</span>
+                    <select id="cmbDeliveryTerm" class="win-combo so-select2" style="width:91px;" data-dtcombo="single" data-dtcombo-caption="Delivery Term"></select>
+                    <span class="win-label" style="width:60px; margin-left:8px;">Delivery<br>Start Date</span>
+                    <input type="date" id="datDeliveryStartDate" class="win-date" style="width:113px;">
+                </div>
+
+                <div class="win-row">
+                    <span class="win-label req" style="width:125px;">Delivery Days</span>
+                    <input type="text" id="txtDeliveryDays" class="win-textbox num" style="width:91px;" value="1">
+                    <span class="win-label" style="width:60px; margin-left:8px;">Expiry Date</span>
+                    <input type="date" id="datExpiryDate" class="win-date" style="width:113px;">
+                </div>
+            </fieldset>
+
+            <!-- groupBox3 "Sub_Commission Agent" + groupBox4 "Sub_Brokery Agent" (297 wide) -->
+            <div style="display:flex; flex-direction:column; gap:2px; width:297px;">
+
+                <fieldset class="win-group" style="width:297px;">
+                    <legend>Sub_Commission Agent</legend>
+
+                    <div class="win-row">
+                        <span class="win-label" style="width:59px;">Account</span>
+                        <select id="cmbCommissionAc" class="win-combo so-select2" style="width:230px;" data-dtcombo="party4" data-dtcombo-caption="Commission Account"></select>
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:59px;">Type</span>
+                        <select id="cmbCommType" class="win-combo so-select2" style="width:85px;" data-dtcombo="single" data-dtcombo-caption="Commission Type"></select>
+                        <span class="win-label" style="width:47px; text-align:right;">Rate</span>
+                        <input type="text" id="txtCommRate" class="win-textbox num" style="width:90px;">
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:59px;">Rate Uom</span>
+                        <select id="cmbCommUom" class="win-combo so-select2" style="width:85px;" data-dtcombo="single" data-dtcombo-caption="Commission Uom"></select>
+                        <span class="win-label" style="width:47px; text-align:right;">Amount</span>
+                        <input type="text" id="txtCommAmount" class="win-textbox num" style="width:90px;" readonly>
+                    </div>
+                </fieldset>
+
+                <fieldset class="win-group" style="width:297px;">
+                    <legend>Sub_Brokery Agent</legend>
+
+                    <div class="win-row">
+                        <span class="win-label" style="width:59px;">Account</span>
+                        <select id="cmbBrokeryAc" class="win-combo so-select2" style="width:230px;" data-dtcombo="party4" data-dtcombo-caption="Brokery Account"></select>
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:59px;">Type</span>
+                        <select id="cmbBrokeryType" class="win-combo so-select2" style="width:85px;" data-dtcombo="single" data-dtcombo-caption="Brokery Type"></select>
+                        <span class="win-label" style="width:47px; text-align:right;">Rate</span>
+                        <input type="text" id="txtBrokeryRate" class="win-textbox num" style="width:90px;">
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:59px;">Rate Uom</span>
+                        <select id="cmbBrokeryRateUom" class="win-combo so-select2" style="width:85px;" data-dtcombo="single" data-dtcombo-caption="Brokery Uom"></select>
+                        <span class="win-label" style="width:47px; text-align:right;">Amount</span>
+                        <input type="text" id="txtBrokeryAmount" class="win-textbox num" style="width:90px;" readonly>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- groupBox5 "Add Single or Multi Payment Schedule" (386 x 150) + remarks/flags -->
+            <div style="display:flex; flex-direction:column; gap:2px; flex:1 1 386px; min-width:386px;">
+
+                <fieldset class="win-group" style="width:386px;">
+                    <legend>Add Single or Multi Payment Schedule</legend>
+
+                    <div class="win-row">
+                        <span class="win-label" style="width:84px;">Payment Term</span>
+                        <select id="cmbPaymentTerm" class="win-combo so-select2" style="width:175px;" data-dtcombo="single" data-dtcombo-caption="Payment Term"></select>
+                        <span class="win-label" style="width:58px; text-align:right;">Due Days</span>
+                        <input type="text" id="txtDueDays" class="win-textbox num" style="width:60px;">
+                    </div>
+
+                    <div class="win-row" style="align-items:flex-start;">
+                        <span class="win-label" style="width:106px;">Payment Schedule</span>
+                    </div>
+                    <div class="win-row">
+                        <textarea id="txtPaymentScheduleRemarks" class="win-textbox"
+                                  style="width:377px; height:76px; resize:vertical;" readonly></textarea>
+                    </div>
+                </fieldset>
+
+                <div class="win-row" style="margin-top:2px;">
+                    <label class="win-check" style="width:189px;">
+                        <input type="checkbox" id="chkWithHoldingTaxApplied"> With Holding Tax Applied
+                    </label>
+                    <label class="win-check" style="width:176px;">
+                        <input type="checkbox" id="chkOtherExpenseAllowed"> Other Expense Allowed
+                    </label>
+                </div>
+
+                <div class="win-row" style="align-items:flex-start;">
+                    <span class="win-label" style="width:52px; padding-top:4px;">Remarks</span>
+                    <textarea id="txtRemarks" class="win-textbox"
+                              style="flex:1 1 auto; min-width:300px; height:52px; resize:vertical;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- panel2 / groupBox6 "Detail" : item entry bar ---------- -->
+        <fieldset class="win-group" style="margin-top:4px;">
+            <legend>Detail</legend>
+
+            <!-- Line 1 - desktop control order and widths preserved exactly -->
+            <div class="win-row" style="flex-wrap:wrap;">
+                <div style="width:160px;">
+                    <div class="win-label req">Parent Item</div>
+                    <select id="cmbParentItem" class="win-combo so-select2" style="width:160px;" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select>
+                </div>
+                <div style="width:200px;">
+                    <div class="win-label req">Item Name</div>
+                    <select id="cmbItemName" class="win-combo so-select2" style="width:200px;" data-dtcombo="itemCmagt" data-dtcombo-caption="Item Name"></select>
+                </div>
+                <div style="width:100px;">
+                    <div class="win-label req">Crop Year</div>
+                    <select id="cmbCropYear" class="win-combo so-select2" style="width:100px;" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select>
+                </div>
+                <div style="width:120px;">
+                    <div class="win-label req">Packing Type</div>
+                    <select id="cmbPackingType" class="win-combo so-select2" style="width:120px;" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select>
+                </div>
+                <div style="width:85px;">
+                    <div class="win-label req">Pack Uom</div>
+                    <select id="cmbPackUom" class="win-combo so-select2" style="width:85px;" data-dtcombo="uomCmagt" data-dtcombo-caption="Pack Uom"></select>
+                </div>
+                <div style="width:70px;">
+                    <div class="win-label req">Qty</div>
+                    <input type="text" id="txtQty" class="win-textbox num" style="width:70px; text-align:right;">
+                </div>
+                <div style="width:90px;">
+                    <div class="win-label req">Weight</div>
+                    <input type="text" id="txtWeight" class="win-textbox num" style="width:90px; text-align:right;">
+                </div>
+                <div style="width:70px;">
+                    <div class="win-label req">Rate</div>
+                    <input type="text" id="txtRate" class="win-textbox num" style="width:70px; text-align:right;">
+                </div>
+                <div style="width:85px;">
+                    <div class="win-label req">Rate Uom</div>
+                    <select id="cmbRateUom" class="win-combo so-select2" style="width:85px;" data-dtcombo="uomCmagt" data-dtcombo-caption="Rate Uom"></select>
+                </div>
+                <div style="width:90px;">
+                    <div class="win-label req">Amount</div>
+                    <input type="text" id="txtAmount" class="win-textbox num" style="width:90px; text-align:right;" readonly>
+                </div>
+            </div>
+
+            <!-- Line 2 -->
+            <div class="win-row" style="flex-wrap:wrap; align-items:flex-end;">
+                <div style="width:109px;">
+                    <div class="win-label">Tax Name</div>
+                    <select id="cmbTaxName" class="win-combo so-select2" style="width:109px;" data-dtcombo="single" data-dtcombo-caption="Tax Name"></select>
+                </div>
+                <div style="width:50px;">
+                    <div class="win-label">Tax%</div>
+                    <input type="text" id="txtTaxPercnt" class="win-textbox num" style="width:50px; text-align:right;" readonly>
+                </div>
+                <div style="width:90px;">
+                    <div class="win-label">Tax Amount</div>
+                    <input type="text" id="txtTaxAmount" class="win-textbox num" style="width:90px; text-align:right;" readonly>
+                </div>
+                <div style="width:109px;">
+                    <div class="win-label">Tax + Amount</div>
+                    <input type="text" id="txtTotalAmount" class="win-textbox num" style="width:109px; text-align:right;" readonly>
+                </div>
+                <div style="flex:1 1 300px; min-width:300px;">
+                    <div class="win-label">Remarks</div>
+                    <input type="text" id="txtRemarksDetail" class="win-textbox" style="width:100%;">
+                </div>
+                <div style="display:flex; gap:4px; align-items:flex-end; padding-bottom:1px;">
+                    <button type="button" id="btnAddRow" class="win-btn" style="width:25px;" title="Add row">+</button>
+                    <button type="button" id="btnUpdateRow" class="win-btn" style="width:62px; display:none;">Update</button>
+                    <button type="button" id="btnCancelRow" class="win-btn" style="width:62px; display:none;">Clear</button>
+                </div>
+            </div>
+
+            <div class="win-status" id="detailStatus"></div>
+        </fieldset>
+
+        <!-- ---------- tabControl2 : the four detail tabs ---------- -->
+        <div class="win-tabs">
+            <div class="win-tab active" data-tab="detail">Detail</div>
+            <div class="win-tab" data-tab="expenses">Buyer Other Charges</div>
+            <div class="win-tab" data-tab="emptybags">Empty Bags Weight Deduction Policy</div>
+            <div class="win-tab" data-tab="payment">Payment Schedule</div>
+        </div>
+
+        <div class="win-tabpanel active" id="panel-detail">
+            <div class="win-grid-wrap" style="max-height:300px;">
+                <table class="win-grid hdr3" id="grdDetail"></table>
+            </div>
+        </div>
+
+        <div class="win-tabpanel" id="panel-expenses">
+            <div class="win-grid-wrap" style="max-height:300px;">
+                <table class="win-grid hdr2" id="grdInvExp"></table>
+            </div>
+        </div>
+
+        <div class="win-tabpanel" id="panel-emptybags">
+            <!-- panel7 : the desktop's Empty Bags policy radio bar -->
+            <div class="win-row" style="padding:2px 4px;">
+                <label class="win-radio"><input type="radio" name="ebPolicy" value="1"> Company Owned And Weight Cut Apply</label>
+                <label class="win-radio"><input type="radio" name="ebPolicy" value="2"> Bag Purchase And Weight Cut Apply</label>
+                <label class="win-radio"><input type="radio" name="ebPolicy" value="3"> Bag FOC And Weight Cut Not Apply</label>
+            </div>
+            <div class="win-grid-wrap" style="max-height:300px;">
+                <table class="win-grid hdr2" id="grdEmptyBags"></table>
+            </div>
+        </div>
+
+        <div class="win-tabpanel" id="panel-payment">
+            <div class="win-row" style="padding:2px 4px;">
+                <span class="win-label" style="font-weight:bold;">Add Single or Multi Payment Schedule</span>
+                <button type="button" id="btnAddPaymentRow" class="win-btn" style="width:25px; margin-left:8px;" title="Add row">+</button>
+            </div>
+            <div class="win-grid-wrap" style="max-height:300px;">
+                <table class="win-grid hdr2" id="grdPaymentTerm"></table>
+            </div>
+        </div>
+
+        <div class="win-status" id="formStatus"></div>
+    </div>
+
+    <!-- ===================================================================
+         HISTORY TAB
+         =================================================================== -->
+    <div class="win-tabpanel" id="mainpanel-history">
+
+        <div class="win-toolbar">
+            <button type="button" id="btnNewHistory"><i class="fa fa-file-o"></i> New</button>
+            <span class="sep"></span>
+            <button type="button" id="btnRefreshHistory"><i class="fa fa-refresh"></i> Refresh</button>
+        </div>
+
+        <!-- groupBox1 "Filters" (desktop 1112 x 98) -->
+        <fieldset class="win-group" style="margin-top:4px;">
+            <legend>Filters</legend>
+
+            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+                <div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:91px;">Date From &amp; To</span>
+                        <input type="date" id="fromDateHistory" class="win-date" style="width:130px;">
+                        <input type="date" id="toDateHistory" class="win-date" style="width:130px;">
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:91px;">Validity From,To</span>
+                        <input type="date" id="datValidityFromHistory" class="win-date" style="width:130px;">
+                        <input type="date" id="datValidityToHistory" class="win-date" style="width:130px;">
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:91px;">Parent Item</span>
+                        <select id="cmbParentItemHistory" class="win-combo so-select2" style="width:264px;" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:105px;">Item Name</span>
+                        <select id="cmbItemNameHistory" class="win-combo so-select2" style="width:240px;" data-dtcombo="itemCmagt" data-dtcombo-caption="Item Name"></select>
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:105px;">Commission<br>Agent</span>
+                        <select id="cmbCommissionAgentHistory" class="win-combo so-select2" style="width:240px;" data-dtcombo="party4" data-dtcombo-caption="Commission Agent"></select>
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:105px;">Buyer Name</span>
+                        <select id="cmbBuyerNameHistory" class="win-combo so-select2" style="width:240px;" data-dtcombo="party4" data-dtcombo-caption="Buyer Name"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:105px;">Deliver To Party</span>
+                        <select id="cmbDeliveryToPartyHistory" class="win-combo so-select2" style="width:240px;" data-dtcombo="party4" data-dtcombo-caption="Deliver To Party"></select>
+                    </div>
+                    <div class="win-row">
+                        <span class="win-label" style="width:105px;">Deliver To Address</span>
+                        <select id="cmbDeliverToAddressHistory" class="win-combo so-select2" style="width:240px;" data-dtcombo="single" data-dtcombo-caption="Ship To Address"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="win-radio" style="display:flex;"><input type="radio" name="histDateMode" value="docdate" checked> Doc Date</label>
+                    <label class="win-radio" style="display:flex;"><input type="radio" name="histDateMode" value="entrydate"> Entry Date</label>
+                    <label class="win-radio" style="display:flex;"><input type="radio" name="histDateMode" value="modifydate"> Modify Date</label>
+                </div>
+
+                <div style="align-self:flex-end;">
+                    <button type="button" id="btnShowHistory" class="win-btn" style="width:50px; height:25px;">Show</button>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="win-grid-wrap" style="max-height:330px; margin-top:4px;">
+            <table class="win-grid hdr3" id="grdHistory"></table>
+        </div>
+
+        <!-- panel9 : "Detail of the Above Selected Row" -->
+        <div class="win-row" style="padding:3px 4px;">
+            <span class="win-label" style="font-weight:bold;">Detail of the Above Selected Row</span>
+        </div>
+
+        <div class="win-tabs">
+            <div class="win-tab active" data-htab="detail">Detail</div>
+            <div class="win-tab" data-htab="expenses">Buyer Other Charges</div>
+            <div class="win-tab" data-htab="emptybags">Empty Bags Weight Deduction Policy</div>
+            <div class="win-tab" data-htab="payment">Payment Schedule</div>
+        </div>
+
+        <div class="win-tabpanel active" id="hpanel-detail">
+            <div class="win-grid-wrap" style="max-height:260px;">
+                <table class="win-grid hdr3" id="grdHistoryDetail"></table>
+            </div>
+        </div>
+        <div class="win-tabpanel" id="hpanel-expenses">
+            <div class="win-grid-wrap" style="max-height:260px;">
+                <table class="win-grid hdr2" id="grdExpenseHistory"></table>
+            </div>
+        </div>
+        <div class="win-tabpanel" id="hpanel-emptybags">
+            <div class="win-grid-wrap" style="max-height:260px;">
+                <table class="win-grid hdr2" id="grdEmptyBagHistory"></table>
+            </div>
+        </div>
+        <div class="win-tabpanel" id="hpanel-payment">
+            <div class="win-grid-wrap" style="max-height:260px;">
+                <table class="win-grid hdr2" id="grdPaymentTermHistory"></table>
+            </div>
+        </div>
+
+        <div class="win-status" id="historyStatus"></div>
+    </div>
+
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_cmagt_sale_order.js?v=20260925a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

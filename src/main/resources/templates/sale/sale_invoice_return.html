@@ -15,6 +15,7 @@
         .table-custom { font-size: 12px; }
         .table-custom th { background-color: #2a5298; color: white; text-align: center; }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 
 <!-- =====================================================================================
@@ -205,5 +206,59 @@
         });
     });
 </script>
+
+    <!-- ==================================================================================
+         Form History - InvfrmSaleInvoiceReturn.
+
+         DocumentTypeId 98 (:2269, :3337, :4055); ScreenName "InvfrmSaleInvoiceReturn"
+         (base.Name, :9551); history combo captioned "Customer Name" (:758).
+
+         This screen is a SALE form that runs the PURCHASE history procedure - its call is
+         InvPurchaseInvoice.FormHistory(obj) at :3404, not InvSaleInvoice.FormHistory like the
+         other three sale invoice screens. Two consequences visible here:
+
+           - there is NO Payment Term filter. @PaymentTermId is a parameter of
+             Sp_InvSaleInvoice_GetAllMethod only, so offering one would send a parameter the
+             procedure this screen uses does not accept.
+           - the party list is still CUSTOMERS, because the desktop combo is bound from the
+             customer list and captioned "Customer Name". The procedure and the party list are
+             two different axes; the screen key's "sale-" prefix drives only the latter.
+
+         DocumentTypeId, the user id and the view-all right are all derived server-side from the
+         signed-in user and this screen's grant grid - none of them is a request parameter.
+         ================================================================================== -->
+    <div id="invoiceHistoryPanel" style="margin-top:10px;border:1px solid #b9b9b9;background:#f7f7f7;padding:8px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <strong style="font-size:11px;">History</strong>
+            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="doc" checked/> Doc Date</label>
+            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="entry"/> Entry Date</label>
+            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="modify"/> Modify Date</label>
+            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="approved"/> Approved Date</label>
+            <span style="font-size:11px;">From</span><input type="date" id="ihFromDate" style="font-size:11px;"/>
+            <span style="font-size:11px;">To</span><input type="date" id="ihToDate" style="font-size:11px;"/>
+            <span style="font-size:11px;">Doc No</span>
+            <input type="number" id="ihFromDocNo" style="width:70px;font-size:11px;" placeholder="From" data-guard="integer"/>
+            <input type="number" id="ihToDocNo" style="width:70px;font-size:11px;" placeholder="To" data-guard="integer"/>
+            <span style="font-size:11px;">Customer</span>
+            <select id="ihParty" style="font-size:11px;min-width:130px;" data-dtcombo="single" data-dtcombo-caption="Customer Name"><option value="0">-- All --</option></select>
+            <span style="font-size:11px;">Rows</span>
+            <input type="number" id="ihNoOfRecords" style="width:60px;font-size:11px;" placeholder="All"/>
+            <input type="hidden" id="ihBranches"/>
+            <button type="button" id="ihSearchBtn" class="btn btn-sm btn-primary" style="margin-left:auto;">
+                <i class="fa fa-search"></i> Search
+            </button>
+        </div>
+        <div id="ihMessage" style="font-size:11px;min-height:14px;margin:4px 0;"></div>
+        <div style="overflow:auto;max-height:260px;border:1px solid #d0d0d0;background:#fff;min-width:0;">
+            <table style="width:max-content;min-width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap;">
+                <thead id="ihHead" style="position:sticky;top:0;background:#e8e8e8;"></thead>
+                <tbody id="ihBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>window.INVOICE_HISTORY_SCREEN = "sale-invoice-return";</script>
+    <script th:src="@{/build/js/countx_invoice_history.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

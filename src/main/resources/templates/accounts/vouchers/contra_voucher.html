@@ -291,7 +291,6 @@
                             <div class="col-md-4"><label class="win-label">Project</label></div>
                             <div class="col-md-8">
                                 <select id="cmbCostCenter" class="win-input">
-                                    <option value="1">Golden Ace Rice Mills (Pvt) Ltd.</option>
                                 </select>
                             </div>
                         </div>
@@ -588,7 +587,11 @@
         });
 
         function loadAccounts() {
-            $.get('/accounts/api/vouchers/cash-bank-accounts', function(accounts) {
+            /* ContraVoucher.AccountsComboBind():1107 —
+               CommonServices.Accounts_GetAccountTitleByAccountTypeIds("2,15").
+               Both combos bind that ONE result set on the desktop (DetailAccounts():1132
+               copies dtcoalst row for row), which is why one call fills both here too. */
+            $.get('/accounts/api/vouchers/cash-bank-accounts?accountTypeIds=2%2C15', function(accounts) {
                 accountsCache = accounts || [];
                 let creditOpt = '<option value="0">...Select Any Value...</option>';
                 let detailOpt = '<option value="0">...Select Any Value...</option>';
@@ -615,18 +618,30 @@
             const accCode = selectedOpt.attr('data-code') || '';
             const accTitle = selectedOpt.attr('data-title') || selectedOpt.text().split('[')[0].trim();
             const jobLot = $('#cmbJobLot option:selected').text();
-            const jobLotId = parseInt($('#cmbJobLot').val()) || 1;
+            /* Insert():551 — vd.JobLotId = Conversion.ToInt(cell), which is 0 when no job
+               lot is chosen. This used to fall back to 1, posting every unassigned line
+               against whatever job lot happens to hold id 1 in the live database. */
+            const jobLotId = parseInt($('#cmbJobLot').val()) || 0;
             const remarks = $('#txtLineRemarks').val().trim();
             const debitAmt = parseFloat($('#txtDebitAmount').val()) || 0.0;
 
+            /* Add_Click_1():413 — the desktop's four row checks, in its order and with its own
+               wording. "Job/Lot Field Required" was missing here entirely, which is how a row
+               with no job lot could be added at all. */
             if (accId <= 0) {
-                alert('Please select an Account.');
+                alert('Debit Account Field Required');
                 $('#cmbDetailAccount').select2('open');
                 return;
             }
 
+            if (jobLotId <= 0) {
+                alert('Job/Lot Field Required');
+                $('#cmbJobLot').focus();
+                return;
+            }
+
             if (debitAmt <= 0) {
-                alert('Please enter a valid Debit Amount greater than 0.');
+                alert('Amount Field Required');
                 $('#txtDebitAmount').focus();
                 return;
             }
@@ -891,5 +906,6 @@
             if (e.ctrlKey && e.keyCode === 82) { e.preventDefault(); refreshPage(); }
         });
     </script>
+<script th:src="@{/build/js/countx_cost_center.js?v=20260920a}"></script>
 </body>
 </html>

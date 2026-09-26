@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Analytics (Periodic)</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family: "Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold;
+                         padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px;
+                   text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-group-box { border:1px solid #c7d0d6; border-radius:2px; padding:8px 10px 10px;
+                         position:relative; }
+        .win-group-title { position:absolute; top:-8px; left:8px; background:#fff; padding:0 5px;
+                           font-size:11px; font-weight:700; color:#0f5959; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+        .win-input[readonly], .win-input:disabled { background:#f2f4f6; color:#555; }
+
+        .totals-bar { background:#e0f2f1; font-weight:bold; color:#0f5959; font-size:12px;
+                      padding:4px 12px; border:1px solid #0f5959; border-radius:2px;
+                      display:flex; justify-content:space-between; margin:0 8px; }
+
+        /* Button busy state: disabled + spinner while a request is in flight. */
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #paMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #paMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #paMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        /* PurchaseAnalyticCard - a captioned header over its own grid. The desktop lays the cards
+           out in a FlowLayoutPanel, so they wrap; same here. */
+        .pa-wrap { display:flex; flex-wrap:wrap; gap:10px; padding:0 8px 10px; }
+        .pa-card { background:#fff; border:1px solid #b0bec5; border-radius:3px; flex:1 1 520px;
+                   min-width:0; max-width:100%; display:flex; flex-direction:column; }
+        .pa-card-head { background:#0f5959; color:#fff; padding:5px 10px; font-size:12px;
+                        font-weight:700; display:flex; justify-content:space-between; gap:8px; }
+        /* lblTitle.LinkBehavior = AlwaysUnderline (:216) - the caption is a link. */
+        .pa-card-head a { color:#fff; text-decoration:underline; cursor:pointer; }
+        .pa-card-head a:hover { color:#cdeee9; }
+
+        .pa-scroll { overflow:auto; max-height:320px; }
+        table.pa-grid { width:max-content; min-width:100%; border-collapse:collapse; font-size:11px; background:#fff; }
+        table.pa-grid th { background:#eef2f4; border:1px solid #cfd8dc; padding:3px 5px;
+                           font-weight:700; color:#33454e; text-align:center; position:sticky;
+                           top:0; z-index:2; white-space:nowrap; }
+        table.pa-grid td { border:1px solid #e0e6ea; padding:2px 5px; white-space:nowrap; }
+        table.pa-grid tbody tr { cursor:pointer; }
+        table.pa-grid tbody tr:hover { background:#e0f2f1; }
+        table.pa-grid tfoot td { border:1px solid #cfd8dc; background:#eef2f4; font-weight:700; }
+        .num { text-align:right; }
+
+        /* Drill-down dialog - the desktop opens PartyAndItemWise with ShowDialog(). */
+        .pa-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:3200; }
+        .pa-modal-inner { background:#e4e9ed; margin:24px auto; width:96%; max-height:90vh;
+                          overflow:auto; border:1px solid #7a9a9e; }
+        .pa-modal-bar { background:#0f5959; color:#fff; padding:5px 10px; display:flex;
+                        align-items:center; gap:8px; font-weight:700; font-size:12px; }
+
+        .pa-full { position:fixed; inset:0; z-index:3000; background:#e4e9ed; overflow:auto; padding:6px; }
+        .pa-note { font-size:10px; color:#666; padding:0 10px 6px; }
+        .pa-empty { background:#fff; border:1px dashed #b0bec5; color:#667; padding:14px;
+                    text-align:center; margin:0 8px; font-size:11px; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Purchase Analytics (Periodic)
+     ditto Architecture.WinApp.AnalyticDashboard\PurchaseAnalyticPeriodic.cs (512 lines)
+
+     Controls, in the desktop's own order (:24-60):
+       groupBox1 "Date"      DateFrom, DateTo, btnshow
+       panel1                datSeasonStartDate, datSeasonEndDate  (the season bounds)
+       flowLayoutPanel1      the PurchaseAnalyticCard controls
+
+     Events ported:
+       PurchaseAnalyticPeriodic_Load  -> GetSeasonScheduleDates()          (:71-113)
+       DateFrom_ValueChanged                                                (:115-148)
+       DateTo_ValueChanged                                                  (:150-168)
+       btnshow_Click                                                        (:170-252)
+       UserControl_Click  card caption -> item-wise, grid row -> party+item (:254-300)
+
+     This screen is read-only on the desktop - it has no save, update or delete and no History
+     button - so none is added here.
+     ========================================================================== -->
+<div class="win-title-bar">Purchase Analytics (Periodic)</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Purchase Analytics (Periodic)</span>
+</div>
+
+<!-- tsItemType: btnnew (refresh) and btnSeasonYearSchedule (:28-58) -->
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnNew" onclick="paRefresh(this)">
+        <i class="fa fa-refresh"></i> Refresh
+    </button>
+    <a class="win-btn" href="/dashboard">
+        <i class="fa fa-arrow-left"></i> Back to DashBoard
+    </a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="paToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="paMessage"></div>
+
+<div class="win-form-card">
+    <div class="win-group-box">
+        <div class="win-group-title">Date</div>
+        <div class="row g-2">
+            <!-- label5 "From", label4 "To" -->
+            <div class="col-md-2">
+                <label class="win-label">From</label>
+                <input type="date" id="dateFrom" class="win-input" onchange="paDateFromChanged()">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">To</label>
+                <input type="date" id="dateTo" class="win-input" onchange="paDateToChanged()">
+            </div>
+            <!-- label1 / label2 - the season bounds, read-only on the desktop panel -->
+            <div class="col-md-2">
+                <label class="win-label">Season Start Date</label>
+                <input type="date" id="seasonStart" class="win-input" readonly>
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">Season End Date</label>
+                <input type="date" id="seasonEnd" class="win-input" readonly>
+            </div>
+            <div class="col-md-2" style="display:flex; align-items:flex-end;">
+                <button type="button" class="win-btn win-btn-teal" id="btnShow"
+                        onclick="paShow(this)" disabled>
+                    <i class="fa fa-search"></i> Show
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="totals-bar">
+    <span>Product categories: <b id="paCardCount">0</b></span>
+    <span id="paRange"></span>
+</div>
+
+<div class="pa-note">
+    Click a category heading for its item-wise breakdown, or a grid row for that period's
+    party and item detail.
+</div>
+
+<div id="paCards" class="pa-wrap"></div>
+<div id="paEmpty" class="pa-empty" style="display:none;">Press Show to load.</div>
+
+<!-- PurchaseAnalyticPeriodicPartyAndItemWise, opened with ShowDialog() on the desktop -->
+<div id="paModal" class="pa-modal">
+    <div class="pa-modal-inner">
+        <div class="pa-modal-bar">
+            <span id="paModalTitle">Party &amp; Item Wise</span>
+            <span style="flex:1;"></span>
+            <button type="button" class="win-btn" onclick="paCloseModal()">Close</button>
+        </div>
+        <div id="paModalBody" class="pa-wrap" style="padding-top:10px;"></div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_purchase_analytic_periodic.js?v=20260920a}"></script>
+</body>
+</html>

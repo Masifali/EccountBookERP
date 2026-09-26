@@ -29,6 +29,10 @@ import com.mst.serviceInterface.IVoucherService;
 @Service("voucherService")
 public class VoucherService implements IVoucherService {
 
+	private static final org.slf4j.Logger LOG_VOUCHER =
+			org.slf4j.LoggerFactory.getLogger(VoucherService.class);
+
+
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	@Autowired
@@ -149,6 +153,10 @@ public class VoucherService implements IVoucherService {
 				return getVoucherById(ids.get(0));
 			}
 		} catch (Exception ex) {
+			/* Was swallowed silently, so a real failure reached the screen as a plain 404 and the
+			   alert said "could not load" with no way to tell not-found from broken. */
+			LOG_VOUCHER.warn("getVoucherByCode(documentTypeId={}, voucherCode={}) scoped lookup failed",
+					documentTypeId, voucherCode, ex);
 		}
 		try {
 			String sql = "SELECT TOP 1 Id FROM VoucherHead WHERE DocumentTypeId = ? AND VoucherCode = ? ORDER BY Id DESC";
@@ -156,7 +164,39 @@ public class VoucherService implements IVoucherService {
 			if (ids != null && !ids.isEmpty()) {
 				return getVoucherById(ids.get(0));
 			}
-		} catch (Exception ignored) {}
+		} catch (Exception ex) {
+			LOG_VOUCHER.warn("getVoucherByCode(documentTypeId={}, voucherCode={}) unscoped lookup failed",
+					documentTypeId, voucherCode, ex);
+		}
+		/* Last resort, and only inside the pair the desktop already treats as one list.
+		 *
+		 * The payment screens share a history grid that lists DocumentTypeId 1 AND 2, and the
+		 * receipt screens one that lists 3 AND 4 (see desktopDocumentTypeName). So a Cash Payment
+		 * can legitimately be opened from the Bank Payment screen's own history, and the voucherCode
+		 * in the URL then has no row under documentTypeId=2 at all. Rather than report it missing,
+		 * look in the paired type - exactly the set the grid the user clicked from was showing.
+		 *
+		 * Deliberately NOT a wildcard over every document type: that would let a Journal Voucher
+		 * open on the Bank Payment screen. */
+		int paired = documentTypeId == 1 ? 2 : documentTypeId == 2 ? 1
+				   : documentTypeId == 3 ? 4 : documentTypeId == 4 ? 3 : 0;
+		if (paired != 0) {
+			try {
+				String sql = "SELECT TOP 1 Id FROM VoucherHead WHERE DocumentTypeId = ? AND VoucherCode = ? AND OrganizationId = ? AND CompanyId = ? ORDER BY Id DESC";
+				List<Integer> ids = jdbcTemplate.queryForList(sql, Integer.class, paired, voucherCode, orgId, compId);
+				if (ids != null && !ids.isEmpty()) {
+					LOG_VOUCHER.info("voucherCode={} not found under documentTypeId={}, resolved under its paired type {}",
+							voucherCode, documentTypeId, paired);
+					return getVoucherById(ids.get(0));
+				}
+			} catch (Exception ex) {
+				LOG_VOUCHER.warn("getVoucherByCode paired lookup (type {}) failed for voucherCode={}",
+						paired, voucherCode, ex);
+			}
+		}
+
+		LOG_VOUCHER.info("No VoucherHead for documentTypeId={} voucherCode={} - the screen will report it as not found",
+				documentTypeId, voucherCode);
 		return null;
 	}
 
@@ -788,9 +828,33 @@ public class VoucherService implements IVoucherService {
 	 *  own default - see StatusFillForBpv()'s Rows[0].Activate() selecting it first) passes
 	 *  @IsApproved=0, "approved" passes @IsApproved=1, "all" omits @IsApproved entirely so every
 	 *  voucher (approved or not) is returned, ditto the ApprovedFilter=="All" branch. */
+	/**
+	 * USP_VoucherFormHistory's @DocumentTypeName is a CSV of DocumentTypeIds, and the desktop does
+	 * NOT always pass the screen's own single id. VoucherHead.VoucherFormHistory (BLL 0654) maps:
+	 *
+	 *     DocumentTypeId 1 or 2  -> @DocumentTypeName = "1,2"     Cash + Bank PAYMENT
+	 *     DocumentTypeId 3 or 4  -> @DocumentTypeName = "3,4"     Cash + Bank RECEIPT
+	 *     5, 6, 7, 10, 24, 25, 26, 27 -> that id alone
+	 *
+	 * PaymentVoucherNew.cs hosts both payment screens and fills its bank grid from every row the
+	 * call returns, without filtering on DocumentTypeId (:3091-3125) - the grid has its own
+	 * DocumentType column precisely because both types are listed. Same for the two receipt grids.
+	 *
+	 * Passing the single id instead - "1", "2", "3", "4" - made each of those four history grids
+	 * show strictly fewer rows than the desktop's. It also breaks opening a row: the screens look a
+	 * voucher up by code with their own documentTypeId, so a Cash Payment listed in the desktop's
+	 * Bank Payment history has no match under documentTypeId=2 and the load fails.
+	 */
+	private static String desktopDocumentTypeName(String documentTypeName) {
+		if ("1".equals(documentTypeName) || "2".equals(documentTypeName)) return "1,2";
+		if ("3".equals(documentTypeName) || "4".equals(documentTypeName)) return "3,4";
+		return documentTypeName;
+	}
+
 	private List<Map<String, Object>> callVoucherFormHistory(String documentTypeName, String dateType,
 			LocalDate fromDate, LocalDate toDate, Integer fromDocNo, Integer toDocNo, Integer accountId,
 			String approvedStatus) {
+		documentTypeName = desktopDocumentTypeName(documentTypeName);
 		int orgId = currentUserContext.currentOrganizationId();
 		int compId = currentUserContext.currentCompanyId();
 		int userId = currentUserContext.currentUserId();

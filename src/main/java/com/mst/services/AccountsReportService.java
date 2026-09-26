@@ -546,7 +546,19 @@ public class AccountsReportService {
                 return res;
             }
             int id = Integer.parseInt(idObj.toString());
-            jdbcTemplate.update("UPDATE ChartofAccount SET AccountCode = ?, AccountTitle = ? WHERE Id = ?", code, title, id);
+            /* TENANCY. This used to be "WHERE Id = ?" with no organization or company predicate,
+               so any signed-in user could rename ANY chart-of-accounts row in ANY tenant simply
+               by sending its id. The predicate below confines it to the caller's own company. */
+            int rows = jdbcTemplate.update(
+                    "UPDATE ChartofAccount SET AccountCode = ?, AccountTitle = ? "
+                  + "WHERE Id = ? AND OrganizationId = ? AND CompanyId = ?",
+                    code, title, id,
+                    currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId());
+            if (rows == 0) {
+                res.put("success", false);
+                res.put("message", "That account does not belong to this company.");
+                return res;
+            }
 
             res.put("success", true);
             res.put("message", "Row updated successfully in DB.");
@@ -565,7 +577,28 @@ public class AccountsReportService {
                 res.put("message", "Invalid Account ID.");
                 return res;
             }
-            jdbcTemplate.update("DELETE FROM ChartofAccount WHERE Id = ?", id);
+            /* TENANCY, and a referential guard. This used to be "DELETE FROM ChartofAccount
+               WHERE Id = ?" — no tenancy, and no check that the account is unused, so one call
+               could delete another company's general-ledger account even with vouchers posted
+               against it. */
+            Integer used = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM VoucherDetail WHERE AccountId = ? OR AgainstAccountId = ?",
+                    Integer.class, id, id);
+            if (used != null && used > 0) {
+                res.put("success", false);
+                res.put("message", "That account cannot be deleted because " + used
+                                 + " voucher line(s) are posted against it.");
+                return res;
+            }
+            int rows = jdbcTemplate.update(
+                    "DELETE FROM ChartofAccount WHERE Id = ? AND OrganizationId = ? AND CompanyId = ?",
+                    id, currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId());
+            if (rows == 0) {
+                res.put("success", false);
+                res.put("message", "That account does not belong to this company.");
+                return res;
+            }
             res.put("success", true);
             res.put("message", "Row deleted successfully from DB.");
         } catch (Exception e) {

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>EccountBook</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        /* ------------------------------------------------------------------------------------
+           The generic report runner.
+
+           There is no desktop form to copy here: on the desktop each report is a Print button on
+           its own screen. This page is the web's single door to all of them, so it follows the
+           project's grid rules rather than a designer's coordinates - full width, scrolling
+           inside its own container, fullscreen available.
+
+           The rows are faithful to the desktop; the LAYOUT is not and cannot be. A .rpt's pixel
+           layout lives in its compressed OLE streams and is not readable outside Crystal.
+           ------------------------------------------------------------------------------------ */
+        html, body { margin: 0; padding: 0; background: #f0f0f0; }
+        body { font-family: Verdana, "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 8.25pt; color: #000; }
+
+        .toolstrip { height: 27px; background: linear-gradient(#fdfdfd, #e6e4dc); border-bottom: 1px solid #aca899; white-space: nowrap; }
+        .toolstrip button { height: 24px; border: 1px solid transparent; background: transparent;
+                            font-family: Verdana; font-size: 9.75pt; cursor: pointer; vertical-align: top; padding: 0 5px; margin-top: 1px; }
+        .toolstrip button:hover:not(:disabled) { border-color: #316ac5; background: #dfe8f6; }
+        .toolstrip button:disabled { color: #9a9a9a; cursor: default; }
+        .toolstrip .spin { width: 11px; height: 11px; border: 2px solid rgba(0,0,0,.15); border-top-color: #316ac5;
+                           border-radius: 50%; display: none; margin-right: 4px; vertical-align: -1px; animation: sp .7s linear infinite; }
+        .toolstrip button.busy .spin { display: inline-block; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+
+        #wrap { display: flex; height: calc(100vh - 27px); }
+        #left  { width: 420px; border-right: 1px solid #aca899; display: flex; flex-direction: column; background: #fff; }
+        #right { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+        #summary { padding: 6px 8px; background: #ece9d8; border-bottom: 1px solid #aca899; line-height: 1.6; }
+        #summary b { font-size: 9pt; }
+        .pill { display: inline-block; padding: 1px 6px; margin-right: 4px; border: 1px solid #aca899; background: #fff; cursor: pointer; }
+        .pill.on { background: #316ac5; color: #fff; border-color: #16407f; }
+        .pill .n { font-weight: bold; }
+
+        #search { margin: 5px 6px; padding: 3px; width: calc(100% - 20px); border: 1px solid #7f9db9;
+                  font-family: Verdana; font-size: 8.25pt; box-sizing: border-box; }
+        #list { flex: 1; overflow: auto; border-top: 1px solid #d7d3c8; }
+        #list .it { padding: 4px 8px; border-bottom: 1px solid #eee; cursor: pointer; }
+        #list .it:hover { background: #dfe8f6; }
+        #list .it.sel { background: #316ac5; color: #fff; }
+        #list .it.dim { color: #7a7a7a; cursor: not-allowed; }
+        #list .it.sel .m, #list .it.sel .tag { color: #dbe6ff; }
+        #list .it .m { font-size: 7.5pt; color: #666; }
+        .tag { font-size: 7pt; border: 1px solid #aca899; padding: 0 3px; margin-left: 4px; }
+
+        #head { padding: 6px 8px; background: #ece9d8; border-bottom: 1px solid #aca899; }
+        #head .t { font-size: 10pt; font-weight: bold; }
+        #head .p { font-family: Consolas, monospace; font-size: 8pt; color: #244; }
+        #why { margin: 10px; padding: 10px 12px; background: #fff8e1; border: 1px solid #e0c060; display: none; }
+        #params { padding: 6px 8px; border-bottom: 1px solid #d7d3c8; background: #fafafa; }
+        #params label { display: inline-block; margin: 0 10px 5px 0; }
+        #params label span { display: block; font-size: 7.5pt; color: #555; }
+        #params input { border: 1px solid #7f9db9; font-family: Verdana; font-size: 8.25pt; padding: 1px 3px; width: 130px; }
+        #params .none { color: #666; }
+
+        #out { flex: 1; overflow: auto; padding: 0 0 10px 0; }
+        .gwrap { border: 1px solid #7f9db9; background: #fff; margin: 6px; }
+        .gcap { background: #ece9d8; border-bottom: 1px solid #aca899; padding: 3px 6px; font-weight: bold; }
+        .gscroll { overflow: auto; max-height: 60vh; }
+        table.grd { border-collapse: collapse; width: 100%; font-family: Verdana; font-size: 8.25pt; }
+        table.grd th { background: #ece9d8; border: 1px solid #aca899; padding: 3px 5px; text-align: left;
+                       white-space: nowrap; position: sticky; top: 0; font-weight: normal; z-index: 1; }
+        table.grd td { border-bottom: 1px solid #e6e6e6; border-right: 1px solid #f0f0f0; padding: 2px 5px; vertical-align: top; }
+        table.grd td.num { text-align: right; white-space: nowrap; }
+        table.grd tbody tr:hover { background: #dfe8f6; }
+        #banner { margin: 6px; padding: 8px 10px; background: #eef4ff; border: 1px solid #9db4d8; }
+
+        #mbMask { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; z-index: 100; }
+        #mbForm { background: #f0f0f0; border: 1px solid #555; min-width: 320px; max-width: 620px; }
+        #mbForm .cap { background: #0A6E6E; color: #fff; padding: 4px 8px; font-weight: bold; }
+        #mbForm .body { padding: 14px 16px; white-space: pre-wrap; }
+        #mbForm .btns { padding: 8px 16px 12px; text-align: right; }
+        #mbForm .btns button { min-width: 72px; height: 23px; margin-left: 6px; background: #ece9d8;
+                               border: 1px solid #aca899; cursor: pointer; font-family: Verdana; font-size: 8.25pt; }
+        #deny { padding: 14px 18px; font-size: 9pt; background: #ffebee; border: 1px solid #e57373; color: #7f0000; margin: 12px; }
+
+        @media print {
+            #left, .toolstrip, #params, #head .p { display: none; }
+            #wrap { display: block; height: auto; }
+            .gscroll { max-height: none; overflow: visible; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="deny" th:unless="${canOpen}">Sign in to run reports.</div>
+
+<div th:if="${canOpen}">
+    <div class="toolstrip">
+        <button type="button" id="btnRun"><span class="spin"></span><i class="fa fa-play"></i> Run</button>
+        <button type="button" id="btnCsv"><i class="fa fa-file-excel-o"></i> Export CSV</button>
+        <button type="button" id="btnCrystal"><span class="spin"></span><i class="fa fa-file-pdf-o"></i> Crystal PDF</button>
+        <button type="button" id="btnPrint"><i class="fa fa-print"></i> Print</button>
+        <button type="button" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh list</button>
+    </div>
+
+    <div id="wrap">
+        <div id="left">
+            <div id="summary"></div>
+            <input id="search" placeholder="Filter by template, procedure or desktop method">
+            <div id="list"></div>
+        </div>
+
+        <div id="right">
+            <div id="head"><div class="t">Select a report</div><div class="p"></div></div>
+            <div id="crystalNote" style="display:none;margin:6px;padding:6px 10px;background:#fff8e1;border:1px solid #e0c060;"></div>
+            <div id="why"></div>
+            <div id="params"></div>
+            <div id="out"></div>
+        </div>
+    </div>
+
+    <div id="mbMask"><div id="mbForm">
+        <div class="cap">EccountBook</div>
+        <div class="body" id="mbBody"></div>
+        <div class="btns" id="mbBtns"></div>
+    </div></div>
+</div>
+
+<script th:if="${canOpen}" th:src="@{/build/js/countx_reports.js}"></script>
+</body>
+</html>

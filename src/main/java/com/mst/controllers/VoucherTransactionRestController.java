@@ -35,62 +35,127 @@ public class VoucherTransactionRestController {
 	@Autowired
 	private com.mst.security.CurrentUserContext currentUserContext;
 
+	/**
+	 * The account pickers on every voucher screen.
+	 *
+	 * -----------------------------------------------------------------------------------------
+	 * WHAT THIS USED TO DO, AND WHY IT HAD TO CHANGE
+	 * -----------------------------------------------------------------------------------------
+	 * Both this method and {@link #searchAccounts} used to run hand-written SQL over
+	 * dbo.ChartofAccount with an invented filter ("AccountGroup = 'Detail' OR Account_Level >= 4"),
+	 * NO organization or company predicate, NO per-user account allocation, exceptions swallowed
+	 * with an empty catch, and — when everything failed — a hardcoded list of INVENTED accounts
+	 * ("Cash in Hand" id 1, "Main Bank Account" id 2, "Office Expense Account" id 2) returned to the
+	 * operator as if they were real chart-of-accounts rows. Picking one of those would have posted a
+	 * voucher against whatever account happened to hold id 1 or 2 in the live database.
+	 *
+	 * The desktop never queries the table. ContraVoucher.AccountsComboBind():1101 calls
+	 * CommonServices.Accounts_GetAccountTitleByAccountTypeIds -> COAAllocation, which is
+	 *
+	 *     [dbo].[USP_Accounts_GetAccountTitleByAccountTypeIds]
+	 *         @OrganizationId @CompanyId @AppId @UserId [@AccountTypeIds] [@AccountTypeIdsNot]
+	 *         [@AccountClassIds] [@AccountClassIdsNot] [@CostCenterId]
+	 *
+	 * so that is what runs here, with the signed-in user's own tenancy and application. Optional
+	 * parameters are omitted when unset, exactly as the BLL's own guards do. A failure is reported
+	 * and rethrown rather than answered with invented rows.
+	 *
+	 * -----------------------------------------------------------------------------------------
+	 * accountTypeIds IS PER SCREEN
+	 * -----------------------------------------------------------------------------------------
+	 * Contra Voucher passes "2,15" (ContraVoucher.cs:1107) and both of its combos — Credit and
+	 * Debit — bind that ONE result set. Other voucher screens pass their own values, which still
+	 * have to be traced form by form; until each is, those pages send nothing and the procedure
+	 * returns the user's full allowed list. That is a superset of the right answer rather than a
+	 * wrong subset, and it is never fabricated.
+	 */
 	@GetMapping("/cash-bank-accounts")
-	public ResponseEntity<?> getCashBankAccounts(@RequestParam(value = "type", required = false) String type) {
-		try {
-			String sql = "SELECT Id as id, AccountTitle as accountTitle, AccountCode as accountCode FROM ChartofAccount WHERE (AccountGroup = 'Detail' OR Account_Level >= 4) ORDER BY AccountTitle ASC";
-			List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-			if (list != null && !list.isEmpty()) {
-				return ResponseEntity.ok(list);
-			}
-		} catch (Exception e) {
-		}
-		try {
-			String sql = "SELECT Id as id, AccountTitle as accountTitle, AccountCode as accountCode FROM ChartofAccount ORDER BY AccountTitle ASC";
-			List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-			if (list != null && !list.isEmpty()) {
-				return ResponseEntity.ok(list);
-			}
-		} catch (Exception e) {
-		}
-
-		List<Map<String, Object>> fallback = new java.util.ArrayList<>();
-		Map<String, Object> a1 = new java.util.HashMap<>(); a1.put("id", 1); a1.put("accountTitle", "Cash in Hand"); a1.put("accountCode", "100101"); fallback.add(a1);
-		Map<String, Object> a2 = new java.util.HashMap<>(); a2.put("id", 2); a2.put("accountTitle", "Main Bank Account"); a2.put("accountCode", "100102"); fallback.add(a2);
-		return ResponseEntity.ok(fallback);
+	public ResponseEntity<?> getCashBankAccounts(
+			@RequestParam(value = "accountTypeIds", required = false) String accountTypeIds,
+			@RequestParam(value = "accountTypeIdsNot", required = false) String accountTypeIdsNot,
+			@RequestParam(value = "costCenterId", required = false, defaultValue = "0") int costCenterId) {
+		return ResponseEntity.ok(accountTitles(accountTypeIds, accountTypeIdsNot, costCenterId));
 	}
 
+	/**
+	 * The same list, filtered by what the operator typed. The desktop's combo filters the bound
+	 * DataTable in the control rather than asking the database again, so the filtering happens here
+	 * in memory over the same rows for the same reason: a LIKE predicate of my own invention would
+	 * match a different set from the one the desktop shows.
+	 */
 	@GetMapping("/accounts-search")
-	public ResponseEntity<?> searchAccounts(@RequestParam(value = "query", defaultValue = "") String query) {
-		try {
-			String searchPattern = "%" + query.trim() + "%";
-			String sql = "SELECT c.Id as id, c.AccountCode as accountCode, c.AccountTitle as accountTitle, " +
-					"COALESCE(p.AccountTitle, 'Detail') as parentAccountTitle, 'Assets' as className " +
-					"FROM ChartofAccount c " +
-					"LEFT JOIN ChartofAccount p ON c.ParentAccountCode = p.AccountCode " +
-					"WHERE (c.AccountGroup = 'Detail' OR c.Account_Level >= 4) " +
-					"AND (c.AccountTitle LIKE ? OR c.AccountCode LIKE ?) " +
-					"ORDER BY c.AccountTitle ASC";
-			List<Map<String, Object>> list = jdbcTemplate.queryForList(sql, searchPattern, searchPattern);
-			if (list != null && !list.isEmpty()) {
-				return ResponseEntity.ok(list);
-			}
-		} catch (Exception e) {
+	public ResponseEntity<?> searchAccounts(
+			@RequestParam(value = "query", defaultValue = "") String query,
+			@RequestParam(value = "accountTypeIds", required = false) String accountTypeIds,
+			@RequestParam(value = "accountTypeIdsNot", required = false) String accountTypeIdsNot,
+			@RequestParam(value = "costCenterId", required = false, defaultValue = "0") int costCenterId) {
+		List<Map<String, Object>> rows = accountTitles(accountTypeIds, accountTypeIdsNot, costCenterId);
+		String q = query == null ? "" : query.trim().toLowerCase();
+		if (q.isEmpty()) return ResponseEntity.ok(rows);
+		List<Map<String, Object>> hit = new java.util.ArrayList<>();
+		for (Map<String, Object> r : rows) {
+			String title = String.valueOf(r.get("accountTitle") == null ? "" : r.get("accountTitle")).toLowerCase();
+			String code  = String.valueOf(r.get("accountCode")  == null ? "" : r.get("accountCode")).toLowerCase();
+			if (title.contains(q) || code.contains(q)) hit.add(r);
 		}
-		try {
-			String searchPattern = "%" + query.trim() + "%";
-			String sql = "SELECT Id as id, AccountCode as accountCode, AccountTitle as accountTitle, 'Detail' as parentAccountTitle FROM ChartofAccount WHERE AccountTitle LIKE ? OR AccountCode LIKE ? ORDER BY AccountTitle ASC";
-			List<Map<String, Object>> list = jdbcTemplate.queryForList(sql, searchPattern, searchPattern);
-			if (list != null && !list.isEmpty()) {
-				return ResponseEntity.ok(list);
-			}
-		} catch (Exception e) {
+		return ResponseEntity.ok(hit);
+	}
+
+	/**
+	 * One call to the desktop's procedure, projected to the keys the voucher pages already read.
+	 * The source columns are the ones DetailAccounts():1132 copies into its own DataTable:
+	 * Id, AccountTitle, AccountCode, ParentAccountTitle, AccountClass.
+	 */
+	private List<Map<String, Object>> accountTitles(String accountTypeIds, String accountTypeIdsNot,
+												   int costCenterId) {
+		com.mst.models.UserAccount u = currentUserContext.requireAccountingUser();
+		java.util.LinkedHashMap<String, Object> p = new java.util.LinkedHashMap<>();
+		p.put("OrganizationId", u.getOrganizationId());
+		p.put("CompanyId",      u.getCompanyId());
+		/* CommonServices.Accounts_GetAccountTitleByAccountTypeIds passes
+		   clsGlobalVariables.UserAccount.AppId straight through, with no check that the application
+		   is one allocated to the user. currentAppId() adds that check and REFUSES when the user has
+		   several applications and none chosen — which would leave every voucher screen with an empty
+		   account picker where the desktop shows a full one. The raw value is used here for that
+		   reason: same input, same rows. */
+		p.put("AppId",          u.getAppId() == null ? 0 : u.getAppId());
+		if (accountTypeIds    != null && !accountTypeIds.trim().isEmpty())    p.put("AccountTypeIds",    accountTypeIds.trim());
+		if (accountTypeIdsNot != null && !accountTypeIdsNot.trim().isEmpty()) p.put("AccountTypeIdsNot", accountTypeIdsNot.trim());
+		if (u.getId() != null && u.getId() != 0) p.put("UserId", u.getId());
+		if (costCenterId != 0) p.put("CostCenterId", costCenterId);
+
+		StringBuilder sql = new StringBuilder("EXEC [dbo].[USP_Accounts_GetAccountTitleByAccountTypeIds] ");
+		List<Object> args = new java.util.ArrayList<>();
+		boolean first = true;
+		for (Map.Entry<String, Object> e : p.entrySet()) {
+			if (!first) sql.append(", ");
+			first = false;
+			sql.append('@').append(e.getKey()).append("=?");
+			args.add(e.getValue());
 		}
 
-		List<Map<String, Object>> fallback = new java.util.ArrayList<>();
-		Map<String, Object> a1 = new java.util.HashMap<>(); a1.put("id", 1); a1.put("accountCode", "100101"); a1.put("accountTitle", "Cash in Hand"); a1.put("parentAccountTitle", "Cash Accounts"); fallback.add(a1);
-		Map<String, Object> a2 = new java.util.HashMap<>(); a2.put("id", 2); a2.put("accountCode", "100201"); a2.put("accountTitle", "Office Expense Account"); a2.put("parentAccountTitle", "Expense Accounts"); fallback.add(a2);
-		return ResponseEntity.ok(fallback);
+		List<Map<String, Object>> out = new java.util.ArrayList<>();
+		for (Map<String, Object> r : jdbcTemplate.queryForList(sql.toString(), args.toArray())) {
+			Map<String, Object> o = new java.util.LinkedHashMap<>();
+			o.put("id",                 ci(r, "Id"));
+			o.put("accountTitle",       ci(r, "AccountTitle"));
+			o.put("accountCode",        ci(r, "AccountCode"));
+			o.put("parentAccountTitle", ci(r, "ParentAccountTitle"));
+			o.put("accountClass",       ci(r, "AccountClass"));
+			/* The pages that already read className keep working without another round-trip. */
+			o.put("className",          ci(r, "AccountClass"));
+			out.add(o);
+		}
+		return out;
+	}
+
+	private static Object ci(Map<String, Object> row, String name) {
+		if (row == null) return null;
+		if (row.containsKey(name)) return row.get(name);
+		for (Map.Entry<String, Object> e : row.entrySet()) {
+			if (e.getKey() != null && e.getKey().equalsIgnoreCase(name)) return e.getValue();
+		}
+		return null;
 	}
 
 	@GetMapping("/next-code")

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Input - EccountBook</title>
+    <!--
+      Screen 280 "Production Against (Job Order)", tab "Input" - Architecture.WinApp.Production/frmProductionInput.cs
+      (DocumentTypeId 80). The shell frames this page into its Input tab exactly as the desktop drops the form
+      into PanelOtherForms. Layout follows InitializeComponent (:3049): tabControl2 has its tabs at the BOTTOM
+      ("Form", "History"); tabPage1 = toolStrip1 + panel63 (teal title) + panel72 (groupBox1 "Main" 857x104,
+      groupBox3 "Link Any Move Order Here" 304x104) + PanelInPutManualEntry (groupBox2 "Detail") + panel12
+      (teal "Input Detail") + grdStockConversionProductionDetail.
+    -->
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/js/countx_p280_input.css?v=20260924a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+</head>
+<body class="p280in">
+
+<!-- ================================================================= tabPage1 "Form" -->
+<div id="viewForm" class="pi-view">
+    <!-- toolStrip1 (:5669): btnnew, btnRefresh, btnsave, btnUpdate, |, Print, btnVoucherReport,
+         btnJobOrderDefine, BtnGenerateRates, btnPendingForRateInput -->
+    <div class="win-tool-strip" id="toolStrip1">
+        <button type="button" id="btnnew" class="win-btn-tool" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" id="btnsave" class="win-btn-tool" title="Ctrl+S"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" title="Ctrl+U"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <span class="win-sep"></span>
+        <button type="button" id="Print" class="win-btn-tool"><i class="fa fa-print"></i> 601-Print</button>
+        <button type="button" id="btnVoucherReport" class="win-btn-tool"><i class="fa fa-print"></i> 118-Voucher</button>
+        <button type="button" id="btnJobOrderDefine" class="win-btn-tool"><i class="fa fa-external-link"></i> Define Job Order</button>
+        <button type="button" id="BtnGenerateRates" class="win-btn-tool"><i class="fa fa-calculator"></i> Generate Rates</button>
+        <button type="button" id="btnPendingForRateInput" class="win-btn-tool"><i class="fa fa-list"></i> Pending For Rates </button>
+    </div>
+
+    <!-- panel63 (Teal) / label30 -->
+    <div class="pi-teal pi-title"><span>Production Input</span></div>
+
+    <!-- panel72: groupBox1 "Main" + groupBox3 "Link Any Move Order Here" -->
+    <div class="pi-row72">
+        <fieldset class="win-group-box pi-main" id="groupBox1">
+            <legend>Main</legend>
+            <div class="pi-main-grid">
+                <label class="pi-lbl" for="txtdocnumber">Doc No,Date</label>
+                <div class="pi-pair">
+                    <input type="text" id="txtdocnumber" class="win-textbox" readonly style="width:83px; background:#fff;"/>
+                    <input type="date" id="txtDocdate" class="win-datepicker" style="width:125px;"/>
+                </div>
+                <label class="pi-lbl pi-2line" for="CmbWorkInProcess">WIP<br>Account</label>
+                <div class="pi-fld" style="width:190px;"><select id="CmbWorkInProcess" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WorkInProcessAc"></select></div>
+                <label class="pi-lbl pi-2line" for="CmbWipWarehouse">Wip<br>Warehouse</label>
+                <div class="pi-fld" style="width:180px;"><select id="CmbWipWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse Name"></select></div>
+                <button type="button" id="btnLoadInvoices" class="win-btn-action pi-loadinput" title="Ctrl+L">Load InPut</button>
+
+                <label class="pi-lbl" for="CmbJobOrderNo">Job Order No</label>
+                <div class="pi-fld" style="width:210px;" id="wrapJobOrder"><select id="CmbJobOrderNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo"></select></div>
+                <label class="pi-lbl" for="CmbWIPItem">WIP Item</label>
+                <div class="pi-fld" style="width:190px;"><select id="CmbWIPItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName"></select></div>
+                <label class="pi-lbl pi-2line" for="CmbProductionDepartment">Production<br>Department</label>
+                <div class="pi-fld" style="width:180px;"><select id="CmbProductionDepartment" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Department"></select></div>
+
+                <!-- label83 "Plant Name" is VISIBLE ONLY WHEN FIFO (Load:394/399) - reproduced. -->
+                <label class="pi-lbl" for="CmbPlantFeeder" id="label83">Plant Name</label>
+                <div class="pi-fld" style="width:210px;"><select id="CmbPlantFeeder" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name"></select></div>
+                <label class="pi-lbl" for="txtRemarks">Remarks</label>
+                <div class="pi-remarks"><input type="text" id="txtRemarks" class="win-textbox" maxlength="200"/></div>
+            </div>
+        </fieldset>
+
+        <fieldset class="win-group-box pi-move" id="groupBox3">
+            <legend>Link Any Move Order Here</legend>
+            <div class="pi-move-grid">
+                <div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <label class="pi-lbl" for="CmbMoveOrderTicket" style="margin:0;">W.B Ticket No</label>
+                        <button type="button" id="BtnResetMoveOrder" class="pi-iconbtn" title="Clear the linked ticket"><i class="fa fa-times-circle"></i></button>
+                    </div>
+                    <div style="width:105px;"><select id="CmbMoveOrderTicket" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Ticket No" disabled></select></div>
+                    <button type="button" id="BtnLoadMoveOrder" class="win-btn-action" style="width:105px; height:39px; margin-top:2px; white-space:normal; line-height:1.1;">Load Move Order</button>
+                </div>
+                <div class="pi-move-w">
+                    <label class="pi-lbl" for="txtMoveOrderNetWeight">Net Weight</label>
+                    <input type="text" id="txtMoveOrderNetWeight" class="win-textbox pi-num" readonly value="0"/>
+                    <label class="pi-lbl" for="txtMoveOrderAlreadUsedWeight">Used Weight</label>
+                    <input type="text" id="txtMoveOrderAlreadUsedWeight" class="win-textbox pi-num" readonly value="0"/>
+                    <label class="pi-lbl" for="txtMoveOrderBalWeight">Bal Weight</label>
+                    <input type="text" id="txtMoveOrderBalWeight" class="win-textbox pi-num" readonly value="0"/>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- PanelInPutManualEntry / groupBox2 "Detail" (hidden by IsManualEntryOnInputNotAllowed, Load:365) -->
+    <div id="PanelInPutManualEntry">
+        <fieldset class="win-group-box" id="groupBox2">
+            <legend>Detail</legend>
+            <div class="pi-drow">
+                <div class="pi-cell" style="width:180px;"><label class="win-label" for="cmbWareHouseInput">WareHouse</label>
+                    <select id="cmbWareHouseInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse"></select></div>
+                <div class="pi-cell" style="width:200px;"><label class="win-label" for="cmbItemInput">Item Name</label>
+                    <select id="cmbItemInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></div>
+                <div class="pi-cell" style="width:80px;"><label class="win-label" for="cmbItemUomInput">Pack UOM</label>
+                    <select id="cmbItemUomInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackUom"></select></div>
+                <div class="pi-cell" style="width:100px;"><label class="win-label" for="cmbCropYearInput">Crop Year</label>
+                    <select id="cmbCropYearInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+                <div class="pi-cell" style="width:155px;"><label class="win-label" for="cmbLotInput">Job Lot</label>
+                    <select id="cmbLotInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot Description"></select></div>
+                <div class="pi-cell" style="width:100px;"><label class="win-label" for="cmbPackingTypeInput">Pack Type</label>
+                    <select id="cmbPackingTypeInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select></div>
+                <div class="pi-cell" style="width:69px;"><label class="win-label" for="txtBalanceQty">Balance Qty</label>
+                    <input type="text" id="txtBalanceQty" class="win-textbox pi-num" readonly tabindex="-1" data-guard="decimal"/></div>
+                <div class="pi-cell" style="width:90px;"><label class="win-label" for="txtBalanceWeight">Balance Weight</label>
+                    <input type="text" id="txtBalanceWeight" class="win-textbox pi-num" readonly tabindex="-1" data-guard="decimal"/></div>
+                <div class="pi-cell" style="width:75px;"><label class="win-label" for="txtQtyInput">Quantity</label>
+                    <input type="text" id="txtQtyInput" class="win-textbox pi-num" data-guard="decimal"/></div>
+                <div class="pi-cell" style="width:93px;"><label class="win-label" for="txtNetWeightInput">Net Weight</label>
+                    <input type="text" id="txtNetWeightInput" class="win-textbox pi-num" data-guard="decimal"/></div>
+            </div>
+            <div class="pi-drow">
+                <div class="pi-cell" style="width:60px;"><label class="win-label" for="txtEbUnit">EbUnit</label>
+                    <input type="text" id="txtEbUnit" class="win-textbox pi-num" value="0" data-tag="EbUnit" data-guard="decimal"/></div>
+                <div class="pi-cell" style="width:70px;"><label class="win-label" for="txtEbTotal">EbTotal</label>
+                    <input type="text" id="txtEbTotal" class="win-textbox pi-num" value="0" data-tag="EbTotal" data-guard="decimal"/></div>
+                <div class="pi-cell" style="width:90px;"><label class="win-label" for="txtGrossWeight">Gross Weight</label>
+                    <input type="text" id="txtGrossWeight" class="win-textbox pi-num"/></div>
+                <div class="pi-cell" id="wrapRemarksInput" style="width:527px;"><label class="win-label" for="txtRemarksInput">Remarks</label>
+                    <input type="text" id="txtRemarksInput" class="win-textbox"/></div>
+                <div class="pi-cell" style="width:80px;"><label class="win-label" id="lblRateInput" for="txtRateInput">Avg Rate(40Kg)</label>
+                    <input type="text" id="txtRateInput" class="win-textbox pi-num" data-guard="decimal"/></div>
+                <div class="pi-cell" style="width:80px;"><label class="win-label" id="lblRateUom" for="cmbRateuomInput">Rate UOM</label>
+                    <select id="cmbRateuomInput" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="RateUom" disabled></select></div>
+                <div class="pi-cell" style="width:100px;"><label class="win-label" id="lblAmountInput" for="txtAmountInput">Amount</label>
+                    <input type="text" id="txtAmountInput" class="win-textbox pi-num" readonly style="background:#fff;" data-guard="decimal"/></div>
+                <div class="pi-cell pi-btns">
+                    <button type="button" id="btnAddInput" class="win-btn-action" style="width:41px;">+</button>
+                    <button type="button" id="btnUpdateDetailInput" class="win-btn-action is-hidden" style="width:70px;">Update </button>
+                    <button type="button" id="btnCancelInput" class="win-btn-action is-hidden" style="width:67px;">Cancel</button>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- panel5: panel12 (Teal, "Input Detail" + ctrlGrdBar3) and the grid -->
+    <div class="win-grid-container" id="boxDetail">
+        <div class="pi-teal pi-bar"><span class="pi-bar-title">Input Detail</span>
+            <span class="pi-bar-tools" style="display:inline-flex;gap:3px;align-items:center;"><span class="pi-gridbar" data-grid="tblDetail" data-name="InputDetail"></span><span id="gbDetail"></span></span></div>
+        <div class="win-grid-scroll" id="scrollDetail"><table class="win-grid" id="tblDetail" data-gridbar="frmProductionInput:grdStockConversionProductionDetail" data-gridbar-mount="#gbDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+</div>
+
+<!-- ============================================================== tabPage4 "History" -->
+<div id="viewHistory" class="pi-view is-hidden">
+    <!-- panel57 (Teal): toolStrip7 (New, Refresh) + label124 -->
+    <div class="pi-teal" style="padding:0;">
+        <div class="win-tool-strip" id="toolStrip7">
+            <button type="button" id="toolStripButton4" class="win-btn-tool"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefereshInputHistory" class="win-btn-tool"><i class="fa fa-refresh"></i> Refresh</button>
+        </div>
+        <div class="pi-title" style="padding:3px 4px;"><span>Production Input History</span></div>
+    </div>
+    <!-- panel58 / groupBox11 "Filters" -->
+    <fieldset class="win-group-box" id="groupBox11" style="max-width:1038px;">
+        <legend>Filters</legend>
+        <div class="pi-hfilter">
+            <label class="pi-lbl" for="txtFromdateHistory">Date From</label>
+            <input type="date" id="txtFromdateHistory" class="win-datepicker" style="width:148px;"/>
+            <label class="pi-lbl" for="txtToDateHistory">Date To</label>
+            <input type="date" id="txtToDateHistory" class="win-datepicker" style="width:148px;"/>
+            <label class="pi-lbl" for="txtFromNoHistory">Doc From</label>
+            <input type="text" id="txtFromNoHistory" class="win-textbox" style="width:72px;" data-guard="integer"/>
+            <label class="pi-lbl" for="txtToDocNoHistory">Doc To</label>
+            <input type="text" id="txtToDocNoHistory" class="win-textbox" style="width:72px;" data-guard="integer"/>
+            <label class="pi-lbl" for="CmbJobOrderInputHistory">Job Order</label>
+            <div style="width:198px;"><select id="CmbJobOrderInputHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order"></select></div>
+            <button type="button" id="BtnShowInputHistory" class="win-btn-action" style="width:61px;">Show</button>
+        </div>
+    </fieldset>
+    <!-- panel59 (Teal) "Main" + ctrlGrdBar10, grdinputhistory -->
+    <div class="win-grid-container" id="boxHistory">
+        <div class="pi-teal pi-bar"><span class="pi-bar-title">Main</span>
+            <span class="pi-bar-tools" style="display:inline-flex;gap:3px;align-items:center;"><span class="pi-gridbar" data-grid="tblHistory" data-name="InputHistory"></span><span id="gbHistory"></span></span></div>
+        <div class="win-grid-scroll" style="max-height:320px;"><table class="win-grid" id="tblHistory" data-gridbar="frmProductionInput:grdinputhistory" data-gridbar-mount="#gbHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+    <!-- panel78 (Teal) "Detail of the Selected above row", grdInputDetail -->
+    <div class="win-grid-container" style="margin-top:2px;">
+        <div class="pi-teal pi-bar"><span class="pi-bar-title">Detail of the Selected above row</span></div>
+        <div class="win-grid-scroll" style="max-height:200px;"><table class="win-grid" id="tblHistoryDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+</div>
+
+<!-- tabControl2 - Alignment Bottom: "Form" | "History" (History on the right of the footer). -->
+<div class="pi-footer">
+    <div class="pi-tab is-active" id="tabForm">Form</div>
+    <span id="lblBusy" class="pi-busy-note"></span>
+    <div class="pi-tab" id="tabHistory"><i class="fa fa-history"></i> History</div>
+</div>
+
+<!-- ============================================ LoadavailableTransactionsForIssuance (modal) -->
+<div class="pi-modal" id="dlgIssuance" role="dialog" aria-modal="true" aria-labelledby="dlgIssuanceTitle">
+    <div class="pi-modal-box" style="width:min(1117px,98vw);">
+        <div class="pi-teal pi-bar" style="height:32px;"><span class="pi-bar-title" id="dlgIssuanceTitle">Available Transactions For Issuance</span>
+            <span class="pi-bar-tools" style="display:inline-flex;gap:3px;align-items:center;"><span class="pi-gridbar" data-grid="tblIssuance" data-name="Issuance"></span><span id="gbIssuance"></span>
+            <button type="button" class="pi-close" data-close="dlgIssuance" title="Esc">&times;</button></span></div>
+        <div class="pi-issu-filter">
+            <label class="pi-lbl" for="ldFromDate">From &amp; To Date</label>
+            <div class="pi-pair"><input type="date" id="ldFromDate" class="win-datepicker" style="width:119px;"/><input type="date" id="ldToDate" class="win-datepicker" style="width:119px;"/></div>
+            <label class="pi-lbl" for="ldCropYear">Crop Year</label>
+            <div><select id="ldCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+            <label class="pi-lbl">Total Selected Weight</label>
+            <input type="text" id="ldSelectedStock" class="win-textbox pi-num" readonly style="background:#fff; width:120px;"/>
+
+            <label class="pi-lbl" for="ldParentCategory">Parent Category</label>
+            <div><select id="ldParentCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Categories"></select></div>
+            <label class="pi-lbl" for="ldWarehouse">Warehouse</label>
+            <div><select id="ldWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WarehouseName"></select></div>
+            <label class="pi-lbl">Total Selected Qty</label>
+            <input type="text" id="ldSelectedQty" class="win-textbox pi-num" readonly style="background:#fff; width:120px;"/>
+
+            <label class="pi-lbl" for="ldItemCategory">Item Category</label>
+            <div><select id="ldItemCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+            <label class="pi-lbl" for="ldRefDocument">Ref Document</label>
+            <div><select id="ldRefDocument" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"></select></div>
+            <button type="button" id="ldSearch" class="win-btn-action" style="width:70px;" title="Ctrl+S">Search</button>
+            <span></span>
+
+            <label class="pi-lbl" for="ldItemType">Item Type</label>
+            <div><select id="ldItemType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+            <label class="pi-lbl" for="ldSupplier">Party Name</label>
+            <div><select id="ldSupplier" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+            <button type="button" id="ldLoad" class="win-btn-action" style="width:70px;" title="Ctrl+L">Load</button>
+            <span></span>
+
+            <label class="pi-lbl" for="ldJobLot">Job Lot</label>
+            <div><select id="ldJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot"></select></div>
+            <label class="pi-lbl" for="ldItemName">Item Name</label>
+            <div><select id="ldItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <button type="button" id="ldReset" class="win-btn-action" style="width:70px;">Reset</button>
+            <span></span>
+        </div>
+        <div class="win-grid-scroll pi-modal-grid"><table class="win-grid" id="tblIssuance" data-gridbar="LoadavailableTransactionsForIssuance:grd" data-gridbar-mount="#gbIssuance"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+</div>
+
+<!-- =============================================== LoadOutPutPendingforRates (modal, "Issue") -->
+<div class="pi-modal" id="dlgPending" role="dialog" aria-modal="true" aria-labelledby="dlgPendingTitle">
+    <div class="pi-modal-box" style="width:min(1117px,98vw);">
+        <div class="pi-teal pi-bar" style="height:29px;"><span class="pi-bar-title" id="dlgPendingTitle">Pending InPuts For Rates</span>
+            <button type="button" class="pi-close" data-close="dlgPending" title="Esc">&times;</button></div>
+        <div class="pi-pend-filter">
+            <label class="pi-lbl" for="prFromDate">From Date</label>
+            <input type="date" id="prFromDate" class="win-datepicker" style="width:187px;"/>
+            <label class="pi-lbl" for="prFromDoc">Doc No from</label>
+            <input type="text" id="prFromDoc" class="win-textbox" style="width:88px;" data-guard="integer"/>
+            <label class="pi-lbl" for="prJobOrder">Job Order</label>
+            <div style="width:236px;"><select id="prJobOrder" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo"></select></div>
+            <button type="button" id="prSearch" class="win-btn-action" style="width:72px;">Search</button>
+            <button type="button" id="prReset" class="win-btn-action" style="width:61px;">Reset</button>
+
+            <label class="pi-lbl" for="prToDate">To Date</label>
+            <input type="date" id="prToDate" class="win-datepicker" style="width:187px;"/>
+            <label class="pi-lbl" for="prToDoc">Doc No To</label>
+            <input type="text" id="prToDoc" class="win-textbox" style="width:88px;" data-guard="integer"/>
+        </div>
+        <div class="pi-teal pi-bar"><span class="pi-bar-title">Main</span><span id="gbPending"></span></div>
+        <div class="win-grid-scroll" style="max-height:290px;"><table class="win-grid" id="tblPending" data-gridbar="LoadOutPutPendingforRates:grd" data-gridbar-mount="#gbPending"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="pi-teal pi-bar"><span class="pi-bar-title">Detail Of Above Selected Row</span></div>
+        <div class="win-grid-scroll" style="max-height:234px;"><table class="win-grid" id="tblPendingDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+</div>
+
+<!-- ============================================= frmPendingMoveOrderDocuments (modal) -->
+<div class="pi-modal" id="dlgMoveOrder" role="dialog" aria-modal="true" aria-labelledby="dlgMoveTitle">
+    <div class="pi-modal-box" style="width:min(984px,98vw);">
+        <div class="pi-teal" style="padding:0;">
+            <div class="win-tool-strip">
+                <button type="button" id="moNew" class="win-btn-tool" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="moRefresh" class="win-btn-tool" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+                <button type="button" id="moLoad" class="win-btn-tool" title="Ctrl+L"><i class="fa fa-download"></i> Load</button>
+                <button type="button" id="moShortcuts" class="win-btn-tool" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+                <span style="flex:1"></span>
+                <button type="button" class="pi-close" data-close="dlgMoveOrder" title="Esc" style="color:#000;">&times;</button>
+            </div>
+            <div class="pi-title" style="padding:2px 5px;"><span id="dlgMoveTitle">Pending Move Order (Weight Bridge)</span></div>
+        </div>
+        <div class="pi-mo-filter">
+            <label class="pi-lbl" for="moFromDate">Date From,To</label>
+            <div class="pi-pair"><input type="date" id="moFromDate" class="win-datepicker" style="width:140px;"/><input type="date" id="moToDate" class="win-datepicker" style="width:140px;"/></div>
+            <label class="pi-lbl" for="moDocFrom">Ticket From,To</label>
+            <div class="pi-pair"><input type="text" id="moDocFrom" class="win-textbox" style="width:80px;" data-guard="integer"/><input type="text" id="moDocTo" class="win-textbox" style="width:80px;" data-guard="integer"/></div>
+            <label class="pi-lbl" for="moVehicle">Vehicle No</label>
+            <input type="text" id="moVehicle" class="win-textbox" style="width:100px;"/>
+            <label class="pi-lbl" for="moBilty">Bilty No</label>
+            <input type="text" id="moBilty" class="win-textbox" style="width:100px;"/>
+            <button type="button" id="moShow" class="win-btn-action" style="width:58px;" title="Ctrl+S">Show</button>
+        </div>
+        <div class="pi-teal" style="height:25px;"></div>
+        <div class="win-grid-scroll pi-modal-grid"><table class="win-grid" id="tblMoveOrder"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+</div>
+
+<!-- ============================================= frmwagesBillHeader (modal, Labour Wages page) -->
+<div class="pi-modal" id="dlgWages" role="dialog" aria-modal="true" aria-labelledby="dlgWagesTitle">
+    <div class="pi-modal-box" style="width:98vw; height:94vh; display:flex; flex-direction:column;">
+        <div class="pi-teal pi-bar" style="height:29px;"><span class="pi-bar-title" id="dlgWagesTitle">Labour Wages</span>
+            <button type="button" class="pi-close" data-close="dlgWages" title="Close">&times;</button></div>
+        <iframe id="wagesFrame" title="Labour Wages" style="flex:1; border:0; width:100%;"></iframe>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_p280_input.js?v=20260925g}"></script>
+</body>
+</html>

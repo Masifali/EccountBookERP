@@ -291,7 +291,6 @@
                             <div class="col-md-4"><label class="win-label">Project</label></div>
                             <div class="col-md-8">
                                 <select id="cmbCostCenter" class="win-input">
-                                    <option value="1">Golden Ace Rice Mills (Pvt) Ltd.</option>
                                 </select>
                             </div>
                         </div>
@@ -589,7 +588,11 @@
             const accCode = selectedOpt.attr('data-code') || '';
             const accTitle = selectedOpt.attr('data-title') || selectedOpt.text().split('[')[0].trim();
             const jobLot = $('#cmbJobLot option:selected').text();
-            const jobLotId = parseInt($('#cmbJobLot').val()) || 1;
+            /* The desktop reads this with Conversion.ToInt(cell), which is 0 when the
+               picker is unset — never 1 (ReceiptsVoucherNew.cs:702/698,
+               VoucherEntry.cs:1757). A || 1 default silently posted the line
+               against whatever row happens to hold id 1. */
+            const jobLotId = parseInt($('#cmbJobLot').val()) || 0;
             const remarks = $('#txtLineRemarks').val().trim();
             const debitAmt = parseFloat($('#txtDebitAmount').val()) || 0.0;
 
@@ -880,5 +883,6 @@
             }, 600);
         });
     </script>
+<script th:src="@{/build/js/countx_cost_center.js?v=20260920a}"></script>
 </body>
 </html>

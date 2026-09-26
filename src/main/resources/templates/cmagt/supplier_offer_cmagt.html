@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Offer</title>
+    <!--
+      Commission Trading - Supplier Offer (DocumentTypeId 1051).
+
+      Built from Architecture.WinApp.Cmagt/frmSupplierOfferCmagt.cs.
+
+      This screen and Purchase Order / Deal With Supplier (1052) construct the SAME model
+      (Architecture.Model.CommissionAgent.purchaseOrderMaster), run the same BLL and write
+      through the same procedures - frmSupplierOfferCmagt.cs:3357 calls
+      purchaseOrderMaster.Save(obj). Only DocumentTypeId and the mapping grid differ, so the
+      layout deliberately mirrors purchase_order_cmagt.html rather than inventing a second one.
+
+      Desktop structure reproduced here, in the desktop's own order:
+        toolbar            New / Refresh / Save / Update / Delete / Load Inquiry /
+                           Attachments / 1051-Print, Company + Branch, Preview
+        Main Information   doc no + date, expiry (validity) date, party-name mode,
+                           commission agent, supplier, deliver-to party + ship-to address,
+                           delivery term / days, delivery start date
+        Sub_Commission Agent   account, type, rate, rate uom, amount
+        Sub_Brokery Agent      account, type, rate, rate uom, amount
+        Add Single Payment Term  payment term, due days, schedule description,
+                           With Holding Tax Applied, Other Expense Allowed,
+                           Empty-bag weight-deduction term (4 radios)
+        Detail entry row   parent item, item, crop year, packing type, pack uom, qty,
+                           weight, rate, rate uom, amount, tax name, tax%, tax amount,
+                           tax+amount, remarks, [+]
+        Tabs               Detail | Supplier Other Charges |
+                           Empty Bags Weight Deduction Policy | Payment Schedule
+        Panel below tabs   Buyer Inquiry Mapping (panel17 on the desktop - always visible,
+                           never a tab)
+        Footer             History on the right
+
+      The desktop has no checkbox columns in any of these grids - it uses frozen X / Edit
+      button columns (grdDetailSetting: GridEX_Helper.AddButton "Delete"/"Edit") - so none are
+      drawn here. Adding checkboxes the desktop does not have would not be parity.
+    -->
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
+    <style>
+        /* Screen-specific layout only; palette, buttons, grids and tabs come from cmagt_theme.css. */
+        body.cmagt .po-panels { display: flex; gap: 10px; align-items: flex-start; margin: 10px 14px; flex-wrap: wrap; }
+        body.cmagt .po-panel { background: #FFFFFF; border: 1px solid #C9D2D1; border-radius: 5px; padding: 10px 12px 12px 12px; }
+        body.cmagt .po-panel > .po-legend { font-size: 11px; font-weight: 700; color: #00564C; text-transform: uppercase; letter-spacing: .4px; border-bottom: 2px solid #00796B; padding-bottom: 4px; margin-bottom: 10px; }
+        body.cmagt .po-main  { flex: 2 1 520px; }
+        body.cmagt .po-agent { flex: 1 1 300px; }
+        body.cmagt .po-term  { flex: 1 1 330px; }
+
+        body.cmagt .po-fld { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+        body.cmagt .po-fld > label { min-width: 118px; margin: 0; }
+        body.cmagt .po-fld.narrow > label { min-width: 74px; }
+        body.cmagt .po-inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        body.cmagt .po-inline label { min-width: 0; font-weight: 500; }
+
+        body.cmagt .w60 { width: 60px; }  body.cmagt .w80 { width: 80px; }
+        body.cmagt .w90 { width: 90px; }  body.cmagt .w110 { width: 110px; }
+        body.cmagt .w130 { width: 130px; } body.cmagt .w160 { width: 160px; }
+        body.cmagt .w200 { width: 200px; } body.cmagt .w280 { width: 280px; }
+
+        body.cmagt .po-entry { background: #FFFFFF; border: 1px solid #C9D2D1; border-radius: 5px; margin: 0 14px 10px 14px; padding: 8px 12px 10px 12px; }
+        body.cmagt .po-entry-grid { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-end; }
+        body.cmagt .po-cell { display: flex; flex-direction: column; gap: 2px; }
+        body.cmagt .po-cell > span { font-size: 11px; font-weight: 600; color: #2A3635; }
+        body.cmagt .po-addbtn { align-self: flex-end; }
+
+        body.cmagt .po-toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+        body.cmagt .po-nav { display: flex; align-items: center; gap: 6px; background: linear-gradient(to bottom, #F2F5F5 0%, #E6ECEB 100%); border: 1px solid #C9D2D1; border-top: none; border-radius: 0 0 4px 4px; margin: 0 14px 16px 14px; padding: 4px 8px; font-size: 11px; }
+        body.cmagt .po-nav button { min-height: 20px; padding: 0 7px; font-size: 11px; }
+        body.cmagt .po-nav input { width: 52px; height: 20px; text-align: center; }
+
+        body.cmagt .req::after { content: " *"; color: #B3261E; font-weight: 700; }
+
+        /* Large tables use the full page width; only the table container scrolls sideways,
+           never the page (cross-cutting UI rule). */
+        body.cmagt .grid-wrap { margin: 0 14px 10px 14px; max-width: 100%; overflow-x: auto; }
+        body.cmagt .grid-wrap > table { width: 100%; min-width: 100%; }
+        body.cmagt .grid-wrap.fs { position: fixed; inset: 0; z-index: 900; margin: 0; padding: 12px;
+                                   background: #FFFFFF; overflow: auto; }
+        body.cmagt .grid-tools { display: flex; align-items: center; gap: 8px; margin: 0 14px 4px 14px; }
+        body.cmagt .grid-tools .spacer { margin-left: auto; }
+
+        /* Footer strip - History lives on the RIGHT, per the cross-cutting UI rule. */
+        body.cmagt .form-footer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+                                  background: linear-gradient(to bottom, #F2F5F5 0%, #E6ECEB 100%);
+                                  border: 1px solid #C9D2D1; border-radius: 5px;
+                                  margin: 14px; padding: 8px 12px; }
+        body.cmagt .form-footer .right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+        body.cmagt .doc-code { color: #00564C; font-weight: 700; text-decoration: none; }
+        body.cmagt .doc-code:hover { text-decoration: underline; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20260921a}"/>
+</head>
+<body class="cmagt">
+
+<div class="cmagt-appbar">
+    <span class="cmagt-title">Supplier Offer</span>
+    <span class="cmagt-doctype">Doc Type 1051</span>
+    <span class="cmagt-crumb"><a th:href="@{/commission}">Commission Trading</a> &rsaquo; Transactions</span>
+</div>
+
+<!-- ============================== TOOLBAR ============================== -->
+<div class="cmagt-toolbar">
+    <button type="button" id="btnNew"         onclick="soNew()">New</button>
+    <button type="button" id="btnRefresh"     onclick="soRefresh()">Refresh</button>
+    <button type="button" id="btnSave"        onclick="soSave()">Save</button>
+    <button type="button" id="btnUpdate"      onclick="soSave()" disabled>Update</button>
+    <button type="button" id="btnDelete"      onclick="soDelete()" disabled>Delete</button>
+    <button type="button" id="btnLoadInquiry" onclick="soLoadInquiry()">Load Inquiry</button>
+    <button type="button" id="btnAttachments" onclick="soAttachments()">Attachments</button>
+    <button type="button" id="btnPrint"       onclick="soPrint()">1051-Print</button>
+
+    <span class="po-toolbar-right">
+        <label class="inline" for="cmbCompany">Company</label>
+        <select id="cmbCompany" class="w200" data-dtcombo="single" data-dtcombo-caption="Company Name"></select>
+        <label class="inline" for="cmbBranch">Branch</label>
+        <select id="cmbBranch" class="w200" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select>
+        <label class="inline"><input type="checkbox" id="chkPrint"> Preview</label>
+    </span>
+</div>
+
+<div id="soMessage" class="cmagt-status" style="display:none;"></div>
+
+<input type="hidden" id="purchaseOrderMasterId" value="0">
+<input type="hidden" id="documentTypeId" value="1051">
+
+<!-- ====================== HEADER: three desktop panels ====================== -->
+<div class="po-panels">
+
+    <!-- ------------------------- Main Information ------------------------- -->
+    <div class="po-panel po-main">
+        <div class="po-legend">Main Information</div>
+
+        <div class="po-fld">
+            <label for="txtDocNo">Doc No / Date</label>
+            <input type="text" id="txtDocNo" class="w90" readonly placeholder="Auto">
+            <input type="date" id="datDocDate" class="w130" onchange="soDocDateChanged()">
+            <label class="inline" for="datExpiryDate">Validity</label>
+            <input type="date" id="datExpiryDate" class="w130" readonly title="Delivery Start Date + Delivery Days">
+        </div>
+
+        <div class="po-fld">
+            <label>Show Party As</label>
+            <span class="po-inline">
+                <label><input type="radio" name="partyNameMode" id="radBusinessName" value="business" checked> Business Name</label>
+                <label><input type="radio" name="partyNameMode" id="radNickName" value="nick"> Nick Name</label>
+                <label><input type="radio" name="partyNameMode" id="radPartyCode" value="code"> Code</label>
+            </span>
+        </div>
+
+        <div class="po-fld">
+            <label class="req" for="cmbCommissionAgent">Commission Agent</label>
+            <select id="cmbCommissionAgent" class="w280" data-dtcombo="party4" data-dtcombo-caption="Commission Agent"></select>
+        </div>
+
+        <div class="po-fld">
+            <label class="req" for="cmbSupplierName">Supplier Name</label>
+            <select id="cmbSupplierName" class="w280" data-dtcombo="party4" data-dtcombo-caption="Supplier Name"></select>
+        </div>
+
+        <div class="po-fld">
+            <label for="cmbDeliveryToParty">Deliver To Party</label>
+            <select id="cmbDeliveryToParty" class="w280" onchange="soDeliveryPartyChanged()" data-dtcombo="party4" data-dtcombo-caption="Deliver To Party"></select>
+            <button type="button" id="btnAddShipTo" title="Define ship-to address" onclick="soAddShipToAddress()">+</button>
+        </div>
+
+        <div class="po-fld">
+            <label for="cmbShipToAddress">Ship To Address</label>
+            <select id="cmbShipToAddress" class="w280" onchange="soShipToAddressChanged()" data-dtcombo="single" data-dtcombo-caption="Ship To Address"></select>
+        </div>
+
+        <div class="po-fld">
+            <label for="txtShipToAddress">Address</label>
+            <input type="text" id="txtShipToAddress" class="w280" placeholder="Address text">
+        </div>
+
+        <div class="po-fld">
+            <label class="req" for="cmbDeliveryTerm">Delivery Term</label>
+            <select id="cmbDeliveryTerm" class="w160" data-dtcombo="single" data-dtcombo-caption="Delivery Term"></select>
+            <label class="inline" for="datDeliveryStartDate">Start</label>
+            <input type="date" id="datDeliveryStartDate" class="w130" onchange="soCalculateExpiryDate()">
+        </div>
+
+        <div class="po-fld">
+            <label class="req" for="txtDeliveryDays">Delivery Days</label>
+            <input type="number" id="txtDeliveryDays" class="w90" value="1" min="0" oninput="soCalculateExpiryDate()">
+        </div>
+    </div>
+
+    <!-- ------------------- Sub_Commission / Sub_Brokery ------------------- -->
+    <div class="po-panel po-agent">
+        <div class="po-legend">Sub_Commission Agent</div>
+        <div class="po-fld narrow"><label for="cmbCommissionAc">Account</label>
+            <select id="cmbCommissionAc" class="w200" onchange="soCalcCommission()" data-dtcombo="party4" data-dtcombo-caption="Commission Account"></select></div>
+        <div class="po-fld narrow"><label for="cmbCommType">Type</label>
+            <select id="cmbCommType" class="w110" onchange="soCalcCommission()" data-dtcombo="single" data-dtcombo-caption="Commission Type"></select>
+            <label class="inline" for="txtCommRate">Rate</label>
+            <input type="number" id="txtCommRate" class="w90" value="0" step="0.001" oninput="soCalcCommission()"></div>
+        <div class="po-fld narrow"><label for="cmbCommUom">Rate Uom</label>
+            <select id="cmbCommUom" class="w110" onchange="soCalcCommission()" data-dtcombo="single" data-dtcombo-caption="Commission Uom"></select>
+            <label class="inline" for="txtCommAmount">Amount</label>
+            <input type="number" id="txtCommAmount" class="w90" value="0" readonly></div>
+
+        <div class="po-legend" style="margin-top:12px;">Sub_Brokery Agent</div>
+        <div class="po-fld narrow"><label for="cmbBrokeryAc">Account</label>
+            <select id="cmbBrokeryAc" class="w200" onchange="soCalcBrokery()" data-dtcombo="party4" data-dtcombo-caption="Brokery Account"></select></div>
+        <div class="po-fld narrow"><label for="cmbBrokeryType">Type</label>
+            <select id="cmbBrokeryType" class="w110" onchange="soCalcBrokery()" data-dtcombo="single" data-dtcombo-caption="Brokery Type"></select>
+            <label class="inline" for="txtBrokeryRate">Rate</label>
+            <input type="number" id="txtBrokeryRate" class="w90" value="0" step="0.001" oninput="soCalcBrokery()"></div>
+        <div class="po-fld narrow"><label for="cmbBrokeryRateUom">Rate Uom</label>
+            <select id="cmbBrokeryRateUom" class="w110" onchange="soCalcBrokery()" data-dtcombo="single" data-dtcombo-caption="Brokery Uom"></select>
+            <label class="inline" for="txtBrokeryAmount">Amount</label>
+            <input type="number" id="txtBrokeryAmount" class="w90" value="0" readonly></div>
+    </div>
+
+    <!-- ---------------------- Payment term + flags ---------------------- -->
+    <div class="po-panel po-term">
+        <div class="po-legend">Add Single Payment Term</div>
+        <div class="po-fld narrow">
+            <label class="req" for="cmbPaymentTerm">Term</label>
+            <select id="cmbPaymentTerm" class="w160" onchange="soPaymentTermChanged()" data-dtcombo="single" data-dtcombo-caption="Payment Term"></select>
+            <label class="inline" for="txtDueDays">Due Days</label>
+            <input type="number" id="txtDueDays" class="w60" value="0" min="0">
+        </div>
+        <div class="po-fld narrow" style="align-items:flex-start;">
+            <label for="txtPaymentScheduleRemarks">Schedule</label>
+            <textarea id="txtPaymentScheduleRemarks" rows="4" style="width:100%;" readonly
+                      title="paymentScheduleDescription, rebuilt from the Payment Schedule tab"></textarea>
+        </div>
+        <div class="po-inline" style="margin-bottom:6px;">
+            <label><input type="checkbox" id="chkWithHoldingTaxApplied"> With Holding Tax Applied</label>
+            <label><input type="checkbox" id="chkOtherExpenseAllowed"> Other Expense Allowed</label>
+        </div>
+
+        <!-- Insert():3051 - EBWeightDeductionTermId is 1/2/3/4 by which radio is on, 0 if none. -->
+        <div class="po-legend" style="margin-top:8px;">Empty Bag Weight Deduction Term</div>
+        <div style="display:flex; flex-direction:column; gap:3px;">
+            <label><input type="radio" name="ebTerm" value="1" onchange="soEbTermChanged()"> Company Owned &amp; Weight Cut Apply</label>
+            <label><input type="radio" name="ebTerm" value="2" onchange="soEbTermChanged()"> Bag Purchase &amp; Weight Cut Apply</label>
+            <label><input type="radio" name="ebTerm" value="3" onchange="soEbTermChanged()" checked> Bag FOC &amp; Weight Cut Not Apply</label>
+            <label><input type="radio" name="ebTerm" value="4" onchange="soEbTermChanged()"> Bag Return &amp; Weight Cut Apply</label>
+        </div>
+
+        <div class="po-fld narrow" style="align-items:flex-start; margin-top:8px;">
+            <label for="txtRemarks">Remarks</label>
+            <textarea id="txtRemarks" rows="2" style="width:100%;"></textarea>
+        </div>
+    </div>
+</div>
+
+<!-- ====================== DETAIL ENTRY STRIP ====================== -->
+<div class="po-entry">
+    <div class="po-entry-grid">
+        <div class="po-cell"><span class="req">Parent Item</span><select id="cmbParentItem" class="w160" onchange="soParentItemChanged()" data-dtcombo="single" data-dtcombo-caption="Parent Item"></select></div>
+        <div class="po-cell"><span class="req">Item Name</span><select id="cmbItemName" class="w200" onchange="soItemChanged()" data-dtcombo="itemCmagt" data-dtcombo-caption="Item Name"></select></div>
+        <div class="po-cell"><span class="req">Crop Year</span><select id="cmbCropYear" class="w110" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+        <div class="po-cell"><span class="req">Packing Type</span><select id="cmbPackingType" class="w130" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select></div>
+        <div class="po-cell"><span class="req">Pack Uom</span><select id="cmbPackUom" class="w90" onchange="soCalcRow()" data-dtcombo="uomCmagt" data-dtcombo-caption="Pack Uom"></select></div>
+        <div class="po-cell"><span class="req">Qty</span><input type="number" id="txtQty" class="w80" value="0" step="0.001" oninput="soCalcRow()"></div>
+        <div class="po-cell"><span class="req">Weight</span><input type="number" id="txtWeight" class="w90" value="0" step="0.001" oninput="soCalcRow(true)"></div>
+        <div class="po-cell"><span class="req">Rate</span><input type="number" id="txtRate" class="w80" value="0" step="0.001" oninput="soCalcRow(true)"></div>
+        <div class="po-cell"><span class="req">Rate Uom</span><select id="cmbRateUom" class="w90" onchange="soCalcRow(true)" data-dtcombo="uomCmagt" data-dtcombo-caption="Rate Uom"></select></div>
+    </div>
+    <div class="po-entry-grid" style="margin-top:8px;">
+        <div class="po-cell"><span>Amount</span><input type="number" id="txtAmount" class="w110" value="0" readonly></div>
+        <div class="po-cell"><span>Tax Name</span><select id="cmbTaxName" class="w130" onchange="soTaxNameChanged()" data-dtcombo="single" data-dtcombo-caption="Tax Name"></select></div>
+        <div class="po-cell"><span>Tax%</span><input type="number" id="txtTaxPercnt" class="w60" value="0" step="0.001" oninput="soCalcTax()"></div>
+        <div class="po-cell"><span>Tax Amount</span><input type="number" id="txtTaxAmount" class="w110" value="0" readonly></div>
+        <div class="po-cell"><span>Tax + Amount</span><input type="number" id="txtTotalAmount" class="w110" value="0" readonly></div>
+        <div class="po-cell" style="flex:1 1 240px;"><span>Remarks</span><input type="text" id="txtRemarksDetail" style="width:100%;"></div>
+        <div class="po-addbtn"><button type="button" id="btnAddDetail" class="primary" onclick="soAddOrUpdateDetail()">+</button></div>
+        <div class="po-addbtn"><button type="button" id="btnCancelDetail" style="display:none;" onclick="soCancelDetailEdit()">Cancel</button></div>
+    </div>
+</div>
+
+<!-- ============================== TABS ============================== -->
+<ul class="cmagt-tabs" id="soTabs">
+    <li><a href="#" class="active" data-tab="tabDetail"    onclick="soShowTab(event,'tabDetail')">Detail</a></li>
+    <li><a href="#"                data-tab="tabExpense"   onclick="soShowTab(event,'tabExpense')">Supplier Other Charges</a></li>
+    <li><a href="#"                data-tab="tabEmptyBags" onclick="soShowTab(event,'tabEmptyBags')">Empty Bags Weight Deduction Policy</a></li>
+    <li><a href="#"                data-tab="tabPayment"   onclick="soShowTab(event,'tabPayment')">Payment Schedule</a></li>
+</ul>
+
+<!-- ------------------------------ Detail ------------------------------ -->
+<div id="tabDetail" class="po-tabpane">
+    <div class="grid-tools">
+        <span class="spacer"></span>
+        <button type="button" onclick="soToggleFullscreen('wrapDetail', this)">Fullscreen</button>
+    </div>
+    <div class="grid-wrap" id="wrapDetail">
+        <table id="grdDetail">
+            <thead>
+            <tr>
+                <th style="width:26px;">X</th>
+                <th style="width:44px;">Edit</th>
+                <th style="width:150px;">Parent Item</th>
+                <th style="width:200px;">Item Name</th>
+                <th style="width:100px;">Crop Year</th>
+                <th style="width:120px;">Packing Type</th>
+                <th style="width:90px;">Pack Uom</th>
+                <th style="width:90px;">Qty</th>
+                <th style="width:100px;">Weight</th>
+                <th style="width:90px;">Rate</th>
+                <th style="width:90px;">Rate Uom</th>
+                <th style="width:110px;">Amount</th>
+                <th style="width:120px;">Tax Name</th>
+                <th style="width:70px;">Tax%</th>
+                <th style="width:110px;">Tax Amount</th>
+                <th style="width:120px;">Tax + Amount</th>
+                <th>Remarks</th>
+            </tr>
+            </thead>
+            <tbody id="grdDetailBody"></tbody>
+            <tfoot>
+            <tr>
+                <td colspan="7" style="text-align:right;">Total</td>
+                <td id="totQty">0</td>
+                <td id="totWeight">0</td>
+                <td></td>
+                <td></td>
+                <td id="totAmount">0</td>
+                <td></td>
+                <td></td>
+                <td id="totTaxAmount">0</td>
+                <td id="totTotalAmount">0</td>
+                <td></td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="po-nav">
+        <button type="button" onclick="soNav('first')">|&lt;</button>
+        <button type="button" onclick="soNav('prev')">&lt;</button>
+        <input type="number" id="soNavCurrent" value="0" min="0" onchange="soNav('goto', this.value)">
+        <button type="button" onclick="soNav('next')">&gt;</button>
+        <button type="button" onclick="soNav('last')">&gt;|</button>
+        <span>of</span>
+        <span id="soNavTotal" style="font-weight:700; color:#00564C;">0</span>
+    </div>
+</div>
+
+<!-- ------------------------ Supplier Other Charges ------------------------ -->
+<div id="tabExpense" class="po-tabpane" style="display:none;">
+    <div class="grid-wrap">
+        <table id="grdInvExp">
+            <thead>
+            <tr>
+                <th style="width:260px;">Other Item</th>
+                <th style="width:110px;">Qty</th>
+                <th style="width:110px;">Rate</th>
+                <th style="width:130px;">Amount</th>
+                <th>Remarks</th>
+            </tr>
+            </thead>
+            <tbody id="grdInvExpBody"></tbody>
+            <tfoot><tr><td colspan="3" style="text-align:right;">Total</td><td id="totExpense">0</td><td></td></tr></tfoot>
+        </table>
+    </div>
+    <p style="margin:6px 14px 14px 14px; font-size:11px; color:#5B6A69;">
+        Rows are seeded from InventoryItemsOther, exactly as AddRowsInExpenseGrid() does
+        (frmSupplierOfferCmagt.cs:2049-2063). Only rows with an amount are saved (Insert():3093).
+    </p>
+</div>
+
+<!-- --------------- Empty Bags Weight Deduction Policy --------------- -->
+<div id="tabEmptyBags" class="po-tabpane" style="display:none;">
+    <h3 style="margin:12px 14px 6px 14px;">Weight Cut by Packing Type</h3>
+    <div class="grid-wrap">
+        <table id="grdEmptyBags">
+            <thead>
+            <tr>
+                <th style="width:240px;">Packing Type</th>
+                <th style="width:150px;">Weight Cut (Kg)</th>
+                <th>Allowed Range</th>
+            </tr>
+            </thead>
+            <tbody id="grdEmptyBagsBody"></tbody>
+        </table>
+    </div>
+    <p id="ebFocNote" style="margin:6px 14px 0 14px; font-size:11px; color:#5B6A69;"></p>
+
+    <h3 style="margin:12px 14px 6px 14px;">Packing Material Rate</h3>
+    <div class="grid-wrap">
+        <table id="grdEmptyBagsPm">
+            <thead>
+            <tr>
+                <th style="width:26px;">X</th>
+                <th style="width:220px;">Packing Type</th>
+                <th style="width:260px;">Empty Bag Item</th>
+                <th style="width:130px;">Purchase Rate</th>
+            </tr>
+            </thead>
+            <tbody id="grdEmptyBagsPmBody"></tbody>
+        </table>
+    </div>
+    <div style="margin:0 14px 16px 14px;">
+        <button type="button" onclick="soAddEmptyBagPmRow()">+ Add Packing Material Row</button>
+    </div>
+</div>
+
+<!-- --------------------------- Payment Schedule --------------------------- -->
+<div id="tabPayment" class="po-tabpane" style="display:none;">
+    <div class="grid-wrap">
+        <table id="grdPaymentTerm">
+            <thead>
+            <tr>
+                <th style="width:26px;">X</th>
+                <th style="width:180px;">Payment Term</th>
+                <th style="width:100px;">Due Days</th>
+                <th style="width:170px;">Base Date Type</th>
+                <th style="width:130px;">Due Date</th>
+                <th style="width:110px;">% Of Total</th>
+                <th style="width:140px;">Amount</th>
+            </tr>
+            </thead>
+            <tbody id="grdPaymentTermBody"></tbody>
+            <tfoot><tr><td colspan="5" style="text-align:right;">Total</td><td id="totPct">0</td><td id="totDue">0</td></tr></tfoot>
+        </table>
+    </div>
+    <div style="margin:0 14px 16px 14px;">
+        <button type="button" onclick="soAddPaymentRow()">+ Add Schedule Row</button>
+    </div>
+</div>
+
+<!-- ==================== BUYER INQUIRY MAPPING (persistent) ====================
+     panel17 on the desktop: docked below the tab control and always visible, not a
+     tab. Columns are PurchaseOrderCmagt_Helper.InitializeInquiryMapDetailtable:291-307.
+     Rows arrive only through Load Inquiry and carry the real inquiryBookingMasterId /
+     inquiryBookingDetailId - a typed document number would not create that link. -->
+<h3 style="margin:12px 14px 6px 14px;">Buyer Inquiry Mapping</h3>
+<div class="grid-wrap">
+    <table id="grdInquiryMapping">
+        <thead>
+        <tr>
+            <th style="width:26px;">X</th>
+            <th style="width:110px;">Inquiry No</th>
+            <th style="width:220px;">Buyer</th>
+            <th style="width:220px;">Item</th>
+            <th style="width:120px;">Item Weight</th>
+            <th style="width:120px;">Booked Weight</th>
+            <th style="width:120px;">Balance Weight</th>
+            <th style="width:150px;">Current Allocation</th>
+        </tr>
+        </thead>
+        <tbody id="grdInquiryMappingBody">
+        <tr><td colspan="8">No buyer inquiries mapped. Use Load Inquiry.</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================== FOOTER ============================== -->
+<div class="form-footer">
+    <span style="font-size:11px; color:#5B6A69;">
+        Supplier Offer &middot; DocumentTypeId 1051 &middot;
+        writes through [cmagt].[USP_purchaseOrderMaster_InsertAndUpdate]
+    </span>
+    <span class="right">
+        <label class="inline" for="histFromDate">From</label>
+        <input type="date" id="histFromDate" class="w130">
+        <label class="inline" for="histToDate">To</label>
+        <input type="date" id="histToDate" class="w130">
+        <button type="button" id="btnHistory" class="primary" onclick="soLoadHistory()">History</button>
+    </span>
+</div>
+
+<div class="grid-wrap" id="wrapHistory" style="display:none;">
+    <table id="grdHistory">
+        <thead>
+        <tr>
+            <th style="width:90px;">Doc No</th>
+            <th style="width:100px;">Doc Date</th>
+            <th style="width:220px;">Supplier</th>
+            <th style="width:220px;">Commission Agent</th>
+            <th style="width:220px;">Deliver To Party</th>
+            <th style="width:110px;">Validity Date</th>
+            <th style="width:110px;">Status</th>
+            <th style="width:140px;">Entry User</th>
+        </tr>
+        </thead>
+        <tbody id="grdHistoryBody">
+        <tr><td colspan="8">Choose a date range and press History.</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script th:src="@{/build/js/countx_cmagt_supplier_offer.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

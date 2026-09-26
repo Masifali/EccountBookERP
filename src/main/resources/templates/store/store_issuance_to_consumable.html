@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Store Issuance To Consumable Store - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* frmStoreIssuanceToCosumableStore designer geometry, 1:1 in px (ClientSize 964 x 511).
+           tabControlGsIssuance fills the form with its tabs at the BOTTOM (Alignment = Bottom);
+           the docked panels keep their designer heights, the grids fill what is left. */
+        body { background: #fff; padding-bottom: 36px; }
+        .si-scroll { overflow-x: auto; }
+        .si-root { min-width: 964px; position: relative; font-family: Verdana, sans-serif; font-size: 13px; }
+        .si-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .si-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; }
+        .si-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .si-txt[readonly] { background: #f0f0f0; }
+        .si-txt.r { text-align: right; }
+        .si-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .si-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .si-gb { position: absolute; box-sizing: border-box; }
+        .si-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .si-gb > .si-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; }
+        .si-teal { background: #008080; position: relative; }
+        .si-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .si-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; }
+        .si-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; white-space: nowrap; }
+        .si-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .si-tool:disabled { color: #9a9a9a; cursor: default; }
+        .si-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; }
+        .si-grid-host { overflow: auto; background: #fff; border-top: 1px solid #9eb6ce; }
+        .si-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .si-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .si-grid-host .win-grid td { border: 1px solid #d5e1f0; }
+        .si-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .si-grid-host .win-grid tbody tr.is-selected { background: #d6ecff; }
+        .si-grid-host .win-grid tfoot td { background: #eef4fb; font-weight: bold; border: 1px solid #9eb6ce; }
+        .si-grid-host td.num { text-align: right; }
+        .si-grid-host td.ctr { text-align: center; }
+        .si-grid-host td input.qty { width: 90px; text-align: right; }
+        .si-grid-host td input.rem { width: 160px; }
+        .si-grid-host td.lnk { color: #0645ad; text-decoration: underline; cursor: pointer; text-align: center; }
+        /* bottom tab strip (TabAlignment.Bottom) */
+        .si-tabs { display: flex; gap: 2px; border-top: 1px solid #7a9a9e; padding-left: 2px; background: #f0f0f0; height: 25px; }
+        .si-tabs .win-tab { border-radius: 0 0 3px 3px; border-top: none; border-bottom: 1px solid #999; font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; padding: 2px 10px; }
+        .si-tabs .win-tab.is-active { top: -1px; background: #fff; }
+        .si-panel { display: none; }
+        .si-panel.is-active { display: block; }
+        #grdDetailHost { height: calc(100vh - 290px); min-height: 276px; }
+        #DataGridHistoryHost { height: 240px; }
+        #grddetailHistoryHost { height: calc(100vh - 410px); min-height: 158px; }
+        /* loader dialog (LoadDepRequestToConsumableStore, ClientSize 964 x 661) */
+        #dlgLoader .cx-modal-box { width: 964px; max-width: 98vw; background: #fff; }
+        #dlgLoader .cx-modal-body { padding: 0; background: #fff; }
+        #grdHost { height: 454px; max-height: calc(92vh - 240px); }
+    </style>
+</head>
+<body>
+<div class="si-scroll">
+<div class="si-root">
+
+    <!-- ============================================================ tabPage1 "Form" -->
+    <div id="tabForm" class="si-panel is-active">
+        <!-- panel3 (0,0) 950 x 29 / toolStrip1 -->
+        <div class="si-strip" style="height:29px;">
+            <button type="button" class="si-tool" id="btnnew" style="width:59px" onclick="SiCons.newClick()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            <button type="button" class="si-tool" id="btnRefresh" style="width:80px" onclick="SiCons.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+            <button type="button" class="si-tool" id="btnsave" style="width:64px" onclick="SiCons.save()"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="si-tool is-hidden" id="btnUpdate" style="width:78px" onclick="SiCons.update()"><i class="fa fa-pencil"></i> Update</button>
+            <button type="button" class="si-tool" id="Print" style="width:100px" onclick="SiCons.print()"><i class="fa fa-print"></i> 1616-Print</button>
+            <button type="button" class="si-tool" id="btnattachment" style="width:109px" disabled title="Attachments are not ported to the web page"><i class="fa fa-paperclip"></i> Attachment</button>
+            <button type="button" class="si-tool" id="btnLoadRequest" style="width:100px" onclick="SiCons.openLoader()">Load Request</button>
+            <button type="button" class="si-tool" id="BtnShortCutkeys" style="width:106px" onclick="SiCons.shortcutKeys()">ShortCut Keys</button>
+            <a href="/modules" class="si-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+
+        <!-- panel4 (0,29) 950 x 24 teal; label15 (3,2) -->
+        <div class="si-teal" style="height:24px;">
+            <span class="si-teal-title" style="left:3px;top:2px;">Store Issuance</span>
+        </div>
+
+        <!-- panel5 (0,53) 950 x 122 white; groupBox1 (4,3) 936 x 111 "Main" -->
+        <div style="position:relative;height:122px;background:#fff;">
+            <div class="si-gb" style="left:4px;top:3px;width:936px;height:111px;">
+                <span class="si-cap">Main</span>
+                <label class="si-abs si-lbl" for="cmbBranch" style="left:6px;top:23px;">Branch Name</label>
+                <select id="cmbBranch" class="si-abs si-cmb win-combo" style="left:94px;top:18px;width:213px;"></select>
+                <label class="si-abs si-lbl" for="cmbProject" style="left:6px;top:53px;">Project Name</label>
+                <select id="cmbProject" class="si-abs si-cmb win-combo" style="left:94px;top:49px;width:213px;"></select>
+                <label class="si-abs si-lbl" for="txtDocNo" style="left:6px;top:84px;">Doc No &amp; Date</label>
+                <input type="text" id="txtDocNo" class="si-abs si-txt" style="left:94px;top:80px;width:71px;" readonly tabindex="-1">
+                <input type="date" id="txtDocdate" class="si-abs si-dt" style="left:167px;top:80px;width:140px;">
+                <span class="si-abs" style="left:313px;top:18px;width:546px;height:26px;background:#d3d3d3;font-family:Tahoma,sans-serif;font-weight:bold;font-size:13px;display:flex;align-items:center;justify-content:center;">Remarks</span>
+                <textarea id="txtRemarks" class="si-abs si-txt" style="left:313px;top:49px;width:546px;height:54px;resize:none;"></textarea>
+                <label class="si-abs si-lbl" style="left:862px;top:80px;display:flex;align-items:center;gap:3px;"><input type="checkbox" id="checkBox1" checked style="margin:0">Preview</label>
+            </div>
+        </div>
+
+        <!-- panel6 (0,175) 950 x 25 teal; label2 "Detail" (4,4) -->
+        <div class="si-teal" style="height:25px;">
+            <span class="si-teal-title" style="left:4px;top:4px;">Detail</span>
+        </div>
+
+        <!-- panel11 (0,200) fill / grdDetail -->
+        <div class="si-grid-host win-grid-scroll" id="grdDetailHost">
+            <table class="win-grid" id="grdDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ============================================================ tabPage2 "History" -->
+    <div id="tabHistory" class="si-panel">
+        <!-- panel8 (0,0) 950 x 53 teal: toolStrip2 (0,0) 25 + label6 (5,29) -->
+        <div class="si-teal" style="height:53px;">
+            <div class="si-strip" style="height:25px;">
+                <button type="button" class="si-tool" id="btnLoadAll" style="width:78px;height:22px" onclick="SiCons.loadAll()"><i class="fa fa-download"></i> Load All</button>
+            </div>
+            <span class="si-teal-title" style="left:5px;top:29px;">Store Issuance History</span>
+        </div>
+        <!-- DataGridHistory (0,53) 950 x 240 -->
+        <div class="si-grid-host win-grid-scroll" id="DataGridHistoryHost">
+            <table class="win-grid" id="DataGridHistory"><thead></thead><tbody></tbody></table>
+        </div>
+        <!-- panel9 (0,293) 950 x 25 teal; label7 (3,3) Tahoma 10pt bold -->
+        <div class="si-teal" style="height:25px;">
+            <span class="si-teal-title" style="left:3px;top:3px;font-size:13px;line-height:17px;">Detail of the Above Selected Row</span>
+        </div>
+        <!-- grddetailHistory (0,318) fill -->
+        <div class="si-grid-host win-grid-scroll" id="grddetailHistoryHost">
+            <table class="win-grid" id="grddetailHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- tab headers, bottom -->
+    <div class="si-tabs">
+        <div class="win-tab is-active" data-tab="tabForm" onclick="SiCons.tab('tabForm')">Form</div>
+        <div class="win-tab" data-tab="tabHistory" onclick="SiCons.tab('tabHistory')">History</div>
+    </div>
+</div>
+</div>
+
+<!-- ============================================================ LoadDepRequestToConsumableStore -->
+<div class="cx-modal" id="dlgLoader">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head"><span>EccountBookERP</span><button type="button" onclick="SiCons.loaderClose(false)">&times;</button></div>
+        <div class="cx-modal-body">
+            <!-- panel1 (0,0) 964 x 47 teal: toolStrip1 25 + label23 (4,25) -->
+            <div class="si-teal" style="height:47px;">
+                <div class="si-strip" style="height:25px;">
+                    <button type="button" class="si-tool" id="ldNew" style="width:55px;height:22px" onclick="SiCons.loaderNew()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+                    <button type="button" class="si-tool" id="ldRefresh" style="width:76px;height:22px" onclick="SiCons.loaderRefresh()"><i class="fa fa-repeat"></i> Refresh</button>
+                    <span class="si-sep"></span>
+                    <button type="button" class="si-tool" id="BtnLoader" style="width:58px;height:22px" onclick="SiCons.loaderLoad()"><i class="fa fa-download"></i> Load</button>
+                    <button type="button" class="si-tool" id="btnShortcutKeys" style="width:122px;height:22px" onclick="SiCons.loaderShortcutKeys()">ShortCut Keys</button>
+                    <span class="si-sep"></span>
+                </div>
+                <span class="si-teal-title" style="left:4px;top:25px;">Pending Department Request For Issuance</span>
+            </div>
+            <!-- panel2 (0,47) 964 x 134 white; groupBox1 (4,2) 956 x 130 "Filters" -->
+            <div style="position:relative;height:134px;background:#fff;">
+                <div class="si-gb" style="left:4px;top:2px;width:956px;height:130px;">
+                    <span class="si-cap">Filters</span>
+                    <label class="si-abs si-lbl" for="cmbperemeter" style="left:4px;top:19px;">Date Type</label>
+                    <select id="cmbperemeter" class="si-abs si-cmb win-combo" style="left:81px;top:13px;width:130px;" onchange="SiCons.peremeterChanged()"></select>
+                    <label class="si-abs si-lbl" for="FromDate" style="left:4px;top:47px;">From Date</label>
+                    <input type="date" id="FromDate" class="si-abs si-dt" style="left:81px;top:43px;width:130px;height:22px;">
+                    <label class="si-abs si-lbl" for="Todate" style="left:4px;top:75px;">To Date</label>
+                    <input type="date" id="Todate" class="si-abs si-dt" style="left:81px;top:71px;width:130px;height:22px;">
+                    <label class="si-abs si-lbl" for="txtGrnNoFrom" style="left:4px;top:103px;">From,To Doc</label>
+                    <input type="text" id="txtGrnNoFrom" class="si-abs si-txt r" style="left:81px;top:99px;width:64px;" inputmode="numeric">
+                    <input type="text" id="txtGrnNoTo" class="si-abs si-txt r" style="left:146px;top:99px;width:65px;" inputmode="numeric">
+
+                    <label class="si-abs si-lbl" for="cmbDepartmentFrom" style="left:214px;top:19px;">Department From</label>
+                    <select id="cmbDepartmentFrom" class="si-abs si-cmb win-combo" style="left:318px;top:13px;width:246px;"></select>
+                    <label class="si-abs si-lbl" for="cmbDepartmentTo" style="left:214px;top:47px;">Department To</label>
+                    <select id="cmbDepartmentTo" class="si-abs si-cmb win-combo" style="left:318px;top:41px;width:246px;"></select>
+                    <label class="si-abs si-lbl" for="cmbItem" style="left:214px;top:75px;">Item Name</label>
+                    <select id="cmbItem" class="si-abs si-cmb win-combo" style="left:318px;top:69px;width:246px;"></select>
+                    <label class="si-abs si-lbl" for="cmbFromWStation" id="labelFromWorkStation" style="left:214px;top:103px;">From Work Station</label>
+                    <select id="cmbFromWStation" class="si-abs si-cmb win-combo" style="left:318px;top:97px;width:246px;"></select>
+
+                    <label class="si-abs si-lbl" for="CmbToWorkStation" id="labelToWorkStation" style="left:566px;top:19px;">To Work Station</label>
+                    <select id="CmbToWorkStation" class="si-abs si-cmb win-combo" style="left:677px;top:13px;width:268px;"></select>
+                    <label class="si-abs si-lbl" for="CmbWorkOrder" id="labelWorkOrderNo" style="left:566px;top:47px;">Work Order No</label>
+                    <select id="CmbWorkOrder" class="si-abs si-cmb win-combo" style="left:677px;top:41px;width:268px;"></select>
+                    <button type="button" id="btngrnlod" class="si-abs" style="left:566px;top:96px;width:72px;height:27px;background:#008080;color:#fff;border:1px solid #005959;font-family:Verdana,sans-serif;font-size:13px;font-weight:bold;cursor:pointer;" onclick="SiCons.loaderSearch()">Search</button>
+                </div>
+            </div>
+            <!-- panel3 (0,181) 964 x 26 teal; label2 (4,3) "Records Detail" -->
+            <div class="si-teal" style="height:26px;">
+                <span class="si-teal-title" style="left:4px;top:3px;">Records Detail</span>
+            </div>
+            <!-- grd (0,207) fill -->
+            <div class="si-grid-host win-grid-scroll" id="grdHost">
+                <table class="win-grid" id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_store_issuance_to_consumable.js?v=20260925a}"></script>
+</body>
+</html>

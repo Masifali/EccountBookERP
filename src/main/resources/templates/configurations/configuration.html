@@ -70,6 +70,10 @@
         #cfgSaveToast { position: fixed; top: 10px; right: 10px; z-index: 9999; padding: 8px 16px; border-radius: 3px; font-size: 9pt; font-weight: 600; display: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
         #cfgSaveToast.success { background-color: #00796B; color: #fff; }
         #cfgSaveToast.error { background-color: #c0392b; color: #fff; }
+            #cfgRequestStatus { position:fixed; bottom:12px; right:16px; z-index:2000; background:#0a6e6e; color:white; padding:9px 16px; border-radius:4px; }
+        #cfgRequestStatus:before { content:''; display:inline-block; width:12px; height:12px; margin-right:8px; border:2px solid #ffffff70; border-top-color:white; border-radius:50%; animation:cfg-spin .7s linear infinite; }
+        @keyframes cfg-spin { to { transform:rotate(360deg); } }
+        body { overflow-x:hidden; }
     </style>
 </head>
 <body>
@@ -116,7 +120,7 @@
                 <label class="win-label" for="cmbBaseCurrency">Base Currency</label>
                 <select class="win-combo cfg-select" id="cmbBaseCurrency"
                         data-config-description="Base Currency" data-config-type="select"><option value="">-- Select --</option>
-                    <option th:each="cur : ${currencies}" th:value="${cur.Id}" th:text="${cur.CurrencyName + ' (' + cur.CurrencyCode + ')'}"></option>
+                    <option th:each="cur : ${currencies}" th:value="${cur.Id}" th:text="${cur.CurrencyName}"></option>
                 </select>
             </div>
             <div class="cfg-row">
@@ -980,7 +984,20 @@
                  explicitly here and in CONFIGURATION-PROGRESS.md as an identified, verified,
                  out-of-scope feature. -->
             <div id="tabWages" class="cfg-tab-pane">
-                <div class="cfg-not-implemented" style="margin-bottom:10px;"><i class="fa fa-info-circle"></i> "Document Wise Wages Configuration" (the reference-documents status grid and its Status Update button) is a separate document-approval workflow backed by <code>InvContractorWagesBillHeader</code>, not a <code>ConfigrationsAllocation</code> setting - verified out of scope for this migration, see CONFIGURATION-PROGRESS.md.</div>
+                <fieldset class="win-group-box">
+                    <legend>Document Wise Wages Configuration</legend>
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                        <button type="button" id="btnStatusUpdate">Status Update</button>
+                        <button type="button" id="btnWagesStatusRefresh">Refresh</button>
+                        <span id="wagesStatusMessage" role="status" aria-live="polite"></span>
+                    </div>
+                    <div style="width:100%;max-height:300px;overflow:auto">
+                        <table style="width:100%;border-collapse:collapse" id="grdWagesRefDocuments">
+                            <thead style="background:#0a6e6e;color:white"><tr><th style="padding:6px">Document Type</th><th style="width:75px;padding:6px">Is Active</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </fieldset>
                 <fieldset class="win-group-box">
                     <legend>Comparison by Activity For</legend>
                     <div class="cfg-row"><label class="win-label"><input type="checkbox" class="cfg-checkbox" id="chkContractorWageComparisonbyActivityForGRN" data-config-description="ContractorWageComparisonbyActivityForGRN" data-config-type="checkbox"> GRN</label></div>
@@ -2071,10 +2088,12 @@
         </div>
     </div>
 
+    <div id="cfgRequestStatus" role="status" aria-live="polite" hidden>Saving configuration…</div>
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script th:src="@{/build/js/countx_configuration.js}"></script>
+    <script th:src="@{/build/js/countx_configuration_wages.js?v=20260924a}"></script>
+    <script th:src="@{/build/js/countx_configuration.js?v=20260923verify}"></script>
     <script>
         // Ditto every one of the desktop's 71 UltraCombo dropdowns on this screen, which are
         // ALL configured with AutoCompleteMode=SuggestAppend + AutoSuggestFilterMode=Contains

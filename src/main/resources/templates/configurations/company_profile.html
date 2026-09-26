@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>EccountBook</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        /* ------------------------------------------------------------------------------------
+           frmCompanyProfile.InitializeComponent, 1:1.
+
+           Every number below is the designer's own. ClientSize 965x630; tabControl1 fills it;
+           one TabPage, tabCompany, Text "Form"; panel2 at (3,3) 951x595 holds, top to bottom,
+           panel3 (0,0) 951x48 with toolStrip1, panel4 (0,48) 951x187 with the fields,
+           panel9 (0,235) 951x23 BackColor Teal with ctrlGrdBar2 at (901,1) 46x20, and grd at
+           (0,258) 951x337.
+
+           The fields are absolutely positioned inside panel4 at the designer's coordinates, so
+           this is the desktop's layout rather than a web re-interpretation of it.
+           ------------------------------------------------------------------------------------ */
+        html, body { margin: 0; padding: 0; background: #d4d0c8; }
+        body { font-family: Verdana, "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 8.25pt; color: #000; }
+
+        #form { position: relative; width: 965px; height: 630px; background: #f0f0f0; overflow: hidden; }
+
+        /* tabControl1 — Font Verdana 9.75pt, one page captioned "Form" */
+        #tabstrip { position: absolute; left: 0; top: 0; width: 965px; height: 25px; background: #f0f0f0; border-bottom: 1px solid #aca899; }
+        #tabstrip .tab { display: inline-block; margin: 2px 0 0 4px; padding: 3px 14px; font-family: Verdana; font-size: 9.75pt;
+                         background: #fff; border: 1px solid #aca899; border-bottom: none; }
+        #tabpage { position: absolute; left: 4px; top: 25px; width: 957px; height: 601px; background: #f0f0f0; }
+        #panel2  { position: absolute; left: 3px; top: 3px; width: 951px; height: 595px; }
+
+        /* panel3 + toolStrip1 */
+        #panel3 { position: absolute; left: 0; top: 0; width: 951px; height: 48px; }
+        #toolStrip1 { position: absolute; left: 0; top: 0; width: 951px; height: 27px;
+                      background: linear-gradient(#fdfdfd, #e6e4dc); border-bottom: 1px solid #aca899;
+                      font-family: Verdana; font-size: 9.75pt; white-space: nowrap; }
+        #toolStrip1 button { height: 24px; border: 1px solid transparent; background: transparent;
+                             font-family: Verdana; font-size: 9.75pt; cursor: pointer; vertical-align: top;
+                             padding: 0 4px; margin: 1px 0 0 0; }
+        #toolStrip1 button:hover:not(:disabled) { border-color: #316ac5; background: #dfe8f6; }
+        #toolStrip1 button .fa { margin-right: 3px; }
+        #btnnew     { width: 59px; }
+        #btnRefresh { width: 80px; }
+        #btnsave    { width: 64px; }
+        #btnupdate  { width: 78px; }
+        #BtnShortCutkeys { width: 126px; }
+
+        /* panel4 — the field panel. Absolute, designer coordinates. */
+        #panel4 { position: absolute; left: 0; top: 48px; width: 951px; height: 187px; }
+        #panel4 .lbl { position: absolute; font-size: 8.25pt; line-height: 15px; height: 15px; }
+        #panel4 input.tb { position: absolute; height: 23px; box-sizing: border-box;
+                           border: 1px solid #7f9db9; background: #fff; font-family: Verdana; font-size: 8.25pt; padding: 0 3px; }
+        #CmbOrganizationName { position: absolute; left: 114px; top: 5px; width: 226px; height: 26px; box-sizing: border-box;
+                               border: 1px solid #7f9db9; background: #fff; font-family: Verdana; font-size: 8.25pt; padding: 0 3px; }
+
+        #label14 { left: 4px;   top: 11px;  width: 111px; }
+        #label1  { left: 4px;   top: 37px;  width: 88px;  }
+        #label2  { left: 4px;   top: 62px;  width: 93px;  }
+        #label7  { left: 4px;   top: 87px;  width: 72px;  }
+        #label3  { left: 4px;   top: 112px; width: 82px;  }
+        #label8  { left: 4px;   top: 137px; width: 49px;  }
+        #label10 { left: 4px;   top: 163px; width: 82px;  }
+        #label9  { left: 347px; top: 11px;  width: 84px;  }
+        #label4  { left: 347px; top: 37px;  width: 90px;  }
+        #label5  { left: 347px; top: 62px;  width: 85px;  }
+        #label6  { left: 347px; top: 87px;  width: 49px;  }
+        #label12 { left: 347px; top: 112px; width: 34px;  }
+
+        #txtCode                  { left: 114px; top: 33px;  width: 226px; }
+        #txtName                  { left: 114px; top: 58px;  width: 226px; }
+        #txtCompanynameOtherLingo { left: 114px; top: 83px;  width: 226px; }
+        #txtReportingTitle        { left: 114px; top: 108px; width: 226px; }
+        #txtAdress                { left: 114px; top: 133px; width: 524px; }
+        #txtAddressOtherLingo     { left: 114px; top: 159px; width: 524px; }
+        #txtContactPerson         { left: 438px; top: 7px;   width: 200px; }
+        #txtEmail                 { left: 438px; top: 33px;  width: 200px; }
+        #txtPhoneNumber           { left: 438px; top: 58px;  width: 200px; }
+        #txtCountry               { left: 438px; top: 83px;  width: 200px; }
+        #txtState                 { left: 438px; top: 108px; width: 200px; }
+
+        #LogoPic { position: absolute; left: 644px; top: 7px; width: 303px; height: 149px;
+                   border: 1px solid #7f9db9; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #LogoPic img { max-width: 100%; max-height: 100%; }
+        #browse { position: absolute; left: 644px; top: 158px; width: 303px; height: 24px;
+                  font-family: Verdana; font-size: 8.25pt; background: #ece9d8; border: 1px solid #aca899; cursor: pointer; }
+        #browse:hover { background: #dfe8f6; border-color: #316ac5; }
+
+        /* panel9 — BackColor Teal, ctrlGrdBar2 at (901,1) 46x20 */
+        #panel9 { position: absolute; left: 0; top: 235px; width: 951px; height: 23px; background: #008080; }
+        #ctrlGrdBar2 { position: absolute; left: 901px; top: 1px; width: 46px; height: 20px;
+                       display: flex; align-items: center; justify-content: center; gap: 2px;
+                       background: #ece9d8; border: 1px solid #aca899; }
+        #ctrlGrdBar2 button { border: none; background: transparent; cursor: pointer; font-size: 10px; padding: 0 2px; }
+
+        /* grd — Janus GridEX: DynamicFiltering on (filter row), RecordNavigator on */
+        #grd { position: absolute; left: 0; top: 258px; width: 951px; height: 337px;
+               border: 1px solid #7f9db9; background: #fff; display: flex; flex-direction: column; }
+        #grdScroll { flex: 1; overflow: auto; }
+        #grd table { border-collapse: collapse; width: 100%; font-family: Verdana; font-size: 8.25pt; }
+        #grd th { background: #ece9d8; border: 1px solid #aca899; padding: 3px 5px; text-align: left; white-space: nowrap;
+                  position: sticky; top: 0; font-weight: normal; }
+        #grd tr.filter th { position: sticky; top: 22px; background: #fbfbfb; padding: 1px; }
+        #grd tr.filter input { width: 100%; box-sizing: border-box; border: 1px solid #c8c8c8; font-family: Verdana; font-size: 8.25pt; padding: 1px 3px; }
+        #grd td { border-bottom: 1px solid #e6e6e6; border-right: 1px solid #f0f0f0; padding: 2px 5px; white-space: nowrap; }
+        #grd tbody tr:hover { background: #dfe8f6; cursor: default; }
+        #grd tbody tr.sel { background: #316ac5; color: #fff; }
+        #navigator { height: 20px; border-top: 1px solid #aca899; background: #ece9d8; display: flex; align-items: center; gap: 6px; padding: 0 6px; font-size: 8.25pt; }
+        #navigator button { border: 1px solid #aca899; background: #f5f3ea; cursor: pointer; font-size: 9px; padding: 0 5px; height: 15px; }
+
+        /* ShortCutKeyPopUp — the desktop's own form, centred, with its fourteen rows. */
+        #scMask { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; }
+        #scForm { background: #f0f0f0; border: 1px solid #555; width: 420px; font-family: Verdana; font-size: 8.25pt; }
+        #scForm .cap { background: #0A6E6E; color: #fff; padding: 4px 8px; font-weight: bold; display: flex; justify-content: space-between; }
+        #scForm .cap button { background: transparent; border: none; color: #fff; cursor: pointer; }
+        #scForm table { width: 100%; border-collapse: collapse; }
+        #scForm th, #scForm td { border: 1px solid #c8c8c8; padding: 2px 6px; text-align: left; }
+        #scForm th { background: #ece9d8; font-weight: normal; }
+
+        /* MessageBox.Show — the desktop's modal, not a browser alert bar. */
+        #mbMask { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; }
+        #mbForm { background: #f0f0f0; border: 1px solid #555; min-width: 300px; max-width: 520px; font-family: Verdana; font-size: 8.25pt; }
+        #mbForm .cap { background: #0A6E6E; color: #fff; padding: 4px 8px; font-weight: bold; }
+        #mbForm .body { padding: 14px 16px; }
+        #mbForm .btns { padding: 8px 16px 12px; text-align: right; }
+        #mbForm .btns button { min-width: 72px; height: 23px; margin-left: 6px; background: #ece9d8; border: 1px solid #aca899; cursor: pointer; font-family: Verdana; font-size: 8.25pt; }
+
+        #deny { padding: 14px 18px; font-family: Verdana; font-size: 9pt; background: #ffebee; border: 1px solid #e57373; color: #7f0000; margin: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="deny" th:unless="${canOpen}">
+    Company Profile sits on the desktop's Admin Panel, which DashboardNew draws only when
+    RoleName is &quot;Admin&quot;. This page applies the same condition.
+</div>
+
+<div id="form" th:if="${canOpen}">
+
+    <div id="tabstrip"><span class="tab">Form</span></div>
+
+    <div id="tabpage">
+        <div id="panel2">
+
+            <!-- panel3 / toolStrip1: New, Refresh, Save, Update (Visible=false), ShortCut Keys -->
+            <div id="panel3">
+                <div id="toolStrip1">
+                    <button type="button" id="btnnew"><i class="fa fa-plus"></i><u>N</u>ew</button>
+                    <button type="button" id="btnRefresh"><i class="fa fa-refresh"></i>Refresh</button>
+                    <button type="button" id="btnsave"><i class="fa fa-floppy-o"></i><u>S</u>ave</button>
+                    <button type="button" id="btnupdate" style="display:none;"><i class="fa fa-pencil"></i><u>U</u>pdate</button>
+                    <button type="button" id="BtnShortCutkeys"><i class="fa fa-keyboard-o"></i>ShortCut Keys</button>
+                </div>
+            </div>
+
+            <!-- panel4: the designer's own coordinates -->
+            <div id="panel4">
+                <span class="lbl" id="label14">Organization Name</span>
+                <input id="CmbOrganizationName" readonly>
+
+                <span class="lbl" id="label1">Company Code</span>
+                <input class="tb" id="txtCode" maxlength="50">
+
+                <span class="lbl" id="label2">Company Name</span>
+                <input class="tb" id="txtName" maxlength="150">
+
+                <span class="lbl" id="label7">Other Name</span>
+                <input class="tb" id="txtCompanynameOtherLingo">
+
+                <span class="lbl" id="label3">ReportingTitle</span>
+                <input class="tb" id="txtReportingTitle" maxlength="200">
+
+                <span class="lbl" id="label8">Address</span>
+                <input class="tb" id="txtAdress">
+
+                <span class="lbl" id="label10">Other Address</span>
+                <input class="tb" id="txtAddressOtherLingo">
+
+                <span class="lbl" id="label9">ContactPerson</span>
+                <input class="tb" id="txtContactPerson" maxlength="200">
+
+                <span class="lbl" id="label4">Company Email</span>
+                <input class="tb" id="txtEmail" maxlength="50">
+
+                <span class="lbl" id="label5">PhoneNumber</span>
+                <input class="tb" id="txtPhoneNumber" maxlength="50">
+
+                <span class="lbl" id="label6">Country</span>
+                <input class="tb" id="txtCountry" maxlength="50">
+
+                <span class="lbl" id="label12">State</span>
+                <input class="tb" id="txtState" maxlength="50">
+
+                <div id="LogoPic"></div>
+                <input type="file" id="logoFile" accept=".bmp,.jpg,.jpeg,.png,.gif" style="display:none;">
+                <button type="button" id="browse">Browse</button>
+            </div>
+
+            <!-- panel9 (Teal) + ctrlGrdBar2 -->
+            <div id="panel9">
+                <div id="ctrlGrdBar2">
+                    <button type="button" id="grdPrint" title="Print"><i class="fa fa-print"></i></button>
+                    <button type="button" id="grdExport" title="Export"><i class="fa fa-file-excel-o"></i></button>
+                </div>
+            </div>
+
+            <!-- grd -->
+            <div id="grd">
+                <div id="grdScroll">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>CompanyCode</th><th>CompanyName</th><th>OtherName</th>
+                            <th>ReportingTitle</th><th>Email</th><th>Phone</th>
+                            <th>Country</th><th>State</th><th>Address</th>
+                            <th>OtherAddress</th><th>ContactPerson</th>
+                        </tr>
+                        <tr class="filter" id="filterRow"></tr>
+                        </thead>
+                        <tbody id="grdBody"></tbody>
+                    </table>
+                </div>
+                <div id="navigator">
+                    <button type="button" data-nav="first">|&lt;</button>
+                    <button type="button" data-nav="prev">&lt;</button>
+                    <span id="navPos">0 of 0</span>
+                    <button type="button" data-nav="next">&gt;</button>
+                    <button type="button" data-nav="last">&gt;|</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ShortCutKeyPopUp(dt) — MakeShortCutKeys()'s fourteen rows, verbatim -->
+<div id="scMask">
+    <div id="scForm">
+        <div class="cap"><span>ShortCut Keys</span><button type="button" id="scClose">&times;</button></div>
+        <table>
+            <thead><tr><th>KeyCombination</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td>Ctrl+S</td><td>For Save</td></tr>
+            <tr><td>Ctrl+U</td><td>For Update</td></tr>
+            <tr><td>Ctrl+E</td><td>For Close</td></tr>
+            <tr><td>Ctrl+R</td><td>For Refresh</td></tr>
+            <tr><td>Ctrl+N</td><td>For New</td></tr>
+            <tr><td>Ctrl+F5</td><td>For Focus on Organization combo</td></tr>
+            <tr><td>Ctrl+F10</td><td>For Open Attachments</td></tr>
+            <tr><td>Ctrl+F12</td><td>For SaveAs</td></tr>
+            <tr><td>Ctrl+T</td><td>For Tab Transfer</td></tr>
+            <tr><td>Ctrl+alt</td><td>To Show ShortCut Keys Form</td></tr>
+            <tr><td>Ctrl+ArrowDown</td><td>For Focus On Grid</td></tr>
+            <tr><td>Ctrl+ArrowUp</td><td>For Focus on  Organization combo</td></tr>
+            <tr><td>Ctrl+Enter</td><td>When Focus On Any Grid For Update Record</td></tr>
+            <tr><td>Ctrl+Space</td><td>When Focus On Any Grid To Call Function's On Button Or Link</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="mbMask">
+    <div id="mbForm">
+        <div class="cap" id="mbCap">EccountBook</div>
+        <div class="body" id="mbBody"></div>
+        <div class="btns" id="mbBtns"></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_company_profile.js}"></script>
+</body>
+</html>

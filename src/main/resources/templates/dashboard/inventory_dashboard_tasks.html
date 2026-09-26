@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tasks Done</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-group-box { border:1px solid #c7d0d6; border-radius:2px; padding:10px 10px 8px;
+                         position:relative; }
+        .win-group-title { position:absolute; top:-8px; left:8px; background:#fff; padding:0 5px;
+                           font-size:11px; font-weight:700; color:#0f5959; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #itMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #itMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #itMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        .it-sect { font-weight:700; color:#0f5959; font-size:12px; margin:12px 8px 4px;
+                   padding-bottom:3px; border-bottom:1px solid #b0bec5; }
+        .it-wrap { display:flex; flex-wrap:wrap; gap:10px; padding:0 8px; align-items:flex-start; }
+
+        /* InventoryTaskInfoCard1 - title, then Vehicles / Quantity / Weight. */
+        .it-card { width:238px; background:#fff; border:1px solid #cfd8dc; border-radius:2px;
+                   display:flex; flex-direction:column; cursor:pointer;
+                   box-shadow:0 1px 2px rgba(0,0,0,.08); }
+        .it-card:hover { box-shadow:0 3px 10px rgba(0,0,0,.18); }
+        .it-card .t { background:#0f5959; color:#fff; font-size:11px; font-weight:700;
+                      padding:5px 8px; line-height:1.25; }
+        .it-card .b { padding:6px 8px 8px; }
+        .it-row { display:flex; justify-content:space-between; gap:8px; padding:2px 0;
+                  border-bottom:1px solid #eef2f4; }
+        .it-row:last-child { border-bottom:none; }
+        .it-row span:first-child { color:#5a6b73; }
+        .it-row span:last-child { font-weight:700; color:#23343c; }
+
+        /* InventoryTaskInfoCard2ForWages - a title, an activity table, then its totals row. */
+        .it-wcard { width:420px; background:#fff; border:1px solid #cfd8dc; border-radius:2px;
+                    display:flex; flex-direction:column; cursor:pointer;
+                    box-shadow:0 1px 2px rgba(0,0,0,.08); }
+        .it-wcard:hover { box-shadow:0 3px 10px rgba(0,0,0,.18); }
+        .it-wcard .t { background:#0f5959; color:#fff; font-size:11px; font-weight:700;
+                       padding:5px 8px; }
+        table.it-grid { width:max-content; min-width:100%; border-collapse:collapse; font-size:11px; }
+        table.it-grid th { background:#eef2f4; border-bottom:1px solid #cfd8dc; padding:3px 5px;
+                           font-weight:700; color:#33454e; white-space:nowrap; }
+        table.it-grid td { border-bottom:1px solid #f0f4f6; padding:2px 5px; white-space:nowrap; }
+        table.it-grid tfoot td { background:#e0f2f1; font-weight:700; color:#0f5959;
+                                 border-top:1px solid #0f5959; }
+        .num { text-align:right; }
+
+        .it-empty { background:#fff; border:1px dashed #b0bec5; color:#667; padding:12px;
+                    text-align:center; margin:0 8px; font-size:11px; }
+        .it-full { position:fixed; inset:0; z-index:3000; background:#e4e9ed; overflow:auto; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Purchase Sale Done Work (Dashboard) - "Tasks Done"
+     ditto Architecture.WinApp.Dashboard\InventoryDashboardTasksInformation.cs (858 lines)
+
+     Controls, in the desktop's own order:
+       toolStrip1  btnNew "&New"
+       label3 "Date Type" CmbDateType, label60 "From Date", label59 "To Date", btnshow "Show"
+       label5 "Tasks Done"
+       label1 "Purchase Tasks"  flowLayoutPanel1 (tasks) + flowLayoutPanel2 (wages)
+       label2 "Sale Tasks"      flowLayoutPanel3 (tasks) + flowLayoutPanel4 (wages)
+
+     Events ported:
+       Load                     :93-108   fills the Date Type list and selects its first row
+       DateTypeFill             :110-128  the five fixed choices - this list is hard-coded on
+                                          the desktop too, it is not read from the database
+       CmbDateType_ValueChanged :441-478  each choice sets the dates
+       btnshow_Click            :130-140  GenerateCards()
+       UserControl_Click        :338-418  a task card opens its own document screen
+       WagesControl_Click       :420-439  a wages card opens the wages screen
+
+     Read-only: no save, update, delete or History button on the desktop form.
+     ========================================================================== -->
+<div class="win-title-bar">Tasks Done</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Purchase &amp; Sales Dashboard &gt; Purchase Sale Done Work</span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnNew" onclick="itRefresh(this)">
+        <i class="fa fa-file-o"></i> New
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="itToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="itMessage"></div>
+
+<div class="win-form-card">
+    <div class="win-group-box">
+        <div class="win-group-title">Filters</div>
+        <div class="row g-2 align-items-end">
+            <!-- The five choices are hard-coded on the desktop (:114-124), so they are here too -
+                 this is one list that is NOT read from the database. -->
+            <div class="col-md-2">
+                <label class="win-label">Date Type</label>
+                <select id="dateType" class="win-input" onchange="itDateTypeChanged()">
+                    <option value="1">This Day</option>
+                    <option value="2">This Week</option>
+                    <option value="3">This Month</option>
+                    <option value="4">This Year</option>
+                    <option value="5">Financial Year</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">From Date</label>
+                <input type="date" id="fromDate" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <label class="win-label">To Date</label>
+                <input type="date" id="toDate" class="win-input">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="itShow(this)">
+                    <i class="fa fa-search"></i> Show
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- label1 (:670) -->
+<div class="it-sect">Purchase Tasks</div>
+<div id="itPurchaseTasks" class="it-wrap"></div>
+<div id="itPurchaseWages" class="it-wrap" style="margin-top:8px;"></div>
+
+<!-- label2 (:616) -->
+<div class="it-sect">Sale Tasks</div>
+<div id="itSaleTasks" class="it-wrap"></div>
+<div id="itSaleWages" class="it-wrap" style="margin-top:8px;"></div>
+
+<div id="itEmpty" class="it-empty" style="display:none; margin-top:10px;">Press Show to load.</div>
+<div style="height:16px;"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_inventory_dashboard_tasks.js?v=20260920a}"></script>
+</body>
+</html>

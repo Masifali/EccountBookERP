@@ -420,10 +420,33 @@
     // change/leave, exactly like the desktop's per-control Fire*() handlers -
     // never a full-form submit.
     // ---------------------------------------------------------------
+    // Serialize desktop change events so a slower earlier save cannot overwrite a later one.
+    var saveQueue = [], activeSave = false;
     function saveControl($el, accessibleName, configKeyValue) {
+        var previous = saveQueue.slice().reverse().find(function (job) { return job.key === accessibleName; });
+        if (previous && previous.value === configKeyValue) return;
+        saveQueue.push({el:$el, key:accessibleName, value:configKeyValue});
+        drainSaves();
+    }
+    function drainSaves() {
+        if (activeSave || !saveQueue.length) return;
+        activeSave = true;
+        var job = saveQueue[0], disabled = job.el.prop("disabled");
+        job.el.prop("disabled", true).attr("aria-busy", "true");
+        $("#cfgRequestStatus").prop("hidden", false);
+        var finish = function () {
+            job.el.prop("disabled", disabled).removeAttr("aria-busy");
+            saveQueue.shift(); activeSave = false;
+            $("#cfgRequestStatus").prop("hidden", !saveQueue.length);
+            drainSaves();
+        };
+        try { persistControl(job.el, job.key, job.value).always(finish); }
+        catch (error) { showToast(error.message || "Save failed", true); finish(); }
+    }
+    function persistControl($el, accessibleName, configKeyValue) {
         var controlType = $el.attr("data-config-type");
 
-        $.ajax({
+        return $.ajax({
             url: API_BASE + "/save-control",
             type: "POST",
             contentType: "application/json",
@@ -616,11 +639,8 @@
     // Liabilities" + "Bank Equivalent", checked), retaining the current/saved selection if
     // it's still present in the new list - ditto the desktop's own BindAndRetainSelection.
     //
-    // The unchecked-state list (type {2}) is already server-rendered (Thymeleaf
-    // freightCreditAccountsDefault, see ConfigurationViewController), so the unchecked branch
-    // just re-applies the saved selection rather than re-fetching; only the checked branch
-    // needs a live call to GET /api/configurations/global-accounts, since the wider {2,8,15}
-    // list is never rendered server-side.
+    // Both checkbox states rebind the desktop account-type filter.
+    var freightLookupGeneration = 0;
     function applyFreightVoucherCoupling(isInitialLoad) {
         var $checkbox = $("#chkIncludeBankAccountsInFreightVoucherCreditAccount");
         var $combo = $("#CmbDefaultFreightVoucherCreditAccountId");
@@ -632,18 +652,14 @@
         var savedEntry = configMap["DefaultFreightVoucherCreditAccountId"];
         var targetVal = isInitialLoad && savedEntry ? savedEntry.configKey : $combo.val();
 
-        if (!checked) {
-            if (targetVal) {
-                $combo.val(targetVal);
-            }
-            return;
-        }
-
+        var generation=++freightLookupGeneration;
+        $combo.prop("disabled",true).attr("aria-busy","true");
         $.ajax({
             url: API_BASE + "/global-accounts",
             type: "GET",
-            data: { with: "2,8,15" },
+            data: { with: checked ? "2,8,15" : "2" },
             success: function (rows) {
+                if(generation!==freightLookupGeneration) return;
                 var $placeholder = $combo.find("option[value='']").first();
                 $combo.empty();
                 $combo.append($placeholder.length
@@ -664,7 +680,10 @@
                 reinitSelect2($combo);
             },
             error: function () {
-                showToast("Failed to refresh Default Freight Voucher Credit Account list.", true);
+                if(generation===freightLookupGeneration) showToast("Failed to refresh Default Freight Voucher Credit Account list.", true);
+            },
+            complete: function() {
+                if(generation===freightLookupGeneration) $combo.prop("disabled",false).removeAttr("aria-busy");
             }
         });
     }
@@ -687,17 +706,23 @@
     // combo is simply left/cleared to just its placeholder (ditto the desktop's own "else:
     // DataSource=null, Text=''" branch) - no AJAX call made.
     function refreshWhtAccountCombo($customGroupSelect, $accountSelect) {
+        var generation=($accountSelect.data("cfg-lookup-generation")||0)+1;
+        $accountSelect.data("cfg-lookup-generation",generation);
         var customGroupId = parseInt($customGroupSelect.val(), 10);
         if (!customGroupId || customGroupId <= 0) {
             $accountSelect.find("option:not(:first-child)").remove();
+            $accountSelect.val("").prop("disabled",false).removeAttr("aria-busy");
+            reinitSelect2($accountSelect);
             return;
         }
         var currentVal = $accountSelect.val();
+        $accountSelect.prop("disabled",true).attr("aria-busy","true");
         $.ajax({
             url: API_BASE + "/accounts-by-custom-group",
             type: "GET",
             data: { customGroupId: customGroupId },
             success: function (rows) {
+                if($accountSelect.data("cfg-lookup-generation")!==generation) return;
                 var $placeholder = $accountSelect.find("option[value='']").first();
                 $accountSelect.empty();
                 $accountSelect.append($placeholder.length
@@ -714,7 +739,10 @@
                 reinitSelect2($accountSelect);
             },
             error: function () {
-                showToast("Failed to refresh WHT Account list.", true);
+                if($accountSelect.data("cfg-lookup-generation")===generation) showToast("Failed to refresh WHT Account list.", true);
+            },
+            complete: function() {
+                if($accountSelect.data("cfg-lookup-generation")===generation) $accountSelect.prop("disabled",false).removeAttr("aria-busy");
             }
         });
     }
@@ -732,6 +760,24 @@
             refreshWhtAccountCombo($customGroupSelect, $accountSelect);
         }
     }
+
+    // Configuration.cs KeyPress handlers and CommonServices numeric helpers.
+    var numericControls = {"txtBaseCurrencyRate": "decimal", "txtToleranceForPurchaseOrderCompletion": "integer", "txtOrderDefaultDeliveryDays": "integer", "txtPackingMaterilPoToleranceQtyPercentage": "integer", "txtMinWeightCutForPPBags": "decimal", "txtMinWeightCutForOpenBulk": "decimal", "txtMaxWeightCutForOpenBulk": "decimal", "txtMaxWeightCutForJuteBags": "decimal", "txtWeightCutForJuteBags": "decimal", "txtMaxWeightCutForPPBags": "decimal", "txtMinWeightCutForJuteBags": "decimal", "txtWeightCutForPPBags": "decimal", "txtWeightCutForOpenBulk": "decimal", "txtGdnAndFactoryWeightCompareToleranceForStop": "integer", "txtBookingOrderBackDaysEntryAllowed": "integer", "txtToleranceForOrderCompletion": "integer", "txtNoOfLabsAgainstGPandItem": "integer", "txtPercentageForRateAddLessPartyProcessing": "decimal", "txtPercentageForRateAddLess": "decimal", "txtToleranceForInPutMinusOutputForConversionInPercent": "signed", "txtGainWeightTolerancePercentageForProduction": "decimal", "txtLossWeightTolerancePercentageForProduction": "decimal", "txtDefaultDaysToLessFromHistoryFromDate": "integer"};
+    $(document).on("keydown", Object.keys(numericControls).map(function(id){return "#"+id;}).join(","), function(e) {
+        if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+        var mode=numericControls[this.id], key=e.key, value=this.value;
+        var allowed=/^[0-9]$/.test(key) || (mode!=="integer" && key==="." && value.indexOf(".")<0)
+            || (mode==="signed" && key==="-" && value.indexOf("-")<0);
+        if (!allowed) e.preventDefault();
+    });
+    $(document).on("input", "#txtPoToleranceWeightPercent,#txtPackingMaterilPoToleranceQtyPercentage", function() {
+        if (document.activeElement===this && Number(this.value)>99) {
+            this.value="99"; showToast("Percent cannot be greater than 99", true);
+        }
+    });
+    $(document).on("keydown", "#txtPercentageForRateAddLess,#txtPercentageForRateAddLessPartyProcessing", function() {
+        if (Number(this.value)>99) { this.value="99"; showToast("Value can not be greater than 99...",true); }
+    });
 
     $(function () {
         wireGenericControls();

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Summary Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <style>
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 4px; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
+        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-teal-header { background-color: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+        .win-teal-header-title { font-family: Tahoma, sans-serif; font-size: 11pt; font-weight: bold; }
+        .win-form-body { background-color: #ece9d8; padding: 6px; }
+        .win-group-box { border: 1px solid #999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
+        .win-group-box legend { font-family: Tahoma, sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .win-label { font-size: 8.5pt; font-weight: 600; color: #222; white-space: nowrap; margin-bottom: 2px; display: block; }
+        .win-textbox, .win-datepicker, .win-combo { font-family: Verdana, sans-serif; font-size: 9pt; height: 24px; border: 1px solid #7a9a9e; padding: 2px 4px; box-sizing: border-box; background: #fff; width: 100%; }
+        .win-textbox[readonly] { background: #f0f0f0; color: #333; }
+        .win-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+        .win-field { display: flex; flex-direction: column; min-width: 150px; }
+        .win-btn-action { background-color: #008080; color: #fff; font-family: Verdana, sans-serif; font-size: 9pt; font-weight: bold; border: 1px solid #004d40; height: 26px; padding: 0 14px; cursor: pointer; border-radius: 2px; }
+        .win-btn-action:hover { background-color: #005959; }
+        .win-btn-action:disabled { cursor: not-allowed; }
+        .is-busy { opacity: .65; cursor: progress !important; }
+        .is-busy::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; vertical-align: -1px; animation: cxspin .6s linear infinite; }
+        @keyframes cxspin { to { transform: rotate(360deg); } }
+
+        /* Branch tick-list - the desktop's UltraCombo with a "Selected" checkbox column and a
+           comma-separated text box. */
+        .cx-multi { position: relative; }
+        .cx-multi-panel { position: absolute; z-index: 900; top: 100%; left: 0; min-width: 240px; max-height: 260px; overflow: auto; background: #fff; border: 1px solid #7a9a9e; box-shadow: 0 3px 8px rgba(0,0,0,.25); display: none; }
+        .cx-multi.is-open .cx-multi-panel { display: block; }
+        .cx-multi-head { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); border-bottom: 1px solid #999; font-size: 8pt; font-weight: 700; color: #004d40; padding: 3px 6px; display: flex; gap: 8px; }
+        .cx-multi-row { display: flex; align-items: center; gap: 6px; padding: 3px 6px; font-size: 8.5pt; cursor: pointer; }
+        .cx-multi-row:hover { background: #e0f2f1; }
+
+        .win-grid-container { border: 1px solid #7a9a9e; background: #fff; width: 100%; margin-bottom: 6px; }
+        .win-grid-scroll { max-height: 300px; overflow: auto; max-width: 100%; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8pt; background: #fff; }
+        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); border: 1px solid #999; padding: 4px 5px; text-align: left; position: sticky; top: 0; z-index: 5; white-space: nowrap; }
+        .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; white-space: nowrap; }
+        .win-grid td.num, .win-grid th.num { text-align: right; }
+        .win-grid tr:nth-child(even) { background: #fcfcf8; }
+        .win-grid tr.cx-group td { background: #e0f2f1; font-weight: 700; color: #004d40; }
+        .win-grid tr.cx-total td { background: #f5f5dc; font-weight: 700; }
+        .win-grid-toolbar { display: flex; align-items: center; justify-content: space-between; background: #e0f2f1; border-bottom: 1px solid #7a9a9e; padding: 2px 6px; font-size: 8.5pt; font-weight: 600; color: #004d40; }
+        .win-grid-toolbar button:not(.gb-gear) { background: #fff; border: 1px solid #7a9a9e; font-size: 8pt; padding: 1px 6px; cursor: pointer; }
+        .win-grid-container.is-fullscreen { position: fixed; inset: 0; z-index: 10000; background: #fff; border: none; padding: 6px; display: flex; flex-direction: column; margin: 0; }
+        .win-grid tfoot td { background: #dbd6c6; font-weight: 700; border-top: 2px solid #999; }
+        .win-dd { position: relative; }
+        .win-dd-menu { position: absolute; top: 100%; left: 0; z-index: 950; background: #fff; border: 1px solid #999; box-shadow: 0 3px 8px rgba(0,0,0,.25); min-width: 280px; display: none; }
+        .win-dd.is-open .win-dd-menu { display: block; }
+        .win-dd-menu button { display: block; width: 100%; text-align: left; background: #fff; border: none; padding: 5px 10px; font-size: 11px; cursor: pointer; }
+        .win-dd-menu button:hover { background: #cce8ff; }
+        .ps-tabs { display: flex; gap: 2px; border-bottom: 1px solid #7a9a9e; margin-top: 4px; }
+        .ps-tab { background: #ececec; border: 1px solid #999; border-bottom: none; padding: 3px 14px; cursor: pointer; font-size: 9pt; border-radius: 3px 3px 0 0; }
+        .ps-tab.is-active { background: #fff; font-weight: 700; position: relative; top: 1px; }
+        .ps-pane { display: none; } .ps-pane.is-active { display: block; }
+        .ps-side { display: flex; gap: 6px; align-items: stretch; flex-wrap: wrap; }
+        .ps-side > * { flex: 1 1 300px; min-width: 0; }
+        .win-grid-container.is-fullscreen .win-grid-scroll { max-height: calc(100vh - 80px); flex: 1; }
+        .cx-note { font-size: 8pt; color: #7a5c00; background: #fff8e1; border: 1px solid #e6c200; padding: 4px 8px; margin-bottom: 6px; }
+        .cx-hidden { display: none; }
+        @media print {
+            .win-tool-strip, .win-grid-toolbar, button { display: none !important; }
+            body { background: #fff !important; }
+            .win-grid-scroll { max-height: none !important; overflow: visible !important; }
+            .win-grid th, .win-grid td { border: 1px solid #000 !important; }
+        }
+        .ps-info { background: #f0f0f0; padding: 4px 4px 6px; margin-bottom: 6px; }
+        .ps-info-title { text-align: center; font-weight: bold; font-size: 9.5pt; padding: 6px 0 4px; }
+        .ps-info-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+        .ps-info-row label { flex: 0 0 100px; font-size: 8.5pt; font-weight: 600; margin: 0; }
+        .ps-info-row input { flex: 1 1 auto; }
+        .ps-info-row.cx-hidden { display: flex !important; }
+        .ps-info-row.cx-hidden input { visibility: hidden; }
+    </style>
+</head>
+<body>
+
+<!-- ProductionSummaryReport (screen 309). Toolbar: New (toolStripButton1:305), Refresh
+     (btnRefreshSummary:900), 602-RecoveryReport, 602_01 (with lab), Input Detail drop-down (the
+     .rpt files in the GrnInvoiceWiseInput folder), 625-Print For Detail Grid Data. -->
+<div class="win-tool-strip">
+    <button type="button" class="win-btn-tool" onclick="ProductionSummary.reset()"><i class="fa fa-file-o"></i> New</button>
+    <button type="button" class="win-btn-tool" id="btnRefresh" onclick="ProductionSummary.refresh()"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn-tool" id="btnPrint602" onclick="ProductionSummary.print602('ps-602', 'btnPrint602')"><i class="fa fa-print"></i> 602-RecoveryReport</button>
+    <button type="button" class="win-btn-tool" id="btnPrint60201" onclick="ProductionSummary.print602('ps-602-01', 'btnPrint60201')"><i class="fa fa-print"></i> 602_01-RecoveryReport With Lab</button>
+    <div class="win-dd" id="ddInput">
+        <button type="button" class="win-btn-tool" id="btnInputDetail" onclick="ProductionSummary.toggleInputMenu()"><i class="fa fa-print"></i> Input Detail <i class="fa fa-caret-down"></i></button>
+        <div class="win-dd-menu">
+            <!-- DynamicReportsLoad("GrnInvoiceWiseInput") - the one template in that folder. -->
+            <button type="button" onclick="ProductionSummary.printInputDetail()">607-FoodProductionIssuanceGrnWiseByJobOrderId</button>
+        </div>
+    </div>
+    <button type="button" class="win-btn-tool" id="btnPrint625" onclick="ProductionSummary.print625()"><i class="fa fa-print"></i> 625-Print For Detail Grid Data</button>
+    <button type="button" class="win-btn-tool" onclick="ProductionSummary.exportCsv()"><i class="fa fa-file-excel-o"></i> Export CSV</button>
+    <div style="margin-left:auto;">
+        <a href="/production" style="color:#004d40; text-decoration:none; font-weight:bold; font-size:11px;">
+            <i class="fa fa-arrow-left"></i> Exit to Dashboard</a>
+    </div>
+</div>
+
+<div class="win-teal-header">
+    <div class="win-teal-header-title">Production Summary Report</div>
+    <div><span id="lblStatus" style="font-size:9pt;">&nbsp;</span></div>
+</div>
+
+<div class="win-form-body">
+    <!-- The "Rate" right (DoHaveCanRateandAmount): the value columns are left out of the
+         response, not merely hidden. -->
+    <div class="cx-note cx-hidden" id="noRateNote">
+        Rate and amount columns are hidden - this screen's "Rate" right is not granted to you.
+    </div>
+
+    <fieldset class="win-group-box">
+        <legend>Filters</legend>
+        <div class="win-row">
+            <div class="win-field cx-multi" id="branchBox" style="flex:1 1 260px;">
+                <label class="win-label" for="txtBranchName">Branch Name</label>
+                <input type="text" id="txtBranchName" class="win-textbox" readonly
+                       onclick="ProductionSummary.toggleBranches()"/>
+                <div class="cx-multi-panel" id="branchPanel">
+                    <div class="cx-multi-head"><input type="checkbox" id="chkAllBranches" title="Select all"
+                           onchange="ProductionSummary.allBranches(this.checked)"><span>Branch Name</span></div>
+                    <div style="padding:3px 6px;"><input type="text" id="txtBranchFilter" class="win-textbox" style="height:20px;" placeholder="Filter (contains)" oninput="ProductionSummary.filterBranches()"/></div>
+                    <div id="branchRows"></div>
+                </div>
+            </div>
+            <div class="win-field" style="flex:2 1 320px;">
+                <label class="win-label" for="cmbJobOrderNo">Job Order No</label>
+                <select id="cmbJobOrderNo" class="win-combo dtcombo"
+                        data-dtcombo="jobOrderInfo" data-dtcombo-caption="JobOrderNo"
+                        onchange="ProductionSummary.jobOrderChanged()"></select>
+            </div>
+            <div class="win-field" style="flex:1 1 200px;">
+                <label class="win-label" for="cmbPlantName">Plant Name</label>
+                <select id="cmbPlantName" class="win-combo dtcombo"
+                        data-dtcombo="single" data-dtcombo-caption="Plant Name"></select>
+            </div>
+            <!-- Both pickers carry their own checkbox on the desktop, each end independent. -->
+            <div class="win-field">
+                <label class="win-label">
+                    <input type="checkbox" id="chkFromDate" autocomplete="off" onchange="ProductionSummary.toggleDate('From')"/> From Date
+                </label>
+                <input type="date" id="datFromDate" class="win-datepicker" disabled/>
+            </div>
+            <div class="win-field">
+                <label class="win-label">
+                    <input type="checkbox" id="chkToDate" autocomplete="off" onchange="ProductionSummary.toggleDate('To')"/> To Date
+                </label>
+                <input type="date" id="datToDate" class="win-datepicker" disabled/>
+            </div>
+            <div class="win-field" style="min-width:0;">
+                <button type="button" id="btnShow" class="win-btn-action" onclick="ProductionSummary.show()">Show</button>
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Summary Values | Job Order information | Export Schedule, side by side (:1167-1343). -->
+    <div class="ps-side">
+        <div class="win-grid-container" id="valuesBox" style="flex:3 1 480px;">
+            <div class="win-grid-toolbar">
+                <span>Summary Values</span>
+                <span style="display:inline-flex;gap:4px;align-items:center;"><button type="button" onclick="ProductionSummary.toggleFullscreen('valuesBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button><span id="gbValues"></span></span>
+            </div>
+            <div class="win-grid-scroll" style="max-height:240px;">
+                <table class="win-grid" id="tblValues" data-gridbar="ProductionSummaryReport:grdSummery" data-gridbar-mount="#gbValues"><thead><tr id="valuesHead"></tr></thead><tbody id="valuesBody"></tbody></table>
+            </div>
+        </div>
+
+        <!-- SummaryJobOrderInformationFill:588 - read off the selected dropdown row, filled on
+             Show (btnShow_Click:461). Settlement Date only when the status is "Settled". -->
+        <!-- panel "Job Order No" (designer): a centred caption over the job-order box, then
+             label-left rows. Settlement Date only when the status is "Settled". -->
+        <div class="ps-info" style="flex:0 0 228px;">
+            <div class="ps-info-title">Job Order No</div>
+            <input type="text" id="txtJobOrderNo" class="win-textbox" readonly/>
+                <div class="ps-info-row"><label>Job Order Doc No</label><input type="text" id="txtJobOrderDocNo" class="win-textbox" readonly/></div>
+                <div class="ps-info-row" id="fldStartDate"><label>Job Started Date</label><input type="text" id="txtJobStartedDate" class="win-textbox" readonly/></div>
+                <div class="ps-info-row"><label>Job Order Status</label><input type="text" id="txtJobOrderStatus" class="win-textbox" readonly/></div>
+                <div class="ps-info-row"><label>Settlement Status</label><input type="text" id="txtSettlementStatus" class="win-textbox" readonly/></div>
+                <div class="ps-info-row" id="fldSettlementDate"><label>Settlement Date</label><input type="text" id="txtSettlementDate" class="win-textbox" readonly/></div>
+                <div class="ps-info-row"><label>Lot Code</label><input type="text" id="txtLotCode" class="win-textbox" readonly/></div>
+        </div>
+
+        <div class="win-grid-container" id="scheduleBox" style="flex:1 1 280px;">
+            <div class="win-grid-toolbar">
+                <span>Export Schedule Information</span>
+                <button type="button" onclick="ProductionSummary.toggleFullscreen('scheduleBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
+            </div>
+            <div class="win-grid-scroll" style="max-height:240px;">
+                <table class="win-grid"><thead><tr id="scheduleHead"></tr></thead><tbody id="scheduleBody"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- The two lower grids sit on two tabs, "Summary" (grdSummaryDetail) and "Detail"
+         (grdSummaryDocWiseDetail) - :1092 / :1133. -->
+    <div class="ps-tabs" id="psTabs">
+        <div class="ps-tab is-active" data-pane="recoveryBox" onclick="ProductionSummary.tab('recoveryBox')">Summary</div>
+        <div class="ps-tab" data-pane="docWiseBox" onclick="ProductionSummary.tab('docWiseBox')">Detail</div>
+    </div>
+    <div class="win-grid-container ps-pane is-active" id="recoveryBox">
+        <div class="win-grid-toolbar">
+            <span>Summary</span>
+            <span style="display:inline-flex;gap:4px;align-items:center;"><button type="button" onclick="ProductionSummary.toggleFullscreen('recoveryBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button><span id="gbRecovery"></span></span>
+        </div>
+        <div class="win-grid-scroll" style="max-height:calc(100vh - 260px); min-height:240px;">
+            <table class="win-grid" id="tblRecovery" data-gridbar="ProductionSummaryReport:grdSummaryDetail" data-gridbar-mount="#gbRecovery"><thead><tr id="recoveryHead"></tr></thead><tbody id="recoveryBody"></tbody><tfoot id="recoveryFoot"></tfoot></table>
+        </div>
+    </div>
+    <div class="win-grid-container ps-pane" id="docWiseBox">
+        <div class="win-grid-toolbar">
+            <span>Detail</span>
+            <span style="display:inline-flex;gap:4px;align-items:center;"><button type="button" onclick="ProductionSummary.toggleFullscreen('docWiseBox')"><i class="fa fa-arrows-alt"></i> Fullscreen</button><span id="gbDocWise"></span></span>
+        </div>
+        <div class="win-grid-scroll" style="max-height:calc(100vh - 260px); min-height:240px;">
+            <table class="win-grid" id="tblDocWise" data-gridbar="ProductionSummaryReport:grdSummaryDocWiseDetail" data-gridbar-mount="#gbDocWise"><thead><tr id="docWiseHead"></tr></thead><tbody id="docWiseBody"></tbody><tfoot id="docWiseFoot"></tfoot></table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_production_summary_report.js?v=20260925g}"></script>
+</body>
+</html>

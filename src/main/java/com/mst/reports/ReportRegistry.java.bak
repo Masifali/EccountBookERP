@@ -1,0 +1,352 @@
+package com.mst.reports;
+
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.mst.reports.ReportDefinition.Mode.ALWAYS;
+import static com.mst.reports.ReportDefinition.Mode.GUARDED;
+
+/**
+ * The traced print contracts.
+ *
+ * Each entry was read from the desktop C#: form button -> CommonServices/helper method -> BLL
+ * -> GenericProvider.GetDataTableProc("<procedure>"). The `desktopCaller` field records where.
+ *
+ * GUARDED parameters are the ones the BLL wraps in a test (if (obj.X != 0), if
+ * (!Conversion.CheckDateTimeNull(...))). They are OMITTED when unset — a guarded parameter sent
+ * as NULL is a different call and can return a different result set.
+ *
+ * Reports NOT registered here, and why, are listed in ReportRegistry.UNAVAILABLE.
+ */
+@Component
+public class ReportRegistry {
+
+    private static ReportDefinition.Param P(String n, String src)  { return new ReportDefinition.Param(n, src, ALWAYS); }
+    private static ReportDefinition.Param G(String n, String src)  { return new ReportDefinition.Param(n, src, GUARDED); }
+    private static List<ReportDefinition.Param> ps(ReportDefinition.Param... a) { return Arrays.asList(a); }
+    private static List<ReportDefinition.SubReport> subs(ReportDefinition.SubReport... a) { return Arrays.asList(a); }
+
+    private final Map<String, ReportDefinition> byKey = new LinkedHashMap<>();
+
+    private void add(ReportDefinition d) { byKey.put(d.key, d); }
+
+    public ReportRegistry() {
+
+        /* ---------------------------------------------------------------- Purchase Order (41) */
+
+        // CommonServices.PurchaseOrderSlipReport203
+        add(new ReportDefinition("po-203", "203-InvRptPurchaseOrderRiceSlip.rpt",
+                "Sp_PurchaseOrderSlip_Rpt",
+                "CommonServices.PurchaseOrderSlipReport203",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@DocumentTypeId","const:41"),
+                   P("@OrderId","arg:id"),
+                   P("@ApprovedFilter","const:All"),
+                   G("@StartOrderDate","arg:fromDate"), G("@EndOrderDate","arg:toDate"),
+                   G("@PoSrFrom","arg:fromDocNo"),      G("@PoSrTo","arg:toDocNo")),
+                subs(new ReportDefinition.SubReport("PurchaseOrderSubReport.rpt",
+                            "USP-PurchaseOrderSubReport", ps(P("@OrderId","arg:id"))),
+                     new ReportDefinition.SubReport("PurchaseOrderSupplierExpenseSubReport.rpt",
+                            "[dbo].[USP_PurchaseOrderSupplierExpense_SubReport]", ps(P("@OrderId","arg:id"))))));
+
+        // CommonServices.PurchaseOrderSlipReport203_01 - same main procedure, same sub-reports
+        add(new ReportDefinition("po-203-01", "203_01_PurchaseOrderRiceSlip.rpt",
+                "Sp_PurchaseOrderSlip_Rpt",
+                "CommonServices.PurchaseOrderSlipReport203_01",
+                byKey.get("po-203").params,
+                byKey.get("po-203").subReports));
+
+        // CommonServices.GenerateReport (General Order Slip)
+        add(new ReportDefinition("po-201", "201-InvRptPurchaseOrderGeneralSlip.rpt",
+                "Sp_PurchaseOrder_GeneralOrderSlip_Rpt",
+                "CommonServices.GenerateReport",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@OrderId","arg:id")),
+                Collections.emptyList()));
+
+        // toolStripButton2_Click / toolStripButton1_Click - the register pair share one procedure
+        add(new ReportDefinition("po-205", "205-InvRptPurchaseOrderDetailRegisterRice.rpt",
+                "Sp_PurchaseOrder_RegisterDetail_Rpt", "PurchaseOrderHistory.toolStripButton2_Click",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   G("@FromDate","arg:fromDate"), G("@ToDate","arg:toDate")),
+                Collections.emptyList()));
+
+        add(new ReportDefinition("po-206", "206-RptPurchaseOrderRegisterRice.rpt",
+                "Sp_PurchaseOrder_RegisterDetail_Rpt", "PurchaseOrderHistory.toolStripButton1_Click",
+                byKey.get("po-205").params, Collections.emptyList()));
+
+        // CrystalReportPrint_Helper.PurchaseOrderSlip_1052 - CMAGT purchase order
+        add(new ReportDefinition("po-1052", "1052_PurchaseOrderSlip.rpt",
+                "[cmagt].[USP_purchaseOrderMaster_Slip]",
+                "CrystalReportPrint_Helper.PurchaseOrderSlip_1052",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        // CrystalReportPrint_Helper.PurchaseOrderHeader_Slip_1303 - logistics schema
+        add(new ReportDefinition("po-1303", "1303_PurchaseOrderHeader_Slip.rpt",
+                "[lgstcm].[USP_PurchaseOrderHeader_Slip]",
+                "CrystalReportPrint_Helper.PurchaseOrderHeader_Slip_1303",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        // CommonServices.PurchaseOrderSlip1100
+        add(new ReportDefinition("po-1100", "1100_PurchaseOrderSlip.rpt",
+                "[fed].[USP_PurchaseOrderSubReport]",
+                "CommonServices.PurchaseOrderSlip1100",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@OrderId","arg:id")),
+                subs(new ReportDefinition.SubReport("PurchaseOrderSupplierExpenseSubReport.rpt",
+                            "[fed].[USP_PurchaseOrderSupplierExpense_SubReport]", ps(P("@OrderId","arg:id"))))));
+
+        // CommonServices.PurchaseOrderSlipConcrete - pcc schema
+        add(new ReportDefinition("po-1863-slip", "1863-InvRptPurchaseOrderSlip.rpt",
+                "[pcc].[USP_PurchaseOrder_SlipAndRegister]",
+                "CommonServices.PurchaseOrderSlipConcrete",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        /* ------------------------------------------------------------ Purchase Invoice / Bill */
+
+        add(new ReportDefinition("pi-1859", "1859_InvPurchaseInvoice_DirectSlip.rpt",
+                "[pcc].[USP_InvPurchaseInvoice_DirectSlip]",
+                "CommonServices.PurchaseInvoiceAndRetunFinishGoodsPrint1859",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                subs(new ReportDefinition.SubReport("InvPurchaseInvoice_ItemExpense_SubReport.rpt",
+                            "[pcc].[USP_InvPurchaseInvoice_ItemExpense_SubReport]", ps(P("@Id","arg:id"))))));
+
+        /* -------------------------------------------------------------------------- GRN / GDN */
+
+        add(new ReportDefinition("grn-211", "211-InvRptGoodsReceiptsNotesRiceSlip.rpt",
+                "Sp_InvGrn_RiceSlip_Rpt", "CommonServices.GrnSlipReport211",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                subs(new ReportDefinition.SubReport("InvGrnDetailEmptyBagsSubReport.rpt",
+                            "Sp_InvGrnDetailEmptyBagsSubReport", ps(P("@Id","arg:id"))))));
+
+        add(new ReportDefinition("grn-212", "212-InvRptGoodsReceiptsNotesStoreSlip.rpt",
+                "Sp_InvGrn_StoreSlip_Rpt", "CommonServices.GrnSlipReport212",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        add(new ReportDefinition("grn-213", "213-GoodsReceiptsNotesAgainstOrderSlip.rpt",
+                "Sp_InvGrn_RiceSlip_Rpt", "CommonServices.GrnSlipReport213",
+                byKey.get("grn-211").params, byKey.get("grn-211").subReports));
+
+        add(new ReportDefinition("grn-214", "214-GRNPackingMaterialSlip.rpt",
+                "Sp_InvGrn_StoreSlip_Rpt", "CommonServices.GrnPMSlipReport214",
+                byKey.get("grn-212").params, Collections.emptyList()));
+
+        add(new ReportDefinition("grn-1864", "1864_GoodsRecieptNotesFinish.rpt",
+                "[pcc].[USP_InvGrn_SlipAndRegister]", "CommonServices.GrnConcreteSlip",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        add(new ReportDefinition("gdn-1866", "1866-InvGdnDirect_Slip.rpt",
+                "[pcc].[USP_InvGdn_Slip]", "CommonServices.GenerateCustomerSlip",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                subs(new ReportDefinition.SubReport("InvGdnWagesDetail_SubReport.rpt",
+                            "[pcc].[USP_InvGdnWagesDetail_SubReport]", ps(P("@Id","arg:id"))))));
+
+        add(new ReportDefinition("gdn-703", "703_Gdn_PurchaseReturnSlip.rpt",
+                "[dbo].[USP_InvGdn_PurchaseReturnReport]",
+                "CommonServices.Gdn_PurchaseReturnSlip703",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        /* --------------------------------------------------------------------------- Export */
+
+        add(new ReportDefinition("exp-216", "216-ExportReturnInvoiceSlip.rpt",
+                "[dbo].[USp_ExportReturnInvoice_SlipAndRegister]",
+                "CommonServices.ExportReturnInvoiceSlip242",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        /* ------------------------------------------------------------------ Inventory / Stock */
+
+        /* btnPrint_Click prints the grid the SCREEN already loaded, so the data source is the
+           screen's own load call, not something inside the print handler.
+           frmStockReportWithValues:870  dtStockSum = StocksReport.stockReportWithValues(obj) */
+        List<ReportDefinition.Param> stockValues = ps(
+                P("@OrganizationId","session:organizationId"),
+                P("@CompanyId","session:companyId"),
+                G("@DateFrom","arg:fromDate"),       G("@DateTo","arg:toDate"),
+                G("@ItemTypeId","arg:itemTypeId"),   G("@ItemCategoryId","arg:itemCategoryId"),
+                G("@CropYear","arg:cropYear"),       G("@JobLotId","arg:jobLotId"),
+                G("@WarehouseId","arg:warehouseId"), G("@ItemId","arg:itemId"),
+                G("@IsPackSizeOn","arg:isPackSizeOn"), G("@ItemStockAc","arg:itemStockAc"),
+                G("@AccountGroupId","arg:accountGroupId"), G("@PackingTypeId","arg:packingTypeId"),
+                G("@IsPackTypeOn","arg:isPackTypeOn"), G("@ItemClassGroupId","arg:itemClassGroupId"));
+
+        for (String[] r : new String[][]{
+                {"stock-188", "188-ItemStockSummary.rpt"},
+                {"stock-189", "189-ItemandWarehouseStockSummary.rpt"},
+                {"stock-191", "191-ItemandCropYearStockSummary.rpt"},
+                {"stock-193", "193-JobLotandItemStockSummary.rpt"}}) {
+            add(new ReportDefinition(r[0], r[1], "Sp_ItemStockReportWithValues_Rpt",
+                    "frmStockReportWithValues.btnPrint_Click (grid loaded at :870)",
+                    stockValues, Collections.emptyList()));
+        }
+
+        // frmStockReport:786  dtStockSum = StocksReport.stockGeneralSummaryByWeight(obj)
+        add(new ReportDefinition("stock-187", "187-ItemandPackSizeandPackingTypeStockSummary.rpt",
+                "Sp_InventoryTransactions_StockSummaryGeneralByWeight_Rpt",
+                "frmStockReport.btnPrint_Click (grid loaded at :786)",
+                stockValues, Collections.emptyList()));
+
+        // frmStockReportWithValuesForStore:703  StocksReport.ItemStockReportWithValues_Store(obj)
+        add(new ReportDefinition("stock-202", "202_ItemStockSummary.rpt",
+                "Sp_ItemStockReportWithValues_Store",
+                "frmStockReportWithValuesForStore.btnPrint_Click (grid loaded at :703)",
+                stockValues, Collections.emptyList()));
+
+        add(new ReportDefinition("item-200", "200-InvRptItemsList.rpt",
+                "SP_Item_List_Rpt", "CommonServices.ShowReport",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId")),
+                Collections.emptyList()));
+
+        /* -------------------------------------------------------------------------- Finance */
+
+        add(new ReportDefinition("acc-103", "103-AcRptPurchaseSalesVoucherSlip.rpt",
+                "Sp_Vouchers_GeneralJournalAcAndInventoryDetailSlip_Rpt",
+                "CommonServices.AcRptPurchaseSalesVoucherSlip_103",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        /* ------------------------------------------------------ Sale Order (the 1852 family)
+
+           NOTE ON NAMES. A list of "1054_*" and "1864_*" Sale Order reports does not exist in
+           this system: 1054 is the GRN Supplier Loading family and 1864 is GrnRegister / stock
+           summaries. The real Sale Order reports are 1053_* and 1852_*, verified by searching
+           the whole GoldenAceRice tree for "*SaleOrder*". Registered under their real names. */
+
+        // CommonServices.SaleOrderSlipConcrete
+        add(new ReportDefinition("so-1852-slip", "1852-InvRptSaleOrderSlip.rpt",
+                "[pcc].[USP_SaleOrderSlipAndRegister]",
+                "CommonServices.SaleOrderSlipConcrete (CommonServices.cs:17970)",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        // CommonServices.SaleOrderReports273_01 - Rice slip with two sub-reports
+        add(new ReportDefinition("so-273-01", "273_01_SaleOrderSlip.rpt",
+                "Sp_SaleOrder_RiceSlip_Rpt",
+                "CommonServices.SaleOrderReports273_01 (CommonServices.cs:9091)",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                subs(new ReportDefinition.SubReport("SaleOrderCustomerExpense_SubReport.rpt",
+                            "[dbo].[USP_SaleOrderCustomerExpense_SubReport]", ps(P("@Id","arg:id"))))));
+
+        // CommonServices.SaleOrderReport_1110
+        add(new ReportDefinition("so-1110", "1110-SaleOrderSlip.rpt",
+                "[dbo].[USP_SaleOrderCustomerExpense_SubReport]",
+                "CommonServices.SaleOrderReport_1110 (CommonServices.cs:11790)",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                subs(new ReportDefinition.SubReport("SaleOrderPaymentTermsDetail_SubReport.rpt",
+                            "[fed].[usp_SaleOrderPaymentTermsDetail_SubReport]", ps(P("@Id","arg:id"))))));
+
+        /* --------------------------------------------- Purchase Order Engr (the 1600 report)
+
+           This one IS on disk. It is spelled 1600-PurchaseOrder_Slip_Engr.rpt with a HYPHEN;
+           an underscore lookup misses it. */
+        add(new ReportDefinition("po-1600", "1600-PurchaseOrder_Slip_Engr.rpt",
+                "USP_PurchaseOrder_Slip_Engr",
+                "CommonServices.PurchaseOrderSlip_Engr1600 (CommonServices.cs:12281)",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        /* ------------------------------------------------------------- Services Bill (1304)
+
+           1304 is the SERVICES bill header, not a Sale Order header. */
+        add(new ReportDefinition("svc-1304", "1304_ServicesBillHeader_Slip.rpt",
+                "[lgstcm].[USP_ServicesBillHeader_Slip]",
+                "CrystalReportPrint_Helper.ServicesBillHeader_Slip_1304 (:538)",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
+        add(new ReportDefinition("frt-241", "241-FreightVoucherSlip.rpt",
+                "SP_FreightVoucherSlipAndRegister",
+                "CommonServices.FreightVoucherSlip241",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+    }
+
+    /**
+     * Requested reports that are NOT registered, with the reason. Exposed by the controller so
+     * the gap is visible rather than silently missing.
+     *
+     * "no such file" entries were checked against the whole GoldenAceRice tree AND against every
+     * "*.rpt" literal in the desktop source. Absent from both means the name does not exist in
+     * this system - building an endpoint for it would be fabrication.
+     */
+    public static final Map<String, String> UNAVAILABLE;
+    static {
+        Map<String, String> m = new LinkedHashMap<>();
+        /* RENAMED, NOT MISSING - these names resolve to real files under different numbers.
+           1054 is the GRN Supplier Loading family and 1864 is GrnRegister / stock summaries;
+           the Sale Order family is 1053 and 1852. Each is registered under its real name. */
+        m.put("1600_PurchaseOrder_Slip_Engr.rpt", "RENAMED -> 1600-PurchaseOrder_Slip_Engr.rpt (hyphen). Registered as po-1600.");
+        m.put("1054_01_SaleOrderReport.rpt",      "RENAMED -> 1053_01_SaleOrderDetailReport.rpt family. 1054_* is GRN Supplier Loading.");
+        m.put("1054_SaleOrderSlip.rpt",           "RENAMED -> 273_01_SaleOrderSlip.rpt / 1110-SaleOrderSlip.rpt. Registered as so-273-01 and so-1110.");
+        m.put("1304_SaleOrderHeader_Slip.rpt",    "RENAMED -> 1304_ServicesBillHeader_Slip.rpt (a SERVICES bill, not a sale order). Registered as svc-1304.");
+        m.put("1864-InvRptSaleOrderSlip.rpt",     "RENAMED -> 1852-InvRptSaleOrderSlip.rpt. Registered as so-1852-slip.");
+        m.put("1864-SaleOrderRegister.rpt",       "RENAMED -> 1852-SaleOrderRegister.rpt. BLOCKED: prints the screen's grid; SaleOrderRegister.cs:2503 load call not yet traced.");
+        m.put("1864A-SaleOrder_Register.rpt",     "RENAMED -> 1852A-SaleOrder_Register.rpt. BLOCKED: prints the screen's grid; SaleOrderRegister.cs:2525 load call not yet traced.");
+        m.put("1053_01_SaleOrderDetailReport.rpt","BLOCKED - on disk but no caller found in the desktop source; its parameters are unknown.");
+        m.put("1052_01_PurchaseOrderReport.rpt",  "BLOCKED - on disk but no caller found in the desktop source; its parameters are unknown");
+        m.put("220-InvRptPurchaseBillSupplierRiceSlip.rpt", "BLOCKED - caller btnSlipDetail_Click found, main procedure not yet isolated");
+        m.put("1863-PurchaseOrderRegister.rpt",   "BLOCKED - prints the screen's grid; PurchaseOrderRegister.cs:1825 load call not yet traced");
+        m.put("224-InvRptPurchaseBillRegister.rpt", "BLOCKED - prints the screen's grid; frmPurchaseInvoiceHistory.cs:1862 load call not yet traced");
+        m.put("234-PurchaseRegisterSummary.rpt",  "BLOCKED - prints the screen's grid; PurchaseRegisterPopUp.cs:371 load call not yet traced");
+        m.put("1528-PurchaseRegisterSummary.rpt", "BLOCKED - prints the screen's grid; PurchaseInvoiceRegisterWithActivities.cs:916 load call not yet traced");
+        m.put("1804_01_PurchaseRegister.rpt",     "BLOCKED - prints the screen's grid; PurchaseInvoiceSummaryRegister.cs:1546 load call not yet traced");
+        m.put("1880-SalesRegisterSummary.rpt",    "BLOCKED - prints the screen's grid; Sales_EvaulationDetailReports.cs:1027 load call not yet traced");
+        m.put("1886_01_StockReportWithDocumentWiseIncludeOrders.rpt", "BLOCKED - prints the screen's grid; StockReportWithDocumentWiseIncludeOrders.cs:571 load call not yet traced");
+        m.put("240-FreightVoucherRegister.rpt",   "BLOCKED - prints the screen's grid; FreightVoucherRegister.cs:290 load call not yet traced");
+        UNAVAILABLE = Collections.unmodifiableMap(m);
+    }
+
+    public ReportDefinition get(String key) { return byKey.get(key); }
+    public List<ReportDefinition> all() { return new ArrayList<>(byKey.values()); }
+}

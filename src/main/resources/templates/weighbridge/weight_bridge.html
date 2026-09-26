@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Weigh Bridge - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <style>
+        /* Screen 411 — frmWeightbridge. Captions, their order, the three weight columns
+           (Factory | Supplier | Difference), the two bottom tabs and the History filters follow
+           the desktop designer (InitializeComponent). Nothing here is invented layout. */
+        html, body { overflow-x: hidden; }
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
+
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; min-height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 2px; flex-wrap: wrap; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 7px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
+        .win-btn-tool:hover:not(:disabled) { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-btn-tool:disabled { color: #999; cursor: not-allowed; }
+        .win-teal-header { background-color: #008080; color: #fff; min-height: 30px; display: flex; align-items: center; gap: 14px; padding: 2px 10px; flex-wrap: wrap; }
+        .win-teal-header-title { font-family: Tahoma, sans-serif; font-size: 11pt; font-weight: bold; }
+        .win-teal-header label { margin: 0; font-weight: 600; font-size: 8.5pt; display: flex; align-items: center; gap: 4px; }
+        .win-teal-header input[type=time] { height: 22px; font-size: 9pt; border: 1px solid #7a9a9e; padding: 0 3px; color: #000; }
+        .win-form-body { background-color: #ece9d8; padding: 6px; }
+
+        .win-group-box { border: 1px solid #999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
+        .win-group-box > legend { font-family: Tahoma, sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .win-label { font-size: 8.5pt; font-weight: 600; color: #222; white-space: pre-line; margin: 0; line-height: 1.15; }
+        .win-textbox, .win-combo { font-family: Verdana, sans-serif; font-size: 9pt; height: 24px; border: 1px solid #7a9a9e; padding: 2px 4px; box-sizing: border-box; background: #fff; width: 100%; }
+        .win-textbox[readonly], .win-textbox:disabled, .win-combo:disabled { background: #f0f0f0; color: #333; }
+        .num { text-align: right; }
+        .wt-big { height: 32px; font-size: 13pt; font-weight: bold; }
+        .wt-reading { height: 38px; font-size: 16pt; font-weight: bold; color: #b71c1c; background: #fffde7 !important; }
+
+        /* panel3 — three columns: references | weights & item | camera frames */
+        .wb-main { display: grid; grid-template-columns: minmax(280px, 300px) minmax(380px, 1fr) minmax(300px, 560px); gap: 10px; }
+        .wb-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .wb-row { display: grid; grid-template-columns: 88px 1fr; align-items: center; gap: 4px; }
+        .wb-row-2 { display: grid; grid-template-columns: 88px 1fr 1fr; align-items: center; gap: 4px; }
+        .wb-wt-grid { display: grid; grid-template-columns: 88px 1fr 1fr 0.85fr; align-items: center; gap: 4px; }
+        .wb-wt-head { font-size: 8.5pt; font-weight: 700; color: #004d40; text-align: center; }
+        .wb-wide { display: grid; grid-template-columns: 88px 1fr; align-items: center; gap: 4px; margin-top: 4px; }
+        .wb-wide-3 { display: grid; grid-template-columns: 88px 1fr auto; align-items: center; gap: 6px; margin-top: 4px; }
+
+        .cam-box { border: 1px solid #999; border-radius: 3px; background: #f7f5ed; padding: 4px 6px 6px; }
+        .cam-box > legend { font-size: 8.5pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin: 0; border: none; }
+        .cam-frames { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+        .cam-frame { background: #1f1f1f; color: #bbb; aspect-ratio: 190 / 165; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8pt; padding: 4px; overflow: hidden; word-break: break-all; }
+
+        .lab-info { border: 1px solid #999; border-radius: 3px; background: #fff8e1; padding: 4px 8px; margin-top: 4px; display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; gap: 2px; }
+        .lab-info .cap { font-size: 8.5pt; font-weight: 700; }
+        .lab-info .cnt { font-size: 10pt; font-weight: 700; color: #004d40; }
+
+        .win-btn-action { background-color: #008080; color: #fff; font-family: Verdana, sans-serif; font-size: 8.5pt; font-weight: bold; border: 1px solid #004d40; height: 24px; padding: 0 12px; cursor: pointer; border-radius: 2px; }
+        .win-btn-action:hover:not(:disabled) { background-color: #005959; }
+        .win-btn-action:disabled { background-color: #9e9e9e; border-color: #7a7a7a; cursor: not-allowed; }
+        .is-hidden { display: none !important; }
+        .is-busy { opacity: .65; cursor: progress !important; }
+
+        .win-tabs { display: flex; gap: 2px; border-bottom: 1px solid #7a9a9e; margin: 6px 0; }
+        .win-tab { background: linear-gradient(to bottom, #f3f1e7 0%, #ded9c8 100%); border: 1px solid #999; border-bottom: none; padding: 4px 14px; font-size: 8.5pt; font-weight: 600; cursor: pointer; border-radius: 3px 3px 0 0; color: #333; }
+        .win-tab.is-active { background: #f7f5ed; color: #004d40; position: relative; top: 1px; }
+        .win-tab-panel { display: none; }
+        .win-tab-panel.is-active { display: block; }
+
+        .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; border: 1px solid #999; border-radius: 3px; padding: 4px 8px; background: #f7f5ed; margin-bottom: 4px; }
+        .filters label { margin: 0; font-weight: 600; font-size: 8.5pt; }
+        .filters input[type=date], .filters input[type=text], .filters select { height: 22px; font-size: 8.5pt; border: 1px solid #7a9a9e; padding: 0 3px; }
+        .filters .pick { display: inline-flex; align-items: center; gap: 3px; }
+
+        .win-grid-scroll { max-height: 240px; overflow: auto; border: 1px solid #7a9a9e; background: #fff; }
+        .win-grid-scroll.tall { max-height: 520px; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8pt; background: #fff; }
+        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); border: 1px solid #999; padding: 3px 5px; text-align: center; position: sticky; top: 0; z-index: 5; white-space: normal; min-width: 50px; }
+        .win-grid td { border: 1px solid #d0d0d0; padding: 2px 5px; white-space: nowrap; }
+        .win-grid td.num { text-align: right; }
+        .win-grid td.int { text-align: center; }
+        .win-grid tbody tr:nth-child(even) { background: #fcfcf8; }
+        .win-grid tbody tr:hover { background: #e0f2f1; cursor: default; }
+        .win-grid tbody tr.is-current { background: #fff3c4; }
+        .win-grid tfoot td { background: #dbd6c6; font-weight: 700; border-top: 2px solid #999; }
+        .win-grid .c-red { color: #c62828; font-weight: 600; }
+        .win-grid .c-green { color: #2e7d32; font-weight: 600; }
+        .grid-btn { font-size: 7.5pt; padding: 0 5px; height: 18px; border: 1px solid #7a9a9e; background: #fff; cursor: pointer; border-radius: 2px; }
+        .grid-btn:hover { background: #e0f2f1; }
+        .grid-bar { display: flex; justify-content: space-between; align-items: center; background: #e0f2f1; border: 1px solid #7a9a9e; border-bottom: none; padding: 2px 6px; font-weight: 600; color: #004d40; }
+
+        .cx-note { font-size: 8pt; color: #7a5c00; background: #fff8e1; border: 1px solid #e6c200; padding: 4px 8px; margin-bottom: 6px; }
+        .cx-denied { font-size: 8.5pt; color: #7f0000; background: #ffebee; border: 1px solid #e57373; padding: 5px 9px; margin-bottom: 6px; }
+
+        .cx-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 9000; }
+        .cx-modal.is-open { display: block; }
+        .cx-modal-box { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); width: min(520px, 94vw); background: #ece9d8; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+        .cx-modal-head { background-color: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-weight: bold; }
+        .cx-modal-head button { background: transparent; border: none; color: #fff; font-size: 14px; cursor: pointer; }
+        .cx-modal-body { padding: 6px; max-height: 70vh; overflow: auto; }
+
+        @media (max-width: 1100px) { .wb-main { grid-template-columns: 1fr 1fr; } .wb-cams { grid-column: 1 / -1; } }
+        @media (max-width: 700px)  { .wb-main { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<!-- toolStrip1: btnnew, btnsave, btnUpdate, btnRefresh, Print, btnWeighBridgeLookUp, btnSlip257,
+     BtnPurchaseLab, BtnWeightDefine, BtnShortCutkeys — in that order. -->
+<div class="win-tool-strip">
+    <button type="button" class="win-btn-tool" id="btnnew"    onclick="WeighBridge.newForm()"><i class="fa fa-file-o"></i> New</button>
+    <button type="button" class="win-btn-tool" id="btnsave"   onclick="WeighBridge.save()"><i class="fa fa-save"></i> Save</button>
+    <button type="button" class="win-btn-tool is-hidden" id="btnUpdate" onclick="WeighBridge.update()"><i class="fa fa-refresh"></i> Update</button>
+    <button type="button" class="win-btn-tool" id="btnRefresh" onclick="WeighBridge.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+    <button type="button" class="win-btn-tool" id="btnPrint"  onclick="WeighBridge.print280()"><i class="fa fa-print"></i> 280-Print</button>
+    <button type="button" class="win-btn-tool" id="btnWeighBridgeLookUp" onclick="window.open('/weighbridge/weigh-bridge-general-lookups','_blank')"><i class="fa fa-list"></i> Weigh Bridge Lookup</button>
+    <button type="button" class="win-btn-tool" id="btnSlip257" onclick="WeighBridge.slip257()"><i class="fa fa-print"></i> 257-GPSlip</button>
+    <button type="button" class="win-btn-tool" id="BtnPurchaseLab" onclick="WeighBridge.openPurchaseLab()"><i class="fa fa-flask"></i> Purchase Lab Analysis</button>
+    <button type="button" class="win-btn-tool" id="BtnWeightDefine" onclick="window.open('/weighbridge/vehicle-weight-lookup','_blank')"><i class="fa fa-truck"></i> Vehicle Weight Define</button>
+    <button type="button" class="win-btn-tool" id="BtnShortCutkeys" onclick="WeighBridge.shortcutKeys()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    <div style="margin-left:auto;">
+        <a href="/weighbridge" style="color:#004d40; text-decoration:none; font-weight:bold; font-size:11px;">
+            <i class="fa fa-arrow-left"></i> Exit to Dashboard</a>
+    </div>
+</div>
+
+<!-- panel6 -->
+<div class="win-teal-header">
+    <div class="win-teal-header-title"><i class="fa fa-balance-scale"></i> Weigh Bridge</div>
+    <label id="lblEnableWeights" class="is-hidden"><input type="checkbox" id="chkEnableWeights"> Enable Weights</label>
+    <label>1st &amp; 2nd Time
+        <input type="time" id="txtFirstDate" step="1" disabled>
+        <input type="time" id="txtSecondDate" step="1" disabled>
+    </label>
+    <label style="margin-left:auto;"><input type="checkbox" id="chkPrintWithLab"> Preview 257 Lab</label>
+    <label><input type="checkbox" id="ChkBoxPrintImages"> Preview 280 With Image</label>
+    <label><input type="checkbox" id="ChkBox" checked> Preview 280</label>
+</div>
+
+<div class="win-form-body">
+    <div id="rightsNote" class="cx-denied is-hidden"></div>
+    <div class="cx-note">
+        Desktop screen 411, <code>frmWeightbridge</code>, Document Type 102. <b>F5</b> reads the
+        indicator on the server PC's COM port (first row of the weighbridge scales list) and, when
+        <code>CameraPictureBox</code> is set, the three Hikvision cameras take the pictures into that folder.
+        Prints are browser output from the same procedures, not the Crystal 280 / 281 / 257 layouts.
+    </div>
+
+    <!-- tabControl1 -->
+    <div class="win-tabs" id="tabs1">
+        <div class="win-tab is-active" data-tab="tabForm"    onclick="WeighBridge.tab('tabForm')">Form</div>
+        <div class="win-tab"           data-tab="tabHistory" onclick="WeighBridge.tab('tabHistory')">History</div>
+    </div>
+
+    <!-- ====================================================================== FORM (tabPage1) -->
+    <div id="tabForm" class="win-tab-panel is-active">
+        <div class="wb-main">
+            <!-- left column: x 7..293 -->
+            <div class="wb-col">
+                <div class="wb-row">
+                    <label class="win-label" for="cmbReferenceType">Gate Pass Type</label>
+                    <select id="cmbReferenceType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Reference Name"></select>
+                </div>
+                <div class="wb-row-2">
+                    <label class="win-label">Gate Pass
+Ticket No</label>
+                    <div>
+                        <select id="cmbRefDocNo" class="win-combo dtcombo" data-dtcombo="wbGatePass" data-dtcombo-caption="GpNo"></select>
+                        <input type="text" id="txtrefdocNumberofMoveOrder" class="win-textbox num is-hidden" disabled>
+                    </div>
+                    <input type="text" id="txtTickectNo" class="win-textbox num" readonly>
+                </div>
+                <div class="wb-row">
+                    <label class="win-label" for="CmbWeighBridgeType">Wb Type</label>
+                    <input type="text" id="CmbWeighBridgeType" class="win-textbox" list="dlWbType" autocomplete="off">
+                </div>
+                <div class="wb-row">
+                    <label class="win-label" for="cmbVehicleType">Vehicle Type</label>
+                    <input type="text" id="cmbVehicleType" class="win-textbox" list="dlVehicleType" autocomplete="off">
+                </div>
+                <div class="wb-row-2">
+                    <label class="win-label">Vehicle &amp; Bility</label>
+                    <input type="text" id="txtVehicleNo" class="win-textbox" style="text-transform:uppercase;">
+                    <input type="text" id="txtBilityNo" class="win-textbox">
+                </div>
+                <input type="text" id="cmbVehicleNo" class="is-hidden" disabled>
+                <div class="wb-row">
+                    <label class="win-label" for="CmbInvoiceNo">Invoice No</label>
+                    <select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="InvoiceNo"></select>
+                </div>
+                <div class="wb-row">
+                    <label class="win-label" for="CmbPartyName">Party Name</label>
+                    <input type="text" id="CmbPartyName" class="win-textbox" list="dlParty" autocomplete="off">
+                </div>
+                <div class="wb-row">
+                    <label class="win-label" for="txtWbCharges">Wb Charges</label>
+                    <input type="text" id="txtWbCharges" class="win-textbox num" inputmode="numeric">
+                </div>
+                <div class="wb-row">
+                    <label class="win-label" for="txtContainerNo">Container No</label>
+                    <input type="text" id="txtContainerNo" class="win-textbox">
+                </div>
+                <div class="wb-row">
+                    <label class="win-label" for="txtWorkingReportNo">Working
+Report No</label>
+                    <input type="text" id="txtWorkingReportNo" class="win-textbox num" inputmode="numeric" disabled>
+                </div>
+            </div>
+
+            <!-- middle column: x 295..693 -->
+            <div class="wb-col">
+                <div class="wb-row" style="grid-template-columns: 88px 1fr auto;">
+                    <label class="win-label">Factory Scale
+Reading</label>
+                    <input type="text" id="txtWeightReading" class="win-textbox num wt-reading" readonly value="0">
+                    <button type="button" class="win-btn-action" id="btnReadIndicator" onclick="WeighBridge.readWeight()" title="F5">F5</button>
+                </div>
+                <span id="labelSerialPortData" class="is-hidden"></span>
+                <div class="wb-wt-grid">
+                    <span></span>
+                    <span class="wb-wt-head">Factory</span>
+                    <span class="wb-wt-head">Supplier</span>
+                    <span class="wb-wt-head">Difference</span>
+
+                    <label class="win-label">First Weight</label>
+                    <input type="text" id="txtFirstWeight" class="win-textbox num wt-big" readonly disabled>
+                    <input type="text" id="txtSupplierFirstWeight" class="win-textbox num wt-big" inputmode="decimal">
+                    <input type="text" id="txtFirstWtDifference" class="win-textbox num wt-big" disabled>
+
+                    <label class="win-label">Second
+Weight</label>
+                    <input type="text" id="txtsecondWeight" class="win-textbox num wt-big" readonly disabled>
+                    <input type="text" id="txtSupplierSecondWeight" class="win-textbox num wt-big" inputmode="decimal">
+                    <input type="text" id="txtSecondWtDifference" class="win-textbox num wt-big" disabled>
+
+                    <label class="win-label">Net Weight</label>
+                    <input type="text" id="txtNetWeight" class="win-textbox num wt-big" readonly disabled>
+                    <input type="text" id="txtSupplierNetWeight" class="win-textbox num wt-big" disabled>
+                    <input type="text" id="txtNetWtDifference" class="win-textbox num wt-big" disabled>
+                </div>
+                <div class="wb-row">
+                    <label class="win-label" for="CmbItem">Item Desc</label>
+                    <input type="text" id="CmbItem" class="win-textbox" list="dlItem" autocomplete="off">
+                </div>
+                <div class="wb-row">
+                    <label class="win-label" for="cmbPackingType">Packing Type</label>
+                    <select id="cmbPackingType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select>
+                </div>
+                <div class="wb-row" style="grid-template-columns: 88px 1fr 60px 1fr;">
+                    <label class="win-label" for="txtItemqty">Item Qty</label>
+                    <input type="text" id="txtItemqty" class="win-textbox num" inputmode="decimal">
+                    <label class="win-label" for="txtEbUnit">Eb Unit</label>
+                    <input type="text" id="txtEbUnit" class="win-textbox num" inputmode="decimal">
+                </div>
+                <div class="wb-row" style="grid-template-columns: 88px 1fr 60px 1fr;">
+                    <label class="win-label" for="txtEbTotalWeight">Eb Weight Total</label>
+                    <input type="text" id="txtEbTotalWeight" class="win-textbox num" readonly>
+                    <label class="win-label" for="txtWeightAfterPakingWeight">Net Weight</label>
+                    <input type="text" id="txtWeightAfterPakingWeight" class="win-textbox num" readonly>
+                </div>
+            </div>
+
+            <!-- right column: groupBox1 / groupBox2 -->
+            <div class="wb-col wb-cams">
+                <fieldset class="cam-box">
+                    <legend>First Weight Images</legend>
+                    <div class="cam-frames">
+                        <div class="cam-frame" id="PicFirstReading1stTime">Camera 01</div>
+                        <div class="cam-frame" id="picFirstUpper">Camera 02</div>
+                        <div class="cam-frame" id="PicVehicleFront1stTime">Camera 03</div>
+                    </div>
+                </fieldset>
+                <fieldset class="cam-box">
+                    <legend>Second Weight Images</legend>
+                    <div class="cam-frames">
+                        <div class="cam-frame" id="PicSecondReading2ndtime">Camera 01</div>
+                        <div class="cam-frame" id="PicSecondUpper">Camera 02</div>
+                        <div class="cam-frame" id="PicSecondVehicle2ndTime">Camera 03</div>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+
+        <div class="wb-wide">
+            <label class="win-label" for="txtRemarks">Remarks</label>
+            <input type="text" id="txtRemarks" class="win-textbox">
+        </div>
+        <div class="wb-wide-3">
+            <label class="win-label" for="txtWeightDiffComments">Wt Diff
+Remarks</label>
+            <input type="text" id="txtWeightDiffComments" class="win-textbox">
+            <label class="win-label is-hidden" id="lblMultiItem"><input type="checkbox" id="ChkMultiItem"> Multi Items</label>
+        </div>
+        <div id="GroupInwardLabInfo" class="lab-info is-hidden">
+            <div class="cap">Total Lab Done</div>
+            <div class="cap">Accepted Lab Done &amp; Pending For First Weight</div>
+            <div class="cap">Pending For Acceptance</div>
+            <div class="cnt" id="labInwardfirstWtTotalCount">Count</div>
+            <div class="cnt" id="labInwardfirstWtCompleteCount">Count</div>
+            <div class="cnt" id="labInwardfirstWtPendingCount">Count</div>
+        </div>
+
+        <!-- tabControl2 -->
+        <div class="win-tabs" id="tabs2">
+            <div class="win-tab is-active" data-tab2="tabPending2nd" onclick="WeighBridge.tab2('tabPending2nd')">Pending Tickets For Second Weight</div>
+            <div class="win-tab"           data-tab2="tabPending1st" onclick="WeighBridge.tab2('tabPending1st')">Pending Gate Pass For First Weight</div>
+        </div>
+
+        <div id="tabPending2nd" class="win-tab-panel is-active">
+            <div class="filters">
+                <span class="pick"><input type="checkbox" id="chkFromGpDatePendingFor2nd" checked><label for="FromGpDatePendingFor2nd">From Gp Date</label>
+                    <input type="date" id="FromGpDatePendingFor2nd"></span>
+                <span class="pick"><input type="checkbox" id="chkToGpDatePendingFor2nd" checked><label for="ToGpDatePendingFor2nd">To Gp Date</label>
+                    <input type="date" id="ToGpDatePendingFor2nd"></span>
+                <label for="txtFromGpNoPendingFor2nd">From Gp No</label>
+                <input type="text" id="txtFromGpNoPendingFor2nd" inputmode="numeric" style="width:90px;">
+                <label for="txtToGpNoPendingFor2nd">To Gp No</label>
+                <input type="text" id="txtToGpNoPendingFor2nd" inputmode="numeric" style="width:90px;">
+                <button type="button" class="win-btn-action" onclick="WeighBridge.showPending2nd()">Show</button>
+                <button type="button" class="win-btn-action" onclick="WeighBridge.resetPending2nd()">Reset</button>
+            </div>
+            <div class="win-grid-scroll" id="grdPendingForSecond" tabindex="0"></div>
+        </div>
+
+        <div id="tabPending1st" class="win-tab-panel">
+            <div class="filters">
+                <span class="pick"><input type="checkbox" id="chkFromDatePendingFor1st" checked><label for="FromDatePendingFor1st">From Ticket Date</label>
+                    <input type="date" id="FromDatePendingFor1st"></span>
+                <span class="pick"><input type="checkbox" id="chkToDatePendingFor1st" checked><label for="ToDatePendingFor1st">To Ticket Date</label>
+                    <input type="date" id="ToDatePendingFor1st"></span>
+                <label for="txtFromGpNoPendingFor1st">From Gp No</label>
+                <input type="text" id="txtFromGpNoPendingFor1st" inputmode="numeric" style="width:90px;">
+                <label for="txtToGpNoPendingFor1st">To Gp No</label>
+                <input type="text" id="txtToGpNoPendingFor1st" inputmode="numeric" style="width:90px;">
+                <button type="button" class="win-btn-action" onclick="WeighBridge.showPending1st()">Show</button>
+                <button type="button" class="win-btn-action" onclick="WeighBridge.resetPending1st()">Reset</button>
+            </div>
+            <div class="win-grid-scroll" id="grdPendingFirst" tabindex="0"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================== HISTORY (tabPage2) -->
+    <div id="tabHistory" class="win-tab-panel">
+        <div class="win-tool-strip" style="border:1px solid #999; margin-bottom:4px;">
+            <button type="button" class="win-btn-tool" onclick="WeighBridge.newHistory()"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="win-btn-tool" onclick="WeighBridge.refreshHistoryLists()"><i class="fa fa-repeat"></i> Refresh</button>
+        </div>
+        <div class="filters">
+            <span class="pick"><input type="checkbox" id="chkFromDate" checked><label for="FromDate">From Date</label>
+                <input type="date" id="FromDate"></span>
+            <label for="txtTicketNoFrom">Ticket No From</label>
+            <input type="text" id="txtTicketNoFrom" inputmode="numeric" style="width:80px;">
+            <label for="GPNoFrom">Gp No From</label>
+            <input type="text" id="GPNoFrom" inputmode="numeric" style="width:80px;">
+            <label for="TxtVehicleNumber">Vehicle No.</label>
+            <input type="text" id="TxtVehicleNumber" style="width:110px;">
+            <label for="CmbWbTypeHistory">W.B Type</label>
+            <select id="CmbWbTypeHistory" style="width:150px;"></select>
+            <label><input type="radio" name="histDate" id="drdocdate" value="doc" checked> Doc Date</label>
+            <label><input type="radio" name="histDate" id="rdmodifydate" value="modify"> Modify Date</label>
+        </div>
+        <div class="filters">
+            <span class="pick"><input type="checkbox" id="chkToDate" checked><label for="ToDate">To Date</label>
+                <input type="date" id="ToDate"></span>
+            <label for="txtTicketNoTo">Ticket No To</label>
+            <input type="text" id="txtTicketNoTo" inputmode="numeric" style="width:80px;">
+            <label for="GpNoTo">Gp No To</label>
+            <input type="text" id="GpNoTo" inputmode="numeric" style="width:80px;">
+            <label for="CmbGatePassTypeHistory">GatePass Type</label>
+            <select id="CmbGatePassTypeHistory" style="width:170px;"></select>
+            <button type="button" class="win-btn-action" id="btnshow" onclick="WeighBridge.showHistory()">Show</button>
+            <label><input type="radio" name="histDate" id="rdentrydate" value="entry"> Entry Date</label>
+            <!-- rdapproveddate is Visible = false on the desktop -->
+        </div>
+        <div class="grid-bar"><span>Filtered Records <span id="lblHistoryCount"></span></span></div>
+        <div class="win-grid-scroll tall" id="DataGridHistory" tabindex="0"></div>
+    </div>
+</div>
+
+<datalist id="dlWbType"></datalist>
+<datalist id="dlVehicleType"></datalist>
+<datalist id="dlParty"></datalist>
+<datalist id="dlItem"></datalist>
+
+<!-- ShortCutKeyPopUp -->
+<div class="cx-modal" id="shortcutModal">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head"><span>ShortCut Keys</span><button type="button" onclick="WeighBridge.closeShortcutKeys()">&times;</button></div>
+        <div class="cx-modal-body"><table class="win-grid" id="shortcutTable"></table></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_weight_bridge.js?v=20260924c}"></script>
+</body>
+</html>

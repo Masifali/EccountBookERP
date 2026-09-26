@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DashBoard</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+<style>
+        body {
+            font-family: "Segoe UI", "Tahoma", "Geneva", "Verdana", sans-serif;
+            background-color: #e4e9ed;
+            font-size: 11px;
+            color: #222;
+            margin: 0;
+            padding: 0;
+        }
+
+        .win-sub-header {
+            font-size: 10px;
+            color: #4f5d65;
+            padding: 2px 10px;
+            background: #d8e0e6;
+            border-bottom: 1px solid #b0bec5;
+        }
+
+        .win-toolbar {
+            background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%);
+            border-bottom: 1px solid #b0bec5;
+            padding: 3px 8px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .win-btn {
+            background: #ffffff;
+            border: 1px solid #90a4ae;
+            border-radius: 2px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #263238;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+            height: 25px;
+        }
+        .win-btn:hover { background: #e0f2f1; border-color: #0f5959; color: #004d40; }
+        .win-btn-teal { background: #0f5959; color: #ffffff; border-color: #083b3b; }
+        .win-btn-teal:hover { background: #083b3b; color: #ffffff; }
+
+        .win-title-bar {
+            background-color: #0f5959;
+            color: #ffffff;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #083b3b;
+        }
+
+        .win-form-card {
+            background: #ffffff;
+            border: 1px solid #b0bec5;
+            margin: 6px;
+            padding: 8px;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .win-group-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            padding: 12px 10px 8px 10px;
+            margin-bottom: 8px;
+            background-color: #ffffff;
+            position: relative;
+        }
+
+        .win-group-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: #0f5959;
+            background: #ffffff;
+            padding: 0 6px;
+            position: absolute;
+            top: -9px;
+            left: 10px;
+        }
+
+        .win-label {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 2px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .win-input {
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            padding: 2px 6px;
+            font-size: 11px;
+            height: 24px;
+            width: 100%;
+            background-color: #ffffff;
+            box-sizing: border-box;
+        }
+        .win-input:focus { border-color: #0f5959; outline: none; box-shadow: 0 0 2px rgba(15,89,89,0.4); }
+
+        .win-textarea {
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            padding: 4px 6px;
+            font-size: 11px;
+            width: 100%;
+            height: 98px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        /* Select2 styling override for WinForms ERP look */
+        .select2-container--default .select2-selection--single {
+            height: 24px !important;
+            line-height: 22px !important;
+            font-size: 11px !important;
+            border: 1px solid #94a3b8 !important;
+            border-radius: 2px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 22px !important;
+            padding-left: 6px !important;
+            color: #222 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 22px !important;
+        }
+        .select2-dropdown {
+            border: 1px solid #0f5959 !important;
+            font-size: 11px !important;
+        }
+
+        .detail-entry-bar {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            border-radius: 2px;
+        }
+
+        .win-grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: #ffffff;
+        }
+        .win-grid-table th {
+            background-color: #0f5959;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 4px 8px;
+            border: 1px solid #083b3b;
+            text-align: left;
+        }
+        .win-grid-table td {
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            vertical-align: middle;
+        }
+        .win-grid-table tbody tr:hover { background-color: #e0f2f1; }
+
+        .btn-add-green {
+            background-color: #00796b;
+            color: white;
+            border: 1px solid #004d40;
+            height: 24px;
+            width: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-add-green:hover { background-color: #004d40; }
+
+        .totals-bar {
+            background: #e0f2f1;
+            font-weight: bold;
+            color: #0f5959;
+            font-size: 12px;
+            padding: 4px 12px;
+            border: 1px solid #0f5959;
+            border-radius: 2px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
+        .win-tab-bar {
+            background: #d1d5db;
+            border-bottom: 1px solid #b0bec5;
+            padding: 2px 8px 0 8px;
+            display: flex;
+            gap: 3px;
+        }
+        .win-tab-btn {
+            background: #e5e7eb;
+            border: 1px solid #9ca3af;
+            border-bottom: none;
+            border-radius: 3px 3px 0 0;
+            padding: 4px 14px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #374151;
+            cursor: pointer;
+        }
+        .win-tab-btn.active {
+            background: #ffffff;
+            color: #0f5959;
+            border-color: #b0bec5;
+            border-bottom: 2px solid #ffffff;
+            margin-bottom: -1px;
+        }
+    </style>
+    <style>
+        /* select2 sized to the desktop combo height so the two sit on one line */
+        .select2-container--default .select2-selection--single { height: 24px; border: 1px solid #7f9db9; border-radius: 0; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 22px; font-size: 11px; padding-left: 4px; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 22px; }
+
+        /* Button busy state: disabled + spinner while a request is in flight. */
+        .btn-busy { position: relative; color: transparent !important; pointer-events: none; }
+        .btn-busy::after {
+            content: ""; position: absolute; top: 50%; left: 50%; width: 11px; height: 11px;
+            margin: -6px 0 0 -6px; border: 2px solid rgba(0,0,0,.25); border-top-color: #00564C;
+            border-radius: 50%; animation: btnspin .6s linear infinite;
+        }
+        @keyframes btnspin { to { transform: rotate(360deg); } }
+
+        /* Large table: scrolls inside its own container, never the page. */
+        .cw-grid-scroll { max-height: 420px; overflow: auto; border: 1px solid #b5b5b5; background: #fff; }
+        .cw-grid-scroll thead th { position: sticky; top: 0; z-index: 2; }
+        .cw-grid-scroll table { margin: 0; }
+        #grdWagesAccount tbody tr { cursor: pointer; }
+        #grdWagesAccount tbody tr.selected { background: #cde6f7; }
+        #cwMessage { display: none; margin: 4px 0; padding: 4px 8px; font-size: 11px; font-weight: bold; }
+        #cwMessage.ok  { display: block; background: #e6f4ea; color: #0a6b2e; border: 1px solid #a8d5b5; }
+        #cwMessage.err { display: block; background: #fdecea; color: #a3160b; border: 1px solid #f0b3ad; }
+        .cw-fullscreen { position: fixed; inset: 0; z-index: 3000; background: #fff; padding: 10px; overflow: auto; }
+        .cw-fullscreen .cw-grid-scroll { max-height: calc(100vh - 90px); }
+    </style>
+
+    <style>
+        .db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+        .db-card { background: #fff; border: 1px solid #b0bec5; border-radius: 3px; padding: 14px 12px;
+                   display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: #16323a;
+                   min-height: 92px; transition: border-color .12s, box-shadow .12s; }
+        .db-card:hover { border-color: #00796b; box-shadow: 0 1px 6px rgba(0,0,0,.12); text-decoration: none; color: #00564C; }
+        .db-card .db-title { font-weight: 700; font-size: 12px; line-height: 1.3; }
+        .db-card .db-meta { font-size: 10px; color: #667; }
+        .db-card.db-pending { background: #fbfbfa; border-style: dashed; }
+        .db-badge { align-self: flex-start; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 8px; }
+        .db-badge.built   { background: #e6f4ea; color: #0a6b2e; border: 1px solid #a8d5b5; }
+        .db-badge.pending { background: #fdf3e6; color: #8a5a00; border: 1px solid #edc98a; }
+        .db-fav { color: #c2185b; }
+        .db-empty { background: #fdecea; border: 1px solid #f0b3ad; color: #a3160b; padding: 10px 12px;
+                    border-radius: 3px; font-size: 11px; }
+    </style>
+
+    <style>
+        .db-modwrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+        .db-mod { background:#fff; border:1px solid #b0bec5; border-radius:3px; display:flex; flex-direction:column; }
+        .db-mod-head { background:#0f5959; color:#fff; font-weight:700; font-size:11px; padding:5px 10px;
+                       display:flex; justify-content:space-between; align-items:center; gap:8px; }
+        .db-mod-head .db-n { background:rgba(255,255,255,.18); border-radius:8px; padding:0 7px; font-size:10px; }
+        .db-mod ul { list-style:none; margin:0; padding:4px 0; max-height:320px; overflow:auto; }
+        .db-mod li { border-bottom:1px solid #eef2f4; }
+        .db-mod li:last-child { border-bottom:none; }
+        .db-mod li a { display:flex; align-items:center; gap:6px; padding:4px 10px; font-size:11px;
+                       color:#16323a; text-decoration:none; }
+        .db-mod li a:hover { background:#e0f2f1; color:#00564C; text-decoration:none; }
+        .db-mod li a.np { color:#8a8f93; }
+        .db-mod li a.np:hover { background:#fbf6ec; color:#8a5a00; }
+        .db-dot { width:7px; height:7px; border-radius:50%; flex:0 0 7px; }
+        .db-dot.ok { background:#2e9e5b; }
+        .db-dot.no { background:#d9a441; }
+        .db-secttl { font-weight:700; color:#0f5959; font-size:12px; margin:14px 0 6px; padding-bottom:3px;
+                     border-bottom:1px solid #b0bec5; }
+        .db-legend { font-size:10px; color:#667; margin-top:8px; }
+    </style>
+
+    <style>
+        /* ModuleDynamicallyGenerateCards on the desktop: a teal header carrying the screen count,
+           a white body with a bank glyph and the module name. Same shape here. */
+        .dbm-wrap { display:flex; flex-wrap:wrap; gap:18px; padding:14px 4px; }
+        .dbm-card { width:190px; background:#fff; border:1px solid #cfd8dc; border-radius:2px;
+                    text-decoration:none; color:#123; display:flex; flex-direction:column;
+                    box-shadow:0 1px 2px rgba(0,0,0,.08); transition:box-shadow .12s, transform .12s; }
+        .dbm-card:hover { box-shadow:0 3px 10px rgba(0,0,0,.18); transform:translateY(-1px);
+                          text-decoration:none; color:#00564C; }
+        .dbm-count { background:#0f5959; color:#fff; text-align:center; font-size:20px;
+                     font-weight:700; padding:8px 0; letter-spacing:.5px; }
+        .dbm-body { padding:16px 10px 18px; text-align:center; display:flex; flex-direction:column;
+                    align-items:center; gap:10px; min-height:104px; justify-content:center; }
+        .dbm-body i { font-size:26px; color:#0f5959; }
+        .dbm-name { font-size:13px; font-weight:600; line-height:1.3; }
+        .dbm-built { font-size:10px; color:#667; }
+        .dbm-built b { color:#2e9e5b; }
+        .dbm-card.dbm-sel { outline:2px solid #0f5959; outline-offset:1px; }
+        .dbs-wrap { display:flex; flex-wrap:wrap; gap:14px; padding:4px 4px 14px; }
+        .dbs-card { width:182px; min-height:104px; background:#fff; border:1px solid #cfd8dc;
+                    border-radius:2px; text-decoration:none; color:#123; display:flex;
+                    flex-direction:column; align-items:center; justify-content:center; gap:8px;
+                    padding:14px 10px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+        .dbs-card:hover { box-shadow:0 3px 10px rgba(0,0,0,.18); text-decoration:none; color:#00564C; }
+        .dbs-card i { font-size:20px; }
+        .dbs-card .n { font-size:12px; font-weight:600; line-height:1.3; }
+        .dbs-card .f { font-size:9px; color:#8a8f93; }
+        .dbs-card.np { background:#fbfbfa; border-style:dashed; }
+        .dbs-card.np i { color:#b08528; }
+        .dbs-card.ok i { color:#0f5959; }
+        .dbs-ttl { font-weight:700; color:#0f5959; font-size:12px; margin:10px 0 2px;
+                   padding-bottom:3px; border-bottom:1px solid #b0bec5; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     The DashBoard screen.
+
+     This is frmMenue at its MODULE level, scoped to the "DashBoard" APPLICATION - which is what
+     the desktop window shows. The desktop's own three levels are:
+
+       frmModules.DynamicallyGenerateCardsForApp()    (:69)   cards per { AppId, App }
+       frmMenue.DynamicallyGenerateCardsForModule()   (:201)  cards per { ModuleID, ModuleDescription }
+                                                              WHERE AppId == the app clicked
+       frmMenue.DynamicallyGenerateCards(ModId)       (:84)   cards per screen of one module
+
+     Two earlier versions of this page were wrong. The first filtered on
+     ModuleDescription = 'DashBoard' - no module has that name, so it always returned nothing.
+     The second showed every module the user has across every application, which is frmModules'
+     job, not this screen's; that view still exists, at /dashboard/all.
+     ========================================================================== -->
+<div class="win-title-bar" th:text="${moduleTitle}">DashBoard</div>
+<div class="win-sub-header"><span>&#128193; Screens &gt; DashBoard</span></div>
+
+<div style="padding:10px;">
+
+    <div class="totals-bar" style="margin-bottom:4px;">
+        <span>
+            <span th:text="${cardCount}">0</span> modules
+            <span th:if="${screenCount != null}">
+                &nbsp;|&nbsp; <span th:text="${screenCount}">0</span> screens
+                &nbsp;|&nbsp; built on the web: <b th:text="${builtCount}">0</b>
+            </span>
+        </span>
+        <a href="/dashboard/all" style="color:#0f5959; font-size:11px;">All modules &rsaquo;</a>
+    </div>
+
+    <div th:if="${loadError != null}" class="db-empty">
+        <b>The DashBoard list could not be read.</b>
+        <div style="margin-top:4px; font-weight:normal;" th:text="${loadError}">error</div>
+    </div>
+
+    <div th:if="${appMissing}" class="db-empty">
+        No <code>AppModules</code> row is named &quot;DashBoard&quot;.
+        <code>AppModules</code> is a tree &mdash; a row's <code>AppId</code> is its parent row's
+        <code>Id</code> (<code>Architecture.Model.AppModules</code> carries
+        <code>List&lt;AppModules&gt; AppModuleList</code>), and <code>frmMenue</code> shows the
+        children of the row that was clicked. The table's actual shape is below.
+    </div>
+
+    <div th:if="${noScreens}" class="db-empty">
+        The DashBoard application is allocated, but none of its modules has a screen this user may
+        view. The list is read from <code>tblUserRights</code> joined to
+        <code>ScreenDefinition</code>, <code>AppModules</code>, <code>ScreenRights</code> (the View
+        right) and <code>CompanyRights</code> &mdash; the same rows the desktop uses, so it would
+        be empty there too.
+    </div>
+
+    <div th:if="${diagnostics != null}" style="margin-top:10px; background:#fff; border:1px solid #b0bec5; border-radius:3px; padding:10px 12px;">
+        <div style="font-weight:700; color:#0f5959; margin-bottom:6px;">Where the rows were lost</div>
+        <table class="win-grid-table" style="width:auto; min-width:420px;">
+            <tbody>
+                <tr th:each="e : ${diagnostics}">
+                    <td style="white-space:nowrap;" th:text="${e.key}">step</td>
+                    <td style="font-weight:600;" th:text="${e.value}">value</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${parentDiag != null}" style="margin-top:10px; background:#fff; border:1px solid #b0bec5; border-radius:3px; padding:10px 12px;">
+        <div style="font-weight:700; color:#0f5959; margin-bottom:6px;">What AppModules contains</div>
+        <div style="font-size:11px; margin-bottom:4px;">
+            Looked for: <b th:text="${parentDiag['lookedFor']}">DashBoard</b>
+            &nbsp;|&nbsp; rows in the table: <b th:text="${parentDiag['appModulesRows']}">0</b>
+        </div>
+        <div style="font-weight:600; font-size:11px; margin-top:8px;">Parent &rarr; children</div>
+        <ul style="margin:4px 0 0 16px; padding:0; font-size:11px; line-height:1.5;">
+            <li th:each="g : ${parentDiag['appModulesTree']}" th:text="${g}">group</li>
+        </ul>
+        <div style="font-weight:600; font-size:11px; margin-top:8px;">Your modules, by their AppId</div>
+        <ul style="margin:4px 0 0 16px; padding:0; font-size:11px; line-height:1.5;">
+            <li th:each="g : ${parentDiag['yourModulesByAppId']}" th:text="${g}">group</li>
+        </ul>
+        <div style="font-size:10px; color:#667; margin-top:8px;">
+            The AppId group holding Exective DashBoards, Accounts Dashboard, Approvals &amp; Undo
+            Approvals, Followups &amp; Pending Works, Purchase &amp; Sales Dashboard and Audit
+            Dashboard is the DashBoard parent.
+        </div>
+    </div>
+
+    <div class="dbm-wrap" th:if="${cardCount > 0}">
+        <a class="dbm-card" th:each="c : ${cards}"
+           th:href="@{${appRoute != null ? appRoute : '/dashboard'}(module=${c['moduleId']})}"
+           th:classappend="${selectedModuleId != null and selectedModuleId == c['moduleId']} ? 'dbm-sel' : ''">
+            <span class="dbm-count" th:text="${c['count']}">0</span>
+            <span class="dbm-body">
+                <i class="fa fa-university"></i>
+                <span class="dbm-name" th:text="${c['title']}">Module</span>
+                <span class="dbm-built">
+                    <b th:text="${c['built']}">0</b> of <span th:text="${c['count']}">0</span> built
+                </span>
+            </span>
+        </a>
+    </div>
+
+    <!-- frmMenue.DynamicallyGenerateCards(ModId) - the chosen module's screens, on the same
+         form as the module cards, exactly as the desktop lays them out. -->
+    <div th:if="${screens != null}">
+        <div class="dbs-ttl" th:text="${selectedModuleTitle}">Module</div>
+        <div class="dbs-wrap">
+            <a class="dbs-card" th:each="sc : ${screens}" th:href="${sc['route']}"
+               th:classappend="${sc['built']} ? 'ok' : 'np'"
+               th:title="${sc['built']} ? ${sc['route']} : ${sc['desktopForm']}">
+                <i class="fa" th:classappend="${sc['built']} ? 'fa-star-o' : 'fa-wrench'"></i>
+                <span class="n" th:text="${sc['title']}">Screen</span>
+                <span class="f" th:text="${sc['built']} ? ${sc['route']} : ${sc['desktopForm']}">x</span>
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${rightsSource != null}" style="font-size:10px; color:#889; margin-top:10px;">
+        Screen list read from <b th:text="${rightsSource}">source</b>.
+    </div>
+</div>
+
+</body>
+</html>

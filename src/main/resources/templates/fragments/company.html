@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  The signed-in session's company name, for every page header and printed letterhead.
+
+  It is read from the LoginContext the company/branch pickers write at login - the same object
+  the desktop's own company selection produces. It is NOT written into a page: a hardcoded name
+  reads correctly for one organisation and lies to every other, and on this database it was also
+  the wrong field - the literal that used to sit in 38 templates, "Golden Ace Rice Mills
+  (Pvt) Ltd.", is this installation's BRANCH name, while the signed-in company is
+  "GOLDEN ACE FOODS".
+
+  Empty rather than a guess when no context is present, so a missing company is visible as
+  missing instead of silently showing somebody else's.
+-->
+<span th:fragment="name"
+      th:with="ctx=${session != null ? session['com.mst.security.LoginContext'] : null}"
+      th:text="${ctx != null and ctx.companyName != null ? ctx.companyName : ''}">Company</span>
+</body>
+</html>

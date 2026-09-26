@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Job Order - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <style>
+        /* Screen 281 - frmProductionJobOrderMain (InitializeComponent :2556).
+           Layout follows the designer: a teal title panel carrying toolStrip1, the "Main" group box
+           in four label/control columns, tabControl2 (Job Order Detail | Export Schedule Info) with
+           three side-by-side panels, and tabControl1 (Form | History) with its tabs at the BOTTOM
+           (TabAlignment.Bottom, :2937). */
+        html, body { overflow-x: hidden; }
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background: #f0f0f0; font-size: 12px; color: #000; margin: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
+
+        .jo-page { display: flex; flex-direction: column; min-height: 100vh; }
+        .jo-body { flex: 1 1 auto; padding: 3px; }
+
+        /* panel3 - Teal, toolStrip1 on top, "Production Job Order" and Preview underneath */
+        .jo-title-panel { background: #008080; color: #fff; }
+        .jo-tool-strip { background: linear-gradient(to bottom, #fbfbfb 0%, #e6e6e6 100%); border-bottom: 1px solid #a0a0a0; min-height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; flex-wrap: wrap; }
+        .jo-tool { background: transparent; border: 1px solid transparent; padding: 2px 8px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 24px; border-radius: 2px; color: #000; }
+        .jo-tool:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+        .jo-tool:disabled { color: #9a9a9a; cursor: not-allowed; }
+        .jo-tool u { text-decoration: underline; }
+        .jo-title-row { display: flex; align-items: center; justify-content: space-between; height: 23px; padding: 0 6px; }
+        .jo-title { font-family: Tahoma, sans-serif; font-weight: bold; font-size: 12pt; }
+        .jo-title-row label { margin: 0; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+        .jo-exit { color: #fff; text-decoration: none; font-size: 11px; margin-left: 12px; }
+        .jo-exit:hover { color: #e0f2f1; text-decoration: underline; }
+
+        /* groupBox2 "Main" - 4 columns: label | control, x4 (:1105, 1161 x 130) */
+        .jo-main { border: 1px solid #b5b5b5; border-radius: 3px; padding: 4px 8px 6px; margin: 2px 0 4px; background: #fff; }
+        .jo-main > legend { font-size: 9pt; font-weight: normal; color: #000; width: auto; padding: 0 4px; margin: 0; border: none; }
+        .jo-grid4 { display: grid; grid-template-columns: 100px minmax(170px, 1.35fr) 66px minmax(150px, 1fr) 95px minmax(160px, 1.2fr) 64px minmax(120px, .75fr); gap: 4px 6px; align-items: center; }
+        .jo-grid4 > label { margin: 0; font-size: 9pt; font-weight: normal; white-space: pre-line; line-height: 1.05; }
+        .jo-pair { display: flex; gap: 4px; align-items: center; min-width: 0; }
+        .jo-pair > * { min-width: 0; }
+        .jo-span7 { grid-column: 2 / span 7; }
+        .jo-in { font-family: "Segoe UI", Verdana, sans-serif; font-size: 9.5pt; height: 25px; border: 1px solid #7a7a7a; padding: 2px 4px; background: #fff; width: 100%; }
+        .jo-in[readonly], .jo-in:disabled { background: #f0f0f0; color: #333; }
+        .num { text-align: right; }
+        .jo-define { flex: 0 0 25px; width: 25px; height: 25px; padding: 0; border: 1px solid #7a7a7a; background: #f3f3f3; font-weight: bold; cursor: not-allowed; color: #888; }
+        .jo-hidden-fields { display: none; }
+
+        /* tabControl2 - tabs at the top */
+        .jo-tabs-top { display: flex; gap: 2px; border-bottom: 1px solid #a0a0a0; }
+        .jo-tab { background: #ececec; border: 1px solid #a0a0a0; border-bottom: none; padding: 3px 14px; font-size: 9pt; cursor: pointer; border-radius: 3px 3px 0 0; color: #000; user-select: none; }
+        .jo-tab.is-active { background: #fff; position: relative; top: 1px; font-weight: 600; }
+        .jo-panel { display: none; }
+        .jo-panel.is-active { display: block; }
+        .jo-tab-body { background: #fff; border: 1px solid #a0a0a0; border-top: none; padding: 3px; }
+
+        /* Job Order Detail - panel6 (372) | panel13 (460) | panel16 (444), docked left */
+        .jo-three { display: flex; gap: 3px; align-items: stretch; }
+        .jo-three > .jo-dpanel:nth-child(1) { flex: 372 1 300px; }
+        .jo-three > .jo-dpanel:nth-child(2) { flex: 460 1 340px; }
+        .jo-three > .jo-dpanel:nth-child(3) { flex: 444 1 340px; }
+        .jo-dpanel { display: flex; flex-direction: column; border: 1px solid #c0c0c0; min-width: 0; background: #fff; }
+        .jo-bar { background: #008080; color: #fff; height: 24px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-weight: bold; font-size: 9pt; }
+        .jo-bar-tools { display: inline-flex; gap: 3px; align-items: center; font-weight: normal; }
+        .jo-bar-btn { background: transparent; border: 1px solid rgba(255,255,255,.55); color: #fff; height: 19px; min-width: 20px; padding: 0 4px; font-size: 10px; line-height: 1; cursor: pointer; border-radius: 2px; }
+        .jo-bar-btn:hover { background: rgba(255,255,255,.18); }
+        .jo-entry { display: grid; gap: 2px 4px; padding: 6px 4px; align-items: end; }
+        .jo-entry label { margin: 0; font-size: 9pt; font-weight: normal; }
+        .jo-entry-plant { grid-template-columns: minmax(110px, 126fr) minmax(120px, 178fr) 58px; }
+        .jo-entry-rate  { grid-template-columns: minmax(110px, 112fr) minmax(130px, 191fr) minmax(64px, 80fr) 58px; }
+        .jo-entry .jo-btns { display: flex; flex-direction: column; gap: 2px; }
+        .jo-btn-teal { background: #008080; color: #fff; border: 1px solid #006666; height: 24px; padding: 0 6px; font-size: 9pt; cursor: pointer; border-radius: 2px; }
+        .jo-btn-teal:hover:not(:disabled) { background: #006666; }
+        .jo-btn-teal:disabled { background: #9e9e9e; border-color: #7a7a7a; cursor: not-allowed; }
+
+        .jo-grid-wrap { flex: 1 1 auto; overflow: auto; min-height: 220px; height: calc(100vh - 385px); background: #fff; border-top: 1px solid #c0c0c0; }
+        .jo-grid { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        .jo-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 3px 5px; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; font-weight: normal; }
+        .jo-grid td { border: 1px solid #dcdcdc; padding: 2px 5px; white-space: nowrap; }
+        .jo-grid td.num, .jo-grid th.num { text-align: right; }
+        .jo-grid td.wrap { white-space: normal; }
+        .jo-grid tbody tr { cursor: default; }
+        .jo-grid tbody tr:focus { outline: none; }
+        .jo-grid tbody tr.is-current td { background: #cce8ff; }
+        .jo-grid tbody tr.is-editing td { background: #fff3c4; }
+        .jo-grid tfoot td { background: #ececec; font-weight: bold; border: 1px solid #c8c8c8; padding: 2px 5px; }
+        .jo-grid .col-x { width: 22px; text-align: center; padding: 1px; }
+        .jo-x { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8pt; line-height: 1; padding: 2px 5px; cursor: pointer; }
+        .jo-x:hover:not(:disabled) { background: #e81123; color: #fff; border-color: #e81123; }
+        .jo-x:disabled { color: #aaa; cursor: not-allowed; }
+        .jo-cellbtn { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8.5pt; padding: 1px 6px; cursor: pointer; }
+        .jo-cellbtn:hover:not(:disabled) { background: #cce8ff; border-color: #3399ff; }
+        .jo-cellbtn:disabled { color: #aaa; cursor: not-allowed; }
+        .jo-link { color: #0645ad; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+        .jo-link:hover { color: #0b0080; }
+        .jo-grid input.jo-cellin { width: 100%; min-width: 180px; height: 21px; border: 1px solid #b0b0b0; font-size: 9pt; padding: 1px 3px; }
+        .jo-empty td { color: #777; font-style: italic; }
+
+        /* Export Schedule Info - panel22 bar with Load button docked right */
+        .jo-bar-tall { height: 28px; }
+        .jo-load-btn { background: #004040; color: #fff; border: none; height: 28px; padding: 0 22px; font-weight: bold; cursor: pointer; }
+        .jo-load-btn:hover { background: #005959; }
+
+        /* History tab */
+        .jo-hist-filter { background: #fff; padding: 6px; display: grid; grid-template-columns: 90px 240px 60px 90px 80px minmax(200px, 240px) 70px auto; gap: 4px 6px; align-items: center; border: 1px solid #c0c0c0; border-top: none; }
+        .jo-hist-filter label { margin: 0; font-weight: normal; font-size: 9pt; }
+        .jo-radios { display: grid; grid-template-columns: auto auto; justify-content: start; gap: 2px 14px; font-size: 9pt; padding-left: 8px; }
+        .jo-radios label { display: inline-flex; gap: 4px; align-items: center; }
+        .jo-show { background: #0a6e6e; color: #fff; border: 1px solid #064c4c; height: 26px; padding: 0 14px; font-weight: bold; cursor: pointer; }
+        .jo-show:disabled { background: #9e9e9e; cursor: not-allowed; }
+        .jo-hist-wrap { overflow: auto; height: calc(100vh - 250px); min-height: 260px; border: 1px solid #c0c0c0; border-top: none; background: #fff; }
+
+        /* tabControl1 footer - tabs at the bottom; History sits on the right of the footer */
+        .jo-footer { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; background: #e9e9e9; border-top: 1px solid #a0a0a0; padding: 0 4px; height: 28px; z-index: 20; }
+        .jo-footer .jo-tab { border: 1px solid #a0a0a0; border-top: none; border-radius: 0 0 3px 3px; top: 0; }
+        .jo-footer .jo-tab.is-active { top: -1px; }
+        .jo-footer-mid { font-size: 9pt; color: #333; }
+
+        .is-busy { opacity: .7; cursor: progress !important; pointer-events: none; }
+        .is-busy::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; vertical-align: -1px; animation: joSpin .6s linear infinite; }
+        @keyframes joSpin { to { transform: rotate(360deg); } }
+        .is-hidden { display: none !important; }
+        .jo-note { font-size: 8.5pt; color: #7f0000; background: #ffebee; border: 1px solid #e57373; padding: 3px 8px; margin: 2px 0; }
+
+        /* Grid fullscreen - the table container only, never the page */
+        .jo-full { position: fixed !important; inset: 8px; z-index: 8000; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+        .jo-full .jo-grid-wrap, .jo-full.jo-hist-host .jo-hist-wrap { height: calc(100% - 28px) !important; max-height: none; }
+
+        /* Dialogs - LoadExportScheduleForProduction and AttachmentView */
+        .cx-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 9000; }
+        .cx-modal.is-open { display: block; }
+        .cx-modal-box { position: absolute; top: 3%; left: 50%; transform: translateX(-50%); width: min(1250px, 97vw); max-height: 94vh; display: flex; flex-direction: column; background: #f0f0f0; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+        .cx-modal-box.small { width: min(560px, 94vw); }
+        .cx-modal-head { background: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-weight: bold; }
+        .cx-modal-head button { background: transparent; border: none; color: #fff; font-size: 16px; cursor: pointer; }
+        .cx-modal-body { padding: 6px; overflow: auto; }
+        .cx-filter { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px 8px; align-items: end; background: #fff; border: 1px solid #c0c0c0; padding: 6px; margin-bottom: 4px; }
+        .cx-filter label { margin: 0; font-weight: normal; font-size: 9pt; display: block; }
+
+        @media (max-width: 1100px) {
+            .jo-grid4 { grid-template-columns: 100px minmax(160px, 1fr) 95px minmax(160px, 1fr); }
+            .jo-span7 { grid-column: 2 / span 3; }
+            .jo-three { flex-wrap: wrap; }
+            .jo-three > .jo-dpanel { flex: 1 1 100% !important; }
+            .jo-grid-wrap { height: 260px; }
+            .jo-hist-filter { grid-template-columns: 90px 1fr 70px 1fr; }
+        }
+        @media (max-width: 640px) {
+            .jo-grid4 { grid-template-columns: 95px 1fr; }
+            .jo-span7 { grid-column: 2; }
+            .jo-hist-filter { grid-template-columns: 90px 1fr; }
+        }
+        @media print {
+            .jo-title-panel, .jo-footer, button, .jo-note { display: none !important; }
+            .jo-grid-wrap, .jo-hist-wrap { height: auto !important; overflow: visible !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="jo-page">
+
+<!-- ============================================================== panel3 (Teal, 50px) -->
+<div class="jo-title-panel">
+    <div class="jo-tool-strip" id="toolStrip1">
+        <button type="button" class="jo-tool" id="btnNew"     onclick="JobOrderMain.reset()"   title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+        <button type="button" class="jo-tool" id="btnRefresh" onclick="JobOrderMain.refresh()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="jo-tool is-hidden" id="btnSaveAs" onclick="JobOrderMain.saveAs()"><i class="fa fa-copy"></i> SaveAs</button>
+        <button type="button" class="jo-tool" id="btnSave"    onclick="JobOrderMain.save()"    title="Ctrl+S"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" class="jo-tool is-hidden" id="btnUpdate" onclick="JobOrderMain.update()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" class="jo-tool" id="btnPrint"   onclick="JobOrderMain.printCurrent()"><i class="fa fa-print"></i> <span>620-<u>P</u>rint</span></button>
+        <button type="button" class="jo-tool" id="btnAttachment" disabled
+                title="frmProductionJobOrderMain.btnattachment opens the desktop Attachment dialog (DMS upload). That dialog is not ported to the web yet; history still lists existing attachments."><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+        <button type="button" class="jo-tool is-hidden" id="btnGenerateProductionNo" disabled
+                title="Opens frmGenerateJobOrderNos on the desktop. That form is not ported to the web yet."><i class="fa fa-list-ol"></i> <span><u>G</u>enerate Nos</span></button>
+    </div>
+    <div class="jo-title-row">
+        <div><span class="jo-title">Production Job Order</span>
+            <span id="lblRecId" style="font-size:9pt; margin-left:14px;"></span></div>
+        <div>
+            <label title="chkPrint - after a successful Save/Update, print 620 for the saved job order"><input type="checkbox" id="chkPrint"> Preview</label>
+            <a class="jo-exit" href="/production" title="Ctrl+E / Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+    </div>
+</div>
+
+<div class="jo-body">
+    <div id="rightsNote" class="jo-note is-hidden"></div>
+
+    <!-- ================================================================== tabPage1 "Form" -->
+    <div id="tabForm" class="jo-panel is-active">
+
+        <fieldset class="jo-main">
+            <legend>Main</legend>
+            <div class="jo-grid4">
+                <!-- row y=19 -->
+                <label for="txtPlanCode">Plan Code &amp; Date</label>
+                <div class="jo-pair">
+                    <input type="text" id="txtPlanCode" class="jo-in num" style="flex:0 0 42%;" disabled/>
+                    <input type="date" id="txtPlanDate" class="jo-in" style="flex:1 1 auto;"/>
+                </div>
+                <label for="cmbProductionType">Production
+Type</label>
+                <div class="jo-pair">
+                    <select id="cmbProductionType" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Type"></select>
+                    <button type="button" class="jo-define" id="btnProductionTypeDefine" disabled
+                            title="Opens DefineProductionType on the desktop. That form is not ported to the web yet.">+</button>
+                </div>
+                <label for="cmbWipWarehouse">Wip Warehouse</label>
+                <select id="cmbWipWarehouse" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse Name"></select>
+                <label for="txtStartDate">Start Date</label>
+                <input type="date" id="txtStartDate" class="jo-in"/>
+
+                <!-- row y=46 -->
+                <label for="txtProductionNo">Production #</label>
+                <div>
+                    <div id="fldProductionNoCombo" class="is-hidden">
+                        <select id="cmbProductionNo" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo"></select>
+                    </div>
+                    <div id="fldProductionNoText">
+                        <input type="text" id="txtProductionNo" class="jo-in"/>
+                    </div>
+                </div>
+                <label for="cmbPlanType">Plan Type</label>
+                <div class="jo-pair">
+                    <select id="cmbPlanType" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Plan Type"></select>
+                    <button type="button" class="jo-define" id="btnPlanTypeDefine" disabled
+                            title="Opens DefineProductionPlanType on the desktop. That form is not ported to the web yet.">+</button>
+                </div>
+                <label for="cmbWorkInProcess">Work In Process</label>
+                <select id="cmbWorkInProcess" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="WorkInProcess"></select>
+                <label for="txtEndDate">End Date</label>
+                <input type="date" id="txtEndDate" class="jo-in"/>
+
+                <!-- row y=76 -->
+                <label for="txtOtherReference">Other Ref</label>
+                <input type="text" id="txtOtherReference" class="jo-in"/>
+                <label for="cmbWipItem">WIPItem</label>
+                <select id="cmbWipItem" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName"></select>
+                <label for="cmbStatus">Status</label>
+                <select id="cmbStatus" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Status"></select>
+                <label for="txtAvgFinishGoodRate">Average
+Finish Rate</label>
+                <input type="text" id="txtAvgFinishGoodRate" class="jo-in num"/>
+
+                <!-- row y=102 -->
+                <label for="txtOtherInstruction">Other Instruction</label>
+                <input type="text" id="txtOtherInstruction" class="jo-in jo-span7"/>
+            </div>
+
+            <!-- CmbFinishGoodsAc, CmbByProductionAc (panel5, Visible = false) and txtPlanTypeSrNo
+                 (panel4, Visible = false): invisible on the desktop, but still bound, still read by
+                 ReadById and still sent by Insert(). Kept for exactly that reason. -->
+            <div class="jo-hidden-fields" aria-hidden="true">
+                <select id="cmbFinishGoodsAc"></select>
+                <select id="cmbByProductionAc"></select>
+                <input type="text" id="txtPlanTypeSrNo"/>
+            </div>
+        </fieldset>
+
+        <!-- tabControl2 -->
+        <div class="jo-tabs-top" id="tabs2">
+            <div class="jo-tab is-active" data-tab="tabDetail"   onclick="JobOrderMain.tab2('tabDetail')">Job Order Detail</div>
+            <div class="jo-tab"           data-tab="tabSchedule" onclick="JobOrderMain.tab2('tabSchedule')">Export Schedule Info</div>
+        </div>
+
+        <!-- ------------------------------------------------------------ tabPage3 -->
+        <div id="tabDetail" class="jo-panel is-active jo-tab-body">
+            <div class="jo-three">
+
+                <!-- panel6 - GridDetail -->
+                <div class="jo-dpanel" id="panelPlant">
+                    <div class="jo-bar"><span>(Allocate Multiple Plants To a Job Order)</span>
+                        <span class="jo-bar-tools"><span id="lblPlantCount">0</span>
+                            <button type="button" class="jo-bar-btn" title="Full screen" onclick="JobOrderMain.full('panelPlant')"><i class="fa fa-expand"></i></button></span></div>
+                    <div class="jo-entry jo-entry-plant">
+                        <label for="cmbPlantFeader">Plant / Feader</label>
+                        <label for="txtRemarksDetail">Comments</label>
+                        <div class="jo-btns">
+                            <button type="button" id="btnCancelUpdateDetail" class="jo-btn-teal is-hidden" onclick="JobOrderMain.cancelPlant()">Cancel</button>
+                        </div>
+                        <select id="cmbPlantFeader" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="PlantName"></select>
+                        <input type="text" id="txtRemarksDetail" class="jo-in"/>
+                        <div class="jo-btns">
+                            <button type="button" id="btnPlus" class="jo-btn-teal" style="width:27px;" onclick="JobOrderMain.addPlant()">+</button>
+                            <button type="button" id="btnUpdateDetail" class="jo-btn-teal is-hidden" onclick="JobOrderMain.updatePlant()">Update</button>
+                        </div>
+                    </div>
+                    <div class="jo-grid-wrap">
+                        <table class="jo-grid" id="tblPlant" data-gridbar="frmProductionJobOrderMain:GridDetail">
+                            <thead><tr><th class="col-x">X</th><th style="width:110px;">PlantName</th><th>RemarksDetail</th></tr></thead>
+                            <tbody id="gridPlant"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- panel13 - grdByProduct -->
+                <div class="jo-dpanel" id="panelByProduct">
+                    <div class="jo-bar"><span>(By Product Rate Schedule)</span>
+                        <span class="jo-bar-tools"><span id="lblByProductCount">0</span>
+                            <button type="button" class="jo-bar-btn" title="Full screen" onclick="JobOrderMain.full('panelByProduct')"><i class="fa fa-expand"></i></button></span></div>
+                    <div class="jo-entry jo-entry-rate">
+                        <label for="datEffectiveDateByProduct">Effective Date</label>
+                        <label for="cmbItemByProduct">Item Name</label>
+                        <label for="txtRateByProduct">Rate 40Kg</label>
+                        <div class="jo-btns">
+                            <button type="button" id="btnCancelByProduct" class="jo-btn-teal is-hidden" onclick="JobOrderMain.cancelRate(1)">Cancel</button>
+                        </div>
+                        <input type="date" id="datEffectiveDateByProduct" class="jo-in"/>
+                        <select id="cmbItemByProduct" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName"></select>
+                        <input type="text" id="txtRateByProduct" class="jo-in num"/>
+                        <div class="jo-btns">
+                            <button type="button" id="btnAddUpdateByProduct" class="jo-btn-teal" onclick="JobOrderMain.addRate(1)">Add</button>
+                        </div>
+                    </div>
+                    <div class="jo-grid-wrap">
+                        <table class="jo-grid" id="tblByProduct" data-gridbar="frmProductionJobOrderMain:grdByProduct">
+                            <thead><tr><th class="col-x">X</th><th style="width:100px;">EffectiveDate</th><th>ItemName</th><th class="num" style="width:80px;">Rate40Kg</th></tr></thead>
+                            <tbody id="gridByProduct"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- panel16 - grdFinishGoods -->
+                <div class="jo-dpanel" id="panelFinish">
+                    <div class="jo-bar"><span>(Finish Goods Rate Schedule)</span>
+                        <span class="jo-bar-tools"><span id="lblFinishCount">0</span>
+                            <button type="button" class="jo-bar-btn" title="Full screen" onclick="JobOrderMain.full('panelFinish')"><i class="fa fa-expand"></i></button></span></div>
+                    <div class="jo-entry jo-entry-rate">
+                        <label for="datEffectiveDateFinish">Effective Date</label>
+                        <label for="cmbItemFinish">Item Name</label>
+                        <label for="txtRateFinish">Rate 40Kg</label>
+                        <div class="jo-btns">
+                            <button type="button" id="btnCancelFinish" class="jo-btn-teal is-hidden" onclick="JobOrderMain.cancelRate(2)">Cancel</button>
+                        </div>
+                        <input type="date" id="datEffectiveDateFinish" class="jo-in"/>
+                        <select id="cmbItemFinish" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName"></select>
+                        <input type="text" id="txtRateFinish" class="jo-in num"/>
+                        <div class="jo-btns">
+                            <button type="button" id="btnAddUpdateFinish" class="jo-btn-teal" onclick="JobOrderMain.addRate(2)">Add</button>
+                        </div>
+                    </div>
+                    <div class="jo-grid-wrap">
+                        <table class="jo-grid" id="tblFinish" data-gridbar="frmProductionJobOrderMain:grdFinishGoods">
+                            <thead><tr><th class="col-x">X</th><th style="width:100px;">EffectiveDate</th><th>ItemName</th><th class="num" style="width:80px;">Rate40Kg</th></tr></thead>
+                            <tbody id="gridFinish"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ------------------------------------------------------------ tabPage4 -->
+        <div id="tabSchedule" class="jo-panel jo-tab-body">
+            <div class="jo-dpanel" id="panelSchedule">
+                <div class="jo-bar jo-bar-tall"><span>(Export Schedule Information)</span>
+                    <span class="jo-bar-tools"><span id="lblScheduleCount">0</span>
+                        <button type="button" class="jo-bar-btn" title="Full screen" onclick="JobOrderMain.full('panelSchedule')"><i class="fa fa-expand"></i></button>
+                        <button type="button" class="jo-load-btn" id="btnLoadScheduleInfo" onclick="JobOrderMain.openLoader()">Load Schedule Info</button></span></div>
+                <div class="jo-grid-wrap">
+                    <table class="jo-grid">
+                        <thead><tr id="scheduleHead"></tr></thead>
+                        <tbody id="gridSchedule"></tbody>
+                        <tfoot id="gridScheduleFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================================== tabPage2 "History" -->
+    <div id="tabHistory" class="jo-panel">
+        <div class="jo-tool-strip" id="toolStrip2" style="border:1px solid #a0a0a0;">
+            <button type="button" class="jo-tool" onclick="JobOrderMain.newHistory()" title="Ctrl+N"><i class="fa fa-file-o"></i> <span><u>N</u>ew</span></button>
+        </div>
+        <div class="jo-bar" style="height:31px; font-size:11pt;">Job Order History</div>
+        <div class="jo-hist-filter">
+            <label for="cmbPeremeter">Date Type</label>
+            <select id="cmbPeremeter" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"
+                    onchange="JobOrderMain.datePreset()"></select>
+            <label for="txtOrderNoFrom">Doc From</label>
+            <input type="text" id="txtOrderNoFrom" class="jo-in num"/>
+            <label for="cmbHistoryJobOrder">Job Order No</label>
+            <select id="cmbHistoryJobOrder" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order No"></select>
+            <span></span>
+            <div class="jo-radios" style="grid-row: span 2;">
+                <label><input type="radio" name="dateMode" value="doc" checked> Doc Date</label>
+                <label><input type="radio" name="dateMode" value="modify"> Modify Date</label>
+                <label><input type="radio" name="dateMode" value="entry"> Entry Date</label>
+                <label><input type="radio" name="dateMode" value="approved"> Approved Date</label>
+            </div>
+
+            <label for="datHistoryFrom">Date From &amp; To</label>
+            <div class="jo-pair"><input type="date" id="datHistoryFrom" class="jo-in"/><input type="date" id="datHistoryTo" class="jo-in"/></div>
+            <label for="txtOrderNoTo">Doc To</label>
+            <input type="text" id="txtOrderNoTo" class="jo-in num"/>
+            <span></span><span></span>
+            <button type="button" id="btnShowHistory" class="jo-show" onclick="JobOrderMain.history()" title="Ctrl+S on this tab">Show</button>
+        </div>
+        <div class="jo-hist-host" id="historyHost">
+            <div class="jo-bar"><span>Filtered Records</span>
+                <span class="jo-bar-tools"><span id="lblHistoryScope"></span>&nbsp;<span id="lblHistoryCount"></span>
+                    <button type="button" class="jo-bar-btn" title="Full screen" onclick="JobOrderMain.full('historyHost')"><i class="fa fa-expand"></i></button></span></div>
+            <div class="jo-hist-wrap">
+                <table class="jo-grid" id="tblHistory" data-gridbar="frmProductionJobOrderMain:DataGridHistory" data-gridbar-mount="#historyHost > .jo-bar .jo-bar-tools">
+                    <thead><tr id="historyHead"></tr></thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ tabControl1 tabs (Alignment = Bottom) -->
+<div class="jo-footer" id="tabs1">
+    <div class="jo-tab is-active" data-tab="tabForm" onclick="JobOrderMain.tab('tabForm')" title="Ctrl+T">Form</div>
+    <div class="jo-footer-mid">Ctrl+S Save · Ctrl+U Update · Ctrl+N New · Ctrl+T Form/History · Enter = next field</div>
+    <div class="jo-tab" data-tab="tabHistory" onclick="JobOrderMain.tab('tabHistory')" title="Ctrl+T"><i class="fa fa-history"></i> History</div>
+</div>
+</div>
+
+<!-- ======================================== LoadExportScheduleForProduction dialog -->
+<div class="cx-modal" id="loaderModal">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head">
+            <span>Load Export Schedule</span>
+            <button type="button" onclick="JobOrderMain.closeLoader()">&times;</button>
+        </div>
+        <div class="cx-modal-body">
+            <div class="cx-filter">
+                <div><label for="loaderFrom">From Date</label><input type="date" id="loaderFrom" class="jo-in"/></div>
+                <div><label for="loaderTo">To Date</label><input type="date" id="loaderTo" class="jo-in"/></div>
+                <div><label for="loaderContract">Contract No</label>
+                    <select id="loaderContract" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No"></select></div>
+                <div><label for="loaderCustomer">Customer No</label>
+                    <select id="loaderCustomer" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer No"></select></div>
+                <div><label for="loaderItem">Item Name</label>
+                    <select id="loaderItem" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div><label for="loaderThirdParty">Third Party Inspection N</label>
+                    <select id="loaderThirdParty" class="jo-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Third Party Inspection N"></select></div>
+                <div><button type="button" id="btnLoaderShow" class="jo-show" onclick="JobOrderMain.loaderShow()"><i class="fa fa-search"></i> Show</button></div>
+            </div>
+            <div class="jo-bar"><span>Export Schedules</span><span id="lblLoaderCount"></span></div>
+            <div class="jo-grid-wrap" style="height:52vh;">
+                <table class="jo-grid">
+                    <thead><tr id="loaderHead"></tr></thead>
+                    <tbody id="loaderBody"></tbody>
+                </table>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
+                <button type="button" class="jo-cellbtn" style="height:26px;" onclick="JobOrderMain.closeLoader()">Cancel</button>
+                <button type="button" class="jo-btn-teal" style="height:26px;" onclick="JobOrderMain.loaderApply()"><i class="fa fa-check"></i> Load Selected</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== AttachmentView dialog -->
+<div class="cx-modal" id="attachModal">
+    <div class="cx-modal-box small">
+        <div class="cx-modal-head"><span>Attachments</span>
+            <button type="button" onclick="JobOrderMain.closeAttachments()">&times;</button></div>
+        <div class="cx-modal-body">
+            <table class="jo-grid"><thead><tr><th>AttchmentPath</th></tr></thead><tbody id="attachBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_production_job_order_main.js?v=20260925g}"></script>
+</body>
+</html>

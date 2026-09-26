@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventory Stock Transactions Report</title>
+<meta name="_csrf" th:content="${_csrf?.token}"><meta name="_csrf_header" th:content="${_csrf?.headerName}">
+<link rel="stylesheet" href="/vendors/select2/dist/css/select2.min.css">
+<link rel="stylesheet" href="/css/report-loading.css">
+<link rel="stylesheet" href="/css/inventory-ui.css">
+<style>
+*{box-sizing:border-box}body{margin:0;min-width:980px;background:#f0f0f0;font:13px Tahoma,sans-serif;color:#000}
+nav{height:27px;display:flex;align-items:center;gap:4px;background:#fff;border-bottom:1px solid #aaa}button{font:13px Tahoma;cursor:pointer}nav button{height:24px;background:transparent;border:1px solid transparent}nav button:hover{border-color:#008080}
+h1{margin:0;padding:3px 12px;background:#008080;color:#fff;font-size:18px;height:27px}
+form{position:relative;width:948px;height:140px;margin:0 8px;border:1px solid #aaa}
+.filter{position:absolute;display:flex;align-items:center;height:26px}.filter label{display:inline-block;width:91px;font-size:12px}.filter select{height:26px}.filter input{height:23px;width:148px;font:13px Verdana,sans-serif}
+.first{left:13px}.middle{left:262px}.middle label{width:95px}.last{left:570px}.last label{width:89px}
+.first select{width:148px}.middle select{width:202px}.last select{width:228px}#documentTypeId{width:164px}
+.r1{top:13px}.r2{top:41px}.r3{top:70px}.r4{top:99px}#show{position:absolute;left:828px;top:99px;width:59px;height:26px;background:#008080;color:#fff;border:1px solid #006666}
+.select2-container .select2-selection--single{height:26px;border-radius:0}.select2-container .select2-selection--single .select2-selection__rendered{line-height:24px}.select2-container .select2-selection--multiple{min-height:26px;height:26px;overflow:auto;border-radius:0}.select2-container .select2-selection--multiple .select2-selection__choice{margin-top:1px}
+.grid{overflow:auto;height:calc(100vh - 231px);min-height:300px;border:1px solid #aaa;margin:6px 8px;background:#fff}table{border-collapse:collapse;width:max-content;min-width:100%;font:12px Tahoma}th,td{border:1px solid #c6c6c6;padding:3px 6px;height:22px;white-space:nowrap}th{position:sticky;top:0;background:#008080;color:#fff}tbody tr:nth-child(even){background:#f2f5f5}.number{text-align:right}tfoot td{position:sticky;bottom:0;background:#e1efed;font-weight:bold}#status{margin:4px 8px;min-height:18px}#status.error{color:#a40000}
+@media print{nav,form,#status,.report-loading{display:none!important}body{min-width:0}h1{color:#000;background:#fff}.grid{height:auto;overflow:visible}th,tfoot td{position:static}table{font-size:9px}}
+.date-input{display:flex;position:relative;width:148px;height:23px}.date-input input:first-child{width:125px;font:13px Verdana;border:1px solid #888;border-right:0;border-radius:0}.date-input input[type=date]{width:23px;height:23px;padding:0;border:1px solid #888;border-left:0;font-size:0;color:transparent}.date-input input[type=date]::-webkit-calendar-picker-indicator{margin:0;padding:3px;font-size:13px;width:16px}.grid table{font:11px Verdana}.grid th{background:#eee;color:#000}.grid tbody tr:nth-child(even){background:white}.grid tr.selected{background:#cce8ff}.column-filters th{top:22px;background:#fafafa}.column-filters input{width:100%;min-width:60px;height:21px;border:1px solid #aaa}.results-title{margin:0 8px;padding:4px;background:teal;color:white;font:bold 16px Tahoma;height:27px}.grid{margin-top:0;max-width:calc(100vw - 16px)}dialog{border:1px solid teal;max-width:80vw}dialog::backdrop{background:#0004}
+.filter label,.filter>.select2{flex-shrink:0}.first>.select2{width:148px!important}.middle>.select2{width:202px!important}.last>.select2{width:228px!important}#documentTypeId+.select2{width:164px!important}.filter .select2-search--inline .select2-search__field{width:auto;height:22px;margin-top:0}.filter .select2-selection--single{width:100%}
+.filter .select2-selection--multiple{overflow:hidden}.filter .select2-selection--multiple .select2-selection__rendered{display:flex;align-items:center;flex-wrap:nowrap;height:24px;margin:0;padding-top:0;padding-bottom:0}.filter .select2-search--inline{height:22px;line-height:22px}.filter .select2-selection--multiple .select2-selection__choice{flex-shrink:0}
+</style>
+<script src="/js/report-loading.js"></script><script src="/js/inventory-ui.js"></script>
+</head>
+<body>
+<nav><button id="reset" type="button">Reset</button><button id="refresh" type="button">Refresh</button><button id="print" type="button">417-Stock Report</button><button id="shortcuts" type="button">ShortCutKeys</button></nav>
+<h1>Inventory Stock Transactions Report</h1>
+<form id="filters">
+<div class="filter first r1"><label for="dateType">Date Type</label><select id="dateType"><option value=""></option><option value="1">This Day</option><option value="2" selected>This Week</option><option value="3">This Month</option><option value="4">This Year</option><option value="5">Financial Year</option></select></div>
+<div class="filter first r2"><label for="fromDate">From Date</label><span class="date-input"><input id="fromDate" type="text" placeholder="dd-MMM-yy" required><input id="fromDate-calendar" type="date" aria-label="Choose From Date"></span></div>
+<div class="filter first r3"><label for="toDate">To Date</label><span class="date-input"><input id="toDate" type="text" placeholder="dd-MMM-yy" required><input id="toDate-calendar" type="date" aria-label="Choose To Date"></span></div>
+<div class="filter first r4"><label for="itemClassGroupId">Item Class</label><select id="itemClassGroupId" data-activity="ItemClassGroup"></select></div>
+<div class="filter middle r1"><label for="parentCategoryId">Parent Category</label><select id="parentCategoryId" data-activity="ParentCategories"></select></div>
+<div class="filter middle r2"><label for="itemCategoryId">Item Category</label><select id="itemCategoryId" data-activity="ItemCategories"></select></div>
+<div class="filter middle r3"><label for="itemTypeIds">Item Type</label><select id="itemTypeIds" multiple data-activity="ItemTypes"></select></div>
+<div class="filter middle r4"><label for="jobLotId">JobLot</label><select id="jobLotId" data-activity="JobLot"></select></div>
+<div class="filter last r1"><label for="warehouseIds">WareHouse</label><select id="warehouseIds" multiple data-activity="Warehouse"></select></div>
+<div class="filter last r2"><label for="itemId">Item Name</label><select id="itemId" data-activity="Items"></select></div>
+<div class="filter last r3"><label for="supplierCustomerId">Supplier Name</label><select id="supplierCustomerId" data-activity="Supplier_Customer"></select></div>
+<div class="filter last r4"><label for="documentTypeId">DocumentType</label><select id="documentTypeId"></select></div>
+<button id="show" type="submit">Show</button>
+</form>
+<p id="status" role="status"></p>
+<h2 class="results-title">Inventory Transaction</h2>
+<div class="grid" tabindex="0" aria-label="Inventory transactions, scroll horizontally for more columns"><table><thead id="head"></thead><tbody id="rows"></tbody><tfoot id="totals"></tfoot></table></div>
+<dialog id="keys"><h2>ShortCut Keys</h2><p>Ctrl+S: Show · Ctrl+N / Ctrl+R: Refresh dropdowns<br>Ctrl+P: Stock Report · Ctrl+E / Escape: Close<br>Ctrl+F5 / Ctrl+↑: Date Type · Ctrl+↓: Grid<br>Ctrl+Alt: ShortCut Keys</p><button id="close-keys">Close</button></dialog>
+<script src="/vendors/jquery/dist/jquery.min.js"></script><script src="/vendors/select2/dist/js/select2.min.js"></script>
+<script src="/js/report-decimal.js"></script><script src="/js/inventory-request.js"></script><script src="/js/inventory-transactions.js?v=20260916-filter-state"></script>
+</body></html>

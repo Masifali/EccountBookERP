@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase &amp; Sales Pending Works</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+
+    <style>
+        html, body { max-width:100%; overflow-x:hidden; }
+        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
+               font-size:11px; color:#222; margin:0; padding:0; }
+
+        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
+        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
+                          border-bottom:1px solid #b0bec5; }
+        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
+                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
+                       align-items:center; flex-wrap:wrap; }
+        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
+                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
+        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
+        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
+        .win-btn-teal:hover { background:#083b3b; color:#fff; }
+        .win-btn:disabled { opacity:.55; cursor:default; }
+
+        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
+                         padding:8px 10px; margin:8px; }
+        .win-group-box { border:1px solid #c7d0d6; border-radius:2px; padding:10px 10px 8px;
+                         position:relative; }
+        .win-group-title { position:absolute; top:-8px; left:8px; background:#fff; padding:0 5px;
+                           font-size:11px; font-weight:700; color:#0f5959; }
+        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600; }
+        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
+                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
+        .win-radio-inline { font-size:11px; display:inline-flex; align-items:center; gap:4px;
+                            margin-right:14px; }
+
+        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
+        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
+                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
+                           border-top-color:#00564C; border-radius:50%;
+                           animation:btnspin .6s linear infinite; }
+        @keyframes btnspin { to { transform:rotate(360deg); } }
+
+        #pwMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
+        #pwMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        #pwMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+
+        /* label1 / label4 / label2 - the three section headings on the desktop form. */
+        .pw-sect { font-weight:700; color:#0f5959; font-size:12px; margin:12px 8px 4px;
+                   padding-bottom:3px; border-bottom:1px solid #b0bec5; }
+
+        /* PendingWorkCards: a coloured heading with the caption, the count underneath. */
+        .pw-wrap { display:flex; flex-wrap:wrap; gap:10px; padding:0 8px; }
+        .pw-card { width:220px; background:#fff; border:1px solid #cfd8dc; border-radius:2px;
+                   display:flex; flex-direction:column; cursor:pointer; text-align:center;
+                   box-shadow:0 1px 2px rgba(0,0,0,.08); }
+        .pw-card:hover { box-shadow:0 3px 10px rgba(0,0,0,.18); }
+        .pw-card .t { background:#0f5959; color:#fff; font-size:11px; font-weight:700;
+                      padding:5px 8px; line-height:1.25; }
+        /* CardTitle.BackColor = Color.DarkCyan for the InSeparatePanel = 1 cards (:214). */
+        .pw-card.sep .t { background:#008b8b; }
+        .pw-card .n { font-size:22px; font-weight:700; color:#0f5959; padding:8px 0 2px; }
+        .pw-card .c { font-size:10px; color:#5a6b73; padding:0 6px 8px; line-height:1.3; }
+        /* :292 - a card with no rows does nothing when clicked. */
+        .pw-card.zero { cursor:default; opacity:.6; }
+        .pw-card.zero:hover { box-shadow:0 1px 2px rgba(0,0,0,.08); }
+
+        .pw-empty { background:#fff; border:1px dashed #b0bec5; color:#667; padding:12px;
+                    text-align:center; margin:0 8px; font-size:11px; }
+
+        /* frmPendingWorksDetail opens as its own window on the desktop; a modal here. */
+        .pw-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:3200; }
+        .pw-modal-inner { background:#e4e9ed; margin:20px auto; width:97%; max-height:92vh;
+                          overflow:auto; border:1px solid #7a9a9e; }
+        .pw-modal-bar { background:#0f5959; color:#fff; padding:5px 10px; display:flex;
+                        align-items:center; gap:8px; font-weight:700; font-size:12px; }
+
+        .pw-scroll { margin:8px; border:1px solid #b5b5b5; background:#fff; overflow:auto;
+                     max-height:70vh; }
+        table.pw-grid { width:max-content; min-width:100%; border-collapse:collapse; font-size:11px; background:#fff; }
+        table.pw-grid th { background:#eef2f4; border:1px solid #cfd8dc; padding:4px 6px;
+                           font-weight:700; color:#33454e; position:sticky; top:0; z-index:2;
+                           white-space:nowrap; }
+        table.pw-grid td { border:1px solid #e0e6ea; padding:3px 6px; white-space:nowrap; }
+        table.pw-grid tbody tr:hover { background:#e0f2f1; }
+        .num { text-align:right; }
+        /* Document numbers are clickable, per the brief. */
+        .doc-link { color:#00564C; font-weight:bold; text-decoration:underline; cursor:pointer; }
+
+        .pw-full { position:fixed; inset:0; z-index:3000; background:#e4e9ed; overflow:auto; }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     Purchase & Sales Pending Works (Dashboard)
+     the whole "Followups && Pending Works DashBoards" module
+     ditto Architecture.WinApp.Dashboard\frmPendingWorksRpt.cs (753 lines)
+
+     Controls, in the desktop's own order:
+       label7 "From Date", label3 "To Date", Branches (a checked-list combo), btnshow "Show"
+       RadPaddyRice "Paddy && Rice" / RadPMOthers "Packing Material && Others"
+       label1 "Purchase Pending Works"   PurchaseDashboardFlowLayout + PurchaseSeparateFlowLayout
+       label4 "Sale Pending Works"       SaleDashboardFlowLayout     + SaleSeparateFlowLayout
+       label2 "Export Pending Works"     ExportCardsFlowLayoutPanel
+
+     Events ported:
+       frmPendingWorksRpt_Load   -> BranchesFill(), AllCardsBind()   :93-109
+       btnshow_Click             -> AllCardsBind()                   :339-349
+       datToDate_ValueChanged    -> datFromDate.Value = datToDate.Value  :376-379
+       UserControl_Click         -> the three special cases, else the detail window  :284-337
+
+     This screen is read-only on the desktop - no save, update, delete or History button - so
+     none is added here.
+     ========================================================================== -->
+<div class="win-title-bar">Purchase &amp; Sales Pending Works</div>
+<div class="win-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
+        &gt; Followups &amp; Pending Works &gt; Purchase &amp; Sales Pending Works</span>
+</div>
+
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnRefresh" onclick="pwRefresh(this)">
+        <i class="fa fa-refresh"></i> Refresh
+    </button>
+    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <span style="flex:1;"></span>
+    <button type="button" class="win-btn" onclick="pwToggleFullscreen()">
+        <i class="fa fa-arrows-alt"></i> Fullscreen
+    </button>
+</div>
+
+<div id="pwMessage"></div>
+
+<div class="win-form-card">
+    <div class="win-group-box">
+        <div class="win-group-title">Filters</div>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="win-label">From Date</label>
+                <input type="date" id="fromDate" class="win-input">
+            </div>
+            <!-- datToDate_ValueChanged: changing To also sets From to the same day (:376-379) -->
+            <div class="col-md-2">
+                <label class="win-label">To Date</label>
+                <input type="date" id="toDate" class="win-input" onchange="pwToDateChanged()">
+            </div>
+            <!-- CmbBranches is a checked list on the desktop, so this is a multi-select -->
+            <div class="col-md-4" id="branchWrap">
+                <label class="win-label">Branches</label>
+                <select id="branches" class="win-input pw-select2" multiple></select>
+            </div>
+            <div class="col-md-3">
+                <label class="win-label">Type</label>
+                <div>
+                    <label class="win-radio-inline">
+                        <input type="radio" name="typeId" id="rdPaddyRice" value="1" checked>
+                        Paddy &amp; Rice
+                    </label>
+                    <label class="win-radio-inline">
+                        <input type="radio" name="typeId" id="rdPmOthers" value="2">
+                        Packing Material &amp; Others
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="pwShow(this)">
+                    <i class="fa fa-search"></i> Show
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- label1 (:556) -->
+<div class="pw-sect">Purchase Pending Works</div>
+<div id="pwPurchase" class="pw-wrap"></div>
+<div id="pwPurchaseSeparate" class="pw-wrap" style="margin-top:8px;"></div>
+
+<!-- label4 (:523) -->
+<div class="pw-sect">Sale Pending Works</div>
+<div id="pwSale" class="pw-wrap"></div>
+<div id="pwSaleSeparate" class="pw-wrap" style="margin-top:8px;"></div>
+
+<!-- label2 (:726) -->
+<div class="pw-sect">Export Pending Works</div>
+<div id="pwExport" class="pw-wrap"></div>
+
+<div id="pwEmpty" class="pw-empty" style="display:none; margin-top:10px;">Press Show to load.</div>
+<div style="height:16px;"></div>
+
+<!-- frmPendingWorksDetail -->
+<div id="pwModal" class="pw-modal">
+    <div class="pw-modal-inner">
+        <div class="pw-modal-bar">
+            <span id="pwModalTitle">Pending Work Detail</span>
+            <span id="pwModalCount" style="font-weight:400; font-size:11px;"></span>
+            <span style="flex:1;"></span>
+            <button type="button" class="win-btn" onclick="pwCloseModal()">Close</button>
+        </div>
+        <div class="pw-scroll">
+            <table class="pw-grid" id="pwDetailGrid">
+                <thead><tr id="pwDetailHead"></tr></thead>
+                <tbody id="pwDetailBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_pending_works_rpt.js?v=20260920a}"></script>
+</body>
+</html>

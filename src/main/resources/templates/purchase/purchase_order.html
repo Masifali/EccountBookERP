@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Purchase Order</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css}">
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
@@ -89,15 +90,46 @@
             .win-grid th, .win-grid td { border: 1px solid #000 !important; color: #000 !important; }
             .win-grid th { background: #eee !important; color: #000 !important; }
         }
-    </style>
+    
+        /* ---------------------------------------------------------------------------------
+           Purchase Order Detail line entry. Absolute, at the designer's own coordinates, so
+           the strip reads as the two tight rows the desktop draws rather than a stacked grid.
+           --------------------------------------------------------------------------------- */
+        .po-lineentry { position: relative; width: 1165px; height: 118px; margin: 4px 0 6px 0; }
+        .po-lineentry .lbl { position: absolute; font-size: 8.25pt; line-height: 15px; white-space: nowrap; }
+        .po-lineentry .ctl { position: absolute; height: 23px; box-sizing: border-box;
+                             font-family: Verdana, Tahoma, sans-serif; font-size: 8.25pt;
+                             border: 1px solid #7f9db9; background: #fff; padding: 0 3px; }
+        .po-lineentry select.ctl { height: 26px; }
+        .po-lineentry .dtcombo-wrap { position: absolute; height: 26px; box-sizing: border-box; }
+        .po-lineentry .dtcombo-wrap .dtcombo-input { height: 26px; font-size: 8.25pt; }
+        .po-lineentry .ctl.num { text-align: right; }
+        .po-lineentry input.win-textbox-readonly { background: #eceae1; }
+        .po-lineentry .radios { position: absolute; font-size: 8.25pt; line-height: 19px; white-space: nowrap; }
+        .po-lineentry .radios label { margin: 0 10px 0 0; font-weight: normal; }
+        .po-lineentry .radios input { vertical-align: -2px; margin-right: 3px; }
+        .po-lineentry .po-plus { position: absolute; height: 26px; background: #0A6E6E; color: #fff;
+                                 border: 1px solid #075353; font-size: 13pt; line-height: 1;
+                                 cursor: pointer; padding: 0; }
+        .po-lineentry .po-line-btn { position: absolute; height: 26px; background: #ece9d8;
+                                     border: 1px solid #aca899; font-family: Verdana; font-size: 8.25pt;
+                                     cursor: pointer; padding: 0; }
+        .po-lineentry .po-plus:hover, .po-lineentry .po-line-btn:hover { filter: brightness(1.08); }
+</style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260921d}"/>
 </head>
 <body>
 
     <!-- TOP TOOLBAR -->
     <div class="win-tool-strip">
-        <button type="button" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> &New</button>
-        <button type="button" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> &Save</button>
-        <button type="button" class="win-btn-tool" onclick="btnUpdate_Click()"><i class="fa fa-pencil"></i> &Update</button>
+        <button type="button" id="btnNew" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> &New</button>
+        <button type="button" id="btnSave" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> &Save</button>
+        <button type="button" id="btnUpdate" class="win-btn-tool" style="display:none;" onclick="btnUpdate_Click()"><i class="fa fa-pencil"></i> &Update</button>
+        <!-- grdhistory_ColumnButtonClick :5085-5104 - SaveAs saves the loaded order as a NEW
+             document: the detail Ids and the master id are zeroed first, so the ordinary save
+             path inserts rather than updates. Hidden until the History SaveAs button loads a
+             record, exactly as btnSaveAs.Visible is false everywhere else. -->
+        <button type="button" id="btnSaveAs" class="win-btn-tool" style="display:none;" onclick="btnSaveAs_Click()"><i class="fa fa-copy"></i> Save&As</button>
         <button type="button" class="win-btn-tool" onclick="btnRefresh_Click()"><i class="fa fa-refresh"></i> &Refresh</button>
         <div class="win-sep"></div>
         <button type="button" class="win-btn-tool" onclick="openLoadOrderModal()"><i class="fa fa-folder-open-o"></i> Load Order</button>
@@ -162,8 +194,13 @@
                         <div class="col-md-12">
                             <label class="win-label">Category & No <span style="color:red;">*</span></label>
                             <div style="display: flex; gap: 2px;">
-                                <select id="cmbParentCategory" class="win-input select2-2col" data-header-col1="Category Name" data-header-col2="Cat Code" onchange="onParentCategoryChange()" style="flex: 1;">
-                                    <option value="0">-- Select Category --</option>
+                                <!-- OrderCatagoryfill() binds this with DropDownBind.BindDDLNew(dt, combordercat, "Id",
+     "OrderCategoryName", "Category", true). The caption argument is "Category", and the
+     ZeroIndex row it inserts is captioned "...Select Any Value..." with value 0 - which
+     BindDDLNew then selects (DDL.Value = 0), so that placeholder IS the default on New.
+     Rows[2].Activate() only highlights a row in the open list; it does not set the value. -->
+<select id="cmbParentCategory" class="win-input dtcombo" data-dtcombo="single" data-dtcombo-caption="Category" data-header-col1="Category" onchange="onParentCategoryChange()" style="flex: 1;">
+                                    <option value="0">...Select Any Value...</option>
                                 </select>
                                 <input type="text" id="txtCategoryNo" class="win-textbox" style="width: 80px;" placeholder="Cat No"/>
                             </div>
@@ -183,7 +220,7 @@
                                     <label class="win-radio-inline"><input type="radio" name="radSupSearch" id="radSupCode" onclick="onSupplierSearchModeChange()"> Code</label>
                                 </div>
                             </div>
-                            <select id="cmbSupplier" class="win-input select2-2col" data-header-col1="Supplier Name" data-header-col2="Supplier Code" onchange="onSupplierChange()" style="width: 100%;">
+                            <select id="cmbSupplier" class="win-input dtcombo" data-dtcombo="party4" data-dtcombo-caption="Supplier Name" data-header-col1="Supplier Name" data-header-col2="Supplier Code" style="width: 100%;">
                                 <option value="0">-- Select Supplier / Party --</option>
                             </select>
                             <input type="hidden" id="hidSupplierId" value="0"/>
@@ -199,7 +236,7 @@
                         <div class="col-md-6">
                             <label class="win-label">Booking Person</label>
                             <div style="display: flex; gap: 2px;">
-                                <select id="cmbBookingPerson" class="win-input select2-2col" data-header-col1="Booking Person" data-header-col2="Party Type" onchange="onBookingPersonChange()" style="flex: 1;">
+                                <select id="cmbBookingPerson" class="win-input dtcombo" data-dtcombo="refParty2" data-dtcombo-caption="Booking Person" style="flex: 1;">
                                     <option value="0">-- Select Booking Person --</option>
                                 </select>
                                 <button type="button" class="win-btn-action" style="background-color: #2e7d32; border-color: #1b5e20;" title="Add Booking Person" onclick="openDefineLookUpPartiesModal()"><i class="fa fa-plus"></i></button>
@@ -212,7 +249,7 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-6">
                             <label class="win-label">Payment Terms <span style="color:red;">*</span></label>
-                            <select id="cmbPaymentTerm" class="win-input select2" onchange="onPaymentTermChange()">
+                            <select id="cmbPaymentTerm" class="win-input dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term" onchange="onPaymentTermChange()">
                                 <option value="0">-- Select Payment Term --</option>
                                 <option value="2" data-days="30">Credit</option>
                                 <option value="1" data-days="0">Cash</option>
@@ -221,7 +258,7 @@
                         <div class="col-md-6">
                             <label class="win-label">Due Days & Date <span style="color:red;">*</span></label>
                             <div style="display: flex; gap: 2px;">
-                                <input type="number" id="txtDueDays" class="win-textbox" value="0" style="width: 55px;" oninput="onDueDaysChange()"/>
+                                <input type="number" id="txtDueDays" class="win-textbox" value="0" style="width: 55px;" oninput="onDueDaysChange()" data-guard="integer"/>
                                 <input type="date" id="txtPaymentDueDate" class="win-datepicker win-textbox-readonly" readonly style="flex: 1;"/>
                             </div>
                         </div>
@@ -231,18 +268,22 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-6">
                             <label class="win-label">Delivery Term <span style="color:red;">*</span></label>
-                            <select id="cmbDeliveryTerm" class="win-input select2">
+                            <!-- Options come from /api/purchase-order/delivery-terms only.
+                                 PurchsaeOrder.cs:1093-1098 binds this combo from DeliveryTerm.FormHistory(),
+                                 i.e. the database, so the three literals that used to sit here
+                                 (Load / Load & PartyWeight / Load & FactoryWeight) were invented for the
+                                 web. They are not the whole list - the live data includes terms such as
+                                 "Ponch" - and if the fetch failed the user was shown three plausible but
+                                 wrong terms and could save one. An empty list is the honest failure. -->
+                            <select id="cmbDeliveryTerm" class="win-input dtcombo" data-dtcombo="single" data-dtcombo-caption="Delivery Term">
                                 <option value="0">Delivery Term</option>
-                                <option value="1">Load</option>
-                                <option value="2">Load &amp; PartyWeight</option>
-                                <option value="3">Load &amp; FactoryWeight</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="win-label">Delivery Start Date & Days</label>
                             <div style="display: flex; gap: 2px;">
                                 <input type="date" id="txtDeliveryStartDate" class="win-datepicker" style="flex: 1;" onchange="onDeliveryStartDateChange()"/>
-                                <input type="number" id="txtDeliveryDays" class="win-textbox" value="7" style="width: 55px;" oninput="onDeliveryDaysChange()"/>
+                                <input type="number" id="txtDeliveryDays" class="win-textbox" value="7" style="width: 55px;" oninput="onDeliveryDaysChange()" data-guard="integer"/>
                             </div>
                         </div>
                     </div>
@@ -255,6 +296,17 @@
                                 <option value="Open" selected>Open</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Closed">Closed</option>
+                            </select>
+                        </div>
+                        <!-- LocationTypeFill() - PurchsaeOrder.cs :840. The page had no such
+                             control at all, while FormValidation :1906 makes it required
+                             whenever usp_getLocationType returns rows. Populated from
+                             /api/purchase-order/location-types; if that list is empty the
+                             desktop does not ask for it and neither does the server. -->
+                        <div class="col-md-3">
+                            <label class="win-label">Location Type</label>
+                            <select id="cmbLocationType" class="win-combo">
+                                <option value="0">-- Select --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -290,7 +342,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <label class="win-label">Comm Agent</label>
-                            <select id="cmbCommissionAgent" class="win-input select2-4col" onchange="onCommissionAgentChange()" style="width: 100%;">
+                            <select id="cmbCommissionAgent" class="win-input dtcombo" data-dtcombo="party4" data-dtcombo-caption="Commission Agent" style="width: 100%;">
                                 <option value="0">-- Select Comm Agent --</option>
                             </select>
                             <input type="hidden" id="hidCommissionAgentId" value="0"/>
@@ -301,7 +353,7 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-3">
                             <label class="win-label">Comm Type</label>
-                            <select id="cmbCommType" class="win-combo" onchange="calcCommission()">
+                            <select id="cmbCommType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CommissionType" onchange="calcCommission()">
                                 <option value="Flat">Flat</option>
                                 <option value="Percent">Percent (%)</option>
                                 <option value="Weight">Weight</option>
@@ -309,7 +361,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate</label>
-                            <input type="number" step="0.01" id="txtCommRate" class="win-textbox" value="0.00" oninput="calcCommission()"/>
+                            <input type="number" step="0.01" id="txtCommRate" class="win-textbox" value="0.00" oninput="calcCommission()" data-guard="decimal"/>
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate UOM</label>
@@ -317,7 +369,7 @@
                                  "GetCommissionUom", the same source as the desktop's
                                  CommissionUOMFill() (PurchsaeOrder.cs :1162-1172).
                                  A hard-coded 40 KG / 100 KG / 1 M.Ton list used to sit here. -->
-                            <select id="cmbCommUom" class="win-combo" onchange="calcCommission()">
+                            <select id="cmbCommUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" onchange="calcCommission()">
                                 <option value="0">-- Loading... --</option>
                             </select>
                         </div>
@@ -331,7 +383,7 @@
                     <div class="row" style="margin-top: 10px;">
                         <div class="col-md-12">
                             <label class="win-label">Broker Ac</label>
-                            <select id="cmbBrokerAccount" class="win-input select2-2col" data-header-col1="Broker Name" data-header-col2="Broker Code" onchange="onBrokerAccountChange()" style="width: 100%;">
+                            <select id="cmbBrokerAccount" class="win-input dtcombo" data-dtcombo="party4" data-dtcombo-caption="Brokery Account" data-header-col1="Broker Name" data-header-col2="Broker Code" style="width: 100%;">
                                 <option value="0">-- Select Broker Ac --</option>
                             </select>
                             <input type="hidden" id="hidBrokerAccountId" value="0"/>
@@ -342,7 +394,7 @@
                     <div class="row" style="margin-top: 4px;">
                         <div class="col-md-3">
                             <label class="win-label">Brokery Type</label>
-                            <select id="cmbBrokeryType" class="win-combo" onchange="calcBrokery()">
+                            <select id="cmbBrokeryType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="BrokeryType" onchange="calcBrokery()">
                                 <option value="Flat">Flat</option>
                                 <option value="Percent">Percent (%)</option>
                                 <option value="Weight">Weight</option>
@@ -350,12 +402,12 @@
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate</label>
-                            <input type="number" step="0.01" id="txtBrokeryRate" class="win-textbox" value="0.00" oninput="calcBrokery()"/>
+                            <input type="number" step="0.01" id="txtBrokeryRate" class="win-textbox" value="0.00" oninput="calcBrokery()" data-guard="decimal"/>
                         </div>
                         <div class="col-md-3">
                             <label class="win-label">Rate UOM</label>
                             <!-- Same source as cmbCommUom: CommissionUOMFill() binds both (:1171). -->
-                            <select id="cmbBrokeryRateUom" class="win-combo" onchange="calcBrokery()">
+                            <select id="cmbBrokeryRateUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" onchange="calcBrokery()">
                                 <option value="0">-- Loading... --</option>
                             </select>
                         </div>
@@ -407,97 +459,122 @@
             
             <!-- TAB 1: PURCHASE ORDER DETAIL -->
             <div id="tabDetail" class="po-tab-pane active">
-                <fieldset class="win-group-box">
-                    <legend>Item Selection & Calculation Line Entry</legend>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label class="win-label">Item Selection <span style="color:red;">*</span></label>
-                                <div>
-                                    <label class="win-radio-inline"><input type="radio" name="radItemSearch" id="radItemName" checked onclick="onItemSearchModeChange()"> Name</label>
-                                    <label class="win-radio-inline"><input type="radio" name="radItemSearch" id="radItemCode" onclick="onItemSearchModeChange()"> Code</label>
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 2px;">
-                                <input type="text" id="txtItemDisplay" class="win-textbox" placeholder="Click or type to search Item..." readonly onclick="openItemSearchModal()" style="cursor: pointer; background-color: #fff8e1; font-weight: bold; color: #008080;"/>
-                                <button type="button" class="win-btn-action" onclick="openItemSearchModal()"><i class="fa fa-search"></i></button>
-                            </div>
-                            <input type="hidden" id="hidItemId" value="0"/>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Crop Year</label>
-                            <input type="text" id="txtCropYear" class="win-textbox" value="2025-2026"/>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">UOM (Pack UOM)</label>
-                            <select id="cmbPackUom" class="win-combo" onchange="calcLineWeight()">
-                                <option value="0">-- Select Item First --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Item Qty</label>
-                            <input type="number" step="0.001" id="txtQty" class="win-textbox" placeholder="0.000" oninput="calcLineWeight('qty')"/>
-                        </div>
-                        <div class="col-md-2">
-                            <!-- Editable: the desktop's txtweight drives Qty in reverse
-                                 (CalculateByWeight, PurchsaeOrder.cs :4275-4281). -->
-                            <label class="win-label">Gross Weight (KG)</label>
-                            <input type="number" step="0.001" id="txtWeight" class="win-textbox" placeholder="0.000" oninput="calcLineWeight('weight')"/>
-                        </div>
-                    </div>
+                <!-- ==========================================================================================
+     Purchase Order Detail line entry - PurchsaeOrder.cs designer geometry, 1:1.
 
-                    <div class="row" style="margin-top: 4px;">
-                        <div class="col-md-2">
-                            <label class="win-label">Item Rate</label>
-                            <input type="number" step="0.01" id="txtRate" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Rate UOM</label>
-                            <select id="cmbRateUom" class="win-combo" onchange="calcLineAmount()">
-                                <option value="0">-- Select Item First --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Line Amount</label>
-                            <input type="number" step="0.01" id="txtAmount" class="win-textbox win-textbox-readonly" readonly placeholder="0.00"/>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Job / Lot</label>
-                            <select id="cmbJobLot" class="win-combo">
-                                <option value="0">-- Select Job/Lot --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Loading Location (City)</label>
-                            <div style="display: flex; gap: 2px;">
-                                <input type="text" id="txtLoadingCityDisplay" class="win-textbox" readonly placeholder="Select City..." onclick="openCitySearchModal()"/>
-                                <button type="button" class="win-btn-action" onclick="openDefineCityModal()"><i class="fa fa-plus"></i></button>
-                            </div>
-                            <input type="hidden" id="hidLoadingCityId" value="0"/>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="win-label">Moisture %</label>
-                            <input type="number" step="0.1" id="txtMoisture" class="win-textbox" value="14.0"/>
-                        </div>
-                    </div>
+     Every coordinate below is the designer's own, read out of the PurchaseOrderDetail tab page:
 
-                    <div class="row" style="margin-top: 4px; align-items: center;">
-                        <div class="col-md-3">
-                            <label class="win-label">Factory Sample / Standard</label>
-                            <div>
-                                <label class="win-radio-inline"><input type="radio" name="radSample" id="radSampleYes"> Sample</label>
-                                <label class="win-radio-inline"><input type="radio" name="radSample" id="radSampleNo" checked> Standard</label>
-                            </div>
-                        </div>
-                        <div class="col-md-7">
-                            <label class="win-label">Line Remarks</label>
-                            <input type="text" id="txtLineRemarks" class="win-textbox" placeholder="Item line remarks..."/>
-                        </div>
-                        <div class="col-md-2" style="margin-top: 14px;">
-                            <button type="button" class="win-btn-action" style="width: 100%;" onclick="btnAddDetailRow_Click()"><i class="fa fa-plus"></i> + Add Item</button>
-                        </div>
-                    </div>
-                </fieldset>
+       row 1  labels y=17..20, controls y=38..42
+              label18 "Item" (8,20) | panel5 Category/Type radios (39,15,136x21)
+              label37 "Item" (180,20) | rdSearchByName (221,18) rdSearchByCode (284,18)
+              label3 "Crop Year" (387,19) | label36 "UOM" (527,19) | label38 "Item Qty" (655,19)
+              label39 "Weight" (742,19) | label40 "Item Rate" (838,20)
+              label41 "Rate UOM" (921,18) | label44 "Amount" (1049,17)
+              CmbCategory (8,39,170x26)  combitem (180,39,205x26)  CmbCropyr (387,39,138x26)
+              combitempck (527,39,125x26) txtqty (655,41,82x23)    txtweight (738,41,96x23)
+              txtRate (835,42,82x23)      combrateuom (919,38,125x26) txtamount (1046,39,107x23)
+
+       row 2  labels y=65..69, controls y=85..88
+              label45 "Job/Lot" (8,67) | label35 (180,67) | label34 "Moisture %" (385,67)
+              label46 "Factory" (461,69) | panel16 Sample/Standard radios (503,65,149x23)
+              label47 "Remarks" (655,67)
+              combjob (8,85,170x26)  combcityarea (180,86,205x26)  txtMoisture (387,88,67x23)
+              CmbLabSampleNo (456,86,196x26) txtremarksdetail (655,88,372x23)
+              btnplus '+' (1029,86,27x26) | btnUpdateDetail (1029,86,64x26)
+              btnCancelUpdateDetial (1095,86,61x26)
+
+     The previous markup was a three-row bootstrap grid inside a group box the desktop does not
+     have, with renamed captions ("Gross Weight (KG)", "Line Amount", "UOM (Pack UOM)",
+     "Item Selection *", "Line Remarks"). Element ids and handlers are unchanged, so the existing
+     JavaScript keeps working.
+     ========================================================================================== -->
+<div class="po-lineentry">
+    <!-- row 1 -->
+    <span class="lbl" style="left:8px;  top:20px;">Item</span>
+    <span class="radios" style="left:39px; top:15px; width:136px;">
+        <label><input type="radio" name="itemCatMode" id="radItemCatCategory" checked onchange="onItemCategoryModeChange()">Category</label>
+        <label><input type="radio" name="itemCatMode" id="radItemCatType" onchange="onItemCategoryModeChange()">Type</label>
+    </span>
+    <select id="cmbItemCategory" class="win-combo dtcombo ctl" style="left:8px; top:39px; width:170px;"
+            data-dtcombo="single" data-dtcombo-caption="Item Category" onchange="onItemCategoryChange()"></select>
+
+    <span class="lbl" style="left:180px; top:20px;">Item</span>
+    <span class="radios" style="left:221px; top:18px; width:115px;">
+        <label><input type="radio" name="itemSearchMode" id="radItemName" checked onchange="onItemSearchModeChange()">Name</label>
+        <label><input type="radio" name="itemSearchMode" id="radItemCode" onchange="onItemSearchModeChange()">Code</label>
+    </span>
+    <input type="text" id="txtItemDisplay" class="win-textbox ctl" style="left:180px; top:39px; width:205px;"
+           readonly onclick="openItemSearchModal()" placeholder="">
+    <input type="hidden" id="hidItemId" value="0">
+
+    <span class="lbl" style="left:387px; top:19px;">Crop Year</span>
+    <!-- CropYear() :1584 binds a COMBO here - DDL.BindDDLNew(dtCrop, CmbCropyr, "Id", "CropYear",
+         "Crop Year", true) - not a textbox. It was a read-only input that nothing ever filled on a
+         new line, so Crop and CropYearId were saved empty. -->
+    <select id="cmbCropYear" class="win-combo dtcombo ctl" style="left:387px; top:39px; width:138px;"
+            data-dtcombo="single" data-dtcombo-caption="Crop Year">
+        <option value="0">...Select Any Value...</option>
+    </select>
+
+    <span class="lbl" style="left:527px; top:19px;">UOM</span>
+    <select id="cmbPackUom" class="win-combo dtcombo ctl" style="left:527px; top:39px; width:125px;"
+            data-dtcombo="uom2" data-dtcombo-caption="UOM" onchange="calcLineWeight()"></select>
+
+    <span class="lbl" style="left:655px; top:19px;">Item Qty</span>
+    <input type="number" id="txtQty" class="win-textbox ctl num" style="left:655px; top:41px; width:82px;"
+           step="any" oninput="calcLineWeight('qty')" data-guard="decimal">
+
+    <span class="lbl" style="left:742px; top:19px;">Weight</span>
+    <input type="number" id="txtWeight" class="win-textbox ctl num" style="left:738px; top:41px; width:96px;"
+           step="any" oninput="calcLineWeight('weight')" data-guard="decimal">
+
+    <span class="lbl" style="left:838px; top:20px;">Item Rate</span>
+    <input type="number" id="txtRate" class="win-textbox ctl num" style="left:835px; top:42px; width:82px;"
+           step="any" value="0" oninput="calcLineAmount()" data-guard="decimal">
+
+    <span class="lbl" style="left:921px; top:18px;">Rate UOM</span>
+    <select id="cmbRateUom" class="win-combo dtcombo ctl" style="left:919px; top:38px; width:125px;"
+            data-dtcombo="uom2" data-dtcombo-caption="RateUOM" onchange="calcLineAmount()"></select>
+
+    <span class="lbl" style="left:1049px; top:17px;">Amount</span>
+    <input type="number" id="txtAmount" class="win-textbox win-textbox-readonly ctl num"
+           style="left:1046px; top:39px; width:107px;" readonly>
+
+    <!-- row 2 -->
+    <span class="lbl" style="left:8px;   top:67px;">Job/Lot</span>
+    <select id="cmbJobLot" class="win-combo dtcombo ctl" style="left:8px; top:85px; width:170px;"
+            data-dtcombo="single" data-dtcombo-caption="Job / Lot"></select>
+
+    <span class="lbl" style="left:180px; top:67px;">Loading Location (City)</span>
+    <input type="text" id="txtLoadingCityDisplay" class="win-textbox ctl" style="left:180px; top:86px; width:205px;"
+           readonly onclick="openCitySearchModal()" placeholder="">
+    <input type="hidden" id="hidLoadingCityId" value="0">
+
+    <span class="lbl" style="left:385px; top:67px;">Moisture %</span>
+    <input type="number" id="txtMoisture" class="win-textbox ctl num" style="left:387px; top:88px; width:67px;"
+           step="any" data-guard="decimal">
+
+    <span class="lbl" style="left:461px; top:69px;">Factory</span>
+    <span class="radios" style="left:503px; top:65px; width:149px;">
+        <label><input type="radio" name="factorySample" id="radSampleYes">Sample</label>
+        <label><input type="radio" name="factorySample" id="radSampleNo" checked>Standard</label>
+    </span>
+    <!-- CmbLabSampleNo (456,86,196x26) sits under the Factory radios on the desktop. There is no
+         lab-sample lookup on this page yet, so the slot is drawn disabled rather than filled with
+         an invented list. -->
+    <select id="cmbLabSampleNo" class="win-combo ctl" style="left:456px; top:86px; width:196px;" disabled></select>
+
+    <span class="lbl" style="left:655px; top:67px;">Remarks</span>
+    <input type="text" id="txtLineRemarks" class="win-textbox ctl" style="left:655px; top:88px; width:372px;">
+
+    <!-- btnplus is the ADD button on the desktop; Update/Cancel replace it while a saved row is
+         being edited (all three share position 1029,86). -->
+    <button type="button" id="btnplus" class="po-plus" style="left:1029px; top:86px; width:27px;"
+            onclick="btnAddDetailRow_Click()" title="Add">+</button>
+    <button type="button" id="btnUpdateDetail" class="po-line-btn" style="left:1029px; top:86px; width:64px; display:none;" onclick="btnUpdateDetail_Click()">Update</button>
+    <button type="button" id="btnCancelUpdateDetial" class="po-line-btn" style="left:1095px; top:86px; width:61px; display:none;" onclick="btnCancelUpdateDetial_Click()">Cancel</button>
+</div>
+
 
                 <!-- ITEMS MAIN GRID -->
                 <div class="win-grid-container">
@@ -649,28 +726,42 @@
             </div>
 
             <!-- TAB 5: LAB DEDUCTION STANDARD -->
+            <!-- LabGridSetting() - PurchsaeOrder.cs :2091-2113, filled by GetLabDetailByItemId()
+                 :2290 from Sp_InvLabAnalysisStandardDeductionPolicyHeader_GetAllMethod
+                 (@Activity='ReadByItemId', @PolicyApplyOn='PurchaseOrder') and SAVED to
+                 PurchaseOrderLabDeduction (:3510).
+
+                 What was here before was four invented boxes - "Admixture Max % 2.0",
+                 "Discolored Max % 3.0", "Broken Grain Max % 5.0", "Foreign Matter Max % 1.0" -
+                 with fabricated defaults, no database source, and no path into the save. The
+                 desktop has a GRID, per item, and only the Deduction column is editable
+                 (:2101-2107 set every other column EditType 0). -->
             <div id="tabLabDeductions" class="po-tab-pane" style="display: none;">
-                <fieldset class="win-group-box">
-                    <legend>Lab Deduction Standard Parameters</legend>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label class="win-label">Admixture Max %</label>
-                            <input type="number" step="0.1" id="txtLabAdmixture" class="win-textbox" value="2.0"/>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="win-label">Discolored Max %</label>
-                            <input type="number" step="0.1" id="txtLabDiscolored" class="win-textbox" value="3.0"/>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="win-label">Broken Grain Max %</label>
-                            <input type="number" step="0.1" id="txtLabBroken" class="win-textbox" value="5.0"/>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="win-label">Foreign Matter Max %</label>
-                            <input type="number" step="0.1" id="txtLabForeign" class="win-textbox" value="1.0"/>
-                        </div>
+                <div class="win-grid-container">
+                    <div class="win-grid-scroll" style="max-height: 200px;">
+                        <table class="win-grid" id="grdLabTable">
+                            <thead>
+                                <tr style="background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color:#000; font-weight:bold;">
+                                    <th style="width:200px;">Item Name</th>
+                                    <th style="width:180px;">Analysis Perameter</th>
+                                    <th style="width:90px; text-align:right;">Range From</th>
+                                    <th style="width:90px; text-align:right;">Range To</th>
+                                    <th style="width:110px;">Deduction On</th>
+                                    <th style="width:90px; text-align:right;">Weight</th>
+                                    <th style="width:110px; text-align:right;">Standard Value</th>
+                                    <th style="width:110px; text-align:right;">Deduction Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblLabTbody">
+                                <tr><td colspan="8" style="text-align:center; padding:15px; color:#777;">No lab deduction standard for the items on this order.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
-                </fieldset>
+                </div>
+                <div style="background:#ece9d8; border:1px solid #7a9a9e; border-top:none; padding:3px 8px; font-size:11px;">
+                    <span style="font-weight:bold; color:#333;">Record:</span>
+                    <span id="lblLabRecordInfo" style="font-weight:bold; color:#008080;">0 Of 0</span>
+                </div>
             </div>
 
             <!-- TAB 6: PAYMENT DETAIL - real desktop ditto. Real table
@@ -740,8 +831,8 @@
                     <!-- Row 1: Branch Name, From/To Date, From/To Doc No -->
                     <div class="col-md-3">
                         <label class="win-label">Branch Name</label>
-                        <select id="cmbHistoryBranch" class="win-combo">
-                            <option value="0">Golden Ace Rice Mills (Pvt) Ltd.</option>
+                        <select id="cmbHistoryBranch" class="win-combo" multiple="multiple">
+                            <option value="0"></option>
                         </select>
                     </div>
 
@@ -765,12 +856,12 @@
 
                     <div class="col-md-2">
                         <label class="win-label">From Doc No</label>
-                        <input type="number" id="txtHistoryFromDocNo" class="win-textbox" placeholder="From..."/>
+                        <input type="number" id="txtHistoryFromDocNo" class="win-textbox" placeholder="From..." data-guard="integer"/>
                     </div>
 
                     <div class="col-md-3">
                         <label class="win-label">To Doc No</label>
-                        <input type="number" id="txtHistoryToDocNo" class="win-textbox" placeholder="To..."/>
+                        <input type="number" id="txtHistoryToDocNo" class="win-textbox" placeholder="To..." data-guard="integer"/>
                     </div>
                 </div>
 
@@ -778,17 +869,27 @@
                     <!-- Row 2: Supplier Name, Booking Person, Date Type radios, Show button -->
                     <div class="col-md-3">
                         <label class="win-label">Supplier Name</label>
-                        <div style="display: flex; gap: 2px;">
-                            <input type="text" id="txtHistorySupplierDisplay" class="win-textbox" placeholder="All Suppliers" readonly onclick="openHistorySupplierModal()" style="cursor: pointer; background: #fff;"/>
-                            <button type="button" class="win-btn-action" onclick="openHistorySupplierModal()"><i class="fa fa-search"></i></button>
-                            <button type="button" class="win-btn-action" style="background: #c62828; border-color: #b71c1c;" title="Clear Supplier" onclick="clearHistorySupplier()"><i class="fa fa-times"></i></button>
-                        </div>
+                        <!-- The desktop's cmbSupplierNameHistory is a DROPDOWN, not a search box
+                             (HistorySupplierComboFill, PurchsaeOrder.cs:4688). Its rows are the
+                             parties that actually appear on Purchase Orders - from
+                             USP_GetDataForDropDownFromPurchaseOrder split on its Activity column -
+                             NOT the party master, which is why the desktop offers a handful of
+                             names. A search box over the full master was both the wrong control
+                             and the wrong list.
+
+                             #hidHistorySupplierId is kept and mirrored from this select, because
+                             the history query already reads it (:2486). -->
+                        <select id="cmbHistorySupplier" class="win-combo dtcombo"
+                                data-dtcombo="single" data-dtcombo-caption="Supplier Name"
+                                onchange="document.getElementById('hidHistorySupplierId').value = this.value || '0';">
+                            <option value="0">-- All Suppliers --</option>
+                        </select>
                         <input type="hidden" id="hidHistorySupplierId" value="0"/>
                     </div>
 
                     <div class="col-md-3">
                         <label class="win-label">Booking Person</label>
-                        <select id="cmbHistoryBookingPerson" class="win-combo">
+                        <select id="cmbHistoryBookingPerson" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Booking Person">
                             <option value="0">-- All Booking Persons --</option>
                         </select>
                     </div>
@@ -814,26 +915,18 @@
             </div>
             <div class="win-grid-container">
                 <div class="win-grid-scroll" style="max-height: 220px;">
+                    <!-- Header, body and totals are ALL rendered from HISTORY_COLUMNS in
+                         countx_purchase_order_full.js. They used to be written out separately,
+                         and they disagreed: the <thead> listed Doc Date / Doc No / Branch Name /
+                         ... while the body emitted branch / docNo / docDate / ... so every value
+                         landed one column away from its own heading. Driving both from one
+                         definition is what stops that recurring. -->
                     <table class="win-grid" id="grdHistoryTable">
-                        <thead>
-                            <tr style="background: linear-gradient(to bottom, #dceaf7 0%, #cbe2f7 100%); color: #000; font-weight: bold;">
-                                <th style="width: 70px; text-align: center;">Action</th>
-                                <th style="width: 90px;">Doc Date</th>
-                                <th style="width: 70px;">Doc No</th>
-                                <th style="width: 140px;">Branch Name</th>
-                                <th style="width: 200px;">Supplier Name</th>
-                                <th style="width: 140px;">Booking Person</th>
-                                <th style="width: 85px; text-align: right;">Order Qty</th>
-                                <th style="width: 105px; text-align: right;">Total Amount</th>
-                                <th style="width: 100px;">Delivery Term</th>
-                                <th style="width: 75px; text-align: center;">Status</th>
-                                <th style="width: 100px;">Entry Date</th>
-                                <th style="width: 180px;">Remarks</th>
-                            </tr>
-                        </thead>
+                        <thead id="tblHistoryThead"></thead>
                         <tbody id="tblHistoryTbody">
-                            <tr><td colspan="12" style="text-align: center; padding: 20px; color: #777;">Click <strong>Show</strong> to load Purchase Order history records.</td></tr>
+                            <tr><td style="text-align: center; padding: 20px; color: #777;">Click <strong>Show</strong> to load Purchase Order history records.</td></tr>
                         </tbody>
+                        <tfoot id="tblHistoryTfoot"></tfoot>
                     </table>
                 </div>
             </div>
@@ -853,24 +946,11 @@
             <div class="win-grid-container">
                 <div class="win-grid-scroll" style="max-height: 180px;">
                     <table class="win-grid" id="grdHistoryDetailTable">
-                        <thead>
-                            <tr style="background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); color: #000; font-weight: bold;">
-                                <th style="width: 100px;">Item Code</th>
-                                <th style="width: 220px;">Item Name</th>
-                                <th style="width: 90px;">Crop Year</th>
-                                <th style="width: 80px;">Pack UOM</th>
-                                <th style="width: 90px; text-align: right;">Item Qty</th>
-                                <th style="width: 90px; text-align: right;">Weight/Qty</th>
-                                <th style="width: 100px; text-align: right;">Total Weight</th>
-                                <th style="width: 90px; text-align: right;">Item Rate</th>
-                                <th style="width: 80px;">Rate UOM</th>
-                                <th style="width: 110px; text-align: right;">Amount</th>
-                                <th>Remarks</th>
-                            </tr>
-                        </thead>
+                        <thead id="tblHistoryDetailThead"></thead>
                         <tbody id="tblHistoryDetailTbody">
-                            <tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Select a row above to view line item details.</td></tr>
+                            <tr><td style="text-align: center; padding: 15px; color: #777;">Select a row above to view line item details.</td></tr>
                         </tbody>
+                        <tfoot id="tblHistoryDetailTfoot"></tfoot>
                     </table>
                 </div>
             </div>
@@ -1150,8 +1230,13 @@
             <div class="modal-content" style="border-radius: 0; border: 2px solid #008080;">
                 <div class="modal-winheader">Purchase Order Attachments</div>
                 <div class="modal-body" style="padding: 10px; background-color: #ece9d8;">
-                    <input type="file" id="fileAttach" class="win-textbox" style="margin-bottom: 8px;"/>
-                    <button type="button" class="win-btn-action" onclick="alert('Attachment added successfully.')"><i class="fa fa-upload"></i> Attach File</button>
+                    <input type="file" id="fileAttach" multiple class="win-textbox" style="margin-bottom: 8px;"/>
+                    <button type="button" id="btnAttachFile" class="win-btn-action" onclick="addPurchaseOrderAttachments(this)"><i class="fa fa-upload"></i> Attach File</button>
+                    <p style="margin:8px 0;">Save or Update the order to save attachment changes.</p>
+                    <div class="win-grid-scroll" style="max-height:280px;overflow:auto;">
+                        <table class="win-grid"><thead><tr><th>File</th><th>Action</th></tr></thead><tbody id="poAttachmentRows"></tbody></table>
+                    </div>
+                    <button type="button" class="win-btn-action" data-dismiss="modal" style="margin-top:8px;">Close</button>
                 </div>
             </div>
         </div>
@@ -1246,6 +1331,9 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script th:src="@{/build/js/countx_purchase_order_full.js}"></script>
+    <script th:src="@{/build/js/countx_purchase_request.js?v=20260923c}"></script>
+    <script th:src="@{/build/js/countx_purchase_order_full.js?v=20260923payment}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260923c}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260921d}"></script>
 </body>
 </html>

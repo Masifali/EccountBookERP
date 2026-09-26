@@ -21,10 +21,14 @@ public class PurchaseDirectInvoiceRestController {
 
     @GetMapping("/dropdowns")
     public ResponseEntity<?> getDropdowns() {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        return ResponseEntity.ok(purchaseDirectInvoiceService.getDropdowns(orgId, compId));
+        return ResponseEntity.ok(purchaseDirectInvoiceService.desktopDropdowns());
     }
+
+    @PostMapping("/calculate-line")
+    public ResponseEntity<?> calculateLine(@RequestBody Map<String,Object> input){return ResponseEntity.ok(purchaseDirectInvoiceService.calculateLine(input));}
+
+    @PostMapping("/calculate-bill")
+    public ResponseEntity<?> calculateBill(@RequestBody Map<String,Object> input){input.put("organizationId",currentUserContext.currentOrganizationId());input.put("companyId",currentUserContext.currentCompanyId());return ResponseEntity.ok(purchaseDirectInvoiceService.calculateBill(input));}
 
     @GetMapping("/next-code")
     public ResponseEntity<?> getNextCode() {
@@ -35,6 +39,7 @@ public class PurchaseDirectInvoiceRestController {
         int nextNo = purchaseDirectInvoiceService.generateNextDocNo(orgId, compId, branchId, yearId);
         Map<String, Object> res = new HashMap<>();
         res.put("docNo", nextNo);
+        res.put("branchSrNo",purchaseDirectInvoiceService.generateNextBranchNo(orgId,compId,branchId,yearId));
         return ResponseEntity.ok(res);
     }
 

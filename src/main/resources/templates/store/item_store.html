@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Item Store - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* AddItemStore designer geometry, 1:1 in px (ClientSize 1370 x 702). tabCAddItem (Dock Fill,
+           Alignment Bottom) holds two pages, each at (4,4) 1362 x 673, with the tab headers under the
+           pages. Every control keeps its designer Location/Size inside its group box. */
+        body { background: #fff; padding-bottom: 36px; }
+        .ai-scroll { overflow-x: auto; }
+        .ai-root { width: 1370px; position: relative; font-family: Verdana, sans-serif; font-size: 13px; background: #f0f0f0; padding: 4px 4px 0 4px; box-sizing: border-box; }
+        .ai-page { width: 1362px; height: 673px; position: relative; background: #fff; border: 1px solid #a0a0a0; box-sizing: border-box; overflow: hidden; }
+        .ai-page.win-tab-panel { display: none; }
+        .ai-page.win-tab-panel.is-active { display: block; }
+        .ai-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .ai-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .ai-req { font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 13px; line-height: 17px; color: red; }
+        .ai-txt { font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .ai-txt[readonly] { background: #f0f0f0; }
+        .ai-txt.white[readonly] { background: #fff; }
+        .ai-cmb { font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .ai-chk { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; height: 19px; white-space: nowrap; }
+        .ai-chk.tahoma { font-family: Tahoma, sans-serif; height: 18px; }
+        .ai-chk input { margin: 0; }
+        .ai-gb { position: absolute; box-sizing: border-box; }
+        .ai-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .ai-gb > .ai-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 16px; color: #000; }
+        .ai-teal { background: #008080; position: relative; }
+        .ai-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .ai-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .ai-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; white-space: nowrap; color: #000; }
+        .ai-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .ai-tool:disabled { color: #9a9a9a; cursor: default; }
+        .ai-pic { overflow: hidden; background: #fff; }
+        .ai-pic img { width: 100%; height: 100%; display: block; }
+        .ai-browse { background: #fff; border: 1px solid #008080; color: #008080; font-family: Verdana, sans-serif; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .ai-x { background: #48d1cc; border: 1px solid #48d1cc; color: #fff; font-family: Verdana, sans-serif; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0; }
+        .ai-grid-host { overflow: auto; background: #fff; border: 1px solid #9eb6ce; box-sizing: border-box; }
+        .ai-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .ai-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .ai-grid-host .win-grid td { border: 1px solid #d5e1f0; }
+        .ai-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        #grdhistory tbody tr { cursor: default; }
+        /* tabCAddItem.Alignment = Bottom: the tab headers sit under the pages. */
+        .ai-tabs { display: flex; gap: 2px; height: 21px; margin: 0; border: none; }
+        .ai-tabs .win-tab { border: 1px solid #999; border-top: none; border-radius: 0 0 3px 3px; padding: 2px 12px; font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; }
+        .ai-tabs .win-tab.is-active { top: -1px; background: #fff; color: #000; }
+    </style>
+</head>
+<body>
+<!-- Screen 329 "Item Store", AddItemStore.cs (base.Name "AddItemStore"). Master screen: no DocumentTypeId, no print. -->
+<div class="ai-scroll">
+<div class="ai-root">
+
+    <!-- tpItemDefinitionAddItem "Add Item" (4,4) 1362 x 673, padding 3 -->
+    <div id="tabForm" class="ai-page win-tab-panel is-active">
+
+        <!-- panel6 (3,3) 1356 x 32 / toolStrip1 (0,0) 1356 x 27 -->
+        <div class="ai-abs" style="left:3px;top:3px;width:1356px;height:32px;background:#f0f0f0;">
+            <div class="ai-strip">
+                <button type="button" class="ai-tool" id="btnnew" style="width:59px" onclick="ItemStore.btnnew_Click()"><i class="fa fa-file-o"></i> New</button>
+                <button type="button" class="ai-tool" id="BtnRefresh" style="width:80px" onclick="ItemStore.toolStripButton1_Click()"><i class="fa fa-repeat"></i> Refresh</button>
+                <button type="button" class="ai-tool" id="btnsave" style="width:64px" onclick="ItemStore.BtnSave_Click()"><i class="fa fa-save"></i> Save</button>
+                <button type="button" class="ai-tool is-hidden" id="btnupdate" style="width:78px" onclick="ItemStore.btnupdate_Click()"><i class="fa fa-refresh"></i> Update</button>
+                <button type="button" class="ai-tool" id="btnattachment" style="width:109px" disabled title="Attachments are not ported to the web yet"><i class="fa fa-paperclip"></i> Attachment</button>
+                <button type="button" class="ai-tool" id="BtnDefineCategory" style="width:126px" disabled title="Opens frmItemCatagoryStore (FormTypeId 2) on the desktop - not ported here"><i class="fa fa-sitemap"></i> Item Category</button>
+                <button type="button" class="ai-tool" id="BtnItemType" style="width:98px" disabled title="Opens InvDeffrmItemType (FormTypeId 2) on the desktop - not ported here"><i class="fa fa-tags"></i> Item Type</button>
+                <button type="button" class="ai-tool" id="BtnPrintBarCode" style="width:119px" disabled title="Opens BarcodeGenerate on the desktop - not ported here"><i class="fa fa-barcode"></i> Barcode Print</button>
+                <button type="button" class="ai-tool" id="BtnUom" style="width:94px" disabled title="Opens InvDeffrmItemItemUom on the desktop - not ported here"><i class="fa fa-balance-scale"></i> Item Uom</button>
+                <button type="button" class="ai-tool is-hidden" id="BtnItemUomSchedule" style="width:159px" disabled><i class="fa fa-list"></i> Item Uom Schedule</button>
+                <button type="button" class="ai-tool is-hidden" id="BtnAttributesAllocation" style="width:213px" disabled title="Opens frmAttributeAllocationToItem on the desktop - not ported here"><i class="fa fa-th-list"></i> Attribute Allocation to Item</button>
+                <button type="button" class="ai-tool" id="btnDefineRack" style="width:167px" disabled title="Opens ItemAllocationToStoreRack on the desktop - not ported here"><i class="fa fa-archive"></i> Rack Allocation To Item</button>
+                <span id="lblStatus" style="font-size:10px;color:#004d40;padding-left:6px;"></span>
+                <a href="/modules" class="ai-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+            </div>
+        </div>
+
+        <!-- panel2 (3,35) 1356 x 27 teal; label13 (3,3) Tahoma 12pt bold -->
+        <div class="ai-abs ai-teal" style="left:3px;top:35px;width:1356px;height:27px;">
+            <span class="ai-teal-title" style="left:3px;top:3px;">Add Item</span>
+            <span id="lblRecId" style="display:none;">&nbsp;</span>
+        </div>
+
+        <!-- panel1 / panel7 (3,62) 1356 x 608 -->
+        <div class="ai-abs" style="left:3px;top:62px;width:1356px;height:608px;">
+
+            <!-- groupBox2 "Main Information" (0,0) 322 x 608, Dock Left, Tahoma 9.75pt bold -->
+            <div class="ai-gb" id="groupBox2" style="left:0;top:0;width:322px;height:608px;background:#fff;">
+                <span class="ai-cap">Main Information</span>
+
+                <label class="ai-abs ai-lbl" for="cmbItemCategory" style="left:3px;top:28px;">Item Category</label>
+                <span class="ai-abs ai-req" style="left:93px;top:27px;">*</span>
+                <select id="cmbItemCategory" class="ai-abs ai-cmb win-combo" style="left:109px;top:22px;width:200px;"></select>
+
+                <label class="ai-abs ai-lbl" for="cmbItemType" style="left:3px;top:56px;">Item Type</label>
+                <span class="ai-abs ai-req" style="left:93px;top:55px;">*</span>
+                <select id="cmbItemType" class="ai-abs ai-cmb win-combo" style="left:109px;top:50px;width:199px;"></select>
+
+                <label class="ai-abs ai-lbl" for="txtItemCodeNew" style="left:3px;top:84px;">Item Code</label>
+                <span class="ai-abs ai-req" style="left:93px;top:83px;">*</span>
+                <input type="text" id="txtItemCodeNew" class="ai-abs ai-txt" style="left:109px;top:80px;width:199px;" readonly tabindex="-1">
+                <!-- txtItemCode (233,80) 75 x 23, Visible = false -->
+                <input type="hidden" id="txtItemCode">
+
+                <label class="ai-abs ai-lbl" for="txtItemName" style="left:3px;top:113px;">Item Name</label>
+                <span class="ai-abs ai-req" style="left:93px;top:112px;">*</span>
+                <input type="text" id="txtItemName" class="ai-abs ai-txt" style="left:109px;top:109px;width:199px;" maxlength="100">
+
+                <label class="ai-abs ai-lbl" for="cmbBaseUnit" style="left:3px;top:142px;">Base UOM</label>
+                <span class="ai-abs ai-req" style="left:93px;top:141px;">*</span>
+                <select id="cmbBaseUnit" class="ai-abs ai-cmb win-combo" style="left:109px;top:136px;width:101px;"></select>
+                <label class="ai-abs ai-chk is-hidden" style="left:212px;top:140px;width:116px;"><input type="checkbox" id="chkAllowMultiUom">Allow Multi Uom</label>
+
+                <label class="ai-abs ai-lbl" for="txtBarcodeNo" style="left:3px;top:169px;">Barcode No</label>
+                <span class="ai-abs ai-req" style="left:93px;top:168px;">*</span>
+                <input type="text" id="txtBarcodeNo" class="ai-abs ai-txt" style="left:109px;top:165px;width:199px;" maxlength="50">
+
+                <label class="ai-abs ai-lbl" for="txtMinStock" style="left:3px;top:194px;">Min Stock</label>
+                <input type="text" id="txtMinStock" class="ai-abs ai-txt" style="left:109px;top:190px;width:199px;" data-keys="decimal">
+                <label class="ai-abs ai-lbl" for="txtMaxStock" style="left:3px;top:219px;">Max Stock</label>
+                <input type="text" id="txtMaxStock" class="ai-abs ai-txt" style="left:109px;top:215px;width:199px;" data-keys="decimal">
+                <label class="ai-abs ai-lbl" for="txtReOrderLevel" style="left:3px;top:244px;">ReOrder Level</label>
+                <input type="text" id="txtReOrderLevel" class="ai-abs ai-txt" style="left:109px;top:240px;width:199px;" data-keys="decimal">
+                <label class="ai-abs ai-lbl" for="txtReOrderQty" style="left:3px;top:269px;">ReOrder Qty</label>
+                <input type="text" id="txtReOrderQty" class="ai-abs ai-txt" style="left:109px;top:265px;width:199px;" data-keys="decimal">
+
+                <label class="ai-abs ai-lbl" for="CmbRackName" style="left:3px;top:297px;">Rack Name</label>
+                <span class="ai-abs ai-req" style="left:91px;top:296px;">*</span>
+                <select id="CmbRackName" class="ai-abs ai-cmb win-combo" style="left:109px;top:291px;width:199px;"></select>
+
+                <label class="ai-abs ai-lbl" for="cmbPurchaseGL" style="left:3px;top:325px;">Stock A/C</label>
+                <span class="ai-abs ai-req" style="left:91px;top:324px;">*</span>
+                <select id="cmbPurchaseGL" class="ai-abs ai-cmb win-combo" style="left:109px;top:319px;width:199px;"></select>
+
+                <label class="ai-abs ai-lbl" for="cmbSaleGL" style="left:3px;top:353px;">Sale A/C</label>
+                <span class="ai-abs ai-req" style="left:91px;top:352px;">*</span>
+                <select id="cmbSaleGL" class="ai-abs ai-cmb win-combo" style="left:109px;top:347px;width:199px;"></select>
+
+                <label class="ai-abs ai-lbl" for="cmbCGSGL" style="left:3px;top:381px;">CGS A/C</label>
+                <span class="ai-abs ai-req" style="left:91px;top:380px;">*</span>
+                <select id="cmbCGSGL" class="ai-abs ai-cmb win-combo" style="left:109px;top:375px;width:199px;"></select>
+
+                <label class="ai-abs ai-lbl" for="cmbTaxType" style="left:3px;top:409px;">Tax Type</label>
+                <span class="ai-abs ai-req" style="left:91px;top:408px;">*</span>
+                <select id="cmbTaxType" class="ai-abs ai-cmb win-combo" style="left:109px;top:403px;width:199px;"></select>
+
+                <label class="ai-abs ai-lbl" for="txtTaxPercent" style="left:3px;top:437px;">Tax %</label>
+                <input type="text" id="txtTaxPercent" class="ai-abs ai-txt white" style="left:109px;top:431px;width:101px;" readonly tabindex="-1">
+                <label class="ai-abs ai-chk" style="left:212px;top:434px;width:66px;"><input type="checkbox" id="chbGST">Taxable</label>
+
+                <label class="ai-abs ai-lbl" for="txtLeadTimeDay" style="left:3px;top:460px;">LeadTime Day</label>
+                <input type="text" id="txtLeadTimeDay" class="ai-abs ai-txt" style="left:109px;top:456px;width:199px;" data-keys="number">
+
+                <label class="ai-abs ai-lbl" for="txtPackSize" style="left:3px;top:487px;">Pack Size(Capacity)</label>
+                <input type="text" id="txtPackSize" class="ai-abs ai-txt" style="left:109px;top:483px;width:101px;" data-keys="number">
+                <select id="CmbPackSizeId" class="ai-abs ai-cmb win-combo" style="left:212px;top:481px;width:96px;"></select>
+
+                <label class="ai-abs ai-chk tahoma" style="left:109px;top:517px;width:56px;"><input type="radio" name="rdOrigin" id="rdLocal" checked>Local</label>
+                <label class="ai-abs ai-chk tahoma" style="left:109px;top:534px;width:68px;"><input type="radio" name="rdOrigin" id="rdImport">Import</label>
+                <label class="ai-abs ai-chk is-hidden" id="lblChkIsCompany" style="left:196px;top:516px;width:105px;"><input type="checkbox" id="ChkIsCompany" checked>Company Item</label>
+                <label class="ai-abs ai-chk is-hidden" id="lblChkIsThirdParty" style="left:196px;top:534px;width:112px;"><input type="checkbox" id="ChkIsThirdParty" checked>Third Party Item</label>
+                <label class="ai-abs ai-chk" style="left:109px;top:553px;width:59px;"><input type="checkbox" id="chkstatus" checked tabindex="-1">Status</label>
+            </div>
+
+            <!-- BrandImages "Brand Images" (322,0) 1034 x 321, Dock Top, Tahoma 9.75pt bold -->
+            <div class="ai-gb" id="BrandImages" style="left:322px;top:0;width:1034px;height:321px;background:#fff;">
+                <span class="ai-cap">Brand Images</span>
+                <div class="ai-abs ai-pic" id="picbox1" style="left:6px;top:22px;width:300px;height:250px;"></div>
+                <button type="button" class="ai-abs ai-browse" id="btnimg1" style="left:24px;top:274px;width:196px;height:43px;" onclick="ItemStore.browse(1)"><i class="fa fa-folder-open-o"></i> Browse</button>
+                <button type="button" class="ai-abs ai-x" id="btnPic1Reset" style="left:230px;top:278px;width:43px;height:33px;" onclick="ItemStore.resetPic(1)">X</button>
+                <div class="ai-abs ai-pic" id="picbox2" style="left:314px;top:22px;width:300px;height:250px;"></div>
+                <button type="button" class="ai-abs ai-browse" id="btnimg2" style="left:335px;top:274px;width:189px;height:43px;" onclick="ItemStore.browse(2)"><i class="fa fa-folder-open-o"></i> Browse</button>
+                <button type="button" class="ai-abs ai-x" id="btnPic2Reset" style="left:539px;top:279px;width:42px;height:33px;" onclick="ItemStore.resetPic(2)">X</button>
+                <input type="file" id="fileImage" accept=".jpg,.jpeg,.gif,.png" style="display:none;">
+            </div>
+
+            <!-- groupBox1 "Item Allocation To Company" (322,321) 432 x 287, Dock Left, Verdana 9.75pt bold;
+                 grdAllocation (3,19) 426 x 265, Dock Fill, Verdana 8.25pt -->
+            <div class="ai-gb" id="groupBox1" style="left:322px;top:321px;width:432px;height:287px;background:#fff;">
+                <span class="ai-cap" style="font-family:Verdana,sans-serif;">Item Allocation To Company</span>
+                <div class="ai-abs ai-grid-host win-grid-scroll" style="left:3px;top:19px;width:426px;height:265px;max-height:none;">
+                    <table class="win-grid" id="grdAllocation">
+                        <thead><tr><th>Location</th><th><input type="checkbox" id="chkAllocationHeader" title="Select all" onchange="ItemStore.allocationHeader(this.checked)"> Value</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- tpItemDefinitionAddItemHistory "History" (4,4) 1362 x 673 -->
+    <div id="tabHistory" class="ai-page win-tab-panel">
+
+        <!-- panel10 (0,0) 1362 x 28 white / toolStrip2 (0,0) 1362 x 27 -->
+        <div class="ai-abs" style="left:0;top:0;width:1362px;height:28px;background:#fff;">
+            <div class="ai-strip">
+                <button type="button" class="ai-tool" id="btnLoadAll" style="width:77px" onclick="ItemStore.btnLoadAll_Click()"><i class="fa fa-list"></i> LoadAll</button>
+            </div>
+        </div>
+
+        <!-- panel4 (0,28) 1362 x 645 -->
+        <div class="ai-abs" style="left:0;top:28px;width:1362px;height:645px;">
+            <!-- panel5 (0,0) 1362 x 31 teal; label31 (3,6); ctrlGrdBar1 (1321,3) 38 x 23 -->
+            <div class="ai-teal" style="height:31px;">
+                <span class="ai-teal-title" style="left:3px;top:6px;">Store Items History</span>
+                <span id="lblHistoryCount" class="ai-abs" style="left:176px;top:8px;color:#fff;font-family:Tahoma,sans-serif;font-size:12px;"></span>
+                <button type="button" class="ai-abs" id="ctrlGrdBar1" title="Grid layout / print / export options are not ported" style="left:1321px;top:3px;width:38px;height:23px;background:transparent;color:#fff;border:none;font-size:14px;" disabled><i class="fa fa-cog"></i></button>
+            </div>
+            <!-- panel9 (0,31) 1362 x 69 white; groupBox5 "Filters" (5,2) 434 x 63 -->
+            <div style="position:relative;height:69px;background:#fff;">
+                <div class="ai-gb" style="left:5px;top:2px;width:434px;height:63px;background:#fff;">
+                    <span class="ai-cap">Filters</span>
+                    <label class="ai-abs ai-lbl" for="cmbitemcathistory" style="left:2px;top:14px;">Item Category</label>
+                    <select id="cmbitemcathistory" class="ai-abs ai-cmb win-combo" style="left:2px;top:32px;width:191px;"></select>
+                    <label class="ai-abs ai-lbl" for="CmbItemTypeHistory" style="left:194px;top:14px;">Item Type</label>
+                    <select id="CmbItemTypeHistory" class="ai-abs ai-cmb win-combo" style="left:194px;top:32px;width:162px;"></select>
+                    <button type="button" id="btnsearch" class="ai-abs" style="left:358px;top:32px;width:70px;height:26px;background:#008080;color:#fff;border:1px solid #005959;font-family:Verdana,sans-serif;font-size:13px;font-weight:bold;cursor:pointer;" onclick="ItemStore.btnsearch_Click()">Search</button>
+                </div>
+            </div>
+            <!-- grdhistory (0,100) 1362 x 545, Dock Fill, Verdana 8.25pt -->
+            <div class="ai-grid-host win-grid-scroll" style="height:545px;max-height:none;">
+                <table class="win-grid" id="grdhistory"><thead></thead><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- tabCAddItem tab headers (Alignment Bottom) -->
+    <div class="win-tabs ai-tabs">
+        <div class="win-tab is-active" data-tab="tabForm" onclick="ItemStore.tab('tabForm')">Add Item</div>
+        <div class="win-tab" data-tab="tabHistory" onclick="ItemStore.tab('tabHistory')">History</div>
+    </div>
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_item_store.js?v=20260925a}"></script>
+</body>
+</html>

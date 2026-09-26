@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Invoice Return Store - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* Screen 346, PurchaseInvoiceReturn_Store designer geometry 1:1 in px (ClientSize 1264 x 711).
+           tabControl1 (Alignment Bottom): tabPage1 "Form" / tabPage2 "History" at (4,4) 1256 x 682; panel1 / docked panels at x=3, 1250 wide.
+           tabControl2 (Detail / Charge To Product / Other Items / PartyAddLess) keeps its own pir-subtab classes so the
+           Form/History .win-tab handling is not affected. */
+        body { background: #fff; margin: 0; padding-bottom: 36px; }
+        .dz-scroll { overflow-x: auto; }
+        .dz-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .dz-p { position: relative; background: #fff; }
+        .dz-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .dz-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; }
+        .dz-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .dz-txt[readonly] { background: #f0f0f0; }
+        .dz-txt.w[readonly] { background: #fff; }
+        .dz-txt:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .dz-txt.r { text-align: right; }
+        .dz-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .dz-cmb:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .dz-dt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .dz-dtc { display: flex; align-items: center; gap: 2px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .dz-dtc input[type=date] { border: none; font-family: Verdana, sans-serif; font-size: 12px; height: 19px; width: 100%; min-width: 0; padding: 0; }
+        .dz-dtc input[type=checkbox] { margin: 0; }
+        .dz-gb { position: absolute; box-sizing: border-box; }
+        .dz-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .dz-gb > .dz-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+        .dz-chk { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; height: 19px; white-space: nowrap; cursor: pointer; }
+        .dz-chk input { margin: 0; }
+        .dz-chk.wt { color: #fff; }
+        .dz-teal { background: #008080; position: relative; }
+        .dz-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .dz-teal-title.s { font-size: 15px; line-height: 18px; }
+        .dz-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .dz-strip.white { background: #fff; }
+        .dz-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; color: #000; white-space: nowrap; }
+        .dz-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .dz-tool:disabled { color: #9a9a9a; cursor: default; }
+        .dz-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; flex: none; }
+        .dz-btn { font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; background: #008080; color: #fff; border: 1px solid #005959; cursor: pointer; padding: 0; }
+        .dz-btn:disabled { opacity: .6; cursor: default; }
+        .dz-gbar { width: 38px; height: 22px; background: transparent; color: #fff; border: 1px solid transparent; font-size: 14px; }
+        .dz-host { overflow: auto; background: #fff; border-top: 1px solid #9eb6ce; max-height: none; }
+        .dz-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .dz-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .dz-host .win-grid td { border: 1px solid #d5e1f0; }
+        .dz-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .dz-tabs { display: flex; gap: 0; padding-left: 2px; height: 25px; align-items: flex-end; border-bottom: 1px solid #9a9a9a; }
+        .dz-tabs .win-tab { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 14px; font-weight: normal; padding: 1px 8px; height: 21px; line-height: 19px; background: #f0f0f0; border: 1px solid #9a9a9a; border-bottom: none; border-radius: 2px 2px 0 0; color: #000; box-sizing: border-box; }
+        .dz-tabs .win-tab.is-active { background: #fff; height: 24px; top: 1px; color: #000; }
+        .dz-tabs.bottom { border-bottom: none; border-top: 1px solid #9a9a9a; align-items: flex-start; height: 25px; }
+        .dz-tabs.bottom .win-tab { font-family: Verdana, sans-serif; font-size: 13px; border-radius: 0 0 2px 2px; border-top: none; border-bottom: 1px solid #9a9a9a; }
+        .dz-tabs.bottom .win-tab.is-active { top: -1px; }
+        .dz-page { border: 1px solid #9a9a9a; border-top: none; background: #fff; box-sizing: border-box; }
+        .dz-modal-box { width: auto !important; max-width: 98vw; background: #fff !important; }
+        .dz-modal-box .cx-modal-body { padding: 0; }
+        .dz-root { width: 1264px; }
+        .dz-tp { width: 1256px; margin: 4px 4px 0 4px; padding: 3px; box-sizing: border-box; background: #fff; }
+        .dz-tabs .pir-subtab { position: relative; font-family: Verdana, sans-serif; font-size: 13px; padding: 1px 8px; height: 21px; line-height: 19px; background: #f0f0f0; border: 1px solid #9a9a9a; border-bottom: none; border-radius: 2px 2px 0 0; color: #000; box-sizing: border-box; cursor: pointer; }
+        .dz-tabs .pir-subtab.is-active { background: #fff; height: 24px; top: 1px; }
+        .pir-subpanel { display: none; height: 100%; box-sizing: border-box; }
+        .pir-subpanel.is-active { display: flex; flex-direction: column; }
+        .pir-subpanel > .dz-host { flex: 1 1 auto; min-height: 0; }
+        #lblBalance { color: #b71c1c; }
+        .win-grid tfoot td { background: #f3f1e7; font-weight: bold; border: 1px solid #d0d0d0; padding: 2px 4px; }
+        .win-grid td.cx-docno { cursor: pointer; color: #004d40; text-decoration: underline; }
+        .win-grid:focus { outline: 1px dotted #008080; }
+        /* CmbBranch: multi-select combo (UltraCombo with check column) — closed at designer size, list opens on hover/focus */
+        .dz-multi { height: 29px; overflow: hidden; border: 1px solid #7a7a7a; background: #fff; font-family: 'Microsoft Sans Serif', sans-serif; font-size: 13px; padding: 3px 4px; z-index: 5; }
+        .dz-multi:hover, .dz-multi:focus-within { height: auto; max-height: 160px; overflow: auto; z-index: 30; box-shadow: 0 3px 8px rgba(0,0,0,.25); }
+        .dz-multi label { display: block; white-space: nowrap; line-height: 20px; }
+    </style>
+</head>
+<body>
+<div class="dz-scroll">
+<div class="dz-root">
+
+<!-- ============================== tabPage1 "Form" ============================== -->
+<div id="tabForm" class="win-tab-panel is-active dz-tp">
+    <!-- panel1 (3,3) 1250 x 676: toolStrip1 25 -->
+    <div class="dz-strip" style="height:25px;">
+        <button type="button" class="dz-tool" id="btnNew" style="width:55px;height:22px;" onclick="PiReturnStore.reset()"><i class="fa fa-file-o"></i> New</button>
+        <button type="button" class="dz-tool" id="btnRefresh" style="width:76px;height:22px;" onclick="PiReturnStore.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+        <span class="dz-sep"></span>
+        <button type="button" class="dz-tool is-hidden" id="btnUpdate" style="width:74px;height:22px;" onclick="PiReturnStore.update()"><i class="fa fa-refresh"></i> Update</button>
+        <button type="button" class="dz-tool" id="btnSave" style="width:60px;height:22px;" onclick="PiReturnStore.save()"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="dz-tool is-hidden" id="btnDelete" style="width:69px;height:22px;" onclick="PiReturnStore.del()"><i class="fa fa-trash"></i> Delete</button>
+        <span class="dz-sep"></span>
+        <button type="button" class="dz-tool" id="btnAttachment" style="width:105px;height:22px;" disabled title="Attachments are not ported"><i class="fa fa-paperclip"></i> Attachment</button>
+        <span class="dz-sep"></span>
+        <button type="button" class="dz-tool" id="btnItemSlip" style="width:97px;height:22px;" onclick="PiReturnStore.printItemSlip()"><i class="fa fa-print"></i> 145A-Print</button>
+        <button type="button" class="dz-tool" id="btnPartySlip" style="width:88px;height:22px;" onclick="PiReturnStore.printPartySlip()"><i class="fa fa-print"></i> 145-Print</button>
+        <button type="button" class="dz-tool" id="btnPrint" style="width:111px;height:22px;" onclick="PiReturnStore.printVoucher()"><i class="fa fa-print"></i> 103-Voucher</button>
+        <span class="dz-sep"></span>
+        <button type="button" class="dz-tool" id="BtnLoadInvoice" style="width:169px;height:22px;" onclick="PiReturnStore.openLoader()"><i class="fa fa-download"></i> Load Purchase Invoice</button>
+        <button type="button" class="dz-tool" id="btnshortcutkeys" style="width:122px;height:22px;" disabled title="Shortcut key popup is not ported"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        <span class="dz-sep"></span>
+        <button type="button" class="dz-tool" id="btnDefineReason" style="width:109px;height:18px;" onclick="PiReturnStore.openReasons()">Define Reasons</button>
+        <a href="/modules" class="dz-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+    </div>
+
+    <!-- panel3 (0,25) 1250 x 278 -->
+    <div class="dz-p" style="height:278px;">
+        <!-- panel11 (0,0) 1250 x 27 teal -->
+        <div class="dz-teal" style="height:27px;">
+            <span class="dz-teal-title" style="left:4px;top:5px;">PURCHASE INVOICE RETURN</span>
+            <span id="lblRecId" class="dz-abs" style="left:320px;top:7px;color:#e0f2f1;font-family:Verdana,sans-serif;font-size:11px;">&nbsp;</span>
+            <label class="dz-abs dz-chk wt" style="left:850px;top:5px;width:184px;height:18px;font-family:Verdana,sans-serif;font-size:12px;"><input type="checkbox" id="ChkResetOnSave"> Reset On Add and&nbsp; Save</label>
+            <label class="dz-abs dz-chk wt" style="left:1040px;top:5px;width:87px;height:18px;font-family:Verdana,sans-serif;font-size:12px;"><input type="checkbox" id="ChkPrintslip" checked> Print Slip</label>
+            <label class="dz-abs dz-chk wt" style="left:1134px;top:5px;width:116px;height:18px;font-family:Verdana,sans-serif;font-size:12px;"><input type="checkbox" id="ChkBok"> Print Voucher</label>
+        </div>
+        <div id="rightsNote" class="cx-denied is-hidden" style="position:absolute;left:1095px;top:32px;width:150px;z-index:2;"></div>
+
+        <!-- groupBox2 "Main" (4,29) 1085 x 132 -->
+        <div class="dz-gb" style="left:4px;top:29px;width:1085px;height:132px;">
+            <span class="dz-cap">Main</span>
+            <label class="dz-abs dz-lbl" for="txtdocno" style="left:3px;top:22px;">Doc No &amp; Date</label>
+            <input type="text" id="txtdocno" class="dz-abs dz-txt r" style="left:95px;top:18px;width:92px;" readonly tabindex="-1">
+            <input type="date" id="DocDate" class="dz-abs dz-dt" style="left:189px;top:18px;width:115px;" onchange="PiReturnStore.docDateChanged()">
+            <label class="dz-abs dz-lbl" for="CmbSupplierName" style="left:3px;top:51px;">Party Name</label>
+            <select id="CmbSupplierName" class="dz-abs dz-cmb win-combo" style="left:95px;top:45px;width:209px;" onchange="PiReturnStore.supplierChanged()"></select>
+            <input type="hidden" id="txtSupplierGLId">
+            <label class="dz-abs dz-lbl" for="txtbillno" style="left:3px;top:81px;">Manual Bill No</label>
+            <input type="text" id="txtbillno" class="dz-abs dz-txt" style="left:95px;top:77px;width:209px;">
+            <label class="dz-abs dz-lbl" for="txtSupplierReference" style="left:3px;top:107px;">Party Reference</label>
+            <input type="text" id="txtSupplierReference" class="dz-abs dz-txt" style="left:95px;top:103px;width:209px;">
+
+            <label class="dz-abs dz-lbl" for="CmbPaymentTerm" style="left:308px;top:22px;">Payment Terms</label>
+            <select id="CmbPaymentTerm" class="dz-abs dz-cmb win-combo" style="left:405px;top:16px;width:174px;" onchange="PiReturnStore.paymentTermLeave()"></select>
+            <label class="dz-abs dz-lbl" for="txtduedays" style="left:308px;top:51px;">Due Days &amp; Date</label>
+            <input type="text" id="txtduedays" class="dz-abs dz-txt r" style="left:405px;top:47px;width:60px;" value="0" oninput="PiReturnStore.dueDaysChanged()">
+            <input type="date" id="duedate" class="dz-abs dz-dt" style="left:467px;top:47px;width:112px;" disabled>
+            <label class="dz-abs dz-lbl" for="combdeliverytrm" style="left:308px;top:81px;">Delivery Term</label>
+            <select id="combdeliverytrm" class="dz-abs dz-cmb win-combo" style="left:405px;top:75px;width:174px;"></select>
+            <label class="dz-abs dz-lbl" for="txtremarks" style="left:308px;top:107px;">Invoice Remarks</label>
+            <input type="text" id="txtremarks" class="dz-abs dz-txt" style="left:405px;top:103px;width:449px;height:22px;font-size:12px;">
+
+            <label class="dz-abs dz-lbl" for="CmbTaxAccount" style="left:581px;top:22px;">Tax Account</label>
+            <select id="CmbTaxAccount" class="dz-abs dz-cmb win-combo" style="left:675px;top:16px;width:179px;"></select>
+            <label class="dz-abs dz-lbl" for="txtBillAmount" style="left:581px;top:50px;font-family:Verdana,sans-serif;font-size:13px;line-height:16px;">Bill Amount</label>
+            <input type="text" id="txtBillAmount" class="dz-abs dz-txt r" style="left:675px;top:45px;width:179px;height:27px;font-size:16px;" readonly>
+            <label class="dz-abs dz-lbl" for="txtInvoiceQty" style="left:581px;top:81px;font-size:13px;line-height:19px;">Invoice Qty</label>
+            <input type="text" id="txtInvoiceQty" class="dz-abs dz-txt r" style="left:675px;top:75px;width:179px;height:26px;font-size:15px;" disabled>
+
+            <!-- label61/cmbCurrency, label60/txtExchangeRate, label59/txtFcyAmount: MultiCurrencyFeature:1236 -->
+            <label class="dz-abs dz-lbl pir-mc" id="label61" for="cmbCurrency" style="left:857px;top:22px;">Fcy Code</label>
+            <select id="cmbCurrency" class="dz-abs dz-cmb win-combo pir-mc" style="left:944px;top:17px;width:138px;height:24px;font-family:'Microsoft Sans Serif',sans-serif;font-size:12px;" onchange="PiReturnStore.currencyLeave()"></select>
+            <label class="dz-abs dz-lbl pir-mc" id="label60" for="txtExchangeRate" style="left:857px;top:51px;">Exchange Rate</label>
+            <input type="text" id="txtExchangeRate" class="dz-abs dz-txt r pir-mc" style="left:944px;top:47px;width:138px;" oninput="PiReturnStore.exchangeRateChanged()" onblur="PiReturnStore.exchangeRateLeave()">
+            <label class="dz-abs dz-lbl pir-mc" id="label59" for="txtFcyAmount" style="left:857px;top:81px;">Fcy Amount</label>
+            <input type="text" id="txtFcyAmount" class="dz-abs dz-txt r pir-mc" style="left:944px;top:75px;width:138px;height:26px;font-size:15px;" disabled>
+        </div>
+
+        <!-- groupBox1 "Detail" (3,164) 1092 x 114 -->
+        <div class="dz-gb" id="groupBox1" style="left:3px;top:164px;width:1092px;height:114px;">
+            <span class="dz-cap" style="font-size:12px;">Detail</span>
+            <label class="dz-abs dz-lbl" for="CmbItemName" style="left:3px;top:18px;">Item</label>
+            <label class="dz-abs dz-chk" style="left:36px;top:16px;width:57px;"><input type="radio" name="pirSearch" id="rdbtnItemName" checked onchange="PiReturnStore.itemBind()"> Name</label>
+            <label class="dz-abs dz-chk" style="left:89px;top:16px;width:52px;"><input type="radio" name="pirSearch" id="rdbtnItemCode" onchange="PiReturnStore.itemBind()"> Code</label>
+            <span id="lblBalance" class="dz-abs dz-lbl" style="left:155px;top:18px;">0</span>
+            <select id="CmbItemName" class="dz-abs dz-cmb win-combo" style="left:3px;top:36px;width:220px;" onchange="PiReturnStore.itemLeave()"></select>
+            <label class="dz-abs dz-lbl" for="CmbWarehouseName" style="left:224px;top:18px;">WareHouse</label>
+            <select id="CmbWarehouseName" class="dz-abs dz-cmb win-combo" style="left:224px;top:36px;width:170px;" onchange="PiReturnStore.warehouseLeave()"></select>
+            <label class="dz-abs dz-lbl" for="CmbRackName" style="left:395px;top:18px;">Rack Name</label>
+            <select id="CmbRackName" class="dz-abs dz-cmb win-combo" style="left:395px;top:36px;width:130px;" onchange="PiReturnStore.rackLeave()"></select>
+            <label class="dz-abs dz-lbl" for="CmbItemCondition" style="left:526px;top:18px;">Condition</label>
+            <select id="CmbItemCondition" class="dz-abs dz-cmb win-combo" style="left:526px;top:36px;width:130px;" onchange="PiReturnStore.stock()"></select>
+            <label class="dz-abs dz-lbl" for="CmbJobLot" style="left:657px;top:18px;">Job Lot</label>
+            <select id="CmbJobLot" class="dz-abs dz-cmb win-combo" style="left:657px;top:36px;width:130px;" onchange="PiReturnStore.stock()"></select>
+            <label class="dz-abs dz-lbl" for="CmbPackUOM" style="left:788px;top:18px;">UOM</label>
+            <select id="CmbPackUOM" class="dz-abs dz-cmb win-combo" style="left:788px;top:36px;width:70px;" onchange="PiReturnStore.packUomLeave()"></select>
+            <label class="dz-abs dz-lbl" for="txtQty" style="left:861px;top:18px;">Qty</label>
+            <input type="text" id="txtQty" class="dz-abs dz-txt r" style="left:859px;top:38px;width:70px;" oninput="PiReturnStore.qtyRateChanged()" autocomplete="off">
+            <label class="dz-abs dz-lbl" for="txtRate" style="left:932px;top:18px;">Rate</label>
+            <input type="text" id="txtRate" class="dz-abs dz-txt r" style="left:930px;top:38px;width:70px;" oninput="PiReturnStore.qtyRateChanged()" autocomplete="off">
+            <label class="dz-abs dz-lbl" for="txtAmount" style="left:1001px;top:18px;">Amount</label>
+            <input type="text" id="txtAmount" class="dz-abs dz-txt r" style="left:1001px;top:38px;width:90px;background:#fff;" readonly disabled>
+
+            <label class="dz-abs dz-lbl" id="lblTaxTypes" for="CmbTaxType" style="left:3px;top:66px;">Tax Type</label>
+            <select id="CmbTaxType" class="dz-abs dz-cmb win-combo" style="left:3px;top:82px;width:80px;" onchange="PiReturnStore.taxTypeLeave()"></select>
+            <label class="dz-abs dz-lbl" id="lblTaxPercent" for="txtTaxPercent" style="left:86px;top:66px;">Tax %</label>
+            <input type="text" id="txtTaxPercent" class="dz-abs dz-txt r" style="left:84px;top:84px;width:55px;" oninput="PiReturnStore.taxPercentChanged()">
+            <label class="dz-abs dz-lbl" id="lblTaxAmount" for="txtTaxAmount" style="left:140px;top:66px;">Tax Amount</label>
+            <input type="text" id="txtTaxAmount" class="dz-abs dz-txt r" style="left:140px;top:84px;width:90px;background:#fff;" value="0" readonly disabled>
+            <label class="dz-abs dz-lbl" id="lblTotalAmount" for="txtTotalAmount" style="left:231px;top:66px;">Total Amount</label>
+            <input type="text" id="txtTotalAmount" class="dz-abs dz-txt r" style="left:231px;top:84px;width:100px;background:#fff;" value="0" readonly disabled>
+            <label class="dz-abs dz-lbl" for="txtgpdate" style="left:332px;top:66px;">GP Date</label>
+            <input type="date" id="txtgpdate" class="dz-abs dz-dt" style="left:332px;top:84px;width:110px;height:22px;font-size:12px;">
+            <label class="dz-abs dz-lbl" for="txtgatepassno" style="left:443px;top:66px;">GP #</label>
+            <input type="text" id="txtgatepassno" class="dz-abs dz-txt" style="left:443px;top:84px;width:55px;">
+            <label class="dz-abs dz-lbl" for="txtvehicleno" style="left:499px;top:66px;">Vehicle No</label>
+            <input type="text" id="txtvehicleno" class="dz-abs dz-txt" style="left:499px;top:84px;width:90px;">
+            <label class="dz-abs dz-lbl" for="CmbCityName" style="left:590px;top:66px;">City Name</label>
+            <select id="CmbCityName" class="dz-abs dz-cmb win-combo" style="left:590px;top:82px;width:160px;"></select>
+            <label class="dz-abs dz-lbl" for="txtRemarksDetail" style="left:751px;top:65px;">Remarks</label>
+            <input type="text" id="txtRemarksDetail" class="dz-abs dz-txt" style="left:751px;top:84px;width:272px;">
+            <button type="button" class="dz-abs dz-btn" id="btnAdd" style="left:1025px;top:84px;width:36px;height:23px;" onclick="PiReturnStore.add()">+</button>
+            <button type="button" class="dz-abs dz-btn is-hidden" id="btnCancelUpdateDetial" style="left:1025px;top:62px;width:66px;height:23px;font-size:12px;" onclick="PiReturnStore.cancelDetail()">Cancel</button>
+            <button type="button" class="dz-abs dz-btn is-hidden" id="btnUpdateDetail" style="left:1025px;top:84px;width:66px;height:23px;font-size:12px;" onclick="PiReturnStore.updateDetail()">Update</button>
+        </div>
+    </div>
+
+    <!-- tabControl2 (0,303) 1250 x 373 (fill); pages (4,25) 1242 x 344 -->
+    <div class="dz-tabs">
+        <div class="pir-subtab is-active" data-sub="tabDetail" onclick="PiReturnStore.subTab('tabDetail')">Detail</div>
+        <div class="pir-subtab" data-sub="tabFrieght" onclick="PiReturnStore.subTab('tabFrieght')">Charge To Product</div>
+        <div class="pir-subtab" data-sub="tabOtherItems" onclick="PiReturnStore.subTab('tabOtherItems')">Other Items</div>
+        <div class="pir-subtab" data-sub="tabPartyAddLess" onclick="PiReturnStore.subTab('tabPartyAddLess')">PartyAddLess</div>
+    </div>
+    <div class="dz-page" style="height:calc(100vh - 400px);min-height:348px;">
+        <div id="tabDetail" class="pir-subpanel is-active" style="padding:3px;">
+            <div class="dz-teal" style="height:20px;flex:none;">
+                <span class="dz-teal-title" style="left:4px;top:1px;font-size:13px;line-height:17px;">Detail</span>
+                <button type="button" class="dz-abs dz-gbar" style="left:1195px;top:1px;height:19px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+            </div>
+            <div class="dz-host win-grid-scroll"><table class="win-grid" id="grd"><thead></thead><tbody></tbody></table></div>
+        </div>
+        <div id="tabFrieght" class="pir-subpanel" style="padding:3px;">
+            <div class="dz-teal" style="height:20px;flex:none;"><span class="dz-teal-title" style="left:0;top:1px;font-size:15px;line-height:18px;">Freight_Charge To Product</span></div>
+            <div class="dz-host win-grid-scroll"><table class="win-grid" id="grdFreight" tabindex="0" title="Ctrl+D adds a row"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div id="tabOtherItems" class="pir-subpanel">
+            <div class="dz-teal" style="height:20px;flex:none;"><span class="dz-teal-title" style="left:3px;top:2px;font-size:13px;line-height:17px;">Expense Grid</span></div>
+            <div class="dz-host win-grid-scroll"><table class="win-grid" id="grdInvExp" tabindex="0" title="Ctrl+D adds a row"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div id="tabPartyAddLess" class="pir-subpanel">
+            <div class="dz-teal" style="height:26px;flex:none;"><span class="dz-teal-title" style="left:6px;top:6px;font-size:13px;line-height:17px;">Party Add/Less Grid</span></div>
+            <div class="dz-host win-grid-scroll"><table class="win-grid" id="grdGLedger" tabindex="0" title="Ctrl+D adds a row"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================== tabPage2 "History" ============================== -->
+<div id="tabHistory" class="win-tab-panel dz-tp">
+    <!-- panel2 (3,3) 1250 x 27; toolStrip2 -->
+    <div style="height:27px;background:#fff;">
+        <div class="dz-strip" style="height:25px;">
+            <button type="button" class="dz-tool" id="btnNewHistory" style="width:55px;height:22px;" onclick="PiReturnStore.newHistory()"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="dz-tool" id="btnRefreshHistory" style="width:76px;height:22px;" onclick="PiReturnStore.refreshHistory()"><i class="fa fa-repeat"></i> Refresh</button>
+        </div>
+    </div>
+    <!-- panel9 (3,30) 1250 x 27 teal -->
+    <div class="dz-teal" style="height:27px;"><span class="dz-teal-title" style="left:5px;top:3px;">Purcha Invoice Return History</span></div>
+    <!-- panel6 (3,57) 1250 x 76; groupBox3 "Filters" (5,2) 1084 x 72 -->
+    <div class="dz-p" style="height:76px;">
+        <div class="dz-gb" style="left:5px;top:2px;width:1084px;height:72px;">
+            <span class="dz-cap">Filters</span>
+            <label class="dz-abs dz-lbl" style="left:3px;top:20px;">From Date</label>
+            <div class="dz-abs dz-dtc" style="left:69px;top:16px;width:139px;"><input type="checkbox" id="chkFromDateHistory" checked><input type="date" id="FromDateHistory"></div>
+            <label class="dz-abs dz-lbl" style="left:3px;top:45px;">To Date</label>
+            <div class="dz-abs dz-dtc" style="left:66px;top:41px;width:142px;"><input type="checkbox" id="chkToDateHistory" checked><input type="date" id="ToDateHistory"></div>
+            <label class="dz-abs dz-lbl" for="FromDocNoHistory" style="left:214px;top:20px;">From Doc No</label>
+            <input type="text" id="FromDocNoHistory" class="dz-abs dz-txt" style="left:299px;top:16px;width:168px;">
+            <label class="dz-abs dz-lbl" for="ToDocNoHistory" style="left:214px;top:45px;">To Doc No</label>
+            <input type="text" id="ToDocNoHistory" class="dz-abs dz-txt" style="left:299px;top:41px;width:168px;">
+            <label class="dz-abs dz-lbl" for="CmbCustomerHistory" style="left:489px;top:20px;">Customer</label>
+            <select id="CmbCustomerHistory" class="dz-abs dz-cmb win-combo" style="left:553px;top:14px;width:232px;"></select>
+            <button type="button" class="dz-abs dz-btn" id="btnShowHistory" style="left:723px;top:45px;width:62px;height:26px;" onclick="PiReturnStore.showHistory()">Show</button>
+            <label class="dz-abs dz-chk" style="left:792px;top:28px;width:75px;"><input type="radio" name="pirHistDate" id="drdocdate" checked> Doc Date</label>
+            <label class="dz-abs dz-chk" style="left:792px;top:50px;width:80px;"><input type="radio" name="pirHistDate" id="rdentrydate"> Entry Date</label>
+            <label class="dz-abs dz-chk" style="left:873px;top:28px;width:91px;"><input type="radio" name="pirHistDate" id="rdmodifydate"> Modify Date</label>
+            <label class="dz-abs dz-chk" style="left:873px;top:50px;width:105px;"><input type="radio" name="pirHistDate" id="rdapproveddate"> Approved Date</label>
+        </div>
+    </div>
+    <!-- panel7 (3,133) 1250 x 24 teal + grdHistory (fill) -->
+    <div class="dz-teal" style="height:24px;">
+        <span class="dz-teal-title" style="left:5px;top:3px;">Filtered Records</span>
+        <button type="button" class="dz-abs dz-gbar" style="left:1210px;top:0;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+    </div>
+    <div class="dz-host win-grid-scroll" style="height:calc(100vh - 404px);min-height:343px;"><table class="win-grid" id="grdHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    <!-- panel5 (3,500) 1250 x 21 teal + grdDetail (3,521) 1250 x 158 (Dock Bottom) -->
+    <div class="dz-teal" style="height:21px;">
+        <span class="dz-teal-title" style="left:2px;top:2px;font-size:13px;line-height:17px;">Detail Information of Above Selected Row</span>
+        <button type="button" class="dz-abs dz-gbar" style="left:1209px;top:0;height:20px;" disabled title="Grid layout / print / export options are not ported"><i class="fa fa-cog"></i></button>
+    </div>
+    <div class="dz-host win-grid-scroll" style="height:158px;"><table class="win-grid" id="grdDetail"><thead></thead><tbody></tbody></table></div>
+</div>
+
+<!-- tabControl1 tab strip (Alignment = Bottom) -->
+<div class="dz-tabs bottom" style="margin:0 4px;">
+    <div class="win-tab is-active" data-tab="tabForm" onclick="PiReturnStore.tab('tabForm')">Form</div>
+    <div class="win-tab" data-tab="tabHistory" onclick="PiReturnStore.tab('tabHistory')">History</div>
+</div>
+
+</div>
+</div>
+
+<!-- frmPendingPurchaseInvoiceForReturn (ClientSize 1037 x 581) -->
+<div class="cx-modal" id="dlgPi">
+    <div class="cx-modal-box dz-modal-box" style="width:1037px !important;">
+        <div class="cx-modal-head"><span>EccountBook ERP</span><button type="button" onclick="StoreCommon.closeModal('dlgPi')">&times;</button></div>
+        <div class="cx-modal-body dz-root" style="width:1037px;">
+            <!-- panel1 (0,0) 1037 x 51 teal; toolStrip1 25 (New / Refresh Visible = false) -->
+            <div class="dz-teal" style="height:51px;">
+                <div class="dz-strip" style="height:25px;">
+                    <span class="dz-sep"></span>
+                    <button type="button" class="dz-tool" style="width:122px;height:22px;" disabled title="Shortcut key popup is not ported"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+                    <span class="dz-sep"></span>
+                </div>
+                <span class="dz-teal-title" style="left:1px;top:28px;">Pending Invoices For Return</span>
+            </div>
+            <!-- panel2 (0,51) 1037 x 40 -->
+            <div class="dz-p" style="height:40px;">
+                <label class="dz-abs dz-lbl" style="left:12px;top:12px;">Branches</label>
+                <div id="CmbBranch" class="dz-abs dz-multi" tabindex="0" style="left:77px;top:5px;width:232px;"></div>
+                <label class="dz-abs dz-lbl" style="left:317px;top:12px;">From Date</label>
+                <input type="date" id="piFromDate" class="dz-abs dz-dt" style="left:385px;top:8px;width:135px;">
+                <label class="dz-abs dz-lbl" style="left:521px;top:12px;">To Date</label>
+                <input type="date" id="piTodate" class="dz-abs dz-dt" style="left:575px;top:8px;width:135px;">
+                <button type="button" class="dz-abs dz-btn" id="BtnShow" style="left:716px;top:7px;width:64px;height:25px;font-family:Tahoma,sans-serif;" onclick="PiReturnStore.searchLoader()">Search</button>
+                <button type="button" class="dz-abs dz-btn" id="btnLoadOnInvoice" style="left:786px;top:7px;width:58px;height:25px;font-family:Tahoma,sans-serif;" onclick="PiReturnStore.loadChecked()">Load</button>
+            </div>
+            <div class="dz-teal" style="height:25px;"><span class="dz-teal-title" style="left:4px;top:2px;">Filtered Data</span></div>
+            <div class="dz-host win-grid-scroll" style="height:206px;"><table class="win-grid" id="grdPi"><thead></thead><tbody></tbody></table></div>
+            <div class="dz-teal" style="height:25px;"><span class="dz-teal-title" style="left:4px;top:2px;">Selected Invoice Detail</span></div>
+            <div class="dz-host win-grid-scroll" style="height:234px;"><table class="win-grid" id="grdPiDetail"><thead></thead><tbody></tbody></table></div>
+        </div>
+    </div>
+</div>
+
+<!-- frmDefineReasons (Architecture.WinApp.Lookups, ClientSize 612 x 450) -->
+<div class="cx-modal" id="dlgReasons">
+    <div class="cx-modal-box dz-modal-box" style="width:612px !important;">
+        <div class="cx-modal-head"><span>EccountBookERP</span><button type="button" onclick="StoreCommon.closeModal('dlgReasons')">&times;</button></div>
+        <div class="cx-modal-body dz-root" style="width:612px;">
+            <div class="dz-strip white">
+                <button type="button" class="dz-tool" id="rsNew" style="width:59px" onclick="PiReturnStore.reasonNew()"><i class="fa fa-file-o"></i> New</button>
+                <button type="button" class="dz-tool is-hidden" id="rsUpdate" style="width:78px" onclick="PiReturnStore.reasonSave(true)"><i class="fa fa-refresh"></i> Update</button>
+                <button type="button" class="dz-tool" id="rsSave" style="width:64px" onclick="PiReturnStore.reasonSave(false)"><i class="fa fa-save"></i> Save</button>
+            </div>
+            <div class="dz-teal" style="height:28px;"><span class="dz-teal-title" style="left:3px;top:4px;">Define Reasons</span></div>
+            <div class="dz-p" style="height:68px;">
+                <label class="dz-abs dz-lbl" for="CmbRefDocumentType" style="left:8px;top:8px;width:119px;white-space:normal;">Reference Document<br>Type</label>
+                <select id="CmbRefDocumentType" class="dz-abs dz-cmb win-combo" style="left:129px;top:10px;width:263px;"></select>
+                <label class="dz-abs dz-lbl" for="txtReasonName" style="left:8px;top:44px;">Reason Name</label>
+                <input type="text" id="txtReasonName" class="dz-abs dz-txt" style="left:129px;top:38px;width:263px;height:26px;">
+            </div>
+            <div class="dz-host win-grid-scroll" style="height:min(327px, calc(92vh - 160px));"><table class="win-grid" id="grdDefineReasons"><thead></thead><tbody></tbody></table></div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_store_purchase_invoice_return_store.js?v=20260925c}"></script>
+</body>
+</html>

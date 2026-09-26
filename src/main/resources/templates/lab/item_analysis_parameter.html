@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Item Analysis Parameter - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260924lab1}"/>
+    <!-- Screen 156 "Item Analysis Parameter", Lab module 7. Desktop: Architecture.WinApp.Lab.InvLabAnalysisItems -->
+    <style>
+        html, body { overflow-x: hidden; }
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; min-height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 2px; flex-wrap: wrap; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
+        .win-btn-tool:hover:not(:disabled) { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-btn-tool:disabled { color: #888; cursor: not-allowed; }
+        .win-teal-header { background-color: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+        .win-teal-header-title { font-family: Tahoma, sans-serif; font-size: 11pt; font-weight: bold; }
+        .win-form-body { background-color: #ece9d8; padding: 6px; }
+        .win-group-box { border: 1px solid #999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
+        .win-group-box legend { font-family: Tahoma, sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .win-label { font-size: 8.5pt; font-weight: 600; color: #222; white-space: nowrap; margin-bottom: 2px; display: block; }
+        .win-label .req { color: #c00; }
+        .win-textbox, .win-combo { font-family: Verdana, sans-serif; font-size: 9pt; height: 24px; border: 1px solid #7a9a9e; padding: 2px 4px; box-sizing: border-box; background: #fff; border-radius: 0; width: 100%; }
+        .win-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .win-field { display: flex; flex-direction: column; margin-bottom: 4px; flex: 1 1 150px; min-width: 120px; }
+        .win-check { display: flex; align-items: center; gap: 4px; font-size: 8.5pt; font-weight: 600; margin-right: 10px; }
+        .win-grid-container { border: 1px solid #7a9a9e; background: #fff; width: 100%; }
+        .win-grid-scroll { max-height: 460px; overflow: auto; max-width: 100%; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 8pt; background: #fff; }
+        .win-grid th { background: linear-gradient(to bottom, #ece9d8 0%, #dbd6c6 100%); border: 1px solid #999; padding: 4px 5px; text-align: left; position: sticky; top: 0; z-index: 5; white-space: nowrap; }
+        .win-grid td { border: 1px solid #d0d0d0; padding: 3px 5px; white-space: nowrap; }
+        .win-grid tr.data-row:hover { background: #e0f2f1; cursor: pointer; }
+        .win-grid tr.data-row.selected { background: #cfe8e6; }
+        .win-grid td.num { text-align: right; }
+        .win-grid-toolbar { display: flex; align-items: center; justify-content: space-between; background: #e0f2f1; border-bottom: 1px solid #7a9a9e; padding: 2px 6px; font-size: 8.5pt; font-weight: 600; color: #004d40; }
+        .win-btn-action { background-color: #008080; color: #fff; font-family: Verdana, sans-serif; font-size: 9pt; font-weight: bold; border: 1px solid #004d40; height: 24px; padding: 0 10px; cursor: pointer; border-radius: 2px; }
+        .win-btn-action:hover { background-color: #005959; }
+        .is-busy { opacity: .65; cursor: progress !important; }
+        .status-line { font-size: 8.5pt; color: #004d40; padding: 3px 8px; min-height: 18px; }
+        .win-layout { display: flex; gap: 8px; flex-wrap: wrap; }
+        .win-layout > .entry { flex: 1 1 340px; min-width: 0; }
+        .win-layout > .list { flex: 2 1 560px; min-width: 0; }
+    </style>
+</head>
+<body>
+
+<div class="win-tool-strip" id="toolStrip1">
+    <button type="button" id="btnnew" class="win-btn-tool" onclick="LabAnalysisItems.btnnew_Click()"><i class="fa fa-file-o"></i> &amp;New</button>
+    <button type="button" id="btnsave" class="win-btn-tool" onclick="LabAnalysisItems.btnsave_Click()"><i class="fa fa-save"></i> &amp;Save</button>
+    <button type="button" id="btnupdate" class="win-btn-tool" style="display:none" onclick="LabAnalysisItems.btnupdate_Click()"><i class="fa fa-pencil"></i> &amp;Update</button>
+    <!-- The desktop grid sets AllowDelete off and the form carries no delete button, so there is
+         nothing to offer here. -->
+    <span style="margin-left:auto"><a class="win-btn-tool" th:href="@{/lab}"><i class="fa fa-arrow-left"></i> Back to Lab</a></span>
+</div>
+
+<div class="win-teal-header">
+    <span class="win-teal-header-title">Item Analysis Parameter</span>
+    <span class="win-teal-header-title" id="lblMode" style="font-size:9pt">New</span>
+</div>
+
+<div class="win-form-body">
+    <div class="win-layout">
+
+        <div class="entry">
+            <fieldset class="win-group-box">
+                <legend>Analysis Parameter</legend>
+
+                <div class="win-row">
+                    <div class="win-field" style="flex:1 1 100%">
+                        <label class="win-label" for="txtdescription">Description <span class="req">*</span></label>
+                        <input type="text" id="txtdescription" class="win-textbox" maxlength="150" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="win-row">
+                    <div class="win-field" style="flex:1 1 100%">
+                        <label class="win-label" for="CmbMasterParameter">Master Parameter</label>
+                        <select id="CmbMasterParameter" class="win-combo"></select>
+                    </div>
+                </div>
+
+                <div class="win-row" style="align-items:center">
+                    <label class="win-check">
+                        <input type="checkbox" id="ChkIsSub" onchange="LabAnalysisItems.ChkIsSub_CheckedChanged()">
+                        Is Sub
+                    </label>
+                </div>
+
+                <!-- Hidden until Is Sub is ticked - ChkIsSub_CheckedChanged (:398-417) toggles
+                     both the combo and its label together. -->
+                <div class="win-row" id="rowParentParameter" style="display:none">
+                    <div class="win-field" style="flex:1 1 100%">
+                        <label class="win-label" for="CmbParentParameter" id="label6">Parent Parameter <span class="req">*</span></label>
+                        <select id="CmbParentParameter" class="win-combo"></select>
+                    </div>
+                </div>
+
+                <div class="win-row">
+                    <div class="win-field">
+                        <label class="win-label" for="txtMinValue">Min Value</label>
+                        <input type="text" id="txtMinValue" class="win-textbox" inputmode="decimal" autocomplete="off">
+                    </div>
+                    <div class="win-field">
+                        <label class="win-label" for="txtMaxValue">Max Value</label>
+                        <input type="text" id="txtMaxValue" class="win-textbox" inputmode="decimal" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="status-line" id="statusLine"></div>
+            </fieldset>
+        </div>
+
+        <div class="list">
+            <div class="win-grid-container">
+                <div class="win-grid-toolbar">
+                    <span>Analysis Parameters</span>
+                    <span id="lblRowCount">0 rows</span>
+                </div>
+                <div class="win-grid-scroll">
+                    <table class="win-grid" id="grdfrm">
+                        <thead>
+                        <tr>
+                            <!-- Id and MasterParId exist in the desktop's grid but are set
+                                 Visible = false (grdfrmSetting :258-259); they are carried on the
+                                 row instead of rendered. Column widths below are the desktop's:
+                                 250 / 250 / 250 / 80 / 80. -->
+                            <th style="width:250px">Analysis Parameter</th>
+                            <th style="width:250px">Parent Parameter</th>
+                            <th style="width:250px">Master Parameter</th>
+                            <th style="width:80px">Min Value</th>
+                            <th style="width:80px">Max Value</th>
+                        </tr>
+                        </thead>
+                        <tbody id="grdfrmBody">
+                        <tr><td colspan="5" style="text-align:center;color:#777">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="status-line">Double-click a row to open it for update.</div>
+        </div>
+
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/lab_item_analysis_parameter.js?v=20260924lab1}"></script>
+</body>
+</html>

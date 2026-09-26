@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${moduleTitle}">GRN Loading Challan</title>
+    <style>
+        .form-section { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+        .section-title { font-size: 1rem; font-weight: 600; color: #2d3748; margin-bottom: 12px; border-bottom: 2px solid #3182ce; padding-bottom: 4px; }
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .grid-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .grid-table th { background-color: #ebf8ff; color: #2c5282; border: 1px solid #cbd5e0; padding: 8px; text-align: left; }
+        .grid-table td { border: 1px solid #cbd5e0; padding: 6px 8px; }
+        .grid-table tr:hover { background-color: #f7fafc; }
+        .nav-tabs .nav-link.active { font-weight: bold; border-top: 3px solid #3182ce; }
+        .clickable-code { color: #3182ce; text-decoration: underline; cursor: pointer; font-weight: 600; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20260921a}"/>
+</head>
+<body class="cmagt">
+<div class="cmagt-appbar">
+    <span class="cmagt-title">GRN Loading Challan</span>
+    <span class="cmagt-doctype">Doc Type 1054</span>
+    <span class="cmagt-crumb"><a th:href="@{/commission}">Commission Trading</a> &rsaquo; Transactions</span>
+</div>
+
+<div layout:fragment="content" class="container-fluid py-3">
+
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body py-2 d-flex justify-content-between align-items-center bg-light">
+            <h4 class="m-0 text-primary font-weight-bold" th:text="${moduleTitle}">GRN Loading Challan</h4>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-secondary me-1" id="btnNew"><i class="fas fa-plus"></i> New</button>
+                <button type="button" class="btn btn-sm btn-success me-1" id="btnSave"><i class="fas fa-save"></i> Save</button>
+                <button type="button" class="btn btn-sm btn-primary me-1" id="btnUpdate" disabled><i class="fas fa-edit"></i> Update</button>
+                <button type="button" class="btn btn-sm btn-danger me-1" id="btnDelete" disabled><i class="fas fa-trash"></i> Delete</button>
+                <button type="button" class="btn btn-sm btn-outline-dark" id="btnPrint"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="grnTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab-form-link" data-bs-toggle="tab" href="#tab-form" role="tab">Transaction Form</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-history-link" data-bs-toggle="tab" href="#tab-history" role="tab">History</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="grnTabsContent">
+        <!-- FORM TAB -->
+        <div class="tab-pane fade show active" id="tab-form" role="tabpanel">
+            <form id="grnForm">
+                <input type="hidden" id="grnSupplierLoadingMasterId" value="0">
+
+                <div class="form-section">
+                    <div class="section-title">Header Information (Doc Type: 1054)</div>
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label font-weight-bold">Doc No</label>
+                            <input type="text" class="form-control form-control-sm" id="docNo" readonly placeholder="Auto">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label font-weight-bold">Doc Date</label>
+                            <input type="date" class="form-control form-control-sm" id="docDate">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label font-weight-bold">Supplier Name</label>
+                            <select class="form-select form-select-sm search-select" id="supplierId">
+                                <option value="0">-- Select Supplier --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label font-weight-bold">Commission Agent</label>
+                            <select class="form-select form-select-sm search-select" id="commissionAgentId">
+                                <option value="0">-- Select Commission Agent --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Vehicle No</label>
+                            <input type="text" class="form-control form-control-sm" id="vehicleNo">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Bilty No</label>
+                            <input type="text" class="form-control form-control-sm" id="biltyNo">
+                        </div>
+                        <!-- Driver Name removed: not a property of
+                             Architecture.Model.CommissionAgent.grnSupplierLoadingMaster, so it is
+                             not a parameter of the procedure and the desktop never stored it. -->
+                        <!-- Driver Mobile No removed: not a property of
+                             Architecture.Model.CommissionAgent.grnSupplierLoadingMaster, so it is
+                             not a parameter of the procedure and the desktop never stored it. -->
+
+
+                        <!-- =====================================================================
+                             frmGrnLoadingChallanCmagt btnSave_Click (:2560-2760). Every control
+                             below maps to a parameter of
+                             [cmagt].[USP_grnSupplierLoadingMaster_InsertAndUpdate], which takes 43.
+                             The page previously carried 3 of them and invented driverName /
+                             driverMobileNo, which the desktop model does not declare.
+                             ===================================================================== -->
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Company Name</label>
+                            <select class="form-select form-select-sm dtcombo" id="companyId"
+                                    data-dtcombo="single" data-dtcombo-caption="Company Name">
+                                <option value="0">-- Select Company --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Branch</label>
+                            <select class="form-select form-select-sm dtcombo" id="branchId"
+                                    data-dtcombo="single" data-dtcombo-caption="Branch">
+                                <option value="0">-- Select Branch --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Transporter</label>
+                            <select class="form-select form-select-sm dtcombo" id="transporterId"
+                                    data-dtcombo="party4" data-dtcombo-caption="Transporter">
+                                <option value="0">-- Select Transporter --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Transporter Name</label>
+                            <input type="text" class="form-control form-control-sm" id="transporterName">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Vehicle Type</label>
+                            <select class="form-select form-select-sm dtcombo" id="vehicleTypeId"
+                                    data-dtcombo="single" data-dtcombo-caption="Vehicle Type">
+                                <option value="0">-- Select Vehicle Type --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Loading City</label>
+                            <select class="form-select form-select-sm dtcombo" id="loadingCityId"
+                                    data-dtcombo="single" data-dtcombo-caption="Loading City">
+                                <option value="0">-- Select City --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Un-Loading City</label>
+                            <select class="form-select form-select-sm dtcombo" id="unloadingCityId"
+                                    data-dtcombo="single" data-dtcombo-caption="Un-Loading City">
+                                <option value="0">-- Select City --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Delivery Term</label>
+                            <select class="form-select form-select-sm dtcombo" id="deliveryTermId"
+                                    data-dtcombo="single" data-dtcombo-caption="Delivery Term">
+                                <option value="0">-- Select Delivery Term --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Supplier Ref Doc No</label>
+                            <input type="text" class="form-control form-control-sm" id="supplierRefDocNo">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Bilty Date</label>
+                            <input type="date" class="form-control form-control-sm" id="biltyDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Delivery Start Date</label>
+                            <input type="date" class="form-control form-control-sm" id="deliveryStartDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Delivery Days</label>
+                            <input type="number" class="form-control form-control-sm" id="deliveryDays" step="1" value="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Bilty Qty</label>
+                            <input type="number" class="form-control form-control-sm" id="biltyQty" step="0.01" value="0.00">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Load Weight</label>
+                            <input type="number" class="form-control form-control-sm" id="loadWeight" step="0.01" value="0.00">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Tare Weight</label>
+                            <input type="number" class="form-control form-control-sm" id="tareWeight" step="0.01" value="0.00">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Scale Net Weight</label>
+                            <input type="number" class="form-control form-control-sm" id="scaleNetWeight" step="0.01" value="0.00" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Bilty Freight</label>
+                            <input type="number" class="form-control form-control-sm" id="biltyFreight" step="0.01" value="0.00">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Other Add/Less Charges</label>
+                            <input type="number" class="form-control form-control-sm" id="otherAdLesCharges" step="0.01" value="0.00">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Total Freight</label>
+                            <input type="number" class="form-control form-control-sm" id="totalFreight" step="0.01" value="0.00" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">Approval Remarks</label>
+                            <input type="text" class="form-control form-control-sm" id="approvalRemarks">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label font-weight-bold">Remarks Header</label>
+                            <input type="text" class="form-control form-control-sm" id="remarksHeader">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================ ITEM DETAILS ============================
+                     frmGrnLoadingChallanCmagt.cs FillDetailRow (:1855-1942) and
+                     FillDetailListCommonForInsertAndDelete (:2500-2536).
+
+                     A GRN detail row is NOT free data entry. It carries the linkage ids that
+                     tie this loading challan to the purchase order, the sale order and the
+                     supplier-offer/sale-order mapping:
+
+                         purchaseOrderMasterId, purchaseOrderDetailId,
+                         purchaseOrderSaleOrderMappingId,
+                         saleOrderMasterId, saleOrderDetailId,
+                         buyerId, DeliverToPartyId, DeliverToAddressId
+
+                     None of these can be typed. They arrive with the row the operator picks
+                     from the Order No / Item combos, which are themselves fed by
+                     USP_purchaseOrderMaster_PendingDataLoaderForGrn. The Item combo is keyed
+                     on MappingId - not itemId (:1096) - because one item can appear against
+                     several mappings on the same order.
+
+                     The grid previously collected itemId, weight, qty, rate and amount. Four
+                     of those five are not properties of the desktop model at all, so they were
+                     never procedure parameters: every detail row was writing itemId and
+                     nothing else.
+                     ==================================================================== -->
+                <div class="form-section">
+                    <div class="section-title d-flex align-items-center">
+                        <span>Item Details Entry</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary ms-auto"
+                                id="btnLoadPo">
+                            <i class="fas fa-download"></i> Load Purchase Order
+                        </button>
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Order No</label>
+                            <select class="form-select form-select-sm search-select" id="detPoNo">
+                                <option value="0">-- Load PO first --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Parent Item</label>
+                            <select class="form-select form-select-sm search-select" id="detParentItemId">
+                                <option value="0">-- Select --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small mb-1 font-weight-bold">Item Name</label>
+                            <select class="form-select form-select-sm search-select" id="detItemId">
+                                <option value="0">-- Select Item --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Crop Year</label>
+                            <select class="form-select form-select-sm search-select" id="detCropYearId">
+                                <option value="0">-- Select --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Packing Type</label>
+                            <select class="form-select form-select-sm search-select" id="detPackingTypeId">
+                                <option value="0">-- Select --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small mb-1 font-weight-bold">Pack Uom</label>
+                            <select class="form-select form-select-sm" id="detPackUomId">
+                                <option value="0">--</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-1">
+                            <label class="form-label small mb-1 font-weight-bold">Loading Qty</label>
+                            <input type="number" step="0.001" class="form-control form-control-sm" id="detLoadingQty" value="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Gross Weight</label>
+                            <input type="number" step="0.001" class="form-control form-control-sm" id="detGrossWeight" value="0" readonly
+                                   title="Loading Qty x Pack Uom equivalent (CalculateGrossWeight :3092)">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small mb-1 font-weight-bold">EB / Unit</label>
+                            <input type="number" step="0.001" class="form-control form-control-sm" id="detEbUnit" value="0">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small mb-1 font-weight-bold">EB Total</label>
+                            <input type="number" step="0.001" class="form-control form-control-sm" id="detEbTotal" value="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Add / Less Weight</label>
+                            <input type="number" step="0.001" class="form-control form-control-sm" id="detAddLessWeight" value="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Net Bill Weight</label>
+                            <input type="number" step="0.001" class="form-control form-control-sm" id="detNetBillWeight" value="0" readonly
+                                   title="Gross - EB Total + Add/Less (CalculateNetWeight :3107)">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Empty Bag Term</label>
+                            <select class="form-select form-select-sm" id="detEmptyBagTermId">
+                                <option value="0">-- Select --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-primary w-100" id="btnAddDetail">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label small mb-1 font-weight-bold">Buyer</label>
+                            <input type="text" class="form-control form-control-sm" id="detBuyerName" readonly
+                                   title="Comes with the picked order row; not typed.">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small mb-1 font-weight-bold">Deliver To Party</label>
+                            <input type="text" class="form-control form-control-sm" id="detDeliverToPartyName" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small mb-1 font-weight-bold">Ship To Address</label>
+                            <input type="text" class="form-control form-control-sm" id="detDeliverToAddress" readonly>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1 font-weight-bold">Remarks</label>
+                            <input type="text" class="form-control form-control-sm" id="detRemarks">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small mb-1 font-weight-bold">Warning</label>
+                            <input type="text" class="form-control form-control-sm" id="detWarningRemarks">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mt-3" id="wrapGrnDetail">
+                        <table class="grid-table" id="gridItems">
+                            <thead>
+                                <tr>
+                                    <th style="width:34px;">#</th>
+                                    <th style="width:90px;">PO No</th>
+                                    <th style="width:90px;">SO No</th>
+                                    <th style="width:140px;">Parent Item</th>
+                                    <th style="width:190px;">Item Name</th>
+                                    <th style="width:90px;">Crop Year</th>
+                                    <th style="width:110px;">Packing Type</th>
+                                    <th style="width:80px;">Pack Uom</th>
+                                    <th style="width:90px;">Loading Qty</th>
+                                    <th style="width:100px;">Gross Weight</th>
+                                    <th style="width:80px;">EB/Unit</th>
+                                    <th style="width:90px;">EB Total</th>
+                                    <th style="width:100px;">Add/Less</th>
+                                    <th style="width:110px;">Net Bill Weight</th>
+                                    <th style="width:150px;">Buyer</th>
+                                    <th style="width:150px;">Deliver To</th>
+                                    <th>Remarks</th>
+                                    <th style="width:70px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="18" class="text-center text-muted">No items added yet.</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="8" class="text-end fw-bold">Total</td>
+                                    <td id="totLoadingQty">0</td>
+                                    <td id="totGrossWeight">0</td>
+                                    <td></td>
+                                    <td id="totEbTotal">0</td>
+                                    <td id="totAddLess">0</td>
+                                    <td id="totNetBillWeight">0</td>
+                                    <td colspan="4"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div class="tab-pane fade" id="tab-history" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row g-2 mb-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">From Date</label>
+                            <input type="date" class="form-control form-control-sm" id="histFromDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold">To Date</label>
+                            <input type="date" class="form-control form-control-sm" id="histToDate">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-primary w-100" id="btnLoadHistory"><i class="fas fa-search"></i> Search</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive" style="width: 100%;">
+                        <table class="grid-table" id="gridHistory" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Doc No</th>
+                                    <th>Doc Date</th>
+                                    <th>Supplier Name</th>
+                                    <th>Commission Agent</th>
+                                    <th>Vehicle No</th>
+                                    <th>Bilty No</th>
+                                    <th>Transporter</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="7" class="text-center text-muted">Click Search to load history.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="script">
+    let detailRows = [];
+
+    $(document).ready(function() {
+        setDefaultDates();
+        loadDropdowns();
+
+        $('.calc-trigger').on('input change', grnRecalc);
+        $('#btnAddDetail').on('click', addDetailRow);
+        $('#btnLoadPo').on('click', loadPurchaseOrders);
+        $('#detPoNo').on('change', function () { poNoChanged(); bindDetailItemCombo(); });
+        $('#detParentItemId').on('change', bindDetailItemCombo);
+        $('#detItemId').on('change', detailItemChanged);
+        $('#detPackUomId').on('change', calcGrossWeight);
+        $('#detLoadingQty').on('input', function () { calcGrossWeight(); ebCalculations(); });
+        $('#detEbUnit').on('input',  function () { ebCalculations('unit'); });
+        $('#detEbTotal').on('input', function () { ebCalculations('total'); });
+        $('#detAddLessWeight').on('input', calcNetWeight);
+
+        $('#btnSave').on('click', function() { saveOrder(false); });
+        $('#btnUpdate').on('click', function() { saveOrder(true); });
+        $('#btnNew').on('click', resetForm);
+        $('#btnDelete').on('click', deleteRecord);
+        $('#btnLoadHistory').on('click', fetchHistory);
+        /* datDocDate_ValueChanged (:4316): Bilty Date follows Doc Date. */
+        $('#docDate').on('change', function () { $('#biltyDate').val($('#docDate').val()); });
+        loadDocNo();
+    });
+
+    /* Rows removed from a SAVED challan: DeleteDetailRow (:2142) keeps them with
+       actionTypeId 3 and Insert() (:2593) sends them first, so the procedure soft-deletes. */
+    let removedRows = [];
+
+    /* DocumentNoDbCall (:752) -> GenerateCode. The procedure allocates the real number at
+       save time; this fills the box the form validates as required. */
+    function loadDocNo() {
+        $.get('/api/commission/grn-loading-challan/generate-no', function (r) {
+            if (r && r.docNo && !(parseInt($('#grnSupplierLoadingMasterId').val(), 10) > 0)) {
+                $('#docNo').val(r.docNo);
+            }
+        });
+    }
+
+    function deleteRecord() {
+        const id = parseInt($('#grnSupplierLoadingMasterId').val(), 10) || 0;
+        if (!id) { alert('No record found to Delete'); return; }
+        if (!confirm('Are you sure to Delete?')) return;
+        $.post('/api/commission/grn-loading-challan/' + id + '/delete', function (res) {
+            if (res && res.status === 'SUCCESS') { alert('Delete Record Successfully'); resetForm(); }
+            else alert((res && res.message) || 'Delete failed');
+        }).fail(function () { alert('Server error while deleting.'); });
+    }
+
+    function setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        $('#docDate').val(today);
+        $('#biltyDate').val(today);
+        $('#histFromDate').val(today);
+        $('#histToDate').val(today);
+    }
+
+
+
+
+    /* ====================================================================
+     * DETAIL GRID - the real contract
+     *
+     * frmGrnLoadingChallanCmagt.cs FillDetailRow (:1855-1942) and
+     * FillDetailListCommonForInsertAndDelete (:2500-2536).
+     *
+     * Arithmetic, reproduced exactly:
+     *   CalculateGrossWeight (:3092)  gross = loadingQty x PackUom.Equivalent
+     *   EbCalculations       (:3043)  typing EB/Unit  -> ebTotal = ebUnit x loadingQty
+     *                                 typing EB Total -> ebUnit  = ebTotal / loadingQty
+     *                                 loadingQty <= 0 -> both forced to 0
+     *                                 both rounded to 3
+     *   CalculateNetWeight   (:3107)  net = gross - ebTotal + addLess
+     * ==================================================================== */
+    let poTables = { pendingOrders: [], saleOrdersByPurchaseOrder: [], emptyBagsByOrder: [],
+                     expensesByOrder: [], emptyBagCutByOrder: [] };
+    let calcByEbUnit = false, calcByEbTotal = false;
+
+    function r3(x) {
+        const n = Number(x);
+        if (!isFinite(n)) return 0;
+        return (n < 0 ? -1 : 1) * Math.round(Math.abs(n) * 1000) / 1000;
+    }
+    function nOf(sel) { return parseFloat($(sel).val()) || 0; }
+    function iOf(sel) { return parseInt($(sel).val(), 10) || 0; }
+
+    /* Load Purchase Order - USP_purchaseOrderMaster_PendingDataLoaderForGrn, all five
+       result sets (frmGrnLoadingChallanCmagt.cs:910-915). */
+    function loadPurchaseOrders() {
+        const btn = $('#btnLoadPo');
+        const orig = btn.html();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Loading...');
+        /* OutstandingOrdersdtFillDbCall (:890) passes only the tenancy four and RecId; the
+           supplier filter is applied client-side in OrderNoBind, not in the procedure. */
+        $.get('/api/commission/grn-loading-challan/pending-purchase-order-tables', {
+            recId: iOf('#grnSupplierLoadingMasterId')
+        })
+        .done(function (d) {
+            poTables = d || poTables;
+            bindOrderNoCombo();
+            const n = (poTables.pendingOrders || []).length;
+            if (!n) {
+                alert('No pending purchase orders were returned for this supplier / agent.');
+            }
+        })
+        .fail(function () { alert('Could not load pending purchase orders.'); })
+        .always(function () { btn.prop('disabled', false).html(orig); });
+    }
+
+    function selectedPoRow() {
+        const poId = iOf('#detPoNo');
+        if (!poId) return null;
+        return (poTables.pendingOrders || []).find(function (r) {
+            return (parseInt(col(r, 'purchaseOrderMasterId'), 10) || 0) === poId;
+        }) || null;
+    }
+
+    /* CmbPoNoDetail_Leave (:1300): Empty Bag Term comes from the order and is locked;
+       supplier / agent default from it when still empty. */
+    function poNoChanged() {
+        const po = selectedPoRow();
+        $('#detEmptyBagTermId, #detParentItemId').prop('disabled', !!po);
+        if (!po) return;
+        $('#detEmptyBagTermId').val(parseInt(col(po, 'EBWeightDeductionTermId'), 10) || 0);
+        if (!iOf('#supplierId')) $('#supplierId').val(parseInt(col(po, 'supplierId'), 10) || 0).trigger('change');
+        if (!iOf('#commissionAgentId')) $('#commissionAgentId').val(parseInt(col(po, 'commissionAgentId'), 10) || 0).trigger('change');
+    }
+
+    function dOnly(v) { return v ? String(v).substring(0, 10) : ''; }
+
+    function col(row, name) {
+        if (row == null) return null;
+        if (row[name] !== undefined) return row[name];
+        const k = Object.keys(row).find(function (x) { return x.toLowerCase() === name.toLowerCase(); });
+        return k ? row[k] : null;
+    }
+
+    /* OrderNoBind (:923) - one entry per purchaseOrderMasterId, filtered by the header
+       supplier when one is chosen, exactly as the desktop groups it. */
+    function bindOrderNoCombo() {
+        const supplierId = iOf('#supplierId');
+        const seen = {};
+        const rows = (poTables.pendingOrders || []).filter(function (r) {
+            const sid = parseInt(col(r, 'supplierId'), 10) || 0;
+            if (supplierId > 0 && sid !== supplierId) return false;
+            const pid = parseInt(col(r, 'purchaseOrderMasterId'), 10) || 0;
+            if (!pid || seen[pid]) return false;
+            seen[pid] = r;
+            return true;
+        });
+        const sel = $('#detPoNo').empty().append('<option value="0">-- Select Order --</option>');
+        rows.forEach(function (r) {
+            sel.append($('<option>').val(col(r, 'purchaseOrderMasterId')).text(col(r, 'DocNo')));
+        });
+        bindDetailItemCombo();
+    }
+
+    /* The item combo is keyed on MappingId (:1096), not itemId: the same item can appear
+       against several sale-order mappings on one purchase order, and the row carries the
+       linkage ids the detail row cannot be built without. */
+    function bindDetailItemCombo() {
+        const poId = iOf('#detPoNo');
+        const parentId = iOf('#detParentItemId');
+        const rows = (poTables.pendingOrders || []).filter(function (r) {
+            if (poId > 0 && (parseInt(col(r, 'purchaseOrderMasterId'), 10) || 0) !== poId) return false;
+            /* ItemdtFillAgainstOder (:987) lists every mapping of the chosen order; the parent
+               combo is locked, not a filter, once an order is picked. */
+            if (poId === 0 && parentId > 0 && (parseInt(col(r, 'inventoryParentCategoryId'), 10) || 0) !== parentId) return false;
+            return true;
+        });
+        const sel = $('#detItemId').empty().append('<option value="0">-- Select Item --</option>');
+        rows.forEach(function (r) {
+            /* MappingId in the desktop's dtItem is the procedure's purchaseOrderSaleOrderMappingId. */
+            const mappingId = parseInt(col(r, 'purchaseOrderSaleOrderMappingId'), 10) || 0;
+            const opt = $('<option>')
+                .val(mappingId)
+                .text(col(r, 'ItemName') || '')
+                .data('row', r);
+            sel.append(opt);
+        });
+        detailItemChanged();
+    }
+
+    /* Choosing an item pulls its party and address across, read-only - the desktop takes
+       them from the picked row's own cells (:1932-1940), never from typing. */
+    function detailItemChanged() {
+        const opt = $('#detItemId option:selected');
+        const r = opt.data('row');
+        if (!r) {
+            $('#detBuyerName, #detDeliverToPartyName, #detDeliverToAddress').val('');
+            return;
+        }
+        $('#detBuyerName').val(col(r, 'BuyerName') || '');
+        $('#detDeliverToPartyName').val(col(r, 'DeliveryToPartyName') || '');
+        /* CmbItemName_Leave (:1351): parent category from the row; Loading Qty defaults to the
+           balance qty when empty or above it. */
+        const pc = parseInt(col(r, 'inventoryParentCategoryId'), 10) || 0;
+        if (pc) $('#detParentItemId').val(pc);
+        const balQty = parseFloat(col(r, 'BalanceQty')) || 0;
+        const lq = nOf('#detLoadingQty');
+        if (lq === 0 || lq > balQty) $('#detLoadingQty').val(r3(balQty));
+        $('#detDeliverToAddress').val(col(r, 'ShipToAddress') || '');
+        const cropId = parseInt(col(r, 'cropYearId'), 10) || 0;
+        if (cropId) $('#detCropYearId').val(cropId);
+        const packTypeId = parseInt(col(r, 'packingTypeId'), 10) || 0;
+        if (packTypeId) $('#detPackingTypeId').val(packTypeId);
+        const wantPackUomId = parseInt(col(r, 'packUomId'), 10) || 0;
+        const itemId = parseInt(col(r, 'itemId'), 10) || parseInt(col(r, 'ItemId'), 10) || 0;
+
+        /* CommonBindings.ItemUomFromGlobalBind - the UOM schedule of THIS item. The
+           Equivalent rides on the option as a data attribute; the UOM id is never used as
+           the conversion factor, and a missing factor refuses the row rather than
+           defaulting to 1. */
+        const el = $('#detPackUomId');
+        el.empty().append('<option value="0">--</option>');
+        if (!itemId) { calcGrossWeight(); return; }
+        $.get('/api/commission/dropdowns/item-uoms', { itemId: itemId }, function (uoms) {
+            (uoms || []).forEach(function (u) {
+                $('<option>').val(u.Id).text(u.UOMCode || '')
+                             .attr('data-equivalent', u.Equivalent).appendTo(el);
+            });
+            if (wantPackUomId) el.val(wantPackUomId);
+            calcGrossWeight();
+        });
+    }
+
+    /* The Equivalent is the conversion factor; the UOM id is not. A missing or
+       non-positive factor refuses the row rather than being replaced with 1. */
+    function packUomEquivalent() {
+        const opt = $('#detPackUomId option:selected');
+        const eq = parseFloat(opt.data('equivalent'));
+        return (isFinite(eq) && eq > 0) ? eq : null;
+    }
+
+    function calcGrossWeight() {
+        const qty = nOf('#detLoadingQty');
+        const eq = packUomEquivalent();
+        $('#detGrossWeight').val(eq === null ? 0 : r3(qty * eq));
+        calcNetWeight();
+    }
+
+    function ebCalculations(source) {
+        const qty = nOf('#detLoadingQty');
+        if (qty <= 0) { $('#detEbUnit').val(0); $('#detEbTotal').val(0); calcNetWeight(); return; }
+        if (source === 'unit') {
+            calcByEbUnit = true; calcByEbTotal = false;
+            const u = nOf('#detEbUnit');
+            $('#detEbTotal').val(u > 0 ? r3(u * qty) : 0);
+        } else if (source === 'total') {
+            calcByEbUnit = false; calcByEbTotal = true;
+            const t = nOf('#detEbTotal');
+            $('#detEbUnit').val(t > 0 ? r3(t / qty) : 0);
+        } else if (calcByEbTotal) {
+            const t = nOf('#detEbTotal');
+            $('#detEbUnit').val(t > 0 ? r3(t / qty) : 0);
+        } else if (calcByEbUnit) {
+            const u = nOf('#detEbUnit');
+            $('#detEbTotal').val(u > 0 ? r3(u * qty) : 0);
+        }
+        calcNetWeight();
+    }
+
+    function calcNetWeight() {
+        $('#detNetBillWeight').val(r3(nOf('#detGrossWeight') - nOf('#detEbTotal') + nOf('#detAddLessWeight')));
+    }
+
+    /* The save-time refusals the desktop performs per row (:2658-2665). */
+    function validateDetailEntry() {
+        if (!iOf('#detParentItemId')) return 'Parent Category Field Required';
+        if (!iOf('#detItemId'))       return 'Item Name Field Required';
+        if (!iOf('#detCropYearId'))   return 'Crop Year Field Required';
+        if (!iOf('#detPackingTypeId'))return 'Packing Type Field Required';
+        if (!iOf('#detPackUomId'))    return 'Pack Uom Field Required';
+        if (!(nOf('#detLoadingQty') > 0))   return 'Loading Qty Field Required';
+        if (!(nOf('#detGrossWeight') > 0))  return 'Gross Weight Field Required';
+        if (!(nOf('#detNetBillWeight') > 0))return 'Net Bill Weight Field Required';
+        if (!iOf('#detEmptyBagTermId')) return 'Empty Bag Term Field Required';
+        const po = selectedPoRow();
+        if (po) {
+            const exp = dOnly(col(po, 'ValidityDate')), start = dOnly(col(po, 'DeliveryStartDate'));
+            const doc = $('#docDate').val();
+            if (exp && exp < doc) return 'Selected Purchase Order is Expired On: ' + exp;
+            if (exp && exp === doc && !$.trim($('#detWarningRemarks').val()))
+                return 'Document Date is the same as the selected Purchase Order Expiry Date.\n'
+                     + 'Please enter warning remarks before proceeding.';
+            if (start && start > doc)
+                return 'Document Date is the Less then DeliveryStartDate of selected Purchase Order.';
+        }
+        const mid = iOf('#detItemId');
+        const src0 = $('#detItemId option:selected').data('row') || {};
+        const itm0 = parseInt(col(src0, 'itemId'), 10) || 0;
+        if (detailRows.some(function (r) { return r.purchaseOrderSaleOrderMappingId === mid && r.itemId === itm0; }))
+            return $('#detItemId option:selected').text() + ' already in detail. So can\'t add this item';
+        if (packUomEquivalent() === null)
+            return 'The selected Pack Uom has no usable conversion factor, so Gross Weight '
+                 + 'cannot be computed. It is not assumed to be 1.';
+        return null;
+    }
+
+    function addDetailRow() {
+        const err = validateDetailEntry();
+        if (err) { alert(err); return; }
+
+        const opt = $('#detItemId option:selected');
+        const src = opt.data('row') || {};
+
+        /* Every field of grnSupplierLoadingDetail the desktop fills, in its own order.
+           The linkage ids come from the picked row; nothing here is invented. */
+        const row = {
+            grnSupplierLoadingDetailId: 0,
+            actionTypeId: 1,
+
+            purchaseOrderMasterId:  parseInt(col(src, 'purchaseOrderMasterId'), 10) || 0,
+            purchaseOrderDetailId:  parseInt(col(src, 'DetailId'), 10) || 0,
+            purchaseOrderSaleOrderMappingId: parseInt(opt.val(), 10) || 0,
+            saleOrderMasterId:      parseInt(col(src, 'saleOrderMasterId'), 10) || 0,
+            saleOrderDetailId:      parseInt(col(src, 'saleOrderDetailId'), 10) || 0,
+            supplierOfferId:        parseInt(col(src, 'supplierOfferId'), 10) || 0,
+            supplierOfferDetailId:  parseInt(col(src, 'supplierOfferDetailId'), 10) || 0,
+            inquiryBookingMasterId: parseInt(col(src, 'inquiryBookingMasterId'), 10) || 0,
+            inquiryBookingDetailId: parseInt(col(src, 'inquiryBookingDetailId'), 10) || 0,
+
+            inventoryParentCategoryId: iOf('#detParentItemId'),
+            itemId:        parseInt(col(src, 'itemId'), 10) || parseInt(col(src, 'ItemId'), 10) || 0,
+            itemName:      opt.text(),
+            cropYearId:    iOf('#detCropYearId'),
+            cropYear:      $('#detCropYearId option:selected').text(),
+            packingTypeId: iOf('#detPackingTypeId'),
+            packUomId:     iOf('#detPackUomId'),
+
+            loadingQty:    r3(nOf('#detLoadingQty')),
+            wbGrossWeight: r3(nOf('#detGrossWeight')),
+            ebwPerUnit:    r3(nOf('#detEbUnit')),
+            ebwTotal:      r3(nOf('#detEbTotal')),
+            addLessWeight: r3(nOf('#detAddLessWeight')),
+            netBillWeight: r3(nOf('#detNetBillWeight')),
+            EBWeightDeductionTermId: iOf('#detEmptyBagTermId'),
+
+            buyerId:            parseInt(col(src, 'BuyerId'), 10) || 0,
+            DeliverToPartyId:   parseInt(col(src, 'DeliveryToPartyId'), 10) || 0,
+            DeliverToAddressId: parseInt(col(src, 'ShipToAddressId'), 10) || 0,
+            DeliverToAddress:   $('#detDeliverToAddress').val(),
+
+            loadingCityId:   iOf('#loadingCityId'),
+            unloadingCityId: iOf('#unloadingCityId'),
+            sortNo: detailRows.length + 1,
+            remarks: $('#detRemarks').val(),
+            warningRemarks: $('#detWarningRemarks').val(),
+
+            /* display only - not procedure parameters */
+            _poNo: col(src, 'DocNo'),
+            _soNo: col(src, 'SaleOrderNo'),
+            _poExpiry: dOnly(col(selectedPoRow(), 'ValidityDate')),
+            _poStart: dOnly(col(selectedPoRow(), 'DeliveryStartDate')),
+            _parentItem: $('#detParentItemId option:selected').text(),
+            _packingType: $('#detPackingTypeId option:selected').text(),
+            _packUom: $('#detPackUomId option:selected').text(),
+            _buyerName: $('#detBuyerName').val(),
+            _deliverTo: $('#detDeliverToPartyName').val()
+        };
+
+        detailRows.push(row);
+        renderDetailGrid();
+        clearDetailInputs();
+    }
+
+    function renderDetailGrid() {
+        const tbody = $('#gridItems tbody').empty();
+        if (detailRows.length === 0) {
+            tbody.append('<tr><td colspan="18" class="text-center text-muted">No items added yet.</td></tr>');
+        }
+        let tQty = 0, tGross = 0, tEb = 0, tAdd = 0, tNet = 0;
+        detailRows.forEach(function (r, idx) {
+            tQty += +r.loadingQty || 0;  tGross += +r.wbGrossWeight || 0;
+            tEb  += +r.ebwTotal || 0;    tAdd   += +r.addLessWeight || 0;
+            tNet += +r.netBillWeight || 0;
+            tbody.append(
+                '<tr>' +
+                '<td>' + (idx + 1) + '</td>' +
+                '<td>' + escHtml(r._poNo || r.purchaseOrderMasterId || '') + '</td>' +
+                '<td>' + escHtml(r._soNo || '') + '</td>' +
+                '<td>' + escHtml(r._parentItem || '') + '</td>' +
+                '<td>' + escHtml(r.itemName || '') + '</td>' +
+                '<td>' + escHtml(r.cropYear || '') + '</td>' +
+                '<td>' + escHtml(r._packingType || '') + '</td>' +
+                '<td>' + escHtml(r._packUom || '') + '</td>' +
+                '<td class="text-end">' + (r.loadingQty || 0) + '</td>' +
+                '<td class="text-end">' + (r.wbGrossWeight || 0) + '</td>' +
+                '<td class="text-end">' + (r.ebwPerUnit || 0) + '</td>' +
+                '<td class="text-end">' + (r.ebwTotal || 0) + '</td>' +
+                '<td class="text-end">' + (r.addLessWeight || 0) + '</td>' +
+                '<td class="text-end">' + (r.netBillWeight || 0) + '</td>' +
+                '<td>' + escHtml(r._buyerName || '') + '</td>' +
+                '<td>' + escHtml(r._deliverTo || '') + '</td>' +
+                '<td>' + escHtml(r.remarks || '') + '</td>' +
+                '<td><button type="button" class="btn btn-sm btn-outline-danger" ' +
+                    'onclick="removeDetailRow(' + idx + ')">X</button></td>' +
+                '</tr>');
+        });
+        $('#totLoadingQty').text(r3(tQty));
+        $('#totGrossWeight').text(r3(tGross));
+        $('#totEbTotal').text(r3(tEb));
+        $('#totAddLess').text(r3(tAdd));
+        $('#totNetBillWeight').text(r3(tNet));
+    }
+
+    function clearDetailInputs() {
+        $('#detItemId').val(0);
+        ['#detLoadingQty', '#detGrossWeight', '#detEbUnit', '#detEbTotal',
+         '#detAddLessWeight', '#detNetBillWeight'].forEach(function (s) { $(s).val(0); });
+        $('#detRemarks, #detWarningRemarks').val('');
+        $('#detBuyerName, #detDeliverToPartyName, #detDeliverToAddress').val('');
+        calcByEbUnit = false; calcByEbTotal = false;
+    }
+
+    function removeDetailRow(index) {
+        const r = detailRows[index];
+        if (r && (parseInt(r.grnSupplierLoadingDetailId, 10) || 0) > 0) {
+            if (!confirm('Are you sure to Delete?')) return;
+            removedRows.push(Object.assign({}, r, { actionTypeId: 3 }));
+        }
+        detailRows.splice(index, 1);
+        renderDetailGrid();
+    }
+
+
+    function loadDropdowns() {
+        $.get('/api/commission/dropdowns/suppliers', function(data) {
+            const el = $('#supplierId');
+            el.empty().append('<option value="0">-- Select Supplier --</option>');
+            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+        });
+
+        $.get('/api/commission/dropdowns/commission-agents', function(data) {
+            const el = $('#commissionAgentId');
+            el.empty().append('<option value="0">-- Select Commission Agent --</option>');
+            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+        });
+
+        /* #detItemId is NOT filled from the global item list any more. On this screen the
+           item combo is the PO-scoped one (ItemNameBind :1087), keyed on MappingId and
+           carrying OrderDetailId / SoId / SoDetailId / BuyerId / DeliveryToPartyId /
+           ShipToAddressId. A globally-bound item has none of those, so a row built from it
+           could not be linked to its purchase order. It is populated by Load Purchase Order. */
+
+        /* ParentCategoryBindFromGlobal (:965) */
+        fillCombo('#detParentItemId', '/api/commission/dropdowns/parent-categories', '-- Select --',
+                  function (d) { return '<option value="' + d.Id + '">'
+                                      + escHtml(d.InvParentCateDescription || d.name || '') + '</option>'; });
+
+        /* CropDtFillFromGlobalAndBind (:1155) */
+        fillCombo('#detCropYearId', '/api/commission/dropdowns/crop-years', '-- Select --',
+                  function (d) { return '<option value="' + d.Id + '">'
+                                      + escHtml(d.CropYear || d.name || '') + '</option>'; });
+
+        /* PackingTypeDtFillFromGlobalAndBind (:1170) */
+        fillCombo('#detPackingTypeId', '/api/commission/dropdowns/packing-types', '-- Select --',
+                  function (d) { return '<option value="' + d.Id + '">'
+                                      + escHtml(d.PackTypeDesc || d.name || '') + '</option>'; });
+
+        /* BindViewCombos (:868) - CmbEmptyBagTerm comes from the AllComboServices view,
+           Activity 'EBWeightDeductionTerm'. */
+        $.get('/api/commission/dropdowns/view-combos', function (data) {
+            const el = $('#detEmptyBagTermId');
+            el.empty().append('<option value="0">-- Select --</option>');
+            (data || []).filter(function (r) {
+                const a = String(r.Activity || '');
+                return a === 'EmptyBagTypes';
+            }).forEach(function (r) {
+                el.append('<option value="' + r.Id + '">' + escHtml(r.ReferenceName) + '</option>');
+            });
+        });
+
+        /* Pack Uom is ITEM-SCOPED, not a global list: CommonBindings.ItemUomFromGlobalBind
+           filters the UOM schedule by the chosen item. It is therefore loaded in
+           detailItemChanged(), not here - /item-uoms?itemId=0 returns nothing by design. */
+
+        /* Each list is the desktop's own source, through the endpoint carrying the traced
+           procedure: CompanyBind -> /companies, BranchesBind -> /branches, vehicleTypefill ->
+           /vehicle-types (Sp_VehicleType_GetAllMethod @Activity='ReadAll'), CityBindFromGlobal ->
+           /cities (BOTH city combos bind the same table, :787-793), DeliveryTermBind ->
+           /delivery-terms, Transporter -> the one party list SupplierBind uses. Nothing here is
+           a hard-coded list. */
+        fillCombo('#companyId',      '/api/commission/dropdowns/companies',      '-- Select Company --');
+        fillCombo('#branchId',       '/api/commission/dropdowns/branches',       '-- Select Branch --');
+        fillCombo('#vehicleTypeId',  '/api/commission/dropdowns/vehicle-types',  '-- Select Vehicle Type --');
+        fillCombo('#deliveryTermId', '/api/commission/dropdowns/delivery-terms', '-- Select Delivery Term --');
+        fillCombo('#transporterId',  '/api/commission/dropdowns/delivery-parties', '-- Select Transporter --', partyOption);
+
+        $.get('/api/commission/dropdowns/cities', function (data) {
+            ['#loadingCityId', '#unloadingCityId'].forEach(function (id) {
+                const el = $(id);
+                const keep = el.val();
+                el.empty().append('<option value="0">-- Select City --</option>');
+                if (data) data.forEach(d => el.append(`<option value="${d.id}">${escHtml(d.name)}</option>`));
+                if (keep) el.val(keep);
+            });
+        });
+    }
+
+    function escHtml(v) {
+        return String(v === undefined || v === null ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    /* party4 draws code / city / mobile from data- attributes; a missing one renders an empty
+       cell rather than a placeholder, as the desktop shows for a party with no city on file. */
+    function partyOption(d) {
+        return `<option value="${d.Id || d.id}"`
+             + ` data-code="${escHtml(d.PartyCode || '')}"`
+             + ` data-city="${escHtml(d.CityName || '')}"`
+             + ` data-mobile="${escHtml(d.MobileNo || '')}">${escHtml(d.CompanyName || d.name)}</option>`;
+    }
+
+    function fillCombo(sel, url, placeholder, optionFn) {
+        $.get(url, function (data) {
+            const el = $(sel);
+            const keep = el.val();
+            el.empty().append(`<option value="0">${placeholder}</option>`);
+            if (data) data.forEach(function (d) {
+                el.append(optionFn ? optionFn(d) : `<option value="${d.id}">${escHtml(d.name)}</option>`);
+            });
+            if (keep) el.val(keep);
+        });
+    }
+
+    /* txtTotalFreight and txtWbNetWeight are computed boxes on the desktop, not typed:
+       total freight = bilty freight + other add/less charges; scale net = load - tare. */
+    function grnRecalc() {
+        const f = parseFloat($('#biltyFreight').val()) || 0;
+        const o = parseFloat($('#otherAdLesCharges').val()) || 0;
+        $('#totalFreight').val(r3(f + o));
+        const lw = parseFloat($('#loadWeight').val()) || 0;
+        const tw = parseFloat($('#tareWeight').val()) || 0;
+        $('#scaleNetWeight').val(r3(Math.abs(lw - tw)));
+    }
+    $(document).on('input change',
+        '#biltyFreight, #otherAdLesCharges, #loadWeight, #tareWeight', grnRecalc);
+
+    function saveOrder(isUpdate) {
+        if (detailRows.length === 0) {
+            alert('Please add at least one item detail row.');
+            return;
+        }
+
+        /* Insert() :2551-2590 */
+        const vno = $.trim($('#vehicleNo').val()).toUpperCase();
+        if (!/^[A-Z]{1,6}-\d{1,6}$/.test(vno)) { alert('Vehicle no is not valid. Please check!'); $('#vehicleNo').focus(); return; }
+        const vp = vno.split('-');
+        if ((vp[0].length <= 2 || vp[1].length <= 2)
+                && !confirm('The vehicle number is unusually short (letters or digits less than or equal to 2).\nAre you sure you want to proceed?')) {
+            $('#vehicleNo').focus(); return;
+        }
+        const doc = $('#docDate').val();
+        for (let i = 0; i < detailRows.length; i++) {
+            const r = detailRows[i];
+            if (!(r.purchaseOrderMasterId > 0)) continue;
+            if (r._poExpiry && doc === r._poExpiry && !$.trim(r.warningRemarks || '')) {
+                const w = prompt('Vehicle has reached late compared to PO Expiry Date.\n\nRemarks are required to proceed.', '');
+                if (!w || !$.trim(w)) { alert('Remarks are required for late vehicle entry.'); return; }
+                r.warningRemarks = $.trim(w);
+            } else {
+                if (r._poExpiry && doc > r._poExpiry) { alert('Grn Date is greater than Purchase Order Expiry date.'); return; }
+                if (r._poStart && doc < r._poStart) { alert('Grn Date is less than Purchase Order Delivery Start date.'); return; }
+            }
+        }
+        if (!confirm(isUpdate ? 'Are you sure to Update' : 'Are you sure to Save')) return;
+
+        const btn = isUpdate ? $('#btnUpdate') : $('#btnSave');
+        const origText = btn.html();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
+
+        /* The master procedure takes 43 parameters. Tenancy, the user, actionId,
+           documentTypeId and the entry/modify dates are set server-side and are deliberately
+           NOT sent; everything else the operator can touch is sent here. driverName and
+           driverMobileNo are gone: they are not properties of the desktop model, so they were
+           never procedure parameters. */
+        const payload = {
+            grnSupplierLoadingMasterId: parseInt($('#grnSupplierLoadingMasterId').val()) || 0,
+            docNo: parseInt($('#docNo').val()) || 0,
+            docDate: $('#docDate').val(),
+            supplierId: parseInt($('#supplierId').val()) || 0,
+            commissionAgentId: parseInt($('#commissionAgentId').val()) || 0,
+            vehicleNo: $('#vehicleNo').val(),
+            biltyNo: $('#biltyNo').val(),
+            remarksHeader: $('#remarksHeader').val(),
+
+            companyId:          parseInt($('#companyId').val()) || 0,
+            branchId:           parseInt($('#branchId').val()) || 0,
+            transporterId:      parseInt($('#transporterId').val()) || 0,
+            transporterName:    $('#transporterName').val(),
+            vehicleTypeId:      parseInt($('#vehicleTypeId').val()) || 0,
+            loadingCityId:      parseInt($('#loadingCityId').val()) || 0,
+            unloadingCityId:    parseInt($('#unloadingCityId').val()) || 0,
+            deliveryTermId:     parseInt($('#deliveryTermId').val()) || 0,
+            supplierRefDocNo:   $('#supplierRefDocNo').val(),
+            biltyDate:          $('#biltyDate').val(),
+            deliveryStartDate:  $('#deliveryStartDate').val(),
+            deliveryDays:       parseInt($('#deliveryDays').val()) || 0,
+            biltyQty:           parseFloat($('#biltyQty').val()) || 0,
+            loadWeight:         parseFloat($('#loadWeight').val()) || 0,
+            tareWeight:         parseFloat($('#tareWeight').val()) || 0,
+            scaleNetWeight:     parseFloat($('#scaleNetWeight').val()) || 0,
+            biltyFreight:       parseFloat($('#biltyFreight').val()) || 0,
+            otherAdLesCharges:  parseFloat($('#otherAdLesCharges').val()) || 0,
+            totalFreight:       parseFloat($('#totalFreight').val()) || 0,
+            approvalRemarks:    $('#approvalRemarks').val(),
+
+            grnSupplierLoadingDetailList: (isUpdate ? removedRows : []).concat(detailRows)
+        };
+
+        $.ajax({
+            url: '/api/commission/grn-loading-challan/save',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(res) {
+                btn.prop('disabled', false).html(origText);
+                if (res.status === 'SUCCESS') {
+                    alert(isUpdate ? 'Update Successfully' : 'Save Successfully');
+                    resetForm();
+                } else {
+                    alert('Error saving record: ' + res.message);
+                }
+            },
+            error: function(err) {
+                btn.prop('disabled', false).html(origText);
+                alert((err && err.responseJSON && err.responseJSON.message) || 'Server error while saving.');
+            }
+        });
+    }
+
+    function fetchHistory() {
+        const fromDate = $('#histFromDate').val();
+        const toDate = $('#histToDate').val();
+        $.get(`/api/commission/grn-loading-challan/history?fromDate=${fromDate}&toDate=${toDate}`, function(data) {
+            const tbody = $('#gridHistory tbody');
+            tbody.empty();
+            if (!data || data.length === 0) {
+                tbody.append('<tr><td colspan="7" class="text-center text-muted">No history records found.</td></tr>');
+                return;
+            }
+            data.forEach(r => {
+                tbody.append(`
+                    <tr>
+                        <td><span class="clickable-code" onclick="loadRecord(${parseInt(col(r, 'grnSupplierLoadingMasterId'), 10) || 0})">${escHtml(col(r, 'docNo') || col(r, 'grnSupplierLoadingMasterId'))}</span></td>
+                        <td>${dOnly(col(r, 'docDate'))}</td>
+                        <td>${escHtml(col(r, 'SupplierName') || '')}</td>
+                        <td>${escHtml(col(r, 'CommissionAgentName') || '')}</td>
+                        <td>${escHtml(col(r, 'vehicleNo') || '')}</td>
+                        <td>${escHtml(col(r, 'biltyNo') || '')}</td>
+                        <td>${escHtml(col(r, 'Transporter') || col(r, 'transporterName') || '')}</td>
+                    </tr>
+                `);
+            });
+        });
+    }
+
+    function loadRecord(id) {
+        $.get(`/api/commission/grn-loading-challan/${id}`, function(res) {
+            if (res.status === 'SUCCESS' && res.data) {
+                const d = res.data;
+                $('#grnSupplierLoadingMasterId').val(d.grnSupplierLoadingMasterId);
+                $('#docNo').val(d.docNo);
+                if (d.docDate) $('#docDate').val(d.docDate.substring(0, 10));
+                $('#supplierId').val(d.supplierId || 0);
+                $('#commissionAgentId').val(d.commissionAgentId || 0);
+                $('#vehicleNo').val(d.vehicleNo || '');
+                $('#biltyNo').val(d.biltyNo || '');
+                $('#remarksHeader').val(d.remarksHeader || '');
+                /* ReadById (:2810-2850) restores every header control; an Update after a
+                   partial load would have written 0 / blank over them. */
+                $('#companyId').val(d.companyId || 0);
+                $('#branchId').val(d.branchId || 0);
+                $('#loadingCityId').val(d.loadingCityId || 0);
+                $('#unloadingCityId').val(d.unloadingCityId || 0);
+                $('#transporterId').val(d.transporterId || 0);
+                $('#transporterName').val(d.transporterName || '');
+                $('#biltyFreight').val(r3(d.biltyFreight));
+                $('#otherAdLesCharges').val(r3(d.otherAdLesCharges));
+                $('#totalFreight').val(r3(d.totalFreight));
+                $('#vehicleTypeId').val(d.vehicleTypeId || 0);
+                $('#biltyDate').val(dOnly(d.biltyDate));
+                $('#deliveryTermId').val(d.deliveryTermId || 0);
+                $('#loadWeight').val(r3(d.loadWeight));
+                $('#tareWeight').val(r3(d.tareWeight));
+                $('#scaleNetWeight').val(r3(d.scaleNetWeight));
+                $('#biltyQty').val(r3(d.biltyQty));
+                $('#companyId, #branchId, #supplierId, #commissionAgentId, #loadingCityId, #unloadingCityId, #transporterId, #vehicleTypeId, #deliveryTermId').trigger('change');
+
+                removedRows = [];
+                detailRows = (d.grnSupplierLoadingDetailList || []).map(function (x) {
+                    return Object.assign({}, x, {
+                        itemName: col(x, 'ItemName'),
+                        _poNo: col(x, 'PurchaseOrderNo'),
+                        _soNo: col(x, 'SaleOrderNo'),
+                        _parentItem: col(x, 'InvParentCateDescription'),
+                        _packingType: col(x, 'PackingType'),
+                        _packUom: col(x, 'PackSize'),
+                        _buyerName: col(x, 'BuyerName'),
+                        _deliverTo: col(x, 'DeliverToPartyName'),
+                        _poExpiry: dOnly(col(x, 'POExpiryDate')),
+                        _poStart: dOnly(col(x, 'PODeliveryStartDate'))
+                    });
+                });
+                renderDetailGrid();
+
+                $('#btnSave').prop('disabled', true);
+                $('#btnUpdate').prop('disabled', false);
+                $('#btnDelete').prop('disabled', false);
+
+                $('#tab-form-link').tab('show');
+            } else {
+                alert((res && res.message) || 'Record Not Found');
+            }
+        });
+    }
+
+    function resetForm() {
+        $('#grnSupplierLoadingMasterId').val(0);
+        $('#docNo').val('');
+        setDefaultDates();
+        $('#supplierId').val(0);
+        $('#commissionAgentId').val(0);
+        $('#vehicleNo').val('');
+        $('#biltyNo').val('');
+        $('#remarksHeader').val('');
+
+        detailRows = [];
+        removedRows = [];
+        renderDetailGrid();
+        clearDetailInputs();
+        $('#detPoNo').val(0);
+        $('#detEmptyBagTermId, #detParentItemId').prop('disabled', false);
+        loadDocNo();
+
+        $('#btnSave').prop('disabled', false);
+        $('#btnUpdate').prop('disabled', true);
+        $('#btnDelete').prop('disabled', true);
+    }
+</script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

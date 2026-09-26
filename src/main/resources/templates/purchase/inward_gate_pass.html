@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inward Gate Pass - Eccounting ERP Desktop Copy</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260923a}" />
     <style>
         :root {
             --win-bg: #ece9d8;
@@ -31,7 +32,6 @@
 
         .win-container {
             width: 100%;
-            max-width: 1360px;
             margin: 0 auto;
             background-color: var(--win-bg);
             border: 1px solid var(--win-border);
@@ -90,6 +90,10 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Secondary Teal Bar */
+        /* The status-strip captions are LinkLabels on the desktop - teal background,
+           white bold text, clickable. Kept visibly clickable here. */
+        .igp-link { color: #ffffff; text-decoration: underline; cursor: pointer; }
+        .igp-link:hover { color: #ffe4a0; }
         .status-strip {
             background-color: var(--header-bg);
             color: white;
@@ -127,6 +131,18 @@
             grid-template-columns: 370px 320px 1fr;
             gap: 8px;
         }
+        .entry-layout { display:grid; grid-template-columns:minmax(1052px,2fr) minmax(360px,1fr); gap:6px; }
+        .entry-layout > * { min-width:0; }
+        .breakup-panel { border:1px solid #999; background:white; }
+        .breakup-title { height:26px; padding:5px 3px; color:teal; font: bold 12px Verdana,sans-serif; }
+        .breakup-panel .grid-wrap { height:338px; }
+        .breakup-panel input { width:78px; height:23px; border:1px solid #aaa; text-align:right; }
+        .breakup-panel input[readonly] { background:#f3f3f3; }
+        .breakup-panel .tool-btn { width:20px; padding:0; justify-content:center; }
+        .breakup-panel .data-grid td { padding:1px; }
+        .breakup-panel tfoot { position:sticky; bottom:0; background:#f0f0f0; font-weight:bold; text-align:right; }
+        @media(max-width:1450px) { .entry-layout { display:block; } .breakup-panel { margin:6px 0; } }
+        @media(max-width:1080px) { .grid-3col { grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); } .section-box { min-width:0; overflow-x:auto; } }
 
         .form-row {
             display: flex;
@@ -308,6 +324,7 @@
             .data-grid th { background: #eee !important; color: #000 !important; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body>
 
@@ -316,8 +333,8 @@
     <div class="top-banner">
         <div id="lblFormHeaderTitle">Inward Gate Pass</div>
         <div style="font-size: 11px; font-weight: normal;">
-            <span id="txtUserTitle">Numan Rasheed (Admin)</span> |
-            <span>Golden Ace Rice Mills (Pvt) Ltd.</span> |
+            <span id="txtUserTitle" th:text="${#authentication != null ? #authentication.name : 'User'}">User</span> |
+            <span><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></span> |
             <span id="txtLiveTime">03:47:54 pm</span> |
             <span>2026-27</span>
         </div>
@@ -339,23 +356,47 @@
             <button id="btnLabReport653" class="tool-btn" onclick="onLabReport()">653-LabReport</button>
             <button id="BtnDriverForm" class="tool-btn" onclick="onOpenDriverForm()">Driver Bio</button>
             <button id="btnShortcutKeys" class="tool-btn" onclick="onShowShortcuts()">Shortcut Keys</button>
-            <button id="btnDelete" class="tool-btn" onclick="withButtonLoading(this, onDeleteRecord)" style="margin-left: auto; color: red;">Delete</button>
         </div>
 
         <!-- Status Strip -->
         <div class="status-strip">
             <span style="font-size: 12px;">Inward Gate Pass</span>
+            <!-- ==========================================================================
+                 InwardGatePass.cs puts TWO controls side by side for each of these four, and the
+                 web had only the radio - with no handler anywhere, so all five did nothing.
+
+                 1. A LinkLabel whose CAPTION is clickable and opens that screen NOW:
+                      labelLabAnalysisForm.Click  -> RadPurchaseLabFormToOpenOnInsert_Click (:3816)
+                      labelWeightBridgeForm.Click -> RadWBFormToOpenOnInsert_Click          (:3827)
+                      labelGrnForm.Click          -> RadGrnFormToOpenOnInsert_Click         (:3843)
+                      (Freight Voucher)           -> FreightVoucherFormToOpen_Click         (:3865)
+
+                 2. A radio that chooses which screen opens AUTOMATICALLY after a successful
+                    Save - OpenLinkformOnInsert(GatePassId, Status) (:3897-3915), which passes the
+                    NEW gate pass id through so the target opens already filtered to it.
+
+                 So the caption is a link and the radio is a preference. Both are wired below.
+                 ========================================================================== -->
             <label><input type="radio" name="formMode" value="None" checked> None</label>
-            <label><input type="radio" name="formMode" value="LabAnalysis"> Lab Analysis Form</label>
-            <label><input type="radio" name="formMode" value="WeightBridge"> Weight Bridge Form</label>
-            <label><input type="radio" name="formMode" value="Grn"> Grn Form</label>
-            <label><input type="radio" name="formMode" value="FreightVoucher"> Freight Voucher</label>
+            <label><input type="radio" name="formMode" value="LabAnalysis">
+                <a href="#" onclick="return igpOpenLinkedForm('LabAnalysis');"
+                   class="igp-link" title="Open Lab Purchase Analysis">Lab Analysis Form</a></label>
+            <label><input type="radio" name="formMode" value="WeightBridge">
+                <a href="#" onclick="return igpOpenLinkedForm('WeightBridge');"
+                   class="igp-link" title="Open Weigh Bridge">Weight Bridge Form</a></label>
+            <label><input type="radio" name="formMode" value="Grn">
+                <a href="#" onclick="return igpOpenLinkedForm('Grn');"
+                   class="igp-link" title="Open GRN">Grn Form</a></label>
+            <label><input type="radio" name="formMode" value="FreightVoucher">
+                <a href="#" onclick="return igpOpenLinkedForm('FreightVoucher');"
+                   class="igp-link" title="Open Freight Voucher">Freight Voucher</a></label>
             <label style="margin-left: auto;"><input type="checkbox" id="chkPreview" checked> Preview</label>
         </div>
 
         <!-- Main Form Body -->
         <div class="form-body">
             <input type="hidden" id="txtId" value="0" />
+            <div class="entry-layout"><div>
             <div class="grid-3col">
 
                 <!-- Column 1: Main Information -->
@@ -368,47 +409,46 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">G.P Type & No<span class="req-star">*</span></div>
-                        <select id="cmbgptype" class="form-control" style="width: 120px;" onchange="onGpTypeChange()">
+                        <select id="cmbgptype" class="form-control" style="width: 120px;" onchange="onGpTypeChange()" data-dtcombo="single" data-dtcombo-caption="GatePassType">
                             <option value="">-- Select --</option>
-                            <option th:each="g : ${gatePassTypes}" th:value="${g.id}" th:text="${g.name}"></option>
+                            <option th:each="g : ${gatePassTypes}" th:value="${g['id']}" th:text="${g['name']}"></option>
                         </select>
                         <input type="text" id="txtgptypeno" class="form-control" style="width: 80px; margin-left: 4px;" th:value="${nextTypeNo}" readonly />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Purchase Type<span class="req-star">*</span></div>
-                        <select id="CmbOrderType" class="form-control" style="width: 120px;">
-                            <option value="Purchase Order">Purchase Order</option>
-                            <option value="Direct">Direct</option>
-                            <option value="Sale Return">Sale Return</option>
+                        <select id="CmbOrderType" class="form-control" style="width: 120px;" data-dtcombo="single" data-dtcombo-caption="Purchase Type">
+                            <option value="">-- Select --</option>
+                            <option th:each="o : ${orderTypes}" th:value="${o['id']}" th:text="${o['name']}"></option>
                         </select>
-                        <input type="text" id="CmbOrderno" class="form-control" style="width: 80px; margin-left: 4px;" placeholder="PO No" />
+                        <input type="text" id="CmbOrderno" onblur="onOrderNumberLeave()" onkeydown="if(event.key==='Enter'){event.preventDefault();onOrderNumberLeave();}" class="form-control" style="width: 80px; margin-left: 4px;" placeholder="PO No"  data-guard="integer"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Supplier Name<span class="req-star">*</span></div>
-                        <select id="cmbsupp" class="form-control" style="width: 204px;">
+                        <select id="cmbsupp" class="form-control" style="width: 204px;" onchange="loadTransitVehicles().catch(showRequestError)" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
                             <option value="">-- Select Supplier --</option>
-                            <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
+                            <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">City Name<span class="req-star">*</span></div>
-                        <select id="cmbcity" class="form-control" style="width: 204px;">
+                        <select id="cmbcity" class="form-control" style="width: 204px;" data-dtcombo="single" data-dtcombo-caption="City Name">
                             <option value="">-- Select City --</option>
-                            <option th:each="c : ${cities}" th:value="${c.id}" th:text="${c.name}"></option>
+                            <option th:each="c : ${cities}" th:value="${c['id']}" th:text="${c['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Item Name<span class="req-star">*</span></div>
-                        <select id="CmbVariety" class="form-control" style="width: 204px;" onchange="onItemChange()">
+                        <select id="CmbVariety" class="form-control" style="width: 204px;" onchange="onItemChange()" data-dtcombo="single" data-dtcombo-caption="Item Name">
                             <option value="">-- Select Item --</option>
-                            <option th:each="i : ${items}" th:value="${i.id}" th:text="${i.name}"></option>
+                            <option th:each="i : ${items}" th:value="${i['id']}" th:text="${i['itemName']} ?: ${i['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Item Qty<span class="req-star">*</span></div>
-                        <input type="number" id="txtqty" class="form-control" style="width: 65px;" value="0" oninput="calculateWeight()" />
+                        <input type="number" id="txtqty" class="form-control" style="width: 65px;" value="0" oninput="calculateWeight()"  data-guard="decimal"/>
                         <span class="form-label" style="width: 60px;">Pack Unit</span>
-                        <input type="number" id="txtPackUnit" class="form-control" style="width: 65px;" value="60" oninput="calculateWeight()" />
+                        <input type="number" id="txtPackUnit" class="form-control" style="width: 65px;" value="60" oninput="calculateWeight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Weight<span class="req-star">*</span></div>
@@ -421,14 +461,14 @@
                     <div class="section-title">Vehicle & Freight</div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Vehicle Type</div>
-                        <select id="cmbvehicletype" class="form-control" style="width: 170px;">
+                        <select id="cmbvehicletype" class="form-control" style="width: 170px;" data-dtcombo="single" data-dtcombo-caption="Vehicle Name">
                             <option value="">-- Select Vehicle Type --</option>
-                            <option th:each="v : ${vehicleTypes}" th:value="${v.id}" th:text="${v.name}"></option>
+                            <option th:each="v : ${vehicleTypes}" th:value="${v['id']}" th:text="${v['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Vehicle No<span class="req-star">*</span></div>
-                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. OKB-1254" />
+                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. OKB-1254"  data-guard="vehicle"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty No</div>
@@ -440,15 +480,15 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty Freight</div>
-                        <input type="number" id="txtfreight" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
+                        <input type="number" id="txtfreight" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Advance By Party</div>
-                        <input type="number" id="txtAdvanceByParty" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
+                        <input type="number" id="txtAdvanceByParty" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Advance By Factory</div>
-                        <input type="number" id="txtAdvanceByFactory" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()" />
+                        <input type="number" id="txtAdvanceByFactory" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Total Payable Freight</div>
@@ -456,7 +496,7 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Net Paid<span class="req-star">*</span></div>
-                        <input type="number" id="txtNetPaid" class="form-control" style="width: 170px; font-weight: bold;" value="0" readonly />
+                        <input type="number" id="txtNetPaid" class="form-control" style="width: 170px; font-weight: bold;" value="0" oninput="netPaidEdited=true" data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Remarks Header</div>
@@ -479,20 +519,20 @@
                         <tbody>
                         <tr>
                             <td style="font-weight: bold;">Load Weight</td>
-                            <td><input type="number" id="txtFactoryWeight" value="0" oninput="calculateNetWeights()" /></td>
-                            <td><input type="number" id="txtSupplierFirstWeight" value="0" oninput="calculateNetWeights()" /></td>
+                            <td><input type="number" id="txtFactoryWeight" value="0" readonly /></td>
+                            <td><input type="number" id="txtSupplierFirstWeight" value="0" oninput="calculateNetWeights()"  data-guard="integer"/></td>
                             <td><input type="number" id="txtFirstWtDifference" value="0" readonly /></td>
                         </tr>
                         <tr>
                             <td style="font-weight: bold;">Tare Weight</td>
-                            <td><input type="number" id="txtsecondWeight" value="0" oninput="calculateNetWeights()" /></td>
-                            <td><input type="number" id="txtSupplierSecondWeight" value="0" oninput="calculateNetWeights()" /></td>
+                            <td><input type="number" id="txtsecondWeight" value="0" readonly /></td>
+                            <td><input type="number" id="txtSupplierSecondWeight" value="0" oninput="calculateNetWeights()"  data-guard="integer"/></td>
                             <td><input type="number" id="txtSecondWtDifference" value="0" readonly /></td>
                         </tr>
                         <tr style="background-color: #eef6ff;">
                             <td style="font-weight: bold; color: #003366;">Net Weight</td>
                             <td><input type="number" id="txtFactoryNetWeight" value="0" readonly /></td>
-                            <td><input type="number" id="txtSupplierNetWeight" value="0" readonly /></td>
+                            <td><input type="number" id="txtSupplierNetWeight" value="0" oninput="onSupplierNetInput()" data-guard="decimal"/></td>
                             <td><input type="number" id="txtDifferenceWeight" value="0" readonly style="color: red;" /></td>
                         </tr>
                         </tbody>
@@ -500,39 +540,39 @@
 
                     <div class="form-row" style="margin-top: 4px;">
                         <div class="form-label" style="width: 90px;">W.B Slip No<span class="req-star">*</span></div>
-                        <input type="text" id="txtWeighBridgeSlipNo" class="form-control" style="width: 70px;" value="0" />
+                        <input type="text" id="txtWeighBridgeSlipNo" class="form-control" style="width: 70px;" value="0" readonly />
                         <span class="form-label" style="width: 50px;">In Time</span>
                         <input type="datetime-local" id="txtintime" class="form-control" style="width: 150px;" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">W.B Status<span class="req-star">*</span></div>
-                        <select id="cmbWeighBridge" class="form-control" style="width: 70px;">
+                        <select id="cmbWeighBridge" class="form-control" style="width: 70px;" data-dtcombo="single" data-dtcombo-caption="Status">
                             <option value="">-- Select --</option>
-                            <option th:each="w : ${weighBridges}" th:value="${w.id}" th:text="${w.name}"></option>
+                            <option th:each="w : ${weighBridges}" th:value="${w['id']}" th:text="${w['name']}"></option>
                         </select>
                         <span class="form-label" style="width: 50px;">Out Time</span>
                         <input type="datetime-local" id="txtouttime" class="form-control" style="width: 150px;" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">G.P Status<span class="req-star">*</span></div>
-                        <select id="CmbStatus" class="form-control" style="width: 70px;">
+                        <select id="CmbStatus" class="form-control" style="width: 70px;" data-dtcombo="single" data-dtcombo-caption="Status">
                             <option value="Open">Open</option>
-                            <option value="Closed">Closed</option>
-                            <option value="Pending">Pending</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
                         </select>
                         <span class="form-label" style="width: 70px;">Packing Type</span>
-                        <select id="CmbPackingType" class="form-control" style="width: 130px;">
+                        <select id="CmbPackingType" class="form-control" style="width: 130px;" data-dtcombo="single" data-dtcombo-caption="Packing Type">
                             <option value="">-- Select --</option>
-                            <option th:each="p : ${packingTypes}" th:value="${p.id}" th:text="${p.name}"></option>
+                            <option th:each="p : ${packingTypes}" th:value="${p['id']}" th:text="${p['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">P.O Excess Wt</div>
                         <input type="number" id="txtAccessWeight" class="form-control" style="width: 70px;" value="0" />
                         <span class="form-label" style="width: 70px;">Transit Vehicle</span>
-                        <select id="cmbTransitVehicle" class="form-control" style="width: 130px;">
+                        <select id="cmbTransitVehicle" class="form-control" style="width: 130px;" onchange="onTransitVehicleChange()" data-dtcombo="single" data-dtcombo-caption="Transit Vehicle">
                             <option value="">-- Select --</option>
-                            <option th:each="t : ${transitVehicles}" th:value="${t.id}" th:text="${t.name}"></option>
+                            <option th:each="t : ${transitVehicles}" th:value="${t['id']}" th:text="${t['name']}"></option>
                         </select>
                     </div>
                 </div>
@@ -568,6 +608,16 @@
                     </div>
                 </div>
             </div>
+
+            </div>
+            <section class="breakup-panel" aria-label="Purchase BreakUp">
+                <div class="breakup-title">Purchase BreakUp</div>
+                <div class="grid-wrap"><table class="data-grid">
+                    <thead><tr><th>+</th><th>X</th><th>Qty</th><th>UOM</th><th>Gross Weight</th><th>Eb Weight</th><th>EB Total</th><th>Net Weight</th></tr></thead>
+                    <tbody id="grdBreakupBody"></tbody>
+                    <tfoot><tr><td colspan="2">Total</td><td id="breakupTotal-qty"></td><td></td><td id="breakupTotal-grossWeight"></td><td id="breakupTotal-ebWeight"></td><td id="breakupTotal-ebTotal"></td><td id="breakupTotal-netWeight"></td></tr></tfoot>
+                </table></div>
+            </section></div>
 
             <!-- Main Tab Control -->
             <div class="tab-container">
@@ -610,33 +660,7 @@
                                 <th>City Name</th>
                             </tr>
                             </thead>
-                            <tbody id="grdMainHistoryBody">
-                            <tr th:each="row : ${historyList}" th:attr="ondblclick='loadRecordAndEdit(' + ${row.Id} + ')'">
-                                <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='onPrintReport(' + ${row.Id} + ')'">Print</button></td>
-                                <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'">Edit</button></td>
-                                <td><span class="code-link" th:text="${row.GpSrNo}" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'"></span></td>
-                                <td th:text="${row.GpDate != null ? #strings.substring(row.GpDate.toString(), 0, 10) : ''}"></td>
-                                <td th:text="${row.GatepassType}"></td>
-                                <td th:text="${row.OrderType != null ? row.OrderType : 'Purchase Order'}"></td>
-                                <td th:text="${row.SupplierName}"></td>
-                                <td th:text="${row.PurchaseOrderId}"></td>
-                                <td th:text="${row.VehicleType}"></td>
-                                <td th:text="${row.VehicleNo}"></td>
-                                <td th:text="${row.BiltyNo}"></td>
-                                <td style="text-align:right;" th:text="${row.ItemQty}"></td>
-                                <td style="text-align:right;" th:text="${row.PackUnit}"></td>
-                                <td style="text-align:right;" th:text="${row.WeightComparedToPoWt}"></td>
-                                <td style="text-align:right;" th:text="${row.SupplierFirstWeight}"></td>
-                                <td style="text-align:right;" th:text="${row.SupplierSecondWeight}"></td>
-                                <td style="text-align:right;" th:text="${row.SupplierWeight}"></td>
-                                <td style="text-align:right;" th:text="${row.FactoryWeight}"></td>
-                                <td style="text-align:right; color:red;" th:text="${row.DifferenceWeight}"></td>
-                                <td style="text-align:right;" th:text="${row.AccessWeight}"></td>
-                                <td style="text-align:right;" th:text="${row.NetPaid}"></td>
-                                <td th:text="${row.VarietyName != null ? row.VarietyName : row.ItemName}"></td>
-                                <td th:text="${row.CityName}"></td>
-                            </tr>
-                            </tbody>
+                            <tbody id="grdMainHistoryBody"></tbody>
                         </table>
                     </div>
                     <div class="totals-bar">
@@ -647,23 +671,83 @@
 
                 <!-- Tab 2: Purchase Order Info -->
                 <div id="tabPoInfo" class="tab-content">
-                    <div class="form-row" style="margin-bottom: 6px;">
-                        <span>From Date:</span> <input type="date" id="txtFromPoDate" class="form-control" style="width: 120px; margin: 0 6px;" />
-                        <span>To Date:</span> <input type="date" id="txtToPoDate" class="form-control" style="width: 120px; margin: 0 6px;" />
-                        <button id="btnSearchPoInfo" class="tool-btn" onclick="withButtonLoading(this, loadPoInfoGrid)">Show PO Info</button>
+                    <!-- Filters Panel matching desktop screenshot -->
+                    <div class="history-filter-box" style="margin: 2px 0 6px 0;">
+                        <div style="font-weight: bold; color: #003366; margin-bottom: 4px;">Filters</div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+                            <!-- Column 1: Dates & Docs -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div class="form-row">
+                                    <span class="form-label" style="width: 75px;"><input type="checkbox" id="chkFromPoDate" checked onchange="document.getElementById('txtFromPoDate').disabled=!this.checked"> From Date</span>
+                                    <input type="date" id="txtFromPoDate" class="form-control" style="width: 120px;" />
+                                    <span class="form-label" style="width: 65px; margin-left: 10px;">From Doc</span>
+                                    <input type="number" id="txtFromDocNoPoInfo" class="form-control" style="width: 75px;" data-guard="integer" />
+                                </div>
+                                <div class="form-row">
+                                    <span class="form-label" style="width: 75px;"><input type="checkbox" id="chkToPoDate" checked onchange="document.getElementById('txtToPoDate').disabled=!this.checked"> To Date</span>
+                                    <input type="date" id="txtToPoDate" class="form-control" style="width: 120px;" />
+                                    <span class="form-label" style="width: 65px; margin-left: 10px;">To Doc</span>
+                                    <input type="number" id="txtToDocNoPoInfo" class="form-control" style="width: 75px;" data-guard="integer" />
+                                </div>
+                            </div>
+
+                            <!-- Column 2: Supplier & Document Type -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div class="form-row">
+                                    <span class="form-label" style="width: 95px;">Supplier Name</span>
+                                    <select id="cmbSupplierNamePoInfo" class="form-control" style="width: 200px;" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
+                                        <option value="">-- Select Supplier --</option>
+                                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <span class="form-label" style="width: 95px;">Document Type</span>
+                                    <select id="CmbDocumentTypePoInfo" class="form-control" style="width: 200px;" data-dtcombo="single" data-dtcombo-caption="Document Type">
+                                        <option value="">-- Select --</option>
+                                        <option th:each="d : ${documentTypes}" th:value="${d['id']}" th:text="${d['name']}"></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Column 3: Expired Days & Buttons -->
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="text-align: center;">
+                                    <div style="background-color: #d4e38e; font-weight: bold; padding: 2px 4px; border: 1px solid #a0a0a0; font-size: 10px; line-height: 1.1; max-width: 130px;">Hide Orders Expired<br/>Over Days Ago</div>
+                                    <input type="number" id="txtExpiryDaysPoInfo" class="form-control" style="width: 130px; text-align: center; font-weight: bold; background-color: #ffffcc;" value="7" data-guard="integer" />
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <button id="btnResetPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="resetPoInfoFilters()">Reset</button>
+                                    <button id="btnSearchPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="withButtonLoading(this, loadPoInfoGrid)">Show</button>
+                                </div>
+                            </div>
+
+                            <!-- Column 4: Date Type Radio Buttons -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; background-color: #eef2f5; padding: 6px 10px; border: 1px solid #ccc; border-radius: 3px;">
+                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="docDate" checked> Doc Date</label>
+                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="modifyDate"> Modify Date</label>
+                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="entryDate"> Entry Date</label>
+                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="approvedDate"> Approved Date</label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid-wrap">
+
+                    <!-- Teal Banner Strip -->
+                    <div style="background-color: #005a5b; color: white; font-weight: bold; padding: 4px 8px; margin-bottom: 4px; font-size: 11px;">
+                        This Grid Show The Un-Completed And Approved Purchase Orders.... Complete.Cancel And Un-Approved Orders Will Not Appear here.
+                    </div>
+
+                    <!-- PO Info Grid -->
+                    <div class="grid-wrap" style="max-height: 340px;">
                         <table class="data-grid" id="grdPoInfo">
                             <thead>
                             <tr>
-                                <th>PO No</th>
-                                <th>PO Date</th>
+                                <th>Branch</th><th>Document Type</th><th>Order No</th>
                                 <th>Supplier Name</th>
                                 <th>Item Name</th>
-                                <th>Ordered Qty</th>
-                                <th>Received Qty</th>
-                                <th>Balance Qty</th>
-                                <th>Status</th>
+                                <th>Pack UOM</th><th>Order Qty</th><th>Order Weight</th>
+                                <th>GP Received Qty</th><th>GP Received Weight</th><th>Balance Qty by GP</th><th>Balance Weight by GP</th>
+                                <th>GRN Received Qty</th><th>GRN Received Weight</th><th>Balance Qty by GRN</th><th>Balance Weight by GRN</th>
+                                <th>Remarks</th><th>Approval Status</th><th>Order Status</th><th>Expiry Date</th>
                             </tr>
                             </thead>
                             <tbody id="grdPoInfoBody"></tbody>
@@ -702,17 +786,17 @@
                 </div>
                 <div>
                     <span class="form-label">From Doc No</span><br/>
-                    <input type="number" id="txtHistFromDoc" class="form-control" style="width: 90px;" />
+                    <input type="number" id="txtHistFromDoc" class="form-control" style="width: 90px;"  data-guard="integer"/>
                 </div>
                 <div>
                     <span class="form-label">To Doc No</span><br/>
-                    <input type="number" id="txtHistToDoc" class="form-control" style="width: 90px;" />
+                    <input type="number" id="txtHistToDoc" class="form-control" style="width: 90px;"  data-guard="integer"/>
                 </div>
                 <div>
                     <span class="form-label">Supplier</span><br/>
-                    <select id="cmbHistSupplier" class="form-control" style="width: 220px;">
+                    <select id="cmbHistSupplier" class="form-control" style="width: 220px;" data-dtcombo="single" data-dtcombo-caption="Supplier">
                         <option value="">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
+                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
                     </select>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
@@ -753,44 +837,32 @@
                         <th>Item Name</th>
                         <th>Item Qty</th>
                         <th>Pack Unit</th>
-                        <th>Weight Compared to Po Wt</th>
+                        <th>Weight Compared To Po Wt</th>
                         <th>Supplier Load Weight</th>
                         <th>Supplier Tare Weight</th>
                         <th>Supplier Net Weight</th>
                         <th>Factory Weight</th>
-                        <th>Difference</th>
-                        <th>Excess Weight</th>
+                        <th>Diff Weight</th>
+                        <th>Freight</th>
+                        <th>Advance By Party</th>
+                        <th>Advance By Factory</th>
+                        <th>Total Payable Freight</th>
                         <th>Net Paid</th>
+                        <th>In Time</th>
+                        <th>Out Time</th>
+                        <th>Status</th>
+                        <th>Entry User</th>
+                        <th>Entry Date</th>
+                        <th>Modify User</th>
+                        <th>Modify Date</th>
+                        <th>No Of Attachments</th>
+                        <th>Remarks</th>
+                        <th>Approval Status</th>
+                        <th>Excess Weight</th>
+                        <th>Packing Type</th>
                     </tr>
                     </thead>
-                    <tbody id="grdFullHistoryBody">
-                    <tr th:each="row : ${historyList}" th:attr="ondblclick='loadRecordAndEdit(' + ${row.Id} + ')'">
-                        <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='onPrintReport(' + ${row.Id} + ')'">Print</button></td>
-                        <td><button class="tool-btn" style="padding:1px 4px;" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'">Edit</button></td>
-                        <td><span class="code-link" th:text="${row.GpSrNo}" th:attr="onclick='loadRecordAndEdit(' + ${row.Id} + ')'"></span></td>
-                        <td th:text="${row.GpDate != null ? #strings.substring(row.GpDate.toString(), 0, 10) : ''}"></td>
-                        <td th:text="${row.GatepassType}"></td>
-                        <td th:text="${row.OrderType != null ? row.OrderType : 'Purchase Order'}"></td>
-                        <td th:text="${row.PurchaseOrderId}"></td>
-                        <td th:text="${row.SupplierName}"></td>
-                        <td th:text="${row.CityName}"></td>
-                        <td th:text="${row.VehicleType}"></td>
-                        <td th:text="${row.VehicleNo}"></td>
-                        <td th:text="${row.BiltyDate != null ? #strings.substring(row.BiltyDate.toString(), 0, 10) : ''}"></td>
-                        <td th:text="${row.BiltyNo}"></td>
-                        <td th:text="${row.VarietyName != null ? row.VarietyName : row.ItemName}"></td>
-                        <td style="text-align:right;" th:text="${row.ItemQty}"></td>
-                        <td style="text-align:right;" th:text="${row.PackUnit}"></td>
-                        <td style="text-align:right;" th:text="${row.WeightComparedToPoWt}"></td>
-                        <td style="text-align:right;" th:text="${row.SupplierFirstWeight}"></td>
-                        <td style="text-align:right;" th:text="${row.SupplierSecondWeight}"></td>
-                        <td style="text-align:right;" th:text="${row.SupplierWeight}"></td>
-                        <td style="text-align:right;" th:text="${row.FactoryWeight}"></td>
-                        <td style="text-align:right; color:red;" th:text="${row.DifferenceWeight}"></td>
-                        <td style="text-align:right;" th:text="${row.AccessWeight}"></td>
-                        <td style="text-align:right;" th:text="${row.NetPaid}"></td>
-                    </tr>
-                    </tbody>
+                    <tbody id="grdFullHistoryBody"></tbody>
                 </table>
             </div>
         </div>
@@ -804,548 +876,10 @@
     </div>
 </div>
 
-<script>
-    const context = {
-        documentTypeId: 51,
-        orgId: 1,
-        compId: 1,
-        branchId: 1
-    };
+<script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
+<script th:src="@{/build/js/countx_inward_gate_pass.js?v=20260924h}"></script>
 
-    document.addEventListener('DOMContentLoaded', function() {
-        setDefaultDates();
-        if (!document.getElementById('cmbsupp').options.length || document.getElementById('cmbsupp').options.length <= 1) {
-            loadDropdowns();
-        }
-        loadMainHistoryGrid();
-    });
-
-    function withButtonLoading(btn, asyncFn) {
-        if (!btn || btn.disabled) return;
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner"></span> Loading...`;
-        
-        try {
-            const result = asyncFn();
-            if (result && typeof result.then === 'function') {
-                result.finally(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                });
-            } else {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                }, 300);
-            }
-        } catch(err) {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
-        }
-    }
-
-    function setDefaultDates() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('txtgpdate').value = today;
-        document.getElementById('txtBiltyDate').value = today;
-        document.getElementById('txtFromPoDate').value = today;
-        document.getElementById('txtToPoDate').value = today;
-
-        const threeDaysAgo = new Date();
-        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-        const threeDaysAgoIso = threeDaysAgo.toISOString().split('T')[0];
-        document.getElementById('txtHistFromDate').value = threeDaysAgoIso;
-        document.getElementById('txtHistToDate').value = today;
-
-        const nowIso = new Date().toISOString().slice(0, 16);
-        document.getElementById('txtintime').value = nowIso;
-        document.getElementById('txtouttime').value = nowIso;
-    }
-
-    function loadDropdowns() {
-        return fetch('/api/inward-gate-pass/dropdowns')
-            .then(res => res.json())
-            .then(data => {
-                bindSelect('cmbsupp', data.suppliers, 'id', 'name');
-                bindSelect('cmbcity', data.cities, 'id', 'name');
-                bindSelect('cmbvehicletype', data.vehicleTypes, 'id', 'name');
-                bindSelect('cmbgptype', data.gatePassTypes, 'id', 'name');
-                bindSelect('CmbVariety', data.items, 'id', 'name');
-                bindSelect('cmbWeighBridge', data.weighBridges, 'id', 'name');
-                bindSelect('CmbPackingType', data.packingTypes, 'id', 'name');
-                bindSelect('cmbTransitVehicle', data.transitVehicles, 'id', 'name');
-                bindSelect('cmbHistSupplier', data.suppliers, 'id', 'name');
-
-                selectDefaultByText('cmbgptype', ['Rice', 'Paddy']);
-                selectDefaultByText('cmbcity', ['Khudian Khas', 'Khudian']);
-                selectDefaultByText('cmbvehicletype', ['Truck', 'Tractor']);
-                selectDefaultByText('CmbOrderType', ['Purchase Order']);
-                selectDefaultByText('CmbStatus', ['Open']);
-                selectDefaultByText('cmbWeighBridge', ['Auto']);
-            });
-    }
-
-    function bindSelect(elemId, list, valKey, textKey) {
-        const sel = document.getElementById(elemId);
-        if (!sel) return;
-        sel.innerHTML = '<option value="">-- Select --</option>';
-        if (list) {
-            list.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item[valKey];
-                opt.textContent = item[textKey];
-                sel.appendChild(opt);
-            });
-        }
-    }
-
-    function switchViewMode(mode) {
-        const viewForm = document.getElementById('viewForm');
-        const viewHistory = document.getElementById('viewHistory');
-        const btnForm = document.getElementById('btnModeForm');
-        const btnHist = document.getElementById('btnModeHistory');
-        const lblTitle = document.getElementById('lblFormHeaderTitle');
-
-        if (mode === 'History') {
-            viewForm.style.display = 'none';
-            viewHistory.style.display = 'block';
-            btnForm.classList.remove('active');
-            btnHist.classList.add('active');
-            lblTitle.textContent = 'Inward Gate Pass History';
-            executeFullHistorySearch();
-        } else {
-            viewForm.style.display = 'block';
-            viewHistory.style.display = 'none';
-            btnForm.classList.add('active');
-            btnHist.classList.remove('active');
-            lblTitle.textContent = 'Inward Gate Pass';
-        }
-    }
-
-    function onSwitchToFormNew() {
-        switchViewMode('Form');
-        onNewRecord();
-    }
-
-    function selectDefaultByText(elemId, targetTexts) {
-        const sel = document.getElementById(elemId);
-        if (!sel || sel.options.length <= 1) return;
-        for (let text of targetTexts) {
-            for (let i = 0; i < sel.options.length; i++) {
-                if (sel.options[i].text.toLowerCase().includes(text.toLowerCase())) {
-                    sel.selectedIndex = i;
-                    return;
-                }
-            }
-        }
-        if (sel.options.length > 1) sel.selectedIndex = 1;
-    }
-
-    function onNewRecord() {
-        document.getElementById('txtId').value = '0';
-        document.getElementById('cmbsupp').value = '';
-        document.getElementById('CmbVariety').value = '';
-        document.getElementById('txtvehicleno').value = '';
-        document.getElementById('txtqty').value = '0';
-        document.getElementById('txtPackUnit').value = '60';
-        document.getElementById('txtWeight').value = '0';
-        document.getElementById('txtfreight').value = '0';
-        document.getElementById('txtAdvanceByParty').value = '0';
-        document.getElementById('txtAdvanceByFactory').value = '0';
-        document.getElementById('txtTotalPayablesFreight').value = '0';
-        document.getElementById('txtNetPaid').value = '0';
-        document.getElementById('txtFactoryWeight').value = '0';
-        document.getElementById('txtSupplierFirstWeight').value = '0';
-        document.getElementById('txtsecondWeight').value = '0';
-        document.getElementById('txtSupplierSecondWeight').value = '0';
-
-        resetDriverInfoFields();
-
-        selectDefaultByText('cmbgptype', ['Rice', 'Paddy']);
-        selectDefaultByText('cmbcity', ['Khudian Khas', 'Khudian']);
-        selectDefaultByText('cmbvehicletype', ['Truck', 'Tractor']);
-        selectDefaultByText('CmbOrderType', ['Purchase Order']);
-        selectDefaultByText('CmbStatus', ['Open']);
-        selectDefaultByText('cmbWeighBridge', ['Auto']);
-
-        calculateNetWeights();
-        calculateFreight();
-
-        document.getElementById('btnsave').style.display = 'inline-flex';
-        document.getElementById('btnupdate').style.display = 'none';
-
-        return fetch('/api/inward-gate-pass/generate-no')
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('txtgpno').value = data.gpSrNo || 1;
-                document.getElementById('txtgptypeno').value = data.gpTypeSrNo || 1;
-            });
-    }
-
-    function calculateWeight() {
-        const qty = parseFloat(document.getElementById('txtqty').value) || 0;
-        const packUnit = parseFloat(document.getElementById('txtPackUnit').value) || 0;
-        document.getElementById('txtWeight').value = (qty * packUnit).toFixed(2);
-    }
-
-    function calculateFreight() {
-        const biltyFreight = parseFloat(document.getElementById('txtfreight').value) || 0;
-        const advParty = parseFloat(document.getElementById('txtAdvanceByParty').value) || 0;
-        const advFactory = parseFloat(document.getElementById('txtAdvanceByFactory').value) || 0;
-        const totalPayable = Math.max(0, biltyFreight - advParty - advFactory);
-        document.getElementById('txtTotalPayablesFreight').value = totalPayable.toFixed(2);
-        document.getElementById('txtNetPaid').value = totalPayable.toFixed(2);
-    }
-
-    function calculateNetWeights() {
-        const factLoad = parseFloat(document.getElementById('txtFactoryWeight').value) || 0;
-        const factTare = parseFloat(document.getElementById('txtsecondWeight').value) || 0;
-        const factNet = Math.max(0, factLoad - factTare);
-        document.getElementById('txtFactoryNetWeight').value = factNet.toFixed(2);
-
-        const supLoad = parseFloat(document.getElementById('txtSupplierFirstWeight').value) || 0;
-        const supTare = parseFloat(document.getElementById('txtSupplierSecondWeight').value) || 0;
-        const supNet = Math.max(0, supLoad - supTare);
-        document.getElementById('txtSupplierNetWeight').value = supNet.toFixed(2);
-
-        document.getElementById('txtFirstWtDifference').value = (supLoad - factLoad).toFixed(2);
-        document.getElementById('txtSecondWtDifference').value = (supTare - factTare).toFixed(2);
-        document.getElementById('txtDifferenceWeight').value = (supNet - factNet).toFixed(2);
-    }
-
-    function lookupDriverByCnic() {
-        const cnic = document.getElementById('txtCNIC').value.trim();
-        if (!cnic) return;
-        fetch(`/api/inward-gate-pass/driver-bio/cnic?cnic=${encodeURIComponent(cnic)}`)
-            .then(res => res.json())
-            .then(bio => {
-                if (bio && bio.DriverName) {
-                    document.getElementById('txtDriverName').value = bio.DriverName || '';
-                    document.getElementById('txtFatherName').value = bio.FatherName || '';
-                    document.getElementById('txtFatherCNIC').value = bio.FatherCnicNo || '';
-                    document.getElementById('txtDriverCellNo').value = bio.DriverCellNo || '';
-                    document.getElementById('txtWhatsAppNo').value = bio.WhatsappNo || '';
-                    document.getElementById('txtAlternateCellNo').value = bio.AlternateCellNo || '';
-                }
-            });
-    }
-
-    function lookupDriverByCell() {
-        const cell = document.getElementById('txtDriverCellNo').value.trim();
-        if (!cell) return;
-        fetch(`/api/inward-gate-pass/driver-bio/cell?cell=${encodeURIComponent(cell)}`)
-            .then(res => res.json())
-            .then(bio => {
-                if (bio && bio.DriverName) {
-                    document.getElementById('txtDriverName').value = bio.DriverName || '';
-                    document.getElementById('txtFatherName').value = bio.FatherName || '';
-                    document.getElementById('txtFatherCNIC').value = bio.FatherCnicNo || '';
-                    document.getElementById('txtCNIC').value = bio.CnicNo || '';
-                    document.getElementById('txtWhatsAppNo').value = bio.WhatsappNo || '';
-                    document.getElementById('txtAlternateCellNo').value = bio.AlternateCellNo || '';
-                }
-            });
-    }
-
-    function resetDriverInfoFields() {
-        document.getElementById('txtCNIC').value = '';
-        document.getElementById('txtDriverCellNo').value = '';
-        document.getElementById('txtWhatsAppNo').value = '';
-        document.getElementById('txtAlternateCellNo').value = '';
-        document.getElementById('txtDriverName').value = '';
-        document.getElementById('txtFatherName').value = '';
-        document.getElementById('txtFatherCNIC').value = '';
-    }
-
-    function onSaveRecord() {
-        const payload = {
-            id: parseInt(document.getElementById('txtId').value) || 0,
-            documentTypeId: context.documentTypeId,
-            gpDate: document.getElementById('txtgpdate').value,
-            gpSrNo: parseInt(document.getElementById('txtgpno').value) || 0,
-            gpTypeSrNo: parseInt(document.getElementById('txtgptypeno').value) || 0,
-            gatepassType: document.getElementById('cmbgptype').options[document.getElementById('cmbgptype').selectedIndex]?.text || 'Paddy',
-            supplierCustomerId: parseInt(document.getElementById('cmbsupp').value) || 0,
-            cityId: parseInt(document.getElementById('cmbcity').value) || 0,
-            itemId: parseInt(document.getElementById('CmbVariety').value) || 0,
-            vehicleNo: document.getElementById('txtvehicleno').value,
-            vehicleType: document.getElementById('cmbvehicletype').value,
-            biltyNo: document.getElementById('txtbiltyno').value,
-            biltyDate: document.getElementById('txtBiltyDate').value,
-            freight: parseFloat(document.getElementById('txtfreight').value) || 0,
-            advanceByParty: parseFloat(document.getElementById('txtAdvanceByParty').value) || 0,
-            advanceByFactory: parseFloat(document.getElementById('txtAdvanceByFactory').value) || 0,
-            netPaid: parseFloat(document.getElementById('txtNetPaid').value) || 0,
-            supplierFirstWeight: parseFloat(document.getElementById('txtSupplierFirstWeight').value) || 0,
-            supplierSecondWeight: parseFloat(document.getElementById('txtSupplierSecondWeight').value) || 0,
-            supplierWeight: parseFloat(document.getElementById('txtSupplierNetWeight').value) || 0,
-            factoryWeight: parseFloat(document.getElementById('txtFactoryNetWeight').value) || 0,
-            differenceWeight: parseFloat(document.getElementById('txtDifferenceWeight').value) || 0,
-            status: document.getElementById('CmbStatus').value || 'Open',
-            packingTypeId: parseInt(document.getElementById('CmbPackingType').value) || 0,
-            packUnit: parseFloat(document.getElementById('txtPackUnit').value) || 60,
-            noOfPackages: parseInt(document.getElementById('txtqty').value) || 0,
-            driverName: document.getElementById('txtDriverName').value,
-            driverCNICNO: document.getElementById('txtCNIC').value,
-            driverMobileNo: document.getElementById('txtDriverCellNo').value,
-            whatsappNo: document.getElementById('txtWhatsAppNo').value,
-            alternateCellNo: document.getElementById('txtAlternateCellNo').value,
-            fatherName: document.getElementById('txtFatherName').value,
-            fatherCnicNo: document.getElementById('txtFatherCNIC').value,
-            gatePassInwardDetails: [
-                {
-                    itemId: parseInt(document.getElementById('CmbVariety').value) || 0,
-                    itemQty: parseFloat(document.getElementById('txtqty').value) || 0,
-                    packUnit: parseFloat(document.getElementById('txtPackUnit').value) || 60,
-                    weight: parseFloat(document.getElementById('txtWeight').value) || 0
-                }
-            ]
-        };
-
-        return fetch('/api/inward-gate-pass/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    document.getElementById('txtId').value = data.igpId;
-                    document.getElementById('btnsave').style.display = 'none';
-                    document.getElementById('btnupdate').style.display = 'inline-flex';
-                    loadMainHistoryGrid();
-                } else {
-                    alert(data.message);
-                }
-            });
-    }
-
-    function loadMainHistoryGrid() {
-        return fetch('/api/inward-gate-pass/history', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ documentTypeId: 51 })
-        })
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.getElementById('grdMainHistoryBody');
-                tbody.innerHTML = '';
-                let totalQty = 0, totalSupWt = 0, totalDiff = 0;
-
-                data.forEach(row => {
-                    totalQty += parseFloat(row.ItemQty) || 0;
-                    totalSupWt += parseFloat(row.SupplierWeight) || 0;
-                    totalDiff += parseFloat(row.DifferenceWeight) || 0;
-
-                    const tr = document.createElement('tr');
-                    tr.ondblclick = function() { loadRecordAndEdit(row.Id); };
-                    tr.innerHTML = `
-                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="onPrintReport(${row.Id})">Print</button></td>
-                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="loadRecordAndEdit(${row.Id})">Edit</button></td>
-                    <td><span class="code-link" onclick="loadRecordAndEdit(${row.Id})">${row.GpSrNo || ''}</span></td>
-                    <td>${row.GpDate ? row.GpDate.split('T')[0] : ''}</td>
-                    <td>${row.GatepassType || ''}</td>
-                    <td>${row.OrderType || 'Purchase Order'}</td>
-                    <td>${row.SupplierName || ''}</td>
-                    <td>${row.PurchaseOrderId || ''}</td>
-                    <td>${row.VehicleType || ''}</td>
-                    <td>${row.VehicleNo || ''}</td>
-                    <td>${row.BiltyNo || ''}</td>
-                    <td style="text-align:right;">${row.ItemQty || 0}</td>
-                    <td style="text-align:right;">${row.PackUnit || 0}</td>
-                    <td style="text-align:right;">${row.WeightComparedToPoWt || 0}</td>
-                    <td style="text-align:right;">${row.SupplierFirstWeight || 0}</td>
-                    <td style="text-align:right;">${row.SupplierSecondWeight || 0}</td>
-                    <td style="text-align:right;">${row.SupplierWeight || 0}</td>
-                    <td style="text-align:right;">${row.FactoryWeight || 0}</td>
-                    <td style="text-align:right; color:red;">${row.DifferenceWeight || 0}</td>
-                    <td style="text-align:right;">${row.AccessWeight || 0}</td>
-                    <td style="text-align:right;">${row.NetPaid || 0}</td>
-                    <td>${row.VarietyName || row.ItemName || ''}</td>
-                    <td>${row.CityName || ''}</td>
-                `;
-                    tbody.appendChild(tr);
-                });
-
-                document.getElementById('lblRecordCount').textContent = data.length;
-                document.getElementById('lblSumQty').textContent = totalQty.toFixed(2);
-                document.getElementById('lblSumSupWt').textContent = totalSupWt.toFixed(2);
-                document.getElementById('lblSumDiff').textContent = totalDiff.toFixed(2);
-            });
-    }
-
-    function executeFullHistorySearch() {
-        const payload = {
-            documentTypeId: 51,
-            fromDate: document.getElementById('txtHistFromDate').value,
-            toDate: document.getElementById('txtHistToDate').value,
-            fromDocNo: document.getElementById('txtHistFromDoc').value,
-            toDocNo: document.getElementById('txtHistToDoc').value,
-            supplierId: document.getElementById('cmbHistSupplier').value
-        };
-
-        return fetch('/api/inward-gate-pass/history', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.getElementById('grdFullHistoryBody');
-                tbody.innerHTML = '';
-
-                data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.ondblclick = function() { loadRecordAndEdit(row.Id); };
-                    tr.innerHTML = `
-                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="onPrintReport(${row.Id})">Print</button></td>
-                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="loadRecordAndEdit(${row.Id})">Edit</button></td>
-                    <td><span class="code-link" onclick="loadRecordAndEdit(${row.Id})">${row.GpSrNo || ''}</span></td>
-                    <td>${row.GpDate ? row.GpDate.split('T')[0] : ''}</td>
-                    <td>${row.GatepassType || ''}</td>
-                    <td>${row.OrderType || 'Purchase Order'}</td>
-                    <td>${row.PurchaseOrderId || ''}</td>
-                    <td>${row.SupplierName || ''}</td>
-                    <td>${row.CityName || ''}</td>
-                    <td>${row.VehicleType || ''}</td>
-                    <td>${row.VehicleNo || ''}</td>
-                    <td>${row.BiltyDate ? row.BiltyDate.split('T')[0] : ''}</td>
-                    <td>${row.BiltyNo || ''}</td>
-                    <td>${row.VarietyName || row.ItemName || ''}</td>
-                    <td style="text-align:right;">${row.ItemQty || 0}</td>
-                    <td style="text-align:right;">${row.PackUnit || 0}</td>
-                    <td style="text-align:right;">${row.WeightComparedToPoWt || 0}</td>
-                    <td style="text-align:right;">${row.SupplierFirstWeight || 0}</td>
-                    <td style="text-align:right;">${row.SupplierSecondWeight || 0}</td>
-                    <td style="text-align:right;">${row.SupplierWeight || 0}</td>
-                    <td style="text-align:right;">${row.FactoryWeight || 0}</td>
-                    <td style="text-align:right; color:red;">${row.DifferenceWeight || 0}</td>
-                    <td style="text-align:right;">${row.AccessWeight || 0}</td>
-                    <td style="text-align:right;">${row.NetPaid || 0}</td>
-                `;
-                    tbody.appendChild(tr);
-                });
-            });
-    }
-
-    function loadPoInfoGrid() {
-        const payload = {
-            fromDate: document.getElementById('txtFromPoDate').value,
-            toDate: document.getElementById('txtToPoDate').value
-        };
-        return fetch('/api/inward-gate-pass/po-info', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.getElementById('grdPoInfoBody');
-                tbody.innerHTML = '';
-                data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                    <td>${row.OrderNo || ''}</td>
-                    <td>${row.PODate ? row.PODate.split('T')[0] : ''}</td>
-                    <td>${row.SupplierName || ''}</td>
-                    <td>${row.ItemName || ''}</td>
-                    <td style="text-align:right;">${row.OrderQty || 0}</td>
-                    <td style="text-align:right;">${row.ReceivedQty || 0}</td>
-                    <td style="text-align:right;">${row.BalanceQty || 0}</td>
-                    <td>${row.Status || 'Open'}</td>
-                `;
-                    tbody.appendChild(tr);
-                });
-            });
-    }
-
-    function loadRecordAndEdit(id) {
-        switchViewMode('Form');
-        return fetch(`/api/inward-gate-pass/${id}`)
-            .then(res => res.json())
-            .then(res => {
-                if (res.success && res.header) {
-                    const h = res.header;
-                    document.getElementById('txtId').value = h.Id;
-                    document.getElementById('txtgpno').value = h.GpSrNo || '';
-                    document.getElementById('txtgptypeno').value = h.GpTypeSrNo || '';
-                    document.getElementById('cmbsupp').value = h.SupplierCustomerId || '';
-                    document.getElementById('cmbcity').value = h.CityId || '';
-                    document.getElementById('CmbVariety').value = h.ItemId || '';
-                    document.getElementById('txtvehicleno').value = h.VehicleNo || '';
-                    document.getElementById('cmbvehicletype').value = h.VehicleType || '';
-                    document.getElementById('txtbiltyno').value = h.BiltyNo || '';
-                    document.getElementById('txtfreight').value = h.Freight || 0;
-                    document.getElementById('txtAdvanceByParty').value = h.AdvanceByParty || 0;
-                    document.getElementById('txtAdvanceByFactory').value = h.AdvanceByFactory || 0;
-                    document.getElementById('txtNetPaid').value = h.NetPaid || 0;
-                    document.getElementById('txtSupplierFirstWeight').value = h.SupplierFirstWeight || 0;
-                    document.getElementById('txtSupplierSecondWeight').value = h.SupplierSecondWeight || 0;
-                    document.getElementById('txtFactoryWeight').value = h.FactoryWeight || 0;
-                    document.getElementById('txtDriverName').value = h.DriverName || '';
-                    document.getElementById('txtCNIC').value = h.DriverCNICNO || '';
-                    document.getElementById('txtDriverCellNo').value = h.DriverMobileNo || '';
-                    document.getElementById('txtWhatsAppNo').value = h.WhatsappNo || '';
-                    document.getElementById('txtAlternateCellNo').value = h.AlternateCellNo || '';
-
-                    if (res.details && res.details.length > 0) {
-                        document.getElementById('txtqty').value = res.details[0].ItemQty || 0;
-                        document.getElementById('txtPackUnit').value = res.details[0].PackUnit || 60;
-                        calculateWeight();
-                    }
-
-                    calculateNetWeights();
-                    calculateFreight();
-                    document.getElementById('btnsave').style.display = 'none';
-                    document.getElementById('btnupdate').style.display = 'inline-flex';
-                }
-            });
-    }
-
-    function onDeleteRecord() {
-        const id = parseInt(document.getElementById('txtId').value) || 0;
-        if (id <= 0) {
-            alert('Please select a record to delete.');
-            return Promise.resolve();
-        }
-        if (confirm('Are you sure you want to delete this Inward Gate Pass?')) {
-            return fetch(`/api/inward-gate-pass/delete/${id}`, { method: 'POST' })
-                .then(res => res.json())
-                .then(data => {
-                    alert(data.message);
-                    onNewRecord();
-                    loadMainHistoryGrid();
-                });
-        }
-        return Promise.resolve();
-    }
-
-    function switchMainSubTab(tabId) {
-        document.querySelectorAll('.tab-container .tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-container .tab-content').forEach(c => c.classList.remove('active'));
-
-        if (tabId === 'tabGridHistory') {
-            document.querySelectorAll('.tab-container .tab-btn')[0].classList.add('active');
-            document.getElementById('tabGridHistory').classList.add('active');
-        } else {
-            document.querySelectorAll('.tab-container .tab-btn')[1].classList.add('active');
-            document.getElementById('tabPoInfo').classList.add('active');
-            loadPoInfoGrid();
-        }
-    }
-
-    function onRefreshForm() { return loadMainHistoryGrid(); }
-    function onDefineCity() { alert('Define City form dialog placeholder'); }
-    function onDefineVehicle() { alert('Define Vehicle form dialog placeholder'); }
-    function onOpenDriverForm() { alert('Driver Biodata form dialog placeholder'); }
-    function onOpenAttachments() { alert('Attachments dialog placeholder'); }
-    function onPrintReport(id) { window.print(); }
-    function onPrintSlip() { window.print(); }
-    function onLabReport() { alert('Printing Lab Report 653-LabReport...'); }
-    function onShowShortcuts() { alert('Shortcuts:\nF2: New\nF5: Refresh\nCtrl+S: Save\nCtrl+U: Update\nCtrl+D: Delete'); }
-</script>
-
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

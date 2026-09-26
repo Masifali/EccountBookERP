@@ -323,7 +323,7 @@
         let gridItems = [];
         let editingVoucherId = 0;
         let baseCurrencyId = 0;
-        let baseCurrencyRate = 1;
+        let baseCurrencyRate = 0;
 
         $(document).ready(function() {
             const today = new Date().toISOString().split('T')[0];
@@ -374,7 +374,13 @@
                     }
                     $.get('/api/configurations/by-key?configDescription=BaseCurrencyRate', function(cfg2) {
                         if (cfg2 && cfg2.configKey) {
-                            baseCurrencyRate = parseFloat(cfg2.configKey) || 1;
+                            /* DefaultConfigurations() fills txtExchangeRate from the BaseCurrencyRate
+                           configuration and leaves it EMPTY when there is no such row; FormValidation()
+                           then refuses with "Please Configure Your Base Currency Rate In configurations"
+                           (PaymentVoucherNew.cs:1245, ExpenseVoucher.cs:2492). A || 1 default here meant a
+                           company with no configured rate silently posted at an exchange rate of 1 instead
+                           of being refused. 0 lets the Exchange Rate check below do its job. */
+                        baseCurrencyRate = parseFloat(cfg2.configKey) || 0;
                         }
                         onCurrencyChange();
                     }).fail(function() { onCurrencyChange(); });
