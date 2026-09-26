@@ -31,8 +31,21 @@ public class SaleDriverBioRepository {
     }
 
     public List<Map<String,Object>> history(UserAccount u, int year, boolean canViewAll) {
-        return jdbc.queryForList("EXEC dbo.USP_GatePassOutwardDriverInfo_FormHistory @OrganizationId=?,@CompanyId=?,@BranchesId=?,@FinancialYearId=?,@DocumentTypeId=?,@EntryUser=?,@CanViewAllRecord=?",
-                u.getOrganizationId(), u.getCompanyId(), u.getBranchesId(), year, DOCUMENT_TYPE_ID, u.getId(), canViewAll);
+        // frmDriverBio.FillHistoryGrid uses the gate-pass type (91), not the driver document type (93).
+        String sql="EXEC dbo.USP_GatePassOutwardDriverInfo_FormHistory @OrganizationId=?,@CompanyId=?,@DocumentTypeId=?,@CanViewAllRecord=?";
+        List<Object> args=new ArrayList<>(Arrays.asList(u.getOrganizationId(),u.getCompanyId(),REF_DOCUMENT_TYPE_ID,canViewAll));
+        if(u.getBranchesId()!=0){sql+=",@BranchesId=?";args.add(u.getBranchesId());}
+        if(year!=0){sql+=",@FinancialYearId=?";args.add(year);}
+        if(!canViewAll){sql+=",@EntryUser=?";args.add(u.getId());}
+        return jdbc.queryForList(sql,args.toArray());
+    }
+
+    public boolean canViewAllRecords(UserAccount u,String role) {
+        if("Admin".equalsIgnoreCase(role))return true;
+        return jdbc.queryForList("EXEC dbo.Sp_tblUserRights_GetAllMethod @UserId=?,@ScreenName='frmDriverBio',@RightName=?,@CompanyId=?,@Activity='GetByUserId'",
+                u.getId(),role==null?"":role,u.getCompanyId()).stream()
+                .anyMatch(r->"CanView AllRecord".equalsIgnoreCase(Objects.toString(r.get("RightName"),"").trim())
+                        && (Boolean.TRUE.equals(r.get("Value"))||"1".equals(Objects.toString(r.get("Value"),""))||"true".equalsIgnoreCase(Objects.toString(r.get("Value"),""))));
     }
 
     public Map<String,Object> record(UserAccount u, int id) {
@@ -54,7 +67,7 @@ public class SaleDriverBioRepository {
         String sql="EXEC dbo."+proc+" @Id=?,@DocumentTypeId=?,@GatePassOutwardId=?,@ForwarderName=?,@DriverName=?,@FatherName=?,@CnicNo=?,@DriverCellNo=?,@AlternateCellNo=?,@RemarksHeader=?,@DriverPic=?,@ThumbPic=?,@FingerPrintImage=?,@DriverImage=?,@EntryDate=?,@EntryUser=?,@ModifyDate=?,@ModifyUser=?,@OrganizationId=?,@CompanyId=?,@BranchId=?,@ScreenName=?,@RefDocumentTypeId=?";
         int id=execute(sql,new Object[]{r.id,DOCUMENT_TYPE_ID,r.gatePassOutwardId,text(r.forwarderName),text(r.driverName),text(r.fatherName),text(r.cnicNo),text(r.driverCellNo),text(r.alternateCellNo),text(r.remarksHeader),
                 keep(r.driverPic,old,"DriverPic"),keep(r.thumbPic,old,"ThumbPic"),keepBytes(r.fingerPrintImage,old,"FingerPrintImage"),keepBytes(r.driverImage,old,"DriverImage"),
-                old==null?now:old.get("EntryDate"),old==null?u.getId():old.get("EntryUser"),now,u.getId(),u.getOrganizationId(),u.getCompanyId(),u.getBranchesId(),"frmDriverBio",REF_DOCUMENT_TYPE_ID},r.id);
+                now,u.getId(),now,u.getId(),u.getOrganizationId(),u.getCompanyId(),u.getBranchesId(),"frmDriverBio",REF_DOCUMENT_TYPE_ID},r.id);
         if(id<=0) throw new IllegalStateException("Driver information save returned no record ID");
         return record(u,id);
     }

@@ -33,7 +33,10 @@ public class SaleDeliveryOrderService {
     }
 
     public List<Map<String,Object>> orderLines(int orderId) { return repository.orderLines(context.requireAccountingUser(), orderId); }
-    public List<Map<String,Object>> history() { return repository.history(context.requireAccountingUser(), context.currentFinancialYearId(), true); }
+    public List<Map<String,Object>> history() {
+        UserAccount user=context.requireAccountingUser();
+        return repository.history(user,context.currentFinancialYearId(),repository.canViewAllRecords(user,context.currentRoleName()));
+    }
     public Map<String,Object> record(int id) { return repository.record(context.requireAccountingUser(), id); }
 
     @Transactional

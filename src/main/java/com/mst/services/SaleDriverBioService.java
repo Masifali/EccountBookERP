@@ -14,7 +14,7 @@ public class SaleDriverBioService {
     private final CurrentUserContext context;
     public SaleDriverBioService(SaleDriverBioRepository repository,CurrentUserContext context){this.repository=repository;this.context=context;}
     public Map<String,Object> initial(){UserAccount u=context.requireAccountingUser();return Map.of("documentTypeId",93,"referenceDocumentTypeId",91,"pendingGatePasses",repository.pending(u,context.currentFinancialYearId()),"knownDrivers",repository.knownDrivers(u));}
-    public List<Map<String,Object>> history(){return repository.history(context.requireAccountingUser(),context.currentFinancialYearId(),true);}
+    public List<Map<String,Object>> history(){UserAccount u=context.requireAccountingUser();return repository.history(u,context.currentFinancialYearId(),repository.canViewAllRecords(u,context.currentRoleName()));}
     public Map<String,Object> record(int id){return repository.record(context.requireAccountingUser(),id);}
     @Transactional public Map<String,Object> save(SaleDriverBioRequest request){return repository.save(context.requireAccountingUser(),request);}
 }

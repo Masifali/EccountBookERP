@@ -10,17 +10,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.ToDoubleFunction;
 
 import static com.mst.repositories.SaleInvoiceRepository.*;
 
 /**
- * BLL 0612 SaleInvoiceFinancial.MakeVoucherForSaleInvoice and BLL 0613 SaleInvoiceGeneralFinancialMethods,
- * line for line. Every document-type set, every account choice and every comment string is copied from
- * the recovered C#; nothing is simplified. Doubles are formatted the way .NET Framework's
- * double.ToString() does ("G", 15 significant digits) so the voucher comments match the desktop's.
+ * Translation of BLL 0612 SaleInvoiceFinancial.MakeVoucherForSaleInvoice and BLL 0613
+ * SaleInvoiceGeneralFinancialMethods. Keeps the recovered document-type sets, account choices and
+ * comment templates. The current invoice persistence entry points support documents 95 and 171.
  *
- * The only branch not ported is GetAvgRatesAndStockInHand.GetAvgRateQtyAndStockInHand, reached only by
- * document types 103, 126, 133 and 145; it throws rather than posting a guessed rate.
+ * GetAvgRatesAndStockInHand.GetAvgRateQtyAndStockInHand (103/126/133/145) and
+ * CommonServies.GetEqvilentByItemId (128) remain unsupported and throw explicitly.
  */
 public class SaleInvoiceFinancial {
 
@@ -309,7 +309,7 @@ public class SaleInvoiceFinancial {
         }
 
         int num14 = 0;
-        double freightSum = obj.freights.stream().mapToDouble(x -> x.FreightAmount).sum();
+        double freightSum = desktopSum(obj.freights,x -> x.FreightAmount);
         if (freightSum > 0.0 && obj.freights.stream().map(x -> x.TansporterId).distinct().count() == 1)
             num14 = obj.freights.stream().mapToInt(x -> x.TansporterId).max().orElse(0);
 
@@ -534,7 +534,7 @@ public class SaleInvoiceFinancial {
                     Commission c = obj.commissions.stream().filter(x -> x.SaleOrderId == item2.SaleOrderId).findFirst().orElse(null);
                     String text4 = "", arg = "";
                     if (c != null) {
-                        int t = (int) c.CommType;
+                        int t = i(c.CommType);
                         arg = g(c.Rate);
                         text4 = t == 1 ? "Flat" : t == 2 ? "Percent" : t == 3 ? "OnWeight" : "";
                     }
@@ -570,14 +570,14 @@ public class SaleInvoiceFinancial {
                 double qty, weight, amount;
                 if (item.SaleOrderId > 0) {
                     List<Detail> l10 = obj.details.stream().filter(x -> x.SaleOrderId == item.SaleOrderId).toList();
-                    qty = l10.stream().mapToDouble(x -> x.ItemQty).sum();
-                    weight = l10.stream().mapToDouble(x -> x.NetBillWeight).sum();
-                    amount = l10.stream().mapToDouble(x -> x.ItemAmount).sum();
+                    qty = desktopSum(l10,x -> x.ItemQty);
+                    weight = desktopSum(l10,x -> x.NetBillWeight);
+                    amount = desktopSum(l10,x -> x.ItemAmount);
                     if (!l10.isEmpty()) { text6 = String.valueOf(l10.get(0).SaleOrder); text7 = s(l10.get(0).VehicleNo); }
                 } else {
-                    qty = obj.details.stream().mapToDouble(x -> x.ItemQty).sum();
-                    weight = obj.details.stream().mapToDouble(x -> x.NetBillWeight).sum();
-                    amount = obj.details.stream().mapToDouble(x -> x.ItemAmount).sum();
+                    qty = desktopSum(obj.details,x -> x.ItemQty);
+                    weight = desktopSum(obj.details,x -> x.NetBillWeight);
+                    amount = desktopSum(obj.details,x -> x.ItemAmount);
                 }
                 String type = item.CommType == 1.0 ? "Flat" : item.CommType == 2.0 ? "Percent" : item.CommType != 3.0 ? "" : "OnWeight";
                 List<String> l = new ArrayList<>();
@@ -810,6 +810,13 @@ public class SaleInvoiceFinancial {
     // =========================================================================== .NET formatting
 
     static boolean isBlank(String v) { return v == null || v.trim().isEmpty(); }
+
+    /** The desktop .NET Framework Enumerable.Sum adds doubles in row order without compensated summation. */
+    private static <T> double desktopSum(List<T> rows,ToDoubleFunction<T> value) {
+        double result=0;
+        for(T row:rows)result+=value.applyAsDouble(row);
+        return result;
+    }
 
     private static final double[] POW10 = {1E0, 1E1, 1E2, 1E3, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9, 1E10, 1E11, 1E12, 1E13, 1E14, 1E15};
 

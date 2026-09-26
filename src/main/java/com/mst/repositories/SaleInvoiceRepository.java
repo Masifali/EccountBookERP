@@ -640,10 +640,11 @@ public class SaleInvoiceRepository {
         return out;
     }
 
-    /** jobLot.GetByID - SP_JobLot_ReadMethod @Id, 'GetById', reading AccountId (0 when the lot is not found). */
+    /** jobLot.GetByID indexes the first result; a missing lot must stop posting, not select another GL account. */
     public int jobLotAccountById(int jobLotId) {
         var rows = q("EXEC dbo.SP_JobLot_ReadMethod @Id=?, @Activity=?", jobLotId, "GetById");
-        return rows.isEmpty() ? 0 : i(col(rows.get(0), "AccountId"));
+        if(rows.isEmpty())throw new IllegalArgumentException("Job lot record not found: "+jobLotId);
+        return i(col(rows.get(0), "AccountId"));
     }
 
     /** GetEqvilentByItemIdAndUomScheduleId - Sp_Item_GetAllMethod @ScheduleId, reading Equivalent. */
