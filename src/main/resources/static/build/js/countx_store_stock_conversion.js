@@ -53,8 +53,24 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        var origHtml = '';
+        if (b) {
+            if (b.disabled || b.classList.contains('is-busy')) return Promise.resolve();
+            b.disabled = true;
+            b.classList.add('is-busy');
+            origHtml = b.innerHTML;
+            if (!b.querySelector('.fa-spinner')) {
+                b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + origHtml;
+            }
+        }
+        var done = function () {
+            if (b) {
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                if (origHtml) b.innerHTML = origHtml;
+            }
+            applyRights();
+        };
         var p; try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
         return p;
