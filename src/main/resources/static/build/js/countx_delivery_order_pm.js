@@ -46,8 +46,24 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        var origHtml = '';
+        if (b) {
+            if (b.disabled || b.classList.contains('is-busy')) return;
+            b.disabled = true;
+            b.classList.add('is-busy');
+            origHtml = b.innerHTML;
+            if (!b.querySelector('.fa-spinner')) {
+                b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + origHtml;
+            }
+        }
+        var done = function () {
+            if (b) {
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                if (origHtml) b.innerHTML = origHtml;
+            }
+            applyRights();
+        };
         var p; try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
         return p;
@@ -319,7 +335,14 @@
                 return '<tr class="data-row" data-i="' + i + '">'
                     + (R.print ? '<td><button type="button" class="win-btn-mini" data-act="print">Print</button></td>' : '')
                     + (R.update ? '<td><button type="button" class="win-btn-mini" data-act="edit">Edit</button></td>' : '')
-                    + HIST_COLS.map(function (c) { var v = r[c[0]]; return '<td>' + esc(c[2] === 'd' ? ddmmm(v) : c[2] === 't' ? dt(v) : v) + '</td>'; }).join('') + '</tr>';
+                    + HIST_COLS.map(function (c) {
+                        var v = r[c[0]];
+                        var cellVal = esc(c[2] === 'd' ? ddmmm(v) : c[2] === 't' ? dt(v) : v);
+                        if (c[0] === 'DocNo') {
+                            cellVal = '<span class="win-link" data-act="edit">' + cellVal + '</span>';
+                        }
+                        return '<td>' + cellVal + '</td>';
+                    }).join('') + '</tr>';
             }).join('');
             $id('lblHistCount').textContent = historyRows.length + ' record(s)';
         }).catch(function (e) { box(e.message); });
@@ -358,7 +381,7 @@
         on('grd', 'dblclick', function (e) { if (e.target.closest('button')) return; var tr = e.target.closest('tr'); if (tr) editRow(int(tr.getAttribute('data-i'))); });
         on('grdhistory', 'click', function (e) {
             var tr = e.target.closest('tr'); if (!tr) return;
-            var i = int(tr.getAttribute('data-i')), b = e.target.closest('button');
+            var i = int(tr.getAttribute('data-i')), b = e.target.closest('button, [data-act]');
             if (!b) { historySelect(i); return; }
             if (b.getAttribute('data-act') === 'edit' && R.update) ReadById(int(historyRows[i].Id));
             else if (b.getAttribute('data-act') === 'print' && R.print) InvDeliveryOrderSlip(historyRows[i].Id);

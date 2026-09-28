@@ -13,6 +13,39 @@
     var dtGrid = [];        // the last search's raw rows (IssuanceHistory.dtGrid) — what the Print dropdown pushes
     var gridRows = [];      // the projected DataTable (:261)
     var filters = {};
+    var pending = false, initialized = false, lookupMessage = '';
+
+    function message(text, error, loading) {
+        var status = $id('issuanceLookupStatus');
+        status.hidden = !text;
+        status.style.color = error ? '#a00000' : '#005959';
+        $id('issuanceLookupMessage').textContent = text || '';
+        $id('issuanceLookupSpinner').hidden = !loading;
+    }
+    function get(url) {
+        return C.getJson(url).then(function (data) {
+            // An HTML login redirect is parsed as null by the shared helper, not an empty lookup.
+            if (data == null) throw new Error('Your session has expired or the request could not be completed. Sign in again, then click Refresh.');
+            return data;
+        });
+    }
+    function run(work, text) {
+        if (pending) return Promise.resolve();
+        pending = true;
+        message(text, false, true);
+        var controls = Array.from(document.querySelectorAll('.rc-root button,.rc-root input,.rc-root select'))
+            .map(function (el) { return { el: el, disabled: el.disabled }; });
+        controls.forEach(function (s) { s.el.disabled = true; });
+        var failed = false;
+        return Promise.resolve().then(work).catch(function (e) {
+            failed = true;
+            message(e.message || 'Could not load the report. Click Refresh to try again.', true, false);
+        }).finally(function () {
+            controls.forEach(function (s) { s.el.disabled = s.disabled; });
+            pending = false;
+            if (!failed) message(lookupMessage, false, false);
+        });
+    }
 
     /* ------------------------------------------------------------------ number formats */
     function fmt(v, maxDec) {
@@ -67,11 +100,7 @@
         /* frmGatePassReport_Load (:222): FromDate.Focus(); From = ActiveYr.Start_Period, To = now. */
         $id('FromDate').focus();
         $id('ToDate').value = C.today();
-        C.getJson(API + '/lookups').then(function (d) {
-            look = d || {};
-            bindCombos(look.combos || {});
-            $id('FromDate').value = C.isoDay(look.financialYearStart) || '';
-        }).catch(function (e) { alert(e.message); });
+        refresh();
         document.addEventListener('keydown', formKeyDown);
         render();
     }
@@ -113,22 +142,24 @@
         });
     }
 
-    /** FillAllDropDowns (:114): one combo per Activity; a group missing from the result leaves
-        its combo untouched, and an empty result binds nothing (:127). DropDownBind.BindDDL with
+    /** FillAllDropDowns (:114): one combo per Activity. Clear missing groups on Refresh to avoid
+        stale choices; show an empty-data hint instead of silently binding nothing (:127). BindDDL with
         ZeroIndex false (:172): no "...Select Any Value..." row, the combo starts with empty text
         (the blank option, value 0 — Conversion.ToInt(null) = 0). */
     var MAP = { DepartmentFrom: 'CmbDepartmentName', Item: 'CmbItemName', Asset: 'CmbAssetName',
                 Warehouse: 'CmbWareHouse', DebitAccount: 'CmbAccountTitle', ItemCondition: 'cmbItemCondition' };
     function bindCombos(combos) {
+        var count = 0;
         Object.keys(MAP).forEach(function (act) {
-            if (!combos[act]) return;
-            C.fillSelect(MAP[act], combos[act], 'Id', 'Name');
+            var rows = combos[act] || [], el = $id(MAP[act]);
+            count += rows.length;
+            C.fillSelect(el, rows, 'Id', 'Name');
+            if (!rows.length) {
+                el.innerHTML = '<option value="0">No entries in Store Issuance</option>';
+                el.value = '0';
+            }
         });
-        /* a combo that never got a source still needs its empty text row */
-        Object.keys(MAP).forEach(function (act) {
-            var el = $id(MAP[act]);
-            if (!el.options.length) el.innerHTML = '<option value="0"></option>';
-        });
+        lookupMessage = count ? '' : 'No Store Issuance filter records were found for the current company. These lists use saved Store Issuance records. Check the selected company, then click Refresh.';
     }
 
     function comboInt(id) { return C.intOf($id(id).value); }
@@ -137,6 +168,7 @@
     /** Reset (:200) — Item Condition is NOT cleared on the desktop, and dtGrid is not cleared
         either (only grdfrm.DataSource = null), so Print still prints the last search. */
     function reset() {
+        if (pending) return;
         $id('FromDate').focus();
         $id('FromDate').value = C.isoDay(look.financialYearStart) || '';
         $id('ToDate').value = C.today();
@@ -152,12 +184,25 @@
 
     /** btnRefresh_Click (:396). */
     function refresh() {
-        C.getJson(API + '/refresh').then(function (d) { bindCombos((d && d.combos) || {}); })
-            .catch(function (e) { alert(e.message); });
+        return run(function () {
+            return get(API + (initialized ? '/refresh' : '/lookups')).then(function (d) {
+                if (!d.combos || typeof d.combos !== 'object' || Array.isArray(d.combos))
+                    throw new Error('The filter response was invalid. Click Refresh to try again.');
+                bindCombos(d.combos);
+                if (!initialized) {
+                    look = d;
+                    $id('FromDate').value = C.isoDay(look.financialYearStart) || '';
+                }
+                initialized = true;
+            });
+        }, 'Loading filters...');
     }
 
     /** btnSearch_Click → GridFill (:238). */
     function show() {
+        return run(loadReport, 'Loading report...');
+    }
+    function loadReport() {
         var q = {
             fromDate: $id('FromDate').value, toDate: $id('ToDate').value,
             departmentId: comboInt('CmbDepartmentName'), itemId: comboInt('CmbItemName'),
@@ -165,8 +210,9 @@
             accountId: comboInt('CmbAccountTitle'), itemConditionId: comboInt('cmbItemCondition'),
             fromDocNo: convToInt($id('txtFromDocNo').value), toDocNo: convToInt($id('txtDocNoTo').value)   // :256 / :257
         };
-        C.getJson(API + '/search' + C.qs(q)).then(function (rows) {
-            dtGrid = rows || [];
+        return get(API + '/search' + C.qs(q)).then(function (rows) {
+            if (!Array.isArray(rows)) throw new Error('The report response was invalid. Please try again.');
+            dtGrid = rows;
             if (!dtGrid.length) {                                                        // :295
                 gridRows = [];
                 filters = {};
@@ -188,7 +234,7 @@
             });
             filters = {};
             render();
-        }).catch(function (e) { alert(e.message); });
+        });
     }
 
     /** btnShortCutKey_Click → MakeShortCutKeys (:581). */
@@ -335,7 +381,8 @@
         w.document.close();
     }
 
-    document.addEventListener('DOMContentLoaded', init);
     window.RptIssuance = { show: show, reset: reset, refresh: refresh, printRegister: printRegister,
                            shortcutKeys: shortcutKeys, gotoHistory: gotoHistory };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();

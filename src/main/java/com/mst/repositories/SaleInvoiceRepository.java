@@ -437,6 +437,19 @@ public class SaleInvoiceRepository {
         return q("EXEC dbo.Sp_UOMSchedule_GetAllMethod @OrganizationId=?, @CompanyId=?, @ItemId=?, @Activity=?", org, company, itemId, "ReadByItemID");
     }
 
+    /** BLL 0056 GetAvgRateQtyAndStockInHand. Zero optional IDs are omitted, including on a new invoice. */
+    public List<Map<String, Object>> quantityStock(int org, int company, int itemId, LocalDateTime date,
+            int condition, int warehouse, int rack, int documentType, int recordId) {
+        var p = params("OrganizationId", org, "CompanyId", company, "ItemId", itemId, "DocDate", date);
+        if (condition != 0) p.put("ItemConditionId", condition);
+        if (warehouse != 0) p.put("WarehouseId", warehouse);
+        if (rack != 0) p.put("RackId", rack);
+        if (documentType != 0) p.put("DocumentTypeId", documentType);
+        if (recordId != 0) p.put("RecId", recordId);
+        p.put("Activity", "GetAvgRateQtyAndStockInHand");
+        return proc("Sp_GetAvgRatesAndStockInHand_GetAllMethod", p);
+    }
+
     // ============================================================================== read / delete
 
     /** InvSaleInvoice.GetByID - DAL 0433 GetData: 'ReadById' then the six child reads. */

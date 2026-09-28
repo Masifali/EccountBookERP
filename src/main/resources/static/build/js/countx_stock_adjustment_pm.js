@@ -19,9 +19,9 @@
 
     function $id(id) { return document.getElementById(id); }
     function val(id) { var e = $id(id); return e ? e.value : ''; }
-    function setVal(id, v) { var e = $id(id); if (e) e.value = (v === null || v === undefined) ? '' : v; }
+    function setVal(id, v) { var e = $id(id); if (e) { e.value = (v === null || v === undefined) ? '' : v; if (e.type === 'date') syncDateDisplay(e); } }
     function say(m) { var e = $id('lblFormStatus'); if (e) e.textContent = m || ''; }
-    function box(m) { window.alert(m); }
+    function box(m) { say(m); window.alert(m); }
     function ask(m) { return window.confirm(m); }
     function esc(s) {
         return String(s === null || s === undefined ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -41,6 +41,9 @@
     function dateOnly(v) { if (!v) return ''; var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return m[0]; var d = new Date(v); return isNaN(d.getTime()) ? '' : iso(d); }
     var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     function ddmmm(v) { var d = dateOnly(v); if (!d) return ''; var p = d.split('-'); return p[2] + '-' + MON[+p[1] - 1] + '-' + p[0]; }
+    function syncDateDisplay(input) {
+        if (input.parentElement.classList.contains('sap-date-view')) input.parentElement.dataset.display = ddmmm(input.value).replace(/\d{4}$/, function (year) { return year.slice(2); });
+    }
     function dt(v) { if (!v) return ''; var d = new Date(String(v).replace(' ', 'T')); if (isNaN(d.getTime())) return String(v);
         var h = d.getHours(), ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
         return ddmmm(iso(d)) + ' ' + String(h).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ' ' + ap; }
@@ -49,8 +52,27 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        var origHtml = '';
+        if (b) {
+            if (b.disabled || b.classList.contains('is-busy')) return Promise.resolve();
+            b.disabled = true;
+            b.classList.add('is-busy');
+            origHtml = b.innerHTML;
+            if (!b.querySelector('.fa-spinner')) {
+                b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + origHtml;
+            }
+        }
+        var indicator = $id('lblFormStatus');
+        if (indicator) { indicator.classList.add('is-busy'); indicator.setAttribute('aria-busy', 'true'); }
+        var done = function () {
+            if (b) {
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                if (origHtml) b.innerHTML = origHtml;
+            }
+            if (indicator) { indicator.classList.remove('is-busy'); indicator.removeAttribute('aria-busy'); }
+            applyRights();
+        };
         var p; try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
         return p;
@@ -84,10 +106,16 @@
     // ------------------------------------------------------------------ load
 
     function init() {
+        document.querySelectorAll('input[type="date"]').forEach(function (input) {
+            var wrapper = document.createElement('span'); wrapper.className = 'sap-date-view';
+            input.parentNode.insertBefore(wrapper, input); wrapper.appendChild(input);
+            input.addEventListener('input', function () { syncDateDisplay(input); });
+            input.addEventListener('change', function () { syncDateDisplay(input); });
+        });
         bindEvents();
         setVal('DocDate', today());
         var f = new Date(); f.setDate(f.getDate() - 3); setVal('FromDateHistory', iso(f)); setVal('ToDateHistory', today());
-        loadLookups().then(function () { rateLock(); renderGrid(); });
+        busy(null, function () { return loadLookups().then(function () { rateLock(); renderGrid(); var id = Number(new URLSearchParams(location.search).get("id")); if (Number.isSafeInteger(id) && id > 0) return ReadById(id); }); });
     }
 
     function loadLookups() {
@@ -100,15 +128,15 @@
             fill('CmbItemCondition', d.conditions, 'Id', 'Description');
             if (RecId === 0) { setVal('txtdocno', d.docNo); $id('txtDocNoShow').textContent = 'SA-' + d.docNo; }
             $id('ChkPrint').checked = !!R.print;
-            refreshCombos(); applyRights(); say('');
+            refreshCombos(); applyRights(); say((d.lookupWarnings || []).join(' '));
         }).catch(function (e) { say(''); box(e.message); });
     }
 
     function applyRights() {
         var upd = RecId > 0;
         show('btnsave', !upd); show('btnupdate', upd);
-        $id('btnsave').disabled = !R.save; $id('btnupdate').disabled = !R.update;
-        $id('btnprint').disabled = !R.print; $id('ChkPrint').disabled = !R.print;
+        $id('btnsave').disabled = actionPending || !R.save; $id('btnupdate').disabled = actionPending || !R.update;
+        $id('btnprint').disabled = actionPending || !R.print; $id('ChkPrint').disabled = !R.print;
     }
 
     // ------------------------------------------------------------------ entry bar
@@ -382,6 +410,7 @@
         currentTab = i;
         $id('tabPage1').style.display = i === 0 ? '' : 'none'; $id('tabPage2').style.display = i === 1 ? '' : 'none';
         $id('tabForm').classList.toggle('active', i === 0); $id('tabHistory').classList.toggle('active', i === 1);
+        $id('tabForm').setAttribute('aria-pressed', String(i === 0)); $id('tabHistory').setAttribute('aria-pressed', String(i === 1));
     }
     function on(id, ev, fn) { var e = $id(id); if (e) e.addEventListener(ev, fn); }
 
@@ -415,6 +444,11 @@
             if (k === 't') { e.preventDefault(); showTab(currentTab === 1 ? 0 : 1); }
             else if (k === 's') { e.preventDefault(); if (currentTab === 1) window.Sap.btnShowHistory_Click(); else window.Sap.btnsave_Click(); }
             else if (k === 'u' && currentTab === 0) { e.preventDefault(); window.Sap.btnupdate_Click(); }
+            else if (k === 'n') { e.preventDefault(); if (currentTab === 1) window.Sap.btnNewHistory_Click(); else window.Sap.btnnew_Click(); }
+            else if (k === 'r') { e.preventDefault(); if (currentTab === 1) window.Sap.btnRefreshHistory_Click(); else window.Sap.btnRefresh_Click(); }
+            else if (k === 'p' && currentTab === 0) { e.preventDefault(); if (!$id('btnprint').disabled) window.Sap.btnprint_Click(); }
+            else if (k === 'f5') { e.preventDefault(); showTab(0); focus('DocDate'); }
+            else if (k === 'e') { e.preventDefault(); window.location.assign('/app/packing-material?module=54'); }
         });
     }
 
@@ -429,6 +463,7 @@
         btnplus_Click: btnplus_Click, btnUpdateDetail_Click: btnUpdateDetail_Click,
         btnCancelUpdateDetial_Click: ResetDetail,
         showTab: showTab, btnShowHistory_Click: function () { return busy('btnShowHistory', gridhistoryfill); },
+        btnRefreshHistory_Click: function () { return busy('btnRefreshHistory', gridhistoryfill); },
         btnNewHistory_Click: function () {
             var f = new Date(); f.setDate(f.getDate() - 3); setVal('FromDateHistory', iso(f));
             setVal('FromDocNoHistory', ''); setVal('ToDocNoHistory', ''); focus('FromDateHistory');

@@ -68,13 +68,34 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); applyRights(); } };
+        if (!b) return fn();
+        if (b.disabled || b.classList.contains('is-busy')) return;
+        b.disabled = true;
+        b.classList.add('is-busy');
+
+        var origHtml = b.innerHTML;
+        var icon = b.querySelector('i');
+        if (icon) {
+            icon.className = 'fa fa-spinner fa-spin';
+        } else {
+            b.insertAdjacentHTML('afterbegin', '<i class="fa fa-spinner fa-spin"></i> ');
+        }
+
+        var done = function () {
+            if (b) {
+                b.innerHTML = origHtml;
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                applyRights();
+            }
+        };
+
         var p;
         try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
         return p;
     }
+
     function http(method, url, body) {
         var opt = { method: method, headers: { 'Accept': 'application/json' }, credentials: 'same-origin' };
         if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
@@ -104,11 +125,6 @@
         ]);
     }
 
-    /**
-     * BindDDL (DropDownBind.cs) hides column 0 and shows every other column of the DataTable it is
-     * given. For Master Item and the three GL combos that DataTable is the procedure's result as
-     * returned, so the column set is read off the response rather than written down here.
-     */
     function defineDynamic(family, caption, displayKey, rows) {
         var cols = [{ caption: caption, flex: 3 }];
         var keys = [];
@@ -150,10 +166,18 @@
         $id('fileAttachment').addEventListener('change', onAttachmentsPicked);
         $id('cmbItemCategory').addEventListener('change', cmbItemCategory_Leave);
         $id('cmbItemType').addEventListener('change', cmbItemType_Leave);
+        $id('chbGST').addEventListener('change', onTaxableChanged);
         return loadLookups(true).then(function () {
             showTab(0);
+            onTaxableChanged();
             say('');
         }).catch(function (e) { say('Not loaded.'); box(e.message); });
+    }
+
+    function onTaxableChanged() {
+        var on = $id('chbGST').checked;
+        setComboReadOnly('cmbTaxType', !on);
+        if (!on) setVal('cmbTaxType', '');
     }
 
     function loadLookups(first) {
@@ -189,16 +213,10 @@
         });
     }
 
-    /**
-     * HistoryComboBind :374. NOTE - ported exactly, including what it binds: the Item Type list
-     * built from existing PM items is bound into cmbItemType (:409), the ENTRY combo, not into
-     * CmbItemTypeHistory. So once the company has any PM item, the entry Item Type offers only the
-     * types already used by PM items. Reported for a decision; not changed.
-     */
     function bindHistoryCombos() {
         var h = (L && L.history) || {};
         if (!h.types || !h.types.length) {
-            if ((!h.categories || !h.categories.length) && (!h.masterItems || !h.masterItems.length)) return;   // :381 - no PM items
+            if ((!h.categories || !h.categories.length) && (!h.masterItems || !h.masterItems.length)) return;
         }
         fill('cmbitemcathistory', h.categories, 'Id', 'Name');
         fill('cmbItemType', h.types, 'Id', 'Name');
@@ -227,10 +245,10 @@
         var s = $id('btnsave'), u = $id('btnupdate');
         s.style.display = saveMode ? '' : 'none';
         u.style.display = saveMode ? 'none' : '';
-        if (!s.classList.contains('is-busy')) s.disabled = !p.Save;          // :340
-        if (!u.classList.contains('is-busy')) u.disabled = !p.Update;        // :341
+        if (!s.classList.contains('is-busy')) s.disabled = !p.Save;
+        if (!u.classList.contains('is-busy')) u.disabled = !p.Update;
     }
-    function isSaveButtonActive() { return saveMode && !$id('btnsave').disabled; }   // :645
+    function isSaveButtonActive() { return saveMode && !$id('btnsave').disabled; }
 
     // ------------------------------------------------------------------ leave handlers
 
@@ -238,17 +256,16 @@
         if (!isSaveButtonActive()) return Promise.resolve();
         return defaults(true);
     }
-    /** :1913 - no mode check on the desktop, so it also runs while an item is open for update. */
     function cmbItemType_Leave() { return defaults(false); }
 
     function defaults(withAccounts) {
         var q = '?categoryId=' + int(val('cmbItemCategory')) + '&typeId=' + int(val('cmbItemType')) + '&withAccounts=' + withAccounts;
         return getJson(api + '/defaults' + q).then(function (d) {
-            if (d && d.ItemCode !== undefined) {                              // GenerateItemCode :676
+            if (d && d.ItemCode !== undefined) {
                 setVal('txtItemCode', d.ItemCode);
                 setVal('txtItemCodeNew', d.ItemCodeNew);
             }
-            if (withAccounts && d && d.PurchaseGLAC !== undefined) {         // SetGLAccounts :693
+            if (withAccounts && d && d.PurchaseGLAC !== undefined) {
                 setVal('cmbPurchaseGL', String(col(d, 'PurchaseGLAC')));
                 setVal('cmbSaleGL', String(col(d, 'SaleGLAC')));
                 setVal('cmbCGSGL', String(col(d, 'COGSGLAC')));
@@ -359,7 +376,6 @@
 
     // ------------------------------------------------------------------ refresh / new
 
-    /** refresh() :1263 - clears only what the desktop clears; the rest keep their values. */
     function refresh() {
         RecId = 0;
         saveMode = true;
@@ -369,6 +385,7 @@
         setVal('txtMinStock', ''); setVal('txtMaxStock', ''); setVal('txtReOrderLevel', '');
         setVal('txtItemCode', ''); setVal('txtBarcodeNo', ''); setVal('txtItemName', '');
         $id('chbGST').checked = false;
+        onTaxableChanged();
         resetPic(1); resetPic(2);
         newFiles = []; removeAttachmentIds = []; existingAttachments = [];
         renderAttachments();
@@ -376,17 +393,16 @@
         applyRights();
         say('');
         focus('cmbItemCategory');
-        return cmbItemCategory_Leave();                                           // :1285
+        return cmbItemCategory_Leave();
     }
 
-    function btnnew_Click() {                                                     // :1301
+    function btnnew_Click() {
         var p = refresh();
         setVal('cmbBaseUnit', '');
         setVal('cmbItemType', '');
         return p;
     }
 
-    /** toolStripButton1_Click :1320 - rebinds the lookups; the allocation grid and history combos stay. */
     function toolStripButton1_Click() {
         return busy('BtnRefresh', function () { return loadLookups(false).catch(function (e) { box(e.message); }); });
     }
@@ -410,7 +426,6 @@
         });
     }
 
-    /** gridsetting :1431 - grouped by TypeDescription, the group column hidden; MasterItem and EmptyBagWeight editable. */
     function renderHistory() {
         var groups = {}, order = [];
         historyRows.forEach(function (r) {
@@ -426,10 +441,11 @@
             html += '<tr class="group-row" data-group="' + gi + '"><td colspan="14">TypeDescription: ' + esc(g) + ' (' + groups[g].length + ')</td></tr>';
             groups[g].forEach(function (r) {
                 var id = int(col(r, 'Id'));
+                var codeDisplay = esc(col(r, 'ItemCodeNew') || col(r, 'ItemCode') || id);
                 html += '<tr class="data-row" data-g="' + gi + '" data-id="' + id + '">'
-                     + '<td>' + esc(col(r, 'ItemCode')) + '</td>'
-                     + '<td>' + esc(col(r, 'ItemCodeNew')) + '</td>'
-                     + '<td>' + esc(col(r, 'ItemName')) + '</td>'
+                     + '<td><span class="win-link hist-code" data-id="' + id + '">' + esc(col(r, 'ItemCode')) + '</span></td>'
+                     + '<td><span class="win-link hist-code" data-id="' + id + '">' + esc(col(r, 'ItemCodeNew')) + '</span></td>'
+                     + '<td><span class="win-link hist-code" data-id="' + id + '">' + esc(col(r, 'ItemName')) + '</span></td>'
                      + '<td><select class="hist-master" data-id="' + id + '">' + opts.replace('value="' + esc(int(col(r, 'MasterItemId'))) + '"', 'value="' + esc(int(col(r, 'MasterItemId'))) + '" selected') + '</select></td>'
                      + '<td><input type="text" class="cell hist-eb" data-guard="decimal" data-id="' + id + '" value="' + esc(num(col(r, 'EmptyBagWeight'))) + '"/></td>'
                      + '<td>' + esc(col(r, 'CategoryDescription')) + '</td>'
@@ -457,6 +473,12 @@
                 });
             });
         });
+        Array.prototype.forEach.call(body.querySelectorAll('.hist-code'), function (a) {
+            a.addEventListener('click', function (e) {
+                e.stopPropagation();
+                openRecord(int(a.getAttribute('data-id')));
+            });
+        });
         Array.prototype.forEach.call(body.querySelectorAll('tr.data-row'), function (tr) {
             tr.addEventListener('dblclick', function (e) {
                 if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT')) return;
@@ -476,7 +498,6 @@
         historyRows = []; renderHistory();
     }
 
-    /** btnRefreshHistory_Click :1489 - HistoryComboBind + the grid's Master Item list. */
     function btnRefreshHistory_Click() {
         return busy('btnRefreshHistory', function () {
             return getJson(api + '/lookups').then(function (d) {
@@ -493,7 +514,7 @@
             var id = int(tr.getAttribute('data-id'));
             var m = int(tr.querySelector('.hist-master').value);
             var eb = num(tr.querySelector('.hist-eb').value);
-            if (m > 0 || eb > 0) rows.push({ itemId: id, masterItemId: m, emptyBagWeight: eb });   // :1869
+            if (m > 0 || eb > 0) rows.push({ itemId: id, masterItemId: m, emptyBagWeight: eb });
         });
         return busy('btnMasterItemsUpdate', function () {
             return http('POST', api + '/master-items', rows).then(function (d) {
@@ -523,7 +544,7 @@
             setVal('txtItemName', col(it, 'ItemName'));
             setVal('cmbBaseUnit', String(int(col(it, 'BaseUnitId'))));
             setVal('cmbItemCategory', String(int(col(it, 'ItemCategoryId'))));
-            setComboReadOnly('cmbItemCategory', true);                             // :1129
+            setComboReadOnly('cmbItemCategory', true);
             setVal('cmbItemType', String(int(col(it, 'ItemTypeId'))));
             if (int(col(it, 'MasterItemId')) > 0) setVal('CmbMasterItem', String(int(col(it, 'MasterItemId'))));
             if (int(col(it, 'RackId')) > 0) setVal('CmbRackName', String(int(col(it, 'RackId'))));
@@ -540,6 +561,8 @@
             setVal('CmbPackSizeId', String(int(col(it, 'PackSizeId'))));
             $id('chkAllowMultiUom').checked = !!col(it, 'AllowMultiUom');
             $id('chbGST').checked = !!col(it, 'ApplyGST');
+            onTaxableChanged();
+            if (int(col(it, 'TaxTypeId')) > 0) setVal('cmbTaxType', String(int(col(it, 'TaxTypeId'))));
 
             existingAttachments = d.attachments || [];
             newFiles = []; removeAttachmentIds = [];
@@ -573,7 +596,7 @@
         };
         reader.readAsDataURL(file);
     }
-    function resetPic(slot) { pics[slot] = null; $id('picbox' + slot).innerHTML = ''; }       // btnPicNReset
+    function resetPic(slot) { pics[slot] = null; $id('picbox' + slot).innerHTML = ''; }
 
     // ------------------------------------------------------------------ attachments
 
@@ -625,10 +648,9 @@
         $id('tpItemDefinitionAddItemHistory').style.display = i === 1 ? '' : 'none';
         $id('tabForm').classList.toggle('active', i === 0);
         $id('tabHistory').classList.toggle('active', i === 1);
-        focus(i === 1 ? 'cmbitemcathistory' : 'txtItemName');                   // tabCAddItem_SelectedIndexChanged
+        focus(i === 1 ? 'cmbitemcathistory' : 'txtItemName');
     }
 
-    /** InvDefrmAddItem_KeyDown :1699 */
     function bindKeys() {
         document.addEventListener('keydown', function (e) {
             var k = (e.key || '').toLowerCase();
@@ -639,7 +661,7 @@
             if (e.ctrlKey && k === 'e') { e.preventDefault(); window.location.href = '/dashboard'; return; }
             if (k === 'enter' && e.target && e.target.tagName === 'INPUT' && e.target.type !== 'file'
                     && !(e.target.classList && e.target.classList.contains('dtcombo-input'))) {
-                e.preventDefault(); nextField(e.target);                          // SendKeys("{TAB}")
+                e.preventDefault(); nextField(e.target);
             }
         });
     }

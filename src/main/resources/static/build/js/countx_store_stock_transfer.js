@@ -92,6 +92,7 @@
             var d = new Date(); d.setDate(d.getDate() - days);
             $id('FromDateHistory').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
             $id('ToDateHistory').value = C.today();
+            var linkedId = Number(new URLSearchParams(location.search).get("id")); if (Number.isSafeInteger(linkedId) && linkedId > 0) return readById(linkedId);
         }).catch(fail);
     }
 

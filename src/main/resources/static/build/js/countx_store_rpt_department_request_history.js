@@ -27,15 +27,14 @@
         }).catch(function (e) { alert(e.message); });
     }
 
-    /* FillAllDropDowns:103 - nothing returned leaves the combos as they are (:116); only the
-       Activity groups present in the answer are re-bound (:138-150), so an absent group (an empty
-       list here) leaves its combo as it was. BindDDL ZeroIndex false - no default row. */
+    /* FillAllDropDowns:103, Activity mapping :138-150. Clear absent groups and explain an empty
+       source instead of retaining stale choices. BindDDL ZeroIndex false - no default row. */
     function fillDropDowns(d) {
-        if (d.empty) return;
         [['CmbDepartmentName', d.departments], ['CmbItemName', d.items], ['CmbAssetName', d.assets],
          ['cmbItemCondition', d.itemConditions]].forEach(function (x) {
-            if (x[1] && x[1].length) C.fillSelect(x[0], x[1], 'Id', 'Name');
+            C.fillSelect(x[0], x[1] || [], 'Id', 'Name');
         });
+        C.lookupNotice(d.empty ? 'No saved Department Requests were found for this company. These filters use values from Department Request records.' : '');
     }
 
     /* btnRefresh_Click:407 */
@@ -110,5 +109,6 @@
     function gotoHistory() { $id('historySection').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
     window.RptDR = { show: show, reset: reset, refresh: refresh, printRegister: printRegister, gotoHistory: gotoHistory };
-    document.addEventListener('DOMContentLoaded', load);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
+    else load();
 })();

@@ -60,6 +60,7 @@
             itemBind();
             C.fillSelect('CmbAdjustmentTypeHistory', l.historyTypes, 'Id', 'Name');
             render();
+            var linkedId = Number(new URLSearchParams(location.search).get("id")); if (Number.isSafeInteger(linkedId) && linkedId > 0) open(linkedId);
         }).catch(function (e) { alert(e.message); });
     }
 

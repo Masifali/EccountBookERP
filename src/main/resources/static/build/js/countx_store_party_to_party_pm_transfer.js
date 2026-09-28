@@ -501,6 +501,7 @@
             show('btnUpdate', false);
             var days = C.intOf(d.defaultDaysToLessFromHistoryFromDate);                         // :279-280
             $('FromDateHistory').value = addDays(d.today || today, days > 0 ? -days : -3);
+            var linkedId = Number(new URLSearchParams(window.location.search).get('id')); if (Number.isInteger(linkedId) && linkedId > 0) return readById(linkedId);
         }).catch(function (e) { msg(e.message); });
     }
 

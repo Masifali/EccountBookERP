@@ -9,6 +9,9 @@ import com.mst.repositories.StockTransferStoreRepository;
 import com.mst.repositories.StoreDefineAssetsExtraRepository;
 import com.mst.repositories.StoreIssuanceRepository;
 import com.mst.security.CurrentUserContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +69,7 @@ import static com.mst.repositories.StoreIssuanceRepository.toInt;
 public class StockAdjustmentPmService {
 
     public static final String SCREEN = "StockAdjustmentForPM";
+    private static final Logger LOG = LoggerFactory.getLogger(StockAdjustmentPmService.class);
 
     private final StockAdjustmentPmRepository pm;
     private final StockAdjustmentRepository repo;
@@ -95,7 +99,16 @@ public class StockAdjustmentPmService {
         out.put("items", items);
         out.put("racks", store.racks(u, branch(u)));                               // racksWithWarehouseAndItems
         out.put("conditions", store.conditions());
-        out.put("entryTypes", StockAdjustmentRepository.project(pm.entryTypes(), "Id", "Type"));
+        // Desktop EntryTypeBind catches its own database error after the other lists are bound.
+        // Preserve that boundary; do not invent Gain/Loss options when the native query fails.
+        try {
+            out.put("entryTypes", StockAdjustmentRepository.project(pm.entryTypes(), "Id", "Type"));
+            out.put("lookupWarnings", List.of());
+        } catch (DataAccessException e) {
+            LOG.warn("Stock Adjustment PM EntryTypeBind failed; retaining the other lookup lists", e);
+            out.put("entryTypes", List.of());
+            out.put("lookupWarnings", List.of("Entry Type could not be loaded. The other lists are available. Refresh to retry."));
+        }
         out.put("packingMaterialDefaultWarehouse", toInt(shared.config(u, "PackingMaterialDefaultWarehouse")));
         return out;
     }

@@ -17,9 +17,9 @@ import static com.mst.repositories.SaleInvoiceRepository.*;
 /**
  * Translation of BLL 0612 SaleInvoiceFinancial.MakeVoucherForSaleInvoice and BLL 0613
  * SaleInvoiceGeneralFinancialMethods. Keeps the recovered document-type sets, account choices and
- * comment templates. The current invoice persistence entry points support documents 95 and 171.
+ * comment templates. The current invoice persistence entry points support documents 95, 171 and 126.
  *
- * GetAvgRatesAndStockInHand.GetAvgRateQtyAndStockInHand (103/126/133/145) and
+ * GetAvgRatesAndStockInHand.GetAvgRateQtyAndStockInHand (103/133/145) and
  * CommonServies.GetEqvilentByItemId (128) remain unsupported and throw explicitly.
  */
 public class SaleInvoiceFinancial {
@@ -673,7 +673,12 @@ public class SaleInvoiceFinancial {
             if (r != null) { item3.ItemCgsRate = d(col(r, "AvgRate")); item3.RateUOM = d(col(r, "RateUom")); item3.CgsRateUomId = i(col(r, "RateUomId")); }
             if (item3.ItemCgsRate <= 0.0) throw new IllegalStateException("CGS Rate not found");
         } else if (flag10 || feature2) {
-            if (hashSet3.contains(h.DocumentTypeId))
+            if (h.DocumentTypeId == 126) {
+                var rates = repo.quantityStock(org, company, item3.ItemId, h.DocDate, item3.ItemConditionId, 0, 0,
+                        h.Id > 0 ? h.DocumentTypeId : 0, h.Id > 0 ? h.Id : 0);
+                if (!rates.isEmpty()) item3.ItemCgsRate = round(d(col(rates.get(0), "AvgRate")), 3);
+                if (item3.ItemCgsRate <= 0) throw new IllegalStateException("CGS Rate not found.for Item " + s(item3.ItemName));
+            } else if (hashSet3.contains(h.DocumentTypeId))
                 throw new UnsupportedOperationException("GetAvgRatesAndStockInHand.GetAvgRateQtyAndStockInHand (document type " + h.DocumentTypeId + ") is not ported");
             else if (flag8) {
                 item3.ItemCgsRate = repo.avgRateByJobOrder(org, company, h.DocDate, item3.JobLotId, item3.ItemId, h.Id > 0 ? h.DocumentTypeId : 0, h.Id > 0 ? h.Id : 0);

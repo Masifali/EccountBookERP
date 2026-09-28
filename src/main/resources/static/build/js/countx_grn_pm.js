@@ -67,8 +67,24 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        var origHtml = '';
+        if (b) {
+            if (b.disabled || b.classList.contains('is-busy')) return;
+            b.disabled = true;
+            b.classList.add('is-busy');
+            origHtml = b.innerHTML;
+            if (!b.querySelector('.fa-spinner')) {
+                b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + origHtml;
+            }
+        }
+        var done = function () {
+            if (b) {
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                if (origHtml) b.innerHTML = origHtml;
+            }
+            applyRights();
+        };
         var p;
         try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
@@ -113,7 +129,7 @@
     function init() {
         bindEvents();
         setVal('DocDate', today());
-        loadLookups();
+        loadLookups().then(function () { var linkedId = Number(new URLSearchParams(window.location.search).get('id')); if (Number.isInteger(linkedId) && linkedId > 0) return ReadById(linkedId); });
     }
 
     /** InitializeComponentMethod :377 - rights, number, vehicle types, pending GPs, history combo. */
@@ -689,7 +705,13 @@
                     + '<td><button type="button" class="win-btn-mini" data-h-act="edit">Edit</button></td>'
                     + '<td><button type="button" class="win-btn-mini" data-h-act="print">Print</button></td>'
                     + '<td><button type="button" class="win-btn-mini" data-h-act="print2">PrintII</button></td>';
-                H_COLS.forEach(function (c) { html += '<td' + (c[2] === 'n' ? ' class="num"' : '') + '>' + cell(col(r, c[0]), c[2]) + '</td>'; });
+                H_COLS.forEach(function (c) {
+                    var cellVal = cell(col(r, c[0]), c[2]);
+                    if (c[0] === 'DocNo') {
+                        cellVal = '<span class="win-link" data-h-act="edit">' + cellVal + '</span>';
+                    }
+                    html += '<td' + (c[2] === 'n' ? ' class="num"' : '') + '>' + cellVal + '</td>';
+                });
                 html += '</tr>';
             });
             $id('GrdHistory').innerHTML = html;
@@ -703,7 +725,7 @@
         var tr = e.target.closest('tr[data-h]'); if (!tr) return;
         var r = historyRows[int(tr.getAttribute('data-h'))]; if (!r) return;
         Array.prototype.forEach.call(document.querySelectorAll('#GrdHistory tr'), function (x) { x.classList.toggle('sel', x === tr); });
-        var b = e.target.closest('button[data-h-act]');
+        var b = e.target.closest('button[data-h-act], [data-h-act]');
         var id = int(col(r, 'Id'));
         if (!b) { BindHistoryDetail(id); return; }
         var act = b.getAttribute('data-h-act');

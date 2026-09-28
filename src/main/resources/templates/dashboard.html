@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DashBoard</title>
+    <title th:text="${appRoute == '/app/packing-material'} ? 'Packing Material' : 'DashBoard'">DashBoard</title>
 
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
@@ -332,8 +332,9 @@
         .dbs-ttl { font-weight:700; color:#0f5959; font-size:12px; margin:10px 0 2px;
                    padding-bottom:3px; border-bottom:1px solid #b0bec5; }
     </style>
+    <link th:if="${appRoute == '/app/packing-material'}" rel="stylesheet" th:href="@{/build/css/packing_material_menu.css?v=20260927-1}">
 </head>
-<body>
+<body th:classappend="${appRoute == '/app/packing-material'} ? 'packing-material-menu' : ''">
 
 <!-- ==========================================================================
      The DashBoard screen.
@@ -351,10 +352,10 @@
      The second showed every module the user has across every application, which is frmModules'
      job, not this screen's; that view still exists, at /dashboard/all.
      ========================================================================== -->
-<div class="win-title-bar" th:text="${moduleTitle}">DashBoard</div>
-<div class="win-sub-header"><span>&#128193; Screens &gt; DashBoard</span></div>
+<div class="win-title-bar" th:text="${appRoute == '/app/packing-material' ? appName : moduleTitle}">DashBoard</div>
+<div class="win-sub-header"><span th:text="${appRoute == '/app/packing-material'} ? 'Screens > Packing Material' : '📁 Screens > DashBoard'">Screens &gt; DashBoard</span></div>
 
-<div style="padding:10px;">
+<div class="dashboard-content" style="padding:10px;">
 
     <div class="totals-bar" style="margin-bottom:4px;">
         <span>
@@ -424,7 +425,8 @@
     <div class="dbm-wrap" th:if="${cardCount > 0}">
         <a class="dbm-card" th:each="c : ${cards}"
            th:href="@{${appRoute != null ? appRoute : '/dashboard'}(module=${c['moduleId']})}"
-           th:classappend="${selectedModuleId != null and selectedModuleId == c['moduleId']} ? 'dbm-sel' : ''">
+           th:classappend="${selectedModuleId != null and selectedModuleId == c['moduleId']} ? 'dbm-sel' : ''"
+           th:attr="aria-current=${selectedModuleId != null and selectedModuleId == c['moduleId']} ? 'page' : null">
             <span class="dbm-count" th:text="${c['count']}">0</span>
             <span class="dbm-body">
                 <i class="fa fa-university"></i>
@@ -443,18 +445,19 @@
         <div class="dbs-wrap">
             <a class="dbs-card" th:each="sc : ${screens}" th:href="${sc['route']}"
                th:classappend="${sc['built']} ? 'ok' : 'np'"
-               th:title="${sc['built']} ? ${sc['route']} : ${sc['desktopForm']}">
-                <i class="fa" th:classappend="${sc['built']} ? 'fa-star-o' : 'fa-wrench'"></i>
+               th:title="${appRoute == '/app/packing-material' ? sc['title'] : (sc['built'] ? sc['route'] : sc['desktopForm'])}">
+                <i class="fa" th:classappend="${appRoute == '/app/packing-material' or sc['built']} ? 'fa-star-o' : 'fa-wrench'"></i>
                 <span class="n" th:text="${sc['title']}">Screen</span>
                 <span class="f" th:text="${sc['built']} ? ${sc['route']} : ${sc['desktopForm']}">x</span>
             </a>
         </div>
     </div>
 
-    <div th:if="${rightsSource != null}" style="font-size:10px; color:#889; margin-top:10px;">
+    <div class="dashboard-source" th:if="${rightsSource != null}" style="font-size:10px; color:#889; margin-top:10px;">
         Screen list read from <b th:text="${rightsSource}">source</b>.
     </div>
 </div>
-
+<div th:if="${appRoute == '/app/packing-material'}" id="packingMenuLoading" class="packing-menu-loading" role="status" aria-live="polite" hidden><span class="packing-menu-spinner" aria-hidden="true"></span><span>Opening…</span></div>
+<script th:if="${appRoute == '/app/packing-material'}" th:src="@{/build/js/packing_material_menu.js?v=20260927-1}"></script>
 </body>
 </html>

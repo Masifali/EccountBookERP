@@ -60,8 +60,28 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        if (!b) return fn();
+        if (b.disabled || b.classList.contains('is-busy')) return;
+        b.disabled = true;
+        b.classList.add('is-busy');
+
+        var origHtml = b.innerHTML;
+        var icon = b.querySelector('i');
+        if (icon) {
+            icon.className = 'fa fa-spinner fa-spin';
+        } else {
+            b.insertAdjacentHTML('afterbegin', '<i class="fa fa-spinner fa-spin"></i> ');
+        }
+
+        var done = function () {
+            if (b) {
+                b.innerHTML = origHtml;
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                applyRights();
+            }
+        };
+
         var p; try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
         return p;
@@ -637,11 +657,26 @@
                 html += '<tr class="data-row" data-h="' + i + '">' + ['edit', 'voucher', 'slip'].map(function (a) {
                     return '<td><button type="button" class="win-btn-mini" data-h-act="' + a + '">' + a.charAt(0).toUpperCase() + a.slice(1) + '</button></td>';
                 }).join('');
-                H.forEach(function (c) { var v = col(r, c[0]); html += '<td' + (c[2] === 'n' ? ' class="num"' : '') + '>' + (c[2] === 'date' ? ddmmm(v) : c[2] === 'n' ? amt(v) : esc(v)) + '</td>'; });
+                H.forEach(function (c) {
+                    var v = col(r, c[0]);
+                    if (c[0] === 'DocNo') {
+                        var id = int(col(r, 'Id'));
+                        v = '<span class="win-link hist-doc" data-id="' + id + '">' + esc(v) + '</span>';
+                    } else {
+                        v = (c[2] === 'date' ? ddmmm(v) : c[2] === 'n' ? amt(v) : esc(v));
+                    }
+                    html += '<td' + (c[2] === 'n' ? ' class="num"' : '') + '>' + v + '</td>';
+                });
                 html += '</tr>';
             });
             $id('grdHistory').innerHTML = html; $id('grdDetail').innerHTML = ''; $id('histDetailHead').innerHTML = '';
             $id('lblHistCount').textContent = historyRows.length ? historyRows.length + ' record(s)' : '';
+            Array.prototype.forEach.call($id('grdHistory').querySelectorAll('.hist-doc'), function (span) {
+                span.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    editFromHistory(int(span.getAttribute('data-id')));
+                });
+            });
         }).catch(function (e) { box(e.message); });
     }
     function editFromHistory(id) { if (!perms.Update) { box("You don't Have Update Rights..."); return; } ReadById(id); }

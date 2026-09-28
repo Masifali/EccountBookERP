@@ -698,10 +698,17 @@ public class SaleInvoiceService {
         boolean num9 = num8 && !flag2 && h.DocumentTypeId != 1611 && h.DocumentTypeId != 1662;
         /* The GDN reference type: 86 for 95; for 171, 170 when any line has a sale order, else 221
            (the num9 switch and GetReferenceDocumentTypeId agree for both). With or without feature 5. */
-        if (h.DocumentTypeId != 95 && h.DocumentTypeId != 171) throw new UnsupportedOperationException("DocumentTypeId " + h.DocumentTypeId + " is not ported");
-        final int refType = h.DocumentTypeId == 171 ? (obj.details.stream().anyMatch(x -> x.SaleOrderId > 0) ? 170 : 221) : 86;
+        if (h.DocumentTypeId != 95 && h.DocumentTypeId != 171 && h.DocumentTypeId != 126) throw new UnsupportedOperationException("DocumentTypeId " + h.DocumentTypeId + " is not ported");
+        final boolean directPm = h.DocumentTypeId == 126 && obj.details.stream().noneMatch(x -> x.InvGdnId > 0);
+        final int refType = h.DocumentTypeId == 126 ? 149 : h.DocumentTypeId == 171 ? (obj.details.stream().anyMatch(x -> x.SaleOrderId > 0) ? 170 : 221) : 86;
+        // DAL 0433:265-292: direct 126 updates its own stock; GDN-backed 126 uses reference 149.
+        if (directPm) {
+            StockDetail sd = new StockDetail();
+            sd.OrganizationId = org; sd.CompanyId = company; sd.RefDocumentTypeId = h.DocumentTypeId; sd.RefDocIdNo = h.Id;
+            repo.setProc("Sp_InventoryStockEvalautionDetail_Update", sd);
+        }
         List<StockDetail> stock = new ArrayList<>();
-        for (Detail item : obj.details) {
+        for (Detail item : directPm ? Collections.<Detail>emptyList() : obj.details) {
             var refs = repo.stockByOtherIds(org, company, refType, item.InvGdnId, item.InvGdnDetailId);
             if (refs.isEmpty()) throw new IllegalStateException("InventoryStockEvalautionDetailslist not found other reference.");
             boolean hasJobLotAccount = jobLots.getOrDefault(item.JobLotId, 0) > 0;
@@ -725,6 +732,8 @@ public class SaleInvoiceService {
         }
         for (StockDetail sd : stock) repo.setProc("USP_InventoryStockEvalautionDetailGdnReferences_Update", sd);
         repo.run("EXEC dbo.usp_StockInTransit_VoucherDelete_ByGdnId @Id=?", h.Id);
+        if (h.DocumentTypeId == 126)
+            repo.run("EXEC dbo.Sp_InventoryTransactions_GetALLMethod @OrganizationId=?, @CompanyId=?, @RefDocumentTypeId=?, @RefDocIdNo=?", org, company, h.DocumentTypeId, h.Id);
         /* DAL :316 - every type but 95/1611/1662/1660 (and 126 with GDN lines) runs USP_InventoryValidation per line
            while flag4 (= !(99 && feature 14)) holds. */
         if (h.DocumentTypeId != 95 && h.DocumentTypeId != 1611 && h.DocumentTypeId != 1662 && h.DocumentTypeId != 1660
@@ -821,7 +830,7 @@ public class SaleInvoiceService {
         if (sd.BillWeightOut > 0.0 && d.ItemRate > 0.0 && eq > 0.0) {
             sd.RateUom = d.UomScheduleIdRate;
             sd.AmountOut = d.BillAmount;
-            sd.CgsAmount = d.ItemCgsRate > 0.0 ? sd.StockWeightOut / eq * d.ItemCgsRate : sd.AmountOut;
+            sd.CgsAmount = d.ItemCgsRate > 0.0 ? (h.DocumentTypeId == 126 ? sd.QtyOut * d.ItemCgsRate : sd.StockWeightOut / eq * d.ItemCgsRate) : sd.AmountOut;
         }
         sd.ItemRate = d.ItemRate;
         sd.CgsRate = d.ItemCgsRate > 0.0 ? d.ItemCgsRate : d.ItemRate;

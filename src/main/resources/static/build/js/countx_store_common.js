@@ -111,10 +111,14 @@
             opt.headers[header.getAttribute('content')] = token.getAttribute('content');
         }
         return fetch(url, opt).then(function (r) {
+            if (r.redirected && /\/login(?:[/?#]|$)/.test(r.url || '')) {
+                throw new Error('Your session has expired. Sign in again, then click Refresh.');
+            }
             return r.text().then(function (t) {
-                var body = null;
-                try { body = t ? JSON.parse(t) : null; } catch (e) { /* not json */ }
+                var body = null, invalidJson = false;
+                try { body = t ? JSON.parse(t) : null; } catch (e) { invalidJson = true; }
                 if (!r.ok) throw new Error((body && body.message) || ('Request failed (' + r.status + ')'));
+                if (invalidJson) throw new Error('The server did not return the requested data. Sign in again if needed, then click Refresh.');
                 return body;
             });
         });
@@ -143,6 +147,21 @@
         });
         el.innerHTML = h;
         if (keep) el.value = keep;
+    }
+
+    /** Report lookup feedback is separate from the table and contains no substitute data. */
+    function lookupNotice(text, error) {
+        var host = $id('historySection');
+        if (!host) return;
+        var notice = $id('storeLookupNotice');
+        if (!notice) {
+            notice = document.createElement('div'); notice.id = 'storeLookupNotice';
+            notice.setAttribute('role', 'status'); notice.setAttribute('aria-live', 'polite');
+            notice.style.cssText = 'padding:8px 12px;background:#edf7f7;border:1px solid #b6d8d8;font:12px Verdana,sans-serif;';
+            host.before(notice);
+        }
+        notice.textContent = text || ''; notice.hidden = !text;
+        notice.style.color = error ? '#a00000' : '#005959';
     }
 
     function openModal(id) { var m = $id(id); if (m) m.classList.add('is-open'); }
@@ -417,6 +436,6 @@
         getJson: getJson, postJson: postJson, qs: qs, fillSelect: fillSelect,
         openModal: openModal, closeModal: closeModal, pickFrom: pickFrom,
         resolveWarehouseAndRack: resolveWarehouseAndRack, configWarehouse: configWarehouse,
-        distinct: distinct, printSlip: printSlip, wrapGrids: wrapGrids, withBusy: withBusy
+        distinct: distinct, printSlip: printSlip, wrapGrids: wrapGrids, withBusy: withBusy, lookupNotice: lookupNotice
     };
 })();

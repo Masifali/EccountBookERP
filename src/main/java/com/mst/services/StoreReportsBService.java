@@ -6,6 +6,7 @@ import com.mst.repositories.StoreReportsBRepository;
 import com.mst.security.CurrentUserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static com.mst.repositories.StoreIssuanceRepository.ci;
 import static com.mst.repositories.StoreIssuanceRepository.str;
@@ -184,9 +186,8 @@ public class StoreReportsBService {
     /** StockAdjustmentRegister_Load:107 - CropYearBind, WareHouseNameFill, JobLotFill, EntryTypeBind, ItemBind. */
     public Map<String, Object> saLookups() {
         UserAccount u = ctx.requireAccountingUser();
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("cropYears", project(repo.cropYears(u), "Id", "CropYear"));                   // :133 BindDDLNew Id/CropYear
-        out.putAll(saRefreshLists(u));
+        Map<String, Object> out = saRefreshLists(u);
+        putAdjustmentLookup(out, "cropYears", "Crop Year", () -> repo.cropYears(u), "CropYear"); // :133
         out.put("fromDate", repo.financialYearStart(u, ctx.currentFinancialYearId()));      // :118 ActiveYr.Start_Period
         out.put("toDate", LocalDate.now().toString());                                       // designer: picker Value = Now
         out.put("amountDecimals", amountDecimals(u));
@@ -201,11 +202,27 @@ public class StoreReportsBService {
 
     private Map<String, Object> saRefreshLists(UserAccount u) {
         Map<String, Object> out = new LinkedHashMap<>();
-        out.put("warehouses", project(repo.warehouses(u), "Id", "WareHouseName"));             // :149
-        out.put("jobLots", project(repo.jobLots(u), "Id", "JobLotDescription"));               // :165
-        out.put("entryTypes", project(repo.staticColumns("StockAdjustmentType"), "Id", "Type"));  // :181
-        out.put("items", project(repo.readAllItems(u), "Id", "ItemName"));                     // :197 BindDDL Id/ItemName
+        out.put("lookupErrors", new LinkedHashMap<String, String>());
+        putAdjustmentLookup(out, "warehouses", "Warehouse", () -> repo.warehouses(u), "WareHouseName"); // :149
+        putAdjustmentLookup(out, "jobLots", "Job Lot", () -> repo.jobLots(u), "JobLotDescription"); // :165
+        putAdjustmentLookup(out, "entryTypes", "Entry Type", () -> repo.staticColumns("StockAdjustmentType"), "Type"); // :181
+        putAdjustmentLookup(out, "items", "Item", () -> repo.readAllItems(u), "ItemName"); // :197
         return out;
+    }
+
+    /** Each desktop fill catches its own database error (:129-203); one broken lookup must
+     * not discard every other list. Keep the original procedure and surface the failed field. */
+    @SuppressWarnings("unchecked")
+    private void putAdjustmentLookup(Map<String, Object> out, String key, String label,
+                                     Supplier<List<Map<String, Object>>> query, String nameColumn) {
+        try {
+            out.put(key, project(query.get(), "Id", nameColumn));
+        } catch (DataAccessException e) {
+            LOG.warn("Stock Adjustment Report {} lookup failed", label, e);
+            out.put(key, List.of());
+            ((Map<String, String>) out.get("lookupErrors")).put(key,
+                    label + " could not be loaded. Other available filters can still be used.");
+        }
     }
 
     /** gridHisory:224 - the Show button. */

@@ -175,6 +175,9 @@ public class DashboardController {
     @GetMapping("/dashboard/screen")
     public String dashboardScreen(@RequestParam(value = "name", required = false) String name,
                                   Model model) {
+        if ("InvfrmInvSaleInvoiceDirectPackingMaterial".equalsIgnoreCase(name)
+                || "FrmSaleInvoiceDirectPackingMaterial".equalsIgnoreCase(name))
+            return "redirect:/packing-material/sale-invoice-direct";
         model.addAttribute("activeMenu", "dashboard");
         model.addAttribute("moduleName", MODULE);
         model.addAttribute("moduleHome", "/dashboard");

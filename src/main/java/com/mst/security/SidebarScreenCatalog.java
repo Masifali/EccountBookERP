@@ -216,6 +216,7 @@ public final class SidebarScreenCatalog {
         // 8. PACKING MATERIAL (module 54)
         // Id 496 / ScreenName AddItemPM / alias "Item PM" read from reconciliation-input.json.
         e.add(new Entry("Item PM", "Packing Material", "/packing-material/item-pm", "PM_ITEM", "PACKING_MATERIAL", 496, 54));
+        e.add(new Entry("Item And PM Item Map", "Packing Material", "/packing-material/item-pm-map", "PM_ITEM_MAP", "PACKING_MATERIAL", 497, 54));
         // Id 498 / ScreenName PurchsaeOrderPmNew / alias "1002 Purchsae Order" - same dump.
         e.add(new Entry("1002 Purchsae Order", "Packing Material", "/packing-material/purchase-order", "PM_PURCHASE_ORDER", "PACKING_MATERIAL", 498, 54));
         e.add(new Entry("Goods Receipt Notes PM", "Packing Material", "/packing-material/grn", "PM_GRN", "PACKING_MATERIAL", 500, 54));
@@ -226,6 +227,14 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Stock Adjustment For PM", "Packing Material", "/packing-material/stock-adjustment", "PM_STOCK_ADJUSTMENT", "PACKING_MATERIAL", 492, 54));
         e.add(new Entry("Store Stock Conversion", "Packing Material", "/packing-material/store-stock-conversion", "PM_STORE_STOCK_CONVERSION", "PACKING_MATERIAL", 502, 54));
         e.add(new Entry("Delivery Order PM", "Packing Material", "/packing-material/delivery-order", "PM_DELIVERY_ORDER", "PACKING_MATERIAL", 506, 54));
+        e.add(new Entry("Sale Invoice Store Direct", "Packing Material", "/packing-material/sale-invoice-direct", "PM_SALE_INVOICE_DIRECT", "PACKING_MATERIAL", 507, 54));
+
+        // 8b. PACKING MATERIAL REPORTS (module 2031)
+        e.add(new Entry("Goods Receipt Notes PM Register", "Packing Material Reports", "/packing-material/reports/grn-register", "PM_RPT_GRN_REGISTER", "PACKING_MATERIAL_REPORTS", 697, 2031));
+        e.add(new Entry("Packing Material Requirement Planning Detail", "Packing Material Reports", "/packing-material/reports/requirement-planning-detail", "PM_RPT_REQ_PLANNING_DETAIL", "PACKING_MATERIAL_REPORTS", 699, 2031));
+        e.add(new Entry("Purchase Order Register_PM", "Packing Material Reports", "/packing-material/reports/purchase-order-register", "PM_RPT_PO_REGISTER", "PACKING_MATERIAL_REPORTS", 778, 2031));
+        e.add(new Entry("Inventory Transaction Report", "Packing Material Reports", "/packing-material/reports/inventory-transaction-report", "PM_RPT_INV_TXN", "PACKING_MATERIAL_REPORTS", 695, 2031));
+        e.add(new Entry("Stock With Supplier Report", "Packing Material Reports", "/packing-material/reports/stock-with-supplier", "PM_RPT_STOCK_SUPPLIER", "PACKING_MATERIAL_REPORTS", 696, 2031));
         // 9. WEIGH BRIDGE (module 44)
         // Id 411, ScreenName "frmWeightbridge", ScreenAlias "Weigh Bridge", ModuleId 44 - read from
         // migration/user-rights/reconciliation-input.json, the live GoldenAcedb dump, not matched by

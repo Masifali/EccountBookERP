@@ -9,6 +9,7 @@
     var API = '/api/store/reports/stock-adjustment-register';
     var grnData = [];              /* GrnData - what the last Show fetched; 410-Register prints it */
     var amountDec = 0, rateDec = 2;
+    var initialized = false, pending = false;
 
     function zeros(n) { return new Array(n + 1).join('0'); }
     function val(id) { return $id(id).value; }
@@ -16,7 +17,7 @@
 
     /* StockAdjustmentRegister_Load:107 */
     function load() {
-        C.getJson(API + '/lookups').then(function (d) {
+        return C.getJson(API + '/lookups').then(function (d) {
             bindIfRows('CmbCropYear', d.cropYears);                          /* :133 */
             fillRefreshLists(d);
             amountDec = d.amountDecimals || 0;
@@ -25,22 +26,38 @@
             $id('datToDate').value = d.toDate || C.today();                 /* designer default: Now */
             K.guardDate('datFromDate'); K.guardDate('datToDate');           /* a DateTimePicker is never empty */
             $id('datFromDate').focus();
-        }).catch(function (e) { alert(e.message); });
+            initialized = true;
+        });
     }
 
-    /* Each bind runs only when the list has rows (if (dt.Rows.Count > 0), :131-199): an empty
-       answer leaves the combo as it was. BindDDLNew / BindDDL ZeroIndex false - no default row. */
-    function bindIfRows(id, rows) { if (rows && rows.length) C.fillSelect(id, rows, 'Id', 'Name'); }
+    /* BindDDLNew / BindDDL ZeroIndex false. Clear a failed/empty source on refresh so old
+       options cannot look like a successful reload. */
+    function bindIfRows(id, rows) { C.fillSelect(id, rows || [], 'Id', 'Name'); }
     function fillRefreshLists(d) {
         bindIfRows('CmbWarehouseName', d.warehouses);                      /* :149 */
         bindIfRows('CmbJobLotName', d.jobLots);                            /* :165 */
         bindIfRows('CmbEntryType', d.entryTypes);                          /* :181 */
         bindIfRows('CmbItem', d.items);                                    /* :197 */
+        var errors = d.lookupErrors || {};
+        if (errors.entryTypes) {
+            $id('CmbEntryType').innerHTML = '<option value="0">Entry Type unavailable</option>';
+            $id('CmbEntryType').value = '0';
+        }
+        C.lookupNotice(Object.keys(errors).map(function (key) { return errors[key]; }).join(' '), true);
     }
 
     /* toolStripButton1_Click:491 - Item, Entry Type, Job Lot, Warehouse (Crop Year is not re-read) */
     function refresh() {
-        return C.getJson(API + '/refresh').then(fillRefreshLists).catch(function (e) { alert(e.message); });
+        if (pending) return Promise.resolve();
+        pending = true;
+        C.lookupNotice('Loading filters...');
+        var states = Array.from(document.querySelectorAll('.rb-root button,.rb-root input,.rb-root select'))
+            .map(function (el) { return { el: el, disabled: el.disabled }; });
+        states.forEach(function (s) { s.el.disabled = true; });
+        return Promise.resolve().then(function () {
+            return initialized ? C.getJson(API + '/refresh').then(fillRefreshLists) : load();
+        }).catch(function (e) { C.lookupNotice(e.message || 'Could not load the filters. Click Refresh to try again.', true); })
+            .finally(function () { states.forEach(function (s) { s.el.disabled = s.disabled; }); pending = false; });
     }
 
     /* Reset:207 - the five combos' text only; dates, grid and GrnData stay */
@@ -105,5 +122,6 @@
     function gotoHistory() { $id('historySection').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
     window.RptSA = { show: show, reset: reset, refresh: refresh, printRegister: printRegister, gotoHistory: gotoHistory };
-    document.addEventListener('DOMContentLoaded', load);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refresh);
+    else refresh();
 })();

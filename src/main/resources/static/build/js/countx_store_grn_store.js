@@ -545,57 +545,119 @@
 
     /* ------------------------------------------------------------------ Load PO */
 
-    var po = { rows: [], opened: false };
+    var po = { rows: [], detail: [], pending: false, lookupMessage: '', lookupError: false };
     var PO_COLS = [{ k: 'DocDate', d: 1 }, { k: 'DocNo', link: 'po', idKey: 'Id' }, 'SupplierName', 'DeliveryTerm', 'RemarksHeader', 'VehicleNo', 'BiltyNo', 'GpSrNo', { k: 'GpDate', d: 1 }, 'GpStatus',
         { k: 'EntryDate', d: 1 }, 'EntryUserName', { k: 'ModifyDate', d: 1 }, 'ModifyUserName'];
     var PO_DETAIL = ['DocNo', 'ItemCode', 'ItemName', 'UomCode', { k: 'OrderItemQty', n: 1 }, { k: 'UsedQty', n: 1 }, { k: 'BalQty', n: 1 }];
 
+    function poNotice(text, loading, error) {
+        var status = $id('poLookupStatus');
+        status.innerHTML = (loading ? '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> ' : '') + esc(text || '');
+        status.title = text || '';
+        status.style.backgroundColor = error ? '#a12622' : '';
+    }
+    function poRequest(message, task) {
+        if (po.pending) return Promise.resolve();
+        po.pending = true;
+        var elements = Array.prototype.slice.call($id('dlgPo').querySelectorAll('.dz-strip button, .dz-p button, .dz-p input, .dz-p select'));
+        elements.push($id('btnLoadPurchaseOrder'));
+        var controls = elements.map(function (el) {
+            var state = { el: el, disabled: el.disabled };
+            el.disabled = true;
+            return state;
+        });
+        $id('dlgPo').setAttribute('aria-busy', 'true');
+        poNotice(message, true, false);
+        return Promise.resolve().then(task).catch(function (e) {
+            poNotice(e.message || 'Could not load the purchase orders. Click Refresh to try again.', false, true);
+        }).finally(function () {
+            controls.forEach(function (state) { state.el.disabled = state.disabled; });
+            $id('dlgPo').removeAttribute('aria-busy');
+            po.pending = false;
+        });
+    }
+    function poBindLookups(l, retain) {
+        if (!l || !Array.isArray(l.suppliers) || !Array.isArray(l.items)) {
+            throw new Error('The server did not return the purchase order dropdowns. Sign in again if needed, then click Refresh.');
+        }
+        [['poBillToParty', l.suppliers, 'No order suppliers'],
+            ['poItemName', l.items, 'No order items']].forEach(function (binding) {
+            var el = $id(binding[0]), selected = retain ? el.value : '0';
+            C.fillSelect(el, binding[1], 'Id', 'Name');
+            el.options[0].textContent = binding[1].length ? '...Select Any Value...' : binding[2];
+            el.value = binding[1].some(function (r) { return String(r.Id) === selected; }) ? selected : '0';
+        });
+        po.lookupError = false;
+        po.lookupMessage = !l.suppliers.length && !l.items.length
+            ? 'No supplier or item options were found in Store Purchase Orders for the current company.' : '';
+    }
+    function poFetchLookups(refresh, retain) {
+        return C.getJson(api + '/loader/po/lookups' + (refresh ? '?refresh=true' : '')).then(function (l) {
+            poBindLookups(l, retain);
+        }).catch(function (e) {
+            po.lookupError = true;
+            po.lookupMessage = e.message || 'Could not load the dropdowns. Click Refresh to try again.';
+            throw e;
+        });
+    }
+
     function openPo() {                                                         // btnLoadSupplySchedule_Click:1908 — a new dialog per click
-        if (!guard(1, 'Purchase Order')) return;
-        po.rows = []; clearGrid('poGrd'); clearGrid('poGrdDetail');
+        if (po.pending || !guard(1, 'Purchase Order')) return;
+        po.rows = []; po.detail = []; po.lookupMessage = ''; po.lookupError = false;
+        clearGrid('poGrd'); clearGrid('poGrdDetail');
+        C.fillSelect('poBillToParty', [], 'Id', 'Name'); C.fillSelect('poItemName', [], 'Id', 'Name');
+        $id('poSelectionStatus').textContent = '';
         $id('poFromDate').value = daysAgo(7); $id('poToDate').value = C.today();
         $id('poDocNoFrom').value = ''; $id('poDocNoTo').value = '';
         C.openModal('dlgPo');
-        C.getJson(api + '/loader/po/lookups').then(function (l) {
-            C.fillSelect('poBillToParty', l.suppliers, 'Id', 'Name'); $id('poBillToParty').value = '0';
-            C.fillSelect('poItemName', l.items, 'Id', 'Name'); $id('poItemName').value = '0';
-            return poSearch(daysAgo(7));                                        // PendingDataDbCall(Intilization: true)
-        }).catch(function (e) { alert(e.message); });
+        return poRequest('Loading purchase order dropdowns and pending orders...', function () {
+            return poFetchLookups(false, false).then(function () {
+                return poSearch(daysAgo(7));                                    // PendingDataDbCall(Intilization: true)
+            });
+        });
     }
     function poSearch(from) {
+        po.rows = []; po.detail = []; clearGrid('poGrd'); clearGrid('poGrdDetail');
+        $id('poSelectionStatus').textContent = '';
         return C.getJson(api + '/loader/po' + C.qs({
             fromDate: from || $id('poFromDate').value, toDate: $id('poToDate').value,
             fromDocNo: intOf($id('poDocNoFrom').value), toDocNo: intOf($id('poDocNoTo').value),
             supplierId: intOf($id('poBillToParty').value)
         })).then(function (rows) {
-            po.rows = rows || [];
+            if (!Array.isArray(rows)) throw new Error('The server did not return pending orders. Sign in again if needed, then click Show.');
+            po.rows = rows;
             /* GrdDataBind:252 — one header row per pending line (no de-duplication). */
             if (po.rows.length) loaderGrid('poGrd', PO_COLS, po.rows, 'GrnStore.poChecked()'); else clearGrid('poGrd');
             clearGrid('poGrdDetail');
-        }).catch(function (e) { alert(e.message); });
+            poNotice(po.lookupMessage || (rows.length ? 'Select an order below to view its items.' : 'No pending Store Purchase Orders match the selected dates and filters.'), false, po.lookupError);
+            $id('poSelectionStatus').textContent = rows.length ? 'Select an order above to view its items.' : 'No pending orders to load.';
+        });
     }
-    function poShow() { poSearch(); }
+    function poShow() { return poRequest('Loading pending purchase orders...', function () { return poSearch(); }); }
     function poChecked() {                                                      // grd_RowCheckStateChanged:351
         var ids = {};
         checkedIdx('poGrd').forEach(function (i) { ids[intOf(ci(po.rows[i], 'Id'))] = 1; });
         po.detail = po.rows.filter(function (r) { return ids[intOf(ci(r, 'Id'))]; });
+        $id('poSelectionStatus').textContent = po.detail.length ? 'Select the items to load, then click Load.' : 'Select an order above to view its items.';
         if (!po.detail.length) { clearGrid('poGrdDetail'); return; }
         var view = po.detail.map(function (r) { var o = Object.assign({}, r); o.BalQty = ci(r, 'ItemQty'); return o; });
         loaderGrid('poGrdDetail', PO_DETAIL, view, null, true);                 // CheckAllRows
     }
     function poNew() {                                                          // btnReset_Click:486
+        if (po.pending) return Promise.resolve();
         $id('poFromDate').value = look.financialYearStart || $id('poFromDate').value;
         $id('poDocNoFrom').value = ''; $id('poDocNoTo').value = ''; $id('poItemName').value = '0';
-        poSearch();
+        return poShow();
     }
     function poRefresh() {                                                      // btnRefresh_Click:504 — branch-wise from here on
-        C.getJson(api + '/loader/po/lookups?refresh=true').then(function (l) {
-            var s = $id('poBillToParty').value, it = $id('poItemName').value;
-            C.fillSelect('poBillToParty', l.suppliers, 'Id', 'Name'); $id('poBillToParty').value = s;
-            C.fillSelect('poItemName', l.items, 'Id', 'Name'); $id('poItemName').value = it;
-        }).catch(function (e) { alert(e.message); });
+        return poRequest('Refreshing purchase order dropdowns...', function () {
+            return poFetchLookups(true, true).then(function () {
+                poNotice(po.lookupMessage || 'Dropdowns refreshed. Click Show to load pending orders.', false, false);
+            });
+        });
     }
     function poLoad() {                                                         // btnLoadOnInvoice_Click_1:436
+        if (po.pending) return;
         var idx = checkedIdx('poGrdDetail');
         if (!idx.length) { alert('Check the row first in Detail Grid'); return; }
         var sel = idx.map(function (i) { return po.detail[i]; });
@@ -894,8 +956,10 @@
         openDc: openDc, dcShow: dcShow, dcChecked: dcChecked, dcNew: dcNew, dcRefresh: dcRefresh, dcLoad: dcLoad
     };
 
-    document.addEventListener('DOMContentLoaded', function () {
+    function start() {
         $id('DocDate').value = C.today();                                       // designer: DateTime.Now, once
         init();
-    });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+    else start();
 })();

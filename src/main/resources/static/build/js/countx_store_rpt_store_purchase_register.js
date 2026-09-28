@@ -48,8 +48,9 @@
         $(id).value = '0';
     }
     function fillCombos(c) {
-        if (!c || !c.bound) return;                    // ALlDropDown:236 — nothing returned, nothing rebound
+        if (!c) throw new Error('Could not load purchase filters. Click Refresh to try again.');
         COMBOS.forEach(function (p) { bind(p[0], c[p[1]]); });
+        C.lookupNotice(c.bound ? '' : 'No matching Store Purchase invoices were found for this company. These filters use values from saved Store Purchase invoices.');
     }
     function clearCombos() {                           // cmbBranchName_Leave:842-853
         COMBOS.forEach(function (p) { $(p[0]).innerHTML = ''; });
@@ -306,5 +307,6 @@
     }
 
     window.RptSPR = { show: show, newForm: newForm, refresh: refresh, printRegister: printRegister, gotoHistory: gotoHistory };
-    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();

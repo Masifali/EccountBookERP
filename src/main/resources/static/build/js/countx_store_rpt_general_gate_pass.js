@@ -352,7 +352,8 @@
         w.document.close();
     }
 
-    document.addEventListener('DOMContentLoaded', init);
     window.RptGatePassGeneral = { show: show, reset: reset, refresh: refresh, print255: print255,
                                   dateTypeChanged: dateTypeChanged, shortcutKeys: shortcutKeys, gotoHistory: gotoHistory };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();

@@ -514,6 +514,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         $id('FromDateHistory').value = C.today(); $id('ToDateHistory').value = C.today();
         $id('txtDocdate').value = C.today();                                    // designer: DateTime.Now, once
-        reset();
+        reset().then(function () { var linkedId = Number(new URLSearchParams(window.location.search).get("id")); if (Number.isInteger(linkedId) && linkedId > 0) return readById(linkedId); });
     });
 })();

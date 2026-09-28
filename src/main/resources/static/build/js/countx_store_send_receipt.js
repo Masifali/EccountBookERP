@@ -47,8 +47,24 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        var origHtml = '';
+        if (b) {
+            if (b.disabled || b.classList.contains('is-busy')) return;
+            b.disabled = true;
+            b.classList.add('is-busy');
+            origHtml = b.innerHTML;
+            if (!b.querySelector('.fa-spinner')) {
+                b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + origHtml;
+            }
+        }
+        var done = function () {
+            if (b) {
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                if (origHtml) b.innerHTML = origHtml;
+            }
+            applyRights();
+        };
         var p; try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
         return p;
@@ -334,7 +350,7 @@
             var html = '';
             historyRows.forEach(function (r, i) {
                 html += '<tr class="data-row" data-h="' + i + '"><td><button type="button" class="win-btn-mini" data-h-act="edit">Edit</button></td><td><button type="button" class="win-btn-mini" data-h-act="print">Print</button></td>'
-                    + '<td>' + esc(col(r, 'DocNo')) + '</td><td>' + ddmmm(col(r, 'DocDate')) + '</td><td>' + esc(col(r, 'SenderWareHouse')) + '</td><td>' + esc(col(r, 'ReceiverWareHouse')) + '</td>'
+                    + '<td><span class="win-link" data-h-act="edit">' + esc(col(r, 'DocNo')) + '</span></td><td>' + ddmmm(col(r, 'DocDate')) + '</td><td>' + esc(col(r, 'SenderWareHouse')) + '</td><td>' + esc(col(r, 'ReceiverWareHouse')) + '</td>'
                     + '<td>' + dateTime(col(r, 'EntryDate')) + '</td><td>' + esc(col(r, 'EntryUser')) + '</td><td>' + dateTime(col(r, 'ModifyDate')) + '</td><td>' + esc(col(r, 'ModifyUser')) + '</td>'
                     + '<td class="num">' + esc(col(r, 'NoOfAttachments')) + '</td></tr>';
             });
@@ -346,7 +362,7 @@
         var tr = e.target.closest('tr[data-h]'); if (!tr) return;
         var r = historyRows[int(tr.getAttribute('data-h'))]; if (!r) return;
         Array.prototype.forEach.call(document.querySelectorAll('#GrdHistory tr'), function (x) { x.classList.toggle('sel', x === tr); });
-        var id = int(col(r, 'InvStoreSendReceiptId')), b = e.target.closest('button[data-h-act]');
+        var id = int(col(r, 'InvStoreSendReceiptId')), b = e.target.closest('button[data-h-act], [data-h-act]');
         if (!b) { BindDetailOfHeaderId(id); return; }
         if (b.getAttribute('data-h-act') === 'edit') ReadById(id); else GeneratePrint(id);
     }

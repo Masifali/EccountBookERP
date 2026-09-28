@@ -78,8 +78,28 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        if (!b) return fn();
+        if (b.disabled || b.classList.contains('is-busy')) return;
+        b.disabled = true;
+        b.classList.add('is-busy');
+
+        var origHtml = b.innerHTML;
+        var icon = b.querySelector('i');
+        if (icon) {
+            icon.className = 'fa fa-spinner fa-spin';
+        } else {
+            b.insertAdjacentHTML('afterbegin', '<i class="fa fa-spinner fa-spin"></i> ');
+        }
+
+        var done = function () {
+            if (b) {
+                b.innerHTML = origHtml;
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                applyRights();
+            }
+        };
+
         var p;
         try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
@@ -143,7 +163,7 @@
         setVal('txtPackingDate', today());
         setVal('txtExpiryDateDetail', today());
         renderGrid();
-        return loadLookups(true).then(function () { showTab(0); }).catch(function (e) { say('Not loaded.'); box(e.message); });
+        return loadLookups(true).then(function () { showTab(0); var linkedId = Number(new URLSearchParams(window.location.search).get('id')); if (Number.isInteger(linkedId) && linkedId > 0) return ReadById(linkedId, false); }).catch(function (e) { say('Not loaded.'); box(e.message); });
     }
 
     function loadLookups(first) {
@@ -326,7 +346,7 @@
             setVal('txtTaxPercnt', '0'); setVal('txtTaxAmount', '0'); setVal('txtTotalAmount', amt(a));
         }
     }
-    function recalcEntry() { CalculateWeight(); CalculateItemAount(); }
+    function recalcEntry(isUomChange) { CalculateWeight(); if (!isUomChange) CalculateItemAount(); }
 
     // ------------------------------------------------------------------ grid-row maths :3638-3707
 
@@ -889,8 +909,8 @@
         on('rdSearchByName', 'change', ItemDtsFillAndBind);
         on('rdSearchByCode', 'change', ItemDtsFillAndBind);
         ['txtqty', 'txtWtPerQty', 'txtRate'].forEach(function (id) { on(id, 'input', recalcEntry); });
-        on('combrateuom', 'change', recalcEntry);
-        on('CmbUomDetail', 'change', recalcEntry);
+        on('combrateuom', 'change', function () { recalcEntry(true); });
+        on('CmbUomDetail', 'change', function () { recalcEntry(true); });
         on('CmbTaxName', 'change', function () {
             if (int(val('CmbTaxName'))) CalculateTaxAmount();
             else { setVal('txtTaxPercnt', ''); setVal('txtTaxAmount', ''); setVal('txtTotalAmount', amt(num(val('txtItemAmount')))); }

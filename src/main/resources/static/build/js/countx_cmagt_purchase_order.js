@@ -411,9 +411,9 @@ function poCalcTax() {
 /* One entry point for the chain, mirroring the desktop's event order:
  *   txtQty / CmbPackUom  -> CalculateWeight -> CalculateAmount -> tax
  *   txtWeight / txtRate / CmbRateUom -> CalculateAmount -> tax          */
-function poCalcRow(skipWeight) {
+function poCalcRow(skipWeight, isUomChange) {
     if (!skipWeight) poCalcWeight();
-    poCalcAmount();
+    if (!isUomChange) poCalcAmount();
     poCalcTax();
 }
 

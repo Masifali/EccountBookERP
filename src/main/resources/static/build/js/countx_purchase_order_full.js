@@ -1709,7 +1709,7 @@ function calcLineWeight(source) {
         /* :4262-4266 - no factor, so neither figure can be trusted */
         $('#txtQty').val('0');
         $('#txtWeight').val('0');
-        calcLineAmount();
+        calcLineAmount(source === 'uom');
         return;
     }
 
@@ -1720,14 +1720,18 @@ function calcLineWeight(source) {
         const qty = parseFloat($('#txtQty').val() || '0');
         $('#txtWeight').val(qty > 0 ? r3(qty * uom) : 0);         /* :4269 */
     }
-    calcLineAmount();
+    calcLineAmount(source === 'uom');
 }
 
 /* Amount = Weight / RateUom.Equivalent x Rate.
    combrateuom.SelectedRow.Cells[2] is that Equivalent (:2620 compares it to 40.0).
    With no factor there is no amount - it is left at 0 and the user is not shown a
-   number that was computed from an assumption. */
-function calcLineAmount() {
+   number that was computed from an assumption.
+   On change of UOM (isUomChange=true), Amount will not change. */
+function calcLineAmount(isUomChange) {
+    if (isUomChange) {
+        return;
+    }
     const weight = parseFloat($('#txtWeight').val() || '0');
     const rate = parseFloat($('#txtRate').val() || '0');
     const rateEq = uomFactor('cmbRateUom');

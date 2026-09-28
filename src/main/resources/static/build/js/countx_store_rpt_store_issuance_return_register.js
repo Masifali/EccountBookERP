@@ -10,11 +10,44 @@
 
     var look = { fromDate: '', formats: { amountDecimals: 0, rateDecimals: 2 } };
     var dt = [];              // what the Print list prints (GridFill:309)
+    var pending = false, initialized = false, lookupMessage = '';
 
     var COMBOS = [
         ['CmbDepartmentName', 'departments'], ['CmbItemName', 'items'], ['CmbAssetName', 'assets'],
         ['CmbWareHouse', 'warehouses'], ['CmbAccountTitle', 'accounts']
     ];
+
+    function message(text, error, loading) {
+        var status = $('returnLookupStatus');
+        status.hidden = !text;
+        status.style.color = error ? '#a00000' : '#005959';
+        $('returnLookupMessage').textContent = text || '';
+        $('returnLookupSpinner').hidden = !loading;
+    }
+    function get(url) {
+        return C.getJson(url).then(function (data) {
+            // The shared helper returns null for an HTML login redirect.
+            if (!data) throw new Error('Your session has expired or the filters could not be loaded. Sign in again, then click Refresh.');
+            return data;
+        });
+    }
+    function run(work, text) {
+        if (pending) return Promise.resolve();
+        pending = true;
+        message(text, false, true);
+        var controls = Array.from(document.querySelectorAll('.ra-root button,.ra-root input,.ra-root select'))
+            .map(function (el) { return { el: el, disabled: el.disabled }; });
+        controls.forEach(function (s) { s.el.disabled = true; });
+        var failed = false;
+        return Promise.resolve().then(work).catch(function (e) {
+            failed = true;
+            message(e.message || 'Could not load the filters. Click Refresh to try again.', true, false);
+        }).finally(function () {
+            controls.forEach(function (s) { s.el.disabled = s.disabled; });
+            pending = false;
+            if (!failed) message(lookupMessage, false, false);
+        });
+    }
 
     /* ---------------------------------------------------------------- helpers (page-local) */
     var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -53,8 +86,14 @@
         COMBOS.forEach(function (p) {
             var rows = c[p[1]] || [];
             if (rows.length) bind(p[0], rows);
-            else if (p[0] === 'CmbAccountTitle') $(p[0]).innerHTML = '';
+            else if (p[0] === 'CmbAccountTitle') {
+                // A zero-valued hint is not an account and does not change the report filter.
+                $(p[0]).innerHTML = '<option value="0">No eligible Store Issuance accounts</option>';
+                $(p[0]).value = '0';
+            }
         });
+        lookupMessage = (c.accounts || []).length ? ''
+            : 'No eligible Account Titles were found in Store Issuance records for the current company. Check the selected company, then click Refresh.';
     }
 
     /* ---------------------------------------------------------------- grid (GridFill:312 dtHistory + gridSetting:352) */
@@ -185,12 +224,12 @@
             warehouseId: selVal('CmbWareHouse'), accountId: selVal('CmbAccountTitle'),
             fromDocNo: toInt(val('txtFromDocNo')), toDocNo: toInt(val('txtDocNoTo'))
         };
-        C.getJson(API + C.qs(q)).then(function (res) {
+        return get(API + C.qs(q)).then(function (res) {
             dt = (res && res.rows) || [];
             if (dt.length) { render(dt); return; }
             clearGrid();
             alert(res.message || 'Record Not found For Display');
-        }).catch(function (e) { alert(e.message); });
+        });
     }
     function newForm() {                                // Reset:248 — dt is not cleared
         $('FromDate').value = look.fromDate || '';
@@ -204,7 +243,7 @@
         $('FromDate').focus();
     }
     function refresh() {                                // toolStripButton1_Click:568
-        C.getJson(API + '/combos').then(fillCombos).catch(function (e) { alert(e.message); });
+        return run(loadFilters, 'Loading filters...');
     }
     function printRegister() {                          // tsPrintDropDown_DropDownItemClicked:508 (see D2)
         if (!dt.length) { alert('Record Not Found For Display'); return; }
@@ -215,17 +254,23 @@
         $('historySection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    function loadFilters() {
+        return get(API + (initialized ? '/combos' : '/lookups')).then(function (d) {
+            if (!initialized) {
+                look = d;
+                $('FromDate').value = d.fromDate || '';
+                $('ToDate').value = d.toDate || C.today();
+            }
+            fillCombos(d);
+            initialized = true;
+        });
+    }
     function init() {                                   // frmGatePassReport_Load:270
         digitsOnly();
-        C.getJson(API + '/lookups').then(function (d) {
-            look = d;
-            $('FromDate').value = d.fromDate || '';
-            $('ToDate').value = d.toDate || C.today();
-            fillCombos(d);
-            $('FromDate').focus();
-        }).catch(function (e) { alert(e.message); });
+        return refresh().then(function () { $('FromDate').focus(); });
     }
 
-    window.RptSRR = { show: show, newForm: newForm, refresh: refresh, printRegister: printRegister, gotoHistory: gotoHistory };
-    document.addEventListener('DOMContentLoaded', init);
+    window.RptSRR = { show: function () { return run(show, 'Loading report...'); }, newForm: newForm, refresh: refresh, printRegister: printRegister, gotoHistory: gotoHistory };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();

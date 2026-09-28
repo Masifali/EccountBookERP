@@ -152,14 +152,21 @@
     </div>
 
     <!-- TEAL HEADER -->
-    <div class="win-teal-header">
-        <!-- This is the PURCHASE module's Purchase Order, document type 41 in the dbo
-             schema (PurchsaeOrder.cs :3295). It is a different document from Commission
-             Trading's Purchase Order (type 1052, cmagt schema), which has its own screen.
-             The header used to read "Commission Agent Purchase Order Master", which named
-             the wrong module. -->
-        <div class="win-teal-header-title">Purchase Order <span style="font-weight:400; opacity:.85;">&mdash; Doc Type 41</span></div>
-        <div id="lblDocNoDisplay" class="win-doc-badge">PO-1</div>
+    <div class="win-teal-header" style="background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="win-teal-header-title" style="font-family: 'Tahoma', sans-serif; font-size: 11pt; font-weight: bold; text-transform: uppercase;">PURCHASE ORDER</div>
+            <span style="font-size: 8.5pt; font-weight: bold; margin-left: 12px; color: #ffffff;">Location Type</span>
+            <select id="cmbLocationType" class="win-combo" style="height: 20px; width: 140px; font-size: 8.5pt; font-weight: normal; color: #000000; background: #ffffff; padding: 0 2px; border: 1px solid #7a9a9e;">
+                <option value="0">-- Select --</option>
+            </select>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <label style="margin: 0; font-size: 8.5pt; font-weight: bold; color: #ffffff; cursor: pointer;"><input type="checkbox" id="chkPreview203" checked> Preview 203</label>
+            <label style="margin: 0; font-size: 8.5pt; font-weight: bold; color: #ffffff; cursor: pointer;"><input type="checkbox" id="chkPreview203A"> Preview 203A</label>
+            <label style="margin: 0; font-size: 8.5pt; font-weight: bold; color: #ffffff; cursor: pointer;"><input type="checkbox" id="chkPreview203_01"> Preview 203_01</label>
+            <label style="margin: 0; font-size: 8.5pt; font-weight: bold; color: #ffffff; cursor: pointer;"><input type="checkbox" id="chkPreview203_02"> Preview 203_02</label>
+            <div id="lblDocNoDisplay" class="win-doc-badge">PO-1</div>
+        </div>
     </div>
 
     <!-- MAIN FORM BODY -->
@@ -296,17 +303,6 @@
                                 <option value="Open" selected>Open</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Closed">Closed</option>
-                            </select>
-                        </div>
-                        <!-- LocationTypeFill() - PurchsaeOrder.cs :840. The page had no such
-                             control at all, while FormValidation :1906 makes it required
-                             whenever usp_getLocationType returns rows. Populated from
-                             /api/purchase-order/location-types; if that list is empty the
-                             desktop does not ask for it and neither does the server. -->
-                        <div class="col-md-3">
-                            <label class="win-label">Location Type</label>
-                            <select id="cmbLocationType" class="win-combo">
-                                <option value="0">-- Select --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -518,7 +514,7 @@
 
     <span class="lbl" style="left:527px; top:19px;">UOM</span>
     <select id="cmbPackUom" class="win-combo dtcombo ctl" style="left:527px; top:39px; width:125px;"
-            data-dtcombo="uom2" data-dtcombo-caption="UOM" onchange="calcLineWeight()"></select>
+            data-dtcombo="uom2" data-dtcombo-caption="UOM" onchange="calcLineWeight('uom')"></select>
 
     <span class="lbl" style="left:655px; top:19px;">Item Qty</span>
     <input type="number" id="txtQty" class="win-textbox ctl num" style="left:655px; top:41px; width:82px;"
@@ -534,7 +530,7 @@
 
     <span class="lbl" style="left:921px; top:18px;">Rate UOM</span>
     <select id="cmbRateUom" class="win-combo dtcombo ctl" style="left:919px; top:38px; width:125px;"
-            data-dtcombo="uom2" data-dtcombo-caption="RateUOM" onchange="calcLineAmount()"></select>
+            data-dtcombo="uom2" data-dtcombo-caption="RateUOM" onchange="calcLineAmount(true)"></select>
 
     <span class="lbl" style="left:1049px; top:17px;">Amount</span>
     <input type="number" id="txtAmount" class="win-textbox win-textbox-readonly ctl num"

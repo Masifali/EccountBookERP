@@ -44,8 +44,9 @@
         $(id).value = '0';
     }
     function fillCombos(c) {
-        if (!c || !c.bound) return;                    // AllDropDownBind:179 — no rows, nothing rebound
+        if (!c) throw new Error('Could not load demand filters. Click Refresh to try again.');
         COMBOS.forEach(function (p) { bind(p[0], c[p[1]]); });
+        C.lookupNotice(c.bound ? '' : 'No saved Store Purchase Demands were found for this company. These filters use values from saved Store Purchase Demands.');
     }
     /** A list of the form's own literal rows. The blank option stands for a cleared combo text. */
     function bindText(id, rows, selectedId) {
@@ -302,5 +303,6 @@
 
     window.RptPDR = { show: gridHisory, newForm: reset, refresh: refresh, printRegister: printRegister, dateTypeChanged: dateTypeChanged,
                       gotoHistory: gotoHistory };
-    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();

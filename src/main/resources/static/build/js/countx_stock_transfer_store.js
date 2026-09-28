@@ -47,8 +47,24 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        var origHtml = '';
+        if (b) {
+            if (b.disabled || b.classList.contains('is-busy')) return;
+            b.disabled = true;
+            b.classList.add('is-busy');
+            origHtml = b.innerHTML;
+            if (!b.querySelector('.fa-spinner')) {
+                b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + origHtml;
+            }
+        }
+        var done = function () {
+            if (b) {
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                if (origHtml) b.innerHTML = origHtml;
+            }
+            applyRights();
+        };
         var p; try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
         return p;
@@ -84,7 +100,7 @@
     function init() {
         bindEvents();
         setVal('DocDate', today());
-        loadLookups().then(function () { AddRowInExpenseGrid(); renderAll(); });
+        loadLookups().then(function () { AddRowInExpenseGrid(); renderAll(); var id = Number(new URLSearchParams(location.search).get("id")); if (Number.isSafeInteger(id) && id > 0) return ReadById(id); });
     }
 
     function loadLookups() {
@@ -450,7 +466,13 @@
             var html = '';
             historyRows.forEach(function (r, i) {
                 html += '<tr class="data-row" data-h="' + i + '"><td><button type="button" class="win-btn-mini" data-h-act="edit">Edit</button></td><td><button type="button" class="win-btn-mini" data-h-act="print">Print</button></td>';
-                H.forEach(function (c) { html += '<td>' + (c[2] === 'd' ? ddmmm(r[c[0]]) : esc(r[c[0]])) + '</td>'; });
+                H.forEach(function (c) {
+                    var cellVal = (c[2] === 'd' ? ddmmm(r[c[0]]) : esc(r[c[0]]));
+                    if (c[0] === 'DocNo') {
+                        cellVal = '<span class="win-link" data-h-act="edit">' + cellVal + '</span>';
+                    }
+                    html += '<td>' + cellVal + '</td>';
+                });
                 html += '</tr>';
             });
             $id('grdhistory').innerHTML = html; $id('GridDetail').innerHTML = ''; $id('histDetailHead').innerHTML = '';
@@ -464,7 +486,7 @@
             if (L.financialEffect) C.push(['ItemRate', 'ItemRate', 'q'], ['ItemAmount', 'ItemAmount', 'q']);
             C.push(['Expense', 'Expense', 'q'], ['RefDocumentType', 'RefDocumentType'], ['RefDocNo', 'RfDocNo'], ['RefDocInvoiceNo', 'RefDocInvoiceNo'], ['Remarks', 'Remarks']);
             var head = ''; C.forEach(function (c) { head += '<th>' + c[1] + '</th>'; }); $id('histDetailHead').innerHTML = head;
-            var html = ''; (d.rows || []).forEach(function (l) { html += '<tr>'; C.forEach(function (c) { html += '<td' + (c[2] ? ' class="num"' : '') + '>' + (c[2] ? fmt(l[c[0]]) : esc(l[c[0]])) + '</td>'; }); html += '</tr>'; });
+            var html = ''; (d.lines || []).forEach(function (l) { html += '<tr>'; C.forEach(function (c) { html += '<td' + (c[2] ? ' class="num"' : '') + '>' + (c[2] ? fmt(l[c[0]]) : esc(l[c[0]])) + '</td>'; }); html += '</tr>'; });
             $id('GridDetail').innerHTML = html;
         }).catch(function () { $id('GridDetail').innerHTML = ''; });
     }
@@ -537,7 +559,7 @@
             var tr = e.target.closest('tr[data-h]'); if (!tr) return;
             var r = historyRows[int(tr.getAttribute('data-h'))]; if (!r) return;
             Array.prototype.forEach.call(document.querySelectorAll('#grdhistory tr'), function (x) { x.classList.toggle('sel', x === tr); });
-            var b = e.target.closest('button[data-h-act]');
+            var b = e.target.closest('button[data-h-act], [data-h-act]');
             if (!b) { detail(int(r.Id)); return; }
             if (b.getAttribute('data-h-act') === 'edit') Reset().then(function () { ReadById(int(r.Id)); }); else GeneratePrint(int(r.Id));
         });

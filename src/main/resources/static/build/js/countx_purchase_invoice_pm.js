@@ -53,8 +53,24 @@
 
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
-        if (b) { if (b.disabled || b.classList.contains('is-busy')) return; b.disabled = true; b.classList.add('is-busy'); }
-        var done = function () { if (b) { b.disabled = false; b.classList.remove('is-busy'); } applyRights(); };
+        var origHtml = '';
+        if (b) {
+            if (b.disabled || b.classList.contains('is-busy')) return;
+            b.disabled = true;
+            b.classList.add('is-busy');
+            origHtml = b.innerHTML;
+            if (!b.querySelector('.fa-spinner')) {
+                b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + origHtml;
+            }
+        }
+        var done = function () {
+            if (b) {
+                b.disabled = false;
+                b.classList.remove('is-busy');
+                if (origHtml) b.innerHTML = origHtml;
+            }
+            applyRights();
+        };
         var p; try { p = fn(); } catch (e) { done(); throw e; }
         if (p && typeof p.then === 'function') p.then(done, done); else done();
         return p;
@@ -99,7 +115,7 @@
         setVal('DocDate', today());
         setVal('DueDate', today());
         setVal('FromDateHistory', today()); setVal('ToDateHistory', today());
-        loadLookups().then(function () { AddRowInGLGrid(); AddRowInFreightGrid(); renderAll(); });
+        loadLookups().then(function () { AddRowInGLGrid(); AddRowInFreightGrid(); renderAll(); var id = Number(new URLSearchParams(location.search).get("id")); if (Number.isSafeInteger(id) && id > 0) return ReadById(id); });
     }
 
     function loadLookups() {
@@ -526,7 +542,14 @@
                 html += '<tr class="data-row" data-h="' + i + '">' + ['edit', 'print', 'print2', 'voucher'].map(function (a) {
                     return '<td><button type="button" class="win-btn-mini" data-h-act="' + a + '">' + a.charAt(0).toUpperCase() + a.slice(1) + '</button></td>';
                 }).join('');
-                H.forEach(function (c) { var v = col(r, c[0]); html += '<td' + (c[2] === 'n' ? ' class="num"' : '') + '>' + (c[2] === 'date' ? ddmmm(v) : c[2] === 'n' ? amt(v) : esc(v)) + '</td>'; });
+                H.forEach(function (c) {
+                    var v = col(r, c[0]);
+                    var cellVal = (c[2] === 'date' ? ddmmm(v) : c[2] === 'n' ? amt(v) : esc(v));
+                    if (c[0] === 'DocNo') {
+                        cellVal = '<span class="win-link" data-h-act="edit">' + cellVal + '</span>';
+                    }
+                    html += '<td' + (c[2] === 'n' ? ' class="num"' : '') + '>' + cellVal + '</td>';
+                });
                 html += '</tr>';
             });
             $id('grdHistory').innerHTML = html; $id('grdDetail').innerHTML = ''; $id('histDetailHead').innerHTML = '';
@@ -537,7 +560,7 @@
         var tr = e.target.closest('tr[data-h]'); if (!tr) return;
         var r = historyRows[int(tr.getAttribute('data-h'))]; if (!r) return;
         Array.prototype.forEach.call(document.querySelectorAll('#grdHistory tr'), function (x) { x.classList.toggle('sel', x === tr); });
-        var id = int(col(r, 'Id')), b = e.target.closest('button[data-h-act]');
+        var id = int(col(r, 'Id')), b = e.target.closest('button[data-h-act], [data-h-act]');
         if (!b) { detail(id); return; }
         var a = b.getAttribute('data-h-act');
         if (a === 'edit') { if (String(col(r, 'ApprovedStatus')) === 'APPROVED') { box("Can't Update Approved Record"); return; } ReadById(id); }

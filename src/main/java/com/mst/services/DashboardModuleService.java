@@ -220,6 +220,15 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(492, "/packing-material/stock-adjustment"); // StockAdjustmentForPM
         WEB_ROUTES_BY_SCREEN_ID.put(502, "/packing-material/store-stock-conversion"); // StoreStockConversion
         WEB_ROUTES_BY_SCREEN_ID.put(506, "/packing-material/delivery-order"); // DeliveryOrderPackingMaterial
+        WEB_ROUTES_BY_SCREEN_ID.put(507, "/packing-material/sale-invoice-direct"); // FrmSaleInvoiceDirectPackingMaterial
+        WEB_ROUTES_BY_SCREEN_ID.put(497, "/packing-material/item-pm-map"); // frmItemAndPMItemMap (Architecture.WinApp.PackingMaterial_Store)
+
+        /* Packing Material Reports, ModuleId 2031 */
+        WEB_ROUTES_BY_SCREEN_ID.put(697, "/packing-material/reports/grn-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(699, "/packing-material/reports/requirement-planning-detail");
+        WEB_ROUTES_BY_SCREEN_ID.put(778, "/packing-material/reports/purchase-order-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(695, "/packing-material/reports/inventory-transaction-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(696, "/packing-material/reports/stock-with-supplier");
     }
 
     /** The desktop forms behind the DashBoard menu, for the placeholder to name (DashboardNew.cs :5161-5196). */
