@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ApiAuthenticationBoundaryTest {
  @Configuration @EnableWebMvc @Import(SecurityConfiguration.class) static class Config {
   @Bean ReceiptMangerAuthFilter receiptMangerAuthFilter(){return new ReceiptMangerAuthFilter();}
+  @Bean com.mst.security.DevAutoLoginFilter devAutoLoginFilter(){return new com.mst.security.DevAutoLoginFilter();}
   @Bean LegacyUserPasswordEncoder legacyUserPasswordEncoder(){return new LegacyUserPasswordEncoder();}
   @Bean CustomUserDetailsService customUserDetailsService(){return mock(CustomUserDetailsService.class);}
   @Bean(name="IUserAccountRepository") IUserAccountRepository userRepository(){return mock(IUserAccountRepository.class);}

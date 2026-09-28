@@ -26,12 +26,14 @@ import org.springframework.context.annotation.Lazy;
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @EnableCaching(proxyTargetClass = true)
 //@EnableJpaRepositories(repositoryBaseClass = ExtendedRepositoryImpl.class)
-@PropertySource(value = "file:/application.properties", ignoreResourceNotFound = true)
+@PropertySource(value = "classpath:application.properties", ignoreResourceNotFound = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     @Lazy
     ReceiptMangerAuthFilter receiptMangerAuthFilter;
+    @Autowired
+    private com.mst.security.DevAutoLoginFilter devAutoLoginFilter;
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     @Autowired
@@ -72,6 +74,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         // Replace the default DENY writer only with the scoped report-frame policy.
         http.headers().frameOptions().disable()
                 .addHeaderWriter(new com.mst.security.ReportFrameHeaderWriter());
+        http.addFilterBefore(devAutoLoginFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(receiptMangerAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
         /* After Spring Security has restored the session, so the principal is present. */
         http.addFilterAfter(loginContextFilter, org.springframework.security.web.access.intercept.FilterSecurityInterceptor.class);
@@ -116,6 +119,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
      * Disabled as a servlet filter here, exactly as receiptFilterRegistration does for the same
      * reason; it runs once, inside the chain, via addFilterAfter below.
      */
+    @Bean
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<com.mst.security.DevAutoLoginFilter> devAutoLoginFilterRegistration() {
+        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(devAutoLoginFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     @Bean
     public org.springframework.boot.web.servlet.FilterRegistrationBean<com.mst.security.LoginContextFilter> loginContextFilterRegistration() {
         var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(loginContextFilter);
