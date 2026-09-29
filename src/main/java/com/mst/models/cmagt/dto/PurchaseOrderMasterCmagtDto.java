@@ -87,6 +87,11 @@ public class PurchaseOrderMasterCmagtDto {
     private String customAttachmentsValues;
     private String remarksHeader;
     private String paymentScheduleDescription;
+    /** Not a DB column. GetColumnSum(grdPaymentTerm, "Amount") - the SCHEDULE GRID's Amount total
+     *  the page had when Save was pressed. formvalidation() (frmPurchaseOrderCmagt.cs:2859 /
+     *  frmSupplierOfferCmagt.cs:2905) demands a header payment term only when it is 0. The grid
+     *  rows themselves are never saved (see PurchaseOrderMasterCmagtValidator.payment). */
+    private BigDecimal paymentScheduleGridAmount;
     private String purchaseOrderEmptyBagDetailDescription;
     private String purchaseOrderEmptyBagDetailDescriptionII;
     private String purchaseOrderSupplierExpenseDetailDescription;
@@ -557,6 +562,8 @@ public class PurchaseOrderMasterCmagtDto {
     public String getRemarksHeader() { return remarksHeader; }
     public void setRemarksHeader(String remarksHeader) { this.remarksHeader = remarksHeader; }
     public String getPaymentScheduleDescription() { return paymentScheduleDescription; }
+    public BigDecimal getPaymentScheduleGridAmount() { return paymentScheduleGridAmount; }
+    public void setPaymentScheduleGridAmount(BigDecimal paymentScheduleGridAmount) { this.paymentScheduleGridAmount = paymentScheduleGridAmount; }
     public void setPaymentScheduleDescription(String paymentScheduleDescription) { this.paymentScheduleDescription = paymentScheduleDescription; }
     public String getPurchaseOrderEmptyBagDetailDescription() { return purchaseOrderEmptyBagDetailDescription; }
     public void setPurchaseOrderEmptyBagDetailDescription(String purchaseOrderEmptyBagDetailDescription) { this.purchaseOrderEmptyBagDetailDescription = purchaseOrderEmptyBagDetailDescription; }

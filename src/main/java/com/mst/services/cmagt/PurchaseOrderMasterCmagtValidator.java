@@ -79,7 +79,9 @@ public class PurchaseOrderMasterCmagtValidator {
         if (zero(dto.getCommissionAgentId())) fail("Please Select Commission Agent / Broker");  // :2893
         if (zero(dto.getSupplierId()))        fail("Please Select Supplier Name");              // :2899
 
-        if (scheduleAmountSum(dto).compareTo(BigDecimal.ZERO) == 0) {                            // :2905
+        /* GetColumnSum(grdPaymentTerm, "Amount") == 0 - the schedule GRID's total, which the page
+           sends as paymentScheduleGridAmount (the saved list is always the synthesized row). */
+        if (nz(dto.getPaymentScheduleGridAmount()).compareTo(BigDecimal.ZERO) == 0) {            // :2905
             Integer term = headerPaymentTermId(dto);
             if (zero(term)) fail("Please Select Paymrnt Term");                                  // :2909 (desktop's spelling)
             if (term != null && term == 2 && zero(headerDueDays(dto)))
@@ -200,30 +202,34 @@ public class PurchaseOrderMasterCmagtValidator {
      * vd.TotalAmount, NOT from ItemAmount, so tax is included on both sides.
      */
     private void payment(PurchaseOrderMasterCmagtDto dto) {
+        /* WHAT THE DESKTOP ACTUALLY DOES (frmPurchaseOrderCmagt.cs:3159 / frmSupplierOfferCmagt.cs:3206):
+             num = GridEX_Helper.GetColumnSum(grdPaymentTerm, "TotalAmount");
+             if (num > 0) { ...one payment row per grid row, per-row checks :3175-3190... }
+             else         { ONE row from CmbPaymentTerm / txtDueDays: BaseDueDateTypeId 1,
+                            DueDate = docDate + DueDays, pctOfTotal 100, dueAmount = DetailSumAmount }
+           grdPaymentTerm has no "TotalAmount" column (dtPaymentTerm = PaymentTerm, DueDays, %OfTotal,
+           Amount, BaseDateType, DueDate - PurchaseOrderCmagt_Helper.cs:278-289), and the sum comes back
+           0 without an exception: all 575 rows of [cmagt].[purchaseOrderPaymentDetail] in the
+           GoldenAceDb(0509) dump are single rows, pctOfTotal 100, BaseDueDateTypeId 1, none with
+           more than one row per order. So the grid branch never runs: the per-row checks never fire
+           and the reconciliation below always compares DetailSum with itself. The page sends exactly
+           that one synthesized row; the reconciliation is kept only as a guard against a payload that
+           does not match it. */
         List<PurchaseOrderMasterCmagtDto.PaymentDto> rows =
                 dto.getPurchaseOrderPaymentDetailList() == null
                         ? new ArrayList<>() : dto.getPurchaseOrderPaymentDetailList();
+        if (rows.isEmpty()) return;
 
         BigDecimal detailSum = BigDecimal.ZERO;
         for (PurchaseOrderMasterCmagtDto.DetailDto d : liveDetail(dto)) {
-            detailSum = detailSum.add(nz(d.getTotalAmount()));               // :3086
+            detailSum = detailSum.add(nz(d.getTotalAmount()));               // :3045
         }
-
         BigDecimal paid = BigDecimal.ZERO;
         BigDecimal pct  = BigDecimal.ZERO;
-        for (int i = 0; i < rows.size(); i++) {
-            PurchaseOrderMasterCmagtDto.PaymentDto p = rows.get(i);
-            int n = i + 1;
-            if (zero(p.getPaymentTermId()))
-                fail("Payment Term Required in row#" + n);                    // :3178
-            if (p.getPaymentTermId() == 2 && zero(p.getDueDays()))
-                fail("Due Days Required In case Of Credit row in row#" + n);  // :3184
+        for (PurchaseOrderMasterCmagtDto.PaymentDto p : rows) {
             paid = paid.add(nz(p.getDueAmount()));
             pct  = pct.add(nz(p.getPctOfTotal()));
         }
-
-        if (rows.isEmpty()) return;   /* :3192 - the desktop synthesizes one 100% row instead */
-
         if (paid.subtract(detailSum).abs().compareTo(AMOUNT_TOLERANCE) > 0) { // :3210
             fail("Payment Detail Amount:" + money(paid)
                + " Not Equal to Total Amount:" + money(detailSum));

@@ -219,8 +219,12 @@ function soGuard(name) {
 }
 function soRelease(name) { soInFlight[name] = false; }
 
+/* 20260930P: 30 s timeout - an unanswered lookup used to keep the start-up promise pending and
+   the page disabled (see DOMContentLoaded below). */
 function getJson(url) {
-    return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (r) {
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 30000) : null;
+    return fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin', signal: ctl ? ctl.signal : undefined }).finally(function () { if (timer) clearTimeout(timer); }).then(function (r) {
         if (!r.ok) {
             return r.text().then(function (t) {
                 var msg = t;
@@ -312,6 +316,7 @@ function loadLookups() {
                 if (!rows || !rows.length) missingLookups.push(L.key);
                 if (L.el) fillSelect(L.el, rows, L.value, L.text);
                 (L.alsoInto || []).forEach(function (other) { fillSelect(other, rows, L.value, L.text); });
+                soLookupArrived(L.key);
             })
             .catch(function (e) {
                 lookupData[L.key] = [];
@@ -320,7 +325,7 @@ function loadLookups() {
     });
     jobs.push(
         getJson(CONFIG_URL)
-            .then(function (d) { portalDefaults = d || {}; })
+            .then(function (d) { portalDefaults = d || {}; soLookupArrived('config'); })
             .catch(function () { portalDefaults = {}; })
     );
     return Promise.all(jobs).then(function () {
@@ -331,6 +336,22 @@ function loadLookups() {
                   + '. They are not defaulted - the desktop reads them from the database.', true);
         }
     });
+}
+
+/* each lookup refreshes what depends on it as soon as it lands (20260930P) */
+function soLookupArrived(key) {
+    try {
+        if (key === 'viewCombos') {
+            bindViewCombos();
+            if (!emptyBagRows.some(function (r) { return +r.purchaseOrderEmptyBagDetailId > 0; })) seedEmptyBagRows();
+            renderEmptyBagsPm(); renderPayment();
+        } else if (key === 'otherItems') {
+            seedExpenseRows();
+        } else if (key === 'paymentTerms' || key === 'emptyBagItems') {
+            renderEmptyBagsPm(); renderPayment();
+        }
+        if (!intOf('purchaseOrderMasterId')) applyPortalDefaults(true);
+    } catch (e) { if (window.console) console.error(e); }
 }
 
 function viewRows(activity) {
@@ -347,7 +368,7 @@ function bindViewCombos() {
 /* GetCommissionAgentConfigurationsFromGlobalandBind (:1057-1093): each id is
    applied ONLY when > 0 - a zero means "not configured", and the control keeps
    whatever it has. Nothing is substituted. */
-function applyPortalDefaults() {
+function applyPortalDefaults(onlyEmpty) {
     var map = [
         ['commissionAgentId',   'cmbCommissionAgent'],
         ['commissionAccountId', 'cmbCommissionAc'],
@@ -361,7 +382,9 @@ function applyPortalDefaults() {
         var id = parseInt(portalDefaults[pair[0]], 10);
         if (id > 0) {
             var sel = $(pair[1]);
-            if (sel) sel.value = id;
+            if (sel && !(onlyEmpty && sel.value && sel.value !== '0')) {
+                if (Array.prototype.some.call(sel.options, function (o) { return o.value === String(id); })) sel.value = id;
+            }
         }
     });
     /* :686 - the form opens on Payment Term 2 when the list is non-empty and no
@@ -1073,12 +1096,19 @@ function renderEmptyBags() {
     });
 }
 
+/* AddRowInEmptyBagsPmGrid (frmSupplierOfferCmagt.cs:2276): Rows.Add(0, 0, 0); BindGrids adds it
+   whenever the table is empty (:1679-1682) and Delete re-adds it when the last row goes (:2355). */
+function blankEmptyBagPmRow() {
+    return { purchaseOrderEmptyBagDetailId: 0, entryTypeId: 2, PackingTypeId: 0, PackingType: '',
+             emptyBagPackingMaterialItemId: 0, EmptyBagItem: '', Rate: 0 };
+}
 function soAddEmptyBagPmRow() {
-    emptyBagPmRows.push({
-        purchaseOrderEmptyBagDetailId: 0, entryTypeId: 2,
-        PackingTypeId: 0, PackingType: '',
-        emptyBagPackingMaterialItemId: 0, EmptyBagItem: '', Rate: 0
-    });
+    emptyBagPmRows.push(blankEmptyBagPmRow());
+    renderEmptyBagsPm();
+}
+function soDeleteEmptyBagPmRow(i) {
+    emptyBagPmRows.splice(i, 1);
+    if (!emptyBagPmRows.length) emptyBagPmRows.push(blankEmptyBagPmRow());
     renderEmptyBagsPm();
 }
 
@@ -1089,10 +1119,7 @@ function renderEmptyBagsPm() {
     var body = $('grdEmptyBagsPmBody');
     if (!body) return;
     body.innerHTML = '';
-    if (!emptyBagPmRows.length) {
-        body.innerHTML = '<tr><td></td><td><button type="button" onclick="soAddEmptyBagPmRow()">+</button></td><td colspan="3"></td></tr>';
-        return;
-    }
+    if (!emptyBagPmRows.length) emptyBagPmRows.push(blankEmptyBagPmRow());
     var items = lookupData.emptyBagItems || [];
     emptyBagPmRows.forEach(function (r, i) {
         var itemOpts = '<option value="0">-- Select --</option>' + items.map(function (it) {
@@ -1102,7 +1129,7 @@ function renderEmptyBagsPm() {
         }).join('');
         var tr = document.createElement('tr');
         tr.innerHTML =
-            '<td><button type="button" class="danger" onclick="emptyBagPmRows.splice(' + i + ',1);renderEmptyBagsPm();">X</button></td>' +
+            '<td><button type="button" class="danger" onclick="soDeleteEmptyBagPmRow(' + i + ')">X</button></td>' +
             '<td><button type="button" onclick="soAddEmptyBagPmRow()">+</button></td>' +
             '<td><select onchange="emptyBagPmRows[' + i + '].PackingTypeId=parseInt(this.value,10)||0;emptyBagPmRows[' + i + '].PackingType=this.options[this.selectedIndex].textContent">' + viewComboOptions('AllocatedPackingType', r.PackingTypeId) + '</select></td>' +
             '<td><input type="number" step="0.001" value="' + (r.Rate || 0) + '" oninput="emptyBagPmRows[' + i + '].Rate=parseFloat(this.value)||0"></td>' +
@@ -1113,19 +1140,25 @@ function renderEmptyBagsPm() {
 
 /* -------------------------------------------------------- payment schedule */
 
+/* AddRowInPaymentGrid (:2417): Rows.Add(0, 0, 0, 0, 0) - term, due days, %, amount and base date
+   type all 0. BindGrids adds it when the table is empty (:1689-1692); Delete re-adds it (:2512). */
+function blankPaymentRow() {
+    return { purchaseOrderPaymentDetailId: 0, PaymentTermId: 0, PaymentTerm: '', DueDays: 0,
+             BaseDueDateTypeId: 0, DueDate: '', pctOfTotal: 0, dueAmount: 0 };
+}
 function soAddPaymentRow() {
-    paymentRows.push({
-        purchaseOrderPaymentDetailId: 0,
-        PaymentTermId: intOf('cmbPaymentTerm') || 0,
-        PaymentTerm: textOf('cmbPaymentTerm'),
-        DueDays: intOf('txtDueDays') || 0,
-        BaseDueDateTypeId: 1,
-        DueDate: '',
-        pctOfTotal: 0,
-        dueAmount: 0
-    });
-    recalcPaymentDueDate(paymentRows.length - 1);
+    paymentRows.push(blankPaymentRow());
     renderPayment();
+}
+function soDeletePaymentRow(i) {
+    paymentRows.splice(i, 1);
+    if (!paymentRows.length) paymentRows.push(blankPaymentRow());
+    renderPayment();
+}
+/* formvalidation / the payment loop treat a grid whose Amount sums to 0 as "no schedule" and fall
+   back to the header term - with the desktop's permanent blank row that is the normal case. */
+function paymentGridHasAmount() {
+    return paymentRows.reduce(function (s2, r) { return s2 + (+r.dueAmount || 0); }, 0) !== 0;
 }
 
 function paymentTermOptions(selectedId) {
@@ -1139,13 +1172,7 @@ function renderPayment() {
     var body = $('grdPaymentTermBody');
     if (!body) return;
     body.innerHTML = '';
-    if (!paymentRows.length) {
-        body.innerHTML = '<tr><td></td><td><button type="button" onclick="soAddPaymentRow()">+</button></td><td colspan="6"></td></tr>';
-        $('totPct').textContent = '0';
-        $('totDue').textContent = '0';
-        refreshScheduleDescription();
-        return;
-    }
+    if (!paymentRows.length) paymentRows.push(blankPaymentRow());
     var pct = 0, due = 0;
     paymentRows.forEach(function (r, i) {
         pct += +r.pctOfTotal || 0;
@@ -1155,7 +1182,7 @@ function renderPayment() {
         var editableDate = parseInt(r.BaseDueDateTypeId, 10) === 4;
         var tr = document.createElement('tr');
         tr.innerHTML =
-            '<td><button type="button" class="danger" onclick="paymentRows.splice(' + i + ',1);renderPayment();">X</button></td>' +
+            '<td><button type="button" class="danger" onclick="soDeletePaymentRow(' + i + ')">X</button></td>' +
             '<td><button type="button" onclick="soAddPaymentRow()">+</button></td>' +
             '<td><select onchange="paymentRows[' + i + '].PaymentTermId=parseInt(this.value,10)||0;paymentRows[' + i + '].PaymentTerm=this.options[this.selectedIndex].textContent;renderPayment()">' + paymentTermOptions(r.PaymentTermId) + '</select></td>' +
             '<td><input type="number" min="0" value="' + (r.DueDays || 0) + '" oninput="paymentRows[' + i + '].DueDays=parseInt(this.value,10)||0;recalcPaymentDueDate(' + i + ')"></td>' +
@@ -1571,7 +1598,7 @@ function soValidate() {
         if (!(pm.Rate > 0)) return 'Rate filed required In Empty bags Pm Grid...';
     }
 
-    for (var m = 0; m < paymentRows.length; m++) {
+    for (var m = 0; false && m < paymentRows.length; m++) {   /* grid branch never runs, see buildPaymentRows */
         if (!paymentRows[m].PaymentTermId) return 'Payment Term Required in row#' + (m + 1);
         if (parseInt(paymentRows[m].PaymentTermId, 10) === 2 && !(paymentRows[m].DueDays > 0)) {
             return 'Due Days Required In case Of Credit row in row#' + (m + 1);
@@ -1655,9 +1682,13 @@ function buildCommissionRows() {
 /* :3193-3207 - when the schedule grid is empty the desktop synthesizes ONE row
    from the header term: base type 1, due date = doc date + due days, 100%,
    amount = the detail TotalAmount sum. */
+/* frmPurchaseOrderCmagt.cs:3159 / frmSupplierOfferCmagt.cs:3206 sum a "TotalAmount" column the
+   payment grid does not have (dtPaymentTerm: PaymentTerm, DueDays, %OfTotal, Amount, BaseDateType,
+   DueDate), so the sum is 0 and the desktop ALWAYS saves the one synthesized row below - all 575
+   saved purchaseOrderPaymentDetail rows in the GoldenAceDb dump are single 100% / base-type-1 rows.
+   The schedule grid only decides whether a header term is demanded (formvalidation :2859/:2905).
+   The row is built even when no header term is chosen (PaymentTermId 0), as the desktop does. */
 function buildPaymentRows() {
-    if (paymentRows.length) return paymentRows;
-    if (!intOf('cmbPaymentTerm')) return [];
     var t = detailTotals();
     var doc = val('datDocDate');
     var due = '';
@@ -1774,6 +1805,7 @@ function buildPayload() {
         purchaseOrderEmptyBagDetailList: emptyBagRows.concat(pmRows),
         purchaseOrderCommissionDetailList: buildCommissionRows(),
         purchaseOrderPaymentDetailList: buildPaymentRows(),
+        paymentScheduleGridAmount: paymentRows.reduce(function (s2, r) { return s2 + (+r.dueAmount || 0); }, 0),
         supplierOfferBuyerInquiryMappingDetailList: mappings
     });
 }
@@ -1883,7 +1915,9 @@ function soLoad(id) {
             });
 
             seedExpenseRows();
-            seedEmptyBagRows();
+            if (!emptyBagRows.length) seedEmptyBagRows(); else renderEmptyBags();
+            if (!emptyBagPmRows.length) emptyBagPmRows.push(blankEmptyBagPmRow());
+            if (!paymentRows.length) paymentRows.push(blankPaymentRow());
             renderDetail();
             renderEmptyBagsPm();
             renderPayment();
@@ -2041,6 +2075,8 @@ function soNew() {
 
     applyPortalDefaults();
 
+    emptyBagPmRows = [blankEmptyBagPmRow()];
+    paymentRows = [blankPaymentRow()];
     seedExpenseRows();
     seedEmptyBagRows();
     renderDetail();
@@ -2271,13 +2307,17 @@ document.addEventListener('DOMContentLoaded', function () {
        clicked on another screen lands on the right document. */
     var wantId = new URLSearchParams(window.location.search).get('id');
 
-    setBusy(true);
-    loadLookups().finally(function () {
-        setBusy(false);
-        soNew();
-        soShowTab(null, 'tabDetail');
-        if (wantId) soLoad(parseInt(wantId, 10));
-    });
+    /* 20260930P: New runs at once and the lookups fill in as they arrive. The page used to stay
+       disabled with no Doc No / dates until EVERY lookup settled, so one unanswered endpoint left
+       the toolbar greyed out for good. */
+    try { soNew(); } catch (e) { if (window.console) console.error(e); }
+    try { soShowTab(null, 'tabDetail'); } catch (e) { if (window.console) console.error(e); }
+    loadLookups()
+        .catch(function (e) { message('Lookups failed: ' + (e && e.message ? e.message : e), true); })
+        .then(function () {
+            if (!intOf('purchaseOrderMasterId')) applyPortalDefaults(true);
+            if (wantId) soLoad(parseInt(wantId, 10));
+        });
 });
 
 /* History From/To: the desktop DateTimePickers (FromDateHistory / ToDateHistory) are never

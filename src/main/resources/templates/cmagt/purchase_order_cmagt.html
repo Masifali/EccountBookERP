@@ -17,7 +17,7 @@
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
     <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20260921a}"/>
-    <link rel="stylesheet" th:href="@{/build/css/cmagt_po1052.css?v=20260930Z}"/>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_po1052.css?v=20260930Q}"/>
 </head>
 <body class="cmagt po1052">
 
@@ -178,7 +178,7 @@ Start Date</label>
   <div id="tabDetail" class="po-tabpane ipane">
     <div class="teal strip"></div>
     <div class="grid-wrap" style="max-height:260px;">
-        <table id="grdDetail">
+        <table id="grdDetail" class="po-gx">
             <thead><tr>
                 <th style="width:26px;">X</th><th style="width:40px;">Edit</th>
                 <th>Parent Item</th><th>Item Name</th><th>Crop Year</th><th>Packing Type</th><th>Pack Uom</th>
@@ -194,6 +194,7 @@ Start Date</label>
             </tr></tfoot>
         </table>
     </div>
+    <div class="po-recnav" id="nav_det"></div>
     <!-- web-only record navigator kept hidden (the JS still maintains it); the desktop grid has none -->
     <div class="po-nav" style="display:none;">
         <button type="button" onclick="poNav('first')">&lt;|</button><button type="button" onclick="poNav('prev')">&lt;</button>
@@ -204,12 +205,13 @@ Start Date</label>
   <div id="tabExpense" class="po-tabpane ipane" style="display:none;">
     <div class="teal strip"></div>
     <div class="grid-wrap" style="max-height:260px;">
-        <table id="grdInvExp">
-            <thead><tr><th>Sale Order No</th><th>Item Id</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th><th>Remarks</th></tr></thead>
+        <table id="grdInvExp" class="po-gx">
+            <thead id="grdInvExpHead"><tr><th>Other Item Name</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th><th>Remarks</th></tr></thead>
             <tbody id="grdInvExpBody"></tbody>
-            <tfoot><tr><td colspan="4"></td><td id="totExpense" class="num">0</td><td></td></tr></tfoot>
+            <tfoot id="grdInvExpFoot"><tr><td></td><td class="num">0.00</td><td></td><td id="totExpense" class="num">0.00</td><td></td></tr></tfoot>
         </table>
     </div>
+    <div class="po-recnav" id="nav_exp"></div>
   </div>
   <div id="tabEmptyBags" class="po-tabpane ipane" style="display:none;">
     <!-- panel7: values 3 FOC / 1 Company Owned / 2 Bag Purchase / 4 Bag Return (:3005), FOC default -->
@@ -224,41 +226,45 @@ Start Date</label>
       <div style="width:520px;">
         <div class="whitehdr">Empty Bags Weight Deduction</div>
         <div class="grid-wrap" style="max-height:220px;">
-            <table id="grdEmptyBags"><thead><tr><th>Packing Type</th><th class="num">Weight Cut</th></tr></thead>
-            <tbody id="grdEmptyBagsBody"></tbody></table>
+            <table id="grdEmptyBags" class="po-gx"><thead id="grdEmptyBagsHead"><tr><th>Packing Type</th><th class="num">Weight Cut</th></tr></thead>
+            <tbody id="grdEmptyBagsBody"></tbody><tfoot id="grdEmptyBagsFoot"></tfoot></table>
         </div>
+        <div class="po-recnav" id="nav_eb"></div>
       </div>
       <div style="width:552px;">
-        <div class="whitehdr">Empty Bags Purchase Rate <button type="button" style="float:right;height:16px;font-size:10px;padding:0 5px;" onclick="poAddEmptyBagPmRow()" title="Add row">+</button></div>
+        <div class="whitehdr">Empty Bags Purchase Rate</div>
         <div class="grid-wrap" style="max-height:220px;">
-            <table id="grdEmptyBagsPm"><thead><tr><th style="width:26px;">X</th><th>Packing Type</th><th class="num">Purchase Rate</th><th>Empty Bag Item</th></tr></thead>
-            <tbody id="grdEmptyBagsPmBody"></tbody></table>
+            <table id="grdEmptyBagsPm" class="po-gx"><thead><tr><th class="gbtn">X</th><th class="gbtn">+</th><th>Packing Type</th><th class="num" style="width:120px;">Purchase Rate</th><th>Empty Bag Item</th></tr></thead>
+            <tbody id="grdEmptyBagsPmBody"></tbody><tfoot id="grdEmptyBagsPmFoot"></tfoot></table>
         </div>
+        <div class="po-recnav" id="nav_ebpm"></div>
       </div>
     </div>
   </div>
   <div id="tabPayment" class="po-tabpane ipane" style="display:none;">
-    <div class="teal strip"><span class="ylw">Add Single or Multi Payment Schedule</span><span style="flex:1"></span>
-        <button type="button" style="height:17px;font-size:10px;padding:0 5px;" onclick="poAddPaymentRow()" title="Add row">+</button></div>
+    <div class="teal strip"><span class="ylw">Add Single or Multi Payment Schedule</span></div>
     <div class="grid-wrap" style="max-height:260px;">
-        <table id="grdPaymentTerm">
-            <thead><tr><th style="width:26px;">X</th><th>Payment Term</th><th class="num">Due Days</th><th>Due Date</th><th>Base Date Type</th><th class="num">% Of Total</th><th class="num">Due Amount</th></tr></thead>
+        <table id="grdPaymentTerm" class="po-gx">
+            <thead><tr><th class="gbtn">X</th><th class="gbtn">+</th><th style="width:200px;">Payment Term</th><th class="num" style="width:80px;">Due Days</th><th class="num" style="width:100px;">%Of Total</th><th class="num" style="width:120px;">Amount</th><th style="width:150px;">Base Date Type</th><th style="width:130px;">Due Date</th></tr></thead>
             <tbody id="grdPaymentTermBody"></tbody>
-            <tfoot><tr><td colspan="5"></td><td id="totPct" class="num">0</td><td id="totDue" class="num">0</td></tr></tfoot>
+            <tfoot id="grdPaymentTermFoot"><tr><td colspan="4"></td><td id="totPct" class="num">0.00</td><td id="totDue" class="num">0.00</td><td colspan="2"></td></tr></tfoot>
         </table>
     </div>
+    <div class="po-recnav" id="nav_pay"></div>
   </div>
   <!-- panel17: Sale Order Mapping, docked under the tabs, always visible -->
   <div class="teal strip" style="height:23px;margin-top:3px;"><span class="ylw">Sale Order Mapping</span><span style="flex:1"></span>
       <button type="button" style="height:17px;font-size:10px;padding:0 5px;" onclick="poToggleFull('mapWrap')" title="Fullscreen">[ ]</button></div>
   <div class="grid-wrap" id="mapWrap" style="max-height:172px;background:#FFF;">
-    <table id="grdSaleOrderMapping">
+    <table id="grdSaleOrderMapping" class="po-gx">
         <thead><tr><th style="width:26px;">X</th><th>Sale Order No</th><th>Buyer Name</th><th>Item Name</th>
             <th class="num">Item Weight</th><th class="num">Booked Weight</th><th class="num">Balance Weight</th>
             <th class="num">Current Allocation Weight</th><th>Validity Date</th></tr></thead>
-        <tbody id="grdSaleOrderMappingBody"><tr><td colspan="9">No sale orders mapped. Use Load So.</td></tr></tbody>
+        <tbody id="grdSaleOrderMappingBody"></tbody>
+        <tfoot id="grdSaleOrderMappingFoot"></tfoot>
     </table>
   </div>
+  <div class="po-recnav" id="nav_map"></div>
 </div>
 <!-- tabHistory -->
 <div class="po-form main-pane" id="tabHistory" style="display:none;">
@@ -468,7 +474,7 @@ Agent</label>
     body.cmagt td.expiry-today { color:red; font-weight:700; }
     body.cmagt .map-alloc { width:110px; text-align:right; }
 </style>
-<script th:src="@{/build/js/countx_cmagt_purchase_order.js?v=20260930Z}"></script>
+<script th:src="@{/build/js/countx_cmagt_purchase_order.js?v=20260930Q}"></script>
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 <script th:src="@{/build/js/cmagt_session_defaults.js?v=20260930a}"></script>
