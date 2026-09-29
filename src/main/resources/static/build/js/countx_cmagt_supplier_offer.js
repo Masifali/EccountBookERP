@@ -70,14 +70,14 @@ var DOCUMENT_TYPE_ID = 1051;
 var LOOKUPS = [
     { key: 'companies',        url: LOOKUP + '/companies',         el: 'cmbCompany',         value: 'Id', text: 'CompName',      desktop: 'CompanyBind <- CommonServices.CompanyServiceBind() (:830)' },
     { key: 'branches',         url: LOOKUP + '/branches',          el: 'cmbBranch',          value: 'BranchId', text: 'BranchName', desktop: 'BranchesFill <- GetBranchsAllocatedToUser (:762)' },
-    { key: 'commissionAgents', url: LOOKUP + '/commission-agents', el: 'cmbCommissionAgent', value: 'Id', text: 'CompanyName',   desktop: 'SupplierBind(CmbCommissionAgent, dtSupplier) (:900)' },
-    { key: 'suppliers',        url: LOOKUP + '/suppliers',         el: 'cmbSupplierName',    value: 'Id', text: 'CompanyName',   desktop: 'SupplierBind(CmbSupplierName, dtSupplier) (:901)' },
-    { key: 'deliveryParties',  url: LOOKUP + '/suppliers',         el: 'cmbDeliveryToParty', value: 'Id', text: 'CompanyName',   desktop: 'SupplierBind(CmbDeliveryToParty, dtSupplier) (:902)' },
-    { key: 'shipToAddresses',  url: LOOKUP + '/ship-to-addresses', el: 'cmbShipToAddress',   value: 'Id', text: 'AddressLine1',  extra: ['SupplierCustomerId'], desktop: 'AllShipToAddress <- SupplierCustomerShipToAddress.GetAll_Combo (:1076)' },
+    { key: 'commissionAgents', url: LOOKUP + '/commission-agents', el: 'cmbCommissionAgent', alsoInto: ['cmbCommissionAgentHistory'], value: 'Id', text: 'CompanyName',   desktop: 'SupplierBind(CmbCommissionAgent, dtSupplier) (:900)' },
+    { key: 'suppliers',        url: LOOKUP + '/suppliers',         el: 'cmbSupplierName', alsoInto: ['cmbBuyerNameHistory'],    value: 'Id', text: 'CompanyName',   desktop: 'SupplierBind(CmbSupplierName, dtSupplier) (:901)' },
+    { key: 'deliveryParties',  url: LOOKUP + '/suppliers',         el: 'cmbDeliveryToParty', alsoInto: ['cmbDeliveryToPartyHistory'], value: 'Id', text: 'CompanyName',   desktop: 'SupplierBind(CmbDeliveryToParty, dtSupplier) (:902)' },
+    { key: 'shipToAddresses',  url: LOOKUP + '/ship-to-addresses', el: 'cmbShipToAddress', alsoInto: ['cmbDeliverToAddressHistory'],   value: 'Id', text: 'AddressLine1',  extra: ['SupplierCustomerId'], desktop: 'AllShipToAddress <- SupplierCustomerShipToAddress.GetAll_Combo (:1076)' },
     { key: 'deliveryTerms',    url: LOOKUP + '/delivery-terms',    el: 'cmbDeliveryTerm',    value: 'Id', text: 'Description',   desktop: 'DeliveryTermFill <- DeliveryTerm.FormHistory() (:1112)' },
     { key: 'paymentTerms',     url: LOOKUP + '/payment-terms',     el: 'cmbPaymentTerm',     value: 'Id', text: 'TermsDescription', desktop: 'PaymentTermsFill <- clsGlobalVariables.globalPaymentTerm (:1085)' },
-    { key: 'parentItems',      url: LOOKUP + '/parent-categories', el: 'cmbParentItem',      value: 'Id', text: 'InvParentCateDescription', desktop: 'ParentCategoryBindFromGlobal (:1124)' },
-    { key: 'items',            url: LOOKUP + '/items',             el: 'cmbItemName',        value: 'Id', text: 'ItemName',      extra: ['InventoryParentCategoriesId'], desktop: 'ItemdtFillFromGlobal / ItemNameBind (:1165/:1185)' },
+    { key: 'parentItems',      url: LOOKUP + '/parent-categories', el: 'cmbParentItem', alsoInto: ['cmbParentItemHistory'],      value: 'Id', text: 'InvParentCateDescription', desktop: 'ParentCategoryBindFromGlobal (:1124)' },
+    { key: 'items',            url: LOOKUP + '/items',             el: 'cmbItemName', alsoInto: ['cmbItemNameHistory'],        value: 'Id', text: 'ItemName',      extra: ['InventoryParentCategoriesId'], desktop: 'ItemdtFillFromGlobal / ItemNameBind (:1165/:1185)' },
     { key: 'cropYears',        url: LOOKUP + '/crop-years',        el: 'cmbCropYear',        value: 'Id', text: 'CropYear',      desktop: 'CropDtFillFromGlobalAndBind (:1203)' },
     { key: 'packingTypes',     url: LOOKUP + '/packing-types',     el: 'cmbPackingType',     value: 'Id', text: 'PackTypeDesc',  desktop: 'PackingTypeDtFillFromGlobalAndBind (:1218)' },
     /* CmbCommissionAc / CmbBrokeryAc are bound to the SAME party table as the other
@@ -195,8 +195,9 @@ function setBusy(on, btnId) {
     busy = !!on;
     var form = document.body;
     if (form) form.classList.toggle('is-busy', busy);
-    var ids = ['btnNew', 'btnRefresh', 'btnSave', 'btnUpdate', 'btnDelete',
-               'btnLoadInquiry', 'btnAttachments', 'btnPrint', 'btnHistory', 'btnAddDetail'];
+    var ids = ['btnNew', 'btnRefresh', 'btnSave', 'btnUpdate', 'btnSaveAs', 'btnDelete',
+               'btnLoadInquiry', 'btnAttachments', 'btnPrint', 'btnHistory', 'btnAddDetail',
+               'btnshow', 'btnNewHistory', 'btnRefreshHistory'];
     ids.forEach(function (id) {
         var b = $(id);
         if (!b) return;
@@ -865,7 +866,7 @@ function renderDetail() {
     if (!body) return;
     body.innerHTML = '';
     if (!detailRows.length) {
-        body.innerHTML = '<tr><td colspan="17">No detail rows. Fill the entry row above and press +.</td></tr>';
+        body.innerHTML = '';
     } else {
         detailRows.forEach(function (r, i) {
             var tr = document.createElement('tr');
@@ -1056,22 +1057,18 @@ function renderEmptyBags() {
     if (!body) return;
     body.innerHTML = '';
     if (!emptyBagRows.length) {
-        body.innerHTML = '<tr><td colspan="3">No packing types configured (AllocatedPackingType).</td></tr>';
+        body.innerHTML = '<tr><td colspan="2">No packing types configured (AllocatedPackingType).</td></tr>';
         return;
     }
     var foc = ebTermId() === 3;
     emptyBagRows.forEach(function (r, i) {
         var range = packingTypeRange(r.PackingTypeId);
         var tr = document.createElement('tr');
+        var tip = foc ? '' : (range ? (fmt(range.min) + ' to ' + fmt(range.max) + ' (' + range.name + ')') : '');
         tr.innerHTML =
             '<td>' + esc(r.PackingType) + '</td>' +
-            '<td><input type="number" step="0.001" value="' + (r.weightCutKg || 0) + '" ' +
-                 'oninput="emptyBagRows[' + i + '].weightCutKg=parseFloat(this.value)||0"></td>' +
-            '<td style="font-size:11px;color:#5B6A69;">' +
-                (foc ? 'not validated under the FOC term'
-                     : (range ? (fmt(range.min) + ' to ' + fmt(range.max) + ' (' + esc(range.name) + ')')
-                              : 'no range configured')) +
-            '</td>';
+            '<td><input type="number" step="0.001" title="' + esc(tip) + '" value="' + (r.weightCutKg || 0) + '" ' +
+                 'oninput="emptyBagRows[' + i + '].weightCutKg=parseFloat(this.value)||0"></td>';
         body.appendChild(tr);
     });
 }
@@ -1093,7 +1090,7 @@ function renderEmptyBagsPm() {
     if (!body) return;
     body.innerHTML = '';
     if (!emptyBagPmRows.length) {
-        body.innerHTML = '<tr><td colspan="4">No packing-material rate rows.</td></tr>';
+        body.innerHTML = '<tr><td></td><td><button type="button" onclick="soAddEmptyBagPmRow()">+</button></td><td colspan="3"></td></tr>';
         return;
     }
     var items = lookupData.emptyBagItems || [];
@@ -1106,9 +1103,10 @@ function renderEmptyBagsPm() {
         var tr = document.createElement('tr');
         tr.innerHTML =
             '<td><button type="button" class="danger" onclick="emptyBagPmRows.splice(' + i + ',1);renderEmptyBagsPm();">X</button></td>' +
+            '<td><button type="button" onclick="soAddEmptyBagPmRow()">+</button></td>' +
             '<td><select onchange="emptyBagPmRows[' + i + '].PackingTypeId=parseInt(this.value,10)||0;emptyBagPmRows[' + i + '].PackingType=this.options[this.selectedIndex].textContent">' + viewComboOptions('AllocatedPackingType', r.PackingTypeId) + '</select></td>' +
-            '<td><select onchange="emptyBagPmRows[' + i + '].emptyBagPackingMaterialItemId=parseInt(this.value,10)||0;emptyBagPmRows[' + i + '].EmptyBagItem=this.options[this.selectedIndex].textContent">' + itemOpts + '</select></td>' +
-            '<td><input type="number" step="0.001" value="' + (r.Rate || 0) + '" oninput="emptyBagPmRows[' + i + '].Rate=parseFloat(this.value)||0"></td>';
+            '<td><input type="number" step="0.001" value="' + (r.Rate || 0) + '" oninput="emptyBagPmRows[' + i + '].Rate=parseFloat(this.value)||0"></td>' +
+            '<td><select onchange="emptyBagPmRows[' + i + '].emptyBagPackingMaterialItemId=parseInt(this.value,10)||0;emptyBagPmRows[' + i + '].EmptyBagItem=this.options[this.selectedIndex].textContent">' + itemOpts + '</select></td>';
         body.appendChild(tr);
     });
 }
@@ -1142,8 +1140,7 @@ function renderPayment() {
     if (!body) return;
     body.innerHTML = '';
     if (!paymentRows.length) {
-        body.innerHTML = '<tr><td colspan="7">No schedule rows. One 100% row is synthesized from the '
-                       + 'header Payment Term at save time, as the desktop does (:3193).</td></tr>';
+        body.innerHTML = '<tr><td></td><td><button type="button" onclick="soAddPaymentRow()">+</button></td><td colspan="6"></td></tr>';
         $('totPct').textContent = '0';
         $('totDue').textContent = '0';
         refreshScheduleDescription();
@@ -1159,12 +1156,13 @@ function renderPayment() {
         var tr = document.createElement('tr');
         tr.innerHTML =
             '<td><button type="button" class="danger" onclick="paymentRows.splice(' + i + ',1);renderPayment();">X</button></td>' +
+            '<td><button type="button" onclick="soAddPaymentRow()">+</button></td>' +
             '<td><select onchange="paymentRows[' + i + '].PaymentTermId=parseInt(this.value,10)||0;paymentRows[' + i + '].PaymentTerm=this.options[this.selectedIndex].textContent;renderPayment()">' + paymentTermOptions(r.PaymentTermId) + '</select></td>' +
             '<td><input type="number" min="0" value="' + (r.DueDays || 0) + '" oninput="paymentRows[' + i + '].DueDays=parseInt(this.value,10)||0;recalcPaymentDueDate(' + i + ')"></td>' +
-            '<td><select onchange="paymentRows[' + i + '].BaseDueDateTypeId=parseInt(this.value,10)||0;recalcPaymentDueDate(' + i + ');renderPayment()">' + viewComboOptions('PaymentBaseDate', r.BaseDueDateTypeId) + '</select></td>' +
-            '<td><input type="date" value="' + esc((r.DueDate || '').slice(0, 10)) + '"' + (editableDate ? '' : ' readonly') + ' onchange="paymentRows[' + i + '].DueDate=this.value"></td>' +
             '<td><input type="number" step="0.0001" value="' + (r.pctOfTotal || 0) + '" oninput="paymentRows[' + i + '].pctOfTotal=parseFloat(this.value)||0;paymentAmountReCalculate()"></td>' +
-            '<td><input type="number" step="0.001" value="' + (r.dueAmount || 0) + '" oninput="paymentRows[' + i + '].dueAmount=parseFloat(this.value)||0;renderPaymentTotals()"></td>';
+            '<td><input type="number" step="0.001" value="' + (r.dueAmount || 0) + '" oninput="paymentRows[' + i + '].dueAmount=parseFloat(this.value)||0;renderPaymentTotals()"></td>' +
+            '<td><select onchange="paymentRows[' + i + '].BaseDueDateTypeId=parseInt(this.value,10)||0;recalcPaymentDueDate(' + i + ');renderPayment()">' + viewComboOptions('PaymentBaseDate', r.BaseDueDateTypeId) + '</select></td>' +
+            '<td><input type="date" value="' + esc((r.DueDate || '').slice(0, 10)) + '"' + (editableDate ? '' : ' readonly') + ' onchange="paymentRows[' + i + '].DueDate=this.value"></td>';
         body.appendChild(tr);
     });
     $('totPct').textContent = fmt(pct);
@@ -1237,7 +1235,7 @@ function renderInquiryMapping() {
     if (!body) return;
     body.innerHTML = '';
     if (!inquiryMappings.length) {
-        body.innerHTML = '<tr><td colspan="8">No buyer inquiries mapped. Use Load Inquiry.</td></tr>';
+        body.innerHTML = '';
         return;
     }
     inquiryMappings.forEach(function (r, i) {
@@ -1283,8 +1281,11 @@ function soMappingWeightChanged(i, box) {
 function soDeleteMapping(i) {
     var r = inquiryMappings[i];
     if (!r) return;
-    if (r.SupplierOfferBuyerInquiryMappingDetailId > 0) {
+    /* DeleteSoMappingRow (:2690-2718): an UNSAVED row (Id == 0) asks "Are you sure to Delete?";
+       a saved row is queued with actionTypeId 3 and removed without a prompt. */
+    if (!(r.SupplierOfferBuyerInquiryMappingDetailId > 0)) {
         if (!confirm('Are you sure to Delete?')) return;
+    } else {
         var gone = Object.assign({}, r);
         gone.actionTypeId = 3;
         removedMappings.push(gone);
@@ -1306,10 +1307,210 @@ function soOpenInquiry(i) {
    here: a typed number would not create that link, and Insert():3233-3239
    refuses a row whose ids are zero. */
 function soLoadInquiry() {
-    message('The Buyer Inquiry picker for this screen is not built yet. The desktop opens '
-          + 'frmBuyerInquiryLoaderForOffer and stores real inquiryBookingMasterId / '
-          + 'inquiryBookingDetailId values - typing a document number would not create that '
-          + 'link, so nothing is fabricated here.', true);
+    if (busy || !soGuard('inqopen')) return;
+    setBusy(true, 'btnLoadInquiry');
+    /* frmBuyerInquiryLoaderForOffer InitializeComponentMethod (:129-150): combos + pending rows;
+       FromDate = today - 7, ToDate = today. btnLoadSo_Click (:4713-4750) pre-sets Delivery To
+       Party and Ship To Address (combo text, else the free-text box). */
+    var from = new Date(); from.setDate(from.getDate() - 7);
+    $('inqFromDate').value = ymd(from);
+    $('inqToDate').value = ymd(new Date());
+    $('inqDocNoFrom').value = ''; $('inqDocNoTo').value = '';
+    soInqCombos().then(function () {
+        var dp = intOf('cmbDeliveryToParty');
+        if (dp > 0) setSel('inqDeliveryToParty', dp);
+        var ship = intOf('cmbShipToAddress') > 0 ? textOf('cmbShipToAddress') : '';
+        if (!ship) ship = (val('txtShipToAddress') || '').trim();
+        if (ship) setSelByText('inqShipToAddress', ship);
+        $('inqLoader').style.display = '';
+        return soInqFetch();
+    }).catch(function (e) { message('Error occurred during database call: ' + e.message, true); })
+      .finally(function () { setBusy(false); soRelease('inqopen'); });
+}
+
+var inqRows = [];
+
+function setSel(id, v) {
+    var s = $(id); if (!s) return;
+    s.value = String(v);
+    if (window.CountxDesktopCombo && window.CountxDesktopCombo.refresh) window.CountxDesktopCombo.refresh(s);
+}
+function setSelByText(id, text) {
+    var s = $(id); if (!s) return;
+    for (var k = 0; k < s.options.length; k++) {
+        if (s.options[k].textContent === text) { setSel(id, s.options[k].value); return; }
+    }
+    /* the desktop sets the combo TEXT even when no row matches, and sends that text */
+    var o = document.createElement('option'); o.value = '-1'; o.textContent = text; s.appendChild(o);
+    setSel(id, '-1');
+}
+
+/* CombosFill (:179-259): one result set split by Activity, de-duplicated by Id
+   (DeliverToAddress by Id|Name). */
+function soInqCombos() {
+    return getJson(API + '/inquiry-loader/combos').then(function (rows) {
+        var map = { CommissionAgent: 'inqCommissionAgent', buyerName: 'inqBuyer', Item: 'inqItem',
+                    DeliveryToParty: 'inqDeliveryToParty', DeliverToAddress: 'inqShipToAddress' };
+        Object.keys(map).forEach(function (act) {
+            var seen = {}, out = [];
+            (rows || []).forEach(function (r) {
+                if (r.Activity !== act) return;
+                var key = act === 'DeliverToAddress' ? (r.Id + '|' + r.ReferenceName) : String(r.Id);
+                if (seen[key]) return; seen[key] = 1;
+                out.push({ Id: r.Id, Name: r.ReferenceName });
+            });
+            fillSelect(map[act], out, 'Id', 'Name');
+        });
+    });
+}
+
+function inqBtn(id, on) { var b = $(id); if (!b) return; b.disabled = on; b.classList.toggle('btn-busy', on); }
+
+function soInqRefreshCombos() {           /* btnRefresh_Click (:461) */
+    if (!soGuard('inqrefresh')) return;
+    inqBtn('btnInqRefresh', true);
+    soInqCombos().catch(function (e) { alert(e.message); })
+        .finally(function () { inqBtn('btnInqRefresh', false); soRelease('inqrefresh'); });
+}
+
+function soInqClose() { $('inqLoader').style.display = 'none'; }
+
+/* PendingDataDbCall (:274-302) */
+function soInqFetch() {
+    var shipSel = $('inqShipToAddress');
+    var ship = (shipSel && shipSel.value && shipSel.value !== '0' && shipSel.selectedIndex >= 0)
+        ? shipSel.options[shipSel.selectedIndex].textContent : '';
+    var body = {
+        fromDate: val('inqFromDate'), toDate: val('inqToDate'),
+        fromDocNo: parseInt(val('inqDocNoFrom'), 10) || 0,
+        toDocNo: parseInt(val('inqDocNoTo'), 10) || 0,
+        commissionAgentId: intOf('inqCommissionAgent'), buyerId: intOf('inqBuyer'),
+        itemId: intOf('inqItem'), deliveryToPartyId: Math.max(0, intOf('inqDeliveryToParty')),
+        shipToAddress: ship
+    };
+    return fetch(API + '/inquiry-loader/pending', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(body)
+    }).then(function (r) {
+        return r.text().then(function (t) {
+            var d; try { d = JSON.parse(t); } catch (e) { d = { message: t }; }
+            if (!r.ok) throw new Error(d.message || d.error || (r.status + ' ' + r.statusText));
+            return d;
+        });
+    }).then(function (rows) { inqRows = rows || []; soInqRender(); });
+}
+
+function soInqSearch() {                 /* btngrnlod_Click (:261) */
+    if (!soGuard('inqsearch')) return;
+    inqBtn('btnInqLoad', true);
+    soInqFetch().catch(function (e) { alert(e.message); })
+        .finally(function () { inqBtn('btnInqLoad', false); soRelease('inqsearch'); });
+}
+
+/* btnReset_Click (:443): FromDate = active year start, clear doc nos and buyer, reload. */
+function soInqReset() {
+    var ys = portalDefaults.financialYearStart || portalDefaults.yearStart || portalDefaults.startPeriod;
+    if (ys) $('inqFromDate').value = String(ys).slice(0, 10);
+    $('inqDocNoFrom').value = ''; $('inqDocNoTo').value = '';
+    setSel('inqBuyer', 0);
+    soInqSearch();
+}
+
+/* GrdDataBind/grdSettings (:304-424): visible columns in the desktop order (ids hidden). */
+var INQ_COLS = [
+    ['inquiryBookingNo', 'inquiryBookingNo'], ['inquiryBookingDate', 'inquiryBookingDate', 'd'],
+    ['CommissionAgentName', 'CommissionAgentName'], ['DeliveryToPartyName', 'DeliveryToPartyName'],
+    ['ShipToAddress', 'ShipToAddress'], ['BuyerName', 'BuyerName'],
+    ['inventoryParentCategory', 'inventoryParentCategory'], ['ItemName', 'ItemName'], ['ItemCode', 'ItemCode'],
+    ['PackUom', 'PackUomCode'], ['cropYear', 'cropYear'], ['PackingType', 'PackingType'],
+    ['itemQty', 'itemQty', 'n'], ['QtyUsedInOffer', 'QtyUsedInOffer', 'n'], ['BalanceQty', 'BalanceQty', 'n'],
+    ['itemWeight', 'itemWeight', 'n'], ['WeightUsedInOffer', 'WeightUsedInOffer', 'n'], ['BalanceWeight', 'BalanceWeight', 'n'],
+    ['buyerRate', 'buyerRate', 'n'], ['supplierRate', 'supplierRate', 'n'], ['RateUom', 'RateUomCode'],
+    ['buyerAmount', 'buyerAmount', 'n'], ['SupplierAmount', 'SupplierAmount', 'n'],
+    ['AmountUsedInOffer', 'AmountUsedInOffer', 'n'], ['BalanceAmount', 'BalanceAmount', 'n'],
+    ['EntryDate', 'EntryDate', 't'], ['EntryUserName', 'EntryUserName'], ['ModifyDate', 'ModifyDate', 't'],
+    ['ModifyUserName', 'ModifyUserName'], ['ApprovedDate', 'ApprovedDate', 't'], ['IsApproved', 'IsApproved', 'b'],
+    ['ApprovalUserName', 'ApprovalUserName'], ['NoOfAttachments', 'NoOfAttachments']
+];
+var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* dd-MMM-yyyy [hh:mm tt], parsed from the server's local text - never through UTC */
+function fmtDesktopDate(v, withTime) {
+    if (v === null || v === undefined || v === '') return '';
+    var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
+    if (!m) return String(v);
+    var out = m[3] + '-' + MON[+m[2] - 1] + '-' + m[1];
+    if (withTime && m[4] !== undefined) {
+        var h = +m[4], ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+        out += ' ' + ('0' + h).slice(-2) + ':' + m[5] + ' ' + ap;
+    }
+    return out;
+}
+function soInqRender() {
+    var head = $('grdInqLoaderHead'), body = $('grdInqLoaderBody');
+    head.innerHTML = '<tr><th style="width:30px;"><input type="checkbox" onclick="soInqCheckAll(this)"></th>'
+        + INQ_COLS.map(function (c) { return '<th>' + esc(c[0]) + '</th>'; }).join('') + '</tr>';
+    if (!inqRows.length) {
+        body.innerHTML = '<tr><td colspan="' + (INQ_COLS.length + 1) + '">No pending inquiries.</td></tr>';
+        return;
+    }
+    body.innerHTML = inqRows.map(function (r, i) {
+        return '<tr><td><input type="checkbox" class="inq-chk" data-i="' + i + '"></td>' + INQ_COLS.map(function (c) {
+            var v = r[c[1]];
+            if (c[2] === 'n') return '<td style="text-align:right;">' + fmt(+v || 0) + '</td>';
+            if (c[2] === 'd') return '<td>' + esc(fmtDesktopDate(v, false)) + '</td>';
+            if (c[2] === 't') return '<td>' + esc(fmtDesktopDate(v, true)) + '</td>';
+            if (c[2] === 'b') return '<td><input type="checkbox" disabled' + ((v === true || v === 1) ? ' checked' : '') + '></td>';
+            return '<td>' + esc(v === null || v === undefined ? '' : v) + '</td>';
+        }).join('') + '</tr>';
+    }).join('');
+}
+function soInqCheckAll(cb) {
+    Array.prototype.forEach.call(document.querySelectorAll('#grdInqLoaderBody .inq-chk'),
+        function (c) { c.checked = cb.checked; });
+}
+
+/* btnLoadOnInvoice_Click_1 (:473-522) + LoadInGridDetail (:4760-4799). */
+function soInqLoadOnOffer() {
+    var checked = Array.prototype.filter.call(document.querySelectorAll('#grdInqLoaderBody .inq-chk'),
+        function (c) { return c.checked; }).map(function (c) { return inqRows[+c.dataset.i]; });
+    if (!checked.length) { alert('Check the row first'); return; }
+    /* btnLoadSo_Click (:4724-4742): once the offer has detail rows, only those items may be picked */
+    var allowed = {}, names = [];
+    detailRows.forEach(function (d) {
+        var id = +d.itemId || +d.ItemId || 0;
+        if (id && !allowed[id]) { allowed[id] = 1; names.push(rowItemName(d)); }
+    });
+    if (names.length) {
+        for (var k = 0; k < checked.length; k++) {
+            if (!allowed[+checked[k].itemId]) {
+                alert('Sorry! You can only check rows having these Item(s):\n' + names.join(', '));
+                return;
+            }
+        }
+    }
+    var existing = {};
+    inquiryMappings.forEach(function (m) { existing[+m.inquiryBookingDetailId] = 1; });
+    checked.forEach(function (dr) {
+        var det = +dr.DetailId;
+        if (existing[det]) return;                       /* existingDetailIds.Add */
+        existing[det] = 1;
+        inquiryMappings.push({
+            SupplierOfferBuyerInquiryMappingDetailId: 0,
+            inquiryBookingMasterId: dr.inquiryBookingMasterId,
+            inquiryBookingDetailId: det,
+            inquiryNo: dr.inquiryBookingNo,
+            buyerId: dr.buyerId,
+            buyerName: dr.BuyerName,
+            itemId: dr.itemId,
+            itemName: dr.ItemName,
+            itemWeight: dr.itemWeight,
+            bookedWeight: dr.WeightUsedInOffer,
+            balanceWeight: dr.BalanceWeight,
+            itemNetWeight: dr.BalanceWeight              /* CurrentAllocationWeight = BalanceWeight */
+        });
+    });
+    soInqClose();
+    renderInquiryMapping();
 }
 
 /* -------------------------------------------------------------- validation */
@@ -1576,7 +1777,7 @@ function buildPayload() {
     });
 }
 
-function soSave() {
+function soSave(btnOverride) {
     if (busy || !soGuard('save')) return;
     var err = soValidate();
     if (err) { message(err, true); soRelease('save'); return; }
@@ -1586,7 +1787,7 @@ function soSave() {
         soRelease('save');
         return;
     }
-    setBusy(true, isUpdate ? 'btnUpdate' : 'btnSave');
+    setBusy(true, btnOverride || (isUpdate ? 'btnUpdate' : 'btnSave'));
     fetch(API + '/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1609,10 +1810,24 @@ function soSave() {
         .finally(function () { setBusy(false); soRelease('save'); });
 }
 
+/* btnSaveAs_Click (:3379-3389): RecId = 0; Insert(). The loaded document is saved as a NEW
+   one; its child rows are sent as inserts (buildPayload zeroes line ids when the header id is 0)
+   and nothing is deleted from the source document. */
+function soSaveAs() {
+    if (busy) return;
+    var keepId = $('purchaseOrderMasterId').value;
+    $('purchaseOrderMasterId').value = 0;
+    var err = soValidate();
+    if (err) { $('purchaseOrderMasterId').value = keepId; message(err, true); return; }
+    inquiryMappings.forEach(function (m) { m.SupplierOfferBuyerInquiryMappingDetailId = 0; });
+    removedDetailRows = []; removedMappings = [];
+    soSave('btnSaveAs');
+}
+
 function soLoad(id) {
-    if (!id) return;
+    if (!id) return Promise.resolve();
     setBusy(true);
-    getJson(API + '/' + id)
+    return getJson(API + '/' + id)
         .then(function (res) {
             var so = (res && res.data) ? res.data : res;
             if (!so || (res && res.status === 'ERROR')) { message('Record Not Found', true); return; }
@@ -1674,9 +1889,9 @@ function soLoad(id) {
             renderInquiryMapping();
             soEbTermChanged();
 
-            $('btnUpdate').disabled = false;
-            $('btnDelete').disabled = false;
-            $('btnSave').disabled = true;
+            /* ReadById (:3435-3439): tab Form; Save + SaveAs hidden, Update + Delete visible. */
+            soMainTab(null, 'pageForm');
+            soButtons('edit');
             message('Loaded document ' + (so.docNo || id));
         })
         .catch(function (e) { message('Load failed: ' + e.message, true); })
@@ -1709,35 +1924,86 @@ function soDelete() {
 
 /* FormHistory - the same columns the desktop's grdHistory shows. The Doc No is
    a link that loads that record, per the cross-cutting rule. */
+function soToggleHistFilters() {
+    var f = $('histFilters'); f.style.display = f.style.display === 'none' ? '' : 'none';
+}
+
+/* btnHistory (:3968-4041): the checked date radio routes From/To (Doc -> FromDate/ToDate,
+   Entry -> EntryFromDate/EntryToDate, Modify -> ModifyFromDate/ModifyToDate); each picker is
+   sent only when its check box is on. Validity pickers are unchecked by default (blank). */
+function historyPayload() {
+    var mode = (document.querySelector('input[name="histDateMode"]:checked') || {}).value || 'doc';
+    var from = $('chkHistFrom').checked ? val('histFromDate') : '';
+    var to   = $('chkHistTo').checked   ? val('histToDate')   : '';
+    var p = {};
+    if (mode === 'doc')    { p.fromDate = from; p.toDate = to; }
+    if (mode === 'entry')  { p.EntryFromDate = from; p.EntryToDate = to; }
+    if (mode === 'modify') { p.ModifyFromDate = from; p.ModifyToDate = to; }
+    p.ValidityDateFrom = val('histValidityFrom');
+    p.ValidityDateTo   = val('histValidityTo');
+    var pi = intOf('cmbParentItemHistory');
+    p.ParentItemIds = pi > 0 ? pi + ',' : '';               /* ParentIds "id," list */
+    p.ItemId            = intOf('cmbItemNameHistory');
+    p.CommissionAgentId = intOf('cmbCommissionAgentHistory');
+    p.SupplierId        = intOf('cmbBuyerNameHistory');
+    p.DeliveryToPartyId = intOf('cmbDeliveryToPartyHistory');
+    p.ShipToAddress     = intOf('cmbDeliverToAddressHistory') > 0 ? textOf('cmbDeliverToAddressHistory') : '';
+    return p;
+}
+
 function soLoadHistory() {
     if (busy || !soGuard('history')) return;
-    setBusy(true, 'btnHistory');
-    $('wrapHistory').style.display = '';
-    var q = '?fromDate=' + encodeURIComponent(val('histFromDate'))
-          + '&toDate=' + encodeURIComponent(val('histToDate'));
-    getJson(API + '/history' + q)
+    setBusy(true, 'btnshow');
+    fetch(API + '/history', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(historyPayload())
+    })
+        .then(function (r) {
+            return r.text().then(function (t) {
+                var d; try { d = JSON.parse(t); } catch (e) { d = { message: t }; }
+                if (!r.ok) throw new Error(d.message || d.error || (r.status + ' ' + r.statusText));
+                return d;
+            });
+        })
         .then(function (rows) {
             var body = $('grdHistoryBody');
             body.innerHTML = '';
             if (!rows || !rows.length) {
-                body.innerHTML = '<tr><td colspan="8">No documents in this range.</td></tr>';
+                body.innerHTML = '<tr><td colspan="20">No documents in this range.</td></tr>';
                 return;
             }
+            function g(r, a, b) { var v = r[a]; if (v === undefined || v === null) v = r[b]; return (v === undefined || v === null) ? '' : v; }
+            function dd(v) { return fmtDesktopDate(v, false); }
+            function dt(v) { return fmtDesktopDate(v, true); }
+            /* dt2 columns (:4045-4062) */
             rows.forEach(function (r) {
-                var id = r.purchaseOrderMasterId || r.PurchaseOrderMasterId || r.Id;
-                var docNo = r.docNo || r.DocNo || '';
+                var id = +g(r, 'purchaseOrderMasterId', 'PurchaseOrderMasterId') || 0;
+                var wht = g(r, 'isWhtApplied', 'IsWhtApplied');
                 var tr = document.createElement('tr');
                 tr.style.cursor = 'pointer';
-                tr.ondblclick = function () { soLoad(id); };
+                tr.ondblclick = function () { soLoad(id); };                       /* grdHistory_DoubleClick :4177 */
+                tr.onclick = function () { soHistSelect(id, tr); };                /* grdHistory_SelectionChanged :4241 */
                 tr.innerHTML =
-                    '<td><a href="#" class="doc-code" onclick="event.preventDefault();soLoad(' + id + ')">' + esc(docNo) + '</a></td>' +
-                    '<td>' + esc(String(r.docDate || r.DocDate || '').slice(0, 10)) + '</td>' +
-                    '<td>' + esc(r.SupplierName || r.supplierName || '') + '</td>' +
-                    '<td>' + esc(r.CommissionAgentName || r.commissionAgentName || '') + '</td>' +
-                    '<td>' + esc(r.DeliveryToPartyName || r.DeliveryToParty || r.deliveryToParty || '') + '</td>' +
-                    '<td>' + esc(String(r.ValidityDate || r.validityDate || '').slice(0, 10)) + '</td>' +
-                    '<td>' + esc(r.status || r.Status || '') + '</td>' +
-                    '<td>' + esc(r.EntryUserName || r.entryUserName || '') + '</td>';
+                    '<td><button type="button" onclick="event.stopPropagation();soLoad(' + id + ')">Edit</button></td>' +
+                    '<td><a href="#" class="doc-code" onclick="event.preventDefault();event.stopPropagation();soLoad(' + id + ')">' + esc(g(r, 'docNo', 'DocNo')) + '</a></td>' +
+                    '<td><button type="button" onclick="event.stopPropagation();soHistSaveAs(' + id + ')">SaveAs</button></td>' +
+                    '<td><button type="button" onclick="event.stopPropagation();soHistPrint(' + id + ')">Print</button></td>' +
+                    '<td>' + esc(dd(g(r, 'docDate', 'DocDate'))) + '</td>' +
+                    '<td>' + esc(g(r, 'CommissionAgentName', 'commissionAgentName')) + '</td>' +
+                    '<td>' + esc(g(r, 'SupplierName', 'supplierName')) + '</td>' +
+                    '<td>' + esc(g(r, 'DeliveryToPartyName', 'deliveryToPartyName')) + '</td>' +
+                    '<td>' + esc(g(r, 'ShipToAddress', 'shipToAddress')) + '</td>' +
+                    '<td>' + esc(g(r, 'DeliveryTerm', 'deliveryTerm')) + '</td>' +
+                    '<td>' + esc(dd(g(r, 'deliveryStartDate', 'DeliveryStartDate'))) + '</td>' +
+                    '<td style="text-align:right;">' + (+g(r, 'deliveryDays', 'DeliveryDays') || 0) + '</td>' +
+                    '<td>' + esc(dd(g(r, 'ValidityDate', 'validityDate'))) + '</td>' +
+                    '<td><input type="checkbox" disabled' + ((wht === true || wht === 1) ? ' checked' : '') + '></td>' +
+                    '<td>' + esc(g(r, 'Status', 'status')) + '</td>' +
+                    '<td>' + esc(g(r, 'EntryUserName', 'entryUserName')) + '</td>' +
+                    '<td>' + esc(dt(g(r, 'EntryDate', 'entryDate'))) + '</td>' +
+                    '<td>' + esc(g(r, 'ModifyUserName', 'modifyUserName')) + '</td>' +
+                    '<td>' + esc(dt(g(r, 'ModifyDate', 'modifyDate'))) + '</td>' +
+                    '<td style="text-align:right;">' + (+g(r, 'NoOfAttachments', 'noOfAttachments') || 0) + '</td>';
                 body.appendChild(tr);
             });
         })
@@ -1782,10 +2048,7 @@ function soNew() {
     renderInquiryMapping();
     soEbTermChanged();
 
-    $('btnSave').disabled = false;
-    $('btnUpdate').disabled = true;
-    $('btnDelete').disabled = true;
-    $('wrapHistory').style.display = 'none';
+    soButtons('new');                                                  /* Reset :2773-2776 */
     message('');
 
     getJson(API + '/generate-no')
@@ -1817,9 +2080,12 @@ function soPrint() {
     window.print();
 }
 
+/* BtnAddShiptoAddress_Click (:4801-4811) opens SupfrmShipToAddress as a dialog; the desktop does
+   not rebind the combo afterwards. The web's ship-to address maintenance lives on the party
+   (Supplier) definition page, opened in its own tab; press Refresh here to re-read addresses. */
 function soAddShipToAddress() {
-    message('Defining a new ship-to address (BtnAddShiptoAddress_Click, :4801) is not built on '
-          + 'this screen yet.', true);
+    window.open('/accounts/supplier', '_blank');
+    message('Ship-to addresses are maintained on the Supplier definition (ShipToAddress). Press Refresh after saving.');
 }
 
 /* RadBusinessName_CheckedChanged (:929) - re-bind what the party combos DISPLAY.
@@ -1890,3 +2156,114 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', seed); else seed();
 })();
+
+
+/* ================= 2026-09-30 GUI parity: tabControl1, button visibility, history children ================= */
+
+/* tabControl1 [Form | History]. */
+function soMainTab(ev, id) {
+    if (ev) ev.preventDefault();
+    ['pageForm', 'pageHistory'].forEach(function (p) { var e = $(p); if (e) e.style.display = (p === id) ? '' : 'none'; });
+    Array.prototype.forEach.call(document.querySelectorAll('#soMainTabs a'), function (a) {
+        a.classList.toggle('active', a.dataset.page === id);
+    });
+}
+
+/* Desktop toggles Visible (not Enabled) on the toolbar buttons:
+   new  - Reset (:2773): Save only;  edit - ReadById (:3436): Update + Delete;
+   saveas - DataGridHistory_SaveAs (:4158): SaveAs only. */
+function soButtons(mode) {
+    function show(id, on) { var b = $(id); if (!b) return; b.style.display = on ? '' : 'none'; b.disabled = false; delete b.dataset.wasDisabled; }
+    show('btnSave',   mode === 'new');
+    show('btnUpdate', mode === 'edit');
+    show('btnDelete', mode === 'edit');
+    show('btnSaveAs', mode === 'saveas');
+}
+
+/* btnNewHistory_Click (:3698): clears Item, Commission Agent and Supplier history combos. */
+function soHistNew() {
+    ['cmbItemNameHistory', 'cmbCommissionAgentHistory', 'cmbBuyerNameHistory'].forEach(function (id) {
+        var e = $(id); if (!e) return; e.value = '';
+        if (e.value !== '') e.value = 0;
+        e.dispatchEvent(new Event('change'));
+    });
+}
+
+/* DataGridHistory_SaveAs (:4152): ReadById, only SaveAs visible, doc date = today,
+   inquiry mapping cleared. */
+function soHistSaveAs(id) {
+    soLoad(id).then(function () {
+        if (!intOf('purchaseOrderMasterId')) return;
+        soButtons('saveas');
+        $('datDocDate').value = ymd(new Date());
+        inquiryMappings = []; removedMappings = [];
+        renderInquiryMapping();
+    });
+}
+
+/* grdHistory Print column -> OpenSlip(Id): the 1051 slip is not ported; load it and use the page print. */
+function soHistPrint(id) {
+    soLoad(id).then(function () { if (intOf('purchaseOrderMasterId')) soPrint(); });
+}
+
+function soShortCutKeys() {
+    alert('F2  Save / Update\nF3  New\nF5  Refresh\nCtrl+Enter  Add detail row\nEsc  Clear detail edit');
+}
+
+function soShowHistTab(ev, id) {
+    if (ev) ev.preventDefault();
+    ['hTabDetail', 'hTabExpense', 'hTabEb', 'hTabPay', 'hTabMap'].forEach(function (t) {
+        var p = $(t); if (p) p.style.display = (t === id) ? '' : 'none';
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#soHistTabs a'), function (a) {
+        a.classList.toggle('active', a.dataset.tab === id);
+    });
+}
+
+/* GetDetailGrdByHeadId (:4250-4375): the selected history row's children, read through the
+   same ReadById endpoint the form uses. Columns are the desktop DataTables' columns. */
+var soHistSeq = 0;
+function soHistSelect(id, tr) {
+    Array.prototype.forEach.call(document.querySelectorAll('#grdHistoryBody tr'), function (x) { x.classList.toggle('selected', x === tr); });
+    var seq = ++soHistSeq;
+    var ids = ['grdHistoryDetailBody', 'grdExpenseHistoryBody', 'grdEmptyBagHistoryBody',
+               'grdEmptyBagPmHistoryBody', 'grdPaymentTermHistoryBody', 'grdSaleOrderMappingHistoryBody'];
+    ids.forEach(function (b) { if ($(b)) $(b).innerHTML = ''; });
+    getJson(API + '/' + id).then(function (res) {
+        if (seq !== soHistSeq) return;
+        var o = (res && res.data) ? res.data : res;
+        if (!o) return;
+        function td(v, right) { return '<td' + (right ? ' style="text-align:right;"' : '') + '>' + esc(v == null ? '' : v) + '</td>'; }
+        function n(v) { return td(fmt(+v || 0), true); }
+        function rows(bodyId, list, fn) {
+            var b = $(bodyId); if (!b) return;
+            b.innerHTML = (list || []).map(function (r) { return '<tr>' + fn(r) + '</tr>'; }).join('');
+        }
+        var det = o.purchaseOrderDetailList || [];
+        if (!det.length) return;                                   /* :4256 - no detail -> all cleared */
+        rows('grdHistoryDetailBody', det, function (r) {
+            return td(rowParentItem(r)) + td(rowItemName(r)) + td(rowCropYear(r)) + td(rowPackingType(r)) +
+                   td(rowPackUom(r)) + n(r.itemQty) + n(r.itemWeight) + n(r.itemRate) + td(rowRateUom(r)) +
+                   n(r.ItemAmount) + td(rowTaxName(r)) + n(r.TaxPercent) + n(r.TaxAmount) + n(r.TotalAmount) + td(r.remarks);
+        });
+        rows('grdExpenseHistoryBody', o.purchaseOrderSupplierExpenseDetailList, function (r) {
+            return td(r.OtherItemName) + n(r.Qty) + n(r.rate) + n(r.amount) + td(r.remarks);
+        });
+        var eb = o.purchaseOrderEmptyBagDetailList || [];
+        rows('grdEmptyBagHistoryBody', eb.filter(function (r) { return +r.entryTypeId === 1; }), function (r) {
+            return td(r.PackingType) + n(r.weightCutKg);
+        });
+        rows('grdEmptyBagPmHistoryBody', eb.filter(function (r) { return +r.entryTypeId === 2; }), function (r) {
+            return td(r.PackingType) + n(r.Rate) + td(r.EmptyBagItem);
+        });
+        rows('grdPaymentTermHistoryBody', o.purchaseOrderPaymentDetailList, function (r) {
+            return td(r.PaymentTerm) + td(r.DueDays, true) + n(r.pctOfTotal) + n(r.dueAmount) +
+                   td(r.BaseDateType) + td(fmtDesktopDate(r.DueDate, false));
+        });
+        rows('grdSaleOrderMappingHistoryBody', o.supplierOfferBuyerInquiryMappingDetailList, function (r) {
+            return td(r.InquiryBookingNo || r.inquiryNo) + td(r.BuyerName || r.buyerName) + td(r.ItemName || r.itemName) +
+                   n(r.InquiryBookingWeight != null ? r.InquiryBookingWeight : mapItemWeight(r)) +
+                   n(mapBookedWeight(r)) + n(mapBalanceWeight(r)) + n(r.itemNetWeight);
+        });
+    }).catch(function (e) { message('History detail failed: ' + e.message, true); });
+}

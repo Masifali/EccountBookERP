@@ -108,6 +108,29 @@ public class SupplierOfferCmagtSaveService {
     }
 
     public java.util.List<Map<String, Object>> formHistory(String fromDate, String toDate) {
+        return formHistory(fromDate, toDate, null);
+    }
+
+    /**
+     * btnHistory (:3968-4041): the date radio (Doc / Entry / Modify) decides whether the From/To
+     * pair goes to @FromDate/@ToDate, @EntryFromDate/@EntryToDate or @ModifyFromDate/@ModifyToDate;
+     * validity from/to, parent items (comma list of ids), item, commission agent, supplier,
+     * deliver-to party and ship-to address text are passed as the BLL does (repository skips
+     * zero / empty values). Keys the page may send are whitelisted here.
+     */
+    private static final java.util.Set<String> HISTORY_FILTER_KEYS = new java.util.HashSet<>(java.util.Arrays.asList(
+            "EntryFromDate", "EntryToDate", "ModifyFromDate", "ModifyToDate",
+            "ValidityDateFrom", "ValidityDateTo", "ParentItemIds", "ItemId",
+            "CommissionAgentId", "SupplierId", "DeliveryToPartyId", "ShipToAddress"));
+
+    public java.util.List<Map<String, Object>> formHistory(String fromDate, String toDate,
+                                                           Map<String, Object> rawFilters) {
+        Map<String, Object> filters = null;
+        if (rawFilters != null) {
+            filters = new java.util.LinkedHashMap<>();
+            for (Map.Entry<String, Object> e : rawFilters.entrySet())
+                if (HISTORY_FILTER_KEYS.contains(e.getKey())) filters.put(e.getKey(), e.getValue());
+        }
         boolean all = canViewAllRecords();
         return repository.formHistory(
                 currentUserContext.currentOrganizationId(),
@@ -117,7 +140,38 @@ public class SupplierOfferCmagtSaveService {
                 DOCUMENT_TYPE_ID,
                 all,
                 all ? null : currentUserContext.currentUserId(),
-                fromDate, toDate);
+                fromDate, toDate, filters);
+    }
+
+    @Autowired private com.mst.repositories.cmagt.SupplierOfferCmagtRepository offerRepo;
+
+    /** frmBuyerInquiryLoaderForOffer:113 - the loader reads Buyer Inquiry (1050) documents. */
+    public static final int INQUIRY_DOCUMENT_TYPE_ID = 1050;
+
+    public java.util.List<Map<String, Object>> inquiryLoaderCombos() {
+        return offerRepo.inquiryLoaderCombos(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId());
+    }
+
+    public java.util.List<Map<String, Object>> pendingInquiries(Map<String, Object> f) {
+        if (f == null) f = new HashMap<>();
+        return offerRepo.pendingInquiryForOffer(
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                currentUserContext.currentBranchId(),
+                currentUserContext.currentFinancialYearId(),
+                INQUIRY_DOCUMENT_TYPE_ID,
+                str(f.get("fromDate")), str(f.get("toDate")),
+                intv(f.get("fromDocNo")), intv(f.get("toDocNo")),
+                intv(f.get("commissionAgentId")), intv(f.get("buyerId")), intv(f.get("itemId")),
+                intv(f.get("deliveryToPartyId")), str(f.get("shipToAddress")));
+    }
+
+    private static String str(Object o) { return o == null ? null : o.toString(); }
+    private static int intv(Object o) {
+        if (o == null) return 0;
+        if (o instanceof Number) return ((Number) o).intValue();
+        try { return (int) Double.parseDouble(o.toString().trim()); } catch (Exception e) { return 0; }
     }
 
     /** DeleteByID — the desktop's own delete, not a JPA deleteById. */

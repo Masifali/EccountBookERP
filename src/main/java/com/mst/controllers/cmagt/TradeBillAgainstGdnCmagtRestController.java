@@ -25,23 +25,106 @@ public class TradeBillAgainstGdnCmagtRestController {
     @org.springframework.beans.factory.annotation.Autowired
     private com.mst.security.CurrentUserContext currentUserContext;
 
+    /**
+     * btnsave_Click / btnUpdate_Click -> Insert() -> BLL Save -> DAL SetData (16 procedures, one
+     * transaction, voucher included). header.RecId > 0 updates. Every refusal - the form's own,
+     * MakeVoucher's, or a procedure's RAISERROR (financial year, approved record, voucher
+     * balance) - comes back as {status: ERROR, message} with the desktop's text, and nothing is
+     * committed.
+     */
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> save(@RequestBody TradeBillAgainstGdnCmagtDto dto) {
-        /* The repository refuses (no voucher engine yet). Surface that refusal as the page's
-           own {status, message} shape instead of a bare 500 the page reports as "Server error". */
         try {
-            return ResponseEntity.ok(service.saveOrUpdate(dto));
-        } catch (UnsupportedOperationException e) {
-            Map<String, Object> r = new java.util.LinkedHashMap<>();
-            r.put("status", "ERROR");
-            r.put("message", e.getMessage());
-            return ResponseEntity.ok(r);
+            return ResponseEntity.ok(service.save(dto));
+        } catch (org.springframework.dao.DataAccessException e) {
+            Throwable root = e.getMostSpecificCause();
+            return ResponseEntity.ok(err(root != null ? root.getMessage() : e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok(err(e.getMessage()));
         }
+    }
+
+    private static Map<String, Object> err(String m) {
+        Map<String, Object> r = new java.util.LinkedHashMap<>();
+        r.put("status", "ERROR");
+        r.put("message", m);
+        return r;
+    }
+
+    // ------------------------------------------------------------------ GDN loader (frmPendingGdnLoader)
+
+    /** ComboDbCall: flat {Activity, Id, ReferenceName} rows, split by the page as CombosFill does. */
+    @GetMapping("/loader/dropdowns")
+    public ResponseEntity<List<Map<String, Object>>> loaderDropdowns() {
+        return ResponseEntity.ok(service.loaderDropdowns());
+    }
+
+    /** PendingDataDbCall: all nine result sets of the loader procedure, in order. */
+    @GetMapping("/loader/pending")
+    public ResponseEntity<Object> loaderPending(
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate,
+            @RequestParam(defaultValue = "0") int fromDocNo,
+            @RequestParam(defaultValue = "0") int toDocNo,
+            @RequestParam(defaultValue = "0") int commissionAgentId,
+            @RequestParam(defaultValue = "0") int supplierId,
+            @RequestParam(defaultValue = "0") int buyerId,
+            @RequestParam(defaultValue = "0") int itemId,
+            @RequestParam(defaultValue = "0") int deliverToPartyId,
+            @RequestParam(required = false) String shipToAddress) {
+        try {
+            return ResponseEntity.ok(service.pendingGdn(fromDate, toDate, fromDocNo, toDocNo, commissionAgentId,
+                    supplierId, buyerId, itemId, deliverToPartyId, shipToAddress));
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok(err(e.getMessage()));
+        }
+    }
+
+    // --------------------------------------------------------------------------- lookups
+
+    /** Every account combo on the form, filtered as DatatableHelper.GetAccountsFromGlobalByTypeIds. */
+    @GetMapping("/lookups/accounts")
+    public ResponseEntity<Map<String, List<Map<String, Object>>>> accounts() {
+        return ResponseEntity.ok(service.accountLists());
+    }
+
+    @GetMapping("/lookups/tax-types")
+    public ResponseEntity<List<Map<String, Object>>> taxTypes() {
+        return ResponseEntity.ok(service.taxTypes());
+    }
+
+    @GetMapping("/lookups/wht-percent")
+    public ResponseEntity<Map<String, Object>> whtPercent(@RequestParam(defaultValue = "0") int taxNameId,
+                                                          @RequestParam(required = false) String docDate) {
+        return ResponseEntity.ok(service.whtPercent(taxNameId, docDate));
+    }
+
+    @GetMapping("/lookups/sale-tax-types")
+    public ResponseEntity<List<Map<String, Object>>> saleTaxTypes(@RequestParam(defaultValue = "0") int customerId,
+                                                                  @RequestParam(required = false) String docDate) {
+        return ResponseEntity.ok(service.saleTaxTypes(customerId, docDate));
+    }
+
+    @GetMapping("/lookups/configs")
+    public ResponseEntity<Map<String, Object>> configs() {
+        return ResponseEntity.ok(service.configs());
+    }
+
+    /** HistoryComboBind: Trading Account / Supplier / Customer from the saved bills. */
+    @GetMapping("/lookups/history-combos")
+    public ResponseEntity<List<Map<String, Object>>> historyCombos() {
+        return ResponseEntity.ok(service.historyCombos());
+    }
+
+    @GetMapping("/lookups/year-start")
+    public ResponseEntity<Map<String, Object>> yearStart() {
+        return ResponseEntity.ok(service.yearStart());
     }
 
     /** HistoryGridFill -> BLL FormHistory. Tenancy, year, branch and rights from the session. */
     @GetMapping("/history")
     public ResponseEntity<List<Map<String, Object>>> getHistory(
+            @RequestParam(defaultValue = "doc") String dateKind,
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,
             @RequestParam(required = false) Integer docNoFrom,
@@ -49,7 +132,7 @@ public class TradeBillAgainstGdnCmagtRestController {
             @RequestParam(required = false) Integer tradingAccountId,
             @RequestParam(required = false) Integer supplierId,
             @RequestParam(required = false) Integer customerId) {
-        return ResponseEntity.ok(service.getHistory(fromDate, toDate, docNoFrom, docNoTo,
+        return ResponseEntity.ok(service.getHistory(dateKind, fromDate, toDate, docNoFrom, docNoTo,
                 tradingAccountId, supplierId, customerId));
     }
 

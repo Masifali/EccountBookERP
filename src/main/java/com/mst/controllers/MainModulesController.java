@@ -82,11 +82,9 @@ public class MainModulesController {
         return "redirect:/app/store-management";
     }
 
-    @GetMapping("/taxation")
-    public String taxation(Model model) {
-        model.addAttribute("activeMenu", "taxation");
-        return "redirect:/accounts/reports/payables-report";
-    }
+    /* /taxation used to redirect to the Payables report - an unrelated page. It now lives in
+       AppMenuController, which draws the desktop's own Taxation module (App 13, ModuleId 9) and its nine
+       screen cards from the rights rows. */
 
     /*
      * The Weigh Bridge application landing page. This used to return the hand-written

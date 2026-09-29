@@ -87,8 +87,32 @@ public class GrnLoadingChallanCmagtRestController {
     @GetMapping("/history")
     public ResponseEntity<List<Map<String, Object>>> getHistory(
             @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate) {
-        return ResponseEntity.ok(service.getHistory(fromDate, toDate));
+            @RequestParam(required = false) String toDate,
+            @RequestParam(required = false) String dateType,
+            @RequestParam(required = false) Integer commissionAgentId,
+            @RequestParam(required = false) Integer supplierId,
+            @RequestParam(required = false) Integer deliveryToPartyId,
+            @RequestParam(required = false) String shipToAddress) {
+        return ResponseEntity.ok(service.getHistory(fromDate, toDate, dateType,
+                commissionAgentId, supplierId, deliveryToPartyId, shipToAddress));
+    }
+
+    /** History filter combos - USP_GetDataForDropDownFromgrnSupplierLoadingMaster (:627). */
+    @GetMapping("/history-combos")
+    public ResponseEntity<List<Map<String, Object>>> historyCombos() {
+        return ResponseEntity.ok(service.historyCombos());
+    }
+
+    /** Load Purchase Order dialog combos - USP_GetDataForDropDownFrompurchaseOrderMaster. */
+    @GetMapping("/loader-combos")
+    public ResponseEntity<List<Map<String, Object>>> loaderCombos() {
+        return ResponseEntity.ok(service.loaderCombos());
+    }
+
+    /** GetConfigurationsFromGlobal + portal defaults (:646-700). */
+    @GetMapping("/form-config")
+    public ResponseEntity<Map<String, Object>> formConfig() {
+        return ResponseEntity.ok(service.formConfig());
     }
 
     /** History date-range default (desktop :618-619). Literal path wins over /{id}. */

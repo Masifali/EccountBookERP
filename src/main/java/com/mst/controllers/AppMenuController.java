@@ -112,6 +112,27 @@ public class AppMenuController {
         return renderApp("Production", moduleId, model);
     }
 
+    /**
+     * Taxation - dbo.App Id 13 "Taxation", whose one module (ModuleId 9) holds screens 172-180. This
+     * replaces MainModulesController's redirect of /taxation to the Payables report.
+     */
+    @GetMapping("/taxation")
+    public String taxation(@RequestParam(value = "module", required = false) Integer moduleId,
+                           Model model) {
+        return renderApp("Taxation", moduleId, model);
+    }
+
+    /**
+     * Master Data Definition - dbo.App Id 19, whose one module (AppModules 2039 "System_Level") holds
+     * screens 742 and 749-756. This replaces DesktopInventoryLookupDefinitionController's alias of
+     * /master-data-definition onto the Inventory "Lookup Definitions" page, an unrelated screen.
+     */
+    @GetMapping("/master-data-definition")
+    public String masterDataDefinition(@RequestParam(value = "module", required = false) Integer moduleId,
+                                       Model model) {
+        return renderApp("Master Data Definition", moduleId, model);
+    }
+
     /*
      * "Admin Panel" and "System Utilities" USED to be routed from here, as if they were rows in
      * the App table. They are not. They are contextMenuStrip3 on DashboardNew - a fixed menu

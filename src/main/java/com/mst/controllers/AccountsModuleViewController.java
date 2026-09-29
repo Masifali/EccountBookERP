@@ -155,9 +155,9 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Labour Wages");
 				return "accounts/vouchers/labour_wages";
 			case "labour-wages-manual":
+				/* frmWagesBillManual, screen 187, DocumentTypeId 810 - LabourWagesManualService. */
 				model.addAttribute("moduleTitle", "Labour Wages Manual");
-				model.addAttribute("desktopForm", "frmWagesBillManual.cs");
-				return "accounts/vouchers/contractor_wages_pending";
+				return "accounts/vouchers/labour_wages_manual";
 			case "voucher-validation":
 				model.addAttribute("moduleTitle", "Voucher Validation Report");
 				model.addAttribute("accountsList", voucherValidationService.getAllDetailAccounts());
@@ -348,19 +348,14 @@ public class AccountsModuleViewController {
 			case "wages-report":
 			case "wages_report":
 				model.addAttribute("moduleTitle", "Wages Report");
-				model.addAttribute("contractorsList", accountsReportService.getSupplierCustomersForCombo());
-				model.addAttribute("costCentersList", accountsReportService.getCostCenters());
-				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
-				model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
-				return "accounts/reports/wages_report";
+				/* frmStockContractorWagesHistory.cs - every list is loaded by the page from its own API. */
+				return "accounts/reports/contractor_wages_history";
 			case "wages-report-activities":
 			case "wages_report_activities":
 				model.addAttribute("moduleTitle", "Wages Report (With Activities)");
-				model.addAttribute("contractorsList", accountsReportService.getSupplierCustomersForCombo());
-				model.addAttribute("costCentersList", accountsReportService.getCostCenters());
-				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
-				model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
-				return "accounts/reports/wages_report_activities";
+				/* The desktop's "Wages Report (With Activities)" menu opens frmEvaulationDetailWagesReports
+				   ("Wages Register"), already ported for screen 280 - one page for both entries. */
+				return "production/reports/evaluation_detail_wages";
 			default:
 				throw new org.springframework.web.server.ResponseStatusException(
 						org.springframework.http.HttpStatus.NOT_FOUND, "Report route is not implemented: " + reportType);

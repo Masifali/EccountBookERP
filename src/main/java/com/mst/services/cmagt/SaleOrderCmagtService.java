@@ -198,8 +198,27 @@ public class SaleOrderCmagtService {
         m.put("items", items);
         m.put("parentItems", deriveParentItems(items));
 
+        // CompanyBind(CompanyDropdownData()) - value = UserAccount.CompanyId.
+        m.put("companies", lookup(errors, "companies", () -> repo.companies(orgId)));
+        m.put("currentCompanyId", companyId);
+        m.put("currentBranchId", currentUserContext.currentBranchId());
+        // HistoryComboBind(HistoryComboDbCall()) - saleOrderMaster.GetDataForDropDown.
+        m.put("historyCombos", lookup(errors, "historyCombos", () -> repo.historyCombos(orgId, companyId)));
+
         m.put("lookupErrors", errors);
         return m;
+    }
+
+    /** AllShipToAddress() re-read after the ship-to "+" dialog (SupfrmShipToAddress). */
+    public List<Map<String, Object>> getShipToAddresses() {
+        return repo.shipToAddresses(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId());
+    }
+
+    /** BtnRefreshHistory_Click -> HistoryComboDbCall(). */
+    public List<Map<String, Object>> getHistoryCombos() {
+        return repo.historyCombos(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId());
     }
 
     /** Runs one lookup; on failure records why and yields an empty list, never fake rows. */

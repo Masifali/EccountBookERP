@@ -43,7 +43,7 @@ public class GrnLoadingChallanCmagtRepository {
             throw new IllegalArgumentException("Detail list not found");
         }
 
-        SimpleJdbcCall masterCall = new SimpleJdbcCall(jdbcTemplate)
+        SimpleJdbcCall masterCall = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                 .withSchemaName("cmagt")
                 .withProcedureName("USP_grnSupplierLoadingMaster_InsertAndUpdate");
 
@@ -155,7 +155,7 @@ public class GrnLoadingChallanCmagtRepository {
             p.addValue("remarks", ns(d.getRemarks()));
             p.addValue("warningRemarks", ns(d.getWarningRemarks()));
             p.addValue("DeliverToAddress", ns(d.getDeliverToAddress()));
-            new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+            new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                     .withProcedureName("USP_grnSupplierLoadingDetail_Insert").execute(p);
         }
 
@@ -173,7 +173,7 @@ public class GrnLoadingChallanCmagtRepository {
                 p.addValue("emptyBagPackingMaterialItemId", ni(d.getEmptyBagPackingMaterialItemId()));
                 p.addValue("sortNo", ni(d.getSortNo()));
                 p.addValue("remarks", ns(d.getRemarks()));
-                new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_grnSupplierLoadingEmptyBagDetail_Insert").execute(p);
             }
         }
@@ -192,7 +192,7 @@ public class GrnLoadingChallanCmagtRepository {
                 p.addValue("ItemId", ni(d.getItemId()));
                 p.addValue("sortNo", ni(d.getSortNo()));
                 p.addValue("remarks", ns(d.getRemarks()));
-                new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_grnSupplierLoadingExpenseDetail_Insert").execute(p);
             }
         }
@@ -323,7 +323,7 @@ public class GrnLoadingChallanCmagtRepository {
      */
     @SuppressWarnings("unchecked")
     private Map<String, List<Map<String, Object>>> pendingLoaderTables(MapSqlParameterSource p) {
-        Map<String, Object> out = new SimpleJdbcCall(jdbcTemplate)
+        Map<String, Object> out = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                 .withSchemaName("cmagt")
                 .withProcedureName("USP_purchaseOrderMaster_PendingDataLoaderForGrn")
                 .execute(p);
@@ -371,8 +371,53 @@ public class GrnLoadingChallanCmagtRepository {
         return extractList(getAll().execute(params));
     }
 
+    /** HistoryFill (:3691) with the desktop's optional filters (BLL 0488 FormHistory :127-300). */
+    public List<Map<String, Object>> formHistory(int organizationId, int companyId, int branchId,
+                                                 int financialYearId, boolean canViewAllRecord,
+                                                 int entryUserId, String fromDate, String toDate,
+                                                 String dateType, Integer commissionAgentId,
+                                                 Integer supplierId, Integer deliveryToPartyId,
+                                                 String shipToAddress) {
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("OrganizationId", organizationId);
+        params.addValue("CompanyId", companyId);
+        params.addValue("BranchesId", branchId);
+        params.addValue("FinancialYearId", financialYearId);
+        params.addValue("CanViewAllRecord", canViewAllRecord ? 1 : 0);
+        if (!canViewAllRecord) params.addValue("EntryUserId", entryUserId);
+        String fromKey = "FromDate", toKey = "ToDate";
+        if ("entry".equalsIgnoreCase(dateType)) { fromKey = "EntryFromDate"; toKey = "EntryToDate"; }
+        else if ("modify".equalsIgnoreCase(dateType)) { fromKey = "ModifyFromDate"; toKey = "ModifyToDate"; }
+        if (notBlank(fromDate)) params.addValue(fromKey, parseDateOrNull(fromDate));
+        if (notBlank(toDate))   params.addValue(toKey, parseDateOrNull(toDate));
+        if (commissionAgentId != null && commissionAgentId != 0) params.addValue("CommissionAgentId", commissionAgentId);
+        if (supplierId != null && supplierId != 0) params.addValue("SupplierId", supplierId);
+        if (deliveryToPartyId != null && deliveryToPartyId != 0) params.addValue("DeliveryToPartyId", deliveryToPartyId);
+        if (notBlank(shipToAddress)) params.addValue("ShipToAddress", shipToAddress);
+        params.addValue("Activity", "FormHistory");
+        return extractList(getAll().execute(params));
+    }
+
+    /** BLL 0488 GetDataForDropDown (:306-335): org, company; the form sends no Activity. */
+    public List<Map<String, Object>> historyCombos(int organizationId, int companyId) {
+        return jdbcTemplate.queryForList(
+                "EXEC [cmagt].[USP_GetDataForDropDownFromgrnSupplierLoadingMaster] @OrganizationId=?, @CompanyId=?",
+                organizationId, companyId);
+    }
+
+    /**
+     * frmLoadPurchaseOrderForGrnLoading.ComboDbCall (:167) -> BLL 0490 GetDataForDropDown
+     * (:344-375). The loader sets DocumentTypeId, not DocumentTypeIds, and no Activity, so only
+     * @OrganizationId and @CompanyId reach the procedure.
+     */
+    public List<Map<String, Object>> loaderCombos(int organizationId, int companyId) {
+        return jdbcTemplate.queryForList(
+                "EXEC [cmagt].[USP_GetDataForDropDownFrompurchaseOrderMaster] @OrganizationId=?, @CompanyId=?",
+                organizationId, companyId);
+    }
+
     private SimpleJdbcCall getAll() {
-        return new SimpleJdbcCall(jdbcTemplate)
+        return new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                 .withSchemaName("cmagt")
                 .withProcedureName("usp_grnSupplierLoadingMaster_GetAllMethod");
     }

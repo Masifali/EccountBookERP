@@ -196,7 +196,10 @@ public class GoodsDispatchingNoteCmagtRepository {
     /** BLL 0487 FormHistory :127-298 - optional parameters are omitted when unset, as there. */
     public List<Map<String, Object>> formHistory(int organizationId, int companyId, int branchId,
                                                  int financialYearId, boolean canViewAllRecord,
-                                                 int entryUserId, String fromDate, String toDate) {
+                                                 int entryUserId, String fromDate, String toDate,
+                                                 String dateType, int commissionAgentId, int buyerId,
+                                                 int deliverToPartyId, String shipToAddress) {
+        /* BLL 0487 FormHistory :127-304 - optional parameters are only added when set. */
         MapSqlParameterSource p = new MapSqlParameterSource();
         p.addValue("OrganizationId", organizationId);
         p.addValue("CompanyId", companyId);
@@ -204,8 +207,15 @@ public class GoodsDispatchingNoteCmagtRepository {
         p.addValue("FinancialYearId", financialYearId);
         p.addValue("CanViewAllRecord", canViewAllRecord ? 1 : 0);
         if (!canViewAllRecord) p.addValue("EntryUserId", entryUserId);
-        if (notBlank(fromDate)) p.addValue("FromDate", parseDate(fromDate));
-        if (notBlank(toDate))   p.addValue("ToDate", parseDate(toDate));
+        String fromKey = "FromDate", toKey = "ToDate";                       // drdocdate
+        if ("entry".equalsIgnoreCase(dateType)) { fromKey = "EntryFromDate"; toKey = "EntryToDate"; }      // rdentrydate
+        else if ("modify".equalsIgnoreCase(dateType)) { fromKey = "ModifyFromDate"; toKey = "ModifyToDate"; } // rdmodifydate
+        if (notBlank(fromDate)) p.addValue(fromKey, parseDate(fromDate));
+        if (notBlank(toDate))   p.addValue(toKey, parseDate(toDate));
+        if (commissionAgentId != 0) p.addValue("CommissionAgentId", commissionAgentId);
+        if (buyerId != 0) p.addValue("BuyerId", buyerId);
+        if (deliverToPartyId != 0) p.addValue("DeliveryToPartyId", deliverToPartyId);
+        if (notBlank(shipToAddress)) p.addValue("ShipToAddress", shipToAddress);
         p.addValue("Activity", "FormHistory");
         return datesToText(firstList(call(PROC_GET_ALL).execute(p)));
     }
@@ -244,6 +254,103 @@ public class GoodsDispatchingNoteCmagtRepository {
         return v == null ? 0 : v;
     }
 
+    /**
+     * frmPendingGrnLoadingChallanLoader.PendingDataDbCall (:290-321) and the form's
+     * OutstandingOrdersdtFillDbCall -> BLL 0488 PendingDataLoaderForGdn (:615-735)
+     *   -> [cmagt].[USP_grnSupplierLoadingMaster_PendingDataLoaderForGdn]
+     * @OrganizationId/@CompanyId/@BranchesId/@FinancialYearId always; every other parameter only
+     * when set (dates non-null, numbers != 0, ShipToAddress non-empty) - the BLL never sends
+     * @DocumentTypeId even though the loader fills it. Unsent parameters default to NULL in the
+     * procedure, which is also what SimpleJdbcCall binds for them.
+     * Returns the three result sets: rows (GRN header+detail), emptyBags (SO empty-bag rates),
+     * expenses (SO buyer expenses).
+     */
+    public Map<String, Object> pendingGrnForGdn(int organizationId, int companyId, int branchId,
+                                                int financialYearId, String fromDate, String toDate,
+                                                int fromDocNo, int toDocNo, int recId,
+                                                int commissionAgentId, int supplierId, int buyerId,
+                                                int itemId, int deliverToPartyId, String shipToAddress) {
+        MapSqlParameterSource p = new MapSqlParameterSource();
+        p.addValue("OrganizationId", organizationId);
+        p.addValue("CompanyId", companyId);
+        p.addValue("BranchesId", branchId);
+        p.addValue("FinancialYearId", financialYearId);
+        p.addValue("FromDate", notBlank(fromDate) ? parseDate(fromDate) : null);
+        p.addValue("ToDate", notBlank(toDate) ? parseDate(toDate) : null);
+        p.addValue("FromDocNo", fromDocNo != 0 ? fromDocNo : null);
+        p.addValue("ToDocNo", toDocNo != 0 ? toDocNo : null);
+        p.addValue("RecId", recId != 0 ? recId : null);
+        p.addValue("CommissionAgentId", commissionAgentId != 0 ? commissionAgentId : null);
+        p.addValue("SupplierId", supplierId != 0 ? supplierId : null);
+        p.addValue("BuyerId", buyerId != 0 ? buyerId : null);
+        p.addValue("ItemId", itemId != 0 ? itemId : null);
+        p.addValue("DeliveryToPartyId", deliverToPartyId != 0 ? deliverToPartyId : null);
+        p.addValue("ShipToAddress", notBlank(shipToAddress) ? shipToAddress : null);
+        p.addValue("DocumentTypeId", null);
+        List<List<Map<String, Object>>> sets = allLists(
+                call("USP_grnSupplierLoadingMaster_PendingDataLoaderForGdn").execute(p));
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("rows", datesToText(sets.size() > 0 ? sets.get(0) : new ArrayList<>()));
+        out.put("emptyBags", datesToText(sets.size() > 1 ? sets.get(1) : new ArrayList<>()));
+        out.put("expenses", datesToText(sets.size() > 2 ? sets.get(2) : new ArrayList<>()));
+        return out;
+    }
+
+    /**
+     * Loader combos - frmPendingGrnLoadingChallanLoader.ComboDbCall (:158-184) ->
+     * BLL 0488 GetDataForDropDown (:306-335) -> [cmagt].[USP_GetDataForDropDownFromgrnSupplierLoadingMaster]
+     * @OrganizationId, @CompanyId; @Activity is never set by the loader, so it is omitted and
+     * every activity comes back (CombosFill :186-275 splits them).
+     */
+    /** BLL 0487 GetDataForDropDown :306-335 (form never sets Activity, so it is omitted). */
+    public List<Map<String, Object>> historyCombos(int organizationId, int companyId) {
+        return jdbcTemplate.queryForList(
+                "EXEC [cmagt].[USP_GetDataForDropDownFromgdnBuyerDispatchMaster] @OrganizationId=?, @CompanyId=?",
+                organizationId, companyId);
+    }
+
+    public List<Map<String, Object>> pendingGrnLoaderCombos(int organizationId, int companyId) {
+        return jdbcTemplate.queryForList(
+                "EXEC [cmagt].[USP_GetDataForDropDownFromgrnSupplierLoadingMaster] @OrganizationId=?, @CompanyId=?",
+                organizationId, companyId);
+    }
+
+    /**
+     * GlobalVariables_Helper.GetConfigValueFromGlobal(name) - the same configuration procedure
+     * and activity the rest of the port uses. Returns the raw ConfigKey text, or null.
+     */
+    public String configValue(int organizationId, int companyId, String configDescription) {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod "
+                  + "@OrganizationId=?, @CompanyId=?, @ConfigDescription=?, @Activity=?",
+                    organizationId, companyId, configDescription,
+                    "GetConfigurationByOrgCompandConfigDescription");
+            if (rows.isEmpty()) return null;
+            for (Map.Entry<String, Object> e : rows.get(0).entrySet()) {
+                if ("ConfigKey".equalsIgnoreCase(e.getKey())) return e.getValue() == null ? null : e.getValue().toString();
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<List<Map<String, Object>>> allLists(Map<String, Object> out) {
+        List<String> keys = new ArrayList<>();
+        for (Map.Entry<String, Object> e : out.entrySet()) {
+            if (e.getValue() instanceof List) keys.add(e.getKey());
+        }
+        keys.sort(Comparator.comparingInt(GoodsDispatchingNoteCmagtRepository::resultSetOrdinal));
+        List<List<Map<String, Object>>> sets = new ArrayList<>();
+        for (String k : keys) {
+            List<Map<String, Object>> rows = (List<Map<String, Object>>) out.get(k);
+            sets.add(rows == null ? new ArrayList<>() : rows);
+        }
+        return sets;
+    }
+
     private List<Map<String, Object>> readActivity(String activity, int id) {
         MapSqlParameterSource p = new MapSqlParameterSource();
         p.addValue("Id", id);
@@ -252,7 +359,7 @@ public class GoodsDispatchingNoteCmagtRepository {
     }
 
     private SimpleJdbcCall call(String proc) {
-        return new SimpleJdbcCall(jdbcTemplate).withSchemaName(SCHEMA).withProcedureName(proc);
+        return new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName(SCHEMA).withProcedureName(proc);
     }
 
     /** Result sets come back as #result-set-1..N; the id is the procedure's final SELECT. */

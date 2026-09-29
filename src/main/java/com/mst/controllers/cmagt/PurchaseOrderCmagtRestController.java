@@ -128,4 +128,114 @@ public class PurchaseOrderCmagtRestController {
         r.put("success", !"ERROR".equals(String.valueOf(r.get("status"))));
         return ResponseEntity.ok(r);
     }
+
+    /* ===================================================================== Load So picker */
+
+    @Autowired
+    private com.mst.repositories.cmagt.PurchaseOrderCmagtRepository poRepository;
+
+    /** frmLoadSaleIrderForPO.ComboDbCall - rows split on Activity by the page (CombosFill). */
+    @GetMapping("/load-so/combos")
+    public ResponseEntity<List<Map<String, Object>>> loadSoCombos() {
+        return ResponseEntity.ok(poRepository.loadSoCombos(
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId()));
+    }
+
+    /** frmLoadSaleIrderForPO.PendingDataDbCall. Tenancy, branch and year from the session. */
+    @GetMapping("/load-so/pending")
+    public ResponseEntity<List<Map<String, Object>>> loadSoPending(
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate,
+            @RequestParam(required = false) Integer fromDocNo,
+            @RequestParam(required = false) Integer toDocNo,
+            @RequestParam(required = false) Integer commissionAgentId,
+            @RequestParam(required = false) Integer buyerId,
+            @RequestParam(required = false) Integer itemId,
+            @RequestParam(required = false) Integer deliveryToPartyId,
+            @RequestParam(required = false) String shipToAddress) {
+        return ResponseEntity.ok(poRepository.loadSoPending(
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(),
+                currentUserContext.currentBranchId(), currentUserContext.currentFinancialYearId(),
+                fromDate, toDate, fromDocNo, toDocNo, commissionAgentId, buyerId, itemId,
+                deliveryToPartyId, shipToAddress));
+    }
+
+    @Autowired
+    private com.mst.repositories.cmagt.CmagtReportRepository cmagtReportRepository;
+
+    /** frmLoadSaleIrderForPO.btnReset_Click (:417-422): FromDate = clsGlobalVariables.ActiveYr.Start_Period
+        of the signed-in session's financial year (same lookup the reports use). */
+    @GetMapping("/financial-year-start")
+    public ResponseEntity<Map<String, Object>> financialYearStart() {
+        Object start = cmagtReportRepository.financialYearStart(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(), currentUserContext.currentFinancialYearId());
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        String s = start == null ? null : String.valueOf(start);
+        out.put("financialYearStart", s == null ? null : s.substring(0, Math.min(10, s.length())));
+        return ResponseEntity.ok(out);
+    }
+
+    /** HistoryComboDbCall - the history filter combos (HistoryComboBind splits on Activity). */
+    @GetMapping("/history-combos")
+    public ResponseEntity<List<Map<String, Object>>> historyCombos() {
+        return ResponseEntity.ok(poRepository.historyCombos(
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId()));
+    }
+
+    /* ============================================= Ship-to "+" (SupfrmShipToAddress) */
+
+    @GetMapping("/ship-to/countries")
+    public ResponseEntity<List<Map<String, Object>>> shipToCountries() {
+        return ResponseEntity.ok(poRepository.countries());
+    }
+
+    @GetMapping("/ship-to/cities")
+    public ResponseEntity<List<Map<String, Object>>> shipToCities() {
+        return ResponseEntity.ok(poRepository.cities(
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId()));
+    }
+
+    @GetMapping("/ship-to/history")
+    public ResponseEntity<List<Map<String, Object>>> shipToHistory() {
+        return ResponseEntity.ok(poRepository.shipToHistory(
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId()));
+    }
+
+    @GetMapping("/ship-to/{id}")
+    public ResponseEntity<Map<String, Object>> shipToById(@PathVariable Integer id) {
+        List<Map<String, Object>> rows = poRepository.shipToById(id);
+        return ResponseEntity.ok(rows.isEmpty() ? new java.util.LinkedHashMap<>() : rows.get(0));
+    }
+
+    /** Insert(): FormValidation messages, then BLL Save. Org/company/user from the session. */
+    @PostMapping("/ship-to/save")
+    public ResponseEntity<Map<String, Object>> shipToSave(@RequestBody Map<String, Object> body) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        String err = null;
+        if (isBlank(body.get("SupplierCustomerId")) || "0".equals(String.valueOf(body.get("SupplierCustomerId")))) err = "Please Select Supplier";
+        else if (isBlank(body.get("AddressLine1"))) err = "Please Enter Address";
+        else if (isBlank(body.get("AddressTitle"))) err = "Please Enter Address Title";
+        else if (isBlank(body.get("CountryId")) || "0".equals(String.valueOf(body.get("CountryId")))) err = "Please Select Country";
+        else if (isBlank(body.get("CityId")) || "0".equals(String.valueOf(body.get("CityId")))) err = "Please Select City";
+        if (err != null) {
+            out.put("success", false); out.put("message", err);
+            return ResponseEntity.ok(out);
+        }
+        Map<String, Object> m = new java.util.LinkedHashMap<>(body);
+        for (String k : new String[] { "AddressLine1", "AddressTitle", "PhoneNo", "MobileNo", "WhatsAppNo", "ContactPerson" }) {
+            m.put(k, body.get(k) == null ? "" : String.valueOf(body.get(k)).trim());
+        }
+        m.put("OrganizationId", currentUserContext.currentOrganizationId());
+        m.put("CompanyId", currentUserContext.currentCompanyId());
+        m.put("EntryUser", currentUserContext.currentUserId());
+        m.put("ModifyUser", currentUserContext.currentUserId());
+        boolean isNew = isBlank(body.get("Id")) || "0".equals(String.valueOf(body.get("Id")));
+        Object id = poRepository.shipToSave(m);
+        out.put("success", true);
+        out.put("id", id);
+        out.put("message", isNew ? "Save Successfully" : "Update Successfully");
+        return ResponseEntity.ok(out);
+    }
+
+    private static boolean isBlank(Object v) { return v == null || String.valueOf(v).trim().isEmpty(); }
 }

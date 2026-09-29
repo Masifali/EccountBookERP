@@ -89,7 +89,7 @@ public class PurchaseOrderMasterCmagtRepository {
         m.addValue("shipToAddressId", ni(dto.getShipToAddressId()));
         m.addValue("DeliveryToPartyId", ni(dto.getDeliveryToPartyId()));
 
-        Map<String, Object> out = new SimpleJdbcCall(jdbcTemplate)
+        Map<String, Object> out = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                 .withSchemaName("cmagt")
                 .withProcedureName("USP_purchaseOrderMaster_InsertAndUpdate")
                 .execute(m);
@@ -146,7 +146,7 @@ public class PurchaseOrderMasterCmagtRepository {
                 p.addValue("cropYear", ns(r.getCropYear()));
                 p.addValue("qualitySpecification", ns(r.getQualitySpecification()));
                 p.addValue("remarks", ns(r.getRemarks()));
-                Integer newDetailId = firstScalar(new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                Integer newDetailId = firstScalar(new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_purchaseOrderDetail_Insert").execute(p));
                 /* DAL SetData:59-60 - the insert branch SELECTs the new detail id; it is kept on
                    the row because the two mapping collections below link to it by item. */
@@ -167,7 +167,7 @@ public class PurchaseOrderMasterCmagtRepository {
                 p.addValue("purchaseOrderPaymentDetailId", ni(r.getPurchaseOrderPaymentDetailId()));
                 p.addValue("sortNo", ni(r.getSortNo()));
                 p.addValue("remarks", ns(r.getRemarks()));
-                new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_purchaseOrderPaymentDetail_Insert").execute(p);
             }
         }
@@ -186,7 +186,7 @@ public class PurchaseOrderMasterCmagtRepository {
                 p.addValue("emptyBagPackingMaterialItemId", ni(r.getEmptyBagPackingMaterialItemId()));
                 p.addValue("sortNo", ni(r.getSortNo()));
                 p.addValue("remarks", ns(r.getRemarks()));
-                new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_purchaseOrderEmptyBagDetail_Insert").execute(p);
             }
         }
@@ -204,7 +204,7 @@ public class PurchaseOrderMasterCmagtRepository {
                 p.addValue("saleOrderMasterId", ni(r.getSaleOrderMasterId()));
                 p.addValue("saleOrderBuyerOtherExpenseDetailId", ni(r.getSaleOrderBuyerOtherExpenseDetailId()));
                 p.addValue("remarks", ns(r.getRemarks()));
-                new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_purchaseOrderSupplierExpenseDetail_Insert").execute(p);
             }
         }
@@ -222,7 +222,7 @@ public class PurchaseOrderMasterCmagtRepository {
                 p.addValue("rateUomId", ni(r.getRateUomId()));
                 p.addValue("sortNo", ni(r.getSortNo()));
                 p.addValue("commissionRemarks", ns(r.getCommissionRemarks()));
-                new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_purchaseOrderCommissionDetail_Insert").execute(p);
             }
         }
@@ -248,7 +248,7 @@ public class PurchaseOrderMasterCmagtRepository {
                 p.addValue("supplierId", ni(r.getSupplierId()));
                 p.addValue("actionTypeId", ni(r.getActionTypeId()));
                 p.addValue("Remarks", ns(r.getRemarks()));
-                new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_purchaseOrderSaleOrderMapping_Insert").execute(p);
             }
         }
@@ -274,7 +274,7 @@ public class PurchaseOrderMasterCmagtRepository {
                 p.addValue("supplierOfferDetailId", ni(r.getSupplierOfferDetailId()));
                 p.addValue("supplierOfferMasterId", ni(r.getSupplierOfferMasterId()));
                 p.addValue("Remarks", ns(r.getRemarks()));
-                new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+                new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                         .withProcedureName("USP_SupplierOfferBuyerInquiryMappingDetail_Insert").execute(p);
             }
         }
@@ -298,7 +298,7 @@ public class PurchaseOrderMasterCmagtRepository {
     private static final String P_GET = "USP_purchaseOrderMaster_GetAllMethod";
 
     private List<Map<String, Object>> get(MapSqlParameterSource p) {
-        Map<String, Object> out = new SimpleJdbcCall(jdbcTemplate)
+        Map<String, Object> out = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                 .withSchemaName("cmagt").withProcedureName(P_GET).execute(p);
         return firstList(out);
     }
@@ -330,7 +330,7 @@ public class PurchaseOrderMasterCmagtRepository {
         MapSqlParameterSource p = new MapSqlParameterSource();
         p.addValue("Id", id);
         p.addValue("DocumentTypeId", documentTypeId);
-        return firstList(new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+        return firstList(new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                 .withProcedureName("USP_SupplierOfferBuyerInquiryMappingDetail_ReadById").execute(p));
     }
 
@@ -416,7 +416,7 @@ public class PurchaseOrderMasterCmagtRepository {
         p.addValue("EntryUserId", entryUserId);
         p.addValue("Id", id);
         p.addValue("Activity", "DeleteById");
-        new SimpleJdbcCall(jdbcTemplate).withSchemaName("cmagt")
+        new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate).withSchemaName("cmagt")
                 .withProcedureName(P_GET).execute(p);
     }
 

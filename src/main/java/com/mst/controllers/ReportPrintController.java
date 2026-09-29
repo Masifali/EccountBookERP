@@ -4,6 +4,7 @@ import com.mst.reports.CrystalBridgeRenderer;
 import com.mst.reports.ReportDataService;
 import com.mst.reports.ReportDefinition;
 import com.mst.reports.ReportRegistry;
+import com.mst.reports.jasper.CrystalJasperPrinter;
 import com.mst.repositories.ReportTemplateRepository;
 import com.mst.security.CurrentUserContext;
 import org.slf4j.Logger;
@@ -43,15 +44,17 @@ public class ReportPrintController {
     private final CrystalBridgeRenderer crystal;
     private final ReportTemplateRepository templates;
     private final CurrentUserContext context;
+    private final CrystalJasperPrinter jasper;
 
     public ReportPrintController(ReportRegistry registry, ReportDataService data,
                                  CrystalBridgeRenderer crystal, ReportTemplateRepository templates,
-                                 CurrentUserContext context) {
+                                 CurrentUserContext context, CrystalJasperPrinter jasper) {
         this.registry = registry;
         this.data = data;
         this.crystal = crystal;
         this.templates = templates;
         this.context = context;
+        this.jasper = jasper;
     }
 
     private void require() {
@@ -67,7 +70,9 @@ public class ReportPrintController {
         Map<String, Object> m = new LinkedHashMap<>();
         try {
             require();
-            m.put("available", crystal.available());
+            m.put("available", true);
+            m.put("crystalAvailable", crystal.available());
+            m.put("jasper", "converted templates print without Crystal; others need the bridge");
             m.put("reason", crystal.unavailableReason());
             m.put("templatesSeeded", templates.seeded());
             m.put("templateFiles", templates.count());
@@ -115,12 +120,16 @@ public class ReportPrintController {
             if (def == null) {
                 return text(HttpStatus.NOT_FOUND, "Unknown report '" + key + "'.");
             }
-            if (!crystal.available()) {
-                return text(HttpStatus.SERVICE_UNAVAILABLE, crystal.unavailableReason());
+            /* A converted Jasper template (migration/rpt-to-jasper) prints in pure Java; the
+               Crystal bridge is the fallback for reports not converted yet. */
+            boolean useJasper = jasper.hasTemplate(def.template);
+            if (!useJasper && !crystal.available()) {
+                return text(HttpStatus.SERVICE_UNAVAILABLE, "No converted Jasper template for "
+                        + def.template + ", and " + crystal.unavailableReason());
             }
 
             Map<String, Object> result = data.run(key, args == null ? new LinkedHashMap<>() : args);
-            byte[] pdf = crystal.renderPdf(result);
+            byte[] pdf = useJasper ? jasper.renderPdf(result) : crystal.renderPdf(result);
 
             HttpHeaders h = new HttpHeaders();
             h.setContentType(MediaType.APPLICATION_PDF);

@@ -23,7 +23,7 @@ public class PurchaseOrderCmagtRepository {
     public Map<String, Object> saveOrUpdate(PurchaseOrderCmagtDto dto) {
         Map<String, Object> result = new HashMap<>();
         try {
-            SimpleJdbcCall masterCall = new SimpleJdbcCall(jdbcTemplate)
+            SimpleJdbcCall masterCall = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                     .withSchemaName("cmagt")
                     .withProcedureName("USP_purchaseOrderMaster_InsertAndUpdate");
 
@@ -66,7 +66,7 @@ public class PurchaseOrderCmagtRepository {
             // Details
             if (dto.getPurchaseOrderDetailList() != null) {
                 for (PurchaseOrderCmagtDto.ItemDetailDto det : dto.getPurchaseOrderDetailList()) {
-                    SimpleJdbcCall detCall = new SimpleJdbcCall(jdbcTemplate)
+                    SimpleJdbcCall detCall = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                             .withSchemaName("cmagt")
                             .withProcedureName("USP_purchaseOrderDetail_Insert");
 
@@ -113,7 +113,7 @@ public class PurchaseOrderCmagtRepository {
     }
 
     public List<Map<String, Object>> getHistory(Integer companyId, Integer organizationId, String fromDate, String toDate) {
-        SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate)
+        SimpleJdbcCall call = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                 .withSchemaName("cmagt")
                 .withProcedureName("USP_purchaseOrderMaster_GetAllMethod");
 
@@ -135,7 +135,7 @@ public class PurchaseOrderCmagtRepository {
     public Map<String, Object> getById(Integer id) {
         Map<String, Object> result = new HashMap<>();
 
-        SimpleJdbcCall headerCall = new SimpleJdbcCall(jdbcTemplate)
+        SimpleJdbcCall headerCall = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                 .withSchemaName("cmagt")
                 .withProcedureName("USP_purchaseOrderMaster_GetAllMethod");
 
@@ -150,7 +150,7 @@ public class PurchaseOrderCmagtRepository {
             Map<String, Object> header = new HashMap<>(headers.get(0));
 
             // Details
-            SimpleJdbcCall detCall = new SimpleJdbcCall(jdbcTemplate)
+            SimpleJdbcCall detCall = new com.mst.repositories.support.LenientJdbcCall(jdbcTemplate)
                     .withSchemaName("cmagt")
                     .withProcedureName("USP_purchaseOrderMaster_GetAllMethod");
             MapSqlParameterSource detParams = new MapSqlParameterSource();
@@ -192,5 +192,171 @@ public class PurchaseOrderCmagtRepository {
         } catch (Exception e) {
             return new Date();
         }
+    }
+
+    /* ===================================================================== Load So picker
+       frmLoadSaleIrderForPO (Architecture.WinApp.Cmagt). Both calls are the BLL 0489
+       saleOrderMaster methods exactly as the loader makes them. */
+
+    /** Runs "EXEC proc @A=?, @B=?" with only the parameters present - the BLL adds a parameter
+     *  only when it has a value, and every omitted one has a NULL default in the procedure. */
+    private List<Map<String, Object>> execProc(String proc, LinkedHashMap<String, Object> p) {
+        StringBuilder sql = new StringBuilder("SET NOCOUNT ON; EXEC ").append(proc);
+        List<Object> args = new ArrayList<>();
+        boolean first = true;
+        for (Map.Entry<String, Object> e : p.entrySet()) {
+            sql.append(first ? " " : ", ").append('@').append(e.getKey()).append("=?");
+            args.add(e.getValue());
+            first = false;
+        }
+        return jdbcTemplate.queryForList(sql.toString(), args.toArray());
+    }
+
+    /** ComboDbCall (:158-182) -> GetDataForDropDown: @OrganizationId, @CompanyId only (the
+     *  loader sets DocumentTypeId/FinancialYearId/BranchesIds on the object but the BLL never
+     *  sends them). Rows: Id, ReferenceName, ParentCategoryId, Activity. */
+    public List<Map<String, Object>> loadSoCombos(int orgId, int companyId) {
+        LinkedHashMap<String, Object> p = new LinkedHashMap<>();
+        p.put("OrganizationId", orgId);
+        p.put("CompanyId", companyId);
+        return execProc("[cmagt].[USP_GetDataForDropDownFromsaleOrderMaster]", p);
+    }
+
+    /** PendingDataDbCall (:279-307) -> BLL 0489 PendingDataLoader (:675-786). Dates always
+     *  (the pickers are never null); doc nos and ids only when non-zero; ship-to text only
+     *  when non-empty. @DocumentTypeId is not sent by the BLL. */
+    public List<Map<String, Object>> loadSoPending(int orgId, int companyId, int branchId, int fyId,
+                                                   String fromDate, String toDate,
+                                                   Integer fromDocNo, Integer toDocNo,
+                                                   Integer commissionAgentId, Integer buyerId,
+                                                   Integer itemId, Integer deliveryToPartyId,
+                                                   String shipToAddress) {
+        LinkedHashMap<String, Object> p = new LinkedHashMap<>();
+        p.put("OrganizationId", orgId);
+        p.put("CompanyId", companyId);
+        p.put("BranchesId", branchId);
+        p.put("FinancialYearId", fyId);
+        Date f = parseDateOrNull(fromDate), t = parseDateOrNull(toDate);
+        if (f != null) p.put("FromDate", new java.sql.Date(f.getTime()));
+        if (t != null) p.put("ToDate", new java.sql.Date(t.getTime()));
+        if (fromDocNo != null && fromDocNo != 0) p.put("FromDocNo", fromDocNo);
+        if (toDocNo != null && toDocNo != 0) p.put("ToDocNo", toDocNo);
+        if (commissionAgentId != null && commissionAgentId != 0) p.put("CommissionAgentId", commissionAgentId);
+        if (buyerId != null && buyerId != 0) p.put("buyerId", buyerId);
+        if (itemId != null && itemId != 0) p.put("ItemId", itemId);
+        if (deliveryToPartyId != null && deliveryToPartyId != 0) p.put("DeliveryToPartyId", deliveryToPartyId);
+        if (shipToAddress != null && !shipToAddress.trim().isEmpty()) p.put("ShipToAddress", shipToAddress);
+        return execProc("[cmagt].[USP_saleOrderMaster_PendingDataLoader]", p);
+    }
+
+    /** HistoryComboDbCall (:770-788) -> BLL 0490 GetDataForDropDown with DocumentTypeIds='1052'. */
+    public List<Map<String, Object>> historyCombos(int orgId, int companyId) {
+        LinkedHashMap<String, Object> p = new LinkedHashMap<>();
+        p.put("OrganizationId", orgId);
+        p.put("CompanyId", companyId);
+        p.put("DocumentTypeIds", "1052");
+        return execProc("[cmagt].[USP_GetDataForDropDownFrompurchaseOrderMaster]", p);
+    }
+
+    /* ================================================== Ship-to "+" (SupfrmShipToAddress) */
+
+    /** cmbcountryfill -> country.GetAll(new Country()): org/company are the model's CLR 0. */
+    public List<Map<String, Object>> countries() {
+        LinkedHashMap<String, Object> p = new LinkedHashMap<>();
+        p.put("OrganizationId", 0);
+        p.put("CompanyId", 0);
+        p.put("MethodType", "GetAll");
+        return execProc("[dbo].[SP_Country_ReadMethod]", p);
+    }
+
+    /** cmbcountry_Leave -> City.GetAll(org, company) with @MethodType='GetAll'. */
+    public List<Map<String, Object>> cities(int orgId, int companyId) {
+        LinkedHashMap<String, Object> p = new LinkedHashMap<>();
+        p.put("OrganizationId", orgId);
+        p.put("CompanyId", companyId);
+        p.put("MethodType", "GetAll");
+        return execProc("[dbo].[SP_City_GetAllMethod]", p);
+    }
+
+    /** gridFill -> SupplierCustomerShipToAddress.FormHistory(org, company). */
+    public List<Map<String, Object>> shipToHistory(int orgId, int companyId) {
+        LinkedHashMap<String, Object> p = new LinkedHashMap<>();
+        p.put("OrganizationId", orgId);
+        p.put("CompanyId", companyId);
+        p.put("Activity", "FormHistory");
+        return execProc("[dbo].[Sp_SupplierCustomerShipToAddress_GetAllMethod]", p);
+    }
+
+    /** grdfrm_CellContentDoubleClick -> GetByID: @Id, @Activity='ReadById'. */
+    public List<Map<String, Object>> shipToById(int id) {
+        LinkedHashMap<String, Object> p = new LinkedHashMap<>();
+        p.put("Id", id);
+        p.put("Activity", "ReadById");
+        return execProc("[dbo].[Sp_SupplierCustomerShipToAddress_GetAllMethod]", p);
+    }
+
+    /** BLL 0602 Save: Id==0 -> Sp_..._Insert, else Sp_..._Update; SetProc sends every model
+     *  property (19 parameters, the procedures' full list); EntryDate = ModifyDate = now. */
+    public Object shipToSave(Map<String, Object> m) {
+        int id = toInt(m.get("Id"));
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        LinkedHashMap<String, Object> p = new LinkedHashMap<>();
+        p.put("AddressLine1", m.get("AddressLine1"));
+        p.put("AddressLine2", m.get("AddressLine2"));
+        p.put("AddressLine3", m.get("AddressLine3"));
+        p.put("AddressLine4", m.get("AddressLine4"));
+        p.put("AddressTitle", m.get("AddressTitle"));
+        p.put("ContactPerson", m.get("ContactPerson"));
+        p.put("CityId", toInt(m.get("CityId")));
+        p.put("CompanyId", toInt(m.get("CompanyId")));
+        p.put("CountryId", toInt(m.get("CountryId")));
+        p.put("EntryDate", now);
+        p.put("EntryUser", toInt(m.get("EntryUser")));
+        p.put("Id", id);
+        p.put("MobileNo", m.get("MobileNo"));
+        p.put("ModifyDate", now);
+        p.put("ModifyUser", toInt(m.get("ModifyUser")));
+        p.put("OrganizationId", toInt(m.get("OrganizationId")));
+        p.put("PhoneNo", m.get("PhoneNo"));
+        p.put("SupplierCustomerId", toInt(m.get("SupplierCustomerId")));
+        p.put("WhatsAppNo", m.get("WhatsAppNo"));
+        String proc = id == 0 ? "[dbo].[Sp_SupplierCustomerShipToAddress_Insert]"
+                              : "[dbo].[Sp_SupplierCustomerShipToAddress_Update]";
+        StringBuilder sql = new StringBuilder("SET NOCOUNT ON; EXEC ").append(proc);
+        List<Object> args = new ArrayList<>();
+        boolean first = true;
+        for (Map.Entry<String, Object> e : p.entrySet()) {
+            sql.append(first ? " " : ", ").append('@').append(e.getKey()).append("=?");
+            args.add(e.getValue());
+            first = false;
+        }
+        /* Insert ends with SELECT SCOPE_IDENTITY(); Update may return nothing - execute()
+           handles both without "A result set was generated for update". */
+        return jdbcTemplate.execute(sql.toString(), (org.springframework.jdbc.core.PreparedStatementCallback<Object>) ps -> {
+            for (int i = 0; i < args.size(); i++) ps.setObject(i + 1, args.get(i));
+            boolean rs = ps.execute();
+            while (true) {
+                if (rs) {
+                    try (java.sql.ResultSet r = ps.getResultSet()) {
+                        if (r.next()) return r.getObject(1);
+                    }
+                } else if (ps.getUpdateCount() == -1) {
+                    break;
+                }
+                rs = ps.getMoreResults();
+            }
+            return id;
+        });
+    }
+
+    private static int toInt(Object v) {
+        if (v == null) return 0;
+        if (v instanceof Number) return ((Number) v).intValue();
+        try { return (int) Double.parseDouble(String.valueOf(v).trim()); } catch (Exception e) { return 0; }
+    }
+
+    private Date parseDateOrNull(String s) {
+        if (s == null || s.trim().isEmpty()) return null;
+        try { return new SimpleDateFormat("yyyy-MM-dd").parse(s.trim()); } catch (Exception e) { return null; }
     }
 }

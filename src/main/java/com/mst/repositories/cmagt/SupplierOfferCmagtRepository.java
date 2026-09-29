@@ -198,4 +198,59 @@ public class SupplierOfferCmagtRepository {
             return null;
         }
     }
+
+    /* ------------------------------------------------------------------
+     * frmBuyerInquiryLoaderForOffer (Load Inquiry on frmSupplierOfferCmagt :4713)
+     * ------------------------------------------------------------------ */
+
+    /**
+     * ComboDbCall (:153-176) -> BLL 0492 InquiryBookingMaster.GetDataForDropDown (:367-396)
+     *   -> [cmagt].[USP_GetDataForDropDownFrominquiryBookingMaster]
+     * Only @OrganizationId/@CompanyId; @Activity is never set by the loader so every activity
+     * comes back and CombosFill (:179-259) splits them by the Activity column.
+     */
+    public List<Map<String, Object>> inquiryLoaderCombos(int orgId, int companyId) {
+        return jdbc.queryForList(
+                "EXEC [cmagt].[USP_GetDataForDropDownFrominquiryBookingMaster] @OrganizationId=?, @CompanyId=?",
+                orgId, companyId);
+    }
+
+    /**
+     * PendingDataDbCall (:274-302) -> BLL 0492 InquiryBookingMaster.PendingDataLoader (:443-530)
+     *   -> [cmagt].[USP_inquiryBookingMaster_PendingDataLoader]
+     * Org/Company/BranchesId/FinancialYearId/DocumentTypeId (1050, loader :113) always; every other
+     * parameter only when set, exactly as the BLL guards them (dates non-null, ints != 0,
+     * ShipToAddress non-empty). @RecId is never set by the loader.
+     */
+    public List<Map<String, Object>> pendingInquiryForOffer(int orgId, int companyId, int branchId,
+                                                            int financialYearId, int documentTypeId,
+                                                            String fromDate, String toDate,
+                                                            int fromDocNo, int toDocNo,
+                                                            int commissionAgentId, int buyerId, int itemId,
+                                                            int deliveryToPartyId, String shipToAddress) {
+        StringBuilder sql = new StringBuilder("EXEC [cmagt].[USP_inquiryBookingMaster_PendingDataLoader] "
+                + "@OrganizationId=?, @CompanyId=?, @BranchesId=?, @FinancialYearId=?, @DocumentTypeId=?");
+        java.util.List<Object> a = new java.util.ArrayList<>(java.util.Arrays.asList(
+                orgId, companyId, branchId, financialYearId, documentTypeId));
+        LocalDateTime f = parse(fromDate), t = parse(toDate);
+        if (f != null) { sql.append(", @FromDate=?"); a.add(java.sql.Date.valueOf(f.toLocalDate())); }
+        if (t != null) { sql.append(", @ToDate=?");   a.add(java.sql.Date.valueOf(t.toLocalDate())); }
+        if (fromDocNo != 0) { sql.append(", @FromDocNo=?"); a.add(fromDocNo); }
+        if (toDocNo != 0)   { sql.append(", @ToDocNo=?");   a.add(toDocNo); }
+        if (commissionAgentId != 0) { sql.append(", @CommissionAgentId=?"); a.add(commissionAgentId); }
+        if (deliveryToPartyId != 0) { sql.append(", @DeliveryToPartyId=?"); a.add(deliveryToPartyId); }
+        if (shipToAddress != null && !shipToAddress.isEmpty()) { sql.append(", @ShipToAddress=?"); a.add(shipToAddress); }
+        if (buyerId != 0) { sql.append(", @buyerId=?"); a.add(buyerId); }
+        if (itemId != 0)  { sql.append(", @ItemId=?");  a.add(itemId); }
+        List<Map<String, Object>> rows = jdbc.queryForList(sql.toString(), a.toArray());
+        /* dates as local text so the page never shifts them through UTC */
+        for (Map<String, Object> r : rows) {
+            for (Map.Entry<String, Object> e : r.entrySet()) {
+                Object v = e.getValue();
+                if (v instanceof Timestamp) e.setValue(((Timestamp) v).toLocalDateTime().toString().replace('T', ' '));
+                else if (v instanceof java.sql.Date) e.setValue(v.toString());
+            }
+        }
+        return rows;
+    }
 }

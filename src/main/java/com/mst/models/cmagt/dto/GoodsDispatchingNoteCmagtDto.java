@@ -123,6 +123,10 @@ public class GoodsDispatchingNoteCmagtDto {
         private String grnDate;
         @JsonAlias({"GrnNo"})
         private Integer grnNo;
+        /* Not persisted: the row's PO validity date (loader PurchaseOrderExpiryDate / ReadDetailByHeaderId
+           POExpiryDate) for the late-vehicle check in Insert() :1954-1990. */
+        @JsonAlias({"POExpiryDate", "PurchaseOrderExpiryDate"})
+        private String poExpiryDate;
 
         public Integer getGdnBuyerDispatchDetailId() { return gdnBuyerDispatchDetailId; }
         public void setGdnBuyerDispatchDetailId(Integer v) { this.gdnBuyerDispatchDetailId = v; }
@@ -200,6 +204,8 @@ public class GoodsDispatchingNoteCmagtDto {
         public void setGrnDate(String v) { this.grnDate = v; }
         public Integer getGrnNo() { return grnNo; }
         public void setGrnNo(Integer v) { this.grnNo = v; }
+        public String getPoExpiryDate() { return poExpiryDate; }
+        public void setPoExpiryDate(String v) { this.poExpiryDate = v; }
     }
 
     public static class EmptyBagDto {

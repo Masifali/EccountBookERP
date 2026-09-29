@@ -45,6 +45,19 @@ public class SaleOrderCmagtController {
         return ResponseEntity.ok(service.getMasterLookups());
     }
 
+    /** BtnRefreshHistory_Click: re-reads USP_GetDataForDropDownFromsaleOrderMaster. */
+    @GetMapping("/api/history-combos")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> historyCombos() {
+        return ResponseEntity.ok(service.getHistoryCombos());
+    }
+
+    @GetMapping("/api/ship-to-addresses")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> shipToAddresses() {
+        return ResponseEntity.ok(service.getShipToAddresses());
+    }
+
     @GetMapping("/api/next-doc-no")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> nextDocNo() {

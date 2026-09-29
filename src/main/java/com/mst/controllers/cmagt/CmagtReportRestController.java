@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -63,6 +65,16 @@ public class CmagtReportRestController {
     public ResponseEntity<?> filters(@PathVariable String report) {
         try {
             return ResponseEntity.ok(service.filters(report));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", e.getMessage()));
+        }
+    }
+
+    /** UpdateOrderStatus / UpdateMultiOrderStatus of the Sale / Purchase Order reports. */
+    @PostMapping("/{report}/status")
+    public ResponseEntity<?> status(@PathVariable String report, @RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.ok(service.orderStatus(report, body));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("message", e.getMessage()));
         }

@@ -146,9 +146,13 @@ function withButton(btnId, work) {
  * document, Update and Delete once one is loaded (btnsave.Visible etc., :1328). */
 function applyButtonState() {
     var loaded = intOf('inquiryBookingMasterId') > 0;
-    if ($('btnSave')) $('btnSave').disabled = loaded;
-    if ($('btnUpdate')) $('btnUpdate').disabled = !loaded;
-    if ($('btnDelete')) $('btnDelete').disabled = !loaded;
+    /* btnsave / btnUpdate / btnDelete are shown and hidden (Visible), not greyed out */
+    [['btnSave', !loaded], ['btnUpdate', loaded], ['btnDelete', loaded]].forEach(function (b) {
+        var el = $(b[0]);
+        if (!el) return;
+        el.style.display = b[1] ? '' : 'none';
+        if (!inFlight[b[0]]) el.disabled = !b[1];
+    });
 }
 
 function getJson(url) {
@@ -447,6 +451,8 @@ function bibDeliveryPartyChanged() {
     fillSelect('cmbShipToAddress', rows, 'Id', 'AddressLine1');
     makeSearchable();
     if (!partyId) { $('cmbShipToAddress').value = 0; $('txtShipToAddressText').value = ''; }
+    /* BindAndRetainSelection(..., selectSingle: dt.Rows.Count == 1) (:740) */
+    else if (rows.length === 1) { $('cmbShipToAddress').value = rows[0].Id; bibShipToAddressChanged(); }
 }
 
 /* picking an address back-fills its party (:681) */
@@ -613,10 +619,11 @@ function bibParamNav(what, v) {
 
 /* ------------------------------------------------------- sub parties */
 
+/* grdSubParty is always on the desktop form (docked Fill under panel5 "Sub Parties");
+   BindGrids() seeds one empty row when the table is empty (AddRowsInSubPartyeGrid, :1086). */
 function bibToggleSubParties() {
-    var on = $('chkAddSubParties').checked;
-    $('subPartiesBlock').style.display = on ? '' : 'none';
-    if (on && !subPartyRows.length) bibAddSubParty();
+    if ($('subPartiesBlock')) $('subPartiesBlock').style.display = '';
+    if (!subPartyRows.length) bibAddSubParty();
 }
 
 function bibAddSubParty() {
@@ -669,7 +676,7 @@ function renderSubParties() {
     body.innerHTML = '';
     var parties = lookupData.buyers || [];
     if (!subPartyRows.length) {
-        body.innerHTML = '<tr><td colspan="8">No sub parties.</td></tr>';
+        body.innerHTML = '<tr><td colspan="7">No sub parties.</td></tr>';
     } else {
         subPartyRows.forEach(function (r, i) {
             var opts = '<option value="0">-- Select --</option>' + parties.map(function (p) {
@@ -681,7 +688,6 @@ function renderSubParties() {
             tr.innerHTML =
                 '<td><button type="button" class="danger" onclick="event.stopPropagation();bibRemoveSubParty(' + i + ')">X</button></td>' +
                 '<td><button type="button" onclick="event.stopPropagation();bibAddSubParty()">+</button></td>' +
-                '<td style="text-align:center;"><input type="checkbox" ' + (r.selected ? 'checked' : '') + ' onclick="event.stopPropagation()" onchange="subPartyRows[' + i + '].selected=this.checked"></td>' +
                 '<td><select onclick="event.stopPropagation()" onchange="bibSubCellChanged(' + i + ',\'SubPartyId\',this.value)">' + opts + '</select></td>' +
                 '<td><input type="number" step="0.001" value="' + (r.itemQty || 0) + '" onclick="event.stopPropagation()" oninput="bibSubCellChanged(' + i + ',\'itemQty\',this.value)"></td>' +
                 '<td><input type="number" step="0.001" value="' + (r.Rate || 0) + '" onclick="event.stopPropagation()" oninput="bibSubCellChanged(' + i + ',\'Rate\',this.value)"></td>' +
@@ -719,7 +725,7 @@ document.addEventListener('keydown', function (e) {
     if (!e.ctrlKey) return;
     if (!$('subPartiesBlock') || $('subPartiesBlock').style.display === 'none') return;
     if (e.key === 'd' || e.key === 'D') { e.preventDefault(); bibAddSubParty(); }
-    else if (e.key === 'Delete') { e.preventDefault(); bibRemoveSubParty(subSelectedIdx); }
+    else if (e.key === 'Delete' && !e.shiftKey) { e.preventDefault(); bibRemoveSubParty(subSelectedIdx); }
 });
 
 /* ------------------------------------------------------- validation */
@@ -756,6 +762,15 @@ function bibValidate() {
         if (fromEntered !== toEntered) return 'Please enter both Range From and Range To for parameter: ' + p.QualityParameter;
         if (fromEntered && toEntered && (+p.rangeFrom) > (+p.rangeTo)) return 'Range From cannot be greater than Range To for parameter: ' + p.QualityParameter;
         if ((+p.rangeFrom) < 0 || (+p.rangeTo) < 0) return 'Negative values are not allowed for parameter: ' + p.QualityParameter;
+    }
+    /* Insert() :1608-1615 - a sub-party row that is used (party chosen or Amount > 0) must have
+       both; FormHelper.ValidateField wording "<field> is required in Detail Grid at row No: n" */
+    for (var j = 0; j < subPartyRows.length; j++) {
+        var sp = subPartyRows[j];
+        if ((parseInt(sp.SubPartyId, 10) || 0) > 0 || (+sp.Amount || 0) > 0) {
+            if (!(parseInt(sp.SubPartyId, 10) > 0)) return 'Sub Party Name is required in Detail Grid at row No: ' + (j + 1);
+            if (!((+sp.Amount || 0) > 0)) return 'amount is required in Detail Grid at row No: ' + (j + 1);
+        }
     }
     return null;
 }
@@ -883,8 +898,20 @@ function bibSave() {
                     message(isUpdate ? 'Update Successfully' : 'Save Successfully');
                     removedSubPartyRows = [];
                     var id = data.id || intOf('inquiryBookingMasterId');
+                    /* desktop Insert (:1621-1641): message, Reset(), then
+                       new doc + ChkLink -> open frmSubBuyerInquiryBooking for it,
+                       otherwise Preview -> print slip. The separate sub-party form is
+                       not ported; the web opens the saved inquiry with the sub-party
+                       grid switched on instead. */
+                    /* new doc + ChkLink: Reset() then openForm(success) -> frmSubBuyerInquiryBooking */
+                    if (!isUpdate && $('chkLink') && $('chkLink').checked && id) {
+                        bibNew();
+                        bibAddSubPartyTo(id, true);
+                        return;
+                    }
+                    bibNew();
                     if ($('chkPrint').checked && id) bibPrintId(id);
-                    return bibLoad(id);
+                    return;
                 }
                 message((data && (data.message || data.error)) || 'The server rejected the save.', true);
             })
@@ -1015,7 +1042,7 @@ function bibLoad(id) {
                     };
                 });
                 removedSubPartyRows = [];
-                if (subPartyRows.length) { $('chkAddSubParties').checked = true; bibToggleSubParties(); }
+                bibToggleSubParties();
                 renderSubParties();
 
                 makeSearchable();
@@ -1080,44 +1107,59 @@ function renderHistory() {
     var body = $('grdHistoryBody');
     body.innerHTML = '';
     if (!historyRows.length) {
-        body.innerHTML = '<tr><td colspan="24">No documents match these filters.</td></tr>';
+        body.innerHTML = '<tr><td colspan="23">No documents match these filters.</td></tr>';
+        if ($('totHistQty')) { $('totHistQty').textContent = ''; $('totHistWeight').textContent = ''; }
+        bibRenderSubPartyHistory([]);
         $('lblOpenInquiries').textContent = '0';
         $('lblInProcessInquiries').textContent = '0';
         $('lblTotalOutstanding').textContent = '0';
         return;
     }
+    var totQty = 0, totWeight = 0;
     historyRows.forEach(function (r, i) {
         var id = pick(r, 'inquiryBookingMasterId', 'InquiryBookingMasterId');
+        var qty = parseFloat(pick(r, 'itemQty', 'ItemQty')) || 0, wt = parseFloat(pick(r, 'itemWeight', 'ItemWeight')) || 0;
+        totQty += qty; totWeight += wt;
         var tr = document.createElement('tr');
+        /* SelectionChanged -> GetDetailGrdByHeadId (:2331); DoubleClick / Ctrl+Enter -> ReadById */
+        tr.onclick = function () {
+            Array.prototype.forEach.call(document.querySelectorAll('#grdHistoryBody tr.selected'), function (x) { x.classList.remove('selected'); });
+            tr.classList.add('selected');
+            bibLoadSubPartyHistory(id);
+        };
+        tr.ondblclick = function () { bibLoad(id); bibShowTab(null, 'tabForm'); };
+        /* column order = dt2 (:2162) with the Edit / Print / AddSubParties buttons inserted at
+           positions 0, 2 and 3 (GridSettingHistory, :2245) */
         tr.innerHTML =
-            '<td style="text-align:center;"><input type="checkbox" onchange="historyRows[' + i + '].selected=this.checked"></td>' +
-            '<td><button type="button" onclick="bibLoad(' + id + ')">Edit</button></td>' +
-            '<td><button type="button" onclick="bibPrintId(' + id + ')">Print</button></td>' +
-            '<td><button type="button" onclick="bibAddSubPartyTo(' + id + ')">Add Sub Party</button></td>' +
-            /* the document code is clickable and opens its own record */
-            '<td><a href="#" onclick="event.preventDefault();bibLoad(' + id + ')">' + esc(pick(r, 'inquiryBookingNo', 'InquiryBookingNo')) + '</a></td>' +
-            '<td>' + esc(String(pick(r, 'inquiryBookingDate', 'InquiryBookingDate')).slice(0, 10)) + '</td>' +
-            '<td>' + esc(String(pick(r, 'validityDate', 'ValidityDate')).slice(0, 10)) + '</td>' +
+            '<td><button type="button" onclick="event.stopPropagation();bibLoad(' + id + ');bibShowTab(null,\'tabForm\')">Edit</button></td>' +
             '<td>' + esc(pick(r, 'CommissionAgentName', 'commissionAgentName')) + '</td>' +
+            '<td><button type="button" onclick="event.stopPropagation();bibPrintId(' + id + ')">Print</button></td>' +
+            '<td><button type="button" onclick="event.stopPropagation();bibAddSubPartyTo(' + id + ')">Add Sub Party</button></td>' +
             '<td>' + esc(pick(r, 'BuyerName', 'buyerName')) + '</td>' +
             '<td>' + esc(pick(r, 'DeliveryToParty', 'deliveryToParty')) + '</td>' +
             '<td>' + esc(pick(r, 'ShipToAddress', 'shipToAddress')) + '</td>' +
+            /* the document code is clickable and opens its own record */
+            '<td><a href="#" onclick="event.preventDefault();event.stopPropagation();bibLoad(' + id + ');bibShowTab(null,\'tabForm\')">' + esc(pick(r, 'inquiryBookingNo', 'InquiryBookingNo')) + '</a></td>' +
+            '<td>' + esc(bibDmy(pick(r, 'inquiryBookingDate', 'InquiryBookingDate'))) + '</td>' +
+            '<td>' + esc(bibDmy(pick(r, 'validityDate', 'ValidityDate'))) + '</td>' +
             /* PaymentTermNames is always empty from this procedure - see the contract */
             '<td>' + esc(pick(r, 'PaymentTermNames', 'paymentTermNames')) + '</td>' +
             '<td>' + esc(pick(r, 'DeliveryTerm', 'deliveryTerm')) + '</td>' +
             '<td>' + esc(pick(r, 'ItemName', 'itemName')) + '</td>' +
-            '<td style="text-align:right;">' + fmt(pick(r, 'itemQty', 'ItemQty')) + '</td>' +
-            '<td style="text-align:right;">' + fmt(pick(r, 'itemWeight', 'ItemWeight')) + '</td>' +
-            '<td style="text-align:right;">' + fmt(pick(r, 'buyerRate', 'BuyerRate')) + '</td>' +
-            '<td style="text-align:right;">' + fmt(pick(r, 'supplierRate', 'SupplierRate')) + '</td>' +
+            '<td class="num">' + fmt(qty) + '</td>' +
+            '<td class="num">' + fmt(wt) + '</td>' +
+            '<td class="num">' + fmt(pick(r, 'buyerRate', 'BuyerRate')) + '</td>' +
+            '<td class="num">' + fmt(pick(r, 'supplierRate', 'SupplierRate')) + '</td>' +
             '<td>' + esc(pick(r, 'QualitySpecifications', 'qualitySpecifications')) + '</td>' +
             '<td>' + esc(pick(r, 'EntryUserName', 'entryUserName')) + '</td>' +
-            '<td>' + esc(String(pick(r, 'EntryDate', 'entryDate')).replace('T', ' ').slice(0, 16)) + '</td>' +
+            '<td>' + esc(bibDmyTime(pick(r, 'EntryDate', 'entryDate'))) + '</td>' +
             '<td>' + esc(pick(r, 'ModifyUserName', 'modifyUserName')) + '</td>' +
-            '<td>' + esc(String(pick(r, 'ModifyDate', 'modifyDate')).replace('T', ' ').slice(0, 16)) + '</td>' +
-            '<td style="text-align:right;">' + esc(pick(r, 'NoOfAttachments', 'noOfAttachments') || 0) + '</td>';
+            '<td>' + esc(bibDmyTime(pick(r, 'ModifyDate', 'modifyDate'))) + '</td>' +
+            '<td class="num">' + esc(pick(r, 'NoOfAttachments', 'noOfAttachments') || 0) + '</td>';
         body.appendChild(tr);
     });
+    if ($('totHistQty')) $('totHistQty').textContent = fmt(totQty);
+    if ($('totHistWeight')) $('totHistWeight').textContent = fmt(totWeight);
 
     var first = historyRows[0];
     var open = parseFloat(pick(first, 'TotalOpenRecords', 'totalOpenRecords')) || 0;
@@ -1132,15 +1174,110 @@ function bibToggleAllHistory(on) {
     Array.prototype.forEach.call(document.querySelectorAll('#grdHistoryBody input[type=checkbox]'), function (c) { c.checked = !!on; });
 }
 
+/* btnNewHistory_Click (:1937): clears Item, Commission Agent, Buyer and the price range only -
+   the dates, validity dates and parent item are kept, and the grid is not cleared. */
 function bibClearHistoryFilters() {
-    ['histFromDate', 'histToDate', 'histValidityFrom', 'histValidityTo', 'txtRateFrom', 'txtRateTo'].forEach(function (id) { $(id).value = ''; });
-    ['cmbHistParentItem', 'cmbHistCommissionAgent', 'cmbHistBuyer', 'cmbHistItem'].forEach(function (id) {
+    ['txtRateFrom', 'txtRateTo'].forEach(function (id) { $(id).value = ''; });
+    ['cmbHistCommissionAgent', 'cmbHistBuyer', 'cmbHistItem'].forEach(function (id) {
         $(id).value = 0;
         bibRefreshSelect2($(id));
     });
-    historyRows = [];
-    renderHistory();
 }
+
+/* BtnRefreshHistory_Click (:1953): reload the history combos; when a parent item is chosen
+   the item list is re-narrowed to it (BindDropdownsAgainstParentCategory). */
+function bibRefreshHistoryCombos() {
+    return withButton('btnRefreshHistory', function () {
+        var keep = { p: intOf('cmbHistParentItem'), a: intOf('cmbHistCommissionAgent'), b: intOf('cmbHistBuyer'), i: intOf('cmbHistItem') };
+        return loadLookups().then(function () {
+            $('cmbHistParentItem').value = keep.p; $('cmbHistCommissionAgent').value = keep.a; $('cmbHistBuyer').value = keep.b;
+            if (keep.p) bibHistParentChanged();
+            $('cmbHistItem').value = keep.i;
+            ['cmbHistParentItem', 'cmbHistCommissionAgent', 'cmbHistBuyer', 'cmbHistItem'].forEach(function (id) { bibRefreshSelect2($(id)); });
+        });
+    });
+}
+
+/* dd-MMM-yyyy and dd-MMM-yy hh:mm tt (GridSettingHistory FormatString, :2232-2235) */
+var BIB_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function bibParts(v) {
+    var m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+    return m ? { y: m[1], mo: BIB_MON[parseInt(m[2], 10) - 1], d: m[3], h: m[4] ? parseInt(m[4], 10) : null, mi: m[5] } : null;
+}
+function bibDmy(v) { var p = bibParts(v); return p ? p.d + '-' + p.mo + '-' + p.y : ''; }
+function bibDmyTime(v) {
+    var p = bibParts(v);
+    if (!p) return '';
+    var s = p.d + '-' + p.mo + '-' + p.y.slice(2);
+    if (p.h === null) return s;
+    var h12 = p.h % 12 || 12;
+    return s + ' ' + (h12 < 10 ? '0' + h12 : h12) + ':' + p.mi + ' ' + (p.h < 12 ? 'AM' : 'PM');
+}
+
+/* grdSubPartyHistory: GetDetailGrdByHeadId (:2349) - ReadById, then the party list with
+   SubPartyName shown in place of the hidden SubPartyId (HistoryDetailGridSetting, :2371). */
+var subHistReq = 0;
+function bibLoadSubPartyHistory(id) {
+    var mine = ++subHistReq;
+    if (!id) { bibRenderSubPartyHistory([]); return Promise.resolve(); }
+    return getJson(API + '/' + id)
+        .then(function (o) {
+            if (mine !== subHistReq) return;
+            var rows = (o && (o.partyDetails || o.InquiryBookingPartyDetailList || o.inquiryBookingPartyDetailList)) || [];
+            bibRenderSubPartyHistory(rows);
+        })
+        .catch(function (e) { if (mine === subHistReq) { bibRenderSubPartyHistory([]); message('Sub parties could not be read: ' + e.message, true); } });
+}
+function bibRenderSubPartyHistory(rows) {
+    var body = $('grdSubPartyHistoryBody');
+    if (!body) return;
+    var parties = lookupData.buyers || [], q = 0, a = 0;
+    body.innerHTML = rows.map(function (r) {
+        var pid = parseInt(r.SubPartyId || r.subPartyId, 10) || 0;
+        var name = r.SubPartyName || r.subPartyName || '';
+        if (!name) for (var k = 0; k < parties.length; k++) if (parseInt(parties[k].Id, 10) === pid) { name = parties[k].CompanyName; break; }
+        var qty = parseFloat(r.itemQty || r.ItemQty) || 0, amt = parseFloat(r.Amount || r.amount) || 0;
+        q += qty; a += amt;
+        return '<tr><td>' + esc(name) + '</td><td class="num">' + fmt(qty) + '</td><td class="num">' + fmt(r.Rate || r.rate || 0) +
+            '</td><td class="num">' + fmt(amt) + '</td><td>' + esc(r.remarks || r.Remarks || '') + '</td></tr>';
+    }).join('');
+    if ($('totSubHistQty')) { $('totSubHistQty').textContent = rows.length ? fmt(q) : ''; $('totSubHistAmount').textContent = rows.length ? fmt(a) : ''; }
+}
+
+/* MakeShortCutKeys() (:2505) */
+var BIB_SHORTCUTS = [
+    ['Ctrl+S', 'For Save When on Entry form and For Show Data when on History Form'], ['Ctrl+U', 'For Update'],
+    ['Ctrl+Shift+Delete', 'For Delete'], ['Ctrl+E', 'For Close'], ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'],
+    ['Ctrl+P', 'For Print'], ['Ctrl+F5', 'For Focus on Inquiry Date'], ['Ctrl+F10', 'For Open Attachments'],
+    ['Ctrl+T', 'For Tab Transfer'], ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowDown', 'For Focus On Parent Item'],
+    ['Ctrl+ArrowUp', 'For Focus On on Inquiry Date'], ['Ctrl+Enter', 'When Focus On Any Grid For Update Record']
+];
+function bibShortcutKeys() {
+    var m = $('bibShortcutModal');
+    if (!m) return;
+    $('bibShortcutBody').innerHTML = BIB_SHORTCUTS.map(function (k) { return '<tr><td>' + esc(k[0]) + '</td><td>' + esc(k[1]) + '</td></tr>'; }).join('');
+    m.classList.add('open');
+}
+
+/* frmBuyerInquiryBooking_KeyDown (:2400) - main page only; the sub page has its own */
+document.addEventListener('keydown', function (e) {
+    if (window.BIB_SUB_MODE || !e.ctrlKey) return;
+    var onHistory = $('tabHistory') && $('tabHistory').style.display !== 'none';
+    var k = (e.key || '').toLowerCase();
+    function vis(id) { var b = $(id); return b && b.style.display !== 'none' && !b.disabled; }
+    if (e.altKey && (e.key === 'Control' || e.key === 'Alt')) { bibShortcutKeys(); return; }
+    if (k === 's' && !e.shiftKey) { e.preventDefault(); if (onHistory) bibLoadHistory(); else if (vis('btnSave')) bibSave(); }
+    else if (k === 'u') { e.preventDefault(); if (!onHistory && vis('btnUpdate')) bibSave(); }
+    else if (e.key === 'Delete' && e.shiftKey) { e.preventDefault(); if (!onHistory && vis('btnDelete')) bibDelete(); }
+    else if (k === 'r') { e.preventDefault(); if (onHistory) bibRefreshHistoryCombos(); else bibRefresh(); }
+    else if (k === 'n') { e.preventDefault(); if (onHistory) bibClearHistoryFilters(); else bibNew(); }
+    else if (k === 'p') { e.preventDefault(); bibPrint(); }
+    else if (k === 't') { e.preventDefault(); bibShowTab(null, onHistory ? 'tabForm' : 'tabHistory'); }
+    else if (k === 'e') { e.preventDefault(); window.location.href = '/commission'; }
+    else if (e.key === 'F10') { e.preventDefault(); bibAttachments(); }
+    else if (e.key === 'F5' || e.key === 'ArrowUp') { e.preventDefault(); if ($('datInquiryDate')) $('datInquiryDate').focus(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); if ($('cmbParentItem')) $('cmbParentItem').focus(); }
+});
 
 /* the history's Item list narrows with the chosen parent item, as
    BindDropdownsAgainstParentCategory does (:1973) */
@@ -1157,7 +1294,7 @@ function bibHistParentChanged() {
 
 function bibShowTab(ev, id) {
     if (ev) ev.preventDefault();
-    ['tabForm', 'tabHistory'].forEach(function (t) { $(t).style.display = (t === id) ? '' : 'none'; });
+    ['tabForm', 'tabHistory'].forEach(function (t) { if ($(t)) $(t).style.display = (t === id) ? '' : 'none'; });
     Array.prototype.forEach.call(document.querySelectorAll('#bibTabs a'), function (a) {
         a.classList.toggle('active', a.dataset.tab === id);
     });
@@ -1195,7 +1332,6 @@ function bibNew() {
          'cmbItemName', 'cmbPackingType', 'cmbCropYear', 'cmbPackUom', 'cmbRateUom', 'cmbAnalysisGroup']
             .forEach(function (id) { if ($(id)) $(id).value = 0; });
         $('cmbAnalysisGroup').removeAttribute('data-loaded-group');   /* RecId = 0 (:949) */
-        $('chkAddSubParties').checked = false;
         bibToggleSubParties();
         renderParams(); renderSubParties();
         makeSearchable();
@@ -1242,13 +1378,22 @@ function bibPrintId(id) { window.open(API + '/print/' + id, '_blank'); }
 function bibAttachments() { message('Attachments are not implemented on this screen yet.', true); }
 function bibAddShipToAddress() { message('Defining a new ship-to address is not implemented on this screen yet.', true); }
 function bibOpenSupplierOffer() { window.location.href = '/commission/supplier-offer'; }
-function bibAddSubPartyTo(id) {
-    bibLoad(id).then(function () { $('chkAddSubParties').checked = true; bibToggleSubParties(); });
+/* openForm(Id) (:2635): opens frmSubBuyerInquiryBooking as its own window and ReadById(Id).
+   The web opens /commission/sub-buyer-inquiry-booking?id= in a new tab; when a popup is
+   blocked (after an async save) the current tab navigates there instead. */
+function bibAddSubPartyTo(id, afterSave) {
+    if (!id) { message('Please Save The Record First or Edit Any', true); return; }
+    var url = '/commission/sub-buyer-inquiry-booking?id=' + encodeURIComponent(id);
+    var w = window.open(url, '_blank');
+    if (!w && afterSave) window.location.href = url;
+    else if (!w) window.location.href = url;
 }
 
 /* ------------------------------------------------------------- start */
 
 document.addEventListener('DOMContentLoaded', function () {
+    /* the Sub Buyer Inquiry page reuses this file and starts itself */
+    if (window.BIB_SUB_MODE) return;
     loadLookups().then(function () { return bibNew(); });
 });
 

@@ -195,6 +195,14 @@ public class CmagtReportService {
         try { days = (int) Double.parseDouble(repository.config(org, comp, "DefaultDaysToLessFromHistoryFromDate")); }
         catch (Exception ignored) { days = 0; }
         out.put("defaultDaysToLessFromHistoryFromDate", days);
+        if (SALE_ORDER.equals(report) || PURCHASE_ORDER.equals(report)) {
+            out.put("rights", orderRights(report));
+        }
+        if (AGENT_TRADE_BILL_REGISTER.equals(report)) {
+            /* cmbDateType_ValueChanged case 5: txtDateFrom = ActiveYr.Start_Period. */
+            Object start = repository.financialYearStart(org, comp, currentUserContext.currentFinancialYearId());
+            out.put("financialYearStart", start == null ? null : String.valueOf(start).substring(0, Math.min(10, String.valueOf(start).length())));
+        }
         return out;
     }
 
@@ -274,5 +282,96 @@ public class CmagtReportService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    // ======================================================= order status (SO / PO reports)
+
+    /**
+     * CommonServices.SetRightsValueInRightsObject(base.Name): Admin role -> every
+     * CanChangeOrder* right true; otherwise each comes from the user's grant rows for the
+     * report form's own screen (frmSaleOrderCmagtReport / frmPurchaseOrderCmagtReport).
+     */
+    public Map<String, Boolean> orderRights(String report) {
+        String screen = SALE_ORDER.equals(report) ? "frmSaleOrderCmagtReport" : "frmPurchaseOrderCmagtReport";
+        String role = currentUserContext.currentRoleName();
+        boolean admin = "Admin".equals(role);
+        Map<String, Boolean> r = new LinkedHashMap<>();
+        r.put("CanChangeOrderStatusToComplete", admin);
+        r.put("CanChangeOrderStatusToOpen", admin);
+        r.put("CanChangeOrderStatusToCancel", admin);
+        r.put("CanChangeOrderExpiryDate", admin);
+        if (admin) return r;
+        for (Map<String, Object> row : repository.userRights(currentUserContext.currentUserId(), screen, role,
+                currentUserContext.currentCompanyId())) {
+            String name = String.valueOf(row.get("RightName")).trim();
+            if (!r.containsKey(name)) continue;
+            Object v = row.get("Value");
+            r.put(name, Boolean.TRUE.equals(v) || "1".equals(String.valueOf(v)) || "true".equalsIgnoreCase(String.valueOf(v)));
+        }
+        return r;
+    }
+
+    /**
+     * frmSaleOrderCmagtReport / frmPurchaseOrderCmagtReport UpdateOrderStatus (grid button, one
+     * row) and UpdateMultiOrderStatus (Complete / Cancel / Open Orders buttons, checked rows):
+     * RemarksPopUp text required ("Action Remarks Required"), then one BLL call with one TVP row
+     * per order: OrganizationId, CompanyId, FinancialYearId (never set by the form - CLR 0),
+     * DocumentTypeId 1053 / 1052, Id, UserId, ReqType, DateForUpdate (ValidityDate for
+     * "Expiry", otherwise now), Remarks. The procedure owns the mapping / GDN / GRN guards.
+     *
+     * body: {reqType: Complete|Cancel|Open|Expiry, remarks, items: [{id, validityDate?}]}
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> orderStatus(String report, Map<String, Object> body) {
+        if (!SALE_ORDER.equals(report) && !PURCHASE_ORDER.equals(report))
+            throw new IllegalArgumentException("Status change is only available on the Sale / Purchase Order reports");
+        String reqType = body == null ? "" : String.valueOf(body.getOrDefault("reqType", "")).trim();
+        Map<String, String> need = new LinkedHashMap<>();
+        need.put("Complete", "CanChangeOrderStatusToComplete");
+        need.put("Cancel", "CanChangeOrderStatusToCancel");
+        need.put("Open", "CanChangeOrderStatusToOpen");
+        need.put("Expiry", "CanChangeOrderExpiryDate");
+        if (!need.containsKey(reqType)) throw new IllegalArgumentException("Unknown status request: " + reqType);
+        if (!Boolean.TRUE.equals(orderRights(report).get(need.get(reqType))))
+            throw new IllegalArgumentException("You do not have rights to " + reqType + " orders");
+        Object items = body.get("items");
+        if (!(items instanceof List) || ((List<Object>) items).isEmpty())
+            throw new IllegalArgumentException("Please Check Rows first");
+        String remarks = body.get("remarks") == null ? "" : String.valueOf(body.get("remarks"));
+        if (remarks.isEmpty()) throw new IllegalArgumentException("Action Remarks Required");
+        int org = currentUserContext.currentOrganizationId();
+        int comp = currentUserContext.currentCompanyId();
+        int user = currentUserContext.currentUserId();
+        int docType = SALE_ORDER.equals(report) ? 1053 : 1052;
+        java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+        List<Object[]> rows = new java.util.ArrayList<>();
+        for (Object o : (List<Object>) items) {
+            if (!(o instanceof Map)) continue;
+            Map<String, Object> it = (Map<String, Object>) o;
+            int id;
+            try { id = (int) Double.parseDouble(String.valueOf(it.get("id"))); } catch (Exception e) { id = 0; }
+            if (id <= 0) continue;
+            Object when = now;
+            if ("Expiry".equals(reqType)) {
+                Map<String, String> q = new LinkedHashMap<>();
+                q.put("d", it.get("validityDate") == null ? "" : String.valueOf(it.get("validityDate")));
+                when = date(q, "d");       // null -> the procedure raises 'Expiry Date is required...'
+            }
+            rows.add(new Object[]{org, comp, 0, docType, id, user, reqType, when, remarks});
+        }
+        if (rows.isEmpty()) throw new IllegalArgumentException("Please Check Rows first");
+        if ("Expiry".equals(reqType) && rows.size() != 1)
+            throw new IllegalArgumentException("Update Expiry Date works on one row");
+        try {
+            repository.updateOrderStatus(SALE_ORDER.equals(report)
+                    ? "[cmagt].[USP_SaleOrderHeader_UpdateStatus]" : "[cmagt].[USP_PurchaseOrderHeader_UpdateStatus]", rows);
+        } catch (org.springframework.dao.DataAccessException e) {
+            Throwable c = e.getMostSpecificCause();
+            throw new IllegalArgumentException(c == null ? e.getMessage() : c.getMessage());
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("message", "Record " + ("Expiry".equals(reqType) ? "Expiry Date Updated" : reqType) + " Successfully");
+        out.put("processed", rows.size());
+        return out;
     }
 }

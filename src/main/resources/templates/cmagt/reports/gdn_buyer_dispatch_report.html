@@ -5,26 +5,66 @@
     <title th:text="${moduleTitle}">Gdn Buyer Dispatch Report</title>
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
     <style>
-        body.cmagt { font-family: Segoe UI, Tahoma, Arial, sans-serif; font-size: 12px; margin: 0; }
-        .rpt-wrap { padding: 8px 12px; }
-        .rpt-filters { border: 1px solid #c9d3e0; background: #f7f9fc; padding: 8px; display: grid;
-                       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px 12px; }
-        .rpt-filters label { display: block; font-weight: 600; color: #2c3e50; margin-bottom: 2px; }
-        .rpt-filters input, .rpt-filters select { width: 100%; box-sizing: border-box; font-size: 12px; padding: 2px 4px; }
-        .rpt-filters select[multiple] { height: 64px; }
-        .rpt-radios label { display: inline; font-weight: normal; margin-right: 8px; }
-        .rpt-radios input { width: auto; }
-        .rpt-actions { margin: 8px 0; display: flex; gap: 8px; align-items: center; }
-        .rpt-actions button { font-size: 12px; padding: 4px 14px; cursor: pointer; }
-        .rpt-msg { color: #b00020; }
-        .rpt-count { color: #555; }
-        .rpt-grid-wrap { overflow: auto; max-height: calc(100vh - 290px); border: 1px solid #c9d3e0; }
-        table.rpt-grid { border-collapse: collapse; white-space: nowrap; }
+        body.cmagt { font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 12px; margin: 0; background: #fff; }
+        /* GUI-20260930: desktop geometry (InitializeComponent): toolStrip1 / panel3 (white, title band panel5 rgb(10,110,110))
+           / panel4 teal grid bar / grdfrm. Controls are placed at the desktop Location, width = desktop Size.Width. */
+        .rpt-wrap { padding: 0; }
+        .rpt-tool { display: flex; gap: 2px; align-items: center; background: #f0f0f0; border-bottom: 1px solid #d0d0d0; height: 27px; padding: 0 4px; }
+        .rpt-tool button { font: 12px "Segoe UI", Tahoma, sans-serif; background: transparent; border: 1px solid transparent; height: 24px; padding: 0 10px; cursor: pointer; }
+        .rpt-tool button:hover { border-color: #7fb2d6; background: #e5f1fb; }
+        .rpt-tool button:disabled { opacity: .6; cursor: wait; }
+        .rpt-tool .st-btn { display: none; }
+        .rpt-panel-scroll { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+        .rpt-filters { position: relative; background: #fff; width: 1284px; font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-weight: 600; font-size: 12px; }
+        .rpt-band { position: absolute; left: 0; top: 0; right: 0; height: 31px; background: rgb(10,110,110); }
+        .rpt-band span { position: absolute; left: 5px; top: 5px; color: #fff; font: bold 12pt Tahoma, sans-serif; }
+        .rpt-filters .fl { position: absolute; white-space: pre; line-height: 15px; color: #000; }
+        .rpt-filters .fc { position: absolute; height: 24px; box-sizing: border-box; font: 12px "Segoe UI", sans-serif; padding: 1px 3px; }
+        .rpt-filters .fr { position: absolute; font-weight: normal; line-height: 17px; }
+        .rpt-filters .fr label { display: block; white-space: nowrap; }
+        .rpt-filters .fr.h label { display: inline-block; margin-right: 8px; }
+        .rpt-filters #btnShow { position: absolute; height: 26px; padding: 0; background: rgb(10,110,110); color: #fff; font: bold 9pt Verdana, sans-serif; border: 1px solid #075; cursor: pointer; }
+        .rpt-filters #btnShow:disabled { opacity: .6; cursor: wait; }
+        .rpt-filters fieldset { position: absolute; left: 3px; top: 37px; width: 1295px; height: 157px; margin: 0; padding: 0; border: 1px solid #ccc; box-sizing: border-box; }
+        .rpt-filters fieldset legend { font: bold 9.75pt Tahoma, sans-serif; margin-left: 6px; padding: 0 2px; }
+        .rpt-filters fieldset .inner { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+        .ms { position: absolute; }
+        .ms .ms-btn { width: 100%; height: 24px; text-align: left; font: 12px "Segoe UI", sans-serif; background: #fff; border: 1px solid #999; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 1px 18px 1px 3px; cursor: pointer; position: relative; }
+        .ms .ms-btn:after { content: "\25BE"; position: absolute; right: 4px; top: 3px; }
+        .ms .ms-list { display: none; position: absolute; top: 24px; left: 0; min-width: 100%; max-height: 220px; overflow: auto; background: #fff; border: 1px solid #999; z-index: 50; font-weight: normal; }
+        .ms.open .ms-list { display: block; }
+        .ms .ms-list label { display: block; padding: 1px 4px; white-space: nowrap; cursor: pointer; }
+        .ms .ms-list input.ms-q { width: 100%; box-sizing: border-box; }
+        .rpt-gbar { height: 23px; background: teal; display: flex; align-items: center; gap: 10px; padding: 0 6px; color: #fff; }
+        .rpt-gbar .ttl { font: bold 12pt Tahoma, sans-serif; }
+        .rpt-gbar .sp { flex: 1; }
+        .rpt-gbar button { font-size: 12px; padding: 0 6px; height: 19px; cursor: pointer; }
+        .rpt-msg { color: #ffd0d0; font-weight: 600; }
+        .rpt-count { color: #fff; }
+        .rpt-grid-wrap { overflow: auto; max-height: calc(100vh - 230px); border: 1px solid #c9d3e0; }
+        .rpt-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .rpt-modal.on { display: flex; }
+        .rpt-modal .box { background: #fff; width: 420px; max-width: calc(100vw - 32px); border: 1px solid teal; box-shadow: 0 6px 24px rgba(0,0,0,.3); }
+        .rpt-modal .hd { background: rgb(10,110,110); color: #fff; font: bold 11pt Tahoma, sans-serif; padding: 6px 10px; }
+        .rpt-modal .bd { padding: 10px; }
+        .rpt-modal textarea { width: 100%; height: 80px; box-sizing: border-box; font: 12px "Segoe UI", sans-serif; }
+        .rpt-modal .err { color: #b00020; min-height: 16px; margin-top: 4px; }
+        .rpt-modal .ft { display: flex; justify-content: flex-end; gap: 8px; padding: 0 10px 10px; }
+        .rpt-modal .ft button { min-width: 70px; height: 26px; cursor: pointer; }
+        .rpt-modal .ft .ok { background: rgb(10,110,110); color: #fff; border: 1px solid #075; font-weight: bold; }
+        table.rpt-grid { border-collapse: collapse; white-space: nowrap; min-width: 100%; }
+        table.rpt-grid a.doclink { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        table.rpt-grid td.sel, table.rpt-grid th.sel { position: sticky; left: 0; background: #fff; z-index: 1; text-align: center; }
+        table.rpt-grid th.sel { background: #dfe8f5; z-index: 2; }
+        table.rpt-grid button.rowbtn { font-size: 11px; padding: 1px 6px; cursor: pointer; }
+        .rpt-wrap.fs { position: fixed; inset: 0; z-index: 1000; background: #fff; overflow: auto; }
+        .rpt-wrap.fs .rpt-grid-wrap { max-height: calc(100vh - 210px); }
+        .rpt-wrap, .rpt-grid-wrap { max-width: 100%; box-sizing: border-box; }
         table.rpt-grid th { position: sticky; top: 0; background: #dfe8f5; border: 1px solid #b8c6d9; padding: 3px 6px; text-align: left; }
         table.rpt-grid td { border: 1px solid #dde3ea; padding: 2px 6px; }
         table.rpt-grid td.num { text-align: right; }
         table.rpt-grid tfoot td { background: #eef3fa; font-weight: 600; position: sticky; bottom: 0; }
-        @media print { .rpt-filters, .rpt-actions, .cmagt-appbar { display: none; } .rpt-grid-wrap { max-height: none; overflow: visible; } }
+        @media print { .rpt-panel-scroll, .rpt-tool, .rpt-gbar button, .cmagt-appbar, .rpt-modal { display: none; } .rpt-grid-wrap { max-height: none; overflow: visible; } }
     </style>
 </head>
 <body class="cmagt">
@@ -33,23 +73,47 @@
     <span class="cmagt-crumb"><a th:href="@{/commission}">Commission Trading</a> &rsaquo; <a th:href="@{/commission/reports}">Reports</a></span>
 </div>
 <!-- Desktop source: frmGdnBuyerDispatchedCmagtReport.cs -->
-<div class="rpt-wrap">
-    <div class="rpt-filters" id="filters"></div>
-    <div class="rpt-actions">
-        <button type="button" id="btnShow">Show</button>
+<div class="rpt-wrap" id="rptWrap">
+    <div class="rpt-tool">
+        <button type="button" id="btnNew">New</button>
         <button type="button" id="btnRefresh">Refresh</button>
-        <button type="button" onclick="window.print()">Print</button>
-        <span class="rpt-count" id="rowCount"></span>
-        <span class="rpt-msg" id="msg"></span>
+        <button type="button" id="btnPrint" onclick="window.print()">Print</button>
+        <button type="button" id="btnShortcut">ShortCut Keys</button>
+        <button type="button" id="btnOpenOrders" class="st-btn" hidden>Open</button><button type="button" id="btnCompleteOrders" class="st-btn" hidden>Complete</button><button type="button" id="btnCancelOrders" class="st-btn" hidden>Cancel</button>
     </div>
+    <div class="rpt-panel-scroll"><div class="rpt-filters" id="filters"></div></div>
+    <div class="rpt-gbar"><span class="rpt-count" id="rowCount"></span><span class="rpt-msg" id="msg"></span><span class="sp"></span><button type="button" id="btnFullscreen" title="Toggle full screen">&#x26F6;</button></div>
     <div class="rpt-grid-wrap"><table class="rpt-grid" id="grid"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+</div>
+<div class="rpt-modal" id="remarksModal" role="dialog" aria-modal="true" aria-labelledby="remarksTitle">
+    <div class="box"><div class="hd" id="remarksTitle">Remarks</div>
+        <div class="bd"><div id="remarksPrompt" style="margin-bottom:6px"></div><textarea id="remarksText" maxlength="500"></textarea><div class="err" id="remarksErr"></div></div>
+        <div class="ft"><button type="button" class="ok" id="remarksOk">OK</button><button type="button" id="remarksCancel">Cancel</button></div></div>
 </div>
 <script th:inline="none">
 (function () {
     'use strict';
     var CFG = {"key":"gdn-buyer-dispatch","title":"Gdn Buyer Dispatch Report","form":"frmGdnBuyerDispatchedCmagtReport.cs","docNo":false,"approval":false,"status":false,"parentSent":false,"combos":[["agentId","Commission Agent","CommissionAgent"],["supplierId","Supplier","SupplierName"],["buyerId","Buyer Name","BuyerName"],["deliverToPartyId","Deliver To Party","DeliveryToParty"],["shipToAddress","Deliver To Address","DeliverToAddress"],["itemCategoryId","Category","ItemCategories"],["itemId","Item Name","Item"]],"types":["Detail","DocWise_Summary","ItemWise_Summary","CommissionAgentWise_Summary","SupplierWise_Summary","CommissionAndSupplierWise_Summary","BuyerWise_Summary","CommissionAndBuyerWise_Summary","TransporterWise_Summary","CityWise_Movement","VehicleWise_Utilization"],"cols":[["RecordNo","RecordNo"],["Id","GdnBuyerDispatchMasterId"],["DocumentTypeId","DocumentTypeId"],["DocNo","DocNo"],["DocDate","DocDate"],["CommissionAgentId","CommissionAgentId"],["CommissionAgentName","CommissionAgentName"],["BuyerId","BuyerId"],["BuyerName","BuyerName"],["DeliverToParty","DeliveryToPartyName"],["DeliverToAddress","DeliverToAddress"],["GrnId","grnSupplierLoadingMasterId"],["GrnNo","GrnNo"],["GrnDate","GrnDate"],["LoadingCity","LoadingCity"],["UnloadingCity","UnloadingCity"],["BuyerRefDocNo","BuyerRefDocNo"],["DeliveryTerm","DeliveryTerm"],["TransporterName","TransporterName"],["BiltyFreight","BiltyFreight"],["OtherAdLesCharges","OtherAdLesCharges"],["TotalFreight","TotalFreight"],["VehicleNo","VehicleNo"],["BiltyNo","BiltyNo"],["BiltyDate","BiltyDate"],["BiltyQty","BiltyQty"],["LoadWeight","LoadWeight"],["TareWeight","TareWeight"],["ScaleNetWeight","ScaleNetWeight"],["DetailId","DetailId"],["PurchaseOrderMasterId","PurchaseOrderMasterId"],["PurchaseOrderNo","PurchaseOrderNo"],["SaleOrderMasterId","SaleOrderMasterId"],["SaleOrderNo","SaleOrderNo"],["SupplierId","SupplierId"],["SupplierName","SupplierName"],["ParentCategory","InvParentCateDescription"],["ItemId","ItemId"],["ItemName","ItemName"],["ItemCode","ItemCode"],["PackSize","PackSize"],["CropYear","CropYear"],["PackingType","PackingType"],["LoadingQty","LoadingQty"],["WbGrossWeight","WbGrossWeight"],["EbUnit","EbwPerUnit"],["EbTotal","EbwTotal"],["AddLessWeight","AddLessWeight"],["NetBillWeight","NetBillWeight"],["EBWeightDeductionTerm","EBWeightDeductionTerm"],["TotalTrips","TotalTrips"],["VehiclesUsed","VehiclesUsed"],["FreightPerTon","FreightPerTon"],["RemarksHeader","RemarksHeader"],["EntryDate","EntryDate"],["EntryUserName","EntryUserName"],["ModifyDate","ModifyDate"],["ModifyUserName","ModifyUserName"],["IsApproved","IsApproved"],["ApprovedDate","ApprovedDate"],["ApprovalUserName","ApprovalUserName"],["NoOfAttachments","NoOfAttachments"]],"hidden":{"_base":["RecordNo","Id","DocumentTypeId","CommissionAgentId","SupplierId","DetailId","ItemId","BuyerId","GrnId","TransporterId","LoadingCityId","UnloadingCityId","PurchaseOrderMasterId","SaleOrderMasterId"],"Detail":["TotalTrips","VehiclesUsed","FreightPerTon"],"DocWise_Summary":["PurchaseOrderNo","SaleOrderNo","BuyerName","DeliverToParty","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","TotalTrips","VehiclesUsed","FreightPerTon"],"ItemWise_Summary":["DocNo","DocDate","CommissionAgentName","SupplierName","LoadingCity","UnloadingCity","BuyerRefDocNo","DeliveryTerm","TransporterName","BiltyFreight","OtherAdLesCharges","TotalFreight","VehicleNo","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","BuyerName","DeliverToParty","DeliverToAddress","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate","GrnNo","GrnDate","TotalTrips","VehiclesUsed","FreightPerTon"],"CommissionAndSupplierWise_Summary":["DocNo","DocDate","LoadingCity","UnloadingCity","BuyerRefDocNo","DeliveryTerm","TransporterName","BiltyFreight","OtherAdLesCharges","VehicleNo","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","BuyerName","DeliverToParty","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate"],"SupplierWise_Summary":["DocNo","DocDate","CommissionAgentName","LoadingCity","UnloadingCity","BuyerRefDocNo","DeliveryTerm","TransporterName","BiltyFreight","OtherAdLesCharges","VehicleNo","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","BuyerName","DeliverToParty","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate","TotalFreight","FreightPerTon"],"CommissionAgentWise_Summary":["DocNo","DocDate","SupplierName","LoadingCity","UnloadingCity","BuyerRefDocNo","DeliveryTerm","TransporterName","BiltyFreight","OtherAdLesCharges","VehicleNo","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","BuyerName","DeliverToParty","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate","GrnNo","GrnDate"],"CommissionAndBuyerWise_Summary":["DocNo","DocDate","SupplierName","LoadingCity","UnloadingCity","BuyerRefDocNo","DeliveryTerm","TransporterName","BiltyFreight","OtherAdLesCharges","VehicleNo","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate"],"BuyerWise_Summary":["DocNo","DocDate","CommissionAgentName","SupplierName","LoadingCity","UnloadingCity","BuyerRefDocNo","DeliveryTerm","TransporterName","BiltyFreight","OtherAdLesCharges","VehicleNo","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate"],"TransporterWise_Summary":["DocNo","DocDate","CommissionAgentName","SupplierName","LoadingCity","UnloadingCity","BuyerRefDocNo","DeliveryTerm","BiltyFreight","OtherAdLesCharges","VehicleNo","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","BuyerName","DeliverToParty","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate"],"CityWise_Movement":["DocNo","DocDate","CommissionAgentName","SupplierName","BuyerRefDocNo","DeliveryTerm","TransporterName","BiltyFreight","OtherAdLesCharges","VehicleNo","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","BuyerName","DeliverToParty","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate"],"VehicleWise_Utilization":["DocNo","DocDate","CommissionAgentName","SupplierName","LoadingCity","UnloadingCity","BuyerRefDocNo","DeliveryTerm","TransporterName","BiltyFreight","OtherAdLesCharges","BiltyNo","BiltyDate","BiltyQty","LoadWeight","TareWeight","ScaleNetWeight","PurchaseOrderNo","SaleOrderNo","BuyerName","DeliverToParty","DeliverToAddress","ParentCategory","ItemName","ItemCode","PackSize","CropYear","PackingType","EbUnit","EBWeightDeductionTerm","VehiclesUsed","RemarksHeader","EntryDate","EntryUserName","ModifyDate","ModifyUserName","IsApproved","ApprovedDate","ApprovalUserName","NoOfAttachments","GrnNo","GrnDate"]},"textValue":["shipToAddress"]};
+    var LAYOUT = {"h": 119, "title": "Gdn Buyer Report", "items": [["Date From", 6, 39, "fromDate", 74, 35, 140], ["Date To", 6, 67, "toDate", 74, 63, 140], ["Parent Item", 6, 96, "parentItemIds", 74, 90, 140], ["Item Category", 218, 39, "itemCategoryId", 301, 33, 225], ["Item Name", 218, 67, "itemId", 301, 61, 225], ["Commission\nAgent", 218, 88, "agentId", 301, 90, 225], ["Supplier Name", 531, 39, "supplierId", 621, 33, 225], ["Buyer Name", 531, 67, "buyerId", 621, 61, 225], ["Deliver To Party", 531, 96, "deliverToPartyId", 621, 90, 225], ["Deliver To Address", 849, 39, "shipToAddress", 952, 33, 230], ["Report Type", 849, 67, "reportType", 952, 61, 230], ["", 0, 0, "btnShow", 1127, 90, 55], ["", 0, 0, "dateType", 1186, 32, 95]]};
+    /* GUI-20260930: grid captions the desktop GridSettings sets (Columns[..].Caption). */
+    var CAPTION = {'EBWeightDeductionTerm': 'EB Weight Deduction Term', 'ValidityDate': 'Expiry Date', 'DeliveryToParty': 'Deliver To Party',
+        'ShipToAddress': 'Deliver To Address', 'FreightNetHeader': 'Freight Net Amount', 'OtherExpenseAmount': 'Other Expense Amount', 'TaxAmountHeader': 'Tax Amount'};
     var API = '/api/commission/reports/' + CFG.key;
     var rows = [];                   // raw filter-combo rows (Id, ReferenceName, ParentCategoryId, Activity)
+    /* PARITY-20260929: meta = /filters response (rights, financialYearStart); lastData / ctx = the
+       last GridBind result and the filter state GridSettings read when it ran. */
+    var meta = {}, lastData = [], ctx = {type: '', isApproved: false, isOpen: false, hasStatus: false};
+    var STATUS_REPORT = CFG.key === 'sale-order' || CFG.key === 'purchase-order';
+    var DOC_ROUTE = {'sale-order': '/commission/sale-order', 'purchase-order': '/commission/purchase-order',
+        'grn-supplier-loading': '/commission/grn-loading-challan', 'gdn-buyer-dispatch': '/commission/goods-dispatching-note'};
+    function right(n) { return !!(meta.rights && meta.rights[n]); }
+    /* Every action button: disabled at once, busy text, no duplicate request, re-enabled after. */
+    function withButton(btn, fn) {
+        if (!btn || btn.disabled) return Promise.resolve();
+        var t = btn.textContent; btn.disabled = true; btn.textContent = 'Please wait...';
+        return Promise.resolve().then(fn).catch(function (e) { el('msg').textContent = e && e.message ? e.message : String(e); })
+            .then(function () { btn.disabled = false; btn.textContent = t; });
+    }
     var el = function (id) { return document.getElementById(id); };
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
         return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
@@ -59,46 +123,102 @@
 
     // ------------------------------------------------------------------ filter panel
     function buildFilters() {
-        var h = '';
-        if (CFG.tb) {
-            h += field('Date Type', '<select id="datePreset"><option value="1">Today</option><option value="2">Last 7 Days</option>' +
-                '<option value="3" selected>Current Month</option><option value="4">Current Year</option><option value="5">Financial Year</option></select>');
-        }
-        h += field('Date On', '<div class="rpt-radios"><label><input type="radio" name="dateType" value="doc" checked> Doc Date</label>' +
-            '<label><input type="radio" name="dateType" value="entry"> Entry Date</label>' +
-            '<label><input type="radio" name="dateType" value="modify"> Modify Date</label></div>');
-        h += field('From Date', '<input type="date" id="fromDate">');
-        h += field('To Date', '<input type="date" id="toDate">');
-        if (CFG.docNo) {
-            h += field('Doc No From', '<input type="number" min="0" step="1" id="fromDocNo">');
-            h += field('Doc No To', '<input type="number" min="0" step="1" id="toDocNo">');
-        }
-        if (!CFG.tb) {
-            h += field('Parent Categories' + (CFG.parentSent ? '' : ' (narrows the lists only)'),
-                '<select id="parentItemIds" multiple></select>');
-        }
-        CFG.combos.forEach(function (c) { h += field(c[1], '<select id="' + c[0] + '"></select>'); });
-        if (CFG.approval) {
-            h += field('Approval', '<select id="approved"><option value=""></option><option>UnApproved</option>' +
-                '<option>Approved</option><option>All</option></select>');
-        }
-        h += field('Report Type', '<select id="reportType">' + CFG.types.map(function (t) {
-            return '<option>' + esc(t) + '</option>'; }).join('') + '</select>');
+        /* GUI-20260930: controls at the desktop InitializeComponent Location/Size (LAYOUT). */
+        var inner = '', cls = function (x, y, w) { return 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px'; };
+        LAYOUT.items.forEach(function (it) {
+            var lbl = it[0], id = it[3], x = it[4], y = it[5], w = it[6], s = cls(x, y, w);
+            if (lbl) inner += '<div class="fl" style="left:' + it[1] + 'px;top:' + it[2] + 'px">' + esc(lbl) + '</div>';
+            if (id === 'dateType') {
+                inner += '<div class="fr" style="left:' + x + 'px;top:' + y + 'px"><label><input type="radio" name="dateType" value="doc" checked> Doc Date</label>' +
+                    '<label><input type="radio" name="dateType" value="entry"> Entry Date</label>' +
+                    '<label><input type="radio" name="dateType" value="modify"> Modify Date</label></div>';
+            } else if (id === 'tbSide') {
+                /* rdpurchase / raforsale / rdAll -> SetColumnsOnBaseOfRadioButton */
+                inner += '<div class="fr h" style="left:' + x + 'px;top:' + y + 'px"><label><input type="radio" name="tbSide" value="purchase"> For Purchase</label>' +
+                    '<label><input type="radio" name="tbSide" value="sale"> For Sale</label>' +
+                    '<label><input type="radio" name="tbSide" value="all" checked> For Both</label></div>';
+            } else if (id === 'btnShow') {
+                inner += '<button type="button" id="btnShow" style="' + s + '">Show</button>';
+            } else if (id === 'fromDate' || id === 'toDate') {
+                inner += '<input class="fc" type="date" id="' + id + '" style="' + s + '">';
+            } else if (id === 'fromDocNo' || id === 'toDocNo') {
+                inner += '<input class="fc" type="number" min="0" step="1" id="' + id + '" style="' + s + '">';
+            } else if (id === 'parentItemIds') {
+                /* CmbParentItem: check-box multi-select combo; the hidden <select multiple> keeps the value API. */
+                inner += '<div class="ms" id="parentMs" style="' + s + '"><button type="button" class="ms-btn" id="parentMsBtn"></button>' +
+                    '<div class="ms-list" id="parentMsList"></div></div><select id="parentItemIds" multiple hidden></select>';
+            } else if (id === 'datePreset') {
+                inner += '<select class="fc" id="datePreset" style="' + s + '"><option value="1">Today</option><option value="2">Last 7 Days</option>' +
+                    '<option value="3" selected>Current Month</option><option value="4">Current Year</option><option value="5">Financial Year</option></select>';
+            } else if (id === 'approved') {
+                inner += '<select class="fc" id="approved" style="' + s + '"><option value=""></option><option>UnApproved</option><option>Approved</option><option>All</option></select>';
+            } else if (id === 'reportType') {
+                inner += '<select class="fc" id="reportType" style="' + s + '">' + CFG.types.map(function (t) {
+                    return '<option>' + esc(t) + '</option>'; }).join('') + '</select>';
+            } else {
+                var c = CFG.combos.filter(function (k) { return k[0] === id; })[0];
+                inner += '<select class="fc" id="' + id + '" style="' + s + '"' + (c && /not applied/.test(c[1]) ? ' title="' + esc(c[1]) + '"' : '') + '></select>';
+            }
+        });
+        var h = '<div class="rpt-band"><span>' + esc(LAYOUT.title) + '</span></div>';
+        h += LAYOUT.group ? '<fieldset><legend>' + esc(LAYOUT.group) + '</legend><div class="inner">' + inner + '</div></fieldset>' : inner;
+        el('filters').style.height = LAYOUT.h + 'px';
         el('filters').innerHTML = h;
+        if (CFG.tb) Array.prototype.forEach.call(document.querySelectorAll('input[name="tbSide"]'), function (r) {
+            r.addEventListener('change', function () { if (lastData.length) render(lastData); });
+        });
         if (CFG.approval) el('approved').value = CFG.approvedDefault || '';
-        if (!CFG.tb) el('parentItemIds').addEventListener('change', bindCombos);
+        if (!CFG.tb) {
+            el('parentItemIds').addEventListener('change', function () { msSync(); bindCombos(); });
+            el('parentMsBtn').addEventListener('click', function (e) { e.stopPropagation(); el('parentMs').classList.toggle('open'); });
+            el('parentMsList').addEventListener('click', function (e) { e.stopPropagation(); });
+            el('parentMsList').addEventListener('change', function (e) {
+                var cb = e.target; if (!cb.classList || !cb.classList.contains('ms-cb')) return;
+                Array.prototype.forEach.call(el('parentItemIds').options, function (o) { if (o.value === cb.value) o.selected = cb.checked; });
+                el('parentItemIds').dispatchEvent(new Event('change'));
+            });
+            document.addEventListener('click', function () { var m = el('parentMs'); if (m) m.classList.remove('open'); });
+            msSync();
+        }
         if (CFG.tb) el('datePreset').addEventListener('change', applyPreset);
+    }
+    /* Rebuild the check-box list from the hidden <select multiple>. */
+    function msSync() {
+        var s = el('parentItemIds'), list = el('parentMsList'), btn = el('parentMsBtn'); if (!s || !list) return;
+        var sel = [];
+        list.innerHTML = Array.prototype.map.call(s.options, function (o) {
+            if (o.selected) sel.push(o.text);
+            return '<label><input type="checkbox" class="ms-cb" value="' + esc(o.value) + '"' + (o.selected ? ' checked' : '') + '> ' + esc(o.text) + '</label>';
+        }).join('');
+        btn.textContent = sel.join(', ');
+        btn.title = sel.join(', ');
+    }
+    /* Styled replacement for window.prompt('Remarks'): resolves the text, or null on Cancel. */
+    function askRemarks(reqType) {
+        return new Promise(function (resolve) {
+            var m = el('remarksModal'), t = el('remarksText'), err = el('remarksErr');
+            el('remarksTitle').textContent = reqType + ' - Remarks';
+            el('remarksPrompt').textContent = 'Action Remarks';
+            t.value = ''; err.textContent = ''; m.classList.add('on'); setTimeout(function () { t.focus(); }, 0);
+            function done(v) { m.classList.remove('on'); el('remarksOk').onclick = el('remarksCancel').onclick = null; m.onkeydown = null; resolve(v); }
+            el('remarksOk').onclick = function () {
+                if (!t.value.trim()) { err.textContent = 'Action Remarks Required'; t.focus(); return; }
+                done(t.value.trim());
+            };
+            el('remarksCancel').onclick = function () { done(null); };
+            m.onkeydown = function (e) { if (e.key === 'Escape') done(null); };
+        });
     }
 
     function applyPreset() {
-        var v = el('datePreset').value, t = new Date(), f = new Date(t.getTime());
-        if (v === '1') f = t;
-        else if (v === '2') f.setDate(t.getDate() - 7);
-        else if (v === '3') f = new Date(t.getFullYear(), t.getMonth(), 1);
-        else if (v === '4') f = new Date(t.getFullYear(), 0, 1);
-        else if (v === '5') return;          // ActiveYr.Start_Period - left to the user
-        el('fromDate').value = iso(f);
-        el('toDate').value = iso(t);
+        /* cmbDateType_ValueChanged: 1 / 2 / 5 set only the From date; 3 / 4 set From and To. */
+        var v = el('datePreset').value, t = new Date(), f = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+        if (!el('toDate').value) el('toDate').value = iso(t);
+        if (v === '1') { el('fromDate').value = iso(f); }
+        else if (v === '2') { f.setDate(f.getDate() - 7); el('fromDate').value = iso(f); }
+        else if (v === '3') { el('fromDate').value = iso(new Date(t.getFullYear(), t.getMonth(), 1)); el('toDate').value = iso(t); }
+        else if (v === '4') { el('fromDate').value = iso(new Date(t.getFullYear(), 0, 1)); el('toDate').value = iso(t); }
+        else if (v === '5') { if (meta.financialYearStart) el('fromDate').value = String(meta.financialYearStart).substring(0, 10); }
     }
 
     // ------------------------------------------------------------------ combos
@@ -140,12 +260,14 @@
             if (!r.ok) throw new Error('Filter lists could not be loaded (' + r.status + ')');
             return r.json();
         }).then(function (d) {
+            meta = d || {};
             rows = (d && d.rows) || [];
             if (!CFG.tb) {
                 var ps = el('parentItemIds'), keep = selectedParents();
                 ps.innerHTML = listFor('ParentCategories', []).map(function (p) {
                     return '<option value="' + esc(p.id) + '"' + (keep.indexOf(String(p.id)) >= 0 ? ' selected' : '') + '>' + esc(p.name) + '</option>';
                 }).join('');
+                msSync();
                 if (!el('fromDate').value) {
                     var days = d.defaultDaysToLessFromHistoryFromDate > 0 ? d.defaultDaysToLessFromHistoryFromDate : 3;
                     var t = new Date(), f = new Date(t.getTime()); f.setDate(t.getDate() - days);
@@ -178,6 +300,18 @@
         var type = el('reportType').value;
         var cols = (CFG.colsByType && CFG.colsByType[type]) || CFG.cols;
         var hid = {}; (CFG.hidden._base || []).concat(CFG.hidden[type] || []).forEach(function (h) { hid[h] = 1; });
+        if (CFG.tb) {
+            var side = (document.querySelector('input[name="tbSide"]:checked') || {}).value || 'all';
+            var PUR = ['RatePurchase', 'PurchaseAmount', 'PurchaseFreight', 'PurchaseExpenses', 'BillWeight', 'EbCutTotal', 'EbCut'];
+            var SAL = ['SaleEbCut', 'SaleEbCutTotal', 'AddLessSale', 'SaleBillWeight', 'RateSale', 'SaleAmount', 'SaleExpenses', 'SaleNetAmount'];
+            if (type === 'Detail') (side === 'sale' ? PUR : side === 'purchase' ? SAL : []).forEach(function (h) { hid[h] = 1; });
+            else if (type === 'DocumentWiseProfitAndLoss' || type === 'VehicleWiseProfitAndLoss') {
+                if (side === 'sale') { hid.BillWeight = 1; hid.ProfitAndLoss = 1; }
+                if (side === 'purchase') { hid.SaleBillWeight = 1; hid.SaleNetAmount = 1; }
+            }
+        }
+        var idCol = cols.filter(function (c) { return c[0] === 'Id'; })[0];
+        var idKey = idCol ? idCol[1].toLowerCase() : 'id';
         var shown = cols.filter(function (c) { return !hid[c[0]]; });
         var lrows = data.map(lc);
         /* PurchaseSaleRegister: ExpenseNameN / ExpenseAmountN pairs become one column per expense
@@ -195,19 +329,53 @@
             });
             extra.forEach(function (n) { shown.push([n, '__exp__' + n]); });
         }
-        el('grid').tHead.innerHTML = '<tr>' + shown.map(function (c) { return '<th>' + esc(c[0]) + '</th>'; }).join('') + '</tr>';
+        /* GridSettings (Detail only): Select column + Complete / Cancel / Update Expiry Date / Open
+           row buttons, each gated by approval = Approved, status Open / not Open, and the right. */
+        var st = STATUS_REPORT && type === 'Detail' && ctx.type === 'Detail';
+        var bComplete = st && ctx.isApproved && ctx.isOpen && right('CanChangeOrderStatusToComplete');
+        var bCancel = st && ctx.isApproved && ctx.isOpen && right('CanChangeOrderStatusToCancel');
+        var bExpiry = st && ctx.isApproved && ctx.isOpen && right('CanChangeOrderExpiryDate');
+        var bOpen = st && ctx.isApproved && ctx.hasStatus && !ctx.isOpen && right('CanChangeOrderStatusToOpen');
+        var bSelect = st && ctx.isApproved && (right('CanChangeOrderStatusToComplete') || right('CanChangeOrderStatusToCancel') || right('CanChangeOrderStatusToOpen'));
+        el('btnCompleteOrders').style.display = bComplete ? 'inline-block' : 'none';
+        el('btnCancelOrders').style.display = bCancel ? 'inline-block' : 'none';
+        el('btnOpenOrders').style.display = bOpen ? 'inline-block' : 'none';
+        var head = (bSelect ? '<th class="sel"><input type="checkbox" id="selAll" title="Select all"></th>' : '') +
+            (bComplete ? '<th>Complete</th>' : '') + (bCancel ? '<th>Cancel</th>' : '') +
+            (bExpiry ? '<th>Update Expiry Date</th>' : '') + (bOpen ? '<th>Open</th>' : '');
+        el('grid').tHead.innerHTML = '<tr>' + head + shown.map(function (c) { return '<th>' + esc(CAPTION[c[0]] || c[0]) + '</th>'; }).join('') + '</tr>';
         var tot = {}, any = {};
-        el('grid').tBodies[0].innerHTML = lrows.map(function (r) {
-            return '<tr>' + shown.map(function (c) {
+        el('grid').tBodies[0].innerHTML = lrows.map(function (r, i) {
+            var id = r[idKey];
+            var pre = (bSelect ? '<td class="sel"><input type="checkbox" class="rowsel" data-i="' + i + '"></td>' : '') +
+                (bComplete ? '<td><button type="button" class="rowbtn" data-act="Complete" data-i="' + i + '">Complete</button></td>' : '') +
+                (bCancel ? '<td><button type="button" class="rowbtn" data-act="Cancel" data-i="' + i + '">Cancel</button></td>' : '') +
+                (bExpiry ? '<td><button type="button" class="rowbtn" data-act="Expiry" data-i="' + i + '">Update Expiry Date</button></td>' : '') +
+                (bOpen ? '<td><button type="button" class="rowbtn" data-act="Open" data-i="' + i + '">Open</button></td>' : '');
+            return '<tr>' + pre + shown.map(function (c) {
                 var v = c[1].indexOf('__exp__') === 0 ? r[c[1]] : r[c[1].toLowerCase()];
                 var f = fmt(c[1], v);
                 if (f.n && summable(c[0])) { tot[c[0]] = (tot[c[0]] || 0) + v; any[c[0]] = 1; }
+                if (bExpiry && c[0] === 'ValidityDate') {
+                    /* editableColumns.Add("ValidityDate") */
+                    var dv = v == null ? '' : (typeof v === 'number' ? iso(new Date(v)) : String(v).substring(0, 10));
+                    return '<td><input type="date" class="valdate" data-i="' + i + '" value="' + esc(dv) + '"></td>';
+                }
+                if (c[0] === 'DocNo' && id != null && id !== '') {
+                    return '<td><a class="doclink" data-i="' + i + '">' + f.t + '</a></td>';
+                }
                 return '<td' + (f.n ? ' class="num"' : '') + '>' + f.t + '</td>';
             }).join('') + '</tr>';
         }).join('');
-        el('grid').tFoot.innerHTML = lrows.length ? '<tr>' + shown.map(function (c) {
+        var preCells = (bSelect ? 1 : 0) + (bComplete ? 1 : 0) + (bCancel ? 1 : 0) + (bExpiry ? 1 : 0) + (bOpen ? 1 : 0);
+        el('grid').tFoot.innerHTML = lrows.length ? '<tr>' + new Array(preCells + 1).join('<td></td>') + shown.map(function (c) {
             return any[c[0]] ? '<td class="num">' + tot[c[0]].toFixed(2) + '</td>' : '<td></td>';
         }).join('') + '</tr>' : '';
+        el('grid')._rows = lrows; el('grid')._idKey = idKey;
+        var sa = el('selAll');
+        if (sa) sa.addEventListener('change', function () {
+            Array.prototype.forEach.call(document.querySelectorAll('.rowsel'), function (c) { c.checked = sa.checked; });
+        });
         el('rowCount').textContent = lrows.length + ' row(s)';
     }
     function show() {
@@ -221,22 +389,97 @@
         CFG.combos.forEach(function (c) { var v = el(c[0]).value; if (v !== '') q.set(c[0], v); });
         if (CFG.parentSent) { var p = selectedParents(); if (p.length) q.set('parentItemIds', p.join(',')); }
         if (CFG.tb && !el('reportType').value) { el('msg').textContent = 'Please Select Activity First...'; return; }
-        el('btnShow').disabled = true;
-        fetch(API + '?' + q.toString(), {credentials: 'same-origin'}).then(function (r) {
-            return r.json().catch(function () { return null; }).then(function (b) {
-                if (!r.ok) throw new Error((b && b.message) || ('Report failed (' + r.status + ')'));
-                return b || [];
+        var sSel = el('statusId');
+        ctx = {type: el('reportType').value,
+               isApproved: !!(el('approved') && el('approved').value === 'Approved'),
+               isOpen: !!(sSel && sSel.selectedIndex >= 0 && sSel.options[sSel.selectedIndex].text === 'Open'),
+               hasStatus: !!(sSel && sSel.selectedIndex >= 0 && sSel.options[sSel.selectedIndex].text !== '')};
+        return withButton(el('btnShow'), function () {
+            return fetch(API + '?' + q.toString(), {credentials: 'same-origin'}).then(function (r) {
+                return r.json().catch(function () { return null; }).then(function (b) {
+                    if (!r.ok) throw new Error((b && b.message) || ('Report failed (' + r.status + ')'));
+                    return b || [];
+                });
+            }).then(function (d) { lastData = d; render(d); }).catch(function (e) {
+                el('msg').textContent = e.message; lastData = []; render([]);
             });
-        }).then(render).catch(function (e) {
-            el('msg').textContent = e.message; render([]);
-        }).then(function () { el('btnShow').disabled = false; });
+        });
     }
 
+    // ------------------------------------------------------------------ grid events
+    function rowAt(i) { return (el('grid')._rows || [])[+i]; }
+    function rowId(i) { var r = rowAt(i); return r ? r[el('grid')._idKey] : null; }
+    /* grdfrm_LinkClicked (Trade Bill Register: DocNo -> frmCommissionAgentTradeBillAgainstGdn for
+       DocumentTypeId 1056, else CommissionAgentTradeBill_162). The desktop opens a new form and
+       calls ReadById(Id); the web opens the document's own page with ?id=. */
+    function openDoc(i) {
+        var r = rowAt(i), id = rowId(i); if (!r || id == null) return;
+        var url;
+        if (CFG.tb) {
+            if (Number(r.documenttypeid) === 1056) url = '/commission/trade-bill-against-gdn';
+            else { el('msg').textContent = 'Commission Agent Trade Bill (CommissionAgentTradeBill_162) is not available on the web yet.'; return; }
+        } else url = DOC_ROUTE[CFG.key];
+        if (url) window.open(url + '?id=' + encodeURIComponent(id), '_blank');
+    }
+    /* UpdateOrderStatus (row button) / UpdateMultiOrderStatus (checked rows). */
+    function changeStatus(reqType, items, btn) {
+        if (!items.length) { alert('Please Check Rows first'); return; }
+        return askRemarks(reqType).then(function (remarks) {
+        if (remarks == null) return;
+        if (!window.confirm('Are you sure to ' + reqType + ' Status?')) return;
+        return withButton(btn, function () {
+            return fetch(API + '/status', {method: 'POST', credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({reqType: reqType, remarks: remarks, items: items})}).then(function (r) {
+                return r.json().catch(function () { return null; }).then(function (b) {
+                    if (!r.ok) throw new Error((b && b.message) || ('Status change failed (' + r.status + ')'));
+                    alert((b && b.message) || ('Record ' + reqType + ' Successfully'));
+                });
+            }).then(function () { el('btnShow').disabled = false; return show(); });
+        });
+        });
+    }
+    function checkedItems() {
+        return Array.prototype.filter.call(document.querySelectorAll('.rowsel'), function (c) { return c.checked; })
+            .map(function (c) { return {id: rowId(c.getAttribute('data-i'))}; });
+    }
+    el('grid').addEventListener('click', function (e) {
+        var a = e.target.closest ? e.target.closest('a.doclink') : null;
+        if (a) { e.preventDefault(); openDoc(a.getAttribute('data-i')); return; }
+        var b = e.target.closest ? e.target.closest('button.rowbtn') : null;
+        if (!b) return;
+        var i = b.getAttribute('data-i'), act = b.getAttribute('data-act'), it = {id: rowId(i)};
+        if (act === 'Expiry') {
+            var inp = document.querySelector('input.valdate[data-i="' + i + '"]');
+            it.validityDate = inp ? inp.value : '';
+        }
+        changeStatus(act, [it], b);
+    });
+    el('btnCompleteOrders').addEventListener('click', function () { changeStatus('Complete', checkedItems(), el('btnCompleteOrders')); });
+    el('btnCancelOrders').addEventListener('click', function () { changeStatus('Cancel', checkedItems(), el('btnCancelOrders')); });
+    el('btnOpenOrders').addEventListener('click', function () { changeStatus('Open', checkedItems(), el('btnOpenOrders')); });
+    el('btnFullscreen').addEventListener('click', function () { el('rptWrap').classList.toggle('fs'); });
+    /* btnNewHistory_Click / btnNew_Click (Reset): clear the combos and the grid, reset dates. */
+    el('btnNew').addEventListener('click', function () {
+        CFG.combos.forEach(function (c) { if (el(c[0])) el(c[0]).value = ''; });
+        if (el('parentItemIds')) { Array.prototype.forEach.call(el('parentItemIds').options, function (o) { o.selected = false; }); msSync(); }
+        if (!CFG.tb) {
+            el('reportType').selectedIndex = 0;
+            var days = meta.defaultDaysToLessFromHistoryFromDate > 0 ? meta.defaultDaysToLessFromHistoryFromDate : 3;
+            var t = new Date(), f = new Date(t.getFullYear(), t.getMonth(), t.getDate()); f.setDate(f.getDate() - days);
+            el('fromDate').value = iso(f);
+            if (!CFG.tb) bindCombos();
+        } else { el('datePreset').value = '3'; applyPreset(); }
+        lastData = []; ctx = {type: ''}; render([]); el('rowCount').textContent = ''; el('msg').textContent = '';
+        el('fromDate').focus();
+    });
+
     buildFilters();
+    el('btnShortcut').addEventListener('click', function () { alert('Ctrl+S : Show\nCtrl+R : Refresh'); });
     if (CFG.tb) applyPreset();
     loadFilters();
     el('btnShow').addEventListener('click', show);
-    el('btnRefresh').addEventListener('click', loadFilters);
+    el('btnRefresh').addEventListener('click', function () { withButton(el('btnRefresh'), loadFilters); });
     document.addEventListener('keydown', function (e) {
         if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); show(); }
         if (e.ctrlKey && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); loadFilters(); }

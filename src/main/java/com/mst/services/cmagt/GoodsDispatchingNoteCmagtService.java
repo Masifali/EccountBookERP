@@ -54,6 +54,12 @@ public class GoodsDispatchingNoteCmagtService {
             dto.setEntryUserId(currentUserContext.currentUserId());
             dto.setModifyUserId(currentUserContext.currentUserId());
             dto.setDocumentTypeId(DOCUMENT_TYPE_ID);
+            /* btnsave.Enabled = DoHaveSaveRight, btnUpdate.Enabled = DoHaveUpdateRights (:552-553). */
+            Map<String, Boolean> fr = formRights();
+            if (!isUpdate && !Boolean.TRUE.equals(fr.get("save")))
+                throw new IllegalArgumentException("you don't have save rights...");
+            if (isUpdate && !Boolean.TRUE.equals(fr.get("update")))
+                throw new IllegalArgumentException("you don't have update rights...");
             if (recId > 0) requireOwnRecord(recId);
             if (recId == 0) {
                 /* The desktop shows GenerateCode in txtDocNo on New (:677); the procedure
@@ -118,6 +124,10 @@ public class GoodsDispatchingNoteCmagtService {
         reqInt(dto.getDocNo(), "Doc No", true);
         reqInt(dto.getCommissionAgentId(), "Commission Agent", false);
         reqInt(dto.getBuyerId(), "Buyer Name", false);
+        /* CmbGrnNoDetail "Grn No" (:1860) - set only by Load GRN (:3496) / ReadById (:2172). */
+        boolean hasGrn = false;
+        for (GoodsDispatchingNoteCmagtDto.DetailDto d : rows) if (ni(d.getGrnSupplierLoadingMasterId()) > 0) { hasGrn = true; break; }
+        if (!hasGrn) throw new IllegalArgumentException("Grn No field is required");
         reqInt(dto.getLoadingCityId(), "Loading City", false);
         reqInt(dto.getUnloadingCityId(), "Un-Loading City", false);
         reqInt(dto.getVehicleTypeId(), "Vehicle Type", false);
@@ -141,6 +151,8 @@ public class GoodsDispatchingNoteCmagtService {
 
         /* :1938-2001 - detail rows. */
         BigDecimal gross = BigDecimal.ZERO, net = BigDecimal.ZERO;
+        boolean blockLate = configBool("BlockEntryForLateVehicleArrivalAfterPoExpiryCommissionAgentPortal");     // :607
+        boolean warnLate  = configBool("ShowWarningForLateVehicleArrivalAfterPoExpiryCommissionAgentPortal");    // :608
         for (int i = 0; i < rows.size(); i++) {
             GoodsDispatchingNoteCmagtDto.DetailDto d = rows.get(i);
             int detailId = recId != 0 ? ni(d.getGdnBuyerDispatchDetailId()) : 0;           // :1942
@@ -154,6 +166,23 @@ public class GoodsDispatchingNoteCmagtService {
             reqField(d.getLoadingQty(), "Loading Qty", i);
             reqField(d.getWbGrossWeight(), "Gross Weight", i);
             reqField(d.getNetBillWeight(), "Net Bill Weight", i);
+            /* :1954-1990 late vehicle against the PO validity date. The page asks for the
+               remarks (frmRemarks); this re-applies the rule so it cannot be skipped. */
+            if (ni(d.getPurchaseOrderMasterId()) > 0 && gdnDate != null) {
+                Date poExpiry = day(d.getPoExpiryDate());
+                if (poExpiry != null) {
+                    if (gdnDate.equals(poExpiry)) {
+                        d.setWarningRemarks("");
+                    } else if (gdnDate.after(poExpiry)) {
+                        if (blockLate) {
+                            throw new IllegalArgumentException("Vehicle has reached late compared to PO Expiry Date.\n\nEntry is not allowed.");
+                        }
+                        if (warnLate && isBlank(d.getWarningRemarks())) {
+                            throw new IllegalArgumentException("Remarks are required for late vehicle entry.");
+                        }
+                    }
+                }
+            }
             d.setSortNo(ni(d.getSortNo()));
             gross = gross.add(nd(d.getWbGrossWeight()));
             net = net.add(nd(d.getNetBillWeight()));
@@ -206,11 +235,122 @@ public class GoodsDispatchingNoteCmagtService {
         }
     }
 
-    public List<Map<String, Object>> getHistory(String fromDate, String toDate) {
+    /**
+     * Load GRN - frmPendingGrnLoadingChallanLoader.PendingDataDbCall (:290-321); with recId it is
+     * also the form's OutstandingOrdersdtFillDbCall used by ReadById (:2173-2177). Tenancy from
+     * the session (UserAccount / clsGlobalVariables.ActiveYr), never from the request.
+     */
+    public Map<String, Object> pendingGrn(String fromDate, String toDate, int fromDocNo, int toDocNo,
+                                          int recId, int commissionAgentId, int supplierId, int buyerId,
+                                          int itemId, int deliverToPartyId, String shipToAddress) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            if (recId > 0) requireOwnRecord(recId);
+            Map<String, Object> data = repository.pendingGrnForGdn(
+                    currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(),
+                    currentUserContext.currentBranchId(), currentUserContext.currentFinancialYearId(),
+                    fromDate, toDate, fromDocNo, toDocNo, recId, commissionAgentId, supplierId,
+                    buyerId, itemId, deliverToPartyId, shipToAddress);
+            result.put("status", "SUCCESS");
+            result.putAll(data);
+        } catch (Exception e) {
+            result.put("status", "ERROR");
+            result.put("message", rootMessage(e));
+        }
+        return result;
+    }
+
+    /** Loader filter combos, split as CombosFill (:186-275): distinct Id per activity, distinct text for ship-to. */
+    public Map<String, Object> pendingGrnLoaderCombos() {
+        String[][] map = {
+                {"CommissionAgent", "commissionAgents"}, {"SupplierName", "suppliers"},
+                {"BuyerName", "buyers"}, {"Item", "items"},
+                {"DeliveryToParty", "deliverToParties"}, {"DeliverToAddress", "shipToAddresses"}};
+        Map<String, Object> out = new LinkedHashMap<>();
+        Map<String, Set<String>> seen = new HashMap<>();
+        for (String[] m : map) { out.put(m[1], new ArrayList<Map<String, Object>>()); seen.put(m[0], new HashSet<>()); }
+        List<Map<String, Object>> rows;
+        try {
+            rows = repository.pendingGrnLoaderCombos(currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId());
+        } catch (Exception e) {
+            rows = new ArrayList<>();
+        }
+        for (Map<String, Object> r : rows) {
+            Object a = pick(r, "Activity");
+            String activity = a == null ? "" : a.toString();
+            for (String[] m : map) {
+                if (!m[0].equals(activity)) continue;
+                int id = toInt(pick(r, "Id"));
+                Object n = pick(r, "ReferenceName");
+                String name = n == null ? "" : n.toString();
+                String key = "DeliverToAddress".equals(activity) ? name : String.valueOf(id);
+                if (!seen.get(activity).add(key)) break;
+                Map<String, Object> o = new LinkedHashMap<>();
+                o.put("id", id);
+                o.put("name", name);
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> list = (List<Map<String, Object>>) out.get(m[1]);
+                list.add(o);
+                break;
+            }
+        }
+        return out;
+    }
+
+    /** :607-608 - the two late-vehicle configurations, for the page's remarks prompt. */
+    public Map<String, Object> lateVehicleConfig() {
+        Map<String, Object> r = new HashMap<>();
+        r.put("blockEntry", configBool("BlockEntryForLateVehicleArrivalAfterPoExpiryCommissionAgentPortal"));
+        r.put("showWarning", configBool("ShowWarningForLateVehicleArrivalAfterPoExpiryCommissionAgentPortal"));
+        return r;
+    }
+
+    /** GetCommissionAgentConfigurationsFromGlobalandBind :705-735 (Conversion.ToInt of each config). */
+    public Map<String, Object> portalDefaults() {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("commissionAgentId", configInt("DefaultCommissionAgentIdForCommissionAgentPortal"));
+        r.put("deliveryTermId", configInt("DefaultDeliveryTermIdForCommissionAgentPortal"));
+        r.put("loadingCityId", configInt("DefaultLoadingCityIdForCommissionAgentPortal"));
+        r.put("unloadingCityId", configInt("DefaultUnloadingCityIdForCommissionAgentPortal"));
+        r.put("defaultDaysToLessFromHistoryFromDate", configInt("DefaultDaysToLessFromHistoryFromDate"));
+        return r;
+    }
+
+    private int configInt(String name) {
+        String v = repository.configValue(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(), name);
+        if (v == null) return 0;
+        try { return (int) Double.parseDouble(v.trim()); } catch (Exception e) { return 0; }
+    }
+
+    /** Conversion.ToBool(GetConfigValueFromGlobal(name)). */
+    private boolean configBool(String name) {
+        String v = repository.configValue(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(), name);
+        if (v == null) return false;
+        v = v.trim();
+        return "1".equals(v) || "true".equalsIgnoreCase(v);
+    }
+
+    public List<Map<String, Object>> getHistory(String fromDate, String toDate, String dateType,
+                                                int commissionAgentId, int buyerId, int deliverToPartyId,
+                                                String shipToAddress) {
         return repository.formHistory(currentUserContext.currentOrganizationId(),
                 currentUserContext.currentCompanyId(), currentUserContext.currentBranchId(),
                 currentUserContext.currentFinancialYearId(), canViewAllRecords(),
-                currentUserContext.currentUserId(), fromDate, toDate);
+                currentUserContext.currentUserId(), fromDate, toDate, dateType,
+                commissionAgentId, buyerId, deliverToPartyId, shipToAddress);
+    }
+
+    /** HistoryComboDbCall :589-604 (OrganizationId, CompanyId; no Activity). */
+    public List<Map<String, Object>> historyCombos() {
+        try {
+            return repository.historyCombos(currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId());
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 
     public Map<String, Object> getById(Integer id) {
@@ -231,6 +371,9 @@ public class GoodsDispatchingNoteCmagtService {
         Map<String, Object> result = new HashMap<>();
         try {
             if (id == null || id <= 0) throw new IllegalArgumentException("No record found to Delete");
+            /* btnDelete.Enabled = formright.DoHaveCanDelete (:554). */
+            if (!Boolean.TRUE.equals(formRights().get("delete")))
+                throw new IllegalArgumentException("you don't have delete rights...");
             requireOwnRecord(id);
             repository.deleteById(currentUserContext.currentUserId(), id);
             result.put("status", "SUCCESS");
@@ -261,6 +404,39 @@ public class GoodsDispatchingNoteCmagtService {
     private boolean belongsToSession(Map<String, Object> h) {
         return toInt(pick(h, "organizationId")) == currentUserContext.currentOrganizationId()
             && toInt(pick(h, "companyId")) == currentUserContext.currentCompanyId();
+    }
+
+    /**
+     * CommonServices.SetRightsValueInRightsObject(ScreenName) (:522, CommonServices.cs:17565):
+     * role "Admin" gets every right; otherwise Save / Update / Delete / Print / "CanView AllRecord"
+     * come from the user's grant rows (dbo.Sp_tblUserRights_GetAllMethod @Activity='GetByUserId')
+     * for frmGoodsDispatchingNoteCmagt. A right with no grant row is false (CLR default).
+     */
+    public Map<String, Boolean> formRights() {
+        Map<String, Boolean> r = new LinkedHashMap<>();
+        String role = currentUserContext.currentRoleName();
+        boolean admin = "Admin".equalsIgnoreCase(role) || "Administrator".equalsIgnoreCase(role);
+        for (String k : new String[] {"view", "save", "update", "delete", "print", "canViewAllRecord"}) r.put(k, admin);
+        if (admin) return r;
+        try {
+            for (Map<String, Object> row : rightsRepo.userRightsForScreen(
+                    currentUserContext.currentUserId(), DESKTOP_SCREEN_NAME, role,
+                    currentUserContext.currentCompanyId())) {
+                Object name = pick(row, "RightName");
+                if (name == null) continue;
+                String n = name.toString().trim();
+                String key = "View".equals(n) ? "view" : "Save".equals(n) ? "save" : "Update".equals(n) ? "update"
+                        : "Delete".equals(n) ? "delete" : "Print".equals(n) ? "print"
+                        : RIGHT_CAN_VIEW_ALL_RECORDS.equals(n) ? "canViewAllRecord" : null;
+                if (key == null) continue;
+                Object v = pick(row, "Value");
+                boolean b = v instanceof Boolean ? (Boolean) v
+                        : v instanceof Number ? ((Number) v).intValue() != 0
+                        : v != null && ("1".equals(v.toString().trim()) || "true".equalsIgnoreCase(v.toString().trim()));
+                r.put(key, b);
+            }
+        } catch (Exception ignored) { }
+        return r;
     }
 
     public boolean canViewAllRecords() {

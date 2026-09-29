@@ -97,7 +97,19 @@ public class SupplierOfferCmagtRestController {
             if (payload.get("fromDate") != null) fromDate = payload.get("fromDate").toString();
             if (payload.get("toDate") != null)   toDate   = payload.get("toDate").toString();
         }
-        return saveService.formHistory(fromDate, toDate);
+        return saveService.formHistory(fromDate, toDate, payload);
+    }
+
+    /** frmBuyerInquiryLoaderForOffer.ComboDbCall -> USP_GetDataForDropDownFrominquiryBookingMaster. */
+    @GetMapping("/inquiry-loader/combos")
+    public List<Map<String, Object>> inquiryLoaderCombos() {
+        return saveService.inquiryLoaderCombos();
+    }
+
+    /** frmBuyerInquiryLoaderForOffer.PendingDataDbCall -> USP_inquiryBookingMaster_PendingDataLoader. */
+    @PostMapping("/inquiry-loader/pending")
+    public List<Map<String, Object>> pendingInquiries(@RequestBody(required = false) Map<String, Object> filters) {
+        return saveService.pendingInquiries(filters);
     }
 
 }

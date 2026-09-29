@@ -560,6 +560,27 @@ public class ReportRegistry {
                    P("@Id","arg:id")),
                 Collections.emptyList()));
 
+        /* CommonServices.SaleOrderReports273 (CommonServices.cs:8978) - the Sale Order "273-Print".
+           Same procedure and sub-report as 273_01; the desktop only picks another .rpt.
+           The sub-report procedure's only parameter is @OrderId (procdure.sql), not @Id. */
+        add(new ReportDefinition("so-273", "273-InvRptSaleOrderSlip.rpt",
+                "Sp_SaleOrder_RiceSlip_Rpt",
+                "CommonServices.SaleOrderReports273 (CommonServices.cs:8978)",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                subs(new ReportDefinition.SubReport("SaleOrderCustomerExpense_SubReport.rpt",
+                            "[dbo].[USP_SaleOrderCustomerExpense_SubReport]", ps(P("@OrderId","arg:id"))))));
+
+        // CommonServices.BookOrderReports273A (CommonServices.cs:9140) - no sub-report
+        add(new ReportDefinition("so-273-a", "273-InvRptSaleOrderSlip(A).rpt",
+                "Sp_SaleOrder_RiceSlip_Rpt",
+                "CommonServices.BookOrderReports273A",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@Id","arg:id")),
+                Collections.emptyList()));
+
         // CommonServices.SaleOrderReports273_01 - Rice slip with two sub-reports
         add(new ReportDefinition("so-273-01", "273_01_SaleOrderSlip.rpt",
                 "Sp_SaleOrder_RiceSlip_Rpt",
@@ -568,7 +589,7 @@ public class ReportRegistry {
                    P("@CompanyId","session:companyId"),
                    P("@Id","arg:id")),
                 subs(new ReportDefinition.SubReport("SaleOrderCustomerExpense_SubReport.rpt",
-                            "[dbo].[USP_SaleOrderCustomerExpense_SubReport]", ps(P("@Id","arg:id"))))));
+                            "[dbo].[USP_SaleOrderCustomerExpense_SubReport]", ps(P("@OrderId","arg:id"))))));
 
         // CommonServices.SaleOrderReport_1110
         add(new ReportDefinition("so-1110", "1110-SaleOrderSlip.rpt",
@@ -578,7 +599,7 @@ public class ReportRegistry {
                    P("@CompanyId","session:companyId"),
                    P("@Id","arg:id")),
                 subs(new ReportDefinition.SubReport("SaleOrderPaymentTermsDetail_SubReport.rpt",
-                            "[fed].[usp_SaleOrderPaymentTermsDetail_SubReport]", ps(P("@Id","arg:id"))))));
+                            "[fed].[usp_SaleOrderPaymentTermsDetail_SubReport]", ps(P("@OrderId","arg:id"))))));
 
         /* --------------------------------------------- Purchase Order Engr (the 1600 report)
 
@@ -808,6 +829,13 @@ public class ReportRegistry {
                 ps(P("@OrganizationId","session:organizationId"), P("@CompanyId","session:companyId"), P("@DocumentTypeId","const:101"), G("@Id","arg:id"), P("@FreeOfCost","const:0"),
                    P("rpt:@CompanyName","same:@CompanyName"), P("rpt:@CompanyAddress","same:@CompanyAddress")),
                 Collections.emptyList()));
+        /* frmWagesBillManual Print-004 / history Slip -> CommonServices.ContractorWagesBillManualSlip004 (:7531):
+           DocumentTypeId 810 and @Id; as with 002 the DAL's null ApprovedFilter sends @FreeOfCost = 0. */
+        add(new ReportDefinition("wages-004", "004-ContractorWagesBillManualSlip.rpt", "Sp_InvContractorWagesBillHeader_SlipandRegister",
+                "CommonServices.ContractorWagesBillManualSlip004",
+                ps(P("@OrganizationId","session:organizationId"), P("@CompanyId","session:companyId"), P("@DocumentTypeId","const:810"), G("@Id","arg:id"), P("@FreeOfCost","const:0"),
+                   P("rpt:@CompanyName","same:@CompanyName"), P("rpt:@CompanyAddress","same:@CompanyAddress")),
+                Collections.emptyList()));
         /* FoodProductionWithValues consumption print -> CommonServices.ProductionConsumptionReport_623 */
         add(new ReportDefinition("prod-623", "623-InvFoodProduction_ConsumptionReport.rpt",
                 "[dbo].[USP_InvFoodProduction_ConsumptionReport]", "CommonServices.ProductionConsumptionReport_623",
@@ -858,6 +886,30 @@ public class ReportRegistry {
                 "[dbo].[usp_ProductionOutputAllocationWithExportInvoice_SlipAndRegister]",
                 "ProductionOutputAllocationWithExportInvoice.Slip",
                 ps(G("@JobOrderId","arg:jobOrderId")), Collections.emptyList()));
+        /* frmStockContractorWagesHistory.Print_Click / BtnPrintNew_Click - ShowReportWithDataTable(dtGrid, ...):
+           the rows of the last Show, re-run here with the arguments GridBind sent (BLL guards). */
+        add(new ReportDefinition("wh-001", "001-ContractorWagesRegister.rpt", "Sp_InvContractorWagesBillHeader_SlipandRegister",
+                "frmStockContractorWagesHistory.Print_Click (001-Print)",
+                ps(P("@OrganizationId","session:organizationId"), P("@CompanyId","session:companyId"), P("@DocumentTypeId","const:101"),
+                   G("@BranchesIds","arg:branchesIds"), G("@SupplierCustomerId","arg:contractorId"), G("@RefDocumentTypeId","arg:documentTypeId"),
+                   G("@InvConractorWagesAccountsId","arg:wagesAccountId"), G("@BillDateFrom","arg:fromDate"), G("@BillDateTo","arg:toDate"),
+                   G("@FreeOfCost","arg:freeOfCost"), G("@ActionId","arg:actionId"), G("@StockPartyId","arg:stockPartyId")),
+                Collections.emptyList()));
+        add(new ReportDefinition("wh-003A", "003_A_WagesReportByContractor.rpt", "Sp_InvContractorWagesBillHeader_SlipandRegister",
+                "frmStockContractorWagesHistory.BtnPrintNew_Click (003-A-Print)",
+                ps(P("@OrganizationId","session:organizationId"), P("@CompanyId","session:companyId"), P("@DocumentTypeId","const:101"),
+                   G("@BranchesIds","arg:branchesIds"), G("@SupplierCustomerId","arg:contractorId"), G("@RefDocumentTypeId","arg:documentTypeId"),
+                   G("@InvConractorWagesAccountsId","arg:wagesAccountId"), G("@BillDateFrom","arg:fromDate"), G("@BillDateTo","arg:toDate"),
+                   G("@FreeOfCost","arg:freeOfCost"), G("@ActionId","arg:actionId"), G("@StockPartyId","arg:stockPartyId")),
+                Collections.emptyList()));
+        add(new ReportDefinition("wh-003", "003-tSummaryWagesByRefDocumentsAndActivities.rpt", "USP_GetSummaryWagesByRefDocumentsAndActivities",
+                "frmStockContractorWagesHistory.Print_Click (003-Print)",
+                ps(P("@OrganizationId","session:organizationId"), P("@CompanyId","session:companyId"),
+                   G("@FromDate","arg:fromDate"), G("@ToDate","arg:toDate"), G("@RefDocumentTypeId","arg:documentTypeId"),
+                   G("@SupplierCustomerId","arg:contractorId"), G("@InvConractorWagesAccountsId","arg:wagesAccountId"),
+                   G("@BranchesIds","arg:branchesIds"), G("@FreeOfCost","arg:freeOfCost"), G("@ActionId","arg:actionId"),
+                   G("@StockPartyId","arg:stockPartyId"), G("@BranchWise","arg:branchWise")),
+                Collections.emptyList()));
         /* frmEvaulationDetailWagesReports.btnPrint_Click - one procedure, five templates */
         add(new ReportDefinition("wr-160", "160-WagesRegister.rpt", "dbo.USp_WagesRegister", "frmEvaulationDetailWagesReports.btnPrint_Click",
                 ps(P("@OrganizationId","session:organizationId"), P("@CompanyId","session:companyId"),

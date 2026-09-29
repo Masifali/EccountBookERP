@@ -170,6 +170,27 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(308, "/production/reports/production-comparison");         // FoodProductionComparisonRpt
         WEB_ROUTES_BY_SCREEN_ID.put(306, "/production/reports/packing-material-consumption");  // frmProductionPackingMaterialConsumptionRegister
 
+        /* Taxation, ModuleId 9 (App 13). 176 was built under Inventory; the other four were built for
+           the Taxation hub on 29-Sep-2026. 172-175 and 177-180 confirmed against the ScreenDefinition
+           dump (ModuleId 9); 174, 175, 179, 180 have no page yet and show as not built. */
+        WEB_ROUTES_BY_SCREEN_ID.put(176, "/inventory/item-tax-schedules");               // InvDeffrmItemTaxSchdule
+        WEB_ROUTES_BY_SCREEN_ID.put(178, "/taxation/add-tax-type");                      // InvfrmAddTaxType
+        WEB_ROUTES_BY_SCREEN_ID.put(177, "/taxation/add-tax-schedule");                  // InvfrmAddTaxSchedule
+        WEB_ROUTES_BY_SCREEN_ID.put(172, "/taxation/tax-notes-and-gl-maping");           // frmTaxNotesAndGLMaping
+        WEB_ROUTES_BY_SCREEN_ID.put(173, "/taxation/supplier-customer-tax-exemption");   // frmSupplierCustomerExemptionSchedule
+
+        /* Master Data Definition, App 19, ModuleId 2039 "System_Level" - all nine confirmed against the
+           ScreenDefinition dump (GoldenAceDb(0509)t.sql) on 2026-09-30. */
+        WEB_ROUTES_BY_SCREEN_ID.put(749, "/master-data/country");       // frmCountry -> DefineCountry
+        WEB_ROUTES_BY_SCREEN_ID.put(750, "/master-data/city");          // frmCity -> DefineCity
+        WEB_ROUTES_BY_SCREEN_ID.put(751, "/master-data/currency");      // frmExImCurrency -> DefineMultiCurrency
+        WEB_ROUTES_BY_SCREEN_ID.put(752, "/master-data/sea-ports");     // frmExImSeaPorts -> SeaPortsDefine
+        WEB_ROUTES_BY_SCREEN_ID.put(753, "/master-data/province");      // frmDefineProvince -> DefineProvince
+        WEB_ROUTES_BY_SCREEN_ID.put(754, "/master-data/date-lock");     // DateLock
+        WEB_ROUTES_BY_SCREEN_ID.put(755, "/master-data/tehsil");        // DefineTehsil
+        WEB_ROUTES_BY_SCREEN_ID.put(756, "/master-data/district");      // DefineDistrict
+        WEB_ROUTES_BY_SCREEN_ID.put(742, "/master-data/other-items");   // frmInvDefineOtherItems -> InvOtherItems
+
         /* Packing Material, ModuleId 54 */
         WEB_ROUTES_BY_SCREEN_ID.put(496, "/packing-material/item-pm");        // AddItemPM (Architecture.WinApp.StoreManagement)
 

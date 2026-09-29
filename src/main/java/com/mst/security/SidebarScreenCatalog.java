@@ -202,6 +202,27 @@ public final class SidebarScreenCatalog {
         // GoldenAcedb this repository already holds - not matched by name.
         e.add(new Entry("Production Job Order", "Production", "/production/job-order", "PRODUCTION_JOB_ORDER", "PRODUCTION", 281, 18));
         e.add(new Entry("Stock Conversion", "Production", "/production/stock-conversion", "PRODUCTION_STOCK_CONVERSION", "PRODUCTION", 276, 18));
+        // The three master-data definitions (DefineProductionType.cs, DefineProductionPlanType.cs,
+        // DefineProductionPlant.cs). In dbo.ScreenDefinition (GoldenAceDb(0509)t.sql) they are NOT under
+        // Production (18) but under AppModules 45 "Accounts Definition" (ModuleTypeId 4, the Utility menu):
+        //   420 frmDefinePlant / "Define Plant Utility"   TargetUrl Architecture.WinApp.Production.DefineProductionPlant
+        //   425 DefineProductionPlanType / "Production Plan Type"  TargetUrl "WinApp.Production.DefineProductionType"
+        //       (no "Architecture." prefix - the desktop cannot open this row; matched here by its ScreenName)
+        // DefineProductionType has no row of its own, so it is null: hidden from the menu, reachable by URL.
+        e.add(new Entry("Define Plant Utility", "Production", "/production/define-production-plant", "PRODUCTION_DEFINE_PLANT", "PRODUCTION", 420, 45));
+        e.add(new Entry("Production Plan Type", "Production", "/production/define-production-plan-type", "PRODUCTION_DEFINE_PLAN_TYPE", "PRODUCTION", 425, 45));
+        e.add(new Entry("DefineProductionType", "Production", "/production/define-production-type", "PRODUCTION_DEFINE_TYPE", "PRODUCTION", null, 45));
+
+        // MASTER DATA DEFINITION (App 19, AppModules 2039 "System_Level") - ids from the ScreenDefinition dump.
+        e.add(new Entry("Country", "Master Data Definition", "/master-data/country", "MDD_COUNTRY", "MASTER_DATA_DEFINITION", 749, 2039));
+        e.add(new Entry("City", "Master Data Definition", "/master-data/city", "MDD_CITY", "MASTER_DATA_DEFINITION", 750, 2039));
+        e.add(new Entry("Currency", "Master Data Definition", "/master-data/currency", "MDD_CURRENCY", "MASTER_DATA_DEFINITION", 751, 2039));
+        e.add(new Entry("Sea Ports", "Master Data Definition", "/master-data/sea-ports", "MDD_SEA_PORTS", "MASTER_DATA_DEFINITION", 752, 2039));
+        e.add(new Entry("Province", "Master Data Definition", "/master-data/province", "MDD_PROVINCE", "MASTER_DATA_DEFINITION", 753, 2039));
+        e.add(new Entry("Date Lock", "Master Data Definition", "/master-data/date-lock", "MDD_DATE_LOCK", "MASTER_DATA_DEFINITION", 754, 2039));
+        e.add(new Entry("Tehsil", "Master Data Definition", "/master-data/tehsil", "MDD_TEHSIL", "MASTER_DATA_DEFINITION", 755, 2039));
+        e.add(new Entry("District", "Master Data Definition", "/master-data/district", "MDD_DISTRICT", "MASTER_DATA_DEFINITION", 756, 2039));
+        e.add(new Entry("Other Items", "Master Data Definition", "/master-data/other-items", "MDD_OTHER_ITEMS", "MASTER_DATA_DEFINITION", 742, 2039));
 
         // 7. PRODUCTION REPORTS (module 21)
         // Ids, ScreenName and ScreenAlias all read from reconciliation-input.json, the live dump

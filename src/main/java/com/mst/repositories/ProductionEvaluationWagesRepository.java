@@ -113,6 +113,23 @@ public class ProductionEvaluationWagesRepository {
         return rows("dbo.USp_WagesRegister", params);
     }
 
+    /**
+     * frmStockContractorWagesHistory.GridBind (Report Type 1 "Detail") ->
+     * InvContractorWagesBillHeader.ContractorWagesBill_SlipandRegister -> Sp_InvContractorWagesBillHeader_SlipandRegister.
+     * The caller builds the list with the BLL's guards; this only executes it.
+     */
+    public List<Map<String, Object>> contractorWagesSlipAndRegister(LinkedHashMap<String, Object> params) {
+        return rows("dbo.Sp_InvContractorWagesBillHeader_SlipandRegister", params);
+    }
+
+    /**
+     * frmStockContractorWagesHistory.GridBind (Report Type 2 "Summary") ->
+     * InvContractorWagesBillHeader.GetSummaryWagesByRefDocumentsAndActivities -> USP_GetSummaryWagesByRefDocumentsAndActivities.
+     */
+    public List<Map<String, Object>> summaryWagesByRefDocumentsAndActivities(LinkedHashMap<String, Object> params) {
+        return rows("dbo.USP_GetSummaryWagesByRefDocumentsAndActivities", params);
+    }
+
     /* ============================================================================== plumbing */
 
     private List<Map<String, Object>> rows(String proc, LinkedHashMap<String, Object> params) {

@@ -25,6 +25,10 @@ public class GrnLoadingChallanCmagtService {
     @Autowired
     private com.mst.repositories.cmagt.SaleOrderCmagtRepository rightsRepo;
 
+    /** CmbBranch source (BranchesAllocationToUser.GetBranchsAllocatedToUser) - read only. */
+    @Autowired
+    private CommissionDropdownService dropdownService;
+
     public static final String DESKTOP_SCREEN_NAME = "frmGrnLoadingChallanCmagt";
     private static final String RIGHT_CAN_VIEW_ALL_RECORDS = "CanView AllRecord";
     private static final java.util.regex.Pattern VEHICLE_NO =
@@ -47,7 +51,10 @@ public class GrnLoadingChallanCmagtService {
     public Map<String, Object> saveOrUpdate(GrnLoadingChallanCmagtDto dto) {
         dto.setOrganizationId(currentUserContext.currentOrganizationId());
         dto.setCompanyId(currentUserContext.currentCompanyId());
-        dto.setBranchId(currentUserContext.currentBranchId());
+        /* Insert() :2596 obj.branchId = CmbBranch.Value. CmbBranch lists only the branches
+           allocated to this user, so the chosen branch is honoured when it is one of those and
+           falls back to the session branch otherwise (never an arbitrary id from the client). */
+        dto.setBranchId(allowedBranch(dto.getBranchId()));
         dto.setFinancialYearId(currentUserContext.currentFinancialYearId());
         dto.setEntryUserId(currentUserContext.currentUserId());
         dto.setModifyUserId(currentUserContext.currentUserId());
@@ -57,6 +64,13 @@ public class GrnLoadingChallanCmagtService {
            update. Derived here, never taken from the request. */
         Integer id = dto.getGrnSupplierLoadingMasterId();
         dto.setActionId((id == null || id == 0) ? 1 : 2);
+        /* :591-592 btnsave.Enabled = DoHaveSaveRight, btnUpdate.Enabled = DoHaveUpdateRights.
+           The web enforces the same right on the server, not only on the button. */
+        Map<String, Boolean> rights = formRights();
+        if (dto.getActionId() == 1 && !Boolean.TRUE.equals(rights.get("save")))
+            throw new IllegalArgumentException("You do not have Save rights on this screen.");
+        if (dto.getActionId() == 2 && !Boolean.TRUE.equals(rights.get("update")))
+            throw new IllegalArgumentException("You do not have Update rights on this screen.");
 
         /* DocumentTypeId belongs to THIS form, not to the model's name - 1054 is the value
            frmGrnLoadingChallanCmagt carries. It is set server-side for the same reason
@@ -93,9 +107,109 @@ public class GrnLoadingChallanCmagtService {
             dto.setTotalFreight(java.math.BigDecimal.ZERO);
         }
 
+        /* FillDetailListCommonForInsertAndDelete (:2500-2536) never assigns these detail
+           properties, so the desktop sends their CLR defaults (0 / null). The page used to send
+           supplier-offer / inquiry ids from the loader row, the header cities and a running
+           sortNo - values the desktop never writes. */
+        if (dto.getGrnSupplierLoadingDetailList() != null) {
+            for (GrnLoadingChallanCmagtDto.DetailDto d : dto.getGrnSupplierLoadingDetailList()) {
+                d.setSupplierOfferId(0);
+                d.setSupplierOfferDetailId(0);
+                d.setInquiryBookingMasterId(0);
+                d.setInquiryBookingDetailId(0);
+                d.setLoadingCityId(0);
+                d.setUnloadingCityId(0);
+                d.setSortNo(0);
+                d.setModifyUserId(0);
+            }
+        }
+
         validate(dto);
 
         return repository.saveOrUpdate(dto);
+    }
+
+    private int allowedBranch(Integer requested) {
+        int session = currentUserContext.currentBranchId();
+        if (requested == null || requested <= 0) return session;
+        try {
+            for (Map<String, Object> b : dropdownService.branches()) {
+                Object v = pick(b, "BranchId");
+                if (v instanceof Number && ((Number) v).intValue() == requested) return requested;
+            }
+        } catch (Exception ignored) { }
+        return session;
+    }
+
+    private String cfg(String name) {
+        try {
+            String v = repository.config(currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId(), name);
+            return v == null ? "" : v.trim();
+        } catch (Exception e) { return ""; }
+    }
+    private int cfgInt(String name) {
+        try { return (int) Double.parseDouble(cfg(name)); } catch (Exception e) { return 0; }
+    }
+    /** Conversion.ToBool: "1"/"true" are true, anything else false. */
+    private boolean cfgBool(String name) {
+        String v = cfg(name);
+        return "1".equals(v) || "true".equalsIgnoreCase(v);
+    }
+
+    /**
+     * GetConfigurationsFromGlobal (:646-659) + GetCommissionAgentConfigurationsFromGlobalandBind
+     * (:661-700) + CmbCompanyName.Value = UserAccount.CompanyId (:600). A zero id means
+     * "not configured" - the page leaves that control alone, as the desktop's `if (id > 0)`.
+     */
+    public Map<String, Object> formConfig() {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("defaultDaysToLessFromHistoryFromDate", cfgInt("DefaultDaysToLessFromHistoryFromDate"));
+        out.put("tolerancePercentageForCmagtPoWeight", cfgInt("TolerancePercentageForCmagtPoWeight"));
+        out.put("grnLoadingAllowDifferentBiltyDate", cfgBool("GrnLoadingAllowDifferentBiltyDate"));
+        out.put("grnLoadingDocDateAndBiltyDateSame", cfgBool("GrnLoadingDocDateAndBiltyDateSame"));
+        out.put("commissionAgentId", cfgInt("DefaultCommissionAgentIdForCommissionAgentPortal"));
+        out.put("deliveryTermId", cfgInt("DefaultDeliveryTermIdForCommissionAgentPortal"));
+        out.put("cropYearId", cfgInt("DefaultCropYearIdForCommissionAgentPortal"));
+        out.put("packingTypeId", cfgInt("DefaultPackingTypeIdForCommissionAgentPortal"));
+        out.put("loadingCityId", cfgInt("DefaultLoadingCityIdForCommissionAgentPortal"));
+        out.put("unloadingCityId", cfgInt("DefaultUnloadingCityIdForCommissionAgentPortal"));
+        out.put("companyId", currentUserContext.currentCompanyId());
+        out.put("branchId", currentUserContext.currentBranchId());
+        out.put("canViewAllRecords", canViewAllRecords());
+        out.put("rights", formRights());
+        return out;
+    }
+
+    /** Load Purchase Order dialog filter combos (frmLoadPurchaseOrderForGrnLoading:167). */
+    public List<Map<String, Object>> loaderCombos() {
+        return repository.loaderCombos(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId());
+    }
+
+    /** HistoryComboDbCall (:627) -> BLL GetDataForDropDown (org, company; no Activity). */
+    public List<Map<String, Object>> historyCombos() {
+        return repository.historyCombos(currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId());
+    }
+
+    /**
+     * HistoryFill (:3691-3760). The date pair goes to FromDate/ToDate, EntryFromDate/EntryToDate
+     * or ModifyFromDate/ModifyToDate depending on the Doc Date / Entry Date / Modify Date radio;
+     * CommissionAgentId, SupplierId, DeliveryToPartyId only when non-zero and ShipToAddress only
+     * when non-empty (BLL 0488 FormHistory :127-300). Item / parent category / validity dates are
+     * set on the desktop's ReportsParameters but the BLL never passes them, so neither does this.
+     */
+    public List<Map<String, Object>> getHistory(String fromDate, String toDate, String dateType,
+                                                Integer commissionAgentId, Integer supplierId,
+                                                Integer deliveryToPartyId, String shipToAddress) {
+        return repository.formHistory(
+                currentUserContext.currentOrganizationId(),
+                currentUserContext.currentCompanyId(),
+                currentUserContext.currentBranchId(),
+                currentUserContext.currentFinancialYearId(),
+                canViewAllRecords(), currentUserContext.currentUserId(), fromDate, toDate,
+                dateType, commissionAgentId, supplierId, deliveryToPartyId, shipToAddress);
     }
 
     /**
@@ -152,6 +266,13 @@ public class GrnLoadingChallanCmagtService {
             reqRow(d.getNetBillWeight(), "Net Bill Weight", i);
             gross = gross.add(d.getWbGrossWeight());
         }
+        /* Insert() :2577: GrnLoadingDocDateAndBiltyDateSame is a hard refusal. (The
+           GrnLoadingAllowDifferentBiltyDate Yes/No confirmation is the page's to ask.) */
+        if (cfgBool("GrnLoadingDocDateAndBiltyDateSame") && dto.getDocDate() != null && dto.getBiltyDate() != null
+                && !dto.getDocDate().substring(0, Math.min(10, dto.getDocDate().length()))
+                        .equals(dto.getBiltyDate().substring(0, Math.min(10, dto.getBiltyDate().length())))) {
+            throw new IllegalArgumentException("Doc Date And Bilty Date Can't be different");
+        }
         if (dto.getScaleNetWeight().compareTo(gross) != 0) {
             throw new IllegalArgumentException("Header Net Weight:" + dto.getScaleNetWeight().stripTrailingZeros().toPlainString()
                     + " not equal to detail gross weight:" + gross.stripTrailingZeros().toPlainString() + ". please Check!");
@@ -178,6 +299,45 @@ public class GrnLoadingChallanCmagtService {
                 currentUserContext.currentBranchId(),
                 currentUserContext.currentFinancialYearId(),
                 all, currentUserContext.currentUserId(), fromDate, toDate);
+    }
+
+    /**
+     * CommonServices.SetRightsValueInRightsObject(ScreenName) (InitializeComponentMethod :559),
+     * the four flags the form reads at :591-594. Role "Admin" presets Save/Update/Delete/
+     * CanViewAll/Print to true; a grant row then overrides each flag, except that for Admin
+     * Save/Update/Print/CanView AllRecord stay true - Delete has no Admin guard in the desktop
+     * and so takes the row's value. Computed per call (singleton bean).
+     */
+    public Map<String, Boolean> formRights() {
+        String role = currentUserContext.currentRoleName();
+        boolean admin = "Admin".equalsIgnoreCase(role) || "Administrator".equalsIgnoreCase(role);
+        Map<String, Boolean> r = new java.util.LinkedHashMap<>();
+        r.put("save", admin); r.put("update", admin); r.put("delete", admin);
+        r.put("print", admin); r.put("canViewAllRecords", admin);
+        try {
+            for (Map<String, Object> row : rightsRepo.userRightsForScreen(
+                    currentUserContext.currentUserId(), DESKTOP_SCREEN_NAME, role,
+                    currentUserContext.currentCompanyId())) {
+                Object name = pick(row, "RightName");
+                if (name == null) continue;
+                String n = name.toString().trim();
+                boolean v = truthy(pick(row, "Value"));
+                if ("Save".equals(n)) r.put("save", admin || v);
+                else if ("Update".equals(n)) r.put("update", admin || v);
+                else if ("Print".equals(n)) r.put("print", admin || v);
+                else if ("CanView AllRecord".equals(n)) r.put("canViewAllRecords", admin || v);
+                else if ("Delete".equals(n)) r.put("delete", v);
+            }
+        } catch (Exception ignored) {
+            // An unreadable grant grid must not become an implicit grant for non-admins.
+        }
+        return r;
+    }
+
+    private static boolean truthy(Object v) {
+        if (v instanceof Boolean) return (Boolean) v;
+        if (v instanceof Number) return ((Number) v).intValue() != 0;
+        return v != null && ("1".equals(v.toString().trim()) || "true".equalsIgnoreCase(v.toString().trim()));
     }
 
     public boolean canViewAllRecords() {
@@ -219,6 +379,9 @@ public class GrnLoadingChallanCmagtService {
 
     /** btnDelete_Click (:2874) -> BLL DeleteByID(UserAccount.ID, RecId). */
     public Map<String, Object> deleteById(int id) {
+        /* :593 btnDelete.Enabled = formright.DoHaveCanDelete. */
+        if (!Boolean.TRUE.equals(formRights().get("delete")))
+            throw new IllegalArgumentException("You do not have Delete rights on this screen.");
         if (!repository.belongsTo(id, currentUserContext.currentOrganizationId(),
                 currentUserContext.currentCompanyId())) {
             throw new IllegalArgumentException("No record found to Delete");

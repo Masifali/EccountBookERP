@@ -269,10 +269,20 @@
                 bindCombo('#cmbCropYear', LK.cropYears, 'Id', 'CropYear');
                 bindCombo('#cmbPackingType', LK.packingTypes, 'Id', 'PackTypeDesc');
                 bindCombo('#cmbParentItem', LK.parentItems, 'Id', 'Description');
-                bindCombo('#cmbParentItemHistory', LK.parentItems, 'Id', 'Description');
+                // CompanyBind(CompanyDropdownData()); CmbCompanyName.Value = UserAccount.CompanyId
+                bindCombo('#cmbCompanyName', LK.companies, 'Id', 'CompName', { keepValue: true });
+                /* the "-- Select --" row has value "0", so test the number, not the string */
+                if (!int($('#cmbCompanyName').val()) && LK.currentCompanyId) {
+                    $('#cmbCompanyName').val(String(LK.currentCompanyId)).trigger('change.select2');
+                }
+                /* desktop: CmbBranch.Value = UserAccount.BranchesId (login branch) */
+                if (!int($('#cmbBranch').val()) && LK.currentBranchId) {
+                    $('#cmbBranch').val(String(LK.currentBranchId)).trigger('change.select2');
+                }
                 bindItemCombo('#cmbItemName', 0);
-                bindItemCombo('#cmbItemNameHistory', 0);
                 bindShipToAddresses(0);
+                // HistoryComboBind(HistoryComboDbCall()) - USP_GetDataForDropDownFromsaleOrderMaster
+                historyComboBind(LK.historyCombos);
 
                 seedExpenseGrid();
                 seedEmptyBagGrid();
@@ -302,8 +312,7 @@
     function bindPartyCombos() {
         var field = $('#radNickName').is(':checked') ? 'DisplayNick' : 'DisplayCompany';
         ['#cmbCommissionAgent', '#cmbBuyerName', '#cmbDeliveryToParty',
-         '#cmbCommissionAc', '#cmbBrokeryAc',
-         '#cmbCommissionAgentHistory', '#cmbBuyerNameHistory', '#cmbDeliveryToPartyHistory']
+         '#cmbCommissionAc', '#cmbBrokeryAc']
             .forEach(function (sel) {
                 bindCombo(sel, LK.parties, 'Id', field, { keepValue: true });
             });
@@ -322,8 +331,56 @@
         var rows = (LK.shipToAddresses || []).filter(function (r) {
             return !partyId || int(r.SupplierCustomerId) === int(partyId);
         });
-        bindCombo('#cmbShipToAddress', rows, 'Id', 'AddressLine1');
-        bindCombo('#cmbDeliverToAddressHistory', LK.shipToAddresses, 'Id', 'AddressLine1');
+        bindCombo('#cmbShipToAddress', rows, 'Id', 'AddressLine1', { keepValue: true });
+    }
+
+    /* =====================================================================
+     * HISTORY COMBOS - HistoryComboBind (:3062) / BindDropdownsAgainstParentCategory (:3183)
+     * Source: [cmagt].[USP_GetDataForDropDownFromsaleOrderMaster] rows
+     * (Id, ReferenceName, ParentCategoryId, Activity). Parent Category is a multi-select
+     * checked list defaulted to GetMostUsedParentCategoryId; the other five combos are
+     * filtered to the checked parent categories.
+     * ===================================================================== */
+    var HISTORY_COMBO_MAP = [
+        ['CommissionAgent',     '#cmbCommissionAgentHistory', true],
+        ['buyerName',           '#cmbBuyerNameHistory',       true],
+        ['Item',                '#cmbItemNameHistory',        false],
+        ['DeliveryToPartyName', '#cmbDeliveryToPartyHistory', true],
+        ['DeliverToAddress',    '#cmbDeliverToAddressHistory', true]
+    ];
+    function bindHistoryChildCombos(parentIds) {
+        var rows = LK.historyCombos || [];
+        var filter = parentIds && parentIds.length ? parentIds.map(String) : null;
+        HISTORY_COMBO_MAP.forEach(function (m) {
+            var seen = {}, out = [];
+            rows.forEach(function (r) {
+                if (String(r.Activity || '').toLowerCase() !== m[0].toLowerCase()) return;
+                if (filter && filter.indexOf(String(r.ParentCategoryId)) < 0) return;
+                if (m[2]) { if (seen[r.Id]) return; seen[r.Id] = 1; }
+                out.push({ Id: r.Id, Name: r.ReferenceName });
+            });
+            bindCombo(m[1], out, 'Id', 'Name', { keepValue: true });
+        });
+    }
+    function historyComboBind(rows) {
+        LK.historyCombos = rows || [];
+        var parents = [], seen = {}, mostUsed = null;
+        LK.historyCombos.forEach(function (r) {
+            if (r.Activity === 'ParentCategories' && !seen[r.Id]) { seen[r.Id] = 1; parents.push({ Id: r.Id, Name: r.ReferenceName }); }
+            if (r.Activity === 'GetMostUsedParentCategoryId' && mostUsed === null) mostUsed = r.Id;
+        });
+        var $p = $('#cmbParentItemHistory');
+        var html = '';
+        parents.forEach(function (r) { html += '<option value="' + esc(r.Id) + '">' + esc(r.Name) + '</option>'; });
+        $p.html(html);
+        if (mostUsed !== null) $p.val([String(mostUsed)]);
+        $p.trigger('change.select2');
+        /* HistoryComboBind loads the five combos with rows of the most-used parent only */
+        bindHistoryChildCombos(mostUsed !== null ? [mostUsed] : []);
+    }
+    function historyParentIds() {
+        var v = $('#cmbParentItemHistory').val();
+        return Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []);
     }
 
     /* =====================================================================
@@ -919,6 +976,8 @@
     }
 
     function renderPaymentGrid() {
+        // BindGrids (:1456) / delete (:2103): the desktop grid never shows zero rows.
+        if (!dtPaymentTerm.length) dtPaymentTerm.push({ PaymentTerm: 0, DueDays: 0, '%OfTotal': 0, Amount: 0, BaseDateType: 0, DueDate: '' });
         var h = '<colgroup><col style="width:20px"><col style="width:20px">';
         PAYMENT_COLUMNS.forEach(function (c) { h += '<col style="width:' + c.w + 'px">'; });
         h += '</colgroup><thead><tr><th>X</th><th>+</th>';
@@ -1125,11 +1184,11 @@
             commissionAgentId: int($('#cmbCommissionAgentHistory').val()) || '',
             buyerId: int($('#cmbBuyerNameHistory').val()) || '',
             itemId: int($('#cmbItemNameHistory').val()) || '',
-            parentItemIds: $('#cmbParentItemHistory').val() || '',
+            parentItemIds: historyParentIds().join(','),
             deliveryToPartyId: int($('#cmbDeliveryToPartyHistory').val()) || '',
             shipToAddress: $('#cmbDeliverToAddressHistory option:selected').text() || ''
         };
-        $.getJSON(API + '/history', q)
+        return $.getJSON(API + '/history', q)
             .done(function (rows) {
                 historyRows = (rows || []).map(mapHistoryRow);
                 renderHistoryGrid();
@@ -1543,7 +1602,8 @@
         $('#txtDueDays,#txtRemarks,#txtCommRate,#txtCommAmount,#txtBrokeryRate,' +
           '#txtBrokeryAmount,#txtPaymentScheduleRemarks,#txtBuyerReference,#txtShipToAddress').val('');
         $('#chkWithHoldingTaxApplied,#chkOtherExpenseAllowed').prop('checked', false);
-        $('input[name=ebPolicy]').prop('checked', false);
+        // Desktop Reset() never touches panel7's radios; designer default is rdBagFocAndWeightCutNotApply.Checked=true (frmSaleOrderCmagt.cs:5600)
+        if (!$('input[name=ebPolicy]:checked').length) $('input[name=ebPolicy][value="3"]').prop('checked', true);
 
         $('#datDocDate').val(today()).prop('disabled', false);
         $('#datDeliveryStartDate').val(today());
@@ -1590,6 +1650,24 @@
         $('#datExpiryDate').val(days === 0 ? start : addDays(start, days));
     }
 
+    /* MakeShortCutKeys (:3933) - the desktop's key list, shown in a popup. */
+    var SHORTCUT_KEYS = [
+        ['Ctrl+S', 'For Save When on Entry form and For Show Data when on History Form'],
+        ['Ctrl+U', 'For Update'], ['Ctrl+Shift+Delete', 'For Delete'], ['Ctrl+E', 'For Close'],
+        ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'], ['Ctrl+P', 'For Print'],
+        ['Ctrl+F5', 'For Focus on Inquiry Date'], ['Ctrl+F10', 'For Open Attachments'],
+        ['Ctrl+T', 'For Tab Transfer'], ['Ctrl+alt', 'To Show ShortCut Keys Form'],
+        ['Ctrl+ArrowDown', 'For Focus On Parent Item'], ['Ctrl+ArrowUp', 'For Focus On on Inquiry Date'],
+        ['Ctrl+Enter', 'When Focus On Any Grid For Update Record'],
+        ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]
+    ];
+    function showShortCutKeys() {
+        $('#soShortcutBody').html(SHORTCUT_KEYS.map(function (r) {
+            return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>';
+        }).join(''));
+        $('#soShortcutDlg').addClass('open');
+    }
+
     /* =====================================================================
      * EVENT WIRING
      * ===================================================================== */
@@ -1600,7 +1678,12 @@
         $('#datDeliveryStartDate').val(today());
         calculateExpiryDate();
 
-        loadLookups().always(function () { loadNextDocNo(); applyPortalDefaults(); });
+        loadLookups().always(function () {
+            loadNextDocNo(); applyPortalDefaults();
+            /* report Doc No links open /commission/sale-order?id=N */
+            var qm = /[?&]id=(\d+)/.exec(location.search);
+            if (qm) loadOrder(+qm[1]);
+        });
 
         // ---- main tabs (Form / History) ----
         $(document).on('click', '.win-tab[data-maintab]', function () {
@@ -1658,7 +1741,8 @@
         });
 
         $('#cmbParentItemHistory').on('change', function () {
-            bindItemCombo('#cmbItemNameHistory', int($(this).val()));
+            // CmbParentItemHistory_Leave -> BindDropdownsAgainstParentCategory
+            bindHistoryChildCombos(historyParentIds());
         });
 
         // ---- commission / brokery recalculation ----
@@ -1762,21 +1846,53 @@
         $('#btnRefresh').on('click', function () { loadLookups(); });
         $('#btnSave,#btnUpdate,#btnSaveAs').on('click', save);
         $('#btnDelete').on('click', remove);
-        $('#btnShortCutKeys').on('click', function () {
-            window.alert('Shortcut keys:\n  F2  Save / Update\n  F3  New\n  F5  Refresh\n  Ctrl+D  Delete\n  Ctrl+H  History');
-        });
+        // BtnShortCutkeys_Click -> MakeShortCutKeys (:3933): the desktop's own list.
+        $('#btnShortCutKeys').on('click', showShortCutKeys);
+        $('#soShortcutClose').on('click', function () { $('#soShortcutDlg').removeClass('open'); });
         $('#btnAttachments,#btnPrint').on('click', function () {
             status('Attachments and printing are not migrated for this screen yet.', true);
         });
+        // BtnAddShiptoAddress_Click (:4006) opens SupfrmShipToAddress modally. The web ship-to
+        // editor lives on the party (supplier/customer) page; open it, then re-read
+        // AllShipToAddress() when the user comes back so the new address is selectable.
         $('#btnAddShipToAddress').on('click', function () {
-            status('Adding a new Ship To Address is not migrated for this screen yet.', true);
+            var partyId = int($('#cmbDeliveryToParty').val());
+            var url = '/accounts/supplier' + (partyId ? '/edit/' + partyId : '');
+            var w = window.open(url, '_blank');
+            var refresh = function () {
+                $(window).off('focus.soShipTo');
+                $.getJSON(API + '/ship-to-addresses').done(function (rows) {
+                    LK.shipToAddresses = rows || [];
+                    bindShipToAddresses(int($('#cmbDeliveryToParty').val()));
+                });
+            };
+            if (w) $(window).off('focus.soShipTo').on('focus.soShipTo', refresh);
         });
 
         // ---- history ----
-        $('#btnShowHistory,#btnRefreshHistory').on('click', loadHistory);
+        $('#btnShowHistory').on('click', function () {
+            var $b = $(this);
+            if ($b.prop('disabled')) return;
+            $b.prop('disabled', true);
+            var r = loadHistory();
+            if (r && r.always) r.always(function () { $b.prop('disabled', false); }); else $b.prop('disabled', false);
+        });
+        // BtnRefreshHistory_Click (:3042): re-read the history combos only (no grid reload).
+        $('#btnRefreshHistory').on('click', function () {
+            var $b = $(this);
+            if ($b.prop('disabled')) return;
+            $b.prop('disabled', true);
+            $.getJSON(API + '/history-combos').done(function (rows) {
+                var keep = historyParentIds();
+                LK.historyCombos = rows || [];
+                if (keep.length) bindHistoryChildCombos(keep); else historyComboBind(rows);
+            }).fail(function (xhr) {
+                $('#historyStatus').text('Refresh failed: ' + (xhr.responseText || xhr.statusText)).addClass('err');
+            }).always(function () { $b.prop('disabled', false); });
+        });
+        // btnNewHistory_Click (:3028): clears Item, Commission Agent and Buyer filters only.
         $('#btnNewHistory').on('click', function () {
-            resetForm(false);
-            $('.win-tab[data-maintab=form]').trigger('click');
+            $('#cmbItemNameHistory,#cmbCommissionAgentHistory,#cmbBuyerNameHistory').val('').trigger('change.select2');
         });
 
         $(document).on('click', '#grdHistory button[data-act]', function () {
@@ -1793,13 +1909,133 @@
             $('#grdHistory .hist-check').prop('checked', $(this).is(':checked'));
         });
 
-        // ---- keyboard shortcuts (MakeShortCutKeys) ----
+        // ---- keyboard: frmPurchaseOrderCmagt_KeyDown (:3795, KeyPreview=true) ----
+        function isVisibleEnabled(sel) { var $b = $(sel); return $b.length && $b.is(':visible') && !$b.prop('disabled'); }
+        function onHistoryTab() { return $('#mainpanel-history').hasClass('active'); }
+        function select2Open() { return $('.select2-container--open').length > 0; }
+        function focusGrid(wrapSel) { var $w = $(wrapSel); if ($w.length) $w.trigger('focus'); }
+        var TAB_ORDER = ['detail', 'expenses', 'emptybags', 'payment'];
+        var GRID_OF = { detail: '#grdDetail', expenses: '#grdInvExp', emptybags: '#grdEmptyBags', payment: '#grdPaymentTerm' };
+        function gridWrap(tab) { return $('#panel-' + tab + ' .win-grid-wrap'); }
+
+        /* Current grid row (GridEX CurrentRow): the row last clicked / focused in each grid. */
+        var curRow = {};
+        $(document).on('mousedown focusin', '#grdDetail tbody tr[data-i], #grdPaymentTerm tbody tr[data-i], #grdHistory tbody tr[data-hi]', function () {
+            var gid = $(this).closest('table').attr('id');
+            curRow[gid] = $(this).is('[data-hi]') ? int($(this).data('hi')) : int($(this).data('i'));
+        });
+        function focusedGridId() {
+            var $t = $(document.activeElement).closest('.win-grid-wrap').find('table.win-grid').first();
+            return $t.length ? $t.attr('id') : null;
+        }
+
+        /* grdDetail_KeyDown (:1600), grdPaymentTerm_KeyDown (:2190), grdHistory_KeyDown (:3670). */
+        function gridKeyDown(e, gid) {
+            var i = curRow[gid];
+            var ctrl = e.ctrlKey && !e.altKey;
+            var btnInRow = $(document.activeElement).is('button') && $(document.activeElement).closest('#' + gid).length;
+            if (gid === 'grdDetail') {
+                if (i === undefined || i >= dtDetail.length) return false;
+                if (ctrl && e.key === ' ') { if (btnInRow) $(document.activeElement).trigger('click'); return true; }
+                if (ctrl && e.key === 'Delete') { deleteDetailRow(i); curRow[gid] = undefined; return true; }
+                if (ctrl && e.key === 'Enter') { editDetailRow(i); return true; }
+            } else if (gid === 'grdPaymentTerm') {
+                if (i === undefined || i >= dtPaymentTerm.length) return false;
+                if (ctrl && e.key === ' ') { if (btnInRow) $(document.activeElement).trigger('click'); return true; }
+                if (ctrl && e.key === 'Delete') {
+                    dtPaymentTerm.splice(i, 1); curRow[gid] = undefined;
+                    renderPaymentGrid(); refreshPaymentScheduleText(); return true;
+                }
+                if (ctrl && (e.key === 'd' || e.key === 'D')) { addPaymentRow(); return true; }
+            } else if (gid === 'grdHistory') {
+                if (i === undefined || !historyRows[i]) return false;
+                if (ctrl && e.key === ' ') { if (btnInRow) $(document.activeElement).trigger('click'); return true; }
+                if (ctrl && e.key === 'Enter') { loadOrder(int(historyRows[i].Id), false); return true; }
+            }
+            return false;
+        }
+
+        function nextFocusable(from) {
+            var $all = $('#soForm').find('input:not([type=hidden]):not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled]):not([readonly]), button:not([disabled])')
+                .filter(':visible').add($('#soForm .select2-selection').filter(':visible'));
+            var list = $all.toArray().sort(function (a, b) {
+                return (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
+            });
+            var idx = list.indexOf(from);
+            if (idx < 0) { var s2 = $(from).closest('.select2-container').find('.select2-selection')[0]; idx = list.indexOf(s2); }
+            return idx >= 0 ? list[idx + 1] : null;
+        }
+
         $(document).on('keydown', function (e) {
-            if (e.key === 'F2') { e.preventDefault(); save(); }
-            else if (e.key === 'F3') { e.preventDefault(); resetForm(false); }
-            else if (e.key === 'F5') { e.preventDefault(); loadLookups(); }
-            else if (e.ctrlKey && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); remove(); }
-            else if (e.ctrlKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); $('.win-tab[data-maintab=history]').trigger('click'); }
+            if ($('#soShortcutDlg').hasClass('open')) {
+                if (e.key === 'Escape') { $('#soShortcutDlg').removeClass('open'); e.preventDefault(); }
+                return;
+            }
+            // leave a full-screen grid first
+            if (e.key === 'Escape' && $('.so-fs-host.so-fs').length) { $('.so-fs-host.so-fs').removeClass('so-fs'); e.preventDefault(); return; }
+            if (select2Open()) return;           // the open combo owns the keys
+
+            var gid = focusedGridId() || ($(e.target).closest('table.win-grid').attr('id'));
+            if (gid && gridKeyDown(e, gid)) { e.preventDefault(); return; }
+
+            var t = e.target, tag = (t.tagName || '').toLowerCase();
+            // Keys.Return -> SendKeys("{TAB}") - not inside a textarea, a button or a grid
+            if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+                if (tag === 'textarea' || tag === 'button' || gid) return;
+                if ($(t).closest('#soForm').length) {
+                    var nx = nextFocusable(t);
+                    if (nx) { e.preventDefault(); $(nx).trigger('focus'); }
+                }
+                return;
+            }
+            if (e.ctrlKey && e.altKey && (e.key === 'Control' || e.key === 'Alt')) { e.preventDefault(); showShortCutKeys(); return; }
+            if (!e.ctrlKey) {
+                if (e.key === 'Escape' && tag !== 'input' && tag !== 'select' && tag !== 'textarea') { e.preventDefault(); window.close(); }
+                return;
+            }
+            var k = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+            if (k === 'T') {
+                e.preventDefault();
+                if (onHistoryTab()) { $('.win-tab[data-maintab=form]').trigger('click'); $('#datDocDate').trigger('focus'); }
+                else { $('.win-tab[data-maintab=history]').trigger('click'); focusGrid('#hpanel-grid .win-grid-wrap'); }
+                return;
+            }
+            if (k === 'E') { e.preventDefault(); window.close(); return; }
+            if (!onHistoryTab()) {
+                if (e.shiftKey && k === 'Delete') { e.preventDefault(); if (!$('#btnDelete').prop('disabled')) $('#btnDelete').trigger('click'); }
+                else if (k === 'S') { e.preventDefault(); if (isVisibleEnabled('#btnSave')) $('#btnSave').trigger('click'); else if (isVisibleEnabled('#btnUpdate')) $('#btnUpdate').trigger('click'); }
+                else if (k === 'F12') { e.preventDefault(); if (isVisibleEnabled('#btnSaveAs')) $('#btnSaveAs').trigger('click'); }
+                else if (k === 'U') { e.preventDefault(); if (isVisibleEnabled('#btnUpdate')) $('#btnUpdate').trigger('click'); }
+                else if (k === 'P') { e.preventDefault(); if (isVisibleEnabled('#btnPrint')) $('#btnPrint').trigger('click'); }
+                else if (k === 'N') { e.preventDefault(); if (!$('#btnNew').prop('disabled')) $('#btnNew').trigger('click'); }
+                else if (k === 'R') { e.preventDefault(); if (!$('#btnRefresh').prop('disabled')) $('#btnRefresh').trigger('click'); }
+                else if (k === 'F5') { e.preventDefault(); $('#datDocDate').trigger('focus'); }
+                else if (k === 'F10') { e.preventDefault(); $('#btnAttachments').trigger('click'); }
+                else if (k === 'ArrowDown') { e.preventDefault(); $('.win-tab[data-tab=detail]').trigger('click'); focusGrid(gridWrap('detail')); }
+                else if (k === 'ArrowRight') {
+                    var cur = null;
+                    TAB_ORDER.forEach(function (tb) { if (gid === GRID_OF[tb].slice(1)) cur = tb; });
+                    if (cur) {
+                        e.preventDefault();
+                        var nxt = TAB_ORDER[(TAB_ORDER.indexOf(cur) + 1) % TAB_ORDER.length];
+                        $('.win-tab[data-tab=' + nxt + ']').trigger('click'); focusGrid(gridWrap(nxt));
+                    }
+                }
+                else if (k === 'ArrowUp') { e.preventDefault(); $('#cmbParentItem').select2('focus'); }
+            } else {
+                if (k === 'ArrowDown') { e.preventDefault(); focusGrid('#hpanel-grid .win-grid-wrap'); }
+                else if (k === 'S') { e.preventDefault(); if (!$('#btnShowHistory').prop('disabled')) $('#btnShowHistory').trigger('click'); }
+                else if (k === 'ArrowUp') { e.preventDefault(); $('#fromDateHistory').trigger('focus'); }
+            }
+        });
+
+        // ---- ctrlGrdBar : full-screen toggle for each grid ----
+        $(document).on('click', '.so-fs-btn', function () {
+            var $h = $(this).closest('.so-fs-host');
+            var on = !$h.hasClass('so-fs');
+            $('.so-fs-host.so-fs').removeClass('so-fs');
+            $h.toggleClass('so-fs', on);
+            $(this).attr('title', on ? 'Exit full screen (Esc)' : 'Full screen');
         });
     });
 })();

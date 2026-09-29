@@ -158,6 +158,16 @@ public class SaleOrderCmagtRepository {
      * AllocatedPackingType. Called with no @Activity so all four sets come back at once,
      * matching purchaseOrderMaster.AllComboServices_FromViews when Activity is empty.
      */
+    /** CommonServices.CompanyServiceBind() -> BLL 0062 Company.GetAlldt: Sp_Company_GetAllMethod
+     *  @OrgCompanyTypeId=<org>, @Activity='ReadByOrganizationId' (Id, CompName). */
+    private static final String SQL_COMPANIES =
+            "EXEC dbo.Sp_Company_GetAllMethod @OrgCompanyTypeId=?, @Activity=?";
+
+    /** BLL 0489 saleOrderMaster.GetDataForDropDown - history combos (Id, ReferenceName,
+     *  ParentCategoryId, Activity). Desktop sends only @OrganizationId/@CompanyId. */
+    private static final String SQL_HISTORY_COMBOS =
+            "EXEC [cmagt].[USP_GetDataForDropDownFromsaleOrderMaster] @OrganizationId=?, @CompanyId=?";
+
     private static final String SQL_ALL_COMBO_SERVICES =
             "EXEC [cmagt].[USP_AllComboServices] @OrganizationId=?, @CompanyId=?";
 
@@ -459,6 +469,14 @@ public class SaleOrderCmagtRepository {
 
     public List<Map<String, Object>> allComboServices(int orgId, int companyId) {
         return safeQuery(SQL_ALL_COMBO_SERVICES, orgId, companyId);
+    }
+
+    public List<Map<String, Object>> companies(int orgId) {
+        return safeQuery(SQL_COMPANIES, orgId, "ReadByOrganizationId");
+    }
+
+    public List<Map<String, Object>> historyCombos(int orgId, int companyId) {
+        return safeQuery(SQL_HISTORY_COMBOS, orgId, companyId);
     }
 
     public List<Map<String, Object>> otherItems(int orgId, int companyId) {

@@ -201,7 +201,7 @@ function setBusy(on, btnId) {
         Array.prototype.forEach.call(document.querySelectorAll('.btn-busy'),
             function (b) { b.classList.remove('btn-busy'); });
     }
-    ['btnNew', 'btnRefresh', 'btnSave', 'btnUpdate', 'btnDelete', 'btnLoadSo', 'btnPrint', 'btnHistory', 'btnAddDetail']
+    ['btnNew', 'btnRefresh', 'btnSave', 'btnSaveAs', 'btnUpdate', 'btnDelete', 'btnLoadSo', 'btnPrint', 'btnHistory', 'btnAddDetail']
         .forEach(function (id) {
             var b = $(id);
             if (!b) return;
@@ -704,7 +704,7 @@ function poEditDetail(i) {
     $('cmbPackingType').value = r.packingTypeId || 0;
     $('cmbTaxName').value = r.taxNameId || 0;
     $('txtRemarksDetail').value = r.remarks || '';
-    $('btnAddDetail').textContent = 'Update Row';
+    $('btnAddDetail').textContent = 'Update';
     $('btnCancelDetail').style.display = '';
 }
 
@@ -853,10 +853,11 @@ function seedExpenseRows() {
 function renderExpense() {
     var body = $('grdInvExpBody');
     body.innerHTML = '';
-    if (!expenseRows.length) { body.innerHTML = '<tr><td colspan="5">No other-item master rows returned.</td></tr>'; $('totExpense').textContent = '0'; return; }
+    if (!expenseRows.length) { body.innerHTML = '<tr><td colspan="6">No other-item master rows returned.</td></tr>'; $('totExpense').textContent = '0'; return; }
     expenseRows.forEach(function (r, i) {
         var tr = document.createElement('tr');
         tr.innerHTML =
+            '<td>' + esc(r.saleOrderNo || '') + '</td>' +
             '<td>' + esc(r.otherItemName) + '</td>' +
             '<td><input type="number" value="' + (r.qty || 0) + '" oninput="expenseRows[' + i + '].qty=parseFloat(this.value)||0;recalcExpense(' + i + ')"></td>' +
             '<td><input type="number" value="' + (r.rate || 0) + '" oninput="expenseRows[' + i + '].rate=parseFloat(this.value)||0;recalcExpense(' + i + ')"></td>' +
@@ -867,13 +868,15 @@ function renderExpense() {
     $('totExpense').textContent = fmt(expenseRows.reduce(function (s2, r) { return s2 + (+r.amount || 0); }, 0));
 }
 
-/* the persistent Sale Order Mapping panel (desktop panel17, :6523) */
+/* the persistent Sale Order Mapping panel (desktop panel17, :6523). Columns per
+ * grdSaleOrderMappingSettings (:2597-2624); CurrentAllocationWeight is the only editable
+ * cell and is what the save sends as itemNetWeight (:3254). */
 function renderSaleOrderMapping() {
     var body = $('grdSaleOrderMappingBody');
     if (!body) return;
     body.innerHTML = '';
     if (!saleOrderMappings.length) {
-        body.innerHTML = '<tr><td colspan="6">No sale orders mapped. Use Load So.</td></tr>';
+        body.innerHTML = '<tr><td colspan="9">No sale orders mapped. Use Load So.</td></tr>';
         return;
     }
     saleOrderMappings.forEach(function (m, i) {
@@ -883,10 +886,48 @@ function renderSaleOrderMapping() {
             '<td>' + esc(m.saleOrderNo || m.saleOrderMasterId) + '</td>' +
             '<td>' + esc(m.buyerName || m.buyerId) + '</td>' +
             '<td>' + esc(m.itemName || m.itemId) + '</td>' +
-            '<td style="text-align:right;">' + fmt(m.itemNetWeight) + '</td>' +
-            '<td>' + esc((m.validityDate || '').slice(0, 10)) + '</td>';
+            '<td class="num">' + fmt(m.itemWeight) + '</td>' +
+            '<td class="num">' + fmt(m.bookedWeight) + '</td>' +
+            '<td class="num">' + fmt(m.balanceWeight) + '</td>' +
+            '<td class="num"><input type="number" step="any" class="map-alloc" value="' + r3(m.itemNetWeight) +
+                '" onchange="poMappingAllocChanged(' + i + ', this)"></td>' +
+            '<td>' + esc(fmtDMY(m.validityDate)) + '</td>';
         body.appendChild(tr);
     });
+}
+
+/* grdSaleOrderMapping_CellUpdated (:2682-2704). Only enforced when the row knows its balance
+ * (a row read back from a saved PO may not carry BalanceWeight). */
+function poMappingAllocChanged(i, input) {
+    var m = saleOrderMappings[i];
+    if (!m) return;
+    var v = parseFloat(input.value); if (isNaN(v)) v = 0;
+    var bal = +m.balanceWeight || 0;
+    if (m.hasBalance && v > bal) {
+        alert('Current Allocation Weight:' + fmt(v) + " can't be greater than Balance weight:" + bal);
+        v = bal;
+        input.value = r3(v);
+    }
+    m.itemNetWeight = v;
+}
+
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* dd-MMM-yyyy [hh:mm tt] (desktop FormatString) in local time - never toISOString */
+function fmtDMY(v, withTime) {
+    if (v === undefined || v === null || v === '') return '';
+    var raw = String(v), d = null;
+    if (typeof v === 'number' || /T.*(Z|[+-]\d{2}:?\d{2})$/.test(raw)) d = new Date(v);
+    else {
+        var p = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/.exec(raw);
+        if (p) d = new Date(+p[1], +p[2] - 1, +p[3], +(p[4] || 0), +(p[5] || 0));
+    }
+    if (!d || isNaN(d.getTime())) return raw;
+    var out = ('0' + d.getDate()).slice(-2) + '-' + MONTHS[d.getMonth()] + '-' + d.getFullYear();
+    if (withTime) {
+        var h = d.getHours(), ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+        out += ' ' + ('0' + h).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' ' + ap;
+    }
+    return out;
 }
 
 /* DeleteSoMappingRow (:2644-2680): an unsaved row is simply dropped; a saved one is queued with
@@ -1021,8 +1062,8 @@ function renderEmptyBagsPm() {
         tr.innerHTML =
             '<td><button type="button" class="danger" onclick="emptyBagPmRows.splice(' + i + ',1);renderEmptyBagsPm();">X</button></td>' +
             '<td><select onchange="emptyBagPmRows[' + i + '].packingTypeId=parseInt(this.value,10)||0;emptyBagPmRows[' + i + '].packingType=this.selectedOptions[0].textContent">' + viewComboOptions('AllocatedPackingType', r.packingTypeId) + '</select></td>' +
-            '<td><select onchange="emptyBagPmRows[' + i + '].emptyBagPackingMaterialItemId=parseInt(this.value,10)||0;emptyBagPmRows[' + i + '].emptyBagItem=this.selectedOptions[0].textContent">' + itemOpts + '</select></td>' +
-            '<td><input type="number" step="0.001" value="' + (r.rate || 0) + '" oninput="emptyBagPmRows[' + i + '].rate=parseFloat(this.value)||0"></td>';
+            '<td><input type="number" step="0.001" value="' + (r.rate || 0) + '" oninput="emptyBagPmRows[' + i + '].rate=parseFloat(this.value)||0"></td>' +
+            '<td><select onchange="emptyBagPmRows[' + i + '].emptyBagPackingMaterialItemId=parseInt(this.value,10)||0;emptyBagPmRows[' + i + '].emptyBagItem=this.selectedOptions[0].textContent">' + itemOpts + '</select></td>';
         body.appendChild(tr);
     });
 }
@@ -1447,12 +1488,12 @@ var saleOrderMappings = [];
 function poSave() {
     if (busy || !poGuard('save')) return;
     var err = poValidate();
-    if (err) { message(err, true); return; }
+    if (err) { poRelease('save'); message(err, true); return; }
 
     var isUpdate = intOf('purchaseOrderMasterId') > 0;
-    if (!confirm(isUpdate ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+    if (!confirm(isUpdate ? 'Are you sure to Update?' : 'Are you sure to Save?')) { poRelease('save'); return; }
 
-    setBusy(true, isUpdate ? 'btnUpdate' : 'btnSave');
+    setBusy(true, isUpdate ? 'btnUpdate' : (poMode === 'saveas' ? 'btnSaveAs' : 'btnSave'));
     message('');
     fetch(API + '/save', {
         method: 'POST',
@@ -1476,9 +1517,9 @@ function poSave() {
 }
 
 function poLoad(id) {
-    if (!id) return;
+    if (!id) return Promise.resolve();
     setBusy(true);
-    getJson(API + '/' + id)
+    return getJson(API + '/' + id)
         .then(function (resp) {
             /* GET /{id} answers { status, data } - the header and its seven lists are under data.
                The page used to read the wrapper itself, so every field loaded blank. */
@@ -1613,6 +1654,10 @@ function poLoad(id) {
                     itemId: colInt(m, 'itemId'),
                     itemName: colStr(m, 'ItemName'),
                     itemNetWeight: colNum(m, 'itemNetWeight'),
+                    itemWeight: colNum(m, 'ItemWeight'),
+                    bookedWeight: colNum(m, 'BookedWeight'),
+                    balanceWeight: colNum(m, 'BalanceWeight'),
+                    hasBalance: col(m, 'BalanceWeight') !== undefined && col(m, 'BalanceWeight') !== null,
                     validityDate: dstr(col(m, 'ValidityDate'))
                 };
             });
@@ -1624,6 +1669,8 @@ function poLoad(id) {
             $('btnUpdate').disabled = false;
             $('btnDelete').disabled = false;
             $('btnSave').disabled = true;
+            poSetMode('edit');
+            poMainTab(null, 'tabForm');
         })
         .catch(function (e) { message('Load failed: ' + e.message, true); })
         .finally(function () { setBusy(false); });
@@ -1645,34 +1692,152 @@ function poDelete() {
         .finally(function () { setBusy(false); poRelease('delete'); });
 }
 
+/* ----------------------------------------------------------------- history
+ * HistoryFill (:3919-4056). The From/To pair applies to the date the radio names
+ * (drdocdate / rdentrydate / rdmodifydate); Validity From/To only when filled (their
+ * check boxes default off); parent categories as a comma list of ids; the rest by id,
+ * except Deliver To Address which the desktop sends as the combo TEXT (:3990). */
+function poHistSelected(id) {
+    var e = $(id); if (!e) return '';
+    return Array.prototype.filter.call(e.options, function (o) { return o.selected && o.value !== '0'; })
+        .map(function (o) { return o.value; }).join(',');
+}
 function poLoadHistory() {
     if (busy || !poGuard('history')) return;
     setBusy(true, 'btnHistory');
-    var q = '?fromDate=' + encodeURIComponent(val('histFromDate')) + '&toDate=' + encodeURIComponent(val('histToDate'));
+    var dt = (document.querySelector('input[name="histDateType"]:checked') || {}).value || 'doc';
+    var shipText = intOf('histDeliverToAddress') ? textOf('histDeliverToAddress') : '';
+    var parents = poHistSelected('histParentItems');
+    var q = '?fromDate=' + encodeURIComponent(val('histFromDate')) + '&toDate=' + encodeURIComponent(val('histToDate'))
+        + '&dateType=' + dt
+        + '&validityFrom=' + encodeURIComponent(val('histValidityFrom'))
+        + '&validityTo=' + encodeURIComponent(val('histValidityTo'))
+        + (intOf('histCommissionAgent') ? '&commissionAgentId=' + intOf('histCommissionAgent') : '')
+        + (intOf('histSupplier') ? '&supplierId=' + intOf('histSupplier') : '')
+        + (intOf('histItem') ? '&itemId=' + intOf('histItem') : '')
+        + (parents ? '&parentItemIds=' + encodeURIComponent(parents + ',') : '')
+        + (intOf('histDeliveryToParty') ? '&deliveryToPartyId=' + intOf('histDeliveryToParty') : '')
+        + (shipText ? '&shipToAddress=' + encodeURIComponent(shipText) : '');
     getJson(API + '/history' + q)
         .then(function (rows) {
             var body = $('grdHistoryBody');
             body.innerHTML = '';
-            if (!rows || !rows.length) { body.innerHTML = '<tr><td colspan="8">No documents in this range.</td></tr>'; return; }
+            if (!rows || !rows.length) { body.innerHTML = '<tr><td colspan="20">No documents in this range.</td></tr>'; return; }
             rows.forEach(function (r) {
-                var id = r.purchaseOrderMasterId || r.PurchaseOrderMasterId;
+                var id = colInt(r, 'purchaseOrderMasterId');
+                var wht = col(r, 'isWhtApplied');
                 var tr = document.createElement('tr');
-                tr.style.cursor = 'pointer';
-                tr.onclick = function () { poLoad(id); };
+                tr.ondblclick = function () { poLoad(id); };
+                tr.onclick = function () {
+                    Array.prototype.forEach.call(body.querySelectorAll('tr.hsel'), function (x) { x.classList.remove('hsel'); });
+                    tr.classList.add('hsel');
+                    poHistShowChildren(id);
+                };
                 tr.innerHTML =
-                    '<td><a href="#" onclick="event.preventDefault();poLoad(' + id + ')">' + esc(r.docNo || r.DocNo) + '</a></td>' +
-                    '<td>' + esc(dstr(r.docDate || r.DocDate)) + '</td>' +
-                    '<td>' + esc(r.supplierName || r.SupplierName) + '</td>' +
-                    '<td>' + esc(r.commissionAgentName || r.CommissionAgentName) + '</td>' +
-                    '<td>' + esc(r.DeliveryToPartyName || r.deliveryToPartyName) + '</td>' +   /* FormHistory column */
-                    '<td>' + esc(dstr(r.ValidityDate || r.validityDate)) + '</td>' +
-                    '<td>' + esc(r.status || r.Status) + '</td>' +
-                    '<td>' + esc(r.entryUserName || r.EntryUserName) + '</td>';
+                    '<td><button type="button" onclick="poLoad(' + id + ')">Edit</button></td>' +
+                    '<td><button type="button" onclick="poHistSaveAs(' + id + ')">SaveAs</button></td>' +
+                    '<td><button type="button" onclick="poHistPrint(' + id + ')">Print</button></td>' +
+                    '<td><a href="#" onclick="event.preventDefault();poLoad(' + id + ')">' + esc(colStr(r, 'docNo')) + '</a></td>' +
+                    '<td>' + esc(fmtDMY(col(r, 'docDate'))) + '</td>' +
+                    '<td>' + esc(colStr(r, 'CommissionAgentName')) + '</td>' +
+                    '<td>' + esc(colStr(r, 'SupplierName')) + '</td>' +
+                    '<td>' + esc(colStr(r, 'DeliveryToPartyName')) + '</td>' +
+                    '<td>' + esc(colStr(r, 'ShipToAddress')) + '</td>' +
+                    '<td>' + esc(colStr(r, 'DeliveryTerm')) + '</td>' +
+                    '<td>' + esc(fmtDMY(col(r, 'deliveryStartDate'))) + '</td>' +
+                    '<td class="num">' + colInt(r, 'deliveryDays') + '</td>' +
+                    '<td>' + esc(fmtDMY(col(r, 'ValidityDate'))) + '</td>' +
+                    '<td style="text-align:center;"><input type="checkbox" disabled' + ((wht === true || wht === 1 || wht === '1' || wht === 'true') ? ' checked' : '') + '></td>' +
+                    '<td>' + esc(colStr(r, 'Status')) + '</td>' +
+                    '<td>' + esc(colStr(r, 'EntryUserName')) + '</td>' +
+                    '<td>' + esc(fmtDMY(col(r, 'EntryDate'), true)) + '</td>' +
+                    '<td>' + esc(colStr(r, 'ModifyUserName')) + '</td>' +
+                    '<td>' + esc(fmtDMY(col(r, 'ModifyDate'), true)) + '</td>' +
+                    '<td class="num">' + colInt(r, 'NoOfAttachments') + '</td>';
                 body.appendChild(tr);
             });
         })
         .catch(function (e) { message('History failed: ' + e.message, true); })
         .finally(function () { setBusy(false); poRelease('history'); });
+}
+
+/* DataGridHistory_SaveAs (:4058-4078): read, then present as new - doc date today, Sale Order
+ * mapping cleared; btnSaveAs_Click saves with RecId = 0. */
+function poHistSaveAs(id) {
+    poLoad(id).then(function () {
+        if (intOf('purchaseOrderMasterId') !== id) return;
+        $('purchaseOrderMasterId').value = 0;
+        $('datDocDate').value = ymd(new Date());
+        saleOrderMappings = []; removedMappings = []; removedDetailRows = [];
+        renderSaleOrderMapping();
+        $('btnSave').disabled = false; $('btnUpdate').disabled = true; $('btnDelete').disabled = true;
+        poSetMode('saveas');
+        message('Save As: press Save to create a new document from this one.');
+    });
+}
+function poHistPrint(id) { poLoad(id).then(function () { if (intOf('purchaseOrderMasterId') === id) window.print(); }); }
+
+/* HistoryComboDbCall + HistoryComboBind / BindDropdownsAgainstParentCategory */
+var historyComboRows = [];
+function poHistRefreshCombos() {
+    var b = $('btnHistRefresh'); if (b) b.disabled = true;
+    return getJson(API + '/history-combos')
+        .then(function (rows) {
+            historyComboRows = rows || [];
+            var parents = [], seen = {}, most = 0;
+            historyComboRows.forEach(function (r) {
+                var act = colStr(r, 'Activity');
+                if (act === 'ParentCategories' && !seen[colInt(r, 'Id')]) { seen[colInt(r, 'Id')] = 1; parents.push({ Id: colInt(r, 'Id'), Name: colStr(r, 'ReferenceName') }); }
+                if (act === 'GetMostUsedParentCategoryId' && !most) most = colInt(r, 'Id');
+            });
+            var ps = $('histParentItems');
+            var keep = poHistSelected('histParentItems');
+            ps.innerHTML = '';
+            parents.forEach(function (p) {
+                var o = document.createElement('option'); o.value = p.Id; o.textContent = p.Name;
+                o.selected = keep ? (',' + keep + ',').indexOf(',' + p.Id + ',') >= 0 : p.Id === most;
+                ps.appendChild(o);
+            });
+            poHistParentChanged();
+        })
+        .catch(function (e) { message('History combos failed: ' + e.message, true); })
+        .finally(function () { if (b) b.disabled = false; });
+}
+function poHistParentChanged() {
+    var sel = poHistSelected('histParentItems');
+    var set = sel ? (',' + sel + ',') : null;
+    var buckets = { CommissionAgent: [], SupplierName: [], Item: [], DeliveryToParty: [], DeliverToAddress: [] };
+    var seen = {};
+    historyComboRows.forEach(function (r) {
+        var act = colStr(r, 'Activity');
+        if (!buckets[act]) return;
+        if (set && set.indexOf(',' + colInt(r, 'ParentCategoryId') + ',') < 0) return;
+        var key = act + '|' + colInt(r, 'Id');
+        if (seen[key]) return;
+        seen[key] = 1;
+        buckets[act].push({ Id: colInt(r, 'Id'), Name: colStr(r, 'ReferenceName') });
+    });
+    fillSelect('histCommissionAgent', buckets.CommissionAgent, 'Id', 'Name');
+    fillSelect('histSupplier', buckets.SupplierName, 'Id', 'Name');
+    fillSelect('histItem', buckets.Item, 'Id', 'Name');
+    fillSelect('histDeliveryToParty', buckets.DeliveryToParty, 'Id', 'Name');
+    fillSelect('histDeliverToAddress', buckets.DeliverToAddress, 'Id', 'Name');
+}
+/* btnNewHistory_Click (:3650): clears Item, Commission Agent and Supplier only */
+function poHistNew() {
+    ['histItem', 'histCommissionAgent', 'histSupplier'].forEach(function (id) { if ($(id)) $(id).value = '0'; });
+}
+function poToggleFull(id) { var e = $(id); if (e) e.classList.toggle('po-full'); }
+
+/* runs an action with its button disabled until the promise settles (success or failure) */
+function withButton(btnId, fn) {
+    var b = $(btnId);
+    if (b && b.disabled) return Promise.resolve();
+    if (b) { b.disabled = true; b.classList.add('btn-busy'); }
+    var p;
+    try { p = Promise.resolve(fn()); } catch (e) { p = Promise.reject(e); }
+    return p.catch(function (e) { message(e.message || String(e), true); })
+        .finally(function () { if (b) { b.disabled = false; b.classList.remove('btn-busy'); } });
 }
 
 /* --------------------------------------------------------------- toolbar */
@@ -1696,6 +1861,7 @@ function poNew() {
     $('btnSave').disabled = false;
     $('btnUpdate').disabled = true;
     $('btnDelete').disabled = true;
+    poSetMode('new');
     message('');
     getJson(API + '/generate-no')
         .then(function (d) { $('txtDocNo').value = (d && (d.docNo || d.DocNo)) || ''; })
@@ -1704,11 +1870,258 @@ function poNew() {
 
 function poRefresh() { setBusy(true); loadLookups().finally(function () { setBusy(false); }); }
 
+/* ------------------------------------------------------ Load So (frmLoadSaleIrderForPO)
+ * btnLoadSo_Click (:4651-4693) pre-sets the loader's Delivery To Party and Ship To text from
+ * this form and passes the distinct items already in the detail grid; the loader lists
+ * USP_saleOrderMaster_PendingDataLoader rows with a check column; Load refuses rows whose
+ * item is not in that list (:447-496); LoadInGridDetail (:4695-4733) sets this form's
+ * Delivery To Party from the first row and appends rows not already mapped (by SoDetailId),
+ * CurrentAllocationWeight = BalanceWeight. */
+var loadSoRows = [];
+var loadSoCombosLoaded = false;
 function poLoadSaleOrder() {
-    message('The Sale Order picker for this screen is not implemented yet. '
-          + 'The desktop opens frmLoadSaleIrderForPO and stores real saleOrderMasterId / '
-          + 'saleOrderDetailId values in purchaseOrderSaleOrderMappingList - typing a '
-          + 'document number instead would not create that link, so nothing is faked here.', true);
+    withButton('btnLoadSo', function () {
+        var d = new Date(), from = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7);   /* Load: Now - 7 days */
+        $('lsFromDate').value = ymd(from);
+        $('lsToDate').value = ymd(d);
+        $('lsDocNoFrom').value = ''; $('lsDocNoTo').value = '';
+        $('loadSoModal').style.display = 'flex';
+        var chain = loadSoCombosLoaded ? Promise.resolve() : poLoadSoRefreshCombos();
+        return chain.then(function () {
+            var party = intOf('cmbDeliveryToParty');
+            if (party > 0) $('lsDeliveryToParty').value = party;
+            var ship = (intOf('cmbShipToAddress') ? textOf('cmbShipToAddress') : '') || val('txtShipToAddress');
+            var ls = $('lsShipToAddress');
+            ls.value = '0';
+            if (ship) {
+                var hit = false;
+                Array.prototype.forEach.call(ls.options, function (o) { if (!hit && o.textContent === ship) { ls.value = o.value; hit = true; } });
+                if (!hit) { var o = document.createElement('option'); o.value = '-1'; o.textContent = ship; ls.appendChild(o); ls.value = '-1'; }
+            }
+            return poLoadSoFetch();
+        });
+    });
+}
+function poLoadSoClose() { $('loadSoModal').style.display = 'none'; }
+function poLoadSoRefreshCombos() {
+    return getJson(API + '/load-so/combos').then(function (rows) {
+        var b = { CommissionAgent: [], buyerName: [], Item: [], DeliveryToPartyName: [], DeliverToAddress: [] }, seen = {};
+        (rows || []).forEach(function (r) {
+            var act = colStr(r, 'Activity'); if (!b[act]) return;
+            var key = act + '|' + colInt(r, 'Id') + (act === 'DeliverToAddress' ? '|' + colStr(r, 'ReferenceName') : '');
+            if (seen[key]) return; seen[key] = 1;
+            b[act].push({ Id: colInt(r, 'Id'), Name: colStr(r, 'ReferenceName') });
+        });
+        fillSelect('lsCommissionAgent', b.CommissionAgent, 'Id', 'Name');
+        fillSelect('lsBuyer', b.buyerName, 'Id', 'Name');
+        fillSelect('lsItem', b.Item, 'Id', 'Name');
+        fillSelect('lsDeliveryToParty', b.DeliveryToPartyName, 'Id', 'Name');
+        fillSelect('lsShipToAddress', b.DeliverToAddress, 'Id', 'Name', '');   /* matched by TEXT, no default row */
+        loadSoCombosLoaded = true;
+    });
+}
+function poLoadSoRefreshCombos_click() { return withButton('btnLsRefresh', poLoadSoRefreshCombos); }
+function poLoadSoFetch() {
+    var ls = $('lsShipToAddress');
+    var ship = ls && ls.value !== '0' && ls.selectedIndex >= 0 ? textOf('lsShipToAddress') : '';
+    var q = '?fromDate=' + encodeURIComponent(val('lsFromDate')) + '&toDate=' + encodeURIComponent(val('lsToDate'))
+        + (intOf('lsDocNoFrom') ? '&fromDocNo=' + intOf('lsDocNoFrom') : '')
+        + (intOf('lsDocNoTo') ? '&toDocNo=' + intOf('lsDocNoTo') : '')
+        + (intOf('lsCommissionAgent') > 0 ? '&commissionAgentId=' + intOf('lsCommissionAgent') : '')
+        + (intOf('lsBuyer') > 0 ? '&buyerId=' + intOf('lsBuyer') : '')
+        + (intOf('lsItem') > 0 ? '&itemId=' + intOf('lsItem') : '')
+        + (intOf('lsDeliveryToParty') > 0 ? '&deliveryToPartyId=' + intOf('lsDeliveryToParty') : '')
+        + (ship ? '&shipToAddress=' + encodeURIComponent(ship) : '');
+    return getJson(API + '/load-so/pending' + q).then(function (rows) {
+        loadSoRows = rows || [];
+        var body = $('grdLoadSoBody');
+        body.innerHTML = '';
+        $('lsCheckAll').checked = false;
+        if (!loadSoRows.length) { body.innerHTML = '<tr><td colspan="22">No pending sale orders.</td></tr>'; return; }
+        var today = ymd(new Date());
+        loadSoRows.forEach(function (r, i) {
+            var exp = col(r, 'ValidityDate');
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td><input type="checkbox" class="ls-chk" data-i="' + i + '"></td>' +
+                '<td>' + esc(colStr(r, 'docNo')) + '</td>' +
+                '<td>' + esc(fmtDMY(col(r, 'docDate'))) + '</td>' +
+                '<td>' + esc(colStr(r, 'CommissionAgentName')) + '</td>' +
+                '<td>' + esc(colStr(r, 'buyerName')) + '</td>' +
+                '<td>' + esc(colStr(r, 'DeliveryToPartyName')) + '</td>' +
+                '<td>' + esc(colStr(r, 'ShipToAddress')) + '</td>' +
+                '<td' + (dstr(exp) === today ? ' class="expiry-today"' : '') + '>' + esc(fmtDMY(exp)) + '</td>' +
+                '<td>' + esc(colStr(r, 'ItemName')) + '</td>' +
+                '<td class="num">' + fmt(colNum(r, 'itemQty')) + '</td>' +
+                '<td class="num">' + fmt(colNum(r, 'QtyUsedInPo')) + '</td>' +
+                '<td class="num">' + fmt(colNum(r, 'BalanceQty')) + '</td>' +
+                '<td class="num">' + fmt(colNum(r, 'itemWeight')) + '</td>' +
+                '<td class="num">' + fmt(colNum(r, 'WeightUsedInPo')) + '</td>' +
+                '<td class="num">' + fmt(colNum(r, 'BalanceWeight')) + '</td>' +
+                '<td class="num">' + fmt(colNum(r, 'itemRate')) + '</td>' +
+                '<td>' + esc(colStr(r, 'EntryUserName')) + '</td>' +
+                '<td>' + esc(fmtDMY(col(r, 'EntryDate'), true)) + '</td>' +
+                '<td>' + esc(fmtDMY(col(r, 'ModifyDate'), true)) + '</td>' +
+                '<td>' + esc(colStr(r, 'ModifyUserName')) + '</td>' +
+                '<td>' + esc(colStr(r, 'RemarksHeader')) + '</td>' +
+                '<td class="num">' + colInt(r, 'NoOfAttachments') + '</td>';
+            body.appendChild(tr);
+        });
+    });
+}
+function poLoadSoShow() { withButton('btnLsShow', poLoadSoFetch); }
+/* btnReset_Click (:417): From = active year start, doc nos and buyer cleared, reload */
+function poLoadSoReset() {
+    withButton('btnLsReset', function () {
+        /* btnReset_Click :422 - FromDate = ActiveYr.Start_Period, read from the server session */
+        return getJson(API + '/financial-year-start').catch(function () { return {}; }).then(function (d) {
+            var fy = String((d && d.financialYearStart) || window.ACTIVE_YEAR_START || '').slice(0, 10);
+            if (fy) $('lsFromDate').value = fy;
+            $('lsDocNoFrom').value = ''; $('lsDocNoTo').value = '';
+            $('lsBuyer').value = '0';
+            return poLoadSoFetch();
+        });
+    });
+}
+function poLoadSoCheckAll(on) {
+    Array.prototype.forEach.call(document.querySelectorAll('#grdLoadSoBody .ls-chk'), function (c) { c.checked = on; });
+}
+function poLoadSoLoad() {
+    var checked = Array.prototype.filter.call(document.querySelectorAll('#grdLoadSoBody .ls-chk'), function (c) { return c.checked; })
+        .map(function (c) { return loadSoRows[+c.getAttribute('data-i')]; });
+    if (!checked.length) { alert('Check the row first'); return; }
+    var allowed = {}, names = [];
+    detailRows.forEach(function (d) {
+        if (!allowed[d.itemId]) { allowed[d.itemId] = 1; names.push(d.itemName || textOfItem(d.itemId)); }
+    });
+    if (names.length) {
+        for (var i = 0; i < checked.length; i++) {
+            if (!allowed[colInt(checked[i], 'itemId')]) {
+                alert('Sorry! You can only check rows having these Item(s):\n' + names.join(', '));
+                return;
+            }
+        }
+    }
+    poLoadSoClose();
+    $('cmbDeliveryToParty').value = colInt(checked[0], 'DeliveryToPartyId');
+    var have = {};
+    saleOrderMappings.forEach(function (m) { have[m.saleOrderDetailId] = 1; });
+    checked.forEach(function (r) {
+        var did = colInt(r, 'DetailId');
+        if (have[did]) return;
+        have[did] = 1;
+        saleOrderMappings.push({
+            purchaseOrderSaleOrderMappingId: 0,
+            saleOrderMasterId: colInt(r, 'saleOrderMasterId'),
+            saleOrderDetailId: did,
+            saleOrderNo: colStr(r, 'docNo'),
+            buyerId: colInt(r, 'buyerId'),
+            buyerName: colStr(r, 'buyerName'),
+            itemId: colInt(r, 'itemId'),
+            itemName: colStr(r, 'ItemName'),
+            itemWeight: colNum(r, 'itemWeight'),
+            bookedWeight: colNum(r, 'WeightUsedInPo'),
+            balanceWeight: colNum(r, 'BalanceWeight'),
+            hasBalance: true,
+            itemNetWeight: colNum(r, 'BalanceWeight'),
+            validityDate: dstr(col(r, 'ValidityDate'))
+        });
+    });
+    renderSaleOrderMapping();
+}
+function textOfItem(itemId) {
+    var it = (lookupData.items || []).filter(function (x) { return +x.Id === +itemId; })[0];
+    return it ? it.ItemName : String(itemId);
+}
+
+/* --------------------------------------------- Ship To Address "+" (SupfrmShipToAddress)
+ * BtnAddShiptoAddress_Click opens the definition form; saving goes through BLL 0602 Save
+ * (Sp_SupplierCustomerShipToAddress_Insert / _Update). Afterwards the ship-to lookup is
+ * reloaded so the new address can be picked. */
+var shipToLookupsLoaded = false;
+function poAddShipToAddress() {
+    withButton('btnAddShipTo', function () {
+        $('shipToModal').style.display = 'flex';
+        poShipToReset();
+        var jobs = [];
+        if (!shipToLookupsLoaded) {
+            fillSelect('stParty', lookupData.deliveryParties || lookupData.suppliers || [], 'Id', 'CompanyName');
+            jobs.push(getJson(API + '/ship-to/countries').then(function (rows) {
+                fillSelect('stCountry', (rows || []).map(function (r) { return { Id: colInt(r, 'Id'), Name: colStr(r, 'Description') || colStr(r, 'CountryName') }; }), 'Id', 'Name');
+            }));
+            jobs.push(getJson(API + '/ship-to/cities').then(function (rows) {
+                fillSelect('stCity', (rows || []).map(function (r) { return { Id: colInt(r, 'Id'), Name: colStr(r, 'CityName') }; }), 'Id', 'Name');
+            }));
+        }
+        jobs.push(poShipToGrid());
+        return Promise.all(jobs).then(function () {
+            shipToLookupsLoaded = true;
+            if (intOf('cmbDeliveryToParty')) $('stParty').value = intOf('cmbDeliveryToParty');
+        });
+    });
+}
+function poShipToClose() { $('shipToModal').style.display = 'none'; }
+function poShipToReset() {
+    $('stId').value = 0;
+    ['stParty', 'stCountry', 'stCity'].forEach(function (id) { if ($(id)) $(id).value = '0'; });
+    ['stTitle', 'stAddress', 'stContact', 'stPhone', 'stMobile', 'stWhatsApp'].forEach(function (id) { $(id).value = ''; });
+    $('btnStSave').textContent = 'Save';
+}
+function poShipToGrid() {
+    return getJson(API + '/ship-to/history').then(function (rows) {
+        var body = $('grdShipToBody'); body.innerHTML = '';
+        (rows || []).forEach(function (r) {
+            var tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.ondblclick = function () { poShipToEdit(colInt(r, 'Id')); };
+            tr.innerHTML = '<td>' + esc(colStr(r, 'PartyName')) + '</td><td>' + esc(colStr(r, 'AddressTitle')) + '</td><td>' +
+                esc(colStr(r, 'CountryName')) + '</td><td>' + esc(colStr(r, 'CityName')) + '</td><td>' + esc(colStr(r, 'ContactPerson')) +
+                '</td><td>' + esc(colStr(r, 'PhoneNo')) + '</td><td>' + esc(colStr(r, 'MobileNo')) + '</td><td>' + esc(colStr(r, 'WhatsAppNo')) +
+                '</td><td>' + esc(fmtDMY(col(r, 'EntryDate'), true)) + '</td><td>' + esc(colStr(r, 'EntryUser')) + '</td><td>' +
+                esc(fmtDMY(col(r, 'ModifyDate'), true)) + '</td><td>' + esc(colStr(r, 'ModifyUser')) + '</td><td>' + esc(colStr(r, 'AddressLine1')) + '</td>';
+            body.appendChild(tr);
+        });
+    });
+}
+function poShipToEdit(id) {
+    getJson(API + '/ship-to/' + id).then(function (b) {
+        $('stId').value = id;
+        $('stParty').value = colInt(b, 'SupplierCustomerId');
+        $('stCountry').value = colInt(b, 'CountryId');
+        $('stCity').value = colInt(b, 'CityId');
+        $('stAddress').value = colStr(b, 'AddressLine1');
+        $('stTitle').value = colStr(b, 'AddressTitle');
+        $('stWhatsApp').value = colStr(b, 'WhatsAppNo');
+        $('stContact').value = colStr(b, 'ContactPerson');
+        $('stMobile').value = colStr(b, 'MobileNo');
+        $('stPhone').value = colStr(b, 'PhoneNo');
+        $('btnStSave').textContent = 'Update';
+    }).catch(function (e) { alert(e.message); });
+}
+function poShipToSave() {
+    if (!intOf('stParty')) { alert('Please Select Supplier'); return; }
+    if (!val('stAddress').trim()) { alert('Please Enter Address'); return; }
+    if (!val('stTitle').trim()) { alert('Please Enter Address Title'); return; }
+    if (!intOf('stCountry')) { alert('Please Select Country'); return; }
+    if (!intOf('stCity')) { alert('Please Select City'); return; }
+    withButton('btnStSave', function () {
+        return fetch(API + '/ship-to/save', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                Id: intOf('stId'), SupplierCustomerId: intOf('stParty'), CountryId: intOf('stCountry'), CityId: intOf('stCity'),
+                AddressLine1: val('stAddress'), AddressTitle: val('stTitle'), PhoneNo: val('stPhone'), MobileNo: val('stMobile'),
+                WhatsAppNo: val('stWhatsApp'), ContactPerson: val('stContact')
+            })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+            if (!d || !d.success) { alert((d && d.message) || 'Save refused.'); return; }
+            alert(d.message);
+            poShipToReset();
+            return Promise.all([poShipToGrid(), getJson(LOOKUP + '/ship-to-addresses').then(function (rows) {
+                lookupData.shipToAddresses = rows || [];
+                poDeliveryPartyChanged();
+            }).catch(function () {})]);
+        });
+    });
 }
 
 function poAttachments() { message('Attachments are not implemented on this screen yet.', true); }
@@ -1718,7 +2131,6 @@ function poPrint() {
     window.print();
 }
 
-function poAddShipToAddress() { message('Defining a new ship-to address is not implemented on this screen yet.', true); }
 
 /* ------------------------------------------------------------- start-up */
 
@@ -1750,6 +2162,10 @@ document.addEventListener('DOMContentLoaded', function () {
         setBusy(false);
         poNew();
         poShowTab(null, 'tabDetail');
+        poHistRefreshCombos();
+        /* report Doc No links open /commission/purchase-order?id=N */
+        var qm = /[?&]id=(\d+)/.exec(location.search);
+        if (qm) poLoad(+qm[1]);
     });
 });
 
@@ -1768,3 +2184,124 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', seed); else seed();
 })();
+
+
+/* ===================== 2026-09-30 GUI parity (frmPurchaseOrderCmagt InitializeComponent) ===================== */
+
+/* Button visibility as the desktop toggles it: New -> Save only (:2727), ReadById -> Update + Delete
+   (:3400), history SaveAs -> SaveAs only (:4101). */
+var poMode = 'new';
+function poSetMode(mode) {
+    poMode = mode;
+    var show = { btnSave: mode === 'new', btnSaveAs: mode === 'saveas', btnUpdate: mode === 'edit', btnDelete: mode === 'edit' };
+    Object.keys(show).forEach(function (id) { var b = $(id); if (b) b.style.display = show[id] ? '' : 'none'; });
+    if (mode === 'saveas' && $('btnSaveAs')) $('btnSaveAs').disabled = false;
+}
+
+/* tabControl1: Form | History */
+function poMainTab(ev, id) {
+    if (ev) ev.preventDefault();
+    ['tabForm', 'tabHistory'].forEach(function (t) { var e = $(t); if (e) e.style.display = (t === id) ? '' : 'none'; });
+    Array.prototype.forEach.call(document.querySelectorAll('#poMainTabs a'), function (a) {
+        a.classList.toggle('active', a.dataset.tab === id);
+    });
+}
+
+/* tabControl3 on the History page */
+function poHistTab(ev, id) {
+    if (ev) ev.preventDefault();
+    ['htDetail', 'htExpense', 'htEmptyBags', 'htPayment', 'htMapping'].forEach(function (t) {
+        var e = $(t); if (e) e.style.display = (t === id) ? '' : 'none';
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#poHistTabs a'), function (a) {
+        a.classList.toggle('active', a.dataset.tab === id);
+    });
+}
+
+/* grdHistory_SelectionChanged -> GetDetailGrdByHeadId (:4110): ReadById of the selected row and
+   the five child grids (detail, other charges, empty bags split by entryTypeId, payment terms,
+   sale order mapping) with the desktop's column sets. Read-only; uses the same GET /{id}. */
+var poHistChildSeq = 0;
+function poHistShowChildren(id) {
+    var seq = ++poHistChildSeq;
+    var bodies = ['htDetailBody', 'htExpenseBody', 'htEbBody', 'htEbPmBody', 'htPaymentBody', 'htMappingBody'];
+    bodies.forEach(function (b) { if ($(b)) $(b).innerHTML = ''; });
+    if (!id) return;
+    getJson(API + '/' + id).then(function (resp) {
+        if (seq !== poHistChildSeq) return;
+        var po = resp && resp.data ? resp.data : null;
+        if (!po) return;
+        function td(v, num) { return '<td' + (num ? ' class="num"' : '') + '>' + (num ? fmt(v) : esc(v == null ? '' : String(v))) + '</td>'; }
+        function fill(bodyId, list, cells) {
+            var b = $(bodyId); if (!b) return;
+            b.innerHTML = (list || []).map(function (r) { return '<tr>' + cells(r) + '</tr>'; }).join('');
+        }
+        fill('htDetailBody', col(po, 'purchaseOrderDetailList'), function (d) {
+            return td(colStr(d, 'inventoryParentCategory')) + td(colStr(d, 'ItemName')) + td(colStr(d, 'cropYear')) +
+                td(colStr(d, 'PackingType')) + td(colStr(d, 'PackUomCode')) + td(colNum(d, 'itemQty'), 1) +
+                td(colNum(d, 'itemWeight'), 1) + td(colNum(d, 'itemRate'), 1) + td(colStr(d, 'RateUomCode')) +
+                td(colNum(d, 'ItemAmount'), 1) + td(colStr(d, 'TaxName')) + td(colNum(d, 'TaxPercent'), 1) +
+                td(colNum(d, 'TaxAmount'), 1) + td(colNum(d, 'TotalAmount'), 1) + td(colStr(d, 'remarks'));
+        });
+        fill('htExpenseBody', col(po, 'purchaseOrderSupplierExpenseDetailList'), function (x) {
+            return td(colStr(x, 'OtherItemName')) + td(colNum(x, 'Qty'), 1) + td(colNum(x, 'rate'), 1) +
+                td(colNum(x, 'amount'), 1) + td(colStr(x, 'remarks'));
+        });
+        var bags = col(po, 'purchaseOrderEmptyBagDetailList') || [];
+        fill('htEbBody', bags.filter(function (b) { return colInt(b, 'entryTypeId') === 1; }), function (b) {
+            return td(colStr(b, 'PackingType')) + td(colNum(b, 'weightCutKg'), 1);
+        });
+        fill('htEbPmBody', bags.filter(function (b) { return colInt(b, 'entryTypeId') === 2; }), function (b) {
+            return td(colStr(b, 'PackingType')) + td(colNum(b, 'Rate'), 1) + td(colStr(b, 'EmptyBagItem'));
+        });
+        fill('htPaymentBody', col(po, 'purchaseOrderPaymentDetailList'), function (x) {
+            return td(colStr(x, 'PaymentTerm')) + td(colInt(x, 'DueDays'), 1) + td(colNum(x, 'pctOfTotal'), 1) +
+                td(colNum(x, 'dueAmount'), 1) + td(colStr(x, 'BaseDateType')) + td(fmtDMY(col(x, 'DueDate')));
+        });
+        fill('htMappingBody', col(po, 'purchaseOrderSaleOrderMappingList'), function (m) {
+            return td(colStr(m, 'SaleOrderNo')) + td(colStr(m, 'BuyerName')) + td(colStr(m, 'ItemName')) +
+                td(colNum(m, 'SaleOrderWeight') || colNum(m, 'ItemWeight'), 1) +
+                td(colNum(m, 'UsedSaleOrderWeightInPo') || colNum(m, 'BookedWeight'), 1) +
+                td(colNum(m, 'SaleOrderBalWeight') || colNum(m, 'BalanceWeight'), 1) + td(colNum(m, 'itemNetWeight'), 1);
+        });
+    }).catch(function (e) { message('History detail failed: ' + e.message, true); });
+}
+
+/* BtnShortCutkeys_Click -> MakeShortCutKeys (:4600) */
+var PO_SHORTCUTS = [
+    ['Ctrl+S', 'For Save When on Entry form and For Show Data when on History Form'],
+    ['Ctrl+U', 'For Update'], ['Ctrl+Shift+Delete', 'For Delete'], ['Ctrl+E', 'For Close'],
+    ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'], ['Ctrl+P', 'For Print'],
+    ['Ctrl+F5', 'For Focus on Inquiry Date'], ['Ctrl+F10', 'For Open Attachments'],
+    ['Ctrl+T', 'For Tab Transfer'], ['Ctrl+alt', 'To Show ShortCut Keys Form'],
+    ['Ctrl+ArrowDown', 'For Focus On Parent Item'], ['Ctrl+ArrowUp', 'For Focus On on Inquiry Date'],
+    ['Ctrl+Enter', 'When Focus On Any Grid For Update Record'],
+    ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]
+];
+function poShortCutKeys() {
+    var b = $('sckBody'); if (!b) return;
+    b.innerHTML = PO_SHORTCUTS.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>'; }).join('');
+    $('sckModal').style.display = 'flex';
+}
+
+/* frmPurchaseOrderCmagt_KeyDown (:4470) - the browser-safe subset. A button only fires when it is
+   visible and enabled, as on the desktop. */
+function poVisibleEnabled(id) { var b = $(id); return !!b && !b.disabled && b.style.display !== 'none'; }
+document.addEventListener('keydown', function (e) {
+    if (!e.ctrlKey) return;
+    var onForm = $('tabForm') && $('tabForm').style.display !== 'none';
+    var k = e.key;
+    var fire = function (id, fn) { e.preventDefault(); if (poVisibleEnabled(id)) fn(); };
+    if (k === 't' || k === 'T') { e.preventDefault(); poMainTab(null, onForm ? 'tabHistory' : 'tabForm'); return; }
+    if (!onForm) { if (k === 's' || k === 'S') fire('btnHistory', poLoadHistory); return; }
+    if (e.shiftKey && k === 'Delete') fire('btnDelete', poDelete);
+    else if (k === 's' || k === 'S') fire('btnSave', poSave);
+    else if (k === 'F12') fire('btnSaveAs', poSave);
+    else if (k === 'u' || k === 'U') fire('btnUpdate', poSave);
+    else if (k === 'p' || k === 'P') fire('btnPrint', poPrint);
+    else if (k === 'r' || k === 'R') fire('btnRefresh', poRefresh);
+    else if (k === 'F5') { e.preventDefault(); $('datDocDate').focus(); }
+    else if (k === 'F10') fire('btnAttachments', poAttachments);
+    else if (k === 'ArrowDown') { e.preventDefault(); poShowTab(null, 'tabDetail'); $('cmbParentItem').focus(); }
+    else if (k === 'ArrowUp') { e.preventDefault(); $('datDocDate').focus(); }
+});

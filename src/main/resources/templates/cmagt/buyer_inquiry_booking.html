@@ -6,61 +6,22 @@
     <title>Buyer Inquiry Booking</title>
     <!--
       Commission Trading - Buyer Inquiry Booking (DocumentTypeId 1050).
-
-      Ditto of Architecture.WinApp.CommissionAgent.Transactions/frmBuyerInquiryBooking.cs.
-      Layout follows the desktop form exactly: toolbar (New / Refresh / Save /
-      Attachments / 1050-Print / Supplier Offer / ShortCut Keys) with Company Name,
-      the "Add Sub Parties" toggle and Preview on the right; a header block; a
-      single item block on the left with Analysis Group and the Quality Parameters
-      grid on the right; and the Sub Parties grid across the foot, shown only when
-      Add Sub Parties is ticked. Form / History tabs at the bottom.
-
-      The full field, procedure and validation contract this screen implements is
-      recorded in claude/CMAGT-BUYER-INQUIRY-BOOKING-1050-CONTRACT.md.
+      GUI rebuilt 2026-09-30 from frmBuyerInquiryBooking.cs InitializeComponent(): every panel,
+      caption, Location/Size and Visible/Enabled state follows the designer (see cmagt_bib.css).
+        tabPage1 "Form": toolStrip1 (New, Refresh | Save, Update*, Delete*, Attachments, 1050-Print,
+          Supplier Offer, ShortCut Keys; * Visible=false until a record is read) -> panel3 teal
+          (title, Company Name, BtnLink "Add Sub Parties" with ChkLink, Preview) -> PanelHeaderInfo
+          -> panel2 (item + Analysis Group + Quality Parameters) -> panel5 "Sub Parties" -> grdSubParty
+          (docked Fill; its rows ARE saved by Insert() :1605, so the grid stays on the main page).
+        tabPage2 "History": toolStrip2 (New | Refresh) -> panel4 -> groupBox1 "Filters" -> panel15
+          "Filtered Records" -> grdHistory -> panel6 "Sub Parties" -> grdSubPartyHistory.
+        Tabs sit at the bottom (tabControl1.Alignment = Bottom).
     -->
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
-    <style>
-        body.cmagt .bib-panels { display: flex; gap: 10px; align-items: flex-start; margin: 10px 14px; flex-wrap: wrap; }
-        body.cmagt .bib-panel { background: #FFFFFF; border: 1px solid #C9D2D1; border-radius: 5px; padding: 10px 12px 12px 12px; }
-        body.cmagt .bib-panel > .bib-legend { font-size: 11px; font-weight: 700; color: #00564C; text-transform: uppercase; letter-spacing: .4px; border-bottom: 2px solid #00796B; padding-bottom: 4px; margin-bottom: 10px; }
-        body.cmagt .bib-head  { flex: 1 1 560px; }
-        body.cmagt .bib-terms { flex: 1 1 420px; }
-        body.cmagt .bib-item  { flex: 1 1 520px; }
-        body.cmagt .bib-qual  { flex: 1 1 520px; }
-
-        body.cmagt .bib-fld { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
-        body.cmagt .bib-fld > label { min-width: 150px; margin: 0; }
-        body.cmagt .bib-fld.narrow > label { min-width: 104px; }
-        body.cmagt .bib-inline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        body.cmagt .bib-inline label { min-width: 0; font-weight: 500; }
-
-        body.cmagt .w70 { width: 70px; } body.cmagt .w90 { width: 90px; }
-        body.cmagt .w130 { width: 130px; } body.cmagt .w160 { width: 160px; }
-        body.cmagt .w240 { width: 240px; } body.cmagt .w280 { width: 280px; }
-
-        body.cmagt .bib-toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-        body.cmagt .req::after { content: " *"; color: #B3261E; font-weight: 700; }
-
-        /* select2 sized to the desktop combo height */
-        body.cmagt .select2-container--default .select2-selection--single { height: 26px; border-color: #C9D2D1; border-radius: 3px; }
-        body.cmagt .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 24px; font-size: 12px; padding-left: 6px; }
-        body.cmagt .select2-container--default .select2-selection--single .select2-selection__arrow { height: 24px; }
-
-        body.cmagt .bib-nav { display: flex; align-items: center; gap: 6px; background: linear-gradient(to bottom, #F2F5F5 0%, #E6ECEB 100%); border: 1px solid #C9D2D1; border-top: none; border-radius: 0 0 4px 4px; padding: 4px 8px; font-size: 11px; }
-        body.cmagt .bib-nav button { min-height: 20px; padding: 0 7px; font-size: 11px; }
-        body.cmagt .bib-nav input { width: 52px; height: 20px; text-align: center; }
-
-        body.cmagt .bib-counters { display: flex; gap: 22px; align-items: center; margin: 0 14px 10px 14px; padding: 7px 12px; border: 1px solid #C9D2D1; border-radius: 4px; background: linear-gradient(to bottom, #F2F5F5 0%, #E6ECEB 100%); font-size: 12px; font-weight: 600; color: #00564C; }
-        body.cmagt .bib-counters b { color: #15201F; }
-
-        body.cmagt .btn-busy::after { content: ""; display: inline-block; width: 10px; height: 10px; margin-left: 7px; border: 2px solid rgba(0,0,0,.25); border-top-color: #00564C; border-radius: 50%; animation: bibspin .6s linear infinite; vertical-align: -1px; }
-        @keyframes bibspin { to { transform: rotate(360deg); } }
-
-        body.cmagt .grid-full { position: fixed; inset: 0; z-index: 90; margin: 0; max-height: none; background: #FFFFFF; }
-        body.cmagt .grid-tools { display: flex; justify-content: flex-end; gap: 6px; margin: 0 14px 4px 14px; }
-    </style>
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_bib.css?v=20260930L}"/>
+    <style>body.cmagt .cnt { color:#008080; }</style>
 </head>
 <body class="cmagt">
 
@@ -70,345 +31,259 @@
     <span class="cmagt-crumb"><a th:href="@{/commission}">Commission Trading</a> &rsaquo; Transactions</span>
 </div>
 
-<!-- ============================ TOOLBAR ============================ -->
-<div class="cmagt-toolbar">
-    <button type="button" id="btnNew"         onclick="bibNew()">New</button>
-    <button type="button" id="btnRefresh"     onclick="bibRefresh()">Refresh</button>
-    <button type="button" id="btnSave"        onclick="bibSave()">Save</button>
-    <button type="button" id="btnUpdate"      onclick="bibSave()" disabled>Update</button>
-    <button type="button" id="btnDelete"      onclick="bibDelete()" disabled>Delete</button>
-    <button type="button" id="btnAttachments" onclick="bibAttachments()">Attachments</button>
-    <button type="button" id="btnPrint"       onclick="bibPrint()">1050-Print</button>
-    <button type="button" id="btnSupplierOffer" onclick="bibOpenSupplierOffer()">Supplier Offer</button>
-
-    <span class="bib-toolbar-right">
-        <label class="inline" for="cmbCompanyName">Company Name</label>
-        <select id="cmbCompanyName" class="w240 searchable" data-dtcombo="single" data-dtcombo-caption="Company"></select>
-        <label class="inline"><input type="checkbox" id="chkAddSubParties" onchange="bibToggleSubParties()"> Add Sub Parties</label>
-        <label class="inline"><input type="checkbox" id="chkPrint"> Preview</label>
-    </span>
-</div>
-
 <div id="bibMessage" class="cmagt-status" style="display:none;"></div>
 
 <input type="hidden" id="inquiryBookingMasterId" value="0">
 <input type="hidden" id="detailId" value="0">
 <input type="hidden" id="documentTypeId" value="1050">
 
-<!-- ============================ TABS ============================ -->
-<ul class="cmagt-tabs" id="bibTabs">
-    <li><a href="#" class="active" data-tab="tabForm"    onclick="bibShowTab(event,'tabForm')">Form</a></li>
-    <li><a href="#"                data-tab="tabHistory" onclick="bibShowTab(event,'tabHistory')">History</a></li>
-</ul>
-
-<!-- ============================== FORM ============================== -->
+<!-- ============================== FORM (tabPage1) ============================== -->
 <div id="tabForm">
-
-<div class="bib-panels">
-
-    <!-- ------------- header ------------- -->
-    <div class="bib-panel bib-head">
-        <div class="bib-legend">Inquiry</div>
-
-        <div class="bib-fld">
-            <label for="txtInquiryNo">Inquiry No</label>
-            <input type="text" id="txtInquiryNo" class="w90" readonly placeholder="Auto">
-            <label class="inline" for="datInquiryDate">Inquiry Date</label>
-            <input type="date" id="datInquiryDate" class="w130" onchange="bibValidityDaysChanged()">
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="txtValidityDays">Validity Days</label>
-            <input type="number" id="txtValidityDays" class="w90" min="0" value="1" oninput="bibValidityDaysChanged()">
-            <label class="inline" for="datValidityUpto">Validity UpTo</label>
-            <input type="date" id="datValidityUpto" class="w130" onchange="bibValidityUptoChanged()">
-        </div>
-
-        <div class="bib-fld">
-            <label>&nbsp;</label>
-            <span class="bib-inline">
-                <!-- the desktop offers only these two here (RadBusinessName / RadNickName) -->
-                <label><input type="radio" name="partyNameMode" value="business" checked onchange="bibPartyNameModeChanged()"> Business Name</label>
-                <label><input type="radio" name="partyNameMode" value="nick" onchange="bibPartyNameModeChanged()"> Nick Name</label>
-            </span>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="cmbCommissionAgent">Commission Agent / Broker</label>
-            <select id="cmbCommissionAgent" class="w280 searchable" data-dtcombo="party4" data-dtcombo-caption="Commission Agent"></select>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="cmbBuyerName">Buyer Name</label>
-            <select id="cmbBuyerName" class="w280 searchable" data-dtcombo="party4" data-dtcombo-caption="Buyer Name"></select>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="cmbDeliveryToParty">Deliver / Ship To Party</label>
-            <select id="cmbDeliveryToParty" class="w280 searchable" onchange="bibDeliveryPartyChanged()" data-dtcombo="party4" data-dtcombo-caption="Deliver To Party"></select>
-        </div>
-
-        <div class="bib-fld">
-            <label for="cmbShipToAddress">Delivery / Ship To Address</label>
-            <select id="cmbShipToAddress" class="w280 searchable" onchange="bibShipToAddressChanged()" data-dtcombo="shipTo2" data-dtcombo-caption="Ship To Address"></select>
-            <button type="button" id="btnAddShipTo" title="Define ship-to address" onclick="bibAddShipToAddress()">+</button>
-        </div>
-
-        <div class="bib-fld">
-            <label>&nbsp;</label>
-            <input type="text" id="txtShipToAddressText" class="w280" placeholder="Address">
-        </div>
-    </div>
-
-    <!-- ------------- terms + remarks ------------- -->
-    <div class="bib-panel bib-terms">
-        <div class="bib-legend">Terms</div>
-
-        <div class="bib-fld narrow">
-            <label class="req" for="cmbPaymentTerm">Payment Term</label>
-            <select id="cmbPaymentTerm" class="w160 searchable" onchange="bibPaymentTermChanged()" data-dtcombo="single" data-dtcombo-caption="Payment Term"></select>
-            <label class="inline" for="txtDueDays">Due Days</label>
-            <input type="number" id="txtDueDays" class="w70" min="0" value="0">
-        </div>
-
-        <div class="bib-fld narrow">
-            <label class="req" for="cmbDeliveryTerm">Delivery Term</label>
-            <select id="cmbDeliveryTerm" class="w160 searchable" data-dtcombo="single" data-dtcombo-caption="Delivery Term"></select>
-            <label class="inline req" for="txtDeliveryDays">Delivery Days</label>
-            <input type="number" id="txtDeliveryDays" class="w70" min="0" value="1" oninput="bibCalculateExpiryDate()">
-        </div>
-
-        <div class="bib-fld narrow">
-            <label for="datDeliveryStartDate">Delivery Start Date</label>
-            <input type="date" id="datDeliveryStartDate" class="w130" onchange="bibDeliveryStartChanged()">
-            <label class="inline" for="datExpiryDate">Expiry Date</label>
-            <input type="date" id="datExpiryDate" class="w130" readonly>
-        </div>
-
-        <div class="bib-fld narrow" style="align-items:flex-start;">
-            <label for="txtRemarks">Remarks</label>
-            <textarea id="txtRemarks" rows="6" style="width:100%;"></textarea>
-        </div>
-    </div>
+<div class="bib-tools">
+    <button type="button" id="btnNew"         onclick="bibNew()">New</button>
+    <button type="button" id="btnRefresh"     onclick="bibRefresh()">Refresh</button>
+    <span class="sep"></span>
+    <button type="button" id="btnSave"        onclick="bibSave()">Save</button>
+    <button type="button" id="btnUpdate"      onclick="bibSave()" style="display:none;">Update</button>
+    <button type="button" id="btnDelete"      onclick="bibDelete()" style="display:none;">Delete</button>
+    <button type="button" id="btnAttachments" onclick="bibAttachments()">Attachments</button>
+    <button type="button" id="btnPrint"       onclick="bibPrint()">1050-Print</button>
+    <button type="button" id="btnSupplierOffer" onclick="bibOpenSupplierOffer()">Supplier Offer</button>
+    <button type="button" id="btnShortCutKeys" onclick="bibShortcutKeys()">ShortCut Keys</button>
+    <span class="sep"></span>
 </div>
-
-<div class="bib-panels">
-
-    <!-- ------------- the single item line ------------- -->
-    <div class="bib-panel bib-item">
-        <div class="bib-legend">Item</div>
-
-        <div class="bib-fld">
-            <label class="req" for="cmbParentItem">Parent Item</label>
-            <select id="cmbParentItem" class="w280 searchable" onchange="bibParentItemChanged()" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="cmbItemName">Item Name</label>
-            <select id="cmbItemName" class="w280 searchable" onchange="bibItemChanged()" data-dtcombo="itemCmagt" data-dtcombo-caption="Item Name"></select>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="txtQty">Qty</label>
-            <input type="number" id="txtQty" class="w130" step="0.001" value="0" oninput="bibCalculateWeight()">
-            <label class="inline req" for="cmbPackUom">Pack Uom</label>
-            <select id="cmbPackUom" class="w130 searchable" onchange="bibCalculateWeight()" data-dtcombo="uomCmagt5" data-dtcombo-caption="Pack Uom"></select>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="txtWeight">Weight</label>
-            <input type="number" id="txtWeight" class="w130" step="0.001" value="0" readonly>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="cmbPackingType">Packing Type</label>
-            <select id="cmbPackingType" class="w280 searchable" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="cmbCropYear">Crop Year</label>
-            <select id="cmbCropYear" class="w160 searchable" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select>
-            <label class="inline req" for="cmbRateUom">Rate Uom</label>
-            <select id="cmbRateUom" class="w130 searchable" onchange="bibCalculateAmounts()" data-dtcombo="uomCmagt5" data-dtcombo-caption="Rate Uom"></select>
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="txtBuyerTargetPrice">Buyer Target Price</label>
-            <input type="number" id="txtBuyerTargetPrice" class="w130" step="0.001" value="0" oninput="bibCalculateAmounts()">
-        </div>
-
-        <div class="bib-fld">
-            <label class="req" for="txtTargetPurchasePrice">Target Purchase Price</label>
-            <input type="number" id="txtTargetPurchasePrice" class="w130" step="0.001" value="0" oninput="bibCalculateAmounts()">
-        </div>
-
-        <div class="bib-fld" style="align-items:flex-start;">
-            <label for="txtQualitySpecifications">Quality Specification</label>
-            <textarea id="txtQualitySpecifications" rows="4" style="width:100%;"></textarea>
-        </div>
-    </div>
-
-    <!-- ------------- analysis group + quality parameters ------------- -->
-    <div class="bib-panel bib-qual">
-        <div class="bib-legend">Analysis</div>
-
-        <div class="bib-fld">
-            <label for="cmbAnalysisGroup">Analysis Group</label>
-            <select id="cmbAnalysisGroup" class="w280 searchable" onchange="bibAnalysisGroupChanged()" data-dtcombo="analysisGroup3" data-dtcombo-caption="Analysis Group"></select>
-        </div>
-
-        <div style="font-size:11px; font-weight:600; color:#2A3635; margin:10px 0 4px 0;">Quality Parameters</div>
-        <div class="grid-wrap" style="margin:0;">
+<div class="bib-scroll"><div class="bib-canvas" id="panel3" style="height:29px;background:#008080;">
+    <div class="at" style="left:0.748%;top:5px;color:#fff;font:700 16px Tahoma,sans-serif;white-space:nowrap;">Buyer Inquiry Booking</div>
+    <div class="at" style="left:19.900%;top:7px;color:#fff;font:700 12px 'Segoe UI',Tahoma,sans-serif;">Company Name</div>
+    <div class="at" style="left:29.533%;top:2px;width:32.617%;height:25px;"><select id="cmbCompanyName" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Company" ></select></div>
+    <div class="at" style="left:78.224%;top:2px;"><button type="button" id="btnLink" class="bib-link" title="Open the Sub Buyer Inquiry Booking form for this record (desktop BtnLink); the tick is ChkLink: open it automatically after saving a new inquiry" onclick="if(event.target.id!=='chkLink')bibAddSubPartyTo(intOf('inquiryBookingMasterId'))"><input type="checkbox" id="chkLink" checked onclick="event.stopPropagation()"> Add Sub Parties</button></div>
+    <div class="at" style="left:92.243%;top:6px;"><label class="chk-white" style="color:#fff;font:700 12px Verdana,sans-serif;display:inline-flex;gap:4px;align-items:center;"><input type="checkbox" id="chkPrint"> Preview</label></div>
+</div></div>
+<div class="bib-scroll"><div class="bib-canvas" id="PanelHeaderInfo" style="height:223px;">
+    <div class="at lbl "  style="left:0.795%;top:5px;width:17.386%;height:23px;">Inquiry No</div>
+    <div class="at" style="left:18.523%;top:5px;width:8.409%;height:23px;"><input type="text" id="txtInquiryNo" readonly></div>
+    <div class="at lbl "  style="left:27.273%;top:5px;width:8.295%;height:23px;">Inquiry Date</div>
+    <div class="at" style="left:35.909%;top:5px;width:13.295%;height:23px;"><input type="date" id="datInquiryDate" onchange="bibValidityDaysChanged()"></div>
+    <div class="at lbl "  style="left:49.773%;top:3px;width:12.159%;height:26px;">Payment Term</div>
+    <div class="at" style="left:62.273%;top:3px;width:13.295%;height:26px;"><select id="cmbPaymentTerm" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Payment Term" onchange="bibPaymentTermChanged()"></select></div>
+    <div class="at lbl "  style="left:76.136%;top:5px;width:9.091%;height:23px;">Due Days</div>
+    <div class="at" style="left:85.568%;top:5px;width:13.068%;height:23px;"><input type="number" id="txtDueDays" min="0" value="0"></div>
+    <div class="at lbl "  style="left:0.795%;top:32px;width:17.386%;height:23px;">Validity Days</div>
+    <div class="at" style="left:18.523%;top:32px;width:8.409%;height:23px;"><input type="number" id="txtValidityDays" min="0" value="1" oninput="bibValidityDaysChanged()"></div>
+    <div class="at lbl "  style="left:27.273%;top:32px;width:8.295%;height:23px;">Validity UpTo</div>
+    <div class="at" style="left:35.909%;top:32px;width:13.295%;height:23px;"><input type="date" id="datValidityUpto" onchange="bibValidityUptoChanged()"></div>
+    <div class="at lbl "  style="left:49.773%;top:30px;width:12.159%;height:26px;">Delivery Term</div>
+    <div class="at" style="left:62.273%;top:30px;width:13.295%;height:26px;"><select id="cmbDeliveryTerm" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Delivery Term" ></select></div>
+    <div class="at lbl "  style="left:76.136%;top:32px;width:9.091%;height:23px;">Delivery Days</div>
+    <div class="at" style="left:85.568%;top:32px;width:13.068%;height:23px;"><input type="number" id="txtDeliveryDays" min="0" value="1" oninput="bibCalculateExpiryDate()"></div>
+    <div class="at rad" style="left:18.409%;top:61px;"><label><input type="radio" name="partyNameMode" value="business" checked onchange="bibPartyNameModeChanged()"> Business Name</label></div>
+    <div class="at rad" style="left:32.500%;top:61px;"><label><input type="radio" name="partyNameMode" value="nick" onchange="bibPartyNameModeChanged()"> Nick Name</label></div>
+    <div class="at lbl "  style="left:49.773%;top:58px;width:12.159%;height:23px;">Delivery Start Date</div>
+    <div class="at" style="left:62.273%;top:58px;width:13.295%;height:23px;"><input type="date" id="datDeliveryStartDate" onchange="bibDeliveryStartChanged()"></div>
+    <div class="at lbl "  style="left:76.136%;top:58px;width:9.091%;height:23px;">Expiry Date</div>
+    <div class="at" style="left:85.568%;top:58px;width:13.068%;height:23px;"><input type="date" id="datExpiryDate" disabled></div>
+    <div class="at lbl "  style="left:0.795%;top:83px;width:17.273%;height:26px;">Commission Agent / Broker</div>
+    <div class="at" style="left:18.409%;top:83px;width:30.909%;height:26px;"><select id="cmbCommissionAgent" class="searchable" style="width:100%" data-dtcombo="party4" data-dtcombo-caption="Commission Agent" ></select></div>
+    <div class="at lbl "  style="left:49.773%;top:83px;width:12.159%;height:26px;">Remarks</div>
+    <div class="at" style="left:62.273%;top:83px;width:36.364%;height:134px;"><textarea id="txtRemarks"></textarea></div>
+    <div class="at lbl "  style="left:0.795%;top:110px;width:17.273%;height:26px;">Buyer Name</div>
+    <div class="at" style="left:18.409%;top:110px;width:30.909%;height:26px;"><select id="cmbBuyerName" class="searchable" style="width:100%" data-dtcombo="party4" data-dtcombo-caption="Buyer Name" ></select></div>
+    <div class="at lbl "  style="left:0.795%;top:138px;width:17.273%;height:26px;">Deliver / Ship To Party</div>
+    <div class="at" style="left:18.409%;top:138px;width:30.909%;height:26px;"><select id="cmbDeliveryToParty" class="searchable" style="width:100%" data-dtcombo="party4" data-dtcombo-caption="Deliver To Party" onchange="bibDeliveryPartyChanged()"></select></div>
+    <div class="at lbl "  style="left:0.795%;top:166px;width:17.273%;height:26px;">Delivery / Ship To Address</div>
+    <div class="at" style="left:18.409%;top:166px;width:27.727%;height:26px;"><select id="cmbShipToAddress" class="searchable" style="width:100%" data-dtcombo="shipTo2" data-dtcombo-caption="Ship To Address" onchange="bibShipToAddressChanged()"></select></div>
+    <div class="at" style="left:46.477%;top:166px;width:2.841%;height:26px;"><button type="button" id="btnAddShipTo" class="bib-btn-teal" title="Define ship-to address (BtnAddShiptoAddress)" onclick="bibAddShipToAddress()">+</button></div>
+    <div class="at" style="left:18.409%;top:194px;width:30.909%;height:23px;"><input type="text" id="txtShipToAddressText"></div>
+    <div class="bib-hr" style="left:1.705%;top:219px;width:96.591%;"></div>
+</div></div>
+<div class="bib-scroll"><div class="bib-canvas" id="panel2" style="height:314px;">
+    <div class="at lbl "  style="left:1.022%;top:5px;width:17.140%;height:26px;">Parent Item</div>
+    <div class="at" style="left:18.502%;top:5px;width:30.647%;height:26px;"><select id="cmbParentItem" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Parent Category" onchange="bibParentItemChanged()"></select></div>
+    <div class="at lbl "  style="left:62.429%;top:11px;">Analysis Group</div>
+    <div class="at" style="left:62.202%;top:32px;width:36.436%;height:26px;"><select id="cmbAnalysisGroup" class="searchable" style="width:100%" data-dtcombo="analysisGroup3" data-dtcombo-caption="Analysis Group" onchange="bibAnalysisGroupChanged()"></select></div>
+    <div class="at lbl "  style="left:1.022%;top:32px;width:17.140%;height:26px;">Item Name</div>
+    <div class="at" style="left:18.502%;top:32px;width:30.647%;height:26px;"><select id="cmbItemName" class="searchable" style="width:100%" data-dtcombo="itemCmagt" data-dtcombo-caption="Item Name" onchange="bibItemChanged()"></select></div>
+    <div class="at lbl "  style="left:1.022%;top:61px;width:17.140%;height:23px;">Qty</div>
+    <div class="at" style="left:18.502%;top:61px;width:13.394%;height:23px;"><input type="number" id="txtQty" step="0.001" value="0" oninput="bibCalculateWeight()"></div>
+    <div class="at lbl "  style="left:32.123%;top:59px;width:6.810%;height:26px;">Pack Uom</div>
+    <div class="at" style="left:39.274%;top:59px;width:9.875%;height:26px;"><select id="cmbPackUom" class="searchable" style="width:100%" data-dtcombo="uomCmagt5" data-dtcombo-caption="Pack Uom" onchange="bibCalculateWeight()"></select></div>
+    <div class="at lbl "  style="left:61.975%;top:65px;">Quality Parameters</div>
+    <div class="at lbl "  style="left:1.022%;top:89px;width:17.140%;height:23px;">Weight</div>
+    <div class="at" style="left:18.502%;top:89px;width:13.621%;height:23px;"><input type="number" id="txtWeight" step="0.001" value="0" readonly></div>
+    <div class="at lbl "  style="left:1.022%;top:114px;width:17.140%;height:26px;">Packing Type</div>
+    <div class="at" style="left:18.502%;top:114px;width:30.647%;height:26px;"><select id="cmbPackingType" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Packing Type" ></select></div>
+    <div class="at lbl "  style="left:1.022%;top:142px;width:17.140%;height:26px;">Crop Year</div>
+    <div class="at" style="left:18.502%;top:142px;width:13.507%;height:26px;"><select id="cmbCropYear" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Crop Year" ></select></div>
+    <div class="at lbl "  style="left:32.236%;top:142px;width:6.810%;height:26px;">Rate Uom</div>
+    <div class="at" style="left:39.387%;top:142px;width:9.875%;height:26px;"><select id="cmbRateUom" class="searchable" style="width:100%" data-dtcombo="uomCmagt5" data-dtcombo-caption="Rate Uom" onchange="bibCalculateAmounts()"></select></div>
+    <div class="at lbl "  style="left:1.022%;top:169px;width:17.140%;height:23px;">Buyer Target Price</div>
+    <div class="at" style="left:18.502%;top:169px;width:13.507%;height:23px;"><input type="number" id="txtBuyerTargetPrice" step="0.001" value="0" oninput="bibCalculateAmounts()"></div>
+    <div class="at lbl "  style="left:1.022%;top:193px;width:17.140%;height:23px;">Target Purchase Price</div>
+    <div class="at" style="left:18.502%;top:193px;width:13.507%;height:23px;"><input type="number" id="txtTargetPurchasePrice" step="0.001" value="0" oninput="bibCalculateAmounts()"></div>
+    <div class="at lbl "  style="left:1.022%;top:218px;width:17.140%;height:26px;">Quality Specification</div>
+    <div class="at" style="left:18.502%;top:218px;width:30.760%;height:92px;"><textarea id="txtQualitySpecifications"></textarea></div>
+    <div class="at" style="left:62.316%;top:83px;width:36.322%;height:227px;flex-direction:column;align-items:stretch;">
+        <div class="bib-grid" style="margin:0;max-width:none;flex:1 1 auto;">
             <table id="grdParameters">
-                <thead>
-                <tr>
-                    <th style="width:260px;">Quality Parameter</th>
-                    <th style="width:110px;">Range From</th>
-                    <th style="width:110px;">Range To</th>
-                </tr>
-                </thead>
+                <thead><tr><th style="width:55%;">Quality Parameter</th><th>Range From</th><th>Range To</th></tr></thead>
                 <tbody id="grdParametersBody"></tbody>
             </table>
         </div>
-        <div class="bib-nav">
-            <span style="font-weight:700;">Record:</span>
+        <div class="bib-nav" style="margin:0;">
             <button type="button" onclick="bibParamNav('first')">&lt;|</button>
             <button type="button" onclick="bibParamNav('prev')">&lt;</button>
             <input type="number" id="paramNavCurrent" value="0" min="0" onchange="bibParamNav('goto', this.value)">
-            <span style="font-weight:700;">Of</span>
-            <span id="paramNavTotal" style="font-weight:700; color:#00564C;">0</span>
+            <span>Of</span> <span id="paramNavTotal">0</span>
             <button type="button" onclick="bibParamNav('next')">&gt;</button>
             <button type="button" onclick="bibParamNav('last')">&gt;|</button>
         </div>
     </div>
+</div></div>
+<div class="bib-strip" id="panel5">Sub Parties
+    <span style="margin-left:auto;"><button type="button" class="bib-link" style="width:auto;height:19px;justify-content:center;" onclick="bibToggleFullscreen('grdSubPartyWrap', this)">Full screen</button></span>
 </div>
-
-<!-- ------------- sub parties (gated by the Add Sub Parties toggle) ------------- -->
-<div id="subPartiesBlock" style="display:none;">
-    <h3 style="margin:12px 14px 6px 14px;">Sub Parties</h3>
-    <div class="grid-tools">
-        <button type="button" onclick="bibAddSubParty()">+ Add Row</button>
-        <button type="button" onclick="bibToggleFullscreen('grdSubPartyWrap', this)">Full screen</button>
-    </div>
-    <div class="grid-wrap" id="grdSubPartyWrap">
+<div id="subPartiesBlock">
+    <div class="bib-grid bib-sub-grid" id="grdSubPartyWrap">
         <table id="grdSubParty">
             <thead>
             <tr>
                 <th style="width:26px;">X</th>
                 <th style="width:26px;">+</th>
-                <th style="width:34px;" title="Select"><input type="checkbox" id="chkAllSubParties" onchange="bibToggleAllSubParties(this.checked)"></th>
-                <th style="width:260px;">Sub Party Name</th>
-                <th style="width:110px;">Item Qty</th>
-                <th style="width:110px;">Rate</th>
-                <th style="width:130px;">Amount</th>
+                <th style="width:24%;">Sub Party Name</th>
+                <th style="width:13%;">Item Qty</th>
+                <th style="width:13%;">Rate</th>
+                <th style="width:16%;">Amount</th>
                 <th>Remarks</th>
             </tr>
             </thead>
             <tbody id="grdSubPartyBody"></tbody>
             <tfoot>
             <tr>
-                <td colspan="4" style="text-align:right;">Totals</td>
-                <td id="totSubQty">0</td>
+                <td colspan="3"></td>
+                <td id="totSubQty" class="num">0</td>
                 <td></td>
-                <td id="totSubAmount">0</td>
+                <td id="totSubAmount" class="num">0</td>
                 <td></td>
             </tr>
             </tfoot>
         </table>
     </div>
-    <div class="bib-nav" style="margin:0 14px 16px 14px;">
-        <span style="font-weight:700;">Record:</span>
+    <div class="bib-nav">
         <button type="button" onclick="bibSubNav('first')">&lt;|</button>
         <button type="button" onclick="bibSubNav('prev')">&lt;</button>
         <input type="number" id="subNavCurrent" value="0" min="0" onchange="bibSubNav('goto', this.value)">
-        <span style="font-weight:700;">Of</span>
-        <span id="subNavTotal" style="font-weight:700; color:#00564C;">0</span>
+        <span>Of</span> <span id="subNavTotal">0</span>
         <button type="button" onclick="bibSubNav('next')">&gt;</button>
         <button type="button" onclick="bibSubNav('last')">&gt;|</button>
-        <span style="margin-left:14px; color:#5C6B6A;">Ctrl+D add row &nbsp;|&nbsp; Ctrl+Delete remove row</span>
     </div>
 </div>
-
 </div><!-- /tabForm -->
 
-<!-- ============================= HISTORY ============================= -->
+<!-- ============================= HISTORY (tabPage2) ============================= -->
 <div id="tabHistory" style="display:none;">
+<div class="bib-tools">
+    <button type="button" id="btnNewHistory" onclick="bibClearHistoryFilters()">New</button>
+    <span class="sep"></span>
+    <button type="button" id="btnRefreshHistory" onclick="bibRefreshHistoryCombos()">Refresh</button>
+</div>
+<div class="bib-strip tall" id="panel4"><span class="ttl">Buyer Inquiry Booking History</span></div>
+<div class="bib-scroll"><div class="bib-canvas" id="groupBox1" style="height:101px;border:1px solid #C9D2D1;box-sizing:border-box;margin-top:4px;">
+    <div class="at" style="left:0.374%;top:-2px;font:700 13px Tahoma,sans-serif;background:#fff;padding:0 3px;">Filters</div>
+    <div class="at lbl "  style="left:0.467%;top:13px;width:9.626%;height:22px;">Date From &amp; To</div>
+    <div class="at" style="left:10.374%;top:13px;width:11.963%;height:22px;"><input type="date" id="histFromDate"></div>
+    <div class="at" style="left:22.430%;top:13px;width:11.963%;height:22px;"><input type="date" id="histToDate"></div>
+    <div class="at lbl "  style="left:0.467%;top:40px;width:9.626%;height:22px;">Validity From &amp; To</div>
+    <div class="at" style="left:10.374%;top:40px;width:11.963%;height:22px;"><input type="date" id="histValidityFrom"></div>
+    <div class="at" style="left:22.430%;top:40px;width:11.963%;height:22px;"><input type="date" id="histValidityTo"></div>
+    <div class="at lbl "  style="left:0.467%;top:65px;width:9.626%;height:26px;">Parent Item</div>
+    <div class="at" style="left:10.374%;top:65px;width:24.019%;height:26px;"><select id="cmbHistParentItem" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Parent Category" onchange="bibHistParentChanged()"></select></div>
+    <div class="at lbl "  style="left:34.766%;top:11px;width:9.626%;height:26px;">Item Name</div>
+    <div class="at" style="left:44.673%;top:11px;width:19.346%;height:26px;"><select id="cmbHistItem" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Item Name" ></select></div>
+    <div class="at lbl "  style="left:34.766%;top:38px;width:9.626%;height:26px;">Commission Agent</div>
+    <div class="at" style="left:44.673%;top:38px;width:19.346%;height:26px;"><select id="cmbHistCommissionAgent" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Commission Agent" ></select></div>
+    <div class="at lbl "  style="left:34.766%;top:65px;width:9.626%;height:26px;">Buyer Name</div>
+    <div class="at" style="left:44.673%;top:65px;width:19.346%;height:26px;"><select id="cmbHistBuyer" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Buyer Name" ></select></div>
+    <div class="at lbl "  style="left:64.486%;top:13px;width:12.617%;height:23px;">Buyer Target Price Range</div>
+    <div class="at" style="left:77.383%;top:13px;width:7.477%;height:23px;"><input type="number" id="txtRateFrom" step="0.001"></div>
+    <div class="at" style="left:84.953%;top:13px;width:7.477%;height:23px;"><input type="number" id="txtRateTo" step="0.001"></div>
+    <div class="at" style="left:93.645%;top:12px;width:5.140%;height:25px;"><button type="button" id="btnShowHistory" class="bib-btn-teal" style="width:100%;height:100%;" onclick="bibLoadHistory()">Show</button></div>
+    <div class="at rad" style="left:64.486%;top:39px;"><label><input type="radio" name="histDateMode" value="doc" checked> Doc Date</label></div>
+    <div class="at rad" style="left:72.150%;top:39px;"><label><input type="radio" name="histDateMode" value="entry"> Entry Date</label></div>
+    <div class="at rad" style="left:80.187%;top:39px;"><label><input type="radio" name="histDateMode" value="modify"> Modify Date</label></div>
+    <div class="at lbl "  style="left:64.393%;top:61px;width:14.579%;">Total Outstanding Inquiries</div>
+    <div class="at lbl "  style="left:79.252%;top:61px;width:8.318%;">Open Inquiries</div>
+    <div class="at lbl "  style="left:87.850%;top:61px;">In Process Inquiries</div>
+    <div class="at lbl cnt " id="lblTotalOutstanding"  style="left:64.766%;top:78px;width:14.299%;">0</div>
+    <div class="at lbl cnt " id="lblOpenInquiries"  style="left:79.346%;top:78px;width:8.505%;">0</div>
+    <div class="at lbl cnt " id="lblInProcessInquiries"  style="left:88.131%;top:78px;width:111px;">0</div>
+</div></div>
+<div class="bib-strip" id="panel15">Filtered Records
+    <span style="margin-left:auto;"><button type="button" class="bib-link" style="width:auto;height:19px;justify-content:center;" onclick="bibToggleFullscreen('grdHistoryWrap', this)">Full screen</button></span>
+</div>
+<div class="bib-grid bib-hist-grid" id="grdHistoryWrap">
+    <table id="grdHistory">
+        <thead>
+        <tr>
+            <th style="width:40px;">Edit</th>
+            <th style="width:170px;">Commission Agent Name</th>
+            <th style="width:40px;">Print</th>
+            <th style="width:100px;">Add Sub Party</th>
+            <th style="width:170px;">Buyer Name</th>
+            <th style="width:170px;">Delivery To Party</th>
+            <th style="width:170px;">Ship To Address</th>
+            <th style="width:70px;">Inquiry No</th>
+            <th style="width:90px;">Inquiry Date</th>
+            <th style="width:90px;">Validity Up To</th>
+            <th style="width:110px;">Payment Term</th>
+            <th style="width:110px;">Delivery Term</th>
+            <th style="width:170px;">Item</th>
+            <th style="width:80px;">Qty</th>
+            <th style="width:90px;">Weight</th>
+            <th style="width:90px;">Buyer Target Price</th>
+            <th style="width:90px;">Target Purchase Price</th>
+            <th style="width:200px;">Quality Specifications</th>
+            <th style="width:110px;">Entry User</th>
+            <th style="width:130px;">Entry Date</th>
+            <th style="width:110px;">Modify User</th>
+            <th style="width:130px;">Modify Date</th>
+            <th style="width:60px;">No Of Attachments</th>
+        </tr>
+        </thead>
+        <tbody id="grdHistoryBody">
+        <tr><td colspan="23">Choose a filter and press Show.</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="13"></td><td id="totHistQty" class="num"></td><td id="totHistWeight" class="num"></td><td colspan="8"></td></tr></tfoot>
+    </table>
+</div>
+<div class="bib-strip" id="panel6">Sub Parties</div>
+<div class="bib-grid bib-subhist-grid" id="grdSubPartyHistoryWrap">
+    <table id="grdSubPartyHistory">
+        <thead><tr><th style="width:30%;">Sub Party Name</th><th style="width:14%;">Item Qty</th><th style="width:14%;">Rate</th><th style="width:16%;">Amount</th><th>Remarks</th></tr></thead>
+        <tbody id="grdSubPartyHistoryBody"></tbody>
+        <tfoot><tr><td></td><td id="totSubHistQty" class="num"></td><td></td><td id="totSubHistAmount" class="num"></td><td></td></tr></tfoot>
+    </table>
+</div>
+</div><!-- /tabHistory -->
 
-    <div class="bib-panel" style="margin:12px 14px;">
-        <div class="bib-legend">History Filters</div>
-        <div class="bib-inline" style="gap:14px;">
-            <span class="bib-inline">
-                <label><input type="radio" name="histDateMode" value="doc" checked> Doc Date</label>
-                <label><input type="radio" name="histDateMode" value="entry"> Entry Date</label>
-                <label><input type="radio" name="histDateMode" value="modify"> Modify Date</label>
-            </span>
-            <span><label class="inline" for="histFromDate">From</label> <input type="date" id="histFromDate" class="w130"></span>
-            <span><label class="inline" for="histToDate">To</label> <input type="date" id="histToDate" class="w130"></span>
-            <span><label class="inline" for="histValidityFrom">Validity From</label> <input type="date" id="histValidityFrom" class="w130"></span>
-            <span><label class="inline" for="histValidityTo">Validity To</label> <input type="date" id="histValidityTo" class="w130"></span>
-        </div>
-        <div class="bib-inline" style="gap:14px; margin-top:8px;">
-            <span><label class="inline" for="cmbHistParentItem">Parent Item</label> <select id="cmbHistParentItem" class="w240 searchable" onchange="bibHistParentChanged()" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select></span>
-            <span><label class="inline" for="cmbHistCommissionAgent">Commission Agent</label> <select id="cmbHistCommissionAgent" class="w240 searchable" data-dtcombo="single" data-dtcombo-caption="Commission Agent"></select></span>
-            <span><label class="inline" for="cmbHistBuyer">Buyer</label> <select id="cmbHistBuyer" class="w240 searchable" data-dtcombo="single" data-dtcombo-caption="Buyer Name"></select></span>
-            <span><label class="inline" for="cmbHistItem">Item</label> <select id="cmbHistItem" class="w240 searchable" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></span>
-        </div>
-        <div class="bib-inline" style="gap:14px; margin-top:8px;">
-            <span><label class="inline" for="txtRateFrom">Target Price From</label> <input type="number" id="txtRateFrom" class="w130" step="0.001"></span>
-            <span><label class="inline" for="txtRateTo">Target Price To</label> <input type="number" id="txtRateTo" class="w130" step="0.001"></span>
-            <button type="button" id="btnShowHistory" onclick="bibLoadHistory()">Show</button>
-            <button type="button" id="btnNewHistory" onclick="bibClearHistoryFilters()">New</button>
-            <button type="button" onclick="bibToggleFullscreen('grdHistoryWrap', this)">Full screen</button>
-        </div>
-    </div>
+<!-- tabControl1.Alignment = Bottom -->
+<ul class="cmagt-tabs bib-tabs-bottom" id="bibTabs">
+    <li><a href="#" class="active" data-tab="tabForm"    onclick="bibShowTab(event,'tabForm')">Form</a></li>
+    <li><a href="#"                data-tab="tabHistory" onclick="bibShowTab(event,'tabHistory')">History</a></li>
+</ul>
 
-    <div class="bib-counters">
-        <span>Open Inquiries: <b id="lblOpenInquiries">0</b></span>
-        <span>In Process: <b id="lblInProcessInquiries">0</b></span>
-        <span>Total Outstanding: <b id="lblTotalOutstanding">0</b></span>
-    </div>
-
-    <div class="grid-wrap" id="grdHistoryWrap">
-        <table id="grdHistory">
-            <thead>
-            <tr>
-                <th style="width:34px;"><input type="checkbox" id="chkAllHistory" onchange="bibToggleAllHistory(this.checked)"></th>
-                <th style="width:46px;">Edit</th>
-                <th style="width:46px;">Print</th>
-                <th style="width:110px;">Add Sub Party</th>
-                <th style="width:90px;">Inquiry No</th>
-                <th style="width:100px;">Inquiry Date</th>
-                <th style="width:100px;">Validity UpTo</th>
-                <th style="width:200px;">Commission Agent</th>
-                <th style="width:200px;">Buyer Name</th>
-                <th style="width:200px;">Deliver To Party</th>
-                <th style="width:200px;">Ship To Address</th>
-                <th style="width:140px;">Payment Term</th>
-                <th style="width:140px;">Delivery Term</th>
-                <th style="width:200px;">Item</th>
-                <th style="width:90px;">Qty</th>
-                <th style="width:100px;">Weight</th>
-                <th style="width:120px;">Buyer Target Price</th>
-                <th style="width:130px;">Target Purchase Price</th>
-                <th style="width:240px;">Quality Specifications</th>
-                <th style="width:140px;">Entry User</th>
-                <th style="width:130px;">Entry Date</th>
-                <th style="width:140px;">Modify User</th>
-                <th style="width:130px;">Modify Date</th>
-                <th style="width:60px;">Attach</th>
-            </tr>
-            </thead>
-            <tbody id="grdHistoryBody">
-            <tr><td colspan="24">Choose a filter and press Show.</td></tr>
-            </tbody>
-        </table>
+<!-- MakeShortCutKeys() popup -->
+<div class="bib-modal" id="bibShortcutModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div>
+        <h4>ShortCut Keys <a href="#" style="color:#fff;" onclick="event.preventDefault();$('bibShortcutModal').classList.remove('open')">X</a></h4>
+        <div class="bib-grid" style="margin:0;max-width:none;"><table><thead><tr><th>Key Combination</th><th>Description</th></tr></thead><tbody id="bibShortcutBody"></tbody></table></div>
     </div>
 </div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
 <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-<script th:src="@{/build/js/countx_cmagt_buyer_inquiry_booking.js?v=20260929a}"></script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
-    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_cmagt_buyer_inquiry_booking.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/cmagt_session_defaults.js?v=20260930a}"></script>
 </body>
 </html>

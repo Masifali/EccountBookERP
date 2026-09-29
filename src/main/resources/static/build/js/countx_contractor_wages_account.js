@@ -110,7 +110,7 @@ function makeSearchable() {
 function loadGlAccounts() {
     return getJson(API + '/gl-accounts')
         .then(function (rows) {
-            fillSelect('cmbGlAccount', rows, '-- Select Account Name --',
+            fillSelect('cmbGlAccount', rows, '',
                        '-- No GL accounts available --');
         })
         .catch(function (e) { message('Could not load GL accounts: ' + e.message, true); });
@@ -120,7 +120,7 @@ function loadGlAccounts() {
 function loadWagesTypes() {
     return getJson(API + '/wages-types')
         .then(function (rows) {
-            fillSelect('cmbWagesType', rows, '-- Select Wages Type --',
+            fillSelect('cmbWagesType', rows, '',
                        '-- No wages types configured --');
         })
         .catch(function (e) { message('Could not load wages types: ' + e.message, true); });
@@ -130,7 +130,7 @@ function loadWagesTypes() {
 function loadActivityNatures() {
     return getJson(API + '/activity-natures')
         .then(function (rows) {
-            fillSelect('cmbActivityNature', rows, '-- Select Activity Nature --',
+            fillSelect('cmbActivityNature', rows, '',
                        '-- No activity natures configured --');
         })
         .catch(function (e) { message('Could not load activity natures: ' + e.message, true); });
