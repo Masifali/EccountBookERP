@@ -280,6 +280,18 @@ public class ReportRegistry {
                    G("@Id","arg:id")),
                 Collections.emptyList()));
 
+        /* SaleInvoiceStorePMSlip(Id, 126) -> SaleInvoiceDirectItemSlip_294 (CommonServices :6379): BLL 0128
+           InvSaleInvoiceDirectSlipRice (org, company, @Id when not 0) and the SalesCustomerBillSubReport sub-report. */
+        add(new ReportDefinition("sidpm-294", "294-InvRptSaleBillDirectWithoutSO.rpt",
+                "sp_InvSaleInvoiceDirectSlip", "CommonServices.SaleInvoiceDirectItemSlip_294",
+                ps(P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   G("@Id","arg:id"),
+                   P("rpt:CompanyAddress","same:@CompanyAddress"),
+                   P("rpt:CompanyName","same:@CompanyName")),
+                subs(new ReportDefinition.SubReport("InvRptPurchaseBillSupplierOthers.rpt",
+                            "[dbo].[SP_InvSaleInvoice_CustomerBillRice OthersExp_SubRep]", ps(P("@PihId","arg:id"))))));
+
         /* StockTransferPackingMaterialAndStore_Slip415 (CommonServices) - BLL 0559
            StockTransferPackingMaterialAndStore_SlipandRegister: only @Id is set, the filters stay 0/null. */
         add(new ReportDefinition("st-415", "415-InvStockTransferPackingMaterialAndStore_SlipandRegister.rpt",

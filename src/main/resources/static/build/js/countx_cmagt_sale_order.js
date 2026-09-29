@@ -205,6 +205,23 @@
         var bp = r.BasePackUom !== undefined ? r.BasePackUom : r.basePackUom;
         if (br !== undefined && br !== null) add('base', br === true ? 1 : br === false ? 0 : br);
         if (bp !== undefined && bp !== null) add('base-pack', bp === true ? 1 : bp === false ? 0 : bp);
+
+        /* uomCmagt5 / shipTo2 / analysisGroup3 / taxCmagt (countx_desktop_combo.js) */
+        var bs = r.BaseSecondaryUom !== undefined ? r.BaseSecondaryUom : r.baseSecondaryUom;
+        if (bs !== undefined && bs !== null) add('base-secondary', bs === true ? 1 : bs === false ? 0 : bs);
+        if (r.AddressLine1 !== undefined) add('party-name', pick('CompanyName', 'PartyName'));
+        if (r.AnalysisGroupDescription !== undefined) {
+            add('group-type', pick('GroupType'));
+            add('parent-category', pick('InvParentCateDescription'));
+        }
+        if (r.TaxNameId !== undefined) {
+            add('tax-schedule-id', pick('TaxScheduleId'));
+            var ed = pick('EffectedDate');
+            if (ed !== null) add('effected-date', typeof ed === 'number' ? localYmd(new Date(ed)) : String(ed).slice(0, 10));
+            add('tax-percent', pick('TaxPercent'));
+            add('tax-gl-account', pick('TaxGLAccountId'));
+        }
+        function localYmd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
         return out;
     }
 
@@ -228,7 +245,7 @@
     function initSelect2() {
         $('.so-select2').each(function () {
             var $e = $(this);
-            if ($e.data('select2')) return;
+            if ($e.data('select2') || this.__dtcombo || this.classList.contains('dtcombo-native')) return;
             $e.select2({ width: $e.css('width'), dropdownAutoWidth: true, placeholder: '' });
         });
     }
@@ -1785,4 +1802,20 @@
             else if (e.ctrlKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); $('.win-tab[data-maintab=history]').trigger('click'); }
         });
     });
+})();
+
+/* History From/To: the desktop DateTimePickers (FromDateHistory / ToDateHistory) are never
+   assigned in code, so they open on the designer default - today - with their check box ON
+   (ShowCheckBox, Checked defaults true), i.e. the history filters today..today. Validity
+   From/To are Checked=false in the designer and stay blank. Local calendar date, not UTC. */
+(function () {
+    function seed() {
+        var d = new Date();
+        var t = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+        ['fromDateHistory', 'toDateHistory'].forEach(function (id) {
+            var e = document.getElementById(id);
+            if (e && !e.value) e.value = t;
+        });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', seed); else seed();
 })();

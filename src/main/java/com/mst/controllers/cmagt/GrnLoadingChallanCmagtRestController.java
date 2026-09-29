@@ -91,6 +91,12 @@ public class GrnLoadingChallanCmagtRestController {
         return ResponseEntity.ok(service.getHistory(fromDate, toDate));
     }
 
+    /** History date-range default (desktop :618-619). Literal path wins over /{id}. */
+    @GetMapping("/history-defaults")
+    public ResponseEntity<Map<String, Object>> historyDefaults() {
+        return ResponseEntity.ok(service.historyDefaults());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.getById(id));

@@ -184,7 +184,10 @@ public class StockConversionService {
         }
         out.put("conversionTypes", types);
 
-        out.put("warehouses", pick(lookups.warehousesForBranch(u, branchId), "Id", "WareHouseName"));
+        /* cmbGodown - DropDownBind.BindDDL hides ONLY column 0 (Id); every other column of
+           USP_GetWarehousesAllocatedToBranch stays visible in the drop grid, so all are sent. */
+        out.put("warehouses", pickCols(lookups.warehousesForBranch(u, branchId), "Id", "WareHouseName",
+                "BranchId", "BranchName", "WareHouseTypeId", "WareHouseType", "IsActive", "PlantId", "PlantName"));
         /* The whole item cache; the page filters it on the parent category exactly as
            BindItemCombo does in memory. */
         List<Map<String, Object>> items = new ArrayList<>();
@@ -196,7 +199,9 @@ public class StockConversionService {
             items.add(m);
         }
         out.put("items", items);
-        out.put("jobLots", pick(lookups.jobLotsForBranch(u, branchId), "Id", "JobLotDescription"));
+        /* cmbLot / CmbJobLotForGrid - BindDDL again: Id hidden, the other three columns shown. */
+        out.put("jobLots", pickCols(lookups.jobLotsForBranch(u, branchId), "Id", "JobLotDescription",
+                "BranchId", "BranchName"));
         out.put("cropYears", pick(lookups.cropYears(u), "Id", "CropYear"));
         out.put("packingTypes", pick(lookups.packingTypes(), "Id", "PackTypeDesc"));
         out.put("moistureSlabs", pick(lookups.moistureSlabs(u), "Id", "MoistureSlabDescription"));
@@ -294,6 +299,17 @@ public class StockConversionService {
             m.put("Equivalent", ci(r, "Equivalent"));
             m.put("QtyEquivalent", ci(r, "QtyEquivalent"));
             m.put("BaseRateUom", ci(r, "BaseRateUom"));
+            out.add(m);
+        }
+        return out;
+    }
+
+    /** Keeps the named columns, in this order, under their desktop names. */
+    private static List<Map<String, Object>> pickCols(List<Map<String, Object>> rows, String... cols) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            for (String c : cols) m.put(c, ci(r, c));
             out.add(m);
         }
         return out;

@@ -205,6 +205,24 @@ public class GrnLoadingChallanCmagtRepository {
 
     /* Null-safe coercions. A null never becomes 1 or any other invented id - it becomes the
        type's zero, and tenancy/user are guaranteed non-null by the service. */
+    /**
+     * GlobalVariables_Helper.GetConfigValueFromGlobal (frmGrnLoadingChallanCmagt:650) - the same
+     * procedure/activity every other configuration read in this port uses. "" when absent.
+     */
+    public String config(int organizationId, int companyId, String description) {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?, @CompanyId=?, "
+                            + "@ConfigDescription=?, @DefinitionIds=?, @Activity=?",
+                    organizationId, companyId, description, null,
+                    "GetConfigurationByOrgCompandConfigDescription");
+            Object v = rows.isEmpty() ? null : rows.get(0).get("ConfigKey");
+            return v == null ? "" : String.valueOf(v).trim();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     private static int ni(Integer v) { return v == null ? 0 : v; }
     private static boolean nb(Boolean v) { return v != null && v; }
     private static String ns(String v) { return v == null ? "" : v; }

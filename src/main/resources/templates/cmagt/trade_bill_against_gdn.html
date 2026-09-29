@@ -67,13 +67,13 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label font-weight-bold">Supplier Name</label>
-                            <select class="form-select form-select-sm search-select" id="supplierId">
+                            <select class="form-select form-select-sm search-select dtcombo" id="supplierId" data-dtcombo="party4" data-dtcombo-caption="Supplier Name">
                                 <option value="0">-- Select Supplier --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label font-weight-bold">Customer (Buyer)</label>
-                            <select class="form-select form-select-sm search-select" id="buyerId">
+                            <select class="form-select form-select-sm search-select dtcombo" id="buyerId" data-dtcombo="party4" data-dtcombo-caption="Buyer Name">
                                 <option value="0">-- Select Buyer --</option>
                             </select>
                         </div>
@@ -100,7 +100,7 @@
                     <div class="row g-2 mb-2">
                         <div class="col-md-3">
                             <label class="form-label small mb-1 font-weight-bold">Item Name</label>
-                            <select class="form-select form-select-sm search-select" id="detItemId">
+                            <select class="form-select form-select-sm search-select dtcombo" id="detItemId" data-dtcombo="itemCmagt" data-dtcombo-caption="Item Name">
                                 <option value="0">-- Select Item --</option>
                             </select>
                         </div>
@@ -254,11 +254,37 @@
         });
     }
 
+    /* Local calendar date - toISOString() is UTC and gives YESTERDAY before 05:00 at UTC+5.
+       History From = today - DefaultDaysToLessFromHistoryFromDate (else today - 3), To = today:
+       frmCommissionAgentTradeBillAgainstGdn.cs:987-988. */
+    function ymdLocal(d) {
+        return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    }
     function setDefaultDates() {
-        const today = new Date().toISOString().split('T')[0];
-        $('#docDate').val(today);
-        $('#histFromDate').val(today);
-        $('#histToDate').val(today);
+        const t = new Date();
+        $('#docDate').val(ymdLocal(t));
+        $('#histToDate').val(ymdLocal(t));
+        const f = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 3);
+        $('#histFromDate').val(ymdLocal(f));
+        $.get('/api/commission/dropdowns/config-defaults', function (c) {
+            const days = c ? parseInt(c.defaultDaysToLessFromHistoryFromDate, 10) || 0 : 0;
+            if (days > 0) $('#histFromDate').val(ymdLocal(new Date(t.getFullYear(), t.getMonth(), t.getDate() - days)));
+        });
+    }
+
+    /* party4 - CommonBindings.SupplierBind hides Columns[3] (GlAccountId). */
+    function partyOption(d) {
+        return `<option value="${d.Id || d.id}"`
+             + ` data-code="${esc(d.PartyCode || '')}"`
+             + ` data-city="${esc(d.CityName || '')}"`
+             + ` data-mobile="${esc(d.MobileNo || '')}">${esc(d.CompanyName || d.name)}</option>`;
+    }
+
+    /* itemCmagt - ItemNameBind hides Columns[3] and [4]: Item | ItemCode | ItemCategory. */
+    function itemOption(d) {
+        return `<option value="${d.Id || d.id}"`
+             + ` data-item-code="${esc(d.ItemCode || '')}"`
+             + ` data-item-category="${esc(d.ItemCategory || '')}">${esc(d.ItemName || d.name)}</option>`;
     }
 
     function calculateItemRow() {
@@ -332,13 +358,15 @@
         $.get('/api/commission/dropdowns/suppliers', function(data) {
             const el = $('#supplierId');
             el.empty().append('<option value="0">-- Select Supplier --</option>');
-            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+            if (data) data.forEach(d => el.append(partyOption(d)));
+            if (window.CountxDesktopCombo && window.CountxDesktopCombo.refresh) window.CountxDesktopCombo.refresh(el[0]);
         });
 
         $.get('/api/commission/dropdowns/buyers', function(data) {
             const el = $('#buyerId');
             el.empty().append('<option value="0">-- Select Buyer --</option>');
-            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+            if (data) data.forEach(d => el.append(partyOption(d)));
+            if (window.CountxDesktopCombo && window.CountxDesktopCombo.refresh) window.CountxDesktopCombo.refresh(el[0]);
         });
 
         $.get('/api/commission/dropdowns/commission-agents', function(data) {
@@ -350,7 +378,8 @@
         $.get('/api/commission/dropdowns/items', function(data) {
             const el = $('#detItemId');
             el.empty().append('<option value="0">-- Select Item --</option>');
-            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+            if (data) data.forEach(d => el.append(itemOption(d)));
+            if (window.CountxDesktopCombo && window.CountxDesktopCombo.refresh) window.CountxDesktopCombo.refresh(el[0]);
         });
     }
 
@@ -497,7 +526,7 @@
         fillDocNos();
     }
 </script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

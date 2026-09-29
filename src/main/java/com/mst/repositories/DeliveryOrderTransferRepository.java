@@ -130,6 +130,9 @@ public class DeliveryOrderTransferRepository {
             o.put("ItemName", str(r.get("ItemName")));
             o.put("ItemCode", str(r.get("ItemCode")));
             o.put("ItemTypeOfTypeId", toInt(r.get("ItemTypeOfTypeId")));
+            o.put("ItemCategory", str(r.get("ItemCategory")));
+            o.put("ItemType", str(r.get("ItemType")));
+            o.put("ProductionStage", str(r.get("productionStageName")));
             out.add(o);
         }
         return out;

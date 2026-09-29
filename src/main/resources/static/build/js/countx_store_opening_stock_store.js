@@ -186,7 +186,18 @@
 
     function jobLotBind() { bind('cmbJobLot', look.jobLots, 'Id', 'Description', intOf($id('cmbJobLot').value)); }
     function conditionBind() { bind('CmbItemCondition', look.itemConditions, 'Id', 'Description', intOf($id('CmbItemCondition').value)); }
-    function stockCreditBind() { bind('cmbStockCreditAcc', look.stockCreditAccounts, 'Id', 'AccountTitle', intOf($id('cmbStockCreditAcc').value)); }
+    function stockCreditBind() {
+        bind('cmbStockCreditAcc', look.stockCreditAccounts, 'Id', 'AccountTitle', intOf($id('cmbStockCreditAcc').value));
+        /* BindAndRetainSelection(AllColumns: true) over GetAccountsFromGlobalByTypeIds (:571): the drop-down shows
+           "Account Title", AccountCode, ParentAccountTitle, AccountClass. */
+        var el = $id('cmbStockCreditAcc'), byId = {};
+        (look.stockCreditAccounts || []).forEach(function (r) { byId[String(r.Id)] = r; });
+        Array.prototype.forEach.call(el.options, function (o) {
+            var r = byId[o.value];
+            if (r) o.setAttribute('data-extra', [r.AccountCode, r.ParentAccountTitle, r.AccountClass].map(function (v) { return String(v == null ? '' : v).replace(/\|/g, '/'); }).join('|'));
+        });
+        el.setAttribute('data-columns', 'Account Title|AccountCode|ParentAccountTitle|AccountClass');
+    }
 
     // ------------------------------------------------------------------------------ calculations
 

@@ -78,6 +78,16 @@
             return '<option value="' + esc(r[valueKey]) + '">' + esc(r[textKey]) + '</option>';
         }).join('');
     }
+    /** Multi-column drop-down (InfragisticsHelper AllColumns): extra cells per option + header captions. */
+    function colsOf(id, rows, valueKey, extraKeys, captions) {
+        var el = $id(id), byId = {};
+        (rows || []).forEach(function (r) { byId[String(r[valueKey])] = r; });
+        Array.prototype.forEach.call(el.options, function (o) {
+            var r = byId[o.value];
+            if (r) o.setAttribute('data-extra', extraKeys.map(function (k) { return String(r[k] == null ? '' : r[k]).replace(/\|/g, '/'); }).join('|'));
+        });
+        el.setAttribute('data-columns', captions.join('|'));
+    }
     function has(id, v) { return Array.prototype.some.call($id(id).options, function (o) { return o.value === String(v); }); }
     /** combo.Value = v — a value not in the list leaves the combo without a selection. */
     function setVal(id, v) { var el = $id(id); el.value = String(v); if (el.value !== String(v)) el.selectedIndex = -1; }
@@ -345,8 +355,13 @@
         fillPlain('CmbVendorSupplier', look.suppliers, 'Id', 'CompanyName');
         if (bill && has('CmbBillToParty', bill)) $id('CmbBillToParty').value = bill; else clearCombo('CmbBillToParty');
         if (vend && has('CmbVendorSupplier', vend)) $id('CmbVendorSupplier').value = vend; else clearCombo('CmbVendorSupplier');
+        /* BindSupplierName (:510-519): dtSupplier with AllColumns, Id / GlAccountId / CityId hidden. CurrencyCode is never
+           filled by SupplierDtFillFromGlobal, so that column stays empty as on the desktop. */
+        colsOf('CmbBillToParty', look.suppliers, 'Id', ['PartyCode', 'CityName', 'MobileNo', 'CurrencyCode'], ['Bill To Party', 'PartyCode', 'CityName', 'MobileNo', 'CurrencyCode']);
+        colsOf('CmbVendorSupplier', look.suppliers, 'Id', ['PartyCode', 'CityName', 'MobileNo', 'CurrencyCode'], ['Vendor Supplier Name', 'PartyCode', 'CityName', 'MobileNo', 'CurrencyCode']);
         var ref = isLoad ? 0 : comboInt('CmbRefParty');
         fillDefault('CmbRefParty', look.referenceParties, 'Id', 'ReferencePartyName');
+        colsOf('CmbRefParty', look.referenceParties, 'Id', [], ['ReferenceParty Name']);   // AllColumns false: one visible column
         if ((look.referenceParties || []).length) retain('CmbRefParty', ref, true, 1); else clearCombo('CmbRefParty');   // :555 (D7)
         var term = isLoad ? 0 : comboInt('CmbDeliveryTerm');
         fillDefault('CmbDeliveryTerm', look.deliveryTerms, 'Id', 'Description');

@@ -206,7 +206,7 @@ public class StoreReportsBService {
         putAdjustmentLookup(out, "warehouses", "Warehouse", () -> repo.warehouses(u), "WareHouseName"); // :149
         putAdjustmentLookup(out, "jobLots", "Job Lot", () -> repo.jobLots(u), "JobLotDescription"); // :165
         putAdjustmentLookup(out, "entryTypes", "Entry Type", () -> repo.staticColumns("StockAdjustmentType"), "Type"); // :181
-        putAdjustmentLookup(out, "items", "Item", () -> repo.readAllItems(u), "ItemName"); // :197
+        putAdjustmentLookup(out, "items", "Item", () -> itemColumns(repo.readAllItems(u)), "Name"); // :197 BindDDL: every column but Id visible
         return out;
     }
 
@@ -216,7 +216,8 @@ public class StoreReportsBService {
     private void putAdjustmentLookup(Map<String, Object> out, String key, String label,
                                      Supplier<List<Map<String, Object>>> query, String nameColumn) {
         try {
-            out.put(key, project(query.get(), "Id", nameColumn));
+            List<Map<String, Object>> rows = query.get();
+            out.put(key, "items".equals(key) ? rows : project(rows, "Id", nameColumn));
         } catch (DataAccessException e) {
             LOG.warn("Stock Adjustment Report {} lookup failed", label, e);
             out.put(key, List.of());
@@ -477,6 +478,20 @@ public class StoreReportsBService {
         m.put("Id", id);
         m.put("Name", name);
         return m;
+    }
+
+    /** ItemBind:189 - DDL.BindDDL over Sp_Item_GetAllMethod 'ReadAllItems': Id hidden, the rest visible in order. */
+    static final String[] ITEM_EXTRA_COLUMNS = { "ItemCode", "ItemCodeNew", "InventoryParentCategoriesId", "ItemCategoryId",
+            "ItemTypeId", "ItemQcGradeId", "ItemQcGrade", "MaxMeaurementUnitId", "WeightKgs", "MaxMeaurement", "PurchaseGLAC",
+            "SaleGLAC", "COGSGLAC", "CategoryDescription", "TypeDescription" };
+    private static List<Map<String, Object>> itemColumns(List<Map<String, Object>> rows) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            Map<String, Object> o = idName(toInt(ci(r, "Id")), str(ci(r, "ItemName")));
+            for (String k : ITEM_EXTRA_COLUMNS) { Object v = ci(r, k); o.put(k, v == null ? "" : String.valueOf(v)); }
+            out.add(o);
+        }
+        return out;
     }
 
     private static List<Map<String, Object>> project(List<Map<String, Object>> rows, String id, String name) {

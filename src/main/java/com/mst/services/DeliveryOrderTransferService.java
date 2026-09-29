@@ -581,6 +581,9 @@ public class DeliveryOrderTransferService {
             o.put("Id", r.get("Id"));
             o.put("ItemName", r.get("ItemName"));
             o.put("ItemCode", r.get("ItemCode"));
+            o.put("ItemCategory", r.get("ItemCategory"));
+            o.put("ItemType", r.get("ItemType"));
+            o.put("ProductionStage", r.get("ProductionStage"));
             out.add(o);
         }
         return out;

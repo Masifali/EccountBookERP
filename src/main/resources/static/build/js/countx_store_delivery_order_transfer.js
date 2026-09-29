@@ -66,8 +66,14 @@
         rows = rows || [];
         if (!rows.length) { el.innerHTML = '<option value=""></option>'; el.value = ''; return; }
         var list = o.defaultRow ? [{ Id: 0, Name: '-- Select --' }].concat(rows) : rows;
+        /* o.cols: multi-column drop grid (InfragisticsHelper AllColumns) - [caption of Name, [caption, key]...] */
+        if (o.cols) el.setAttribute('data-columns', o.cols.map(function (c) { return c[0]; }).join('|'));
+        else el.removeAttribute('data-columns');
         el.innerHTML = '<option value="" hidden></option>' + list.map(function (r) {
-            return '<option value="' + esc(r.Id) + '">' + esc(r.Name) + '</option>';
+            var extra = o.cols ? o.cols.slice(1).map(function (c) {
+                var v = r[c[1]]; return v === null || v === undefined ? '' : String(v).replace(/\|/g, '/');
+            }).join('|') : '';
+            return '<option value="' + esc(r.Id) + '"' + (o.cols ? ' data-extra="' + esc(extra) + '"' : '') + '>' + esc(r.Name) + '</option>';
         }).join('');
         el.value = o.defaultRow ? '0' : '';
         var idx = o.activateIndex || 0, act = o.activate !== false;
@@ -105,8 +111,11 @@
     function vehicleTypesBind() { bindCombo('CmbVehicleType', look.vehicleTypes, { prev: val('CmbVehicleType') }); }   // :819
     function saleTypeBind() { bindCombo('CmbSaleType', SALE_TYPES, { prev: null, activate: false }); }                 // DDL.BindDDL:840
     function bindSupplierName() {                                                // :880
-        bindCombo('CmbSupplierCustomer', look.suppliers.map(function (s) { return { Id: s.Id, Name: s.CompanyName }; }),
-            { prev: val('CmbSupplierCustomer'), activate: false });
+        bindCombo('CmbSupplierCustomer', look.suppliers.map(function (s) {
+                return { Id: s.Id, Name: s.CompanyName, Code: s.PartyCode, City: s.CityName, Mobile: s.MobileNo };
+            }),
+            { prev: val('CmbSupplierCustomer'), activate: false,
+              cols: [['Customer Name'], ['Id', 'Id'], ['PartyCode', 'Code'], ['CityName', 'City'], ['MobileNo', 'Mobile']] });
     }
     function warehouseBind() { bindCombo('CmbWareHouse', look.warehouses, { prev: val('CmbWareHouse'), defaultRow: true }); }  // :911
     function cropBind() { bindCombo('CmbCropYear', look.cropYears, { prev: val('CmbCropYear'), defaultRow: true }); }        // :991
@@ -121,8 +130,12 @@
     function itemNameBind() {
         var id = val('CmbItemName') > 0 ? val('CmbItemName') : 0;
         var key = $id('rdSearchByName').checked ? 'ItemName' : 'ItemCode';
-        bindCombo('CmbItemName', look.items.map(function (i) { return { Id: i.Id, Name: i[key] }; }),
-            { prev: id, defaultRow: true, activateIndex: 1 });
+        var other = key === 'ItemName' ? 'ItemCode' : 'ItemName';
+        bindCombo('CmbItemName', look.items.map(function (i) {
+                return { Id: i.Id, Name: i[key], Other: i[other], Category: i.ItemCategory, Type: i.ItemType, Stage: i.ProductionStage };
+            }),
+            { prev: id, defaultRow: true, activateIndex: 1,
+              cols: [[key === 'ItemName' ? 'Item Name' : 'Item Code'], [other, 'Other'], ['ItemCategory', 'Category'], ['ItemType', 'Type'], ['ProductionStage', 'Stage']] });
         packUomFromGlobalBind(id);
     }
     function uomsOf(itemId) {                                                    // dtUomFromGloablUomScheduleByItemId:2159
@@ -130,8 +143,10 @@
     }
     function packUomFromGlobalBind(itemId) {                                     // :1037 — kept by its UOMCode text
         var prevText = selText('CmbPackUom');
-        bindCombo('CmbPackUom', uomsOf(itemId).map(function (u) { return { Id: u.Id, Name: u.UOMCode }; }),
-            { prev: prevText, byText: true, defaultRow: true });
+        bindCombo('CmbPackUom', uomsOf(itemId).map(function (u) {
+                return { Id: u.Id, Name: u.UOMCode, Eq: u.Equivalent, Base: u.BasePackUom ? 'Yes' : '' };
+            }),
+            { prev: prevText, byText: true, defaultRow: true, cols: [['Uom'], ['Equivalent', 'Eq'], ['BasePackUom', 'Base']] });
     }
     function selectedUom() {
         var id = val('CmbPackUom');

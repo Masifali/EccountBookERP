@@ -164,6 +164,22 @@
         notice.style.color = error ? '#a00000' : '#005959';
     }
 
+    /** Multi-column combo (desktop InfragisticsHelper ... AllColumns: true): the search popup shows a
+        header row and one column per key; the select itself still shows only textKey. */
+    function fillSelectCols(el, rows, valueKey, textKey, extraKeys, captions, blank) {
+        if (typeof el === 'string') el = $id(el);
+        if (!el) return;
+        var keep = el.value;
+        var h = blank === false ? '' : '<option value="0"></option>';
+        (rows || []).forEach(function (r) {
+            var extra = (extraKeys || []).map(function (k) { var v = ci(r, k); return v === null || v === undefined ? '' : String(v).replace(/\|/g, '/'); }).join('|');
+            h += '<option value="' + esc(ci(r, valueKey)) + '" data-extra="' + esc(extra) + '">' + esc(ci(r, textKey)) + '</option>';
+        });
+        el.innerHTML = h;
+        if (captions && captions.length) el.setAttribute('data-columns', captions.join('|'));
+        if (keep) el.value = keep;
+    }
+
     function openModal(id) { var m = $id(id); if (m) m.classList.add('is-open'); }
     function closeModal(id) { var m = $id(id); if (m) m.classList.remove('is-open'); }
 
@@ -333,21 +349,43 @@
     }
     function renderPop(q) {
         q = String(q || '').toLowerCase().trim();
+        var cols = (popSel.getAttribute('data-columns') || '').split('|').filter(Boolean);
         var opts = Array.prototype.slice.call(popSel.options);
-        var starts = [], contains = [];
-        opts.forEach(function (o) {
-            var t = o.text.toLowerCase();
-            if (!q || t.indexOf(q) === 0) starts.push(o); else if (t.indexOf(q) >= 0) contains.push(o);
-        });
-        popRows = starts.concat(contains).slice(0, 500);
+        var extraOf = function (o) { var e = o.getAttribute('data-extra'); return e ? e.split('|') : []; };
+        if (cols.length) {
+            /* multi-column: desktop combo filters on contains and keeps the list order */
+            popRows = opts.filter(function (o) {
+                if (o.value === '0' && !o.text) return false;      // the "nothing selected" slot is not a desktop row
+                if (!q) return true;
+                return [o.text].concat(extraOf(o)).some(function (t) { return String(t).toLowerCase().indexOf(q) >= 0; });
+            }).slice(0, 500);
+        } else {
+            var starts = [], contains = [];
+            opts.forEach(function (o) {
+                var t = o.text.toLowerCase();
+                if (!q || t.indexOf(q) === 0) starts.push(o); else if (t.indexOf(q) >= 0) contains.push(o);
+            });
+            popRows = starts.concat(contains).slice(0, 500);
+        }
         popActive = -1;
         for (var i = 0; i < popRows.length; i++) if (popRows[i].value === popSel.value) { popActive = i; break; }
         if (popActive < 0 && q && popRows.length) popActive = 0;
         var list = pop.querySelector('.cx-combo-list');
-        list.innerHTML = popRows.length ? popRows.map(function (o, i) {
-            return '<div class="cx-combo-item' + (i === popActive ? ' is-active' : '') + '" data-i="' + i + '">' +
-                (o.text ? esc(o.text) : '&nbsp;') + '</div>';
-        }).join('') : '<div class="cx-combo-empty">No match</div>';
+        pop.classList.toggle('is-cols', cols.length > 0);
+        if (!popRows.length) { list.innerHTML = '<div class="cx-combo-empty">No match</div>'; return; }
+        if (cols.length) {
+            list.innerHTML = '<table class="cx-combo-table"><thead><tr>' + cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') +
+                '</tr></thead><tbody>' + popRows.map(function (o, i) {
+                    var cells = [o.text].concat(extraOf(o));
+                    return '<tr class="cx-combo-item' + (i === popActive ? ' is-active' : '') + '" data-i="' + i + '">' +
+                        cols.map(function (c, j) { var v = cells[j] || ''; return '<td>' + (v ? esc(v) : '&nbsp;') + '</td>'; }).join('') + '</tr>';
+                }).join('') + '</tbody></table>';
+        } else {
+            list.innerHTML = popRows.map(function (o, i) {
+                return '<div class="cx-combo-item' + (i === popActive ? ' is-active' : '') + '" data-i="' + i + '">' +
+                    (o.text ? esc(o.text) : '&nbsp;') + '</div>';
+            }).join('');
+        }
         var a = list.querySelector('.is-active'); if (a) a.scrollIntoView({ block: 'nearest' });
     }
     function movePop(d) {
@@ -362,7 +400,7 @@
         var r = sel.getBoundingClientRect();
         pop.style.left = (r.left + window.scrollX) + 'px';
         pop.style.top = (r.bottom + window.scrollY) + 'px';
-        pop.style.minWidth = Math.max(r.width, 220) + 'px';
+        pop.style.minWidth = Math.max(r.width, sel.getAttribute('data-columns') ? 560 : 220) + 'px';
         pop.style.display = 'block';
         var inp = pop.querySelector('input');
         inp.value = firstChar || '';
@@ -433,7 +471,7 @@
     window.StoreCommon = {
         $id: $id, esc: esc, ci: ci, num: num, intOf: intOf, round: round,
         today: today, isoDay: isoDay, gridDate: gridDate, gridDateTime: gridDateTime,
-        getJson: getJson, postJson: postJson, qs: qs, fillSelect: fillSelect,
+        getJson: getJson, postJson: postJson, qs: qs, fillSelect: fillSelect, fillSelectCols: fillSelectCols,
         openModal: openModal, closeModal: closeModal, pickFrom: pickFrom,
         resolveWarehouseAndRack: resolveWarehouseAndRack, configWarehouse: configWarehouse,
         distinct: distinct, printSlip: printSlip, wrapGrids: wrapGrids, withBusy: withBusy, lookupNotice: lookupNotice

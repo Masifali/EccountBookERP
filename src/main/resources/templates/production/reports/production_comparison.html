@@ -7,6 +7,7 @@
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
     <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
     <style>
         body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
@@ -79,6 +80,31 @@
             .win-grid-scroll { max-height: none !important; overflow: visible !important; }
             .win-grid th, .win-grid td { border: 1px solid #000 !important; }
         }
+        /* The designer geometry (FoodProductionComparisonRpt): labels Segoe UI Semibold 9pt bold at their
+           Location, fields Verdana 9.75pt at their Location/Size, titles Tahoma 12pt bold on teal. */
+        .pc-panel { position: relative; width: 1176px; border-bottom: 1px solid #c8c8c8; }
+        .pc-title { position: relative; width: 1176px; background: #008080; color: #fff; }
+        .pc-title > span { position: absolute; font: bold 12pt Tahoma, sans-serif; line-height: 19px; white-space: nowrap; }
+        .pc-l { position: absolute; margin: 0; font: 600 9pt "Segoe UI Semibold", "Segoe UI", sans-serif; color: #000; line-height: 15px; white-space: nowrap; }
+        .pc-rd { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; line-height: 19px; }
+        .pc-rd input { margin: 0; }
+        .pc-at { position: absolute; }
+        .pc-at > .win-textbox, .pc-at > .win-datepicker { width: 100%; height: 100%; font: 9.75pt Verdana, sans-serif; padding: 1px 3px; }
+        .pc-at > .dtcombo-wrap { width: 100%; height: 100%; }
+        .pc-at > .dtcombo-wrap > .dtcombo-input.pcx-field { font: 9.75pt Verdana, sans-serif; }
+        .pc-fill { width: 100%; height: 100%; }
+        .pc-fill > .win-textbox { width: 100%; height: 100%; font: 9.75pt Verdana, sans-serif; cursor: default; background: #fff; }
+        .pc-btn { width: 100%; height: 100%; padding: 0; }
+        .pc-values { position: absolute; left: 747px; top: 38px; width: 424px; height: 78px; border: 1px solid #7a7a7a; background: #f0f0f0; }
+        .pc-values-head { position: absolute; left: 0; top: 0; right: 0; height: 24px; background: #fff; }
+        .pc-values-head span { position: absolute; top: 3px; font: 9.75pt "Segoe UI", sans-serif; color: #008080; white-space: nowrap; }
+        .pc-val { position: absolute; top: 35px; height: 23px; background: #fff; border: 1px solid #7a9a9e; font: 9.75pt Verdana, sans-serif; text-align: right; padding: 2px 4px; }
+        .pc-st { position: absolute; left: 360px; font-size: 9pt; line-height: 16px; white-space: nowrap; }
+        /* panel5 / panel10 "Filtered Records" - teal, Tahoma 11pt bold white. */
+        .win-grid-toolbar { background: #008080; color: #fff; font: bold 11pt Tahoma, sans-serif; min-height: 23px; border-bottom: 0; }
+        .pc-bottom-tabs { border-bottom: 0; border-top: 1px solid #7a9a9e; margin: 4px 0 0; }
+        .pc-bottom-tabs .cx-tab { border: 1px solid #999; border-top: none; border-radius: 0 0 3px 3px; top: 0; }
+        .pc-bottom-tabs .cx-tab.is-active { top: -1px; }
     </style>
 </head>
 <body>
@@ -95,11 +121,6 @@
 </div>
 
 <div class="win-form-body">
-    <div class="cx-tabs">
-        <div class="cx-tab is-active" id="tabComparisonBtn" onclick="ProductionComparison.tab('comparison')">Production Comparison</div>
-        <div class="cx-tab" id="tabSummaryBtn" onclick="ProductionComparison.tab('summary')">Production Summary &amp; Detail</div>
-    </div>
-
     <!-- ------------------------------------------------------------------ Comparison tab -->
     <div id="tabComparison">
         <div class="win-tool-strip">
@@ -108,48 +129,17 @@
             <button type="button" class="win-btn-tool" id="btnPrint604" onclick="ProductionComparison.print604()" title="Ctrl+P"><i class="fa fa-print"></i> 604-Print-Register</button>
             <button type="button" class="win-btn-tool" onclick="ProductionComparison.exportCsv('cmp')"><i class="fa fa-file-excel-o"></i> Export CSV</button>
         </div>
-        <fieldset class="win-group-box">
-            <legend>Filters</legend>
-            <div class="win-row">
-                <!-- This tab's branch list rebuilds its two pickers; the report itself takes no
-                     branch parameter. -->
-                <div class="win-field cx-multi" id="cmpBranchBox">
-                    <label class="win-label">Branch Name</label>
-                    <input type="text" id="txtCmpBranch" class="win-textbox" readonly
-                           onclick="ProductionComparison.toggle('cmpBranchBox')"/>
-                    <div class="cx-multi-panel">
-                        <div class="cx-multi-head"><input type="checkbox" title="Select all" onchange="ProductionComparison.all('cmpBranchRows', 'txtCmpBranch', this.checked)"> Branch Name</div>
-                        <div id="cmpBranchRows"></div>
-                    </div>
-                </div>
-                <div class="win-field">
-                    <label class="win-label">Production Type</label>
-                    <select id="cmbProductionType" class="win-combo dtcombo"
-                            data-dtcombo="single" data-dtcombo-caption="Production Type"></select>
-                </div>
-                <div class="win-field" style="flex:2 1 240px;">
-                    <label class="win-label">JobOrder No</label>
-                    <select id="cmbCmpJobOrder" class="win-combo dtcombo"
-                            data-dtcombo="single" data-dtcombo-caption="Job Order"></select>
-                </div>
-                <div class="win-field">
-                    <label class="win-label">Plant Name</label>
-                    <select id="cmbCmpPlant" class="win-combo dtcombo"
-                            data-dtcombo="single" data-dtcombo-caption="Plant Name"></select>
-                </div>
-                <div class="win-field" style="flex:0 1 200px;">
-                    <label class="win-label">Doc From &amp; To</label>
-                    <div style="display:flex; gap:4px;">
-                        <input type="text" id="txtDocNoFrom" class="win-textbox" inputmode="numeric"/>
-                        <input type="text" id="txtDocNoTo" class="win-textbox" inputmode="numeric"/>
-                    </div>
-                </div>
-                <div class="win-field" style="flex:0 0 auto; min-width:0;">
-                    <button type="button" id="btnShowComparison" class="win-btn-action"
-                            onclick="ProductionComparison.showComparison()">Show</button>
-                </div>
-            </div>
-        </fieldset>
+        <!-- panel3 (teal, 31) "Production Comparison" Tahoma 12 bold; panel4 (White, 1176 x 64) - designer geometry. -->
+        <div class="pc-title" style="height:31px;"><span style="left:5px;top:6px;">Production Comparison</span></div>
+        <div class="pc-panel" style="height:64px;background:#fff;">
+            <label class="pc-l" style="left:9px;top:12px;" for="txtCmpBranch">Branch Name</label><div class="pc-at" style="left:95px;top:6px;width:224px;height:26px;"><div class="cx-multi pc-fill" id="cmpBranchBox"><input type="text" id="txtCmpBranch" class="win-textbox" readonly onclick="ProductionComparison.toggle('cmpBranchBox')"/><div class="cx-multi-panel"><div class="cx-multi-head"><input type="checkbox" title="Select all" onchange="ProductionComparison.all('cmpBranchRows', 'txtCmpBranch', this.checked)"> Branch Name</div><div id="cmpBranchRows"></div></div></div></div>
+            <label class="pc-l" style="left:325px;top:12px;" for="cmbProductionType">Production Type</label><div class="pc-at" style="left:426px;top:6px;width:216px;height:26px;"><select id="cmbProductionType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Type"></select></div>
+            <label class="pc-l" style="left:647px;top:12px;" for="cmbCmpPlant">Plant Name</label><div class="pc-at" style="left:717px;top:6px;width:216px;height:26px;"><select id="cmbCmpPlant" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name"></select></div>
+            <!-- This tab's branch list rebuilds its two pickers; the report itself takes no branch parameter. -->
+            <label class="pc-l" style="left:9px;top:40px;" for="txtDocNoFrom">Doc From &amp; To</label><div class="pc-at" style="left:95px;top:36px;width:111px;height:23px;"><input type="text" id="txtDocNoFrom" class="win-textbox" inputmode="numeric"/></div><div class="pc-at" style="left:208px;top:36px;width:111px;height:23px;"><input type="text" id="txtDocNoTo" class="win-textbox" inputmode="numeric"/></div>
+            <label class="pc-l" style="left:325px;top:40px;" for="cmbCmpJobOrder">JobOrder No</label><div class="pc-at" style="left:426px;top:34px;width:216px;height:26px;"><select id="cmbCmpJobOrder" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order"></select></div>
+            <div class="pc-at" style="left:877px;top:34px;width:56px;height:26px;"><button type="button" id="btnShowComparison" class="win-btn-action pc-btn" style="font:bold 9pt Tahoma,sans-serif;" onclick="ProductionComparison.showComparison()">Show</button></div>
+        </div>
         <div class="win-grid-container" id="cmpBox">
             <div class="win-grid-toolbar">
                 <span>Filtered Records</span>
@@ -179,72 +169,28 @@
             </div>
             <button type="button" class="win-btn-tool" onclick="ProductionComparison.exportCsv('sum')"><i class="fa fa-file-excel-o"></i> Export CSV</button>
         </div>
-        <fieldset class="win-group-box">
-            <legend>Filters</legend>
-            <div class="win-row">
-                <div class="win-field cx-multi" id="sumBranchBox">
-                    <label class="win-label">Branch Name</label>
-                    <input type="text" id="txtSumBranch" class="win-textbox" readonly
-                           onclick="ProductionComparison.toggle('sumBranchBox')"/>
-                    <div class="cx-multi-panel">
-                        <div class="cx-multi-head"><input type="checkbox" title="Select all" onchange="ProductionComparison.all('sumBranchRows', 'txtSumBranch', this.checked)"> Branch Name</div>
-                        <div id="sumBranchRows"></div>
-                    </div>
-                </div>
-                <div class="win-field" style="flex:2 1 220px;">
-                    <label class="win-label">Job Order</label>
-                    <select id="cmbSumJobOrder" class="win-combo dtcombo"
-                            data-dtcombo="single" data-dtcombo-caption="Job Order"></select>
-                </div>
-                <div class="win-field">
-                    <label class="win-label">Plant Name</label>
-                    <select id="cmbSumPlant" class="win-combo dtcombo"
-                            data-dtcombo="single" data-dtcombo-caption="Plant Name"></select>
-                </div>
-                <div class="win-field" style="flex:2 1 220px;">
-                    <label class="win-label">Item Name</label>
-                    <select id="cmbSumItem" class="win-combo dtcombo"
-                            data-dtcombo="single" data-dtcombo-caption="Item Name"
-                            onchange="ProductionComparison.itemChanged()"></select>
-                </div>
-                <div class="win-field" style="flex:0 1 130px;">
-                    <label class="win-label">Pack Uom</label>
-                    <select id="cmbSumPackUom" class="win-combo dtcombo"
-                            data-dtcombo="single" data-dtcombo-caption="PackUom"></select>
-                </div>
-                <div class="win-field" style="flex:0 1 290px;">
-                    <label class="win-label">From,To Date</label>
-                    <div style="display:flex; gap:4px;">
-                        <input type="date" id="datSumFrom" class="win-datepicker" required/>
-                        <input type="date" id="datSumTo" class="win-datepicker" required/>
-                    </div>
-                </div>
+        <!-- panel9 (1176 x 121): panel11 (rgb 10,110,110, 26) "Production Summary Detail" + the filters - designer geometry. -->
+        <div class="pc-panel" style="height:121px;background:#f0f0f0;">
+            <div class="pc-title" style="position:absolute;left:0;top:0;right:0;height:26px;background:#0A6E6E;"><span style="left:4px;top:4px;">Production Summary Detail</span></div>
+            <label class="pc-l" style="left:5px;top:40px;" for="txtSumBranch">Branch Name</label><div class="pc-at" style="left:86px;top:34px;width:233px;height:26px;"><div class="cx-multi pc-fill" id="sumBranchBox"><input type="text" id="txtSumBranch" class="win-textbox" readonly onclick="ProductionComparison.toggle('sumBranchBox')"/><div class="cx-multi-panel"><div class="cx-multi-head"><input type="checkbox" title="Select all" onchange="ProductionComparison.all('sumBranchRows', 'txtSumBranch', this.checked)"> Branch Name</div><div id="sumBranchRows"></div></div></div></div>
+            <label class="pc-l" style="left:5px;top:68px;" for="datSumFrom">From,To Date</label><div class="pc-at" style="left:86px;top:64px;width:116px;height:23px;"><input type="date" id="datSumFrom" class="win-datepicker" required/></div><div class="pc-at" style="left:203px;top:64px;width:116px;height:23px;"><input type="date" id="datSumTo" class="win-datepicker" required/></div>
+            <label class="pc-l" style="left:5px;top:96px;" for="cmbSumJobOrder">Job Order</label><div class="pc-at" style="left:86px;top:90px;width:233px;height:26px;"><select id="cmbSumJobOrder" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order"></select></div>
+            <label class="pc-l" style="left:323px;top:40px;" for="cmbSumPlant">Plant Name</label><div class="pc-at" style="left:391px;top:34px;width:223px;height:26px;"><select id="cmbSumPlant" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name"></select></div>
+            <label class="pc-l" style="left:323px;top:68px;" for="cmbSumItem">Item Name</label><div class="pc-at" style="left:391px;top:62px;width:223px;height:26px;"><select id="cmbSumItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" onchange="ProductionComparison.itemChanged()"></select></div>
+            <label class="pc-l" style="left:323px;top:96px;" for="cmbSumPackUom">Pack Uom</label><div class="pc-at" style="left:391px;top:90px;width:159px;height:26px;"><select id="cmbSumPackUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackUom"></select></div>
+            <div class="pc-at" style="left:553px;top:90px;width:61px;height:26px;"><button type="button" id="btnShowSummary" class="win-btn-action pc-btn" style="font:bold 9pt Verdana,sans-serif;" onclick="ProductionComparison.showSummary()">Show</button></div>
+            <label class="pc-l pc-rd" style="left:620px;top:38px;"><input type="radio" name="sumMode" value="detail" checked/> InPut_Detail</label>
+            <label class="pc-l pc-rd" style="left:620px;top:66px;"><input type="radio" name="sumMode" value="gainloss"/> Gain/Loss Summary</label>
+            <!-- PanelValues (747,38) 424 x 78, FixedSingle - visible only once the gain/loss report returns rows. -->
+            <div class="pc-values cx-hidden" id="panelValues">
+                <div class="pc-values-head"><span style="left:8px;">Total Issue (Kg)</span><span style="left:125px;">Total OutPut (Kg)</span><span style="left:251px;">Gain/Loss (Kg)</span></div>
+                <span class="pc-val" id="lblSumofTotalIssue" style="left:2px;width:116px;">0</span>
+                <span class="pc-val" id="lblSumOfOutPut" style="left:125px;width:116px;">0</span>
+                <span class="pc-val" id="lblGainLossDiff" style="left:250px;width:101px;">0</span>
+                <span class="cx-status pc-st" id="lblPercent" style="top:30px;">&nbsp;</span>
+                <span class="cx-status pc-st" id="lblGainLossStatus" style="top:48px;">&nbsp;</span>
             </div>
-            <div class="win-row" style="margin-top:6px;">
-                <div class="win-field" style="flex:1 1 260px;">
-                    <div>
-                        <label class="win-radio-inline"><input type="radio" name="sumMode" value="detail" checked/> InPut_Detail</label>
-                        <label class="win-radio-inline"><input type="radio" name="sumMode" value="gainloss"/> Gain/Loss Summary</label>
-                    </div>
-                </div>
-                <div class="win-field" style="flex:0 0 auto; min-width:0;">
-                    <button type="button" id="btnShowSummary" class="win-btn-action"
-                            onclick="ProductionComparison.showSummary()">Show</button>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset class="win-group-box cx-hidden" id="panelValues">
-            <legend>Gain / Loss</legend>
-            <div class="cx-totals">
-                <div class="cx-total-box"><span class="k">Total Issue (Kg)</span><span class="v" id="lblSumofTotalIssue">0</span></div>
-                <div class="cx-total-box"><span class="k">Total OutPut (Kg)</span><span class="v" id="lblSumOfOutPut">0</span></div>
-                <div class="cx-total-box"><span class="k">Gain/Loss (Kg)</span><span class="v" id="lblGainLossDiff">0</span></div>
-                <div><span class="cx-status" id="lblGainLossStatus">&nbsp;</span>
-                     &nbsp;<span class="cx-status" id="lblPercent">&nbsp;</span></div>
-            </div>
-        </fieldset>
-
+        </div>
         <div class="cx-note cx-hidden" id="noRateNote">
             Item Amount and Item Net Amount are hidden - this screen's "Rate" right is not granted to you.
         </div>
@@ -263,11 +209,16 @@
             </div>
         </div>
     </div>
+    <!-- tabControl1.Alignment = Bottom: the tab buttons sit under the pages. -->
+    <div class="cx-tabs pc-bottom-tabs">
+        <div class="cx-tab is-active" id="tabComparisonBtn" onclick="ProductionComparison.tab('comparison')">Production Comparison</div>
+        <div class="cx-tab" id="tabSummaryBtn" onclick="ProductionComparison.tab('summary')">Production Summary &amp; Detail</div>
+    </div>
 </div>
 
 <script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
 <script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
-<script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
 <script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
 <script th:src="@{/build/js/countx_production_comparison.js?v=20260925g}"></script>
 </body>

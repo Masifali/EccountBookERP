@@ -32,12 +32,28 @@
 
     /* BindDDLNew / BindDDL ZeroIndex false. Clear a failed/empty source on refresh so old
        options cannot look like a successful reload. */
+    /* ItemBind:197 - DDL.BindDDL keeps every column of Sp_Item_GetAllMethod 'ReadAllItems' visible except Id,
+       with column 1 captioned "Item Name". */
+    var ITEM_COLS = ['ItemCode', 'ItemCodeNew', 'InventoryParentCategoriesId', 'ItemCategoryId', 'ItemTypeId', 'ItemQcGradeId',
+        'ItemQcGrade', 'MaxMeaurementUnitId', 'WeightKgs', 'MaxMeaurement', 'PurchaseGLAC', 'SaleGLAC', 'COGSGLAC',
+        'CategoryDescription', 'TypeDescription'];
+    function itemColumns(rows) {
+        if (!rows || !rows.length) return;
+        var el = $id('CmbItem'), byId = {};
+        rows.forEach(function (r) { byId[String(r.Id)] = r; });
+        Array.prototype.forEach.call(el.options, function (o) {
+            var r = byId[o.value];
+            if (r) o.setAttribute('data-extra', ITEM_COLS.map(function (k) { return String(r[k] == null ? '' : r[k]).replace(/\|/g, '/'); }).join('|'));
+        });
+        el.setAttribute('data-columns', ['Item Name'].concat(ITEM_COLS).join('|'));
+    }
     function bindIfRows(id, rows) { C.fillSelect(id, rows || [], 'Id', 'Name'); }
     function fillRefreshLists(d) {
         bindIfRows('CmbWarehouseName', d.warehouses);                      /* :149 */
         bindIfRows('CmbJobLotName', d.jobLots);                            /* :165 */
         bindIfRows('CmbEntryType', d.entryTypes);                          /* :181 */
         bindIfRows('CmbItem', d.items);                                    /* :197 */
+        itemColumns(d.items);
         var errors = d.lookupErrors || {};
         if (errors.entryTypes) {
             $id('CmbEntryType').innerHTML = '<option value="0">Entry Type unavailable</option>';

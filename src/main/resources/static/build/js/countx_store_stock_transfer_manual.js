@@ -108,6 +108,17 @@
         function keep(id, rows, textKey) { var v = intOf($id(id).value); setOptions(id, rows, 'Id', textKey); keepOr(id, v, rows, 'Id'); }
         keep('CmbWareHouseFrom', l.warehouses, 'WareHouseName');
         keep('cmbWareHouseTo', l.warehouses, 'WareHouseName');
+        /* WareHouseFill:1234 — DDL.BindDDL keeps every column of USP_GetWarehousesAllocatedToBranch visible except Id. */
+        ['CmbWareHouseFrom', 'cmbWareHouseTo'].forEach(function (id) {
+            var el = $id(id), byId = {};
+            (l.warehouses || []).forEach(function (r) { byId[String(r.Id)] = r; });
+            var keys = ['BranchId', 'BranchName', 'WareHouseTypeId', 'WareHouseType', 'IsActive', 'PlantId', 'PlantName'];
+            Array.prototype.forEach.call(el.options, function (o) {
+                var r = byId[o.value];
+                if (r) o.setAttribute('data-extra', keys.map(function (k) { return String(r[k] == null ? '' : r[k]).replace(/\|/g, '/'); }).join('|'));
+            });
+            el.setAttribute('data-columns', ['WareHouseName'].concat(keys).join('|'));
+        });
         keep('cmbJobLot', l.jobLots, 'JobLotDescription');
         keep('CmbJobLotTo', l.jobLots, 'JobLotDescription');
         keep('cmbPackingType', l.packingTypes, 'PackTypeDesc');

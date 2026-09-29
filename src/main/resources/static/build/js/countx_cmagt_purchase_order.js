@@ -264,6 +264,23 @@ function applyComboColumns(opt, row) {
     var bp = row.BasePackUom !== undefined ? row.BasePackUom : row.basePackUom;
     if (br !== undefined && br !== null) put('base', br === true ? 1 : br === false ? 0 : br);
     if (bp !== undefined && bp !== null) put('base-pack', bp === true ? 1 : bp === false ? 0 : bp);
+
+    /* uomCmagt5 / shipTo2 / analysisGroup3 / taxCmagt (countx_desktop_combo.js) */
+    var bs = row.BaseSecondaryUom !== undefined ? row.BaseSecondaryUom : row.baseSecondaryUom;
+    if (bs !== undefined && bs !== null) put('base-secondary', bs === true ? 1 : bs === false ? 0 : bs);
+    if (row.AddressLine1 !== undefined) put('party-name', pick('CompanyName', 'PartyName'));
+    if (row.AnalysisGroupDescription !== undefined) {
+        put('group-type', pick('GroupType'));
+        put('parent-category', pick('InvParentCateDescription'));
+    }
+    if (row.TaxNameId !== undefined) {
+        put('tax-schedule-id', pick('TaxScheduleId'));
+        var ed = pick('EffectedDate');
+        if (ed !== null) put('effected-date', typeof ed === 'number' ? localYmd(new Date(ed)) : String(ed).slice(0, 10));
+        put('tax-percent', pick('TaxPercent'));
+        put('tax-gl-account', pick('TaxGLAccountId'));
+    }
+    function localYmd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
 }
 
 function fillSelect(elId, rows, valueKey, textKey, placeholder) {
@@ -1735,3 +1752,19 @@ document.addEventListener('DOMContentLoaded', function () {
         poShowTab(null, 'tabDetail');
     });
 });
+
+/* History From/To: the desktop DateTimePickers (FromDateHistory / ToDateHistory) are never
+   assigned in code, so they open on the designer default - today - with their check box ON
+   (ShowCheckBox, Checked defaults true), i.e. the history filters today..today. Validity
+   From/To are Checked=false in the designer and stay blank. Local calendar date, not UTC. */
+(function () {
+    function seed() {
+        var d = new Date();
+        var t = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+        ['histFromDate', 'histToDate'].forEach(function (id) {
+            var e = document.getElementById(id);
+            if (e && !e.value) e.value = t;
+        });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', seed); else seed();
+})();

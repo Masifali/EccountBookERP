@@ -266,6 +266,24 @@ public class GrnLoadingChallanCmagtService {
                 commissionAgentId, supplierId, itemId, deliveryToPartyId, shipToAddress);
     }
 
+    /**
+     * InitializeComponentMethod (:618-619): History From = today - DefaultDaysToLessFromHistoryFromDate
+     * when > 0, else today - 3; To = today. Only the day count is returned - the page does the
+     * date arithmetic on the client's local calendar.
+     */
+    public Map<String, Object> historyDefaults() {
+        int days = 0;
+        try {
+            days = (int) Double.parseDouble(repository.config(
+                    currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId(),
+                    "DefaultDaysToLessFromHistoryFromDate"));
+        } catch (Exception ignored) { days = 0; }
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("defaultDaysToLessFromHistoryFromDate", days);
+        return out;
+    }
+
     public Map<String, Object> getById(Integer id) {
         return repository.getById(id, currentUserContext.currentOrganizationId(),
                 currentUserContext.currentCompanyId());

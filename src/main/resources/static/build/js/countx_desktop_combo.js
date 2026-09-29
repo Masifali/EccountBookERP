@@ -194,6 +194,63 @@
             { caption: 'ReferencePartyType', flex: 2, key: 'code' }
         ],
 
+        /* CMAGT - CommonBindings.ItemUomFromGlobalBind (:201-217) calls
+           dtUomFromGloablUomScheduleByItemId(itemId, addBaseSecondaryUom: TRUE), so the bound
+           table is Id, UOMCode, Equivalent, BaseRateUom, BasePackUom, BaseSecondaryUom and,
+           with nothing hidden, FIVE columns show. (uomCmagt above stops at four.) */
+        uomCmagt5: [
+            { caption: 'Uom',              flex: 3 },
+            { caption: 'Equivalent',       flex: 2, key: 'eq',             type: 'num' },
+            { caption: 'BaseRateUom',      flex: 2, key: 'base',           type: 'check' },
+            { caption: 'BasePackUom',      flex: 2, key: 'base-pack',      type: 'check' },
+            { caption: 'BaseSecondaryUom', flex: 2, key: 'base-secondary', type: 'check' }
+        ],
+
+        /* CMAGT - CommonBindings.BindShipToAddressAgainstBuyer (:296-321): Id, Address,
+           PartyId, PartyName with Columns[2] (PartyId) hidden -> Address | PartyName. */
+        shipTo2: [
+            { caption: 'Ship To Address', flex: 4 },
+            { caption: 'PartyName',       flex: 3, key: 'party-name' }
+        ],
+
+        /* frmBuyerInquiryBooking AnalysisGroupFill (:903-912): Id, AnalysisGroupDescription,
+           GroupTypeId, GroupType, nothing hidden. The desktop fills the column NAMED GroupTypeId
+           with dtLAG.GroupType and the one NAMED GroupType with InvParentCateDescription; the
+           captions are kept as drawn, the data as populated. */
+        analysisGroup3: [
+            { caption: 'Analysis Group', flex: 3 },
+            { caption: 'GroupTypeId',    flex: 2, key: 'group-type' },
+            { caption: 'GroupType',      flex: 2, key: 'parent-category' }
+        ],
+
+        /* CMAGT Tax Name - TaxTypeBind binds Sp_ItemTaxSchedule_GetAllMethod
+           'GetItemTaxScheduleForItemId' (TaxNameId, TaxName, TaxScheduleId, EffectedDate,
+           TaxPercent, TaxGLAccountId) with AllColumns:true and nothing hidden -> five columns. */
+        /* GRN Loading Challan 1054: OrderNoBind :930-950 and the order-item combo :1103-1122 */
+        poOrderGrnCmagt: [
+            { caption: 'Order No',          flex: 2 },
+            { caption: 'DeliveryStartDate', flex: 2, key: 'start' },
+            { caption: 'ExpiryDate',        flex: 2, key: 'expiry' }
+        ],
+        poItemGrnCmagt: [
+            { caption: 'Item Name',      flex: 4 },
+            { caption: 'ItemCode',       flex: 2, key: 'item-code' },
+            { caption: 'ItemQty',        flex: 1, key: 'item-qty',        type: 'num' },
+            { caption: 'ReceivedQty',    flex: 1, key: 'received-qty',    type: 'num' },
+            { caption: 'BalanceQty',     flex: 1, key: 'balance-qty',     type: 'num' },
+            { caption: 'ItemWeight',     flex: 1, key: 'item-weight',     type: 'num' },
+            { caption: 'ReceivedWeight', flex: 1, key: 'received-weight', type: 'num' },
+            { caption: 'BalanceWeight',  flex: 1, key: 'balance-weight',  type: 'num' },
+            { caption: 'SoNo',           flex: 1, key: 'so-no',           type: 'num' }
+        ],
+        taxCmagt: [
+            { caption: 'Tax Name',       flex: 3 },
+            { caption: 'TaxScheduleId',  flex: 1, key: 'tax-schedule-id', type: 'num' },
+            { caption: 'EffectedDate',   flex: 2, key: 'effected-date' },
+            { caption: 'TaxPercent',     flex: 1, key: 'tax-percent',     type: 'num' },
+            { caption: 'TaxGLAccountId', flex: 1, key: 'tax-gl-account',  type: 'num' }
+        ],
+
         /* One captioned column - the desktop still draws a header band over these. */
         single: [ { caption: '', flex: 1 } ]
     };

@@ -67,13 +67,13 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label font-weight-bold">Buyer Name</label>
-                            <select class="form-select form-select-sm search-select" id="buyerId">
+                            <select class="form-select form-select-sm search-select dtcombo" id="buyerId" data-dtcombo="party4" data-dtcombo-caption="Buyer Name">
                                 <option value="0">-- Select Buyer --</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label font-weight-bold">Commission Agent</label>
-                            <select class="form-select form-select-sm search-select" id="commissionAgentId">
+                            <select class="form-select form-select-sm search-select dtcombo" id="commissionAgentId" data-dtcombo="party4" data-dtcombo-caption="Commission Agent">
                                 <option value="0">-- Select Commission Agent --</option>
                             </select>
                         </div>
@@ -378,11 +378,22 @@
         });
     }
 
+    /* Local calendar date - toISOString() is UTC and gives YESTERDAY before 05:00 at UTC+5.
+       History From = today - DefaultDaysToLessFromHistoryFromDate (else today - 3), To = today:
+       frmGoodsDispatchingNoteCmagt.cs:574-575. */
+    function ymdLocal(d) {
+        return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    }
     function setDefaultDates() {
-        const today = new Date().toISOString().split('T')[0];
-        $('#docDate').val(today);
-        $('#histFromDate').val(today);
-        $('#histToDate').val(today);
+        const t = new Date();
+        $('#docDate').val(ymdLocal(t));
+        $('#histToDate').val(ymdLocal(t));
+        const f = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 3);
+        $('#histFromDate').val(ymdLocal(f));
+        $.get('/api/commission/dropdowns/config-defaults', function (c) {
+            const days = c ? parseInt(c.defaultDaysToLessFromHistoryFromDate, 10) || 0 : 0;
+            if (days > 0) $('#histFromDate').val(ymdLocal(new Date(t.getFullYear(), t.getMonth(), t.getDate() - days)));
+        });
     }
 
     function calculateItemRow() {
@@ -452,13 +463,15 @@
         $.get('/api/commission/dropdowns/buyers', function(data) {
             const el = $('#buyerId');
             el.empty().append('<option value="0">-- Select Buyer --</option>');
-            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+            if (data) data.forEach(d => el.append(partyOption(d)));
+            if (window.CountxDesktopCombo && window.CountxDesktopCombo.refresh) window.CountxDesktopCombo.refresh(el[0]);
         });
 
         $.get('/api/commission/dropdowns/commission-agents', function(data) {
             const el = $('#commissionAgentId');
             el.empty().append('<option value="0">-- Select Commission Agent --</option>');
-            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+            if (data) data.forEach(d => el.append(partyOption(d)));
+            if (window.CountxDesktopCombo && window.CountxDesktopCombo.refresh) window.CountxDesktopCombo.refresh(el[0]);
         });
 
         $.get('/api/commission/dropdowns/items', function(data) {
@@ -705,7 +718,7 @@
         loadDocNo();
     }
 </script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

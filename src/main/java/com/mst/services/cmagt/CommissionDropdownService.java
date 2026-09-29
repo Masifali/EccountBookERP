@@ -382,6 +382,11 @@ public class CommissionDropdownService {
             m.put("TaxNameId",  asInt(col(r, "TaxNameId")));
             m.put("TaxName",    str(col(r, "TaxName")));
             m.put("TaxPercent", col(r, "TaxPercent"));   // raw - no rounding, no 0 fallback
+            /* The other columns of 'GetItemTaxScheduleForItemId' - TaxTypeBind binds with
+               AllColumns:true, so the desktop drop grid shows them too (taxCmagt column set). */
+            m.put("TaxScheduleId",  col(r, "TaxScheduleId"));
+            m.put("EffectedDate",   col(r, "EffectedDate") == null ? null : String.valueOf(col(r, "EffectedDate")));
+            m.put("TaxGLAccountId", col(r, "TaxGLAccountId"));
             m.put("id",   asInt(col(r, "TaxNameId")));
             m.put("name", str(col(r, "TaxName")));
             out.add(m);
@@ -726,6 +731,8 @@ public class CommissionDropdownService {
              - txtDeliveryDays starts at "1" (frmSupplierOfferCmagt_Load:590) */
         out.put("fallbackPaymentTermId", 2);
         out.put("defaultDeliveryDays", 1);
+        /* GDN (:574) / Trade Bill (:987) history From = today - this when > 0, else today - 3. */
+        out.put("defaultDaysToLessFromHistoryFromDate", configInt("DefaultDaysToLessFromHistoryFromDate"));
         return out;
     }
 

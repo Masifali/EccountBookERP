@@ -210,18 +210,65 @@
     function convType() { return netI(val('CmbConversionType')); }
     function selText(id) { var s = $id(id); return (!s || s.selectedIndex < 0 || s.value === '0' || s.value === '') ? '' : s.options[s.selectedIndex].textContent; }
     function hasSel(id) { var s = $id(id); return !!s && s.value !== '0' && s.value !== ''; }
-    function refreshCombos() { if (window.DesktopCombo) window.DesktopCombo.refresh(); }
+    function refreshCombos() { defineComboFamilies(); if (window.DesktopCombo) window.DesktopCombo.refresh(); }
+
+    /* The drop grids DropDownBind.BindDDL draws: it hides ONLY column 0 (Id), captions column 1
+       and sets its width to 350; every other column of the bound table stays visible.
+         cmbGodown  Warehouse():894      USP_GetWarehousesAllocatedToBranch - 8 columns
+         cmbLot     combojoblotfill():966 USP_GetJobLotsAllocatedToBranch  - 3 columns (also CmbJobLotForGrid)
+         cmbUOM / cmbRateUom  bindRateUomAndItemPackUom:1047 GetUomScheduleByItemId -
+                    Id, UOMCode, Equivalent, QtyEquivalent, BaseRateUom - 4 columns (col 1 75, col 2 85). */
+    var WH_EXTRA = { 'branch-id': 'BranchId', 'branch-name': 'BranchName', 'wh-type-id': 'WareHouseTypeId',
+        'wh-type': 'WareHouseType', 'is-active': 'IsActive', 'plant-id': 'PlantId', 'plant-name': 'PlantName' };
+    var LOT_EXTRA = { 'branch-id': 'BranchId', 'branch-name': 'BranchName' };
+    var UOM_EXTRA = { 'eq': 'Equivalent', 'qty-eq': 'QtyEquivalent', 'base': 'BaseRateUom' };
+    /* countx_prod_combo.js loads AFTER this file, so the families are defined once it exists -
+       on DOMContentLoaded (before its boot scan, which registered its listener later) and on refresh. */
+    var familiesDefined = false;
+    document.addEventListener('DOMContentLoaded', function () { defineComboFamilies(); });
+    function defineComboFamilies() {
+        if (familiesDefined || !window.DesktopCombo || !window.DesktopCombo.define) return;
+        familiesDefined = true;
+        window.DesktopCombo.define('scWarehouse', [
+            { caption: 'Issue From', flex: 7 },
+            { caption: 'BranchId', flex: 1, key: 'branch-id', type: 'num' },
+            { caption: 'BranchName', flex: 2, key: 'branch-name' },
+            { caption: 'WareHouseTypeId', flex: 1, key: 'wh-type-id', type: 'num' },
+            { caption: 'WareHouseType', flex: 2, key: 'wh-type' },
+            { caption: 'IsActive', flex: 1, key: 'is-active', type: 'check' },
+            { caption: 'PlantId', flex: 1, key: 'plant-id', type: 'num' },
+            { caption: 'PlantName', flex: 2, key: 'plant-name' }
+        ]);
+        window.DesktopCombo.define('scJobLot', [
+            { caption: 'JobLot Description', flex: 7 },
+            { caption: 'BranchId', flex: 1, key: 'branch-id', type: 'num' },
+            { caption: 'BranchName', flex: 2, key: 'branch-name' }
+        ]);
+        window.DesktopCombo.define('scUom', [
+            { caption: 'PackUOM', flex: 2 },
+            { caption: 'Equivalent', flex: 2, key: 'eq', type: 'num' },
+            { caption: 'QtyEquivalent', flex: 2, key: 'qty-eq', type: 'num' },
+            { caption: 'BaseRateUom', flex: 2, key: 'base', type: 'check' }
+        ]);
+    }
     function show(id, on) { var e = $id(id); if (e) e.classList.toggle('is-hidden', !on); }
     function isShown(id) { var e = $id(id); return !!e && !e.classList.contains('is-hidden'); }
 
-    function fill(id, rows, valueKey, textKey, keep) {
+    /* extras: { 'data-attr-suffix': 'ColumnName' } - the drop grid's other visible columns
+       (read by the countx_prod_combo.js family named on the select). */
+    function fill(id, rows, valueKey, textKey, keep, extras) {
         var sel = $id(id);
         if (!sel) return;
         var html = '<option value="0"></option>', found = false;
         (rows || []).forEach(function (r) {
             var v = String(col(r, valueKey));
             if (keep !== undefined && keep !== null && String(keep) === v) found = true;
-            html += '<option value="' + esc(v) + '">' + esc(col(r, textKey)) + '</option>';
+            var attrs = '';
+            if (extras) Object.keys(extras).forEach(function (a) {
+                var x = col(r, extras[a]);
+                attrs += ' data-' + a + '="' + esc(x === null || x === undefined ? '' : x) + '"';
+            });
+            html += '<option value="' + esc(v) + '"' + attrs + '>' + esc(col(r, textKey)) + '</option>';
         });
         sel.innerHTML = html;
         sel.value = found ? String(keep) : '0';
@@ -267,10 +314,10 @@
             var keepType = netI(val('CmbConversionType'));
             fill('CmbConversionType', LK.conversionTypes, 'Id', 'type', keepType || null);
             if (!keepType) selectFirst('CmbConversionType');
-            fill('cmbGodown', LK.warehouses, 'Id', 'WareHouseName');
+            fill('cmbGodown', LK.warehouses, 'Id', 'WareHouseName', null, WH_EXTRA);
             bindItems();
-            fill('cmbLot', LK.jobLots, 'Id', 'JobLotDescription');
-            fill('CmbJobLotForGrid', LK.jobLots, 'Id', 'JobLotDescription');
+            fill('cmbLot', LK.jobLots, 'Id', 'JobLotDescription', null, LOT_EXTRA);
+            fill('CmbJobLotForGrid', LK.jobLots, 'Id', 'JobLotDescription', null, LOT_EXTRA);
             fill('CmbCropyr', LK.cropYears, 'Id', 'CropYear');
             fill('cmbBagType', LK.packingTypes, 'Id', 'PackTypeDesc');
             if (firstTime) fill('cmbMoistureSlab', LK.moistureSlabs, 'Id', 'MoistureSlabDescription');
@@ -310,7 +357,7 @@
         }
         return getJson(api + '/uoms?itemId=' + itemId).then(function (rows) {
             UOM_ROWS = rows || [];
-            fill('cmbUOM', rows, 'Id', 'UOMCode'); fill('cmbRateUom', rows, 'Id', 'UOMCode');
+            fill('cmbUOM', rows, 'Id', 'UOMCode', null, UOM_EXTRA); fill('cmbRateUom', rows, 'Id', 'UOMCode', null, UOM_EXTRA);
             if (UOM_ROWS.length) {
                 if (packText) selectByText('cmbUOM', packText);
                 if (rateText) selectByText('cmbRateUom', rateText);
@@ -388,8 +435,8 @@
         rate.tabIndex = rate.readOnly ? -1 : 0;
         if (t !== 'Issue') {
             bindItems();
-            fill('cmbLot', (LK && LK.jobLots) || [], 'Id', 'JobLotDescription');
-            fill('CmbJobLotForGrid', (LK && LK.jobLots) || [], 'Id', 'JobLotDescription');
+            fill('cmbLot', (LK && LK.jobLots) || [], 'Id', 'JobLotDescription', null, LOT_EXTRA);
+            fill('CmbJobLotForGrid', (LK && LK.jobLots) || [], 'Id', 'JobLotDescription', null, LOT_EXTRA);
             setVal('txtAverageRate', '0');
         }
         refreshCombos();
@@ -1471,7 +1518,10 @@
             var opts = ed(r) || [], cur = String(v === null || v === undefined ? '' : v), found = false;
             var html = opts.map(function (o) { var s = String(o[0]) === cur; if (s) found = true; return '<option value="' + esc(o[0]) + '"' + (s ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
             if (!found && cur !== '' && cur !== '0') html = '<option value="' + esc(cur) + '" selected>' + esc((c[5] ? c[5](r) : '') || cur) + '</option>' + html;
-            return '<td class="ed"><select data-i="' + i + '" data-k="' + esc(k) + '"><option value="0"></option>' + html + '</select></td>';
+            /* A GridEX value-list cell (EditType.Combo, LimitToList): the production searchable combo
+               (countx_prod_combo.js) enhances it; the select stays authoritative and its bubbling
+               'change' still reaches wireGrid. */
+            return '<td class="ed cb"><select class="win-combo" data-dtcombo="single" data-dtcombo-caption="' + esc(c[1]) + '" data-i="' + i + '" data-k="' + esc(k) + '"><option value="0"></option>' + html + '</select></td>';
         }
         var disp = c[5] ? c[5](r) : (fmt === 't' ? (v === null || v === undefined ? '' : v) : F(fmt, v));
         if (ed === 'num' || ed === 'text') {
@@ -1481,7 +1531,13 @@
     }
     function drawGrid(o) {
         var cols = o.cols.filter(function (c) { return !c.hidden; });
-        $id(o.head).innerHTML = (o.preHead || '') + cols.map(function (c) { return '<th' + (c[2] !== 't' ? ' class="num"' : '') + '>' + esc(c[1]) + '</th>'; }).join('') + (o.postHead || '');
+        /* o.widths: the GridEX column widths in px (pre columns first), fixed layout, centred headers. */
+        var W = o.widths || null, wAt = function (n) { return W && W[n] ? ' style="width:' + W[n] + 'px;min-width:' + W[n] + 'px;max-width:' + W[n] + 'px;"' : ''; };
+        var preN = ((o.preHead || '').match(/<th/g) || []).length;
+        var tbl = $id(o.head).closest('table'); if (tbl) tbl.classList.toggle('sc-fixed', !!W);
+        var preH = o.preHead || '';
+        if (W) { var n = 0; preH = preH.replace(/<th/g, function () { return '<th' + wAt(n++); }); }
+        $id(o.head).innerHTML = preH + cols.map(function (c, j) { return '<th' + (c[2] !== 't' ? ' class="num"' : '') + wAt(preN + j) + '>' + esc(gxCaption(c[1])) + '</th>'; }).join('') + (o.postHead || '');
         var order = o.rows.map(function (r, i) { return i; });
         var html = '', lastGroup = null, preCount = ((o.preHead || '').match(/<th/g) || []).length, postCount = ((o.postHead || '').match(/<th/g) || []).length;
         if (o.groupBy) {
@@ -1498,12 +1554,63 @@
                   + '>' + (o.pre ? o.pre(r, i) : '') + cols.map(function (c) { return cellHtml(r, i, c, edit && c[4]); }).join('') + (o.post ? o.post(r, i) : '') + '</tr>';
         });
         $id(o.body).innerHTML = html;
+        gxNavUpdate(o.body, o.key);
         var any = cols.some(function (c) { return c[3]; });
         $id(o.foot).innerHTML = (o.rows.length && any) ? '<tr>' + (preCount ? '<td colspan="' + preCount + '"></td>' : '') + cols.map(function (c) {
             if (!c[3]) return '<td></td>';
             return '<td class="num">' + esc(F(c[2] === 't' ? 'raw' : c[2], o.rows.reduce(function (a, r) { return a + netD(r[c[0]]); }, 0))) + '</td>';
         }).join('') + (postCount ? '<td colspan="' + postCount + '"></td>' : '') + '</tr>' : '';
     }
+    /* Janus GridEX RetrieveStructure captions a bound column from its field name with a space
+       before each capital that follows a lower-case letter: WareHouse -> "Ware House",
+       ItemQTY -> "Item QTY", BrandUom -> "Brand Uom" (the desktop PM grid shows exactly these).
+       Captions the form sets itself ("Item", "Charge To", ...) already read that way. */
+    function gxCaption(s) { return String(s === null || s === undefined ? '' : s).replace(/([a-z])([A-Z])/g, '$1 $2'); }
+
+    /* GridEX.RecordNavigator: "Record: |< < [n] Of N > >|" under every tab grid; it moves the
+       grid's CurrentRow (CUR[key]) the way the desktop navigator does. */
+    function gxRows(bodyId) { return Array.prototype.slice.call($id(bodyId).querySelectorAll('tr[data-i]')); }
+    function gxNavUpdate(bodyId, key) {
+        var body = $id(bodyId); if (!body) return;
+        var box = body.closest('.win-grid-container'); if (!box || !box.classList.contains('sc-gx')) return;
+        var nav = box.querySelector('.gx-nav');
+        if (!nav) {
+            nav = document.createElement('div');
+            nav.className = 'gx-nav';
+            nav.innerHTML = '<span class="gx-lbl">Record:</span>'
+                + '<button type="button" data-nv="first" title="First">&#9198;</button><button type="button" data-nv="prev" title="Previous">&#9664;</button>'
+                + '<input type="text" class="gx-pos" autocomplete="off"><span class="gx-of"></span>'
+                + '<button type="button" data-nv="next" title="Next">&#9654;</button><button type="button" data-nv="last" title="Last">&#9197;</button>';
+            box.appendChild(nav);
+            nav.addEventListener('click', function (e) {
+                var b = e.target.closest('button[data-nv]'); if (!b) return;
+                var rows = gxRows(bodyId), n = rows.length; if (!n) return;
+                var at = gxPos(bodyId, key), act = b.getAttribute('data-nv');
+                var to = act === 'first' ? 0 : act === 'last' ? n - 1 : act === 'prev' ? Math.max(0, at - 1) : Math.min(n - 1, at + 1);
+                gxGo(bodyId, key, to);
+            });
+            nav.querySelector('.gx-pos').addEventListener('change', function (e) {
+                var n = gxRows(bodyId).length, v = parseInt(e.target.value, 10);
+                if (n && v >= 1) gxGo(bodyId, key, Math.min(n, v) - 1); else gxNavUpdate(bodyId, key);
+            });
+        }
+        var rows = gxRows(bodyId), at = gxPos(bodyId, key);
+        nav.querySelector('.gx-pos').value = rows.length ? String(at + 1) : '0';
+        nav.querySelector('.gx-of').textContent = 'Of ' + rows.length;
+    }
+    function gxPos(bodyId, key) {
+        var rows = gxRows(bodyId);
+        for (var i = 0; i < rows.length; i++) if (+rows[i].getAttribute('data-i') === CUR[key]) return i;
+        return 0;
+    }
+    function gxGo(bodyId, key, pos) {
+        var rows = gxRows(bodyId), tr = rows[pos]; if (!tr) return;
+        CUR[key] = +tr.getAttribute('data-i');
+        rows.forEach(function (x) { x.classList.toggle('is-current', x === tr); });
+        tr.scrollIntoView({ block: 'nearest' });
+        gxNavUpdate(bodyId, key);
+    }
+
     function opts(list, idKey, textKey) { return function () { return (list() || []).map(function (x) { return [col(x, idKey), col(x, textKey)]; }); }; }
     function slabOptions() { return ((LK && LK.moistureSlabs) || []).map(function (x) { return [col(x, 'Id'), col(x, 'MoistureSlabDescription')]; }); }
 
@@ -1555,6 +1662,11 @@
     }
     function renderPm() {
         drawGrid({ key: 'pm', head: 'pmHead', body: 'gridPacking', foot: 'pmFoot', cols: pmCols(), rows: PMR, editable: function () { return true; },
+            /* grdPackingMaterialSettings:2849-2857 + GridPmDropdownBind:2811-2812 (InventoryConstants):
+               X 20, + 20, Item ItemName+30, WareHouse 150, RackName 130, Item Condition 130,
+               BrandItem ItemName+50, BrandUom 60, ItemQTY 70, ItemRate 70, Amount 90, Charge To 150,
+               Schedule / Invoice No 80. */
+            widths: [20, 20, 180, 150, 130, 130, 200, 60, 70, 70, 90, 150, 80],
             preHead: '<th>X</th><th>+</th>',
             pre: function (r, i) { return '<td><button type="button" class="sc-x" data-act="del" data-i="' + i + '">X</button></td><td><button type="button" class="sc-x" data-act="add" data-i="' + i + '">+</button></td>'; } });
     }
@@ -1607,14 +1719,19 @@
         });
         b.addEventListener('click', function (e) {
             var tr = e.target.closest('tr[data-i]');
-            if (tr) { CUR[key] = +tr.getAttribute('data-i'); b.querySelectorAll('tr[data-i]').forEach(function (x) { x.classList.toggle('is-current', x === tr); }); }
+            if (tr) { CUR[key] = +tr.getAttribute('data-i'); b.querySelectorAll('tr[data-i]').forEach(function (x) { x.classList.toggle('is-current', x === tr); }); gxNavUpdate(bodyId, key); }
             var a = e.target.closest('[data-act]');
             if (!a || a.getAttribute('data-act') === 'chk') return;
             var i = +a.getAttribute('data-i');
             if (a.getAttribute('data-act') === 'f1') { if (h.f1) h.f1(i, a.getAttribute('data-k')); return; }
             if (h.act) h.act(i, a.getAttribute('data-act'));
         });
-        b.addEventListener('focusin', function (e) { var tr = e.target.closest('tr[data-i]'); if (tr) CUR[key] = +tr.getAttribute('data-i'); });
+        b.addEventListener('focusin', function (e) {
+            var tr = e.target.closest('tr[data-i]'); if (!tr) return;
+            CUR[key] = +tr.getAttribute('data-i');
+            b.querySelectorAll('tr[data-i]').forEach(function (x) { x.classList.toggle('is-current', x === tr); });
+            gxNavUpdate(bodyId, key);
+        });
         b.addEventListener('dblclick', function (e) { var tr = e.target.closest('tr[data-i]'); if (tr && h.dbl && !e.target.closest('input,select,button')) h.dbl(+tr.getAttribute('data-i')); });
         b.addEventListener('keydown', function (e) {
             var tr = e.target.closest('tr[data-i]');

@@ -67,13 +67,15 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label font-weight-bold">Supplier Name</label>
-                            <select class="form-select form-select-sm search-select" id="supplierId">
+                            <select class="form-select form-select-sm search-select" id="supplierId"
+                                    data-dtcombo="party4" data-dtcombo-caption="Supplier Name">
                                 <option value="0">-- Select Supplier --</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label font-weight-bold">Commission Agent</label>
-                            <select class="form-select form-select-sm search-select" id="commissionAgentId">
+                            <select class="form-select form-select-sm search-select" id="commissionAgentId"
+                                    data-dtcombo="party4" data-dtcombo-caption="Commission Agent">
                                 <option value="0">-- Select Commission Agent --</option>
                             </select>
                         </div>
@@ -111,7 +113,7 @@
                         <div class="col-md-3">
                             <label class="form-label font-weight-bold">Branch</label>
                             <select class="form-select form-select-sm dtcombo" id="branchId"
-                                    data-dtcombo="single" data-dtcombo-caption="Branch">
+                                    data-dtcombo="single" data-dtcombo-caption="Branch Name">
                                 <option value="0">-- Select Branch --</option>
                             </select>
                         </div>
@@ -245,37 +247,43 @@
                     <div class="row g-2 mb-2">
                         <div class="col-md-2">
                             <label class="form-label small mb-1 font-weight-bold">Order No</label>
-                            <select class="form-select form-select-sm search-select" id="detPoNo">
+                            <select class="form-select form-select-sm search-select" id="detPoNo"
+                                    data-dtcombo="poOrderGrnCmagt" data-dtcombo-caption="Order No">
                                 <option value="0">-- Load PO first --</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small mb-1 font-weight-bold">Parent Item</label>
-                            <select class="form-select form-select-sm search-select" id="detParentItemId">
+                            <select class="form-select form-select-sm search-select" id="detParentItemId"
+                                    data-dtcombo="single" data-dtcombo-caption="Parent Item">
                                 <option value="0">-- Select --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small mb-1 font-weight-bold">Item Name</label>
-                            <select class="form-select form-select-sm search-select" id="detItemId">
+                            <select class="form-select form-select-sm search-select" id="detItemId"
+                                    data-dtcombo="poItemGrnCmagt" data-dtcombo-caption="Item Name">
                                 <option value="0">-- Select Item --</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small mb-1 font-weight-bold">Crop Year</label>
-                            <select class="form-select form-select-sm search-select" id="detCropYearId">
+                            <select class="form-select form-select-sm search-select" id="detCropYearId"
+                                    data-dtcombo="single" data-dtcombo-caption="Crop Year">
                                 <option value="0">-- Select --</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small mb-1 font-weight-bold">Packing Type</label>
-                            <select class="form-select form-select-sm search-select" id="detPackingTypeId">
+                            <select class="form-select form-select-sm search-select" id="detPackingTypeId"
+                                    data-dtcombo="single" data-dtcombo-caption="Packing Type">
                                 <option value="0">-- Select --</option>
                             </select>
                         </div>
                         <div class="col-md-1">
                             <label class="form-label small mb-1 font-weight-bold">Pack Uom</label>
-                            <select class="form-select form-select-sm" id="detPackUomId">
+                            <select class="form-select form-select-sm" id="detPackUomId"
+                                    data-dtcombo="uomCmagt" data-dtcombo-caption="Pack Uom">
                                 <option value="0">--</option>
                             </select>
                         </div>
@@ -310,7 +318,8 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small mb-1 font-weight-bold">Empty Bag Term</label>
-                            <select class="form-select form-select-sm" id="detEmptyBagTermId">
+                            <select class="form-select form-select-sm" id="detEmptyBagTermId"
+                                    data-dtcombo="single" data-dtcombo-caption="Empty Bag term">
                                 <option value="0">-- Select --</option>
                             </select>
                         </div>
@@ -388,6 +397,51 @@
                     </div>
                 </div>
 
+                <!-- ===================== EMPTY BAGS (grdEmptyBags) =====================
+                     GrnLoadingChallan_Helper.InitializeEmptyBagDetailtable / EmptyBagGridCommonSetting:
+                     Id, PoId, PoEbId hidden; PurchaseOrderNo (shown only when a row has PoId > 0),
+                     PackingType (combo, AllocatedPackingType), PurchaseRate (editable),
+                     EmptyBagItem (combo, packing-material items for flow 1); + / X buttons.
+                     Filled from the loaded PO by GetEmptyBagDetailOnBaseOfPO (:1190). -->
+                <div class="form-section">
+                    <div class="section-title">Empty Bags</div>
+                    <div class="table-responsive">
+                        <table class="grid-table" id="gridEmptyBags">
+                            <thead><tr>
+                                <th style="width:34px;">+</th><th style="width:34px;">X</th>
+                                <th class="col-pono" style="width:110px;">Purchase Order No</th>
+                                <th style="width:200px;">Packing Type</th>
+                                <th style="width:120px;">Purchase Rate</th>
+                                <th>Empty Bag Item</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===================== EXPENSES (grdInvExp) =====================
+                     InitializeExpenseDetailtable / ExpenseGridCommonSetting: Id, PoId, PoExpenseId
+                     hidden; PurchaseOrderNo (shown only when a row has PoId > 0), ItemId (combo
+                     "Other Item Name"), Qty, Rate, Amount, Remarks editable; + / X buttons.
+                     Filled from the loaded PO by GetExpensesOnBaseOfPO (:1223). -->
+                <div class="form-section">
+                    <div class="section-title">Expenses</div>
+                    <div class="table-responsive">
+                        <table class="grid-table" id="gridExpenses">
+                            <thead><tr>
+                                <th style="width:34px;">+</th><th style="width:34px;">X</th>
+                                <th class="col-pono" style="width:110px;">Purchase Order No</th>
+                                <th style="width:240px;">Other Item Name</th>
+                                <th style="width:100px;">Qty</th>
+                                <th style="width:100px;">Rate</th>
+                                <th style="width:120px;">Amount</th>
+                                <th>Remarks</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
             </form>
         </div>
 
@@ -437,8 +491,9 @@
     let detailRows = [];
 
     $(document).ready(function() {
-        setDefaultDates();
+        initDates();
         loadDropdowns();
+        resetChildGrids();
 
         $('.calc-trigger').on('input change', grnRecalc);
         $('#btnAddDetail').on('click', addDetailRow);
@@ -486,12 +541,216 @@
         }).fail(function () { alert('Server error while deleting.'); });
     }
 
-    function setDefaultDates() {
-        const today = new Date().toISOString().split('T')[0];
+    /* Local calendar date as yyyy-MM-dd. toISOString() is UTC and shifts the day at UTC+5. */
+    function localYmd(d) {
+        const p = function (n) { return (n < 10 ? '0' : '') + n; };
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    }
+
+    /* Form open only. Doc Date is the picker's own default (today) and Bilty Date follows it
+       (datDocDate_ValueChanged :4320). History: InitializeComponentMethod (:618-619)
+       From = today - DefaultDaysToLessFromHistoryFromDate when > 0, else today - 3; To = today.
+       ResetForm (:2900-2950) touches none of these, so New does not call this. */
+    function initDates() {
+        const now = new Date();
+        const today = localYmd(now);
         $('#docDate').val(today);
         $('#biltyDate').val(today);
-        $('#histFromDate').val(today);
         $('#histToDate').val(today);
+        const setFrom = function (days) {
+            const f = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            f.setDate(f.getDate() - (days > 0 ? days : 3));
+            $('#histFromDate').val(localYmd(f));
+        };
+        setFrom(0);
+        $.get('/api/commission/grn-loading-challan/history-defaults', function (r) {
+            setFrom(parseInt(r && r.defaultDaysToLessFromHistoryFromDate, 10) || 0);
+        });
+    }
+
+    /* =====================================================================
+     * EMPTY BAGS (grdEmptyBags) and EXPENSES (grdInvExp)
+     * USP_grnSupplierLoadingMaster_InsertAndUpdate removes both child tables on update, so
+     * these lists must always be sent in full (btnSave_Click :2711-2744).
+     * Row shape = GrnLoadingChallan_Helper.InitializeEmptyBagDetailtable / InitializeExpenseDetailtable.
+     * ===================================================================== */
+    let ebRows = [], expRows = [];
+    let ebPackTypes = [], ebItems = [], otherItems = [];
+
+    function newEbRow()  { return { Id: 0, PoId: 0, PoEbId: 0, PurchaseOrderNo: 0, PackingType: 0, PurchaseRate: 0, EmptyBagItem: 0 }; }
+    function newExpRow() { return { Id: 0, PoId: 0, PoExpenseId: 0, PurchaseOrderNo: 0, ItemId: 0, Qty: 0, Rate: 0, Amount: 0, Remarks: '' }; }
+
+    /* BindGrids (:1755-1790): an empty table gets one blank row. */
+    function resetChildGrids() {
+        ebRows = [newEbRow()];
+        expRows = [newExpRow()];
+        renderEbGrid(); renderExpGrid();
+    }
+
+    function optList(list, valKey, textKey, selected) {
+        let h = '<option value="0"></option>';
+        (list || []).forEach(function (d) {
+            const v = parseInt(col(d, valKey), 10) || 0;
+            h += '<option value="' + v + '"' + (v === (parseInt(selected, 10) || 0) ? ' selected' : '') + '>'
+               + escHtml(col(d, textKey) || '') + '</option>';
+        });
+        return h;
+    }
+
+    function renderEbGrid() {
+        const tb = $('#gridEmptyBags tbody').empty();
+        const showPo = ebRows.some(function (r) { return (parseInt(r.PoId, 10) || 0) > 0; });
+        $('#gridEmptyBags .col-pono').toggle(showPo);
+        ebRows.forEach(function (r, i) {
+            tb.append('<tr data-i="' + i + '">'
+                + '<td><button type="button" class="btn btn-sm btn-outline-primary eb-add">+</button></td>'
+                + '<td><button type="button" class="btn btn-sm btn-outline-danger eb-del">X</button></td>'
+                + '<td class="col-pono"' + (showPo ? '' : ' style="display:none"') + '>' + escHtml(r.PurchaseOrderNo || '') + '</td>'
+                + '<td><select class="form-select form-select-sm eb-pt" data-dtcombo="single" data-dtcombo-caption="Packing Type">'
+                +     optList(ebPackTypes, 'Id', 'ReferenceName', r.PackingType) + '</select></td>'
+                + '<td><input type="number" step="any" class="form-control form-control-sm text-end eb-rate" value="' + (Number(r.PurchaseRate) || 0) + '"></td>'
+                + '<td><select class="form-select form-select-sm eb-item" data-dtcombo="single" data-dtcombo-caption="Empty Bag Item">'
+                +     optList(ebItems, 'ItemId', 'ItemName', r.EmptyBagItem) + '</select></td>'
+                + '</tr>');
+        });
+    }
+
+    function renderExpGrid() {
+        const tb = $('#gridExpenses tbody').empty();
+        const showPo = expRows.some(function (r) { return (parseInt(r.PoId, 10) || 0) > 0; });
+        $('#gridExpenses .col-pono').toggle(showPo);
+        expRows.forEach(function (r, i) {
+            tb.append('<tr data-i="' + i + '">'
+                + '<td><button type="button" class="btn btn-sm btn-outline-primary ex-add">+</button></td>'
+                + '<td><button type="button" class="btn btn-sm btn-outline-danger ex-del">X</button></td>'
+                + '<td class="col-pono"' + (showPo ? '' : ' style="display:none"') + '>' + escHtml(r.PurchaseOrderNo || '') + '</td>'
+                + '<td><select class="form-select form-select-sm ex-item" data-dtcombo="single" data-dtcombo-caption="Other Item Name">'
+                +     optList(otherItems, 'Id', 'OtherItemName', r.ItemId) + '</select></td>'
+                + '<td><input type="number" step="any" class="form-control form-control-sm text-end ex-qty" value="' + (Number(r.Qty) || 0) + '"></td>'
+                + '<td><input type="number" step="any" class="form-control form-control-sm text-end ex-rate" value="' + (Number(r.Rate) || 0) + '"></td>'
+                + '<td><input type="number" step="any" class="form-control form-control-sm text-end ex-amt" value="' + (Number(r.Amount) || 0) + '"></td>'
+                + '<td><input type="text" class="form-control form-control-sm ex-rem" value="' + escHtml(r.Remarks || '') + '"></td>'
+                + '</tr>');
+        });
+    }
+
+    function rowIdx(el) { return parseInt($(el).closest('tr').attr('data-i'), 10); }
+    /* ColumnButtonClick (:2475 / :2323): + appends a blank row, X removes the row; the grid
+       never goes empty (DeleteRowIn*Grid re-adds a blank row). */
+    $(document).on('click', '#gridEmptyBags .eb-add', function () { ebRows.push(newEbRow()); renderEbGrid(); });
+    $(document).on('click', '#gridEmptyBags .eb-del', function () {
+        ebRows.splice(rowIdx(this), 1); if (!ebRows.length) ebRows.push(newEbRow()); renderEbGrid();
+    });
+    $(document).on('change', '#gridEmptyBags .eb-pt',   function () { ebRows[rowIdx(this)].PackingType  = parseInt(this.value, 10) || 0; });
+    $(document).on('change', '#gridEmptyBags .eb-item', function () { ebRows[rowIdx(this)].EmptyBagItem = parseInt(this.value, 10) || 0; });
+    $(document).on('input change', '#gridEmptyBags .eb-rate', function () { ebRows[rowIdx(this)].PurchaseRate = parseFloat(this.value) || 0; });
+
+    $(document).on('click', '#gridExpenses .ex-add', function () { expRows.push(newExpRow()); renderExpGrid(); });
+    $(document).on('click', '#gridExpenses .ex-del', function () {
+        expRows.splice(rowIdx(this), 1); if (!expRows.length) expRows.push(newExpRow()); renderExpGrid();
+    });
+    $(document).on('change', '#gridExpenses .ex-item', function () { expRows[rowIdx(this)].ItemId = parseInt(this.value, 10) || 0; });
+    $(document).on('input change', '#gridExpenses .ex-rem', function () { expRows[rowIdx(this)].Remarks = this.value; });
+    /* grdInvExp_CellUpdated (:2348): Qty/Rate -> Amount = Qty x Rate (UpdateAmount);
+       Amount -> Rate = Amount / Qty, 0 when Qty is 0 (UpdateRate). No rounding. */
+    $(document).on('change', '#gridExpenses .ex-qty, #gridExpenses .ex-rate, #gridExpenses .ex-amt', function () {
+        const tr = $(this).closest('tr'), r = expRows[rowIdx(this)];
+        r.Qty = parseFloat(tr.find('.ex-qty').val()) || 0;
+        r.Rate = parseFloat(tr.find('.ex-rate').val()) || 0;
+        r.Amount = parseFloat(tr.find('.ex-amt').val()) || 0;
+        if ($(this).hasClass('ex-amt')) { r.Rate = r.Qty === 0 ? 0 : r.Amount / r.Qty; tr.find('.ex-rate').val(r.Rate); }
+        else { r.Amount = r.Qty * r.Rate; tr.find('.ex-amt').val(r.Amount); }
+    });
+
+    /* GetEmptyBagDetailOnBaseOfPO (:1190): keep the grid only if some row has a rate, then
+       add the PO's empty-bag rows not already present (key PoId + PoEbId). */
+    function fillEmptyBagsFromPo(poId) {
+        if (!ebRows.some(function (r) { return (Number(r.PurchaseRate) || 0) > 0; })) ebRows = [];
+        const keys = {};
+        ebRows.forEach(function (r) { keys[(parseInt(r.PoId, 10) || 0) + '|' + (parseInt(r.PoEbId, 10) || 0)] = 1; });
+        (poTables.emptyBagsByOrder || []).forEach(function (x) {
+            const pid = parseInt(col(x, 'purchaseOrderMasterId'), 10) || 0;
+            if (pid !== poId) return;
+            const eb = parseInt(col(x, 'purchaseOrderEmptyBagDetailId'), 10) || 0;
+            if (keys[pid + '|' + eb]) return;
+            keys[pid + '|' + eb] = 1;
+            ebRows.push({ Id: 0, PoId: pid, PoEbId: eb,
+                PurchaseOrderNo: parseInt(col(x, 'PurchaseOrderNo'), 10) || 0,
+                PackingType: parseInt(col(x, 'PackingTypeId'), 10) || 0,
+                PurchaseRate: parseFloat(col(x, 'Rate')) || 0,
+                EmptyBagItem: parseInt(col(x, 'emptyBagPackingMaterialItemId'), 10) || 0 });
+        });
+    }
+
+    /* GetExpensesOnBaseOfPO (:1223): keep the grid only if some row has an amount, then add
+       the PO's supplier-expense rows not already present (key PoId + PoExpenseId). */
+    function fillExpensesFromPo(poId) {
+        if (!expRows.some(function (r) { return (Number(r.Amount) || 0) > 0; })) expRows = [];
+        const keys = {};
+        expRows.forEach(function (r) { keys[(parseInt(r.PoId, 10) || 0) + '|' + (parseInt(r.PoExpenseId, 10) || 0)] = 1; });
+        (poTables.expensesByOrder || []).forEach(function (x) {
+            const pid = parseInt(col(x, 'purchaseOrderMasterId'), 10) || 0;
+            if (pid !== poId) return;
+            const ex = parseInt(col(x, 'purchaseOrderSupplierExpenseDetailId'), 10) || 0;
+            if (keys[pid + '|' + ex]) return;
+            keys[pid + '|' + ex] = 1;
+            expRows.push({ Id: 0, PoId: pid, PoExpenseId: ex,
+                PurchaseOrderNo: parseInt(col(x, 'PurchaseOrderNo'), 10) || 0,
+                ItemId: parseInt(col(x, 'ItemId'), 10) || 0,
+                Qty: parseFloat(col(x, 'Qty')) || 0,
+                Rate: parseFloat(col(x, 'rate')) || 0,
+                Amount: parseFloat(col(x, 'amount')) || 0,
+                Remarks: col(x, 'remarks') || '' });
+        });
+    }
+
+    /* CheckPurchaseOrderInDetailAndExpenses (:1273) + RemoveInvalidRows (:1257). */
+    function checkPoInDetailAndExpenses() {
+        const valid = {};
+        detailRows.forEach(function (r) { valid[parseInt(r.purchaseOrderMasterId, 10) || 0] = 1; });
+        const keep = function (r) { const p = parseInt(r.PoId, 10) || 0; return !(p > 0 && !valid[p]); };
+        expRows = expRows.filter(keep);
+        ebRows = ebRows.filter(keep);
+        if (!expRows.length) expRows.push(newExpRow());
+        if (!ebRows.length) ebRows.push(newEbRow());
+        renderEbGrid(); renderExpGrid();
+    }
+
+    /* btnSave_Click (:2711-2725): only rows with an Empty Bag Item AND a Packing Type. The
+       desktop sets no Id, weightCutKg, sortNo or remarks on these (CLR defaults). */
+    function buildEmptyBagList() {
+        return ebRows.filter(function (r) {
+            return (parseInt(r.EmptyBagItem, 10) || 0) > 0 && (parseInt(r.PackingType, 10) || 0) > 0;
+        }).map(function (r) {
+            return { grnSupplierLoadingEmptyBagDetailId: 0,
+                     purchaseOrderMasterId: parseInt(r.PoId, 10) || 0,
+                     purchaseOrderEmptyBagDetailId: parseInt(r.PoEbId, 10) || 0,
+                     PackingTypeId: parseInt(r.PackingType, 10) || 0,
+                     Rate: Number(r.PurchaseRate) || 0,
+                     emptyBagPackingMaterialItemId: parseInt(r.EmptyBagItem, 10) || 0,
+                     weightCutKg: 0, sortNo: 0 };
+        });
+    }
+
+    /* btnSave_Click (:2726-2744): ItemId != 0 AND Amount > 0; blank / "0" remarks become
+       "Expense : <item>  Qty<qty>  @<rate>". */
+    function buildExpenseList() {
+        const txt = function (id) {
+            const o = (otherItems || []).find(function (d) { return (parseInt(col(d, 'Id'), 10) || 0) === id; });
+            return o ? String(col(o, 'OtherItemName') || '').trim() : '';
+        };
+        return expRows.filter(function (r) {
+            return (parseInt(r.ItemId, 10) || 0) !== 0 && (Number(r.Amount) || 0) > 0;
+        }).map(function (r) {
+            const itemId = parseInt(r.ItemId, 10) || 0, qty = Number(r.Qty) || 0, rate = Number(r.Rate) || 0;
+            let rem = $.trim(r.Remarks || '');
+            if (rem === '0' || rem === '') rem = 'Expense : ' + txt(itemId) + '  Qty' + qty + '  @' + rate;
+            return { grnSupplierLoadingExpenseDetailId: 0,
+                     purchaseOrderMasterId: parseInt(r.PoId, 10) || 0,
+                     purchaseOrderExpenseDetailId: parseInt(r.PoExpenseId, 10) || 0,
+                     ItemId: itemId, Qty: qty, rate: rate, amount: Number(r.Amount) || 0,
+                     remarks: rem, sortNo: 0 };
+        });
     }
 
 
@@ -589,7 +848,10 @@
         });
         const sel = $('#detPoNo').empty().append('<option value="0">-- Select Order --</option>');
         rows.forEach(function (r) {
-            sel.append($('<option>').val(col(r, 'purchaseOrderMasterId')).text(col(r, 'DocNo')));
+            /* OrderNoBind (:930-950): visible DocNo, DeliveryStartDate, ExpiryDate. */
+            sel.append($('<option>').val(col(r, 'purchaseOrderMasterId')).text(col(r, 'DocNo'))
+                .attr('data-start', dOnly(col(r, 'DeliveryStartDate')))
+                .attr('data-expiry', dOnly(col(r, 'ValidityDate'))));
         });
         bindDetailItemCombo();
     }
@@ -614,7 +876,17 @@
             const opt = $('<option>')
                 .val(mappingId)
                 .text(col(r, 'ItemName') || '')
-                .data('row', r);
+                .data('row', r)
+                /* ItemNameBind with an order (:1103-1122): ItemName, ItemCode, ItemQty,
+                   ReceivedQty, BalanceQty, ItemWeight, ReceivedWeight, BalanceWeight, SoNo. */
+                .attr('data-item-code', col(r, 'ItemCode') || '')
+                .attr('data-item-qty', r3(col(r, 'itemQty')))
+                .attr('data-received-qty', r3(col(r, 'UsedQty')))
+                .attr('data-balance-qty', r3(col(r, 'BalanceQty')))
+                .attr('data-item-weight', r3(col(r, 'itemWeight')))
+                .attr('data-received-weight', r3(col(r, 'UsedWeight')))
+                .attr('data-balance-weight', r3(col(r, 'BalanceWeight')))
+                .attr('data-so-no', col(r, 'SaleOrderNo') || '');
             sel.append(opt);
         });
         detailItemChanged();
@@ -656,7 +928,10 @@
         $.get('/api/commission/dropdowns/item-uoms', { itemId: itemId }, function (uoms) {
             (uoms || []).forEach(function (u) {
                 $('<option>').val(u.Id).text(u.UOMCode || '')
-                             .attr('data-equivalent', u.Equivalent).appendTo(el);
+                             .attr('data-equivalent', u.Equivalent)
+                             .attr('data-eq', u.Equivalent)
+                             .attr('data-base', u.BaseRateUom ? 'true' : 'false')
+                             .attr('data-base-pack', u.BasePackUom ? 'true' : 'false').appendTo(el);
             });
             if (wantPackUomId) el.val(wantPackUomId);
             calcGrossWeight();
@@ -801,6 +1076,10 @@
         detailRows.push(row);
         renderDetailGrid();
         clearDetailInputs();
+        /* FillDetailRow tail (:1843-1845). */
+        fillEmptyBagsFromPo(row.purchaseOrderMasterId);
+        fillExpensesFromPo(row.purchaseOrderMasterId);
+        checkPoInDetailAndExpenses();
     }
 
     function renderDetailGrid() {
@@ -860,20 +1139,22 @@
         }
         detailRows.splice(index, 1);
         renderDetailGrid();
+        checkPoInDetailAndExpenses();   /* DeleteDetailRow tail (:2175) */
     }
 
 
     function loadDropdowns() {
-        $.get('/api/commission/dropdowns/suppliers', function(data) {
-            const el = $('#supplierId');
-            el.empty().append('<option value="0">-- Select Supplier --</option>');
-            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
-        });
+        /* SupplierBind (:780-784): the party combos bind dtSupplier with GlAccountId hidden
+           -> Name / PartyCode / CityName / MobileNo (party4). */
+        fillCombo('#supplierId', '/api/commission/dropdowns/suppliers', '-- Select Supplier --', partyOption);
+        fillCombo('#commissionAgentId', '/api/commission/dropdowns/commission-agents', '-- Select Commission Agent --', partyOption);
 
-        $.get('/api/commission/dropdowns/commission-agents', function(data) {
-            const el = $('#commissionAgentId');
-            el.empty().append('<option value="0">-- Select Commission Agent --</option>');
-            if (data) data.forEach(d => el.append(`<option value="${d.id}">${d.name}</option>`));
+        /* Grid value lists: GrdEmptyBagsRefresh (:2408-2409), ExpenseGridCombBind (:2260). */
+        $.get('/api/commission/dropdowns/empty-bag-items', { transactionFlowId: 1 }, function (d) {
+            ebItems = d || []; renderEbGrid();
+        });
+        $.get('/api/commission/dropdowns/other-items', function (d) {
+            otherItems = d || []; renderExpGrid();
         });
 
         /* #detItemId is NOT filled from the global item list any more. On this screen the
@@ -908,6 +1189,9 @@
             }).forEach(function (r) {
                 el.append('<option value="' + r.Id + '">' + escHtml(r.ReferenceName) + '</option>');
             });
+            /* BindViewCombos (:873): AllocatedPackingType -> dtEbGridPackingTypes. */
+            ebPackTypes = (data || []).filter(function (r) { return String(r.Activity || '') === 'AllocatedPackingType'; });
+            renderEbGrid();
         });
 
         /* Pack Uom is ITEM-SCOPED, not a global list: CommonBindings.ItemUomFromGlobalBind
@@ -1046,7 +1330,9 @@
             totalFreight:       parseFloat($('#totalFreight').val()) || 0,
             approvalRemarks:    $('#approvalRemarks').val(),
 
-            grnSupplierLoadingDetailList: (isUpdate ? removedRows : []).concat(detailRows)
+            grnSupplierLoadingDetailList: (isUpdate ? removedRows : []).concat(detailRows),
+            grnSupplierLoadingEmptyBagDetailList: buildEmptyBagList(),
+            grnSupplierLoadingExpenseDetailList: buildExpenseList()
         };
 
         $.ajax({
@@ -1145,6 +1431,33 @@
                 });
                 renderDetailGrid();
 
+                /* ReadById (:2857-2860): FillEmptyBagTableFromListCommonForReadById /
+                   FillExpenseTableFromListCommonForReadById (ReadByHeaderId reads), then
+                   BindGrids adds a blank row to an empty grid. */
+                ebRows = (d.grnSupplierLoadingEmptyBagDetailList || []).map(function (x) {
+                    return { Id: parseInt(col(x, 'grnSupplierLoadingEmptyBagDetailId'), 10) || 0,
+                             PoId: parseInt(col(x, 'purchaseOrderMasterId'), 10) || 0,
+                             PoEbId: parseInt(col(x, 'purchaseOrderEmptyBagDetailId'), 10) || 0,
+                             PurchaseOrderNo: parseInt(col(x, 'PurchaseOrderNo'), 10) || 0,
+                             PackingType: parseInt(col(x, 'PackingTypeId'), 10) || 0,
+                             PurchaseRate: parseFloat(col(x, 'Rate')) || 0,
+                             EmptyBagItem: parseInt(col(x, 'emptyBagPackingMaterialItemId'), 10) || 0 };
+                });
+                expRows = (d.grnSupplierLoadingExpenseDetailList || []).map(function (x) {
+                    return { Id: parseInt(col(x, 'grnSupplierLoadingExpenseDetailId'), 10) || 0,
+                             PoId: parseInt(col(x, 'purchaseOrderMasterId'), 10) || 0,
+                             PoExpenseId: parseInt(col(x, 'purchaseOrderExpenseDetailId'), 10) || 0,
+                             PurchaseOrderNo: parseInt(col(x, 'PurchaseOrderNo'), 10) || 0,
+                             ItemId: parseInt(col(x, 'ItemId'), 10) || 0,
+                             Qty: parseFloat(col(x, 'Qty')) || 0,
+                             Rate: parseFloat(col(x, 'rate')) || 0,
+                             Amount: parseFloat(col(x, 'amount')) || 0,
+                             Remarks: col(x, 'remarks') || '' };
+                });
+                if (!ebRows.length) ebRows.push(newEbRow());
+                if (!expRows.length) expRows.push(newExpRow());
+                renderEbGrid(); renderExpGrid();
+
                 $('#btnSave').prop('disabled', true);
                 $('#btnUpdate').prop('disabled', false);
                 $('#btnDelete').prop('disabled', false);
@@ -1159,7 +1472,7 @@
     function resetForm() {
         $('#grnSupplierLoadingMasterId').val(0);
         $('#docNo').val('');
-        setDefaultDates();
+        /* ResetForm (:2900-2950) leaves Doc Date, Bilty Date and the history range alone. */
         $('#supplierId').val(0);
         $('#commissionAgentId').val(0);
         $('#vehicleNo').val('');
@@ -1170,6 +1483,7 @@
         removedRows = [];
         renderDetailGrid();
         clearDetailInputs();
+        resetChildGrids();   /* dtExpGrid / dtEmptyBags cleared; BindGrids re-adds a blank row */
         $('#detPoNo').val(0);
         $('#detEmptyBagTermId, #detParentItemId').prop('disabled', false);
         loadDocNo();
@@ -1179,7 +1493,7 @@
         $('#btnDelete').prop('disabled', true);
     }
 </script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260920a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 </body>
 </html>

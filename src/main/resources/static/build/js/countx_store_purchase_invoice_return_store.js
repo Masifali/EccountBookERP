@@ -1038,7 +1038,7 @@
         C.fillSelect('combdeliverytrm', [{ Id: 1, DeliveryTerm: 'Load' }, { Id: 2, DeliveryTerm: 'Ponch' }], 'Id', 'DeliveryTerm', false);
         $id('combdeliverytrm').value = '1';                                     // DeliveryTerm:744 Rows[0].Activate()
         var keepTa = val('CmbTaxAccount');
-        C.fillSelect('CmbTaxAccount', l.taxAccounts, 'Id', 'AccountTitle'); setSelect('CmbTaxAccount', keepTa);
+        C.fillSelectCols('CmbTaxAccount', l.taxAccounts, 'Id', 'AccountTitle', ['AccountCode', 'ParentAccountTitle'], ['Tax Account', 'AccountCode', 'ParentAccountTitle']);   // BindTaxAccountFromGlobal: AllColumns setSelect('CmbTaxAccount', keepTa);
         var keepTt = $id('CmbTaxType').value;                                   // GetallTaxType:1051
         $id('CmbTaxType').innerHTML = '<option value=""></option>' + look.taxTypes.map(function (t) { return '<option value="' + t._k + '">' + esc(t.TaxName) + '</option>'; }).join('');
         var tt = look.taxTypes.find(function (t) { return t._k === keepTt; });

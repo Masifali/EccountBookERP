@@ -165,7 +165,7 @@ public class StockTransferManualService {
 
     private Map<String, Object> combos(UserAccount u) {
         Map<String, Object> out = new LinkedHashMap<>();
-        out.put("warehouses", project(own.warehousesAllocatedToBranch(u, branch(u)), "Id", "WareHouseName"));
+        out.put("warehouses", warehouseColumns(own.warehousesAllocatedToBranch(u, branch(u))));   // WareHouseFill:1234 — BindDDL shows every column but Id
         out.put("packingTypes", project(repo.packingTypes(), "Id", "PackTypeDesc"));
         out.put("cropYears", project(repo.cropYears(u), "Id", "CropYear"));
         out.put("jobLots", project(own.jobLotsAllocatedToBranch(u, branch(u)), "Id", "JobLotDescription"));
@@ -1035,6 +1035,21 @@ public class StockTransferManualService {
         if (toInt(ci(h, "CompanyId")) != u.getCompanyId()) return null;
         if (toInt(ci(h, "OrganizationId")) != u.getOrganizationId()) return null;
         return h;
+    }
+
+    /** USP_GetWarehousesAllocatedToBranch columns, as DDL.BindDDL leaves them visible in the drop-down. */
+    private static List<Map<String, Object>> warehouseColumns(List<Map<String, Object>> rows) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            Map<String, Object> o = new LinkedHashMap<>();
+            o.put("Id", toInt(ci(r, "Id")));
+            for (String k : new String[] { "WareHouseName", "BranchId", "BranchName", "WareHouseTypeId", "WareHouseType", "IsActive", "PlantId", "PlantName" }) {
+                Object v = ci(r, k);
+                o.put(k, v instanceof Boolean ? ((Boolean) v ? "True" : "False") : str(v));
+            }
+            out.add(o);
+        }
+        return out;
     }
 
     private static List<Map<String, Object>> project(List<Map<String, Object>> rows, String id, String name) {

@@ -294,6 +294,16 @@
         else sel.value = '0';
     }
 
+    /** InfragisticsHelper.BindAndRetainSelection(AllColumns: true) over DatatableHelper.GetAccountsFromGlobalByTypeIds:
+        header caption, AccountCode, ParentAccountTitle, AccountClass. */
+    function bindRetainAcc(sel, rows, caption) {
+        var keep = sel.value;
+        C.fillSelectCols(sel, rows, 'Id', 'AccountTitle', ['AccountCode', 'ParentAccountTitle', 'AccountClass'],
+            [caption, 'AccountCode', 'ParentAccountTitle', 'AccountClass']);
+        if (keep && keep !== '0') { sel.value = keep; if (sel.value !== keep) sel.value = '0'; }
+        else sel.value = '0';
+    }
+
     /* ================================================================== Define_Department */
 
     function openDepartment(onClose, opts) {
@@ -756,10 +766,10 @@
         function bindLists(l) {
             if (l.parentCategories && l.parentCategories.length) bindFirst(cmbParent, l.parentCategories, 'Id', 'InvParentCateDescription');
             if (l.classGroups && l.classGroups.length) bindFirst(cmbCls, l.classGroups, 'Id', 'ClassGroupName');
-            bindRetain(cmbRev, l.assetAccounts, 'Id', 'AccountTitle');
-            bindRetain(cmbInv, l.assetAccounts, 'Id', 'AccountTitle');
-            bindRetain(cmbExp, l.expenseAccounts, 'Id', 'AccountTitle');
-            bindRetain(cmbCgs, l.expenseAccounts, 'Id', 'AccountTitle');
+            bindRetainAcc(cmbRev, l.assetAccounts, 'Assets GL Account');
+            bindRetainAcc(cmbInv, l.assetAccounts, 'Accumulative Account');
+            bindRetainAcc(cmbExp, l.expenseAccounts, 'Expense Maintenance Account');
+            bindRetainAcc(cmbCgs, l.expenseAccounts, 'Depreciation Account');
             bindRetain(cmbMethod, l.depreciationMethods, 'depreciationMethodScheduleId', 'DepreciatonMethodName');
         }
         function load() {                                                       // InvDeffrmItemCatagory_Load:166
@@ -1006,10 +1016,10 @@
             var bind = first ? bindNone : bindRetain;
             bindCategories(l.categories, !first);                               // ItemCatagoryHistoryFill:308
             bind(cmbType, l.itemTypes, 'Id', 'TypeDescription');                // ItemTypeFill:373
-            bindRetain(cmbAccum, l.assetAccounts, 'Id', 'AccountTitle');        // AssetAccountBind:270
-            bindRetain(cmbAssetGl, l.assetAccounts, 'Id', 'AccountTitle');
-            bindRetain(cmbExpm, l.expenseAccounts, 'Id', 'AccountTitle');       // ExpenseAccountFill:289
-            bindRetain(cmbDepr, l.expenseAccounts, 'Id', 'AccountTitle');
+            bindRetainAcc(cmbAccum, l.assetAccounts, 'Accumulative Account');        // AssetAccountBind:270
+            bindRetainAcc(cmbAssetGl, l.assetAccounts, 'Assets GL Account');
+            bindRetainAcc(cmbExpm, l.expenseAccounts, 'Expense Maintenance Account');       // ExpenseAccountFill:289
+            bindRetainAcc(cmbDepr, l.expenseAccounts, 'Depreciation Account');
             bind(cmbCls, l.classes, 'ClassId', 'ClassDescription');             // ItemClassFill:488
         }
         function load() {                                                       // InvDefrmAddItem_Load:243
@@ -1021,7 +1031,7 @@
                 if (!rights.update) bUpdate.title = 'You do not have the Update right for Fixed Asset Items';
                 bindAll(l, true);
                 if (l.companies && l.companies.length) galloc.set(l.companies); else galloc.clear();   // CompaniesBindInGrid:443
-                bindNone(cmbUom, l.uoms, 'Id', 'UomCode');                      // BaseUnitFill:341
+                C.fillSelectCols(cmbUom, l.uoms, 'Id', 'UomCode', ['Equivalent'], ['UOM Code', 'Equivalent']); cmbUom.value = '0';   // BindDDL: UOM Code + Equivalent columns                      // BaseUnitFill:341
             }).catch(function (e) { alert(e.message); });
         }
         function refreshLists() {                                               // BtnRefresh_Click:871
