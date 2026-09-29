@@ -224,6 +224,11 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("District", "Master Data Definition", "/master-data/district", "MDD_DISTRICT", "MASTER_DATA_DEFINITION", 756, 2039));
         e.add(new Entry("Other Items", "Master Data Definition", "/master-data/other-items", "MDD_OTHER_ITEMS", "MASTER_DATA_DEFINITION", 742, 2039));
 
+        // EXPORT (App 8, AppModules 11 "Export") - the two screens CompanyRights enables for company 78;
+        // ids from the ScreenDefinition dump (GoldenAceDb(0509)t.sql).
+        e.add(new Entry("Gd Break Up By Invoice", "Export", "/export/gd-break-up-by-invoice", "EXP_GD_BREAK_UP_BY_INVOICE", "EXPORT", 881, 11));
+        e.add(new Entry("Export Invoice Packing List", "Export", "/export/invoice-packing-list", "EXP_INVOICE_PACKING_LIST", "EXPORT", 882, 11));
+
         // 7. PRODUCTION REPORTS (module 21)
         // Ids, ScreenName and ScreenAlias all read from reconciliation-input.json, the live dump
         // of GoldenAcedb this repository already holds. The catalog keys on the alias because

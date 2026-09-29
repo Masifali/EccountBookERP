@@ -116,6 +116,18 @@ public class AppMenuController {
      * Taxation - dbo.App Id 13 "Taxation", whose one module (ModuleId 9) holds screens 172-180. This
      * replaces MainModulesController's redirect of /taxation to the Payables report.
      */
+    /**
+     * Export - dbo.App Id 8 "Export". For this company (78) CompanyRights activates exactly two screens
+     * of AppModules 11 "Export": 881 frmGdBreakUpByInvoice and 882 frmExportInvoicePackingList, both
+     * built on 2026-09-29 (ExportModuleController). Rendered through the generic renderer so the module
+     * cards and counts come from the rights rows, as everywhere else.
+     */
+    @GetMapping("/export")
+    public String export(@RequestParam(value = "module", required = false) Integer moduleId,
+                         Model model) {
+        return renderApp("Export", moduleId, model);
+    }
+
     @GetMapping("/taxation")
     public String taxation(@RequestParam(value = "module", required = false) Integer moduleId,
                            Model model) {
@@ -131,6 +143,17 @@ public class AppMenuController {
     public String masterDataDefinition(@RequestParam(value = "module", required = false) Integer moduleId,
                                        Model model) {
         return renderApp("Master Data Definition", moduleId, model);
+    }
+
+    /**
+     * HRM - dbo.App Id 12, modules 2018-2027 (Profile, Policy, Employee, Device, Attendance, Leave, Loan,
+     * Over Time, Approval, Payroll), 47 (CPL Leave) and 29 (HRM Reports). Every screen row of those modules
+     * is mapped in DashboardModuleService.WEB_ROUTES_BY_SCREEN_ID to its own /hrm/... page.
+     */
+    @GetMapping("/hrm")
+    public String hrm(@RequestParam(value = "module", required = false) Integer moduleId,
+                      Model model) {
+        return renderApp("HRM", moduleId, model);
     }
 
     /*

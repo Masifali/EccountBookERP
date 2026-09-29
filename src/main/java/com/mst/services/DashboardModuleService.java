@@ -179,6 +179,11 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(172, "/taxation/tax-notes-and-gl-maping");           // frmTaxNotesAndGLMaping
         WEB_ROUTES_BY_SCREEN_ID.put(173, "/taxation/supplier-customer-tax-exemption");   // frmSupplierCustomerExemptionSchedule
 
+        /* Export, App 8, ModuleId 11 - the two rows CompanyRights activates for company 78, built
+           2026-09-29 (ExportModuleController); ids confirmed against the ScreenDefinition dump. */
+        WEB_ROUTES_BY_SCREEN_ID.put(881, "/export/gd-break-up-by-invoice");   // frmGdBreakUpByInvoice
+        WEB_ROUTES_BY_SCREEN_ID.put(882, "/export/invoice-packing-list");     // frmExportInvoicePackingList
+
         /* Master Data Definition, App 19, ModuleId 2039 "System_Level" - all nine confirmed against the
            ScreenDefinition dump (GoldenAceDb(0509)t.sql) on 2026-09-30. */
         WEB_ROUTES_BY_SCREEN_ID.put(749, "/master-data/country");       // frmCountry -> DefineCountry
@@ -190,6 +195,61 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(755, "/master-data/tehsil");        // DefineTehsil
         WEB_ROUTES_BY_SCREEN_ID.put(756, "/master-data/district");      // DefineDistrict
         WEB_ROUTES_BY_SCREEN_ID.put(742, "/master-data/other-items");   // frmInvDefineOtherItems -> InvOtherItems
+
+        /* HRM, App 12 - every ScreenDefinition row of modules 2018-2027, 47 and 29 (GoldenAceDb(0509)t.sql),
+           ported 2026-09-30 (project doc HRM-01-...). 650/651 and 662/463 are two rows for one desktop form each. */
+        WEB_ROUTES_BY_SCREEN_ID.put(634, "/hrm/employee-group");                          // genEmployeeGroup
+        WEB_ROUTES_BY_SCREEN_ID.put(635, "/hrm/employee-category");                       // frmEmployeeCategory
+        WEB_ROUTES_BY_SCREEN_ID.put(636, "/hrm/benefit");                                 // BenifitDefine
+        WEB_ROUTES_BY_SCREEN_ID.put(637, "/hrm/designation");                             // genDesignation
+        WEB_ROUTES_BY_SCREEN_ID.put(638, "/hrm/department");                              // genDepartment
+        WEB_ROUTES_BY_SCREEN_ID.put(639, "/hrm/section");                                 // DefineSection
+        WEB_ROUTES_BY_SCREEN_ID.put(640, "/hrm/location");                                // frmgenLocation
+        WEB_ROUTES_BY_SCREEN_ID.put(641, "/hrm/profile-type");                            // ProfileTypes
+        WEB_ROUTES_BY_SCREEN_ID.put(642, "/hrm/define-profile");                          // ProfileDefine
+        WEB_ROUTES_BY_SCREEN_ID.put(643, "/hrm/social-security");                         // SocialSecurity
+        WEB_ROUTES_BY_SCREEN_ID.put(644, "/hrm/general-policy");                          // GeneralPolicy
+        WEB_ROUTES_BY_SCREEN_ID.put(645, "/hrm/salary-breakup-policy");                   // SalaryBreakupPolicy
+        WEB_ROUTES_BY_SCREEN_ID.put(646, "/hrm/leave-quota-policy");                      // LeaveQuotaPolicy
+        WEB_ROUTES_BY_SCREEN_ID.put(647, "/hrm/eobi-policy");                             // EOBIPolicy
+        WEB_ROUTES_BY_SCREEN_ID.put(648, "/hrm/employee-registration");                   // frmEmployeeRegistration
+        WEB_ROUTES_BY_SCREEN_ID.put(649, "/hrm/device-configuration");                    // frmDeviceManagement
+        WEB_ROUTES_BY_SCREEN_ID.put(650, "/hrm/pull-attendance-by-machine");              // PullAttendanceByMachine (650 and 651 both target this form)
+        WEB_ROUTES_BY_SCREEN_ID.put(651, "/hrm/pull-attendance-by-machine");              // PullAttendanceByMachine
+        WEB_ROUTES_BY_SCREEN_ID.put(652, "/hrm/define-shift");                            // frmGenShift
+        WEB_ROUTES_BY_SCREEN_ID.put(653, "/hrm/shift-location");                          // frmShiftLocation
+        WEB_ROUTES_BY_SCREEN_ID.put(654, "/hrm/shift-timing");                            // frmGenShiftTiming
+        WEB_ROUTES_BY_SCREEN_ID.put(655, "/hrm/holiday");                                 // frmHoliday
+        WEB_ROUTES_BY_SCREEN_ID.put(656, "/hrm/duty-roaster");                            // frmDutyRoasterNew
+        WEB_ROUTES_BY_SCREEN_ID.put(657, "/hrm/employee-roaster");                        // frmEmployeeRoaster
+        WEB_ROUTES_BY_SCREEN_ID.put(658, "/hrm/daily-attendance");                        // frmDailyAttendance
+        WEB_ROUTES_BY_SCREEN_ID.put(659, "/hrm/manual-attendance");                       // hrmManualAttendance
+        WEB_ROUTES_BY_SCREEN_ID.put(660, "/hrm/leave-opening");                           // frmEmployeeLeaveOpening
+        WEB_ROUTES_BY_SCREEN_ID.put(661, "/hrm/employee-leave");                          // frmEmployeeLeaveRequest
+        WEB_ROUTES_BY_SCREEN_ID.put(662, "/hrm/cpl-leave-opening");                       // frmEmployeeCPLLeaveOpening
+        WEB_ROUTES_BY_SCREEN_ID.put(463, "/hrm/cpl-leave-opening");                       // frmEmployeeCPLLeaveOpening (same form as 662)
+        WEB_ROUTES_BY_SCREEN_ID.put(461, "/hrm/cpl-attendance");                          // frmEmployeeCPLAttendance
+        WEB_ROUTES_BY_SCREEN_ID.put(462, "/hrm/cpl-request");                             // frmEmployeeCPLRequest
+        WEB_ROUTES_BY_SCREEN_ID.put(663, "/hrm/employee-loan");                           // frmEmployeeLoan
+        WEB_ROUTES_BY_SCREEN_ID.put(664, "/hrm/employee-advance");                        // frmEmployeeAdvance
+        WEB_ROUTES_BY_SCREEN_ID.put(665, "/hrm/over-time-request");                       // OverTimeRequest
+        WEB_ROUTES_BY_SCREEN_ID.put(666, "/hrm/employee-over-time");                      // frmEmployeeOverTime
+        WEB_ROUTES_BY_SCREEN_ID.put(667, "/hrm/loan-approval");                           // LoanApproval
+        WEB_ROUTES_BY_SCREEN_ID.put(668, "/hrm/leave-approval");                          // LeaveApproval
+        WEB_ROUTES_BY_SCREEN_ID.put(669, "/hrm/advance-approval");                        // AdvanceApproval
+        WEB_ROUTES_BY_SCREEN_ID.put(670, "/hrm/payroll-posting");                         // frmPayrollPosting
+        WEB_ROUTES_BY_SCREEN_ID.put(671, "/hrm/employee-allowance");                      // frmEmployeeAllowance
+        WEB_ROUTES_BY_SCREEN_ID.put(672, "/hrm/employee-late-adjustment");                // frmEmployeeLateAdjustment
+        WEB_ROUTES_BY_SCREEN_ID.put(673, "/hrm/employee-loan-deduction");                 // EmployeeLoanDeduction
+        WEB_ROUTES_BY_SCREEN_ID.put(674, "/hrm/employee-short-adjustment");               // EmployeeShortAdjustment
+        WEB_ROUTES_BY_SCREEN_ID.put(371, "/hrm/reports/employee-register");               // EmployeeHistoryRpt
+        WEB_ROUTES_BY_SCREEN_ID.put(372, "/hrm/reports/employee-monthly-register");       // HRM_Reports
+        WEB_ROUTES_BY_SCREEN_ID.put(373, "/hrm/reports/daily-attendance");                // DailyAttendanceRpt
+        WEB_ROUTES_BY_SCREEN_ID.put(374, "/hrm/reports/daily-late-and-early-departure");  // DailyLateandEarlyDeparture
+        WEB_ROUTES_BY_SCREEN_ID.put(375, "/hrm/reports/duty-roster-employee-wise");       // genDutyRosterEmployeeWise
+        WEB_ROUTES_BY_SCREEN_ID.put(376, "/hrm/reports/employee-attendence");             // genEmployeeAttendence
+        WEB_ROUTES_BY_SCREEN_ID.put(377, "/hrm/reports/monthly-attendance-summary");      // MonthlyAttendanceSummary
+        WEB_ROUTES_BY_SCREEN_ID.put(378, "/hrm/reports/salary-sheet");                    // PayRollSalarySheetRpt
 
         /* Packing Material, ModuleId 54 */
         WEB_ROUTES_BY_SCREEN_ID.put(496, "/packing-material/item-pm");        // AddItemPM (Architecture.WinApp.StoreManagement)
