@@ -272,6 +272,8 @@ public class SaleOrderHistoryLookupsRepository {
         out.put("checkStockAndGiveWarningMessageOnSaleOrder", truthy(config(u, "CheckStockAndGiveWarningMessageOnSaleOrder")));
         out.put("itemSearchByCode", truthy(config(u, "ItemSearchByCode")));
         out.put("saleOrderBranchWise", truthy(config(u, "SaleOrderBranchWise")));
+        /* ConfigurationDefault (:820-823): when false and no expense row was added, the save asks for confirmation (:3024). */
+        out.put("warningMessageOnSaleOrderForExpenseGridIsOff", truthy(config(u, "WarningMessageOnSaleOrderForExpenseGridIsOff")));
         Set<Integer> features = new HashSet<>();
         for (Map<String, Object> r : jdbc.queryForList("EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?, @CompanyId=?",
                 u.getOrganizationId(), u.getCompanyId())) features.add(num(r.get("Id")));

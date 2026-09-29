@@ -333,7 +333,14 @@ document.addEventListener('keydown', function (e) {
     if (k === 's' && !updateMode) { e.preventDefault(); cwSave(); }
     else if (k === 'n')           { e.preventDefault(); cwNew(); }
     else if (k === 'u' && updateMode) { e.preventDefault(); cwUpdate(); }
+    else if (k === 'e')           { e.preventDefault(); cwClose(); }        /* Ctrl+E -> Close() :413 */
 });
+/* Close() - Escape (:413) */
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !e.ctrlKey) { e.preventDefault(); cwClose(); } });
+function cwClose() {
+    if (window.opener && !window.opener.closed) { window.close(); return; }
+    window.location.href = '/accounts/vouchers/contractor-wages-dashboard';
+}
 
 /* frmContractorWagesAccount_Load, :107-124 - same order as the desktop. */
 document.addEventListener('DOMContentLoaded', function () {

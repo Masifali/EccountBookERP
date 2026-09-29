@@ -91,10 +91,7 @@ public class ContractorWagesScheduleRestController {
         return ResponseEntity.ok(scheduleService.saveContractorWiseSchedule(body));
     }
 
-    /**
-     * grdWagesSchedule_ColumnButtonClick, form :631-634. The row's own EntryUserId is what the
-     * desktop passes as @EntryUserId, so it is read from the grid row, not from the session.
-     */
+    /** grdWagesSchedule_ColumnButtonClick / gridhistory_ColumnButtonClick -> ApproveUnApprove(Id, "Approve", row EntryUserId). */
     @PostMapping("/{id}/approve")
     public ResponseEntity<Map<String, Object>> approve(@PathVariable int id,
                                                        @RequestBody Map<String, Object> body) {
@@ -104,6 +101,24 @@ public class ContractorWagesScheduleRestController {
             try { rowEntryUserId = (int) Double.parseDouble(String.valueOf(v).trim()); }
             catch (Exception ignored) { }
         }
-        return ResponseEntity.ok(scheduleService.approve(id, rowEntryUserId));
+        String reqType = body.get("reqType") == null ? "Approve" : String.valueOf(body.get("reqType"));
+        return ResponseEntity.ok(scheduleService.approve(id, rowEntryUserId, reqType));
+    }
+
+    /** BindGridHistory (both forms): actionId 2 = plain schedule, 1 = contractor wise. */
+    @GetMapping("/history")
+    public ResponseEntity<List<Map<String, Object>>> history(
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate,
+            @RequestParam(defaultValue = "0") int contractorId,
+            @RequestParam(defaultValue = "0") int wagesAccountId,
+            @RequestParam(defaultValue = "2") int actionId) {
+        return ResponseEntity.ok(scheduleService.getHistory(fromDate, toDate, contractorId, wagesAccountId, actionId));
+    }
+
+    /** SetRightsValueInRightsObject(base.Name) - btnsave.Enabled / btnUpdate.Enabled. */
+    @GetMapping("/rights")
+    public ResponseEntity<Map<String, Boolean>> rights(@RequestParam String screen) {
+        return ResponseEntity.ok(scheduleService.rights(screen));
     }
 }

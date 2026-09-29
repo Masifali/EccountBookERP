@@ -1322,7 +1322,7 @@ function soLoadInquiry() {
         var ship = intOf('cmbShipToAddress') > 0 ? textOf('cmbShipToAddress') : '';
         if (!ship) ship = (val('txtShipToAddress') || '').trim();
         if (ship) setSelByText('inqShipToAddress', ship);
-        $('inqLoader').style.display = '';
+        $('inqLoader').style.display = 'flex';
         return soInqFetch();
     }).catch(function (e) { message('Error occurred during database call: ' + e.message, true); })
       .finally(function () { setBusy(false); soRelease('inqopen'); });
@@ -1449,6 +1449,7 @@ function soInqRender() {
     var head = $('grdInqLoaderHead'), body = $('grdInqLoaderBody');
     head.innerHTML = '<tr><th style="width:30px;"><input type="checkbox" onclick="soInqCheckAll(this)"></th>'
         + INQ_COLS.map(function (c) { return '<th>' + esc(c[0]) + '</th>'; }).join('') + '</tr>';
+    if ($('inqCount')) $('inqCount').textContent = inqRows.length ? ('Records: ' + inqRows.length) : '';
     if (!inqRows.length) {
         body.innerHTML = '<tr><td colspan="' + (INQ_COLS.length + 1) + '">No pending inquiries.</td></tr>';
         return;
@@ -2083,10 +2084,148 @@ function soPrint() {
 /* BtnAddShiptoAddress_Click (:4801-4811) opens SupfrmShipToAddress as a dialog; the desktop does
    not rebind the combo afterwards. The web's ship-to address maintenance lives on the party
    (Supplier) definition page, opened in its own tab; press Refresh here to re-read addresses. */
+/* btnAddShipTo_Click (:4800-4812): SupfrmShipToAddress.ShowDialog(); the offer's
+   combos are not re-bound on close (desktop) - press Refresh to pick a new address.
+   The dialog reuses the 1052 controller's ship-to endpoints (same proc family:
+   SupplierCustomerShipToAddress Save/GetById/FormHistory, Country/City GetAll). */
+var ST_API = '/api/commission/purchase-order/ship-to';
+var shipToLookupsLoaded = false;
+function soStBtn(id, on) { var b = $(id); if (!b) return; b.disabled = on; b.classList.toggle('btn-busy', on); }
 function soAddShipToAddress() {
-    window.open('/accounts/supplier', '_blank');
-    message('Ship-to addresses are maintained on the Supplier definition (ShipToAddress). Press Refresh after saving.');
+    if (!soGuard('stopen')) return;
+    soStBtn('btnAddShipTo', true);
+    $('shipToModal').style.display = 'flex';
+    soShipToReset();
+    var jobs = [soShipToGrid()];                            /* SupfrmShipToAddress_Load: supplier, country, grid */
+    if (!shipToLookupsLoaded) jobs.push(soShipToCombos());
+    Promise.all(jobs).then(function () { shipToLookupsLoaded = true; })
+        .catch(function (e) { alert(e.message); })
+        .finally(function () { soStBtn('btnAddShipTo', false); soRelease('stopen'); });
 }
+/* cmbsupplierfill (SupplierCustomerGetforComboServiceBind, "Supplier Title") + cmbcountryfill (Country.GetAll) */
+function soShipToCombos() {
+    fillSelect('stParty', lookupData.deliveryParties || lookupData.suppliers || [], 'Id', 'CompanyName');
+    return getJson(ST_API + '/countries').then(function (rows) {
+        fillSelect('stCountry', (rows || []).map(function (r) { return { Id: r.Id, Name: r.Description || r.CountryName }; }), 'Id', 'Name');
+    });
+}
+/* cmbcountry_Leave: City.GetAll(org, company) - all cities, not filtered by country */
+function soShipToCountryLeave() {
+    return getJson(ST_API + '/cities').then(function (rows) {
+        var keep = val('stCity');
+        fillSelect('stCity', (rows || []).map(function (r) { return { Id: r.Id, Name: r.CityName }; }), 'Id', 'Name');
+        if (keep) setSel('stCity', keep);
+    }).catch(function (e) { alert(e.message); });
+}
+function soShipToRefresh() {                                /* btnRefresh_Click: country + supplier combos */
+    if (!soGuard('strefresh')) return;
+    soStBtn('btnStRefresh', true);
+    soShipToCombos().catch(function (e) { alert(e.message); })
+        .finally(function () { soStBtn('btnStRefresh', false); soRelease('strefresh'); });
+}
+function soShipToClose() { $('shipToModal').style.display = 'none'; }
+function soShipToMode(update) {                             /* btnsave / btnupdate visibility */
+    $('btnStSave').style.display = update ? 'none' : '';
+    $('btnStUpdate').style.display = update ? '' : 'none';
+}
+function soShipToReset() {                                  /* Reset() */
+    $('stId').value = 0;
+    ['stParty', 'stCountry', 'stCity'].forEach(function (id) { setSel(id, '0'); });
+    ['stTitle', 'stAddress', 'stContact', 'stPhone', 'stMobile', 'stWhatsApp'].forEach(function (id) { $(id).value = ''; });
+    soShipToMode(false);
+}
+function soDigitsOnly(el) { var v = el.value.replace(/[^0-9]/g, ''); if (v !== el.value) el.value = v; }
+/* gridFill(): FormHistory(org, company) -> Id(hidden), CompanyName(PartyName), AddressTitle, Country, City, ... */
+function soShipToGrid() {
+    return getJson(ST_API + '/history').then(function (rows) {
+        var body = $('grdShipToBody'); body.innerHTML = '';
+        (rows || []).forEach(function (r) {
+            var tr = document.createElement('tr');
+            tr.ondblclick = function () { soShipToEdit(r.Id); };
+            tr.innerHTML = [r.PartyName, r.AddressTitle, r.CountryName, r.CityName, r.ContactPerson, r.PhoneNo, r.MobileNo,
+                r.WhatsAppNo, fmtDesktopDate(r.EntryDate, true), r.EntryUser, fmtDesktopDate(r.ModifyDate, true), r.ModifyUser, r.AddressLine1]
+                .map(function (v) { return '<td>' + esc(v === null || v === undefined ? '' : v) + '</td>'; }).join('');
+            body.appendChild(tr);
+        });
+    });
+}
+/* grdfrm_CellContentDoubleClick: GetById -> fill, Update visible */
+function soShipToEdit(id) {
+    getJson(ST_API + '/' + id).then(function (b) {
+        $('stId').value = id;
+        setSel('stParty', b.SupplierCustomerId || 0);
+        setSel('stCountry', b.CountryId || 0);
+        var city = b.CityId || 0;
+        return soShipToCountryLeave().then(function () {
+            setSel('stCity', city);
+            $('stAddress').value = b.AddressLine1 || '';
+            $('stTitle').value = b.AddressTitle || '';
+            $('stWhatsApp').value = b.WhatsAppNo || '';
+            $('stContact').value = b.ContactPerson || '';
+            $('stMobile').value = b.MobileNo || '';
+            $('stPhone').value = b.PhoneNo || '';
+            soShipToMode(true);
+        });
+    }).catch(function (e) { alert(e.message); });
+}
+/* Insert(): FormValidation messages in desktop order; then gridFill + Reset */
+function soShipToSave(btnId) {
+    if (!intOf('stParty')) { alert('Please Select Supplier'); return; }
+    if (!val('stAddress').trim()) { alert('Please Enter Address'); return; }
+    if (!val('stTitle').trim()) { alert('Please Enter Address Title'); return; }
+    if (!intOf('stCountry')) { alert('Please Select Country'); return; }
+    if (!intOf('stCity')) { alert('Please Select City'); return; }
+    if (!soGuard('stsave')) return;
+    soStBtn(btnId, true);
+    fetch(ST_API + '/save', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            Id: intOf('stId'), SupplierCustomerId: intOf('stParty'), CountryId: intOf('stCountry'), CityId: intOf('stCity'),
+            AddressLine1: val('stAddress'), AddressTitle: val('stTitle'), PhoneNo: val('stPhone'), MobileNo: val('stMobile'),
+            WhatsAppNo: val('stWhatsApp'), ContactPerson: val('stContact')
+        })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.success) { alert((d && d.message) || 'Save refused.'); return; }
+        alert(d.message || (intOf('stId') ? 'Update Successfully' : 'Save Successfully'));
+        soShipToReset();
+        return soShipToGrid();
+    }).catch(function (e) { alert(e.message); })
+      .finally(function () { soStBtn(btnId, false); soRelease('stsave'); });
+}
+
+/* MakeShortCutKeys (:524-546) */
+function soInqShortcuts() {
+    var rows = [['Ctrl+E', 'For Close'], ['Ctrl+N', 'For New'], ['Ctrl+R', 'For Refresh'], ['Ctrl+L', 'To Press Load Button'],
+                ['Ctrl+S', 'For Search'], ['Ctrl+alt', 'To Show ShortCut Keys Form'],
+                ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]];
+    $('scKeysBody').innerHTML = rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>'; }).join('');
+    $('scKeys').style.display = 'flex';
+}
+/* frmLoadLogisticAgreementForPO_KeyDown (:560-610) and SupfrmShipToAddress_KeyDown (:465-490) */
+document.addEventListener('keydown', function (e) {
+    var open = function (id) { var m = $(id); return m && m.style.display !== 'none'; };
+    var k = (e.key || '').toLowerCase();
+    if (open('scKeys')) { if (k === 'escape') { $('scKeys').style.display = 'none'; e.preventDefault(); } return; }
+    if (open('inqLoader')) {
+        if (k === 'escape' || (e.ctrlKey && k === 'e')) soInqClose();
+        else if (e.ctrlKey && e.altKey) soInqShortcuts();
+        else if (e.ctrlKey && k === 's') soInqSearch();
+        else if (e.ctrlKey && k === 'l') soInqLoadOnOffer();
+        else if (e.ctrlKey && k === 'n') soInqReset();
+        else if (e.ctrlKey && k === 'r') soInqRefreshCombos();
+        else return;
+        e.preventDefault(); e.stopPropagation(); return;
+    }
+    if (open('shipToModal')) {
+        var upd = $('btnStUpdate').style.display !== 'none';
+        if (k === 'escape' || (e.ctrlKey && k === 'e')) soShipToClose();
+        else if (e.ctrlKey && k === 'n') soShipToReset();
+        else if (e.ctrlKey && k === 's' && !upd) soShipToSave('btnStSave');
+        else if (e.ctrlKey && k === 'u' && upd) soShipToSave('btnStUpdate');
+        else return;
+        e.preventDefault(); e.stopPropagation();
+    }
+}, true);
 
 /* RadBusinessName_CheckedChanged (:929) - re-bind what the party combos DISPLAY.
    A row that lacks NickName or PartyCode keeps its CompanyName rather than

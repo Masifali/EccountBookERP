@@ -1,132 +1,115 @@
 /*
- * Client-side handler for the "Document Wise Wages Configuration" status grid on tabWages.
- * Backed by ConfigurationWagesStatusController (/api/configurations/wages-documents).
+ * Configuration.cs - tabWages / PanelWages02 "Document Wise Wages Configuration".
+ *
+ *   GetRefDocumentsForWages()   (Configuration.cs:2823, called from the form Load)
+ *     InvContractorWagesBillHeader.GetRefDocumentsForWages(0) -> USP_GetRefDocumentsForWages
+ *     with @RefDocumentTypeId omitted. The grid is rebuilt from 4 columns
+ *     (Id, RefDocumentTypeId, DocumentTypeDescription, IsActive); Id and RefDocumentTypeId are
+ *     hidden, DocumentTypeDescription is read-only, IsActive is the editable checkbox column.
+ *     Captions are the raw column names (GridEX RetrieveStructure).
+ *
+ *   btnStatusUpdate_Click()     (Configuration.cs:3739)
+ *     rows > 0 and "Are you sure to Update Status?" (Yes/No) -> one
+ *     USP_ContractorWagesRefDocumentStatus_Insert per grid row -> "Record's Status Updated
+ *     Successfully" -> GetRefDocumentsForWages() again. Errors show ex.Message.
+ *
+ * Backend: ConfigurationWagesStatusController (/api/configurations/wages-documents).
  */
 (function () {
     "use strict";
 
     var API_URL = "/api/configurations/wages-documents";
-    var cachedRows = [];
+    var updating = false;
+
+    function esc(v) { return $("<div>").text(v == null ? "" : String(v)).html(); }
+    function pick(row, a, b) { return row[a] !== undefined ? row[a] : row[b]; }
+    function toBool(v) { return v === true || v === 1 || v === "1" || v === "true" || v === "True"; }
 
     function showStatusMessage(msg, isError) {
-        var $msg = $("#wagesStatusMessage");
-        if ($msg.length) {
-            $msg.text(msg)
-                .css("color", isError ? "#c92a2a" : "#2b8a3e")
-                .css("font-weight", "600");
-        }
+        $("#wagesStatusMessage").text(msg || "")
+            .css({ color: isError ? "#c92a2a" : "#2b8a3e", "font-weight": "600" });
+    }
+
+    function renderNavigator() {
+        var n = $("#grdWagesRefDocuments tbody tr[data-row]").length;
+        var i = $("#grdWagesRefDocuments tbody tr.is-current").index() + 1;
+        $("#wagesDocsNavigator").text("Record " + (n ? Math.max(i, 1) : 0) + " of " + n);
+        $("#wagesDocsTotal").text(n ? "Total: " + n : "");
     }
 
     function renderTable(rows) {
-        cachedRows = rows || [];
-        var $tbody = $("#grdWagesRefDocuments tbody");
-        $tbody.empty();
-
-        if (!rows || rows.length === 0) {
-            $tbody.append('<tr><td colspan="2" style="text-align:center;padding:12px;color:#868e96;">No reference document statuses found</td></tr>');
-            return;
-        }
-
-        $.each(rows, function (idx, row) {
-            var id = row.Id !== undefined ? row.Id : row.id;
-            var refTypeId = row.RefDocumentTypeId !== undefined ? row.RefDocumentTypeId : row.refDocumentTypeId;
-            var docDesc = row.DocumentTypeDescription || row.documentTypeDescription || ("Document #" + refTypeId);
-            var isActive = (row.IsActive !== undefined ? row.IsActive : row.isActive);
-            if (isActive === 1 || isActive === true || isActive === "true") {
-                isActive = true;
-            } else {
-                isActive = false;
-            }
-
-            var tr = '<tr style="border-bottom:1px solid #dee2e6;">' +
-                     '  <td style="padding:8px 10px;">' + $("<div>").text(docDesc).html() + '</td>' +
-                     '  <td style="padding:8px 10px;text-align:center;">' +
-                     '    <input type="checkbox" class="wages-status-check" ' +
-                     '           data-id="' + id + '" ' +
-                     '           data-type-id="' + refTypeId + '" ' +
-                     (isActive ? 'checked="checked"' : '') + ' />' +
-                     '  </td>' +
-                     '</tr>';
-            $tbody.append(tr);
+        var $tbody = $("#grdWagesRefDocuments tbody").empty();
+        // Desktop: when USP_GetRefDocumentsForWages returns no rows the grid is simply left empty.
+        $.each(rows || [], function (idx, row) {
+            var id = pick(row, "Id", "id");
+            var typeId = pick(row, "RefDocumentTypeId", "refDocumentTypeId");
+            var desc = pick(row, "DocumentTypeDescription", "documentTypeDescription");
+            var active = toBool(pick(row, "IsActive", "isActive"));
+            $tbody.append(
+                '<tr data-row="1"' + (idx === 0 ? ' class="is-current"' : '') + '>' +
+                '<td>' + esc(desc) + '</td>' +
+                '<td class="cfg-col-check"><input type="checkbox" class="wages-status-check"' +
+                ' data-id="' + esc(id) + '" data-type-id="' + esc(typeId) + '"' +
+                (active ? ' checked' : '') + ' aria-label="IsActive - ' + esc(desc) + '"></td></tr>');
         });
+        renderNavigator();
     }
 
     function loadWagesStatus() {
-        showStatusMessage("Loading status records...", false);
-        $.ajax({
-            url: API_URL,
-            type: "GET",
-            dataType: "json",
-            success: function (data) {
-                renderTable(data);
-                showStatusMessage("", false);
-            },
-            error: function (xhr) {
-                var err = "Failed to load document statuses";
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    err = xhr.responseJSON.message;
-                }
-                showStatusMessage(err, true);
-            }
-        });
+        return $.ajax({ url: API_URL, type: "GET", dataType: "json" })
+            .done(function (data) { renderTable(data); })
+            .fail(function (xhr) {
+                renderTable([]);
+                showStatusMessage((xhr.responseJSON && xhr.responseJSON.message) || "Failed to load document statuses", true);
+            });
+    }
+
+    function setBusy(busy) {
+        $("#btnStatusUpdate").prop("disabled", busy).toggleClass("is-loading", busy)
+            .attr("aria-busy", busy ? "true" : null);
+        $("#grdWagesRefDocuments .wages-status-check").prop("disabled", busy);
     }
 
     function updateWagesStatus() {
-        var payload = [];
-        $("#grdWagesRefDocuments tbody tr").each(function () {
-            var $chk = $(this).find(".wages-status-check");
-            if ($chk.length) {
-                var id = parseInt($chk.attr("data-id"), 10);
-                var refTypeId = parseInt($chk.attr("data-type-id"), 10);
-                var isActive = $chk.is(":checked");
-                payload.push({
-                    id: id,
-                    refDocumentTypeId: refTypeId,
-                    isActive: isActive
-                });
-            }
-        });
+        if (updating) return;                       // no duplicate requests
+        var payload = $("#grdWagesRefDocuments tbody .wages-status-check").map(function () {
+            var $c = $(this);
+            return {
+                id: parseInt($c.attr("data-id"), 10),
+                refDocumentTypeId: parseInt($c.attr("data-type-id"), 10),
+                isActive: $c.is(":checked")
+            };
+        }).get();
+        // Desktop: grdWagesRefDocuments.GetRows().Count() > 0 && Yes/No confirm - else nothing.
+        if (!payload.length) return;
+        if (!window.confirm("Are you sure to Update Status?")) return;
 
-        if (payload.length === 0) {
-            showStatusMessage("No rows to update", true);
-            return;
-        }
-
-        var $btn = $("#btnStatusUpdate");
-        $btn.prop("disabled", true);
-        showStatusMessage("Updating status...", false);
-
-        $.ajax({
-            url: API_URL,
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(payload),
-            success: function (res) {
-                $btn.prop("disabled", false);
-                var msg = (res && res.message) ? res.message : "Record's Status Updated Successfully";
+        updating = true;
+        setBusy(true);
+        showStatusMessage("", false);
+        $.ajax({ url: API_URL, type: "POST", contentType: "application/json", data: JSON.stringify(payload) })
+            .done(function (res) {
+                var msg = (res && res.message) || "Record's Status Updated Successfully";
                 showStatusMessage(msg, false);
-                loadWagesStatus();
-            },
-            error: function (xhr) {
-                $btn.prop("disabled", false);
-                var err = "Failed to update status records";
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    err = xhr.responseJSON.message;
-                }
+                window.alert(msg);
+                return loadWagesStatus();
+            })
+            .fail(function (xhr) {
+                var err = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) ||
+                          "Failed to update status records";
                 showStatusMessage(err, true);
-            }
-        });
+                window.alert(err);
+            })
+            .always(function () { updating = false; setBusy(false); });
     }
 
     $(document).ready(function () {
         loadWagesStatus();
-        $("#btnStatusUpdate").on("click", function (e) {
-            e.preventDefault();
-            updateWagesStatus();
-        });
-        $("#btnWagesStatusRefresh").on("click", function (e) {
-            e.preventDefault();
-            loadWagesStatus();
+        $("#btnStatusUpdate").on("click", function (e) { e.preventDefault(); updateWagesStatus(); });
+        // Current-row marker for the record navigator (GridEX RecordNavigator).
+        $("#grdWagesRefDocuments").on("click focusin", "tbody tr[data-row]", function () {
+            $(this).addClass("is-current").siblings().removeClass("is-current");
+            renderNavigator();
         });
     });
 })();

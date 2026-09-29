@@ -51,6 +51,13 @@ public class ReportRegistry {
     private void add(ReportDefinition d) { byKey.put(d.key, d); handTraced.add(d.key); }
 
     /**
+     * Hand-traced contracts registered by a module's own component (HRM: HrmReportSupport), so that
+     * module does not edit this file. Same rule as add(): a registered key is hand-traced and wins
+     * over a seeded row (it replaces a seeded row with the same key, whenever it is registered).
+     */
+    public void register(ReportDefinition d) { add(d); }
+
+    /**
      * Merge the contracts seeded from the C# trace (migration/report-contracts).
      *
      * Hand-traced entries win outright: a key already present is counted and skipped, never
@@ -431,6 +438,22 @@ public class ReportRegistry {
                 ps(P("@OrganizationId","session:organizationId"),
                    P("@CompanyId","session:companyId")),
                 Collections.emptyList()));
+
+        /* ------------------------------------------------------ Export Invoice Packing List (frmExportInvoicePackingList, 882)
+           CommonServices.ExportPackingList529A / 529B / 529C(PrintId) (WinApp Common :10435-10514) -> all three call
+           ExportPdfReport.InvoicePackingList529A(CompanyId, Id) = usp_ExImInvoicePackingList_Rpt @CompanyId, @Id,
+           push "CompanyAddress" / "CompanyName" WITHOUT the @, and open 529A_ / 529B_ / 529C_ExportInvoiceSlipPackingList.rpt.
+           PrintId 0 -> "No Record Found For Display" (the endpoint's own 400 text). */
+        for (String slip : new String[] {"A", "B", "C"}) {
+            add(new ReportDefinition("exp-529" + slip, "529" + slip + "_ExportInvoiceSlipPackingList.rpt",
+                    "usp_ExImInvoicePackingList_Rpt",
+                    "CommonServices.ExportPackingList529" + slip,
+                    ps(P("@CompanyId","session:companyId"),
+                       P("@Id","arg:id"),
+                       P("rpt:CompanyAddress","same:@CompanyAddress"),
+                       P("rpt:CompanyName","same:@CompanyName")),
+                    Collections.emptyList()));
+        }
 
         /* -------------------------------------------------------------------------- Finance */
 
@@ -909,6 +932,16 @@ public class ReportRegistry {
                    G("@SupplierCustomerId","arg:contractorId"), G("@InvConractorWagesAccountsId","arg:wagesAccountId"),
                    G("@BranchesIds","arg:branchesIds"), G("@FreeOfCost","arg:freeOfCost"), G("@ActionId","arg:actionId"),
                    G("@StockPartyId","arg:stockPartyId"), G("@BranchWise","arg:branchWise")),
+                Collections.emptyList()));
+        /* frmContractWagesSchedule.btnPrintForm_Click (dtFormHistory) / btnPrint_Click (dtHistory):
+           ShowReportWithDataTable(dt, "06_ContractorWagesRateSchedule.rpt") - the rows of the last
+           BindgrdWagesSchedule / BindGridHistory, re-run with the same GetAll arguments (BLL :36-102). */
+        add(new ReportDefinition("ws-06", "06_ContractorWagesRateSchedule.rpt", "Sp_InvContractorWagesSchedule_GetAllMethod",
+                "frmContractWagesSchedule.btnPrint_Click",
+                ps(P("@OrganizationId","session:organizationId"), P("@CompanyId","session:companyId"),
+                   G("@EffectedDate","arg:fromDate"), G("@EffectedDateTo","arg:toDate"),
+                   G("@InvConractorWagesAccountsId","arg:wagesAccountId"), G("@ContractorId","arg:contractorId"),
+                   G("@ActionId","arg:actionId"), P("@Activity","const:ReadAll")),
                 Collections.emptyList()));
         /* frmEvaulationDetailWagesReports.btnPrint_Click - one procedure, five templates */
         add(new ReportDefinition("wr-160", "160-WagesRegister.rpt", "dbo.USp_WagesRegister", "frmEvaulationDetailWagesReports.btnPrint_Click",

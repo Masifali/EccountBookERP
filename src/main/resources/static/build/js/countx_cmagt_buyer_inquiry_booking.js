@@ -1376,7 +1376,123 @@ function bibPrint() {
 function bibPrintId(id) { window.open(API + '/print/' + id, '_blank'); }
 
 function bibAttachments() { message('Attachments are not implemented on this screen yet.', true); }
-function bibAddShipToAddress() { message('Defining a new ship-to address is not implemented on this screen yet.', true); }
+/* ------------------------------------ Ship To Address "+" (SupfrmShipToAddress, :2603)
+ * Same endpoints as the Purchase Order dialog (BLL SupplierCustomerShipToAddress:
+ * FormHistory / GetByID / Save -> Sp_SupplierCustomerShipToAddress_Insert|_Update).
+ * Load: cmbsupplierfill (SupplierCustomerGetforComboServiceBind), cmbcountryfill, gridFill.
+ * cmbcountry_Leave binds City.GetAll(org, company). Double-click a row = edit (Save hidden,
+ * Update shown). Insert(): FormValidation messages, then "Save Successfully" /
+ * "Update Successfully", gridFill, Reset. Nothing is pre-selected (Reset clears all). */
+var ST_API = '/api/commission/purchase-order/ship-to';
+var stLookups = false;
+function stStr(r, k) { if (!r) return ''; var v = r[k]; if (v == null) v = r[k.charAt(0).toLowerCase() + k.slice(1)]; return v == null ? '' : String(v); }
+function stInt(r, k) { var n = parseInt(stStr(r, k), 10); return isNaN(n) ? 0 : n; }
+function stDate(v) {
+    if (!v) return '';
+    var d = new Date(v); if (isNaN(d)) return String(v);
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function bibShipToLoadLookups() {
+    return Promise.all([
+        getJson(LOOKUP + '/suppliers').then(function (rows) { fillSelect('stParty', rows || [], 'Id', 'CompanyName'); }),
+        getJson(ST_API + '/countries').then(function (rows) {
+            fillSelect('stCountry', (rows || []).map(function (r) { return { Id: stInt(r, 'Id'), Name: stStr(r, 'Description') || stStr(r, 'CountryName') }; }), 'Id', 'Name');
+        })
+    ]).then(function () { stLookups = true; });
+}
+function bibAddShipToAddress() {
+    return withButton('btnAddShipTo', function () {
+        $('shipToModal').classList.add('open');
+        bibShipToReset();
+        return Promise.all([stLookups ? null : bibShipToLoadLookups(), bibShipToGrid()])
+            .catch(function (e) { alert(e.message); });
+    });
+}
+function bibShipToClose() { $('shipToModal').classList.remove('open'); }
+function bibShipToReset() {
+    $('stId').value = 0;
+    ['stParty', 'stCountry', 'stCity'].forEach(function (id) { if ($(id)) $(id).value = '0'; });
+    ['stTitle', 'stAddress', 'stContact', 'stPhone', 'stMobile', 'stWhatsApp'].forEach(function (id) { $(id).value = ''; });
+    $('btnStSave').style.display = ''; $('btnStUpdate').style.display = 'none';
+}
+function bibShipToRefresh() {
+    return withButton('btnStRefresh', function () { return bibShipToLoadLookups().catch(function (e) { alert(e.message); }); });
+}
+/* cmbcountry_Leave: City.GetAll(org, company) - not filtered by the country */
+var stCitiesLoaded = false;
+function bibShipToCountryLeave() {
+    if (stCitiesLoaded) return Promise.resolve();
+    return getJson(ST_API + '/cities').then(function (rows) {
+        var keep = intOf('stCity');
+        fillSelect('stCity', (rows || []).map(function (r) { return { Id: stInt(r, 'Id'), Name: stStr(r, 'CityName') }; }), 'Id', 'Name');
+        if (keep) $('stCity').value = keep;
+        stCitiesLoaded = true;
+    });
+}
+function bibShipToGrid() {
+    return getJson(ST_API + '/history').then(function (rows) {
+        var body = $('grdShipToBody'); body.innerHTML = '';
+        rows = rows || [];
+        rows.forEach(function (r) {
+            var tr = document.createElement('tr');
+            tr.onclick = function () { Array.prototype.forEach.call(body.children, function (x) { x.classList.remove('sel'); }); tr.classList.add('sel'); };
+            tr.ondblclick = function () { bibShipToEdit(stInt(r, 'Id')); };
+            tr.innerHTML = ['PartyName', 'AddressTitle', 'CountryName', 'CityName', 'ContactPerson', 'PhoneNo', 'MobileNo', 'WhatsAppNo']
+                .map(function (k) { return '<td>' + esc(stStr(r, k)) + '</td>'; }).join('') +
+                '<td>' + esc(stDate(r.EntryDate || r.entryDate)) + '</td><td>' + esc(stStr(r, 'EntryUser')) + '</td>' +
+                '<td>' + esc(stDate(r.ModifyDate || r.modifyDate)) + '</td><td>' + esc(stStr(r, 'ModifyUser')) + '</td>' +
+                '<td>' + esc(stStr(r, 'AddressLine1')) + '</td>';
+            body.appendChild(tr);
+        });
+        $('stCount').textContent = rows.length + ' Records';
+    });
+}
+/* grdfrm_CellContentDoubleClick (:369) */
+function bibShipToEdit(id) {
+    Promise.all([getJson(ST_API + '/' + id), bibShipToCountryLeave()]).then(function (res) {
+        var b = res[0];
+        $('stId').value = id;
+        $('stParty').value = stInt(b, 'SupplierCustomerId');
+        $('stCountry').value = stInt(b, 'CountryId');
+        $('stCity').value = stInt(b, 'CityId');
+        $('stAddress').value = stStr(b, 'AddressLine1');
+        $('stTitle').value = stStr(b, 'AddressTitle');
+        $('stWhatsApp').value = stStr(b, 'WhatsAppNo');
+        $('stContact').value = stStr(b, 'ContactPerson');
+        $('stMobile').value = stStr(b, 'MobileNo');
+        $('stPhone').value = stStr(b, 'PhoneNo');
+        $('btnStSave').style.display = 'none'; $('btnStUpdate').style.display = '';
+    }).catch(function (e) { alert(e.message); });
+}
+/* Insert() / FormValidation() (:77-111, :279) */
+function bibShipToSave(btnId) {
+    var focus = function (id, msg) { alert(msg); $(id).focus(); };
+    if (!intOf('stParty')) return focus('stParty', 'Please Select Supplier');
+    if (!val('stAddress').trim()) return focus('stAddress', 'Please Enter Address');
+    if (!val('stTitle').trim()) return focus('stTitle', 'Please Enter Address Title');
+    if (!intOf('stCountry')) return focus('stCountry', 'Please Select Country');
+    if (!intOf('stCity')) return focus('stCity', 'Please Select City');
+    return withButton(btnId, function () {
+        return fetch(ST_API + '/save', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                Id: intOf('stId'), SupplierCustomerId: intOf('stParty'), CountryId: intOf('stCountry'), CityId: intOf('stCity'),
+                AddressLine1: val('stAddress').trim(), AddressTitle: val('stTitle').trim(), PhoneNo: val('stPhone').trim(),
+                MobileNo: val('stMobile').trim(), WhatsAppNo: val('stWhatsApp').trim(), ContactPerson: val('stContact').trim()
+            })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+            if (!d || !d.success) { alert((d && d.message) || 'Save refused.'); return; }
+            alert(intOf('stId') ? 'Update Successfully' : 'Save Successfully');
+            bibShipToReset();
+            /* the new address becomes pickable in CmbShipToAddress without a page reload */
+            return Promise.all([bibShipToGrid(), getJson(LOOKUP + '/ship-to-addresses').then(function (rows) {
+                lookupData.shipToAddresses = rows || [];
+                bibDeliveryPartyChanged && bibDeliveryPartyChanged();
+            }).catch(function () {})]);
+        }).catch(function (e) { alert(e.message); });
+    });
+}
 function bibOpenSupplierOffer() { window.location.href = '/commission/supplier-offer'; }
 /* openForm(Id) (:2635): opens frmSubBuyerInquiryBooking as its own window and ReadById(Id).
    The web opens /commission/sub-buyer-inquiry-booking?id= in a new tab; when a popup is

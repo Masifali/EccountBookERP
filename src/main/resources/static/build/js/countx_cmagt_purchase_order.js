@@ -1943,7 +1943,7 @@ function poLoadSoFetch() {
             var exp = col(r, 'ValidityDate');
             var tr = document.createElement('tr');
             tr.innerHTML =
-                '<td><input type="checkbox" class="ls-chk" data-i="' + i + '"></td>' +
+                '<td class="cb"><input type="checkbox" class="ls-chk" data-i="' + i + '"></td>' +
                 '<td>' + esc(colStr(r, 'docNo')) + '</td>' +
                 '<td>' + esc(fmtDMY(col(r, 'docDate'))) + '</td>' +
                 '<td>' + esc(colStr(r, 'CommissionAgentName')) + '</td>' +
@@ -1967,8 +1967,31 @@ function poLoadSoFetch() {
                 '<td class="num">' + colInt(r, 'NoOfAttachments') + '</td>';
             body.appendChild(tr);
         });
+        poLoadSoFilter();
     });
 }
+/* Janus filter row of grd: case-insensitive "contains" per column */
+function poLoadSoFilter() {
+    var f = {}, n = 0, shown = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('#grdLoadSo .ls-flt'), function (i) { if (i.value.trim()) f[i.getAttribute('data-c')] = i.value.trim().toLowerCase(); });
+    Array.prototype.forEach.call(document.querySelectorAll('#grdLoadSoBody tr'), function (tr) {
+        if (!tr.querySelector('.ls-chk')) return;
+        n++;
+        var ok = Object.keys(f).every(function (c) { var td = tr.children[+c]; return td && td.textContent.toLowerCase().indexOf(f[c]) >= 0; });
+        tr.style.display = ok ? '' : 'none';
+        if (ok) shown++;
+    });
+    $('lsNav').textContent = 'Record ' + (shown ? 1 : 0) + ' of ' + shown + (shown !== n ? ' (filtered from ' + n + ')' : '');
+}
+document.addEventListener('input', function (e) { if (e.target && e.target.classList && e.target.classList.contains('ls-flt')) poLoadSoFilter(); });
+/* btnShortcutKeys_Click -> MakeShortCutKeys (:498-511) */
+function poLoadSoShortcuts() {
+    var keys = [['Ctrl+E', 'For Close'], ['Ctrl+N', 'For New'], ['Ctrl+R', 'For Refresh'], ['Ctrl+L', 'To Press Load Button'],
+        ['Ctrl+S', 'For Search'], ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]];
+    $('sckBody').innerHTML = keys.map(function (k) { return '<tr><td>' + esc(k[0]) + '</td><td>' + esc(k[1]) + '</td></tr>'; }).join('');
+    $('sckModal').style.display = 'flex';
+}
+function poDlgFull(id) { var w = $(id); if (w) w.classList.toggle('po-full'); }
 function poLoadSoShow() { withButton('btnLsShow', poLoadSoFetch); }
 /* btnReset_Click (:417): From = active year start, doc nos and buyer cleared, reload */
 function poLoadSoReset() {
@@ -1987,7 +2010,7 @@ function poLoadSoCheckAll(on) {
     Array.prototype.forEach.call(document.querySelectorAll('#grdLoadSoBody .ls-chk'), function (c) { c.checked = on; });
 }
 function poLoadSoLoad() {
-    var checked = Array.prototype.filter.call(document.querySelectorAll('#grdLoadSoBody .ls-chk'), function (c) { return c.checked; })
+    var checked = Array.prototype.filter.call(document.querySelectorAll('#grdLoadSoBody .ls-chk'), function (c) { return c.checked && c.closest('tr').style.display !== 'none'; })
         .map(function (c) { return loadSoRows[+c.getAttribute('data-i')]; });
     if (!checked.length) { alert('Check the row first'); return; }
     var allowed = {}, names = [];
@@ -2065,7 +2088,20 @@ function poShipToReset() {
     $('stId').value = 0;
     ['stParty', 'stCountry', 'stCity'].forEach(function (id) { if ($(id)) $(id).value = '0'; });
     ['stTitle', 'stAddress', 'stContact', 'stPhone', 'stMobile', 'stWhatsApp'].forEach(function (id) { $(id).value = ''; });
-    $('btnStSave').textContent = 'Save';
+    /* Reset (:400-420): Update hidden, Save visible */
+    $('btnStUpdate').style.display = 'none';
+    $('btnStSave').style.display = '';
+}
+/* btnRefresh_Click (:434): cmbcountryfill + cmbsupplierfill */
+function poShipToRefresh() {
+    return withButton('btnStRefresh', function () {
+        return Promise.all([
+            getJson(LOOKUP + '/suppliers').then(function (rows) { if (rows && rows.length) lookupData.deliveryParties = rows; }).catch(function () {}),
+            getJson(API + '/ship-to/countries').then(function (rows) {
+                fillSelect('stCountry', (rows || []).map(function (r) { return { Id: colInt(r, 'Id'), Name: colStr(r, 'Description') || colStr(r, 'CountryName') }; }), 'Id', 'Name');
+            })
+        ]).then(function () { fillSelect('stParty', lookupData.deliveryParties || lookupData.suppliers || [], 'Id', 'CompanyName'); });
+    });
 }
 function poShipToGrid() {
     return getJson(API + '/ship-to/history').then(function (rows) {
@@ -2081,6 +2117,7 @@ function poShipToGrid() {
                 esc(fmtDMY(col(r, 'ModifyDate'), true)) + '</td><td>' + esc(colStr(r, 'ModifyUser')) + '</td><td>' + esc(colStr(r, 'AddressLine1')) + '</td>';
             body.appendChild(tr);
         });
+        $('stNav').textContent = 'Record ' + ((rows || []).length ? 1 : 0) + ' of ' + (rows || []).length;
     });
 }
 function poShipToEdit(id) {
@@ -2095,16 +2132,18 @@ function poShipToEdit(id) {
         $('stContact').value = colStr(b, 'ContactPerson');
         $('stMobile').value = colStr(b, 'MobileNo');
         $('stPhone').value = colStr(b, 'PhoneNo');
-        $('btnStSave').textContent = 'Update';
+        /* grdfrm_CellContentDoubleClick (:352): Save hidden, Update shown */
+        $('btnStSave').style.display = 'none';
+        $('btnStUpdate').style.display = '';
     }).catch(function (e) { alert(e.message); });
 }
-function poShipToSave() {
+function poShipToSave(btnId) {
     if (!intOf('stParty')) { alert('Please Select Supplier'); return; }
     if (!val('stAddress').trim()) { alert('Please Enter Address'); return; }
     if (!val('stTitle').trim()) { alert('Please Enter Address Title'); return; }
     if (!intOf('stCountry')) { alert('Please Select Country'); return; }
     if (!intOf('stCity')) { alert('Please Select City'); return; }
-    withButton('btnStSave', function () {
+    withButton(btnId || 'btnStSave', function () {
         return fetch(API + '/ship-to/save', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2287,7 +2326,23 @@ function poShortCutKeys() {
 /* frmPurchaseOrderCmagt_KeyDown (:4470) - the browser-safe subset. A button only fires when it is
    visible and enabled, as on the desktop. */
 function poVisibleEnabled(id) { var b = $(id); return !!b && !b.disabled && b.style.display !== 'none'; }
+function poOpen(id) { var m = $(id); return !!m && m.style.display !== 'none'; }
 document.addEventListener('keydown', function (e) {
+    if (poOpen('sckModal')) { if (e.key === 'Escape') $('sckModal').style.display = 'none'; return; }
+    if (poOpen('loadSoModal')) {
+        var k0 = e.key, lk = function (fn) { e.preventDefault(); e.stopPropagation(); fn(); };
+        if (k0 === 'Escape' || (e.ctrlKey && (k0 === 'e' || k0 === 'E'))) lk(poLoadSoClose);
+        else if (e.ctrlKey && e.altKey) lk(poLoadSoShortcuts);
+        else if (e.ctrlKey && (k0 === 's' || k0 === 'S')) lk(poLoadSoShow);
+        else if (e.ctrlKey && (k0 === 'l' || k0 === 'L')) lk(poLoadSoLoad);
+        else if (e.ctrlKey && (k0 === 'n' || k0 === 'N')) lk(poLoadSoReset);
+        else if (e.ctrlKey && (k0 === 'r' || k0 === 'R')) lk(poLoadSoRefreshCombos_click);
+        else if (e.ctrlKey && k0 === 'F5') lk(function () { $('lsFromDate').focus(); });
+        else if (e.ctrlKey && k0 === 'ArrowUp') lk(function () { $('lsFromDate').focus(); });
+        else if (e.ctrlKey && k0 === 'ArrowDown') lk(function () { var c = document.querySelector('#grdLoadSoBody .ls-chk'); if (c) c.focus(); });
+        return;
+    }
+    if (poOpen('shipToModal')) { if (e.key === 'Escape') poShipToClose(); return; }
     if (!e.ctrlKey) return;
     var onForm = $('tabForm') && $('tabForm').style.display !== 'none';
     var k = e.key;

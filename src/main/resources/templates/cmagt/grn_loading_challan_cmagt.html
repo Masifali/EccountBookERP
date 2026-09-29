@@ -6,7 +6,7 @@
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
     <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20260921a}"/>
-    <link rel="stylesheet" th:href="@{/build/css/cmagt_grn1054.css?v=20260930T}"/>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_grn1054.css?v=20260930Z}"/>
 </head>
 <body class="cmagt g54">
 <div class="cmagt-appbar">
@@ -17,12 +17,11 @@
 
 <div layout:fragment="content" class="grn-page">
 
-    <ul class="main-tabs" id="grnTabs" role="tablist">
-        <li><a class="active" id="tab-form-link" href="#tab-form" role="tab">Form</a></li>
-        <li><a id="tab-history-link" href="#tab-history" role="tab">History</a></li>
-    </ul>
 
-    <!-- toolStrip1 at the TOP, as on the desktop (desktop order and captions: New, Refresh, Save, Update, Delete,
+    <div class="tab-content main-pane">
+        <!-- ============================== FORM (tabForm) ============================== -->
+        <div class="tab-pane show active" id="tab-form" role="tabpanel">
+    <!-- toolStrip1 docked Top INSIDE tabForm (tabForm.Controls.Add(toolStrip1) :5611), as on the desktop (desktop order and captions: New, Refresh, Save, Update, Delete,
          Attachments, 1054-Print, 1054_01-Print, ShortCut Keys). History sits on the right. -->
     <div class="grn-footer grn-topbar tstrip">
         <button type="button" id="btnNew">New</button>
@@ -38,9 +37,6 @@
         <button type="button" id="btnHistory" class="hist">History</button>
     </div>
 
-    <div class="tab-content main-pane">
-        <!-- ============================== FORM (tabForm) ============================== -->
-        <div class="tab-pane show active" id="tab-form" role="tabpanel">
             <input type="hidden" id="grnSupplierLoadingMasterId" value="0">
             <div class="g54-scroll"><div class="g54-form">
             <!-- panel3 (teal): title, Company, Branch, Preview -->
@@ -128,6 +124,7 @@
                 </div>
             <div class="drow">
                 <div class="dc" style="flex:251 1 0"><div class="dl"><label class="lb2">Delivery To Address</label></div><div class="fx"><select id="detShipToAddressId" data-dtcombo="shipTo2" data-dtcombo-caption="Ship To Address"><option value="0"></option></select></div></div>
+                <div class="dc dbtn st-plus"><div class="dl"></div><div class="btns"><button type="button" class="btn-teal" id="btnDefineShipToAddress" title="Define Ship To Address (SupfrmShipToAddress)">+</button></div></div>
                 <div class="dc" style="flex:250 1 0"><div class="dl"><label class="lb2" for="detDeliverToAddress">Delivery To Address</label></div><input type="text" id="detDeliverToAddress"></div>
                 <div class="dc" style="flex:283 1 0"><div class="dl"><label class="lb2" for="detRemarks">Remarks</label></div><input type="text" id="detRemarks"></div>
                 <div class="dc" style="flex:200 1 0"><div class="dl"><label class="lb2" for="detWarningRemarks">Warning Remarks</label></div><input type="text" id="detWarningRemarks" disabled></div>
@@ -155,25 +152,30 @@
                     <tfoot><tr id="detailTotals"></tr></tfoot>
                 </table>
             </div>
+                    <div class="recnav" id="navDetail"></div>
             <!-- panel6 (154px): panel10 Empty Bags (515) | panel8 Other Expenses (605) -->
             <div class="ebsplit" style="height:154px">
                 <div style="width:515px;flex:0 0 515px">
-                    <div class="teal strip" style="height:22px"><span class="ylw">Empty Bags Weight Deduction From Bill Weight</span></div>
-                    <div class="grid-wrap" style="height:132px">
+                    <div class="teal strip" style="height:22px"><span class="ylw">Empty Bags Weight Deduction From Bill Weight</span><span class="spacer"></span><button type="button" class="grid-fs gbar" data-target="wrapEb" title="Fullscreen">&#x26F6;</button></div>
+                    <div class="grid-wrap" id="wrapEb" style="height:108px">
                         <table class="grid-table" id="gridEmptyBags">
-                            <thead><tr><th>+</th><th>X</th><th class="col-pono">Purchase Order No</th><th>Packing Type</th><th class="num">Purchase Rate</th><th>Empty Bag Item</th></tr></thead>
+                            <thead><tr><th>X</th><th>+</th><th class="col-pono">Purchase Order No</th><th>Packing Type</th><th class="num">Purchase Rate</th><th>Empty Bag Item</th></tr></thead>
                             <tbody></tbody>
+                            <tfoot><tr id="ebTotals"></tr></tfoot>
                         </table>
                     </div>
+                    <div class="recnav" id="navEb"></div>
                 </div>
                 <div style="flex:1 1 605px">
-                    <div class="teal strip" style="height:22px"><span class="ylw">Other Expenses</span></div>
-                    <div class="grid-wrap" style="height:132px">
+                    <div class="teal strip" style="height:22px"><span class="ylw">Other Expenses</span><span class="spacer"></span><button type="button" class="grid-fs gbar" data-target="wrapExp" title="Fullscreen">&#x26F6;</button></div>
+                    <div class="grid-wrap" id="wrapExp" style="height:108px">
                         <table class="grid-table" id="gridExpenses">
-                            <thead><tr><th>+</th><th>X</th><th class="col-pono">Purchase Order No</th><th>Other Item Name</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th><th>Remarks</th></tr></thead>
+                            <thead><tr><th>X</th><th>+</th><th class="col-pono">Purchase Order No</th><th>Other Item Name</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th><th>Remarks</th></tr></thead>
                             <tbody></tbody>
+                            <tfoot><tr id="expTotals"></tr></tfoot>
                         </table>
                     </div>
+                    <div class="recnav" id="navExp"></div>
                 </div>
             </div>
             </div></div>
@@ -250,6 +252,12 @@
         </div>
     </div>
 
+    <!-- tabControl1.Alignment = Bottom (:5595): Form | History tabs sit under the pages -->
+    <ul class="main-tabs bottom" id="grnTabs" role="tablist">
+        <li><a class="active" id="tab-form-link" href="#tab-form" role="tab">Form</a></li>
+        <li><a id="tab-history-link" href="#tab-history" role="tab">History</a></li>
+    </ul>
+
     <!-- ===================== Load Purchase Order (frmLoadPurchaseOrderForGrnLoading) ===================== -->
     <!-- ===================== frmLoadPurchaseOrderForGrnLoading (Pending Purchase Order For Grn Loading) ===================== -->
     <div class="grn-modal" id="loaderModal">
@@ -300,10 +308,46 @@
         </div>
     </div>
 
+    <!-- ===================== SupfrmShipToAddress (btnDefineShipToAddress_Click :4274) ===================== -->
+    <div class="grn-modal" id="shipToModal">
+        <div class="box stbox">
+            <!-- toolStrip1: &New | &Update | &Refresh | &Save (Save/Update swap visibility) -->
+            <div class="tstrip ld-strip">
+                <button type="button" id="btnStNew">New</button>
+                <button type="button" id="btnStUpdate" style="display:none">Update</button>
+                <button type="button" id="btnStRefresh">Refresh</button>
+                <button type="button" id="btnStSave">Save</button>
+                <span class="spacer"></span>
+                <button type="button" id="btnStClose" title="Close (Esc)">&#x2715;</button>
+            </div>
+            <div class="teal ld-title st-title"><span>Ship To Address</span></div>
+            <input type="hidden" id="stId" value="0">
+            <div class="st-form">
+                <label>Supplier/Customer</label><div class="fx"><select id="stParty" data-dtcombo="single" data-dtcombo-caption="Supplier Title"><option value="0"></option></select></div>
+                <label for="stContact">Contact / Party Name</label><input type="text" id="stContact" maxlength="100">
+                <label for="stTitle">Address Title</label><input type="text" id="stTitle" maxlength="100">
+                <label for="stPhone">Telephone</label><input type="text" id="stPhone" maxlength="50">
+                <label>Country</label><div class="fx"><select id="stCountry" data-dtcombo="single" data-dtcombo-caption="Country Name"><option value="0"></option></select></div>
+                <label for="stMobile">Cell No</label><input type="text" id="stMobile" maxlength="50">
+                <label>City</label><div class="fx"><select id="stCity" data-dtcombo="single" data-dtcombo-caption="City Name"><option value="0"></option></select></div>
+                <label for="stWhatsApp">WhatsApp No</label><input type="text" id="stWhatsApp" maxlength="50">
+                <label for="stAddress">Address</label><input type="text" id="stAddress" class="st-wide" maxlength="550">
+            </div>
+            <div class="teal strip ld-gbar"><span class="wht st-h">History</span><span class="spacer"></span>
+                <button type="button" class="grid-fs gbar" data-target="wrapShipTo" title="Fullscreen">&#x26F6;</button></div>
+            <div class="grid-wrap ld-grid" id="wrapShipTo">
+                <table class="grid-table" id="gridShipTo">
+                    <thead><tr><th>CompanyName</th><th>AddressTitle</th><th>Country</th><th>City</th><th>ContactPerson</th><th>PhoneNo</th><th>MobileNo</th><th>WhatsAppNo</th><th>EntryDate</th><th>EntryUser</th><th>ModifyDate</th><th>ModifyUser</th><th>AddressLine1</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_cmagt_grn_loading.js?v=20260930L}"></script>
+<script th:src="@{/build/js/countx_cmagt_grn_loading.js?v=20260930Z}"></script>
 <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
 <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 <script th:src="@{/build/js/cmagt_session_defaults.js?v=20260930a}"></script>

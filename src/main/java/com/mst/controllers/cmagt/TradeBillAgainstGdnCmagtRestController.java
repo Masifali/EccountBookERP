@@ -116,6 +116,12 @@ public class TradeBillAgainstGdnCmagtRestController {
         return ResponseEntity.ok(service.historyCombos());
     }
 
+    /** SetRightsValueInRightsObject for this screen - the page enables Save/Update/Delete from it. */
+    @GetMapping("/rights")
+    public ResponseEntity<Map<String, Boolean>> rights() {
+        return ResponseEntity.ok(service.formRights());
+    }
+
     @GetMapping("/lookups/year-start")
     public ResponseEntity<Map<String, Object>> yearStart() {
         return ResponseEntity.ok(service.yearStart());

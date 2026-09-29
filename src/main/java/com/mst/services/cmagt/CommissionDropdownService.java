@@ -733,6 +733,9 @@ public class CommissionDropdownService {
         out.put("defaultDeliveryDays", 1);
         /* GDN (:574) / Trade Bill (:987) history From = today - this when > 0, else today - 3. */
         out.put("defaultDaysToLessFromHistoryFromDate", configInt("DefaultDaysToLessFromHistoryFromDate"));
+        /* desktop forms open with CmbCompany = UserAccount.CompanyId and CmbBranch = UserAccount.BranchesId */
+        out.put("sessionCompanyId", currentUserContext.currentCompanyId());
+        out.put("sessionBranchId", currentUserContext.currentBranchId());
         return out;
     }
 

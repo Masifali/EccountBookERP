@@ -17,7 +17,7 @@
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
     <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20260921a}"/>
-    <link rel="stylesheet" th:href="@{/build/css/cmagt_po1052.css?v=20260930L}"/>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_po1052.css?v=20260930Z}"/>
 </head>
 <body class="cmagt po1052">
 
@@ -342,79 +342,109 @@ Agent</label>
   </div>
 </div>
 
-<!-- ======================= LOAD SO (frmLoadSaleIrderForPO) ======================= -->
-<div id="loadSoModal" class="po-modal" style="display:none;">
-  <div class="po-modal-box">
-    <div class="po-modal-head">Load Sale Order <button type="button" class="po-x" onclick="poLoadSoClose()">X</button></div>
-    <div class="po-inline">
-        <label class="inline" for="lsFromDate">From Date</label><input type="date" id="lsFromDate" class="w130">
-        <label class="inline" for="lsToDate">To Date</label><input type="date" id="lsToDate" class="w130">
-        <label class="inline" for="lsDocNoFrom">Doc No From</label><input type="text" id="lsDocNoFrom" class="w80" inputmode="numeric">
-        <label class="inline" for="lsDocNoTo">To</label><input type="text" id="lsDocNoTo" class="w80" inputmode="numeric">
+<!-- ======================= LOAD SO (frmLoadSaleIrderForPO.InitializeComponent :900-1440) ======================= -->
+<div id="loadSoModal" class="po-modal po-dlg" style="display:none;">
+  <div class="po-dlg-box ls-box">
+    <!-- panel1 (Teal): toolStrip1 = | &New | Refresh | | Load | ShortCut Keys | ; label23 caption -->
+    <div class="tstrip">
+        <span class="sep"></span>
+        <button type="button" id="btnLsReset" title="Ctrl+N" onclick="poLoadSoReset()">New</button>
+        <button type="button" id="btnLsRefresh" title="Ctrl+R" onclick="poLoadSoRefreshCombos_click()">Refresh</button>
+        <span class="sep"></span>
+        <button type="button" id="btnLsLoad" title="Ctrl+L" onclick="poLoadSoLoad()">Load</button>
+        <button type="button" id="btnLsSck" title="Ctrl+Alt" onclick="poLoadSoShortcuts()">ShortCut Keys</button>
+        <span class="sep"></span>
+        <span class="spacer"></span>
+        <button type="button" class="po-x" title="Close (Esc / Ctrl+E)" onclick="poLoadSoClose()">&#x2715;</button>
     </div>
-    <div class="po-inline" style="margin-top:6px;">
-        <label class="inline" for="lsCommissionAgent">Commission Agent</label>
-        <select id="lsCommissionAgent" class="w160" data-dtcombo="single" data-dtcombo-caption="Commission Agent"></select>
-        <label class="inline" for="lsBuyer">Buyer</label>
-        <select id="lsBuyer" class="w160" data-dtcombo="single" data-dtcombo-caption="Buyer Name"></select>
-        <label class="inline" for="lsItem">Item</label>
-        <select id="lsItem" class="w160" data-dtcombo="single" data-dtcombo-caption="Item Name"></select>
-        <label class="inline" for="lsDeliveryToParty">Delivery To Party</label>
-        <select id="lsDeliveryToParty" class="w160" data-dtcombo="single" data-dtcombo-caption="Delivery To Party Name"></select>
-        <label class="inline" for="lsShipToAddress">Ship To Address</label>
-        <select id="lsShipToAddress" class="w160" data-dtcombo="single" data-dtcombo-caption="Ship To Address"></select>
+    <div class="teal dlg-title"><span>Pending Sale Order  For Purchase Order</span></div>
+    <!-- panel2 (White, 973x92): three label/field columns at x=5/71, 215/306, 533/660 -->
+    <div class="ls-filters">
+        <div class="ls-col">
+            <!-- desktop captions: label3 "To Date" sits beside FromDate (y=6), label1 "From Date" beside ToDate (y=35) -->
+            <label for="lsFromDate">To Date</label><input type="date" id="lsFromDate">
+            <label for="lsToDate">From Date</label><input type="date" id="lsToDate">
+            <label for="lsDocNoFrom">Doc No<br>From &amp; To</label>
+            <div class="ls-pair"><input type="text" id="lsDocNoFrom" class="num" inputmode="numeric"><input type="text" id="lsDocNoTo" class="num" inputmode="numeric"></div>
+        </div>
+        <div class="ls-col">
+            <label for="lsCommissionAgent">Commission<br>Agent / Broker</label>
+            <div class="fx"><select id="lsCommissionAgent" data-dtcombo="single" data-dtcombo-caption="Commission Agent"></select></div>
+            <label for="lsBuyer">Buyer</label>
+            <div class="fx"><select id="lsBuyer" data-dtcombo="single" data-dtcombo-caption="Buyer Name"></select></div>
+            <label for="lsItem">Item Name</label>
+            <div class="fx"><select id="lsItem" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        </div>
+        <div class="ls-col">
+            <label for="lsDeliveryToParty">Deliver / Ship To Party</label>
+            <div class="fx"><select id="lsDeliveryToParty" data-dtcombo="single" data-dtcombo-caption="Delivery To Party Name"></select></div>
+            <label for="lsShipToAddress">Delivery / Ship<br>To Address</label>
+            <div class="fx"><select id="lsShipToAddress" data-dtcombo="single" data-dtcombo-caption="Ship To Address"></select></div>
+            <span></span>
+            <div><button type="button" class="btn-teal ls-show" id="btnLsShow" title="Ctrl+S" onclick="poLoadSoShow()">Show</button></div>
+        </div>
     </div>
-    <div class="po-inline" style="margin-top:6px;">
-        <button type="button" id="btnLsShow" onclick="poLoadSoShow()">Show</button>
-        <button type="button" id="btnLsReset" onclick="poLoadSoReset()">Reset</button>
-        <button type="button" id="btnLsRefresh" onclick="poLoadSoRefreshCombos_click()">Refresh</button>
-        <span style="flex:1"></span>
-        <button type="button" id="btnLsLoad" onclick="poLoadSoLoad()">Load</button>
-    </div>
-    <div class="grid-wrap po-fit" style="margin:8px 0 0 0; max-height:55vh;">
+    <!-- panel3 (Teal) with ctrlGrdBar6 -->
+    <div class="teal dlg-gbar"><span class="spacer"></span>
+        <button type="button" class="gbar-btn" title="Fullscreen" onclick="poDlgFull('wrapLoadSo')">&#x26F6;</button></div>
+    <div class="grid-wrap po-fit dlg-grid" id="wrapLoadSo">
         <table id="grdLoadSo">
             <thead><tr>
-                <th><input type="checkbox" id="lsCheckAll" onclick="poLoadSoCheckAll(this.checked)"></th>
+                <th class="cb"><input type="checkbox" id="lsCheckAll" onclick="poLoadSoCheckAll(this.checked)"></th>
                 <th>Doc No</th><th>Doc Date</th><th>Commission Agent</th><th>Buyer Name</th>
-                <th>Delivery To Party</th><th>Ship To Address</th><th>Expiry Date</th><th>Item Name</th>
+                <th>Delivery To Party Name</th><th>Ship To Address</th><th>Expiry Date</th><th>Item Name</th>
                 <th class="num">Item Qty</th><th class="num">Booked Qty</th><th class="num">Balance Qty</th>
                 <th class="num">Item Weight</th><th class="num">Booked Weight</th><th class="num">Balance Weight</th>
-                <th class="num">Item Rate</th><th>Entry User</th><th>Entry Date</th><th>Modify Date</th>
-                <th>Modify User</th><th>Remarks</th><th class="num">Attachments</th>
-            </tr></thead>
+                <th class="num">Item Rate</th><th>Entry User Name</th><th>Entry Date</th><th>Modify Date</th>
+                <th>Modify User Name</th><th>Remarks Header</th><th class="num">No Of Attachments</th>
+            </tr>
+            <tr class="flt-row"><th></th><th><input class="ls-flt" data-c="1"></th><th><input class="ls-flt" data-c="2"></th><th><input class="ls-flt" data-c="3"></th><th><input class="ls-flt" data-c="4"></th><th><input class="ls-flt" data-c="5"></th><th><input class="ls-flt" data-c="6"></th><th><input class="ls-flt" data-c="7"></th><th><input class="ls-flt" data-c="8"></th><th><input class="ls-flt" data-c="9"></th><th><input class="ls-flt" data-c="10"></th><th><input class="ls-flt" data-c="11"></th><th><input class="ls-flt" data-c="12"></th><th><input class="ls-flt" data-c="13"></th><th><input class="ls-flt" data-c="14"></th><th><input class="ls-flt" data-c="15"></th><th><input class="ls-flt" data-c="16"></th><th><input class="ls-flt" data-c="17"></th><th><input class="ls-flt" data-c="18"></th><th><input class="ls-flt" data-c="19"></th><th><input class="ls-flt" data-c="20"></th><th><input class="ls-flt" data-c="21"></th></tr>
+            </thead>
             <tbody id="grdLoadSoBody"><tr><td colspan="22">Press Show.</td></tr></tbody>
         </table>
     </div>
+    <div class="dlg-nav" id="lsNav">Record 0 of 0</div>
   </div>
 </div>
 
-<!-- ======================= SHIP TO ADDRESS "+" (SupfrmShipToAddress) ======================= -->
-<div id="shipToModal" class="po-modal" style="display:none;">
-  <div class="po-modal-box">
-    <div class="po-modal-head">Ship To Address <button type="button" class="po-x" onclick="poShipToClose()">X</button></div>
+<!-- ======================= SHIP TO ADDRESS "+" (SupfrmShipToAddress.InitializeComponent :690-1150) ======================= -->
+<div id="shipToModal" class="po-modal po-dlg" style="display:none;">
+  <div class="po-dlg-box st-box">
     <input type="hidden" id="stId" value="0">
-    <div class="po-inline">
-        <label class="inline" for="stParty">Supplier Title</label>
-        <select id="stParty" class="w200" data-dtcombo="single" data-dtcombo-caption="Supplier Title"></select>
-        <label class="inline" for="stCountry">Country</label>
-        <select id="stCountry" class="w160" data-dtcombo="single" data-dtcombo-caption="Country Name"></select>
-        <label class="inline" for="stCity">City</label>
-        <select id="stCity" class="w160" data-dtcombo="single" data-dtcombo-caption="City Name"></select>
-    </div>
-    <div class="po-inline" style="margin-top:6px;">
-        <label class="inline" for="stTitle">Address Title</label><input type="text" id="stTitle" class="w160" maxlength="100">
-        <label class="inline" for="stAddress">Address</label><input type="text" id="stAddress" class="w280" maxlength="550">
-        <label class="inline" for="stContact">Contact Person</label><input type="text" id="stContact" class="w160" maxlength="100">
-    </div>
-    <div class="po-inline" style="margin-top:6px;">
-        <label class="inline" for="stPhone">Telephone</label><input type="text" id="stPhone" class="w130" maxlength="50">
-        <label class="inline" for="stMobile">Cell</label><input type="text" id="stMobile" class="w130" maxlength="50">
-        <label class="inline" for="stWhatsApp">WhatsApp No</label><input type="text" id="stWhatsApp" class="w130" maxlength="50">
-        <span style="flex:1"></span>
+    <!-- panel2: toolStrip1 = &New | &Update (hidden until a row is double-clicked) | &Refresh | &Save -->
+    <div class="tstrip">
         <button type="button" id="btnStNew" onclick="poShipToReset()">New</button>
-        <button type="button" id="btnStSave" onclick="poShipToSave()">Save</button>
+        <button type="button" id="btnStUpdate" style="display:none;" onclick="poShipToSave('btnStUpdate')">Update</button>
+        <button type="button" id="btnStRefresh" onclick="poShipToRefresh()">Refresh</button>
+        <button type="button" id="btnStSave" onclick="poShipToSave('btnStSave')">Save</button>
+        <span class="spacer"></span>
+        <button type="button" class="po-x" title="Close" onclick="poShipToClose()">&#x2715;</button>
     </div>
-    <div class="grid-wrap po-fit" style="margin:8px 0 0 0; max-height:45vh;">
+    <!-- panel4 (Teal) lblCaption -->
+    <div class="teal dlg-title"><span>Ship To Address</span></div>
+    <!-- panel3 (White, 1284x172): label x=15 / field x=132 w=221 ; label x=361 / field x=490 w=228 -->
+    <div class="st-panel">
+        <label for="stParty">Supplier/Customer</label>
+        <div class="fx"><select id="stParty" data-dtcombo="single" data-dtcombo-caption="Supplier Title"></select></div>
+        <label for="stContact">Contact / Party Name</label><input type="text" id="stContact" maxlength="100">
+
+        <label for="stTitle">Address Title</label><input type="text" id="stTitle" maxlength="100">
+        <label for="stPhone">Telephone</label><input type="text" id="stPhone" maxlength="50">
+
+        <label for="stCountry">Country</label>
+        <div class="fx"><select id="stCountry" data-dtcombo="single" data-dtcombo-caption="Country Name"></select></div>
+        <label for="stMobile">Cell No</label><input type="text" id="stMobile" maxlength="50">
+
+        <label for="stCity">City</label>
+        <div class="fx"><select id="stCity" data-dtcombo="single" data-dtcombo-caption="City Name"></select></div>
+        <label for="stWhatsApp">WhatsApp No</label><input type="text" id="stWhatsApp" maxlength="50">
+
+        <label for="stAddress">Address</label><input type="text" id="stAddress" class="span3" maxlength="550">
+    </div>
+    <!-- panel6 (Teal) label3 "History" + ctrlGrdBar1 -->
+    <div class="teal dlg-gbar"><span class="gbar-cap">History</span><span class="spacer"></span>
+        <button type="button" class="gbar-btn" title="Fullscreen" onclick="poDlgFull('wrapShipTo')">&#x26F6;</button></div>
+    <div class="grid-wrap po-fit dlg-grid" id="wrapShipTo">
         <table id="grdShipTo">
             <thead><tr><th>Company Name</th><th>Address Title</th><th>Country</th><th>City</th><th>Contact Person</th>
                 <th>Phone No</th><th>Mobile No</th><th>WhatsApp No</th><th>Entry Date</th><th>Entry User</th>
@@ -422,6 +452,7 @@ Agent</label>
             <tbody id="grdShipToBody"></tbody>
         </table>
     </div>
+    <div class="dlg-nav" id="stNav">Record 0 of 0</div>
   </div>
 </div>
 
@@ -437,7 +468,7 @@ Agent</label>
     body.cmagt td.expiry-today { color:red; font-weight:700; }
     body.cmagt .map-alloc { width:110px; text-align:right; }
 </style>
-<script th:src="@{/build/js/countx_cmagt_purchase_order.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_cmagt_purchase_order.js?v=20260930Z}"></script>
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 <script th:src="@{/build/js/cmagt_session_defaults.js?v=20260930a}"></script>

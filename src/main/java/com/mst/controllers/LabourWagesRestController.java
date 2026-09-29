@@ -133,4 +133,20 @@ public class LabourWagesRestController {
     public ResponseEntity<Map<String, Object>> save(@RequestBody Map<String, Object> body) {
         return ResponseEntity.ok(labourWagesService.save(body));
     }
+
+    /** BtnCancelPendingRecords_Click :4037 */
+    @PostMapping("/cancel-pending")
+    public ResponseEntity<Map<String, Object>> cancelPending(@RequestBody Map<String, Object> body) {
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) body.get("rows");
+        try { return ResponseEntity.ok(labourWagesService.cancelPending(rows)); }
+        catch (Exception e) { Map<String, Object> m = new java.util.LinkedHashMap<>(); m.put("success", false); m.put("message", e.getMessage()); return ResponseEntity.ok(m); }
+    }
+
+    /** ValidationOnformClose :2597 - WagesDeleteByRefDocTypeAndId */
+    @PostMapping("/delete-by-ref")
+    public ResponseEntity<Map<String, Object>> deleteByRef(@RequestParam int refDocumentTypeId, @RequestParam int refDocId) {
+        try { return ResponseEntity.ok(labourWagesService.deleteByRefDoc(refDocumentTypeId, refDocId)); }
+        catch (Exception e) { Map<String, Object> m = new java.util.LinkedHashMap<>(); m.put("success", false); m.put("message", e.getMessage()); return ResponseEntity.ok(m); }
+    }
 }

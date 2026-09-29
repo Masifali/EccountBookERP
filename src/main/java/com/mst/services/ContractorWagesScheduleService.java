@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -216,23 +217,85 @@ public class ContractorWagesScheduleService {
     }
 
     /**
-     * ApproveUnApprove, form :987 / BLL :312-336. The desktop only ever approves from this grid -
-     * grdWagesSchedule_ColumnButtonClick :631 fires only when the row is NOT already approved - so
-     * no un-approve path is exposed here.
+     * ApproveUnApprove(Id, ReqType, EntryUserId), form :960-1003 / BLL :322-355.
+     *   - non-Admin users cannot act on their own rows: "You can't update Status!" (:964-966)
+     *   - @ReqType is "Ap" for Approve, "UP" for UnApprove (:975)
+     *   - @EntryUserId is the CURRENT user (detail.EntryUser = UserAccount.ID, :974), not the row's
+     * The grid button only fires for rows that are not yet approved (:632), so ReqType is "Approve"
+     * in practice; "UnApprove" is accepted for completeness of the BLL contract.
      */
-    public Map<String, Object> approve(int id, int rowEntryUserId) {
+    public Map<String, Object> approve(int id, int rowEntryUserId, String reqType) {
         Map<String, Object> res = new HashMap<>();
+        String role = currentUserContext.currentRoleName();
+        int me = currentUserContext.currentUserId();
+        if (!"Admin".equals(role) && rowEntryUserId == me) {
+            res.put("success", false);
+            res.put("message", "You can't update Status!");
+            return res;
+        }
+        String rt = "UnApprove".equals(reqType) ? "UP" : "Ap";
         try {
-            ProcExec.call(jdbcTemplate, SQL_APPROVE, id, "Approve",
-                    currentUserContext.currentCompanyId(), rowEntryUserId,
+            ProcExec.call(jdbcTemplate, SQL_APPROVE, id, rt,
+                    currentUserContext.currentCompanyId(), me,
                     currentUserContext.currentOrganizationId(), "ApproveUnApprove");
             res.put("success", true);
+            res.put("message", "Record Updated Successfully!");
         } catch (Exception e) {
             LOG.error("Wages schedule approve failed for id {}", id, e);
             res.put("success", false);
             res.put("message", e.getMessage());
         }
         return res;
+    }
+
+    /**
+     * BindGridHistory, frmContractWagesSchedule :819-885 (ActionId 2) and
+     * frmContractWiseWagesSchedule :956-1017 (ActionId 1) -> BLL GetAll :36-102: @EffectedDate /
+     * @EffectedDateTo only when the picker's check box is ticked, @InvConractorWagesAccountsId /
+     * @ContractorId only when non-zero, @ActionId, @Activity='ReadAll'.
+     */
+    public List<Map<String, Object>> getHistory(String fromDate, String toDate, int contractorId,
+                                                int wagesAccountId, int actionId) {
+        StringBuilder sql = new StringBuilder("EXEC dbo.Sp_InvContractorWagesSchedule_GetAllMethod @OrganizationId=?, @CompanyId=?");
+        List<Object> args = new ArrayList<>();
+        args.add(currentUserContext.currentOrganizationId());
+        args.add(currentUserContext.currentCompanyId());
+        if (fromDate != null && !fromDate.isBlank()) { sql.append(", @EffectedDate=?"); args.add(java.sql.Date.valueOf(fromDate)); }
+        if (toDate != null && !toDate.isBlank()) { sql.append(", @EffectedDateTo=?"); args.add(java.sql.Date.valueOf(toDate)); }
+        if (wagesAccountId != 0) { sql.append(", @InvConractorWagesAccountsId=?"); args.add(wagesAccountId); }
+        if (contractorId != 0) { sql.append(", @ContractorId=?"); args.add(contractorId); }
+        if (actionId != 0) { sql.append(", @ActionId=?"); args.add(actionId); }
+        sql.append(", @Activity='ReadAll'");
+        return jdbcTemplate.queryForList(sql.toString(), args.toArray());
+    }
+
+    /**
+     * CommonServices.SetRightsValueInRightsObject(base.Name) -> Sp_tblUserRights_GetAllMethod
+     * @Activity='GetByUserId'. Role "Admin" gets everything; otherwise Save / Update come from the
+     * grant rows. Only the two rights this form reads are returned.
+     */
+    public Map<String, Boolean> rights(String screenName) {
+        Map<String, Boolean> r = new LinkedHashMap<>();
+        String role = currentUserContext.currentRoleName();
+        boolean admin = "Admin".equals(role);
+        r.put("save", admin);
+        r.put("update", admin);
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_tblUserRights_GetAllMethod @UserId=?, @ScreenName=?, @RightName=?, @CompanyId=?, @Activity=?",
+                    currentUserContext.currentUserId(), screenName, role == null ? "" : role,
+                    currentUserContext.currentCompanyId(), "GetByUserId");
+            for (Map<String, Object> row : rows) {
+                String name = str(col(row, "RightName"));
+                Object v = col(row, "Value");
+                boolean b = v != null && ("true".equalsIgnoreCase(String.valueOf(v)) || "1".equals(String.valueOf(v)));
+                if ("Save".equals(name)) r.put("save", admin || b);
+                if ("Update".equals(name)) r.put("update", admin || b);
+            }
+        } catch (Exception e) {
+            LOG.warn("rights lookup failed for {}", screenName, e);
+        }
+        return r;
     }
 
     // ================================================================

@@ -77,7 +77,7 @@
     <div class="rpt-tool">
         <button type="button" id="btnNew">New</button>
         <button type="button" id="btnRefresh">Refresh</button>
-        <button type="button" id="btnPrint" onclick="window.print()">Print</button>
+        <button type="button" id="btnPrint" style="display:none" onclick="if(!document.querySelector('#grid tbody tr')){alert('Record Not Found For Display');return;}window.print()">Print</button>
         <button type="button" id="btnShortcut">ShortCut Keys</button>
         <button type="button" id="btnOpenOrders" class="st-btn" hidden>Open</button><button type="button" id="btnCompleteOrders" class="st-btn" hidden>Complete</button><button type="button" id="btnCancelOrders" class="st-btn" hidden>Cancel</button>
     </div>
@@ -98,6 +98,12 @@
     /* GUI-20260930: grid captions the desktop GridSettings sets (Columns[..].Caption). */
     var CAPTION = {'EBWeightDeductionTerm': 'EB Weight Deduction Term', 'ValidityDate': 'Expiry Date', 'DeliveryToParty': 'Deliver To Party',
         'ShipToAddress': 'Deliver To Address', 'FreightNetHeader': 'Freight Net Amount', 'OtherExpenseAmount': 'Other Expense Amount', 'TaxAmountHeader': 'Tax Amount'};
+    /* FINAL-20260930: GridSettings column widths (Columns[kvp.Key].Width) and UpdateButtonColumns widths;
+       PrintButtonManage captions; row Print button (GridEX_Helper.AddButton "Print"). */
+    var WIDTHS = {"DocNo": 60, "DocDate": 80, "CommissionAgentName": 140, "SupplierName": 140, "GrnNo": 65, "GrnDate": 80, "LoadingCity": 100, "UnLoadingCity": 100, "BuyerRefDocNo": 80, "DeliveryTerm": 80, "TransporterName": 140, "BiltyFreight": 80, "OtherAdLesCharges": 80, "TotalFreight": 90, "VehicleNo": 90, "BiltyNo": 80, "BiltyDate": 80, "BiltyQty": 70, "LoadWeight": 70, "TareWeight": 70, "ScaleNetWeight": 70, "PurchaseOrderNo": 70, "SaleOrderNo": 70, "BuyerName": 140, "DeliveryToAddress": 100, "ParentCategory": 100, "ItemName": 140, "ItemCode": 70, "PackSize": 60, "CropYear": 80, "PackingType": 100, "LoadingQty": 80, "WbGrossWeight": 100, "EbUnit": 55, "EbTotal": 70, "AddLessWeight": 60, "NetBillWeight": 100, "RemarksHeader": 140, "NoOfAttachments": 80};
+    var BTNW = {sel: 40, Complete: 80, Cancel: 60, Update: 120, Open: 40};
+    var PRINTCAP = {"__list": ["1055_01_GdnBuyerDispatchDetailReport", "1055_02_GdnBuyerDispatchDocWise_SummaryReport", "1055_03_GdnBuyerDispatchItemWise_SummaryReport", "1055_04_GdnBuyerDispatchCommissionAgentWise_SummaryReport", "1055_05_GdnBuyerDispatchSupplierWise_SummaryReport", "1055_06_GdnBuyerDispatchCommissionAndSupplierWise_SummaryReport", "1055_07_GdnBuyerDispatchBuyerWise_SummaryReport", "1055_08_GdnBuyerDispatchCommissionAndBuyerWise_SummaryReport", "1055_09_GdnBuyerDispatchTransporterWise_SummaryReport", "1055_10_GdnBuyerDispatchCityWise_MovementReport", "1055_11_GdnBuyerDispatchVehicleWise_UtilizationReport"]};
+    var SLIPKEY = null;
     var API = '/api/commission/reports/' + CFG.key;
     var rows = [];                   // raw filter-combo rows (Id, ReferenceName, ParentCategoryId, Activity)
     /* PARITY-20260929: meta = /filters response (rights, financialYearStart); lastData / ctx = the
@@ -340,10 +346,13 @@
         el('btnCompleteOrders').style.display = bComplete ? 'inline-block' : 'none';
         el('btnCancelOrders').style.display = bCancel ? 'inline-block' : 'none';
         el('btnOpenOrders').style.display = bOpen ? 'inline-block' : 'none';
-        var head = (bSelect ? '<th class="sel"><input type="checkbox" id="selAll" title="Select all"></th>' : '') +
-            (bComplete ? '<th>Complete</th>' : '') + (bCancel ? '<th>Cancel</th>' : '') +
-            (bExpiry ? '<th>Update Expiry Date</th>' : '') + (bOpen ? '<th>Open</th>' : '');
-        el('grid').tHead.innerHTML = '<tr>' + head + shown.map(function (c) { return '<th>' + esc(CAPTION[c[0]] || c[0]) + '</th>'; }).join('') + '</tr>';
+        var head = (bSelect ? '<th class="sel" style="' + wcss(BTNW.sel) + '"><input type="checkbox" id="selAll" title="Select all"></th>' : '') +
+            (bComplete ? '<th style="' + wcss(BTNW.Complete) + '">Complete</th>' : '') + (bCancel ? '<th style="' + wcss(BTNW.Cancel) + '">Cancel</th>' : '') +
+            (bExpiry ? '<th style="' + wcss(BTNW.Update) + '">Update Expiry Date</th>' : '') + (bOpen ? '<th style="' + wcss(BTNW.Open) + '">Open</th>' : '');
+        var pcol = CFG.tb ? true : (type === 'Detail' || type === 'DocWise_Summary');
+        var pth = pcol ? '<th style="' + wcss(CFG.tb ? 70 : 40) + '">' + (CFG.tb ? '1056 Slip' : 'Print') + '</th>' : '';
+        el('grid').tHead.innerHTML = '<tr>' + (CFG.tb ? '' : pth) + head + shown.map(function (c, k) { return (CFG.tb && k === 1 ? pth : '') + '<th style="' + wcss(WIDTHS[c[0]]) + '">' + esc(CAPTION[c[0]] || c[0]) + '</th>'; }).join('') + '</tr>';
+        printCaption(type);
         var tot = {}, any = {};
         el('grid').tBodies[0].innerHTML = lrows.map(function (r, i) {
             var id = r[idKey];
@@ -352,22 +361,25 @@
                 (bCancel ? '<td><button type="button" class="rowbtn" data-act="Cancel" data-i="' + i + '">Cancel</button></td>' : '') +
                 (bExpiry ? '<td><button type="button" class="rowbtn" data-act="Expiry" data-i="' + i + '">Update Expiry Date</button></td>' : '') +
                 (bOpen ? '<td><button type="button" class="rowbtn" data-act="Open" data-i="' + i + '">Open</button></td>' : '');
-            return '<tr>' + pre + shown.map(function (c) {
+            var ptd = pcol ? '<td><button type="button" class="rowbtn" data-act="Print" data-i="' + i + '">' + (CFG.tb ? '1056 Slip' : 'Print') + '</button></td>' : '';
+            return '<tr>' + (CFG.tb ? '' : ptd) + pre + shown.map(function (c, k) {
+                var lead = CFG.tb && k === 1 ? ptd : '';
                 var v = c[1].indexOf('__exp__') === 0 ? r[c[1]] : r[c[1].toLowerCase()];
                 var f = fmt(c[1], v);
                 if (f.n && summable(c[0])) { tot[c[0]] = (tot[c[0]] || 0) + v; any[c[0]] = 1; }
                 if (bExpiry && c[0] === 'ValidityDate') {
                     /* editableColumns.Add("ValidityDate") */
                     var dv = v == null ? '' : (typeof v === 'number' ? iso(new Date(v)) : String(v).substring(0, 10));
-                    return '<td><input type="date" class="valdate" data-i="' + i + '" value="' + esc(dv) + '"></td>';
+                    return lead + '<td><input type="date" class="valdate" data-i="' + i + '" value="' + esc(dv) + '"></td>';
                 }
                 if (c[0] === 'DocNo' && id != null && id !== '') {
-                    return '<td><a class="doclink" data-i="' + i + '">' + f.t + '</a></td>';
+                    return lead + '<td><a class="doclink" data-i="' + i + '">' + f.t + '</a></td>';
                 }
-                return '<td' + (f.n ? ' class="num"' : '') + '>' + f.t + '</td>';
+                var pl = (CFG.tb && c[0] === 'ProfitAndLoss' && type !== 'Detail' && typeof v === 'number' && v >= 0) ? ' style="color:green;font-weight:bold"' : '';
+                return lead + '<td' + (f.n ? ' class="num"' : '') + pl + '>' + f.t + '</td>';
             }).join('') + '</tr>';
         }).join('');
-        var preCells = (bSelect ? 1 : 0) + (bComplete ? 1 : 0) + (bCancel ? 1 : 0) + (bExpiry ? 1 : 0) + (bOpen ? 1 : 0);
+        var preCells = (pcol ? 1 : 0) + (bSelect ? 1 : 0) + (bComplete ? 1 : 0) + (bCancel ? 1 : 0) + (bExpiry ? 1 : 0) + (bOpen ? 1 : 0);
         el('grid').tFoot.innerHTML = lrows.length ? '<tr>' + new Array(preCells + 1).join('<td></td>') + shown.map(function (c) {
             return any[c[0]] ? '<td class="num">' + tot[c[0]].toFixed(2) + '</td>' : '<td></td>';
         }).join('') + '</tr>' : '';
@@ -377,6 +389,33 @@
             Array.prototype.forEach.call(document.querySelectorAll('.rowsel'), function (c) { c.checked = sa.checked; });
         });
         el('rowCount').textContent = lrows.length + ' row(s)';
+    }
+    function wcss(w) { return w ? 'width:' + w + 'px;min-width:' + w + 'px;max-width:' + w + 'px;white-space:normal' : ''; }
+    /* PrintButtonManage: btnPrint.Text = the .rpt for the report type (TB: also the side radio). */
+    function printCaption(type) {
+        var b = el('btnPrint'); if (!b) return; var cap = '';
+        if (CFG.tb) {
+            var side = (document.querySelector('input[name="tbSide"]:checked') || {}).value || 'all';
+            if (type === 'Detail') cap = side === 'purchase' ? '1558-CommissionTradePurchaseRpt' : side === 'sale' ? '1559-CommissionTradeSaleRpt' : '1560-CommissionTradeAllRpt';
+            else if (type === 'DocumentWiseProfitAndLoss') cap = '1561-DocumentWiseProfitAndLossAll';
+            else if (type === 'VehicleWiseProfitAndLoss') cap = side === 'purchase' ? '1564-VehicleWiseProfitAndLossPurchase' : side === 'sale' ? '1565-VehicleWiseProfitAndLossSale' : '1566-VehicleWiseProfitAndLossAll';
+            else if (type === 'PurchaseSaleRegister') cap = '1567_CommissionAgentPurchaseSaleRegister';
+        } else if (PRINTCAP.__list) { cap = PRINTCAP.__list[CFG.types.indexOf(type)] || ''; }
+        else cap = PRINTCAP[type] || '';
+        b.style.display = type ? '' : 'none';
+        if (cap) { b.textContent = cap; b.title = cap + '.rpt'; }
+    }
+    /* grdfrm_ColumnButtonClick "Print": the document slip (CrystalReportPrint_Helper) for the row Id. */
+    function printSlip(i, btn) {
+        var id = rowId(i); if (id == null) return;
+        if (!SLIPKEY) { el('msg').textContent = 'The document slip for this report is not available on the web yet.'; return; }
+        return withButton(btn, function () {
+            return fetch('/api/reports/' + SLIPKEY + '/print.pdf', {method: 'POST', credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id})}).then(function (r) {
+                if (!r.ok) return r.text().then(function (t) { throw new Error(t || ('Print failed (' + r.status + ')')); });
+                return r.blob().then(function (b) { window.open(URL.createObjectURL(b), '_blank'); });
+            });
+        });
     }
     function show() {
         el('msg').textContent = '';
@@ -449,6 +488,7 @@
         var b = e.target.closest ? e.target.closest('button.rowbtn') : null;
         if (!b) return;
         var i = b.getAttribute('data-i'), act = b.getAttribute('data-act'), it = {id: rowId(i)};
+        if (act === 'Print') { printSlip(i, b); return; }
         if (act === 'Expiry') {
             var inp = document.querySelector('input.valdate[data-i="' + i + '"]');
             it.validityDate = inp ? inp.value : '';

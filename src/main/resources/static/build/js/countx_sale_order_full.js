@@ -356,6 +356,8 @@ function loadMasterLookups() {
             }
             /* ItemSearchByCode (:621-629) chooses the item radio; the item combo rebinds on the radio change. */
             if (c.itemSearchByCode) { $('#radCode').prop('checked', true).trigger('change'); }
+            /* SaleOrderBranchWise (:4271-4275): the history grid hides BranchSrNo and BranchName. */
+            if (c.saleOrderBranchWise) { $('#tblHistory').addClass('so-branch-wise'); }
             /* :751-754 - History From date = today minus DefaultDaysToLessFromHistoryFromDate, else minus 3 days. */
             var back = c.defaultDaysToLessFromHistoryFromDate > 0 ? c.defaultDaysToLessFromHistoryFromDate : 3;
             var fromD = new Date(); fromD.setDate(fromD.getDate() - back);
@@ -1568,6 +1570,15 @@ function btnSave_Click() {
 
     /* Insert() :2783 / :2790 */
     if (!confirm(currentEditingOrderId ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+
+    /* :3024-3035 - unless config WarningMessageOnSaleOrderForExpenseGridIsOff is on, an empty Customer Expense
+       list (rows with ItemId != 0 and Amount > 0) asks once more before saving. Same order as the desktop:
+       after 'Are you sure', before the Payment Detail checks. */
+    if (!saleOrderConfig.warningMessageOnSaleOrderForExpenseGridIsOff
+        && !currentExpenseItems.some(function (e) { return e.itemId && parseFloat(e.amount) > 0; })) {
+        if (!confirm(currentEditingOrderId ? 'Are you sure to Update? There is No Expense Added'
+                                           : 'Are you sure to Save? There is No Expense Added')) return;
+    }
 
     // Real desktop Payment Detail validation/fallback (Sp_SaleOrder_Insert flow) - see
     // SALE-ORDER-PROGRESS.md Pass 3. Must run before submit; a failure focuses that tab.

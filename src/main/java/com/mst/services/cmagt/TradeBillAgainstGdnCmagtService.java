@@ -1017,6 +1017,17 @@ public class TradeBillAgainstGdnCmagtService {
      * user's grant grid overrides. For "CanView AllRecord" an Admin stays true; for "Delete"
      * the row wins even for Admin (the desktop has no Admin guard on that branch).
      */
+    /** formright flags the form applies at :951-954 (btnsave/btnUpdate/BtnDelete/btnPrint .Enabled). */
+    public Map<String, Boolean> formRights() {
+        Map<String, Boolean> r = new LinkedHashMap<>();
+        r.put("save", hasRight(RIGHT_SAVE));
+        r.put("update", hasRight(RIGHT_UPDATE));
+        r.put("delete", hasRight(RIGHT_DELETE));
+        r.put("print", hasRight("Print"));
+        r.put("canViewAllRecords", hasRight(RIGHT_CAN_VIEW_ALL_RECORDS));
+        return r;
+    }
+
     private boolean hasRight(String rightName) {
         String role = currentUserContext.currentRoleName();
         boolean admin = "Admin".equalsIgnoreCase(role) || "Administrator".equalsIgnoreCase(role);

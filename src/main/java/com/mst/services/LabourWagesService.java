@@ -425,6 +425,8 @@ public class LabourWagesService {
     public Map<String, Object> getConfigFlags() {
         Map<String, Object> out = new LinkedHashMap<>();
         for (String n : CONFIG_NAMES) out.put(n, "");
+        /* BtnCancelPendingRecords.Visible = UserAccount.RoleName == "Admin" && ... (:434) */
+        out.put("isAdmin", "Admin".equals(currentUserContext.currentRoleName()));
         try {
             for (Map<String, Object> r : jdbcTemplate.queryForList(
                     "SELECT D.ConfigDescription, A.ConfigKey "
@@ -686,5 +688,37 @@ public class LabourWagesService {
         if (s == null || s.trim().isEmpty()) return null;
         try { return java.sql.Date.valueOf(LocalDate.parse(s.trim().substring(0, 10))); }
         catch (Exception e) { return null; }
+    }
+
+    /**
+     * BtnCancelPendingRecords_Click :4037-4070 -> InvContractorWagesBillHeader.UpdateContractorWagesRefDocumentStatus
+     * (BLL :1733-1765): one transaction, per ticked row
+     * [dbo].[USP_ContractorWagesCancelRecords_InsertAndUpdate] @Id=0, @RefDocumentTypeId, @RefDocId,
+     * @OrganizationId, @CompanyId, @EntryUserId, @ModifyUserId (never set on the desktop -> 0).
+     * Admin only, as the button is only visible to Admin (:434).
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public Map<String, Object> cancelPending(List<Map<String, Object>> rows) {
+        Map<String, Object> res = new LinkedHashMap<>();
+        if (!"Admin".equals(currentUserContext.currentRoleName())) throw new IllegalStateException("Not allowed");
+        if (rows == null || rows.isEmpty()) throw new IllegalArgumentException("Please select check box first");
+        int org = currentUserContext.currentOrganizationId(), comp = currentUserContext.currentCompanyId();
+        int me = currentUserContext.currentUserId();
+        for (Map<String, Object> r : rows) {
+            int refType = (int) Math.round(Double.parseDouble(String.valueOf(r.get("refDocumentTypeId"))));
+            int refId = (int) Math.round(Double.parseDouble(String.valueOf(r.get("refDocId"))));
+            jdbcTemplate.update("EXEC [dbo].[USP_ContractorWagesCancelRecords_InsertAndUpdate] @Id=?, @RefDocumentTypeId=?, @RefDocId=?, "
+                    + "@OrganizationId=?, @CompanyId=?, @EntryUserId=?, @ModifyUserId=?", 0, refType, refId, org, comp, me, 0);
+        }
+        res.put("success", true);
+        res.put("message", "Record Approve Successfully");
+        return res;
+    }
+
+    /** ValidationOnformClose :2597-2632 -> WagesDeleteByRefDocTypeAndId (BLL :1404-1434) -> USP_WagesDeleteByRefDocTypeAndId. */
+    public Map<String, Object> deleteByRefDoc(int refDocumentTypeId, int refDocId) {
+        jdbcTemplate.update("EXEC USP_WagesDeleteByRefDocTypeAndId @OrganizationId=?, @CompanyId=?, @RefDocumentTypeId=?, @RefDocId=?",
+                currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(), refDocumentTypeId, refDocId);
+        Map<String, Object> res = new LinkedHashMap<>(); res.put("success", true); return res;
     }
 }

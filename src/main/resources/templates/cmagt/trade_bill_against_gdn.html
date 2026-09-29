@@ -7,7 +7,7 @@
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
     <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20260921a}"/>
-    <link rel="stylesheet" th:href="@{/build/css/cmagt_tb1056.css?v=20260930L}"/>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_tb1056.css?v=20260930Z}"/>
 </head>
 <body class="cmagt">
 <div class="cmagt-appbar">
@@ -339,46 +339,67 @@
     <button type="button" id="btnUpdate" hidden>Update</button>
     <button type="button" id="btnDelete" hidden>Delete</button>
     <button type="button" id="btnLoadGdn">Load Gdn</button>
+    <button type="button" id="btnShortcutKeys" title="Ctrl+Alt">ShortCut Keys</button>
     <span class="spacer"></span>
     <button type="button" id="btnHistory">History</button>
 </div>
 
-<!-- ============================================================ frmPendingGdnLoader -->
-<div class="tb-modal" id="loaderModal" role="dialog" aria-modal="true" aria-labelledby="loaderTitle">
-    <div class="tb-modal-box">
-        <div class="tb-modal-head">
-            <div class="tools">
-                <button type="button" id="btnLoaderReset">New</button>
-                <button type="button" id="btnLoaderRefresh">Refresh</button>
-                <button type="button" id="btnLoaderLoad">Load</button>
-                <button type="button" class="x" id="btnLoaderClose" aria-label="Close">&times;</button>
+<!-- ============================================================ frmPendingGdnLoader (InitializeComponent :829-1784, ClientSize 984x611) -->
+<div class="tb-modal ld56" id="loaderModal" role="dialog" aria-modal="true" aria-labelledby="loaderTitle">
+    <div class="tb-modal-box ld56-box">
+        <!-- panel1 (Teal, 984x50): toolStrip1 = &New | Refresh | Load (Visible=false :1161) | ShortCut Keys, label23 title -->
+        <div class="ld56-strip">
+            <span class="sep"></span>
+            <button type="button" id="btnLoaderReset" title="Ctrl+N">New</button>
+            <button type="button" id="btnLoaderRefresh" title="Ctrl+R">Refresh</button>
+            <span class="sep"></span>
+            <button type="button" id="btnLoaderLoad" title="Ctrl+L" hidden>Load</button>
+            <button type="button" id="btnLoaderShortcut" title="Ctrl+Alt">ShortCut Keys</button>
+            <span class="sep"></span>
+            <span class="spacer"></span>
+            <button type="button" class="x" id="btnLoaderClose" title="Close (Esc / Ctrl+E)" aria-label="Close">&#x2715;</button>
+        </div>
+        <div class="ld56-title"><span id="loaderTitle">Pending Gdn Dispatched</span></div>
+        <!-- panel2 (White, 984x96): three columns of filters, Show (btngrnlod, Teal) at the end of row 3 -->
+        <div class="ld56-f">
+            <div class="ld56-col">
+                <label for="ldFromDate">From Date</label><input type="date" id="ldFromDate">
+                <label for="ldToDate">To Date</label><input type="date" id="ldToDate">
+                <label for="ldDocNoFrom">Doc No<br>From &amp; To</label><div class="ld56-pair"><input id="ldDocNoFrom" inputmode="numeric"><input id="ldDocNoTo" inputmode="numeric" aria-label="Doc No To"></div>
             </div>
-            <div class="ttl" id="loaderTitle">Pending Gdn Dispatched</div>
+            <div class="ld56-col">
+                <label for="ldCommissionAgent">Commission<br>Agent / Broker</label><select id="ldCommissionAgent"></select>
+                <label for="ldSupplier">Supplier</label><select id="ldSupplier"></select>
+                <label for="ldBuyer">Buyer</label><select id="ldBuyer"></select>
+            </div>
+            <div class="ld56-col">
+                <label for="ldDeliveryToParty">Deliver / Ship To Party</label><select id="ldDeliveryToParty"></select>
+                <label for="ldShipToAddress">Delivery / Ship<br>To Address</label><select id="ldShipToAddress"></select>
+                <label for="ldItem">Item Name</label><div class="ld56-pair ld56-item"><select id="ldItem"></select><button type="button" id="btnLoaderSearch" class="tb-teal-btn" title="Ctrl+S">Show</button></div>
+            </div>
         </div>
-        <div class="ld-f">
-            <label for="ldFromDate">From Date</label><input type="date" id="ldFromDate">
-            <label for="ldCommissionAgent">Commission Agent / Broker</label><select id="ldCommissionAgent"></select>
-            <label for="ldDeliveryToParty">Deliver / Ship To Party</label><select id="ldDeliveryToParty"></select>
-            <span></span>
-            <label for="ldToDate">To Date</label><input type="date" id="ldToDate">
-            <label for="ldSupplier">Supplier</label><select id="ldSupplier"></select>
-            <label for="ldShipToAddress">Delivery / Ship To Address</label><select id="ldShipToAddress"></select>
-            <span></span>
-            <label for="ldDocNoFrom">Doc No From &amp; To</label><div class="pair"><input id="ldDocNoFrom" inputmode="numeric"><input id="ldDocNoTo" inputmode="numeric" aria-label="Doc No To"></div>
-            <label for="ldBuyer">Buyer</label><select id="ldBuyer"></select>
-            <label for="ldItem">Item Name</label><select id="ldItem"></select>
-            <button type="button" id="btnLoaderSearch" class="tb-teal-btn">Show</button>
-        </div>
-        <div class="tb-bar"><span></span></div>
-        <div class="tb-scroll short"><table class="tb-grid" id="ldMaster"></table></div>
-        <div class="tb-bar"><span></span></div>
-        <div class="tb-scroll short"><table class="tb-grid" id="ldDetail"></table></div>
+        <!-- panel3 (Teal, 21 high) + grd (RecordNavigator, FrozenColumns 1, "Load This" button column) -->
+        <div class="tb-bar ld56-bar"><span></span></div>
+        <div class="tb-scroll ld56-grid" id="wrapLdMaster"><table class="tb-grid" id="ldMaster"></table></div>
+        <div class="ld56-nav" id="ldNavMaster" data-grid="M"></div>
+        <!-- panel4 (Teal, 23 high) with ctrlGrdBar6 at the right + grdDetail (RecordNavigator) -->
+        <div class="tb-bar ld56-bar"><span></span><button type="button" class="ld56-fs" id="btnLdFs" title="Fullscreen">&#x26F6;</button></div>
+        <div class="tb-scroll ld56-grid" id="wrapLdDetail"><table class="tb-grid" id="ldDetail"></table></div>
+        <div class="ld56-nav" id="ldNavDetail" data-grid="D"></div>
+    </div>
+</div>
+
+<!-- ShortCutKeyPopUp (KeyCombination | Description) -->
+<div class="tb-modal" id="keysModal" role="dialog" aria-modal="true" aria-labelledby="keysTitle">
+    <div class="tb-modal-box keys-box">
+        <div class="ld56-title"><span id="keysTitle">ShortCut Keys</span><button type="button" class="x" id="btnKeysClose" aria-label="Close">&#x2715;</button></div>
+        <div class="tb-scroll"><table class="tb-grid" id="keysGrid"></table></div>
     </div>
 </div>
 
 <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
 <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
-<script th:src="@{/build/js/countx_cmagt_trade_bill.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_cmagt_trade_bill.js?v=20260930Z}"></script>
 <script th:src="@{/build/js/cmagt_session_defaults.js?v=20260930a}"></script>
 </body>
 </html>

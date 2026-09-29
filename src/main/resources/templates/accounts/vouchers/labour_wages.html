@@ -282,26 +282,24 @@
            tabPage3 "Regular Wages", tabPage4 "Other Wages", tabPage2 "History".
      ========================================================================== -->
 <div class="win-title-bar">Labour Wages</div>
-<div class="win-sub-header"><span>&#128193; Screens &gt; Contractor Wages &gt; Labour Wages</span></div>
 
 <!-- btnnew, btnRefresh, btnsave, btnUpdate, btnWagesSchedule, btnWagesExempt (:4973-5010) -->
 <div class="win-toolbar">
-    <button type="button" class="win-btn" id="btnNew"     onclick="lwNew()"><i class="fa fa-file-o"></i> New</button>
+    <button type="button" class="win-btn" id="btnNew"     onclick="lwNewClick()"><i class="fa fa-plus-circle" style="color:#1e88e5;"></i> <u>N</u>ew</button>
     <button type="button" class="win-btn" id="btnRefresh" onclick="lwRefresh()"><i class="fa fa-refresh"></i> Refresh</button>
-    <button type="button" class="win-btn" id="btnSave"    onclick="lwSave()"><i class="fa fa-save"></i> Save</button>
-    <button type="button" class="win-btn" id="btnUpdate"  onclick="lwUpdate()" style="display:none;"><i class="fa fa-pencil"></i> Update</button>
-    <button type="button" class="win-btn win-btn-teal" onclick="location.href='/accounts/vouchers/wages-rate-schedule'">Wages Schedule</button>
-    <button type="button" class="win-btn" id="btnWagesExempt" onclick="lwNotImplemented('Wages Exempt Item')">Wages Exempt Item</button>
-    <span style="flex:1;"></span>
-    <button type="button" class="win-btn" onclick="lwToggleFullscreen()"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
+    <button type="button" class="win-btn" id="btnSave"    onclick="lwSave()"><i class="fa fa-floppy-o" style="color:#1565c0;"></i> <u>S</u>ave</button>
+    <button type="button" class="win-btn" id="btnUpdate"  onclick="lwUpdate()" style="display:none;"><i class="fa fa-check-circle" style="color:#2e7d32;"></i> <u>U</u>pdate</button>
+    <button type="button" class="win-btn" id="btnPrint002" onclick="lwPrint002()"><i class="fa fa-print" style="color:#1976d2;"></i> <u>P</u>rint-002</button>
+    <button type="button" class="win-btn" id="btnWagesSchedule" onclick="window.open('/accounts/vouchers/wages-rate-schedule','_blank')">Wages Schedule</button>
+    <button type="button" class="win-btn" id="btnWagesExempt" onclick="window.open('/production/wages-exempt-item-schedule','_blank')">Wages Exempt Item</button>
 </div>
 
 <div class="win-tab-bar">
     <div class="win-tab-btn active" id="tabForm"     onclick="lwTab('form')">Form</div>
     <div class="win-tab-btn"        id="tabPending"  onclick="lwTab('pending')">Pending Data For Load</div>
+    <div class="win-tab-btn"        id="tabDetail"   onclick="lwTab('detail')">Wages Detail</div>
     <div class="win-tab-btn"        id="tabRegular"  onclick="lwTab('regular')">Regular Wages</div>
     <div class="win-tab-btn"        id="tabOther"    onclick="lwTab('other')">Other Wages</div>
-    <div class="win-tab-btn"        id="tabDetail"   onclick="lwTab('detail')">Wages Detail</div>
     <div class="win-tab-btn"        id="tabHistory"  onclick="lwTab('history')">History</div>
 </div>
 
@@ -393,8 +391,8 @@
             <!-- label7 (:4462) -->
             <div class="lw-note">This grid shows the pending data to load for wages entries.</div>
             <div style="display:flex; gap:6px; margin-bottom:6px;">
-                <button type="button" class="win-btn" id="btnLoadAll" onclick="lwLoadAllPending()">Load All</button>
-                <button type="button" class="win-btn" id="btnCancelPending" onclick="lwCancelPending()">Cancel Records</button>
+                <button type="button" class="win-btn" id="btnLoadAll" onclick="lwLoadAllPending()" style="display:none;">Load All</button>
+                <button type="button" class="win-btn" id="btnCancelPending" onclick="lwCancelPending()" style="display:none;">Cancel Records</button>
             </div>
             <div class="cw-grid-scroll">
                 <table class="win-grid-table lw-grid-wide" id="grdPending">
@@ -430,12 +428,11 @@
             <!-- label2 (:4616) / label12 + btnAddContractorValuesForAllDetailWages (:4587-4596) -->
             <div class="lw-note">In this Grid User Will add Regular Wages</div>
             <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;">
-                <button type="button" class="win-btn" onclick="lwAddRow('regular')"><i class="fa fa-plus"></i> Add Row</button>
                 <button type="button" class="win-btn win-btn-teal" onclick="lwApplyAll('regular')">Apply All</button>
                 <span class="lw-note" style="margin:0;">Click this button To Apply First Row Values for All other Rows</span>
             </div>
             <div class="cw-grid-scroll">
-                <table class="win-grid-table lw-grid-wide" id="grdRegular">
+                <table class="win-grid-table lw-grid-wide" id="grdRegular" data-grid="regular" tabindex="0">
                     <thead><tr id="grdRegularHead"></tr></thead>
                     <tbody id="grdRegularBody"></tbody>
                     <tfoot><tr id="grdRegularFoot"></tr></tfoot>
@@ -453,12 +450,11 @@
             <!-- label5 (:4697) / label13 + btnAddContractorValuesForAllSticingWages (:4668-4677) -->
             <div class="lw-note">In this Grid User Will add Other Wages (Stiching &amp; OutPut etc)</div>
             <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;">
-                <button type="button" class="win-btn" onclick="lwAddRow('other')"><i class="fa fa-plus"></i> Add Row</button>
                 <button type="button" class="win-btn win-btn-teal" onclick="lwApplyAll('other')">Apply All</button>
                 <span class="lw-note" style="margin:0;">Click this button To Apply First Row Values for All other Rows</span>
             </div>
             <div class="cw-grid-scroll">
-                <table class="win-grid-table lw-grid-wide" id="grdOther">
+                <table class="win-grid-table lw-grid-wide" id="grdOther" data-grid="other" tabindex="0">
                     <thead><tr id="grdOtherHead"></tr></thead>
                     <tbody id="grdOtherBody"></tbody>
                     <tfoot><tr id="grdOtherFoot"></tr></tfoot>
@@ -582,6 +578,7 @@
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
 <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-<script th:src="@{/build/js/countx_labour_wages.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_labour_wages.js?v=20260929a}"></script>
 </body>
 </html>

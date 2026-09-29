@@ -63,6 +63,24 @@
         .cfg-row .win-textbox, .cfg-row .win-combo { flex: 1 1 auto; }
         .cfg-checkbox, .cfg-row input[type="radio"] { width: 15px; height: 15px; flex: 0 0 auto; }
 
+        /* Wages tab - PanelWages02 "Document Wise Wages Configuration" (desktop colours) */
+        .cfg-wages-docs { border:1px solid #7a9a9a; margin-bottom:10px; background:#fff; }
+        .cfg-wages-docs-bar { background:#008080; min-height:26px; display:flex; align-items:center; justify-content:space-between; padding:1px 0 1px 4px; }
+        .cfg-wages-docs-caption { color:#fff; font:bold 9.75pt Tahoma, sans-serif; }
+        .cfg-wages-docs-btn { background:#004040; color:#fff; border:0; font:bold 9.75pt Tahoma, sans-serif; min-width:112px; height:24px; display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; }
+        .cfg-wages-docs-btn:disabled { opacity:.75; cursor:wait; }
+        .cfg-btn-spinner { display:none; width:12px; height:12px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:cfgspin .8s linear infinite; }
+        .cfg-wages-docs-btn.is-loading .cfg-btn-spinner { display:inline-block; }
+        @keyframes cfgspin { to { transform:rotate(360deg); } }
+        .cfg-wages-docs-grid { width:100%; max-height:420px; overflow:auto; }
+        #grdWagesRefDocuments { width:100%; border-collapse:collapse; font:8.25pt Verdana, sans-serif; }
+        #grdWagesRefDocuments th { position:sticky; top:0; background:#e8eef4; border:1px solid #b9c6d3; padding:4px 6px; text-align:left; font-weight:normal; }
+        #grdWagesRefDocuments td { border:1px solid #d6dde4; padding:3px 6px; }
+        #grdWagesRefDocuments .cfg-col-check { width:70px; text-align:center; }
+        #grdWagesRefDocuments tbody tr:hover { background:#f2f7fb; }
+        #grdWagesRefDocuments tbody tr.is-current { background:#dbe9f7; }
+        #grdWagesRefDocuments tfoot td { background:#f4f4f4; font-weight:bold; }
+        .cfg-wages-docs-nav { display:flex; gap:16px; align-items:center; padding:3px 6px; background:#f0f0f0; border-top:1px solid #c8c8c8; font:8.25pt Verdana, sans-serif; }
         .cfg-not-implemented { padding: 30px; text-align: center; color: #666666; font-size: 10pt; background: #f7f5ed; border: 1px dashed #999999; border-radius: 4px; }
         .cfg-warning-note { color: #a15c00; font-size: 8pt; font-weight: normal; font-style: italic; }
         .cfg-disabled-group { opacity: 0.55; }
@@ -973,31 +991,33 @@
                  chkOtherWagesCompulsoryForStockTransferPartyProcessing/label215 in "Other Wages
                  (Party Processing)"), 37 implemented. No ControlEventHandler coupling references
                  any of the 37 (all checked against the dispatcher's full body).
-                 PanelWages02's own children (grdWagesRefDocuments + btnStatusUpdate,
-                 "Document Wise Wages Configuration") are INTENTIONALLY NOT IMPLEMENTED here -
-                 verified (GetRefDocumentsForWages()/btnStatusUpdate_Click(), lines 2830-2861 and
-                 3729-3752) to be a separate document-approval workflow backed by
-                 InvContractorWagesBillHeader.GetRefDocumentsForWages()/
-                 UpdateContractorWagesRefDocumentStatus(), a completely different real
-                 table/BLL than ConfigrationsAllocation - out of scope for this settings-only
-                 migration, not a fabricated/faked control, and not silently dropped: reported
-                 explicitly here and in CONFIGURATION-PROGRESS.md as an identified, verified,
-                 out-of-scope feature. -->
+                 PanelWages02 ("Document Wise Wages Configuration": grdWagesRefDocuments +
+                 btnStatusUpdate) IS implemented below - GetRefDocumentsForWages() ->
+                 USP_GetRefDocumentsForWages (no params), btnStatusUpdate_Click() ->
+                 USP_ContractorWagesRefDocumentStatus_Insert once per grid row (OrganizationId,
+                 CompanyId, RefDocumentTypeId, Id, ModifyDate, ModifyUserId, IsActive), via
+                 ConfigurationWagesStatusController/Service + countx_configuration_wages.js. -->
             <div id="tabWages" class="cfg-tab-pane">
-                <fieldset class="win-group-box">
-                    <legend>Document Wise Wages Configuration</legend>
-                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-                        <button type="button" id="btnStatusUpdate">Status Update</button>
-                        <button type="button" id="btnWagesStatusRefresh">Refresh</button>
-                        <span id="wagesStatusMessage" role="status" aria-live="polite"></span>
+                <!-- PanelWages02 (Dock=Fill): PanelWages03 caption strip (Color.Teal, label205 white
+                     Tahoma 9.75 bold, btnStatusUpdate FromArgb(0,64,64) anchored right) over
+                     grdWagesRefDocuments (GridEX, Verdana 8.25, RecordNavigator, TotalRow). -->
+                <div class="cfg-wages-docs" id="PanelWages02">
+                    <div class="cfg-wages-docs-bar" id="PanelWages03">
+                        <span class="cfg-wages-docs-caption">Document Wise Wages Configuration</span>
+                        <button type="button" id="btnStatusUpdate" class="cfg-wages-docs-btn">
+                            <span class="cfg-btn-spinner" aria-hidden="true"></span><span class="cfg-btn-text">Status Update</span>
+                        </button>
                     </div>
-                    <div style="width:100%;max-height:300px;overflow:auto">
-                        <table style="width:100%;border-collapse:collapse" id="grdWagesRefDocuments">
-                            <thead style="background:#0a6e6e;color:white"><tr><th style="padding:6px">Document Type</th><th style="width:75px;padding:6px">Is Active</th></tr></thead>
+                    <div class="cfg-wages-docs-grid">
+                        <table id="grdWagesRefDocuments">
+                            <thead><tr><th>DocumentTypeDescription</th><th class="cfg-col-check">IsActive</th></tr></thead>
                             <tbody></tbody>
+                            <tfoot><tr class="cfg-total-row"><td id="wagesDocsTotal"></td><td></td></tr></tfoot>
                         </table>
                     </div>
-                </fieldset>
+                    <div class="cfg-wages-docs-nav"><span id="wagesDocsNavigator">Record 0 of 0</span>
+                        <span id="wagesStatusMessage" role="status" aria-live="polite"></span></div>
+                </div>
                 <fieldset class="win-group-box">
                     <legend>Comparison by Activity For</legend>
                     <div class="cfg-row"><label class="win-label"><input type="checkbox" class="cfg-checkbox" id="chkContractorWageComparisonbyActivityForGRN" data-config-description="ContractorWageComparisonbyActivityForGRN" data-config-type="checkbox"> GRN</label></div>
@@ -2088,11 +2108,11 @@
         </div>
     </div>
 
-    <div id="cfgRequestStatus" role="status" aria-live="polite" hidden>Saving configuration…</div>
+    <div id="cfgRequestStatus" role="status" aria-live="polite" hidden>Saving configuration...</div>
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script th:src="@{/build/js/countx_configuration_wages.js?v=20260924a}"></script>
+    <script th:src="@{/build/js/countx_configuration_wages.js?v=20260929a}"></script>
     <script th:src="@{/build/js/countx_configuration.js?v=20260923verify}"></script>
     <script>
         // Ditto every one of the desktop's 71 UltraCombo dropdowns on this screen, which are

@@ -21,7 +21,7 @@
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
     <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20260921a}"/>
-    <link rel="stylesheet" th:href="@{/build/css/cmagt_so1051.css?v=20260930L}"/>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_so1051.css?v=20260930Z}"/>
 </head>
 <body class="cmagt so1051">
 
@@ -389,37 +389,104 @@
 </div>
 </div><!-- /pageHistory -->
 
-<!-- frmBuyerInquiryLoaderForOffer - Load Inquiry (:4713). Combos: USP_GetDataForDropDownFrominquiryBookingMaster;
-     grid: USP_inquiryBookingMaster_PendingDataLoader (DocumentTypeId 1050). -->
-<div id="inqLoader" style="display:none; position:fixed; inset:0; z-index:950; background:rgba(0,0,0,.35);">
-  <div style="position:absolute; inset:24px; background:#FFFFFF; border-radius:6px; display:flex; flex-direction:column; padding:10px 12px; overflow:hidden;">
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        <strong style="color:#00564C;">Buyer Inquiry Loader For Offer</strong>
-        <span style="margin-left:auto;"></span>
-        <button type="button" onclick="soInqClose()">Close</button>
+<!-- ===================== frmBuyerInquiryLoaderForOffer (Pending Buyer Inquiry For Supplier Offer) =====================
+     toolStrip1 [&New | Refresh | Load | ShortCut Keys]; label23 teal title; panel2 filters in 3 columns
+     (x6/72, x216/327, x562/689) + teal "Show" (btngrnlod); panel3 teal grid bar; grd with Select check column.
+     Combos: USP_GetDataForDropDownFrominquiryBookingMaster; grid: USP_inquiryBookingMaster_PendingDataLoader (1050). -->
+<div id="inqLoader" class="so-modal" style="display:none;">
+  <div class="so-mbox ldbox">
+    <div class="so-tstrip">
+        <button type="button" id="btnInqReset" title="Ctrl+N" onclick="soInqReset()">New</button>
+        <button type="button" id="btnInqRefresh" title="Ctrl+R" onclick="soInqRefreshCombos()">Refresh</button>
+        <span class="sep"></span>
+        <button type="button" id="btnInqSelect" title="Ctrl+L" onclick="soInqLoadOnOffer()">Load</button>
+        <button type="button" id="btnInqShortcut" title="Ctrl+Alt" onclick="soInqShortcuts()">ShortCut Keys</button>
+        <span class="spacer"></span>
+        <button type="button" class="so-x" title="Close (Esc / Ctrl+E)" onclick="soInqClose()">&#x2715;</button>
     </div>
-    <div class="po-entry-grid" style="margin-bottom:6px;">
-        <label class="po-cell"><span>From Date</span><input type="date" id="inqFromDate" class="w130"></label>
-        <label class="po-cell"><span>To Date</span><input type="date" id="inqToDate" class="w130"></label>
-        <label class="po-cell"><span>Doc No From</span><input type="text" id="inqDocNoFrom" class="w90" inputmode="numeric"></label>
-        <label class="po-cell"><span>Doc No To</span><input type="text" id="inqDocNoTo" class="w90" inputmode="numeric"></label>
-        <label class="po-cell"><span>Commission Agent</span><select id="inqCommissionAgent" class="w200" data-dtcombo="single" data-dtcombo-caption="Commission Agent"></select></label>
-        <label class="po-cell"><span>Buyer Name</span><select id="inqBuyer" class="w200" data-dtcombo="single" data-dtcombo-caption="Buyer Name"></select></label>
-        <label class="po-cell"><span>Item Name</span><select id="inqItem" class="w200" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></label>
-        <label class="po-cell"><span>Delivery To Party</span><select id="inqDeliveryToParty" class="w200" data-dtcombo="single" data-dtcombo-caption="Delivery To Party Name"></select></label>
-        <label class="po-cell"><span>Ship To Address</span><select id="inqShipToAddress" class="w200" data-dtcombo="single" data-dtcombo-caption="Ship To Address"></select></label>
-        <button type="button" id="btnInqLoad" class="primary po-addbtn" onclick="soInqSearch()">Load</button>
-        <button type="button" id="btnInqReset" class="po-addbtn" onclick="soInqReset()">Reset</button>
-        <button type="button" id="btnInqRefresh" class="po-addbtn" onclick="soInqRefreshCombos()">Refresh</button>
-        <button type="button" id="btnInqSelect" class="primary po-addbtn" onclick="soInqLoadOnOffer()">Load On Offer</button>
+    <div class="so-ttl">Pending Buyer Inquiry For Supplier Offer</div>
+    <div class="ld-filters">
+        <div class="ld-col">
+            <label for="inqFromDate">From Date</label><input type="date" id="inqFromDate">
+            <label for="inqToDate">To Date</label><input type="date" id="inqToDate">
+            <label for="inqDocNoFrom">Doc No<br>From &amp; To</label>
+            <div class="ld-pair"><input type="text" id="inqDocNoFrom" class="num" inputmode="numeric"><input type="text" id="inqDocNoTo" class="num" inputmode="numeric"></div>
+        </div>
+        <div class="ld-col">
+            <label for="inqCommissionAgent">Commission Agent<br>/ Broker</label>
+            <div class="fx"><select id="inqCommissionAgent" data-dtcombo="single" data-dtcombo-caption="Commission Agent"></select></div>
+            <label for="inqBuyer">Buyer Name</label>
+            <div class="fx"><select id="inqBuyer" data-dtcombo="single" data-dtcombo-caption="Buyer Name"></select></div>
+            <label for="inqItem">Item Name</label>
+            <div class="fx"><select id="inqItem" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        </div>
+        <div class="ld-col">
+            <label for="inqDeliveryToParty">Deliver / Ship To Party</label>
+            <div class="fx"><select id="inqDeliveryToParty" data-dtcombo="single" data-dtcombo-caption="Delivery To Party Name"></select></div>
+            <label for="inqShipToAddress">Delivery / Ship<br>To Address</label>
+            <div class="fx"><select id="inqShipToAddress" data-dtcombo="single" data-dtcombo-caption="Ship To Address"></select></div>
+            <span></span>
+            <div><button type="button" id="btnInqLoad" class="so-show" title="Ctrl+S" onclick="soInqSearch()">Show</button></div>
+        </div>
     </div>
-    <div class="grid-wrap" style="flex:1; margin:0; overflow:auto;">
+    <div class="so-gbar"><span class="spacer"></span><span id="inqCount" class="cnt"></span></div>
+    <div class="grid-wrap ld-grid">
         <table id="grdInqLoader"><thead id="grdInqLoaderHead"></thead><tbody id="grdInqLoaderBody"></tbody></table>
     </div>
   </div>
 </div>
 
-<script th:src="@{/build/js/countx_cmagt_supplier_offer.js?v=20260930a}"></script>
+<!-- ===================== SupfrmShipToAddress (frmSupplierOfferCmagt :4805 btnAddShipTo -> ShowDialog) =====================
+     toolStrip1 [&New | &Update | &Refresh | &Save] (Update visible only after a grid double-click);
+     panel4 teal "Ship To Address"; panel3 white: left col label x15 / control x132 w221, right col label x361 / control x490 w228,
+     Address x132 w586; panel6 teal "History" + grdfrm. Endpoints: /api/commission/purchase-order/ship-to/* -->
+<div id="shipToModal" class="so-modal" style="display:none;">
+  <div class="so-mbox stbox">
+    <div class="so-tstrip">
+        <button type="button" id="btnStNew" title="Ctrl+N" onclick="soShipToReset()">New</button>
+        <button type="button" id="btnStUpdate" title="Ctrl+U" onclick="soShipToSave('btnStUpdate')" style="display:none;">Update</button>
+        <button type="button" id="btnStRefresh" onclick="soShipToRefresh()">Refresh</button>
+        <button type="button" id="btnStSave" title="Ctrl+S" onclick="soShipToSave('btnStSave')">Save</button>
+        <span class="spacer"></span>
+        <button type="button" class="so-x" title="Close (Esc / Ctrl+E)" onclick="soShipToClose()">&#x2715;</button>
+    </div>
+    <div class="so-ttl">Ship To Address</div>
+    <input type="hidden" id="stId" value="0">
+    <div class="st-form">
+        <label for="stParty">Supplier/Customer</label>
+        <div class="fx"><select id="stParty" data-dtcombo="single" data-dtcombo-caption="Supplier Title"></select></div>
+        <label for="stContact">Contact / Party Name</label><input type="text" id="stContact" maxlength="100">
+        <label for="stTitle">Address Title</label><input type="text" id="stTitle" maxlength="100">
+        <label for="stPhone">Telephone</label><input type="text" id="stPhone" maxlength="50" oninput="soDigitsOnly(this)">
+        <label for="stCountry">Country</label>
+        <div class="fx"><select id="stCountry" data-dtcombo="single" data-dtcombo-caption="Country Name" onchange="soShipToCountryLeave()"></select></div>
+        <label for="stMobile">Cell No</label><input type="text" id="stMobile" maxlength="50" oninput="soDigitsOnly(this)">
+        <label for="stCity">City</label>
+        <div class="fx"><select id="stCity" data-dtcombo="single" data-dtcombo-caption="City Name"></select></div>
+        <label for="stWhatsApp">WhatsApp No</label><input type="text" id="stWhatsApp" maxlength="50">
+        <label for="stAddress">Address</label><input type="text" id="stAddress" class="st-addr" maxlength="550">
+    </div>
+    <div class="so-gbar"><span class="gt">History</span></div>
+    <div class="grid-wrap st-grid">
+        <table id="grdShipTo">
+            <thead><tr><th>CompanyName</th><th>AddressTitle</th><th>Country</th><th>City</th><th>ContactPerson</th>
+                <th>PhoneNo</th><th>MobileNo</th><th>WhatsAppNo</th><th>EntryDate</th><th>EntryUser</th>
+                <th>ModifyDate</th><th>ModifyUser</th><th>AddressLine1</th></tr></thead>
+            <tbody id="grdShipToBody"></tbody>
+        </table>
+    </div>
+  </div>
+</div>
+
+<!-- ShortCutKeyPopUp -->
+<div id="scKeys" class="so-modal" style="display:none;z-index:1100;">
+  <div class="so-mbox scbox">
+    <div class="so-ttl">ShortCut Keys <button type="button" class="so-x" onclick="document.getElementById('scKeys').style.display='none'">&#x2715;</button></div>
+    <div class="grid-wrap"><table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="scKeysBody"></tbody></table></div>
+  </div>
+</div>
+
+<script th:src="@{/build/js/countx_cmagt_supplier_offer.js?v=20260930Z}"></script>
 <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
 <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 <script th:src="@{/build/js/cmagt_session_defaults.js?v=20260930a}"></script>
