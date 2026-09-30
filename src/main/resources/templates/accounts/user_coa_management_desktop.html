@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User Chart Of Account Management</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body { font-family: Verdana, "Segoe UI", sans-serif; background: #e0e0e0; font-size: 11px; margin: 0; }
+        .hdr { background: #008080; color: #fff; padding: 6px 10px; font-weight: bold; font-size: 13px; display: flex; align-items: center; }
+        .hdr a { color: #ffeb3b; margin-left: auto; font-size: 11px; text-decoration: none; }
+        .tool { background: #f0f0f0; border-bottom: 1px solid #bbb; padding: 3px 8px; }
+        .tool button { font-size: 11px; }
+        .tabs { display: flex; gap: 2px; padding: 6px 8px 0 8px; }
+        .tabs button { border: 1px solid #999; border-bottom: none; background: #ddd; padding: 4px 10px; font-size: 11px; }
+        .tabs button.active { background: #fff; font-weight: bold; }
+        .pane { display: none; background: #fff; margin: 0 8px 8px 8px; border: 1px solid #999; padding: 8px; min-height: 520px; }
+        .pane.active { display: block; }
+        .sec { background: #008080; color: #fff; padding: 3px 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .sec button { color: #000; font-size: 10px; padding: 0 6px; }
+        .grid { width: 100%; border-collapse: collapse; }
+        .grid th { background: #e8eef2; border: 1px solid #ccc; padding: 3px 5px; position: sticky; top: 0; }
+        .grid td { border: 1px solid #e0e0e0; padding: 2px 5px; }
+        .gwrap { max-height: 420px; overflow: auto; border: 1px solid #ccc; }
+        .row-f { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin: 6px 0; }
+        .row-f label { display: block; font-weight: bold; margin-bottom: 2px; }
+        .row-f select, .row-f input[type=text] { min-width: 200px; font-size: 11px; height: 24px; }
+        tr.sel td { background: #0078d7; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="hdr">User Chart Of Accounts Management  (Allocating accounts to custom groups for users)
+        <a th:href="@{/accounts/dashboard}"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
+    <div class="tool"><button type="button" class="btn btn-default btn-xs" id="btnrefresh"><i class="fa fa-refresh"></i> Refresh</button></div>
+
+    <div class="tabs">
+        <button type="button" class="active" data-pane="tabPage4">User Allocate For Accounts Status</button>
+        <button type="button" data-pane="tabPage1">Custom Group Definition</button>
+        <button type="button" data-pane="tabPage2">Coa Accounts Allocation To Custom Group</button>
+        <button type="button" data-pane="tabPage3">History By User</button>
+    </div>
+
+    <!-- tabPage4 -->
+    <div class="pane active" id="tabPage4">
+        <div class="sec">User Allocate For Chart of Accounts Status (Show Or Hide)
+            <button type="button" id="button1" title="Save"><i class="fa fa-save"></i> Save</button></div>
+        <div class="gwrap">
+            <table class="grid" id="grdUserAllcoateForAccountStatus">
+                <thead><tr><th style="width:50px;"><input type="checkbox" class="chk-all"/> Select</th><th>UserName</th><th style="width:170px;">Account Status</th><th style="width:70px;">IsActive</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- tabPage1 -->
+    <div class="pane" id="tabPage1">
+        <div class="row">
+            <div class="col-md-5">
+                <div class="sec">Define Accounts Custom Group</div>
+                <div class="row-f">
+                    <div><label>Group Name</label><input type="text" id="txtGroupName"/></div>
+                    <div><label><input type="checkbox" id="ChBoxIsActive"/> Active</label></div>
+                    <div><button type="button" class="btn btn-default btn-xs" id="btnAdd">Add</button></div>
+                </div>
+                <div class="sec">Custom Groups Grid</div>
+                <div class="gwrap">
+                    <table class="grid" id="GridCustomGroup">
+                        <thead><tr><th>Description</th><th style="width:70px;">IsActive</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="sec">Allocate Custom Group To User</div>
+                <div class="row-f"><div><label>Select User Account</label><select id="CmbUsers"></select></div></div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="sec">DeAllocated Custom Groups To User
+                            <button type="button" id="BtnAllocateCustomGroup" title="Allocate"><i class="fa fa-arrow-right"></i></button></div>
+                        <div class="gwrap">
+                            <table class="grid" id="grdDeAllocatedCustomGroupsToUser">
+                                <thead><tr><th style="width:50px;"><input type="checkbox" class="chk-all"/> Select</th><th>CustomGroupName</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="sec">Allocated Custom Groups To User
+                            <button type="button" id="BtnDeAllocateCustomGroup" title="De-Allocate"><i class="fa fa-arrow-left"></i></button></div>
+                        <div class="gwrap">
+                            <table class="grid" id="grdAllocatedCustomGroupToUser">
+                                <thead><tr><th style="width:50px;"><input type="checkbox" class="chk-all"/> Select</th><th>CustomGroupName</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- tabPage2 -->
+    <div class="pane" id="tabPage2">
+        <div class="sec">Accounts Allocation To Custom Group</div>
+        <div class="row-f"><div><label>Custom Group Name</label><select id="cmbGroupName"></select></div></div>
+        <fieldset style="border:1px solid #bbb; padding:4px 8px;">
+            <legend style="font-size:11px; width:auto; border:none; margin:0;">Filters For Deallocated Accounts</legend>
+            <div class="row-f">
+                <div><label>Account Types</label><select id="cmbAccountTypes"></select></div>
+                <div><label>3rd Level Account</label><select id="CmbThirdLevelAccounts"></select></div>
+                <div><label>Coa Custom Group</label><select id="cmbCoaCustomgroup"></select></div>
+                <div><button type="button" class="btn btn-default btn-xs" id="btnShow">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="row" style="margin-top:6px;">
+            <div class="col-md-6">
+                <div class="sec">DeAllocated Detail Accounts <button type="button" id="btnAddAc" title="Allocate"><i class="fa fa-arrow-right"></i></button></div>
+                <div class="gwrap">
+                    <table class="grid" id="grdDeAllocatedChartOfAccountToCustomGroup">
+                        <thead><tr><th style="width:50px;"><input type="checkbox" class="chk-all"/> Select</th><th style="width:100px;">AccountCode</th><th>AccountTitle</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="sec">Allocated Accounts <button type="button" id="btnDeAllocate" title="De-Allocate"><i class="fa fa-arrow-left"></i></button></div>
+                <div class="gwrap">
+                    <table class="grid" id="GrdAllocatedChartofAccount">
+                        <thead><tr><th style="width:50px;"><input type="checkbox" class="chk-all"/> Select</th><th style="width:100px;">AccountCode</th><th>AccountTitle</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- tabPage3 -->
+    <div class="pane" id="tabPage3">
+        <div class="sec">Allocating accounts to custom groups for  users</div>
+        <div class="row-f">
+            <div><label>User Account</label><select id="cmbUserforhistory"></select></div>
+            <div><button type="button" class="btn btn-default btn-xs" id="btnShowHistory">Show</button></div>
+        </div>
+        <div class="sec">Detail</div>
+        <div class="gwrap">
+            <table class="grid" id="grdhistorybyuser"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script>
+        /* UserChartOfAccountManagement, event for event (see UserCoaManagementDesktopService). */
+        (function () {
+            var BASE = '/accounts/user-coa-management';
+            var RecId = 0;
+            var AC_STATUS = [{ Id: 1, AccountStatus: 'Accounts Hide' }, { Id: 2, AccountStatus: 'Accounts Show' }];
+            function v(r, k) { if (!r) return null; if (r[k] !== undefined) return r[k]; var l = k.toLowerCase(); for (var x in r) if (x.toLowerCase() === l) return r[x]; return null; }
+            function esc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+            function isTrue(x) { return x === true || x === 1 || String(x).toLowerCase() === 'true' || String(x) === '1'; }
+            function bind(sel, rows, idKey, textKey) {
+                var cur = $(sel).val(), html = '<option value=""></option>';
+                (rows || []).forEach(function (r) { html += '<option value="' + esc(v(r, idKey)) + '">' + esc(v(r, textKey)) + '</option>'; });
+                $(sel).html(html);
+                if (cur && $(sel).find('option[value="' + cur + '"]').length) $(sel).val(cur);
+            }
+            function post(url, body, done) {
+                $.ajax({ url: url, type: 'POST', contentType: 'application/json', data: JSON.stringify(body), success: done,
+                         error: function (x) { alert('Server error: ' + (x.responseText || x.status)); } });
+            }
+            function checkedIds(grid) {
+                var ids = []; $('#' + grid + ' .chk-row:checked').each(function () { ids.push(parseInt($(this).attr('data-id'))); }); return ids;
+            }
+            function selGrid(grid, rows, idKey, cols) {
+                var html = '';
+                (rows || []).forEach(function (r) {
+                    html += '<tr><td style="text-align:center;"><input type="checkbox" class="chk-row" data-id="' + esc(v(r, idKey)) + '"/></td>';
+                    cols.forEach(function (c) { html += '<td>' + esc(v(r, c)) + '</td>'; });
+                    html += '</tr>';
+                });
+                $('#' + grid + ' tbody').html(html);
+                $('#' + grid + ' .chk-all').prop('checked', false);
+            }
+
+            /* GridBind */
+            function gridBind(rows) {
+                var html = '';
+                (rows || []).forEach(function (r) {
+                    html += '<tr data-id="' + esc(v(r, 'Id')) + '" data-name="' + esc(v(r, 'CoaCustomGroupNameForUsers')) + '" data-active="' + (isTrue(v(r, 'IsActive')) ? '1' : '0') + '"><td>'
+                         + esc(v(r, 'CoaCustomGroupNameForUsers')) + '</td><td style="text-align:center;"><input type="checkbox" disabled' + (isTrue(v(r, 'IsActive')) ? ' checked' : '') + '/></td></tr>';
+                });
+                $('#GridCustomGroup tbody').html(html);
+            }
+            /* AllUsersForAllocationAccountsStatus */
+            function statusGrid(rows) {
+                var html = '';
+                (rows || []).forEach(function (r) {
+                    var st = parseInt(v(r, 'AccountStatus') || 0);
+                    var opts = '<option value="0"></option>';
+                    AC_STATUS.forEach(function (a) { opts += '<option value="' + a.Id + '"' + (a.Id === st ? ' selected' : '') + '>' + a.AccountStatus + '</option>'; });
+                    html += '<tr data-id="' + esc(v(r, 'Id')) + '" data-user="' + esc(v(r, 'UserId')) + '"><td style="text-align:center;"><input type="checkbox" class="chk-row"/></td><td>'
+                         + esc(v(r, 'UserName')) + '</td><td><select class="st">' + opts + '</select></td><td style="text-align:center;"><input type="checkbox" class="act"' + (isTrue(v(r, 'IsActive')) ? ' checked' : '') + '/></td></tr>';
+                });
+                $('#grdUserAllcoateForAccountStatus tbody').html(html);
+            }
+
+            function load() {
+                $.get(BASE + '/lookups', function (res) {
+                    gridBind(res.gridGroups);
+                    bind('#CmbUsers', res.users, 'Id', 'UserName');
+                    bind('#cmbGroupName', res.customGroups, 'Id', 'CoaCustomGroupNameForUsers');
+                    bind('#CmbThirdLevelAccounts', res.thirdLevel, 'Id', 'AccountTitle');
+                    bind('#cmbAccountTypes', res.accountTypes, 'Id', 'AccountType');
+                    bind('#cmbUserforhistory', res.historyUsers, 'Id', 'UserName');
+                    bind('#cmbCoaCustomgroup', res.coaCustomGroups, 'Id', 'AcLookUpsDescription');
+                    statusGrid(res.statusUsers);
+                });
+            }
+            function cutomGroupFill() {
+                $.get(BASE + '/lookups', function (res) { bind('#cmbGroupName', res.customGroups, 'Id', 'CoaCustomGroupNameForUsers'); gridBind(res.gridGroups); });
+            }
+
+            /* InsertCustomGroup */
+            function addGroup() {
+                if ($('#txtGroupName').val().trim() === '') { alert('Group Name Required'); $('#txtGroupName').focus(); return; }
+                if (!confirm(RecId > 0 ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+                post(BASE + '/group/save', { recId: RecId, groupName: $('#txtGroupName').val(), isActive: $('#ChBoxIsActive').is(':checked') }, function (res) {
+                    alert(res.message);
+                    if (res.success) { $('#txtGroupName').val(''); $('#btnAdd').text('Add'); RecId = 0; }
+                    cutomGroupFill();
+                });
+            }
+
+            /* CmbUsers_Leave */
+            function usersLeave() {
+                var u = parseInt($('#CmbUsers').val() || 0);
+                $.get(BASE + '/user-groups/' + u, function (res) {
+                    selGrid('grdAllocatedCustomGroupToUser', res.allocated, 'CoaAlocToCustomGroupForUsersId', ['CoaCustomGroupNameForUsers']);
+                    selGrid('grdDeAllocatedCustomGroupsToUser', res.unallocated, 'Id', ['CoaCustomGroupNameForUsers']);
+                });
+            }
+
+            function coaShow() {
+                var g = parseInt($('#cmbGroupName').val() || 0);
+                if (!$('#cmbGroupName').val()) {
+                    alert('Custom Group Field Is Cumpulsory'); $('#cmbGroupName').focus();
+                    $('#grdDeAllocatedChartOfAccountToCustomGroup tbody, #GrdAllocatedChartofAccount tbody').html('');
+                    return;
+                }
+                $.get(BASE + '/coa', { customGroupId: g, thirdLevelAccountId: parseInt($('#CmbThirdLevelAccounts').val() || 0),
+                                       accountTypeId: parseInt($('#cmbAccountTypes').val() || 0), coaCustomGroupId: parseInt($('#cmbCoaCustomgroup').val() || 0) }, function (res) {
+                    selGrid('grdDeAllocatedChartOfAccountToCustomGroup', res.unallocated, 'ChartOfAccountId', ['AccountCode', 'AccountTitle']);
+                    selGrid('GrdAllocatedChartofAccount', res.allocated, 'ChartOfAccountId', ['AccountCode', 'AccountTitle']);
+                });
+            }
+            function coaRefreshGrids() {
+                var g = parseInt($('#cmbGroupName').val() || 0);
+                $.get(BASE + '/coa', { customGroupId: g, thirdLevelAccountId: parseInt($('#CmbThirdLevelAccounts').val() || 0),
+                                       accountTypeId: parseInt($('#cmbAccountTypes').val() || 0), coaCustomGroupId: parseInt($('#cmbCoaCustomgroup').val() || 0) }, function (res) {
+                    selGrid('grdDeAllocatedChartOfAccountToCustomGroup', res.unallocated, 'ChartOfAccountId', ['AccountCode', 'AccountTitle']);
+                    selGrid('GrdAllocatedChartofAccount', res.allocated, 'ChartOfAccountId', ['AccountCode', 'AccountTitle']);
+                });
+            }
+
+            $(function () {
+                $('.tabs button').on('click', function () {
+                    $('.tabs button').removeClass('active'); $(this).addClass('active');
+                    $('.pane').removeClass('active'); $('#' + $(this).data('pane')).addClass('active');
+                });
+                $(document).on('change', '.chk-all', function () { $(this).closest('table').find('.chk-row').prop('checked', this.checked); });
+
+                $('#btnAdd').on('click', addGroup);
+                /* grdLookUp_DoubleClick */
+                $('#GridCustomGroup').on('dblclick', 'tr', function () {
+                    RecId = parseInt($(this).attr('data-id') || 0);
+                    $('#txtGroupName').val($(this).attr('data-name'));
+                    $('#ChBoxIsActive').prop('checked', $(this).attr('data-active') === '1');
+                    $('#btnAdd').text('Update');
+                });
+                $('#CmbUsers').on('change', usersLeave);
+                $('#BtnAllocateCustomGroup').on('click', function () {
+                    var ids = checkedIds('grdDeAllocatedCustomGroupsToUser');
+                    if (ids.length === 0) { alert('Please Check Rows First To Allocate'); return; }
+                    post(BASE + '/user-groups/' + parseInt($('#CmbUsers').val() || 0) + '/allocate', ids, function (res) {
+                        if (res.message) alert(res.message);
+                        if (res.success) usersLeave();
+                        cutomGroupFill();
+                    });
+                });
+                $('#BtnDeAllocateCustomGroup').on('click', function () {
+                    var ids = checkedIds('grdAllocatedCustomGroupToUser');
+                    if (ids.length === 0) { alert('Please Check Rows First To Allocate'); return; }
+                    if (!confirm("Are you sure to DeAllocate Custom Group's?")) return;
+                    post(BASE + '/user-groups/' + parseInt($('#CmbUsers').val() || 0) + '/deallocate', ids, function (res) {
+                        alert(res.message);
+                        if (res.success) usersLeave();
+                        cutomGroupFill();
+                    });
+                });
+
+                $('#btnShow').on('click', coaShow);
+                $('#btnAddAc').on('click', function () {
+                    var ids = checkedIds('grdDeAllocatedChartOfAccountToCustomGroup');
+                    if (ids.length === 0) { alert('Checked row first'); return; }
+                    post(BASE + '/coa/' + parseInt($('#cmbGroupName').val() || 0) + '/allocate', ids, function (res) {
+                        if (res.message) alert(res.message);
+                        coaRefreshGrids();
+                    });
+                });
+                $('#btnDeAllocate').on('click', function () {
+                    var ids = checkedIds('GrdAllocatedChartofAccount');
+                    if (ids.length === 0) { alert('Checked row first'); return; }
+                    if (!confirm("Are you sure to DeAllocate Chart Of Acccount's?")) return;
+                    post(BASE + '/coa/' + parseInt($('#cmbGroupName').val() || 0) + '/deallocate', ids, function (res) {
+                        alert(res.message);
+                        if (res.success) coaRefreshGrids();
+                    });
+                });
+
+                /* BindHistorybyUser: the grid shows the procedure's own columns */
+                $('#btnShowHistory').on('click', function () {
+                    $.get(BASE + '/history', { userId: parseInt($('#cmbUserforhistory').val() || 0) }, function (rows) {
+                        rows = rows || [];
+                        if (rows.length === 0) {
+                            /* desktop: grdhistorybyuser.ClearStructure() - the web also says why the grid is empty */
+                            $('#grdhistorybyuser thead').html('<tr><th>ChartOfAccountId</th><th>AccountCode</th><th>AccountTitle</th><th>UserName</th><th>CustomGroup</th></tr>');
+                            $('#grdhistorybyuser tbody').html('<tr><td colspan="5" style="text-align:center;padding:14px;color:#777;">No accounts are allocated to this user through a custom group.</td></tr>');
+                            return;
+                        }
+                        var cols = Object.keys(rows[0]);
+                        $('#grdhistorybyuser thead').html('<tr>' + cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>');
+                        $('#grdhistorybyuser tbody').html(rows.map(function (r) { return '<tr>' + cols.map(function (c) { return '<td>' + esc(r[c]) + '</td>'; }).join('') + '</tr>'; }).join(''));
+                    }).fail(function (x) { alert('Could not load history (' + x.status + ').'); });
+                });
+
+                /* button1_Click: Accounts Show & Hide status */
+                $('#button1').on('click', function () {
+                    if (!confirm('Are you sure to Allocate Accounts Show & Hide Status?')) return;
+                    var rows = [];
+                    $('#grdUserAllcoateForAccountStatus tbody tr').each(function () {
+                        if (!$(this).find('.chk-row').is(':checked')) return;
+                        rows.push({ id: parseInt($(this).attr('data-id') || 0), userId: parseInt($(this).attr('data-user') || 0),
+                                    accountStatus: parseInt($(this).find('.st').val() || 0), isActive: $(this).find('.act').is(':checked') });
+                    });
+                    if (rows.length === 0) { alert('Checked row first'); return; }
+                    post(BASE + '/account-status', rows, function (res) {
+                        if (!res.success) { alert(res.message); return; }
+                        $.get(BASE + '/lookups', function (r) { statusGrid(r.statusUsers); });
+                    });
+                });
+
+                /* btnrefresh_Click */
+                $('#btnrefresh').on('click', function () { load(); $('#txtGroupName').focus(); });
+                load();
+            });
+        })();
+    </script>
+</body>
+</html>

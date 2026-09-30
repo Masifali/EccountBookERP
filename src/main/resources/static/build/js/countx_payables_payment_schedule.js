@@ -201,6 +201,8 @@ function loadSetup() {
 
         var wrap = el('branchWrap');
         if (wrap) wrap.style.display = S.branchFeature ? '' : 'none';
+        /* R3 2026-09-30: the Branches caption hides with the combo (Branches.Visible = false without feature 17). */
+        var bl = el('branchLbl'); if (bl) bl.style.display = S.branchFeature ? '' : 'none';
         if (S.branchFeature) {
             fillSelect('branches', d.branches, 'Branch Name');
             if (d.currentBranchId) {

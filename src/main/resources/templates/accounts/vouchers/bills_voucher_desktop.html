@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title th:text="${moduleTitle}">Bills</title>
+<link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+<link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+<!--
+  Screens 38 frmBillsPayables (DocumentTypeId 6) and 39 frmBillsReceivables (7).
+  Layout = InitializeComponent(): groupBox1 "Main" and panel19 controls at their desktop
+  Locations/Sizes (px); groupBox2 "Detail" is the form's FlowLayoutPanel of fixed-width panels.
+  Server: /accounts/api/desktop-vouchers/bills/{6|7}/... (DesktopVoucherScreensController).
+-->
+<style>
+ body{font-family:"Segoe UI",Tahoma,Verdana,sans-serif;background:#e4e9ed;font-size:12px;color:#222;margin:0}
+ .tbar{background:linear-gradient(#fff,#e3e8ee);border-bottom:1px solid #b0bec5;padding:2px 6px;display:flex;gap:3px;flex-wrap:wrap;align-items:center}
+ .tbtn{background:#fff;border:1px solid #90a4ae;border-radius:2px;padding:2px 9px;font-size:12px;cursor:pointer}
+ .tbtn:hover{background:#e0f2f1}.tbtn:disabled{opacity:.45;cursor:not-allowed}
+ .tabs{display:flex;gap:2px;padding:4px 6px 0;background:#d1d5db}
+ .tab{border:1px solid #9ca3af;border-bottom:none;background:#e5e7eb;padding:3px 16px;cursor:pointer;font-weight:600}
+ .tab.on{background:#fff;color:#00796B}
+ .cap{background:#00796B;color:#fff;height:29px;position:relative}
+ .cap .t{position:absolute;left:4px;top:4px;font-size:14px;font-weight:bold}
+ .rel{position:relative}
+ fieldset.gb{position:relative;border:1px solid #9aa9b5;margin:3px;padding:0;background:#fff}
+ fieldset.gb>legend{font-size:12px;font-weight:600;width:auto;margin:0 0 0 8px;padding:0 4px;border:0;color:#004d40}
+ .lbl{position:absolute;white-space:nowrap;font-weight:600;color:#334155}
+ .abs{position:absolute}
+ input.f,select.f,textarea.f{position:absolute;border:1px solid #94a3b8;border-radius:2px;padding:1px 4px;font-size:12px;background:#fff}
+ input.f[readonly],input.f:disabled{background:#f1f5f9}
+ .flow{display:flex;flex-wrap:wrap;width:1020px;padding:2px 1px}
+ .fp{position:relative;height:45px}
+ .fp label{position:absolute;left:2px;top:2px;font-weight:600;color:#334155;white-space:nowrap}
+ .fp input{position:absolute;left:1px;top:19px;height:24px;border:1px solid #94a3b8;border-radius:2px;padding:1px 4px;font-size:12px}
+ table.g{border-collapse:collapse;width:100%;background:#fff}
+ table.g th{background:#00796B;color:#fff;padding:3px 6px;border:1px solid #004d40;white-space:nowrap;font-weight:600;text-align:center}
+ table.g td{padding:2px 6px;border:1px solid #cbd5e1;white-space:nowrap}
+ table.g tr.sel td{background:#b2dfdb}
+ table.g tfoot td{font-weight:bold;background:#e0f2f1}
+ table.g td input{width:100%;border:0;font-size:12px;padding:0 2px}
+ .num{text-align:right}
+ .gridwrap{overflow:auto;border:1px solid #b0bec5;background:#fff}
+ .dcombo-popup{position:absolute;z-index:2000;background:#fff;border:1px solid #00796B;box-shadow:0 4px 10px rgba(0,0,0,.2);max-height:260px;overflow:auto;font-size:12px}
+ .dcombo-popup table{border-collapse:collapse;width:100%}
+ .dcombo-popup th{background:#00796B;color:#fff;padding:2px 6px;position:sticky;top:0}
+ .dcombo-popup td{padding:2px 6px;border-bottom:1px solid #eee;white-space:nowrap;cursor:pointer}
+ .dcombo-popup tr.act td,.dcombo-popup tbody tr:hover td{background:#e0f2f1}
+ #msg{position:fixed;right:12px;top:8px;z-index:3000;max-width:520px}
+ .modal-sc{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;z-index:2500}
+ .modal-sc>div{background:#fff;width:540px;margin:60px auto;padding:8px;border:1px solid #00796B}
+</style>
+</head>
+<body>
+<div id="msg"></div>
+<div class="tabs">
+  <div class="tab on" id="tabForm" onclick="BV.tab(0)">Form</div>
+  <div class="tab" id="tabHist" onclick="BV.tab(1)">History</div>
+  <a href="/accounts/dashboard" style="margin-left:auto;padding:3px 8px">Back to Dashboard</a>
+</div>
+
+<!-- ============================================================================ tabPage1 -->
+<div id="pgForm">
+  <div class="tbar">
+    <button class="tbtn" id="btnnew" onclick="BV.newForm()">New</button>
+    <button class="tbtn" id="btnRefresh" onclick="BV.refresh()">Refresh</button>
+    <button class="tbtn" id="btnsave" onclick="BV.save('save')">Save</button>
+    <button class="tbtn" id="btnSaveAs" onclick="BV.save('saveAs')" style="display:none">SaveAs</button>
+    <button class="tbtn" id="btnUpdate" onclick="BV.save('update')" style="display:none">Update</button>
+    <button class="tbtn" id="btnAttachment" disabled title="Attachments (DMS) are not ported to the web.">Attachments</button>
+    <button class="tbtn" id="Print" title="102 - Voucher Slip" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Save or open a voucher first.">102-Print</button>
+    <button class="tbtn pay" id="BtnPrintII" title="102_01 - Bills Payables / Receivables Voucher" data-rpt="102_01_BillsPayablesOrReceiveableVoucher.rpt" data-rpt-need="voucherHeadId" data-rpt-need-msg="Save or open a voucher first.">102_01-Print</button>
+    <button class="tbtn" id="BtnLookup" disabled title="frmAccountsAllocateToCustomAccountGroupByDocumentType is not ported here.">Accounts Allocate To Custom</button>
+    <button class="tbtn" id="btnShortCutKey" onclick="BV.shortcuts()">ShortCut Keys</button>
+    <button class="tbtn rcv" id="BtnPrintII_r" title="102_01 - Bills Payables / Receivables Voucher" data-rpt="102_01_BillsPayablesOrReceiveableVoucher.rpt" data-rpt-need="voucherHeadId" data-rpt-need-msg="Save or open a voucher first.">102_01-Print</button>
+  </div>
+  <!-- panel2 lower strip -->
+  <div class="cap"><span class="t" id="label3" th:text="${moduleTitle}">Bills</span>
+    <span class="lbl" id="labelLocationType" style="top:6px;color:#fff">Location Type</span>
+    <input class="f" id="cmbLocationType" style="top:1px;width:243px;height:26px;color:#222">
+    <label class="abs" style="left:547px;top:6px;color:#fff;font-weight:bold"><input type="checkbox" id="chkCustomAccounts"> Custom Accounts</label>
+    <label class="abs" id="lblPreview" style="top:5px;color:#fff"><input type="checkbox" id="CHKPREVIEW" checked disabled> Preview</label>
+  </div>
+
+  <!-- groupBox1 "Main" 1016 x 127 -->
+  <fieldset class="gb" id="groupBox1" style="width:1016px;height:127px"><legend>Main</legend>
+    <label class="lbl" style="left:6px;top:9px">Cost Center</label>
+    <input class="f" id="CmbProjectId" style="left:80px;top:4px;width:206px;height:24px">
+    <label class="lbl" style="left:6px;top:36px">Doc No,Date</label>
+    <input class="f" id="txtDocNo" readonly style="left:80px;top:32px;width:82px;height:23px">
+    <input class="f" type="date" id="txtDocDate" style="left:163px;top:32px;width:123px;height:22px">
+    <label class="lbl" style="left:6px;top:59px">Remarks</label>
+    <textarea class="f" id="txtRemarks" style="left:80px;top:58px;width:383px;height:51px"></textarea>
+    <label class="lbl" style="left:290px;top:9px">Bill No</label>
+    <input class="f" id="txtInvoiceNo" style="left:340px;top:5px;width:123px;height:23px">
+    <label class="lbl" style="left:290px;top:36px">Bill Date</label>
+    <input class="f" type="date" id="txtInvoiceDate" style="left:340px;top:32px;width:123px;height:22px">
+    <label class="lbl" style="left:466px;top:9px">Account Type</label>
+    <input class="f" id="CmbAccountType" style="left:567px;top:3px;width:234px;height:26px">
+    <label class="lbl" id="label7" style="left:466px;top:36px"></label>
+    <input class="f" id="cmbAccount" style="left:567px;top:30px;width:234px;height:26px">
+    <label class="lbl" style="left:466px;top:62px">Account Balance</label>
+    <input class="f num" id="lblCreditAcBalance" readonly style="left:567px;top:58px;width:201px;height:23px" value="0">
+    <span class="lbl" id="lblDrCrS" style="left:771px;top:62px"></span>
+    <label class="lbl sub" id="lblSubsidiaryaccountCr" style="left:466px;top:89px">Subsidiary A/C</label>
+    <input class="f sub" id="CmbSubsidiaryAccountHdr" style="left:567px;top:83px;width:234px;height:26px">
+    <label class="lbl" style="left:805px;top:9px">Fcy Code</label>
+    <input class="f" id="cmbCurrency" style="left:888px;top:3px;width:125px;height:26px">
+    <label class="lbl" style="left:805px;top:36px">Exchange Rate</label>
+    <input class="f num" id="txtExchangeRate" style="left:888px;top:32px;width:125px;height:23px">
+    <label class="lbl" style="left:805px;top:62px">Fcy Amount</label>
+    <input class="f num" id="txtFcyAmount" disabled style="left:888px;top:58px;width:125px;height:23px">
+  </fieldset>
+
+  <!-- groupBox2 "Detail" -->
+  <fieldset class="gb" style="width:1146px;height:116px"><legend>Detail</legend>
+    <div class="flow">
+      <div class="fp" style="width:159px"><label>Custom Group</label><input id="CmbCustomGroup" style="width:158px"></div>
+      <div class="fp" id="PanelAccountTitleDetail" style="width:272px"><label id="label9"></label>
+        <label id="label29" style="left:81px;color:#6a1b9a"></label>
+        <label id="lblbalancedetail" style="left:164px;display:none">0</label><label id="lbldetaildrcr" style="left:235px;display:none"></label>
+        <input id="cmbAccountDetail" style="width:270px"></div>
+      <div class="fp" id="PanelSubsidiaryDetail" style="width:215px"><label>Subsidiary Account</label><input id="CmbSubsidiaryAccount" style="left:2px;width:212px"></div>
+      <div class="fp" style="width:114px"><label>Job/Lot</label><input id="cmbJobLotFile" style="width:111px"></div>
+      <div class="fp" style="width:93px"><label>Bill/Invoice #</label><input id="txtInvoiceNoDetail" style="top:21px;width:91px;height:23px"></div>
+      <div class="fp" style="width:84px"><label>Qty</label><input id="txtQtyDetial" class="num" value="0" style="top:21px;width:82px;height:23px"></div>
+      <div class="fp" style="width:82px"><label>Rate</label><input id="txtRateDetail" class="num" value="0" style="top:21px;width:80px;height:23px"></div>
+      <div class="fp" style="width:108px"><label>Amount</label><input id="txtAmountDetail" class="num" style="top:21px;width:106px;height:23px"></div>
+      <div class="fp" style="width:110px"><label>Fcy Amount</label><input id="txtFcyAmountDetail" class="num" style="top:22px;width:109px;height:23px"></div>
+      <div class="fp" style="width:208px"><label>Reference Account</label><input id="CmbReferenceAccount" style="width:207px"></div>
+      <div class="fp" style="width:428px"><label>Remarks</label><input id="txtRemarksDetail" style="top:21px;width:427px;height:23px"></div>
+      <div class="fp" style="width:135px">
+        <button class="tbtn abs" id="btnAdd" style="left:3px;top:17px;width:35px;height:27px" onclick="BV.addRow()">+</button>
+        <button class="tbtn abs" id="btnUpdateDetail" style="left:3px;top:18px;width:65px;height:26px;display:none" onclick="BV.updateRow()">Update</button>
+        <button class="tbtn abs" id="btnCancelDetail" style="left:69px;top:18px;width:63px;height:26px;display:none" onclick="BV.cancelRow()">Cancel</button>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="gridwrap" style="margin:0 3px;min-height:115px;max-height:260px" id="grdWrap" tabindex="0"><table class="g" id="grd"></table></div>
+
+  <!-- panel19 (bottom, 230 high) -->
+  <div class="rel" style="height:232px;margin:3px;background:#fff;border:1px solid #b0bec5">
+    <div class="abs" style="left:0;top:0;width:506px;height:230px">
+      <div style="background:#00796B;color:#fff;font-weight:bold;padding:1px 4px;height:19px">Amount Distribution</div>
+      <div class="gridwrap" style="height:211px" id="grdScheduleWrap"><table class="g" id="grdSchedule"></table></div>
+    </div>
+    <label class="lbl" style="left:776px;top:7px">Voucher Amount</label>
+    <input class="f num" id="txtVoucherAmountFooter" disabled style="left:903px;top:3px;width:111px;height:23px">
+    <label class="lbl" style="left:653px;top:31px">Sales Tax Type</label>
+    <input class="f" id="CmbTaxType" style="left:784px;top:26px;width:92px;height:24px">
+    <label class="lbl" style="left:879px;top:31px">%</label>
+    <input class="f num" id="txtTaxPercent" disabled style="left:903px;top:27px;width:111px;height:22px">
+    <label class="lbl" style="left:653px;top:57px">Sales Tax Account</label>
+    <input class="f" id="CmbTaxAccount" style="left:784px;top:51px;width:230px;height:26px">
+    <label class="lbl" style="left:776px;top:82px">Sales Tax Amount</label>
+    <input class="f num" id="txtTaxAmount" disabled style="left:903px;top:78px;width:111px;height:23px">
+    <label class="lbl" style="left:653px;top:108px">Advance Tax Account</label>
+    <input class="f" id="CmbAdvanceTaxAccount" style="left:784px;top:102px;width:230px;height:26px">
+    <label class="lbl" style="left:776px;top:133px">Advance Tax Amount</label>
+    <input class="f num" id="txtAdvanceTaxAmount" style="left:903px;top:129px;width:111px;height:23px">
+    <label class="lbl" style="left:653px;top:159px">Other Charges Account</label>
+    <input class="f" id="CmbOtherChargesAccount" style="left:784px;top:153px;width:230px;height:26px">
+    <label class="lbl" style="left:776px;top:185px">Other Charges Amount</label>
+    <input class="f num" id="txtOtherChargesAmount" style="left:903px;top:181px;width:111px;height:23px">
+    <label class="lbl" style="left:776px;top:209px">Total Amount</label>
+    <input class="f num" id="txtTotalAmount" disabled style="left:903px;top:205px;width:111px;height:23px">
+  </div>
+</div>
+
+<!-- ============================================================================ tabPage2 -->
+<div id="pgHist" style="display:none">
+  <div class="tbar">
+    <button class="tbtn" id="btnNewHistory" onclick="BV.histReset()">Reset</button>
+    <button class="tbtn" id="btnRefreshHistory" onclick="BV.histAccounts()">Refresh</button>
+    <button class="tbtn" id="btnLoadAll" style="display:none">LoadAll</button>
+  </div>
+  <div class="cap" style="height:23px"><span class="t" id="label35" style="top:2px"></span></div>
+  <div class="rel" style="height:79px;background:#fff">
+    <fieldset class="gb" style="position:absolute;left:4px;top:0;width:790px;height:72px;margin:0"><legend>Filters</legend>
+      <label class="lbl" style="left:4px;top:9px"><input type="checkbox" id="chkFrom" checked> From Date</label>
+      <input class="f" type="date" id="FromDateHistory" style="left:84px;top:5px;width:112px;height:22px">
+      <label class="lbl" style="left:4px;top:37px"><input type="checkbox" id="chkTo" checked> To Date</label>
+      <input class="f" type="date" id="ToDateHistory" style="left:84px;top:33px;width:112px;height:22px">
+      <label class="lbl" style="left:200px;top:9px">From Doc</label>
+      <input class="f" id="txtFromDocNoHistory" style="left:258px;top:5px;width:92px;height:23px">
+      <label class="lbl" style="left:200px;top:37px">To Doc</label>
+      <input class="f" id="txtToDocNoHistory" style="left:258px;top:33px;width:92px;height:23px">
+      <label class="lbl" style="left:354px;top:9px">Account Title (Cr)</label>
+      <input class="f" id="CmbAccountTitleHistory" style="left:451px;top:3px;width:234px;height:26px">
+      <label class="lbl" style="left:354px;top:37px">Approved Status</label>
+      <select class="f" id="cmbApproveStatus" style="left:451px;top:31px;width:158px;height:26px">
+        <option>Not Apporved</option><option>Approved</option><option>All</option></select>
+      <button class="tbtn abs" id="btnShowHistory" style="left:614px;top:31px;width:71px;height:26px" onclick="BV.history()">Show</button>
+      <label class="abs" style="left:690px;top:0"><input type="radio" name="dt" value="doc" checked> Doc Date</label>
+      <label class="abs" style="left:690px;top:15px"><input type="radio" name="dt" value="entry"> Entry Date</label>
+      <label class="abs" style="left:690px;top:30px"><input type="radio" name="dt" value="modify"> Modify Date</label>
+      <label class="abs" style="left:690px;top:45px"><input type="radio" name="dt" value="approved"> Approved Date</label>
+    </fieldset>
+    <div class="abs" id="VoucherInfoBox" style="left:795px;top:3px;width:221px;height:72px;border:1px solid #9aa9b5;padding:4px 6px;display:none">
+      <div>Total Vouchers <b id="lblTotalVouchers" style="float:right">0</b></div>
+      <div>Approved Vouchers <b id="lblApprovedVouchers" style="float:right">0</b></div>
+      <div>UnApproved Vouchers <b id="lblUnApprovedVouchers" style="float:right">0</b></div>
+    </div>
+  </div>
+  <div style="margin:3px"><b>Filtered Records</b></div>
+  <div class="gridwrap" style="max-height:347px"><table class="g" id="DataGridHistory"></table></div>
+  <div style="margin:3px"><b>Detail of above selected row</b></div>
+  <div class="gridwrap" style="max-height:156px"><table class="g" id="grdDetailHistory"></table></div>
+</div>
+
+<div class="modal-sc" id="scModal" onclick="this.style.display='none'"><div><b>ShortCut Keys</b><table class="g" id="scTable"></table></div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/desktop_combo_c.js}"></script>
+<script th:inline="javascript">
+var DOC_TYPE = /*[[${documentTypeId}]]*/ 6;
+</script>
+<script>
+(function () {
+'use strict';
+var PAY = DOC_TYPE === 6;
+var API = '/accounts/api/desktop-vouchers/bills/' + DOC_TYPE;
+var L = null, rights = {}, subFeature = false;
+var rows = [], sched = [];
+var recId = 0, updateMode = false, editIndex = -1;
+    /* print-rpt.js reads the open voucher's id (desktop: RecId == VoucherHeadId) */
+    try { Object.defineProperty(window, 'RecId', { get: function () { return recId; }, configurable: true });
+          Object.defineProperty(window, 'VoucherHeadId', { get: function () { return recId; }, configurable: true }); } catch (e) { }
+
+var subLenDetail = 0, subLenHdr = 0;
+var baseCurrency = 0, baseRate = 0;
+var cb = {};
+
+function $id(i) { return document.getElementById(i); }
+function show(el, on) { if (typeof el === 'string') el = $id(el); if (el) el.style.display = on ? '' : 'none'; }
+function num(v) { v = String(v == null ? '' : v).replace(/,/g, ''); var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function fmt(n, d) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: d == null ? 2 : d }); }
+function AD() { return (L && L.decimals && L.decimals.amount) || 0; }
+function FD() { return (L && L.decimals && L.decimals.fcyAmount) || 0; }
+function RD() { return (L && L.decimals && L.decimals.rate) || 2; }
+function round(v, d) { var p = Math.pow(10, d); return Math.round((v + Number.EPSILON) * p) / p; }
+function dstr(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function today() { return dstr(new Date()); }
+function day(v) { return v ? String(v).substring(0, 10) : ''; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function msg(text, ok) {
+    var d = document.createElement('div'); d.className = 'alert ' + (ok ? 'alert-success' : 'alert-danger');
+    d.textContent = text; $id('msg').appendChild(d); setTimeout(function () { d.remove(); }, ok ? 3500 : 7000);
+}
+function ajax(method, url, body) {
+    return $.ajax({ method: method, url: url, contentType: 'application/json', data: body ? JSON.stringify(body) : undefined })
+        .fail(function (x) { msg((x.responseJSON && x.responseJSON.message) || ('Request failed (' + x.status + ')')); });
+}
+function gridTotal() { var t = 0; rows.forEach(function (r) { t += num(r.amount); }); return t; }
+
+function captions() {
+    $id('label7').textContent = PAY ? 'Account Title (Cr)' : 'Account Title (Dr)';
+    $id('label9').textContent = PAY ? 'Account (Dr)' : 'Account (Cr)';
+    $id('label35').textContent = PAY ? 'Bills Payables History' : 'Bills Receivables History';
+    $id('labelLocationType').style.left = (PAY ? 135 : 170) + 'px';
+    $id('cmbLocationType').style.left = (PAY ? 223 : 258) + 'px';
+    $id('lblPreview').style.left = (PAY ? 1063 : 1261) + 'px';
+    document.querySelectorAll('.pay').forEach(function (e) { show(e, PAY); });
+    document.querySelectorAll('.rcv').forEach(function (e) { show(e, !PAY); });
+}
+
+/* ------------------------------------------------------------- InitializeComponentMethod */
+function init() {
+    captions();
+    var acCols = [{ key: 'AccountTitle', caption: 'Account Title' }, { key: 'AccountCode', caption: 'Code' }];
+    cb.loc = DCombo('cmbLocationType', { columns: [{ key: 'Location', caption: 'Location Type' }], textKey: 'Location' });
+    cb.proj = DCombo('CmbProjectId', { columns: [{ key: 'ProjectName', caption: 'Cost Center' }], textKey: 'ProjectName', popupWidth: 240 });
+    cb.type = DCombo('CmbAccountType', { columns: [{ key: 'AccountType', caption: 'Account Type' }], textKey: 'AccountType', onLeave: accountTypeLeave });
+    cb.acc = DCombo('cmbAccount', { columns: acCols, popupWidth: 420, onLeave: accountLeave });
+    cb.subH = DCombo('CmbSubsidiaryAccountHdr', { columns: [{ key: 'SubsidiaryAccount', caption: 'Account Title' }], textKey: 'SubsidiaryAccount', popupWidth: 300,
+        onLeave: function (r) { if (r && +r.AccountId) cb.acc.setValue(r.AccountId); } });
+    cb.cur = DCombo('cmbCurrency', { columns: [{ key: 'CurrencyCode', caption: 'Currency' }, { key: 'CurrencyName', caption: 'Name' }], textKey: 'CurrencyCode', onLeave: currencyLeave });
+    cb.grp = DCombo('CmbCustomGroup', { columns: [{ key: 'CustomGroupName', caption: 'Custom Group' }], textKey: 'CustomGroupName', popupWidth: 300, onLeave: customGroupLeave });
+    cb.det = DCombo('cmbAccountDetail', { columns: acCols.concat([{ key: 'NoteTitle', caption: 'Note' }]), popupWidth: 460, onLeave: detailAccountLeave });
+    cb.sub = DCombo('CmbSubsidiaryAccount', { columns: [{ key: 'SubsidiaryAccount', caption: 'Account Title' }], textKey: 'SubsidiaryAccount', popupWidth: 300,
+        onLeave: function (r) { if (r && +r.AccountId) cb.det.setValue(r.AccountId); } });
+    cb.job = DCombo('cmbJobLotFile', { columns: [{ key: 'JobLotDescription', caption: 'Job Lot' }], textKey: 'JobLotDescription', popupWidth: 240 });
+    cb.ref = DCombo('CmbReferenceAccount', { columns: acCols, popupWidth: 380 });
+    cb.taxType = DCombo('CmbTaxType', { columns: [{ key: 'TaxName', caption: 'TaxType' }], textKey: 'TaxName', popupWidth: 200, onSelect: salesTex, onLeave: salesTex });
+    cb.tax = DCombo('CmbTaxAccount', { columns: acCols, popupWidth: 380 });
+    cb.adv = DCombo('CmbAdvanceTaxAccount', { columns: acCols, popupWidth: 380 });
+    cb.oc = DCombo('CmbOtherChargesAccount', { columns: acCols, popupWidth: 380 });
+    cb.hist = DCombo('CmbAccountTitleHistory', { columns: [{ key: 'AccountTitle', caption: 'Account Title' }], popupWidth: 320 });
+
+    $id('txtDocDate').value = today(); $id('txtInvoiceDate').value = today();
+    $id('txtQtyDetial').addEventListener('input', calculation);
+    $id('txtRateDetail').addEventListener('input', calculation);
+    $id('txtAmountDetail').addEventListener('input', function () { related('amount'); });
+    $id('txtFcyAmountDetail').addEventListener('input', function () { related('fcy'); });
+    $id('txtExchangeRate').addEventListener('input', exchangeRateChanged);
+    $id('txtExchangeRate').addEventListener('blur', function () { this.value = num(this.value).toFixed(RD()); });
+    $id('txtAdvanceTaxAmount').addEventListener('input', totalAmountInFooter);
+    $id('txtOtherChargesAmount').addEventListener('input', totalAmountInFooter);
+    document.addEventListener('keydown', keys);
+
+    ajax('GET', API + '/lookups').done(function (d) {
+        L = d; rights = d.rights || {}; subFeature = !!d.subsidiaryFeature;
+        $id('btnsave').disabled = !rights.save; $id('btnSaveAs').disabled = !rights.save;
+        $id('btnUpdate').disabled = !rights.update;
+        document.querySelectorAll('.sub').forEach(function (e) { show(e, subFeature); });
+        show('PanelSubsidiaryDetail', subFeature);
+        $id('PanelAccountTitleDetail').style.width = subFeature ? '272px' : '487px';
+        $id('cmbAccountDetail').style.width = subFeature ? '270px' : '485px';
+        $id('txtDocNo').value = d.voucherCode || '';
+        cb.loc.setData(d.locationTypes || []); if ((d.locationTypes || []).length) cb.loc.setValue(d.locationTypes[0].Id);
+        cb.proj.setData(d.costCenters || []); if ((d.costCenters || []).length) cb.proj.setValue(d.costCenters[0].Id);
+        cb.type.setData(d.accountTypes || []);
+        cb.acc.setData(d.headerAccounts || []);
+        cb.tax.setData(d.taxAccounts || []);
+        cb.cur.setData(d.currencies || []);
+        cb.grp.setData(d.customGroups || []);
+        if ((d.customGroups || []).length) { cb.grp.setValue(d.customGroups[0].Id); customGroupLeave(); }
+        cb.job.setData(d.jobLots || []);
+        cb.ref.setData(d.referenceAccounts || []);
+        cb.taxType.setData(d.taxTypes || []);
+        cb.adv.setData(d.advanceTaxAccounts || []);
+        if (!PAY) cb.oc.setData(d.otherChargesAccounts || []);
+        defaults();
+        schedAddRow(); renderSched();
+        renderGrid();
+        cb.hist.setData(d.historyAccounts || []);
+        var from = new Date(); from.setDate(from.getDate() - (d.defaults.historyFromDaysBack || 3));
+        $id('FromDateHistory').value = dstr(from); $id('ToDateHistory').value = today();
+        totalAmountInFooter();
+        $id('txtDocDate').focus();
+    });
+}
+
+/* DefaultConfigurations() */
+function defaults() {
+    if (L.defaults.jobLotId) cb.job.setValue(L.defaults.jobLotId);
+    baseCurrency = L.defaults.currencyId || 0; baseRate = L.defaults.exchangeRate || 0;
+    if (baseCurrency) cb.cur.setValue(baseCurrency);
+    $id('txtExchangeRate').value = Number(baseRate).toFixed(RD());
+}
+
+/* CmbAccountType_Leave */
+function accountTypeLeave() {
+    var t = +cb.type.value();
+    if (t > 0) {
+        cb.acc.setData((L.allAccounts || []).filter(function (a) { return +a.AccountTypeId === t; }));
+    } else if (PAY) {
+        cb.acc.setData(L.headerAccounts || []);                  // CreditAccountAccountBind()
+    }
+    /* Receivables: SalesTaxAccountBind() - the header list is left as it is */
+}
+
+/* cmbAccount_Leave: balance + BindSubsidiaryAccountCrWithDbCall */
+function accountLeave() {
+    var acc = +cb.acc.value();
+    if (acc) balance(acc, function (b, raw) { $id('lblCreditAcBalance').value = raw; $id('lblDrCrS').textContent = b > 0 ? 'Dr' : (b === 0 ? 'Nill' : 'Cr'); });
+    var all = L.subsidiaries || [];
+    if (!all.length) { cb.subH.setData([]); subLenHdr = 0; return; }
+    var keep = cb.subH.text() ? cb.subH.value() : 0;
+    var m = acc ? all.filter(function (x) { return +x.AccountId === acc; }) : all;
+    subLenHdr = m.length; cb.subH.setData(m); cb.subH.clear();
+    if (keep) cb.subH.setValue(keep);
+}
+
+/* cmbAccountDetail_Leave: balance, NoteTitle, BindSubsidiaryAccountDrWithDbCall */
+function detailAccountLeave() {
+    var r = cb.det.row();
+    if (r && +r.Id) {
+        show('lblbalancedetail', true); show('lbldetaildrcr', true);
+        balance(+r.Id, function (b, raw) { $id('lblbalancedetail').textContent = raw; $id('lbldetaildrcr').textContent = b > 0 ? 'Dr' : (b === 0 ? 'Nill' : 'Cr'); });
+        $id('label29').textContent = r.NoteTitle || '';
+    } else { show('lblbalancedetail', false); show('lbldetaildrcr', false); $id('lblbalancedetail').textContent = '0'; $id('label29').textContent = ''; }
+    bindDetailSubsidiary();
+}
+
+function bindDetailSubsidiary() {
+    var all = L.subsidiaries || [];
+    if (!all.length) { cb.sub.setData([]); subLenDetail = 0; return; }
+    var r = cb.det.row(), acc = +cb.det.value();
+    if (acc) {
+        var t = r ? +r.AccountTypeId : 0;
+        var vis = t !== 2 && t !== 15 && subFeature;
+        show('PanelSubsidiaryDetail', vis);
+        $id('PanelAccountTitleDetail').style.width = vis ? '272px' : '487px';
+        $id('cmbAccountDetail').style.width = vis ? '270px' : '485px';
+        var keep = cb.sub.text() ? cb.sub.value() : 0;
+        var m = all.filter(function (x) { return +x.AccountId === acc; });
+        subLenDetail = m.length; cb.sub.setData(m); cb.sub.clear();
+        if (keep) cb.sub.setValue(keep);
+    } else { subLenDetail = all.length; cb.sub.setData(all); }
+}
+
+function balance(acc, cbk) {
+    ajax('GET', '/accounts/api/desktop-vouchers/balance?accountId=' + acc + '&date=' + ($id('txtDocDate').value || today())).done(function (d) {
+        if (d && d.length) cbk(num(d[0].Balance), String(d[0].Balance));
+    });
+}
+
+/* CmbCustomGroup_Leave -> DetailAccountsBind(GetCustomAccountsByGroup) */
+function customGroupLeave() {
+    var g = +cb.grp.value();
+    if (!g) return;
+    ajax('GET', '/accounts/api/desktop-vouchers/bills/custom-accounts?customGroupId=' + g).done(function (d) {
+        cb.det.setData(d || []);
+        if (PAY) cb.oc.setData(d || []);          // Payables binds Other Charges from the same list
+    });
+}
+
+/* cmbCurrency_Leave */
+function currencyLeave() {
+    var c = +cb.cur.value();
+    if (!c) return;
+    if (c !== baseCurrency) {
+        ajax('GET', API + '/last-rate?currencyId=' + c).done(function (d) {
+            $id('txtExchangeRate').value = d && d.length ? num(d[0].LastExchRate).toFixed(RD()) : '0';
+            exchangeRateChanged();
+        });
+    } else { $id('txtExchangeRate').value = Number(baseRate).toFixed(RD()); exchangeRateChanged(); }
+}
+
+/* Calculation(): Amount = Qty x Rate, or 0 */
+function calculation() {
+    var q = num($id('txtQtyDetial').value), r = num($id('txtRateDetail').value);
+    var a = (q !== 0 && r !== 0) ? q * r : 0;
+    $id('txtAmountDetail').value = round(a, AD()).toFixed(AD());
+    related('amount');
+}
+
+/* CommonServices.UpdateRelatedFieldsCalculation(txtAmountDetail, txtFcyAmountDetail, rate) */
+function related(src) {
+    var rate = num($id('txtExchangeRate').value);
+    if (rate === 0) { msg('Please enter exchange Rate First'); $id('txtExchangeRate').focus(); return; }
+    if (src === 'amount') { var a = num($id('txtAmountDetail').value); $id('txtFcyAmountDetail').value = fmt(a > 0 ? round(a / rate, FD()) : 0, 3); }
+    else { var f = num($id('txtFcyAmountDetail').value); $id('txtAmountDetail').value = fmt(f > 0 ? round(f * rate, AD()) : 0, 3); }
+}
+
+/* txtExchangeRate_TextChanged */
+function exchangeRateChanged() {
+    var rate = num($id('txtExchangeRate').value);
+    rows.forEach(function (r) { r.fcyAmount = rate > 0 ? round(num(r.amount) / rate, FD()) : 0; });
+    renderGrid();
+}
+
+/* CalculateTotalInformation() */
+function calcTotals() { var t = 0; rows.forEach(function (r) { t += num(r.fcyAmount); }); $id('txtFcyAmount').value = fmt(t, 3); }
+
+/* ------------------------------------------------------------------------- detail grid */
+function detailValidation() {
+    if (!cb.det.row()) { msg('Account  Field Required'); cb.det.focus(); return false; }
+    if ($id('PanelSubsidiaryDetail').style.display !== 'none' && subLenDetail > 0 && !cb.sub.row()) { msg('Subsidiary Account Title Field Required'); cb.sub.focus(); return false; }
+    if (!cb.job.row()) { msg('JobLot  Field Required'); cb.job.focus(); return false; }
+    if (num($id('txtAmountDetail').value) === 0) { msg('Amount  Field Required'); $id('txtAmountDetail').focus(); return false; }
+    return true;
+}
+
+function rowFromBox() {
+    var a = cb.det.row(), s = cb.sub.row(), vis = $id('PanelSubsidiaryDetail').style.display !== 'none';
+    var ref = cb.ref.row();
+    return {
+        accountCode: a.AccountCode, accountId: +a.Id, account: a.AccountTitle,
+        subsidiaryAccountId: !vis ? 0 : (subLenDetail > 0 && s ? +s.Id : +a.Id),
+        subsidiaryAccount: !vis ? '' : (subLenDetail > 0 && s ? s.SubsidiaryAccount : a.AccountTitle),
+        subsidiaryAccountTypeId: !vis ? 0 : (subLenDetail > 0 && s ? +s.SubsidiaryTypeId : 4),
+        jobLotId: +cb.job.value(), jobLot: cb.job.text(), invoiceNo: $id('txtInvoiceNoDetail').value.trim(),
+        qty: num($id('txtQtyDetial').value), rate: num($id('txtRateDetail').value), amount: num($id('txtAmountDetail').value),
+        fcyAmount: num($id('txtFcyAmountDetail').value), referenceAccountId: ref ? +ref.Id : 0, referenceAccount: ref ? ref.AccountTitle : '',
+        remarks: $id('txtRemarksDetail').value
+    };
+}
+
+/* ResetFormDetail() */
+function resetDetail() {
+    cb.det.clear(); $id('txtInvoiceNoDetail').value = ''; $id('txtQtyDetial').value = '0'; $id('txtRateDetail').value = '0';
+    $id('txtAmountDetail').value = ''; $id('txtRemarksDetail').value = '';
+    show('btnUpdateDetail', false); show('btnCancelDetail', false); show('btnAdd', true);
+}
+
+function addRow() {
+    if (!detailValidation()) return;
+    var n = rowFromBox();
+    if (!PAY) n.srNo = rows.length + 1;
+    rows.push(n);
+    show('lblbalancedetail', false); show('lbldetaildrcr', false);
+    resetDetail(); updateSchedAmounts(); exchangeRateChanged(); salesTex(); cb.det.focus();
+}
+
+function editRow(i) {
+    var r = rows[i]; editIndex = i;
+    cb.det.setValue(r.accountId); detailAccountLeave();
+    if (subLenDetail === 0) cb.sub.setData([{ Id: r.subsidiaryAccountId, SubsidiaryAccount: r.subsidiaryAccount, SubsidiaryTypeId: 4, AccountId: r.accountId, AccountTitle: r.account }]);
+    cb.sub.setValue(r.subsidiaryAccountId);
+    cb.job.setValue(r.jobLotId);
+    $id('txtRemarksDetail').value = r.remarks || ''; $id('txtInvoiceNoDetail').value = r.invoiceNo || '';
+    $id('txtQtyDetial').value = r.qty; $id('txtRateDetail').value = r.rate; $id('txtAmountDetail').value = r.amount;
+    $id('txtFcyAmountDetail').value = fmt(r.fcyAmount, 3);
+    if (+r.referenceAccountId > 0) cb.ref.setValue(r.referenceAccountId);
+    show('btnUpdateDetail', true); show('btnCancelDetail', true); show('btnAdd', false); cb.det.focus();
+}
+
+function updateRow() {
+    if (editIndex < 0 || !detailValidation()) return;
+    var n = rowFromBox(), vis = $id('PanelSubsidiaryDetail').style.display !== 'none';
+    if (vis && !cb.sub.row()) { n.subsidiaryAccountId = n.accountId; n.subsidiaryAccount = n.account; n.subsidiaryAccountTypeId = 4; }
+    if (!vis) { n.subsidiaryAccountId = 0; n.subsidiaryAccount = ''; n.subsidiaryAccountTypeId = 0; }
+    if (!PAY) n.srNo = rows[editIndex].srNo;
+    rows[editIndex] = n; editIndex = -1;
+    show('lblbalancedetail', false); show('lbldetaildrcr', false);
+    resetDetail(); cb.det.focus(); exchangeRateChanged(); updateSchedAmounts(); salesTex();
+}
+
+function cancelRow() { editIndex = -1; resetDetail(); }
+
+/* DetailGridSetting() */
+function renderGrid() {
+    var cols = [];
+    if (!PAY) cols.push(['srNo', 'SrNo']);
+    cols.push(['accountCode', 'AccountCode'], ['account', 'Account']);
+    if (subFeature) cols.push(['subsidiaryAccount', 'SubsidiaryAccount']);
+    cols.push(['jobLot', 'JobLot'], ['invoiceNo', 'InvoiceNo'], ['qty', 'Qty'], ['rate', 'Rate'], ['amount', 'Amount'], ['fcyAmount', 'FcyAmount'],
+        ['referenceAccount', 'ReferenceAccount'], ['remarks', 'Remarks']);
+    var tq = 0, ta = 0, tf = 0, sr = 0;
+    var h = '<thead><tr>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '<th>X</th></tr></thead><tbody>';
+    rows.forEach(function (r, i) {
+        tq += num(r.qty); ta += num(r.amount); tf += num(r.fcyAmount); sr += num(r.rate);
+        h += '<tr data-i="' + i + '">' + cols.map(function (c) {
+            var v = r[c[0]];
+            if (c[0] === 'qty' || c[0] === 'fcyAmount') return '<td class="num">' + fmt(v, 3) + '</td>';
+            if (c[0] === 'rate') return '<td class="num">' + num(v).toFixed(RD()) + '</td>';
+            if (c[0] === 'amount') return '<td class="num">' + fmt(v, AD() || 2) + '</td>';
+            return '<td>' + esc(v) + '</td>';
+        }).join('') + '<td><button class="tbtn" data-del="' + i + '">X</button></td></tr>';
+    });
+    h += '</tbody><tfoot><tr>' + cols.map(function (c) {
+        if (c[0] === 'qty') return '<td class="num">' + fmt(tq, 3) + '</td>';
+        if (c[0] === 'rate') return '<td class="num">' + (rows.length ? (sr / rows.length).toFixed(RD()) : '') + '</td>';
+        if (c[0] === 'amount') return '<td class="num">' + fmt(ta, AD() || 2) + '</td>';
+        return '<td></td>';
+    }).join('') + '<td></td></tr></tfoot>';
+    var t = $id('grd'); t.innerHTML = h;
+    t.querySelectorAll('tbody tr').forEach(function (tr) { tr.addEventListener('dblclick', function () { editRow(+tr.getAttribute('data-i')); }); });
+    t.querySelectorAll('[data-del]').forEach(function (b) {
+        b.addEventListener('click', function (e) { e.stopPropagation(); rows.splice(+b.getAttribute('data-del'), 1); updateSchedAmounts(); exchangeRateChanged(); salesTex(); });
+    });
+    calcTotals();
+}
+
+/* ------------------------------------------------------------------- Amount Distribution */
+function schedAddRow() {
+    if (sched.length) {
+        var tp = 0; sched.forEach(function (s) { tp += num(s.duePercent); });
+        if (tp !== 100) { var p = 100 - tp; sched.push({ dueDays: '', dueDate: '', duePercent: p, amount: rows.length ? gridTotal() * p / 100 : 0 }); }
+    } else sched.push({ dueDays: '', dueDate: '', duePercent: 0, amount: 0 });
+}
+
+function updateSchedAmounts() { var t = gridTotal(); sched.forEach(function (s) { s.amount = num(s.duePercent) * t / 100; }); renderSched(); }
+
+function renderSched() {
+    var h = '<thead><tr><th>DueDays</th><th>DueDate</th><th>Due%</th><th>Amount</th><th>X</th><th>+</th></tr></thead><tbody>';
+    var tot = 0;
+    sched.forEach(function (s, i) {
+        tot += num(s.amount);
+        h += '<tr data-i="' + i + '"><td><input data-k="dueDays" value="' + esc(s.dueDays) + '"></td><td><input type="date" data-k="dueDate" value="' + esc(day(s.dueDate)) + '"></td>' +
+            '<td><input class="num" data-k="duePercent" value="' + esc(s.duePercent) + '"></td><td><input class="num" data-k="amount" value="' + esc(s.amount) + '"></td>' +
+            '<td><button class="tbtn" data-act="del">X</button></td><td><button class="tbtn" data-act="add">+</button></td></tr>';
+    });
+    h += '</tbody><tfoot><tr><td></td><td></td><td></td><td class="num">' + fmt(tot, 2) + '</td><td></td><td></td></tr></tfoot>';
+    var t = $id('grdSchedule'); t.innerHTML = h;
+    t.querySelectorAll('input').forEach(function (inp) {
+        inp.addEventListener('change', function () {
+            var i = +inp.closest('tr').getAttribute('data-i'), k = inp.getAttribute('data-k'), s = sched[i];
+            s[k] = inp.value;
+            /* grdSchedule_CellUpdated */
+            if (k === 'dueDays') { var d = new Date($id('txtDocDate').value || today()); d.setDate(d.getDate() + (parseInt(inp.value, 10) || 0)); s.dueDate = dstr(d); }
+            if (k === 'duePercent') { s.amount = round(gridTotal() * (num(inp.value) / 100), 2); }
+            renderSched();
+        });
+    });
+    t.querySelectorAll('[data-act]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var i = +b.closest('tr').getAttribute('data-i');
+            if (b.getAttribute('data-act') === 'del') { sched.splice(i, 1); if (!sched.length) schedAddRow(); }
+            else schedAddRow();
+            renderSched();
+        });
+    });
+}
+
+/* salesTex() + TotalAmountInfooter() */
+function salesTex() {
+    var tt = +cb.taxType.value();
+    if (tt > 0) {
+        ajax('GET', '/accounts/api/desktop-vouchers/bills/tax-schedule?taxTypeId=' + tt + '&date=' + ($id('txtDocDate').value || today())).done(function (d) {
+            if (d && d.length) {
+                $id('txtTaxPercent').value = d[0].TaxPercent;
+                if (!updateMode || !+cb.tax.value()) { if (+d[0].TaxGLAccountId > 0) cb.tax.setValue(d[0].TaxGLAccountId); }
+                var gt = gridTotal(), pct = num(d[0].TaxPercent);
+                $id('txtTaxAmount').value = (gt > 0 && pct > 0) ? round(gt * pct / 100, 2) : 0;
+            } else { $id('txtTaxPercent').value = '0'; $id('txtTaxAmount').value = '0'; }
+            totalAmountInFooter();
+        });
+    } else { $id('txtTaxPercent').value = '0'; $id('txtTaxAmount').value = '0'; totalAmountInFooter(); }
+}
+
+function totalAmountInFooter() {
+    var gt = gridTotal();
+    $id('txtVoucherAmountFooter').value = fmt(gt, 0);
+    $id('txtTotalAmount').value = fmt(gt + num($id('txtTaxAmount').value) + num($id('txtAdvanceTaxAmount').value) + num($id('txtOtherChargesAmount').value), 0);
+}
+
+/* --------------------------------------------------------------------------------- save */
+function save(mode) {
+    if (mode === 'update' && !recId) { msg('Record Not Update  0'); return; }
+    if (!rows.length) { msg('Grid Record not found'); return; }
+    if (!confirm(mode === 'update' ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+    var sr = cb.sub.row();
+    var body = {
+        mode: mode, recId: mode === 'update' ? recId : 0,
+        projectId: +cb.proj.value() || 0, voucherCode: $id('txtDocNo').value, voucherDate: $id('txtDocDate').value,
+        accountId: +cb.acc.value() || 0, headerSubsidiaryId: +cb.subH.value() || 0, taxAccountId: +cb.tax.value() || 0,
+        invoiceNo: $id('txtInvoiceNo').value, invoiceDate: $id('txtInvoiceDate').value, remarks: $id('txtRemarks').value,
+        locationTypeId: +cb.loc.value() || 0, currencyId: +cb.cur.value() || 0, exchangeRate: num($id('txtExchangeRate').value),
+        customAccounts: $id('chkCustomAccounts').checked, taxTypeId: +cb.taxType.value() || 0,
+        taxPercent: num($id('txtTaxPercent').value), taxPercentText: $id('txtTaxPercent').value, taxAmount: num($id('txtTaxAmount').value),
+        advanceTaxAccountId: +cb.adv.value() || 0, advanceTaxAmount: num($id('txtAdvanceTaxAmount').value),
+        otherChargesAccountId: +cb.oc.value() || 0, otherChargesAmount: num($id('txtOtherChargesAmount').value),
+        detailSubsidiaryId: sr ? +sr.Id : 0, detailSubsidiaryTypeId: sr ? +sr.SubsidiaryTypeId : 0,
+        rows: rows, schedules: sched
+    };
+    ajax('POST', API + '/save', body).done(function (d) {
+        msg(d.message, true); resetForm(true); if (d.nextVoucherCode) $id('txtDocNo').value = d.nextVoucherCode;
+    });
+}
+
+/* ResetForm() */
+function resetForm(keepCode) {
+    recId = 0; updateMode = false; editIndex = -1;
+    $id('txtInvoiceNoDetail').value = ''; cb.acc.clear(); $id('txtInvoiceNo').value = ''; $id('txtRemarks').value = '';
+    cb.tax.clear(); $id('txtTaxPercent').value = ''; $id('txtTaxAmount').value = ''; $id('lblCreditAcBalance').value = '0';
+    rows = []; renderGrid(); sched = []; schedAddRow(); renderSched();
+    show('btnsave', true); show('btnUpdate', false); show('btnSaveAs', false);
+    cb.adv.clear(); cb.oc.clear(); cb.taxType.clear();
+    $id('txtVoucherAmountFooter').value = '0'; $id('txtAdvanceTaxAmount').value = '0'; $id('txtOtherChargesAmount').value = '0'; $id('txtTotalAmount').value = '0';
+    if (!keepCode) ajax('GET', API + '/next-code').done(function (d) { $id('txtDocNo').value = d.voucherCode || ''; });
+}
+
+function newForm() { resetForm(false); resetDetail(); }
+
+/* btnRefresh_Click */
+function refresh() {
+    ajax('GET', API + '/lookups').done(function (d) {
+        var keep = L; L = d; L.decimals = d.decimals || keep.decimals;
+        cb.loc.setData(d.locationTypes || []); cb.proj.setData(d.costCenters || []); cb.type.setData(d.accountTypes || []);
+        if (+cb.type.value() > 0) accountTypeLeave(); else if (PAY) cb.acc.setData(d.headerAccounts || []);
+        cb.tax.setData(d.taxAccounts || []); cb.cur.setData(d.currencies || []); cb.grp.setData(d.customGroups || []);
+        customGroupLeave(); cb.job.setData(d.jobLots || []); cb.ref.setData(d.referenceAccounts || []);
+        cb.taxType.setData(d.taxTypes || []); cb.adv.setData(d.advanceTaxAccounts || []);
+        if (!PAY) cb.oc.setData(d.otherChargesAccounts || []);
+        defaults();
+    });
+}
+
+/* ReadById(ID) */
+function readById(id, asSaveAs) {
+    ajax('GET', API + '/load/' + id).done(function (v) {
+        resetForm(true);
+        recId = v.id; updateMode = true;
+        show('btnsave', false); show('btnSaveAs', !!asSaveAs); show('btnUpdate', !asSaveAs);
+        tab(0);
+        $id('txtDocDate').value = v.voucherDate;
+        cb.acc.setValue(v.accountId);
+        cb.proj.setValue(v.projectId);
+        $id('txtRemarks').value = v.remarks || ''; $id('txtInvoiceNo').value = v.invoiceNo || '';
+        $id('txtDocNo').value = v.voucherCode;
+        cb.cur.setValue(v.currencyId);
+        $id('chkCustomAccounts').checked = !!v.customAccounts;
+        $id('txtExchangeRate').value = Number(v.exchangeRate || 0).toFixed(RD());
+        $id('txtFcyAmount').value = fmt(v.fcAmount, 3);
+        cb.adv.setValue(v.advanceTaxAccountId); $id('txtAdvanceTaxAmount').value = fmt(v.advanceTaxAmount, 3);
+        cb.oc.setValue(v.otherChargesAccountId); $id('txtOtherChargesAmount').value = fmt(v.otherChargesAmount, 3);
+        if (!+cb.loc.value()) cb.loc.setValue(v.firstLocationTypeId);
+        if (v.headerSubsidiaryId) { accountLeave(); cb.subH.setValue(v.headerSubsidiaryId); }
+        rows = v.rows || []; renderGrid();
+        var t = v.tax || {};
+        if (t.taxTypeId) { cb.taxType.setValue(t.taxTypeId); cb.tax.setValue(t.taxAccountId); }
+        $id('txtTaxPercent').value = t.taxPercent; $id('txtTaxAmount').value = t.taxAmount;
+        sched = (v.schedules && v.schedules.length) ? v.schedules : []; if (!sched.length) schedAddRow(); renderSched();
+        exchangeRateChanged(); totalAmountInFooter();
+    });
+}
+
+/* ------------------------------------------------------------------------------ history */
+function history() {
+    var q = { dateType: (document.querySelector('input[name=dt]:checked') || {}).value || 'doc',
+        fromDate: $id('chkFrom').checked ? $id('FromDateHistory').value : '', toDate: $id('chkTo').checked ? $id('ToDateHistory').value : '',
+        fromDocNo: $id('txtFromDocNoHistory').value, toDocNo: $id('txtToDocNoHistory').value,
+        accountId: cb.hist.value() || 0, status: $id('cmbApproveStatus').value };
+    ajax('GET', API + '/history?' + $.param(q)).done(function (d) {
+        var list = d.rows || [];
+        $id('grdDetailHistory').innerHTML = '';
+        if (!list.length) { show('VoucherInfoBox', false); $id('DataGridHistory').innerHTML = ''; return; }
+        show('VoucherInfoBox', true);
+        $id('lblTotalVouchers').textContent = d.totalVouchers || 0; $id('lblApprovedVouchers').textContent = d.approvedVouchers || 0;
+        $id('lblUnApprovedVouchers').textContent = d.unApprovedVouchers || 0;
+        /* HistoryGridSettings(): Print, PrintII, Edit, SaveAs, V.Type first; Id/AccountTypeId/DocumentTypeId/ManualBillNo/AgainstAccount hidden */
+        var cols = [ ['DocumentTypeCode', 'V.Type'], ['VoucherCode', 'V.No'], ['VoucherDate', 'V.Date'], ['AccountTitle', 'AccountTitle'],
+            ['VoucherAmount', 'VoucherAmount'], ['FcyCode', 'FcyCode'], ['ExchangeRate', 'ExchangeRate'], ['FcyAmount', 'FcyAmount'], ['Remarks', 'Remarks'],
+            ['EntryUser', 'EntryUser'], ['EntryDate', 'EntryDate'], ['ModifyUser', 'ModifyUser'], ['ModifyDate', 'ModifyDate'],
+            ['ApprovedUser', 'ApprovedUser'], ['ApprovedDate', 'ApprovedDate'], ['CheqNo', 'CheqNo'], ['Attachment', 'Attachment']];
+        var tv = 0, tf = 0;
+        var h = '<thead><tr><th>Print</th><th>PrintII</th><th>Edit</th><th>SaveAs</th>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
+        list.forEach(function (r) {
+            tv += num(r.VoucherAmount); tf += num(r.FcyAmount);
+            h += '<tr data-id="' + r.Id + '"><td><button class="tbtn" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-need="id">Print</button></td>' +
+                '<td><button class="tbtn" data-rpt="102_01_BillsPayablesOrReceiveableVoucher.rpt" data-rpt-need="voucherHeadId">PrintII</button></td>' +
+                '<td><button class="tbtn" data-act="Edit">Edit</button></td><td><button class="tbtn" data-act="SaveAs">SaveAs</button></td>' +
+                cols.map(function (c) {
+                    var v = r[c[0]];
+                    if (c[0] === 'VoucherAmount') return '<td class="num">' + fmt(v, 2) + '</td>';
+                    if (c[0] === 'FcyAmount') return '<td class="num">' + fmt(v, 3) + '</td>';
+                    if (c[0] === 'ExchangeRate') return '<td class="num">' + num(v).toFixed(RD()) + '</td>';
+                    if (c[0] === 'EntryDate' || c[0] === 'ModifyDate' || c[0] === 'ApprovedDate') return '<td>' + esc(v ? String(v).substring(0, 19) : '') + '</td>';
+                    return '<td>' + esc(v) + '</td>';
+                }).join('') + '</tr>';
+        });
+        h += '</tbody><tfoot><tr><td></td><td></td><td></td><td></td>' + cols.map(function (c) {
+            return c[0] === 'VoucherAmount' ? '<td class="num">' + fmt(tv, 2) + '</td>' : c[0] === 'FcyAmount' ? '<td class="num">' + fmt(tf, 3) + '</td>' : '<td></td>';
+        }).join('') + '</tr></tfoot>';
+        var t = $id('DataGridHistory'); t.innerHTML = h;
+        t.querySelectorAll('tbody tr').forEach(function (tr) {
+            var id = +tr.getAttribute('data-id');
+            tr.addEventListener('click', function () {
+                t.querySelectorAll('tr.sel').forEach(function (x) { x.classList.remove('sel'); }); tr.classList.add('sel'); historyDetail(id);
+            });
+            tr.addEventListener('dblclick', function () { readById(id, false); });
+            tr.querySelector('[data-act=Edit]').addEventListener('click', function (e) { e.stopPropagation(); readById(id, false); });
+            tr.querySelector('[data-act=SaveAs]').addEventListener('click', function (e) {
+                e.stopPropagation(); if (rights.update) readById(id, true);
+            });
+        });
+    });
+}
+
+/* VoucherDetailByHeaderId() */
+function historyDetail(id) {
+    ajax('GET', API + '/history-detail/' + id).done(function (list) {
+        var cols = ['AccountCode', 'AccountTitle'].concat(subFeature ? ['SubsidiaryAccount'] : [])
+            .concat(['Job/Lot', 'InvoiceNo', 'Qty', 'Rate', 'DebitAmount', 'CreditAmount', 'FcyAmount', 'Remarks', 'ReferenceAccount']);
+        var cap = { DebitAmount: 'Debit', CreditAmount: 'Credit' };
+        var s = {};
+        var h = '<thead><tr>' + cols.map(function (c) { return '<th>' + (cap[c] || c) + '</th>'; }).join('') + '</tr></thead><tbody>';
+        (list || []).forEach(function (r) {
+            h += '<tr>' + cols.map(function (c) {
+                var v = r[c];
+                if (['Qty', 'DebitAmount', 'CreditAmount', 'FcyAmount'].indexOf(c) >= 0) { s[c] = (s[c] || 0) + num(v); return '<td class="num">' + fmt(v, c === 'Qty' || c === 'FcyAmount' ? 3 : 2) + '</td>'; }
+                if (c === 'Rate') return '<td class="num">' + num(v).toFixed(RD()) + '</td>';
+                return '<td>' + esc(v) + '</td>';
+            }).join('') + '</tr>';
+        });
+        h += '</tbody><tfoot><tr>' + cols.map(function (c) { return s[c] != null ? '<td class="num">' + fmt(s[c], c === 'Qty' || c === 'FcyAmount' ? 3 : 2) + '</td>' : '<td></td>'; }).join('') + '</tr></tfoot>';
+        $id('grdDetailHistory').innerHTML = h;
+    });
+}
+
+function histReset() {
+    $id('FromDateHistory').value = today(); $id('ToDateHistory').value = today();
+    $id('txtFromDocNoHistory').value = ''; $id('txtToDocNoHistory').value = ''; cb.hist.clear();
+    $id('cmbApproveStatus').selectedIndex = 0; show('VoucherInfoBox', false);
+    $id('DataGridHistory').innerHTML = ''; rows = []; renderGrid();   // btnNewHistory_Click also clears grd
+}
+
+function histAccounts() { ajax('GET', API + '/history-accounts').done(function (d) { cb.hist.setData(d || []); }); }
+
+function tab(i) {
+    show('pgForm', i === 0); show('pgHist', i === 1);
+    $id('tabForm').classList.toggle('on', i === 0); $id('tabHist').classList.toggle('on', i === 1);
+    if (i === 1) $id('FromDateHistory').focus(); else $id('txtDocDate').focus();
+}
+
+function shortcuts() {
+    var k = [ ['Ctrl+S', 'For Save'], ['Ctrl+U', 'For Update'], ['Ctrl+E', 'For Close'], ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'], ['Ctrl+P', 'For Print'],
+        ['Ctrl+F5', 'For Focus on Doc Date'], ['Ctrl+F10', 'For Open Attachments'], ['Ctrl+T', 'For Tab Transfer'], ['Ctrl+L', 'For Load All Records'],
+        ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowRight', 'For Moving In Detail Grids'], ['Ctrl+ArrowDown', 'For Focus On Detail Grid'],
+        ['Ctrl+ArrowUp', 'For Focus On Debit Account in Detail Box'], ['Ctrl+shift+ArrowUp', 'For Focus On Sale Tax Account int Sales Tax Tab'],
+        ['Ctrl+Enter', 'When Focus On Any Grid For Update Record'], ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]];
+    $id('scTable').innerHTML = '<tr><th>KeyCombination</th><th>Description</th></tr>' + k.map(function (x) { return '<tr><td>' + x[0] + '</td><td>' + esc(x[1]) + '</td></tr>'; }).join('');
+    $id('scModal').style.display = 'block';
+}
+
+/* frmBillsPayables_KeyDown */
+function keys(e) {
+    var histOn = $id('pgHist').style.display !== 'none';
+    if (e.ctrlKey && e.altKey) { shortcuts(); return; }
+    if (!e.ctrlKey) return;
+    var k = e.key.toLowerCase();
+    if (k === 's' && !histOn && $id('btnsave').style.display !== 'none' && !$id('btnsave').disabled) { e.preventDefault(); save('save'); }
+    else if (k === 'u' && updateMode && $id('btnUpdate').style.display !== 'none' && !$id('btnUpdate').disabled) { e.preventDefault(); save('update'); }
+    else if (k === 'n') { e.preventDefault(); newForm(); }
+    else if (k === 't') { e.preventDefault(); tab(histOn ? 0 : 1); }
+    else if (k === 'r') { e.preventDefault(); refresh(); }
+    else if (e.key === 'F5') { e.preventDefault(); $id('txtDocDate').focus(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); $id('grdWrap').focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); cb.det.focus(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); if (document.activeElement === $id('grdWrap')) $id('grdScheduleWrap').focus(); else $id('grdWrap').focus(); }
+}
+
+window.BV = { tab: tab, newForm: newForm, refresh: refresh, save: save, addRow: addRow, updateRow: updateRow, cancelRow: cancelRow,
+    history: history, histReset: histReset, histAccounts: histAccounts, shortcuts: shortcuts };
+init();
+})();
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

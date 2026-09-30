@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Commission Agent Report</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20260930s}">
+</head>
+<!--
+  Screen 886 "Commission Agent Report" - CommissionAgentLedger.cs (ScreenName CommissionAgentRpt). Read-only.
+  panel2 (toolStrip3) / panel3 (teal "Commission Agent  Ledger") / groupBox1 "Filters" / grdCommissionAgent.
+  Combos: Sp_SupplierCustomer_GetAllMethod (GetSupplierCustomerAndCommissionAgentFromPurchaseAndSales, ActionId 1).
+  Show: Sp_CommissionAndBrokery_Report; balance Sp_Vouchers_GetMethods GetCurrentGLAccountBalance.
+  Data: /accounts/api/reports/commission-agent-886. Dates as VoucherValidation_Load: From = ActiveYr.Start_Period, To = today.
+  Look: countx_acc_rpt_f.css; searchable combos countx_prod_combo.js (R5, 2026-09-30).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-handshake-o"></i> Commission Agent Report</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li class="active"><a>Commission Agent Report</a></li>
+</ul>
+<div class="win-toolbar" id="toolStrip3">
+    <button type="button" class="win-btn" id="btnNew"><i class="fa fa-file-o text-success"></i> <span><u>R</u>eset</span></button>
+    <button type="button" class="win-btn" id="btnRefresh"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    <button type="button" class="win-btn" id="print" data-rpt="157-CommissionAndBrokary.rpt"><i class="fa fa-print"></i> 157-Print</button>
+    <button type="button" class="win-btn" id="btnShortCutKey"><i class="fa fa-key"></i> ShortCut Keys</button>
+</div>
+<div class="win-header-panel" id="panel3"><span>Commission Agent  Ledger</span></div>
+
+<div class="filters" id="panel5">
+    <div class="gb" id="groupBox1" style="width:560px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 105px 124px 124px 1fr;">
+            <span class="lbl">From &amp; To Date</span>
+            <input type="date" id="txtFromDateCommissionAgent" class="inp">
+            <input type="date" id="txtToDateCommissionAgent" class="inp">
+            <span></span>
+
+            <span class="lbl">Commission Agent</span>
+            <select id="cmbCommissionAgent" class="inp span2" data-dtcombo="single" data-dtcombo-caption="Commission Agent"></select>
+            <span><span class="bal" id="lblDrCrCommissionAgent"></span> <span class="bal" id="lblbalanceCommissionAgent"></span></span>
+
+            <span class="lbl">Party Name</span>
+            <select id="cmbpartyName" class="inp span2" data-dtcombo="single" data-dtcombo-caption="Party  Name "></select>
+            <span></span>
+
+            <span></span>
+            <span class="radios span2">
+                <label class="chk"><input type="radio" name="ps" id="rdall" checked> ALL</label>
+                <label class="chk"><input type="radio" name="ps" id="rdpurchase"> Purcahse</label>
+                <label class="chk"><input type="radio" name="ps" id="rdsale"> Sale</label>
+            </span>
+            <div class="show-cell" style="justify-content:flex-start"><button type="button" id="btnshow" class="win-btn-show"><i class="fa fa-eye"></i> Show</button></div>
+        </div>
+    </div>
+</div>
+<div class="grid-caption"><span>Commission Agent  Ledger</span><span id="lblStatus"></span></div>
+<div class="grid-wrap tall" id="wrap" tabindex="0"><table class="wg" id="grdCommissionAgent"></table></div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}"></script>
+<script>
+(function () {
+    'use strict';
+    var H = AccH, API = '/accounts/api/reports/commission-agent-886';
+    var ctx = {}, dec = 0, rdec = 2, agents = [], dtCommissionAgent = [];
+
+    /* grdCommissionAgentSetting: [key, caption, width, kind]  kind: s text, d date, i int, q "0,0" + sum, r rate, b stringFormatboth */
+    var COLS = [ ['CommissionFrom', 'CommissionFrom', 100, 's'], ['CommissionAgent', 'CommissionAgent', 300, 's'], ['DocumentType', 'DocumentType', 70, 's'],
+        ['InvoiceDate', 'InvoiceDate', 80, 'd'], ['InvoiceNo', 'InvoiceNo', 60, 'i'], ['OrderNo', 'OrderNo', 60, 'i'], ['PartyName', 'PartyName', 300, 's'],
+        ['VehicleNo', 'VehicleNo', 90, 's'], ['GpNo', 'GpNo', 60, 's'], ['ItemQty', 'ItemQty', 80, 'q'], ['GrossWeight', 'GrossWeight', 90, 'q'],
+        ['NetBillWeight', 'NetBillWeight', 90, 'q'], ['ItemAmount', 'ItemAmount', 100, 'q'], ['CommissionType', 'CommissionType', 100, 's'],
+        ['CommRate', 'CommRate', 90, 'r'], ['CommAmount', 'CommAmount', 100, 'q'], ['CommBrokery', 'CommBrokery', 120, 's'], ['LedgerBalance', 'LedgerBalance', 100, 'b']];
+
+    function fill(sel, list) {
+        sel.innerHTML = '<option value="0"></option>' + list.map(function (r) {
+            return '<option value="' + H.esc(r.Id) + '" data-gl="' + H.esc(r.GlAccountId) + '">' + H.esc(r.CompanyName) + '</option>';
+        }).join('');
+    }
+    /* CommissionAgentFill - returns without rebinding when the procedure gave nothing */
+    function combos(d) {
+        if (!d.bound) return;
+        agents = d.agents || [];
+        fill(H.$('cmbCommissionAgent'), agents); fill(H.$('cmbpartyName'), d.parties || []);
+    }
+
+    function cell(c, v) {
+        switch (c[3]) {
+            case 'd': return H.shortDate(v);
+            case 'q': return H.zz(v);
+            case 'r': return H.rate(v, rdec);
+            case 'b': return H.both(v, dec);
+            default: return v == null ? '' : String(v);
+        }
+    }
+    function draw(rows) {
+        var g = H.$('grdCommissionAgent');
+        H.$('lblStatus').textContent = rows.length ? 'Records: ' + rows.length : '';
+        if (!rows.length) { g.innerHTML = ''; return; }
+        var sums = {};
+        var h = '<thead><tr>' + COLS.map(function (c) { return '<th style="min-width:' + c[2] + 'px;text-align:center">' + H.esc(c[1]) + '</th>'; }).join('') + '</tr></thead><tbody>';
+        rows.forEach(function (r) {
+            h += '<tr>' + COLS.map(function (c) {
+                var v = r[c[0]];
+                if (c[3] === 'q') sums[c[0]] = (sums[c[0]] || 0) + H.toNum(v);
+                return '<td' + (/[qrb]/.test(c[3]) ? ' class="num"' : '') + '>' + H.esc(cell(c, v)) + '</td>';
+            }).join('') + '</tr>';
+        });
+        /* TotalFormatString "#,##0.###" */
+        h += '</tbody><tfoot><tr>' + COLS.map(function (c) { return '<td class="num">' + (c[0] in sums ? H.esc(H.opt(sums[c[0]], 3)) : '') + '</td>'; }).join('') + '</tr></tfoot>';
+        g.innerHTML = h;
+    }
+
+    /* GridFillCommissionAgent */
+    function show() {
+        H.$('lblbalanceCommissionAgent').classList.remove('is-hidden'); H.$('lblDrCrCommissionAgent').classList.remove('is-hidden');
+        var a = H.$('cmbCommissionAgent'), opt = a.options[a.selectedIndex];
+        H.api('POST', API + '/show', {
+            fromDate: H.$('txtFromDateCommissionAgent').value, toDate: H.$('txtToDateCommissionAgent').value,
+            commissionAgentId: +a.value || 0, glAccountId: opt ? +opt.getAttribute('data-gl') || 0 : 0,
+            supplierCustomerId: +H.$('cmbpartyName').value || 0,
+            actionId: H.$('rdpurchase').checked ? 1 : (H.$('rdsale').checked ? 2 : 0)
+        }).then(function (d) {
+            var src = d.rows || [];
+            dtCommissionAgent = src;
+            var rows = src.map(function (r) {
+                return { CommissionFrom: H.ci(r, 'CommissionFrom'), CommissionAgentId: H.ci(r, 'CommissionAgentId'), CommissionAgent: H.ci(r, 'CommissionAgent'),
+                    DocumentType: H.ci(r, 'DocumentTypeCode'), InvoiceDate: H.ci(r, 'InvoiceDate'), InvoiceNo: H.ci(r, 'InvoiceNo'), OrderNo: H.ci(r, 'OrderNo'),
+                    PartyName: H.ci(r, 'SupplierCustomerName'), VehicleNo: H.ci(r, 'VehicleNo'), GpNo: H.ci(r, 'GpNo'), ItemQty: H.ci(r, 'ItemQty'),
+                    GrossWeight: H.ci(r, 'GrossWeight'), NetBillWeight: H.ci(r, 'NetBillWeight'), ItemAmount: H.ci(r, 'ItemAmount'), CommissionType: H.ci(r, 'CommissionType'),
+                    CommRate: H.ci(r, 'CommRate'), CommAmount: H.ci(r, 'CommAmount'), CommBrokery: H.ci(r, 'CommBrokery'), LedgerBalance: H.ci(r, 'LedgerBalance') };
+            });
+            draw(rows);
+            if (rows.length && (+a.value || 0) > 0) {
+                /* Math.Round (banker's) then ToString("0,0") */
+                var raw = H.toNum(d.balance), fl = Math.floor(raw), diff = raw - fl;
+                var bal = diff > 0.5 ? fl + 1 : diff < 0.5 ? fl : (fl % 2 === 0 ? fl : fl + 1);
+                H.$('lblbalanceCommissionAgent').textContent = H.zz(bal);
+                H.$('lblDrCrCommissionAgent').textContent = bal > 0 ? 'Dr' : bal < 0 ? 'Cr' : 'Nill';
+            } else {
+                H.$('lblDrCrCommissionAgent').textContent = ''; H.$('lblbalanceCommissionAgent').textContent = ' 0';
+            }
+        }).catch(function (e) { H.box(e.message); });
+    }
+
+    function reset() {
+        H.$('cmbCommissionAgent').value = '0';
+        H.$('txtFromDateCommissionAgent').value = (ctx.financialYearStart || '').substring(0, 10);
+        H.$('rdall').checked = true;
+        H.$('grdCommissionAgent').innerHTML = ''; H.$('lblStatus').textContent = '';
+    }
+    function refresh() { H.api('GET', API + '/combos').then(combos).catch(function (e) { H.box(e.message); }); }
+    /* print_Click_1 - 157-CommissionAndBrokary.rpt over the procedure's rows */
+    function print() {
+        if (!dtCommissionAgent.length) { H.box('Not Record Found For Display'); return; }
+        H.printRows('157 - Commission And Brokary', 'Browser output of Sp_CommissionAndBrokery_Report - not the Crystal layout.', Object.keys(dtCommissionAgent[0]), dtCommissionAgent,
+            function (c, v) { return /Date/.test(c) ? H.shortDate(v) : (v == null ? '' : v); });
+    }
+    function shortcuts() {
+        H.shortcuts([ ['Ctrl+N', 'For Reset'], ['Ctrl+R', 'For Refresh'], ['Ctrl+E', 'For Close'], ['Ctrl+P', 'For Print'], ['Ctrl+S', 'For Show Data'],
+            ['Ctrl+F5', 'For Focus on Date Type'], ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowDown', 'For Focus On Grids'],
+            ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]]);
+    }
+
+    H.$('btnshow').addEventListener('click', show);
+    H.$('btnNew').addEventListener('click', reset);
+    H.$('btnRefresh').addEventListener('click', refresh);
+    H.$('print').addEventListener('click', print);
+    H.$('btnShortCutKey').addEventListener('click', shortcuts);
+    H.keys({ 'Ctrl+P': print, 'Ctrl+N': reset, 'Ctrl+R': refresh, 'Ctrl+S': show,
+             'Ctrl+ArrowDown': function () { H.$('wrap').focus(); }, 'Ctrl+F5': function () { H.$('txtFromDateCommissionAgent').focus(); },
+             'Ctrl+E': function () { window.location.href = '/accounts/dashboard'; }, 'Escape': function () { window.location.href = '/accounts/dashboard'; },
+             'Ctrl+Alt+Control': shortcuts });
+
+    /* VoucherValidation_Load */
+    H.$('txtToDateCommissionAgent').value = H.today();
+    H.$('lblbalanceCommissionAgent').classList.add('is-hidden'); H.$('lblDrCrCommissionAgent').classList.add('is-hidden');
+    H.api('GET', API + '/init').then(function (c) {
+        ctx = c; dec = c.amountDecimals || 0; rdec = c.rateDecimals;
+        H.$('txtFromDateCommissionAgent').value = (c.financialYearStart || '').substring(0, 10);
+        combos(c);
+    }).catch(function (e) { H.box(e.message); });
+})();
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

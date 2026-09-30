@@ -1,514 +1,249 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Trial Balance - WinForms Replica</title>
-
+    <title>Trial Balance</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
     <style>
-        body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #d8e0e8; font-size: 10.5px; color: #000; margin: 0; padding: 0; overflow-x: hidden; }
-        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-size: 11.5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 23px; box-sizing: border-box; }
-        
-        .win-nav-tabs { border-bottom: 1px solid #99aab8; background: #d8e0e8; padding: 2px 6px 0 6px; display: flex; gap: 2px; list-style: none; margin: 0; }
-        .win-nav-tabs > li > a { border: 1px solid #99aab8; border-bottom: none; background: #e4ebf2; color: #222; padding: 2px 8px; font-size: 10.5px; font-weight: normal; border-radius: 2px 2px 0 0; text-decoration: none; display: block; }
-        .win-nav-tabs > li.active > a { background: #ffffff; color: #000; font-weight: bold; border-color: #99aab8; }
-
-        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 6px; display: flex; gap: 4px; align-items: center; height: 25px; box-sizing: border-box; }
-
-        .win-btn { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 1px 7px; font-size: 10.5px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; height: 20px; box-shadow: inset 0 1px 0 #fff; text-decoration: none; }
-        .win-btn:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
-        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .win-header-panel { background-color: #00796B; padding: 2px 8px; display: flex; justify-content: space-between; align-items: center; height: 24px; box-sizing: border-box; }
-        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 12px; font-weight: bold; }
-
-        .filters-container { padding: 4px; background: #d8e0e8; display: flex; gap: 6px; align-items: stretch; }
-        
-        .win-groupbox { border: 1px solid #8fa3b5; border-radius: 2px; padding: 8px 8px 6px 8px; position: relative; background: #ffffff; box-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
-        .win-groupbox-title { position: absolute; top: -7px; left: 8px; background: #ffffff; padding: 0 4px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 10px; color: #000; }
-
-        .win-label { font-weight: 600; color: #222; margin-bottom: 1px; font-size: 10px; white-space: nowrap; }
-        .win-label-chk { font-weight: 600; color: #222; font-size: 10.5px; margin: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
-        .win-input { border: 1px solid #7f9db9; border-radius: 1px; padding: 1px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; height: 20px; background-color: #ffffff; box-sizing: border-box; }
-        .win-input:focus { border-color: #00796B; outline: none; }
-        
-        .win-btn-show { background: #00796B; color: #ffffff; border: 1px solid #004d40; font-weight: bold; font-size: 11px; padding: 1px 14px; height: 22px; border-radius: 2px; cursor: pointer; }
-        .win-btn-show:hover { background: #004d40; }
-
-        /* Select2 custom compact styles */
-        .select2-container--default .select2-selection--single { height: 20px !important; padding: 0px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; border: 1px solid #7f9db9; border-radius: 1px; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 18px !important; padding-left: 0px; color: #000; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 18px !important; }
-
-        .select2-container--default .select2-selection--multiple { min-height: 20px !important; border: 1px solid #7f9db9; border-radius: 1px; padding: 0 2px; }
-        .select2-container--default .select2-selection--multiple .select2-selection__choice { padding: 0 4px; font-size: 10px; margin-top: 1px; margin-bottom: 1px; background-color: #e0f2f1; border: 1px solid #00796B; color: #000; }
-
-        /* Sort Bar */
-        .sort-bar { background-color: #00796B; color: #ffffff; padding: 3px 8px; display: flex; align-items: center; gap: 10px; font-size: 10.5px; border-bottom: 1px solid #004d40; }
-        .sort-bar .win-label-chk { color: #ffffff; }
-
-        /* Instruction Bar */
-        .win-grouping-bar { background: #dbe6f2; color: #1e3a8a; border: 1px solid #93c5fd; padding: 3px 8px; font-size: 10.5px; font-weight: bold; margin: 2px 4px; box-shadow: inset 0 1px 0 #fff; }
-
-        /* Grid Table Styling */
-        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 10.5px; font-family: Tahoma, sans-serif; background: #ffffff; }
-        .win-grid-table th { background: linear-gradient(to bottom, #dbe6f2 0%, #b0c4de 100%); color: #000000; font-weight: bold; padding: 3px 5px; border: 1px solid #849ca8; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; }
-        .win-grid-table td { padding: 2px 5px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; height: 19px; }
-        .win-grid-table tbody tr:nth-child(even) { background-color: #f7fafc; }
-        .win-grid-table tbody tr:hover { background-color: #cbe5ff; }
-        .grid-group-row td { font-weight: bold; background: #dbe7e5; border-top: 1px solid #00796B; color: #004d40; }
-        .grid-total-row td { font-weight: bold; background: #eaf0f6; border-top: 2px solid #00796B; }
-
-        .grid-scroll { max-height: calc(100vh - 275px); overflow: auto; border: 1px solid #849ca8; margin: 4px; background: #fff; }
-
-        @media print {
-            .win-title-bar, .win-nav-tabs, .win-toolbar, .filters-container, .win-header-panel, .sort-bar, .win-grouping-bar { display: none !important; }
-            body { background: white !important; font-size: 9pt; }
-            .grid-scroll { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
-            .win-grid-table th, .win-grid-table td { border: 1px solid #000 !important; font-size: 8.5pt; }
-            .win-grid-table th { background: #e2e8f0 !important; color: #000 !important; }
-            a { text-decoration: none !important; color: #000 !important; }
-        }
+        .accf .sort-bar { background: var(--f-teal); color: #fff; padding: 2px 8px; display: flex; align-items: center; gap: 10px; margin: 4px 4px 0 4px; }
+        .accf .sort-bar .chk { color: #fff; }
+        .accf .sort-bar .win-btn { height: 18px; }
     </style>
 </head>
-<body>
+<!--
+  Screen 51 "Trial Balance" - Architecture.WinApp.Account_Reports.TrialBalance (base.Name "TrialBalance").
+  Load: VouchertypeFill (Sp_Vouchers_GetMethods GetDocumentTypesFromVouchers, multi), BranchesFill when feature 17
+  (multi when 18), MultiLanguagesGetAll (BindDDLNew ZeroIndex true, hidden, Ctrl+L), GroupAccountFill (ReadAllAccountgroup),
+  CustomGroupsDefine(1); SkipZero + ChkBoxPost ticked; fromdate = ActiveYr.Start_Period; todate = End_Period when earlier
+  than today, else today.
+  Show: VoucherReports.TrialBalanceReport -> Sp_TrialBalance_Rpt via /accounts/api/reports-desktop/trial-balance.
+  Grid: GridSettings - grouped on ParentTitle when "Group On Parent Ac", four / six column modes, sums in stringFormatboth,
+  sorted "ParentAccountTitle ASC" + the chosen sort columns; AccountCode links to the General Ledger (Detail) or the
+  Trial Balance Selected (Group).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-balance-scale"></i> Trial Balance</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li class="active"><a>Trial Balance</a></li>
+    <li><a href="/accounts/reports/selected-trial-balance">Trial Balance Selected</a></li>
+    <li><a href="/accounts/reports/trial-balances-all-level">Trial Balances All Level</a></li>
+</ul>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="resetTB()"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="111A-AcRptTrialBalances.rpt"><i class="fa fa-print"></i> Print</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="111A-AcRptTrialBalances.rpt"><i class="fa fa-print"></i> 111APrint</button>
+    <button type="button" class="win-btn" disabled title="Crystal level-wise reports are not ported">Level Wise <i class="fa fa-caret-down"></i></button>
+</div>
+<div class="win-header-panel"><span>Trial Balance</span></div>
 
-    <!-- Title Bar -->
-    <div class="win-title-bar">
-        <span><i class="fa fa-balance-scale"></i> Trial Balance</span>
-        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 10.5px;">
-            <i class="fa fa-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
+<div class="filters">
+    <div class="gb" style="width:600px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 95px 130px 55px 90px 1fr;">
+            <span class="lbl">From Date</span><input type="date" id="fromdate" class="inp">
+            <span class="lbl">Cl_Debit</span><input type="text" id="txtClosingDebit" class="inp" value="0" style="text-align:right;">
+            <label class="chk"><input type="checkbox" id="ChkBoxPost" checked> Include UnPost Voucher</label>
 
-    <!-- Tabs Bar -->
-    <ul class="win-nav-tabs">
-        <li class="active"><a href="/accounts/reports/trial-balance">Trial Balance</a></li>
-        <li><a href="/accounts/reports/selected-trial-balance">Trial Balance Selected</a></li>
-        <li><a href="/accounts/reports/trial-balances-all-level">Trial Balances All Level</a></li>
-    </ul>
+            <span class="lbl">To Date</span><input type="date" id="todate" class="inp">
+            <span class="lbl">Cl_Credit</span><input type="text" id="txtClosingCredit" class="inp" value="0" style="text-align:right;">
+            <label class="chk"><input type="checkbox" id="SkipZero" checked> Skip Zero</label>
 
-    <!-- WinForms Toolbar -->
-    <div class="win-toolbar">
-        <button type="button" class="win-btn" onclick="resetTB()"><i class="fa fa-plus text-success"></i> Reset</button>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 111APrint</button>
-        <button type="button" class="win-btn" onclick="alert('Level Wise view applied.')">Level Wise <i class="fa fa-caret-down"></i></button>
-    </div>
+            <span class="lbl">Documents Not To Include</span>
+            <select id="cmbDocumentTypeIds" class="inp" multiple style="grid-column: span 3;"></select>
+            <label class="chk"><input type="checkbox" id="chkSkipCGSAc"> Skip CGS Accounts</label>
 
-    <!-- Filters Section (Side-by-side: Filters + Group Accounts Show) -->
-    <div class="filters-container">
-        <!-- Main Filters Groupbox -->
-        <div class="win-groupbox" style="width: 580px; flex: 0 0 580px; background: #ffffff;">
-            <span class="win-groupbox-title">Filters</span>
-            
-            <div style="display: grid; grid-template-columns: 85px 125px 55px 75px 1fr; gap: 3px 6px; align-items: center; font-size: 10px;">
-                <!-- Row 1 -->
-                <div class="win-label">From Date</div>
-                <div><input type="date" id="fromdate" class="win-input" style="width: 100%;"></div>
-                <div class="win-label" style="text-align: right;">Cl_Debit</div>
-                <div><input type="text" id="txtClosingDebit" class="win-input" value="0" style="text-align:right; width: 100%;"></div>
-                <div><label class="win-label-chk"><input type="checkbox" id="ChkBoxPost" checked> Include UnPost Voucher</label></div>
+            <span class="lbl">Group Account</span>
+            <select id="CmbGroupAccount" class="inp" style="grid-column: span 3;" data-dtcombo-caption="Account Title"></select>
+            <label class="chk"><input type="checkbox" id="chkGroupOnParent" checked> Group On Parent Ac</label>
 
-                <!-- Row 2 -->
-                <div class="win-label">To Date</div>
-                <div><input type="date" id="todate" class="win-input" style="width: 100%;"></div>
-                <div class="win-label" style="text-align: right;">Cl_Credit</div>
-                <div><input type="text" id="txtClosingCredit" class="win-input" value="0" style="text-align:right; width: 100%;"></div>
-                <div><label class="win-label-chk"><input type="checkbox" id="SkipZero" checked> Skip Zero</label></div>
+            <span class="lbl">Custom Groups</span>
+            <select id="CmbCustomeGroups" class="inp" style="grid-column: span 3;" data-dtcombo-caption="Custom Group"></select>
+            <span><label class="chk"><input type="radio" name="rdColumns" id="rdFourColumns" checked> Four Columns</label>
+                  <label class="chk"><input type="radio" name="rdColumns" id="rdSixColumns"> Six Columns</label></span>
 
-                <!-- Row 3 -->
-                <div class="win-label" style="line-height: 1.1;">Documents Not To Include</div>
-                <div style="grid-column: span 3;">
-                    <select id="cmbDocumentTypeIds" class="win-input select2" multiple="multiple" style="width: 100%;">
-                        <option th:each="dt : ${documentTypesList}" th:value="${dt['id'] != null ? dt['id'] : (dt['Id'] != null ? dt['Id'] : '')}" th:text="${dt['DocumentTypeDescription']}"></option>
-                    </select>
-                </div>
-                <div><label class="win-label-chk"><input type="checkbox" id="chkSkipCGSAc"> Skip CGS Accounts</label></div>
+            <span class="lbl tb-branch" style="display:none;">Branches</span>
+            <select id="CmbBranches" class="inp tb-branch" style="grid-column: span 3; display:none;" data-dtcombo-caption="Branch Name"></select>
+            <span class="tb-branch" style="display:none;"></span>
 
-                <!-- Row 4 -->
-                <div class="win-label">Group Account</div>
-                <div style="grid-column: span 3;">
-                    <select id="CmbGroupAccount" class="win-input select2" style="width: 100%;">
-                        <option value="">-- Select Group Account --</option>
-                        <option th:each="ga : ${accountGroupsList}" th:value="${ga['id'] != null ? ga['id'] : (ga['Id'] != null ? ga['Id'] : '')}" th:text="${ga['AccountTitle']}"></option>
-                    </select>
-                </div>
-                <div><label class="win-label-chk"><input type="checkbox" id="chkGroupOnParent" checked> Group On Parent Ac</label></div>
-
-                <!-- Row 5 -->
-                <div class="win-label">Custom Groups</div>
-                <div style="grid-column: span 3;">
-                    <select id="CmbCustomeGroups" class="win-input select2" style="width: 100%;">
-                        <option value="">-- Select Custom Group --</option>
-                        <option th:each="cg : ${customGroupsList}" th:value="${cg['id'] != null ? cg['id'] : (cg['Id'] != null ? cg['Id'] : '')}" th:text="${cg['AcLookUpsDescription']}"></option>
-                    </select>
-                </div>
-                <div>
-                    <label class="win-label-chk" style="margin-right: 4px;"><input type="radio" name="rdColumns" id="rdFourColumns" checked> Four Columns</label>
-                    <label class="win-label-chk"><input type="radio" name="rdColumns" id="rdSixColumns"> Six Columns</label>
-                </div>
-            </div>
-
-            <!-- Branches (GetERPFeatureById 17 / 18) and the hidden Language combo (Ctrl+L), TrialBalance.cs -->
-            <div style="display: grid; grid-template-columns: 85px 1fr 55px 1fr; gap: 3px 6px; align-items: center; font-size: 10px; margin-top: 3px;">
-                <div class="win-label tb-branch" style="display:none;">Branches</div>
-                <div class="tb-branch" style="display:none;"><select id="CmbBranches" class="win-input" style="width:100%;"></select></div>
-                <div class="win-label tb-lang" style="display:none;">Language</div>
-                <div class="tb-lang" style="display:none;"><select id="CmbLanguage" class="win-input" style="width:100%;"><option value="0">...Select Any Value...</option></select></div>
-            </div>
-
-            <!-- Show Button centered at bottom of Filters box -->
-            <div style="text-align: center; margin-top: 6px;">
-                <button type="button" class="win-btn-show" onclick="executeTB()"><i class="fa fa-eye"></i> Show</button>
-            </div>
+            <span class="lbl tb-lang" style="display:none;">Language</span>
+            <select id="CmbLanguage" class="inp tb-lang" style="grid-column: span 3; display:none;" data-dtcombo-caption="LanguageName"></select>
+            <span class="tb-lang" style="display:none;"></span>
         </div>
-
-        <!-- Group Accounts Show Groupbox (Side-by-side right) -->
-        <div class="win-groupbox" style="width: 140px; flex: 0 0 140px; background: #ffffff; padding: 10px 8px 6px 8px;">
-            <span class="win-groupbox-title">Group Accounts Show</span>
-            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
-                <label class="win-label-chk"><input type="checkbox" id="chkStockGroupAccountShow" checked> Stock</label>
-                <label class="win-label-chk"><input type="checkbox" id="ChkSaleGroupAccountShow" checked> Sale</label>
-                <label class="win-label-chk"><input type="checkbox" id="ChkCGSGroupAccountShow" checked> CGS</label>
-            </div>
+        <div style="text-align:right; margin-top:6px;">
+            <button type="button" id="btnshow" class="win-btn-show" onclick="executeTB()"><i class="fa fa-eye"></i> Show</button>
         </div>
     </div>
-
-    <!-- Header Title Bar -->
-    <div class="win-header-panel">
-        <span class="win-header-title">Trial Balance</span>
-    </div>
-
-    <!-- Sort Bar -->
-    <div class="sort-bar">
-        <label class="win-label-chk"><input type="checkbox" id="chkAccountCodeSorting"> Account Code</label>
-        <label class="win-label-chk"><input type="checkbox" id="chkAccountTitleSorting"> Account Title</label>
-        <label class="win-label-chk"><input type="checkbox" id="chkClosingSorting"> Closing</label>
-        <button type="button" class="win-btn" style="height: 19px; padding: 0 8px;" onclick="applySorting()">Apply Sorting</button>
-        <label class="win-label-chk"><input type="radio" name="rdSortDir" id="rdAscending" checked> Ascending</label>
-        <label class="win-label-chk"><input type="radio" name="rdSortDir" id="rdDescending"> Descending</label>
-        <span id="lblSortingCritera" style="font-weight: bold; margin-left: auto;">(ParentAccountTitle ASC)</span>
-    </div>
-
-    <!-- Instruction Bar -->
-    <div class="win-grouping-bar">
-        Drag a column header here to group by that column.
-    </div>
-
-    <!-- Main Grid Form -->
-    <div style="background:#ffffff; border:1px solid #849ca8; margin:4px;">
-        <div class="grid-scroll">
-            <table class="win-grid-table" id="tbTable">
-                <thead>
-                <tr id="tbHeaderRow">
-                    <th>Parent Title</th>
-                    <th class="col-branch" style="display:none;">Branch Name</th>
-                    <th>Account Code</th>
-                    <th>Account Title</th>
-                    <th>Account Type</th>
-                    <th style="text-align:right;" class="col-four">Opening</th>
-                    <th style="text-align:right;" class="col-six">Opening Dr</th>
-                    <th style="text-align:right;" class="col-six">Opening Cr</th>
-                    <th style="text-align:right;">Debit</th>
-                    <th style="text-align:right;">Credit</th>
-                    <th style="text-align:right;" class="col-four">Closing</th>
-                    <th style="text-align:right;" class="col-six">Closing Dr</th>
-                    <th style="text-align:right;" class="col-six">Closing Cr</th>
-                </tr>
-                </thead>
-                <tbody id="tbTbody">
-                    <tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>
-                </tbody>
-                <tfoot>
-                <tr class="grid-total-row">
-                    <td colspan="4" style="text-align:right;" id="tbTotalLabel">Total:</td>
-                    <td style="text-align:right;" id="totOpening" class="col-four">0</td>
-                    <td style="text-align:right;" id="totOpeningDr" class="col-six">0</td>
-                    <td style="text-align:right;" id="totOpeningCr" class="col-six">0</td>
-                    <td style="text-align:right;" id="totDebit">0</td>
-                    <td style="text-align:right;" id="totCredit">0</td>
-                    <td style="text-align:right;" id="totClosing" class="col-four">0</td>
-                    <td style="text-align:right;" id="totClosingDr" class="col-six">0</td>
-                    <td style="text-align:right;" id="totClosingCr" class="col-six">0</td>
-                </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <!-- Record Navigation Footer -->
-        <div style="background: #e4ebf2; border-top: 1px solid #849ca8; padding: 2px 8px; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 6px; height: 22px;">
-            <span>Record:</span>
-            <button type="button" class="win-btn" style="height: 18px; padding: 0 4px;" onclick="firstRecord()"><i class="fa fa-step-backward"></i></button>
-            <button type="button" class="win-btn" style="height: 18px; padding: 0 4px;" onclick="prevRecord()"><i class="fa fa-caret-left"></i></button>
-            <span style="background: #fff; border: 1px solid #849ca8; padding: 0 6px;" id="lblCurrentRecord">0</span>
-            <span>Of</span>
-            <span id="lblTotalRecordsCount">0</span>
-            <button type="button" class="win-btn" style="height: 18px; padding: 0 4px;" onclick="nextRecord()"><i class="fa fa-caret-right"></i></button>
-            <button type="button" class="win-btn" style="height: 18px; padding: 0 4px;" onclick="lastRecord()"><i class="fa fa-step-forward"></i></button>
+    <div class="gb" style="width:150px;">
+        <span class="gb-title">Group Accounts Show</span>
+        <div class="fcol" style="gap:8px; margin-top:4px;">
+            <label class="chk"><input type="checkbox" id="chkStockGroupAccountShow" checked> Stock</label>
+            <label class="chk"><input type="checkbox" id="ChkSaleGroupAccountShow" checked> Sale</label>
+            <label class="chk"><input type="checkbox" id="ChkCGSGroupAccountShow" checked> CGS</label>
         </div>
     </div>
+</div>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930f}"></script>
-    <script th:inline="javascript">
-        function fmt(v) {
-            const n = parseFloat(v);
-            if (isNaN(n)) return '0';
-            return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        }
+<div class="sort-bar">
+    <label class="chk"><input type="checkbox" id="chkAccountCodeSorting"> Account Code</label>
+    <label class="chk"><input type="checkbox" id="chkAccountTitleSorting"> Account Title</label>
+    <label class="chk"><input type="checkbox" id="chkClosingSorting"> Closing</label>
+    <button type="button" class="win-btn" onclick="applySorting()">Apply Sorting</button>
+    <label class="chk"><input type="radio" name="rdSortDir" id="rdAscending" checked> Ascending</label>
+    <label class="chk"><input type="radio" name="rdSortDir" id="rdDescending"> Descending</label>
+    <span id="lblSortingCritera" style="font-weight:bold; margin-left:auto;">(ParentAccountTitle ASC)</span>
+</div>
+<div class="grid-caption"><span>Trial Balance</span><span id="lblStatus"></span></div>
+<div class="grid-wrap"><table class="wg" id="tbTable"></table></div>
 
-        function onAccountCodeClick(accId, groupType, subsidiaryAccountId, branchesId) {
-            const fd = $('#fromdate').val() || '';
-            const td = $('#todate').val() || '';
-            if (groupType === 'Detail') {
-                window.location.href = `/accounts/reports/general-ledger?accountId=${accId}&fromDate=${fd}&toDate=${td}` +
-                    (subsidiaryAccountId ? `&subsidiaryAccountId=${subsidiaryAccountId}` : '') + (branchesId ? `&branchId=${branchesId}` : '');
-            } else {
-                window.location.href = `/accounts/reports/selected-trial-balance?groupAccountId=${accId}&fromDate=${fd}&toDate=${td}`;
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    let TB_CTX = null, tbData = [], tbBranchShown = false;
+
+    function sortCols() {
+        const cols = [];
+        if ($('#chkAccountCodeSorting').is(':checked')) cols.push('AccountCode');
+        if ($('#chkAccountTitleSorting').is(':checked')) cols.push('AccountTitle');
+        if ($('#chkClosingSorting').is(':checked')) cols.push('Closing');
+        return cols;
+    }
+    function applySorting() {
+        const dir = $('#rdAscending').is(':checked') ? 'ASC' : 'DESC';
+        const dyn = sortCols().map(function (c) { return c + ' ' + dir; }).join(', ');
+        $('#lblSortingCritera').text('(' + (dyn ? 'ParentAccountTitle ASC, ' + dyn : 'ParentAccountTitle ASC') + ')');
+        if (tbData.length) renderTb();
+    }
+    /* DataView.Sort "ParentAccountTitle ASC[, AccountCode|AccountTitle|Closing ASC|DESC]" */
+    function sortedRows() {
+        const cols = sortCols(), asc = $('#rdAscending').is(':checked');
+        function cmp(a, b) { return String(a == null ? '' : a).localeCompare(String(b == null ? '' : b), undefined, { numeric: true }); }
+        return tbData.slice().sort(function (a, b) {
+            const p = cmp(a.ParentAccountTitle, b.ParentAccountTitle);
+            if (p) return p;
+            for (const c of cols) {
+                const d = c === 'Closing' ? AccF.num(a.Closing) - AccF.num(b.Closing) : cmp(a[c], b[c]);
+                if (d) return asc ? d : -d;
             }
-        }
+            return 0;
+        });
+    }
 
-        let tbData = [];
+    /* GridSettings */
+    function renderTb() {
+        const six = $('#rdSixColumns').is(':checked');
+        const onParent = $('#chkGroupOnParent').is(':checked');
+        const rows = sortedRows().map(function (r) { return Object.assign({ ParentTitle: r.ParentAccountTitle }, r); });
+        AccF.renderGrid({
+            table: '#tbTable', rows: rows, emptyText: '',
+            groupBy: onParent ? 'ParentTitle' : null, groupCaption: 'ParentTitle',
+            columns: [
+                { key: 'BranchName', visible: tbBranchShown },
+                { key: 'ParentTitle', visible: !onParent },
+                { key: 'AccountCode', link: function (r) { onAccountCodeClick(r); } },
+                { key: 'AccountTitle' },
+                { key: 'AccountType' },
+                { key: 'Opening', type: 'both', sum: true, visible: !six },
+                { key: 'OpeningDr', type: 'both', sum: true, visible: six },
+                { key: 'OpeningCr', type: 'both', sum: true, visible: six },
+                { key: 'Debit', type: 'both', sum: true },
+                { key: 'Credit', type: 'both', sum: true },
+                { key: 'Closing', type: 'both', sum: true, visible: !six },
+                { key: 'ClosingDr', type: 'both', sum: true, visible: six },
+                { key: 'ClosingCr', type: 'both', sum: true, visible: six }
+            ]
+        });
+        $('#lblStatus').text(tbData.length ? 'Records: ' + tbData.length : '');
+    }
 
-        function buildTbRequest() {
-            const docTypeIds = $('#cmbDocumentTypeIds').val() || [];
-            let accountTypeIds = [];
-            if ($('#chkStockGroupAccountShow').is(':checked')) accountTypeIds.push('4');
-            if ($('#ChkSaleGroupAccountShow').is(':checked')) accountTypeIds.push('10');
-            if ($('#ChkCGSGroupAccountShow').is(':checked')) accountTypeIds.push('12');
+    /* grd_LinkClicked on AccountCode: Detail -> General Ledger, else Trial Balance Selected (GroupId, From, To) */
+    function onAccountCodeClick(r) {
+        const fd = $('#fromdate').val(), td = $('#todate').val();
+        if (String(r.AccountGroup || '').toLowerCase() === 'detail') AccF.openLedger(r.AccountId, fd, td, r.SubsidiaryAccoutId, r.BranchesId);
+        else window.open('/accounts/reports/selected-trial-balance?groupAccountId=' + encodeURIComponent(r.AccountId) + '&fromDate=' + fd + '&toDate=' + td, '_blank');
+    }
+
+    function buildTbRequest() {
+        const acTypes = [];
+        if ($('#chkStockGroupAccountShow').is(':checked')) acTypes.push('4');
+        if ($('#ChkSaleGroupAccountShow').is(':checked')) acTypes.push('10');
+        if ($('#ChkCGSGroupAccountShow').is(':checked')) acTypes.push('12');
+        const br = $('#CmbBranches').val();
+        return {
+            fromDate: $('#fromdate').val(), toDate: $('#todate').val(),
+            skipZero: $('#SkipZero').is(':checked'),
+            clDebit: $('#txtClosingDebit').val() || '0', clCredit: $('#txtClosingCredit').val() || '0',
+            includeUnposted: $('#ChkBoxPost').is(':checked'),
+            languageId: $('#CmbLanguage').val() || 0,
+            documentTypeIds: AccF.selectedIds('#cmbDocumentTypeIds') || null,
+            branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null,
+            accountTypeIds: acTypes.length ? acTypes.join(',') : null,
+            customGroupId: $('#CmbCustomeGroups').val() || null,
+            groupAccountId: $('#CmbGroupAccount').val() || null,
+            skipCgs: $('#chkSkipCGSAc').is(':checked')
+        };
+    }
+
+    async function executeTB() {
+        const btn = $('#btnshow');
+        AccF.busy(btn, true);
+        try {
+            tbData = (await AccF.post('/trial-balance', buildTbRequest())) || [];
             const br = $('#CmbBranches').val();
-            return {
-                fromDate: $('#fromdate').val(),
-                toDate: $('#todate').val(),
-                skipZero: $('#SkipZero').is(':checked'),
-                clDebit: $('#txtClosingDebit').val() || '0',
-                clCredit: $('#txtClosingCredit').val() || '0',
-                includeUnposted: $('#ChkBoxPost').is(':checked'),
-                languageId: $('#CmbLanguage').val() || 0,
-                documentTypeIds: docTypeIds.length ? docTypeIds.join(',') : null,
-                branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null,
-                accountTypeIds: accountTypeIds.length ? accountTypeIds.join(',') : null,
-                customGroupId: $('#CmbCustomeGroups').val() || null,
-                groupAccountId: $('#CmbGroupAccount').val() || null,
-                skipCgs: $('#chkSkipCGSAc').is(':checked')
-            };
-        }
-
-        function executeTB() {
-            $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#00796B;"><i class="fa fa-spinner fa-spin"></i> Executing Trial Balance query...</td></tr>');
-            $.ajax({
-                url: '/accounts/api/reports-desktop/trial-balance',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(buildTbRequest()),
-                success: function (res) {
-                    if (res && res.success) {
-                        tbData = res.data || [];
-                        tbBranchShown = !!(TB_CTX && TB_CTX.branchFeature && $('#CmbBranches').val());
-                        renderTb();
-                    } else {
-                        tbData = [];
-                        $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Trial Balance.') + '</td></tr>');
-                    }
-                },
-                error: function (xhr) {
-                    tbData = [];
-                    const msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) || 'Error executing Trial Balance report.';
-                    $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;"></td></tr>');
-                    $('#tbTbody td').text(msg);
-                }
-            });
-        }
-
-        function applySorting() {
-            const cols = [];
-            if ($('#chkAccountCodeSorting').is(':checked')) cols.push('AccountCode');
-            if ($('#chkAccountTitleSorting').is(':checked')) cols.push('AccountTitle');
-            if ($('#chkClosingSorting').is(':checked')) cols.push('Closing');
-
-            const dir = $('#rdAscending').is(':checked') ? 'ASC' : 'DESC';
-            const dynamicSort = cols.map(c => c + ' ' + dir).join(', ');
-            const sortExpr = dynamicSort ? 'ParentAccountTitle ASC, ' + dynamicSort : 'ParentAccountTitle ASC';
-            $('#lblSortingCritera').text('(' + sortExpr + ')');
+            tbBranchShown = !!(TB_CTX && TB_CTX.branchFeature && br && br.length);
             renderTb();
-        }
+        } catch (e) {
+            tbData = []; $('#tbTable').empty(); $('#lblStatus').text('');
+            alert(e.message);
+        } finally { AccF.busy(btn, false); }
+    }
 
-        function sortedTbData() {
-            const cols = [];
-            if ($('#chkAccountCodeSorting').is(':checked')) cols.push('AccountCode');
-            if ($('#chkAccountTitleSorting').is(':checked')) cols.push('AccountTitle');
-            if ($('#chkClosingSorting').is(':checked')) cols.push('Closing');
-            const asc = $('#rdAscending').is(':checked');
-            const rows = tbData.slice();
-            rows.sort((a, b) => {
-                const pa = (a.ParentAccountTitle || '').toString();
-                const pb = (b.ParentAccountTitle || '').toString();
-                if (pa !== pb) {
-                    return pa.localeCompare(pb, undefined, {numeric: true});
-                }
-                for (const c of cols) {
-                    let va, vb;
-                    if (c === 'Closing') {
-                        va = parseFloat(a.Closing || a.ClosingBalance || 0);
-                        vb = parseFloat(b.Closing || b.ClosingBalance || 0);
-                        if (va !== vb) {
-                            return asc ? va - vb : vb - va;
-                        }
-                    } else {
-                        va = (a[c] || '').toString();
-                        vb = (b[c] || '').toString();
-                        if (va !== vb) {
-                            return asc ? va.localeCompare(vb, undefined, {numeric: true}) : vb.localeCompare(va, undefined, {numeric: true});
-                        }
-                    }
-                }
-                return 0;
-            });
-            return rows;
-        }
+    /* TrialBalance.reset(): SkipZero ticked; fromdate = ActiveYr.Start_Period */
+    function resetTB() {
+        $('#SkipZero').prop('checked', true);
+        if (TB_CTX && TB_CTX.activeYear.startPeriod) $('#fromdate').val(TB_CTX.activeYear.startPeriod);
+    }
 
-        function applyColumnMode() {
-            const six = $('#rdSixColumns').is(':checked');
-            $('.col-six').toggle(six);
-            $('.col-four').toggle(!six);
-            $('.col-branch').toggle(tbBranchShown);
-        }
+    $('input[name="rdColumns"], #chkGroupOnParent').on('change', function () { if (tbData.length) renderTb(); });
+    $('#rdAscending, #rdDescending, #chkAccountCodeSorting, #chkAccountTitleSorting, #chkClosingSorting').on('change', applySorting);
 
-        function renderTb() {
-            applyColumnMode();
-            const tbody = $('#tbTbody');
-            tbody.empty();
-            const groupOnParent = $('#chkGroupOnParent').is(':checked');
-            $('#tbHeaderRow th:first-child').toggle(!groupOnParent);
-            if (!tbData || tbData.length === 0) {
-                tbody.html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">No records found for the selected criteria.</td></tr>');
-                ['totOpening','totOpeningDr','totOpeningCr','totDebit','totCredit','totClosing','totClosingDr','totClosingCr'].forEach(id => $('#' + id).text('0'));
-                $('#lblCurrentRecord').text('0');
-                $('#lblTotalRecordsCount').text('0');
-                return;
-            }
-            const rows = sortedTbData();
-            const skipZero = false; /* @ZeroBalanceType is applied by Sp_TrialBalance_Rpt itself; the desktop grid does not filter again */
-            let totOpening = 0, totOpeningDr = 0, totOpeningCr = 0, totDebit = 0, totCredit = 0, totClosing = 0, totClosingDr = 0, totClosingCr = 0;
-            let lastParent = null;
-            let displayedCount = 0;
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.tb-lang').show(); AccF.focus('#CmbLanguage'); }
+        if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetTB(); }
+    });
 
-            rows.forEach(r => {
-                const opening = parseFloat(r.Opening || r.OpeningBalance || 0), openingDr = parseFloat(r.OpeningDr || 0), openingCr = parseFloat(r.OpeningCr || 0);
-                const debit = parseFloat(r.Debit || r.DebitAmount || 0), credit = parseFloat(r.Credit || r.CreditAmount || 0);
-                const closing = parseFloat(r.Closing || r.ClosingBalance || 0), closingDr = parseFloat(r.ClosingDr || 0), closingCr = parseFloat(r.ClosingCr || 0);
-
-                const isZero = (isNaN(opening) || Math.abs(opening) < 0.0001) &&
-                               (isNaN(debit) || Math.abs(debit) < 0.0001) &&
-                               (isNaN(credit) || Math.abs(credit) < 0.0001) &&
-                               (isNaN(closing) || Math.abs(closing) < 0.0001);
-
-                if (skipZero && isZero) {
-                    return;
-                }
-
-                displayedCount++;
-                const parentTitle = r.ParentAccountTitle || '';
-                if (groupOnParent && parentTitle !== lastParent) {
-                    tbody.append('<tr class="grid-group-row"><td colspan="12">' + parentTitle + '</td></tr>');
-                    lastParent = parentTitle;
-                }
-
-                totOpening += opening; totOpeningDr += openingDr; totOpeningCr += openingCr;
-                totDebit += debit; totCredit += credit;
-                totClosing += closing; totClosingDr += closingDr; totClosingCr += closingCr;
-                tbody.append(`
-                    <tr>
-                        <td ${groupOnParent ? 'hidden' : ''}>${parentTitle}</td>
-                        <td class="col-branch" style="display:none;">${$('<div>').text(r.BranchName || '').html()}</td>
-                        <td style="color: #00796B; cursor: pointer; text-decoration: underline; font-weight: 600;" onclick="onAccountCodeClick(${r.AccountId || 0}, '${r.AccountGroup || ''}', ${r.SubsidiaryAccoutId || 0}, ${r.BranchesId || 0})">${r.AccountCode || ''}</td>
-                        <td>${r.AccountTitle || ''}</td>
-                        <td>${r.AccountType || ''}</td>
-                        <td style="text-align:right;" class="col-four">${fmt(opening)}</td>
-                        <td style="text-align:right;" class="col-six">${fmt(openingDr)}</td>
-                        <td style="text-align:right;" class="col-six">${fmt(openingCr)}</td>
-                        <td style="text-align:right;">${fmt(debit)}</td>
-                        <td style="text-align:right;">${fmt(credit)}</td>
-                        <td style="text-align:right;" class="col-four">${fmt(closing)}</td>
-                        <td style="text-align:right;" class="col-six">${fmt(closingDr)}</td>
-                        <td style="text-align:right;" class="col-six">${fmt(closingCr)}</td>
-                    </tr>
-                `);
-            });
-
-            if (displayedCount === 0) {
-                tbody.html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">No accounts match the selected criteria.</td></tr>');
-            }
-
-            $('#lblCurrentRecord').text(displayedCount > 0 ? '1' : '0');
-            $('#lblTotalRecordsCount').text(displayedCount);
-            $('#totOpening').text(fmt(totOpening));
-            $('#totOpeningDr').text(fmt(totOpeningDr));
-            $('#totOpeningCr').text(fmt(totOpeningCr));
-            $('#totDebit').text(fmt(totDebit));
-            $('#totCredit').text(fmt(totCredit));
-            $('#totClosing').text(fmt(totClosing));
-            $('#totClosingDr').text(fmt(totClosingDr));
-            $('#totClosingCr').text(fmt(totClosingCr));
-            applyColumnMode();
-        }
-
-        let TB_CTX = null, tbBranchShown = false;
-
-        /* TrialBalance.reset(): SkipZero.Checked = true; fromdate = ActiveYr.Start_Period */
-        function resetTB() {
-            $('#SkipZero').prop('checked', true);
-            if (TB_CTX && TB_CTX.activeYear.startPeriod) $('#fromdate').val(TB_CTX.activeYear.startPeriod);
-        }
-
-        /* TrialBalance_Load: fromdate = Start_Period; todate = End_Period when it is earlier than today, else today */
-        function onDateTypeInit() {
-            const today = new Date(); const iso = d => d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-            const t = iso(today);
-            const ay = TB_CTX ? TB_CTX.activeYear : {};
+    $(function () { (async function () {
+        try {
+            TB_CTX = await AccF.context();
+            /* TrialBalance_Load dates */
+            const t = AccF.today(), ay = TB_CTX.activeYear || {};
             $('#fromdate').val(ay.startPeriod || t);
             $('#todate').val(ay.endPeriod && ay.endPeriod < t ? ay.endPeriod : t);
-        }
-
-        function firstRecord() { if (tbData.length > 0) $('#lblCurrentRecord').text('1'); }
-        function prevRecord() { }
-        function nextRecord() { }
-        function lastRecord() { if (tbData.length > 0) $('#lblCurrentRecord').text($('#lblTotalRecordsCount').text()); }
-
-        $('#rdFourColumns, #rdSixColumns').on('change', applyColumnMode);
-        $('#chkGroupOnParent').on('change', renderTb);
-        $('#rdAscending, #rdDescending, #chkAccountCodeSorting, #chkAccountTitleSorting, #chkClosingSorting').on('change', applySorting);
-
-        $(document).on('keydown', function (e) {
-            if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.tb-lang').show(); }
-            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetTB(); }
-        });
-
-        $(document).ready(async function () {
-            applyColumnMode();
-            $('#CmbGroupAccount, #CmbCustomeGroups, #cmbDocumentTypeIds').select2({ width: '100%' });
-            try {
-                TB_CTX = await AccF.context();
-                onDateTypeInit();
-                (await AccF.lookup('languages')).forEach(l => $('#CmbLanguage').append($('<option>').val(l.Id).text(l.LanguageDescription)));
-                if (TB_CTX.branchFeature) {
-                    const brs = await AccF.lookup('branches');
-                    if (TB_CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
-                    else $('#CmbBranches').append($('<option>').val('').text(''));
-                    brs.forEach(b => $('#CmbBranches').append($('<option>').val(b.Id).text(b.BranchName)));
-                    $('#CmbBranches').val(TB_CTX.branchConsolidated ? [String(TB_CTX.userBranchId)] : String(TB_CTX.userBranchId));
-                    $('.tb-branch').show();
-                }
-            } catch (e) { alert(e.message); }
-        });
-    </script>
+            AccF.fillSelect('#cmbDocumentTypeIds', await AccF.lookup('document-types'), 'Id', 'DocumentTypeDescription', null);
+            if (TB_CTX.branchFeature) {
+                const brs = await AccF.lookup('branches');
+                if (TB_CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
+                AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', TB_CTX.branchConsolidated ? null : '');
+                $('#CmbBranches').val(TB_CTX.branchConsolidated ? [String(TB_CTX.userBranchId)] : String(TB_CTX.userBranchId));
+                AccF.ctl('#CmbBranches'); $('.tb-branch').show();
+            }
+            /* MultiLanguagesGetAll: BindDDLNew(..., ZeroIndex true) -> "...Select Any Value..." (0) selected */
+            AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', null);
+            $('#CmbLanguage').prepend($('<option>').val('0').text('...Select Any Value...')).val('0');
+            AccF.fillSelect('#CmbGroupAccount', await AccF.lookup('account-groups'), 'Id', 'AccountTitle', '');
+            AccF.fillSelect('#CmbCustomeGroups', await AccF.lookup('custom-groups'), 'Id', 'AcLookUpsDescription', '');
+            document.getElementById('fromdate').focus();
+        } catch (e) { alert(e.message); }
+    })(); });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

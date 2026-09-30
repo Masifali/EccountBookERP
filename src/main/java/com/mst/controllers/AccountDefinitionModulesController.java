@@ -319,7 +319,10 @@ public class AccountDefinitionModulesController {
 	}
 
 	/** Body {companyId, companyText, financialYearId, financialYearText, rows:[{id, accountTitle}]}. */
-	@PostMapping("/allocation/save")
+	/* Two handlers share /allocation/save: this JSON one (the desktop port) and the older HTML
+	   form post below. Splitting them by content type keeps both working and stops Spring's
+	   "Ambiguous mapping" failure at startup. */
+	@PostMapping(value = "/allocation/save", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public Map<String, Object> saveAccountAllocation(@RequestBody Map<String, Object> body) {
 		Map<String, Object> res = new HashMap<>();
@@ -366,7 +369,9 @@ public class AccountDefinitionModulesController {
 	// 6. ACCOUNT ALLOCATION (/accounts/allocation)
 	// ==========================================
 
-	@GetMapping("/allocation")
+	/* The older server-rendered page. It shared GET /allocation with the desktop port above,
+	   which made Spring refuse to start ("Ambiguous mapping"); kept under /allocation/legacy. */
+	@GetMapping("/allocation/legacy")
 	public String viewAccountAllocation(
 			@RequestParam(value = "companyId", required = false, defaultValue = "0") Integer companyId,
 			Model model) {
@@ -394,7 +399,7 @@ public class AccountDefinitionModulesController {
 		return "accounts/account_allocation";
 	}
 
-	@PostMapping("/allocation/save")
+	@PostMapping(value = "/allocation/save", consumes = org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public String saveAccountAllocation(
 			@RequestParam("companyId") Integer companyId,
 			@RequestParam(value = "allocatedAccountIds", required = false) List<Integer> allocatedAccountIds) {

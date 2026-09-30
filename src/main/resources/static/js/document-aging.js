@@ -18,5 +18,5 @@ el('show').onclick=show;el('refresh').onclick=refresh;el('reset').onclick=()=>{+
 el('print').onclick=()=>status(rows.length?'Crystal print layout verification is pending.':'Record Not Found For Display');
 el('shortcuts').onclick=()=>{el('shortcutDialog').showModal()};el('closeShortcuts').onclick=()=>el('shortcutDialog').close();
 document.addEventListener('keydown',e=>{if(e.ctrlKey){const key=e.key.toLowerCase(),actions={s:show,n:()=>el('reset').click(),r:refresh,p:()=>el('print').click(),f5:()=>el('asOnDate').focus(),arrowup:()=>el('asOnDate').focus(),arrowdown:()=>el('grid').focus()};if(actions[key]){e.preventDefault();actions[key]()}}});
-const today=new Date();el('asOnDate').value=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');$('select').select2({allowClear:true,placeholder:''});refresh();
+const today=new Date();el('asOnDate').value=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');if($.fn.select2)$('select').select2({allowClear:true,placeholder:''});refresh();
 })();

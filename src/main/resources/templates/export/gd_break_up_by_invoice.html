@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Gd Break Up By Invoice - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+</head>
+<!-- frmGdBreakUpByInvoice.cs (Architecture.WinApp.Export), screen 881 "Gd Break Up By Invoice", ClientSize 1184 x 561,
+     ScreenName frmGdBreakUpByInvoice, DocumentTypeId 224.
+     tabControlMain: "GD BreakUp" | "Advance Utilized By GD". Each holds an inner tab control "Form" | "History".
+     GD BreakUp / Form: toolStripGDBreakUpForm New / Save / Update(hidden) / Refresh; panel25 (Teal) "GD BreakUp";
+       panel30 (150 high): row 1 Invoice No (UltraCombo, Id/InvoiceNo/BankInvoiceAmount) + Invoice Balance (disabled),
+       Due Days, FOB Value (disabled), Custom Duty %, Additional Custom Duty %; row 2 GD No,Date, Exch Rate, FTT % (10),
+       Custom Duty, Additional Custom Duty; row 3 Bank Invoice No & Date, GD Value, FTT Amount (disabled), Sales Tax %,
+       Income Tax %; row 4 Bank Name (UltraCombo Id/BranchName/BankIBANNo), Freight, Net Amount (disabled), Sales Tax,
+       Income Tax; row 5 Remarks (868 wide) and the + / Update / Cancel buttons (Teal, white text).
+       panel1 (Teal) "Detail" + ctrlGrdBar5; grdGdBreakUp with the X column first and one frozen column.
+     GD BreakUp / History: toolStripGdBreakupHistory New / Refresh; From Date, To Date, Bank Name, Show (Teal);
+       panel34 (rgb 10,110,110) "GD History" + ctrlGrdBar7; grdGDhistory with Edit before Invoice No (Update right).
+     Advance Utilized By GD / Form: toolStripAdvanceAgaintGD New / Save / Update(hidden) / Refresh; "Advance Utilize Against GDs";
+       panel32: Invoice No, GD No, GD Value (read-only), Financial Instruments No, Balance (read-only), Utilize Amount,
+       + / Update / Cancel; panel33 + ctrlGrdBar6; grdAdvanceUtlize (X first, UtilizeAmount summed).
+     Advance Utilized By GD / History: grdAdvanceHistory (fills when the tab opens; double-click loads the row). -->
+<body class="pd-body" data-export-page="gd">
+<div class="pd-form ex-form">
+    <div class="ex-main-tabs">
+        <button type="button" class="ex-main-tab is-active" data-main="mainGd">GD BreakUp</button>
+        <button type="button" class="ex-main-tab" data-main="mainAdv">Advance Utilized By GD</button>
+    </div>
+
+    <!-- ===================================================== tabGdBreakUp -->
+    <div class="ex-main-panel is-active" id="mainGd">
+        <div class="win-tabs" data-tabs="gd">
+            <button type="button" class="win-tab is-active" data-tab="gdForm">Form</button>
+            <button type="button" class="win-tab" data-tab="gdHistory">History</button>
+        </div>
+
+        <div class="win-tab-panel is-active" id="gdForm">
+            <div class="win-tool-strip">
+                <button type="button" id="BtnNewGdBreakUp" class="win-btn-tool" accesskey="n" onclick="ExportGd.gdNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="BtnSaveGdBreakUp" class="win-btn-tool" accesskey="s" onclick="ExportGd.gdSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+                <button type="button" id="BtnUpdateGDBreakUp" class="win-btn-tool is-hidden" accesskey="u"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+                <button type="button" id="BtnRefreshGdBreakUp" class="win-btn-tool" accesskey="r" onclick="ExportGd.gdRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            </div>
+            <div class="pd-caption pd-caption-teal">GD BreakUp</div>
+            <div class="ex-entry ex-gd-entry">
+                <!-- row 1 -->
+                <div class="ex-field"><label for="CmbInvoiceGdBreakUp">Invoice No</label>
+                    <div class="ex-pair">
+                        <select id="CmbInvoiceGdBreakUp" class="win-combo dtcombo" data-columns="Invoice No|BankInvoiceAmount" data-dtcombo-caption="Invoice No"></select>
+                        <input type="text" id="txtInvoiceBalanceGdBreakUp" class="win-textbox num" value="0" disabled title="Invoice Balance"/>
+                    </div></div>
+                <div class="ex-field"><label for="txtDueDaysGdBreakUp">Due Days</label><input type="text" id="txtDueDaysGdBreakUp" class="win-textbox num" value="0" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtFobValueGdBreakUp">FOB Value</label><input type="text" id="txtFobValueGdBreakUp" class="win-textbox num" value="0" disabled/></div>
+                <div class="ex-field"><label for="txtCustomDutyPrcntGdBreakUp">Custom Duty %</label><input type="text" id="txtCustomDutyPrcntGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtAdditionalDutyPrcntGdBreakUp">Additional Custom Duty %</label><input type="text" id="txtAdditionalDutyPrcntGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <!-- row 2 -->
+                <div class="ex-field"><label for="txtGDNoGdBreakUp">GD No,Date</label>
+                    <div class="ex-pair"><input type="text" id="txtGDNoGdBreakUp" class="win-textbox" autocomplete="off"/><input type="date" id="datGDDateGdBreakUp" class="win-date"/></div></div>
+                <div class="ex-field"><label for="txtExchangeRateGdBreakUp">Exch Rate</label><input type="text" id="txtExchangeRateGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtFTTPrcntGdBreakUp">FTT %</label><input type="text" id="txtFTTPrcntGdBreakUp" class="win-textbox num" value="10" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtCustomDutyAmountGdBreakUp">Custom Duty</label><input type="text" id="txtCustomDutyAmountGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtAdditionalDutyAmountGdBreakUp">Additional Custom Duty</label><input type="text" id="txtAdditionalDutyAmountGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <!-- row 3 -->
+                <div class="ex-field"><label for="txtBankInvoiceNoGDBreakUp">Bank Invoice No &amp; Date</label>
+                    <div class="ex-pair"><input type="text" id="txtBankInvoiceNoGDBreakUp" class="win-textbox" autocomplete="off"/><input type="date" id="datInvoiceDateGdBreakUp" class="win-date"/></div></div>
+                <div class="ex-field"><label for="txtGDValueGdBreakUp">GD Value</label><input type="text" id="txtGDValueGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtFttAmountGdBreakUp">FTT Amount</label><input type="text" id="txtFttAmountGdBreakUp" class="win-textbox num" value="0" disabled/></div>
+                <div class="ex-field"><label for="txtSaleTaxtPrcntGdBreakUp">Sales Tax %</label><input type="text" id="txtSaleTaxtPrcntGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtIncomeTaxPrcntGdBreakUp">Income Tax %</label><input type="text" id="txtIncomeTaxPrcntGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <!-- row 4 -->
+                <div class="ex-field"><label for="CmbBankNameGdBreakUp">Bank Name</label>
+                    <select id="CmbBankNameGdBreakUp" class="win-combo dtcombo" data-columns="Bank Name|BankIBANNo" data-dtcombo-caption="Bank Name"></select></div>
+                <div class="ex-field"><label for="txtFreightGdBreakUp">Freight</label><input type="text" id="txtFreightGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtNetAmountGdBreakUp">Net Amount</label><input type="text" id="txtNetAmountGdBreakUp" class="win-textbox num" value="0" disabled/></div>
+                <div class="ex-field"><label for="txtSaleTaxAmountGdBreakUp">Sales Tax</label><input type="text" id="txtSaleTaxAmountGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtIncomeTaxAmountGdBreakUp">Income Tax</label><input type="text" id="txtIncomeTaxAmountGdBreakUp" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <!-- row 5 -->
+                <div class="ex-field ex-span-all">
+                    <label for="txtRemarksGdBreakUp">Remarks</label>
+                    <div class="ex-pair" style="grid-template-columns: 1fr auto;">
+                        <input type="text" id="txtRemarksGdBreakUp" class="win-textbox" autocomplete="off"/>
+                        <div class="ex-actions">
+                            <button type="button" id="btnAddGDBreakUpDetail" class="win-btn-small" onclick="ExportGd.gdAddRow()" title="Add">+</button>
+                            <button type="button" id="btnUpdateGDBreakUpDetail" class="win-btn-small is-hidden" onclick="ExportGd.gdUpdateRow()">Update</button>
+                            <button type="button" id="btnCancelGDBreakUpDetail" class="win-btn-small is-hidden" onclick="ExportGd.gdCancelRow()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Detail</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdGdBreakUpBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountGd" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdGdBreakUpBox">
+                <div class="ex-grid-scroll ex-h240">
+                    <table class="win-grid" id="grdGdBreakUp" data-gridbar="frmGdBreakUpByInvoice:grdGdBreakUp" data-gridbar-mount="#gridBarMountGd" data-gridbar-reorder="false">
+                        <thead><tr>
+                            <th class="ctr" title="Delete">X</th>
+                            <th data-col="PartyInvoiceNo">Party Invoice No</th><th data-col="GDNo">GD No</th><th data-col="GDDate">GD Date</th>
+                            <th data-col="InvoiceNo">Invoice No</th><th data-col="InvoiceDate">Invoice Date</th><th data-col="BankName">Bank Name</th>
+                            <th class="num" data-col="DueDays">Due Days</th><th class="num" data-col="ExchangeRate">Exchange Rate</th><th class="num" data-col="GDValue">GD Value</th>
+                            <th class="num" data-col="Freight">Freight</th><th class="num" data-col="FOBValue">FOB Value</th><th class="num" data-col="FTTPercent">FTT %</th>
+                            <th class="num" data-col="FttAmount">Ftt Amount</th><th class="num" data-col="NetAmount">Net Amount</th>
+                            <th class="num" data-col="CustomDutyPercent">Custom Duty %</th><th class="num" data-col="CustomDutyAmount">Custom Duty Amount</th>
+                            <th class="num" data-col="SalesTaxPercent">Sales Tax %</th><th class="num" data-col="SalesTaxAmount">Sales Tax Amount</th>
+                            <th class="num" data-col="AdditionalCustomDutyPercent">Additional Custom Duty %</th><th class="num" data-col="AdditionalCustomDutyAmount">Additional Custom Duty Amount</th>
+                            <th class="num" data-col="IncomeTaxPercent">Income Tax %</th><th class="num" data-col="IncomeTaxAmount">Income Tax Amount</th>
+                            <th data-col="Remarks">Remarks</th>
+                        </tr></thead>
+                        <tbody id="gdBody"></tbody>
+                        <tfoot id="gdFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="win-tab-panel" id="gdHistory">
+            <div class="win-tool-strip">
+                <button type="button" id="btnResetGdBreakupHistory" class="win-btn-tool" onclick="ExportGd.gdHistoryReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="btnRefreshGdBreakupHistory" class="win-btn-tool" onclick="ExportGd.gdHistoryRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            </div>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:170px;"><label for="FromDateGdBreakupHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateGdBreakupHistoryChk" checked/><input type="date" id="FromDateGdBreakupHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:170px;"><label for="ToDateGdBreakupHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateGdBreakupHistoryChk" checked/><input type="date" id="ToDateGdBreakupHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:300px;"><label for="CmbBankGdBankHistory">Bank Name</label>
+                    <select id="CmbBankGdBankHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Bank Name"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowGdBreakUpHistory" class="win-btn-small" style="width:57px;" onclick="ExportGd.gdHistoryShow(this)">Show</button></div>
+            </div>
+            <div class="pd-caption pd-caption-dark pd-history-bar"><span>GD History</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdGDhistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountGdH" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdGDhistoryBox">
+                <div class="ex-grid-scroll ex-h400">
+                    <table class="win-grid" id="grdGDhistory" data-gridbar="frmGdBreakUpByInvoice:grdGDhistory" data-gridbar-mount="#gridBarMountGdH" data-gridbar-reorder="false">
+                        <thead><tr>
+                            <th id="gdHistEditTh">Edit</th>
+                            <th data-col="InvoiceNo">Invoice No</th><th data-col="GDNO">GDNO</th><th data-col="GDDate">GD Date</th>
+                            <th data-col="BankInvoiceNo">Bank Invoice No</th><th data-col="BankInvoiceDate">Bank Invoice Date</th>
+                            <th data-col="BankName">Bank Name</th><th class="num" data-col="DueDays">Due Days</th><th class="num" data-col="ExchangeRate">Exchange Rate</th>
+                            <th class="num" data-col="GDValue">GD Value</th><th class="num" data-col="Freight">Freight</th><th class="num" data-col="FobValue">Fob Value</th>
+                            <th class="num" data-col="FTTPercent">FTT %</th><th class="num" data-col="FTTAmount">FTT Amount</th><th class="num" data-col="NetAmount">Net Amount</th>
+                            <th data-col="Remarks">Remarks</th>
+                        </tr></thead>
+                        <tbody id="gdHistBody"></tbody>
+                        <tfoot id="gdHistFoot"></tfoot>
+                    </table>
+                </div>
+                <div class="ex-grid-empty is-hidden" id="gdHistEmpty">No record found.</div>
+            </div>
+        </div>
+
+        <div class="win-footer-strip">
+            <span class="ex-footer-left" id="gdFooterInfo"></span>
+            <button type="button" class="win-btn-history" id="btnGdFooterHistory" onclick="ExportGd.toggleHistory('gd')"><i class="fa fa-history"></i> <span>History</span></button>
+        </div>
+    </div>
+
+    <!-- ===================================================== tabAdvanceByGd -->
+    <div class="ex-main-panel" id="mainAdv">
+        <div class="win-tabs" data-tabs="adv">
+            <button type="button" class="win-tab is-active" data-tab="advForm">Form</button>
+            <button type="button" class="win-tab" data-tab="advHistory">History</button>
+        </div>
+
+        <div class="win-tab-panel is-active" id="advForm">
+            <div class="win-tool-strip">
+                <button type="button" id="BtnNewAdvanceAgaintGD" class="win-btn-tool" onclick="ExportGd.advNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="BtnSaveAdvanceAgaintGD" class="win-btn-tool" onclick="ExportGd.advSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+                <button type="button" id="BtnUpdateAdvanceAgaintGD" class="win-btn-tool is-hidden"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+                <button type="button" id="BtnRefreshAdvanceAgaintGD" class="win-btn-tool" onclick="ExportGd.advRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            </div>
+            <div class="pd-caption pd-caption-teal">Advance Utilize Against GDs</div>
+            <div class="ex-entry ex-adv-entry">
+                <div class="ex-field"><label for="CmbInvoiceAdvanceUtilize">Invoice No</label>
+                    <select id="CmbInvoiceAdvanceUtilize" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                <div class="ex-field"><label for="CmbGdNoAdvanceUtilize">GD No</label>
+                    <select id="CmbGdNoAdvanceUtilize" class="win-combo dtcombo" data-columns="GD No|GDValue|UtilizeAmount|GDBalance|BankInvoiceNo|GdStepStatus" data-dtcombo-caption="GD No"></select></div>
+                <div class="ex-field"><label for="txtGdValueAdvanceUtlize">GD Value</label><input type="text" id="txtGdValueAdvanceUtlize" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field"><label for="CmbFIAdvanceUtlize">Financial Instruments No</label>
+                    <select id="CmbFIAdvanceUtlize" class="win-combo dtcombo" data-columns="FI No|BalFIAmount" data-dtcombo-caption="FI No"></select></div>
+                <div class="ex-field"><label for="txtFIBalanceAdvanceUtlize">Balance</label><input type="text" id="txtFIBalanceAdvanceUtlize" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field"><label for="txtAdvanceUtlize">Utilize Amount</label><input type="text" id="txtAdvanceUtlize" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-actions">
+                    <button type="button" id="btnAddAdvanceAgaintGdDetail" class="win-btn-small" onclick="ExportGd.advAddRow()" title="Add">+</button>
+                    <button type="button" id="btnUpdateAdvanceAgaintGdDetail" class="win-btn-small is-hidden" onclick="ExportGd.advUpdateRow()">Update</button>
+                    <button type="button" id="btnCancelAdvanceAgaintGdDetail" class="win-btn-small is-hidden" onclick="ExportGd.advCancelRow()">Cancel</button>
+                </div>
+            </div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span></span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdAdvanceUtlizeBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountAdv" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdAdvanceUtlizeBox">
+                <div class="ex-grid-scroll ex-h300">
+                    <table class="win-grid" id="grdAdvanceUtlize" data-gridbar="frmGdBreakUpByInvoice:grdAdvanceUtlize" data-gridbar-mount="#gridBarMountAdv" data-gridbar-reorder="false">
+                        <thead><tr>
+                            <th class="ctr" title="Delete">X</th>
+                            <th data-col="InvoiceNo">Invoice No</th><th data-col="GDNo">GD No</th><th data-col="FINo">FI No</th><th class="num" data-col="UtilizeAmount">Utilize Amount</th>
+                        </tr></thead>
+                        <tbody id="advBody"></tbody>
+                        <tfoot id="advFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="win-tab-panel" id="advHistory">
+            <div class="pd-caption pd-caption-dark pd-history-bar"><span>History</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdAdvanceHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdAdvanceHistoryBox">
+                <div class="ex-grid-scroll ex-h400">
+                    <table class="win-grid" id="grdAdvanceHistory">
+                        <thead><tr>
+                            <th data-col="InvoiceNo">Invoice No</th><th data-col="GDNO">GDNO</th><th data-col="FINo">FI No</th><th class="num" data-col="UtilizeAmount">Utilize Amount</th>
+                        </tr></thead>
+                        <tbody id="advHistBody"></tbody>
+                        <tfoot id="advHistFoot"></tfoot>
+                    </table>
+                </div>
+                <div class="ex-grid-empty is-hidden" id="advHistEmpty">No record found.</div>
+            </div>
+        </div>
+
+        <div class="win-footer-strip">
+            <span class="ex-footer-left" id="advFooterInfo"></span>
+            <button type="button" class="win-btn-history" id="btnAdvFooterHistory" onclick="ExportGd.toggleHistory('adv')"><i class="fa fa-history"></i> <span>History</span></button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_gd_break_up.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

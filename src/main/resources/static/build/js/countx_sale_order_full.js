@@ -441,8 +441,51 @@ function loadHistoryBranches() {
                 ' ' + (b.BranchName || b.Id)));
         });
         loadHistoryCombos();
+        updateHistoryBranchText();
     });
 }
+/* cmbBranchName is an UltraCombo with check boxes: the closed combo shows the ticked names. */
+function updateHistoryBranchText() {
+    var names = $('#histBranches .hist-branch:checked').map(function () { return $(this).parent().text().trim(); }).get();
+    $('#histBranchText').text(names.length ? names.join(', ') : '...Select Branch...');
+}
+$(document).on('change', '#histBranches .hist-branch', updateHistoryBranchText);
+$(document).on('mousedown', function (e) {
+    if (!$(e.target).closest('#histBranchCombo').length) $('#histBranchList').hide();
+});
+/* btnResetHistory_Click (SaleOrder.cs:4071-4083) */
+function btnResetHistory_Click() {
+    var d = new Date(); $('#histToDate').val(d.toISOString().split('T')[0]);
+    d.setDate(d.getDate() - 3); $('#histFromDate').val(d.toISOString().split('T')[0]);
+    $('#histFromDocNo, #histToDocNo').val('');
+    $('#histCustomerCombo').val('').trigger('change');
+    $('#tblHistory tbody').empty();
+    $('#tblHistoryDetail tbody').html('<tr><td colspan="18" class="text-center text-muted" style="padding:8px">Select a row above.</td></tr>');
+    $('input[name="histDateMode"][value="doc"]').prop('checked', true);
+}
+/* btnRefreshHistory_Click (:4090-4096): HistoryBranchComboFill + HistoryCombosFill */
+function btnRefreshHistory_Click() { loadHistoryBranches(); }
+/* GridDetailBind (:4472-4510): the selected history row's lines in DataGridHistoryDetail. */
+function loadHistoryDetail(id) {
+    $('#tblHistory tbody tr').removeClass('so-hist-selected');
+    $('#tblHistory tbody tr[data-id="' + id + '"]').addClass('so-hist-selected');
+    $.get('/sale/sale-order/api/' + id, function (data) {
+        var tbody = $('#tblHistoryDetail tbody').empty();
+        var rows = (data && data.lineItems) || [];
+        if (!rows.length) { tbody.append('<tr><td colspan="18" class="text-center text-muted" style="padding:8px">No detail.</td></tr>'); return; }
+        function c(v) { return '<td>' + escapeHtml(v == null ? '' : String(v)) + '</td>'; }
+        function n(v) { return '<td class="text-end">' + (v == null || v === '' ? '' : (parseFloat(v) || 0).toFixed(2)) + '</td>'; }
+        rows.forEach(function (l) {
+            tbody.append('<tr>' + c(l.ItemCodeNew) + c(l.ItemName) + c(l.Crop) + c(l.JobLotDescription) + c(l.PackingType) + c(l.UOMCode || l.PackUomCode)
+                + n(l.OrderItemQty) + n(l.NetWeight) + c(l.RateUom) + n(l.OrderItemRate) + n(l.Amount) + n(l.FcyAmount)
+                + n(l.BagPrice) + n(l.BagWeight) + c(l.CityArea) + c(l.LabSampleNo) + c(l.OrderRemarks) + c(l.CommOnSale) + '</tr>');
+        });
+    });
+}
+$(document).on('click', '#tblHistory tbody tr[data-id]', function (e) {
+    if ($(e.target).closest('button').length) return;
+    loadHistoryDetail($(this).data('id'));
+});
 function selectedHistoryBranchIds() {
     return $('#histBranches .hist-branch:checked').map(function () { return this.value; }).get().join(',');
 }

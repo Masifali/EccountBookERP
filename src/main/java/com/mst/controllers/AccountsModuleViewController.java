@@ -268,6 +268,10 @@ public class AccountsModuleViewController {
             case "trial-balances-all-level":
                 model.addAttribute("moduleTitle", "Trial Balance All Levels");
                 return "accounts/reports/trial_balances_all_level";
+            case "general-ledger-statement":
+                /* group R1 2026-09-30: GeneralLedgerStatment.cs - the page loads its combos from /accounts/api/reports-desktop/ledger-lookups */
+                model.addAttribute("moduleTitle", "General Ledger Statement");
+                return "accounts/reports/general_ledger_statement";
             case "customer-ledger":
             case "customer_ledger":
                 model.addAttribute("moduleTitle", "Customer Ledger Report");
@@ -286,6 +290,14 @@ public class AccountsModuleViewController {
                 model.addAttribute("accountsList", accountReportsDesktopService.detailAccounts(null));
                 model.addAttribute("customGroupsList", accountReportsDesktopService.customGroups());
                 return "accounts/reports/voucher_report";
+            case "pdc-register":
+                /* Screen 88 PostDatedCheqRegister (R2 2026-09-30); replaces the reports/pdc_register.html mock-up. */
+                model.addAttribute("moduleTitle", "Post Dated Cheque Register");
+                return "accounts/reports/pdc_register_desktop";
+            case "pdc-information":
+                /* PostDatedCheqInformation.cs, the General Ledger's post dated cheques dialog (R2 2026-09-30). */
+                model.addAttribute("moduleTitle", "Post Dated Cheques Information");
+                return "accounts/reports/pdc_information_desktop";
             default:
                 break;
         }

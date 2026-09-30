@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Employee Over Time - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        .ot-filters { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: end; }
+        .ot-filters .hrm-field { grid-template-columns: 1fr; gap: 2px; width: 150px; }
+        .ot-filters .hrm-field.ot-wide { width: 290px; max-width: 100%; }
+        .ot-sub-right { display: flex; align-items: center; gap: 6px; }
+        .ot-sub-right .win-btn-action { height: 20px; line-height: 18px; min-width: 57px; width: auto; padding: 0 8px; font-size: 8pt; }
+        .ot-emp-label { font: bold 9pt Tahoma, sans-serif; margin-left: 6px; }
+        .ot-history-tools { width: 100%; }
+        .ot-keys td, .ot-keys th { padding: 2px 6px; }
+    </style>
+</head>
+<!-- Architecture.WinApp.HRM.OverTimeManagement.frmEmployeeOverTime - ClientSize 1095 x 632, KeyPreview.
+     tabControl1: "Form" | "History" (the History tab is the footer's History dialog here; Ctrl+T opens it).
+     Form tab: toolStrip1 New | Update (only after RetrivedData, which nothing calls -> never shown) | Save | Print (Visible=false, no handler) | ShortCut Keys.
+     panel2 "Employee Overtime "; groupBox1 Filters (4,3 356x74): Month cmbMonth (6,37) 139 | Year cmbYear (147,37) 140 | Show (289,37).
+     panel6 "Employee's BY  OT "; grdEmployeeOt (Dock Top, 210): Id hidden, EmployeeName (link), Designation, Branch, Department, Section, Mobile.
+     panel3 "Above Selected Employee's Overtime Detail" + lblEmpName "( )" + Add (980,2);
+     grdEmployeeDetail (fill): Select | Employee | Date | Day | FromTime | ToTime | Timing | WorkingHour | OTRate | OTHours | AddLess (editable) | NetOTHours | Amount.
+     History tab: toolStrip2 New | Refresh | Print-1011; "Employee Overtime History"; groupBox2 Filters: Month (6,36) | Year (143,36) | Employee (259,36) 290 | Show (553,37);
+     grdHistory: EmployeeName, OverTimeDate, InTime, OutTime, TimeDuration, OTHours, AddLess, ApprovedHours, OTRate, ApprovedAmount, EntryDate, EntryUser. -->
+<body class="pd-body hrm-body" data-hrm="employee-over-time" data-screen="666">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmOvertime.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="HrmOvertime.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmOvertime.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool is-hidden" data-rpt-own data-rpt="1011-EmployeeOverTimeSlip.rpt"><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+        <button type="button" id="btnShortcutkeys" class="win-btn-tool" onclick="HrmOvertime.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="hrm-caption">Employee Overtime</div>
+    <fieldset class="hrm-group"><legend>Filters</legend>
+        <div class="ot-filters">
+            <div class="hrm-field"><label for="cmbMonth">Month</label><select id="cmbMonth" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="cmbYear">Year</label><select id="cmbYear" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <button type="button" id="btnShow" class="win-btn-action" onclick="HrmOvertime.btnShow(this)">Show</button>
+        </div>
+    </fieldset>
+    <div class="hrm-grid-box hrm-grid-short">
+        <div class="hrm-subcaption"><span>Employee's BY  OT</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="grdEmployeeOt"></table></div>
+    </div>
+    <div class="hrm-grid-box">
+        <div class="hrm-subcaption"><span>Above Selected Employee's Overtime Detail <span id="lblEmpName" class="ot-emp-label">( )</span></span>
+            <span class="ot-sub-right"><button type="button" id="btnAddEmployeeDetail" class="win-btn-action" onclick="HrmOvertime.btnAddEmployeeDetail(this)">Add</button>
+            <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></span></div>
+        <div class="hrm-grid-wrap"><table id="grdEmployeeDetail"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_overtime.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

@@ -79,7 +79,7 @@
         <button type="button" class="win-btn win-btn-teal" id="btnUpdate" hidden onclick="submitVoucher()"><i class="fa fa-save"></i> Update</button>
         <button type="button" class="win-btn" id="btnDelete" hidden onclick="deleteVoucher()"><i class="fa fa-trash text-danger"></i> Delete</button>
         <button type="button" class="win-btn"><i class="fa fa-paperclip text-info"></i> Attachment</button>
-        <button type="button" class="win-btn" disabled title="Slip printing is not reproduced in this port (out of scope, same as every other voucher's print button)"><i class="fa fa-print"></i> 901-Print</button>
+        <button type="button" class="win-btn" title="901 - Voucher Invoices Adjustment Slip" data-rpt="901_VoucherInvoicesAdjustment_Slip.rpt" data-rpt-need="voucherHeadId" data-rpt-need-msg="Open a voucher first."><i class="fa fa-print"></i> 901-Print</button>
         <button type="button" class="win-btn" disabled title="Not reproduced in this port"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
     </div>
 
@@ -321,6 +321,15 @@
         var currentVoucherDate = null;
         var currentVoucherAmount = 0;
         var currentSupplierRows = []; // dtSupplier equivalent - parties sharing this voucher+paymentType
+        /* 901 print - the desktop's GetByVoucherHeadId(TransactionTypeId 1, VoucherHeadId, PaymentTypeId, party, party GL) */
+        window.printRptArgs = function (rpt, a) {
+            if (!/^901/.test(rpt)) return a;
+            var sid = $('#cmbSupplier').val();
+            var row = currentSupplierRows.find(function (rr) { return String(rr.SupplierCustomerId || rr.supplierCustomerId) === String(sid); });
+            a.transactionTypeId = 1; a.voucherHeadId = currentVoucherHeadId || undefined; a.paymentTypeId = currentPaymentTypeId;
+            a.supplierCustomerId = sid; a.partyGlId = row ? (row.AccountId || row.accountId) : undefined;
+            return a;
+        };
 
         $(function () {
             loadPendingVouchers();
@@ -930,5 +939,6 @@
             }).fail(function () { alert('Unable to load this voucher.'); });
         }
     </script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chart Of Account Report</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+</head>
+<!--
+  Screen 52 "Chart of Account" (ScreenName ChartOfAccount) - ScreenDefinition.TargetUrl is
+  Architecture.WinApp.Account_Reports.CoaTitleChange. Show -> VoucherReports.ChartofAccount -> Sp_ChartOfAccounts_Rpt;
+  "Update Title" -> ChartOfAccountMultiLingo.SaveList -> Sp_ChartOfAccountMultiLingo_Insert.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-sitemap"></i> ChartOf Account Report</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="coaReset()"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" onclick="coaRefresh()"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn" onclick="coaPrint()" data-rpt="114-AcRptChartOfAccounts.rpt"><i class="fa fa-print"></i> 114-Print</button>
+</div>
+<div class="win-header-panel"><span>ChartOf Account Report</span></div>
+<ul class="win-tabs" style="margin-top:4px;">
+    <li class="active" data-tab="f"><a onclick="coaTab('f')">Report Filters</a></li>
+    <li data-tab="u"><a onclick="coaTab('u')">Update Title</a></li>
+</ul>
+<div class="filters" id="tabF">
+    <div class="gb" style="width:420px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 90px 1fr;">
+            <span class="lbl">Account Title</span><select data-dtcombo="single" data-dtcombo-caption="Account Title" id="CmbAccount" class="inp"></select>
+            <span class="lbl">Custom Group</span><select id="CmbCustomGroup" class="inp" multiple></select>
+        </div>
+    </div>
+    <div class="gb">
+        <span class="gb-title">Status</span>
+        <label class="chk"><input type="radio" name="rdStatus" id="RadActiveOnly" value="active"> Active</label><br>
+        <label class="chk"><input type="radio" name="rdStatus" id="RadInActive" value="inactive"> InActive</label><br>
+        <label class="chk"><input type="radio" name="rdStatus" id="RadAll" value="all" checked> All</label>
+    </div>
+    <div class="gb">
+        <span class="gb-title">Upto_Level</span>
+        <label class="chk"><input type="radio" name="rdLevel" value="1"> 1st Level</label><br>
+        <label class="chk"><input type="radio" name="rdLevel" value="1,2"> 2nd Level</label><br>
+        <label class="chk"><input type="radio" name="rdLevel" value="1,2,3"> 3rd Level</label><br>
+        <label class="chk"><input type="radio" name="rdLevel" value="1,2,3,4" checked> 4th Level</label><br>
+        <label class="chk"><input type="radio" name="rdLevel" value="1,2,3,4,5"> 5th Level</label>
+    </div>
+    <div class="gb" style="display:flex; flex-direction:column; gap:4px; justify-content:space-between;">
+        <span class="gb-title">&nbsp;</span>
+        <label class="chk"><input type="radio" name="rdGroup" id="rdGroupeExpand" checked> Expand</label>
+        <label class="chk"><input type="radio" name="rdGroup" id="rdGroupCollapsed"> Collapse</label>
+        <button type="button" id="btnshow" class="win-btn-show" onclick="coaShow()"><i class="fa fa-eye"></i> Show</button>
+    </div>
+</div>
+<div class="filters" id="tabU" style="display:none;">
+    <div class="gb" style="width:760px;">
+        <span class="gb-title">Other Language Title</span>
+        <div class="fgrid" style="grid-template-columns: 70px 1fr 60px 170px;">
+            <span class="lbl">COA Title</span><select data-dtcombo="single" data-dtcombo-caption="COA Title" id="cmbCoaTitle" class="inp"></select>
+            <span class="lbl">Language</span><select data-dtcombo="single" data-dtcombo-caption="Language" id="cmbLanguage" class="inp"></select>
+            <span class="lbl">OtherLangauge Title</span><input type="text" id="txtOtherLanguage" class="inp" style="grid-column: span 2;">
+            <button type="button" class="win-btn-show" onclick="coaUpdate()">Update</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-caption"><span>Filtered Records</span><span id="lblStatus"></span></div>
+<div class="grid-wrap"><table class="wg" id="grd"></table></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    /* Searchable dropdowns (countx_prod_combo.js, 2026-09-30 R2): every single select carries data-dtcombo="single";
+       the wrap takes the select's grid placement and its initial hidden state; multi-selects stay native. */
+    function comboInit() {
+        if (!window.DesktopCombo) return;
+        $('select[data-dtcombo]').each(function () {
+            const c = window.DesktopCombo.enhance(this);
+            if (!c || !c.wrap) return;
+            if (this.style.gridColumn) c.wrap.style.gridColumn = this.style.gridColumn;
+            if (this.style.display === 'none') c.wrap.style.display = 'none';
+        });
+    }
+    function comboFocus(sel) { const $i = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); ($i.length ? $i : $(sel)).focus(); }
+    /* CmbBranches is a native multi-select under ERP feature 18 (consolidated), otherwise a single searchable combo. */
+    function branchesCombo(consolidated) {
+        if (consolidated) return;
+        $('#CmbBranches').attr({ 'data-dtcombo': 'single', 'data-dtcombo-caption': 'Branches' });
+        comboInit();
+    }
+    let dt = [], collapsed = new Set();
+
+    function coaTab(t) {
+        $('.win-tabs li').removeClass('active'); $('.win-tabs li[data-tab="' + t + '"]').addClass('active');
+        $('#tabF').toggle(t === 'f'); $('#tabU').toggle(t === 'u');
+    }
+
+    /* GridSettings: self-referencing hierarchy (Id -> ParentAccountId), expand column AccountTitle; Id, ParentAccountId, LanguageId hidden */
+    const COLS = ['AccountCode', 'AccountGroup', 'Account_Level', 'Status', 'AccountClass', 'AccountType', 'NoteTitle', 'LanguageName', 'AccountTitleOtherLingo'];
+    function children(pid) { return dt.filter(function (r) { return (r.ParentAccountId == null ? null : String(r.ParentAccountId)) === pid; }); }
+    function render() {
+        const $t = $('#grd').empty();
+        const $h = $('<tr>').append($('<th>').text('AccountTitle'));
+        COLS.forEach(function (c) { $h.append($('<th>').text(c)); });
+        $t.append($('<thead>').append($h));
+        const $b = $('<tbody>');
+        const ids = new Set(dt.map(function (r) { return String(r.Id); }));
+        function walk(r, depth) {
+            const kids = children(String(r.Id));
+            const $r = $('<tr>').data('row', r);
+            const $tog = $('<span class="tree-t">').html(kids.length ? (collapsed.has(String(r.Id)) ? '+' : '&minus;') : '');
+            $tog.on('click', function () { const k = String(r.Id); if (collapsed.has(k)) collapsed.delete(k); else collapsed.add(k); render(); });
+            $r.append($('<td>').css('padding-left', (6 + depth * 16) + 'px').append($tog, document.createTextNode(' ' + (r.AccountTitle || ''))));
+            COLS.forEach(function (c) { $r.append($('<td>').text(r[c] == null ? '' : r[c])); });
+            $r.on('dblclick', function () { gridDoubleClick(r); });
+            $b.append($r);
+            if (!collapsed.has(String(r.Id))) kids.forEach(function (k) { walk(k, depth + 1); });
+        }
+        dt.filter(function (r) { return r.ParentAccountId == null || !ids.has(String(r.ParentAccountId)); }).forEach(function (r) { walk(r, 0); });
+        $t.append($b);
+        $('#lblStatus').text('Records: ' + dt.length);
+    }
+    function setAllCollapsed() {
+        collapsed = new Set();
+        if ($('#rdGroupCollapsed').is(':checked')) dt.forEach(function (r) { if (children(String(r.Id)).length) collapsed.add(String(r.Id)); });
+    }
+
+    async function coaShow() {
+        const btn = $('#btnshow');
+        AccF.busy(btn, true);
+        try {
+            dt = await AccF.post('/chart-of-accounts', {
+                accountId: $('#CmbAccount').val() || null,
+                customGroupIds: AccF.selectedIds('#CmbCustomGroup') || null,
+                status: $('input[name="rdStatus"]:checked').val(),
+                accountLevels: $('input[name="rdLevel"]:checked').val() || ''
+            });
+            setAllCollapsed();
+            render();
+        } catch (e) { dt = []; $('#grd').empty(); alert(e.message); }
+        finally { AccF.busy(btn, false); }
+    }
+
+    /* grd_DoubleClick: the row's account, language and other-language title go to the Update Title tab */
+    function gridDoubleClick(r) {
+        $('#cmbCoaTitle').val(String(r.Id));
+        $('#cmbLanguage').val(String(r.LanguageId || 0));
+        $('#txtOtherLanguage').val(r.AccountTitleOtherLingo || '');
+    }
+    /* cmbCoaTitle_Leave / cmbLanguage_Leave: OtherLanguagegetByAccountIdAndLanguageId from the shown rows */
+    function otherLanguageFromGrid() {
+        const lang = parseInt($('#cmbLanguage').val() || '0', 10), acc = parseInt($('#cmbCoaTitle').val() || '0', 10);
+        const hit = dt.find(function (r) { return parseInt(r.LanguageId, 10) === lang && parseInt(r.Id, 10) === acc; });
+        $('#txtOtherLanguage').val(hit ? (hit.AccountTitleOtherLingo || '') : '');
+    }
+
+    /* button1_Click ("Update") */
+    async function coaUpdate() {
+        const acc = parseInt($('#cmbCoaTitle').val() || '0', 10), lang = parseInt($('#cmbLanguage').val() || '0', 10), txt = $('#txtOtherLanguage').val();
+        if (!acc) { alert('AccountTitle Field Required'); $('#cmbCoaTitle').focus(); return; }
+        if (!lang) { alert('Language Field Required'); $('#cmbLanguage').focus(); return; }
+        if (txt === '' || txt === '0') { alert('Other Language AccountTitle Field Required'); $('#txtOtherLanguage').focus(); return; }
+        try {
+            await AccF.post('/chart-of-accounts/other-language-title', { chartOfAccountId: acc, languageId: lang, title: txt });
+            alert('Record Update Successfully...;');
+            await coaReset();
+            await coaShow();
+            comboFocus('#cmbCoaTitle');
+        } catch (e) { alert(e.message); }
+    }
+
+    async function loadLanguages() {
+        const langs = await AccF.lookup('languages');
+        AccF.fillSelect('#cmbLanguage', langs, 'Id', 'LanguageDescription', null);
+        $('#cmbLanguage').prepend($('<option>').val('0').text('...Select Any Value...')).val('0');
+    }
+    async function loadCoaTitles() {
+        const cur = $('#cmbCoaTitle').val();
+        AccF.fillSelect('#cmbCoaTitle', await AccF.lookup('coa-allocation'), 'Id', 'AccountTitle', null);
+        $('#cmbCoaTitle').prepend($('<option>').val('0').text('...Select Any Value...')).val(cur || '0');
+    }
+    /* reset(): AccountTitleFill again, other-language text cleared */
+    async function coaReset() {
+        try { await loadCoaTitles(); $('#cmbCoaTitle').val('0'); $('#txtOtherLanguage').val(''); } catch (e) { alert(e.message); }
+    }
+    async function coaRefresh() {
+        try { await loadCoaTitles(); await loadLanguages(); } catch (e) { alert(e.message); }
+    }
+    function coaPrint() {
+        if (!dt.length) { alert('Record Not Found For Display'); return; }
+        window.print();
+    }
+
+    $('#cmbCoaTitle, #cmbLanguage').on('change', otherLanguageFromGrid);
+    $('#rdGroupeExpand, #rdGroupCollapsed').on('change', function () { setAllCollapsed(); render(); });
+
+    $(async function () {
+        comboInit();
+        try {
+            await loadLanguages();
+            await loadCoaTitles();
+            const groups = await AccF.lookup('account-groups');
+            AccF.fillSelect('#CmbAccount', groups, 'Id', 'AccountTitle', null);
+            $('#CmbAccount').prepend($('<option>').val('0').text('...Select Any Value...')).val('0');
+            AccF.fillSelect('#CmbCustomGroup', await AccF.lookup('custom-groups'), 'Id', 'AcLookUpsDescription', null);
+        } catch (e) { alert(e.message); }
+    });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

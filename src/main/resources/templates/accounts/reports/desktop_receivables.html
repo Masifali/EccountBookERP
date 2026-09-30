@@ -1,33 +1,110 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Receivables Reports</title>
-<link rel="stylesheet" href="/vendors/select2/dist/css/select2.min.css">
+<link rel="stylesheet" href="/vendors/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/vendors/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_f.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_grid_js.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s">
+    <link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20260930s">
 <link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f0f0f0;color:#111;font:13px Tahoma,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.65;cursor:wait}nav{height:27px;padding:2px 6px;display:flex;gap:6px;border-bottom:1px solid #aaa;flex:none}h1{font-size:16px;color:#174378;margin:0;padding:4px;height:27px;flex:none}#filters{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:5px;flex:none}label.field{display:flex;align-items:center;min-height:26px;gap:4px}label.field>span{width:100px}input[type=date]{width:125px;height:24px}input[type=number]{width:115px;height:24px}select{width:225px}#filters button{height:28px;min-width:62px}.select2-container .select2-selection--single,.select2-container .select2-selection--multiple{min-height:26px;height:26px;border-radius:0}.select2-container .select2-selection__rendered{line-height:24px!important}.select2-selection--multiple .select2-selection__rendered{max-height:24px;overflow:auto!important;white-space:nowrap!important}#summary{display:flex;gap:4px;padding:4px;flex:none}.summary-card{padding:8px 15px;min-width:177px;background:#fff;border:1px solid #aaa;color:#174378}.summary-card strong{display:block;font-size:21px;margin-top:6px}.sortbar{display:flex;gap:7px;align-items:center;padding:3px;border-block:1px solid #aaa}.grid{flex:1;min-height:0;overflow:auto;background:#fff}table{border-collapse:collapse;table-layout:fixed;width:max-content}td,th{height:24px;border:1px solid #bbb;padding:2px 5px;white-space:nowrap;overflow:hidden}th{height:38px;position:sticky;top:0;background:#e4e9ef;z-index:1;text-align:center;white-space:normal}td.amount{text-align:right}tfoot td{position:sticky;bottom:0;background:#e4e9ef;font-weight:bold}tr.selected td{background:#316ac5;color:#fff}tr.selected a{color:white}a{color:#174378}#status{padding:4px;min-height:25px;color:#9b1c1c;flex:none}[hidden]{display:none!important}
-</style></head><body th:attr="data-report=${reportKind}">
-<nav><button id="new">New</button><button id="print">Print</button><a href="/accounts/reports/all-payables">Close</a></nav>
-<h1 id="heading"></h1><form id="filters">
-<label class="field"><span id="fromLabel">From Date</span><input id="useFrom" type="checkbox" aria-label="Use From Date" checked><input id="fromDate" type="date"></label>
-<label class="field"><span id="toLabel">To Date</span><input id="toDate" type="date" required></label>
-<label class="field"><span>Control Account</span><select id="controls" multiple></select></label>
-<label class="field"><span>Custom Group</span><select id="customGroupId"></select></label>
-<label class="field" data-only="receivables-report"><span>City Name</span><select id="cityId"></select></label>
-<label class="field" data-only="receivables-report"><span>Inventory Group</span><select id="groups" multiple></select></label>
-<label class="field" data-except="receivables-by-due-dates"><span>Branches</span><select id="branches" multiple></select></label>
-<label class="field" data-except="receivables-by-due-dates"><span>Closing From</span><input id="balanceFrom" type="number" step="any" value="0"></label>
-<label class="field" data-except="receivables-by-due-dates"><span>Closing To</span><input id="balanceTo" type="number" step="any" value="0"></label>
-<label class="field" data-only="receivables-receipt-schedule"><span>Due From / To</span><input id="dueFrom" type="date"><input id="dueTo" type="date"></label>
-<label class="field" data-only="receivables-receipt-schedule"><span>Sale From / To</span><input id="saleFrom" type="date"><input id="saleTo" type="date"></label>
-<label class="field" data-only="receivables-receipt-schedule"><span>Customer Group</span><select id="partyGroupId"></select></label>
-<label data-only="receivables-report"><input id="tradeOnly" type="checkbox">Trade Parties</label>
-<label data-only="receivables-report"><input id="skipZero" type="checkbox">Skip Zero</label>
-<label class="field" data-only="receivables-report"><span>Classification</span><select id="showAssetLiability"><option value="0">All</option><option value="2">Assets</option><option value="3">Liability</option></select></label>
-<button id="show" type="submit">Show</button></form>
-<div id="summary"></div><div class="sortbar"><label>Filtered Records <input id="search" type="search"></label><span id="count"></span></div>
-<div class="grid"><table id="results"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
-<section id="followup" hidden style="flex:1;min-height:0;padding:8px;overflow:auto"></section><div id="status" role="status"></div><footer id="tabs" hidden><button data-tab="report">Report</button><button data-tab="followup">Follow Up / History</button></footer>
-<script src="/vendors/jquery/dist/jquery.min.js"></script><script src="/vendors/select2/dist/js/select2.full.min.js"></script>
-<script src="/js/report-decimal.js"></script><script src="/js/desktop-receivables.js"></script>
-</body></html>
+.accf #filters .fgrid { grid-template-columns: 92px 230px 92px 230px 170px; }
+.accf #filters .pair { display: flex; gap: 4px; align-items: center; }
+.accf #filters .pair > * { min-width: 0; }
+.accf #followup { padding: 6px; overflow: auto; background: #fff; margin: 0 4px; border: 1px solid #849ca8; }
+.accf #followup h2 { font-size: 12px; font-weight: bold; color: var(--f-teal-dark); margin: 6px 0 4px; }
+.accf #followup nav { display: flex; gap: 4px; }
+.accf #followup nav button { background: linear-gradient(to bottom, #fff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 1px 9px; font-size: 10.5px; font-weight: 600; height: 20px; }
+.accf #followup label { font-weight: 600; font-size: 10px; margin: 0; }
+.accf #followup input:not([type=checkbox]), .accf #followup select { border: 1px solid #7f9db9; font-size: 10.5px; height: 20px; padding: 1px 3px; }
+.accf #followup table { border-collapse: collapse; font-size: 10.5px; background: #fff; }
+.accf #followup th { background: linear-gradient(to bottom, #dbe6f2 0%, #b0c4de 100%); border: 1px solid #849ca8; padding: 3px 5px; position: sticky; top: 0; }
+.accf #followup td { border: 1px solid #cbd5e1; padding: 2px 5px; }
+.accf #followup tr.selected td { background: #316ac5; color: #fff; }
+.accf #tabs { margin-top: 4px; border-bottom: 0; border-top: 1px solid #99aab8; }
+.accf #tabs > li > a { border-radius: 0 0 2px 2px; border-top: 0; border-bottom: 1px solid #99aab8; }
+</style>
+</head>
+<!--
+  One page, three desktop forms (DesktopReceivablesController, body data-report):
+    receivables-report       screen 80  Architecture.WinApp.Account_Reports.Receivables        (1009 Receivables)
+    receivables-by-due-dates screen 68  Architecture.WinApp.Account_Reports.ReceivablesByDueDatesNew (1007)
+    payables-report          screen 48  Architecture.WinApp.Account_Reports.Payables           (1010 Payables)
+  Logic in /js/desktop-receivables.js. R4 2026-09-30: Account Reports look, searchable combos, select2 removed.
+-->
+<body class="accf" th:attr="data-report=${reportKind}">
+<div class="win-title-bar">
+    <span><i class="fa fa-list-alt"></i> <span id="titleText">Receivables Reports</span></span>
+    <a href="/accounts/reports/all-payables"><i class="fa fa-arrow-left"></i> Back to Payables &amp; Receivables</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="new"><i class="fa fa-file-o"></i> <span id="newText">New</span></button>
+    <button type="button" class="win-btn" id="refresh" hidden><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn" id="print" data-rpt="122-AcRptAccounts_ReceivablesWithStatus.rpt"><i class="fa fa-print"></i> <span id="printText">Print</span></button>
+    <a class="win-btn" href="/accounts/reports/all-payables"><i class="fa fa-times"></i> Close</a>
+</div>
+<div class="win-header-panel"><span id="heading"></span></div>
+
+<form id="filters" class="filters" autocomplete="off">
+    <div class="gb">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid">
+            <span class="lbl" id="fromLabel">From Date</span>
+            <span class="pair"><input id="useFrom" type="checkbox" aria-label="Use From Date" checked><input id="fromDate" type="date" class="inp"></span>
+            <span class="lbl" id="toLabel">To Date</span>
+            <input id="toDate" type="date" class="inp" required>
+            <span></span>
+
+            <span class="lbl" id="controlsLabel">Control Account</span>
+            <select id="controls" class="inp" multiple></select>
+            <span class="lbl">Custom Group</span>
+            <select id="customGroupId" class="inp" data-dtcombo="single" data-dtcombo-caption="Custom Group"></select>
+            <span></span>
+
+            <span class="lbl" data-only="receivables-report">City Name</span>
+            <span data-only="receivables-report"><select id="cityId" class="inp" data-dtcombo="single" data-dtcombo-caption="City Name"></select></span>
+            <span class="lbl" data-only="receivables-report">Inventory Group</span>
+            <span data-only="receivables-report"><select id="groups" class="inp" multiple></select></span>
+            <span data-only="receivables-report" class="radio-col">
+                <label class="chk"><input id="tradeOnly" type="checkbox"> Only Trade Parties</label>
+                <label class="chk"><input id="skipZero" type="checkbox"> SkipZero</label>
+            </span>
+
+            <span class="lbl" data-except="receivables-by-due-dates">Closing From</span>
+            <input id="balanceFrom" class="inp" data-except="receivables-by-due-dates" type="number" step="any" value="0">
+            <span class="lbl" data-except="receivables-by-due-dates">Closing To</span>
+            <input id="balanceTo" class="inp" data-except="receivables-by-due-dates" type="number" step="any" value="0">
+            <span data-only="receivables-report"><span class="lbl">Classification </span><span style="display:inline-block;width:100px;vertical-align:middle"><select id="showAssetLiability" class="inp" data-dtcombo="single"><option value="0">ALL</option><option value="2">Assets</option><option value="3">Liability</option></select></span></span>
+
+            <span class="lbl" id="branchesLabel" data-except="receivables-by-due-dates">Branches</span>
+            <span id="branchesCell" data-except="receivables-by-due-dates"><select id="branches" class="inp" multiple data-dtcombo-caption="Branch Name"></select></span>
+            <span data-only="receivables-receipt-schedule" class="lbl">Due From / To</span>
+            <span data-only="receivables-receipt-schedule" class="pair"><input id="dueFrom" type="date" class="inp"><input id="dueTo" type="date" class="inp"></span>
+            <span data-only="receivables-receipt-schedule" class="lbl">Sale From / To</span>
+            <span data-only="receivables-receipt-schedule" class="pair"><input id="saleFrom" type="date" class="inp"><input id="saleTo" type="date" class="inp"></span>
+            <span data-only="receivables-receipt-schedule" class="lbl">Customer Group</span>
+            <span data-only="receivables-receipt-schedule"><select id="partyGroupId" class="inp" data-dtcombo="single"></select></span>
+            <span><button id="show" type="submit" class="win-btn-show">Show</button></span>
+        </div>
+    </div>
+    <div id="summary" class="sum-cards" style="align-self:center"></div>
+</form>
+
+<div class="grid-caption sortbar"><span>Filtered Records <input id="search" type="search" aria-label="Filter records"></span><span id="count"></span></div>
+<div class="grid-wrap"><table id="results" class="wg"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+<section id="followup" hidden></section>
+<div id="status" class="status-bar msg-err" role="status"></div>
+<ul class="win-tabs" id="tabs" hidden>
+    <li class="active"><a data-tab="report">Form</a></li>
+    <li><a data-tab="followup">Follow Up / History</a></li>
+</ul>
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<script src="/build/js/countx_prod_combo.js?v=20260930s"></script>
+<script src="/js/report-decimal.js"></script>
+<script src="/js/desktop-receivables.js?v=20260930s"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

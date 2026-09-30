@@ -1,238 +1,221 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Balance Sheet - WinForms Replica</title>
-    
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Balance Sheet</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-
-    <style>
-        body { font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif; background-color: #d8e0e8; font-size: 11px; color: #000; margin: 0; padding: 0; overflow-x: hidden; }
-        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 2px 8px; font-size: 11.5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 24px; box-sizing: border-box; }
-        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 8px; display: flex; gap: 6px; align-items: center; height: 26px; box-sizing: border-box; }
-        .win-btn { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 21px; box-shadow: inset 0 1px 0 #fff; text-decoration: none; }
-        .win-btn:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
-        
-        .filter-header-bar { background-color: #00796B; color: white; padding: 3px 8px; display: flex; align-items: center; gap: 8px; height: 28px; box-sizing: border-box; }
-        .win-label-white { color: #ffffff; font-weight: bold; font-size: 11px; margin: 0; }
-        .win-input-date { border: 1px solid #004d40; border-radius: 1px; padding: 1px 4px; font-size: 11px; font-family: Tahoma, sans-serif; height: 20px; background: #ffffff; color: #000; }
-        .win-btn-show { background-color: #004d40; color: #ffffff; border: 1px solid #ffffff; font-weight: bold; font-size: 11px; padding: 1px 12px; height: 21px; border-radius: 2px; cursor: pointer; }
-        .win-btn-show:hover { background-color: #00251a; }
-
-        .bs-container { display: flex; gap: 12px; padding: 8px; background: #d8e0e8; align-items: flex-start; }
-        .bs-column { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-        
-        .bs-section-box { background: #ffffff; border: 1px solid #99aab8; border-radius: 2px; padding: 6px 8px; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
-        .bs-section-title { font-weight: bold; font-size: 12px; color: #0000d0; margin-bottom: 6px; font-family: Tahoma, sans-serif; }
-
-        .bs-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; gap: 8px; }
-        .bs-item-pill { background-color: #00796B; color: #ffffff; font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 1px; flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; height: 20px; line-height: 16px; box-sizing: border-box; }
-        .bs-item-val { font-weight: bold; font-size: 11px; color: #000; text-align: right; width: 140px; }
-
-        .bs-total-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; margin-bottom: 2px; gap: 8px; }
-        .bs-total-label { background-color: #b0c4de; color: #000000; font-weight: bold; font-size: 11px; padding: 2px 8px; border: 1px solid #849ca8; flex: 1; text-align: left; height: 20px; line-height: 16px; box-sizing: border-box; }
-        .bs-total-val { background-color: #00796B; color: #ffffff; font-weight: bold; font-size: 11.5px; padding: 2px 8px; border: 1px solid #004d40; width: 140px; text-align: right; height: 20px; line-height: 16px; box-sizing: border-box; }
-
-        .bs-grand-bar { background-color: #00796B; color: #ffffff; padding: 4px 10px; margin: 0 8px 8px 8px; display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; border: 1px solid #004d40; box-shadow: 1px 1px 3px rgba(0,0,0,0.15); }
-        .bs-grand-col { flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 0 6px; }
-        .bs-grand-col:first-child { border-right: 2px solid #ffffff; margin-right: 10px; }
-    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20260930s}">
 </head>
-<body>
+<!--
+  Screen 62 "Balance Sheet" - Architecture.WinApp.Account_Reports.BalanceSheet (BalanceSheet.cs, ScreenName frmBalanceSheet).
+  Read-only. Data: /accounts/api/reports/balance-sheet-62 (BalanceSheetReportService):
+    Load / Show  BindDatainGrid -> SpAccounts_BalanceSheetFormatA_Report (@OrganizationId, @CompanyId, @UserId, @ToDate,
+                 @BranchesIds only when GetBranchesIdsByFeature returned one). The statement is the form's own sums per AccountNoteId.
+    153-Print    SpAccounts_BalanceSheetFormatA_ForCrystal (@ClassIds '1,2,3') - browser output, not the Crystal layout.
+    Caption click AccountNotefilter -> BS and PL Breakup (screen 84) as a dialog; "Net Profit/Loss" opens Profit & Loss 01.
+  To Date: the DateTimePicker default (today). Rebuilt 2026-09-30 (R5) after the page was rolled back to the old mock-up.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-balance-scale"></i> Balance Sheet</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li class="active"><a>Balance Sheet</a></li>
+    <li><a href="/accounts/reports/profit-and-loss">Profit &amp; Loss 01</a></li>
+</ul>
+<div class="win-toolbar" id="toolStrip3">
+    <button type="button" class="win-btn" id="btnNew"><i class="fa fa-refresh text-success"></i> <span><u>R</u>efresh</span></button>
+    <button type="button" class="win-btn" id="toolStripButton1" data-rpt="153-BalanceSheetStatementRpt.rpt"><i class="fa fa-print"></i> 153-Print</button>
+</div>
+<div class="win-header-panel" id="panel3"><span>Balance Sheet</span></div>
 
-    <div class="win-title-bar">
-        <span><i class="fa fa-balance-scale"></i> Balance Sheet</span>
-        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-size: 10.5px;">
-            <i class="fa fa-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
-
-    <div class="win-toolbar">
-        <button type="button" class="win-btn" onclick="loadBalanceSheet()"><i class="fa fa-refresh text-success"></i> Refresh</button>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 153-Print</button>
-    </div>
-
-    <div class="filter-header-bar">
-        <span class="win-label-white">To Date</span>
-        <input type="date" id="txtToDate" class="win-input-date" value="2026-09-12">
-        <button type="button" class="win-btn-show" onclick="loadBalanceSheet()">Show</button>
-    </div>
-
-    <div class="bs-container">
-        <!-- LEFT COLUMN: Liabilities & Equity -->
-        <div class="bs-column">
-            <!-- Owner Equity -->
-            <div class="bs-section-box">
-                <div class="bs-section-title">Owner Equity</div>
-                <div class="bs-row"><div class="bs-item-pill">Share Capital</div><div class="bs-item-val" id="val_shareCapital">22,991,709</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Shared Deposit</div><div class="bs-item-val" id="val_sharedDeposit">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Un-Appropriated P/L</div><div class="bs-item-val" id="val_unappPl">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Reserves</div><div class="bs-item-val" id="val_reserves">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Net Profit/Loss</div><div class="bs-item-val" id="val_netProfitLoss">19,172,564</div></div>
-                <div class="bs-total-row">
-                    <div class="bs-total-label">Total Owner Equity</div>
-                    <div class="bs-total-val" id="tot_ownerEquity">42,164,273</div>
-                </div>
-            </div>
-
-            <!-- Non Current Liabilities -->
-            <div class="bs-section-box">
-                <div class="bs-section-title">Non Current Liabilities</div>
-                <div class="bs-row"><div class="bs-item-pill">Financial Lease</div><div class="bs-item-val" id="val_finLease">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Long Term Loans</div><div class="bs-item-val" id="val_ltLoans">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Taxation</div><div class="bs-item-val" id="val_taxation">0</div></div>
-                <div class="bs-total-row">
-                    <div class="bs-total-label">Total Non Curr Liabilities</div>
-                    <div class="bs-total-val" id="tot_nonCurrLiab">0</div>
-                </div>
-            </div>
-
-            <!-- Current Liabilities -->
-            <div class="bs-section-box">
-                <div class="bs-section-title">Current Liabilities</div>
-                <div class="bs-row"><div class="bs-item-pill">Short Term Borrowings</div><div class="bs-item-val" id="val_stBorrowing">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Saleries Payables</div><div class="bs-item-val" id="val_salariesPayable">285,749</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Crediters Suppliers</div><div class="bs-item-val" id="val_creditorsSuppliers">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Trade Creditors -Service</div><div class="bs-item-val" id="val_creditorsService">2,920,880</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Other Creditors</div><div class="bs-item-val" id="val_otherCreditors">(90,140,871)</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Trade Others Payables</div><div class="bs-item-val" id="val_tradeOthersPayable">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Loan Advances</div><div class="bs-item-val" id="val_loanAdvances">(272,138,206)</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Creditor Store</div><div class="bs-item-val" id="val_creditorStore">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Creditors Accrued and Other</div><div class="bs-item-val" id="val_creditorsAccrued">(13,133,766)</div></div>
-                <div class="bs-total-row">
-                    <div class="bs-total-label">Total Current Liabilities</div>
-                    <div class="bs-total-val" id="tot_currentLiab">(372,206,214)</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- RIGHT COLUMN: Assets -->
-        <div class="bs-column">
-            <!-- Non Current Assets -->
-            <div class="bs-section-box">
-                <div class="bs-section-title">Non Current Assets</div>
-                <div class="bs-row"><div class="bs-item-pill">Intangible Assets</div><div class="bs-item-val" id="val_intangibleAssets">765,000</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Long Term Investment</div><div class="bs-item-val" id="val_ltInvestment">103,763,014</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Property, Plant Equipment</div><div class="bs-item-val" id="val_propertyPlantEq">787,340,952</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Capital Work In Progress</div><div class="bs-item-val" id="val_cwip">0</div></div>
-                <div class="bs-total-row">
-                    <div class="bs-total-label">Total Non Current Assest</div>
-                    <div class="bs-total-val" id="tot_nonCurrAssets">891,868,966</div>
-                </div>
-            </div>
-
-            <!-- Current assets -->
-            <div class="bs-section-box">
-                <div class="bs-section-title">Current assets</div>
-                <div class="bs-row"><div class="bs-item-pill">Cash and Bank Balances</div><div class="bs-item-val" id="val_cashBank">181,038,230</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Advances PrePayments</div><div class="bs-item-val" id="val_advPrepayments">70,000</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Stock - In -Trade</div><div class="bs-item-val" id="val_stockInTrade">(324,487,686)</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Advance Others</div><div class="bs-item-val" id="val_advOthers">0</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Trade Debtors -Local</div><div class="bs-item-val" id="val_debtorsLocal">651,949,755</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Trade Debtors -Export</div><div class="bs-item-val" id="val_debtorsExport">64,962,914</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Sundry Debtors</div><div class="bs-item-val" id="val_sundryDebtors">41,607,714</div></div>
-                <div class="bs-row"><div class="bs-item-pill">Store Spare Parts and Loose Tools</div><div class="bs-item-val" id="val_storeSpareParts">0</div></div>
-                <div class="bs-total-row">
-                    <div class="bs-total-label">Total Current Assest</div>
-                    <div class="bs-total-val" id="tot_currentAssets">615,140,927</div>
-                </div>
-            </div>
+<div class="filters" id="panel5">
+    <div class="gb" style="width:560px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 50px 132px 44px 204px 1fr;">
+            <span class="lbl" id="label33">To Date</span>
+            <input type="date" id="todate" class="inp">
+            <span class="lbl" id="lblBranch">Branch</span>
+            <div id="cmbbranch"></div>
+            <div class="show-cell"><button type="button" id="btnshow" class="win-btn-show"><i class="fa fa-eye"></i> Show</button></div>
         </div>
     </div>
+</div>
 
-    <!-- GRAND TOTAL BOTTOM BAR -->
-    <div class="bs-grand-bar">
-        <div class="bs-grand-col">
-            <span>Total Capital and Liabilites</span>
-            <span id="grand_capitalLiab">(330,041,941)</span>
-        </div>
-        <div class="bs-grand-col">
-            <span>Total Assets</span>
-            <span id="grand_totalAssets">1,507,009,893</span>
-        </div>
-    </div>
+<div class="grid-caption"><span>Balance Sheet</span><span id="lblStatus"></span></div>
+<div class="stmt-wrap"><div class="stmt" id="panel6" style="width:916px;height:640px;"></div></div>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script>
-        function fmt(v) {
-            const n = parseFloat(v);
-            if (isNaN(n) || n === 0) return '0';
-            const formatted = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-            return n < 0 ? `(${formatted})` : formatted;
-        }
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_bs_pl_breakup.js?v=20260930s}"></script>
+<script>
+(function () {
+    'use strict';
+    var H = AccH, API = '/accounts/api/reports/balance-sheet-62';
+    var ctx = {}, branch = null, dec = 0, dt = [];
 
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            if (!$('#txtToDate').val()) $('#txtToDate').val(today);
-            loadBalanceSheet();
-        });
+    /* BalanceSheet.InitializeComponent: [groupbox, caption, left, top, width, height, caption width, amount left,
+       rows [captionId, AccountNoteId, default text, top, amountId, amount top, tall],
+       line top, total [label, labelWidth, amountId, amount left, top]] */
+    var GB = [
+        ['groupBox1', 'Owner Equity', 22, 5, 468, 185, 258, 311, [
+            ['lblShareCapitalCaption', 29, 'Share Capital', 31, 'lblCapitalShareAmt', 31],
+            ['lblSharDepositCaption', 36, 'Shared Deposit', 56, 'lblShareDepositAmt', 56],
+            ['lblUnAppropriatedCaption', 34, 'Un-Appropriated P/L', 81, 'lblUnAppropriatedAmt', 81],
+            ['lblReserveCaption', 35, 'Reserves', 106, 'lblReserveAmt', 106],
+            ['lblNetPLCaption', 'PL', 'Net Profit/Loss', 130, 'lblNetPLAmount', 130]],
+            153, ['Total Owner Equity', 258, 'lblToOwnerEquityAmt', 309, 156]],
+        ['groupBox2', 'Non Current Liabilities', 22, 196, 468, 122, 258, 311, [
+            ['lblfinancialLeaseCaption', 37, 'Financial Lease', 26, 'lblFinancialLeaseAmt', 26],
+            ['lblLongTermLoanCaption', 21, 'Long Term Loans', 48, 'lblongTermLoansAmt', 49],
+            ['lblTaxationCaption', 17, 'Taxation', 70, 'lblTaxationAmt', 71]],
+            91, ['Total Non Curr Liabilities', 258, 'lblToNonCurrLiabilitiesAmt', 309, 94]],
+        ['groupBox4', 'Current Liabilities', 22, 319, 468, 276, 258, 312, [
+            ['lblShortTermBorrowingCaption', 22, 'Short Term Borrowings', 32, 'lblShorttermBorrowingAmt', 32],
+            ['lblSalariesPayableCaption', 23, 'Salaries Payables', 55, 'lblSalariesPayablesAmt', 55],
+            ['lblCreditorSuppCaption', 24, 'Crediters Suppliers', 78, 'lblCreditorsSupplierAmt', 78],
+            ['lblTradeCreditorServiceCaption', 25, 'Trade Creditors -Service', 100, 'lblTradeCreditorsServiceAmt', 100],
+            ['lblOtherCreditorCaption', 27, 'Other Creditors', 123, 'lblOtherCreditorsAmt', 123],
+            ['lbltradeOthPayableCaption', 28, 'Trade Others Payables', 146, 'lblOtherPayablesAmt', 146],
+            ['lblLoanAndAdvanceCaption', 16, 'Loan And Advances', 169, 'lblLoanAndAdvancesAmt', 169],
+            ['lblCreditorStoreCaption', 26, 'Creditor Store', 192, 'lblCreditorStoreAmt', 192],
+            ['lblAccuredLiabiltyCaption', 38, 'Accrued Liabilty', 216, 'lblAccuredLiabiltyAmt', 216]],
+            245, ['Total Current Liabilities', 258, 'lblToCurrLiabilitiesAmt', 309, 249]],
+        ['groupBox6', 'Non Current Assets', 496, 5, 408, 185, 199, 255, [
+            ['lblIntangibleassetCaption', 10, 'Intangible Assets', 31, 'lblIntangibleAssestAmt', 31],
+            ['lblLongTermInvestCaption', 31, 'Long Term Investment', 56, 'lblAsLongTrmInvestmentAmt', 56],
+            ['lblPropPlantEquipCaption', 30, 'Property, Plant  Equipment', 81, 'lblAsPropertyPlantAmt', 81],
+            ['lblCWIPCaption', 11, 'Capital Work In Progress', 106, 'lblAcCWIPAmt', 106]],
+            129, ['Total Non Current Assest', 210, 'lblToNonCurrAssestsAmt', 253, 131]],
+        ['groupBox5', 'Current assets', 496, 196, 408, 399, 199, 255, [
+            ['lblCashBankBlncCaption', 20, 'Cash and Bank Balances', 26, 'lblCashBankAmt', 26],
+            ['lblAdvancePrePaymCaption', 19, 'Advances & PrePayments', 48, 'lblAdvPrePaymentsAmt', 49],
+            ['lblStockTradeCaption', 12, 'Stock - In -Trade', 70, 'lblStockInTradeAmt', 71],
+            ['lblAdvanceOtherCaption', 18, 'Advance Others', 93, 'lblAsAdvancesOtherAmt', 94],
+            ['lblTradeLocalCaption', 13, 'Trade Debtors -Local', 115, 'lblTradeDebitorsLocalAmt', 116],
+            ['lblTradeExportCaption', 14, 'Trade Debtors -Export', 138, 'lblTradeDebitorExportAmt', 139],
+            ['lblSundryDebitorCaption', 15, 'Sundry Debitors', 159, 'lblSundaryDebitorAmt', 160],
+            ['lblStoreSparePartsCaption', 39, 'Store Spare Parts and Loose Tools', 183, 'lblStoreSpareAmt', 184, true]],
+            318, ['Total Current Assests', 210, 'lblToCurrAssestsAmt', 253, 321]]
+    ];
 
-        function loadBalanceSheet() {
-            const toDate = $('#txtToDate').val();
-            $.ajax({
-                url: '/accounts/api/reports/balance-sheet',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ toDate: toDate }),
-                success: function(res) {
-                    if (res && res.success && res.data && res.data.rows && res.data.rows.length > 0) {
-                        applyCalculatedData(res.data.rows);
-                    }
-                }
+    function build() {
+        var h = '';
+        GB.forEach(function (g) {
+            h += '<div class="sgb" id="' + g[0] + '" style="left:' + g[2] + 'px;top:' + (g[3] + 4) + 'px;width:' + g[4] + 'px;height:' + g[5] + 'px">'
+               + '<span class="gb-title">' + H.esc(g[1]) + '</span>';
+            g[8].forEach(function (r) {
+                h += '<div class="cap' + (r[6] ? ' tall' : '') + '" id="' + r[0] + '" data-note="' + r[1] + '" style="left:' + (r[0] === 'lblStoreSparePartsCaption' ? 6 : (g[0] === 'groupBox4' ? 4 : 6))
+                   + 'px;top:' + r[3] + 'px;width:' + g[6] + 'px' + (r[6] ? ';height:38px' : '') + '">' + H.esc(r[2]) + '</div>'
+                   + '<div class="amt" id="' + r[4] + '" style="left:' + g[7] + 'px;top:' + r[5] + 'px">0</div>';
             });
-        }
+            var t = g[10];
+            h += '<div class="ln" style="left:4px;top:' + g[9] + 'px;width:' + (g[4] - 10) + 'px"></div>'
+               + '<div class="tl" style="left:6px;top:' + t[4] + 'px;width:' + t[1] + 'px">' + H.esc(t[0]) + '</div>'
+               + '<div class="ta" id="' + t[2] + '" style="left:' + t[3] + 'px;top:' + t[4] + 'px;width:150px">0</div>';
+            h += '</div>';
+        });
+        /* panel7 (Teal, 0,600 904x33) */
+        h += '<div class="grand" id="panel7" style="left:0;top:604px;width:904px;height:33px">'
+           + '<span style="left:25px;width:255px">Total Capital and Liabilites</span>'
+           + '<span class="v" id="lblToCapitalAndLiabilitiesAmt" style="left:324px;width:157px">0</span>'
+           + '<span style="left:502px;width:216px">Total Assets</span>'
+           + '<span class="v" id="lblTotalAssestsAmt" style="left:744px;width:156px">0</span></div>';
+        H.$('panel6').innerHTML = h;
+    }
 
-        function applyCalculatedData(rows) {
-            // Helper to sum accounts matching keywords or type ids
-            function sumWhere(keywords) {
-                let s = 0;
-                rows.forEach(r => {
-                    const title = (r.AccountTitle || r.accountTitle || '').toLowerCase();
-                    if (keywords.some(k => title.includes(k.toLowerCase()))) {
-                        s += parseFloat(r.Balance || r.balance || 0);
-                    }
-                });
-                return s;
-            }
+    /* AccountNotefilter(caption.Text): dt.Select("AccountsNotes='" + Notes + "'") -> ItemArray[5] (AccountNoteId) -> GetBsBreakup */
+    H.$('panel6').addEventListener('click', function (e) {
+        var c = e.target.closest('.cap'); if (!c) return;
+        if (c.id === 'lblNetPLCaption') { window.open('/accounts/reports/profit-and-loss', '_blank'); return; }   /* new frmProfitLossHararical(UserAccount).Show() */
+        var r = dt.filter(function (x) { return String(H.ci(x, 'AccountsNotes')) === c.textContent; });
+        if (!r.length) return;
+        AccHBreakup.open({ status: 0, noteId: +H.ci(r[0], 'AccountNoteId') || 0, rows: dt, dec: dec,
+                           fromDate: ctx.financialYearStart || '', toDate: H.$('todate').value });
+    });
 
-            const valShareCap = sumWhere(['share capital', 'capital']);
-            const valNetProfit = sumWhere(['net profit', 'profit']);
-            const totEquity = valShareCap + valNetProfit;
+    function body() {
+        return { toDate: H.$('todate').value, branchText: branch ? branch.text() : '', branchId: branch ? branch.id() : 0 };
+    }
+    function t(id, v) { H.$(id).textContent = H.both(v, dec); }
 
-            const valSalaries = sumWhere(['salaries payable', 'salary']);
-            const valCreditorsService = sumWhere(['creditors -service', 'trade creditors']);
-            const valOtherCreditors = sumWhere(['other creditors']);
-            const valLoanAdv = sumWhere(['loan advances', 'loan']);
-            const valCreditorsAccrued = sumWhere(['creditors accrued', 'accrued']);
-            const totCurrLiab = valSalaries + valCreditorsService + valOtherCreditors + valLoanAdv + valCreditorsAccrued;
+    /* BindDatainGrid (:261): the sums per AccountNoteId; the caption takes the row's AccountsNotes. dt.Rows.Clear() first;
+       an empty result returns before any label is touched (the previous figures stay). */
+    function bind(rows) {
+        dt = rows || [];
+        H.$('lblStatus').textContent = 'Records: ' + dt.length;
+        if (!dt.length) return;
+        var s = {}, cap = {};
+        GB.forEach(function (g) { g[8].forEach(function (r) { if (r[1] !== 'PL') { s[r[1]] = 0; cap[r[1]] = r; } }); });
+        var net = 0;
+        dt.forEach(function (r) {
+            if (H.toNum(H.ci(dt[0], 'NetProfitLoss')) !== 0) net = H.toNum(H.ci(dt[0], 'NetProfitLoss'));
+            var n = +H.ci(r, 'AccountNoteId') || 0;
+            if (cap[n]) { s[n] += H.toNum(H.ci(r, 'Amount')); H.$(cap[n][0]).textContent = H.ci(r, 'AccountsNotes') == null ? '' : String(H.ci(r, 'AccountsNotes')); }
+        });
+        Object.keys(cap).forEach(function (n) { t(cap[n][4], s[n]); });
+        t('lblNetPLAmount', net);
+        var ShareCapital = s[29], SharedDeposit = s[36], UnAppropriated = s[34], Reserves = s[35];
+        var LongTermLoans = s[21], FinancialLease = s[37], Taxation = s[17];
+        var ShortTermBorrowings = s[22], SaleriesPayables = s[23], CreditorsPaddyRice = s[24], TradeCreditorService = s[25], OtherCreditors = s[27],
+            CreditorsAccrued = s[38], TradeOthersPayables = s[28], LoanAndAdvances = s[16], CreditorsStore = s[26];
+        var IntangibleAssets = s[10], LongTermInvestment = s[31], PropertyPlantEquipment = s[30], CWIP = s[11];
+        var CashandBank = s[20], AdvancesAndPrePayments = s[19], StockInTrade = s[12], SundryDebtors = s[15], StoresSpare = s[39], AdvanceOthers = s[18],
+            TradeDebtorLocal = s[13], TradeDebtorsExport = s[14];
+        var equity = ShareCapital + SharedDeposit + UnAppropriated + Reserves + net;
+        var nonCurrLiab = LongTermLoans + FinancialLease + Taxation;
+        var currLiab = ShortTermBorrowings + SaleriesPayables + CreditorsPaddyRice + TradeCreditorService + OtherCreditors + CreditorsAccrued + TradeOthersPayables + LoanAndAdvances + CreditorsStore;
+        var nonCurrAssets = IntangibleAssets + (LongTermInvestment + (PropertyPlantEquipment + CWIP));
+        var currAssets = CashandBank + AdvancesAndPrePayments + StockInTrade + SundryDebtors + StoresSpare + AdvanceOthers + TradeDebtorLocal + TradeDebtorsExport;
+        t('lblToOwnerEquityAmt', equity);
+        t('lblToNonCurrLiabilitiesAmt', nonCurrLiab);
+        t('lblToCurrLiabilitiesAmt', currLiab);
+        t('lblToCapitalAndLiabilitiesAmt', nonCurrLiab + currLiab + equity);
+        t('lblToNonCurrAssestsAmt', nonCurrAssets);
+        t('lblToCurrAssestsAmt', currAssets);
+        t('lblTotalAssestsAmt', currAssets + nonCurrAssets);
+    }
 
-            const valIntangible = sumWhere(['intangible']);
-            const valLtInv = sumWhere(['long term investment', 'investment']);
-            const valPlantEq = sumWhere(['property', 'plant', 'equipment']);
-            const totNonCurrAssets = valIntangible + valLtInv + valPlantEq;
+    function show() {
+        var btn = H.$('btnshow'); btn.disabled = true;
+        return H.api('POST', API + '/show', body()).then(bind)
+            .catch(function (e) { H.box(e.message); })
+            .then(function () { btn.disabled = false; });
+    }
+    /* toolStripButton1_Click - 153-BalanceSheetStatementRpt.rpt over SpAccounts_BalanceSheetFormatA_ForCrystal */
+    function print153() {
+        H.api('POST', API + '/print153', body()).then(function (rows) {
+            H.printRows('153 - Balance Sheet', 'Browser output of SpAccounts_BalanceSheetFormatA_ForCrystal - not the Crystal layout.', Object.keys(rows[0]), rows,
+                function (c, v) { return typeof v === 'number' && /Amount|Debit|Credit|Balance|NetProfit/i.test(c) ? H.both(v, dec) : (v == null ? '' : v); });
+        }).catch(function (e) { H.box(e.message); });
+    }
 
-            const valCashBank = sumWhere(['cash', 'bank']);
-            const valPrepay = sumWhere(['advances prepayments', 'prepayment']);
-            const valStock = sumWhere(['stock', 'inventory']);
-            const valDebtorsLocal = sumWhere(['trade debtors -local', 'debtors local']);
-            const valDebtorsExport = sumWhere(['trade debtors -export', 'debtors export']);
-            const valSundry = sumWhere(['sundry debtors']);
-            const totCurrAssets = valCashBank + valPrepay + valStock + valDebtorsLocal + valDebtorsExport + valSundry;
+    build();
+    /* todate: DateTimePicker default = today; reset() (Refresh) only focuses it */
+    H.$('todate').value = H.today();
+    H.$('btnshow').addEventListener('click', show);
+    H.$('btnNew').addEventListener('click', function () { H.$('todate').focus(); });
+    H.$('toolStripButton1').addEventListener('click', print153);
 
-            if (totEquity !== 0) $('#tot_ownerEquity').text(fmt(totEquity));
-            if (totCurrLiab !== 0) $('#tot_currentLiab').text(fmt(totCurrLiab));
-            if (totNonCurrAssets !== 0) $('#tot_nonCurrAssets').text(fmt(totNonCurrAssets));
-            if (totCurrAssets !== 0) $('#tot_currentAssets').text(fmt(totCurrAssets));
-
-            const grandCapitalLiab = totEquity + totCurrLiab;
-            const grandAssets = totNonCurrAssets + totCurrAssets;
-            if (grandCapitalLiab !== 0) $('#grand_capitalLiab').text(fmt(grandCapitalLiab));
-            if (grandAssets !== 0) $('#grand_totalAssets').text(fmt(grandAssets));
-        }
-    </script>
+    /* BalanceSheet_Load: features 17/18, BranchFill when 17 is on (else the Branch label/combo are hidden), then BindDatainGrid */
+    H.api('GET', API + '/init').then(function (c) {
+        ctx = c; dec = c.amountDecimals || 0;
+        if (!c.branchFeature) { H.$('lblBranch').classList.add('is-hidden'); H.$('cmbbranch').classList.add('is-hidden'); }
+        else branch = H.branchCombo(H.$('cmbbranch'), c);
+        H.$('todate').focus();
+        return show();
+    }).catch(function (e) { H.box(e.message); });
+})();
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

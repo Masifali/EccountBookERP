@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Employee Late Adjustment - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <!-- Architecture.WinApp.HRM.PayRoll.frmEmployeeLateAdjustment - Maximized; toolStrip1 New | Update | Save | Print (hidden) | Refresh;
+         panel6 "Employee Late Adjustment"; Employee Name cmbEmployeeName (12,69) + btnEmployee (185,69) | Month cmbMonth (221,69) | Year cmbYear (333,69) | Total Lates txtTotalLates (412,71);
+         Total Late Days txtTotalLateDays (12,119) | Deducted Days txtDeductedDays (123,119) | Deduction Rate txtDeductionRate (221,119) | IsDeduction (333,118) | IsLeaveAdjust (333,139);
+         groupBox1 "Employee Information" (516,36): Employee No | Employee Salary | Desgination | Department | Section (read-only);
+         panel4: panel5 "History" + ctrlGrdBar1; grd GridEX (AllowEdit False, total row; double-click loads). -->
+    <style>
+        .pr-x-btn, .pr-mini-btn { border: 1px solid #8aa; background: #f4f4f4; font: 8pt Verdana, sans-serif; line-height: 1; padding: 2px 5px; cursor: pointer; }
+        .pr-x-btn { color: #b00; font-weight: bold; }
+        .pr-x-btn:hover, .pr-mini-btn:hover { background: #cce8ff; }
+        .pr-def-btn { width: 28px; height: 24px; padding: 0; border: 1px solid #7a9a9e; background: #f4f4f4; cursor: pointer; flex: 0 0 auto; }
+        .pr-inline { display: flex; align-items: center; gap: 4px; min-width: 0; }
+        .pr-inline > .pr-grow { flex: 1 1 0; min-width: 0; }
+        .pr-checks { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+
+    </style>
+</head>
+<body class="pd-body hrm-body" data-hrm="employee-late-adjustment" data-screen="672">
+<div class="hrm-form hrm-medium">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmPayroll.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="HrmPayroll.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmPayroll.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool is-hidden"><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmPayroll.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+    </div>
+    <div class="hrm-caption">Employee Late Adjustment</div>
+    <div class="adj-top" style="display:flex;flex-wrap:wrap;min-width:0">
+        <div style="flex:3 1 440px;min-width:0">
+            <div class="hrm-entry hrm-cols-4">
+                <div class="hrm-field hrm-stack hrm-span-2"><label for="cmbEmployeeName">Employee Name</label>
+                    <div class="pr-inline"><div class="pr-grow"><select id="cmbEmployeeName" class="win-combo dtcombo" data-dtcombo="single"></select></div><button type="button" id="btnEmployee" class="pr-def-btn" tabindex="-1" title="Employee Registration" onclick="HrmPayroll.btnEmployee(this)"><i class="fa fa-user-plus"></i></button></div></div>
+                <div class="hrm-field hrm-stack"><label for="cmbMonth">Month</label><select id="cmbMonth" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbYear">Year</label><select id="cmbYear" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtTotalLates">Total Lates</label><input type="text" id="txtTotalLates" class="win-textbox" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtTotalLateDays">Total Late Days</label><input type="text" id="txtTotalLateDays" class="win-textbox" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtDeductedDays">Deducted Days</label><input type="text" id="txtDeductedDays" class="win-textbox" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtDeductionRate">Deduction Rate</label><input type="text" id="txtDeductionRate" class="win-textbox" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2 pr-checks" style="grid-template-columns:none">
+                    <label class="hrm-check"><input type="checkbox" id="IsDeduction"/> Is Deduction</label>
+                    <label class="hrm-check"><input type="checkbox" id="IsLeaveAdjust"/> Is Leave Adjust</label>
+                </div>
+            </div>
+        </div>
+        <fieldset class="hrm-group" style="flex:2 1 320px;min-width:0">
+            <legend>Employee Information</legend>
+            <div class="hrm-entry hrm-cols-2" style="padding:4px 0">
+                <div class="hrm-field"><label for="txtEmployeeNo">Employee No</label><input type="text" id="txtEmployeeNo" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field"><label for="txtSalary">Employee Salary</label><input type="text" id="txtSalary" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtDesgination">Desgination</label><input type="text" id="txtDesgination" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtDepartment">Department</label><input type="text" id="txtDepartment" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtSection">Section</label><input type="text" id="txtSection" class="win-textbox" readonly tabindex="-1"/></div>
+            </div>
+        </fieldset>
+    </div>
+    <div class="hrm-grid-box" id="grdBox">
+        <div class="hrm-subcaption" id="panel5"><span>History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="grd"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_payroll.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

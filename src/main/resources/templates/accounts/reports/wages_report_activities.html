@@ -51,7 +51,7 @@
 <!-- btnNew, btnPrint, btnshortcutkeys (:2046-2067) -->
 <div class="erp-toolbar">
     <button type="button" class="btn-erp" id="btnNew" onclick="wraNew()"><i class="fa fa-file-o"></i> New</button>
-    <button type="button" class="btn-erp" id="btnPrint" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+    <button type="button" class="btn-erp" id="btnPrint" onclick="window.print()" data-rpt="1870-WagesDetail.rpt" data-rpt-by="cmbReportType" data-rpt-map='{"Wages Detail": "1870-WagesDetail.rpt", "Wages Detail Without Item": "1881_WagesDetailWithoutItem.rpt", "Summary By Contractor": "1880-dtSummaryByContractor.rpt", "Summary By Item": "1871-SummaryByItem.rpt", "Summary By Item and Contractor": "1872-SummaryByItemandContractor.rpt", "Summary By Item and Service Activity": "1873-SummaryByItemandServiceActivity.rpt", "Summary By Contractor and Service Activity": "1874-SummaryByContractorandServiceActivity.rpt", "Summary By Item Contractor and Service Activity": "1875-SummaryByItemContractorandServiceActivity.rpt", "Summary By Wages Group": "1876-SummaryByWagesGroup.rpt", "Summary By Wages Group and Service Activity": "1877-SummaryByWagesGroupandServiceActivity.rpt", "Summary By Wages Group and Contractor": "1878-SummaryByWagesGroupandContractor.rpt", "Summary By Wages Group Contractor and Service Activity": "1879-SummaryByWagesGroupContractorandServiceActivity.rpt"}'><i class="fa fa-print"></i> Print</button>
     <button type="button" class="btn-erp btn-erp-excel" id="btnExport" onclick="wraExportCsv()"><i class="fa fa-file-excel-o"></i> Export CSV</button>
     <button type="button" class="btn-erp" id="btnShortcuts" onclick="wraShortcuts()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
     <span style="flex:1;"></span>
@@ -155,5 +155,22 @@
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
 <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
 <script th:src="@{/build/js/countx_wages_report_activities.js?v=20260920a}"></script>
+<script>
+/* btnPrint_Click: @ActivityName = the report type, @ActionId = 1 Production / 2 Sales (radio), as GridBind() */
+window.printRptArgs = function (rpt, a) {
+    var t = document.getElementById('cmbReportType'); if (t && t.selectedIndex >= 0) a.activity = t.options[t.selectedIndex].text;
+    var r = document.querySelector('input[name="radSource"]:checked'); if (r && +r.value) a.actionId = +r.value; else delete a.actionId;
+    return a;
+};
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+<script>
+/* btnPrint_Click: @ActivityName = the report type, @ActionId = 1 Production / 2 Sales (radio), as GridBind() */
+window.printRptArgs = function (rpt, a) {
+    var t = document.getElementById('cmbReportType'); if (t && t.selectedIndex >= 0) a.activity = t.options[t.selectedIndex].text;
+    var r = document.querySelector('input[name="radSource"]:checked'); if (r && +r.value) a.actionId = +r.value; else delete a.actionId;
+    return a;
+};
+</script>
 </body>
 </html>

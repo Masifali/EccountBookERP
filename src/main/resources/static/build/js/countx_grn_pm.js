@@ -546,11 +546,11 @@
     /** GenerateReport :2033 / GrnPmSlipWithSubReport214_01 - the report's rows (Crystal is not rendered). */
     function GenerateReport(id) {
         if (!id) { box('No Record Found For Display'); return; }
-        window.open('/api/reports/grn-214/data?id=' + encodeURIComponent(id), '_blank');
+        window.open('/api/print/grn-214/pdf?id=' + encodeURIComponent(id), '_blank');
     }
     function PrintII(id) {
         if (!id) { box('No Record Found For Display'); return; }
-        window.open('/api/reports/grn-214-01/data?id=' + encodeURIComponent(id), '_blank');
+        window.open('/api/print/grn-214-01/pdf?id=' + encodeURIComponent(id), '_blank');
     }
 
     // ------------------------------------------------------------------ reset / read

@@ -342,11 +342,11 @@
 
     function GenerateReport(id) {
         if (!int(id)) { box('RecordId Not Found'); return; }
-        window.open('/api/reports/sa-215/data?id=' + encodeURIComponent(id), '_blank');
+        window.open('/api/print/sa-215/pdf?id=' + encodeURIComponent(id), '_blank');
     }
     function VoucherReport(id) {
         if (!int(id)) { box('VoucherId Not Found'); return; }
-        window.open('/api/reports/acc-118/data?id=' + encodeURIComponent(id), '_blank');
+        window.open('/api/print/acc-118/pdf?id=' + encodeURIComponent(id), '_blank');
     }
 
     /* AvgRateUpdateOnDocDateChange :1992 (Generate Rate) */

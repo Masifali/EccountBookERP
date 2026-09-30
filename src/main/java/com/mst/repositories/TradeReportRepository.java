@@ -61,6 +61,10 @@ public class TradeReportRepository {
             Object name = map.get("BranchName") != null ? map.get("BranchName") : (map.get("branchName") != null ? map.get("branchName") : (map.get("Name") != null ? map.get("Name") : map.get("name")));
             map.put("Id", id); map.put("id", id); map.put("ID", id); map.put("BranchId", id); map.put("branchId", id);
             map.put("BranchName", name); map.put("branchName", name); map.put("Name", name); map.put("name", name);
+            /* R4 2026-09-30: map is a LinkedCaseInsensitiveMap - every alias put above REPLACED the stored key spelling
+               (the JSON carried "ID"/"branchId"/"branchName"/"name" only, so the page's r.Id / r.BranchName were undefined and the Branches
+               combo showed blank rows). Re-put the proc's own spelling (USP_GetBranchesFromVouchersByAccountId: Id, BranchName). */
+            map.put("Id", id); map.put("BranchName", name);
         }
         result.put("branches", branches);
         result.put("controls",execute("Sp_ChartofAccount_GetAllMethodFromCOA",params(u,"FinancialYearId",years.get(0).get("Id"),"Account_Level",3,"AccountTypeId",3,"AccountClassIds","2,3","CoaType","ReadAllAccountGroup")));

@@ -4,91 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Receivables And Receipt Schedule</title>
-
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_grid_js.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
     <style>
-        html, body { max-width:100%; overflow-x:hidden; }
-        body { font-family:"Segoe UI","Tahoma","Geneva","Verdana",sans-serif; background:#e4e9ed;
-               font-size:11px; color:#222; margin:0; padding:0; }
-
-        .win-title-bar { background:#0f5959; color:#fff; font-size:15px; font-weight:bold; padding:6px 12px; }
-        .win-sub-header { font-size:10px; color:#4f5d65; padding:2px 10px; background:#d8e0e6;
-                          border-bottom:1px solid #b0bec5; }
-        .win-toolbar { background:linear-gradient(to bottom,#fff 0%,#e3e8ee 100%);
-                       border-bottom:1px solid #b0bec5; padding:3px 8px; display:flex; gap:4px;
-                       align-items:center; flex-wrap:wrap; }
-        .win-btn { background:#fff; border:1px solid #90a4ae; border-radius:2px; padding:3px 10px;
-                   font-size:11px; font-weight:600; color:#263238; cursor:pointer;
-                   display:inline-flex; align-items:center; gap:5px; height:25px; text-decoration:none; }
-        .win-btn:hover { background:#e0f2f1; border-color:#0f5959; color:#004d40; text-decoration:none; }
-        .win-btn-teal { background:#0f5959; color:#fff; border-color:#083b3b; }
-        .win-btn-teal:hover { background:#083b3b; color:#fff; }
-        .win-btn:disabled { opacity:.55; cursor:default; }
-
-        .win-form-card { background:#fff; border:1px solid #b0bec5; border-radius:3px;
-                         padding:8px 10px; margin:8px; }
-        .win-group-box { border:1px solid #c7d0d6; border-radius:2px; padding:12px 10px 8px;
-                         position:relative; }
-        .win-group-title { position:absolute; top:-8px; left:8px; background:#fff; padding:0 5px;
-                           font-size:11px; font-weight:700; color:#0f5959; }
-        .win-label { display:block; font-size:10px; color:#41525c; margin:0 0 2px; font-weight:600;
-                     white-space:nowrap; }
-        .win-label input[type=checkbox] { margin-right:3px; vertical-align:-1px; }
-        .win-input { border:1px solid #7f9db9; border-radius:0; font-size:11px; height:24px;
-                     padding:1px 4px; width:100%; box-sizing:border-box; background:#fff; }
-        .win-input:disabled { background:#f2f4f6; color:#888; }
-
-        .btn-busy { position:relative; color:transparent !important; pointer-events:none; }
-        .btn-busy::after { content:""; position:absolute; top:50%; left:50%; width:11px; height:11px;
-                           margin:-6px 0 0 -6px; border:2px solid rgba(0,0,0,.25);
-                           border-top-color:#00564C; border-radius:50%;
-                           animation:btnspin .6s linear infinite; }
-        @keyframes btnspin { to { transform:rotate(360deg); } }
-
-        #rsMessage { display:none; margin:6px 8px; padding:4px 8px; font-size:11px; font-weight:bold; }
-        #rsMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
-        #rsMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
-
-        /* Full page width, and the only horizontal scrollbar is INSIDE this container. */
-        .rs-grid-wrap { margin:0 8px 8px; background:#fff; border:1px solid #b0bec5;
-                        max-height:calc(100vh - 300px); overflow:auto; }
-        body.rs-full .rs-grid-wrap { max-height:calc(100vh - 86px); }
-
-        table.rs-grid { border-collapse:separate; border-spacing:0; font-size:11px;
-                        width:max-content; min-width:100%; }
-        table.rs-grid thead th { position:sticky; top:0; z-index:2; background:#dde5ea;
-                                 border-right:1px solid #c3ced6; border-bottom:1px solid #90a4ae;
-                                 padding:3px 6px; font-weight:700; color:#23343c; text-align:center;
-                                 white-space:nowrap; line-height:1.2; }
-        table.rs-grid tbody td { border-right:1px solid #eceff1; border-bottom:1px solid #eceff1;
-                                 padding:2px 6px; white-space:nowrap; }
-        table.rs-grid tbody tr:nth-child(even) td { background:#f7f9fa; }
-        table.rs-grid tbody tr:hover td { background:#e0f2f1; }
-        table.rs-grid tbody tr.rs-group td { background:#cfd8dc !important; font-weight:700;
-                                             color:#0f5959; }
-        table.rs-grid tfoot td { position:sticky; bottom:0; z-index:2; background:#e0f2f1;
-                                 border-top:1px solid #0f5959; font-weight:700; color:#0f5959;
-                                 padding:3px 6px; white-space:nowrap; }
-        .rs-num { text-align:right; }
-        .rs-ctr { text-align:center; }
-        .rs-neg { color:#b00020; }
-        a.rs-link { color:#0d47a1; text-decoration:underline; cursor:pointer; }
-        a.rs-link:hover { color:#b00020; }
-        .rs-link-off { color:#546e7a; text-decoration:underline dotted; cursor:pointer; }
-
-        .rs-empty { background:#fff; border:1px dashed #b0bec5; color:#667; padding:12px;
-                    text-align:center; margin:0 8px; font-size:11px; }
-        .rs-count { font-size:10px; color:#4f5d65; padding:2px 10px; }
-        body.rs-full { position:fixed; inset:0; z-index:3000; overflow:auto; background:#e4e9ed; }
-        .select2-container .select2-selection--single,
-        .select2-container .select2-selection--multiple { border-radius:0; border-color:#7f9db9;
-                                                          min-height:24px; font-size:11px; }
+        /* R4 2026-09-30: Account Reports look (countx_acc_rpt_f.css); only the classes this page's script emits. */
+        .accf #rsMessage { display:none; margin:4px; padding:3px 8px; font-weight:bold; }
+        .accf #rsMessage.ok  { display:block; background:#e6f4ea; color:#0a6b2e; border:1px solid #a8d5b5; }
+        .accf #rsMessage.err { display:block; background:#fdecea; color:#a3160b; border:1px solid #f0b3ad; }
+        .accf .win-btn.btn-busy { opacity:.6; pointer-events:none; }
+        .accf .fgrid .chk input { margin:0 3px 0 0; }
+        .accf table.wg .rs-num { text-align:right; }
+        .accf table.wg .rs-ctr { text-align:center; }
+        .accf table.wg .rs-neg { color:#b00020; }
+        .accf table.wg tr.rs-group td { font-weight:bold; background:#dbe7e5 !important; color:var(--f-teal-dark); border-top:1px solid var(--f-teal); }
+        .accf table.wg a.rs-link { color:#0056b3; text-decoration:underline; cursor:pointer; }
+        .accf table.wg .rs-link-off { color:#546e7a; text-decoration:underline dotted; cursor:pointer; }
+        .accf .rs-empty { background:#fff; border:1px dashed var(--f-border); color:#667; padding:10px; text-align:center; margin:0 4px; }
+        .accf .rs-count { font-size:10px; font-weight:bold; }
+        body.accf.rs-full { position:fixed; inset:0; z-index:3000; overflow:auto; }
+        body.accf.rs-full .grid-wrap { max-height:calc(100vh - 80px); }
     </style>
 </head>
-<body>
+<body class="accf">
 
 <!-- ==========================================================================
      Receivables And Receipt Schedule
@@ -130,131 +71,77 @@
      Read-only screen: the desktop form has no save, update, delete or History button, so this
      page has none either.
      ========================================================================== -->
-<div class="win-title-bar">Receivables And Receipt Schedule</div>
-<div class="win-sub-header">
-    <span>&#128193; Screens &gt; <a href="/dashboard" style="color:#4f5d65;">DashBoard</a>
-        &gt; Exective DashBoards &gt; Receivables And Receipt Schedule</span>
-</div>
 
+<div class="win-title-bar">
+    <span><i class="fa fa-calendar"></i> Receivables And Receipt Schedule</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
 <div class="win-toolbar">
-    <button type="button" class="win-btn" id="btnNew" onclick="rsNew(this)">
-        <i class="fa fa-file-o"></i> New
-    </button>
-    <button type="button" class="win-btn" id="btnPrint" onclick="rsPrint(this)">
-        <i class="fa fa-print"></i> Print
-    </button>
-    <button type="button" class="win-btn" onclick="rsShortcuts()">
-        <i class="fa fa-keyboard-o"></i> ShortCut Keys
-    </button>
-    <a class="win-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+    <button type="button" class="win-btn" id="btnNew" onclick="rsNew(this)"><i class="fa fa-file-o"></i> New</button>
+    <button type="button" class="win-btn" id="btnPrint" onclick="rsPrint(this)" data-rpt="121_02_ReceivablesAndReceiptSchedule.rpt"><i class="fa fa-print"></i> 121_02 Print</button>
+    <button type="button" class="win-btn" onclick="rsShortcuts()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
     <span style="flex:1;"></span>
     <span class="rs-count" id="rsCount"></span>
-    <button type="button" class="win-btn" onclick="rsToggleFullscreen()">
-        <i class="fa fa-arrows-alt"></i> Fullscreen
-    </button>
+    <button type="button" class="win-btn" onclick="rsToggleFullscreen()"><i class="fa fa-arrows-alt"></i> Fullscreen</button>
 </div>
-
+<div class="win-header-panel"><span>Receivables And Receipt Schedule</span></div>
 <div id="rsMessage"></div>
 
-<div class="win-form-card">
-    <div class="win-group-box">
-        <div class="win-group-title">Filters</div>
+<div class="filters">
+    <div class="gb" style="width:1000px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 90px 210px 80px 120px 80px 120px 80px 190px;">
+            <span class="lbl">Parent Category</span>
+            <select id="parentCategory" class="inp" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select>
+            <label class="chk"><input type="checkbox" id="chkFrom" onchange="rsDateToggled('From')"> Date From</label>
+            <input type="date" id="fromDate" class="inp">
+            <label class="chk"><input type="checkbox" id="chkTo" onchange="rsDateToggled('To')"> Date To</label>
+            <input type="date" id="toDate" class="inp">
+            <span class="lbl">Control Account</span>
+            <select id="controlAccounts" class="inp" multiple style="grid-row: span 3; height:66px;"></select>
 
-        <div class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="win-label">Parent Category</label>
-                <select id="parentCategory" class="win-input rs-select2"></select>
-            </div>
+            <span class="lbl">Custom Group</span>
+            <select id="customGroup" class="inp" data-dtcombo="single" data-dtcombo-caption="Custom Group"></select>
+            <!-- datDueFrom starts UNTICKED (:1518) -->
+            <label class="chk"><input type="checkbox" id="chkDueFrom" onchange="rsDateToggled('DueFrom')"> Due From</label>
+            <input type="date" id="dueFrom" class="inp">
+            <label class="chk"><input type="checkbox" id="chkDueUpto" onchange="rsDateToggled('DueUpto')"> Due Up To</label>
+            <input type="date" id="dueUpto" class="inp">
+            <span></span>
 
-            <!-- datDateFrom, ticked by default -->
-            <div class="col-md-2">
-                <label class="win-label">
-                    <input type="checkbox" id="chkFrom" onchange="rsDateToggled('From')"> Date From
-                </label>
-                <input type="date" id="fromDate" class="win-input">
-            </div>
-            <!-- datDateTo, ticked by default. NOTE: this tick box also gates Due Up To,
-                 exactly as the desktop does at :203-206. -->
-            <div class="col-md-2">
-                <label class="win-label">
-                    <input type="checkbox" id="chkTo" onchange="rsDateToggled('To')"> Date To
-                </label>
-                <input type="date" id="toDate" class="win-input">
-            </div>
-            <!-- datDueFrom, UNTICKED by default (:1518) -->
-            <div class="col-md-2">
-                <label class="win-label">
-                    <input type="checkbox" id="chkDueFrom" onchange="rsDateToggled('DueFrom')"> Due From
-                </label>
-                <input type="date" id="dueFrom" class="win-input">
-            </div>
-            <div class="col-md-2">
-                <label class="win-label">
-                    <input type="checkbox" id="chkDueUpto" onchange="rsDateToggled('DueUpto')"> Due Up To
-                </label>
-                <input type="date" id="dueUpto" class="win-input">
-            </div>
-        </div>
+            <span class="lbl">Customer Group</span>
+            <select id="customerGroup" class="inp" data-dtcombo="single" data-dtcombo-caption="Customer Group"></select>
+            <label class="chk"><input type="checkbox" id="chkSaleFrom" onchange="rsDateToggled('SaleFrom')"> Sale From</label>
+            <input type="date" id="saleFrom" class="inp">
+            <label class="chk"><input type="checkbox" id="chkSaleTo" onchange="rsDateToggled('SaleTo')"> Sale To</label>
+            <input type="date" id="saleTo" class="inp">
+            <span></span>
 
-        <div class="row g-2 align-items-end" style="margin-top:6px;">
-            <div class="col-md-2">
-                <label class="win-label">
-                    <input type="checkbox" id="chkSaleFrom" onchange="rsDateToggled('SaleFrom')"> Sale From
-                </label>
-                <input type="date" id="saleFrom" class="win-input">
-            </div>
-            <div class="col-md-2">
-                <label class="win-label">
-                    <input type="checkbox" id="chkSaleTo" onchange="rsDateToggled('SaleTo')"> Sale To
-                </label>
-                <input type="date" id="saleTo" class="win-input">
-            </div>
-            <div class="col-md-1">
-                <label class="win-label">Interval Days</label>
-                <input type="number" id="intervalDays" class="win-input" value="15"
-                       oninput="rsIntervalChanged()">
-            </div>
-            <div class="col-md-3">
-                <label class="win-label">Control Account</label>
-                <select id="controlAccounts" class="win-input rs-select2" multiple></select>
-            </div>
-            <div class="col-md-2">
-                <label class="win-label">Custom Group</label>
-                <select id="customGroup" class="win-input rs-select2"></select>
-            </div>
-            <div class="col-md-2">
-                <label class="win-label">Customer Group</label>
-                <select id="customerGroup" class="win-input rs-select2"></select>
-            </div>
-        </div>
-
-        <div class="row g-2 align-items-end" style="margin-top:6px;">
+            <span class="lbl">Interval Days</span>
+            <input type="number" id="intervalDays" class="inp" value="15" oninput="rsIntervalChanged()" style="width:80px">
             <!-- Branches is hidden entirely when ERP feature 17 is off (:141-147) -->
-            <div class="col-md-3" id="branchWrap" style="display:none;">
-                <label class="win-label">Branches</label>
-                <select id="branches" class="win-input rs-select2"></select>
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="win-btn win-btn-teal" id="btnShow" onclick="rsShow(this)">
-                    <i class="fa fa-search"></i> Show
-                </button>
-            </div>
+            <span id="branchWrap" style="display:none; grid-column: span 4;">
+                <span style="display:flex;gap:6px;align-items:center"><span class="lbl" style="width:74px">Branches</span>
+                <span style="width:220px"><select id="branches" class="inp" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select></span></span>
+            </span>
+            <span style="grid-column: -2 / -1;"><button type="button" class="win-btn-show" id="btnShow" onclick="rsShow(this)"><i class="fa fa-search"></i> Show</button></span>
         </div>
     </div>
 </div>
 
-<div class="rs-grid-wrap" id="rsGridWrap">
-    <table class="rs-grid" id="rsGrid">
+<div class="grid-caption"><span>Filtered Records</span></div>
+<div class="grid-wrap" id="rsGridWrap">
+    <table class="wg" id="rsGrid">
         <thead id="rsHead"></thead>
         <tbody id="rsBody"></tbody>
         <tfoot id="rsFoot"></tfoot>
     </table>
 </div>
 <div id="rsEmpty" class="rs-empty" style="display:none;">Press Show to read the schedule.</div>
-<div style="height:16px;"></div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-<script th:src="@{/build/js/countx_receivables_receipt_schedule.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_receivables_receipt_schedule.js?v=20260930s}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

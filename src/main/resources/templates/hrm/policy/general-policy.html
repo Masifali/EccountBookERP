@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>General Policy - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        /* policy pages only */
+        .pol-row-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .pol-row-btns .win-btn-action { width: auto; min-width: 40px; padding: 0 10px; }
+        .pol-combo-btn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px; align-items: center; min-width: 0; }
+        .pol-combo-btn .win-btn-action { width: 30px; min-width: 30px; padding: 0; }
+        .pol-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 6px; min-width: 0; }
+        .pol-two > .hrm-grid-box { min-width: 0; }
+        .pol-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; padding: 0 4px; }
+        .pol-group { border: 1px solid #c8c8c8; margin: 6px 6px 4px 6px; min-width: 0; }
+        .pol-group .hrm-entry { padding: 6px 8px; }
+        .pol-group .hrm-field { grid-template-columns: 200px minmax(0, 1fr); }
+        .hrm-field > input[type=checkbox] { justify-self: start; width: 15px; height: 15px; margin: 0; }
+        button.pol-del { border: 1px solid #999; background: #f4f4f4; font: bold 8pt Verdana, sans-serif; line-height: 14px; padding: 0 4px; cursor: pointer; }
+        button.pol-del:hover { background: #ffd6d6; }
+        .pol-hist-detail { margin-top: 6px; }
+        @media (max-width: 700px) {
+            .pol-two, .pol-cols { grid-template-columns: 1fr; }
+            .pol-group .hrm-field { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<!-- Architecture.WinApp.HRM.PolicyManagment.GeneralPolicy - ClientSize 871 x 661 (Text "General Policy").
+     tsItemType New | Save (text becomes "Update" in update mode) | Refresh; panel9 (Teal, 28) label27 "General Policy";
+     "Load Record" cmbid (14,53) 202x26 UltraCombo (PolicyHeaderId / DateFrom) - Leave loads the record; "Date From" txtdatefrom (220,53), "Date To" txtdateto (327,53) Short.
+     Left column (x 13): groupBox1 "PayRoll" (Payroll CutOff Day, Is Month End Payroll), groupBox4 "Over Time" (OT Factor Rate, Is Seprate OT Payroll),
+       groupBox5 "Deduction Option" (No of Late, No of short leave, No of Half Day), groupBox7 "CPL" (CPL Apply minutes hours, CPL Calculate Hours).
+     Right column (x 447): groupBox2 "Advance" (Advance After Day, Advance Limit Percent), groupBox3 "Late/Short" (Monthly Short Hour Limit,
+       No of Short leave in month, No of short Hours in day, Mark Absent After Min), groupBox6 "Attendance Configuration" (Overtime apply after min,
+       Is Allow multi shift in one day, Show Late Arrival With Grace Time). Every group has a teal 28px caption panel. -->
+<body class="pd-body hrm-body" data-hrm="general-policy" data-screen="644">
+<div class="hrm-form hrm-medium">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmPolicy.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnSave" class="win-btn-tool" onclick="HrmPolicy.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmPolicy.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    </div>
+    <div class="hrm-caption">General Policy</div>
+    <div class="hrm-entry hrm-cols-3">
+            <div class="hrm-field hrm-stack"><label for="cmbid">Load Record</label><select id="cmbid" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-stack"><label for="txtdatefrom">Date From</label><input type="date" id="txtdatefrom" class="win-textbox" required/></div>
+            <div class="hrm-field hrm-stack"><label for="txtdateto">Date To</label><input type="date" id="txtdateto" class="win-textbox" required/></div>
+    </div>
+    <div class="pol-cols">
+        <div>
+            <section class="pol-group"><div class="hrm-subcaption"><span>PayRoll</span></div><div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field hrm-span-2"><label for="txtpayrollcutoffday">Payroll CutOff Day</label><input type="text" id="txtpayrollcutoffday" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="chkismonthendpayroll">Is Month End Payroll</label><input type="checkbox" id="chkismonthendpayroll"/></div>
+            </div></section>
+            <section class="pol-group"><div class="hrm-subcaption"><span>Over Time</span></div><div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field hrm-span-2"><label for="txtotfactorrate">OT Factor Rate</label><input type="text" id="txtotfactorrate" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="chkisseprateotpayroll">Is Seprate OT Payroll</label><input type="checkbox" id="chkisseprateotpayroll"/></div>
+            </div></section>
+            <section class="pol-group"><div class="hrm-subcaption"><span>Deduction Option</span></div><div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field hrm-span-2"><label for="txtdeductionleavenofoflate">Deduction Leave No of Late</label><input type="text" id="txtdeductionleavenofoflate" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtdeductionleavenoofshortleave">Deduction Leave No of short leave</label><input type="text" id="txtdeductionleavenoofshortleave" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtdeductionleavenoofhalfday">Deduction Leave No of Half Day</label><input type="text" id="txtdeductionleavenoofhalfday" class="win-textbox" autocomplete="off"/></div>
+            </div></section>
+            <section class="pol-group"><div class="hrm-subcaption"><span>CPL</span></div><div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field hrm-span-2"><label for="txtcplapplyminuteshours">CPL Apply minutes hours</label><input type="text" id="txtcplapplyminuteshours" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtCplCalculateHours">CPL Calculate Hours</label><input type="text" id="txtCplCalculateHours" class="win-textbox" autocomplete="off"/></div>
+            </div></section>
+        </div>
+        <div>
+            <section class="pol-group"><div class="hrm-subcaption"><span>Advance</span></div><div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field hrm-span-2"><label for="txtadvanceafterday">Advance After Day</label><input type="text" id="txtadvanceafterday" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtadvancelimitpercent">Advance Limit Percent</label><input type="text" id="txtadvancelimitpercent" class="win-textbox" autocomplete="off"/></div>
+            </div></section>
+            <section class="pol-group"><div class="hrm-subcaption"><span>Late/Short</span></div><div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field hrm-span-2"><label for="txtmonthlyshorthourslimit">Monthly Short Hour Limit</label><input type="text" id="txtmonthlyshorthourslimit" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtnoofshortleaveinmonth">No of Short leave in month</label><input type="text" id="txtnoofshortleaveinmonth" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtnoofshorthoursinday">No of short Hours in day</label><input type="text" id="txtnoofshorthoursinday" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtmarkabsentaftermin">Mark Absent After Min</label><input type="text" id="txtmarkabsentaftermin" class="win-textbox" autocomplete="off"/></div>
+            </div></section>
+            <section class="pol-group"><div class="hrm-subcaption"><span>Attendance Configuration</span></div><div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field hrm-span-2"><label for="txtovertimeapplyaftermin">Overtime apply after min</label><input type="text" id="txtovertimeapplyaftermin" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-span-2"><label for="chkisallowmultishiftinoneday">Is Allow multi shift in one day</label><input type="checkbox" id="chkisallowmultishiftinoneday"/></div>
+                <div class="hrm-field hrm-span-2"><label for="chkshowlatearrivalwithgracetime">Show Late Arrival With Grace Time</label><input type="checkbox" id="chkshowlatearrivalwithgracetime"/></div>
+            </div></section>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_policy.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

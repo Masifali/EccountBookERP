@@ -569,10 +569,10 @@
         });
     }
 
-    function VoucherReport_118(vh) { if (!int(vh)) { box('VoucherId Not Found'); return; } window.open('/api/reports/acc-118/data?id=' + encodeURIComponent(vh) + '&documentTypeId=245', '_blank'); }
-    function GeneratePrint(id) { if (!int(id)) { box('No Record Found For Display'); return; } window.open('/api/reports/pi-dpm-245/data?id=' + encodeURIComponent(id), '_blank'); }
+    function VoucherReport_118(vh) { if (!int(vh)) { box('VoucherId Not Found'); return; } window.open('/api/print/acc-118/pdf?id=' + encodeURIComponent(vh) + '&documentTypeId=245', '_blank'); }
+    function GeneratePrint(id) { if (!int(id)) { box('No Record Found For Display'); return; } window.open('/api/print/pi-dpm-245/pdf?id=' + encodeURIComponent(id), '_blank'); }
     /* grdHistory "Voucher" :3467 passes the invoice Id (not the voucher head id) to AcRptPurchaseSalesVoucherSlip_103 - ported as written. */
-    function VoucherSlip103(id) { if (!int(id)) { box('No Record Found For Display'); return; } window.open('/api/reports/acc-103/data?id=' + encodeURIComponent(id) + '&documentTypeId=245', '_blank'); }
+    function VoucherSlip103(id) { if (!int(id)) { box('No Record Found For Display'); return; } window.open('/api/print/acc-103/pdf?id=' + encodeURIComponent(id) + '&documentTypeId=245', '_blank'); }
 
     // ------------------------------------------------------------------ reset / read
 

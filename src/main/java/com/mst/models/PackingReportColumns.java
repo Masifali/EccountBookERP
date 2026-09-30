@@ -1,0 +1,19 @@
+package com.mst.models;
+import java.util.*;
+/** Desktop visible report columns. Kept in sync with the browser by the contract checks. */
+public final class PackingReportColumns {
+    public record Column(String key,String title,int width,String type) {}
+    private static final Map<String,String> DEFINITIONS=Map.ofEntries(
+        Map.entry("grn-register","BranchName:Branch:120,DocDate:GRN Date:70:d,DocNo:GRN No:50:grn,PoDate:Order Date:70:d,PoNo:Order No:50:po,CompanyName:Supplier Name:150,GpDate:G.P Date:70:d,GpNo:G.P No:50:gp,VehicleNo:Vehicle No:75,BiltyNo:Bilty No:70,TransporterName:Transporter:120,FreightAmount:Freight Amount:90:n2,DeliveryTerm:Delivery Term:90,ItemName:Item:150,UOMCode:Pack UOM:60,ItemQty:Qty:80:n4,AdLsWeight:Wt Per Qty:100:n4,GrossWeight:Gross Weight:90:n2,AreaCity:City:80,WareHouseName:Warehouse:120,NoOfAttachments:Attachments:80:attachments,CommentsDetail:Remarks:150"),
+        Map.entry("requirement-planning-detail","ItemCodeNew:Item Code:100,ItemName:Item Name:180,CustomerName:Customer Name:170,ScheduleCode:Schedule Code:110,CustomerContractNo:Customer Contract No:125,PortName:Destination Port:120,LoadingDate:Loading Date:90:d,ProductionDate:Production Date:95:d,PackingMaterialDate:Packing Material Date:105:d,TotalRequiredQty:Required Qty:100:n2,ReservedStock:Reserved Stock:100:n2,ConsumedReserved:Consumed Reserved:110:n2,RemainingAfterReserved:Remaining After Reserved:120:n2,AvailableStock:Stock In Hand:100:n2,ConsumedFromStock:Consumed From Stock:110:n2,NeedFromOrders:Need From Orders:110:n2,OutstandingOrders:Outstanding Orders:115:n2,MoreRequired:More Required:100:n2"),
+        Map.entry("purchase-order-register","BranchName:Branch:150,DocNo:Doc No:50:po,DocDate:Doc Date:75:d,SupplierName:Supplier Name:150:supplier,TermsDescription:Payment Term:70,OrderDueDays:Due Days:45,OrderDueDate:Due Date:75:d,DeliveryTerm:Delivery Term:70,DeliveryStartDate:Delivery Start Date:90:d,DeliveryDays:Delivery Days:70,OrderStatus:Order Status:70,OrderExpiryDate:Expiry Date:75:expiry,ItemName:Item Name:150,UomCodeItm:Pack UOM:60,OrderItemQty:Item Qty:80:n2,ReceivedQty:Received Qty:80:n2,BalQty:Balance Qty:80:n2,NetWeight:Net Weight:100:n2,ReceivedWeight:Received Weight:80:n2,BalWeight:Balance Weight:100:n2,OrderItemRate:Item Rate:90:n2,UomCodeRate:Rate UOM:60,Amount:Amount:100:n2,ReceivedAmount:Received Amount:100:n2,BalAmount:Balance Amount:100:n2,TaxName:Tax:100,TaxPercent:Tax Percent:80:n3,TaxAmount:Tax Amount:80:n2,IsApproved:Approved:80:approval,UserNameEusr:Entry User:80,EntryDate:Entry Date:80:d,RemarksHeader:Remarks:120"),
+        Map.entry("inventory-transaction-report","BranchName:Branch:120,DocumentTypeDescription:Doc Type:150,DocDate:Doc Date:73:d,DocCodeNo:Doc Code:60:transaction,WareHouseName:Warehouse:150,RackName:Rack:150,ItemCode:Item Code:80,ItemName:Item Name:150,UOMCode:UOM:60,ItemCondition:Item Condition:130,InQty:In Qty:70:n3,OutQty:Out Qty:70:n3,BalQty:Balance Qty:70:n3"),
+        Map.entry("stock-with-supplier","Doc_Date:Doc Date:73:d,Type:Type:70:slip,Doc_No:Doc No:60:slip,Supplier_Name:Supplier Name:190,Item_Name:Item Name:170,Tran_Desc:Description:150,Received:Received:110:n2,Issued:Issued:110:n2,CBalance:Closing:110:n2,EmptyBagsType:Empty Bags Type:130,BagsCondition:Bags Condition:130"),
+        Map.entry("trial","Supplier_Name:Supplier Name:220,Item_Name:Item Name:240,OBalance:Opening:110:n2,Received:Received:130:n2,Issued:Issued:130:n2,CBalance:Closing:110:n2"));
+    public static List<Column> forReport(String report,String mode) {
+        String key=report.equals("stock-with-supplier")&&"trial".equals(mode)?"trial":report;
+        String definition=DEFINITIONS.get(key);
+        if(definition==null)throw new IllegalArgumentException("Unknown report");
+        return Arrays.stream(definition.split(",")).map(v->{String[] c=v.split(":");return new Column(c[0],c[1],Integer.parseInt(c[2]),c.length>3?c[3]:"text");}).toList();
+    }
+}

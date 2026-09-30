@@ -1,5 +1,6 @@
 package com.mst.controllers;
 
+import com.mst.reports.jasper.CrystalJasperPrinter;
 import com.mst.services.AccountsReportService;
 import com.mst.services.GeneralLedgerPrintService;
 import com.mst.services.GeneralLedgerPrintService.Request;
@@ -26,10 +27,67 @@ public class GeneralLedgerPrintController {
     private static final Logger log = LoggerFactory.getLogger(GeneralLedgerPrintController.class);
     private final GeneralLedgerPrintService service;
     private final AccountsReportService accountsReportService;
+    private final CrystalJasperPrinter crystalJasperPrinter;
 
-    public GeneralLedgerPrintController(GeneralLedgerPrintService service, AccountsReportService accountsReportService) {
+    public GeneralLedgerPrintController(GeneralLedgerPrintService service, AccountsReportService accountsReportService,
+                                        CrystalJasperPrinter crystalJasperPrinter) {
         this.service = service;
         this.accountsReportService = accountsReportService;
+        this.crystalJasperPrinter = crystalJasperPrinter;
+    }
+
+    /**
+     * Print-105 / Print-106 / Print-107 of the General Ledger screen, rendered from the desktop's
+     * own .rpt layouts rebuilt as Jasper templates (/jasper/converted/105_..., 106_..., 107_...).
+     *
+     * GeneralLedger.cs pushes the SAME DataTable into all three .rpt files -
+     *     dtDetail = VoucherReports.GeneralLedgerWithOffsetAccount(obj);   // Sp_Accounts_GeneralLedger_Rpt
+     *     val.RptPerameter("@CompanyAddress", ...); val.RptPerameter("@CompanyName", ...);
+     *     val.ShowReportWithDataTable(dtDetail, "105-AcRptGeneralLedger.rpt");   // or 106 / 107
+     * so the rows go to the template exactly as the procedure returns them.
+     */
+    private static final Map<String, String> DESKTOP_TEMPLATES = Map.of(
+            "105", "105-AcRptGeneralLedger.rpt",
+            "106", "106-AcRptGeneralLedgerB.rpt",
+            "107", "107-AcRptQuantativeLedger.rpt");
+
+    private ResponseEntity<byte[]> printDesktopTemplate(String code, String rpt, Integer accountId, String fromDate,
+            String toDate, Integer subsidiaryAccountId, Integer branchId, Integer costCenterId, Integer languageId,
+            boolean includeUnposted) {
+        if (accountId == null || accountId <= 0) {
+            return plain(HttpStatus.BAD_REQUEST, "Account Title Field is Required");
+        }
+        try {
+            List<Map<String, Object>> rows = accountsReportService.getGeneralLedgerReport(accountId, fromDate, toDate,
+                    subsidiaryAccountId, branchId, costCenterId, languageId, includeUnposted);
+            if (rows == null || rows.isEmpty()) {
+                return plain(HttpStatus.NOT_FOUND, "Not Record Found For Display");   // the desktop's message
+            }
+            /* @CompanyName/@CompanyAddress = UserAccount.CompName/CompAddress on the desktop; the
+               procedure returns the same Company row (co.CompName, co.CompAddress). */
+            Map<String, Object> first = rows.get(0);
+            Map<String, Object> reportParams = new HashMap<>();
+            reportParams.put("@CompanyName", first.get("CompName"));
+            reportParams.put("@CompanyAddress", first.get("CompAddress"));
+            byte[] pdf = crystalJasperPrinter.printPdf(rpt, rows, Collections.emptyMap(), reportParams);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.inline()
+                    .filename(rpt.replace(".rpt", "") + "-" + accountId + ".pdf").build());
+            log.info("General Ledger Print-{} ({}) rendered {} rows", code, rpt, rows.size());
+            return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("General Ledger Print-{} failed: {}", code, e.getMessage(), e);
+            return plain(HttpStatus.INTERNAL_SERVER_ERROR, "Print-" + code + " failed: " + e.getMessage());
+        }
+    }
+
+    /** Errors on a PDF endpoint are readable text, never a broken PDF. */
+    private static ResponseEntity<byte[]> plain(HttpStatus status, String message) {
+        HttpHeaders h = new HttpHeaders();
+        h.setContentType(new MediaType("text", "plain", StandardCharsets.UTF_8));
+        return new ResponseEntity<>(message.getBytes(StandardCharsets.UTF_8), h, status);
     }
 
     @GetMapping("/accounts/reports/general-ledger/print")
@@ -63,11 +121,20 @@ public class GeneralLedgerPrintController {
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,
             @RequestParam(defaultValue = "false") boolean includeUnposted,
-            @RequestParam(required = false) Integer languageId) {
+            @RequestParam(required = false) Integer languageId,
+            @RequestParam(required = false) Integer branchId,
+            @RequestParam(required = false) Integer subsidiaryAccountId,
+            @RequestParam(required = false) Integer costCenterId) {
         
         String effCode = (reportCode != null && !reportCode.isBlank()) ? reportCode 
                 : (code != null && !code.isBlank()) ? code 
                 : (format != null ? format : "105");
+
+        String desktopRpt = DESKTOP_TEMPLATES.get(effCode);
+        if (desktopRpt != null && crystalJasperPrinter.hasTemplate(desktopRpt)) {
+            return printDesktopTemplate(effCode, desktopRpt, accountId, fromDate, toDate, subsidiaryAccountId,
+                    branchId, costCenterId, languageId, includeUnposted);
+        }
 
         List<Map<String, Object>> rows = accountsReportService.getGeneralLedgerReport(
                 accountId, fromDate, toDate, null, null, null, languageId, includeUnposted);

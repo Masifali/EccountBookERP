@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bank Balances</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+</head>
+<!--
+  Screen 73 "Bank Balances Report" - Architecture.WinApp.Account_Reports.BankBalances.
+  Show -> ReciptandPaymentGrid (VoucherReports.BankBalances -> Sp_Accounts_BankBalances_Rpt)
+        + SummeryGrd (VoucherReports.CashandBankBalancesSummery, AccountTypeId 15 -> Sp_Accounts_CashBankBalancesSummery_Rpt).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-university"></i> Bank Balances</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="bbReset()"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" onclick="bbRefresh()"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="593-CashBankBalancesSummery_Rpt.rpt"><i class="fa fa-print"></i> 593_Print Summary</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="590-BankBalances.rpt"><i class="fa fa-print"></i> 593_01_Print Summary</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="590_01_BankBalancesWithSummary.rpt"><i class="fa fa-print"></i> 590_Print Receipt and Payment</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="590_01_BankBalancesWithSummary.rpt"><i class="fa fa-print"></i> 590_01_Print</button>
+    <a class="win-btn" href="/accounts/bank-balance-manual-entry" target="_blank"><i class="fa fa-pencil-square-o"></i> Bank Manual Balance</a>
+</div>
+<div class="win-header-panel"><span>Bank Balances</span></div>
+
+<div class="filters">
+    <div class="gb" style="width:760px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 60px 150px 60px 120px 55px 120px 1fr;">
+            <span class="lbl">Date Type</span><select data-dtcombo="single" data-dtcombo-caption="Date Type" id="cmbperemeter" class="inp"></select>
+            <span class="lbl">From Date</span><input type="date" id="txtFromDate" class="inp">
+            <span class="lbl">To Date</span><input type="date" id="txtToDate" class="inp">
+            <button type="button" id="btnshow" class="win-btn-show" onclick="bbShow()">Show</button>
+            <span class="lbl bb-br" style="display:none;">Branches</span><select id="CmbBranches" class="inp bb-br" style="display:none; grid-column: span 3;"></select>
+            <span class="lbl bb-lang" style="display:none;">Language</span><select data-dtcombo="single" data-dtcombo-caption="Language" id="CmbLanguage" class="inp bb-lang" style="display:none; grid-column: span 2;"></select>
+        </div>
+    </div>
+    <div class="gb">
+        <span class="gb-title">&nbsp;</span>
+        <label class="chk"><input type="checkbox" id="chkFilterSummaryOnlyTransactional"> Exclude 0 Debit/Credit From Summary</label><br>
+        <label class="chk"><input type="radio" name="rdGrp" id="RadGroupbyBankName" value="bank" checked> Group By Bank Name</label><br>
+        <label class="chk"><input type="radio" name="rdGrp" id="RadGroupbyParty" value="account"> Group By Account</label><br>
+        <label class="chk"><input type="radio" name="rdGrp" id="RadNoGroup" value="none"> None</label>
+    </div>
+</div>
+
+<ul class="win-tabs">
+    <li class="active" data-tab="s"><a onclick="bbTab('s')">Summary</a></li>
+    <li data-tab="d"><a onclick="bbTab('d')">Payment/Receipts Detail</a></li>
+</ul>
+<div id="tabS">
+    <div class="grid-caption"><span>Summary</span><span id="lblSummary"></span></div>
+    <div class="grid-wrap"><table class="wg" id="grdHistory"></table></div>
+</div>
+<div id="tabD" style="display:none;">
+    <div class="grid-caption"><span>Receipts</span></div>
+    <div class="grid-wrap" style="max-height:calc(50vh - 150px);"><table class="wg" id="grdReceipt"></table></div>
+    <div class="grid-caption"><span>Payment</span></div>
+    <div class="grid-wrap" style="max-height:calc(50vh - 150px);"><table class="wg" id="grdPayment"></table></div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    /* Searchable dropdowns (countx_prod_combo.js, 2026-09-30 R2): every single select carries data-dtcombo="single";
+       the wrap takes the select's grid placement and its initial hidden state; multi-selects stay native. */
+    function comboInit() {
+        if (!window.DesktopCombo) return;
+        $('select[data-dtcombo]').each(function () {
+            const c = window.DesktopCombo.enhance(this);
+            if (!c || !c.wrap) return;
+            if (this.style.gridColumn) c.wrap.style.gridColumn = this.style.gridColumn;
+            if (this.style.display === 'none') c.wrap.style.display = 'none';
+        });
+    }
+    function comboFocus(sel) { const $i = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); ($i.length ? $i : $(sel)).focus(); }
+    /* CmbBranches is a native multi-select under ERP feature 18 (consolidated), otherwise a single searchable combo. */
+    function branchesCombo(consolidated) {
+        if (consolidated) return;
+        $('#CmbBranches').attr({ 'data-dtcombo': 'single', 'data-dtcombo-caption': 'Branches' });
+        comboInit();
+    }
+    let CTX = null, LAST_RECORD = null, summary = [], receipts = [], payments = [], branchShown = false;
+    const QS = new URLSearchParams(window.location.search);
+
+    function bbTab(t) {
+        $('.win-tabs li').removeClass('active'); $('.win-tabs li[data-tab="' + t + '"]').addClass('active');
+        $('#tabS').toggle(t === 's'); $('#tabD').toggle(t === 'd');
+    }
+    /* cmbperemeter_ValueChanged (BankBalances.cs): every choice also sets To = today */
+    function onParameter() {
+        const id = parseInt($('#cmbperemeter').val(), 10);
+        if (id === 1) $('#txtFromDate').val(AccF.today());
+        else if (id === 2) $('#txtFromDate').val(AccF.addDays(-7));
+        else if (id === 3) $('#txtFromDate').val(AccF.monthStart());
+        else if (id === 4) $('#txtFromDate').val(AccF.yearStart());
+        else if (id === 5) $('#txtFromDate').val(CTX.activeYear.startPeriod);
+        else if (id === 6) $('#txtFromDate').val(LAST_RECORD || '');
+        if (id >= 1 && id <= 6) $('#txtToDate').val(AccF.today());
+    }
+
+    function detailColumns(accountCol) {
+        return [
+            { key: 'BranchName', visible: branchShown },
+            { key: 'V.Date', type: 'date' },
+            { key: 'V.Type' },
+            { key: 'V.No', link: function (r) { AccF.editLinked(r.DocumentTypeId, r.Id, r.DocumentTypeSrNo, 0); } },
+            { key: 'BankName' },
+            { key: 'Account', caption: accountCol, link: function (r) {
+                AccF.openLedger(r.AgainstAccountId, $('#txtFromDate').val(), $('#txtToDate').val(), r.SubsidiaryAccountId, r.BranchesId); } },
+            { key: 'Amount', type: 'both', sum: true },
+            { key: 'ChequeNo' }
+        ];
+    }
+    /* BindAndSetupGrid: grouped on BankName or on the account column (group totals) unless None */
+    function renderDetail() {
+        const g = $('input[name="rdGrp"]:checked').val();
+        const groupBy = g === 'bank' ? 'BankName' : (g === 'account' ? 'Account' : null);
+        AccF.renderGrid({ table: '#grdReceipt', columns: detailColumns('ReceivedFrom'), rows: receipts, groupBy: groupBy, groupTotals: !!groupBy, emptyText: '' });
+        AccF.renderGrid({ table: '#grdPayment', columns: detailColumns('PaidTo'), rows: payments, groupBy: groupBy, groupTotals: !!groupBy, emptyText: '' });
+    }
+    /* GridSetting: grouped on CustomGroup with group totals */
+    function renderSummary() {
+        AccF.renderGrid({ table: '#grdHistory', rows: summary, groupBy: 'CustomGroup', groupTotals: true, emptyText: '', columns: [
+            { key: 'BranchName', visible: branchShown },
+            { key: 'AccountCode', link: function (r) { AccF.openLedger(r.AccountId, $('#txtFromDate').val(), $('#txtToDate').val(), 0, r.BranchesId); } },
+            { key: 'AccountTitle' },
+            { key: 'Opening', type: 'both', sum: true },
+            { key: 'Debit', type: 'single', sum: true },
+            { key: 'Credit', type: 'single', sum: true },
+            { key: 'Closing', type: 'both', sum: true },
+            { key: 'PendingPrematureReceipts', type: 'both', sum: true },
+            { key: 'PendingPrematurePayments', type: 'both', sum: true },
+            { key: 'BalanceAfterPrematureReceiptsClearance', type: 'both', sum: true },
+            { key: 'PostDateCheqsReceipts', type: 'both', sum: true },
+            { key: 'PostDateCheqsPayments', type: 'both', sum: true },
+            { key: 'BalanceAfterCheqClearance', type: 'both', sum: true },
+            { key: 'PostDatedCheqAmount', type: 'both', sum: true },
+            { key: 'BalanceTime' },
+            { key: 'ManualBalance', type: 'both', sum: true },
+            { key: 'Source' },
+            { key: 'ConfirmBy' }
+        ] });
+        $('#lblSummary').text('Records: ' + summary.length);
+    }
+
+    function request(withDetail) {
+        const br = $('#CmbBranches').val();
+        return {
+            fromDate: $('#txtFromDate').val(), toDate: $('#txtToDate').val(), withDetail: withDetail,
+            branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null,
+            languageId: $('#CmbLanguage').val() || null,
+            excludeZero: $('#chkFilterSummaryOnlyTransactional').is(':checked')
+        };
+    }
+    async function bbShow() {
+        const btn = $('#btnshow');
+        AccF.busy(btn, true);
+        try {
+            const res = await AccF.post('/bank-balances', request(true));
+            branchShown = !!(CTX.branchFeature && $('#CmbBranches').val() && $('#CmbBranches').val().length);
+            receipts = res.receipts || []; payments = res.payments || []; summary = res.summary || [];
+            renderDetail(); renderSummary();
+        } catch (e) { alert(e.message); }
+        finally { AccF.busy(btn, false); }
+    }
+    /* summary only (SummeryGrd) for the dates on screen */
+    async function summaryOnly() {
+        try { summary = (await AccF.post('/bank-balances', request(false))).summary || []; renderSummary(); } catch (e) { alert(e.message); }
+    }
+    /* btnNew_Click: From = ActiveYr.Start_Period, To = now, Receipts/Payments cleared, SummeryGrd */
+    async function bbReset() {
+        $('#txtFromDate').val(CTX.activeYear.startPeriod || AccF.today());
+        $('#txtToDate').val(AccF.today());
+        receipts = []; payments = []; $('#grdReceipt, #grdPayment').empty();
+        await summaryOnly();
+    }
+    /* BtnRefresh_Click: re-read Vouchers_GetLastRecord(15) only */
+    async function bbRefresh() {
+        try { LAST_RECORD = await AccF.lookup('last-record-date', { accountTypeId: 15 }); } catch (e) { alert(e.message); }
+    }
+
+    $('input[name="rdGrp"]').on('change', renderDetail);
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.bb-lang').show(); }
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); bbShow(); }
+    });
+
+    $(async function () {
+        comboInit();
+        try {
+            CTX = await AccF.context();
+            if (CTX.branchFeature) {
+                const brs = await AccF.lookup('branches');
+                if (CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
+                branchesCombo(CTX.branchConsolidated);
+                AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', CTX.branchConsolidated ? null : '');
+                const pre = QS.get('branchesIds');
+                if (pre) $('#CmbBranches').val(CTX.branchConsolidated ? pre.split(',') : pre.split(',')[0]);
+                else $('#CmbBranches').val(CTX.branchConsolidated ? [String(CTX.userBranchId)] : String(CTX.userBranchId));
+                $('.bb-br').show();
+            }
+            AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '');
+            $('#txtFromDate, #txtToDate').val(AccF.today());
+            // BankBalances_Load: a drill-in with dates fills Receipts/Payments; the summary is always filled; then
+            // Vouchers_GetLastRecord(15) and ParameterFill (Rows[5] "Last Record Date" -> From = last record, To = today).
+            if (QS.get('fromDate') && QS.get('toDate')) {
+                $('#txtFromDate').val(QS.get('fromDate')); $('#txtToDate').val(QS.get('toDate'));
+                await bbShow();
+            } else {
+                await summaryOnly();
+            }
+            LAST_RECORD = await AccF.lookup('last-record-date', { accountTypeId: 15 });
+            AccF.fillSelect('#cmbperemeter', [{ Id: 1, P: 'This Day' }, { Id: 2, P: 'This Week' }, { Id: 3, P: 'This Month' },
+                { Id: 4, P: 'This Year' }, { Id: 5, P: 'Financial Year' }, { Id: 6, P: 'Last Record Date' }], 'Id', 'P', null).val('6');
+            onParameter();
+            $('#cmbperemeter').on('change', onParameter);
+        } catch (e) { alert(e.message); }
+    });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

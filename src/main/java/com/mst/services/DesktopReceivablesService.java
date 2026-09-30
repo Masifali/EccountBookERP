@@ -24,7 +24,9 @@ public class DesktopReceivablesService {
         Integer screen=Map.of("receivables-by-due-dates",68,"receivables-receipt-schedule",71,"receivables-report",80,"payables-report",48).get(report);
         if(screen==null) throw new IllegalArgumentException("Unknown report");
         rights.require(user,screen,"View");
-        return repository.load(report,user,r);
+        /* R4 2026-09-30: @FinancialYearId = clsGlobalVariables.ActiveYr.Id (Receivables.cs DataFill, Payables.cs btnshow_Click). */
+        Integer year = (report.equals("receivables-report")||report.equals("payables-report")) ? context.currentFinancialYearId() : null;
+        return repository.load(report,user,r,year);
     }
     private void dates(LocalDate from,LocalDate to) {
         if(from!=null && to!=null && from.isAfter(to)) throw new IllegalArgumentException("From date must be on or before To date");

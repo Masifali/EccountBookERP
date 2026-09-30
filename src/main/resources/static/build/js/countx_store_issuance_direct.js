@@ -20,6 +20,7 @@
 
     var look = { rights: {}, items: [], uoms: [], racks: [], itemConditions: [] };
     var recId = 0, voucherHeadId = 0;
+    try { Object.defineProperty(window, 'VoucherHeadId', { get: function () { return voucherHeadId; }, configurable: true }); } catch (e) { }
     var table = [];                 // the grid
     var removed = [];               // lstRemoveRecord
     var updateDetailIndex = -1;

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Over Time Request - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        .ot-toolbar-caption { display: flex; align-items: center; gap: 12px; }
+        .ot-caption-check { color: #fff; font: bold 9pt "Segoe UI", sans-serif; }
+        .ot-detail-buttons { display: flex; gap: 4px; align-items: center; }
+        .ot-detail-buttons .win-btn-action { width: auto; min-width: 32px; padding: 0 8px; }
+        .ot-radios { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+        .ot-datecheck { display: flex; align-items: center; gap: 4px; min-width: 0; }
+        .ot-datecheck input[type=date] { flex: 1 1 auto; min-width: 0; }
+        .ot-history-filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px 12px; width: 100%; }
+        .ot-history-filters .hrm-field { grid-template-columns: 90px minmax(0, 1fr); }
+        .ot-history-tools { width: 100%; }
+        .ot-print-btn { height: 20px; line-height: 18px; padding: 0 8px; font-size: 8pt; min-width: 0; width: auto; }
+        .ot-loader-filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px 12px; align-items: end; }
+        .ot-loader-filters .hrm-field { grid-template-columns: 1fr; gap: 2px; }
+        .ot-loader-filters .hrm-actions { padding: 0; justify-content: flex-start; }
+        .ot-keys td, .ot-keys th { padding: 2px 6px; }
+    </style>
+</head>
+<!-- Architecture.WinApp.HRM.OverTimeManagement.OverTimeRequest - ClientSize 959 x 648, KeyPreview, maximized.
+     tabControl1: "Form" | "History" (the History tab is the footer's History dialog here; Ctrl+T opens it).
+     Form tab: panel3 toolstrip New | Refresh | Save | Update (hidden) | Attachment | 1010-Print | ShortCut Keys | Load Employee Overtime.
+     panel6 (Teal, 24): label6 "Over Time Request" (white) + ChkBox "Print Preview" (843,2; Checked = print right).
+     groupBox2 "Main" (3,24 928x73): Request Date (97,14) dd-MMM-yyyy | Department cmbDepartmnet (308,12) Leave -> employees |
+         Requested By cmbRequestedBy (556,12) | IsOffDuty (834,16); Over Time Date (97,43) | Section cmbSection (308,41) | Reason txtReason (556,43) 367.
+     groupBox1 "Detail" (3,97 928x71): Employee cmbEmployee (3,39) 301 | From Time (307,41) hh:mm tt up-down | To Time (416,41) |
+         IsMealAllow (hidden) | + (531,41) | Update (531,41, hidden) | Cancel (607,41, hidden) | OT Hours (hidden, read-only); OT Rate txtOTRate (423,241 - outside the panel).
+     panel9 (Teal, 22) "Detail"; grdDetails GridEX fill: Edit | X | EmployeeName | From Time | To Time (Id, EmployeeId, OTHours, OTRate, IsAllowMeal, EntryByLoader hidden).
+     History tab: toolStrip3 New | Refresh; "Over Time History"; groupBox3 Filters: Date From / Date To (dd-MMM-yy, ShowCheckBox), Section, Department,
+         Requested By, radios Requested Date (checked) | Over Time Date | Entry Date | Modify Date | Approved Date, Show;
+         "Filtered Records" DataGridHistory (Edit | Print | ...), "Detail Of Above Selected Row" grdHistoryDetail. -->
+<body class="pd-body hrm-body" data-hrm="over-time-request" data-screen="665">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmOvertime.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmOvertime.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmOvertime.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="HrmOvertime.btnUpdate(this)"><i class="fa fa-pencil"></i> <span>Update</span></button>
+        <button type="button" id="toolStripButton2" class="win-btn-tool" onclick="HrmOvertime.attachment(this)"><i class="fa fa-paperclip"></i> <span>Attachment</span></button>
+        <button type="button" id="btnprint" class="win-btn-tool" onclick="HrmOvertime.btnprint(this)" data-rpt-own data-rpt="1010-OverTime_Slip.rpt"><i class="fa fa-print"></i> <span>1010-Print</span></button>
+        <button type="button" id="btnshortcutkeys" class="win-btn-tool" onclick="HrmOvertime.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        <button type="button" id="btnLoader" class="win-btn-tool" onclick="HrmOvertime.btnLoader(this)"><i class="fa fa-download"></i> <span>Load Employee Overtime</span></button>
+    </div>
+    <div class="hrm-caption"><span>Over Time Request</span>
+        <label class="hrm-check ot-caption-check"><input type="checkbox" id="ChkBox"> Print Preview</label></div>
+
+    <fieldset class="hrm-group"><legend>Main</legend>
+        <div class="hrm-entry hrm-cols-4">
+            <div class="hrm-field"><label for="txtRequestDate">Request Date</label><input type="date" id="txtRequestDate" class="win-textbox"/></div>
+            <div class="hrm-field"><label for="cmbDepartmnet">Department</label><select id="cmbDepartmnet" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="cmbRequestedBy">Requested By</label><select id="cmbRequestedBy" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><span></span><label class="hrm-check"><input type="checkbox" id="IsOffDuty"> Is Off Duty</label></div>
+            <div class="hrm-field"><label for="txtOverTimeDate">Over Time Date</label><input type="date" id="txtOverTimeDate" class="win-textbox"/></div>
+            <div class="hrm-field"><label for="cmbSection">Section</label><select id="cmbSection" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-span-2"><label for="txtReason">Reason</label><input type="text" id="txtReason" class="win-textbox" autocomplete="off"/></div>
+        </div>
+    </fieldset>
+
+    <fieldset class="hrm-group"><legend>Detail</legend>
+        <div class="hrm-entry hrm-cols-4">
+            <div class="hrm-field hrm-stack"><label for="cmbEmployee">Employee</label><select id="cmbEmployee" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-stack"><label for="txtFromDateTime">From Time</label><input type="time" id="txtFromDateTime" class="win-textbox"/></div>
+            <div class="hrm-field hrm-stack"><label for="txtToDateTime">To Time</label><input type="time" id="txtToDateTime" class="win-textbox"/></div>
+            <div class="hrm-field hrm-stack">
+                <label class="hrm-check is-hidden" id="lblIsMealAllow"><input type="checkbox" id="IsMealAllow"> Is Meal Allow</label>
+                <div class="ot-detail-buttons">
+                    <button type="button" id="btnplus" class="win-btn-action" onclick="HrmOvertime.btnplus()" title="Add to grid">+</button>
+                    <button type="button" id="btnUpdateDetail" class="win-btn-action is-hidden" onclick="HrmOvertime.btnUpdateDetail()">Update</button>
+                    <button type="button" id="btnCancelUpdateDetial" class="win-btn-action is-hidden" onclick="HrmOvertime.btnCancelUpdateDetial()">Cancel</button>
+                    <span class="is-hidden" id="label16">OT Hours</span><input type="text" id="txtOTHours" class="win-textbox is-hidden" readonly style="width:77px"/>
+                    <span class="is-hidden" id="label2">OT Rate</span><input type="text" id="txtOTRate" class="win-textbox is-hidden" style="width:77px"/>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="hrm-grid-box">
+        <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="grdDetails"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_overtime.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

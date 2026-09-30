@@ -1011,6 +1011,7 @@
     /* FreightSlip241 (:2020) -> CommonServices.FreightVoucherSlip241 */
     function printSlip241(id, pre) {
         if (!id) { box('No Record Found For Display'); if (pre) pre.close(); return; }
+        if (window.printRpt) { if (pre) try { pre.close(); } catch (e) { } return window.printRpt('241-FreightVoucherSlip.rpt', { id: id }); }   // Jasper, same .rpt
         var w = openWin(pre);
         get('/slip241/' + id).then(function (rows) {
             if (!rows || !rows.length) { w.close(); box('No Record Found For Display'); return; }
@@ -1051,6 +1052,7 @@
     /* Print_Click (:1996) -> ANewAcRptPaymentReceiptsVoucherSlip_102(VoucherHeadId) */
     function printVoucher102(voucherHeadId) {
         if (!voucherHeadId) { box('VoucherId Not Found'); return; }
+        if (window.printRpt) return window.printRpt('102-ANewAcRptPaymentReceiptsVoucherSlip.rpt', { id: voucherHeadId });   // Jasper, the desktop's 102 slip
         var w = openWin();
         get('/voucher102/' + voucherHeadId).then(function (rows) {
             if (!rows || !rows.length) { w.close(); box('No Record Found For Display'); return; }

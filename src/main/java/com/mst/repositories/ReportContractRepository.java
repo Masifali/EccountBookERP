@@ -61,9 +61,30 @@ public class ReportContractRepository {
      * returns another document's rows. Sub-reports stay hand-traced in ReportRegistry.
      */
     public List<ReportDefinition> loadAll() {
+        List<ReportDefinition> base = new ArrayList<>(loadSeedOrTables());
+        java.util.Set<String> keys = new java.util.HashSet<>();
+        java.util.Set<String> templates = new java.util.HashSet<>();
+        for (ReportDefinition d : base) { keys.add(d.key); templates.add(d.template.toLowerCase(java.util.Locale.ROOT)); }
+        int added = 0;
+        /* Every other converted .rpt, traced from the desktop BLL (bll_contracts.py): same contract
+           shape as the seeder, added after it so a seeded contract always wins. */
+        for (ReportDefinition d : loadBundled("/reports/print-contracts-bll.json")) {
+            if (keys.contains(d.key) || templates.contains(d.template.toLowerCase(java.util.Locale.ROOT))) continue;
+            base.add(d); keys.add(d.key); added++;
+        }
+        LOG.info("Report contracts: {} from the seeder, {} traced from the BLL", base.size() - added, added);
+        return base;
+    }
+
+    private List<ReportDefinition> loadSeedOrTables() {
         if (!seedPresent()) {
-            LOG.info("Report contract seed tables absent - registry keeps its hand-traced entries only");
-            return Collections.emptyList();
+            /* The same 239 contracts, bundled with the application by
+               migration/rpt-to-jasper/extract_seeded_prints.py from 02_seed_report_contracts.sql, so
+               the prints work before the seeder has been run against the database. */
+            List<ReportDefinition> bundled = loadBundled("/reports/print-contracts.json");
+            LOG.info("Report contract seed tables absent - {} contracts loaded from the bundled seed "
+                     + "(reports/print-contracts.json)", bundled.size());
+            return bundled;
         }
 
         Map<String, List<ReportDefinition.Param>> params = new LinkedHashMap<>();
@@ -108,6 +129,39 @@ public class ReportContractRepository {
         } catch (Exception e) {
             LOG.warn("Report contracts could not be read; seeded contracts skipped", e);
             return Collections.emptyList();
+        }
+        return out;
+    }
+
+    /**
+     * The seeder's contracts as shipped on the classpath. Same rules as the tables: a contract
+     * without parameters is skipped, sub-reports are not loaded.
+     */
+    @SuppressWarnings("unchecked")
+    public List<ReportDefinition> loadBundled(String resource) {
+        List<ReportDefinition> out = new ArrayList<>();
+        try (java.io.InputStream in = getClass().getResourceAsStream(resource)) {
+            if (in == null) return out;
+            Map<String, Object> root = new com.fasterxml.jackson.databind.ObjectMapper().readValue(in, Map.class);
+            for (Object o : (List<Object>) root.getOrDefault("prints", Collections.emptyList())) {
+                Map<String, Object> r = (Map<String, Object>) o;
+                List<ReportDefinition.Param> ps = new ArrayList<>();
+                for (Object po : (List<Object>) r.getOrDefault("params", Collections.emptyList())) {
+                    Map<String, Object> p = (Map<String, Object>) po;
+                    ps.add(new ReportDefinition.Param(str(p.get("name")), str(p.get("source")),
+                            "GUARDED".equalsIgnoreCase(str(p.get("mode")))
+                                    ? ReportDefinition.Mode.GUARDED : ReportDefinition.Mode.ALWAYS));
+                }
+                if (ps.isEmpty()) {
+                    LOG.warn("Bundled report '{}' has no parameters - skipped", r.get("key"));
+                    continue;
+                }
+                out.add(new ReportDefinition(str(r.get("key")), str(r.get("template")), str(r.get("procedure")),
+                        str(r.get("desktopCaller")) + " (" + str(r.get("sourceFile")) + ":" + str(r.get("sourceLine")) + ")",
+                        ps, Collections.emptyList()));
+            }
+        } catch (Exception e) {
+            LOG.warn("Bundled report contracts could not be read", e);
         }
         return out;
     }

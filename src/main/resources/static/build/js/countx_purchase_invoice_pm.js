@@ -459,9 +459,9 @@
         });
     }
 
-    function GeneratePurchaseSlip231(id) { if (!id) { box('Record Id Not Found'); return; } window.open('/api/reports/pi-pm-231/data?id=' + encodeURIComponent(id), '_blank'); }
-    function PrintII(id) { if (!id) { box('Record Id Not Found'); return; } window.open('/api/reports/pi-pm-231-01/data?id=' + encodeURIComponent(id), '_blank'); }
-    function VoucherSlip(vh) { if (!vh) { box('No Record Found For Display'); return; } window.open('/api/reports/acc-103/data?id=' + encodeURIComponent(vh), '_blank'); }
+    function GeneratePurchaseSlip231(id) { if (!id) { box('Record Id Not Found'); return; } window.open('/api/print/pi-pm-231/pdf?id=' + encodeURIComponent(id), '_blank'); }
+    function PrintII(id) { if (!id) { box('Record Id Not Found'); return; } window.open('/api/print/pi-pm-231-01/pdf?id=' + encodeURIComponent(id), '_blank'); }
+    function VoucherSlip(vh) { if (!vh) { box('No Record Found For Display'); return; } window.open('/api/print/acc-103/pdf?id=' + encodeURIComponent(vh), '_blank'); }
 
     // ------------------------------------------------------------------ reset / read
 

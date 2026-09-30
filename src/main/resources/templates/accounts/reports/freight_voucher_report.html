@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Freight Voucher Report</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20260930s}">
+</head>
+<!--
+  Screen 911 "Freight Voucher Report" - FreightVoucherRegister.cs. Read-only.
+  toolStrip3 / panel3 (teal "Freight Voucher Register") / groupBox3 "Filters" / panel7 (teal "Filtered Records") + grid.
+  Combos: USP_GetDataForDropDownFromFreightVoucher (/accounts/api/freight/history-combos, Activity Supplier / CreditAccount / DebitAccount).
+  Show: SP_FreightVoucherSlipAndRegister (DocumentTypeId 28, FY) via /accounts/api/freight/register.
+  Dates as VoucherValidation_Load: From = ActiveYr.Start_Period, To = today. Look: countx_acc_rpt_f.css; combos countx_prod_combo.js (R5, 2026-09-30).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-truck"></i> Freight Voucher Report</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li class="active"><a>Freight Voucher Register</a></li>
+</ul>
+<div class="win-toolbar" id="toolStrip3">
+    <button type="button" class="win-btn" id="btnResetRegister"><i class="fa fa-file-o text-success"></i> Reset</button>
+    <button type="button" class="win-btn" id="btnRefreshRegister"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn" id="btnRegister" data-rpt-skip="rows"><i class="fa fa-print"></i> 240-Register</button>
+</div>
+<div class="win-header-panel" id="panel3"><span>Freight Voucher Register</span></div>
+
+<div class="filters" id="panel5">
+    <div class="gb" id="groupBox3" style="width:760px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 104px 118px 112px 88px 250px 1fr;">
+            <span class="lbl">Date From &amp; To</span>
+            <input type="date" id="datFromDate" class="inp">
+            <input type="date" id="datToDate" class="inp">
+            <span class="lbl">Party Name</span>
+            <select id="CmbSupplierName" class="inp" data-dtcombo="single" data-dtcombo-caption="Party Name"></select>
+            <span></span>
+
+            <span class="lbl">GP No From &amp; To</span>
+            <input type="text" id="txtGpNoFrom" class="inp">
+            <input type="text" id="txtGpNoTo" class="inp">
+            <span class="lbl">Credit Account</span>
+            <select id="CmbCreditAcRegister" class="inp" data-dtcombo="single" data-dtcombo-caption="Credit Account"></select>
+            <span></span>
+
+            <span class="lbl">Vehicle No</span>
+            <input type="text" id="txtVehicleRegister" class="inp span2">
+            <span class="lbl">Debit Account</span>
+            <select id="CmbDebitAcRegister" class="inp" data-dtcombo="single" data-dtcombo-caption="Debit Account"></select>
+            <div class="show-cell" style="justify-content:flex-start"><button type="button" id="btnshow" class="win-btn-show"><i class="fa fa-eye"></i> Show</button></div>
+        </div>
+    </div>
+</div>
+<div class="grid-caption" id="panel7"><span>Filtered Records</span><span id="lblStatus"></span></div>
+<div class="grid-wrap tall" id="wrap" tabindex="0"><table class="wg" id="grd"></table></div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}"></script>
+<script>
+(function () {
+    'use strict';
+    /* Data comes from the Freight Voucher API (FreightVoucherController): the same BLL calls with the
+       same parameters - InvFreightVoucher.GetDataForDropDownFromFreightVoucher(org, comp, null) and
+       FreightVoucherSlipAndRegister (DocumentTypeId 28, the signed-in FinancialYearId, dates, GpSrNoF/T,
+       VehicleNo, SupplierCustomerId, CreditAccountId, DebitAccountId - each only when non-zero/non-empty). */
+    var H = AccH, API = '/accounts/api/freight';
+    var dec = 0, dtRegister = [], grid = [];
+
+    /* dtRegisterGrid - columns in the desktop's order, with its typed columns. */
+    var COLS = [ ['Id', 'i'], ['VoucherHeadId', 'i'], ['DocDate', 'd'], ['DocNo', 'i'], ['GpDate', 'd'], ['GpNo', 'i'], ['SupplierName', 's'], ['VehicleNo', 's'],
+        ['BiltyNo', 's'], ['BiltyDate', 'd'], ['DeliveryTerm', 's'], ['SupplierWeight', 'n'], ['FactoryWeight', 'n'], ['ShortWeight', 'n'], ['AllowShortage', 'n'],
+        ['ShortageApply', 'n'], ['ShortageAmount', 'n'], ['BiltyFreight', 'n'], ['DeductedAmount', 'n'], ['DiscountAmount', 'n'], ['ToleranceWeight', 's'],
+        ['WbCharges', 'n'], ['AdvanceByParty', 'n'], ['AdvanceByFactory', 'n'], ['TotalFreight', 'n'], ['ChargeToParty', 'n'], ['PaidAmount', 'n'],
+        ['RemainingAmount', 'n'], ['PerMtonFreight', 'n'], ['PerMaundFreight', 'n'], ['CityName', 's'], ['CashAccountCode', 's'], ['CashAccountTitle', 's'],
+        ['DebitAccountCode', 's'], ['DebitAccountTitle', 's'], ['EntryDate', 't'], ['EntryUser', 's'], ['ModifyDate', 't'], ['ModifyUser', 's'],
+        ['ApprovedDate', 't'], ['ApprovalUser', 's'], ['ApprovalStatus', 's'], ['NoOfAttachments', 'i'], ['RemarksDetail', 's'], ['RemarksHeader', 's']];
+    /* the values dtRegisterGrid.Rows.Add receives, POSITIONALLY. From column 18 the list is shifted against
+       the columns (ToleranceWeight is passed before BiltyFreight and ScaleCharges lands in WbCharges) -
+       reproduced as the desktop shows it. */
+    var SRC = ['Id', 'VoucherHeadId', 'DocDate', 'DocNo', 'GatePassDate', 'GatePassNo', 'SupplierName', 'VehicleNo', 'BiltyNo', 'BiltyDate', 'DeliveryTerm',
+        'SupplierWeight', 'FactoryWeight', 'ShortWeight', 'AllowShortage', 'ShortageApply', 'ShortageAmount', 'ToleranceWeight', 'BiltyFreight', 'DeductedAmount',
+        'DiscountAmount', 'ScaleCharges', 'AdvanceByParty', 'AdvanceByFactory', 'TotalFreight', 'ChargeToParty', 'PaidAmount', 'RemainingAmount', 'PerMtonFreight',
+        '#PerMaund', 'CityName', 'CashAcCode', 'CashAcTitle', 'DebAcCode', 'DebAcTitle', 'EntryDate', 'EntryUser', 'ModifyDate', 'ModifyUser', 'ApprovedDate',
+        'ApprovalUser', 'ApprovalStatus', 'NoOfAttachments', 'RemarksDetail', 'RemarksHeader'];
+    var HIDDEN = ['Id', 'VoucherHeadId', 'RemainingAmount', 'CashAccountCode', 'DebitAccountCode'];
+    var CAPS = { ToleranceWeight: 'Weigh Bridge Tolerance', DeductedAmount: 'Deduction From Freight', PaidAmount: 'Net Payable Amount', AdvanceByParty: 'Advance By Supplier',
+        ChargeToParty: 'Shortage Charge To Supplier', AllowShortage: 'Against Policy Discount / Allowed Weight', ShortageApply: 'Shortage Applied Weight', ShortageAmount: 'Shortage Applied Amount' };
+    var W = { EntryDate: 145, ModifyDate: 145, ApprovedDate: 145, DocDate: 80, DocNo: 55, GpDate: 80, GpNo: 55, DeliveryTerm: 65, VehicleNo: 75, BiltyNo: 70, SupplierName: 200,
+        SupplierWeight: 70, FactoryWeight: 70, ToleranceWeight: 70, BiltyFreight: 70, PerMtonFreight: 75, WbCharges: 60, AdvanceByParty: 70, AdvanceByFactory: 70, TotalFreight: 80,
+        ShortWeight: 65, AllowShortage: 100, ShortageAmount: 85, ShortageApply: 65, DeductedAmount: 80, DiscountAmount: 80, ChargeToParty: 80, PaidAmount: 80,
+        CashAccountTitle: 150, DebitAccountTitle: 150, RemarksDetail: 150, NoOfAttachments: 90 };
+
+    /* GridEX_Helper.GridColumnSettings: Amount/Freight -> stringFormatsingle; other doubles "#,##0.<n #>"; all doubles summed. */
+    function fmtNum(k, v) {
+        if (v == null || v === '') return '';
+        var n = Number(v); if (!isFinite(n)) return isNaN(n) ? 'NaN' : (n > 0 ? 'Infinity' : '-Infinity');
+        if (/Amount|Freight|NetPaid/.test(k)) return H.fixed(n, dec);
+        return H.opt(n, dec || 2);
+    }
+    function num(v) { if (v == null || v === '') return null; var n = Number(v); return isNaN(n) ? v : n; }
+
+    function historyComboBind(rows) {
+        var s = [], c = [], d = [];
+        (rows || []).forEach(function (r) {
+            var a = String(H.ci(r, 'Activity')), o = { Id: H.ci(r, 'Id'), Name: H.ci(r, 'ReferenceName') };
+            if (a === 'Supplier') s.push(o); else if (a === 'CreditAccount') c.push(o); else if (a === 'DebitAccount') d.push(o);
+        });
+        /* InfragisticsHelper.BindAndRetainSelection - keep the current pick */
+        [ ['CmbSupplierName', s], ['CmbCreditAcRegister', c], ['CmbDebitAcRegister', d]].forEach(function (p) {
+            var el = H.$(p[0]), keep = el.value;
+            el.innerHTML = '<option value="0"></option>' + p[1].map(function (o) { return '<option value="' + H.esc(o.Id) + '">' + H.esc(o.Name) + '</option>'; }).join('');
+            el.value = keep && el.querySelector('option[value="' + keep + '"]') ? keep : '0';
+        });
+    }
+    function refresh() { H.api('GET', API + '/history-combos').then(historyComboBind).catch(function (e) { H.box(e.message); }); }
+
+    function toInt(v) { var n = parseInt(String(v || '').trim(), 10); return isNaN(n) ? 0 : n; }
+
+    /* btnshow_Click */
+    function show() {
+        dtRegister = [];
+        H.api('POST', API + '/register', {
+            fromDate: H.$('datFromDate').value, toDate: H.$('datToDate').value,
+            gpNoFrom: toInt(H.$('txtGpNoFrom').value), gpNoTo: toInt(H.$('txtGpNoTo').value), vehicleNo: H.$('txtVehicleRegister').value,
+            supplierCustomerId: +H.$('CmbSupplierName').value || 0, creditAccountId: +H.$('CmbCreditAcRegister').value || 0, debitAccountId: +H.$('CmbDebitAcRegister').value || 0
+        }).then(function (rows) {
+            dtRegister = rows || [];
+            if (!dtRegister.length) return;           /* the previous grid stays, as on the desktop */
+            grid = dtRegister.map(function (r) {
+                var o = {};
+                COLS.forEach(function (c, i) {
+                    var src = SRC[i], v;
+                    if (src === '#PerMaund') v = H.toNum(H.ci(r, 'BiltyFreight')) / H.toNum(H.ci(r, 'FactoryWeight')) * 40;
+                    else v = H.ci(r, src);
+                    if (c[1] === 'n') v = num(v);
+                    o[c[0]] = v;
+                });
+                return o;
+            });
+            draw();
+        }).catch(function (e) { H.box(e.message); });
+    }
+
+    function draw() {
+        var vis = COLS.filter(function (c) { return HIDDEN.indexOf(c[0]) < 0; });
+        var sums = {};
+        var h = '<thead><tr><th style="min-width:50px">Print</th><th style="min-width:70px">Voucher</th>' + vis.map(function (c) {
+            return '<th style="min-width:' + (W[c[0]] || (c[1] === 'i' ? 60 : c[1] === 'n' ? 90 : c[1] === 'd' ? 80 : 100)) + 'px">' + H.esc(CAPS[c[0]] || c[0]) + '</th>';
+        }).join('') + '</tr></thead><tbody>';
+        grid.forEach(function (r, i) {
+            h += '<tr data-i="' + i + '"><td class="ctr"><button type="button" class="cb" data-b="Print">Print</button></td><td class="ctr"><button type="button" class="cb" data-b="Voucher">Voucher</button></td>';
+            vis.forEach(function (c) {
+                var v = r[c[0]], t;
+                if (c[1] === 'n') { if (typeof v === 'number' && isFinite(v)) sums[c[0]] = (sums[c[0]] || 0) + v; t = fmtNum(c[0], v); h += '<td class="num">' + H.esc(t) + '</td>'; return; }
+                if (c[1] === 'd') t = H.shortDate(v);
+                else if (c[1] === 't') t = H.dMMMyyyyhm(v);
+                else t = v == null ? '' : String(v);
+                if (c[0] === 'NoOfAttachments') { h += '<td class="ctr"><a data-att="1">' + H.esc(t) + '</a></td>'; return; }
+                h += '<td' + (c[1] === 'i' ? ' class="ctr"' : (c[0] === 'ToleranceWeight' ? ' class="num"' : '')) + '>' + H.esc(t) + '</td>';
+            });
+            h += '</tr>';
+        });
+        h += '</tbody><tfoot><tr><td></td><td></td>' + vis.map(function (c) { return '<td class="num">' + (c[0] in sums ? H.esc(fmtNum(c[0], sums[c[0]])) : '') + '</td>'; }).join('') + '</tr></tfoot>';
+        H.$('grd').innerHTML = h;
+        H.$('lblStatus').textContent = 'Records: ' + grid.length;
+    }
+
+    H.$('grd').addEventListener('click', function (e) {
+        var tr = e.target.closest('tr[data-i]'); if (!tr) return;
+        var r = grid[+tr.getAttribute('data-i')];
+        var b = e.target.closest('button[data-b]');
+        if (b && b.getAttribute('data-b') === 'Print') print241(r.Id);
+        else if (b) print102(r.VoucherHeadId);
+        else if (e.target.closest('a[data-att]') && (+r.NoOfAttachments || 0) > 0) H.box('Attachments are not available on the web page yet.');
+    });
+
+    /* CommonServices.FreightVoucherSlip241 / ANewAcRptPaymentReceiptsVoucherSlip_102 - browser output of the same procedures */
+    function print241(id) {
+        if (window.printRpt) { if (!(+id)) { H.box('No Record Found For Display'); return; } return window.printRpt('241-FreightVoucherSlip.rpt', { id: +id }); }
+        H.api('GET', API + '/slip241/' + (+id || 0)).then(function (rows) {
+            if (!rows || !rows.length) { H.box('No Record Found For Display'); return; }
+            H.printRows('241 - Freight Voucher Slip', 'Browser output of SP_FreightVoucherSlipAndRegister - not the Crystal layout.', Object.keys(rows[0]), rows);
+        }).catch(function (e) { H.box(e.message); });
+    }
+    function print102(id) {
+        if (window.printRpt) { if (!(+id)) { H.box('VoucherId Not Found'); return; } return window.printRpt('102-ANewAcRptPaymentReceiptsVoucherSlip.rpt', { id: +id }); }
+        H.api('GET', API + '/voucher102/' + (+id || 0)).then(function (rows) {
+            if (!rows || !rows.length) { H.box('No Record Found For Display'); return; }
+            H.printRows('102 - Voucher', 'Browser output of SpVouchers_PaymentReceiptVoucherSlipNew_Rpt - not the Crystal layout.',
+                ['VoucherCode', 'VoucherDate', 'AccountCode', 'AccountTitle', 'Comments', 'DebitAmount', 'CreditAmount'], rows);
+        }).catch(function (e) { H.box(e.message); });
+    }
+    /* btnRegister_Click - 240-FreightVoucherRegister.rpt over dtRegister */
+    function print240() {
+        if (!dtRegister.length) { H.box('Not Record Found For Display'); return; }
+        H.printRows('240 - Freight Voucher Register', 'Browser output of SP_FreightVoucherSlipAndRegister - not the Crystal layout.', Object.keys(dtRegister[0]), dtRegister,
+            function (c, v) { return /Date/.test(c) ? H.shortDate(v) : (v == null ? '' : v); });
+    }
+    function reset() {
+        H.$('txtGpNoFrom').value = ''; H.$('txtGpNoTo').value = ''; H.$('txtVehicleRegister').value = ''; H.$('CmbSupplierName').value = '0';
+        dtRegister = []; grid = []; H.$('grd').innerHTML = ''; H.$('lblStatus').textContent = '';
+    }
+
+    H.$('btnshow').addEventListener('click', show);
+    H.$('btnResetRegister').addEventListener('click', reset);
+    H.$('btnRefreshRegister').addEventListener('click', refresh);
+    H.$('btnRegister').addEventListener('click', print240);
+    H.keys({ 'Ctrl+E': function () { window.location.href = '/accounts/dashboard'; }, 'Ctrl+N': reset, 'Ctrl+R': refresh, 'Ctrl+P': print240, 'Ctrl+S': show });
+
+    /* VoucherValidation_Load: From = ActiveYr.Start_Period, To = today, HistoryComboBind */
+    H.$('datToDate').value = H.today();
+    H.api('GET', '/accounts/api/reports/freight-voucher-911/init').then(function (c) {
+        if (c.financialYearStart) H.$('datFromDate').value = String(c.financialYearStart).substring(0, 10);
+        dec = c.amountDecimals || 0;
+        H.$('datFromDate').focus();
+        refresh();
+    }).catch(function (e) { H.box(e.message); });
+})();
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

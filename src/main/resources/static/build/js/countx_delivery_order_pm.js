@@ -308,7 +308,7 @@
     }
     function InvDeliveryOrderSlip(id) {
         if (!int(id)) { box('PrintId not found...'); return; }
-        window.open('/api/reports/dopm-262/data?id=' + encodeURIComponent(id), '_blank');
+        window.open('/api/print/dopm-262/pdf?id=' + encodeURIComponent(id), '_blank');
     }
     /* txtdocno_TextChanged (Leave) :766 */
     function docNoLeave() {

@@ -1,4 +1,4 @@
-(()=>{'use strict';const $=id=>document.getElementById(id),state={id:0,pending:[],drivers:[]};
+(()=>{'use strict';const $=id=>document.getElementById(id),state={id:0,pending:[],drivers:[]};try{Object.defineProperty(window,'RecId',{get:()=>state.id,configurable:true})}catch(e){};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const value=(row,...keys)=>{for(const k of keys)if(row&&row[k]!=null)return row[k];return''};
 function busy(on){$('loader').hidden=!on;document.querySelectorAll('button').forEach(b=>b.disabled=on)}

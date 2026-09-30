@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Manual Attendance - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <!-- Architecture.WinApp.HRM.AttendanceManagement.hrmManualAttendance - ClientSize 1034 x 434, one tab "Form".
+         panel3 (28): toolStrip1 New | Update | Print (Visible = false, no handler) | Refresh.
+         panel4 (183): panel8 (Teal; 29) "Manual Attendance" (white);
+           groupBox1 "Employee Filter Box" (3,33) 777x144:
+             Month cmbMonth (64,21) 84 + Year cmbYear (177,21) 77 | Department CmbDepartment (332,21) 140 | Emp Category CmbEmployeeCategory (571,21) 200
+             Shift cmbShift (64,51) 190                          | Designation CmbDesignation (332,51) 140 | Emp Group CmbEmployeeGroup (571,51) 200
+             Location CmbLocation (64,81) 190                    | Section CmbSection (332,81) 140 | Employee Name cmbEmployee (571,81) 167 + brnEmployee (743,83) 28x26
+             chkIsRestDay "Is Rest Day" (571,115), btnLoad "Load" teal (719,112) 52x26;
+           groupBox2 "Generate Time" (786,35) 229x142: In Time txtInTime (63,23) / Out Time txtOutTime (63,53) 160 "hh:mm tt" ShowCheckBox (Checked), btnGenerate teal (63,81) 160x26.
+         panel6 (Teal; 30) ctrlGrdBar1; panel5 (Fill): grd GridEX (FilterMode Automatic, TotalRow), sorted by DutyDate. -->
+    <style>
+        .att-top { display: flex; flex-wrap: wrap; align-items: stretch; min-width: 0; }
+        .att-top > .att-filter { flex: 3 1 520px; min-width: 0; }
+        .att-top > .att-gen { flex: 1 1 230px; min-width: 0; }
+        .att-time { display: flex; align-items: center; gap: 6px; min-width: 0; }
+        .att-time input[type=time] { flex: 1 1 auto; min-width: 0; }
+        .att-emp-inline { flex-wrap: nowrap; }
+        .att-emp-inline > .hrm-grow { flex: 1 1 0; min-width: 0; }
+        .att-emp-btn { width: 28px; height: 24px; padding: 0; border: 1px solid #7a9a9e; background: #f4f4f4; cursor: pointer; }
+        .att-load-row { display: flex; justify-content: flex-end; align-items: center; gap: 14px; }
+        .att-load-row .win-btn-action { width: 64px; height: 26px; }
+        .att-gen .win-btn-action { width: 100%; height: 26px; }
+        .att-month-year { display: flex; gap: 6px; align-items: center; min-width: 0; }
+        .att-month-year > .att-m { flex: 1 1 60%; min-width: 0; }
+        .att-month-year > .att-y { flex: 1 1 40%; min-width: 0; }
+        .att-month-year label { font: bold 9pt "Segoe UI", sans-serif; margin: 0; }
+    </style>
+</head>
+<body class="pd-body hrm-body" data-hrm="manual-attendance" data-screen="659">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmAttendance.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool" onclick="HrmAttendance.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool is-hidden"><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmAttendance.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+    </div>
+    <div class="hrm-caption">Manual Attendance</div>
+    <div class="att-top">
+        <fieldset class="hrm-group att-filter">
+            <legend>Employee Filter Box</legend>
+            <div class="hrm-entry hrm-cols-3">
+                <div class="hrm-field"><label for="cmbMonth">Month</label>
+                    <div class="att-month-year"><div class="att-m"><select id="cmbMonth" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <label for="cmbYear">Year</label><div class="att-y"><select id="cmbYear" class="win-combo dtcombo" data-dtcombo="single"></select></div></div></div>
+                <div class="hrm-field"><label for="CmbDepartment">Department</label><select id="CmbDepartment" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="CmbEmployeeCategory">Emp Category</label><select id="CmbEmployeeCategory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="cmbShift">Shift</label><select id="cmbShift" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="CmbDesignation">Designation</label><select id="CmbDesignation" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="CmbEmployeeGroup">Emp Group</label><select id="CmbEmployeeGroup" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="CmbLocation">Location</label><select id="CmbLocation" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="CmbSection">Section</label><select id="CmbSection" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="cmbEmployee">Employee Name</label>
+                    <div class="hrm-inline att-emp-inline"><div class="hrm-grow"><select id="cmbEmployee" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <button type="button" id="brnEmployee" class="att-emp-btn" title="Employee Registration" onclick="HrmAttendance.brnEmployee(this)"><i class="fa fa-user-plus"></i></button></div>
+                </div>
+                <div class="hrm-field hrm-span-all att-load-row">
+                    <label class="hrm-check"><input type="checkbox" id="chkIsRestDay"/> Is Rest Day</label>
+                    <button type="button" id="btnLoad" class="win-btn-action" onclick="HrmAttendance.btnLoad(this)">Load</button>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="hrm-group att-gen">
+            <legend>Generate Time</legend>
+            <div class="hrm-entry" style="grid-template-columns:1fr">
+                <div class="hrm-field"><label for="txtInTime">In Time</label>
+                    <div class="att-time"><input type="checkbox" id="chkInTime" checked title="txtInTime.Checked"/><input type="time" id="txtInTime" class="win-textbox"/></div></div>
+                <div class="hrm-field"><label for="txtOutTime">Out Time</label>
+                    <div class="att-time"><input type="checkbox" id="chkOutTime" checked title="txtOutTime.Checked"/><input type="time" id="txtOutTime" class="win-textbox"/></div></div>
+                <div class="hrm-field"><span></span><button type="button" id="btnGenerate" class="win-btn-action" onclick="HrmAttendance.btnGenerate(this)">Generate</button></div>
+            </div>
+        </fieldset>
+    </div>
+    <div class="hrm-grid-box" id="grdBox">
+        <div class="hrm-subcaption"><span></span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="grd"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_attendance.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Employee Advance - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        /* grid button cells (GridEX ButtonDisplayMode.Always columns: Load / Print / Approve / Reject / Detail) */
+        table.hrm-grid .hrm-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+    </style>
+</head>
+<!-- Architecture.WinApp.HRM.LoanManagement.frmEmployeeAdvance (664) - ClientSize 1133 x 604, Maximized, KeyPreview.
+     panel2 (28): toolStrip1 New | Refresh | Update (hidden) | Save | 1008-Print.
+     panel3 (197): panel5 (Teal, 33) "Employee Advance"; groupBox2 "Advance Information" (5,39) 605x156:
+       Request No txtDocNo (86,22) 196 ReadOnly; Request Date datRequestDate (86,49) 196; Employee cmbEmployeeName (86,75) 166 +
+       btnEmployeeRegister (255,77); Applied On datAppliedOn (86,102) 196; Reason txtReason (86,128) 514;
+       Advance Amount txtAmount (443,23) 157; Previous Advance txtPreviousAdvance (443,48) disabled; Pre Approved Amount
+       txtPreivousApprovedAmount (443,75) disabled; Salary Amt Upto Apply On txtCurrentAmount (443,101) ReadOnly.
+     groupBox1 "Employee Information" (610,39) 351x156 - Employee No, Employee Salary, Department, Desgination, Section (ReadOnly).
+     panel4: panel6 (Teal, 33) "History" + ctrlGrdBar1; grd GridEX: Print button column (Position 0, frozen), AdvanceId hidden,
+       EmployeeName 250, AdvanceAmount / ApprovedAmount "#,#" with totals. -->
+<body class="pd-body hrm-body" data-hrm="employee-advance" data-screen="664">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmLoan.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmLoan.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="HrmLoan.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmLoan.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="HrmLoan.btnPrint(this)" data-rpt-own data-rpt="1008-EmployeeAdvanceSlip.rpt"><i class="fa fa-print"></i> <span>1008-<u>P</u>rint</span></button>
+    </div>
+    <div class="hrm-caption">Employee Advance</div>
+    <div class="hrm-entry hrm-cols-2" style="align-items:start">
+        <fieldset class="hrm-group">
+            <legend>Advance Information</legend>
+            <div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field"><label for="txtDocNo">Request No</label><input type="text" id="txtDocNo" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field"><label for="txtAmount">Advance Amount</label><input type="text" id="txtAmount" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field"><label for="datRequestDate">Request Date</label><input type="date" id="datRequestDate" class="win-textbox"/></div>
+                <div class="hrm-field"><label for="txtPreviousAdvance">Previous Advance</label><input type="text" id="txtPreviousAdvance" class="win-textbox hrm-al-right" data-guard="decimal" disabled tabindex="-1"/></div>
+                <div class="hrm-field"><label for="cmbEmployeeName">Employee</label>
+                    <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="cmbEmployeeName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <button type="button" id="btnEmployeeRegister" class="win-btn-action" style="min-width:0;width:27px;height:23px;padding:0" title="Employee Registration" tabindex="-1" onclick="HrmLoan.btnEmployeeRegister(this)"><i class="fa fa-plus"></i></button></div></div>
+                <div class="hrm-field"><label for="txtPreivousApprovedAmount">Pre Approved Amount</label><input type="text" id="txtPreivousApprovedAmount" class="win-textbox hrm-al-right" data-guard="decimal" disabled tabindex="-1"/></div>
+                <div class="hrm-field"><label for="datAppliedOn">Applied On</label><input type="date" id="datAppliedOn" class="win-textbox"/></div>
+                <div class="hrm-field"><label for="txtCurrentAmount" title="Salary Amt Upto Apply On">Salary Amt Upto Apply On</label><input type="text" id="txtCurrentAmount" class="win-textbox hrm-al-right" data-guard="decimal" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtReason">Reason</label><input type="text" id="txtReason" class="win-textbox" autocomplete="off"/></div>
+            </div>
+        </fieldset>
+        <fieldset class="hrm-group">
+            <legend>Employee Information</legend>
+            <div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field"><label for="txtEmployeeNo">Employee No</label><input type="text" id="txtEmployeeNo" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field"><label for="txtSalary">Employee Salary</label><input type="text" id="txtSalary" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtDesgination">Desgination</label><input type="text" id="txtDesgination" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtDepartment">Department</label><input type="text" id="txtDepartment" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-span-2"><label for="txtSection">Section</label><input type="text" id="txtSection" class="win-textbox" readonly tabindex="-1"/></div>
+            </div>
+        </fieldset>
+    </div>
+    <div class="hrm-grid-box" id="boxHistory">
+        <div class="hrm-subcaption"><span>History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="grd"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_loan.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

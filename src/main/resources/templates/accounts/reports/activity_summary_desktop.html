@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Activity Summary</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+</head>
+<!--
+  Screen 69 "Accounts Activity Summary Report" - Architecture.WinApp.Account_Reports.ActicitySummery.
+  Show -> HistoryFill -> VoucherReports.ActivitySummaryReport -> Sp_ActivityReportSummery_Rpt.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-list-alt"></i> Activity Summary</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="asReset()"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" onclick="asRefresh()"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="110-AcRptActivitySummery.rpt"><i class="fa fa-print"></i> 110-Print</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="110A-AcRptActivitySummery.rpt"><i class="fa fa-print"></i> 110APrint</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="110B-AcRptActivitySummery.rpt"><i class="fa fa-print"></i> 110BPrint</button>
+</div>
+<div class="win-header-panel"><span>Activity Summary</span></div>
+
+<div class="filters">
+    <div class="gb" style="width:560px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 70px 1fr 70px 1fr;">
+            <span class="lbl">Date Type</span><select data-dtcombo="single" data-dtcombo-caption="Date Type" id="cmbDateType" class="inp"></select>
+            <span class="lbl as-rt" style="display:none;">Report Type</span><select data-dtcombo="single" data-dtcombo-caption="Report Type" id="CmbReportType" class="inp as-rt" style="display:none;"></select>
+            <span class="lbl">From Date</span><input type="date" id="fromdate" class="inp">
+            <span class="lbl">To Date</span><input type="date" id="todate" class="inp">
+            <span class="lbl">Doc_Types</span><select id="CmbDocumentType" class="inp" multiple style="grid-column: span 3;"></select>
+            <span class="lbl as-br" style="display:none;">Branches</span><select id="CmbBranches" class="inp as-br" style="display:none; grid-column: span 3;"></select>
+            <span class="lbl as-lang" style="display:none;">Language</span><select data-dtcombo="single" data-dtcombo-caption="Language" id="CmbLanguage" class="inp as-lang" style="display:none; grid-column: span 3;"></select>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <label class="chk"><input type="checkbox" id="ChkBoxPost" checked> Include UnPosted Vouchers</label>
+            <span>
+                <label class="chk"><input type="radio" name="rdCols" id="rdFourColumns" checked> Four Columns</label>
+                <label class="chk"><input type="radio" name="rdCols" id="rdSixColumns"> Six Columns</label>
+            </span>
+            <button type="button" id="btnshow" class="win-btn-show" onclick="asShow()"><i class="fa fa-eye"></i> Show</button>
+        </div>
+    </div>
+    <div class="gb">
+        <span class="gb-title">Filter Type</span>
+        <label class="chk"><input type="radio" name="rdFilter" id="rdDocFromToDate" value="doc" checked> Doc Date</label><br>
+        <label class="chk"><input type="radio" name="rdFilter" id="rdEntryFromToDate" value="entry"> Entry Date</label>
+    </div>
+</div>
+
+<div class="grid-caption"><span>Filtered Records</span><span id="lblStatus"></span></div>
+<div class="grid-wrap"><table class="wg" id="grd"></table></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    /* Searchable dropdowns (countx_prod_combo.js, 2026-09-30 R2): every single select carries data-dtcombo="single";
+       the wrap takes the select's grid placement and its initial hidden state; multi-selects stay native. */
+    function comboInit() {
+        if (!window.DesktopCombo) return;
+        $('select[data-dtcombo]').each(function () {
+            const c = window.DesktopCombo.enhance(this);
+            if (!c || !c.wrap) return;
+            if (this.style.gridColumn) c.wrap.style.gridColumn = this.style.gridColumn;
+            if (this.style.display === 'none') c.wrap.style.display = 'none';
+        });
+    }
+    function comboFocus(sel) { const $i = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); ($i.length ? $i : $(sel)).focus(); }
+    /* CmbBranches is a native multi-select under ERP feature 18 (consolidated), otherwise a single searchable combo. */
+    function branchesCombo(consolidated) {
+        if (consolidated) return;
+        $('#CmbBranches').attr({ 'data-dtcombo': 'single', 'data-dtcombo-caption': 'Branches' });
+        comboInit();
+    }
+    let CTX = null, rows = [], shownReportType = 1, branchShown = false;
+    const QS = new URLSearchParams(window.location.search);
+
+    /* Datetypefill: CommonServices.DateType with a "...Select Any Value..." row 0 (ZeroIndex), Rows[0] active */
+    function dateTypes() {
+        AccF.fillSelect('#cmbDateType', [{ Id: 0, P: '...Select Any Value...' }, { Id: 1, P: 'This Day' }, { Id: 2, P: 'This Week' },
+            { Id: 3, P: 'This Month' }, { Id: 4, P: 'This Year' }, { Id: 5, P: 'Financial Year' }], 'Id', 'P', null).val('0');
+    }
+    /* cmbDateType_ValueChanged */
+    function onDateType() {
+        const id = parseInt($('#cmbDateType').val(), 10);
+        if (id === 1) $('#fromdate').val(AccF.today());
+        else if (id === 2) $('#fromdate').val(AccF.addDays(-7));
+        else if (id === 3) { $('#fromdate').val(AccF.monthStart()); $('#todate').val(AccF.today()); }
+        else if (id === 4) { $('#fromdate').val(AccF.yearStart()); $('#todate').val(AccF.today()); }
+        else if (id === 5) $('#fromdate').val(CTX.activeYear.startPeriod);
+    }
+
+    /* GridSettings: grouped on ParentAccountTitle with group totals; Four = Opening/Closing, Six = the Dr/Cr pairs */
+    function columns() {
+        const six = $('#rdSixColumns').is(':checked');
+        return [
+            { key: 'BranchName', visible: branchShown },
+            { key: 'AccountCode', link: function (r) { AccF.openLedger(r.AccountId, $('#fromdate').val(), $('#todate').val(), 0, r.BranchesId); } },
+            { key: 'AccountTitle' },
+            { key: 'OpeningDr', type: 'both', sum: true, visible: six },
+            { key: 'OpeningCr', type: 'both', sum: true, visible: six },
+            { key: 'Opening', type: 'both', sum: true, visible: !six },
+            { key: 'Debit', type: 'both', sum: true },
+            { key: 'Credit', type: 'both', sum: true },
+            { key: 'Closing', type: 'both', sum: true, visible: !six },
+            { key: 'ClosingDr', type: 'both', sum: true, visible: six },
+            { key: 'ClosingCr', type: 'both', sum: true, visible: six },
+            { key: 'SubsidiaryGroupAccount', visible: shownReportType === 2 }
+        ];
+    }
+    function render() {
+        AccF.renderGrid({ table: '#grd', columns: columns(), rows: rows, groupBy: 'ParentAccountTitle', groupTotals: true, emptyText: '' });
+        $('#lblStatus').text('Records: ' + rows.length);
+    }
+
+    async function asShow() {
+        const btn = $('#btnshow');
+        AccF.busy(btn, true);
+        try {
+            const br = $('#CmbBranches').val();
+            shownReportType = CTX.subsidiaryFeature ? (parseInt($('#CmbReportType').val(), 10) || 0) : 0;
+            rows = await AccF.post('/activity-summary', {
+                dateFilter: $('input[name="rdFilter"]:checked').val(), fromDate: $('#fromdate').val(), toDate: $('#todate').val(),
+                includeUnposted: $('#ChkBoxPost').is(':checked'), reportTypeId: shownReportType || null,
+                documentTypeIds: AccF.selectedIds('#CmbDocumentType') || null,
+                branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null,
+                languageId: $('#CmbLanguage').val() || null
+            });
+            branchShown = !!(CTX.branchFeature && br && br.length);
+            render();
+        } catch (e) { alert(e.message); }
+        finally { AccF.busy(btn, false); }
+    }
+
+    /* reset(): Doc_Types cleared, date type list refilled */
+    function asReset() { $('#CmbDocumentType').val([]); dateTypes(); comboFocus('#cmbDateType'); }
+    /* btnRefresh_Click: DocumenttypeFill + MultiLanguagesGetAll */
+    async function asRefresh() {
+        try {
+            AccF.fillSelect('#CmbDocumentType', await AccF.lookup('document-types'), 'Id', 'DocumentTypeDescription', null);
+            AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '');
+        } catch (e) { alert(e.message); }
+    }
+
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.as-lang').show(); }
+        if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); asReset(); }
+    });
+    $('input[name="rdCols"]').on('change', function () { if (rows.length) render(); });
+
+    $(async function () {
+        comboInit();
+        try {
+            CTX = await AccF.context();
+            if (CTX.subsidiaryFeature) {
+                AccF.fillSelect('#CmbReportType', [{ Id: 1, T: 'ChartofAccount_Wise' }, { Id: 2, T: 'Subsidiary_Wise' }], 'Id', 'T', null).val('1');
+                $('.as-rt').show();
+            }
+            if (CTX.branchFeature) {
+                const brs = await AccF.lookup('branches');
+                if (CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
+                branchesCombo(CTX.branchConsolidated);
+                AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', CTX.branchConsolidated ? null : '');
+                const pre = QS.get('branchesIds');
+                if (pre) $('#CmbBranches').val(CTX.branchConsolidated ? pre.split(',') : pre.split(',')[0]);
+                else $('#CmbBranches').val(CTX.branchConsolidated ? [String(CTX.userBranchId)] : String(CTX.userBranchId));
+                $('.as-br').show();
+            }
+            await asRefresh();
+            dateTypes();
+            $('#fromdate, #todate').val(AccF.today());
+            $('#cmbDateType').on('change', onDateType);
+            if (QS.get('fromDate') && QS.get('toDate')) {
+                $('#fromdate').val(QS.get('fromDate')); $('#todate').val(QS.get('toDate'));
+                asShow();
+            }
+            comboFocus('#cmbDateType');
+        } catch (e) { alert(e.message); }
+    });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

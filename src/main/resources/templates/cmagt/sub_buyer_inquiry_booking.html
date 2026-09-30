@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sub Buyer Inquiry Booking</title>
+    <!--
+      Commission Trading - Sub Buyer Inquiry Booking (DocumentTypeId 1050).
+      GUI rebuilt 2026-09-30 from frmSubBuyerInquiryBooking.cs InitializeComponent():
+        * toolStrip1: New, Refresh | Update (Visible only once a record is read), Attachments,
+          1050A-Print, ShortCut Keys - no Save, no Delete;
+        * panel3 teal: title, Company Name (Enabled=false), Preview;
+        * PanelHeaderInfo (Enabled=false, 1070x167) at the designer Location/Size of every control;
+        * panel2 is Visible=false (1070x1): its fields are loaded and re-sent on Update, never shown;
+        * panel5 "Sub Parties" + grdSubParty (docked Fill) - the only editable part;
+        * the History tab is removed at start-up (tabControl1.TabPages.Remove(tabPage2), :432).
+      Opened from frmBuyerInquiryBooking.openForm(Id) (:2635) with ?id=.
+    -->
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css?v=20260930T}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_bib.css?v=20260930Z}"/>
+</head>
+<body class="cmagt">
+
+<div class="cmagt-appbar">
+    <span class="cmagt-title">Buyer Inquiry Booking</span>
+    <span class="cmagt-doctype">Doc Type 1050 &middot; Sub Parties</span>
+    <span class="cmagt-crumb"><a th:href="@{/commission}">Commission Trading</a> &rsaquo; <a th:href="@{/commission/buyer-inquiry-booking}">Buyer Inquiry Booking</a> &rsaquo; Sub Parties</span>
+</div>
+
+<div id="bibMessage" class="cmagt-status" style="display:none;"></div>
+
+<input type="hidden" id="inquiryBookingMasterId" value="0">
+<input type="hidden" id="detailId" value="0">
+<input type="hidden" id="documentTypeId" value="1050">
+
+<div id="tabForm">
+<div class="bib-tools">
+    <button type="button" id="btnNew"         onclick="bibNew()">New</button>
+    <button type="button" id="btnRefresh"     onclick="bibRefresh()">Refresh</button>
+    <span class="sep"></span>
+    <button type="button" id="btnUpdate"      onclick="bibSave()" style="display:none;">Update</button>
+    <button type="button" id="btnAttachments" onclick="bibAttachments()">Attachments</button>
+    <button type="button" id="btnPrint"       onclick="bibPrint()" data-rpt="1050A_BuyerInquiryBookingSlip.rpt">1050A-Print</button>
+    <button type="button" id="btnShortCutKeys" onclick="subShortcutKeys()">ShortCut Keys</button>
+    <span class="sep"></span>
+</div>
+<div class="bib-scroll"><div class="bib-canvas" id="panel3" style="height:29px;background:#008080;">
+    <div class="at" style="left:0.748%;top:5px;color:#fff;font:700 16px Tahoma,sans-serif;white-space:nowrap;">Buyer Inquiry Booking</div>
+    <div class="at" style="left:19.900%;top:7px;color:#fff;font:700 12px 'Segoe UI',Tahoma,sans-serif;">Company Name</div>
+    <div class="at" style="left:29.533%;top:2px;width:32.617%;height:25px;"><select id="cmbCompanyName" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Company" disabled></select></div>
+    <div class="at" style="left:92.243%;top:6px;"><label style="color:#fff;font:700 12px Verdana,sans-serif;display:inline-flex;gap:4px;align-items:center;"><input type="checkbox" id="chkPrint"> Preview</label></div>
+</div></div>
+<div class="bib-scroll"><div class="bib-canvas" id="PanelHeaderInfo" style="height:167px;">
+    <div class="at lbl "  style="left:0.467%;top:5px;width:7.757%;height:23px;">Inquiry No</div>
+    <div class="at" style="left:8.505%;top:5px;width:6.542%;height:23px;"><input type="text" id="txtInquiryNo" readonly></div>
+    <div class="at lbl "  style="left:15.234%;top:5px;width:6.822%;height:22px;">Inquiry Date</div>
+    <div class="at" style="left:22.336%;top:5px;width:11.215%;height:22px;"><input type="date" id="datInquiryDate" onchange="bibValidityDaysChanged()"></div>
+    <div class="at lbl "  style="left:33.925%;top:3px;width:13.364%;height:26px;">Deliver / Ship To Party</div>
+    <div class="at" style="left:47.570%;top:3px;width:27.103%;height:26px;"><select id="cmbDeliveryToParty" class="searchable" style="width:100%" data-dtcombo="party4" data-dtcombo-caption="Deliver To Party" onchange="bibDeliveryPartyChanged()"></select></div>
+    <div class="at lbl "  style="left:75.047%;top:5px;width:10.654%;height:23px;">Item Qty</div>
+    <div class="at" style="left:85.981%;top:5px;width:14.019%;height:23px;"><input type="number" id="txtQty" step="0.001" value="0" oninput="bibCalculateWeight()"></div>
+    <div class="at lbl "  style="left:0.467%;top:32px;width:7.757%;height:23px;">Validity Days</div>
+    <div class="at" style="left:8.505%;top:32px;width:6.542%;height:23px;"><input type="number" id="txtValidityDays" min="0" value="1" oninput="bibValidityDaysChanged()"></div>
+    <div class="at lbl "  style="left:15.234%;top:32px;width:6.822%;height:22px;">Validity UpTo</div>
+    <div class="at" style="left:22.336%;top:32px;width:11.215%;height:22px;"><input type="date" id="datValidityUpto" onchange="bibValidityUptoChanged()"></div>
+    <div class="at lbl "  style="left:33.925%;top:30px;width:13.364%;height:26px;">Delivery / Ship To Address</div>
+    <div class="at" style="left:47.570%;top:30px;width:27.103%;height:26px;"><select id="cmbShipToAddress" class="searchable" style="width:100%" data-dtcombo="shipTo2" data-dtcombo-caption="Ship To Address" onchange="bibShipToAddressChanged()"></select></div>
+    <div class="at lbl "  style="left:75.047%;top:32px;width:10.654%;height:23px;">Buyer Target Price</div>
+    <div class="at" style="left:85.981%;top:32px;width:14.019%;height:23px;"><input type="number" id="txtBuyerTargetPrice" step="0.001" value="0" oninput="bibCalculateAmounts()"></div>
+    <div class="at rad" style="left:8.411%;top:61px;"><label><input type="radio" name="partyNameMode" value="business" checked onchange="bibPartyNameModeChanged()"> Business Name</label></div>
+    <div class="at rad" style="left:20.000%;top:61px;"><label><input type="radio" name="partyNameMode" value="nick" onchange="bibPartyNameModeChanged()"> Nick Name</label></div>
+    <div class="at" style="left:47.570%;top:58px;width:27.103%;height:23px;"><input type="text" id="txtShipToAddressText"></div>
+    <div class="at lbl "  style="left:75.047%;top:58px;width:10.654%;height:23px;">Target Purchase Price</div>
+    <div class="at" style="left:85.981%;top:58px;width:14.019%;height:23px;"><input type="number" id="txtTargetPurchasePrice" step="0.001" value="0" oninput="bibCalculateAmounts()"></div>
+    <div class="at lbl wrap"  style="left:0.467%;top:83px;width:7.664%;height:26px;">Commission<br>Agent / Broker</div>
+    <div class="at" style="left:8.411%;top:83px;width:25.140%;height:26px;"><select id="cmbCommissionAgent" class="searchable" style="width:100%" data-dtcombo="party4" data-dtcombo-caption="Commission Agent" ></select></div>
+    <div class="at lbl "  style="left:33.925%;top:83px;width:13.271%;height:26px;">Payment Term</div>
+    <div class="at" style="left:47.477%;top:83px;width:10.280%;height:26px;"><select id="cmbPaymentTerm" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Payment Term" ></select></div>
+    <div class="at lbl "  style="left:57.944%;top:84px;width:7.103%;height:26px;">Delivery Term</div>
+    <div class="at" style="left:65.327%;top:84px;width:9.346%;height:26px;"><select id="cmbDeliveryTerm" class="searchable" style="width:100%" data-dtcombo="single" data-dtcombo-caption="Delivery Term" ></select></div>
+    <div class="at lbl "  style="left:75.047%;top:84px;width:10.654%;height:26px;">Quality Specification</div>
+    <div class="at" style="left:85.981%;top:84px;width:14.019%;height:80px;"><textarea id="txtQualitySpecifications"></textarea></div>
+    <div class="at lbl "  style="left:0.467%;top:110px;width:7.664%;height:26px;">Buyer Name</div>
+    <div class="at" style="left:8.411%;top:110px;width:25.140%;height:26px;"><select id="cmbBuyerName" class="searchable" style="width:100%" data-dtcombo="party4" data-dtcombo-caption="Buyer Name" ></select></div>
+    <div class="at lbl "  style="left:33.925%;top:112px;width:13.364%;height:26px;">Item Name</div>
+    <div class="at" style="left:47.570%;top:112px;width:27.103%;height:26px;"><select id="cmbItemName" class="searchable" style="width:100%" data-dtcombo="itemCmagt" data-dtcombo-caption="Item Name" onchange="bibItemChanged()"></select></div>
+    <div class="at lbl "  style="left:0.467%;top:139px;width:7.664%;height:23px;">Remarks</div>
+    <div class="at" style="left:8.411%;top:139px;width:66.262%;height:23px;"><input type="text" id="txtRemarks"></div>
+</div></div>
+
+<!-- ================= panel2 (Visible = false on the desktop) ================= -->
+<div id="panel2" style="display:none;" aria-hidden="true">
+    <select id="cmbParentItem" onchange="bibParentItemChanged()"></select>
+    <input type="number" id="txtWeight" value="0">
+    <select id="cmbPackUom" onchange="bibCalculateWeight()"></select>
+    <select id="cmbRateUom" onchange="bibCalculateAmounts()"></select>
+    <select id="cmbPackingType"></select>
+    <select id="cmbCropYear"></select>
+    <input type="number" id="txtDueDays" value="0">
+    <input type="number" id="txtDeliveryDays" value="1" oninput="bibCalculateExpiryDate()">
+    <input type="date" id="datDeliveryStartDate" onchange="bibDeliveryStartChanged()">
+    <input type="date" id="datExpiryDate">
+    <select id="cmbAnalysisGroup" onchange="bibAnalysisGroupChanged()"></select>
+    <table><tbody id="grdParametersBody"></tbody></table>
+    <input type="number" id="paramNavCurrent" value="0"><span id="paramNavTotal">0</span>
+</div>
+
+<div class="bib-strip" id="panel5">Sub Parties
+    <span style="margin-left:auto;"><button type="button" class="bib-link" style="width:auto;height:19px;justify-content:center;" onclick="bibToggleFullscreen('grdSubPartyWrap', this)">Full screen</button></span>
+</div>
+<div id="subPartiesBlock">
+    <div class="bib-grid" id="grdSubPartyWrap" style="max-height:432px;">
+        <table id="grdSubParty">
+            <thead>
+            <tr>
+                <th style="width:26px;">X</th>
+                <th style="width:26px;">+</th>
+                <th style="width:26%;">Sub Party Name</th>
+                <th style="width:13%;">Item Qty</th>
+                <th style="width:13%;">Rate</th>
+                <th style="width:15%;">Amount</th>
+                <th>Remarks</th>
+            </tr>
+            </thead>
+            <tbody id="grdSubPartyBody"></tbody>
+            <tfoot>
+            <tr>
+                <td colspan="3"></td>
+                <td id="totSubQty" class="num">0</td>
+                <td></td>
+                <td id="totSubAmount" class="num">0</td>
+                <td></td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="bib-nav">
+        <button type="button" onclick="bibSubNav('first')">&lt;|</button>
+        <button type="button" onclick="bibSubNav('prev')">&lt;</button>
+        <input type="number" id="subNavCurrent" value="0" min="0" onchange="bibSubNav('goto', this.value)">
+        <span>Of</span> <span id="subNavTotal">0</span>
+        <button type="button" onclick="bibSubNav('next')">&gt;</button>
+        <button type="button" onclick="bibSubNav('last')">&gt;|</button>
+    </div>
+</div>
+</div><!-- /tabForm -->
+
+<script th:inline="javascript">
+    window.BIB_SUB_MODE = true;
+    window.SUB_BIB_ID = /*[[${inquiryId}]]*/ 0;
+</script>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_cmagt_buyer_inquiry_booking.js?v=20260930Z}"></script>
+<script th:src="@{/build/js/countx_cmagt_sub_buyer_inquiry.js?v=20260930Z}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/cmagt_session_defaults.js?v=20260930a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

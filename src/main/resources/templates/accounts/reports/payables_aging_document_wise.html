@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supplier Aging Document Wise</title>
+<link rel="stylesheet" href="/vendors/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_f.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_pay.css?v=20260930s">
+<link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script>
+<style>.accf table.wg td.remarks { white-space: normal; }</style>
+</head>
+<!--
+  Screen 873 "Supplier Aging Report" - Architecture.WinApp.Account_Reports.frmPayablesAgingDocumentWise (route /accounts/reports/supplier-aging).
+  Read-only. As On Date = today (designer), txtAgingDays "30" after the lists bind (InitializeComponentMethod).
+  Lists (GET /api/accounts/document-aging/supplier/lookups): Supplier = CoaAllocationAccountTitleByAccountTypeIds("3,8","",0,"3"),
+  Custom Group = CustomeGroupsDefine(1), Party Group = CustomerGroup.GetSupplierCustomerGroupFromInventoryStockEvaluation.
+  Grid grouped by PartyName with sub totals and a total row. Page logic: /js/document-aging.js + /js/document-aging-grid.js
+  (shared with frmReceivableAgingDocumentWise, body data-aging-kind).
+  R3 2026-09-30: Account Reports look (countx_acc_rpt_f.css) and searchable combos (countx_prod_combo.js); select2 removed.
+-->
+<body class="accf" data-aging-kind="supplier">
+<div class="win-title-bar">
+    <span><i class="fa fa-hourglass-half"></i> Supplier Aging Report Document Wise</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="reset"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" id="refresh"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn" id="print" data-rpt="127-SupplierAgingReport_DocumentWise.rpt"><i class="fa fa-print"></i> Print-127</button>
+    <button type="button" class="win-btn" id="shortcuts"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    <a class="win-btn" href="/accounts/dashboard"><i class="fa fa-times"></i> Close</a>
+</div>
+<div class="win-header-panel"><span>Supplier Aging Report Document Wise</span></div>
+
+<div class="filters">
+    <div class="gb" style="width:1130px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 65px 120px 48px 200px 78px 170px 64px 160px 60px 45px 70px;">
+            <span class="lbl">As On Date</span><input type="date" id="asOnDate" class="inp">
+            <span class="lbl">Supplier</span><div><select id="account" class="inp" data-dtcombo="single" data-dtcombo-caption="Supplier"></select></div>
+            <span class="lbl">Custom Group</span><div><select id="custom" class="inp" data-dtcombo="single" data-dtcombo-caption="Custom Group"></select></div>
+            <span class="lbl">Party Group</span><div><select id="party" class="inp" data-dtcombo="single" data-dtcombo-caption="Party Group"></select></div>
+            <span class="lbl">Aging Days</span><input id="days" type="number" min="0" value="30" class="inp">
+            <button type="button" id="show" class="win-btn-show"><i class="fa fa-eye"></i> Show</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-caption"><span>Filtered Records</span><input id="search" placeholder="Filter records" aria-label="Filter records"></div>
+<div class="grid-wrap fill" id="grid" tabindex="0"><table class="wg auto" id="results"><thead></thead><tbody></tbody></table></div>
+<div class="status-bar" id="status" role="status"></div>
+<dialog id="shortcutDialog" style="width:420px;"><h2>Shortcut Keys</h2><p>Ctrl+S: Show<br>Ctrl+N: Reset<br>Ctrl+R: Refresh<br>Ctrl+P: Print<br>Ctrl+F5 / Ctrl+Up: As On Date<br>Ctrl+Down: Grid<br>Ctrl+Space: Open selected account ledger</p><button type="button" class="win-btn" id="closeShortcuts">Close</button></dialog>
+
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<script src="/build/js/countx_prod_combo.js?v=20260930s"></script>
+<script src="/js/report-decimal.js"></script>
+<script src="/js/document-aging-grid.js"></script>
+<script src="/js/document-aging.js?v=20260930s"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

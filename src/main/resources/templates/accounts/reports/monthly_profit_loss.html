@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Monthly Profit Loss</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20260930s}">
+</head>
+<!--
+  Screen 958 "Monthly Profit Loss" - frmProfitLossMonthWiseComparison.cs. Read-only.
+  toolStrip3 / panel5 (teal "Profit Loss Month Wise") + groupBox1 "Filters" / panel6 (teal "Filtered Records") / DataGridHistory.
+  Months: GetMonthListByAllFinancialYEarFromGlobal (usp_getFinancialStartAndEndDate), bound with no selection (as the form).
+  Show: usp_getMonthwiseProfitLoss via /accounts/api/reports/monthly-profit-loss-958. Look: countx_acc_rpt_f.css (R5, 2026-09-30).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-calendar"></i> Monthly Profit Loss</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li><a href="/accounts/reports/profit-and-loss">Profit &amp; Loss 01</a></li>
+    <li class="active"><a>Monthly Profit Loss</a></li>
+</ul>
+<div class="win-toolbar" id="toolStrip3">
+    <button type="button" class="win-btn" id="btnNew"><i class="fa fa-file-o text-success"></i> <span><u>R</u>eset</span></button>
+    <button type="button" class="win-btn" id="btnRefresh"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    <span class="dd"><button type="button" class="win-btn" id="tsDrowdown" data-rpt-skip="menu"><i class="fa fa-print"></i> Print &#9662;</button>
+        <div class="dd-menu is-hidden" id="tsDrowdownMenu"><div data-rpt-grid="Profit Loss Month Wise" data-grid="DataGridHistory" data-title="Profit Loss Month Wise">Profit Loss Month Wise</div></div></span>
+    <button type="button" class="win-btn" id="btnShortcut"><i class="fa fa-key"></i> ShortCut Keys</button>
+</div>
+<div class="win-header-panel" id="panel5"><span>Profit Loss Month Wise</span></div>
+
+<div class="filters" id="panel3">
+    <div class="gb" id="groupBox1" style="width:700px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 136px 136px 70px auto auto auto;">
+            <span class="lbl">From Month</span><span class="lbl">To Month</span><span></span><span></span><span></span><span></span>
+            <select id="CmbFromMonth" class="inp" data-dtcombo="single" data-dtcombo-caption="From Month"></select>
+            <select id="CmbToMonth" class="inp" data-dtcombo="single" data-dtcombo-caption="To Month"></select>
+            <button type="button" id="btnShow" class="win-btn-show"><i class="fa fa-eye"></i> Show</button>
+            <span class="radio-box">
+                <label class="chk"><input type="radio" name="grp" id="rdGroupCollapsed"> Collapse</label>
+                <label class="chk"><input type="radio" name="grp" id="rdGroupeExpand" checked> Expand</label>
+            </span>
+            <span class="radio-box">
+                <label class="chk"><input type="radio" name="sd" id="rdSummary" checked> Summary</label>
+                <label class="chk"><input type="radio" name="sd" id="rdDetail"> Detail</label>
+            </span>
+            <span class="radio-box">
+                <label class="chk"><input type="radio" name="gd" id="rdGLWise" checked> GL Wise</label>
+                <label class="chk"><input type="radio" name="gd" id="rdDocWise"> Document Type Wise</label>
+            </span>
+        </div>
+    </div>
+</div>
+<div class="grid-caption" id="panel6"><span>Filtered Records</span><span id="lblStatus"></span></div>
+<div class="grid-wrap tall" id="wrap" tabindex="0"><table class="wg" id="DataGridHistory"></table></div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}"></script>
+<script>
+(function () {
+    'use strict';
+    var H = AccH, API = '/accounts/api/reports/monthly-profit-loss-958';
+    var ctx = {}, dec = 0, dtRegister = [], dt = [], months = [], open = {}, cur = null, range = null, detailMode = false, glWise = true;
+
+    /* the visible field of a countx_prod_combo.js combo (the native select is hidden) */
+    function focusCombo(id) {
+        var el = H.$(id), w = el.closest('.dtcombo-wrap'), i = w && w.querySelector('.dtcombo-input');
+        (i || el).focus();
+    }
+
+    function sortOrder(id) { return { 2: 1, 4: 2, 32: 3, 7: 5, 8: 6, 3: 7, 9: 8, 6: 9 }[id] || 999; }
+
+    function bindMonths(list) {
+        var h = '<option value=""></option>' + (list || []).map(function (m) { return '<option value="' + H.esc(m) + '">' + H.esc(m) + '</option>'; }).join('');
+        H.$('CmbFromMonth').innerHTML = h; H.$('CmbToMonth').innerHTML = h;
+    }
+
+    /* GridFill */
+    function gridFill() {
+        var from = H.$('CmbFromMonth').value, to = H.$('CmbToMonth').value;
+        if (!from) { H.box('From Month Required'); return; }
+        if (!to) { H.box('To Month Required'); return; }
+        H.api('POST', API + '/show', { fromMonth: from, toMonth: to, docWise: H.$('rdDocWise').checked }).then(function (d) {
+            dtRegister = d.rows || []; range = d;
+            detailMode = H.$('rdDetail').checked; glWise = H.$('rdGLWise').checked;
+            if (!dtRegister.length) { dt = []; draw(); return; }
+            var cols = d.columns;
+            months = [];
+            cols.forEach(function (c) { if (c.indexOf('Caption') >= 0 && H.ci(dtRegister[0], c) != null && String(H.ci(dtRegister[0], c)) !== '') months.push(String(H.ci(dtRegister[0], c))); });
+            var startIndex = -1;
+            for (var i = 0; i < cols.length; i++) if (cols[i].indexOf('Column') === 0) { startIndex = i; break; }
+            function at(r, j) { return H.toNum(r[cols[startIndex + j]]); }
+            function row(o) { months.forEach(function (m) { if (!(m in o)) o[m] = 0; }); return o; }
+            dt = [];
+            var pl = {};
+            dtRegister.forEach(function (r) {
+                var id = +H.ci(r, 'PLNoteId') || 0;
+                if (pl[id]) return; pl[id] = true;
+                dt.push(row({ ParentAccountId: 0, ParentPLNoteId: null, PLNoteId: id, NoteTitle: H.ci(r, 'NoteTitle'), ParentAccount: null, SortOrder: sortOrder(id), TotalAmount: 0 }));
+            });
+            dt.push(row({ ParentAccountId: 0, ParentPLNoteId: null, PLNoteId: 100, NoteTitle: 'GROSS PROFIT', ParentAccount: null, SortOrder: 4, TotalAmount: 0 }));
+            dt.push(row({ ParentAccountId: 0, ParentPLNoteId: null, PLNoteId: 101, NoteTitle: 'NET PROFIT', ParentAccount: null, SortOrder: 10, TotalAmount: 0 }));
+            if (!detailMode) {
+                var groups = [], gi = {};
+                dtRegister.forEach(function (r) { var k = +H.ci(r, 'ParentAccountId') || 0; if (!(k in gi)) { gi[k] = groups.length; groups.push([]); } groups[gi[k]].push(r); });
+                groups.forEach(function (g) {
+                    var f = g[0], pid = +H.ci(f, 'ParentAccountId') || 0, o = { ParentAccountId: pid, ParentPLNoteId: H.ci(f, 'PLNoteId'), PLNoteId: -pid,
+                        NoteTitle: H.ci(f, 'NoteTitle'), ParentAccount: H.ci(f, 'ParentAccount') }, sum = 0;
+                    months.forEach(function (m, j) { var s = 0; g.forEach(function (r) { s += at(r, j); }); o[m] = s; sum += s; });
+                    o.SortOrder = sortOrder(+H.ci(f, 'PLNoteId') || 0); o.TotalAmount = sum;
+                    dt.push(o);
+                });
+            } else {
+                var rowWise = 0;   /* desktop: declared once outside the loop, never reset */
+                dtRegister.forEach(function (r) {
+                    var aid = +H.ci(r, 'AccountId') || 0, o = { ParentAccountId: +H.ci(r, 'ParentAccountId') || 0, ParentPLNoteId: H.ci(r, 'PLNoteId'), PLNoteId: -aid,
+                        NoteTitle: H.ci(r, 'NoteTitle'), ParentAccount: H.ci(r, 'ParentAccount'), AccountId: aid, AccountCode: H.ci(r, 'AccountCode'), AccountTitle: H.ci(r, 'AccountTitle') };
+                    months.forEach(function (m, j) { o[m] = at(r, j); rowWise += o[m]; });
+                    o.SortOrder = sortOrder(+H.ci(r, 'PLNoteId') || 0); o.TotalAmount = rowWise;
+                    dt.push(o);
+                });
+            }
+            dt.filter(function (r) { return r.ParentAccountId === 0; }).forEach(function (p) {
+                var kids = dt.filter(function (r) { return (+r.ParentPLNoteId || 0) === p.PLNoteId; }), tot = 0;
+                months.forEach(function (m) { var s = 0; kids.forEach(function (k) { s += H.toNum(k[m]); }); p[m] = s; tot += s; });
+                p.TotalAmount = tot;
+            });
+            var gp = dt.filter(function (r) { return r.PLNoteId === 100; })[0], gpTotal = 0;
+            months.forEach(function (m) { var s = 0; dt.forEach(function (r) { if ([1, 2, 3].indexOf(r.SortOrder) >= 0 && r.ParentAccountId !== 0) s += H.toNum(r[m]); }); gp[m] = s; gpTotal += s; });
+            gp.TotalAmount = gpTotal;
+            var np = dt.filter(function (r) { return r.PLNoteId === 101; })[0];
+            months.forEach(function (m) { var s = 0; dt.forEach(function (r) { if ([5, 6, 7, 8, 9].indexOf(r.SortOrder) >= 0 && r.ParentAccountId !== 0) s += H.toNum(r[m]); }); np[m] = s; });
+            np.TotalAmount = gpTotal;   /* desktop: NetProfitRow["TotalAmount"] = gpTotal */
+            open = {};
+            if (H.$('rdGroupeExpand').checked) dt.forEach(function (r) { open[r.PLNoteId] = true; });
+            draw();
+        }).catch(function (e) { H.box(e.message); });
+    }
+
+    function draw() {
+        var g = H.$('DataGridHistory');
+        H.$('lblStatus').textContent = dt.length ? 'Records: ' + dt.length : '';
+        if (!dt.length) { g.innerHTML = ''; return; }
+        var dec2 = dec || 2;
+        var vis = ['NoteTitle', 'ParentAccount'].concat(detailMode ? ['AccountCode', 'AccountTitle'] : []).concat(months).concat(['TotalAmount']);
+        var byParent = {};
+        dt.slice().sort(function (a, b) { return a.SortOrder - b.SortOrder; }).forEach(function (r) {
+            var k = r.ParentPLNoteId == null ? 'root' : r.ParentPLNoteId; (byParent[k] = byParent[k] || []).push(r);
+        });
+        var h = '<thead><tr>' + vis.map(function (c) { return '<th style="min-width:' + (months.indexOf(c) >= 0 || c === 'TotalAmount' ? 100 : (c === 'AccountCode' ? 80 : 240)) + 'px">' + H.esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>';
+        var n = 0, tot = {};
+        (byParent.root || []).forEach(function (r) { months.concat(['TotalAmount']).forEach(function (m) { tot[m] = (tot[m] || 0) + H.toNum(r[m]); }); });
+        function walk(list, depth) {
+            (list || []).forEach(function (r) {
+                var has = !!byParent[r.PLNoteId] && r.PLNoteId !== undefined;
+                h += '<tr data-n="' + (n++) + '">';
+                vis.forEach(function (c, ci) {
+                    var v = r[c];
+                    if (c === 'NoteTitle') h += '<td style="padding-left:' + (4 + depth * 16) + 'px">' + (has ? '<span class="tg" data-id="' + r.PLNoteId + '">' + (open[r.PLNoteId] ? '&#9662;' : '&#9656;') + '</span>' : '<span class="tg"></span>') + H.esc(v) + '</td>';
+                    else if (c === 'ParentAccount' || c === 'AccountCode') h += '<td>' + (glWise && v != null && v !== '' ? '<a data-link="' + c + '">' + H.esc(v) + '</a>' : H.esc(v)) + '</td>';
+                    else if (c === 'AccountTitle') h += '<td>' + H.esc(v) + '</td>';
+                    else h += '<td class="num">' + H.esc(c === 'TotalAmount' ? H.both(v, dec) : H.bothOpt(v, dec2)) + '</td>';
+                });
+                h += '</tr>';
+                rowsFlat.push(r);
+                if (has && open[r.PLNoteId]) walk(byParent[r.PLNoteId], depth + 1);
+            });
+        }
+        var rowsFlat = [];
+        walk(byParent.root, 0);
+        h += '</tbody><tfoot><tr>' + vis.map(function (c) { return '<td class="num">' + (c in tot ? H.esc(c === 'TotalAmount' ? H.both(tot[c], dec) : H.bothOpt(tot[c], dec2)) : '') + '</td>'; }).join('') + '</tr></tfoot>';
+        g.innerHTML = h;
+        g._rows = rowsFlat;
+    }
+
+    H.$('DataGridHistory').addEventListener('click', function (e) {
+        var tr = e.target.closest('tr[data-n]'); if (!tr) return;
+        var t = e.target.closest('.tg[data-id]');
+        if (t) { var id = t.getAttribute('data-id'); open[id] = !open[id]; draw(); return; }
+        Array.prototype.forEach.call(this.querySelectorAll('tr.cur'), function (x) { x.classList.remove('cur'); });
+        tr.classList.add('cur'); cur = this._rows[+tr.getAttribute('data-n')];
+        var a = e.target.closest('a[data-link]'); if (!a || !range) return;
+        /* DataGridHistory_LinkClicked: From = 1st of From Month, To = last day of To Month */
+        if (a.getAttribute('data-link') === 'ParentAccount') {
+            window.open('/accounts/reports/selected-trial-balance?groupAccountId=' + encodeURIComponent(cur.ParentAccountId) + '&fromDate=' + range.fromDate + '&toDate=' + range.toDate, '_blank');
+        } else {
+            window.open('/accounts/reports/general-ledger?accountId=' + encodeURIComponent(cur.AccountId || 0) + '&fromDate=' + range.fromDate + '&toDate=' + range.toDate, '_blank');
+        }
+    });
+    function expandAll(on) { open = {}; if (on) dt.forEach(function (r) { open[r.PLNoteId] = true; }); draw(); }
+    /* rdGroupCollapsed_CheckedChanged is the only handler wired (both radios share it through the group) */
+    H.$('rdGroupCollapsed').addEventListener('change', function () { expandAll(H.$('rdGroupeExpand').checked); });
+    H.$('rdGroupeExpand').addEventListener('change', function () { expandAll(H.$('rdGroupeExpand').checked); });
+
+    function reset() { H.$('CmbFromMonth').value = ''; H.$('CmbToMonth').value = ''; focusCombo('CmbFromMonth'); dt = []; draw(); }
+    function shortcuts() {
+        H.shortcuts([ ['Ctrl+S', 'For Show'], ['Ctrl+E', 'For Close'], ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'], ['Ctrl+F5', 'For Focus On As On Date '],
+            ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowDown', 'For Focus On Grid'], ['Ctrl+ArrowUp', 'For Focus On As On Date in Filter'],
+            ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]]);
+    }
+    H.$('btnShow').addEventListener('click', gridFill);
+    H.$('btnNew').addEventListener('click', reset);
+    H.$('btnRefresh').addEventListener('click', function () { });   /* btnRefresh_Click: shows and closes the wait form only */
+    H.$('btnShortcut').addEventListener('click', shortcuts);
+    H.$('tsDrowdown').addEventListener('click', function () { H.$('tsDrowdownMenu').classList.toggle('is-hidden'); });
+    document.addEventListener('click', function (e) { if (!e.target.closest('.dd')) H.$('tsDrowdownMenu').classList.add('is-hidden'); });
+    H.$('tsDrowdownMenu').addEventListener('click', function () {
+        if (!dt.length) { H.box('Record not found for Display'); return; }
+        H.printRows('Profit Loss Month Wise', 'Browser output of the grid table - the desktop fills the .rpt chosen from its ProfitLossMonthWiseComparison folder.',
+            ['NoteTitle', 'ParentAccount'].concat(detailMode ? ['AccountCode', 'AccountTitle'] : []).concat(months).concat(['TotalAmount']),
+            dt.slice().sort(function (a, b) { return a.SortOrder - b.SortOrder; }), function (c, v) { return typeof v === 'number' ? H.both(v, dec) : (v == null ? '' : v); });
+    });
+    H.keys({
+        'Ctrl+S': gridFill, 'Ctrl+N': reset, 'Ctrl+R': function () { }, 'Ctrl+F5': function () { focusCombo('CmbFromMonth'); },
+        'Ctrl+ArrowUp': function () { focusCombo('CmbFromMonth'); }, 'Ctrl+ArrowDown': function () { H.$('wrap').focus(); },
+        'Ctrl+E': function () { window.location.href = '/accounts/dashboard'; }, 'Escape': function () { window.location.href = '/accounts/dashboard'; },
+        'Ctrl+Alt+Control': shortcuts,
+        /* DataGridHistory_KeyDown Ctrl+Space: GL of the row's AccountId from ActiveYr.Start_Period to today */
+        'Ctrl+ ': function () { if (cur) window.open('/accounts/reports/general-ledger?accountId=' + encodeURIComponent(cur.AccountId || 0) + '&fromDate=' + (ctx.financialYearStart || '') + '&toDate=' + H.today(), '_blank'); }
+    });
+
+    H.api('GET', API + '/init').then(function (c) { ctx = c; dec = c.amountDecimals || 0; bindMonths(c.months); focusCombo('CmbFromMonth'); })
+        .catch(function () { H.box('Error occurred during database call.'); });
+})();
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

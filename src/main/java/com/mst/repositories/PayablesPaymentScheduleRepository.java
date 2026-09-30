@@ -72,6 +72,10 @@ public class PayablesPaymentScheduleRepository {
             Object name = map.get("BranchName") != null ? map.get("BranchName") : (map.get("branchName") != null ? map.get("branchName") : (map.get("Name") != null ? map.get("Name") : map.get("name")));
             map.put("Id", id); map.put("id", id); map.put("ID", id); map.put("BranchId", id); map.put("branchId", id);
             map.put("BranchName", name); map.put("branchName", name); map.put("Name", name); map.put("name", name);
+            /* R3 casing 2026-09-30: queryForList rows are LinkedCaseInsensitiveMaps - each put above REPLACES the stored key
+               spelling, leaving "ID"/"branchName"/"name" in the JSON, so pages reading r.Id / r.BranchName got empty options.
+               Re-putting restores the spellings the pages read. */
+            map.put("Id", id); map.put("BranchName", name);
         }
         data.put("branches", branches);
         data.put("features",jdbc.queryForList("EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?, @CompanyId=?",org,comp));

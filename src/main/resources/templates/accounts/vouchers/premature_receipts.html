@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Premature Receipts</title>
+<link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+<link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+<!--
+  Screen 25 "Premature Receipts" - AccountsPrematurePaymentsReceipts (DocumentTypeId 159).
+  Layout = InitializeComponent(): panel5 controls at their desktop Locations/Sizes (px).
+  Server: /accounts/api/desktop-vouchers/premature/... (DesktopVoucherScreensController).
+-->
+<style>
+ body{font-family:"Segoe UI",Tahoma,Verdana,sans-serif;background:#e4e9ed;font-size:12px;color:#222;margin:0}
+ .tbar{background:linear-gradient(#fff,#e3e8ee);border-bottom:1px solid #b0bec5;padding:2px 6px;display:flex;gap:3px;flex-wrap:wrap;align-items:center}
+ .tbtn{background:#fff;border:1px solid #90a4ae;border-radius:2px;padding:2px 9px;font-size:12px;cursor:pointer}
+ .tbtn:hover{background:#e0f2f1}.tbtn:disabled{opacity:.45;cursor:not-allowed}
+ .tabs{display:flex;gap:2px;padding:4px 6px 0;background:#d1d5db}
+ .tab{border:1px solid #9ca3af;border-bottom:none;background:#e5e7eb;padding:3px 16px;cursor:pointer;font-weight:600}
+ .tab.on{background:#fff;color:#00796B}
+ .cap{background:#00796B;color:#fff;height:26px;position:relative;font-weight:bold}
+ .cap .t{position:absolute;left:8px;top:3px;font-size:14px}
+ .pnl{position:relative;background:#fff;border-bottom:1px solid #b0bec5}
+ .lbl{position:absolute;white-space:nowrap;font-weight:600;color:#334155}
+ input.f,select.f{position:absolute;border:1px solid #94a3b8;border-radius:2px;padding:1px 4px;font-size:12px;background:#fff}
+ input.f[readonly]{background:#f1f5f9}
+ .abs{position:absolute}
+ table.g{border-collapse:collapse;width:100%;background:#fff}
+ table.g th{background:#00796B;color:#fff;padding:3px 6px;border:1px solid #004d40;white-space:nowrap;font-weight:600;text-align:center}
+ table.g td{padding:2px 6px;border:1px solid #cbd5e1;white-space:nowrap}
+ table.g tr.sel td{background:#b2dfdb}
+ table.g tfoot td{font-weight:bold;background:#e0f2f1}
+ .num{text-align:right}
+ .gridwrap{overflow:auto;border:1px solid #b0bec5;background:#fff}
+ .dcombo-popup{position:absolute;z-index:2000;background:#fff;border:1px solid #00796B;box-shadow:0 4px 10px rgba(0,0,0,.2);max-height:260px;overflow:auto;font-size:12px}
+ .dcombo-popup table{border-collapse:collapse;width:100%}
+ .dcombo-popup th{background:#00796B;color:#fff;padding:2px 6px;position:sticky;top:0}
+ .dcombo-popup td{padding:2px 6px;border-bottom:1px solid #eee;white-space:nowrap;cursor:pointer}
+ .dcombo-popup tr.act td,.dcombo-popup tbody tr:hover td{background:#e0f2f1}
+ fieldset.gb{position:absolute;border:1px solid #9aa9b5;padding:0;background:#fff}
+ fieldset.gb>legend{font-size:12px;font-weight:600;width:auto;margin:0 0 0 8px;padding:0 4px;border:0;color:#004d40}
+ #msg{position:fixed;right:12px;top:8px;z-index:3000;max-width:520px}
+ .modal-sc{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;z-index:2500}
+ .modal-sc>div{background:#fff;width:520px;margin:60px auto;padding:8px;border:1px solid #00796B}
+</style>
+</head>
+<body>
+<div id="msg"></div>
+<div class="tabs">
+  <div class="tab on" id="tabForm" onclick="PR.tab(0)">Form</div>
+  <div class="tab" id="tabHist" onclick="PR.tab(1)">Register</div>
+  <a href="/accounts/dashboard" style="margin-left:auto;padding:3px 8px">Back to Dashboard</a>
+</div>
+
+<!-- ======================================================================= tabPage1 "Form" -->
+<div id="pgForm">
+  <div class="tbar">
+    <button class="tbtn" id="btnNew" onclick="PR.newForm()">New</button>
+    <button class="tbtn" id="toolStripButton1" onclick="PR.refresh()">Refresh</button>
+    <button class="tbtn" id="btnsave" onclick="PR.save('save')">Save</button>
+    <button class="tbtn" id="btnUpdate" onclick="PR.save('update')" style="display:none">Update</button>
+    <button class="tbtn" id="toolStripButton8" disabled title="Attachments (DMS) are not ported to the web.">Attachment</button>
+    <button class="tbtn" id="btnConfirmVoucher" onclick="PR.confirmChecked()">Confirm Vouchers</button>
+    <button class="tbtn" id="btnShortCutKey" onclick="PR.shortcuts()">ShortCut Keys</button>
+  </div>
+  <!-- panel4 -->
+  <div class="cap"><span class="t" id="lblCaption">Accounts Premature Receipts</span>
+    <span class="lbl" id="lblCostCenter" style="left:285px;top:5px;color:#fff;display:none">Cost Center</span>
+    <input class="f" id="CmbCostCenter" style="left:362px;top:0;width:167px;height:26px;display:none" disabled>
+  </div>
+  <!-- panel5 (1283 x 115) -->
+  <div class="pnl" style="height:115px;width:1283px">
+    <label class="lbl" style="left:13px;top:6px">Doc No</label>
+    <input class="f" id="txtdocno" readonly style="left:12px;top:27px;width:89px;height:23px">
+    <label class="lbl" style="left:104px;top:6px">Doc Date</label>
+    <input class="f" type="date" id="txtdocdate" style="left:103px;top:27px;width:116px;height:23px">
+    <label class="lbl" style="left:223px;top:6px">Tracking Slip #</label>
+    <input class="f" id="txtTrackingNo" style="left:220px;top:27px;width:101px;height:23px">
+    <label class="lbl" style="left:324px;top:6px">Slip Amount</label>
+    <input class="f num" id="txtSlipAmount" style="left:322px;top:27px;width:114px;height:23px">
+    <label class="lbl" style="left:438px;top:6px">Voucher Type</label>
+    <input class="f" id="cmbVouchertype" style="left:437px;top:25px;width:119px;height:26px">
+    <label class="lbl" style="left:560px;top:6px">Sender Bank</label>
+    <input class="f" id="cmbSenderbank" style="left:556px;top:25px;width:215px;height:26px">
+    <button class="tbtn abs" id="button1" style="left:772px;top:26px;width:23px;height:24px;padding:0" disabled title="Define PDC Bank (PdcBank form) is not ported.">+</button>
+    <label class="lbl" style="left:795px;top:6px">Representative A/c</label>
+    <input class="f" id="cmbRepresentiveAc" style="left:796px;top:25px;width:348px;height:26px">
+    <button class="tbtn abs" id="btnDefineOtherParties" style="left:1145px;top:27px;width:23px;height:24px;padding:0" disabled title="Define Other Parties form is not ported.">+</button>
+    <label class="lbl" style="left:10px;top:61px">Sender Account</label>
+    <input class="f" id="CmbSenderAccount" style="left:10px;top:82px;width:209px;height:26px">
+    <label class="lbl" id="lblReceiverAc" style="left:223px;top:61px">Receiver Account</label>
+    <input class="f" id="CmbReceiverAccount" style="left:220px;top:82px;width:216px;height:26px">
+    <label class="lbl" style="left:439px;top:61px">Cheque No</label>
+    <input class="f" id="txtChequeNo" style="left:437px;top:84px;width:119px;height:23px">
+    <label class="lbl" style="left:558px;top:61px">Cheque Date</label>
+    <input class="f" type="date" id="datChequeDate" style="left:558px;top:84px;width:117px;height:23px">
+    <label class="lbl" style="left:673px;top:61px">Amount</label>
+    <input class="f num" id="txtAmount" style="left:676px;top:84px;width:95px;height:23px">
+    <label class="lbl" style="left:771px;top:61px">Remarks</label>
+    <input class="f" id="txtremarks" style="left:772px;top:84px;width:284px;height:23px">
+    <label class="lbl" style="left:1057px;top:61px">Status</label>
+    <select class="f" id="cmbStatus" style="left:1057px;top:82px;width:87px;height:26px"></select>
+    <button class="tbtn abs" id="Add" style="left:1145px;top:83px;width:26px;height:24px;padding:0" onclick="PR.add()">+</button>
+    <button class="tbtn abs" id="btnUpdateDetail" style="left:1172px;top:84px;width:54px;height:22px;padding:0;display:none" onclick="PR.updateDetail()">Update</button>
+    <button class="tbtn abs" id="btnCancelUpdateDetial" style="left:1228px;top:84px;width:50px;height:22px;padding:0;display:none" onclick="PR.cancelDetail()">Cancel</button>
+  </div>
+  <!-- panel3: grd (entry grid) -->
+  <div class="gridwrap" style="height:176px"><table class="g" id="grd"></table></div>
+  <!-- panel7: grdPendingRecord -->
+  <div class="gridwrap" style="height:245px;margin-top:3px"><table class="g" id="grdPendingRecord"></table></div>
+</div>
+
+<!-- ===================================================================== tabPage2 "Register" -->
+<div id="pgHist" style="display:none">
+  <div class="tbar">
+    <button class="tbtn" id="btnNewHistory" onclick="PR.histReset()">New</button>
+    <button class="tbtn" id="btnRefreshHistory" onclick="PR.histCombos()">Refresh</button>
+  </div>
+  <div class="cap"><span class="t">Premature Receipts History</span></div>
+  <div class="pnl" style="height:80px">
+    <fieldset class="gb" style="left:5px;top:3px;width:969px;height:74px"><legend>Filters</legend>
+      <label class="lbl" style="left:6px;top:8px">From &amp; To Date</label>
+      <input class="f" type="date" id="FromDateHistory" style="left:117px;top:0;width:135px;height:23px">
+      <input class="f" type="date" id="ToDateHistory" style="left:253px;top:0;width:134px;height:23px">
+      <label class="lbl" style="left:6px;top:28px">From &amp; To Doc No</label>
+      <input class="f" id="txtFromDocNoHistory" style="left:117px;top:25px;width:134px;height:23px">
+      <input class="f" id="txtToDocNoHistory" style="left:253px;top:25px;width:134px;height:23px">
+      <label class="lbl" style="left:393px;top:4px">Voucher Type</label>
+      <input class="f" id="CmbVoucherTypeHistory" style="left:477px;top:0;width:133px;height:26px">
+      <label class="lbl" style="left:393px;top:31px">Bank Name</label>
+      <input class="f" id="CmbBankNameHistory" style="left:477px;top:27px;width:133px;height:26px">
+      <label class="lbl" style="left:612px;top:5px">Sender Ac</label>
+      <input class="f" id="CmbSenderAcHistory" style="left:681px;top:1px;width:226px;height:26px">
+      <label class="lbl" id="label12" style="left:612px;top:32px">Receiver Ac</label>
+      <input class="f" id="CmbReceiverAcHistory" style="left:681px;top:28px;width:226px;height:26px">
+      <button class="tbtn abs" id="btnshow" style="left:911px;top:28px;width:53px;height:26px" onclick="PR.history()">Show</button>
+      <label class="abs" style="left:6px;top:50px;font-size:11px"><input type="checkbox" id="chkFrom" checked> From date <input type="checkbox" id="chkTo" checked> To date</label>
+    </fieldset>
+  </div>
+  <div style="margin:3px"><b>Filtered Records</b></div>
+  <div class="gridwrap" style="max-height:424px"><table class="g" id="grdHistory"></table></div>
+</div>
+
+<div class="modal-sc" id="scModal" onclick="this.style.display='none'"><div><b>ShortCut Keys</b><table class="g" id="scTable"></table></div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/desktop_combo_c.js}"></script>
+<script>
+(function () {
+'use strict';
+var API = '/accounts/api/desktop-vouchers/premature';
+var L = null, rights = {}, booking = false, portal = false;
+var table = [];            // the entry grid (DataTable "table")
+var pending = [];
+var updateIndex = -1, trackingAtEdit = '', mode = 'save';
+var cb = {};
+
+function $id(i) { return document.getElementById(i); }
+function show(el, on) { if (typeof el === 'string') el = $id(el); if (el) el.style.display = on ? '' : 'none'; }
+function num(v) { v = String(v == null ? '' : v).replace(/,/g, ''); var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function fmt(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+function dstr(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function today() { return dstr(new Date()); }
+function day(v) { return v ? String(v).substring(0, 10) : ''; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function msg(text, ok) {
+    var d = document.createElement('div'); d.className = 'alert ' + (ok ? 'alert-success' : 'alert-danger');
+    d.textContent = text; $id('msg').appendChild(d); setTimeout(function () { d.remove(); }, ok ? 3500 : 7000);
+}
+function ajax(method, url, body) {
+    return $.ajax({ method: method, url: url, contentType: 'application/json', data: body ? JSON.stringify(body) : undefined })
+        .fail(function (x) { msg((x.responseJSON && x.responseJSON.message) || ('Request failed (' + x.status + ')')); });
+}
+function costCenterId() { return +cb.cc.value() || 0; }
+
+/* ----------------------------------------------------------- AcfrmDefPdcManagment_Load */
+function init() {
+    cb.cc = DCombo('CmbCostCenter', { columns: [{ key: 'CostCenterName', caption: 'Cost Center' }], valueKey: 'CostCenterId', textKey: 'CostCenterName' });
+    cb.vt = DCombo('cmbVouchertype', { columns: [{ key: 'Name', caption: 'VoucherType' }], textKey: 'Name', onLeave: function () { receiverAccountBind(); } });
+    cb.bank = DCombo('cmbSenderbank', { columns: [{ key: 'BankName', caption: 'BankName' }], textKey: 'BankName', popupWidth: 260 });
+    cb.rep = DCombo('cmbRepresentiveAc', { columns: [{ key: 'PartyName', caption: 'Representative AC' }], textKey: 'PartyName' });
+    cb.snd = DCombo('CmbSenderAccount', { columns: [{ key: 'AccountTitle', caption: 'SenderAccount' }], popupWidth: 320 });
+    cb.rcv = DCombo('CmbReceiverAccount', { columns: [{ key: 'AccountTitle', caption: 'Receiver Account' }], popupWidth: 320 });
+    cb.hVt = DCombo('CmbVoucherTypeHistory', { columns: [{ key: 'Name', caption: 'Voucher Type' }], textKey: 'Name' });
+    cb.hBank = DCombo('CmbBankNameHistory', { columns: [{ key: 'Name', caption: 'Bank Name' }], textKey: 'Name', popupWidth: 240 });
+    cb.hSnd = DCombo('CmbSenderAcHistory', { columns: [{ key: 'Name', caption: 'Sender Ac' }], textKey: 'Name', popupWidth: 300 });
+    cb.hRcv = DCombo('CmbReceiverAcHistory', { columns: [{ key: 'Name', caption: 'Receiver Ac' }], textKey: 'Name', popupWidth: 300 });
+    $id('txtdocdate').value = today(); $id('datChequeDate').value = today();
+    document.addEventListener('keydown', keys);
+
+    ajax('GET', API + '/lookups').done(function (d) {
+        L = d; rights = d.rights || {}; booking = !!d.bookingOffice; portal = !!d.customerPortal;
+        $id('btnsave').disabled = !rights.save;
+        $id('btnUpdate').disabled = !rights.update;
+        if (booking) {
+            show('lblCostCenter', true); show('CmbCostCenter', true); show('btnConfirmVoucher', false);
+            cb.cc.setData(d.costCenters || []);
+            if ((d.costCenters || []).length) cb.cc.setValue(d.costCenters[0].CostCenterId);
+        }
+        if (booking || portal) {
+            show('lblReceiverAc', false); show('CmbReceiverAccount', false);
+            show('label12', false); show('CmbReceiverAcHistory', false);
+            $id('CmbSenderAccount').style.width = '426px';
+        }
+        $id('txtdocno').value = d.docNo || '';
+        cb.vt.setData(d.voucherTypes); cb.vt.setValue(4);           // Rows[1].Activate() -> BRV
+        cb.bank.setData(d.banks || []);
+        $id('cmbStatus').innerHTML = (d.statuses || []).map(function (s) { return '<option value="' + s.Id + '">' + esc(s.Name) + '</option>'; }).join('');
+        cb.rep.setData(d.representatives || []);
+        sendersBind();
+        receiverAccountBind();
+        gridFill();
+        histCombos();
+        var from = new Date(); from.setDate(from.getDate() - (d.historyFromDaysBack || 3));
+        $id('FromDateHistory').value = dstr(from); $id('ToDateHistory').value = today();
+        renderEntry();
+        $id('txtdocdate').focus();
+    });
+}
+
+function sendersBind() {
+    ajax('GET', API + '/senders?costCenterId=' + costCenterId()).done(function (d) { cb.snd.setData(d || []); });
+}
+
+/* ReceiverAccountBind() */
+function receiverAccountBind() {
+    var vt = +cb.vt.value();
+    if (!vt) return;
+    ajax('GET', API + '/receivers?voucherTypeId=' + vt).done(function (d) { cb.rcv.setData(d || []); });
+}
+
+/* GridFill() */
+function gridFill() {
+    ajax('GET', API + '/pending?costCenterId=' + costCenterId()).done(function (d) { pending = d || []; renderPending(); });
+}
+
+/* ------------------------------------------------------------------ formvalidation() */
+function formValidation() {
+    var dn = $id('txtdocno').value.trim();
+    if (!dn || dn === '0') { msg('Doc No field required'); return false; }
+    var tn = $id('txtTrackingNo').value.trim();
+    if (!tn || tn === '0') { msg('Tracking No field required'); $id('txtTrackingNo').focus(); return false; }
+    if (!+cb.vt.value()) { msg('Please Select Voucher type'); cb.vt.focus(); return false; }
+    if (+cb.vt.value() === 5 && +cb.snd.value() === +cb.rcv.value()) { msg('SenderAccount cannot be equal to ReceiverAccount Please Check!'); cb.snd.focus(); return false; }
+    if (!+cb.bank.value()) { msg('Sender Bank Field Required'); cb.bank.focus(); return false; }
+    if (!+cb.rep.value()) { msg('Please Select Represented Account'); cb.rep.focus(); return false; }
+    if (!+cb.snd.value()) { msg('Please Select Sender Account'); cb.snd.focus(); return false; }
+    if (!booking && !portal && !+cb.rcv.value()) { msg('Please Select Receiver Account'); cb.rcv.focus(); return false; }
+    if (+cb.vt.value() === 4 && !$id('txtChequeNo').value) { msg('ChequeNo Field Required'); $id('txtChequeNo').focus(); return false; }
+    if (num($id('txtAmount').value) === 0) { msg('Amount Field is Required'); $id('txtAmount').focus(); return false; }
+    if (!$id('cmbStatus').value) { msg('Please Select Status'); return false; }
+    return true;
+}
+
+function boxRow() {
+    return {
+        docDate: $id('txtdocdate').value, docNo: $id('txtdocno').value, trakingNo: $id('txtTrackingNo').value,
+        slipAmount: num($id('txtSlipAmount').value), voucherTypeId: +cb.vt.value(), voucherType: cb.vt.text(),
+        bankId: +cb.bank.value(), bankName: cb.bank.text(), representativeAcId: +cb.rep.value(), representativeAc: cb.rep.text(),
+        senderAcId: +cb.snd.value(), senderAc: cb.snd.text(), receiverAcId: +cb.rcv.value() || 0, receiverAc: cb.rcv.text(),
+        chequeNo: $id('txtChequeNo').value, chequeDate: $id('datChequeDate').value, amount: num($id('txtAmount').value),
+        remarks: $id('txtremarks').value, status: $id('cmbStatus').options[$id('cmbStatus').selectedIndex] ? $id('cmbStatus').options[$id('cmbStatus').selectedIndex].text : ''
+    };
+}
+
+/* Add_Click() */
+function add() {
+    if (!formValidation()) return;
+    if (table.length) {
+        var r = table[0];
+        if (String(r.trakingNo) !== $id('txtTrackingNo').value) { $id('txtTrackingNo').value = r.trakingNo; msg("You Can't Add Different Tracking#."); return; }
+        if (String(r.voucherType) !== cb.vt.text()) { cb.vt.setValue(r.voucherTypeId); msg("You Can't Add Different Voucher Type."); return; }
+        if (+r.bankId !== +cb.bank.value()) { cb.bank.setValue(r.bankId); msg("You Can't Add Different Sender Bank."); return; }
+        if (+r.representativeAcId !== +cb.rep.value()) { cb.rep.setValue(r.representativeAcId); msg("You Can't Add Different Representative A/c."); return; }
+        if (+r.receiverAcId !== (+cb.rcv.value() || 0)) { cb.rcv.setValue(r.receiverAcId); msg("You Can't Add Different Receiver A/c."); return; }
+    }
+    var n = boxRow(); n.id = 0; table.push(n);
+    renderEntry(); resetDetail();
+}
+
+/* ResetDetail() */
+function resetDetail() { $id('txtremarks').value = ''; $id('txtChequeNo').value = ''; $id('txtAmount').value = ''; $id('txtChequeNo').focus(); }
+
+/* grd_DoubleClick() */
+function editEntry(i) {
+    var r = table[i]; updateIndex = i;
+    $id('txtdocdate').value = day(r.docDate); $id('txtdocno').value = r.docNo;
+    cb.vt.setValue(r.voucherTypeId); $id('txtTrackingNo').value = r.trakingNo; $id('txtSlipAmount').value = r.slipAmount;
+    ajax('GET', API + '/receivers?voucherTypeId=' + r.voucherTypeId).done(function (d) {
+        cb.rcv.setData(d || []); if (!booking && !portal) cb.rcv.setValue(r.receiverAcId);
+    });
+    cb.bank.setValue(r.bankId); cb.rep.setValue(r.representativeAcId); cb.snd.setValue(r.senderAcId);
+    $id('txtChequeNo').value = r.chequeNo || ''; $id('datChequeDate').value = day(r.chequeDate) || today();
+    $id('txtAmount').value = r.amount; $id('txtremarks').value = r.remarks || '';
+    show('Add', false); show('btnUpdateDetail', true); show('btnCancelUpdateDetial', true);
+    trackingAtEdit = $id('txtTrackingNo').value;
+}
+
+/* btnUpdateDetail_Click() */
+function updateDetail() {
+    if (updateIndex < 0 || !formValidation()) return;
+    var n = boxRow(), o = table[updateIndex];
+    n.id = o.id;
+    if (booking || portal) { n.receiverAcId = o.receiverAcId; n.receiverAc = o.receiverAc; }
+    table[updateIndex] = n;
+    var first = table[0];
+    table.forEach(function (r) {
+        if (String(first.trakingNo) !== trackingAtEdit) r.trakingNo = $id('txtTrackingNo').value;
+        r.voucherTypeId = n.voucherTypeId; r.voucherType = n.voucherType; r.bankId = n.bankId; r.bankName = n.bankName;
+        r.representativeAcId = n.representativeAcId; r.representativeAc = n.representativeAc;
+        r.receiverAcId = +cb.rcv.value() || 0; r.receiverAc = cb.rcv.text();
+    });
+    updateIndex = -1; show('Add', true); show('btnUpdateDetail', false); show('btnCancelUpdateDetial', false);
+    renderEntry(); resetDetail();
+}
+
+function cancelDetail() { updateIndex = -1; show('Add', true); show('btnUpdateDetail', false); show('btnCancelUpdateDetial', false); }
+
+/* gridDetailsetting(): Id, BankId, VoucherTypeId, RepresentativeAcId, SenderAcId, ReceiverAcId hidden */
+function renderEntry() {
+    var cols = [ ['docDate', 'DocDate'], ['docNo', 'DocNo'], ['trakingNo', 'TrakingNo'], ['slipAmount', 'SlipAmount'], ['voucherType', 'VoucherType'],
+        ['bankName', 'BankName'], ['representativeAc', 'RepresentativeAc'], ['senderAc', 'SenderAc'], ['receiverAc', 'ReceiverAc'],
+        ['chequeNo', 'ChequeNo'], ['chequeDate', 'ChequeDate'], ['amount', 'Amount'], ['remarks', 'Remarks'], ['status', 'Status']];
+    var tot = 0;
+    var h = '<thead><tr>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '<th>X</th></tr></thead><tbody>';
+    table.forEach(function (r, i) {
+        tot += num(r.amount);
+        h += '<tr data-i="' + i + '">' + cols.map(function (c) {
+            var v = r[c[0]];
+            if (c[0] === 'amount' || c[0] === 'slipAmount') return '<td class="num">' + fmt(v) + '</td>';
+            if (c[0] === 'docDate' || c[0] === 'chequeDate') return '<td>' + esc(day(v)) + '</td>';
+            return '<td>' + esc(v) + '</td>';
+        }).join('') + '<td><button class="tbtn" data-del="' + i + '">X</button></td></tr>';
+    });
+    h += '</tbody><tfoot><tr>' + cols.map(function (c) { return c[0] === 'amount' ? '<td class="num">' + fmt(tot) + '</td>' : '<td></td>'; }).join('') + '<td></td></tr></tfoot>';
+    var t = $id('grd'); t.innerHTML = h;
+    t.querySelectorAll('tbody tr').forEach(function (tr) { tr.addEventListener('dblclick', function () { editEntry(+tr.getAttribute('data-i')); }); });
+    t.querySelectorAll('[data-del]').forEach(function (b) {
+        b.addEventListener('click', function (e) { e.stopPropagation(); table.splice(+b.getAttribute('data-del'), 1); renderEntry(); });
+    });
+}
+
+/* gridsetting() for grdPendingRecord */
+function renderPending() {
+    var h = '<thead><tr>';
+    var sel = !booking && !portal && rights.canChangeOrderStatusToComplete;
+    var can = !booking && !portal && rights.canChangeOrderStatusToCancel;
+    if (sel) h += '<th><input type="checkbox" id="chkAllPending"></th><th>Confirm</th>';
+    if (can) h += '<th>Cancel</th>';
+    if (rights.update) h += '<th>Edit</th>';
+    var cols = [ ['DocNo', 'DocNo'], ['DocDate', 'DocDate']];
+    /* CostCenter: hidden for portal/booking, else Visible = CmbCostCenter.Visible (only shown for
+       booking office) - so it is never visible on this grid. */
+    cols.push(['TrakingNo', 'Tracking No'], ['Amount', 'Amount'], ['BankName', 'BankName'], ['SenderAccount', 'SenderAccount']);
+    if (!(portal || booking)) cols.push(['RecieverAccount', 'ReceiverAccount']);
+    cols.push(['ChequeNo', 'ChequeNo'], ['ChequeDate', 'ChequeDate'], ['RepresentativeAc', 'RepresentativeAccount'], ['SlipAmount', 'SlipAmount'],
+        ['EntryStatus', 'EntryStatus'], ['RemarksHeader', 'Remarks'], ['NoOfAttachments', 'NoOfAttachments']);
+    h += cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
+    var tot = 0;
+    pending.forEach(function (r, i) {
+        tot += num(r.Amount);
+        h += '<tr data-i="' + i + '">';
+        if (sel) h += '<td><input type="checkbox" class="chkP" data-i="' + i + '"></td><td><button class="tbtn" data-act="Confirm">Confirm</button></td>';
+        if (can) h += '<td><button class="tbtn" data-act="Cancel">Cancel</button></td>';
+        if (rights.update) h += '<td><button class="tbtn" data-act="Edit">Edit</button></td>';
+        h += cols.map(function (c) {
+            var v = r[c[0]];
+            if (c[0] === 'Amount' || c[0] === 'SlipAmount') return '<td class="num">' + fmt(v) + '</td>';
+            if (c[0] === 'DocDate' || c[0] === 'ChequeDate') return '<td>' + esc(day(v)) + '</td>';
+            return '<td>' + esc(v) + '</td>';
+        }).join('') + '</tr>';
+    });
+    h += '</tbody><tfoot><tr>' + (sel ? '<td></td><td></td>' : '') + (can ? '<td></td>' : '') + (rights.update ? '<td></td>' : '') +
+        cols.map(function (c) { return c[0] === 'Amount' ? '<td class="num">' + fmt(tot) + '</td>' : '<td></td>'; }).join('') + '</tr></tfoot>';
+    var t = $id('grdPendingRecord'); t.innerHTML = h;
+    var all = $id('chkAllPending');
+    if (all) all.addEventListener('change', function () { t.querySelectorAll('.chkP').forEach(function (c) { c.checked = all.checked; }); });
+    t.querySelectorAll('[data-act]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var r = pending[+b.closest('tr').getAttribute('data-i')];
+            var a = b.getAttribute('data-act');
+            if (a === 'Edit') editPending(r); else statusChange(a, [r], false);
+        });
+    });
+}
+
+function slipKey(r) {
+    return { trakingNo: r.TrakingNo, slipAmount: r.SlipAmount, vouchersId: r.VouchersId, receiverAcId: r.ChartOfAccountIdReceiver,
+             docDate: day(r.DocDate), costCenterId: r.CostCenterId || 0 };
+}
+
+/* grdPendingRecord "Edit" -> ReadByMultiParams */
+function editPending(r) {
+    var k = slipKey(r);
+    ajax('POST', API + '/read', { trackingNo: k.trakingNo, slipAmount: k.slipAmount, voucherTypeId: k.vouchersId,
+        receiverAcId: k.receiverAcId, docDate: k.docDate, costCenterId: k.costCenterId }).done(function (dt) {
+        if (!dt || !dt.length) return;
+        show('btnUpdate', true); show('btnsave', false); mode = 'update';
+        table = dt.map(function (x) {
+            return { id: x.Id, docDate: day(x.DocDate), docNo: x.DocNo, trakingNo: x.TrakingNo, slipAmount: x.SlipAmount,
+                voucherTypeId: x.VoucherTypeId, voucherType: x.VoucherType, bankId: x.BankId, bankName: x.BankName,
+                representativeAcId: x.RepresentativeAcId, representativeAc: x.RepresentativeAc, senderAcId: x.SenderAcId, senderAc: x.SenderAc,
+                receiverAcId: x.ReceiverAcId, receiverAc: x.ReceiverAc, chequeNo: x.ChequeNo, chequeDate: day(x.ChequeDate),
+                amount: x.Amount, remarks: x.Remarks, status: x.Status };
+        });
+        var cc = +dt[0].CostCenterId || 0;
+        if (cc > 0) { cb.cc.setValue(cc); sendersBind(); }
+        renderEntry();
+    });
+}
+
+/* Confirm / Cancel (grid buttons) and btnConfirmVoucher_Click (checked rows) */
+function statusChange(action, rows, bulk) {
+    if (!rows.length) { msg('Please select row first'); return; }
+    if (!confirm(bulk ? 'Are you sure to Confirm Voucher' : 'Are you sure to ' + action)) return;
+    ajax('POST', API + '/status', { action: action, bulk: bulk, rows: rows.map(slipKey) }).done(function (d) {
+        msg(d.message, true); reset();
+    }).always(function () { gridFill(); });
+}
+
+function confirmChecked() {
+    var rows = [];
+    document.querySelectorAll('#grdPendingRecord .chkP:checked').forEach(function (c) { rows.push(pending[+c.getAttribute('data-i')]); });
+    if (!rows.length) { msg('Please select row first'); return; }
+    statusChange('Confirm', rows, true);
+}
+
+/* Insert() */
+function save(m) {
+    if (!table.length) { msg('grid record not found'); return; }
+    if (!confirm(m === 'update' ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+    ajax('POST', API + '/save', { mode: m, costCenterId: costCenterId(), trackingNo: $id('txtTrackingNo').value,
+        slipAmount: num($id('txtSlipAmount').value), docDate: $id('txtdocdate').value, rows: table }).done(function (d) {
+        msg(d.message, true); reset();
+    });
+}
+
+/* Reset() */
+function reset() {
+    show('btnsave', true); show('btnUpdate', false); mode = 'save';
+    $id('txtremarks').value = ''; $id('txtTrackingNo').value = ''; $id('txtSlipAmount').value = '';
+    cb.rcv.clear(); cb.snd.clear(); cb.bank.clear(); cb.rep.clear();
+    $id('txtChequeNo').value = ''; $id('txtAmount').value = '';
+    table = []; renderEntry();
+    show('Add', true); show('btnUpdateDetail', false); show('btnCancelUpdateDetial', false);
+    ajax('GET', API + '/doc-no').done(function (d) { $id('txtdocno').value = d.docNo || ''; });
+    gridFill();
+    $id('txtdocdate').focus();
+}
+
+function newForm() { reset(); show('btnsave', true); show('btnUpdate', false); }
+
+/* btnRefresh_Click: bankfill, OtherPartiesFill, SenderPartiesBind */
+function refresh() {
+    ajax('GET', API + '/lookups').done(function (d) { cb.bank.setData(d.banks || []); cb.rep.setData(d.representatives || []); });
+    sendersBind();
+}
+
+/* ------------------------------------------------------------------------ register tab */
+function histCombos() {
+    ajax('GET', API + '/history-combos?costCenterId=' + costCenterId()).done(function (d) {
+        cb.hVt.setData(d.voucherTypes || []); cb.hBank.setData(d.banks || []);
+        cb.hSnd.setData(d.senders || []); cb.hRcv.setData(d.receivers || []);
+    });
+}
+
+function history() {
+    var q = { fromDate: $id('chkFrom').checked ? $id('FromDateHistory').value : '', toDate: $id('chkTo').checked ? $id('ToDateHistory').value : '',
+        fromDocNo: $id('txtFromDocNoHistory').value, toDocNo: $id('txtToDocNoHistory').value,
+        voucherTypeId: cb.hVt.value() || 0, bankId: cb.hBank.value() || 0, senderAcId: cb.hSnd.value() || 0,
+        receiverAcId: cb.hRcv.value() || 0, costCenterId: costCenterId() };
+    ajax('GET', API + '/history?' + $.param(q)).done(function (list) {
+        list = list || [];
+        if (!list.length) { $id('grdHistory').innerHTML = ''; return; }
+        var cols = [];
+        if (!portal) cols.push(['CostCenterName', 'CostCenter']);
+        cols.push(['DocNo', 'DocNo'], ['DocDate', 'DocDate'], ['TrakingNo', 'TrakingNo'], ['VoucherType', 'VoucherType'], ['Amount', 'Amount'],
+            ['BankName', 'BankName'], ['RepresentativeAc', 'RepresentativeAc'], ['SenderAccount', 'SenderAccount'], ['RecieverAccount', 'ReceiverAccount'],
+            ['ChequeNo', 'ChequeNo'], ['ChequeDate', 'ChequeDate'], ['EntryStatus', 'EntryStatus'], ['NoOfAttachments', 'NoOfAttachments'],
+            ['RemarksHeader', 'RemarksHeader'], ['__tws', 'TrackingWithSlipAmount']);
+        var tot = 0;
+        var h = '<thead><tr>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
+        list.forEach(function (r) {
+            tot += num(r.Amount);
+            h += '<tr>' + cols.map(function (c) {
+                if (c[0] === '__tws') return '<td>' + esc((r.TrakingNo == null ? '' : r.TrakingNo) + ' ' + (r.SlipAmount == null ? '' : r.SlipAmount)) + '</td>';
+                var v = r[c[0]];
+                if (c[0] === 'Amount') return '<td class="num">' + fmt(v) + '</td>';
+                if (c[0] === 'DocDate' || c[0] === 'ChequeDate') return '<td>' + esc(day(v)) + '</td>';
+                return '<td>' + esc(v) + '</td>';
+            }).join('') + '</tr>';
+        });
+        h += '</tbody><tfoot><tr>' + cols.map(function (c) { return c[0] === 'Amount' ? '<td class="num">' + fmt(tot) + '</td>' : '<td></td>'; }).join('') + '</tr></tfoot>';
+        $id('grdHistory').innerHTML = h;
+    });
+}
+
+function histReset() {
+    $id('FromDateHistory').value = today(); $id('ToDateHistory').value = today();
+    $id('txtFromDocNoHistory').value = ''; $id('txtToDocNoHistory').value = '';
+    cb.hVt.clear(); cb.hBank.clear(); cb.hSnd.clear(); cb.hRcv.clear();
+    $id('grdHistory').innerHTML = '';
+}
+
+function tab(i) {
+    show('pgForm', i === 0); show('pgHist', i === 1);
+    $id('tabForm').classList.toggle('on', i === 0); $id('tabHist').classList.toggle('on', i === 1);
+    if (i === 1) $id('FromDateHistory').focus(); else $id('txtdocdate').focus();
+}
+
+function shortcuts() {
+    var k = [ ['Ctrl+S', 'For Save'], ['Ctrl+U', 'For Update'], ['Ctrl+E', 'For Close'], ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'],
+        ['Ctrl+F5', 'For Focus on Doc Date'], ['Ctrl+F10', 'For Open Attachments'], ['Ctrl+T', 'For Tab Transfer'], ['Ctrl+alt', 'To Show ShortCut Keys Form'],
+        ['Ctrl+ArrowDown', 'For Focus On Form Grids'], ['Ctrl+Enter', 'When Focus On Any Grid For Update Record'],
+        ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]];
+    $id('scTable').innerHTML = '<tr><th>KeyCombination</th><th>Description</th></tr>' + k.map(function (x) { return '<tr><td>' + x[0] + '</td><td>' + esc(x[1]) + '</td></tr>'; }).join('');
+    $id('scModal').style.display = 'block';
+}
+
+/* AcfrmDefPdcManagment_KeyDown */
+function keys(e) {
+    if (e.ctrlKey && e.altKey) { shortcuts(); return; }
+    if (!e.ctrlKey) return;
+    var k = e.key.toLowerCase();
+    if (k === 's' && $id('btnsave').style.display !== 'none' && !$id('btnsave').disabled) { e.preventDefault(); save('save'); }
+    else if (k === 'u' && $id('btnUpdate').style.display !== 'none' && !$id('btnUpdate').disabled) { e.preventDefault(); save('update'); }
+    else if (k === 'n') { e.preventDefault(); newForm(); }
+    else if (k === 'r') { e.preventDefault(); refresh(); }
+    else if (k === 't') { e.preventDefault(); tab($id('pgHist').style.display === 'none' ? 1 : 0); }
+    else if (e.key === 'F5') { e.preventDefault(); $id('txtdocdate').focus(); }
+}
+
+window.PR = { tab: tab, newForm: newForm, refresh: refresh, save: save, add: add, updateDetail: updateDetail, cancelDetail: cancelDetail,
+    confirmChecked: confirmChecked, history: history, histReset: histReset, histCombos: histCombos, shortcuts: shortcuts };
+init();
+})();
+</script>
+</body>
+</html>

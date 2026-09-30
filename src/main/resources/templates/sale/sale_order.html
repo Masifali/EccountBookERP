@@ -28,6 +28,26 @@
         
         /* Form Body & GroupBoxes */
         .win-form-body { background-color: #ece9d8; padding: 6px; }
+        /* History tab, desktop geometry (SaleOrder.cs designer :10123-10620) */
+        .so-hist-bar { background:#008080; color:#fff; font-family:Tahoma,sans-serif; font-weight:bold; font-size:11pt; padding:2px 4px; height:22px; line-height:18px; }
+        .so-hist-bar-lg { font-size:12pt; height:25px; line-height:21px; }
+        .so-hist-filters { border:1px solid #b5b5b5; background:#f7f5ed; position:relative; padding:14px 6px 6px 6px; min-height:66px; }
+        .so-hist-filters-title { position:absolute; top:-9px; left:8px; background:#f7f5ed; padding:0 4px; font-family:Tahoma,sans-serif; font-size:9.75pt; font-weight:bold; }
+        .so-hist-row { display:flex; align-items:flex-end; gap:3px; flex-wrap:nowrap; overflow-x:auto; }
+        .so-hf { flex:0 0 auto; display:flex; flex-direction:column; }
+        .so-hf-label { font-family:"Segoe UI Semibold","Segoe UI",sans-serif; font-weight:bold; font-size:9pt; height:17px; white-space:nowrap; }
+        .so-hf .win-textbox, .so-hf .win-datepicker, .so-hf .win-combo { width:100%; height:26px; font-family:Verdana,sans-serif; font-size:9.75pt; }
+        .so-hf-date { display:flex; align-items:center; border:1px solid #7a7a7a; background:#fff; height:26px; padding-left:3px; }
+        .so-hf-date input[type=checkbox] { margin:0 3px 0 0; }
+        .so-hf-date .win-datepicker { border:none; height:22px; flex:1; min-width:0; }
+        .so-hist-show { background:#008080; color:#fff; border:1px solid #006666; font-family:Verdana,sans-serif; font-weight:bold; font-size:9.75pt; height:25px; width:58px; cursor:pointer; }
+        .so-hist-radios { display:grid; grid-template-columns:80px 105px; grid-auto-rows:19px; column-gap:2px; row-gap:3px; margin-left:6px; margin-bottom:2px; font-family:"Segoe UI Semibold","Segoe UI",sans-serif; font-weight:bold; font-size:9pt; }
+        .so-hist-radios .win-radio-inline { white-space:nowrap; margin:0; }
+        .so-hist-branch-combo { position:relative; }
+        .so-hist-branch-btn { width:100%; height:26px; background:#fff; border:1px solid #7a7a7a; text-align:left; padding:0 4px; font-family:Verdana,sans-serif; font-size:9.75pt; display:flex; justify-content:space-between; align-items:center; overflow:hidden; white-space:nowrap; }
+        .so-hist-branch-list { position:absolute; z-index:50; top:26px; left:0; min-width:100%; background:#fff; border:1px solid #7a7a7a; padding:3px 6px; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+        #tblHistory tbody tr.so-hist-selected td { background:#cde6e6; }
+        .so-hist-branch-list label { display:block; white-space:nowrap; font-weight:normal; }
         .win-group-box { border: 1px solid #999999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; background-color: #f7f5ed; }
         .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9pt; font-weight: bold; color: #004d40; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
         
@@ -123,8 +143,8 @@
         <button type="button" class="win-btn-tool" onclick="location.reload()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
         <button type="button" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> Save</button>
         <button type="button" class="win-btn-tool" onclick="openAttachmentsModal()"><i class="fa fa-paperclip"></i> Attachment</button>
-        <button type="button" class="win-btn-tool" onclick="btnPrintReport('273')"><i class="fa fa-print"></i> 273-Print</button>
-        <button type="button" class="win-btn-tool" onclick="btnPrintReport('273_01')"><i class="fa fa-print"></i> 273_01-Print</button>
+        <button type="button" class="win-btn-tool" onclick="btnPrintReport('273')" data-rpt="273-InvRptSaleOrderSlip.rpt"><i class="fa fa-print"></i> 273-Print</button>
+        <button type="button" class="win-btn-tool" onclick="btnPrintReport('273_01')" data-rpt="273_01_SaleOrderSlip.rpt"><i class="fa fa-print"></i> 273_01-Print</button>
         <button type="button" class="win-btn-tool" onclick="openStockReport()"><i class="fa fa-bar-chart"></i> Stock Report</button>
         <button type="button" class="win-btn-tool" onclick="openStockReportWithValue()"><i class="fa fa-line-chart"></i> Stock Report With Value</button>
         <button type="button" class="win-btn-tool" onclick="openPreBookingModal()"><i class="fa fa-folder-open-o"></i> Load Pre Booking Order</button>
@@ -444,54 +464,62 @@
              HistoryCombosFill :4012): date-mode radio (doc / entry / modify / approved), a tick box on each
              date end, doc-no range, branch multi-select, customer and booking person - each list fed from
              the Sale Orders that actually exist in the ticked branches. -->
-        <fieldset class="win-group-box">
-            <legend><i class="fa fa-history me-1"></i> Sale Order History Search</legend>
-            <div class="row g-2 align-items-end">
-                <div class="col-md-3">
-                    <label class="win-label d-block">Date Type</label>
-                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="doc" checked> Doc Date</label>
-                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="entry"> Entry</label>
-                    <label class="win-radio-inline me-2"><input type="radio" name="histDateMode" value="modify"> Modify</label>
-                    <label class="win-radio-inline"><input type="radio" name="histDateMode" value="approved"> Approved</label>
+        <!-- toolStrip2 (SaleOrder.cs designer :10600-10612): Reset | Refresh -->
+        <div class="win-toolbar" style="height:27px;">
+            <button type="button" class="win-btn-tool" onclick="btnResetHistory_Click()"><i class="fa fa-plus-circle text-primary"></i> Reset</button>
+            <button type="button" class="win-btn-tool" onclick="btnRefreshHistory_Click()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+        </div>
+        <!-- panel14: teal bar, label5 "Sale Order History" Tahoma 12 bold white (:10246) -->
+        <div class="so-hist-bar so-hist-bar-lg">Sale Order History</div>
+        <!-- groupBox2 "Filters" (1380x66): labels y=18, controls y=35; positions are the desktop's, scaled to the page -->
+        <div class="so-hist-filters">
+            <div class="so-hist-filters-title">Filters</div>
+            <div class="so-hist-row">
+                <div class="so-hf" style="width:204px">
+                    <label class="so-hf-label">Branch Name</label>
+                    <div class="so-hist-branch-combo" id="histBranchCombo">
+                        <button type="button" class="so-hist-branch-btn" onclick="$('#histBranchList').toggle()"><span id="histBranchText">...Select Branch...</span><i class="fa fa-caret-down"></i></button>
+                        <div id="histBranchList" class="so-hist-branch-list" style="display:none"><div id="histBranches"></div></div>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label"><input type="checkbox" id="histUseFrom" checked> From Date</label>
-                    <input type="date" id="histFromDate" class="win-datepicker"/>
+                <div class="so-hf" style="width:145px">
+                    <label class="so-hf-label">From Date</label>
+                    <div class="so-hf-date"><input type="checkbox" id="histUseFrom" checked><input type="date" id="histFromDate" class="win-datepicker"/></div>
                 </div>
-                <div class="col-md-2">
-                    <label class="win-label"><input type="checkbox" id="histUseTo" checked> To Date</label>
-                    <input type="date" id="histToDate" class="win-datepicker"/>
+                <div class="so-hf" style="width:145px">
+                    <label class="so-hf-label">To Date</label>
+                    <div class="so-hf-date"><input type="checkbox" id="histUseTo" checked><input type="date" id="histToDate" class="win-datepicker"/></div>
                 </div>
-                <div class="col-md-1">
-                    <label class="win-label">From No</label>
+                <div class="so-hf" style="width:78px">
+                    <label class="so-hf-label">From Doc No</label>
                     <input type="number" id="histFromDocNo" class="win-textbox" min="0"/>
                 </div>
-                <div class="col-md-1">
-                    <label class="win-label">To No</label>
+                <div class="so-hf" style="width:78px">
+                    <label class="so-hf-label">To Doc No</label>
                     <input type="number" id="histToDocNo" class="win-textbox" min="0"/>
                 </div>
-                <div class="col-md-3">
-                    <label class="win-label d-block">Branch</label>
-                    <div id="histBranches" class="d-flex flex-wrap"></div>
+                <div class="so-hf" style="width:248px">
+                    <label class="so-hf-label">Party</label>
+                    <select id="histCustomerCombo" class="win-combo so-select2"><option value=""></option></select>
+                </div>
+                <div class="so-hf" style="width:203px">
+                    <label class="so-hf-label">Booking Person</label>
+                    <select id="histBookingPersonCombo" class="win-combo so-select2"><option value=""></option></select>
+                </div>
+                <div class="so-hf" style="width:58px">
+                    <label class="so-hf-label">&nbsp;</label>
+                    <button type="button" class="so-hist-show" onclick="loadHistoryData()">Show</button>
+                </div>
+                <div class="so-hf so-hist-radios">
+                    <label class="win-radio-inline"><input type="radio" name="histDateMode" value="doc" checked> Doc Date</label>
+                    <label class="win-radio-inline"><input type="radio" name="histDateMode" value="modify"> Modify Date</label>
+                    <label class="win-radio-inline"><input type="radio" name="histDateMode" value="entry"> Entry Date</label>
+                    <label class="win-radio-inline"><input type="radio" name="histDateMode" value="approved"> Approved Date</label>
                 </div>
             </div>
-            <div class="row g-2 align-items-end mt-1">
-                <div class="col-md-4">
-                    <label class="win-label">Customer</label>
-                    <select id="histCustomerCombo" class="win-combo so-select2"><option value="">...Select Customer...</option></select>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Booking Person</label>
-                    <select id="histBookingPersonCombo" class="win-combo so-select2"><option value="">...Select Booking Person...</option></select>
-                </div>
-                <div class="col-md-1">
-                    <button type="button" class="win-btn-action w-100" onclick="loadHistoryBranches()"><i class="fa fa-refresh me-1"></i> Refresh</button>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="win-btn-action w-100" onclick="loadHistoryData()"><i class="fa fa-search me-1"></i> Show</button>
-                </div>
-            </div>
-        </fieldset>
+        </div>
+        <!-- panel9: "Filtered Records" Tahoma 11 bold white (:10229) -->
+        <div class="so-hist-bar">Filtered Records</div>
 
         <div class="win-grid-container mt-2">
             <div class="win-grid-scroll" style="max-height: 400px;">
@@ -516,6 +544,20 @@
                 </table>
             </div>
         </div>
+        <div class="so-hist-bar" style="font-size:9pt">Detail Information Of Above Selected Row</div>
+        <div class="win-grid-container">
+            <div class="win-grid-scroll" style="max-height: 220px;">
+                <table class="win-grid" id="tblHistoryDetail">
+                    <thead><tr>
+                        <th>ItemCode</th><th>ItemName</th><th>CropYear</th><th>JobLot</th><th>PackingType</th><th>PackUom</th>
+                        <th style="text-align:right">QTY</th><th style="text-align:right">NetWeight</th><th>RateUOM</th>
+                        <th style="text-align:right">Rate</th><th style="text-align:right">Amount</th><th style="text-align:right">FcyAmount</th>
+                        <th style="text-align:right">BagRate</th><th style="text-align:right">BagWeight</th><th>City</th><th>LabSample</th><th>Remarks</th><th>CommOnSale</th>
+                    </tr></thead>
+                    <tbody><tr><td colspan="18" class="text-center text-muted" style="padding:8px">Select a row above.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- STICKY BOTTOM FOOTER NAVIGATION TABS (MATCHING WINFORMS FOOTER) -->
@@ -528,7 +570,7 @@
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
     <script th:src="@{/build/js/countx_crystal_print.js?v=20260930a}"></script>
-    <script th:src="@{/build/js/countx_sale_order_full.js?v=20260930prt}"></script>
+    <script th:src="@{/build/js/countx_sale_order_full.js?v=20260930hist}"></script>
     <script>
         // Ditto every one of the real desktop's 30 UltraCombo dropdowns on this screen (combitem,
         // combjob, cmbPackType, combitempck, combrateuom, combcityarea, CmbWarehouse, CmbCropyr,
@@ -675,5 +717,6 @@
     </div>
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

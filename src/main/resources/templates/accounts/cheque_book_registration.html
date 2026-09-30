@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cheque Book Registration</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <style>
+        body { font-family: "Verdana", Tahoma, Arial, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; }
+        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font-family: "Verdana", sans-serif; font-size: 11px; color: #000000; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 22px; border-radius: 2px; }
+        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
+        .win-btn-tool-save { font-weight: bold; color: #004d40; }
+        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 12pt; font-weight: bold; }
+        .win-form-body { background-color: #ffffff; padding: 6px; }
+        .win-group-box { border: 1px solid #d0d0d0; border-radius: 3px; padding: 8px 10px; margin-bottom: 6px; background-color: #ffffff; }
+        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9.75pt; font-weight: bold; color: #000000; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
+        .win-label { font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-size: 9pt; font-weight: 600; color: #000000; white-space: nowrap; }
+        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 9.75pt; height: 25px; border: 1px solid #7a9a9e; padding: 2px 5px; box-sizing: border-box; background-color: #ffffff; color: #000000; border-radius: 0; width: 100%; }
+        .win-textbox:focus, .win-combo:focus, .win-datepicker:focus { border-color: #008080; outline: none; }
+        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 9.75pt; font-weight: bold; border: none; height: 25px; padding: 0 14px; cursor: pointer; }
+        .win-btn-action:hover { background-color: #005959; }
+        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; margin-top: 4px; }
+        .win-grid-scroll { max-height: 380px; overflow-x: auto; overflow-y: auto; }
+        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8.25pt; background-color: #ffffff; }
+        .win-grid th { background-color: #ece9d8; color: #000000; font-weight: normal; border: 1px solid #aca899; padding: 4px 6px; text-align: left; position: sticky; top: 0; z-index: 5; }
+        .win-grid td { border: 1px solid #e0e0e0; padding: 3px 6px; color: #000000; vertical-align: middle; }
+        .win-grid tr.selected-row { background-color: #e0f2f1; font-weight: bold; }
+        .account-title-link { color: #0000ff !important; text-decoration: underline !important; cursor: pointer; font-weight: 600; }
+        .account-title-link:hover { color: #000080 !important; text-decoration: underline !important; }
+        .badge-blank { background-color: #28a745; color: #fff; padding: 2px 6px; border-radius: 2px; font-size: 9px; }
+        .badge-cancelled { background-color: #dc3545; color: #fff; padding: 2px 6px; border-radius: 2px; font-size: 9px; }
+        .badge-used { background-color: #007bff; color: #fff; padding: 2px 6px; border-radius: 2px; font-size: 9px; }
+        .win-grid td a.account-title-link { font-weight: bold; }
+        .win-btn-tool:disabled { opacity: .45; cursor: default; }
+        .win-msg { display:none; padding: 5px 10px; margin-bottom: 6px; border: 1px solid; }
+        .win-msg.err { display:block; background:#fdecea; border-color:#e57373; color:#b71c1c; }
+        .win-msg.ok  { display:block; background:#e8f5e9; border-color:#81c784; color:#1b5e20; }
+    </style>
+</head>
+<body>
+
+    <div class="win-tool-strip">
+        <button type="button" class="win-btn-tool" id="btnNew" title="Ctrl+N"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+        <button type="button" class="win-btn-tool win-btn-tool-save" id="btnSave" title="Ctrl+S" th:disabled="${rights == null or !rights['save']}"><i class="fa fa-save"></i> <u>S</u>ave</button>
+        <button type="button" class="win-btn-tool" id="btnRefresh" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="win-btn-tool" id="btnShortCutKey"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        <div style="margin-left: auto;">
+            <a href="/accounts/dashboard" style="color: #000; text-decoration: none; font-weight: bold; font-size: 10px;">
+                <i class="fa fa-arrow-left"></i> Back to Accounts Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="win-teal-header">
+        <div class="win-teal-header-title">Cheque Book Registration</div>
+        <div style="font-size: 10pt; font-weight: bold; color: #ffeb3b;">Account Definition Module #4</div>
+    </div>
+
+    <div class="win-form-body">
+        <div id="msg" class="win-msg"></div>
+
+        <fieldset class="win-group-box">
+            <legend>Cheque Book Registration Details</legend>
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="win-label">Bank Account</label>
+                    <select id="bankId" class="win-combo"><option value="0">-- Select Bank Account --</option></select>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Doc Date</label>
+                    <input type="date" id="docDate" class="win-datepicker"/>
+                </div>
+                <div class="col-md-1">
+                    <label class="win-label">Doc No</label>
+                    <input type="text" id="docNo" class="win-textbox" value="0" style="background-color: #f0f0f0; font-weight: bold;"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Cheque Book Prefix</label>
+                    <input type="text" id="cbPrefix" class="win-textbox" placeholder="e.g. HBL-"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Serial From</label>
+                    <input type="text" id="cbSrFrom" class="win-textbox" placeholder="e.g. 000001"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="win-label">Serial To</label>
+                    <input type="text" id="cbSrTo" class="win-textbox" placeholder="e.g. 000050"/>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 6px;">
+                <div class="col-md-10">
+                    <label class="win-label">Remarks</label>
+                    <input type="text" id="remarks" class="win-textbox" placeholder="Cheque book registration remarks..."/>
+                </div>
+                <div class="col-md-2" style="margin-top: 16px; text-align: right;">
+                    <button type="button" id="btnSaveBook" class="win-btn-action" style="width: 100%;" th:disabled="${rights == null or !rights['save']}"><i class="fa fa-save"></i> Save Cheque Book</button>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="row">
+            <div class="col-md-7">
+                <fieldset class="win-group-box">
+                    <legend>Registered Cheque Books</legend>
+                    <div class="win-grid-container">
+                        <div class="win-grid-scroll">
+                            <table class="win-grid" id="tblHeaders">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40px; text-align: center;">ID</th>
+                                        <th>Bank Name / Account Title</th>
+                                        <th style="width: 85px;">Doc Date</th>
+                                        <th style="width: 70px;">Prefix</th>
+                                        <th style="width: 90px;">Sr From</th>
+                                        <th style="width: 90px;">Sr To</th>
+                                        <th style="width: 50px; text-align: center;">View</th>
+                                    </tr>
+                                </thead>
+                                <tbody><tr><td colspan="7" style="text-align:center; padding:20px; color:#777;">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="col-md-5">
+                <fieldset class="win-group-box">
+                    <legend>Cheque Leaves Details</legend>
+                    <div class="win-grid-container">
+                        <div class="win-grid-scroll">
+                            <table class="win-grid">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40px; text-align: center;">#</th>
+                                        <th>Cheque No</th>
+                                        <th style="width: 80px; text-align: center;">Status</th>
+                                        <th>Remarks</th>
+                                        <th style="width: 80px; text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbDetailsBody">
+                                    <tr><td colspan="5" style="text-align: center; padding: 20px; color: #777;">Select a cheque book on the left to view its cheque leaves.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:inline="javascript">
+        /* Screen 42 AcfrmChequebookRegistration (+ CheqbookStatus for the leaf Cancel / Re-Open buttons).
+           Data: ChequeBookRegistrationController -> CheqBookDesktopService (desktop procedures). */
+        var CAN_CANCEL = /*[[${statusRights != null and statusRights['save']}]]*/ false;
+        var CAN_OPEN   = /*[[${statusRights != null and statusRights['update']}]]*/ false;
+        (function () {
+            var history = [], currentHeaderId = 0;
+            function v(r, k) { if (!r) return null; if (r[k] !== undefined) return r[k]; var l = k.toLowerCase(); for (var x in r) if (x.toLowerCase() === l) return r[x]; return null; }
+            function esc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+            var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            function pad(n) { return (n < 10 ? '0' : '') + n; }
+            function fmtDate(x) { if (!x) return ''; var d = new Date(x); if (isNaN(d.getTime())) return esc(x); return pad(d.getDate()) + '-' + MON[d.getMonth()] + '-' + d.getFullYear(); }
+            function isoDate(x) { if (!x) return ''; var d = new Date(x); if (isNaN(d.getTime())) return ''; return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+            function today() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+            function msg(text, ok) { $('#msg').removeClass('ok err').addClass(ok ? 'ok' : 'err').text(text); if (ok) setTimeout(function () { $('#msg').removeClass('ok'); }, 4000); }
+
+            /* cmbBnkac */
+            function loadBanks() {
+                return $.get('/accounts/cheque_book/banks').done(function (banks) {
+                    var cur = $('#bankId').val();
+                    var html = '<option value="0">-- Select Bank Account --</option>';
+                    (banks || []).forEach(function (b) {
+                        var code = v(b, 'AccountCode');
+                        html += '<option value="' + esc(v(b, 'Id')) + '">' + esc((code ? code + ' - ' : '') + v(b, 'AccountTitle')) + '</option>';
+                    });
+                    $('#bankId').html(html).val(cur && $('#bankId option[value="' + cur + '"]').length ? cur : '0').trigger('change.select2');
+                }).fail(function (x) { msg('Could not load bank accounts (' + x.status + ').'); });
+            }
+
+            /* CheqbookRegistratioinGridFill */
+            var historyReq = null;
+            function loadHistory(selectId) {
+                if (historyReq) historyReq.abort();          /* never stack the same slow call */
+                $('#tblHeaders tbody').html('<tr><td colspan="7" style="text-align:center; padding:20px; color:#777;"><i class="fa fa-spinner fa-spin"></i> Loading cheque books...</td></tr>');
+                historyReq = $.get('/accounts/cheque_book/history').done(function (list) {
+                    /* the proc returns one row per leaf - one grid row per book */
+                    var seen = {}; history = [];
+                    (list || []).forEach(function (r) { var id = v(r, 'Id'); if (!seen[id]) { seen[id] = true; history.push(r); } });
+                    history.sort(function (a, b) { return v(b, 'Id') - v(a, 'Id'); });
+                    var rows = '';
+                    history.forEach(function (h) {
+                        var title = (v(h, 'AccountCode') ? v(h, 'AccountCode') + ' - ' : '') + (v(h, 'AccountTitle') || '');
+                        rows += '<tr data-id="' + esc(v(h, 'Id')) + '">'
+                            + '<td style="text-align:center; font-weight:bold;">' + esc(v(h, 'Id')) + '</td>'
+                            + '<td><a href="javascript:void(0)" class="account-title-link lnk-book">' + esc(title) + '</a></td>'
+                            + '<td>' + fmtDate(v(h, 'DocDate')) + '</td>'
+                            + '<td>' + esc(v(h, 'CbPrefix')) + '</td>'
+                            + '<td>' + esc(v(h, 'CbSrFrom')) + '</td>'
+                            + '<td>' + esc(v(h, 'CbSrTo')) + '</td>'
+                            + '<td style="text-align:center;"><button type="button" class="btn btn-primary btn-xs lnk-book" style="padding:1px 6px; font-size:10px;"><i class="fa fa-eye"></i></button></td></tr>';
+                    });
+                    $('#tblHeaders tbody').html(rows || '<tr><td colspan="7" style="text-align:center; padding:20px; color:#777;">No cheque books registered yet.</td></tr>');
+                    if (selectId) selectBook(selectId);
+                    else if (currentHeaderId) $('#tblHeaders tbody tr[data-id="' + currentHeaderId + '"]').addClass('selected-row');
+                }).fail(function (x) { if (x.statusText !== 'abort') msg('Could not load cheque books (' + x.status + ').'); })
+                  .always(function () { historyReq = null; });
+            }
+
+            function load(selectId) { loadBanks(); loadHistory(selectId); }
+
+            function selectBook(id) {
+                currentHeaderId = parseInt(id, 10) || 0;
+                var $tr = $('#tblHeaders tbody tr[data-id="' + currentHeaderId + '"]');
+                $('#tblHeaders tbody tr').removeClass('selected-row'); $tr.addClass('selected-row');
+                var h = history.filter(function (r) { return String(v(r, 'Id')) === String(currentHeaderId); })[0];
+                if (h) {
+                    $('#bankId').val(String(v(h, 'ChartOfAccountId') || 0)).trigger('change.select2');
+                    $('#docDate').val(isoDate(v(h, 'DocDate')));
+                    $('#docNo').val(v(h, 'DocNo') == null ? '0' : v(h, 'DocNo'));
+                    $('#cbPrefix').val(v(h, 'CbPrefix') || '');
+                    $('#cbSrFrom').val(v(h, 'CbSrFrom') || '');
+                    $('#cbSrTo').val(v(h, 'CbSrTo') || '');
+                    $('#remarks').val(v(h, 'Remarks') || '');
+                }
+                loadDetails(currentHeaderId);
+            }
+
+            function loadDetails(headerId) {
+                $('#tbDetailsBody').html('<tr><td colspan="5" style="text-align:center; padding:20px; color:#777;">Loading...</td></tr>');
+                $.get('/accounts/cheque_book/details/' + headerId).done(function (res) {
+                    if (!res.success) { $('#tbDetailsBody').html('<tr><td colspan="5" style="text-align:center; padding:20px; color:#b71c1c;">' + esc(res.message) + '</td></tr>'); return; }
+                    var html = '';
+                    (res.leaves || []).forEach(function (d, i) {
+                        var st = d.status, badge = st === 'Cancelled' ? 'badge-cancelled' : (st === 'Used' ? 'badge-used' : 'badge-blank');
+                        var action = '';
+                        if (st === 'Blank') action = '<button type="button" class="btn btn-danger btn-xs btn-status" data-id="' + d.id + '" data-no="' + esc(d.cheqNo) + '" data-cancel="true" style="padding:1px 5px; font-size:9px;"' + (CAN_CANCEL ? '' : ' disabled title="No Save right on Cheque Book Status"') + '>Cancel</button>';
+                        else if (st === 'Cancelled') action = '<button type="button" class="btn btn-success btn-xs btn-status" data-id="' + d.id + '" data-no="' + esc(d.cheqNo) + '" data-cancel="false" style="padding:1px 5px; font-size:9px;"' + (CAN_OPEN ? '' : ' disabled title="No Update right on Cheque Book Status"') + '>Re-Open</button>';
+                        html += '<tr><td style="text-align:center;">' + (i + 1) + '</td><td><strong>' + esc(d.cheqNo) + '</strong></td>'
+                            + '<td style="text-align:center;"><span class="' + badge + '">' + esc(st) + '</span></td>'
+                            + '<td>' + esc(d.remarks) + '</td><td style="text-align:center;">' + action + '</td></tr>';
+                    });
+                    $('#tbDetailsBody').html(html || '<tr><td colspan="5" style="text-align:center; padding:20px; color:#777;">No cheque leaves.</td></tr>');
+                }).fail(function (x) { msg('Could not load cheque leaves (' + x.status + ').'); });
+            }
+
+            /* CheqbookStatus: btnsave_Click (Cancel) / btnUpdate_Click (Open) */
+            $('#tbDetailsBody').on('click', '.btn-status', function () {
+                var cancel = String($(this).data('cancel')) === 'true', no = $(this).data('no');
+                if (!confirm(cancel ? 'Are you sure to Cancel Cheque?' : 'Are you sure to Open Cheque?')) return;
+                var remarks = prompt('Remarks for Cheq No ' + no + ':', '');
+                if (remarks === null) return;
+                $.ajax({ url: '/accounts/cheque_book/status', type: 'POST', contentType: 'application/json',
+                    data: JSON.stringify({ detailId: $(this).data('id'), cancel: cancel, remarks: remarks }) })
+                  .done(function (res) { msg(res.message, res.success); if (res.success) loadDetails(currentHeaderId); })
+                  .fail(function (x) { msg('Server error (' + x.status + ').'); });
+            });
+
+            function toLong(s) { var n = parseInt(String(s).trim(), 10); return isNaN(n) ? 0 : n; }
+
+            /* Reset() */
+            function reset() {
+                $('#bankId').val('0').trigger('change.select2');
+                $('#docDate').val(today()); $('#docNo').val('0');
+                $('#cbPrefix, #cbSrFrom, #cbSrTo, #remarks').val('');
+                $('#tblHeaders tbody tr').removeClass('selected-row');
+                currentHeaderId = 0;
+                $('#tbDetailsBody').html('<tr><td colspan="5" style="text-align:center; padding:20px; color:#777;">Select a cheque book on the left to view its cheque leaves.</td></tr>');
+            }
+
+            /* Save_Click */
+            function save() {
+                if ($('#btnSave').prop('disabled')) return;
+                if (!parseInt($('#bankId').val() || 0, 10)) { msg('Bank Account Field is Required'); return; }
+                var from = toLong($('#cbSrFrom').val()), to = toLong($('#cbSrTo').val());
+                if (from > to) { msg("Serial From Can't Be Greater Than Serial To! Please Check."); return; }
+                if (from === to) { msg("Serial From and Serial To Can't Be Same! Please Check."); return; }
+                var diff = to - from;
+                if (diff >= 500) { msg('You are not Allowed to Save Cheques? Cheques Quantity Greater Than 500'); return; }
+                if (diff >= 100 && !confirm('Are you sure to Save Cheques? Cheques Quantity Greater Than 100')) return;
+                $('#btnSave, #btnSaveBook').prop('disabled', true);
+                $.ajax({ url: '/accounts/cheque_book/save', type: 'POST', contentType: 'application/json',
+                    data: JSON.stringify({ bankId: parseInt($('#bankId').val() || 0, 10), docDate: $('#docDate').val(), docNo: $('#docNo').val(),
+                        prefix: $('#cbPrefix').val(), serialFrom: $('#cbSrFrom').val(), serialTo: $('#cbSrTo').val(), remarks: $('#remarks').val() }) })
+                  .done(function (res) { msg(res.message, res.success); if (res.success) { reset(); loadHistory(); } })
+                  .fail(function (x) { msg('Server error while saving (' + x.status + ').'); })
+                  .always(function () { $('#btnSave, #btnSaveBook').prop('disabled', false); });
+            }
+
+            function shortcuts() {
+                alert('Ctrl+S  For Save\nCtrl+R  For Refresh\nCtrl+N  For New\nCtrl+F5  For Focus on Bank Account');
+            }
+
+            $('#tblHeaders').on('click', '.lnk-book', function () { selectBook($(this).closest('tr').data('id')); });
+            /* txtserialfrom_KeyPress / txtserialto_KeyPress: numbers only */
+            $('#cbSrFrom, #cbSrTo').on('keypress', function (e) { if (e.which >= 32 && (e.which < 48 || e.which > 57)) e.preventDefault(); });
+
+            $(function () {
+                $('#bankId').select2({ width: '100%' });
+                $('#docDate').val(today());
+                $('#btnNew').on('click', reset);
+                $('#btnRefresh').on('click', function () { loadBanks(); });
+                $('#btnSave, #btnSaveBook').on('click', save);
+                $('#btnShortCutKey').on('click', shortcuts);
+                $(document).on('keydown', function (e) {
+                    if (!e.ctrlKey) return;
+                    if (e.keyCode === 83) { e.preventDefault(); save(); }
+                    if (e.keyCode === 78) { e.preventDefault(); reset(); }
+                    if (e.keyCode === 82) { e.preventDefault(); loadBanks(); }
+                    if (e.keyCode === 116) { e.preventDefault(); $('#bankId').select2('open'); }
+                });
+                load();
+            });
+        })();
+    </script>
+</body>
+</html>

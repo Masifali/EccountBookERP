@@ -57,7 +57,7 @@
         <button type="button" class="win-btn" onclick="refreshPage()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
         <button type="button" class="win-btn win-btn-teal" id="btnSaveUpdate" onclick="submitVoucher()"><i class="fa fa-save"></i> Save</button>
         <button type="button" class="win-btn"><i class="fa fa-paperclip text-info"></i> Attachment</button>
-        <button type="button" class="win-btn" onclick="printVoucher()"><i class="fa fa-print text-warning"></i> Print Voucher</button>
+        <button type="button" class="win-btn" onclick="printVoucher()" data-rpt="250_PdcPaymentTransactionsSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Save or open a voucher first."><i class="fa fa-print text-warning"></i> Print Voucher</button>
         <!-- Desktop's own btnDelete_Click handler body is empty (PostDatedCheqPaymentVouchers.cs
              line 1509) - PDC Payment has never had a working Delete action on the real application,
              so this button is disabled here too rather than implementing one desktop itself never had. -->
@@ -249,6 +249,9 @@
     <script>
         let gridItems = [];
         let editingVoucherId = 0;
+        /* print-rpt.js: the open voucher is the document to print */
+        try { Object.defineProperty(window, 'RecId', { get: function () { return editingVoucherId; }, configurable: true }); } catch (e) { }
+        window.printRptArgs = function (rpt, a) {  return a; };
 
         $(document).ready(function() {
             $('#cmbTransType').select2({ width: '100%' });

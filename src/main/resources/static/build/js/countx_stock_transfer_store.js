@@ -398,7 +398,7 @@
             }).catch(function (e) { say(''); box(e.message); });
         });
     }
-    function GeneratePrint(id) { if (!int(id)) { box('No Record Found For Display'); return; } window.open('/api/reports/st-415/data?id=' + encodeURIComponent(id), '_blank'); }
+    function GeneratePrint(id) { if (!int(id)) { box('No Record Found For Display'); return; } window.open('/api/print/st-415/pdf?id=' + encodeURIComponent(id), '_blank'); }
 
     /* Reset :1840 - item condition and from branch stay */
     function Reset() {

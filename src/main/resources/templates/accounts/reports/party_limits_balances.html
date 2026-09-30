@@ -1,138 +1,186 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Party Limits & Balances - EccountBookERP</title>
+    <title>Supplier Customer Limits</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
-        .select2-container--default .select2-selection--single { height: 25px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 23px !important; font-size: 11px !important; padding-left: 2px !important; color: #222 !important; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
-        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .erp-table tr:hover { background-color: #f0f7f7; }
-        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .report-summary-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
-    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_grid_js.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
 </head>
-<body>
-    <div class="erp-header">
-        <div><i class="fa fa-line-chart"></i> Party Limits & Balances</div>
-        <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
-    </div>
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary" onclick="loadReport()"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp" onclick="alert('Exporting Excel...')"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp" onclick="resetFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
-    </div>
-    <div style="padding: 10px;">
-        <div class="erp-fieldset">
-            <legend>Report Filter Criteria</legend>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label-erp">Party Type</label>
-                    <select id="cmbPartyType" class="form-control-erp select2">
-                        <option value="">-- All Parties --</option>
-                        <option value="Customer">Customers Only</option>
-                        <option value="Supplier">Suppliers Only</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Party Name</label>
-                    <select id="cmbParty" class="form-control-erp select2">
-                        <option value="">-- All Parties --</option>
-                        <option th:each="sc : ${supplierCustomersList}" th:value="${sc['id'] != null ? sc['id'] : (sc['Id'] != null ? sc['Id'] : '')}" th:text="${sc['supplierName'] != null ? sc['supplierName'] : (sc['SupplierName'] != null ? sc['SupplierName'] : (sc['companyName'] != null ? sc['companyName'] : (sc['CompanyName'] != null ? sc['CompanyName'] : (sc['name'] != null ? sc['name'] : ''))))}"></option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Branch / Location</label>
-                    <select id="cmbBranch" class="form-control-erp select2">
-                        <option value="">-- All Locations --</option>
-                        <option th:each="b : ${branchesList}" th:value="${b.Id}" th:text="${b.BranchName}"></option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Limit Status</label>
-                    <select id="cmbLimitStatus" class="form-control-erp select2">
-                        <option value="">-- All Statuses --</option>
-                        <option value="WithinLimit">Within Limit</option>
-                        <option value="Exceeded">Limit Exceeded</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+<!--
+  Account Reports tile "Party Limits & Balances". The desktop has no report of that name; its "Party Limits" screen is
+  738 frmInvSupCustLimits = Architecture.WinApp.SupfrmSupplierLimits (lblCaption "Supplier / Customer Limits").
+  The page this replaces was a static mock-up (Party Type / Limit Status filters, one fabricated customer row, no data call).
+  Form (SupfrmSupplierLimits.cs): toolStrip New / Update (hidden until a History row is double-clicked) / Save / Refresh;
+  panel3: Supplier/Customer (cmbsup) - Credit (txtcredit) - Debit (txtdebit) - Effected Date (txteffecteddate, dd-MMM-yy);
+  "History" grid: Id hidden, CompanyName, CreditLimits, DebitLimits (summed, stringFormatsingle), EffectedDate.
+  Keys: Ctrl+N New, Ctrl+S Save (always a new row - updateMood is never set on the desktop), Ctrl+E / Esc Close.
+  PartyLimitsController + PartyLimitsRepository (R4, 2026-09-30).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-sliders"></i> Party Limits</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnNew"><i class="fa fa-file-o"></i> New</button>
+    <button type="button" class="win-btn" id="btnUpdate" hidden><i class="fa fa-pencil"></i> Update</button>
+    <button type="button" class="win-btn" id="btnSave"><i class="fa fa-save"></i> Save</button>
+    <button type="button" class="win-btn" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
+    <a class="win-btn" href="/accounts/dashboard"><i class="fa fa-times"></i> Close</a>
+</div>
+<div class="win-header-panel"><span>Supplier / Customer Limits</span></div>
 
-        <div class="erp-fieldset">
-            <legend>Party Limits & Balances Data Output</legend>
-            <div style="text-align: center; margin-bottom: 10px;">
-                <h4 style="margin: 0; font-weight: bold; color: #00796B;"><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></h4>
-                <h5 style="margin: 2px 0; font-weight: bold;">Party Limits & Balances Report</h5>
-                <small style="color: #64748b;" id="lblPeriod">As On: Current Date | Currency: PKR</small>
-            </div>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 12%;">Party Code</th>
-                        <th style="width: 24%;">Party Name</th>
-                        <th style="width: 14%; text-align: right;">Credit Limit (PKR)</th>
-                        <th style="width: 14%; text-align: right;">Current Balance (PKR)</th>
-                        <th style="width: 14%; text-align: right;">Available Limit (PKR)</th>
-                        <th style="width: 10%; text-align: right;">Credit Days</th>
-                        <th style="width: 12%;">Status</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTbody">
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">CUST-001</td>
-                        <td>INTERNATIONAL FOOD IMPORTERS LLC</td>
-                        <td style="text-align: right;">2,000,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">850,000.00 Dr</td>
-                        <td style="text-align: right; color: #166534;">1,150,000.00</td>
-                        <td style="text-align: right;">30</td>
-                        <td><span class="label label-success">Within Limit</span></td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="report-summary-bar">
-                <div>Total Parties: 1</div>
-                <div>Total Limit: 2,000,000.00 PKR</div>
-                <div>Total Balance: 850,000.00 Dr</div>
-            </div>
+<div class="filters">
+    <div class="gb" style="width:1080px">
+        <span class="gb-title">Limits</span>
+        <div class="fgrid" style="grid-template-columns: 107px 220px 38px 163px 36px 164px 78px 161px;">
+            <span class="lbl">Supplier/Customer</span>
+            <select id="cmbsup" class="inp" data-dtcombo="single" data-dtcombo-caption="Supplier/Customer"></select>
+            <span class="lbl">Credit</span><input type="text" id="txtcredit" class="inp" style="text-align:right" inputmode="decimal">
+            <span class="lbl">Debit</span><input type="text" id="txtdebit" class="inp" style="text-align:right" inputmode="decimal">
+            <span class="lbl">Effected Date</span><input type="date" id="txteffecteddate" class="inp">
         </div>
     </div>
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            $('.select2').select2({ width: '100%' });
-            const today = new Date().toISOString().split('T')[0];
-            $('#lblPeriod').text(`As On: ${today} | Currency: PKR`);
+</div>
+
+<div class="grid-caption"><span>History</span><span id="count"></span></div>
+<div class="grid-wrap"><table id="grid" class="wg"></table></div>
+<div id="status" class="status-bar" role="status"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+(function () {
+    'use strict';
+    var el = function (id) { return document.getElementById(id); };
+    var API = '/api/accounts/party-limits';
+    var recId = 0, decimals = 2, rows = [], busy = false;
+
+    function status(text, err) { var s = el('status'); s.textContent = text || ''; s.classList.toggle('msg-err', !!err); }
+    function today() { return AccF.today(); }
+    function json(url, opts) {
+        return fetch(url, Object.assign({ headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }, opts || {}))
+            .then(function (r) {
+                return r.text().then(function (t) {
+                    var body = null; try { body = t ? JSON.parse(t) : null; } catch (e) { body = null; }
+                    if (!r.ok) throw new Error((body && body.message) || ('Request failed (' + r.status + ')'));
+                    return body;
+                });
+            });
+    }
+    /* clsGlobalVariables.stringFormatsingle "#,##0.dd" */
+    function single(v) {
+        var n = parseFloat(v); if (isNaN(n)) n = 0;
+        return (n < 0 ? '-' : '') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+    function renderGrid() {
+        var totals = { CreditLimits: 0, DebitLimits: 0 };
+        var cols = [
+            { key: 'CompanyName', caption: 'CompanyName', width: 300 },
+            { key: 'CreditLimits', caption: 'CreditLimits', width: 130, align: 'r', sum: true, render: function (r) { return single(r.CreditLimits); } },
+            { key: 'DebitLimits', caption: 'DebitLimits', width: 130, align: 'r', sum: true, render: function (r) { return single(r.DebitLimits); } },
+            { key: 'EffectedDate', caption: 'EffectedDate', width: 110, type: 'date' }
+        ];
+        AccF.renderGrid({ table: '#grid', columns: cols, rows: rows, emptyText: '' });
+        rows.forEach(function (r) { totals.CreditLimits += parseFloat(r.CreditLimits) || 0; totals.DebitLimits += parseFloat(r.DebitLimits) || 0; });
+        var $f = $('#grid tfoot td');
+        if ($f.length) { $f.eq(1).text(single(totals.CreditLimits)); $f.eq(2).text(single(totals.DebitLimits)); }
+        $('#grid tbody tr').each(function (i) {
+            var r = rows[i]; if (!r) return;
+            $(this).css('cursor', 'pointer').on('dblclick', function () { edit(r.Id); });
         });
-
-        function loadReport() {}
-
-        function resetFilters() {
-            $('.select2').val('').trigger('change');
-        }
-    </script>
+        el('count').textContent = rows.length ? rows.length + ' records' : '';
+    }
+    /* datagridviewform(): the desktop only rebinds when the proc returns rows. */
+    function loadHistory() {
+        return json(API).then(function (list) { if (list && list.length) { rows = list; renderGrid(); } });
+    }
+    /* cmbsupplierfill(): BindDDL(dt, cmbsup, "Id", "CompanyName", ...), ZeroIndex false. */
+    function fillParties() {
+        return json(API + '/lookups').then(function (d) {
+            decimals = (d && typeof d.amountDecimals === 'number') ? d.amountDecimals : 0;
+            var s = el('cmbsup'), old = s.value;
+            s.innerHTML = '';
+            s.add(new Option('', ''));
+            (d.parties || []).forEach(function (p) { s.add(new Option(p.CompanyName == null ? '' : p.CompanyName, p.Id)); });
+            $(s).val(old);
+        });
+    }
+    function reset() {
+        recId = 0;
+        $('#cmbsup').val('');
+        el('txtdebit').value = ''; el('txtcredit').value = '';
+        el('txteffecteddate').value = today();
+        el('btnUpdate').hidden = true; el('btnSave').hidden = false;
+    }
+    function focusParty() { var i = $('#cmbsup').closest('.dtcombo-wrap').find('.dtcombo-input'); (i.length ? i : $('#cmbsup')).focus(); }
+    function edit(id) {
+        json(API + '/' + encodeURIComponent(id)).then(function (b) {
+            el('btnSave').hidden = true; el('btnUpdate').hidden = false;
+            recId = Number(b.Id);
+            $('#cmbsup').val(String(b.SuplierCustomerId));
+            el('txtcredit').value = b.CreditLimit == null ? '' : String(b.CreditLimit);
+            el('txtdebit').value = b.DebitLimit == null ? '' : String(b.DebitLimit);
+            el('txteffecteddate').value = b.EffectedDate || '';
+            return loadHistory();
+        }).catch(function (e) { status(e.message, true); alert(e.message); });
+    }
+    /* Insert(): formvalidation() (server repeats it), Save, message box, datagridviewform(), Reset(). */
+    function insert() {
+        if (busy) return;
+        var v = { id: recId, partyId: Number(el('cmbsup').value || 0), debit: el('txtdebit').value.trim(), credit: el('txtcredit').value.trim(), effectedDate: el('txteffecteddate').value };
+        if (!v.partyId) { alert('Please Select Supplier'); focusParty(); return; }
+        if (!(parseFloat(v.debit) || 0)) { alert('Please Select Debit Credit'); el('txtdebit').focus(); return; }
+        if (!(parseFloat(v.credit) || 0)) { alert('Please Select  Credit'); el('txtcredit').focus(); return; }
+        if (!v.effectedDate) { alert('Please Select Effected Date'); el('txteffecteddate').focus(); return; }
+        busy = true;
+        json(API, { method: 'POST', body: JSON.stringify(v) }).then(function (r) {
+            alert(r.message); status(r.message);
+            return loadHistory().then(reset);
+        }).catch(function (e) { status(e.message, true); alert(e.message); })
+          .then(function () { busy = false; });
+    }
+    /* CommonServices.OnlytextNumberFunction: digits, one decimal point, control keys. */
+    ['txtcredit', 'txtdebit'].forEach(function (id) {
+        el(id).addEventListener('keypress', function (e) {
+            if (e.ctrlKey || e.key.length > 1) return;
+            if (/[0-9]/.test(e.key)) return;
+            if (e.key === '.' && this.value.indexOf('.') < 0) return;
+            e.preventDefault();
+        });
+    });
+    el('btnSave').onclick = function () { recId = 0; insert(); };
+    el('btnUpdate').onclick = function () { insert(); };
+    el('btnNew').onclick = function () { reset(); };
+    el('btnRefresh').onclick = function () { fillParties().catch(function (e) { status(e.message, true); }); };
+    /* cmbsup_Leave -> datagridviewform() */
+    $(document).on('focusout', '.dtcombo-wrap', function (e) {
+        var w = $('#cmbsup').closest('.dtcombo-wrap')[0];
+        if (w && this === w && !w.contains(e.relatedTarget)) loadHistory().catch(function (x) { status(x.message, true); });
+    });
+    document.addEventListener('keydown', function (e) {
+        var k = (e.key || '').toLowerCase();
+        if (e.ctrlKey && k === 'n') { e.preventDefault(); el('btnNew').click(); }
+        else if (e.ctrlKey && k === 's') { e.preventDefault(); recId = 0; insert(); }
+        else if ((e.ctrlKey && k === 'e') || e.key === 'Escape') { if (!document.querySelector('.dtcombo-pop[style*="block"]')) location.href = '/accounts/dashboard'; }
+    });
+    /* SupfrmSupplierLimits_Load: Save visible, Update hidden, datagridviewform(), cmbsupplierfill(), focus the combo.
+       txteffecteddate keeps its designer value (DateTime.Now). */
+    $(function () {
+        el('txteffecteddate').value = today();
+        renderGrid();
+        loadHistory().catch(function (e) { status(e.message, true); })
+            .then(function () { return fillParties(); })
+            .then(function () { renderGrid(); focusParty(); })
+            .catch(function (e) { status(e.message, true); });
+    });
+})();
+</script>
 </body>
 </html>

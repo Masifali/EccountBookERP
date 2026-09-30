@@ -1,434 +1,230 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Desktop menu tile says "Customer Ledger Report"; the real on-screen header label
-         (label23, teal strip) reads "Party  Ledger" (double space, copied verbatim from
-         CustomerLedger.cs's InitializeComponent) - same "menu name differs from on-screen
-         caption" pattern already seen on Invoice Adjustment / Payment Adjustment Voucher. -->
-    <title>Party Ledger - WinForms Replica</title>
-
+    <title>Party Ledger</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
-        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
-        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
-        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
-        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
-        /* ditto label23 "Party  Ledger" header strip (panel3) */
-        .win-header-panel { background-color: #00796B; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .win-header-title { color: #ffffff; font-family: Tahoma, sans-serif; font-size: 15px; font-weight: bold; }
-        /* ditto groupBox1 "Filters" (left, 427x99) + GlInfoBox "GL Information" (right, 483x99,
-           hidden until a party has been shown - ditto GlInfoBox.Hide() on load) */
-        .filters-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 4px; align-items: stretch; }
-        .win-groupbox { border: 1px solid #9ca3af; border-radius: 2px; padding: 10px 10px 8px 10px; position: relative; background: #fff; flex: 1 1 380px; }
-        .win-groupbox-title { position: absolute; top: -9px; left: 10px; background: #ffffff; padding: 0 6px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 11px; color: #222; }
-        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
-        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
-        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
-        .acct-info-grid { display: grid; grid-template-columns: 95px 1fr 75px 90px 40px; gap: 3px 6px; font-size: 11px; align-items: center; }
-        .acct-info-grid .lbl { font-weight: bold; color: #222; }
-        .acct-info-grid .val { color: #111; }
-        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
-        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; position: sticky; top: 0; z-index: 2; }
-        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; white-space: nowrap; }
-        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
-        .grid-total-row td { font-weight: bold; background: #f1f5f9; border-top: 2px solid #00796B; }
-        .grid-scroll { max-height: 460px; overflow: auto; border: 1px solid #cbd5e1; margin: 6px; }
-        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 6px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        [hidden] { display: none !important; }
-        @media print {
-            .win-title-bar, .win-toolbar, .filters-row, .win-header-panel, a, button, div[style*="position: fixed"] { display: none !important; }
-            body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
-            .grid-scroll { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
-            .win-form-card { border: none !important; box-shadow: none !important; margin: 0 !important; }
-            .win-grid-table th, .win-grid-table td { border: 1px solid #000 !important; color: #000 !important; }
-            .win-grid-table th { background: #eee !important; color: #000 !important; }
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
 </head>
-<body>
+<!--
+  Screen 49 "Customer Ledger" - Architecture.WinApp.Account_Reports.CustomerLedger (shown as the "Party_Ledger" tab of GeneralLedger).
+  Load (VoucherValidation_Load): GlInfoBox hidden; suppliercustomer() = SupplierCustomerGetforComboServiceBind
+  (Sp_SupplierCustomer_GetAllMethod ReadByOrganizationIdCompanyIdForBinding: Id / CompanyName / GlAccountId);
+  DateTypeFill() = CommonServices.DateType() (5 fixed rows); CmbDateType.Rows[1] activated -> "This Week":
+  from = today - 7, to keeps today.
+  comSupplier_Leave / Show -> LedgerDetailByAccountId(GlAccountId): Sp_ChartofAccount_GetAllMethodFromCOA GetCoaDetailByAccountId +
+  Sp_Vouchers_GetMethods GetAccountsBalancesOpeningCurrentAndClosing (/accounts/api/reports-desktop/account-info).
+  Show (CustomerLedgerFill): "Party Name required. Please Check!" when no party; InventoryStockEvalautionDetail
+  .GeneralLedgerSupplierCustomerQuantative -> Sp_GeneralLedger_SupplierCustomerQuantative (/accounts/api/reports-desktop/customer-ledger).
+  Grid (grdCustomerLedgerSettings): V-Type, V-Date, V-No, Description, VehicleNo, Qty, Weight, OrderNo, RateCut, NetRate,
+  Debit Amount, Credit Amount, RunningBalance, BalType, ManualBillNo, GpNo, GpDate; Qty / Weight / Debit / Credit summed "#,#";
+  RunningBalance "#,#;(#,#);0"; RefDocNoId / RefDocumentTypeId hidden.
+  Toolbar (toolStrip3): Reset, Refresh (reloads the party list), 130-Print, ShortCut Keys.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-address-book"></i> Ledgers</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li><a href="/accounts/reports/general-ledger">General Leder</a></li>
+    <li class="active"><a>Party_Ledger</a></li>
+</ul>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="resetCL()"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" onclick="refreshCL()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
+    <button type="button" class="win-btn" onclick="printCL()" data-rpt="130-RptAcSupplierCustomerQuantativeGL.rpt"><i class="fa fa-print"></i> 130-Print</button>
+    <button type="button" class="win-btn" onclick="shortcutKeys()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+</div>
+<div class="win-header-panel"><span>Party  Ledger</span></div>
 
-    <div class="win-title-bar">
-        <span><i class="fa fa-address-book"></i> Party Ledger</span>
-        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
-            <i class="fa fa-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
+<div class="filters">
+    <div class="gb" style="width:470px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 70px 1fr 55px 1fr;">
+            <span class="lbl">Date Type</span>
+            <select id="CmbDateType" class="inp" style="grid-column: span 3;" data-dtcombo-caption="Date Type"></select>
 
-    <!-- ditto toolStrip3's real order: Reset, Refresh | 130-Print | ShortCut Keys -->
-    <div class="win-toolbar">
-        <button type="button" class="win-btn" onclick="resetCL()"><i class="fa fa-plus text-success"></i> Reset</button>
-        <button type="button" class="win-btn" onclick="executeCL()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
-        <button type="button" class="win-btn" onclick="window.print()"><i class="fa fa-print"></i> 130-Print</button>
-        <button type="button" class="win-btn" disabled title="Not reproduced in this port"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
-    </div>
+            <span class="lbl">From Date</span><input type="date" id="txtfromdate" class="inp">
+            <span class="lbl">To Date</span><input type="date" id="txttodate" class="inp">
 
-    <div class="win-header-panel">
-        <span class="win-header-title">Party  Ledger</span>
-    </div>
-
-    <div class="filters-row">
-        <!-- ditto groupBox1 "Filters" -->
-        <div class="win-groupbox">
-            <span class="win-groupbox-title">Filters</span>
-            <div class="row" style="display:flex; gap:8px; margin-bottom:6px;">
-                <div style="flex:1 1 45%;">
-                    <div class="win-label">Date Type</div>
-                    <select class="win-input" id="cmbDateType" onchange="onDateTypeChanged()">
-                        <option value="">--</option>
-                        <option th:each="dt : ${dateTypesList}" th:value="${dt.id}" th:text="${dt.parameters}"></option>
-                    </select>
-                </div>
-            </div>
-            <div class="row" style="display:flex; gap:8px; margin-bottom:6px;">
-                <div style="flex:1 1 45%;">
-                    <div class="win-label">From Date</div>
-                    <input type="date" class="win-input" id="txtFromDate">
-                </div>
-                <div style="flex:1 1 45%;">
-                    <div class="win-label">To Date</div>
-                    <input type="date" class="win-input" id="txtToDate">
-                </div>
-            </div>
-            <div class="row" style="display:flex; gap:8px; align-items:flex-end;">
-                <div style="flex:1 1 70%; position: relative;">
-                    <div class="win-label">Party Name</div>
-                    <input type="text" class="win-input" id="txtPartySearch" placeholder="-- Type to search party --" onfocus="onPartySearchFocus()" oninput="onPartySearchInput()" autocomplete="off">
-                    <select class="win-input" id="comSupplier" style="display: none;">
-                        <option value="">-- Select Party --</option>
-                        <option th:each="s : ${supplierCustomersList}" th:value="${s.Id}" th:text="${s.CompanyName}"
-                                th:attr="data-glaccountid=${s.GlAccountId}"></option>
-                    </select>
-                    <div id="popParty" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:9999; background:#fff; border:1px solid #00796B; max-height:220px; overflow-y:auto; box-shadow:0 4px 8px rgba(0,0,0,0.15); border-radius:0 0 3px 3px;">
-                        <table class="table table-hover table-sm mb-0" style="font-size:11px; margin:0; width:100%;">
-                            <tbody id="tbodyPopParty"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div>
-                    <button type="button" class="win-btn win-btn-teal" onclick="executeCL()"><i class="fa fa-eye"></i> Show</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ditto GlInfoBox "GL Information" - hidden until a party's ledger has been shown -->
-        <div class="win-groupbox" id="glInfoBox" hidden>
-            <span class="win-groupbox-title">GL Information</span>
-            <div class="acct-info-grid">
-                <div class="lbl">Account Code</div><div class="val" id="infoAccountCode">-</div>
-                <div class="lbl">Opening</div><div class="val" id="infoOpening">0</div><div class="val" id="infoOpeningDrCr"></div>
-                <div class="lbl">Account Class</div><div class="val" id="infoAccountClass">-</div>
-                <div class="lbl">Total Debit</div><div class="val" id="infoTotalDebit">0</div><div></div>
-                <div class="lbl">Account Type</div><div class="val" id="infoAccountType">-</div>
-                <div class="lbl">Total Credit</div><div class="val" id="infoTotalCredit">0</div><div></div>
-                <div></div><div></div>
-                <div class="lbl">Closing</div><div class="val" id="infoClosing">0</div><div class="val" id="infoClosingDrCr"></div>
-            </div>
+            <span class="lbl">Party Name</span>
+            <select id="comSupplier" class="inp" style="grid-column: span 2;" data-dtcombo-caption="Party Name"></select>
+            <span style="text-align:right;"><button type="button" id="btnshow" class="win-btn-show inline" onclick="executeCL()"><i class="fa fa-eye"></i> Show</button></span>
         </div>
     </div>
 
-    <div class="win-form-card">
-        <div class="win-toolbar" style="justify-content: space-between;">
-            <span><i class="fa fa-table"></i> <b id="lblStatus">Ready</b></span>
-        </div>
-        <div class="grid-scroll">
-            <!-- ditto grdCustomerLedgerSettings() real column set/order/captions -->
-            <table class="win-grid-table" id="clTable">
-                <thead>
-                <tr>
-                    <th>V-Type</th>
-                    <th>V-Date</th>
-                    <th>V-No</th>
-                    <th>Description</th>
-                    <th>Vehicle No</th>
-                    <th style="text-align:right;">Qty</th>
-                    <th style="text-align:right;">Weight</th>
-                    <th>Order No</th>
-                    <th style="text-align:right;">Rate Cut</th>
-                    <th style="text-align:right;">Net Rate</th>
-                    <th style="text-align:right;">Debit Amount</th>
-                    <th style="text-align:right;">Credit Amount</th>
-                    <th style="text-align:right;">Running Balance</th>
-                    <th>Manual Bill No</th>
-                    <th>Gp No</th>
-                    <th>Gp Date</th>
-                </tr>
-                </thead>
-                <tbody id="clTbody">
-                    <tr><td colspan="16" style="text-align:center; padding:16px; color:#666;">Select a Party Name and click Show.</td></tr>
-                </tbody>
-                <tfoot>
-                <tr class="grid-total-row">
-                    <td colspan="5" style="text-align:right;">Total:</td>
-                    <td style="text-align:right;" id="totQty">0</td>
-                    <td style="text-align:right;" id="totWeight">0</td>
-                    <td colspan="2"></td>
-                    <td style="text-align:right;" id="totDebit">0</td>
-                    <td style="text-align:right;" id="totCredit">0</td>
-                    <td colspan="4"></td>
-                </tr>
-                </tfoot>
-            </table>
+    <div class="gb" id="GlInfoBox" style="display:none;">
+        <span class="gb-title">GL Information</span>
+        <div class="info-grid">
+            <span>Account Code</span><span id="lblAccountCode"></span><span>Opening</span><span class="v" id="lblOpening">0</span><span id="OpeningDrCr"></span>
+            <span>Account Class</span><span id="lblAccountClass"></span><span>Total Debit</span><span class="v" id="lblCurrDebit">0</span><span></span>
+            <span>Account Type</span><span id="lblAccountType"></span><span>Total Credit</span><span class="v" id="lblCurrCredit">0</span><span></span>
+            <span></span><span></span><span>Closing</span><span class="v" id="lblClosingBal">0</span><span id="lblBalType"></span>
         </div>
     </div>
+</div>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:inline="javascript">
-        let partyList = [];
+<div class="grid-caption"><span>Party Ledger</span><span id="lblStatus"></span></div>
+<div class="grid-wrap"><table class="wg" id="grd"></table></div>
 
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            if (!$('#txtFromDate').val()) $('#txtFromDate').val(today);
-            if (!$('#txtToDate').val()) $('#txtToDate').val(today);
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    const QS = new URLSearchParams(window.location.search);
+    let CTX = null, PARTIES = [], clRows = [];
 
-            $('#comSupplier option').each(function() {
-                const val = $(this).attr('value');
-                if (val) {
-                    partyList.push({
-                        id: val,
-                        name: $(this).text().trim(),
-                        glAccountId: $(this).data('glaccountid') || ''
-                    });
-                }
-            });
+    /* suppliercustomer(): BindDDL(dt, comSupplier, "Id", "CompanyName", "Party Name", ZeroIndex false) */
+    async function suppliercustomer() {
+        const cur = $('#comSupplier').val();
+        PARTIES = await AccF.lookup('supplier-customers');
+        AccF.fillSelect('#comSupplier', PARTIES, 'Id', 'CompanyName', '');
+        if (cur) $('#comSupplier').val(cur);
+    }
+    function glAccountIdOf(id) {
+        const p = PARTIES.find(function (x) { return String(x.Id) === String(id); });
+        return p ? AccF.num(p.GlAccountId) : 0;
+    }
+    function drCr(v) { return v > 0 ? 'Dr' : (v < 0 ? 'Cr' : 'Nill'); }
 
-            if (partyList.length === 0) {
-                $.get('/accounts/api/reports/supplier-customers', function(data) {
-                    if (data && data.length > 0) {
-                        partyList = data.map(function(s) {
-                            return {
-                                id: s.Id || s.id,
-                                name: s.CompanyName || s.companyName || s.Name || s.name || ('Party #' + (s.Id || s.id)),
-                                glAccountId: s.GlAccountId || s.glAccountId || ''
-                            };
-                        });
-                    }
-                    loadLinkedParty();
-                });
-            } else loadLinkedParty();
+    /* LedgerDetailByAccountId */
+    async function ledgerDetail() {
+        const accountId = glAccountIdOf($('#comSupplier').val());
+        const info = await AccF.post('/account-info', { accountId: accountId, fromDate: $('#txtfromdate').val(), toDate: $('#txttodate').val() });
+        const coa = info && info.coa, bal = info && info.balances;
+        let show = false;
+        if (coa) {
+            show = true;
+            $('#lblAccountCode').text(coa.AccountCode == null ? '' : coa.AccountCode);
+            $('#lblAccountClass').text(coa.ClassName == null ? '' : coa.ClassName);
+            $('#lblAccountType').text(coa.AccountType == null ? '' : coa.AccountType);
+        } else { $('#lblAccountCode, #lblAccountClass, #lblAccountType').text(''); }
+        if (bal) {
+            const o = AccF.num(bal.OpeningBalance), d = AccF.num(bal.DebitAmount), c = AccF.num(bal.CreditAmount), cl = AccF.num(bal.ClosingBalance);
+            $('#lblBalType').text(drCr(cl)); $('#OpeningDrCr').text(drCr(o));
+            if (o > 0 || d > 0 || c > 0 || cl > 0) show = true;
+            $('#lblOpening').text(AccF.hashBoth(o)); $('#lblCurrDebit').text(AccF.hashBoth(d));
+            $('#lblCurrCredit').text(AccF.hashBoth(c)); $('#lblClosingBal').text(AccF.hashBoth(cl));
+        } else {
+            show = false;
+            $('#lblOpening, #lblCurrDebit, #lblCurrCredit, #lblClosingBal').text('0');
+        }
+        $('#GlInfoBox').toggle(show);
+    }
+
+    /* grdCustomerLedgerSettings */
+    function render() {
+        const rows = clRows.map(function (r) {
+            const rb = AccF.num(r.RunningBalance);
+            return {
+                DocumentTypeCode: r.DocumentTypeCode, 'V-Date': r.DocDate, 'V-No': r.DocNo, RefDocNoId: r.RefDocNoId,
+                RefDocumentTypeId: r.RefDocumentTypeId, Description: r.ItemName, VehicleNo: r.VehicleNo, Qty: r.QtyIn,
+                Weight: r.WeightIn, OrderNo: r.OrderNo, RateCut: r.RateCut, NetRate: r.NetRate, DebitAmt: r.DebitAmt,
+                CreditAmt: r.CreditAmt, RunningBalance: rb, BalType: drCr(rb), ManualBillNo: r.MnBillNo, GpNo: r.GpNo, GpDate: r.GpDate
+            };
         });
-
-        // A report drill-through must select the matching allowed party before requesting its ledger.
-        function loadLinkedParty() {
-            const query = new URLSearchParams(window.location.search);
-            const id = query.get('supplierCustomerId');
-            const party = partyList.find(p => String(p.id) === id);
-            if (!party) return;
-            selectParty(party.id, party.name, party.glAccountId);
-            for (const [key, input] of [['fromDate', '#txtFromDate'], ['toDate', '#txtToDate']]) {
-                const date = query.get(key);
-                if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) $(input).val(date);
-            }
-            executeCL();
-        }
-
-        function onPartySearchFocus() {
-            onPartySearchInput();
-        }
-
-        function onPartySearchInput() {
-            const q = ($('#txtPartySearch').val() || '').toLowerCase().trim();
-            const filtered = partyList.filter(function(p) {
-                return p.name.toLowerCase().indexOf(q) >= 0;
-            }).slice(0, 50);
-
-            if (filtered.length > 0) {
-                let html = '';
-                filtered.forEach(function(p) {
-                    const escapedName = (p.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    html += '<tr style="cursor:pointer;" onclick="selectParty(' + p.id + ', \'' + escapedName + '\', \'' + p.glAccountId + '\')">' +
-                            '<td style="padding:5px 8px;"><strong>' + $('<div>').text(p.name).html() + '</strong></td>' +
-                            '</tr>';
-                });
-                $('#tbodyPopParty').html(html);
-                $('#popParty').show();
-            } else {
-                $('#tbodyPopParty').html('<tr><td style="padding:6px 8px; color:#888; text-align:center;">No matching parties found</td></tr>');
-                $('#popParty').show();
-            }
-        }
-
-        function selectParty(id, name, glAccountId) {
-            $('#txtPartySearch').val(name);
-            $('#comSupplier').val(id);
-            if ($('#comSupplier option[value="' + id + '"]').length === 0) {
-                $('#comSupplier').append($('<option>', { value: id, text: name, 'data-glaccountid': glAccountId }));
-                $('#comSupplier').val(id);
-            }
-            $('#popParty').hide();
-        }
-
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('#txtPartySearch, #popParty').length) {
-                $('#popParty').hide();
-            }
+        AccF.renderGrid({
+            table: '#grd', rows: rows, emptyText: '',
+            columns: [
+                { key: 'DocumentTypeCode', caption: 'V-Type', width: 55 },
+                { key: 'V-Date', type: 'date', width: 70 },
+                { key: 'V-No', width: 60 },
+                { key: 'RefDocNoId', visible: false }, { key: 'RefDocumentTypeId', visible: false },
+                { key: 'Description', width: 200, wrap: true },
+                { key: 'VehicleNo', width: 75 },
+                { key: 'Qty', type: 'hash', sum: true, width: 75 },
+                { key: 'Weight', type: 'hash', sum: true, width: 75 },
+                { key: 'OrderNo', align: 'r', width: 65 },
+                { key: 'RateCut', type: 'hash', width: 65 },
+                { key: 'NetRate', type: 'hash', width: 65 },
+                { key: 'DebitAmt', caption: 'Debit Amount', type: 'hash', sum: true, width: 100 },
+                { key: 'CreditAmt', caption: 'Credit Amount', type: 'hash', sum: true, width: 100 },
+                { key: 'RunningBalance', type: 'hashboth', width: 100 },
+                { key: 'BalType', width: 55 },
+                { key: 'ManualBillNo', width: 70 },
+                { key: 'GpNo', width: 60 },
+                { key: 'GpDate', type: 'date', width: 75 }
+            ]
         });
+        $('#lblStatus').text(clRows.length ? 'Records: ' + clRows.length : '');
+    }
 
-        function fmt(v) {
-            const n = parseFloat(v);
-            if (isNaN(n)) return '0';
-            return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        }
+    /* btnshow_Click -> CustomerLedgerFill */
+    async function executeCL() {
+        const id = $('#comSupplier').val();
+        if (!(parseInt(id, 10) > 0)) { alert('Party Name required. Please Check!'); AccF.focus('#comSupplier'); return; }
+        const btn = $('#btnshow');
+        AccF.busy(btn, true);
+        try {
+            await ledgerDetail();
+            clRows = (await AccF.post('/customer-ledger', { supplierCustomerId: id, fromDate: $('#txtfromdate').val(), toDate: $('#txttodate').val() })) || [];
+            if (clRows.length) render(); else { $('#grd').empty(); $('#lblStatus').text(''); }
+        } catch (e) {
+            clRows = []; $('#grd').empty();
+            alert(e.message);
+        } finally { AccF.busy(btn, false); }
+    }
 
-        function onDateTypeChanged() {
-            const id = parseInt($('#cmbDateType').val());
-            const today = new Date();
-            const iso = d => d.toISOString().split('T')[0];
-            if (id === 1) {
-                $('#txtFromDate').val(iso(today));
-                $('#txtToDate').val(iso(today));
-            } else if (id === 2) {
-                const d = new Date(today); d.setDate(d.getDate() - 7);
-                $('#txtFromDate').val(iso(d));
-                $('#txtToDate').val(iso(today));
-            } else if (id === 3) {
-                $('#txtFromDate').val(iso(new Date(today.getFullYear(), today.getMonth(), 1)));
-                $('#txtToDate').val(iso(today));
-            } else if (id === 4) {
-                $('#txtFromDate').val(iso(new Date(today.getFullYear(), 0, 1)));
-                $('#txtToDate').val(iso(today));
-            }
-        }
+    /* reset(): Date Type Rows[1] (This Week), focus Date Type, party cleared, GlInfoBox hidden, grid cleared */
+    function resetCL() {
+        $('#CmbDateType').val('2').trigger('change');
+        $('#comSupplier').val('');
+        $('#GlInfoBox').hide();
+        clRows = []; $('#grd').empty(); $('#lblStatus').text('');
+        AccF.focus('#CmbDateType');
+    }
+    /* btnRefresh_Click: suppliercustomer() */
+    async function refreshCL() { try { await suppliercustomer(); } catch (e) { alert(e.message); } }
+    /* print_Click_1: "Record Not Found For Display" when the grid is empty; 130-RptAcSupplierCustomerQuantativeGL.rpt is a Crystal report */
+    function printCL() { if (!clRows.length) { alert('Record Not Found For Display'); return; } window.print(); }
+    function shortcutKeys() {
+        alert(['Ctrl+N  For Reset', 'Ctrl+R  For Refresh', 'Ctrl+E  For Close', 'Ctrl+P  For Print', 'Ctrl+S  For Show Data',
+            'Ctrl+F5  For Focus on Date Type', 'Ctrl+alt  To Show ShortCut Keys Form', 'Ctrl+ArrowDown  For Focus On Grids'].join('\n'));
+    }
 
-        function executeCL() {
-            let supplierCustomerId = $('#comSupplier').val();
-            if (!supplierCustomerId && $('#txtPartySearch').val()) {
-                const searchTxt = $('#txtPartySearch').val().toLowerCase().trim();
-                const matching = partyList.find(p => p.name.toLowerCase() === searchTxt);
-                if (matching) {
-                    supplierCustomerId = matching.id;
-                    $('#comSupplier').val(matching.id);
-                }
-            }
+    $(document).on('keydown', function (e) {
+        if (!e.ctrlKey) return;
+        const k = (e.key || '').toLowerCase();
+        if (k === 'n') { e.preventDefault(); resetCL(); }
+        else if (k === 'r') { e.preventDefault(); refreshCL(); }
+        else if (k === 'p') { e.preventDefault(); printCL(); }
+        else if (k === 's') { e.preventDefault(); executeCL(); }
+        else if (e.key === 'F5') { e.preventDefault(); AccF.focus('#CmbDateType'); }
+        else if (e.altKey && (e.key === 'Alt' || e.key === 'Control')) { shortcutKeys(); }
+    });
 
-            if (!supplierCustomerId) {
-                alert('Party Name required. Please Check!');
-                $('#txtPartySearch').focus();
-                return;
-            }
-            $('#lblStatus').text('Executing Customer Ledger query...');
-            const fromDate = $('#txtFromDate').val();
-            const toDate = $('#txtToDate').val();
-            const glAccId = $('#comSupplier option:selected').data('glaccountid') || (partyList.find(p => p.id == supplierCustomerId) || {}).glAccountId;
-
-            $.ajax({
-                url: '/accounts/api/reports/account-info',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ accountId: glAccId, fromDate: fromDate, toDate: toDate }),
-                success: applyAccountInfo
+    $(function () { (async function () {
+        $('#txttodate').val(AccF.today());
+        $('#txtfromdate').val(AccF.today());
+        try {
+            CTX = await AccF.context();
+            await suppliercustomer();
+            AccF.fillSelect('#CmbDateType', AccF.DATE_TYPES, 'Id', 'Parameters', null);
+            $('#CmbDateType').on('change', function () { AccF.applyDateType($(this).val(), '#txtfromdate', '#txttodate', CTX); });
+            /* CmbDateType.Rows[1].Activate() -> "This Week" */
+            $('#CmbDateType').val('2').trigger('change');
+            /* comSupplier_Leave: LedgerDetailByAccountId when a party is chosen, else GlInfoBox hidden */
+            $('#comSupplier').on('change', function () {
+                if (parseInt($(this).val(), 10) > 0) ledgerDetail().catch(function (e) { alert(e.message); });
+                else $('#GlInfoBox').hide();
             });
-
-            $.ajax({
-                url: '/accounts/api/reports/customer-ledger',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ supplierCustomerId: supplierCustomerId, fromDate: fromDate, toDate: toDate }),
-                success: function (res) {
-                    if (res && res.success) {
-                        renderGrid(res.data);
-                        $('#lblStatus').text('Total Records: ' + res.totalRecords);
-                    } else {
-                        $('#clTbody').html('<tr><td colspan="16" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Customer Ledger.') + '</td></tr>');
-                    }
-                },
-                error: function () {
-                    $('#clTbody').html('<tr><td colspan="16" style="text-align:center; color:red; padding:16px;">Error executing Customer Ledger report.</td></tr>');
-                }
-            });
-        }
-
-        function applyAccountInfo(info) {
-            if (!info || Object.keys(info).length === 0) { $('#glInfoBox').prop('hidden', true); return; }
-            $('#glInfoBox').prop('hidden', false);
-            $('#infoAccountCode').text(info.accountCode || '-');
-            $('#infoAccountClass').text(info.accountClass || '-');
-            $('#infoAccountType').text(info.accountType || '-');
-            const opening = parseFloat(info.openingBalance || 0);
-            const closing = parseFloat(info.closingBalance || 0);
-            $('#infoOpening').text(fmt(Math.abs(opening)));
-            $('#infoOpeningDrCr').text(opening > 0 ? 'Dr' : (opening < 0 ? 'Cr' : 'Nill'));
-            $('#infoTotalDebit').text(fmt(info.debitAmount || 0));
-            $('#infoTotalCredit').text(fmt(info.creditAmount || 0));
-            $('#infoClosing').text(fmt(Math.abs(closing)));
-            $('#infoClosingDrCr').text(closing > 0 ? 'Dr' : (closing < 0 ? 'Cr' : 'Nill'));
-        }
-
-        function renderGrid(data) {
-            const tbody = $('#clTbody');
-            tbody.empty();
-            if (!data || data.length === 0) {
-                tbody.html('<tr><td colspan="16" style="text-align:center; padding:16px; color:#666;">No transaction records found for the selected criteria.</td></tr>');
-                $('#totQty, #totWeight, #totDebit, #totCredit').text('0');
-                return;
+            /* A report drill-through (supplierCustomerId, fromDate, toDate) selects the party and shows its ledger */
+            const sid = QS.get('supplierCustomerId');
+            if (sid && PARTIES.some(function (p) { return String(p.Id) === sid; })) {
+                $('#comSupplier').val(sid);
+                if (/^\d{4}-\d{2}-\d{2}$/.test(QS.get('fromDate') || '')) $('#txtfromdate').val(QS.get('fromDate'));
+                if (/^\d{4}-\d{2}-\d{2}$/.test(QS.get('toDate') || '')) $('#txttodate').val(QS.get('toDate'));
+                executeCL();
             }
-            let totQty = 0, totWeight = 0, totDebit = 0, totCredit = 0;
-            data.forEach(r => {
-                const qty = parseFloat(r.QtyIn || 0);
-                const weight = parseFloat(r.WeightIn || 0);
-                const debit = parseFloat(r.DebitAmt || 0);
-                const credit = parseFloat(r.CreditAmt || 0);
-                const runningBalance = parseFloat(r.RunningBalance || 0);
-                totQty += qty; totWeight += weight; totDebit += debit; totCredit += credit;
-                let balType = 'Nill';
-                if (runningBalance > 0) balType = 'Dr'; else if (runningBalance < 0) balType = 'Cr';
-                let vDate = r.DocDate || '';
-                if (typeof vDate === 'string' && vDate.includes('T')) vDate = vDate.split('T')[0];
-                let gpDate = r.GpDate || '';
-                if (typeof gpDate === 'string' && gpDate.includes('T')) gpDate = gpDate.split('T')[0];
-                tbody.append(`
-                    <tr>
-                        <td>${r.DocumentTypeCode || ''}</td>
-                        <td>${vDate}</td>
-                        <td>${r.DocNo || ''}</td>
-                        <td>${r.ItemName || ''}</td>
-                        <td>${r.VehicleNo || ''}</td>
-                        <td style="text-align:right;">${qty ? fmt(qty) : ''}</td>
-                        <td style="text-align:right;">${weight ? fmt(weight) : ''}</td>
-                        <td>${r.OrderNo || ''}</td>
-                        <td style="text-align:right;">${r.RateCut ? fmt(r.RateCut) : ''}</td>
-                        <td style="text-align:right;">${r.NetRate ? fmt(r.NetRate) : ''}</td>
-                        <td style="text-align:right;">${debit ? fmt(debit) : ''}</td>
-                        <td style="text-align:right;">${credit ? fmt(credit) : ''}</td>
-                        <td style="text-align:right; font-weight:bold;">${fmt(Math.abs(runningBalance))} ${balType}</td>
-                        <td>${r.MnBillNo || ''}</td>
-                        <td>${r.GpNo || ''}</td>
-                        <td>${gpDate}</td>
-                    </tr>
-                `);
-            });
-            $('#totQty').text(fmt(totQty));
-            $('#totWeight').text(fmt(totWeight));
-            $('#totDebit').text(fmt(totDebit));
-            $('#totCredit').text(fmt(totCredit));
-        }
-
-        function resetCL() {
-            $('#comSupplier, #cmbDateType').val('');
-            $('#txtPartySearch').val('');
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate').val(today);
-            $('#txtToDate').val(today);
-            $('#glInfoBox').prop('hidden', true);
-            $('#clTbody').html('<tr><td colspan="16" style="text-align:center; padding:16px; color:#666;">Select a Party Name and click Show.</td></tr>');
-            $('#totQty, #totWeight, #totDebit, #totCredit').text('0');
-            $('#lblStatus').text('Ready');
-        }
-    </script>
-
-    <!-- Bottom Footer Tabs Bar matching Desktop C# screenshot -->
-    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #c0c7cf; border-top: 1px solid #999; padding: 2px 8px 0 8px; display: flex; gap: 4px; z-index: 1000; font-size: 11px;">
-        <a href="/accounts/reports/general-ledger" style="background: #d8e0e8; color: #333; font-weight: bold; border: 1px solid #94a3b8; border-bottom: none; padding: 2px 12px; text-decoration: none; border-radius: 3px 3px 0 0;">General Leder</a>
-        <a href="/accounts/reports/customer-ledger" style="background: #ffffff; color: #00796B; font-weight: bold; border: 1px solid #00796B; border-bottom: none; padding: 2px 12px; text-decoration: none; border-radius: 3px 3px 0 0; box-shadow: 0 -1px 2px rgba(0,0,0,0.1);">Party_Ledger</a>
-    </div>
+            AccF.focus('#CmbDateType');
+        } catch (e) { alert(e.message); }
+    })(); });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

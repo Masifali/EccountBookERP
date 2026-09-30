@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>General Ledger</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <style>
+        .accf .info { display: grid; grid-template-columns: 90px 110px 70px 110px 26px; gap: 2px 6px; font-size: 10.5px; font-weight: bold; align-items: center; }
+        .accf .info .v { text-align: right; }
+        .accf .other { display: grid; grid-template-columns: 230px 110px; gap: 2px 6px; font-size: 10.5px; font-weight: bold; }
+        .accf .other .v { text-align: right; }
+    </style>
+</head>
+<!--
+  Screen 79 "General Ledger Report" - desktop form Architecture.WinApp.Account_Reports.GeneralLedger (base.Name "GeneralLedger"),
+  tab "Single Account Ledger". Detail / Summary-I / Summary-II are the form's three btnshow_Click branches
+  (Sp_Accounts_GeneralLedger_Rpt / Sp_VouchersAccountsGeneralLedgerSummery / SpAccounts_GeneralLedger2Format_Rpt).
+  The Multi Accounts Ledger and Bank Summary Ledger tabs stay on the older page (/accounts/reports/general-ledger-multi).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-book"></i> Ledgers</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li class="active"><a>Single Account Ledger</a></li>
+    <li><a href="/accounts/reports/general-ledger-multi">Multi Accounts Ledger</a></li>
+    <li><a href="/accounts/reports/general-ledger-multi">Bank Summary Ledger</a></li>
+</ul>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="glReset()"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn gl-detail-btn" onclick="glPrint('105')"><i class="fa fa-print"></i> Print-105</button>
+    <button type="button" class="win-btn gl-detail-btn" onclick="glPrint('106')"><i class="fa fa-print"></i> Print-106</button>
+    <button type="button" class="win-btn gl-detail-btn" onclick="glPrint('107')"><i class="fa fa-print"></i> Print-107</button>
+    <button type="button" class="win-btn gl-s1-btn" style="display:none" onclick="glPrint('108')" data-rpt="108-AcRptGeneralLedgerSummery.rpt"><i class="fa fa-print"></i> Print-108</button>
+    <button type="button" class="win-btn gl-s2-btn" style="display:none" onclick="glPrint('105A')" data-rpt="105A-GeneralLedgerSummary2.rpt"><i class="fa fa-print"></i> Print-105A</button>
+    <button type="button" class="win-btn gl-detail-btn" onclick="glSaveCheckedRows()"><i class="fa fa-save"></i> SaveCheckedRows</button>
+    <button type="button" class="win-btn gl-detail-btn" onclick="glCheckAllPrevious()"><i class="fa fa-bookmark"></i> Bookmark All Previous Rows After Last Checked Row</button>
+</div>
+<div class="win-header-panel">
+    <span>General Ledger</span>
+    <span style="display:flex; gap:10px; align-items:center;">
+        <label>Cost Center <select id="CmbCostCenter" class="inp" style="width:200px; color:#000;"></select></label>
+        <label><input type="checkbox" id="ChkBoxPost" checked> Include unposted vouchers</label>
+    </span>
+</div>
+
+<div class="filters">
+    <div class="gb" style="width:470px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 70px 1fr 50px 1fr;">
+            <span class="lbl">Date Type</span>
+            <select id="CmbDateType" class="inp"></select>
+            <span class="lbl">Branch <span id="branchLblReq"></span></span>
+            <select id="cmbbranch" class="inp"></select>
+
+            <span class="lbl">From Date</span><input type="date" id="txtFromDate" class="inp">
+            <span class="lbl">To Date</span><input type="date" id="txtToDate" class="inp">
+
+            <span class="lbl">Account</span>
+            <select id="cmbAccountTitle" class="inp" style="grid-column: span 2;"></select>
+            <span>
+                <label class="chk"><input type="radio" name="rdAcBy" id="RdAcByName" checked> Title</label>
+                <label class="chk"><input type="radio" name="rdAcBy" id="RdAcByCode"> Code</label>
+            </span>
+
+            <span class="lbl gl-sub">Subsidiary Ac</span>
+            <select id="CmbSubsidiaryAccount" class="inp gl-sub" style="grid-column: span 3;"></select>
+
+            <span class="lbl gl-lang hidden-ctl">Language</span>
+            <select id="CmbLanguage" class="inp gl-lang hidden-ctl" style="grid-column: span 3;"></select>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span>
+                <label class="chk"><input type="radio" name="rdMode" id="ChkDetail" value="detail" checked> Detail</label>
+                <label class="chk"><input type="radio" name="rdMode" id="ChkSummery1" value="summary1"> Summary-I</label>
+                <label class="chk"><input type="radio" name="rdMode" id="ChkSummery2" value="summary2"> Summary-II</label>
+            </span>
+            <button type="button" id="btnshow" class="win-btn-show" onclick="glShow()"><i class="fa fa-eye"></i> Show</button>
+        </div>
+    </div>
+
+    <div class="gb" id="gbAccountDetail" style="display:none;">
+        <span class="gb-title">Account Detail</span>
+        <div class="info">
+            <span>Account Code</span><span id="lblAccountCode"></span><span>Opening</span><span class="v" id="lblOpening">0</span><span></span>
+            <span>Account Class</span><span id="lblAccountClass"></span><span>Total Debit</span><span class="v" id="lblCurrDebit">0</span><span></span>
+            <span>Account Type</span><span id="lblAccountType"></span><span>Total Credit</span><span class="v" id="lblCurrCredit">0</span><span></span>
+            <span id="lblPostedNoOfCheqs" style="display:none;">Post Dated No Of Cheqs</span><span id="ValuePostDatedNoOfCheqs" style="display:none;">0</span>
+            <span>Closing</span><span class="v" id="lblClosingBal">0</span><span></span>
+            <span id="lblPostDatedCheqAmount" style="display:none;">Post Dated Cheqs Amount</span><span id="ValuePostDatedCheqAmount" style="display:none;">0</span>
+        </div>
+    </div>
+
+    <div class="gb" id="gbAccountOtherInfo" style="display:none;">
+        <span class="gb-title">Account Other Info</span>
+        <div class="other">
+            <span>Pending Premature Receipts</span><span class="v" id="txtPendingPrematureReceipts">0</span>
+            <span>Pending Premature Payments</span><span class="v" id="txtPendingPrePayments">0</span>
+            <span>Balance After Premature Receipts Clearance</span><span class="v" id="txtBalAfterPreReceiptsClearance">0</span>
+            <span>Post Dated Cheqs Receipts</span><span class="v" id="txtPdcReceipts">0</span>
+            <span>Post Dated Cheqs Payments</span><span class="v" id="txtPdcPayments">0</span>
+            <span>Balance After Cheqs Clearance</span><span class="v" id="txtBalAfterCheqClearance">0</span>
+        </div>
+    </div>
+
+    <div class="gb" id="SubsidiaryBalanceBox" style="display:none;">
+        <span class="gb-title">Subsidiary Information</span>
+        <div id="SubsidiaryAccountName" style="font-weight:bold;"></div>
+        <div id="lblSubsidiaryBalance" style="font-weight:bold; text-align:right;">0</div>
+    </div>
+
+    <div class="gb" id="gbBranchesWithBalance" style="display:none; min-width:220px;">
+        <span class="gb-title">Branches</span>
+        <div id="branchBalanceLine" style="font-weight:bold; display:none;"><span id="label46"></span>: <span id="lblBranchBalance"></span></div>
+        <table class="wg" id="grdBranchesWithBalance"></table>
+    </div>
+
+    <div class="gb" id="gbDocType" style="display:none; min-width:200px;">
+        <span class="gb-title">Doc Types</span>
+        <table class="wg" id="GrdDocType"></table>
+        <button type="button" class="win-btn" style="margin-top:3px;" onclick="glShowFilteredRecords()">Show</button>
+    </div>
+</div>
+
+<div class="grid-caption"><span id="gridTitle">Detail</span><span id="lblStatus"></span></div>
+<div class="grid-wrap"><table class="wg" id="grd"></table></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script th:inline="javascript">
+    const PRESET = {
+        accountId: /*[[${selectedAccountId}]]*/ null,
+        fromDate: /*[[${selectedFromDate}]]*/ null,
+        toDate: /*[[${selectedToDate}]]*/ null
+    };
+    const QS = new URLSearchParams(window.location.search);
+    let CTX = null, CFG = {}, ACCOUNTS = [], SUBS = [];
+    let gridRows = [], shownMode = 'detail', lastRequest = null;
+
+    function mode() { return $('input[name="rdMode"]:checked').val(); }
+
+    function accountDisplay() {
+        const byName = $('#RdAcByName').is(':checked');
+        const cur = $('#cmbAccountTitle').val();
+        AccF.fillSelect('#cmbAccountTitle', ACCOUNTS, 'Id', byName ? 'AccountTitle' : 'AccountCode', '');
+        if (cur) $('#cmbAccountTitle').val(cur);
+    }
+
+    async function loadAccounts() {
+        ACCOUNTS = await AccF.lookup('detail-accounts', { costCenterId: $('#CmbCostCenter').val() || '' });
+        accountDisplay();
+    }
+
+    async function loadSubsidiary(byAccount) {
+        if (!CTX.subsidiaryFeature) return;
+        const params = { costCenterId: $('#CmbCostCenter').val() || '' };
+        if (byAccount && $('#cmbAccountTitle').val()) params.accountId = $('#cmbAccountTitle').val();
+        SUBS = await AccF.lookup('subsidiary-accounts', params);
+        $('#CmbSubsidiaryAccount').empty().append($('<option>').val('').text(''));
+        SUBS.forEach(function (s, i) {
+            $('#CmbSubsidiaryAccount').append($('<option>').val(i).text(s.SubsidaryAccount));
+        });
+        AccF.combo(document.getElementById('CmbSubsidiaryAccount'));
+    }
+    function selectedSub() {
+        const i = $('#CmbSubsidiaryAccount').val();
+        return i === '' || i == null ? null : SUBS[parseInt(i, 10)];
+    }
+
+    /* CmbDateType_ValueChanged (GeneralLedger.cs) */
+    function onDateType() {
+        const id = parseInt($('#CmbDateType').val(), 10);
+        if (id === 1) $('#txtFromDate').val(AccF.today());
+        else if (id === 2) $('#txtFromDate').val(AccF.addDays(-7));
+        else if (id === 3) { $('#txtFromDate').val(AccF.monthStart()); $('#txtToDate').val(AccF.today()); }
+        else if (id === 4) { $('#txtFromDate').val(AccF.yearStart()); $('#txtToDate').val(AccF.today()); }
+        else if (id === 5) $('#txtFromDate').val(CTX.activeYear.startPeriod);
+    }
+
+    function signLbl(v) { return v > 0 ? ' Dr' : (v < -0.99 ? ' Cr' : ''); }
+    function colorOf(v) { return v > 0 ? 'red' : (v < 0 ? 'darkgreen' : 'black'); }
+
+    /* LedgerDetailByAccountId */
+    async function ledgerDetail() {
+        const acc = $('#cmbAccountTitle').val();
+        const info = await AccF.post('/account-info', { accountId: acc || 0, fromDate: $('#txtFromDate').val(), toDate: $('#txtToDate').val(), costCenterId: $('#CmbCostCenter').val() || null });
+        const c = info.coa, b = info.balances;
+        if (c) {
+            $('#gbAccountDetail, #gbAccountOtherInfo').show();
+            $('#lblAccountCode').text(c.AccountCode || ''); $('#lblAccountClass').text(c.ClassName || ''); $('#lblAccountType').text(c.AccountType || '');
+            const sub = selectedSub();
+            if (sub) { $('#SubsidiaryBalanceBox').show(); $('#SubsidiaryAccountName').text(sub.SubsidaryAccount || ''); } else { $('#SubsidiaryBalanceBox').hide(); }
+        } else {
+            $('#gbAccountDetail, #gbAccountOtherInfo').hide();
+            $('#lblAccountCode, #lblAccountClass, #lblAccountType').text('');
+        }
+        if (b) {
+            const o = AccF.num(b.OpeningBalance), d = AccF.num(b.DebitAmount), cr = AccF.num(b.CreditAmount), cl = AccF.num(b.ClosingBalance);
+            if (o > 0 || d > 0 || cr > 0 || cl > 0) $('#gbAccountDetail, #gbAccountOtherInfo').show();
+            $('#lblOpening').text(AccF.hashBoth(o) + signLbl(o));
+            $('#lblCurrDebit').text(AccF.hashBoth(d));
+            $('#lblCurrCredit').text(AccF.hashBoth(cr));
+            $('#lblClosingBal').text(AccF.hashBoth(cl) + signLbl(cl)).css('color', colorOf(cl));
+            const bp = AccF.num(b.BalanceAfterPrematureReceiptsClearance), bc = AccF.num(b.BalanceAfterCheqClearance);
+            $('#txtPendingPrematureReceipts').text(AccF.hashBoth(b.PendingPrematureReceipts));
+            $('#txtPendingPrePayments').text(AccF.hashBoth(b.PendingPrematureDebit));
+            $('#txtBalAfterPreReceiptsClearance').text(AccF.hashBoth(bp) + signLbl(bp)).css('color', colorOf(bp));
+            $('#txtPdcReceipts').text(AccF.hashBoth(b.PdcReceipts));
+            $('#txtPdcPayments').text(AccF.hashBoth(b.PdcPayments));
+            $('#txtBalAfterCheqClearance').text(AccF.hashBoth(bc) + signLbl(bc)).css('color', colorOf(bc));
+        } else {
+            $('#gbAccountDetail, #gbAccountOtherInfo').hide();
+            $('#lblOpening, #lblCurrDebit, #lblCurrCredit, #lblClosingBal').text('0');
+            $('#txtPendingPrematureReceipts, #txtBalAfterPreReceiptsClearance, #txtPdcReceipts, #txtPdcPayments, #txtBalAfterCheqClearance').text('0');
+        }
+    }
+
+    function detailColumns() {
+        const voucherLink = (CTX.roleName === 'Admin' || CTX.allowEditOnVoucherNoinReports);
+        return [
+            { key: 'Checked', caption: '', render: function (r) { return '<input type="checkbox" class="chk-bm"' + (r.Checked ? ' checked' : '') + ' data-id="' + AccF.esc(r.DetailId) + '">'; }, align: 'c' },
+            { key: 'BookmarkRemarks', caption: 'BookmarkRemarks', render: function (r) { return '<input type="text" class="inp bm-rem" style="min-width:120px" value="' + AccF.esc(r.BookmarkRemarks || '') + '">'; } },
+            { key: 'BranchName', caption: 'BranchName', visible: !!CTX.branchFeature },
+            { key: 'VoucherDate', type: 'date' },
+            { key: 'DocType' },
+            { key: 'VoucherNo', link: voucherLink ? function (r) { openVoucher(r); } : null },
+            { key: 'AccountCode' },
+            { key: 'OffSetTitle' },
+            { key: 'SubsidiaryAccount', caption: 'Subsidiary Ac', visible: !!CTX.subsidiaryFeature },
+            { key: 'Debit', type: 'single', sum: true },
+            { key: 'Credit', type: 'both', sum: true, totalType: 'single' },
+            { key: 'Balance', type: 'both' },
+            { key: 'BalType' },
+            { key: 'BillAmount', type: 'both' },
+            { key: 'DueDays' },
+            { key: 'DueDate', type: 'date' },
+            { key: 'Comments', wrap: true },
+            { key: 'ChequeNo' },
+            { key: 'ChequeDate', type: 'date' },
+            { key: 'PayeeTitle' },
+            { key: 'RefParty' },
+            { key: 'JobLot' },
+            { key: 'MannualNo' },
+            { key: 'StockStatus', visible: !!CFG.isStockReservedPerParty },
+            { key: 'QtyIn', type: 'both', sum: true, totalType: 'single' },
+            { key: 'QtyOut', type: 'both', sum: true, totalType: 'single' },
+            { key: 'ItemRate', type: 'both' },
+            { key: 'VehicleNo' },
+            { key: 'NoOfAttachments' }
+        ];
+    }
+    function summary1Columns() {
+        return [
+            { key: 'BranchName', visible: !!CTX.branchFeature && !!$('#cmbbranch').val() },
+            { key: 'VoucherDate', type: 'date' },
+            { key: 'DocType' },
+            { key: 'VoucherCode', link: function (r) { openVoucher(r); } },
+            { key: 'ManualBillNo' },
+            { key: 'Remarks', wrap: true },
+            { key: 'DebitAmount', type: 'single', sum: true },
+            { key: 'CreditAmount', type: 'both', sum: true },
+            { key: 'RunningBalance', type: 'both' },
+            { key: 'DueDate', type: 'date' },
+            { key: 'DueDays' },
+            { key: 'IsApproved', type: 'bool', align: 'c' },
+            { key: 'VehicleNo' }
+        ];
+    }
+    function summary2Columns() {
+        return [
+            { key: 'BranchName', visible: !!CTX.branchFeature && !!$('#cmbbranch').val() },
+            { key: 'VoucherDate', type: 'date' },
+            { key: 'VoucherType' },
+            { key: 'VoucherNo', link: function (r) { openVoucher(r); } },
+            { key: 'OffSetAccountTitle' },
+            { key: 'Remarks', wrap: true },
+            { key: 'DebitAmount', type: 'single', sum: true },
+            { key: 'CreditAmount', type: 'both', sum: true },
+            { key: 'RunningBalance', type: 'both' },
+            { key: 'ChequeDate', type: 'date' },
+            { key: 'ChequeNo' },
+            { key: 'PayeeTitle' },
+            { key: 'DueDate', type: 'date' },
+            { key: 'DueDays' },
+            { key: 'NoOfAttachments' }
+        ];
+    }
+    /* grd_LinkClicked, VoucherNo/VoucherCode: EditMethodFromLinked(DocumentTypeId, VoucherHeadId, DocumentTypeSrNo, BaseDocumentTypeId) */
+    function openVoucher(r) {
+        AccF.editLinked(r.DocumentTypeId, r.VoucherHeadId, r.DocumentTypeSrNo, r.BaseDocumentTypeId);
+    }
+
+    function render(rows) {
+        const cols = shownMode === 'summary1' ? summary1Columns() : (shownMode === 'summary2' ? summary2Columns() : detailColumns());
+        AccF.renderGrid({ table: '#grd', columns: cols, rows: rows, emptyText: '' });
+        $('#lblStatus').text('Records: ' + rows.length);
+    }
+
+    /* FillDocTypeList: DocumentTypeId, D.Type, Balance(Debit - Credit) grouped per document type */
+    function fillDocTypes(rows) {
+        if (!CFG.filterRecordsByDocType) { $('#gbDocType').hide(); return; }
+        const typeKey = shownMode === 'summary1' ? 'DocType' : (shownMode === 'summary2' ? 'VoucherType' : 'DocType');
+        const dk = shownMode === 'detail' ? 'Debit' : 'DebitAmount', ck = shownMode === 'detail' ? 'Credit' : 'CreditAmount';
+        const map = {}, order = [];
+        rows.forEach(function (r) {
+            const id = r.DocumentTypeId, key = id + '|' + (r[typeKey] || '');
+            if (!map[key]) { map[key] = { DocumentTypeId: id, 'D.Type': r[typeKey] || '', Balance: 0 }; order.push(key); }
+            map[key].Balance += AccF.num(r[dk]) - AccF.num(r[ck]);
+        });
+        const list = order.map(function (k) { return map[k]; }).sort(function (a, b) { return AccF.num(a.DocumentTypeId) - AccF.num(b.DocumentTypeId); });
+        AccF.renderGrid({ table: '#GrdDocType', rows: list, columns: [
+            { key: 'sel', caption: '', render: function (r) { return '<input type="checkbox" class="dt-sel" value="' + AccF.esc(r.DocumentTypeId) + '">'; }, align: 'c' },
+            { key: 'D.Type' }, { key: 'Balance', type: 'both' }] });
+        $('#gbDocType').toggle(list.length > 0);
+    }
+    /* BtnShowFilteredRecords_Click: re-filter the already loaded table by the selected document types */
+    function glShowFilteredRecords() {
+        const ids = $('.dt-sel:checked').map(function () { return String($(this).val()); }).get();
+        render(ids.length ? gridRows.filter(function (r) { return ids.indexOf(String(r.DocumentTypeId)) >= 0; }) : gridRows);
+    }
+
+    function setModeButtons(m) {
+        $('.gl-detail-btn').toggle(m === 'detail');
+        $('.gl-s1-btn').toggle(m === 'summary1');
+        $('.gl-s2-btn').toggle(m === 'summary2');
+        $('#gridTitle').text(m === 'summary1' ? 'Summary-I' : (m === 'summary2' ? 'Summary-II' : 'Detail'));
+    }
+
+    async function glShow() {
+        const btn = $('#btnshow');
+        AccF.busy(btn, true);
+        try {
+            $('#grd').empty(); gridRows = [];
+            await ledgerDetail();
+            if (!$('#cmbAccountTitle').val()) throw new Error('Account Title Field is Required');
+            const m = mode();
+            const sub = selectedSub();
+            lastRequest = {
+                mode: m, accountId: $('#cmbAccountTitle').val(), fromDate: $('#txtFromDate').val(), toDate: $('#txtToDate').val(),
+                includeUnposted: $('#ChkBoxPost').is(':checked'), languageId: $('#CmbLanguage').val() || null,
+                subsidiaryAccountId: sub ? sub.SubsidiaryAccountId : null, subsidiaryTypeId: sub ? sub.SubsidiaryTypeId : null,
+                branchId: $('#cmbbranch').val() || null, costCenterId: $('#CmbCostCenter').val() || null
+            };
+            const res = await AccF.post('/general-ledger', lastRequest);
+            shownMode = m; setModeButtons(m);
+            gridRows = res.rows || [];
+            render(gridRows);
+            fillDocTypes(gridRows);
+            const last = gridRows.length ? gridRows[gridRows.length - 1] : null;
+            const lastBal = last ? AccF.num(m === 'detail' ? last.Balance : last.RunningBalance) : 0;
+            const lbl = lastBal > 0 ? 'Dr' : (lastBal < 0 ? 'Cr' : '');
+            if (sub && last) $('#lblSubsidiaryBalance').text(AccF.both(lastBal) + ' ' + lbl);
+            if ($('#cmbbranch').val() && last) { $('#branchBalanceLine').show(); $('#label46').text($('#cmbbranch option:selected').text()); $('#lblBranchBalance').text(AccF.both(lastBal) + ' ' + lbl); }
+            else $('#branchBalanceLine').hide();
+            const pdc = AccF.num(res.postDatedCheqAmount);
+            $('#lblPostedNoOfCheqs, #ValuePostDatedNoOfCheqs, #lblPostDatedCheqAmount, #ValuePostDatedCheqAmount').toggle(pdc !== 0);
+            if (pdc !== 0) { $('#ValuePostDatedNoOfCheqs').text(AccF.num(res.postDatedNoOfCheqs)); $('#ValuePostDatedCheqAmount').text(AccF.both(pdc)); }
+            if (CTX.branchFeature) {
+                AccF.renderGrid({ table: '#grdBranchesWithBalance', rows: (res.branchBalances || []).map(function (b) { return { BranchesId: b.BranchesId, BranchName: b.BranchName, Balance: b.Closing }; })
+                        .sort(function (a, b) { return AccF.num(a.BranchesId) - AccF.num(b.BranchesId); }),
+                    columns: [{ key: 'BranchName' }, { key: 'Balance', type: 'both', sum: true }] });
+            }
+        } catch (e) {
+            alert(e.message);
+        } finally {
+            AccF.busy(btn, false);
+        }
+    }
+
+    /* btnSaveCheckedRows_Click -> VoucherHead.InsertBookmarkStatus */
+    async function glSaveCheckedRows() {
+        if (shownMode !== 'detail') return;
+        const items = [];
+        $('#grd tbody tr').each(function () {
+            const $c = $(this).find('.chk-bm');
+            if (!$c.length) return;
+            const id = parseInt($c.data('id'), 10);
+            if (id > 0) items.push({ detailId: id, checked: $c.is(':checked'), bookmarkRemarks: $(this).find('.bm-rem').val() || '' });
+        });
+        if (!items.some(function (x) { return x.checked; })) { alert('No Rows Checked'); return; }
+        if (!confirm('Are you sure to Save Checked Rows?')) return;
+        try {
+            await AccF.post('/general-ledger/bookmarks', { rows: items });
+            alert('Bookmark Status Saved Successfully');
+            glShow();
+        } catch (e) { alert(e.message); }
+    }
+    /* CheckRowsWhichAreBookmard: tick every row above the last ticked one that has a DetailId */
+    function glCheckAllPrevious() {
+        const boxes = $('#grd tbody .chk-bm');
+        if (!boxes.length) return;
+        let last = -1;
+        boxes.each(function (i) { if ($(this).is(':checked')) last = i; });
+        if (last === -1) { alert('No Row Checked'); return; }
+        boxes.each(function (i) { if (i < last && parseInt($(this).data('id'), 10) > 0) $(this).prop('checked', true); });
+    }
+
+    function glPrint(format) {
+        const acc = $('#cmbAccountTitle').val();
+        if (!acc) { alert('Account Title Field is Required'); return; }
+        const q = new URLSearchParams({ format: format, accountId: acc, fromDate: $('#txtFromDate').val(), toDate: $('#txtToDate').val(),
+            includeUnposted: $('#ChkBoxPost').is(':checked') });
+        if ($('#CmbLanguage').val()) q.set('languageId', $('#CmbLanguage').val());
+        /* 105 / 106 / 107: the desktop's own .rpt layouts, rendered as PDF by Jasper */
+        if (format === '105' || format === '106' || format === '107') {
+            if (parseInt($('#cmbbranch').val(), 10) > 0) q.set('branchId', $('#cmbbranch').val());
+            if (parseInt($('#CmbSubsidiaryAccount').val(), 10) > 0) q.set('subsidiaryAccountId', $('#CmbSubsidiaryAccount').val());
+            if (parseInt($('#CmbCostCenter').val(), 10) > 0) q.set('costCenterId', $('#CmbCostCenter').val());
+            window.open('/accounts/reports/general-ledger/pdf/' + format + '?' + q.toString(), '_blank');
+            return;
+        }
+        window.open('/accounts/reports/general-ledger/print?' + q.toString(), '_blank');
+    }
+
+    /* reset(): clear grid, tick ChkBoxPost, clear the account */
+    function glReset() {
+        $('#grd').empty(); gridRows = [];
+        $('#ChkBoxPost').prop('checked', true);
+        $('#cmbAccountTitle').val(''); AccF.focus('#cmbAccountTitle');
+        $('#lblStatus').text('');
+    }
+
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S') && !e.shiftKey) { e.preventDefault(); glShow(); }
+        else if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); glSaveCheckedRows(); }
+        else if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); glReset(); }
+        else if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.gl-lang').removeClass('hidden-ctl'); AccF.focus('#CmbLanguage'); }
+    });
+
+    $(function () { (async function () {
+        try {
+            CTX = await AccF.context();
+            CFG = await AccF.get('/general-ledger/config');
+            AccF.fillSelect('#CmbDateType', [{ Id: 1, P: 'This Day' }, { Id: 2, P: 'This Week' }, { Id: 3, P: 'This Month' }, { Id: 4, P: 'This Year' }, { Id: 5, P: 'Financial Year' }], 'Id', 'P', null);
+            const ccs = await AccF.lookup('cost-centers');
+            AccF.fillSelect('#CmbCostCenter', ccs, 'Id', 'CostCenterName', '');
+            if (CTX.appId === 5 && ccs.length) { $('#CmbCostCenter').val(ccs[0].Id).prop('disabled', true); }
+            AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '');
+            await loadAccounts();
+            if (CTX.subsidiaryFeature) { await loadSubsidiary(false); } else { $('.gl-sub').hide(); }
+            if (CTX.branchFeature) {
+                AccF.fillSelect('#cmbbranch', await AccF.lookup('branches'), 'Id', 'BranchName', '');
+                $('#gbBranchesWithBalance').show();
+            } else { $('#cmbbranch').hide(); $('#cmbbranch').prev('.lbl').hide(); }
+            // Default mode: DefaulLedgerDetail / SummaryOne / SummaryTwo configuration, else Detail.
+            if (CFG.defaulLedgerSummaryOne && !CFG.defaulLedgerDetail) $('#ChkSummery1').prop('checked', true);
+            else if (CFG.defaulLedgerSummaryTwo && !CFG.defaulLedgerDetail && !CFG.defaulLedgerSummaryOne) $('#ChkSummery2').prop('checked', true);
+            setModeButtons(mode());
+            $('#txtToDate').val(AccF.today());
+            $('#CmbDateType').val('5');
+            $('#txtFromDate').val(CTX.activeYear.startPeriod || AccF.today());
+            $('#CmbDateType').on('change', onDateType);
+            $('input[name="rdAcBy"]').on('change', accountDisplay);
+            $('input[name="rdMode"]').on('change', function () { setModeButtons(mode()); });
+            $('#CmbCostCenter').on('change', async function () { await loadAccounts(); if (CTX.subsidiaryFeature) await loadSubsidiary(false); });
+            $('#cmbAccountTitle').on('change', async function () {
+                await ledgerDetail();
+                if (CTX.subsidiaryFeature) await loadSubsidiary(!!$('#cmbAccountTitle').val());
+            });
+            $('#CmbSubsidiaryAccount').on('change', async function () {
+                const s = selectedSub();
+                if (s && AccF.num(s.AccountId) !== 0) { $('#cmbAccountTitle').val(String(s.AccountId)); await ledgerDetail(); }
+            });
+            // GoToGeneralLedgerFromLinkedEvent: account, dates, subsidiary and branch preset, then btnshow_Click.
+            const acc = PRESET.accountId || QS.get('accountId');
+            if (acc) {
+                $('#cmbAccountTitle').val(String(acc));
+                if (PRESET.fromDate || QS.get('fromDate')) $('#txtFromDate').val(PRESET.fromDate || QS.get('fromDate'));
+                if (PRESET.toDate || QS.get('toDate')) $('#txtToDate').val(PRESET.toDate || QS.get('toDate'));
+                if (QS.get('branchId') && CTX.branchFeature) $('#cmbbranch').val(QS.get('branchId'));
+                if (QS.get('subsidiaryAccountId') && CTX.subsidiaryFeature) {
+                    await loadSubsidiary(true);
+                    const idx = SUBS.findIndex(function (s) { return String(s.SubsidiaryAccountId) === QS.get('subsidiaryAccountId'); });
+                    if (idx >= 0) $('#CmbSubsidiaryAccount').val(String(idx));
+                }
+                glShow();
+            }
+            AccF.focus('#cmbAccountTitle');
+        } catch (e) { alert(e.message); }
+    })(); });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

@@ -6,59 +6,73 @@
     <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
     <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
     <title>Profit &amp; Loss</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20260930a}">
-    <style>
-        /* frmProfitLossHararical.cs (screen 64 "Profit & Loss 01") - ClientSize 1152 x 707,
-           AutoScrollMinSize 980 x 700. panel2 (toolStrip3 + ctrlGrdBar1) / panel3 (Left 443: panel5 63
-           filters + grdHistory) / panel4 (Fill, White: the statement group boxes). */
-        .pl { min-width: 1152px; }
-        #body { display: flex; height: 681px; }
-        #panel3 { flex: 0 0 443px; display: flex; flex-direction: column; border-right: 1px solid #c9d1da; }
-        #panel5 { flex: 0 0 63px; }
-        #panel4 { flex: 0 0 709px; position: relative; background: #fff; }
-        .gb { position: absolute; border: 1px solid #c3c9d0; border-radius: 3px; }
-        .gb > .lg { position: absolute; top: -9px; left: 6px; background: #fff; padding: 0 3px; font: bold 9.75pt Tahoma, sans-serif; color: #0000cd; }
-        .c { position: absolute; background: #008080; color: #fff; font: bold 12pt Calibri, sans-serif; padding: 0 3px; cursor: pointer; line-height: 19px; height: 19px; width: 263px; white-space: nowrap; overflow: hidden; }
-        .c:hover { background: #fff; color: #00f; }
-        .a { position: absolute; width: 159px; text-align: right; font: bold 11.25pt Calibri, sans-serif; line-height: 21px; }
-        .ln { position: absolute; border-top: 2px solid #999; width: 689px; }
-        .tl { position: absolute; background: #add8e6; font: bold 12pt Calibri, sans-serif; padding: 0 3px; height: 23px; width: 186px; line-height: 23px; }
-        .tl.sky { background: #87ceeb; }
-        .ta { position: absolute; background: #008080; color: #fff; text-align: right; font: bold 12pt Calibri, sans-serif; padding: 0 3px; height: 23px; width: 167px; line-height: 23px; }
-        .fl { position: absolute; background: #add8e6; font: bold 12pt Calibri, sans-serif; padding: 0 3px; height: 18px; width: 133px; line-height: 18px; }
-        .fa2 { position: absolute; background: #008080; color: #fff; text-align: right; font: bold 11pt Calibri, sans-serif; padding: 0 3px; height: 18px; width: 126px; line-height: 18px; }
-    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20260930s}">
 </head>
-<body>
-<div class="h-form pl" id="frmProfitLossHararical">
-    <div class="h-tool" id="toolStrip3">
-        <span class="lbl">Profit And Loss</span><span class="sep"></span>
-        <button type="button" id="btnNew"><i class="fa fa-refresh"></i><u>R</u>efresh</button>
-        <span class="dd"><button type="button" id="tsDropDown"><i class="fa fa-print"></i>143-Print &#9662;</button>
-            <div class="dd-menu is-hidden" id="tsDropDownMenu"><div data-none="1" style="color:#666;cursor:default">(reports from the desktop's HararicalProfitAndLoss folder)</div></div></span>
-        <button type="button" id="btnProfitAndLoss"><i class="fa fa-print"></i>166-Profit &amp; Loss</button>
-        <button type="button" id="btnProfitLossBreakUp"><i class="fa fa-list"></i>ProfitLoss BreakUp</button>
-    </div>
-    <div id="body">
-        <div id="panel3">
-            <div class="h-filters" id="panel5">
-                <span class="g h-lbl" id="label27" style="left:7px;top:10px">From &amp; To Date</span>
-                <input type="date" id="txtFromDate" class="g h-in" style="left:103px;top:7px;width:99px">
-                <input type="date" id="txtToDate" class="g h-in" style="left:205px;top:7px;width:99px">
-                <label class="g h-ck" style="left:369px;top:13px"><input type="radio" name="grp" id="rdGroupCollapsed" checked>Collapse</label>
-                <label class="g h-ck" style="left:369px;top:37px"><input type="radio" name="grp" id="rdGroupeExpand">Expand</label>
-                <span class="g h-lbl" id="lblBranch" style="left:7px;top:38px">Branch</span>
-                <div class="g" id="cmbbranch" style="left:103px;top:32px;width:199px"></div>
-                <button type="button" id="btnshow" class="g h-btn" style="left:304px;top:32px;width:58px;height:26px">Show</button>
-            </div>
-            <div class="h-gridwrap"><table class="h-grid" id="grdHistory" style="width:100%"></table></div>
+<!--
+  Screen 64 "Profit & Loss 01" - frmProfitLossHararical.cs (ClientSize 1152 x 707). Read-only.
+  panel3 (Left 443): panel5 filters + grdHistory (SpCoahierarchy_TrialBalance_Rpt, AccountClass '4,5');
+  panel4 (Fill, White): the statement group boxes (SpAccounts_ProfitLoassFormatA_Report, sums per AccountNoteId).
+  Data: /accounts/api/reports/profit-loss-64 (ProfitLossHierarchicalReportService). Look: countx_acc_rpt_f.css (R5, 2026-09-30).
+  Dates as the form's Load: From = ActiveYr.Start_Period, To = today (DateTimePicker default).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-line-chart"></i> Profit &amp; Loss 01</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li><a href="/accounts/reports/balance-sheet">Balance Sheet</a></li>
+    <li class="active"><a>Profit &amp; Loss 01</a></li>
+    <li><a href="/accounts/reports/monthly-profit-loss">Monthly Profit Loss</a></li>
+</ul>
+<div class="win-toolbar" id="toolStrip3">
+    <button type="button" class="win-btn" id="btnNew"><i class="fa fa-refresh text-success"></i> <span><u>R</u>efresh</span></button>
+    <span class="dd"><button type="button" class="win-btn" id="tsDropDown" data-rpt-skip="menu"><i class="fa fa-print"></i> 143-Print &#9662;</button>
+        <div class="dd-menu is-hidden" id="tsDropDownMenu"><div data-rpt-grid="143_01_Hierarchy_ProfitLoss.rpt" data-grid="grdHistory" data-title="Profit And Loss">Profit And Loss (browser print of the grid)</div></div></span>
+    <button type="button" class="win-btn" id="btnProfitAndLoss"><i class="fa fa-print"></i> 166-Profit &amp; Loss</button>
+    <button type="button" class="win-btn" id="btnProfitLossBreakUp"><i class="fa fa-list"></i> ProfitLoss BreakUp</button>
+</div>
+<div class="win-header-panel"><span>Profit And Loss</span></div>
+
+<div class="filters" id="panel5">
+    <div class="gb" style="width:620px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 96px 110px 110px 1fr 70px;">
+            <span class="lbl" id="label27">From &amp; To Date</span>
+            <input type="date" id="txtFromDate" class="inp">
+            <input type="date" id="txtToDate" class="inp">
+            <span class="radios">
+                <label class="chk"><input type="radio" name="grp" id="rdGroupCollapsed" checked> Collapse</label>
+                <label class="chk"><input type="radio" name="grp" id="rdGroupeExpand"> Expand</label>
+            </span>
+            <span></span>
+            <span class="lbl" id="lblBranch">Branch</span>
+            <div id="cmbbranch" class="span2"></div>
+            <span></span>
+            <div class="show-cell"><button type="button" id="btnshow" class="win-btn-show"><i class="fa fa-eye"></i> Show</button></div>
         </div>
-        <div id="panel4"></div>
     </div>
 </div>
-<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930a}"></script>
-<script th:src="@{/build/js/countx_bs_pl_breakup.js?v=20260930a}"></script>
+
+<div class="split" id="body">
+    <div class="left" id="panel3">
+        <div class="grid-caption"><span>Accounts</span><span id="lblStatus"></span></div>
+        <div class="grid-wrap"><table class="wg" id="grdHistory"></table></div>
+    </div>
+    <div class="right">
+        <div class="grid-caption"><span>Profit And Loss Statement</span></div>
+        <div class="stmt-wrap"><div class="stmt" id="panel4" style="width:709px;height:681px;"></div></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_bs_pl_breakup.js?v=20260930s}"></script>
 <script>
 (function () {
     'use strict';
@@ -67,41 +81,41 @@
 
     /* [id, AccountNoteId, caption, groupbox-relative top, amount id, amount top] */
     var GB = [
-        ['groupBox1', '', 6, 88, [['lblSalesnet', 2, 'Sales Net', 14, 'lblsalesnetamt', 14], ['lblcostofsale', 4, 'Cost Of Sale', 38, 'lblcostofsaleamt', 38]],
+        ['groupBox1', '', 6, 88, [ ['lblSalesnet', 2, 'Sales Net', 14, 'lblsalesnetamt', 14], ['lblcostofsale', 4, 'Cost Of Sale', 38, 'lblcostofsaleamt', 38]],
             58, ['lblGrosProf', 'Gross Profit', 60, 'lblGrossprofit', 60]],
-        ['groupBox2', 'Non Operating Income', 94, 87, [['lblotherincome', 3, 'Other Income', 29, 'lblotherincomeamt', 29]],
+        ['groupBox2', 'Non Operating Income', 94, 87, [ ['lblotherincome', 3, 'Other Income', 29, 'lblotherincomeamt', 29]],
             54, ['lblNoOperIncomeTotal', 'T. Non Operating Income', 59, 'lblToNonOperatingIncome', 59]],
-        ['groupBox3', 'Operating Expense', 220, 167, [['lblotherexpense', 5, 'Other Expenses', 33, 'lblotherexpenseamt', 33], ['lblSellingExp', 7, 'Selling Expenses', 54, 'lblsellingexpamt', 58],
+        ['groupBox3', 'Operating Expense', 220, 167, [ ['lblotherexpense', 5, 'Other Expenses', 33, 'lblotherexpenseamt', 33], ['lblSellingExp', 7, 'Selling Expenses', 54, 'lblsellingexpamt', 58],
             ['lblAdmiExp', 8, 'Administration Expnses', 85, 'lbladministratorexpamt', 85], ['lblOperExp', 32, 'Operating Expense', 108, 'lbloperatingexpenseamt', 108]],
             129, ['lblTotOperExp', 'Total Operating Expense', 132, 'lblToOperatingExpense', 132]],
-        ['groupBox4', 'Financial Expense', 422, 105, [['lblFinanExp', 9, 'Financial Expenses', 30, 'lblfinancialexpamt', 30], ['lblMarkupLoan', 1, 'Mark Up On Loans ', 53, 'lblmarkuploadAmount', 57]],
+        ['groupBox4', 'Financial Expense', 422, 105, [ ['lblFinanExp', 9, 'Financial Expenses', 30, 'lblfinancialexpamt', 30], ['lblMarkupLoan', 1, 'Mark Up On Loans ', 53, 'lblmarkuploadAmount', 57]],
             73, ['lblTotFinanExp', 'Total Financial Expense', 76, 'lblTotalFinancialExpense', 76]],
-        ['groupBox14', 'Taxation', 563, 51, [['lblTaxexpense', 6, 'Tax Expenses', 26, 'lbltaxexpenseamt', 26]], 0, null]
+        ['groupBox14', 'Taxation', 563, 51, [ ['lblTaxexpense', 6, 'Tax Expenses', 26, 'lbltaxexpenseamt', 26]], 0, null]
     ];
 
     function build() {
         var h = '';
         GB.forEach(function (g) {
-            h += '<div class="gb" id="' + g[0] + '" style="left:6px;top:' + g[2] + 'px;width:694px;height:' + g[3] + 'px">' + (g[1] ? '<span class="lg">' + H.esc(g[1]) + '</span>' : '');
+            h += '<div class="sgb" id="' + g[0] + '" style="left:6px;top:' + g[2] + 'px;width:694px;height:' + g[3] + 'px">' + (g[1] ? '<span class="gb-title">' + H.esc(g[1]) + '</span>' : '');
             g[4].forEach(function (i) {
-                h += '<div class="c" id="' + i[0] + '" style="left:4px;top:' + i[3] + 'px">' + H.esc(i[2]) + '</div><div class="a" id="' + i[4] + '" style="left:529px;top:' + i[5] + 'px">0</div>';
+                h += '<div class="cap" id="' + i[0] + '" style="left:4px;top:' + i[3] + 'px;width:263px">' + H.esc(i[2]) + '</div><div class="amt" id="' + i[4] + '" style="left:529px;top:' + i[5] + 'px;width:159px">0</div>';
             });
             if (g[6]) {
-                h += '<div class="ln" style="left:4px;top:' + g[5] + 'px"></div><div class="tl" style="left:337px;top:' + g[6][2] + 'px">' + H.esc(g[6][1]) + '</div>'
-                   + '<div class="ta" id="' + g[6][3] + '" style="left:524px;top:' + g[6][4] + 'px">0</div>';
+                h += '<div class="ln" style="left:4px;top:' + g[5] + 'px;width:684px"></div><div class="tl" style="left:337px;top:' + g[6][2] + 'px;width:186px">' + H.esc(g[6][1]) + '</div>'
+                   + '<div class="ta" id="' + g[6][3] + '" style="left:524px;top:' + g[6][4] + 'px;width:167px">0</div>';
             }
             h += '</div>';
         });
-        [['Total Profit', 182, 'lblTotalProfit'], ['Total Operating Profit', 390, 'lblToOperatingProfit'], ['Profit Before Taxation', 535, 'lblProfitBeforeTax'], ['Profit After Taxation', 617, 'lblProfitAfterTax']]
+        [ ['Total Profit', 182, 'lblTotalProfit'], ['Total Operating Profit', 390, 'lblToOperatingProfit'], ['Profit Before Taxation', 535, 'lblProfitBeforeTax'], ['Profit After Taxation', 617, 'lblProfitAfterTax']]
             .forEach(function (t) {
-                h += '<div class="tl sky" style="left:343px;top:' + t[1] + 'px">' + H.esc(t[0]) + '</div><div class="ta" id="' + t[2] + '" style="left:530px;top:' + t[1] + 'px' + (t[2] === 'lblProfitAfterTax' ? ';width:170px' : '') + '">0</div>';
+                h += '<div class="tl sky" style="left:343px;top:' + t[1] + 'px;width:186px">' + H.esc(t[0]) + '</div><div class="ta" id="' + t[2] + '" style="left:530px;top:' + t[1] + 'px' + (t[2] === 'lblProfitAfterTax' ? ';width:170px' : ';width:167px') + '">0</div>';
             });
-        [['Total Income', 617, 'lblTotalIncomeFoterAmt'], ['Total Expense', 638, 'lblTotalExpFoterAmt'], ['Net Profit', 658, 'lblNetProfitFoterAmt']].forEach(function (t) {
-            h += '<div class="fl" style="left:9px;top:' + t[1] + 'px">' + H.esc(t[0]) + '</div><div class="fa2" id="' + t[2] + '" style="left:143px;top:' + t[1] + 'px">0</div>';
+        [ ['Total Income', 617, 'lblTotalIncomeFoterAmt'], ['Total Expense', 638, 'lblTotalExpFoterAmt'], ['Net Profit', 658, 'lblNetProfitFoterAmt']].forEach(function (t) {
+            h += '<div class="fl" style="left:9px;top:' + t[1] + 'px;width:133px">' + H.esc(t[0]) + '</div><div class="fa2" id="' + t[2] + '" style="left:143px;top:' + t[1] + 'px;width:126px">0</div>';
         });
         H.$('panel4').innerHTML = h;
         H.$('panel4').addEventListener('click', function (e) {
-            var c = e.target.closest('.c'); if (!c) return;
+            var c = e.target.closest('.cap'); if (!c) return;
             /* AccountNotefilter: dt.Select("AccountsNotes='" + caption + "'") -> ItemArray[5] */
             var r = dt.filter(function (x) { return String(H.ci(x, 'AccountsNotes')) === c.textContent; });
             if (!r.length) return;
@@ -137,10 +151,11 @@
     }
     function drawGrid() {
         var g = H.$('grdHistory');
+        H.$('lblStatus').textContent = dtFinal.length ? 'Records: ' + dtFinal.length : '';
         if (!dtFinal.length) { g.innerHTML = ''; return; }
         var kids = {};
         dtFinal.forEach(function (r) { var k = r.ParentId == null ? 'root' : r.ParentId; (kids[k] = kids[k] || []).push(r); });
-        var h = '<thead><tr><th style="width:350px">AccountTitle</th><th>Amount</th></tr></thead><tbody>', total = 0;
+        var h = '<thead><tr><th style="width:320px">AccountTitle</th><th>Amount</th></tr></thead><tbody>', total = 0;
         function walk(list, depth) {
             (list || []).forEach(function (r) {
                 var has = !!kids[r.RowId];
@@ -225,8 +240,6 @@
         ctx = c; dec = c.amountDecimals || 0;
         if (!c.branchFeature) {
             H.$('lblBranch').classList.add('is-hidden'); H.$('cmbbranch').classList.add('is-hidden');
-            H.$('label27').style.top = '20px'; H.$('txtFromDate').style.top = '15px'; H.$('txtToDate').style.top = '15px';
-            H.$('btnshow').style.top = '15px';
         } else {
             branch = H.branchCombo(H.$('cmbbranch'), c);
         }
@@ -235,5 +248,6 @@
     }).catch(function (e) { H.box(e.message); });
 })();
 </script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

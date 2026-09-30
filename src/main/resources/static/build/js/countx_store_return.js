@@ -439,6 +439,7 @@
             $id('btnsave').classList.add('is-hidden'); $id('btnUpdate').classList.remove('is-hidden');
             $id('txtDocdate').value = C.isoDay(h.DocDate); $id('txtDocNo').value = h.DocNo; $id('txtRemarks').value = h.Remarks || '';
             $id('lblVoucher').textContent = h.voucherHeadId ? ('Voucher #' + h.voucherHeadId) : '';
+            window.VoucherHeadId = h.voucherHeadId || 0;   // 118-Voucher print
             $id('lblRecId').textContent = 'Record #' + recId;
             table = h.rows || [];
             render();

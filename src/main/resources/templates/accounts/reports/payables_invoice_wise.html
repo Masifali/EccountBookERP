@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payables Report Invoice Wise</title>
+<link rel="stylesheet" href="/vendors/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_f.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_pay.css?v=20260930s">
+<link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script>
+<style>.accf .dt { display: flex; gap: 3px; align-items: center; } .accf .dt input[type=date] { flex: 1; }</style>
+</head>
+<!--
+  Screen 909 "Payables Report Invoice Wise" - Architecture.WinApp.Account_Reports.frmPayablesReportInvoiceWise
+  (route /accounts/reports/payables-report-invoice-wise). Read-only. From / To Date = today with the tick boxes ticked
+  (designer), Balance radio checked (designer :1154).
+  Lists (GET /api/accounts/payables-invoice-wise/lookups): Party Name / Commission = InvPurchaseInvoice.AllComboBindAgainstPurchaseInvoice
+  (Usp_AllComboAgainstPurchaseInvoice, Activity Supplier / CommissionAgent, ZeroIndex), Custom Group = AcLookUps type 1,
+  Parent Account = ReadAllAccountGroup level 3 type 3 classes 2,3. GridFill -> usp_PayablesReportInvoiceWise.
+  Page logic: /js/payables-invoice-wise.js. R3 2026-09-30: Account Reports look and searchable combos (countx_prod_combo.js).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-file-text-o"></i> Payables Report Invoice Wise</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<nav class="win-toolbar">
+    <button type="button" class="win-btn" id="reset"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" id="refresh"><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn" id="print" data-rpt-grid="128_PayablesReportInvoiceWise.rpt" data-grid="results"><i class="fa fa-print"></i> Print-128</button>
+    <button type="button" class="win-btn" id="print01" data-rpt-grid="128-01_PayablesReportInvoiceWise.rpt" data-grid="results"><i class="fa fa-print"></i> Print-128-01</button>
+    <button type="button" class="win-btn" id="shortcuts"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    <a class="win-btn" href="/accounts/dashboard"><i class="fa fa-times"></i> Close</a>
+</nav>
+<div class="win-header-panel"><span>Payables Report Invoice Wise</span></div>
+
+<div class="filters">
+    <div class="gb" style="width:920px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 60px 150px 70px 200px 80px 180px 70px 60px;">
+            <span class="lbl">From Date</span><span class="dt"><input type="checkbox" id="useFrom" checked aria-label="Use From Date"><input type="date" id="fromDate" class="inp"></span>
+            <span class="lbl">Party Name</span><div><select id="partyId" class="inp" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+            <span class="lbl">Custom Group</span><div><select id="customGroup" class="inp" data-dtcombo="single" data-dtcombo-caption="Custom Group"></select></div>
+            <div class="radios" style="grid-row: span 2;">
+                <label class="chk"><input type="radio" name="action" value="0"> All</label>
+                <label class="chk"><input type="radio" name="action" value="1"> Paid</label>
+                <label class="chk"><input type="radio" name="action" value="2" checked> Balance</label>
+            </div>
+            <span style="grid-row: span 2; align-self: end;"><button type="button" id="show" class="win-btn-show"><i class="fa fa-eye"></i> Show</button></span>
+            <span class="lbl">To Date</span><span class="dt"><input type="checkbox" id="useTo" checked aria-label="Use To Date"><input type="date" id="toDate" class="inp"></span>
+            <span class="lbl">Commission</span><div><select id="agentId" class="inp" data-dtcombo="single" data-dtcombo-caption="Commission Agent"></select></div>
+            <span class="lbl">Parent Account</span><div><select id="parentAccount" class="inp" data-dtcombo="single" data-dtcombo-caption="Parent Account"></select></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid-caption"><span>Filtered Records</span><input id="search" placeholder="Filter records" aria-label="Filter records"></div>
+<div class="grid-wrap fill" id="grid"><table class="wg auto" id="results"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+<div class="status-bar" id="status" role="status"></div>
+<dialog id="shortcutDialog" style="width:420px;"><h2>Shortcut Keys</h2><p>Ctrl+S: Show<br>Ctrl+N: Reset<br>Ctrl+R: Refresh<br>Ctrl+P: Print<br>Ctrl+F5 / Ctrl+ArrowUp: From Date<br>Ctrl+ArrowDown: Grid<br>Ctrl+Space: Open the link of the selected row</p><button type="button" class="win-btn" id="closeShortcuts">Close</button></dialog>
+
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<script src="/build/js/countx_prod_combo.js?v=20260930s"></script>
+<script src="/js/report-decimal.js"></script>
+<script src="/js/payables-invoice-wise.js?v=20260930s"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

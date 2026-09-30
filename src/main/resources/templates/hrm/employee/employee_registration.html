@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Employee Registration - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        /* page-only layout of frmEmployeeRegistration (panel4 = three columns: 131px / 506px / 774px) */
+        .emp-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 190px; gap: 4px 18px; padding: 8px 12px; }
+        .emp-col { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        .emp-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 18px; padding: 8px 12px; }
+        .emp-col .hrm-field { grid-template-columns: 125px minmax(0, 1fr); }
+        .emp-pics { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-width: 0; }
+        .emp-pic { width: 169px; height: 81px; border: 1px solid #999; background: #f4f4f4; display: flex; align-items: center; justify-content: center;
+                   color: #666; font-size: 8pt; text-align: center; padding: 2px; overflow: hidden; word-break: break-all; }
+        .emp-pics .hrm-lbl { font-size: 10pt; }
+        .emp-pics .win-btn-action { width: 169px; white-space: nowrap; margin-top: 2px; }
+        .emp-plus { width: 30px; min-width: 30px; height: 26px; padding: 0; border: 1px solid #9ab; background: #f6f6f6; cursor: pointer; border-radius: 2px; }
+        .emp-plus:hover { background: #cce8ff; }
+        .emp-no { display: flex; gap: 6px; min-width: 0; }
+        .emp-no input { min-width: 0; }
+        .emp-no #txtEmployeeNo { flex: 0 0 45%; }
+        .emp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 4px 8px; }
+        .emp-bar .win-btn-action { width: auto; min-width: 88px; padding: 0 10px; }
+        .emp-bar .emp-note { font: 9pt "Segoe UI", sans-serif; }
+        .emp-sub { border-top: 1px solid #b8b8b8; }
+        .emp-sub > .hrm-tabs { background: #fafafa; }
+        .emp-two { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 6px 6px 6px; }
+        .emp-two > .hrm-grid-box { flex: 1 1 360px; min-height: 200px; }
+        .emp-two > .hrm-grid-box:first-child { flex-grow: 1.6; }
+        .emp-page .hrm-grid-box { margin: 0 6px 6px 6px; }
+        .emp-page .hrm-grid-wrap { max-height: 300px; min-height: 140px; }
+        @media (max-width: 1000px) { .emp-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .emp-pics { flex-direction: row; flex-wrap: wrap; grid-column: 1 / -1; } }
+        @media (max-width: 900px) { .emp-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 600px) {
+            .emp-head, .emp-cols { grid-template-columns: 1fr; padding: 6px; }
+            .emp-col .hrm-field { grid-template-columns: 1fr; gap: 2px; }
+        }
+    </style>
+</head>
+<!-- Architecture.WinApp.HRM.EmployeeManagement.frmEmployeeRegistration - ClientSize 964 x 742, tabControl1 (Form | History).
+     tabPage1 "Form": panel3 (Teal, 57): toolStrip1 &New | &Update (hidden) | Refresh | &Save | 1112-&Print Slip | Shift Timing | Duty Roaster;
+       label39 "Employee Registration".
+     panel4 (323): column 1 labels x10 / controls x131 (243 wide): Employee No [txtEmployeeNo read-only 110 + txtEmployeeNoForUpdate 127],
+       Title, Employee Catagory, First Name, Middle Name, Last Name, Gender, DOB, Email, Mobile1 (mask 0000 0000000), Mobile2;
+       column 2 labels x382 / controls x506 (254): Relation Title, Relation Name, Relation Mobile No, Nationality, CNIC (mask 00000-0000000-0),
+       Passport No, License No, Blood Group, CNIC Issue Date, CNIC Expiry Date; column 3 x774: Employee Picture (169x81) + Choose File,
+       Employee Signature (169x81) + Choose File. Hidden: Branch Name / Project Name (first row active). Red "*" on the required fields.
+     panel5: tabControl2 "Employee History" (tabControl3: Employee Information | Employee Salary | Benefits | Week Days) and
+       "Employee Detail" (tabControl4: Address Detail | Experience | Education | Family | Reference | Bank Account), each an entry strip
+       with Add / Update / Cancel (Update, Cancel hidden) over a GridEX (AllowEdit false, double-click edits the row).
+     tabPage2 "History": panel7 (Teal) toolStrip2 "1111-&Print Register", ctrlGrdBar1; grdEmployeeRegistration with Edit / Print button
+       columns -> here the footer's History dialog. -->
+<body class="pd-body hrm-body" data-hrm="employee-registration" data-screen="648">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmEmployee.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="HrmEmployee.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmEmployee.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmEmployee.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="HrmEmployee.btnPrint(this)" data-rpt-own data-rpt="1112-Employee_Registration_Slip.rpt"><i class="fa fa-print"></i> <span>1112-<u>P</u>rint Slip</span></button>
+        <button type="button" id="BtnShifttiming" class="win-btn-tool" onclick="HrmEmployee.BtnShifttiming(this)"><i class="fa fa-clock-o"></i> <span>Shift Timing</span></button>
+        <button type="button" id="btnDutyRoasterForm" class="win-btn-tool" onclick="HrmEmployee.btnDutyRoasterForm(this)"><i class="fa fa-calendar"></i> <span>Duty Roaster</span></button>
+    </div>
+    <div class="hrm-caption">Employee Registration</div>
+
+    <!-- ============================================================ panel4: employee information -->
+    <div class="emp-head">
+        <div class="emp-col">
+            <div class="hrm-field"><label for="txtEmployeeNo" class="hrm-req">Employee No</label>
+                <div class="emp-no"><input type="text" id="txtEmployeeNo" class="win-textbox" readonly autocomplete="off"/>
+                    <input type="text" id="txtEmployeeNoForUpdate" class="win-textbox" data-guard="integer" autocomplete="off" title="Employee No to open"/></div></div>
+            <div class="hrm-field"><label for="cmbTitle" class="hrm-req">Title</label>
+                <div class="hrm-inline"><div class="hrm-grow"><select id="cmbTitle" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <button type="button" id="btnTitle" class="emp-plus" title="Define Title" onclick="HrmEmployee.define(24)"><i class="fa fa-plus"></i></button></div></div>
+            <div class="hrm-field"><label for="cmbEmployeeCatagory" class="hrm-req">Employee Catagory</label>
+                <div class="hrm-inline"><div class="hrm-grow"><select id="cmbEmployeeCatagory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <button type="button" id="btnEmployeeCategory" class="emp-plus" title="Employee Category" onclick="HrmEmployee.open('/hrm/employee-category')"><i class="fa fa-plus"></i></button></div></div>
+            <div class="hrm-field"><label for="txtFirstName" class="hrm-req">First Name</label><input type="text" id="txtFirstName" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="txtMiddleName">Middle Name</label><input type="text" id="txtMiddleName" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="txtLastName" class="hrm-req">Last Name</label><input type="text" id="txtLastName" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="cmbGender" class="hrm-req">Gender</label>
+                <div class="hrm-inline"><div class="hrm-grow"><select id="cmbGender" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <button type="button" id="btnGender" class="emp-plus" title="Define Gender" onclick="HrmEmployee.define(26)"><i class="fa fa-plus"></i></button></div></div>
+            <div class="hrm-field"><label for="dtpDOB">DOB</label><input type="date" id="dtpDOB" class="win-textbox"/></div>
+            <div class="hrm-field"><label for="txtEmail">Email</label><input type="text" id="txtEmail" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="txtMobile1" class="hrm-req">Mobile1</label><input type="text" id="txtMobile1" class="win-textbox" placeholder="0000 0000000" inputmode="numeric" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="txtMobile2">Mobile2</label><input type="text" id="txtMobile2" class="win-textbox" autocomplete="off"/></div>
+        </div>
+        <div class="emp-col">
+            <div class="hrm-field"><label for="cmbRelationTitle">Relation Title</label>
+                <div class="hrm-inline"><div class="hrm-grow"><select id="cmbRelationTitle" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <button type="button" id="btnReleaseTitle" class="emp-plus" title="Define Relation Title" onclick="HrmEmployee.define(25)"><i class="fa fa-plus"></i></button></div></div>
+            <div class="hrm-field"><label for="txtRelationName">Relation Name</label><input type="text" id="txtRelationName" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="txtRelationMobileNo">Relation Mobile No</label><input type="text" id="txtRelationMobileNo" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="cmbNationality" class="hrm-req">Nationality</label>
+                <div class="hrm-inline"><div class="hrm-grow"><select id="cmbNationality" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <button type="button" id="btnNationality" class="emp-plus" title="Define Nationality" onclick="HrmEmployee.define(15)"><i class="fa fa-plus"></i></button></div></div>
+            <div class="hrm-field"><label for="txtCNIC" class="hrm-req">CNIC</label><input type="text" id="txtCNIC" class="win-textbox" placeholder="00000-0000000-0" inputmode="numeric" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="txtPassportNo">Passport No</label><input type="text" id="txtPassportNo" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="txtLicenseNo">License No</label><input type="text" id="txtLicenseNo" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="cmbBloodGroup">Blood Group</label>
+                <div class="hrm-inline"><div class="hrm-grow"><select id="cmbBloodGroup" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <button type="button" id="btnBloodGroup" class="emp-plus" title="Define Blood Group" onclick="HrmEmployee.define(22)"><i class="fa fa-plus"></i></button></div></div>
+            <div class="hrm-field"><label for="dtpCNICIssueDate">CNIC Issue Date</label><input type="date" id="dtpCNICIssueDate" class="win-textbox"/></div>
+            <div class="hrm-field"><label for="dtpCNICExpiryDate">CNIC Expiry Date</label><input type="date" id="dtpCNICExpiryDate" class="win-textbox"/></div>
+            <div class="is-hidden"><select id="combranches" class="win-combo"></select><select id="comproject" class="win-combo"></select></div>
+        </div>
+        <div class="emp-pics">
+            <div><div class="hrm-lbl">Employee Picture</div>
+                <div id="pictureBoxEmployeePhoto" class="emp-pic"></div>
+                <button type="button" id="btnEmployeePicture" class="win-btn-action" onclick="HrmEmployee.btnEmployeePicture()">Choose File</button></div>
+            <div><div class="hrm-lbl">Employee Signature</div>
+                <div id="pictureBoxEmployeeSignature" class="emp-pic"></div>
+                <button type="button" id="btnEmployeeSignature" class="win-btn-action" onclick="HrmEmployee.btnEmployeeSignature()">Choose File</button></div>
+        </div>
+    </div>
+
+    <!-- ============================================================ tabControl2 -->
+    <div class="hrm-tabs" data-tabs="tc2">
+        <button type="button" class="hrm-tab is-active" data-tab="tabPage3">Employee History</button>
+        <button type="button" class="hrm-tab" data-tab="tabPage4">Employee Detail</button>
+    </div>
+
+    <!-- ------------------------------------------------------------ tabPage3 Employee History -->
+    <div class="hrm-tab-page is-active" id="tabPage3" data-tabs-page="tc2">
+        <div class="hrm-tabs" data-tabs="tc3">
+            <button type="button" class="hrm-tab is-active" data-tab="tabPage5">Employee Information</button>
+            <button type="button" class="hrm-tab" data-tab="tabPage6">Employee Salary</button>
+            <button type="button" class="hrm-tab" data-tab="tabPage7">Benefits</button>
+            <button type="button" class="hrm-tab" data-tab="tabPage8">Week Days</button>
+        </div>
+
+        <!-- tabPage5 Employee Information (panel10) -->
+        <div class="hrm-tab-page emp-page is-active" id="tabPage5" data-tabs-page="tc3">
+            <div class="emp-cols">
+                <div class="emp-col">
+                    <div class="hrm-field"><label for="txtStartDate">Start Date</label><input type="date" id="txtStartDate" class="win-textbox"/></div>
+                    <div class="hrm-field"><label for="txtEndDate">End Date</label><input type="date" id="txtEndDate" class="win-textbox"/></div>
+                    <div class="hrm-field"><label for="txtProbationEndingDate">Probation End Date</label><input type="date" id="txtProbationEndingDate" class="win-textbox"/></div>
+                    <div class="hrm-field"><label for="cmbDesignation">Designation</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbDesignation" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnDesignation" class="emp-plus" title="Designation" onclick="HrmEmployee.open('/hrm/designation')"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="cmbShift">Shift</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbShift" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnShift" class="emp-plus" title="Define Shift" onclick="HrmEmployee.open('/hrm/define-shift')"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="cmbSection">Section</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbSection" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnSection" class="emp-plus" title="Section" onclick="HrmEmployee.open('/hrm/section')"><i class="fa fa-plus"></i></button></div></div>
+                </div>
+                <div class="emp-col">
+                    <div class="hrm-field"><label for="cmbDepartment">Department</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbDepartment" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnDepartment" class="emp-plus" title="Department" onclick="HrmEmployee.open('/hrm/department')"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="CmbSalaryPayableAc">Salary Payable Ac</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="CmbSalaryPayableAc" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnCoa1" class="emp-plus" title="Define Accounts" onclick="HrmEmployee.coa()"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="CmbSalariesExpensesAc">Salary Expense Ac</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="CmbSalariesExpensesAc" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btncoa2" class="emp-plus" title="Define Accounts" onclick="HrmEmployee.coa()"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="CmbSalaryLoanAc">Loan Ac</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="CmbSalaryLoanAc" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btncoa3" class="emp-plus" title="Define Accounts" onclick="HrmEmployee.coa()"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="cmbEmployeeType">Employee Type</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbEmployeeType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnEmployeeType" class="emp-plus" title="Define Employee Type" onclick="HrmEmployee.define(20)"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="cmbEmployeeGroup">Employee Group</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbEmployeeGroup" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnEmployeeGroup" class="emp-plus" title="Employee Group" onclick="HrmEmployee.open('/hrm/employee-group')"><i class="fa fa-plus"></i></button></div></div>
+                </div>
+                <div class="emp-col">
+                    <div class="hrm-field"><label for="cmbLocation">Location</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbLocation" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnLocation" class="emp-plus" title="Location" onclick="HrmEmployee.open('/hrm/location')"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="cmbReportedBranch">Reported Branch</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbReportedBranch" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnReportedBranch" class="emp-plus" title="Define Reported Branch" onclick="HrmEmployee.define(28)"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="cmbReportedPerson">Reported Person</label>
+                        <div class="hrm-inline"><div class="hrm-grow"><select id="cmbReportedPerson" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="btnReportedPerson" class="emp-plus" title="Define Reported Person" onclick="HrmEmployee.define(34)"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="txtSalary">Total Salary</label><input type="text" id="txtSalary" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field"><span></span><label class="hrm-check"><input type="checkbox" id="IsActiveEmployeeInformation"/> Is Active</label></div>
+                    <div class="is-hidden"><select id="cmbStore" class="win-combo"></select><input type="text" id="txtSiteLocation"/>
+                        <button type="button" id="btnStore" onclick="HrmEmployee.define(31)"></button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- tabPage6 Employee Salary (panel12 + grdEmployeeSalary) -->
+        <div class="hrm-tab-page emp-page" id="tabPage6" data-tabs-page="tc3">
+            <div class="emp-bar">
+                <span class="emp-note">Click the Generate Button To Generate Salary BreakUp</span>
+                <button type="button" id="btnGenerateBreakup" class="win-btn-action" onclick="HrmEmployee.btnGenerateBreakup()">Generate</button>
+                <button type="button" id="btnSalaryBreakUp" class="win-btn-action" onclick="HrmEmployee.open('/hrm/salary-breakup-policy')">Salary BreakUp</button>
+            </div>
+            <div class="hrm-grid-box">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdEmployeeSalary"></table></div>
+            </div>
+        </div>
+
+        <!-- tabPage7 Benefits (panel15 + grdEmployeeDirectBenefits | grdEmployeeAssetsBenefit) -->
+        <div class="hrm-tab-page emp-page" id="tabPage7" data-tabs-page="tc3">
+            <div class="emp-bar">
+                <label class="hrm-check"><input type="checkbox" id="ChkAllBenefits"/> All</label>
+                <button type="button" id="btnGenerateAllBenefits" class="win-btn-action" onclick="HrmEmployee.btnGenerateAllBenefits()">Generate</button>
+                <button type="button" id="btnDefineBenefits" class="win-btn-action" onclick="HrmEmployee.open('/hrm/benefit')">Define Benefits</button>
+            </div>
+            <div class="emp-two">
+                <div class="hrm-grid-box">
+                    <div class="hrm-subcaption"><span>Direct Benefits</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                    <div class="hrm-grid-wrap"><table id="grdEmployeeDirectBenefits"></table></div>
+                </div>
+                <div class="hrm-grid-box">
+                    <div class="hrm-subcaption"><span>Assets Benefits</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                    <div class="hrm-grid-wrap"><table id="grdEmployeeAssetsBenefit"></table></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- tabPage8 Week Days (grdWeekDays) -->
+        <div class="hrm-tab-page emp-page" id="tabPage8" data-tabs-page="tc3">
+            <div class="hrm-grid-box" style="margin-top:6px">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdWeekDays"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ------------------------------------------------------------ tabPage4 Employee Detail -->
+    <div class="hrm-tab-page" id="tabPage4" data-tabs-page="tc2">
+        <div class="hrm-tabs" data-tabs="tc4">
+            <button type="button" class="hrm-tab is-active" data-tab="tabPage9">Address Detail</button>
+            <button type="button" class="hrm-tab" data-tab="tabPage10">Experience</button>
+            <button type="button" class="hrm-tab" data-tab="tabPage11">Education</button>
+            <button type="button" class="hrm-tab" data-tab="tabPage12">Family</button>
+            <button type="button" class="hrm-tab" data-tab="tabPage13">Reference</button>
+            <button type="button" class="hrm-tab" data-tab="tabPage14">Bank Account</button>
+        </div>
+
+        <!-- tabPage9 Address Detail (panel21 + grdAddressDetail) -->
+        <div class="hrm-tab-page emp-page is-active" id="tabPage9" data-tabs-page="tc4">
+            <div class="hrm-entry">
+                <div class="hrm-field hrm-stack"><label for="cmbAddressType">Address Type</label>
+                    <div class="hrm-inline"><div class="hrm-grow"><select id="cmbAddressType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <button type="button" id="btnAddressType" class="emp-plus" title="Define Address Type" onclick="HrmEmployee.define(59)"><i class="fa fa-plus"></i></button></div></div>
+                <div class="hrm-field hrm-stack"><label for="cmbCountry">Country</label><select id="cmbCountry" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbProvince">Province</label><select id="cmbProvince" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbCity">City Name</label>
+                    <div class="hrm-inline"><div class="hrm-grow"><select id="cmbCity" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <button type="button" id="btnCityName" class="emp-plus" title="Define City" onclick="HrmEmployee.open('/master-data/city')"><i class="fa fa-plus"></i></button></div></div>
+                <div class="hrm-field hrm-stack hrm-span-2"><label for="txtAddressDetail">Address Detail</label><input type="text" id="txtAddressDetail" class="win-textbox" autocomplete="off"/></div>
+            </div>
+            <div class="hrm-actions">
+                <button type="button" id="btnAddAddressDetail" class="win-btn-action" onclick="HrmEmployee.address.add()">Add</button>
+                <button type="button" id="btnUpdateAddressDetail" class="win-btn-action is-hidden" onclick="HrmEmployee.address.update()">Update</button>
+                <button type="button" id="btnCancelAddressDetail" class="win-btn-action is-hidden" onclick="HrmEmployee.address.cancel()">Cancel</button>
+            </div>
+            <div class="hrm-grid-box">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdAddressDetail"></table></div>
+            </div>
+        </div>
+
+        <!-- tabPage10 Experience (panel24 + grdEmployeeExperience) -->
+        <div class="hrm-tab-page emp-page" id="tabPage10" data-tabs-page="tc4">
+            <div class="hrm-entry">
+                <div class="hrm-field hrm-stack"><label for="txtOrganization">Organization</label><input type="text" id="txtOrganization" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="cmbDesignationEmployeeExperience">Designation</label><select id="cmbDesignationEmployeeExperience" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="dtpFrom">From</label><input type="date" id="dtpFrom" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><label for="dtpTo">To</label><input type="date" id="dtpTo" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><label for="cmbCityEmployeeExperience">City</label><select id="cmbCityEmployeeExperience" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtDescription">Description</label><input type="text" id="txtDescription" class="win-textbox" autocomplete="off"/></div>
+            </div>
+            <div class="hrm-actions">
+                <button type="button" id="btnAddExperience" class="win-btn-action" onclick="HrmEmployee.experience.add()">Add</button>
+                <button type="button" id="btnUpdateExperience" class="win-btn-action is-hidden" onclick="HrmEmployee.experience.update()">Update</button>
+                <button type="button" id="btnCancelExperience" class="win-btn-action is-hidden" onclick="HrmEmployee.experience.cancel()">Cancel</button>
+            </div>
+            <div class="hrm-grid-box">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdEmployeeExperience"></table></div>
+            </div>
+        </div>
+
+        <!-- tabPage11 Education (panel27 + grdEmployeeEducation) -->
+        <div class="hrm-tab-page emp-page" id="tabPage11" data-tabs-page="tc4">
+            <div class="hrm-entry">
+                <div class="hrm-field hrm-stack"><label for="cmbDegree">Degree</label>
+                    <div class="hrm-inline"><div class="hrm-grow"><select id="cmbDegree" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <button type="button" id="btnDefineDegree" class="emp-plus" title="Define Degree" onclick="HrmEmployee.define(57)"><i class="fa fa-plus"></i></button></div></div>
+                <div class="hrm-field hrm-stack"><label for="txtDegreeTitle">Degree Title</label><input type="text" id="txtDegreeTitle" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtInstitute">Institute</label><input type="text" id="txtInstitute" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="StartYearDate">Start Year</label><input type="date" id="StartYearDate" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><label for="PassingYearDate">Passing Year</label><input type="date" id="PassingYearDate" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><label for="cmbCityEducation">City Name</label><select id="cmbCityEducation" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtCGPA">CGPA</label><input type="text" id="txtCGPA" class="win-textbox" autocomplete="off"/></div>
+            </div>
+            <div class="hrm-actions">
+                <button type="button" id="btnAddEducation" class="win-btn-action" onclick="HrmEmployee.education.add()">Add</button>
+                <button type="button" id="btnUpdateEducation" class="win-btn-action is-hidden" onclick="HrmEmployee.education.update()">Update</button>
+                <button type="button" id="btnCancelEducation" class="win-btn-action is-hidden" onclick="HrmEmployee.education.cancel()">Cancel</button>
+            </div>
+            <div class="hrm-grid-box">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdEmployeeEducation"></table></div>
+            </div>
+        </div>
+
+        <!-- tabPage12 Family (panel30 + grdFamilyInfo) -->
+        <div class="hrm-tab-page emp-page" id="tabPage12" data-tabs-page="tc4">
+            <div class="hrm-entry">
+                <div class="hrm-field hrm-stack"><label for="cmbRelationShip">Relationship</label><select id="cmbRelationShip" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtNameFamilyInfo">Name</label><input type="text" id="txtNameFamilyInfo" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack hrm-span-2"><label for="txtDescriptionFamilyInfo">Description</label><input type="text" id="txtDescriptionFamilyInfo" class="win-textbox" autocomplete="off"/></div>
+            </div>
+            <div class="hrm-actions">
+                <button type="button" id="btnAddFamily" class="win-btn-action" onclick="HrmEmployee.family.add()">Add</button>
+                <button type="button" id="btnUpdateFamily" class="win-btn-action is-hidden" onclick="HrmEmployee.family.update()">Update</button>
+                <button type="button" id="btnCancelFamily" class="win-btn-action is-hidden" onclick="HrmEmployee.family.cancel()">Cancel</button>
+            </div>
+            <div class="hrm-grid-box">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdFamilyInfo"></table></div>
+            </div>
+        </div>
+
+        <!-- tabPage13 Reference (panel33 + grdReference) -->
+        <div class="hrm-tab-page emp-page" id="tabPage13" data-tabs-page="tc4">
+            <div class="hrm-entry">
+                <div class="hrm-field hrm-stack"><label for="txtRefrenceName">Refrence Name</label><input type="text" id="txtRefrenceName" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtOrganizationEmployeeRefrence">Organization Name</label><input type="text" id="txtOrganizationEmployeeRefrence" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="cmbDesignationEmployeeRefrence">Designation</label><select id="cmbDesignationEmployeeRefrence" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtEmailEmployeeRefrence">Email</label><input type="text" id="txtEmailEmployeeRefrence" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtMobileEmployeeRefrence">Mobile</label><input type="text" id="txtMobileEmployeeRefrence" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtDescriptionEmployeeRefrence">Description</label><input type="text" id="txtDescriptionEmployeeRefrence" class="win-textbox" autocomplete="off"/></div>
+            </div>
+            <div class="hrm-actions">
+                <button type="button" id="btnAddReference" class="win-btn-action" onclick="HrmEmployee.reference.add()">Add</button>
+                <button type="button" id="btnUpdateReference" class="win-btn-action is-hidden" onclick="HrmEmployee.reference.update()">Update</button>
+                <button type="button" id="btnCancelReference" class="win-btn-action is-hidden" onclick="HrmEmployee.reference.cancel()">Cancel</button>
+            </div>
+            <div class="hrm-grid-box">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdReference"></table></div>
+            </div>
+        </div>
+
+        <!-- tabPage14 Bank Account (panel36 + grdBankAccount) -->
+        <div class="hrm-tab-page emp-page" id="tabPage14" data-tabs-page="tc4">
+            <div class="hrm-entry">
+                <div class="hrm-field hrm-stack"><label for="cmbBankAccount">Bank Name</label><select id="cmbBankAccount" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtAccountTitle">Account Title</label><input type="text" id="txtAccountTitle" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtAccountNo">Account No</label><input type="text" id="txtAccountNo" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><span class="hrm-lbl">&nbsp;</span><label class="hrm-check"><input type="checkbox" id="IsForPayrollBankAccount"/> Is Payroll</label></div>
+            </div>
+            <div class="hrm-actions">
+                <button type="button" id="btnAddBankAccount" class="win-btn-action" onclick="HrmEmployee.bank.add()">Add</button>
+                <button type="button" id="btnUpdateBankAccount" class="win-btn-action is-hidden" onclick="HrmEmployee.bank.update()">Update</button>
+                <button type="button" id="btnCancelBankAccount" class="win-btn-action is-hidden" onclick="HrmEmployee.bank.cancel()">Cancel</button>
+            </div>
+            <div class="hrm-grid-box">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdBankAccount"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_employee.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

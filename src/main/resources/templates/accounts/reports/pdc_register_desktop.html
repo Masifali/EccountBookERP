@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Post Dated Cheque Register</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+</head>
+<!--
+  Screen 88 "Post Dated Cheq Report" (ScreenName PostDatedCheqRegister) - ScreenDefinition.TargetUrl
+  Architecture.WinApp.Account_Reports.PostDatedCheqRegister (R2, 2026-09-30; replaces the reports/pdc_register.html mock-up).
+  Load (VoucherValidation_Load): AccountTitleFill (COAAllocation.GetAll -> Sp_COAAllocation_GetAllMethod @Activity='COAAllocationSearch',
+  @UserId when != 0), fromdate = ActiveYr.Start_Period, todate = Today, focus cmbAccountTitle.
+  btnshow_Click is EMPTY on the desktop - the grid is never filled; the only output is the Crystal print
+  RptPdcInventoryRegisterCheqParty.rpt (@DocF/@DocT only when typed, @DocDateFrom/@DocDateTo), which is not in the repository.
+  Refresh (btnNew -> reset): account text cleared, focus account. Keys: Enter = Tab, Ctrl+P print, Ctrl+N refresh, Ctrl+E/Esc close.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-list-alt"></i> Post Dated Cheque Register</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="pdcReset()"><i class="fa fa-pencil"></i> Refresh</button>
+    <button type="button" class="win-btn" onclick="pdcPrint()" data-rpt-grid="RptPdcInventoryRegisterCheqParty.rpt" data-grid="grd" data-title="PDC Inventory Register Cheque Party"><i class="fa fa-print"></i> Print</button>
+</div>
+<div class="win-header-panel"><span>Post Dated Cheque Register</span></div>
+
+<div class="filters">
+    <div class="gb" style="width:700px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 80px 1fr 70px 1fr;">
+            <span class="lbl">From Date</span><input type="date" id="fromdate" class="inp">
+            <span class="lbl">To Date</span><input type="date" id="todate" class="inp">
+            <span class="lbl">DocNoFrom</span><input type="text" id="txtDocNoFrom" class="inp">
+            <span class="lbl">DocNoTo</span><input type="text" id="txtDocNoTo" class="inp">
+            <span class="lbl">Account Title</span><select id="cmbAccountTitle" class="inp" data-dtcombo="single" data-dtcombo-caption="Account Title"></select>
+            <span></span><button type="button" id="btnshow" class="win-btn-show" style="width:119px;" onclick="pdcShow()">Show</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-caption"><span>Post Dated Cheque Register</span><span id="lblStatus"></span></div>
+<div class="grid-wrap"><table class="wg" id="grd"></table></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    let CTX = null;
+
+    function comboInit() { if (window.DesktopCombo) window.DesktopCombo.init('select[data-dtcombo]'); }
+    function comboFocus(sel) { const $i = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); ($i.length ? $i : $(sel)).focus(); }
+
+    /* btnshow_Click: empty on the desktop (no data call, the grid keeps no columns). */
+    function pdcShow() { }
+    /* btnNew_Click -> reset(): cmbAccountTitle.Text = empty, focus */
+    function pdcReset() { $('#cmbAccountTitle').val(''); comboFocus('#cmbAccountTitle'); }
+    /* print_Click_1 -> Reporting.ShowReport("RptPdcInventoryRegisterCheqParty.rpt") - a Crystal report with no port. */
+    function pdcPrint() {
+        alert('The print RptPdcInventoryRegisterCheqParty.rpt is not available on the web (the Crystal report is not in the ported prints).');
+    }
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Enter' && $(e.target).is('input.inp')) {
+            e.preventDefault();
+            const $f = $('.filters').find('input.inp, .dtcombo-input, button').filter(':visible');
+            const i = $f.index(e.target);
+            if (i >= 0 && i + 1 < $f.length) $f.eq(i + 1).focus();
+        }
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); pdcPrint(); }
+        if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); pdcReset(); }
+        if ((e.ctrlKey && (e.key === 'e' || e.key === 'E')) || (e.key === 'Escape' && !$('.dtcombo-pop:visible').length)) {
+            e.preventDefault(); window.location.href = '/accounts/dashboard';
+        }
+    });
+
+    $(function () {
+        comboInit();
+        (async function () {
+            try {
+                CTX = await AccF.context();
+                /* AccountTitleFill: BindDDLNew(CoaList, cmbAccountTitle, "Id", "AccountTitle", ...) only when rows exist */
+                const coa = await AccF.lookup('coa-allocation');
+                if (coa && coa.length) AccF.fillSelect('#cmbAccountTitle', coa, 'Id', 'AccountTitle', '');
+                $('#fromdate').val((CTX.activeYear && CTX.activeYear.startPeriod) || '');
+                $('#todate').val(AccF.today());
+                comboFocus('#cmbAccountTitle');
+            } catch (e) { alert(e.message); }
+        })();
+    });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

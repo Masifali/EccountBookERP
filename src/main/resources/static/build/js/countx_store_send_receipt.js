@@ -306,7 +306,7 @@
         });
     }
 
-    function GeneratePrint(id) { if (!int(id)) { box('No Record Found For Display'); return; } window.open('/api/reports/ssr-465/data?id=' + encodeURIComponent(id), '_blank'); }
+    function GeneratePrint(id) { if (!int(id)) { box('No Record Found For Display'); return; } window.open('/api/print/ssr-465/pdf?id=' + encodeURIComponent(id), '_blank'); }
 
     /* Reset :492 - the receiver warehouse and the date stay. */
     function Reset() {

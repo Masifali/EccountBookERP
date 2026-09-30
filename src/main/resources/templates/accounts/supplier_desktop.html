@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Define Parties</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <style>
+        body { font-family: Verdana, "Segoe UI", sans-serif; background: #e0e0e0; font-size: 11px; margin: 0; }
+        .tool { background: #f0f0f0; border-bottom: 1px solid #bbb; padding: 3px 8px; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+        .tool button { font-size: 11px; }
+        .tool a { margin-left: auto; font-size: 11px; }
+        .hdr { background: #008080; color: #fff; padding: 5px 10px; font-weight: bold; font-size: 13px; }
+        .tabs { display: flex; gap: 2px; padding: 6px 8px 0 8px; }
+        .tabs button { border: 1px solid #999; border-bottom: none; background: #ddd; padding: 4px 12px; font-size: 11px; }
+        .tabs button.active { background: #fff; font-weight: bold; }
+        .pane { display: none; background: #fff; margin: 0 8px 8px 8px; border: 1px solid #999; padding: 8px; }
+        .pane.active { display: block; }
+        .frm { display: grid; grid-template-columns: 150px 16px 210px 20px 110px 16px 200px 1fr; row-gap: 4px; align-items: center; }
+        .frm label { margin: 0; font-weight: normal; }
+        .frm .req { color: red; font-weight: bold; text-align: center; }
+        .frm input[type=text], .frm input[type=date], .frm select { width: 100%; height: 22px; font-size: 11px; padding: 1px 3px; }
+        .pic { grid-column: 8; grid-row: 1 / span 8; border: 1px solid #bbb; margin-left: 12px; padding: 6px; }
+        .grid { width: 100%; border-collapse: collapse; }
+        .grid th { background: #e8eef2; border: 1px solid #ccc; padding: 3px 5px; position: sticky; top: 0; white-space: nowrap; }
+        .grid td { border: 1px solid #e0e0e0; padding: 2px 5px; white-space: nowrap; }
+        .gwrap { max-height: 480px; overflow: auto; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <div class="tool">
+        <button type="button" class="btn btn-default btn-xs" id="btnnew">New</button>
+        <button type="button" class="btn btn-default btn-xs" id="btnRefresh">Refresh</button>
+        <button type="button" class="btn btn-default btn-xs" id="btnupdate" style="display:none;">Update</button>
+        <button type="button" class="btn btn-default btn-xs" id="btnsave">Save</button>
+        <button type="button" class="btn btn-default btn-xs sub-screen" data-name="Bank Detail (SupfrmBankDetail)">Bank Detail</button>
+        <button type="button" class="btn btn-default btn-xs sub-screen" data-name="ShipToAddress (SupfrmShipToAddress)">ShipToAddress</button>
+        <button type="button" class="btn btn-default btn-xs sub-screen" data-name="PartyLimits (SupfrmSupplierLimits)">PartyLimits</button>
+        <button type="button" class="btn btn-default btn-xs sub-screen" data-name="Party Multi Language (SupplierCustomerMultiLanguage)">Party Multi Language</button>
+        <button type="button" class="btn btn-default btn-xs sub-screen" id="BtnAttributesAllocation" style="display:none;" data-name="Item Allocation To Party (ItemAllocationToSupplierCustomer)">Item Allocation To Party</button>
+        <a th:href="@{/accounts/dashboard}"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a>
+    </div>
+    <div class="hdr">Define Parties</div>
+    <div class="tabs">
+        <button type="button" class="active" data-pane="tabPage1">Form</button>
+        <button type="button" data-pane="tabPage2">Register</button>
+    </div>
+
+    <div class="pane active" id="tabPage1">
+        <div class="frm">
+            <label>Party Type</label><span class="req">*</span><select id="cmbPartyType"></select><span></span>
+            <label>Discount Type</label><span></span><select id="cmbDiscountType" disabled></select>
+            <div class="pic">
+                <strong>Party - Profile Picture</strong>
+                <div style="height:150px; border:1px dashed #ccc; margin:6px 0; display:flex; align-items:center; justify-content:center; color:#999;">(picture)</div>
+                <button type="button" class="btn btn-default btn-xs" id="browse">Profile Picture</button>
+            </div>
+
+            <label>Party Code</label><span class="req">*</span><input type="text" id="txtPartyCode" disabled/><span></span>
+            <label>Title Mr. / Mrs.</label><span></span><input type="text" id="txttitle"/>
+
+            <label>Manual Party Code</label><span></span><input type="text" id="txtManualNo"/><span></span>
+            <label>First Name</label><span></span><input type="text" id="txtfirstname"/>
+
+            <label>Company / Buisness Name</label><span class="req">*</span><input type="text" id="txtcompany"/><span></span>
+            <label>Last Name</label><span></span><input type="text" id="txtlastname"/>
+
+            <label>Alias / Nick Name</label><span></span><input type="text" id="txtNickName"/><span></span>
+            <label>Phone</label><span></span><input type="text" id="txtphone" placeholder="(999) 000-0000"/>
+
+            <label>General Ledger Account</label><span class="req">*</span><select id="cmbglac"></select><span></span>
+            <label>Office Mobile#</label><span></span><input type="text" id="txtofficemobile"/>
+
+            <label>Advance Account</label><span></span><select id="CmbAdvanceAc"></select><span></span>
+            <label>Mobile#</label><span class="req">*</span><input type="text" id="txtpermobile"/>
+
+            <label>Party Group</label><span class="req">*</span><select id="cmbgroupdetail"></select><span></span>
+            <label>Whats App#</label><span class="req">*</span><input type="text" id="txtWhatsAppNo"/>
+
+            <label>Is Sub Party</label><span></span>
+            <span style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="chksubac"/> <span>Total Sub Parties</span> <input type="text" id="txtSubPartyTotal" disabled style="width:60px;"/></span><span></span>
+            <label>Email</label><span></span><input type="text" id="txtemail"/>
+
+            <label>Parent Party Name</label><span></span><select id="cmbparentac" disabled></select><span></span>
+            <label>Website:URL</label><span></span><input type="text" id="txtwebsite"/>
+
+            <label>Is Company / Individuals</label><span class="req">*</span><select id="CmbBusinessType"></select><span></span>
+            <label>Country Name</label><span class="req">*</span><select id="cmbcountry"></select>
+
+            <label>NTN #</label><span class="req" id="LocNTN">*</span><input type="text" id="txtntnno"/><span></span>
+            <span></span><span></span><span></span>
+
+            <label>CNIC Number</label><span class="req" id="LocCNIC">*</span><input type="text" id="txtcnicno" placeholder="00000-0000000-0"/><span></span>
+            <label>City Name</label><span class="req">*</span><select id="cmbcity"></select>
+
+            <label>CNIC Expiry</label><span></span><input type="date" id="txtcnicexp"/><span></span>
+            <label>Town</label><span></span><input type="text" id="txttown"/>
+
+            <label>STRN #</label><span></span><input type="text" id="txtstrnno"/><span></span>
+            <label>Zip Code</label><span></span><span style="display:flex; gap:8px; align-items:center;"><input type="text" id="txtzipcode"/> <label style="white-space:nowrap;"><input type="checkbox" id="chkactivestatus" checked/> Is Active</label></span>
+
+            <label>Address</label><span class="req">*</span><input type="text" id="txtaddress1"/><span></span>
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <div class="pane" id="tabPage2">
+        <div class="tool" style="border:1px solid #ccc;">
+            <button type="button" class="btn btn-default btn-xs" id="BtnResetRegister">New</button>
+            <button type="button" class="btn btn-default btn-xs" id="BtnRefreshRegister">Refresh</button>
+            <button type="button" class="btn btn-default btn-xs" id="btnRegister">292-Register</button>
+            <button type="button" class="btn btn-default btn-xs" id="BtnShortCutKeysRegister">ShortCut Keys</button>
+        </div>
+        <div class="hdr" style="margin-top:4px;">Parties Report</div>
+        <fieldset style="border:1px solid #bbb; padding:4px 8px; margin:4px 0;">
+            <legend style="font-size:11px; width:auto; border:none; margin:0;">Filters</legend>
+            <div style="display:grid; grid-template-columns: 70px 220px 20px 80px 220px 20px auto; row-gap:4px; align-items:center;">
+                <label style="font-weight:normal;">Party Type</label><select id="CmbPartyTypeRegister"></select><span></span>
+                <label style="font-weight:normal;">Party Group</label><select id="CmbPartyGroupRegister"></select><span></span><span></span>
+                <label style="font-weight:normal;">Gl Account</label><select id="CmbGlAccountRegister"></select><span></span>
+                <label style="font-weight:normal;">City Name</label><select id="CmbCityRegister"></select><span></span>
+                <button type="button" class="btn btn-default btn-xs" id="btnshow" style="width:60px;">Show</button>
+            </div>
+        </fieldset>
+        <div style="font-weight:bold; margin:4px 0;">Filtered Records</div>
+        <div class="gwrap">
+            <table class="grid" id="DataGridHistory"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script>
+        /* supfrmDefineSupplier, event for event (see SupplierDesktopService). */
+        (function () {
+            var BASE = '/accounts/supplier';
+            var L = {}, RecId = 0, GlRecId = 0, saveMode = true, currentPictureUrl = '', registerRows = [];
+            function v(r, k) { if (!r) return null; if (r[k] !== undefined) return r[k]; var l = k.toLowerCase(); for (var x in r) if (x.toLowerCase() === l) return r[x]; return null; }
+            function s(x) { return x == null ? '' : String(x); }
+            function esc(x) { return s(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+            function toInt(x) { var n = parseInt(x, 10); return isNaN(n) ? 0 : n; }
+            function isTrue(x) { return x === true || x === 1 || s(x).toLowerCase() === 'true' || s(x) === '1'; }
+            /* InfragisticsHelper.BindAndRetainSelection */
+            function bind(sel, rows, idKey, textKey, extra) {
+                var cur = $(sel).val(), html = '<option value=""></option>';
+                (rows || []).forEach(function (r) {
+                    html += '<option value="' + esc(v(r, idKey)) + '"' + (extra ? ' data-extra="' + esc(v(r, extra)) + '"' : '') + '>' + esc(v(r, textKey)) + '</option>';
+                });
+                $(sel).html(html);
+                if (cur && $(sel).find('option[value="' + cur + '"]').length) $(sel).val(cur);
+            }
+            function selText(sel) { var o = $(sel).find('option:selected'); return o.length && o.val() !== '' ? o.text() : ''; }
+            function setVal(sel, val) { $(sel).val(s(val)); if ($(sel).val() === null) $(sel).val(''); }
+
+            function fillCombos() {
+                bind('#cmbPartyType', L.partyTypes, 'Id', 'SupplierCustomerType', 'Prefix');
+                if (!L.subsidiaryAccounts && !$('#cmbPartyType').val() && $('#cmbPartyType option').length > 1) $('#cmbPartyType').prop('selectedIndex', 1);
+                bind('#cmbgroupdetail', L.partyGroups, 'Id', 'Description');
+                bind('#cmbDiscountType', L.discountPolicies, 'Id', 'PolicyName');
+                bind('#cmbcountry', L.countries, 'Id', 'Description');
+                if ((L.countries || []).length > 1 && !$('#cmbcountry').val()) $('#cmbcountry').val(s(v(L.countries[1], 'Id')));
+                bind('#cmbcity', L.cities, 'Id', 'CityName');
+                bind('#CmbBusinessType', L.businessTypes, 'Id', 'BusinessTypeName');
+                bind('#cmbparentac', L.parties, 'Id', 'CompanyName');
+                /* GetConfigurationsFromGlobalAndBindValuesInColumns: the group default is applied only when
+                   the CITY default is set (the desktop tests CityId), otherwise the first group row */
+                var cityId = toInt(L.defaultCityId);
+                if (cityId > 0) { $('#cmbcity').val(String(cityId)); $('#cmbgroupdetail').val(String(toInt(L.defaultPartyGroupId))); }
+                else if ($('#cmbgroupdetail option').length > 1) $('#cmbgroupdetail').prop('selectedIndex', 1);
+                partyTypeLeave();
+            }
+            function registerCombos() {
+                var rows = L.registerCombos || [];
+                function f(a) { return rows.filter(function (r) { return v(r, 'Activity') === a; }); }
+                bind('#CmbPartyTypeRegister', f('PartyType'), 'Id', 'name');
+                bind('#CmbPartyGroupRegister', f('PartyGroup'), 'Id', 'name');
+                bind('#CmbCityRegister', f('CityName'), 'Id', 'name');
+                bind('#CmbGlAccountRegister', f('GlAccount'), 'Id', 'name');
+            }
+
+            function load(first) {
+                $.get(BASE + '/lookups', function (res) {
+                    L = res;
+                    var r = res.rights || {};
+                    $('#btnsave').prop('disabled', !r.save);
+                    $('#btnupdate').prop('disabled', !r.update);
+                    $('#BtnAttributesAllocation').toggle(!!res.attributesForItem);
+                    fillCombos();
+                    registerCombos();
+                    if (first) {
+                        $('#cmbparentac').prop('disabled', true);
+                        $('#cmbDiscountType').prop('disabled', true).val('');
+                        $('#cmbPartyType').focus();
+                    }
+                });
+            }
+
+            /* cmbPartyType_Leave */
+            function partyTypeLeave(after) {
+                var id = toInt($('#cmbPartyType').val());
+                $.get(BASE + '/party-type/' + id, { glRecId: GlRecId }, function (res) {
+                    bind('#cmbglac', res.accounts, 'Id', 'AccountTitle');
+                    bind('#CmbAdvanceAc', res.accounts, 'Id', 'AccountTitle');
+                    $('#txtPartyCode').val(s(res.partyCode));
+                    if (after) after();
+                });
+            }
+            /* cmbgroupdetail_Leave */
+            function groupLeave() {
+                if (toInt($('#cmbgroupdetail').val()) === 3) {
+                    $('#cmbDiscountType').prop('disabled', false);
+                    $.get(BASE + '/discount-policies', function (rows) { bind('#cmbDiscountType', rows, 'Id', 'PolicyName'); });
+                } else {
+                    $('#cmbDiscountType').html('<option value=""></option>').val('').prop('disabled', true);
+                }
+            }
+            function subPartyTotal() {
+                var p = toInt($('#cmbparentac').val());
+                var n = (L.parties || []).filter(function (r) { return isTrue(v(r, 'IsSubSupCust')) && toInt(v(r, 'ParentsSupCustId')) === p; }).length;
+                $('#txtSubPartyTotal').val(String(n));
+            }
+            function businessTypeChanged() {
+                var b = toInt($('#CmbBusinessType').val());
+                $('#LocNTN').css('visibility', b === 1 ? 'visible' : 'hidden');
+                $('#LocCNIC').css('visibility', b !== 1 ? 'visible' : 'hidden');
+            }
+
+            function setMode(save) {
+                saveMode = save;
+                $('#btnsave').toggle(save);
+                $('#btnupdate').toggle(!save);
+            }
+
+            /* FormReset */
+            function formReset() {
+                RecId = 0; GlRecId = 0;
+                $('#cmbPartyType').prop('disabled', false);
+                $('#txtaddress1, #txtcnicno, #txtcompany, #txtNickName, #txtManualNo, #txtemail, #txtfirstname, #txtlastname, #txtntnno, #txtofficemobile, #txtpermobile, #txtphone, #txtWhatsAppNo, #txtstrnno, #txttitle, #txttown, #txtwebsite, #txtzipcode').val('');
+                $('#cmbglac, #CmbBusinessType, #cmbgroupdetail, #cmbparentac, #CmbAdvanceAc').val('');
+                setMode(true);
+                currentPictureUrl = '';
+                $.get(BASE + '/discount-policies', function (rows) { bind('#cmbDiscountType', rows, 'Id', 'PolicyName'); });
+                $('#cmbPartyType').focus();
+            }
+
+            function req(sel, label, isCombo) {
+                var ok = isCombo ? toInt($(sel).val()) !== 0 : $.trim($(sel).val()) !== '';
+                if (!ok) { alert(label + ' field is required'); $(sel).focus(); }
+                return ok;
+            }
+
+            /* Insert() */
+            function insert() {
+                var list = [ ['#cmbPartyType', 'Party Type', 1], ['#txtPartyCode', 'Party Code', 0], ['#txtcompany', 'Company / Business Name', 0], ['#cmbglac', 'GL Account', 1]];
+                if ($('#chksubac').is(':checked')) list.push(['#cmbparentac', 'Parent Account', 1]);
+                list = list.concat([ ['#cmbgroupdetail', 'Party Group', 1], ['#CmbBusinessType', 'Company / Individual', 1], ['#txtaddress1', 'Address', 0],
+                    ['#txtpermobile', 'Phone Number', 0], ['#txtWhatsAppNo', 'WhatsApp Number', 0], ['#cmbcountry', 'Country', 1], ['#cmbcity', 'City', 1]]);
+                if (toInt($('#CmbBusinessType').val()) === 1) list.push(['#txtntnno', 'NTN #', 0]);
+                for (var i = 0; i < list.length; i++) if (!req(list[i][0], list[i][1], list[i][2])) return;
+                if (saveMode && !$('#btnsave').prop('disabled') && !$('#chkactivestatus').is(':checked')) {
+                    alert('Please check the Active Status!!!'); $('#chkactivestatus').focus(); return;
+                }
+                if (!confirm(RecId === 0 ? 'Are you sure to Save?' : 'Are you sure to Update?')) return;
+                var body = {
+                    recId: RecId,
+                    partyTypeId: toInt($('#cmbPartyType').val()),
+                    partyTypePrefix: s($('#cmbPartyType option:selected').data('extra')),
+                    partyCode: $('#txtPartyCode').val(),
+                    glAccountId: toInt($('#cmbglac').val()),
+                    nickName: $('#txtNickName').val(),
+                    companyName: $('#txtcompany').val(),
+                    manualPartyCode: $('#txtManualNo').val(),
+                    businessTypeId: toInt($('#CmbBusinessType').val()),
+                    businessTypeText: selText('#CmbBusinessType'),
+                    customerGroupId: toInt($('#cmbgroupdetail').val()),
+                    discountPolicyId: toInt($('#cmbDiscountType').val()),
+                    countryId: toInt($('#cmbcountry').val()),
+                    cityId: toInt($('#cmbcity').val()),
+                    mobilePersonal: $('#txtpermobile').val(),
+                    whatsAppNo: $('#txtWhatsAppNo').val(),
+                    isSubSupCust: $('#chksubac').is(':checked'),
+                    firstName: $('#txtfirstname').val(), lastName: $('#txtlastname').val(), title: $('#txttitle').val(),
+                    cnic: $('#txtcnicno').val(), cnicExpiryDate: $('#txtcnicexp').val(),
+                    address1: $('#txtaddress1').val(), address2: '',
+                    email: $('#txtemail').val(), phone: $('#txtphone').val(), mobileOffice: $('#txtofficemobile').val(),
+                    webPage: $('#txtwebsite').val(), town: $('#txttown').val(), strnNo: $('#txtstrnno').val(), ntnNo: $('#txtntnno').val(),
+                    zipCode: $('#txtzipcode').val(),
+                    advanceGlAcId: toInt($('#CmbAdvanceAc').val()),
+                    parentsSupCustId: toInt($('#cmbparentac').val()),
+                    status: $('#chkactivestatus').is(':checked'),
+                    pictureUrl: currentPictureUrl
+                };
+                $.ajax({ url: BASE + '/save', type: 'POST', contentType: 'application/json', data: JSON.stringify(body),
+                    success: function (res) { alert(res.message); if (res.success) formReset(); },
+                    error: function (x) { alert('Server error: ' + (x.responseText || x.status)); } });
+            }
+
+            /* ReadById */
+            function readById(id) {
+                RecId = id;
+                $.get(BASE + '/read/' + id, function (res) {
+                    var p = res.party;
+                    if (!p) return;
+                    setMode(false);
+                    $('.tabs button[data-pane="tabPage1"]').click();
+                    $('#cmbPartyType').val(s(v(p, 'PartyTypeId')));
+                    GlRecId = toInt(v(p, 'GlAccountId'));
+                    partyTypeLeave(function () {
+                        $('#cmbPartyType').prop('disabled', true);
+                        setVal('#cmbglac', v(p, 'GlAccountId'));
+                        $('#txtcompany').val(s(v(p, 'CompanyName')));
+                        $('#txtNickName').val(s(v(p, 'NickName')));
+                        $('#txtManualNo').val(s(v(p, 'ManualPartyCode')));
+                        setVal('#cmbgroupdetail', v(p, 'CustomerGroupId'));
+                        setVal('#cmbcountry', v(p, 'CountryId'));
+                        setVal('#cmbcity', v(p, 'CityId'));
+                        $('#txtpermobile').val(s(v(p, 'MobilePersonal')));
+                        $('#txtWhatsAppNo').val(s(v(p, 'WhatsAppNo')));
+                        $('#chkactivestatus').prop('checked', isTrue(v(p, 'Status')));
+                        var bt = s(v(p, 'CompanyIndividuals')); $('#CmbBusinessType').val('');
+                        $('#CmbBusinessType option').each(function () { if ($(this).text() === bt) $('#CmbBusinessType').val(this.value); });
+                        businessTypeChanged();
+                        setVal('#cmbparentac', v(p, 'ParentsSupCustId'));
+                        $('#txtfirstname').val(s(v(p, 'FirstName'))); $('#txtlastname').val(s(v(p, 'LastName'))); $('#txttitle').val(s(v(p, 'Title')));
+                        $('#txtcnicno').val(s(v(p, 'CNIC')));
+                        var ce = s(v(p, 'CNIC_EXPIRY_DATE')); if (ce) $('#txtcnicexp').val(ce.substring(0, 10));
+                        $('#txtaddress1').val(s(v(p, 'Address1'))); $('#txtemail').val(s(v(p, 'Email'))); $('#txtphone').val(s(v(p, 'Phone')));
+                        $('#txtofficemobile').val(s(v(p, 'MobileOffice'))); $('#txtwebsite').val(s(v(p, 'WebPage'))); $('#txttown').val(s(v(p, 'Town')));
+                        $('#txtstrnno').val(s(v(p, 'STRN_No'))); $('#txtntnno').val(s(v(p, 'NTN_No'))); $('#txtzipcode').val(s(v(p, 'ZipCode')));
+                        $('#txtPartyCode').val(s(v(p, 'PartyTypePrefix')));
+                        setVal('#CmbAdvanceAc', v(p, 'AdvanceGlAcId'));
+                        currentPictureUrl = s(v(p, 'PictureURL'));
+                        subPartyTotal();
+                        if (toInt($('#cmbgroupdetail').val()) === 3) {
+                            $('#cmbDiscountType').prop('disabled', false);
+                            $.get(BASE + '/discount-policies', function (rows) { bind('#cmbDiscountType', rows, 'Id', 'PolicyName'); setVal('#cmbDiscountType', v(p, 'DiscountPolicyId')); });
+                        } else { groupLeave(); }
+                    });
+                });
+            }
+
+            /* Register tab */
+            var REG_COLS = [ ['PartyType', 'PartyType'], ['PartyCode', 'PartyTypePrefixNo'], ['PartyName', 'CompanyName'], ['NickName', 'NickName'], ['AccountCode', 'AccountCode'],
+                ['ManualNo', 'ManualPartyCode'], ['LedgerAccount', 'AccountTitle'], ['PartyGroup', 'CustomerGroup'], ['Address', 'Address1'], ['Address1', 'Address2'],
+                ['CNIC', 'CNIC'], ['Email', 'Email'], ['Phone', 'MobilePersonal'], ['CompanyIndividuals', 'CompanyIndividuals'], ['EntryUser', 'EntryUser'],
+                ['EntryDate', 'EntryDate'], ['ModifyUser', 'ModifyUser'], ['ModifyDate', 'ModifyDate'], ['CityName', 'DescriptionCity']];
+            function registerBind() {
+                $.get(BASE + '/register', { partyTypeId: toInt($('#CmbPartyTypeRegister').val()), glAccountId: toInt($('#CmbGlAccountRegister').val()),
+                                            customerGroupId: toInt($('#CmbPartyGroupRegister').val()), cityId: toInt($('#CmbCityRegister').val()) }, function (rows) {
+                    registerRows = rows || [];
+                    $('#DataGridHistory thead').html(registerRows.length ? '<tr><th>View</th><th>Edit</th>' + REG_COLS.map(function (c) { return '<th>' + c[0] + '</th>'; }).join('') + '</tr>' : '');
+                    $('#DataGridHistory tbody').html(registerRows.map(function (r) {
+                        return '<tr data-id="' + esc(v(r, 'Id')) + '"><td><button type="button" class="btn btn-default btn-xs r-view">View</button></td><td><button type="button" class="btn btn-default btn-xs r-edit">Edit</button></td>'
+                            + REG_COLS.map(function (c) { return '<td>' + esc(v(r, c[1])) + '</td>'; }).join('') + '</tr>';
+                    }).join(''));
+                });
+            }
+            function printRows(rows, title) {
+                var w = window.open('', '_blank'); if (!w) return;
+                w.document.write('<html><head><title>' + esc(title) + '</title><style>body{font-family:Verdana;font-size:10px}table{border-collapse:collapse}th,td{border:1px solid #999;padding:2px 4px}</style></head><body><h3>' + esc(title) + '</h3><table><tr>'
+                    + REG_COLS.map(function (c) { return '<th>' + c[0] + '</th>'; }).join('') + '</tr>'
+                    + rows.map(function (r) { return '<tr>' + REG_COLS.map(function (c) { return '<td>' + esc(v(r, c[1])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table></body></html>');
+                w.document.close();
+            }
+
+            $(function () {
+                $('.tabs button').on('click', function () {
+                    $('.tabs button').removeClass('active'); $(this).addClass('active');
+                    $('.pane').removeClass('active'); $('#' + $(this).data('pane')).addClass('active');
+                });
+                $('#cmbPartyType').on('change', function () { partyTypeLeave(); });
+                $('#cmbgroupdetail').on('change', groupLeave);
+                $('#chksubac').on('click', function () { $('#cmbparentac').prop('disabled', !this.checked); });
+                $('#cmbparentac').on('change', subPartyTotal);
+                $('#CmbBusinessType').on('change', businessTypeChanged);
+                $('#btnsave').on('click', function () { RecId = 0; insert(); });
+                $('#btnupdate').on('click', function () { if (RecId === 0) { alert('Rec Id not found...'); return; } insert(); });
+                $('#btnnew').on('click', formReset);
+                $('#btnRefresh').on('click', function () { load(false); });
+                $('.sub-screen').on('click', function () { alert($(this).data('name') + ' is not available in the web application yet.'); });
+                $('#browse').on('click', function () { alert('Profile Picture upload (a copy to the configured "Attachment Folder Path") is not available in the web application yet.'); });
+
+                $('#btnshow').on('click', registerBind);
+                $('#BtnRefreshRegister').on('click', function () { $.get(BASE + '/lookups', function (res) { L.registerCombos = res.registerCombos; registerCombos(); }); });
+                $('#BtnResetRegister').on('click', function () {
+                    $('#CmbPartyGroupRegister, #CmbCityRegister, #CmbGlAccountRegister, #CmbBusinessType').val('');
+                    $('#DataGridHistory thead, #DataGridHistory tbody').html(''); registerRows = [];
+                });
+                $('#btnRegister').on('click', function () {
+                    if (registerRows.length === 0) { alert('Record Not Found For Display'); return; }
+                    printRows(registerRows, '292-InvRptSupplierRegister');
+                });
+                $('#DataGridHistory').on('click', '.r-edit', function () { readById(toInt($(this).closest('tr').data('id'))); });
+                $('#DataGridHistory').on('dblclick', 'tr', function () { readById(toInt($(this).data('id'))); });
+                $('#DataGridHistory').on('click', '.r-view', function () {
+                    var id = toInt($(this).closest('tr').data('id'));
+                    var rows = registerRows.filter(function (r) { return toInt(v(r, 'Id')) === id; });
+                    if (id === 0 || rows.length === 0) { alert('Record Not Found For Display'); return; }
+                    printRows(rows, '293-InvRptSupplierSlip');
+                });
+                $('#BtnShortCutKeysRegister').on('click', function () {
+                    alert('Ctrl+alt  To Show ShortCut Date Type\nCtrl+E  For Close\nCtrl+R  For Refresh\nCtrl+N  For New\nCtrl+P  For Print\nCtrl+S  For show data\nCtrl+F5  For Focus on Party Type\nCtrl+ArrowUp  For Focus on Gl Account\nCtrl+ArrowDown  For Focus On Grid');
+                });
+
+                /* supfrmDefineSupplier1_KeyDown */
+                $(document).on('keydown', function (e) {
+                    if (!e.ctrlKey && !e.altKey) return;
+                    var formTab = $('#tabPage1').hasClass('active');
+                    if (formTab) {
+                        if (e.ctrlKey && e.keyCode === 83 && saveMode && !$('#btnsave').prop('disabled')) { e.preventDefault(); RecId = 0; insert(); }
+                        if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); formReset(); }
+                        if (e.ctrlKey && e.keyCode === 85 && !saveMode && !$('#btnupdate').prop('disabled')) { e.preventDefault(); $('#btnupdate').click(); }
+                        if (e.ctrlKey && e.keyCode === 38) { e.preventDefault(); $('#txtcompany').focus(); }
+                        if (e.ctrlKey && e.keyCode === 116) { e.preventDefault(); $('#cmbPartyType').focus(); }
+                        return;
+                    }
+                    if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); formReset(); }
+                    if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); registerBind(); }
+                    if (e.ctrlKey && e.keyCode === 38) { e.preventDefault(); $('#CmbGlAccountRegister').focus(); }
+                    if (e.ctrlKey && e.keyCode === 116) { e.preventDefault(); $('#CmbPartyTypeRegister').focus(); }
+                    if ((e.ctrlKey && e.keyCode === 80) || (e.altKey && (e.keyCode === 49 || e.keyCode === 97))) { e.preventDefault(); $('#btnRegister').click(); }
+                });
+                businessTypeChanged();
+                load(true);
+            });
+        })();
+    </script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

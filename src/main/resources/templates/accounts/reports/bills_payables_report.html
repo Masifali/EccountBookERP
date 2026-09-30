@@ -1,143 +1,165 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bills Payables Report - EccountBookERP</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
-        .select2-container--default .select2-selection--single { height: 25px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 23px !important; font-size: 11px !important; padding-left: 2px !important; color: #222 !important; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
-        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .erp-table tr:hover { background-color: #f0f7f7; }
-        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .report-summary-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bills Payables Report</title>
+<link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+<link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+<link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+<link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_pay.css?v=20260930s}">
+<style>.accf table.wg th { white-space: normal; }</style>
 </head>
-<body>
-    <div class="erp-header">
-        <div><i class="fa fa-line-chart"></i> Bills Payables Report</div>
-        <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
-    </div>
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary" onclick="loadReport()"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp" onclick="alert('Exporting Excel...')"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp" onclick="resetFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
-    </div>
-    <div style="padding: 10px;">
-        <div class="erp-fieldset">
-            <legend>Report Filter Criteria</legend>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label-erp">From Date</label>
-                    <input type="date" id="txtFromDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">To Date</label>
-                    <input type="date" id="txtToDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Supplier / Vendor</label>
-                    <select id="cmbSupplier" class="form-control-erp select2">
-                        <option value="">-- All Suppliers --</option>
-                        <option th:each="sc : ${supplierCustomersList}" th:value="${sc['id'] != null ? sc['id'] : (sc['Id'] != null ? sc['Id'] : '')}" th:text="${sc['supplierName'] != null ? sc['supplierName'] : (sc['SupplierName'] != null ? sc['SupplierName'] : (sc['companyName'] != null ? sc['companyName'] : (sc['CompanyName'] != null ? sc['CompanyName'] : (sc['name'] != null ? sc['name'] : ''))))}"></option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Bill Category</label>
-                    <select id="cmbCategory" class="form-control-erp select2">
-                        <option value="">-- All Categories --</option>
-                        <option value="Raw Material">Raw Material Bill</option>
-                        <option value="Services">Services / Utility Bill</option>
-                        <option value="Freight">Freight Bill</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+<!--
+  "Bills Payables Report" hub entry (route /accounts/reports/bills-payables-report; replaces a static mock-up with invented bills).
+  No ScreenDefinition row carries this name: "Bills Payable" (screen 38 frmBillsPayables) is a voucher form, already at
+  /accounts/vouchers/bills-payables. The desktop's payables report built on bill amounts is
+  Architecture.WinApp.Account_Reports.PayablesWithBillAmount ("Payables Report" - payables with the last bill and last paid amount,
+  141-Print), opened from the Accounts dashboard (CommonServices.GoToPayablesWithBillAmountFromLinkedEvent); this page ports it.
+  Receivables_Load: branch feature 17 -> BranchesFill (GetBranchesFromVouchersByAccountId(org, CompanyIdFromBreakUp = 0) -> no @CompanyId;
+  checked list with 18; UserAccount.BranchName pre-selected), AccountFill3rdLevel (ReadAllAccountgroup level 3 / type 3 / class 3,
+  value column AccountCode), From Date = ActiveYr.Start_Period, To Date = today (designer), then GetData() at once.
+  GetData -> VoucherReports.PayablesWithLastBillAndPaidAmount -> Sp_Accounts_PayablesWithLastBillAndPaidAmount_Rpt
+  (@AccountType 3, @ParentAccountCode = checked group accounts' codes, @BalanceFrom/@BalanceTo = Conversion.ToInt of the Closing boxes
+  when non-zero, @BranchesIds by GetBranchesIdsByFeature). GridSettings: BranchesId / AccountId / ObDebit / ObCredit hidden,
+  BranchName only with feature 17 and a branch chosen; Opening / Closing "#,#;(#,#);0", Debit / Credit / bill and paid amounts "#,#",
+  all summed; AccountCode links to the General Ledger (AccountId, From, To, 0, BranchesId).
+  btnNew_Click (Reset): dates back to year start / today, Closing boxes cleared, Group Account text AND list cleared, grid cleared.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-file-text-o"></i> Payables Report</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs"><li class="active"><a>Payables Report</a></li></ul>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnNew" onclick="resetForm()"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" id="btnPrint" onclick="printReport()" data-rpt="141-AccountPayablesWithLastBillAmountAndDate.rpt"><i class="fa fa-print"></i> 141-Print</button>
+    <a class="win-btn" href="/accounts/dashboard"><i class="fa fa-times"></i> Close</a>
+</div>
+<div class="win-header-panel"><span>Payables Report</span></div>
 
-        <div class="erp-fieldset">
-            <legend>Bills Payables Data Output</legend>
-            <div style="text-align: center; margin-bottom: 10px;">
-                <h4 style="margin: 0; font-weight: bold; color: #00796B;"><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></h4>
-                <h5 style="margin: 2px 0; font-weight: bold;">Bills Payables Report</h5>
-                <small style="color: #64748b;" id="lblPeriod">Period: Current Date To Current Date | Currency: PKR</small>
-            </div>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 12%;">Bill No</th>
-                        <th style="width: 12%;">Bill Date</th>
-                        <th style="width: 24%;">Supplier Name</th>
-                        <th style="width: 14%;">Bill Category</th>
-                        <th style="width: 13%; text-align: right;">Bill Amount</th>
-                        <th style="width: 13%; text-align: right;">Paid Amount</th>
-                        <th style="width: 12%; text-align: right;">Net Payable</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTbody">
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">BILL-8891</td>
-                        <td>2026-09-05</td>
-                        <td>AL-HABIB TRADERS (PVT) LTD</td>
-                        <td>Raw Material Bill</td>
-                        <td style="text-align: right;">450,000.00</td>
-                        <td style="text-align: right;">300,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">150,000.00</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="report-summary-bar">
-                <div>Total Bills: 1</div>
-                <div>Total Payable: 150,000.00 PKR</div>
-            </div>
+<div class="filters">
+    <div class="gb" style="width:960px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 112px 112px 89px 89px 220px 210px 70px;">
+            <span class="lbl">From Date</span><span class="lbl">To Date</span><span class="lbl">Closing From</span><span class="lbl">Closing To</span>
+            <span class="lbl">Group Account</span><span class="lbl br-f">Branches</span><span></span>
+            <input type="date" id="fromdate" class="inp"><input type="date" id="todate" class="inp">
+            <input type="text" id="txtBalanceFrom" class="inp" style="text-align:right;" inputmode="numeric">
+            <input type="text" id="txtBalanceTo" class="inp" style="text-align:right;" inputmode="numeric">
+            <div><select id="cmbAccount" class="inp" multiple style="height:34px;"></select></div>
+            <div class="br-f"><select id="CmbBranches" class="inp" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select></div>
+            <button type="button" id="btnshow" class="win-btn-show" onclick="getData()"><i class="fa fa-eye"></i> Show</button>
         </div>
     </div>
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate, #txtToDate').val(today);
-            $('.select2').select2({ width: '100%' });
-            updatePeriodLabel();
-        });
+</div>
 
-        function updatePeriodLabel() {
-            const fd = $('#txtFromDate').val();
-            const td = $('#txtToDate').val();
-            $('#lblPeriod').text(`Period: ${fd} To ${td} | Currency: PKR`);
-        }
+<div class="grid-caption"><span>Payables Report</span><span id="lblStatus"></span></div>
+<div class="grid-wrap fill"><table class="wg" id="grd"></table></div>
 
-        function loadReport() {
-            updatePeriodLabel();
-        }
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script>
+    'use strict';
+    let CTX = null, LK = null, rows = [], branchFeature = false, consolidated = false, ranFrom = '', ranTo = '', branchShown = false;
 
-        function resetFilters() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate, #txtToDate').val(today);
-            $('.select2').val('').trigger('change');
-            updatePeriodLabel();
+    /* countx_prod_combo.js skips multi-selects: with feature 18 the enhanced single Branches combo goes back to a native
+       multi-select (the desktop's checked list). */
+    function nativeMulti(s) {
+        const c = s.__dtcombo;
+        if (c && c.wrap && c.wrap.parentNode) {
+            c.wrap.parentNode.insertBefore(s, c.wrap); if (c.destroy) c.destroy(); c.wrap.remove();
+            s.classList.remove('dtcombo-native'); s.removeAttribute('aria-hidden'); s.removeAttribute('tabindex');
+            delete s.value; delete s.selectedIndex; delete s.__dtcombo;
+            const l = window.DesktopCombo && DesktopCombo.instances, i = l ? l.indexOf(c) : -1; if (i >= 0) l.splice(i, 1);
         }
-    </script>
+        s.multiple = true; s.style.height = '34px';
+    }
+    function columns() {
+        return [
+            { key: 'BranchName', caption: 'BranchName', visible: branchShown },
+            { key: 'AccountCode', link: function (r) { AccF.openLedger(r.AccountId, ranFrom, ranTo, 0, r.BranchesId); } },
+            { key: 'AccountTitle', wrap: true },
+            { key: 'CityName' },
+            { key: 'Opening', type: 'hashboth', sum: true },
+            { key: 'CurrDebit', caption: 'Debit', type: 'hash', sum: true },
+            { key: 'CurrCredit', caption: 'Credit', type: 'hash', sum: true },
+            { key: 'ClDebit', caption: 'Closing', type: 'hashboth', sum: true },
+            { key: 'LastBillDate', type: 'date' },
+            { key: 'LastBillsAmount', type: 'hash', sum: true },
+            { key: 'BillDays', align: 'r' },
+            { key: 'LastRcvdDate', caption: 'Last Paid Date', type: 'date' },
+            { key: 'LastRcvdAmount', caption: 'Last Paid Amount', type: 'hash', sum: true },
+            { key: 'RcvdDays', caption: 'Paid Days', align: 'r' }
+        ];
+    }
+    function render() {
+        if (!rows.length) { $('#grd').empty(); $('#lblStatus').text(''); return; }   /* grd.ClearStructure() */
+        AccF.renderGrid({ table: '#grd', columns: columns(), rows: rows });
+        $('#lblStatus').text('Records: ' + rows.length);
+    }
+    function branchValue() { const v = $('#CmbBranches').val(); return v ? (Array.isArray(v) ? v : [v]).filter(Boolean).join(',') : ''; }
+    async function getData() {
+        const btn = $('#btnshow');
+        AccF.busy(btn, true);
+        try {
+            const q = new URLSearchParams({ fromDate: $('#fromdate').val(), toDate: $('#todate').val(),
+                balanceFrom: $('#txtBalanceFrom').val(), balanceTo: $('#txtBalanceTo').val(),
+                parentAccountCodes: ($('#cmbAccount').val() || []).join(','), branches: branchFeature ? branchValue() : '' });
+            const r = await fetch('/api/accounts/bills-payables?' + q, { headers: { Accept: 'application/json' } });
+            const data = await r.json().catch(function () { return null; });
+            if (!r.ok) throw new Error((data && data.message) || ('HTTP ' + r.status));
+            rows = data || []; ranFrom = $('#fromdate').val(); ranTo = $('#todate').val();
+            branchShown = branchFeature && branchValue() !== '';
+            render();
+        } catch (e) { alert(e.message); }
+        finally { AccF.busy(btn, false); }
+    }
+    function fillAccounts() { AccF.fillSelect('#cmbAccount', (LK && LK.controls) || [], 'AccountCode', 'AccountTitle', null); }
+    /* btnNew_Click_1 */
+    function resetForm() {
+        $('#fromdate').val((CTX && CTX.activeYear && CTX.activeYear.startPeriod) || AccF.today());
+        $('#todate').val(AccF.today());
+        $('#txtBalanceFrom, #txtBalanceTo').val('');
+        $('#cmbAccount').empty();                                    /* cmbAccount.Text = ""; DataSource = null */
+        rows = []; render();
+    }
+    /* print_Click: 141-AccountPayablesWithLastBillAmountAndDate.rpt */
+    function printReport() {
+        if (!rows.length) { alert('Record Not Found For Display'); return; }
+        window.print();
+    }
+    /* txtBalanceFrom/To_KeyPress: CommonServices.OnlytextNumberFunction - digits only */
+    $('#txtBalanceFrom, #txtBalanceTo').on('keypress', function (e) { if (e.key.length === 1 && !/[0-9.\-]/.test(e.key)) e.preventDefault(); });
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); printReport(); }
+        if ((e.ctrlKey && (e.key === 'e' || e.key === 'E')) || e.key === 'Escape') { window.location.href = '/accounts/dashboard'; }
+    });
+
+    $(function () { (async function () {
+        try {
+            CTX = await AccF.context();
+            const r = await fetch('/api/accounts/payables-sub-bills/lookups', { headers: { Accept: 'application/json' } });
+            LK = await r.json();
+            if (!r.ok) throw new Error(LK.message || ('HTTP ' + r.status));
+            const f = LK.features || [];
+            branchFeature = f.indexOf(17) >= 0; consolidated = branchFeature && f.indexOf(18) >= 0;
+            if (!branchFeature) { $('.br-f').hide(); }
+            else {
+                if (consolidated) nativeMulti(document.getElementById('CmbBranches'));
+                AccF.fillSelect('#CmbBranches', LK.branches || [], 'Id', 'BranchName', consolidated ? null : '');
+                if ((LK.branches || []).length) $('#CmbBranches').val(consolidated ? [String(LK.branchId)] : String(LK.branchId));
+            }
+            fillAccounts();
+            $('#fromdate').val((CTX.activeYear && CTX.activeYear.startPeriod) || AccF.today());
+            $('#todate').val(AccF.today());
+            await getData();                                           /* Receivables_Load ends with GetData() */
+        } catch (e) { alert(e.message); }
+    })(); });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

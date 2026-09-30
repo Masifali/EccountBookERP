@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Social Security - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        /* policy pages only */
+        .pol-row-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .pol-row-btns .win-btn-action { width: auto; min-width: 40px; padding: 0 10px; }
+        .pol-combo-btn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px; align-items: center; min-width: 0; }
+        .pol-combo-btn .win-btn-action { width: 30px; min-width: 30px; padding: 0; }
+        .pol-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 6px; min-width: 0; }
+        .pol-two > .hrm-grid-box { min-width: 0; }
+        .pol-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; padding: 0 4px; }
+        .pol-group { border: 1px solid #c8c8c8; margin: 6px 6px 4px 6px; min-width: 0; }
+        .pol-group .hrm-entry { padding: 6px 8px; }
+        .pol-group .hrm-field { grid-template-columns: 200px minmax(0, 1fr); }
+        .hrm-field > input[type=checkbox] { justify-self: start; width: 15px; height: 15px; margin: 0; }
+        button.pol-del { border: 1px solid #999; background: #f4f4f4; font: bold 8pt Verdana, sans-serif; line-height: 14px; padding: 0 4px; cursor: pointer; }
+        button.pol-del:hover { background: #ffd6d6; }
+        .pol-hist-detail { margin-top: 6px; }
+        @media (max-width: 700px) {
+            .pol-two, .pol-cols { grid-template-columns: 1fr; }
+            .pol-group .hrm-field { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<!-- Architecture.WinApp.HRM.PolicyManagment.SocialSecurity - ClientSize 874 x 607, TabControl "Form" | "History".
+     Form tab: panel3 toolStrip tsItemType New | Update (hidden) | Save | Refresh; panel4 (Teal, 31) label6 "Social Security";
+     groupBox2 "Main" (28,6) 673x112: "Salary Factor" cmbSalaryFactor (90,17) 153x26 + btnsalaryfactor (245,17) 28x26 (ProfileDefine, type 5),
+       "From Date" txtfromdate (353,19) dd-MMM-yy, "Min Year Limit" txtminyearlimit (90,46), "To Date" txttodate (353,46), "Description" txtpolicydescription (90,74) 444x23;
+     groupBox1 "Detail" (26,124) 675x73: From Salary (12,44) 135, To Salary (150,44) 135, Percent% (289,44) 95, Flat Amount (386,44) 95,
+       btnplus "+" (485,42) 39x26, btnUpdateDetail "Update" (528,42, hidden), btnCancelUpdateDetial "Cancel" (601,42, hidden) - teal;
+     panel11 (Teal, 31) "Detail"; grdfrm GridEX (AllowEdit false, filter row, total row): FromSalary 120, ToSalary 120, Percent% 150, Amount 150, Delete " X" 20.
+     History tab: panel7 (Teal) "History" + ctrlGrdBar1; grdHistory (SocialPolicyId hidden, ProfileName, FromDate, ToDate, MinYearLimit, PolicyDescription, Edit, Detail buttons);
+       grdHistoryDetail (FromSalary, ToSalary, Percent%, Amount) -> here the footer History dialog with the same columns and a Detail grid. -->
+<body class="pd-body hrm-body" data-hrm="social-security" data-screen="643">
+<div class="hrm-form hrm-medium">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmPolicy.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="HrmPolicy.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmPolicy.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmPolicy.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    </div>
+    <div class="hrm-caption">Social Security</div>
+    <fieldset class="hrm-group"><legend>Main</legend>
+        <div class="hrm-entry hrm-cols-2">
+            <div class="hrm-field"><label for="cmbSalaryFactor">Salary Factor</label><div class="pol-combo-btn"><select id="cmbSalaryFactor" class="win-combo dtcombo" data-dtcombo="single"></select><button type="button" id="btnsalaryfactor" class="win-btn-action" title="Define Salary Factor" onclick="HrmPolicy.btnsalaryfactor(this)"><i class="fa fa-plus"></i></button></div></div>
+            <div class="hrm-field"><label for="txtfromdate">From Date</label><input type="date" id="txtfromdate" class="win-textbox" required/></div>
+            <div class="hrm-field"><label for="txtminyearlimit">Min Year Limit</label><input type="text" id="txtminyearlimit" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="txttodate">To Date</label><input type="date" id="txttodate" class="win-textbox" required/></div>
+            <div class="hrm-field hrm-span-2"><label for="txtpolicydescription">Description</label><input type="text" id="txtpolicydescription" class="win-textbox" autocomplete="off" maxlength="250"/></div>
+        </div>
+    </fieldset>
+    <fieldset class="hrm-group"><legend>Detail</legend>
+        <div class="hrm-entry hrm-cols-4">
+            <div class="hrm-field hrm-stack"><label for="txtfromsalary">From Salary</label><input type="text" id="txtfromsalary" class="win-textbox" autocomplete="off" inputmode="numeric"/></div>
+            <div class="hrm-field hrm-stack"><label for="txttosalary">To Salary</label><input type="text" id="txttosalary" class="win-textbox" autocomplete="off" inputmode="numeric"/></div>
+            <div class="hrm-field hrm-stack"><label for="txtpercent">Percent%</label><input type="text" id="txtpercent" class="win-textbox" autocomplete="off" inputmode="decimal"/></div>
+            <div class="hrm-field hrm-stack"><label for="txtamount">Flat Amount</label><input type="text" id="txtamount" class="win-textbox" autocomplete="off" inputmode="decimal"/></div>
+        </div>
+        <div class="hrm-actions">
+            <button type="button" id="btnplus" class="win-btn-action" onclick="HrmPolicy.btnplus(this)">+</button>
+            <button type="button" id="btnUpdateDetail" class="win-btn-action is-hidden" onclick="HrmPolicy.btnUpdateDetail(this)">Update</button>
+            <button type="button" id="btnCancelUpdateDetial" class="win-btn-action is-hidden" onclick="HrmPolicy.btnCancelUpdateDetial(this)">Cancel</button>
+        </div>
+    </fieldset>
+    <div class="hrm-grid-box">
+        <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="grdfrm"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_policy.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

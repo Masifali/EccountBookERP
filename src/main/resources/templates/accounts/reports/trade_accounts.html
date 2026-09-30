@@ -1,34 +1,130 @@
-<!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Trade Accounts</title><link rel="stylesheet" href="/vendors/select2/dist/css/select2.min.css">
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trade Accounts</title>
+<link rel="stylesheet" href="/vendors/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_f.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_pay.css?v=20260930s">
+<link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;font:13px 'Segoe UI',sans-serif;background:#f0f0f0;color:#111;height:100vh;display:flex;flex-direction:column;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer}nav{height:29px;display:flex;gap:8px;align-items:center;padding:2px 6px;background:#eee;border-bottom:1px solid #aaa}h1{font-size:16px;margin:0;color:#174378;height:28px;padding:4px}#filters{flex:none;position:relative;height:117px;min-width:0}.field{position:absolute;height:26px;display:flex;align-items:center}.field>label{width:97px;flex:none}.field select{width:225px}.dates input{width:112px;height:23px;padding:0}input[type=number]{height:23px;min-width:0}.select2-container .select2-selection--single,.select2-container .select2-selection--multiple{height:26px;min-height:26px;border-radius:0}.select2-container .select2-selection__rendered{line-height:24px!important}.select2-selection--multiple .select2-selection__rendered{overflow:auto!important;white-space:nowrap!important;max-height:25px}.options{position:absolute;left:664px;top:2px;display:flex;flex-direction:column;font-size:12px}.options label{height:18px}.mode{position:absolute;left:808px;top:0;display:flex;flex-direction:column;padding:4px;border:1px solid #aaa}.sortbar{display:flex;align-items:center;gap:10px;height:29px;padding:3px;border-block:1px solid #bbb}.grid{flex:1;min-height:0;overflow:auto;background:white}table{border-collapse:collapse;table-layout:fixed;width:max-content;font-size:13px}th,td{border:1px solid #ccc;height:24px;padding:2px 5px;overflow:hidden;white-space:nowrap}th{background:#e4e9ef;height:38px;text-align:center;position:sticky;top:0;z-index:1;white-space:normal}tr.selected td{background:#316ac5;color:#fff}tr.selected a{color:#fff}.num{text-align:right}tfoot{font-weight:bold;background:#e4e9ef}#status{min-height:24px;padding:4px;color:#9b1c1c}a{color:#174378}footer{height:28px;display:flex;gap:4px}footer button.active{background:white;border-bottom:2px solid #174378}#followup{display:none;flex:1;min-height:0;padding:12px}#followup h2{font-size:16px}.notice{padding:10px;border:1px solid #aaa;background:white}#show{position:absolute;left:906px;top:78px;width:62px;height:28px} @media(max-width:1000px){#filters{height:auto;display:flex;flex-wrap:wrap;gap:6px;padding:6px}.field,.options,.mode,#show{position:static}.options{flex-direction:row;flex-wrap:wrap;max-width:320px}.mode{max-width:200px}.sortbar{height:auto;flex-wrap:wrap}h1{height:auto}}
-[hidden]{display:none!important}button:disabled{cursor:wait;opacity:.65}tfoot td{position:sticky;bottom:0;background:#e4e9ef;z-index:2}.trade-total{font-weight:bold}</style><link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script></head><body th:attr="data-account-class=${accountClass}">
-<nav><button id="newReport">New</button><button id="printReport">122-Print</button><button id="cityPrint">122-CityWise</button><a href="/accounts/reports/receivables-new">Receivables Aging Report</a><a href="/accounts/reports/payables-aging">Payables Aging Report</a><a href="/accounts/dashboard">Close</a></nav>
-<div style="position:relative;min-height:28px"><h1 id="heading"></h1><label id="costField" style="position:absolute;left:414px;top:0">Cost Center <select id="costCenter" style="width:167px"></select></label></div>
-<section id="filters">
-<div class="field dates" style="left:3px;top:3px"><label>From &amp; To Date</label><input id="fromDate" type="date"><input id="toDate" type="date"></div>
-<div class="field" style="left:3px;top:30px"><label for="controls">Control Account</label><select id="controls" multiple></select></div>
-<div class="field" style="left:3px;top:57px"><label for="accounts">Account Title</label><select id="accounts"></select></div>
-<div class="field" style="left:3px;top:84px"><label for="customGroups">Custom Group</label><select id="customGroups"></select></div>
-<div class="field" style="left:329px;top:3px"><label for="inventoryGroups" style="width:95px">Inventory Group</label><select id="inventoryGroups" multiple style="width:234px"></select></div>
-<div class="field" style="left:329px;top:30px"><label for="cities" style="width:95px">City Name</label><select id="cities" style="width:234px"></select></div>
-<div class="field" style="left:329px;top:57px"><label style="width:95px">Closing From &amp; To</label><input id="balanceFrom" type="number" value="0" step="any" style="width:115px"><input id="balanceTo" type="number" step="any" style="width:117px"></div>
-<div class="field" id="branchField" style="left:329px;top:84px"><label for="branches" style="width:95px">Branches</label><select id="branches" style="width:234px"></select></div>
-<div class="options"><label><input id="credit" type="checkbox">Only Credit Balance</label><label><input id="debit" type="checkbox">Only Debit Balance</label><label><input id="tradeOnly" type="checkbox">Trade Parties</label><label><input id="approved" type="checkbox">Approved Transactions</label><label><input name="classification" type="radio" value="account" checked>Account Classification</label><label><input name="classification" type="radio" value="balance">Balance Classification</label></div>
-<div class="mode"><label><input name="reportClass" type="radio" value="3">Payables</label><label><input name="reportClass" type="radio" value="2">Receivables</label><div id="balanceClass"><label><input name="balanceClass" type="radio" value="0" checked>ALL</label><label><input name="balanceClass" type="radio" value="2">Assets</label><label><input name="balanceClass" type="radio" value="3">Liability</label></div></div>
-<button id="show">Show</button></section>
-<div class="sortbar"><span>Filtered Records</span><label><input class="sort" value="AccountCode" type="checkbox">Account Code</label><label><input class="sort" value="AccountTitle" type="checkbox" checked>Account Title</label><label><input class="sort" value="Closing" type="checkbox">Closing</label><label><input name="direction" value="1" type="radio" checked>Ascending</label><label><input name="direction" value="-1" type="radio">Descending</label><button id="sort">Apply Sorting</button><input id="search" aria-label="Filter records" placeholder="Filter records"></div>
-<div class="grid" id="reportGrid"><table><thead></thead><tbody></tbody></table></div>
-<section id="followup"><h2>Account FollowUp</h2></section><section id="dueDates" hidden style="flex:1;min-height:0"><iframe title="Receivables By Due Date" style="width:100%;height:100%;border:0"></iframe></section>
-<div id="status" role="status"></div><footer><button class="active" data-tab="report">Form</button><button data-tab="followup">Follow Up</button><button data-tab="dueDates" hidden>Receivables By Due Date</button></footer>
-<script src="/js/report-decimal.js"></script><script src="/js/trade-grid.js"></script><script src="/vendors/jquery/dist/jquery.min.js"></script><script src="/vendors/select2/dist/js/select2.full.min.js"></script>
+.accf #tradeGrouping { background: #e4ebf2 !important; border: 1px solid #849ca8 !important; border-bottom: 0 !important; margin: 0 4px; font-size: 10.5px; min-height: 20px !important; padding: 2px 6px !important; }
+.accf #tradeGrouping button { font-size: 10px; margin-left: 6px; }
+.accf #followup { padding: 6px; }
+.accf #followup nav { display: flex; gap: 4px; margin-bottom: 4px; }
+.accf #followup nav button { background: linear-gradient(to bottom, #fff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; font-weight: 600; font-size: 10.5px; height: 20px; }
+.accf #followup h2 { background: var(--f-teal); color: #fff; font-size: 11px; margin: 4px 0; padding: 2px 8px; }
+.accf #followup input, .accf #followup select { font-size: 10.5px; border: 1px solid #7f9db9; }
+.accf #followup label { font-weight: 600; font-size: 10px; }
+.accf #followup table { border-collapse: collapse; font-size: 10.5px; background: #fff; }
+.accf #followup th { background: linear-gradient(to bottom, #dbe6f2 0%, #b0c4de 100%); border: 1px solid #849ca8; padding: 3px 5px; }
+.accf #followup td { border: 1px solid #cbd5e1; padding: 2px 5px; }
+.accf #followup tr.selected td { background: #316ac5; color: #fff; }
+.accf #dueDates iframe { width: 100%; height: calc(100vh - 110px); border: 0; }
+.accf .cost { display: inline-flex; gap: 4px; align-items: center; margin-left: 30px; }
+.accf .cost .dtcombo-wrap, .accf .cost select { width: 170px; }
+</style>
+</head>
+<!--
+  Screens 66 "1001 Trade Creditors" (/accounts/reports/trade-payables, accountClass 3) and 65 "1002 Trade Debtors"
+  (/accounts/reports/trade-receivables, accountClass 2) - Architecture.WinApp.Account_Reports.TradeDebitorsReport
+  (Tag TradeCreditorsReport -> AccountClass 3). Receivables_Load: From Date = ActiveYr.Start_Period, To Date = today,
+  Only Credit (payables) / Only Debit (receivables) ticked, Closing From "0", Account Title sort ticked, cost centre only on the
+  receivables form (AppId 5 -> first row, disabled), Receivables By Due Date tab only on receivables; ends with btnshow_Click.
+  Lists: GET /api/accounts/trade-report/lookups (+ /accounts). Grid: /js/trade-grid.js; Follow Up tab: /js/trade-followup.js.
+  R3 2026-09-30: Account Reports look (countx_acc_rpt_f.css) and searchable combos (countx_prod_combo.js); select2 removed.
+-->
+<body class="accf" th:attr="data-account-class=${accountClass}">
+<div class="win-title-bar">
+    <span><i class="fa fa-users"></i> <span th:text="${accountClass == 2} ? '1002 Trade Debtors' : '1001 Trade Creditors'">Trade Accounts</span></span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs" id="tabs">
+    <li class="active"><a data-tab="report">Form</a></li>
+    <li><a data-tab="followup">Follow Up</a></li>
+    <li><a data-tab="dueDates" hidden>Receivables By Due Date</a></li>
+</ul>
+<div class="win-toolbar rpt-only">
+    <button type="button" class="win-btn" id="newReport"><i class="fa fa-plus text-success"></i> New</button>
+    <button type="button" class="win-btn" id="printReport" data-rpt="122-AcRptAccounts_ReceivablesWithStatus.rpt"><i class="fa fa-print"></i> 122-Print</button>
+    <button type="button" class="win-btn" id="cityPrint" data-rpt="122A-CityWise-AcRptAccounts_ReceivablesWithStatus.rpt"><i class="fa fa-print"></i> 122-CityWise</button>
+    <a class="win-btn" href="/accounts/reports/receivables-new"><i class="fa fa-line-chart"></i> Receivables Aging Report</a>
+    <a class="win-btn" href="/accounts/reports/payables-aging"><i class="fa fa-line-chart"></i> Payables Aging Report</a>
+    <a class="win-btn" href="/accounts/dashboard"><i class="fa fa-times"></i> Close</a>
+</div>
+<div class="win-header-panel rpt-only"><span><span id="heading"></span>
+    <span id="costField" class="cost"><label for="costCenter">Cost Center</label><select id="costCenter" class="inp" data-dtcombo="single" data-dtcombo-caption="Cost Center"></select></span></span></div>
+
+<div class="filters rpt-only" id="filters">
+    <div class="gb" style="width:600px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 95px 230px 95px 1fr;">
+            <span class="lbl">From &amp; To Date</span><span style="display:flex;gap:2px;"><input id="fromDate" type="date" class="inp"><input id="toDate" type="date" class="inp"></span>
+            <span class="lbl">Inventory Group</span><div><select id="inventoryGroups" class="inp" multiple style="height:34px;"></select></div>
+            <span class="lbl">Control Account</span><div><select id="controls" class="inp" multiple style="height:34px;"></select></div>
+            <span class="lbl">City Name</span><div><select id="cities" class="inp" data-dtcombo="single" data-dtcombo-caption="City Name"></select></div>
+            <span class="lbl">Account Title</span><div><select id="accounts" class="inp" data-dtcombo="single" data-dtcombo-caption="Account Title"></select></div>
+            <span class="lbl">Closing From &amp; To</span><span style="display:flex;gap:2px;"><input id="balanceFrom" type="number" value="0" step="any" class="inp"><input id="balanceTo" type="number" step="any" class="inp"></span>
+            <span class="lbl">Custom Group</span><div><select id="customGroups" class="inp" data-dtcombo="single" data-dtcombo-caption="Custom Group"></select></div>
+            <span class="lbl" id="branchLabel">Branches</span><div id="branchField"><select id="branches" class="inp" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select></div>
+        </div>
+    </div>
+    <div class="gb options">
+        <span class="gb-title">Options</span>
+        <div class="radios">
+            <label class="chk"><input id="credit" type="checkbox"> Only Credit Balance</label>
+            <label class="chk"><input id="debit" type="checkbox"> Only Debit Balance</label>
+            <label class="chk"><input id="tradeOnly" type="checkbox"> Trade Parties</label>
+            <label class="chk"><input id="approved" type="checkbox"> Approved Transactions</label>
+            <label class="chk"><input name="classification" type="radio" value="account" checked> Account Classification</label>
+            <label class="chk"><input name="classification" type="radio" value="balance"> Balance Classification</label>
+        </div>
+    </div>
+    <div class="gb mode">
+        <span class="gb-title">Report</span>
+        <div class="radios">
+            <label class="chk"><input name="reportClass" type="radio" value="3"> Payables</label>
+            <label class="chk"><input name="reportClass" type="radio" value="2"> Receivables</label>
+            <div id="balanceClass" class="radios" style="margin-top:4px;">
+                <label class="chk"><input name="balanceClass" type="radio" value="0" checked> ALL</label>
+                <label class="chk"><input name="balanceClass" type="radio" value="2"> Assets</label>
+                <label class="chk"><input name="balanceClass" type="radio" value="3"> Liability</label>
+            </div>
+        </div>
+        <div style="margin-top:6px;text-align:right;"><button type="button" id="show" class="win-btn-show"><i class="fa fa-eye"></i> Show</button></div>
+    </div>
+</div>
+<div class="grid-caption rpt-only">
+    <span>Filtered Records</span>
+    <span>
+        <label><input class="sort" value="AccountCode" type="checkbox"> Account Code</label>
+        <label><input class="sort" value="AccountTitle" type="checkbox" checked> Account Title</label>
+        <label><input class="sort" value="Closing" type="checkbox"> Closing</label>
+        <label><input name="direction" value="1" type="radio" checked> Ascending</label>
+        <label><input name="direction" value="-1" type="radio"> Descending</label>
+        <button type="button" class="win-btn" id="sort">Apply Sorting</button>
+        <input id="search" aria-label="Filter records" placeholder="Filter records">
+    </span>
+</div>
+<div class="grid-wrap fill" id="reportGrid"><table class="wg auto"><thead></thead><tbody></tbody></table></div>
+<section id="followup" style="display:none;"><h2>Account FollowUp</h2></section>
+<section id="dueDates" hidden><iframe title="Receivables By Due Date"></iframe></section>
+<div class="status-bar" id="status" role="status"></div>
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<script src="/build/js/countx_prod_combo.js?v=20260930s"></script>
+<script src="/js/report-decimal.js"></script>
+<script src="/js/trade-grid.js?v=20260930s"></script>
 <script th:inline="none">
 'use strict';
 let lookup={},rows=[],requestId=0,aborter;const $id=id=>document.getElementById(id),number=v=>Number(v||0),value=id=>$id(id).value,selected=id=>($('#'+id).val()||[]),flag=id=>$id(id).checked;
 const columns=[['lvl03_Title','Parent Account',145],['ClassName','Account Class',75],['AccountCode','Account Code',80],['AccountTitle','Account Title',180],['AccountType','Account Type',65],['Opening','Opening',102],['CurrDebit','Debit',102],['CurrCredit','Credit',102],['Closing','Closing',102],['Increase/Decrease','Increase/Decrease',102],['LastBillDate','Last Bill Date',80],['LastBillsAmount','Last Bill Amount',90],['BillDays','Bill Days',50],['LastRcvdDate','Last Paid Date',80],['LastRcvdAmount','Last Paid Amount',90],['RcvdDays','Paid Days',75],['CityName','City Name',120],['MobilePersonal','Mobile#',110]];
 const numeric=new Set(['Opening','CurrDebit','CurrCredit','Closing','Increase/Decrease','LastBillsAmount','LastRcvdAmount']);
 function displayDate(raw){const match=String(raw??'').match(/^(\d{4})-(\d{2})-(\d{2})/);return match?match[3]+'-'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(match[2])-1]+'-'+match[1].slice(-2):String(raw??'')}
+/* R3 2026-09-30: countx_prod_combo.js skips multi-selects, so the enhanced single Branches combo is unwrapped back to a native multi-select when feature 18 (consolidated) makes it a checked list. */
+function nativeMulti(s){const c=s.__dtcombo;if(c&&c.wrap&&c.wrap.parentNode){c.wrap.parentNode.insertBefore(s,c.wrap);if(c.destroy)c.destroy();c.wrap.remove();s.classList.remove('dtcombo-native');s.removeAttribute('aria-hidden');s.removeAttribute('tabindex');delete s.value;delete s.selectedIndex;delete s.__dtcombo;const l=window.DesktopCombo&&DesktopCombo.instances,i=l?l.indexOf(c):-1;if(i>=0)l.splice(i,1)}s.multiple=true}
 function message(t){$id('status').textContent=t}
 async function api(url,options){const r=await fetch(url,options);if(!r.ok)throw Error('Report request failed ('+r.status+'). Check the server log for the database error.');return r.json()}
 function bind(id,data,text,key='Id'){const e=$id(id),old=$('#'+id).val();e.replaceChildren();if(!e.multiple)e.add(new Option('',''));data.forEach(r=>e.add(new Option(r[text]??'',r[key])));$('#'+id).val(old).trigger('change.select2')}
@@ -41,8 +137,12 @@ async function show(){if($id('show').disabled)return;$id('show').disabled=true;$
 let accountRequest=0;async function reloadAccounts(){const token=++accountRequest;$id('accounts').disabled=true;try{const data=await api('/api/accounts/trade-report/accounts?costCenter='+encodeURIComponent(value('costCenter')||0));if(token===accountRequest)bind('accounts',data,'AccountTitle')}catch(e){if(token===accountRequest){bind('accounts',[],'AccountTitle');message(e.message)}}finally{if(token===accountRequest)$id('accounts').disabled=false}}/* The desktop CmbCostCenter has no change handler: AccountTitleFill() runs once at load with the load-time cost centre. */
 $id('show').onclick=show;$id('sort').onclick=render;$id('search').oninput=render;$id('newReport').onclick=()=>{$('#controls').val(null).trigger('change');$id('fromDate').focus()};
 document.querySelectorAll('[name=classification],[name=reportClass]').forEach(e=>e.onchange=modes);
-document.querySelectorAll('footer button').forEach(e=>e.onclick=()=>{const tab=e.dataset.tab;$id('followup').style.display=tab==='followup'?'block':'none';$id('reportGrid').style.display=tab==='report'?'block':'none';$id('dueDates').hidden=tab!=='dueDates';if(tab==='dueDates'){const frame=$id('dueDates').querySelector('iframe');if(!frame.src)frame.src='/accounts/reports/receivables-by-due-dates'}document.querySelectorAll('footer button').forEach(b=>b.classList.toggle('active',b===e))});
+document.querySelectorAll('#tabs [data-tab]').forEach(e=>e.onclick=ev=>{ev.preventDefault();const tab=e.dataset.tab;$id('followup').style.display=tab==='followup'?'block':'none';$id('reportGrid').style.display=tab==='report'?'block':'none';document.querySelectorAll('.rpt-only').forEach(x=>x.style.display=tab==='report'?'':'none');$id('dueDates').hidden=tab!=='dueDates';if(tab==='dueDates'){const frame=$id('dueDates').querySelector('iframe');if(!frame.src)frame.src='/accounts/reports/receivables-by-due-dates'}document.querySelectorAll('#tabs [data-tab]').forEach(b=>b.parentElement.classList.toggle('active',b===e))});
 ['printReport','cityPrint'].forEach(id=>$id(id).onclick=()=>message('The desktop Crystal print template has not yet been verified in Java.'));
 document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key.toLowerCase()==='n'){e.preventDefault();$id('newReport').click()}if(e.key==='Escape')location.href='/accounts/dashboard';if(e.ctrlKey&&e.key.toLowerCase()==='p'){e.preventDefault();$id('printReport').click()}});
-(async()=>{document.querySelector('[name=reportClass][value="'+document.body.dataset.accountClass+'"]').checked=true;$id(document.body.dataset.accountClass==='3'?'credit':'debit').checked=true;$('select').select2({placeholder:'',allowClear:true});modes();try{lookup=await api('/api/accounts/trade-report/lookups');const today=new Date();$id('toDate').value=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');$id('fromDate').value=String(lookup.year.Start_Period).slice(0,10);/* CostCenterFill() runs only when the form opens as Receivables (AccountClass 2); the Payables form hides and never fills it. */if(document.body.dataset.accountClass==='2')bind('costCenter',lookup.costCenters,'CostCenterName');if(document.body.dataset.accountClass==='2'&&Number(lookup.appId)===5&&lookup.costCenters.length){$('#costCenter').val(String(lookup.costCenters[0].Id)).trigger('change.select2');$id('costCenter').disabled=true}bind('cities',lookup.cities,'CityName');bind('customGroups',lookup.customGroups,'AcLookUpsDescription');bind('inventoryGroups',lookup.inventoryGroups,'Description');bind('accounts',lookup.accounts,'AccountTitle');const features=new Set(lookup.features.map(r=>number(r.Id)));$id('branchField').hidden=!features.has(17);if(features.has(18)){$('#branches').select2('destroy');$id('branches').multiple=true;$('#branches').select2()}bind('branches',lookup.branches,'BranchName');$('#branches').val(String(lookup.branchId)).trigger('change');modes();await reloadAccounts();document.querySelector('[data-tab=dueDates]').hidden=document.body.dataset.accountClass!=='2';/* Receivables_Load ends with btnshow_Click(null, null). */await show()}catch(e){message(e.message)}})();
-</script><script src="/js/trade-followup.js"></script></body></html>
+(async()=>{document.querySelector('[name=reportClass][value="'+document.body.dataset.accountClass+'"]').checked=true;$id(document.body.dataset.accountClass==='3'?'credit':'debit').checked=true;if($.fn.select2)$('select').select2({placeholder:'',allowClear:true});modes();try{lookup=await api('/api/accounts/trade-report/lookups');const today=new Date();$id('toDate').value=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');$id('fromDate').value=String(lookup.year.Start_Period).slice(0,10);/* CostCenterFill() runs only when the form opens as Receivables (AccountClass 2); the Payables form hides and never fills it. */if(document.body.dataset.accountClass==='2')bind('costCenter',lookup.costCenters,'CostCenterName');if(document.body.dataset.accountClass==='2'&&Number(lookup.appId)===5&&lookup.costCenters.length){$('#costCenter').val(String(lookup.costCenters[0].Id)).trigger('change.select2');$id('costCenter').disabled=true}bind('cities',lookup.cities,'CityName');bind('customGroups',lookup.customGroups,'AcLookUpsDescription');bind('inventoryGroups',lookup.inventoryGroups,'Description');bind('accounts',lookup.accounts,'AccountTitle');const features=new Set(lookup.features.map(r=>number(r.Id)));$id('branchField').hidden=!features.has(17);$id('branchLabel').hidden=!features.has(17);if(features.has(18)){if($.fn.select2){$('#branches').select2('destroy');$id('branches').multiple=true;$('#branches').select2()}else nativeMulti($id('branches'))}bind('branches',lookup.branches,'BranchName');$('#branches').val(String(lookup.branchId)).trigger('change');modes();await reloadAccounts();document.querySelector('[data-tab=dueDates]').hidden=document.body.dataset.accountClass!=='2';/* Receivables_Load ends with btnshow_Click(null, null). */await show()}catch(e){message(e.message)}})();
+</script>
+<script src="/js/trade-followup.js?v=20260930s"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

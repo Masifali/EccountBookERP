@@ -1023,6 +1023,7 @@
     }
     function slip257For(gpId) {
         if (!(gpId > 0)) { box('No Record Found For Display'); return; }
+        if (window.printRpt) return window.printRpt('257-InwardGatePassWithWbAndLabSlip.rpt', { id: gpId });   // Jasper, same .rpt
         get('/gate-pass-slip/' + gpId, null, shared).then(function (d) {
             openPrint('257 - Inward Gate Pass With Weigh Bridge And Lab Slip', [
                 { title: 'Gate Pass', rows: d.main || [] },

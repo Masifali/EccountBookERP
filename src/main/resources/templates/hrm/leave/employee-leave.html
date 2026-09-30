@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Employee Leave - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+</head>
+<!-- Architecture.WinApp.HRM.LeaveManagment.frmEmployeeLeaveRequest - ClientSize 979 x 735, Maximized.
+     panel3 toolStrip1: New | Save | Update (hidden). panel4 (26): "Leave Request".
+     groupBox2 "Leave Information" (5,6) 601x131: Leave Quota CmbLeaveQuota (78,16) 220 + button3(+, no handler);
+       Leave Type cmbLeaveType (397,16) 174 + button2(+, no handler); Employee cmbEmployee (78,45) 493 + btnEmployeeRegister(+);
+       Reason txtReason (78,74) 521; Remarks txtRemarks (78,101) 521.
+     groupBox1 "Employee Information" (610,6) 351x178: Employee No (ro), Leave Balance (ro), Department, Desgination, Section,
+       Location (read-only UltraCombos filled by GetEmployeeHistory).
+     groupBox3 "Add Leave Dates" (5,138): Leave Date datLeaveDate (dd-MMM-yy) + btnAdd "Add"/"Update".
+     datFromDate / datToDate (Visible = false). panel7 "Detail"; datagrid: X (Delete button, first), EmployeeLeaveDetailId (hidden), LeaveDate.
+     tabPage2 "history": DataGridHistory (Edit button first, EmployeeName, LeaveType, NoOfDays, Reason, Remarks) + grdDetailHistory (LeaveDate). -->
+<body class="pd-body hrm-body" data-hrm="employee-leave" data-screen="661">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmLeave.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmLeave.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="HrmLeave.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+    </div>
+    <div class="hrm-caption">Leave Request</div>
+    <fieldset class="hrm-group"><legend>Leave Information</legend>
+    <div class="hrm-entry hrm-cols-2">
+        <div class="hrm-field"><label for="CmbLeaveQuota">Leave Quota</label><div class="hrm-inline"><select id="CmbLeaveQuota" class="win-combo dtcombo hrm-grow" data-dtcombo="single"></select><button type="button" id="button3" class="win-btn-action" style="min-width:28px;width:28px;padding:0" tabindex="-1" title="Add"><i class="fa fa-plus"></i></button></div></div>
+        <div class="hrm-field"><label for="cmbLeaveType">Leave Type</label><div class="hrm-inline"><select id="cmbLeaveType" class="win-combo dtcombo hrm-grow" data-dtcombo="single"></select><button type="button" id="button2" class="win-btn-action" style="min-width:28px;width:28px;padding:0" tabindex="-1" title="Add"><i class="fa fa-plus"></i></button></div></div>
+        <div class="hrm-field hrm-span-2"><label for="cmbEmployee">Employee</label><div class="hrm-inline"><select id="cmbEmployee" class="win-combo dtcombo hrm-grow" data-dtcombo="single"></select><button type="button" id="btnEmployeeRegister" class="win-btn-action" style="min-width:28px;width:28px;padding:0" tabindex="-1" title="Add" onclick="HrmLeave.employeeRegistration()"><i class="fa fa-plus"></i></button></div></div>
+        <div class="hrm-field hrm-span-2"><label for="txtReason">Reason</label><input type="text" id="txtReason" class="win-textbox" maxlength="250" autocomplete="off"/></div>
+        <div class="hrm-field hrm-span-2"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" maxlength="250" autocomplete="off"/></div>
+        <input type="hidden" id="datFromDate"/><input type="hidden" id="datToDate"/>
+    </div>
+    </fieldset>
+    <fieldset class="hrm-group"><legend>Employee Information</legend>
+    <div class="hrm-entry hrm-cols-3">
+        <div class="hrm-field"><label for="txtEmployeeNo">Employee No</label><input type="text" id="txtEmployeeNo" class="win-textbox" readonly tabindex="-1"/></div>
+        <div class="hrm-field"><label for="txtLeaveBalance">Leave Balance</label><input type="text" id="txtLeaveBalance" class="win-textbox" readonly/></div>
+        <div class="hrm-field"><label for="cmbDepartment">Department</label><select id="cmbDepartment" class="win-combo" disabled tabindex="-1"></select></div>
+        <div class="hrm-field"><label for="cmbDesignation">Desgination</label><select id="cmbDesignation" class="win-combo" disabled tabindex="-1"></select></div>
+        <div class="hrm-field"><label for="cmbSection">Section</label><select id="cmbSection" class="win-combo" disabled tabindex="-1"></select></div>
+        <div class="hrm-field"><label for="cmbLocation">Location</label><select id="cmbLocation" class="win-combo" disabled tabindex="-1"></select></div>
+    </div>
+    </fieldset>
+    <fieldset class="hrm-group"><legend>Add Leave Dates</legend>
+    <div class="hrm-entry hrm-cols-3">
+        <div class="hrm-field"><label for="datLeaveDate">Leave Date</label><div class="hrm-inline"><input type="date" id="datLeaveDate" class="win-textbox hrm-grow"/><button type="button" id="btnAdd" class="win-btn-action" onclick="HrmLeave.btnAdd(this)">Add</button></div></div>
+    </div>
+    </fieldset>
+    <div class="hrm-grid-box">
+        <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="datagrid"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_leave.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

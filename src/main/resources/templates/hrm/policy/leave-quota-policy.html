@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Leave Quota Policy - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        /* policy pages only */
+        .pol-row-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .pol-row-btns .win-btn-action { width: auto; min-width: 40px; padding: 0 10px; }
+        .pol-combo-btn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px; align-items: center; min-width: 0; }
+        .pol-combo-btn .win-btn-action { width: 30px; min-width: 30px; padding: 0; }
+        .pol-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 6px; min-width: 0; }
+        .pol-two > .hrm-grid-box { min-width: 0; }
+        .pol-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; padding: 0 4px; }
+        .pol-group { border: 1px solid #c8c8c8; margin: 6px 6px 4px 6px; min-width: 0; }
+        .pol-group .hrm-entry { padding: 6px 8px; }
+        .pol-group .hrm-field { grid-template-columns: 200px minmax(0, 1fr); }
+        .hrm-field > input[type=checkbox] { justify-self: start; width: 15px; height: 15px; margin: 0; }
+        button.pol-del { border: 1px solid #999; background: #f4f4f4; font: bold 8pt Verdana, sans-serif; line-height: 14px; padding: 0 4px; cursor: pointer; }
+        button.pol-del:hover { background: #ffd6d6; }
+        .pol-hist-detail { margin-top: 6px; }
+        @media (max-width: 700px) {
+            .pol-two, .pol-cols { grid-template-columns: 1fr; }
+            .pol-group .hrm-field { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<!-- Architecture.WinApp.HRM.PolicyManagment.LeaveQuotaPolicy - ClientSize 964 x 661, TabControl "Form" | "History".
+     Form tab: tsItemType New | Update (hidden at Load) | Save | Define Special Leaves (ProfileDefine type 4) | Define Offical Leaves (type 3);
+     panel11 (Teal, 32) label5 "Leave Quota Policy"; "From Date" txtdatefrom (78,45) dd-MMM-yy, "To Date" txtdateto (78,73), "Description" txtdescription (339,45) 559x51;
+     panel5 (left, 481): panel15 (Teal) "Offical Leave" + grdcasualleave; panel6 (fill): panel18 (Teal) "Special Leave" + grdspecialleave -
+       both: Id hidden, LeaveType 300 (no edit), QuotaValue 100 (editable, sum "0,##.##", UpdatingCell numeric check), filter row, total row.
+     History tab: grdHistory (Detail, Edit buttons frozen first; LeaveQuotaId hidden, FromDate, ToDate, Description 300) + grdCasualHistory / grdSpecialHistory
+       -> here the footer History dialog with the same columns and the two Detail grids. -->
+<body class="pd-body hrm-body" data-hrm="leave-quota-policy" data-screen="646">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmPolicy.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="HrmPolicy.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmPolicy.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnlookup" class="win-btn-tool" onclick="HrmPolicy.btnlookup(this)"><i class="fa fa-list"></i> <span>Define Special Leaves</span></button>
+        <button type="button" id="btnOfficialleave" class="win-btn-tool" onclick="HrmPolicy.btnOfficialleave(this)"><i class="fa fa-list"></i> <span>Define Offical Leaves</span></button>
+    </div>
+    <div class="hrm-caption">Leave Quota Policy</div>
+    <div class="hrm-entry hrm-cols-3">
+            <div class="hrm-field"><label for="txtdatefrom">From Date</label><input type="date" id="txtdatefrom" class="win-textbox" required/></div>
+            <div class="hrm-field hrm-span-2"><label for="txtdescription">Description</label><textarea id="txtdescription" class="win-textbox" rows="2" maxlength="150"></textarea></div>
+            <div class="hrm-field"><label for="txtdateto">To Date</label><input type="date" id="txtdateto" class="win-textbox" required/></div>
+    </div>
+    <div class="pol-two">
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Offical Leave</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdcasualleave"></table></div>
+        </div>
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Special Leave</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdspecialleave"></table></div>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_policy.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

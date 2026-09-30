@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trial Balance Selected</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+</head>
+<!--
+  Screen 81 "Trial Balance Seleted" - Architecture.WinApp.Account_Reports.SelectedTrialBalance (base.Name "SelectedTrialBalance").
+  Read-only: btnShowSelectedTrial_Click -> VoucherReports.SelectedTrialBalanceNew -> SpAccounts_TrialBalanceSelectedNew_Report.
+  The form writes nothing; the add/edit/delete chart-of-account rows and the "History" of the previous web page were not desktop features.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-balance-scale"></i> Trial Balance Selected</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<ul class="win-tabs">
+    <li><a href="/accounts/reports/trial-balance">Trial Balance</a></li>
+    <li class="active"><a>Trial Balance Selected</a></li>
+</ul>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="resetSelectedTrial()"><i class="fa fa-plus text-success"></i> Reset</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="113A-AcRptTrialBalanceSelectedGroupAc.rpt"><i class="fa fa-print"></i> Print</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="113A-AcRptTrialBalanceSelectedGroupAc.rpt"><i class="fa fa-print"></i> 113A-Print</button>
+</div>
+<div class="win-header-panel"><span>Trial Balances Selected</span></div>
+
+<div class="filters">
+    <div class="gb" style="width:760px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 95px 150px 60px 110px 1fr;">
+            <span class="lbl">From Date</span><input type="date" id="datFromDateSt" class="inp">
+            <span class="lbl">Cl_Debit</span><input type="text" id="txtClosingDebit" class="inp" value="0" style="text-align:right;">
+            <label class="chk"><input type="checkbox" id="ChkBoxPostSelectedTrial" checked> Include UnPost Voucher</label>
+
+            <span class="lbl">To Date</span><input type="date" id="datToDateST" class="inp">
+            <span class="lbl">Cl_Credit</span><input type="text" id="txtClosingCredit" class="inp" value="0" style="text-align:right;">
+            <span><label class="chk"><input type="checkbox" id="ChkZkipZeroSelected" checked> Skip Zero</label>
+                  <label class="chk"><input type="checkbox" id="chkSkipCgs"> Skip CGS</label></span>
+
+            <span class="lbl">Documents Not To Include</span>
+            <select id="cmbDocumentTypeIds" class="inp" multiple style="grid-column: span 3;"></select>
+            <span><label class="chk"><input type="radio" name="rdCols" id="RdFourColumns" checked> Four Columns</label>
+                  <label class="chk"><input type="radio" name="rdCols" id="RdSixColumns"> Six Columns</label></span>
+
+            <span class="lbl">Group Account</span>
+            <select id="cmbAccountTitle" class="inp" style="grid-column: span 3;"></select>
+            <span></span>
+
+            <span class="lbl">Custom Groups</span>
+            <select id="CmbCustomeGroups" class="inp" style="grid-column: span 3;"></select>
+            <span></span>
+
+            <span class="lbl">City Name</span>
+            <select id="CmbCityName" class="inp" style="grid-column: span 3;"></select>
+            <span></span>
+
+            <span class="lbl st-branch" style="display:none;">Branches</span>
+            <select id="CmbBranches" class="inp st-branch" style="grid-column: span 3; display:none;"></select>
+            <span class="st-branch" style="display:none;"></span>
+
+            <span class="lbl st-lang" style="display:none;">Language</span>
+            <select id="CmbLanguageSelected" class="inp st-lang" style="grid-column: span 3; display:none;"></select>
+            <span class="st-lang" style="display:none;"></span>
+        </div>
+        <div style="text-align:right; margin-top:6px;">
+            <button type="button" id="btnShowSelectedTrial" class="win-btn-show" onclick="showSelectedTrial()"><i class="fa fa-eye"></i> Show</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-caption"><span>Trial Balances Selected</span><span id="lblStatus"></span></div>
+<div class="grid-wrap"><table class="wg" id="grdSelected"></table></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    let CTX = null, rows = [], branchShown = false;
+    const QS = new URLSearchParams(window.location.search);
+
+    function columns() {
+        const six = $('#RdSixColumns').is(':checked');
+        return [
+            { key: 'BranchName', visible: branchShown },
+            { key: 'AccountCode', link: function (r) { AccF.openLedger(r.AccountId, $('#datFromDateSt').val(), $('#datToDateST').val(), 0, r.BranchesId); } },
+            { key: 'AccountTitle' },
+            { key: 'AccountType' },
+            { key: 'Opening', type: 'both', sum: true, visible: !six },
+            { key: 'OpeningDr', type: 'both', sum: true, visible: six },
+            { key: 'OpeningCr', type: 'both', sum: true, visible: six },
+            { key: 'CurrDebit', caption: 'Debit', type: 'both', sum: true },
+            { key: 'CurrCredit', caption: 'Credit', type: 'both', sum: true },
+            { key: 'Closing', type: 'both', sum: true, visible: !six },
+            { key: 'ClosingDr', type: 'both', sum: true, visible: six },
+            { key: 'ClosingCr', type: 'both', sum: true, visible: six }
+        ];
+    }
+    /* GridSettingsSelected: grouped on ParentTitle, ClassName / AcLevel / ids hidden */
+    function render() {
+        AccF.renderGrid({ table: '#grdSelected', columns: columns(), rows: rows, groupBy: 'ParentTitle', groupCaption: 'ParentTitle', emptyText: '' });
+        $('#lblStatus').text('Records: ' + rows.length);
+    }
+
+    async function showSelectedTrial() {
+        const btn = $('#btnShowSelectedTrial');
+        AccF.busy(btn, true);
+        try {
+            const br = $('#CmbBranches').val();
+            rows = await AccF.post('/selected-trial-balance', {
+                fromDate: $('#datFromDateSt').val(), toDate: $('#datToDateST').val(),
+                clDebit: $('#txtClosingDebit').val(), clCredit: $('#txtClosingCredit').val(),
+                groupAccountId: $('#cmbAccountTitle').val() || null, cityId: $('#CmbCityName').val() || null,
+                includeUnposted: $('#ChkBoxPostSelectedTrial').is(':checked'),
+                languageId: $('#CmbLanguageSelected').val() || 0, customGroupId: $('#CmbCustomeGroups').val() || null,
+                skipZero: $('#ChkZkipZeroSelected').is(':checked'), skipCgs: $('#chkSkipCgs').is(':checked'),
+                documentTypeIds: AccF.selectedIds('#cmbDocumentTypeIds') || null,
+                branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null
+            });
+            branchShown = !!(CTX.branchFeature && br && br.length);
+            render();
+        } catch (e) {
+            rows = []; $('#grdSelected').empty();
+            alert(e.message);
+        } finally { AccF.busy(btn, false); }
+    }
+
+    /* ResetSelectedTrial (Reset button): Skip Zero ticked, City / Custom Group / Group Account cleared, grid cleared */
+    function resetSelectedTrial() {
+        $('#ChkZkipZeroSelected').prop('checked', true);
+        $('#CmbCityName, #CmbCustomeGroups, #cmbAccountTitle').val('');
+        rows = []; $('#grdSelected').empty(); $('#lblStatus').text('');
+    }
+    /* reset() (Ctrl+N): City and Group Account cleared, Include UnPost ticked */
+    function resetCtrlN() {
+        $('#CmbCityName, #cmbAccountTitle').val('');
+        $('#ChkBoxPostSelectedTrial').prop('checked', true);
+        AccF.focus('#cmbAccountTitle');
+    }
+
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetCtrlN(); }
+        if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.st-lang').show(); AccF.focus('#CmbLanguageSelected'); }
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); window.print(); }
+    });
+
+    $('input[name="rdCols"]').on('change', function () { if (rows.length) render(); });
+
+    $(function () { (async function () {
+        try {
+            CTX = await AccF.context();
+            if (CTX.branchFeature) {
+                const brs = await AccF.lookup('branches');
+                if (CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
+                AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', CTX.branchConsolidated ? null : '');
+                $('#CmbBranches').val(CTX.branchConsolidated ? [String(CTX.userBranchId)] : String(CTX.userBranchId));
+                $('.st-branch').show();
+            }
+            const langs = await AccF.lookup('languages');
+            AccF.fillSelect('#CmbLanguageSelected', langs, 'Id', 'LanguageDescription', null);
+            $('#CmbLanguageSelected').prepend($('<option>').val('0').text('...Select Any Value...')).val('0');
+            AccF.fillSelect('#cmbAccountTitle', await AccF.lookup('account-groups'), 'Id', 'AccountTitle', '');
+            AccF.fillSelect('#CmbCityName', await AccF.lookup('cities'), 'Id', 'CityName', '');
+            AccF.fillSelect('#CmbCustomeGroups', await AccF.lookup('custom-groups'), 'Id', 'AcLookUpsDescription', '');
+            AccF.fillSelect('#cmbDocumentTypeIds', await AccF.lookup('document-types'), 'Id', 'DocumentTypeDescription', null);
+            $('#datFromDateSt').val(CTX.activeYear.startPeriod || AccF.today());
+            $('#datToDateST').val(AccF.today());
+            // Opened from the Trial Balance (GroupId, FromDate, ToDate): show at once
+            if (QS.get('fromDate') && QS.get('toDate')) {
+                $('#datFromDateSt').val(QS.get('fromDate'));
+                $('#datToDateST').val(QS.get('toDate'));
+                if (QS.get('groupAccountId')) $('#cmbAccountTitle').val(QS.get('groupAccountId'));
+                showSelectedTrial();
+            }
+            AccF.focus('#cmbAccountTitle');
+        } catch (e) { alert(e.message); }
+    })(); });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

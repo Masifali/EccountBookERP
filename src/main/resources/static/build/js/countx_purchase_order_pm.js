@@ -691,7 +691,7 @@
         is not rendered on the web; the report's own rows are opened instead. */
     function GenerateReport(id) {
         if (!id) { box('No Record Found For Display'); return; }
-        window.open('/api/reports/po-pm-215/data?id=' + encodeURIComponent(id), '_blank');
+        window.open('/api/print/po-pm-215/pdf?id=' + encodeURIComponent(id), '_blank');
     }
     function btnprint_Click() { if (!perms.Print) return; GenerateReport(RecId); }
 

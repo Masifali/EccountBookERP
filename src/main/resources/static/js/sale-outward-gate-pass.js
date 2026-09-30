@@ -1,4 +1,4 @@
-(()=>{'use strict';const $=x=>document.getElementById(x),S={id:0,data:{},saleOrderId:0};const v=(r,...k)=>{for(const x of k)if(r?.[x]!=null)return r[x];return''},esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+(()=>{'use strict';const $=x=>document.getElementById(x),S={id:0,data:{},saleOrderId:0};try{Object.defineProperty(window,'RecId',{get:()=>S.id,configurable:true})}catch(e){};const v=(r,...k)=>{for(const x of k)if(r?.[x]!=null)return r[x];return''},esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let pending=0;
 const disabledBefore=new Map(), reads=new Map();
 function syncBusyButtons(){

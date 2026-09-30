@@ -511,7 +511,7 @@
             GenerateSummaryForUser(); renderAll(); refreshCombos();
         }).catch(function (e) { box(e.message); });
     }
-    function GeneratePrint(id) { window.open('/api/reports/ssc-665/data?id=' + encodeURIComponent(id), '_blank'); }
+    function GeneratePrint(id) { window.open('/api/print/ssc-665/pdf?id=' + encodeURIComponent(id), '_blank'); }
 
     /* AvgRateUpdateOnDocDateChange :2454 (txtDocdate_Leave when FIFO or CGSEntryAllow) */
     function docDateLeave() {

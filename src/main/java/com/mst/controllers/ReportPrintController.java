@@ -45,10 +45,13 @@ public class ReportPrintController {
     private final ReportTemplateRepository templates;
     private final CurrentUserContext context;
     private final CrystalJasperPrinter jasper;
+    private final com.mst.reports.prints.ReportPdfService generated;
 
     public ReportPrintController(ReportRegistry registry, ReportDataService data,
                                  CrystalBridgeRenderer crystal, ReportTemplateRepository templates,
-                                 CurrentUserContext context, CrystalJasperPrinter jasper) {
+                                 CurrentUserContext context, CrystalJasperPrinter jasper,
+                                 com.mst.reports.prints.ReportPdfService generated) {
+        this.generated = generated;
         this.registry = registry;
         this.data = data;
         this.crystal = crystal;
@@ -72,7 +75,7 @@ public class ReportPrintController {
             require();
             m.put("available", true);
             m.put("crystalAvailable", crystal.available());
-            m.put("jasper", "converted templates print without Crystal; others need the bridge");
+            m.put("jasper", "every report prints through Jasper: the converted template, or a layout generated from the procedure (no Crystal runtime)");
             m.put("reason", crystal.unavailableReason());
             m.put("templatesSeeded", templates.seeded());
             m.put("templateFiles", templates.count());
@@ -122,14 +125,16 @@ public class ReportPrintController {
             }
             /* A converted Jasper template (migration/rpt-to-jasper) prints in pure Java; the
                Crystal bridge is the fallback for reports not converted yet. */
-            boolean useJasper = jasper.hasTemplate(def.template);
-            if (!useJasper && !crystal.available()) {
-                return text(HttpStatus.SERVICE_UNAVAILABLE, "No converted Jasper template for "
-                        + def.template + ", and " + crystal.unavailableReason());
+            /* No Crystal runtime: the converted template when there is one, otherwise a Jasper layout
+               generated from the procedure's own columns (ReportPdfService). */
+            byte[] pdf;
+            if (jasper.hasTemplate(def.template)) {
+                Map<String, Object> result = data.run(key, args == null ? new LinkedHashMap<>() : args);
+                pdf = jasper.renderPdf(result);
+            } else {
+                pdf = generated.pdf(key, def.template, args == null ? new LinkedHashMap<>() : args);
+                if (pdf == null) return text(HttpStatus.NOT_FOUND, "No Record Found For Display");
             }
-
-            Map<String, Object> result = data.run(key, args == null ? new LinkedHashMap<>() : args);
-            byte[] pdf = useJasper ? jasper.renderPdf(result) : crystal.renderPdf(result);
 
             HttpHeaders h = new HttpHeaders();
             h.setContentType(MediaType.APPLICATION_PDF);

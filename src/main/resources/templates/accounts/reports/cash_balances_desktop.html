@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cash Balances</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+</head>
+<!--
+  Screen 74 "Cash Balances Report" (ScreenName CashBalances) - ScreenDefinition.TargetUrl Architecture.WinApp.Account_Reports.frmCashBalance.
+  Show -> reciptandpayment (VoucherReports.CashBalances -> Sp_Accounts_CashBalances_Rpt)
+        + cashSummery (VoucherReports.CashandBankBalancesSummery, AccountTypeId 2 -> Sp_Accounts_CashBankBalancesSummery_Rpt).
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-money"></i> Cash Balances</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" onclick="cbNew()"><i class="fa fa-plus text-success"></i> New</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="592-CashBalances.rpt"><i class="fa fa-print"></i> 592_Print Receipt and Payment</button>
+    <button type="button" class="win-btn" onclick="window.print()" data-rpt="593-CashBankBalancesSummery_Rpt.rpt"><i class="fa fa-print"></i> 593_Print Summary</button>
+</div>
+<div class="win-header-panel"><span>Cash Balances</span></div>
+
+<div class="filters">
+    <div class="gb" style="width:760px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 60px 150px 60px 120px 55px 120px 1fr;">
+            <span class="lbl">Date Type</span><select data-dtcombo="single" data-dtcombo-caption="Date Type" id="cmbperemeter" class="inp"></select>
+            <span class="lbl">From Date</span><input type="date" id="txtDateFrom" class="inp">
+            <span class="lbl">To Date</span><input type="date" id="txtDateTo" class="inp">
+            <button type="button" id="btnSearch" class="win-btn-show" onclick="cbShow()">Show</button>
+            <span class="lbl">Account Title</span><select data-dtcombo="single" data-dtcombo-caption="Account Title" id="cmbAccountTitle" class="inp" style="grid-column: span 3;"></select>
+            <span></span><span></span><span></span>
+            <span class="lbl cb-br" style="display:none;">Branches</span><select id="CmbBranches" class="inp cb-br" style="display:none; grid-column: span 3;"></select>
+            <span class="lbl cb-lang" style="display:none;">Language</span><select data-dtcombo="single" data-dtcombo-caption="Language" id="CmbLanguage" class="inp cb-lang" style="display:none; grid-column: span 2;"></select>
+        </div>
+    </div>
+    <div class="gb">
+        <span class="gb-title">&nbsp;</span>
+        <label class="chk"><input type="radio" name="rdGrp" id="RadGroupbyBankName" value="cash" checked> Group By Cash Account</label><br>
+        <label class="chk"><input type="radio" name="rdGrp" id="RadGroupbyParty" value="offset"> Group By Offset Account</label><br>
+        <label class="chk"><input type="radio" name="rdGrp" id="RadNoGroup" value="none"> None</label>
+    </div>
+</div>
+
+<ul class="win-tabs">
+    <li class="active" data-tab="s"><a onclick="cbTab('s')">Summary</a></li>
+    <li data-tab="d"><a onclick="cbTab('d')">Payment/Receipts Detail</a></li>
+</ul>
+<div id="tabS">
+    <div class="grid-caption"><span>Summary</span></div>
+    <div class="cards" id="SummeryFlowLayoutPanel"></div>
+</div>
+<div id="tabD" style="display:none;">
+    <div class="grid-caption"><span>Receipt</span></div>
+    <div class="grid-wrap" style="max-height:calc(50vh - 150px);"><table class="wg" id="grdReceipt"></table></div>
+    <div class="grid-caption"><span>Payment</span></div>
+    <div class="grid-wrap" style="max-height:calc(50vh - 150px);"><table class="wg" id="grdPayment"></table></div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    /* Searchable dropdowns (countx_prod_combo.js, 2026-09-30 R2): every single select carries data-dtcombo="single";
+       the wrap takes the select's grid placement and its initial hidden state; multi-selects stay native. */
+    function comboInit() {
+        if (!window.DesktopCombo) return;
+        $('select[data-dtcombo]').each(function () {
+            const c = window.DesktopCombo.enhance(this);
+            if (!c || !c.wrap) return;
+            if (this.style.gridColumn) c.wrap.style.gridColumn = this.style.gridColumn;
+            if (this.style.display === 'none') c.wrap.style.display = 'none';
+        });
+    }
+    function comboFocus(sel) { const $i = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); ($i.length ? $i : $(sel)).focus(); }
+    /* CmbBranches is a native multi-select under ERP feature 18 (consolidated), otherwise a single searchable combo. */
+    function branchesCombo(consolidated) {
+        if (consolidated) return;
+        $('#CmbBranches').attr({ 'data-dtcombo': 'single', 'data-dtcombo-caption': 'Branches' });
+        comboInit();
+    }
+    let CTX = null, receipts = [], payments = [], branchShown = false;
+    const QS = new URLSearchParams(window.location.search);
+
+    function cbTab(t) {
+        $('.win-tabs li').removeClass('active'); $('.win-tabs li[data-tab="' + t + '"]').addClass('active');
+        $('#tabS').toggle(t === 's'); $('#tabD').toggle(t === 'd');
+    }
+    /* cmbperemeter_ValueChanged (frmCashBalance.cs) */
+    function onParameter() {
+        const id = parseInt($('#cmbperemeter').val(), 10);
+        if (id === 1) $('#txtDateFrom').val(AccF.today());
+        else if (id === 2) $('#txtDateFrom').val(AccF.addDays(-7));
+        else if (id === 3) { $('#txtDateFrom').val(AccF.monthStart()); $('#txtDateTo').val(AccF.today()); }
+        else if (id === 4) { $('#txtDateFrom').val(AccF.yearStart()); $('#txtDateTo').val(AccF.today()); }
+        else if (id === 5) $('#txtDateFrom').val(CTX.activeYear.startPeriod);
+    }
+
+    /* grdReceipt/grdPayment_LinkClicked: V.No opens the voucher when AllowEditOnVoucherNoinReports (the slip print otherwise, not on the web) */
+    function detailColumns(accountCol, groupCol) {
+        return [
+            { key: 'BranchName', visible: branchShown },
+            { key: 'V.Type' },
+            { key: 'V.No', link: CTX.allowEditOnVoucherNoinReports ? function (r) { AccF.editLinked(r.DocumentTypeId, r.Id, r.DocumentTypeSrNo, 0); } : null },
+            { key: 'V.Date', type: 'date' },
+            { key: 'CashAccount', visible: groupCol !== 'CashAccount' },
+            { key: 'Account', caption: accountCol, visible: groupCol !== 'Account' },
+            { key: 'Amount', type: 'both', sum: true },
+            { key: 'NoOfAttachments', caption: 'Attachments' }
+        ];
+    }
+    /* BindAndSetupGrid: grouped (group column hidden, group totals) on CashAccount or the offset account unless None */
+    function renderDetail() {
+        const g = $('input[name="rdGrp"]:checked').val();
+        const groupBy = g === 'cash' ? 'CashAccount' : (g === 'offset' ? 'Account' : null);
+        AccF.renderGrid({ table: '#grdReceipt', columns: detailColumns('ReceivedFrom', groupBy), rows: receipts, groupBy: groupBy, groupTotals: !!groupBy, emptyText: '' });
+        AccF.renderGrid({ table: '#grdPayment', columns: detailColumns('PaidTo', groupBy), rows: payments, groupBy: groupBy, groupTotals: !!groupBy, emptyText: '' });
+    }
+    /* cashSummery: one AccountsDashboardCard per cash account; AccountTitleFill from the same rows */
+    function renderCards(rows) {
+        const $p = $('#SummeryFlowLayoutPanel').empty();
+        rows.forEach(function (r) {
+            const diff = AccF.num(r.CurrDebit) - AccF.num(r.CurrCredit);
+            const status = diff === 0 ? 'Nothing' : (diff > 0 ? 'Increase' : 'Decrease');
+            const $c = $('<div class="card-f">');
+            $c.append($('<div class="hd">').text(r.AccountTitle));
+            const $b = $('<div class="bd">');
+            [ ['Opening', AccF.both(r.Opening)], ['Current Dr', AccF.both(r.CurrDebit)], ['Current Cr', AccF.both(r.CurrCredit)],
+             ['Difference', AccF.hashBoth(diff) + ' (' + status + ')'], ['Closing', AccF.both(r.Closing)]].forEach(function (x) {
+                $b.append($('<span>').text(x[0]), $('<span style="text-align:right;">').text(x[1]).addClass(x[0] === 'Difference' ? (diff > 0 ? 'inc' : (diff < 0 ? 'dec' : '')) : ''));
+            });
+            $c.append($b);
+            $c.append($('<div class="ft">').append($('<a href="#" class="lnk">').text('More Info >>>>>').on('click', function (e) {
+                e.preventDefault(); AccF.openLedger(r.AccountId, $('#txtDateFrom').val(), $('#txtDateTo').val());
+            })));
+            $p.append($c);
+        });
+        const cur = $('#cmbAccountTitle').val();
+        const seen = {}, list = [];
+        rows.forEach(function (r) { if (!seen[r.AccountId]) { seen[r.AccountId] = 1; list.push({ Id: r.AccountId, Name: r.AccountTitle }); } });
+        if (list.length) { AccF.fillSelect('#cmbAccountTitle', list, 'Id', 'Name', ''); if (cur) $('#cmbAccountTitle').val(cur); }
+    }
+
+    function request(withDetail) {
+        const br = $('#CmbBranches').val();
+        return {
+            fromDate: $('#txtDateFrom').val(), toDate: $('#txtDateTo').val(), withDetail: withDetail,
+            accountId: $('#cmbAccountTitle').val() || null,
+            branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null,
+            languageId: $('#CmbLanguage').val() || null
+        };
+    }
+    async function cbShow() {
+        const btn = $('#btnSearch');
+        AccF.busy(btn, true);
+        try {
+            const res = await AccF.post('/cash-balances', request(true));
+            branchShown = !!(CTX.branchFeature && $('#CmbBranches').val() && $('#CmbBranches').val().length);
+            receipts = res.receipts || []; payments = res.payments || [];
+            renderDetail(); renderCards(res.summary || []);
+        } catch (e) { alert(e.message); }
+        finally { AccF.busy(btn, false); }
+    }
+    /* btnNew_Click: From = ActiveYr.Start_Period, then cashSummery */
+    async function cbNew() {
+        $('#txtDateFrom').val(CTX.activeYear.startPeriod || AccF.today());
+        try { renderCards((await AccF.post('/cash-balances', request(false))).summary || []); } catch (e) { alert(e.message); }
+    }
+
+    $('input[name="rdGrp"]').on('change', renderDetail);
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.cb-lang').show(); }
+    });
+
+    $(async function () {
+        comboInit();
+        try {
+            CTX = await AccF.context();
+            if (CTX.branchFeature) {
+                const brs = await AccF.lookup('branches');
+                if (CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
+                branchesCombo(CTX.branchConsolidated);
+                AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', CTX.branchConsolidated ? null : '');
+                const pre = QS.get('branchesIds');
+                if (pre) $('#CmbBranches').val(CTX.branchConsolidated ? pre.split(',') : pre.split(',')[0]);
+                else $('#CmbBranches').val(CTX.branchConsolidated ? [String(CTX.userBranchId)] : String(CTX.userBranchId));
+                $('.cb-br').show();
+            }
+            AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '');
+            AccF.fillSelect('#cmbperemeter', [{ Id: 1, P: 'This Day' }, { Id: 2, P: 'This Week' }, { Id: 3, P: 'This Month' },
+                { Id: 4, P: 'This Year' }, { Id: 5, P: 'Financial Year' }], 'Id', 'P', null).val('1');
+            $('#txtDateTo').val(AccF.today());
+            onParameter();
+            $('#cmbperemeter').on('change', onParameter);
+            // frmCashBalance_Load: a drill-in with dates fills Receipts/Payments; the summary is always filled.
+            if (QS.get('fromDate') && QS.get('toDate')) {
+                $('#txtDateFrom').val(QS.get('fromDate')); $('#txtDateTo').val(QS.get('toDate'));
+                await cbShow();
+            } else {
+                renderCards((await AccF.post('/cash-balances', request(false))).summary || []);
+            }
+            comboFocus('#cmbperemeter');
+        } catch (e) { alert(e.message); }
+    });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+/* ============================================================================================
+ * Account Reports 62 Balance Sheet, 64 Profit & Loss 01, 84 BS and PL Breakup, 958 Monthly
+ * Profit Loss, 886 Commission Agent Report, 911 Freight Voucher Report (2026-09-30, group R5).
+ *
+ * The pages use the ONE Account Reports look: countx_acc_rpt_f.css (body.accf, teal title bar,
+ * tab strip, toolbar, teal header panel, "Filters" group box, teal grid caption, table.wg).
+ * This file only adds what those classes do not cover, in the same colours and fonts:
+ * the BS / P&L statement panels, the toolbar drop-down menu, the message box and the breakup
+ * dialog, the branch checked list, and the cell classes the page scripts emit (num / ctr / tg / cur).
+ * Load it AFTER countx_acc_rpt_f.css.
+ * ============================================================================================ */
+
+.is-hidden { display: none !important; }
+
+/* ------------------------------------------------------------------ grid cells (table.wg) */
+.accf table.wg td.num { text-align: right; }
+.accf table.wg td.ctr { text-align: center; }
+.accf table.wg th { white-space: normal; }
+.accf table.wg .tg { display: inline-block; width: 13px; cursor: pointer; font-weight: bold; color: var(--f-teal-dark); }
+.accf table.wg tbody tr.cur td { background: #cbe5ff; }
+.accf table.wg a { color: #0056b3; text-decoration: underline; cursor: pointer; }
+.accf table.wg button.cb { font: 600 10px Tahoma, sans-serif; padding: 0 6px; height: 17px; border: 1px solid #849ca8; border-radius: 2px;
+    background: linear-gradient(to bottom, #fff 0%, #e4e9ed 100%); cursor: pointer; }
+.accf table.wg button.cb:hover { background: #e0f2f1; border-color: var(--f-teal); }
+.accf .grid-wrap:focus { outline: 1px solid var(--f-teal); outline-offset: -1px; }
+.accf .grid-wrap.tall { max-height: calc(100vh - 260px); }
+
+/* ------------------------------------------------------------------ filters extras */
+.accf .fgrid .span2 { grid-column: span 2; }
+.accf .radios { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.accf .radio-box { border: 1px solid var(--f-border); border-radius: 2px; padding: 2px 6px; display: inline-flex; flex-direction: column; gap: 1px; }
+.accf .bal { font-weight: bold; font-size: 12px; color: var(--f-teal-dark); white-space: nowrap; }
+.accf .show-cell { display: flex; align-items: center; justify-content: flex-end; }
+
+/* ------------------------------------------------------------------ toolbar drop-down (Print menus) */
+.accf .win-toolbar .dd { position: relative; display: inline-flex; }
+.accf .dd-menu { position: absolute; left: 0; top: 22px; background: #fff; border: 1px solid #849ca8; min-width: 220px; z-index: 60;
+    box-shadow: 0 3px 8px rgba(0,0,0,.2); font-size: 10.5px; }
+.accf .dd-menu div { padding: 3px 8px; cursor: pointer; white-space: nowrap; }
+.accf .dd-menu div:hover { background: #e0f2f1; }
+.accf .dd-menu div[data-none] { color: #666; cursor: default; }
+.accf .dd-menu div[data-none]:hover { background: #fff; }
+
+/* ------------------------------------------------------------------ statement panels (62 / 64)
+   Positions and sizes are the desktop form's own (InitializeComponent), inside a white panel. */
+.accf .stmt-wrap { overflow: auto; margin: 4px; border: 1px solid #849ca8; background: #fff; }
+.accf .stmt { position: relative; background: #fff; }
+.accf .stmt, .accf .stmt * { box-sizing: border-box; }
+.accf .stmt .sgb { position: absolute; border: 1px solid var(--f-border); border-radius: 2px; background: #fff; }
+.accf .stmt .sgb > .gb-title { position: absolute; top: -7px; left: 8px; background: #fff; padding: 0 4px; font-weight: bold; font-size: 11px; color: var(--f-teal-dark); }
+.accf .stmt .cap { position: absolute; background: var(--f-teal); color: #fff; font: bold 11.5px Tahoma, sans-serif; padding: 0 4px; cursor: pointer;
+    line-height: 19px; height: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 1px; }
+.accf .stmt .cap.tall { white-space: normal; line-height: 15px; }
+.accf .stmt .cap:hover { background: #fff; color: #00f; }
+.accf .stmt .amt { position: absolute; width: 145px; text-align: right; font: bold 11.5px Tahoma, sans-serif; line-height: 19px; }
+.accf .stmt .ln { position: absolute; border-top: 2px solid #99aab8; }
+.accf .stmt .tl { position: absolute; background: #add8e6; font: bold 11.5px Tahoma, sans-serif; padding: 0 4px; height: 21px; line-height: 21px; white-space: nowrap; }
+.accf .stmt .tl.sky { background: #87ceeb; }
+.accf .stmt .ta { position: absolute; background: var(--f-teal); color: #fff; text-align: right; font: bold 12px Tahoma, sans-serif; padding: 0 4px; height: 21px; line-height: 21px; }
+.accf .stmt .fl { position: absolute; background: #add8e6; font: bold 11px Tahoma, sans-serif; padding: 0 4px; height: 18px; line-height: 18px; }
+.accf .stmt .fa2 { position: absolute; background: var(--f-teal); color: #fff; text-align: right; font: bold 11px Tahoma, sans-serif; padding: 0 4px; height: 18px; line-height: 18px; }
+.accf .stmt .grand { position: absolute; background: var(--f-teal); color: #fff; border: 1px solid var(--f-teal-dark); font: bold 12.5px Tahoma, sans-serif; }
+.accf .stmt .grand span { position: absolute; top: 4px; height: 23px; line-height: 23px; }
+.accf .stmt .grand .v { text-align: right; }
+
+/* P&L 01: grid (left) + statement (right), the desktop's panel3 / panel4 split */
+.accf .split { display: flex; gap: 0; margin: 0 4px 4px 4px; align-items: flex-start; }
+.accf .split > .left { flex: 0 0 443px; min-width: 0; }
+.accf .split > .left .grid-caption { margin: 4px 0 0 0; }
+.accf .split > .left .grid-wrap { margin: 0; max-height: 640px; }
+.accf .split > .right { flex: 0 0 auto; margin-left: 6px; }
+.accf .split > .right .grid-caption { margin: 4px 0 0 0; }
+.accf .split > .right .stmt-wrap { margin: 0; }
+
+/* ------------------------------------------------------------------ message box / dialogs */
+.h-modal { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 9000; display: flex; align-items: center; justify-content: center; }
+.h-dlg { background: #fff; border: 1px solid var(--f-teal-dark, #004d40); box-shadow: 0 6px 24px rgba(0,0,0,.4); font: 10.5px Tahoma, "Segoe UI", sans-serif; max-width: 96vw; }
+.h-dlg .cap { height: 23px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; background: var(--f-teal, #00796B); color: #fff; font-weight: bold; font-size: 11.5px; }
+.h-dlg .cap button { background: none; border: none; color: #fff; cursor: pointer; font-size: 12px; }
+.h-dlg .msg { padding: 14px 16px; white-space: pre-wrap; max-width: 560px; font-size: 11px; }
+.h-dlg .btns { padding: 6px 12px; background: #e4ebf2; border-top: 1px solid #a0b0c0; text-align: right; }
+.h-dlg .btns button { min-width: 72px; height: 22px; font: 600 10.5px Tahoma, sans-serif; border: 1px solid #849ca8; border-radius: 2px;
+    background: linear-gradient(to bottom, #fff 0%, #e4e9ed 100%); cursor: pointer; }
+.h-dlg.accf { background: var(--f-bg, #d8e0e8); }
+.h-dlg.accf .grid-wrap { flex: 1 1 auto; max-height: none; }
+
+/* ------------------------------------------------------------------ branch checked list (features 17 + 18) */
+.h-bc { position: relative; width: 100%; }
+.h-bc .bc-text { width: 100%; padding-right: 22px; }
+.h-bc .bc-drop { position: absolute; right: 1px; top: 1px; width: 18px; height: 18px; border: none; background: #eef2f5; cursor: pointer; font-size: 10px; }
+.h-bc .bc-pop { position: absolute; left: 0; top: 21px; min-width: 100%; max-height: 240px; overflow: auto; background: #fff; border: 1px solid #849ca8; z-index: 50;
+    font: 10.5px Tahoma, sans-serif; box-shadow: 0 3px 8px rgba(0,0,0,.2); }
+.h-bc .bc-pop table { border-collapse: collapse; width: 100%; }
+.h-bc .bc-pop th { background: #cfe8f5; border: 1px solid #b7cad6; padding: 2px 4px; font-weight: bold; text-align: left; }
+.h-bc .bc-pop td { border: 1px solid #e0e6ea; padding: 2px 4px; white-space: nowrap; cursor: pointer; }
+.h-bc .bc-pop tr:hover td { background: #e0f2f1; }
+
+@media print {
+  .accf .stmt-wrap { overflow: visible; border: none; }
+  .h-modal { position: static; background: none; }
+}

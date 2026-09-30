@@ -1,139 +1,136 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Subsidiary Payables Report - EccountBookERP</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .form-control-erp:focus { border-color: #00796B; outline: none; }
-        .select2-container--default .select2-selection--single { height: 25px !important; padding: 0 4px !important; font-size: 11px !important; border: 1px solid #94a3b8 !important; border-radius: 2px !important; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 23px !important; font-size: 11px !important; padding-left: 2px !important; color: #222 !important; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 23px !important; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; }
-        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .erp-table tr:hover { background-color: #f0f7f7; }
-        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .report-summary-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subsidiary Payables Report</title>
+<link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+<link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+<link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+<link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_pay.css?v=20260930s}">
 </head>
-<body>
-    <div class="erp-header">
-        <div><i class="fa fa-line-chart"></i> Subsidiary Payables Report</div>
-        <div><a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Back to Accounts Dashboard</a></div>
-    </div>
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp btn-erp-primary" onclick="loadReport()"><i class="fa fa-eye"></i> View Report</button>
-        <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
-        <button type="button" class="btn-erp" onclick="alert('Exporting Excel...')"><i class="fa fa-file-excel-o"></i> Export Excel</button>
-        <button type="button" class="btn-erp" onclick="resetFilters()"><i class="fa fa-refresh"></i> Reset Filters</button>
-    </div>
-    <div style="padding: 10px;">
-        <div class="erp-fieldset">
-            <legend>Report Filter Criteria</legend>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label-erp">From Date</label>
-                    <input type="date" id="txtFromDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">To Date</label>
-                    <input type="date" id="txtToDate" class="form-control-erp"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Main Account</label>
-                    <select id="cmbAccount" class="form-control-erp select2">
-                        <option value="">-- All Accounts --</option>
-                        <option th:each="ac : ${accountsList}" th:value="${ac.id}" th:text="${ac.accountCode + ' - ' + ac.accountTitle}"></option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Branch / Location</label>
-                    <select id="cmbBranch" class="form-control-erp select2">
-                        <option value="">-- All Locations --</option>
-                        <option th:each="b : ${branchesList}" th:value="${b.Id}" th:text="${b.BranchName}"></option>
-                    </select>
-                </div>
-            </div>
-        </div>
+<!--
+  Screen 89 "Subsidiary Payable Receiveables Report" - Architecture.WinApp.Account_Reports.SubsidiaryPayableReceiveables
+  (route /accounts/reports/subsidiary-payables-report; replaces a static mock-up with invented rows).
+  On the desktop the form has NO filters of its own: TradeDebitorsReport's (hidden) SubsidiaryBreakUp column button opens it with
+  ControlAccountId = the row's AccountId, PartyTypeId = 1 (payables, class 3) / 2 (receivables, class 2) and the report's From/To dates,
+  and _Load reads only when ControlAccountId > 0. Those four values are taken from the query string
+  (?controlAccountId=&fromDate=&toDate=&partyTypeId=) and the form then reads at once, exactly like the desktop.
+  Opened from the hub without them, the web page shows a "Filters" box (Account = the payables party accounts the trade report lists,
+  AccountTypeId 3 / AccountClass 3; From = ActiveYr.Start_Period, To = today, as TradeDebitorsReport) - web-only, the desktop has no
+  standalone entry. GetData -> VoucherHead.GetSubsidiaryPayablesReceivables -> USP_GetSubsidiaryPayablesReceivables
+  (@BranchId = UserAccount.BranchesId, @UserId). Grid (GrdSetting): AccountId / SubReferenceId / SubsidiaryTypeId hidden,
+  Four Columns (default): Opening, Debit, Credit, Closing; Six Columns: Opening Dr/Cr, Debit, Credit, Closing Dr/Cr; all summed,
+  stringFormatboth; AccountCode is a link to the General Ledger (account + subsidiary account). Toolbar: 375-Print, Ctrl+P.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-sitemap"></i> Subsidiary Payable Receiveables</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="btnPrint" onclick="printReport()" data-rpt="375-GetSubsidiaryAccountFromVouchers.rpt"><i class="fa fa-print"></i> 375-Print</button>
+    <a class="win-btn" href="/accounts/dashboard"><i class="fa fa-times"></i> Close</a>
+</div>
+<div class="win-header-panel"><span id="label1">Payable Control Account Wise</span>
+    <span><label><input type="radio" name="rdCols" id="rdSixColumns"> Six Columns</label>
+          <label><input type="radio" name="rdCols" id="rdFourColumns" checked> Four Columns</label></span></div>
 
-        <div class="erp-fieldset">
-            <legend>Subsidiary Payables Output</legend>
-            <div style="text-align: center; margin-bottom: 10px;">
-                <h4 style="margin: 0; font-weight: bold; color: #00796B;"><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></h4>
-                <h5 style="margin: 2px 0; font-weight: bold;">Subsidiary Payables Report</h5>
-                <small style="color: #64748b;" id="lblPeriod">Period: Current Date To Current Date | Currency: PKR</small>
-            </div>
-            <table class="erp-table">
-                <thead>
-                    <tr>
-                        <th style="width: 12%;">Sub-Account Code</th>
-                        <th style="width: 28%;">Sub-Account Title</th>
-                        <th style="width: 15%; text-align: right;">Opening Balance</th>
-                        <th style="width: 15%; text-align: right;">Total Additions</th>
-                        <th style="width: 15%; text-align: right;">Total Payments</th>
-                        <th style="width: 15%; text-align: right;">Closing Balance</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTbody">
-                    <tr>
-                        <td style="font-weight: bold; color: #00796B;">201001-01</td>
-                        <td>TRADE CREDITORS - LOCAL SUPPLIERS</td>
-                        <td style="text-align: right;">200,000.00 Cr</td>
-                        <td style="text-align: right;">630,000.00</td>
-                        <td style="text-align: right;">510,000.00</td>
-                        <td style="text-align: right; font-weight: bold;">320,000.00 Cr</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="report-summary-bar">
-                <div>Total Sub-Accounts: 1</div>
-                <div>Total Net Balance: 320,000.00 Cr</div>
-            </div>
+<div class="filters" id="webFilters">
+    <div class="gb" style="width:760px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 60px 125px 50px 125px 50px 1fr 70px;">
+            <span class="lbl">From Date</span><input type="date" id="fromDate" class="inp">
+            <span class="lbl">To Date</span><input type="date" id="toDate" class="inp">
+            <span class="lbl">Account</span><div><select id="cmbAccount" class="inp" data-dtcombo="single" data-dtcombo-caption="Account Title"></select></div>
+            <button type="button" id="btnShow" class="win-btn-show" onclick="getData()"><i class="fa fa-eye"></i> Show</button>
         </div>
     </div>
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate, #txtToDate').val(today);
-            $('.select2').select2({ width: '100%' });
-            updatePeriodLabel();
-        });
+</div>
 
-        function updatePeriodLabel() {
-            const fd = $('#txtFromDate').val();
-            const td = $('#txtToDate').val();
-            $('#lblPeriod').text(`Period: ${fd} To ${td} | Currency: PKR`);
-        }
+<div class="grid-caption"><span>Subsidiary Accounts</span><span id="lblStatus"></span></div>
+<div class="grid-wrap fill"><table class="wg" id="DataGridHistory"></table></div>
 
-        function loadReport() {
-            updatePeriodLabel();
-        }
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script>
+    'use strict';
+    const QS = new URLSearchParams(window.location.search);
+    let rows = [], partyTypeId = 1, ranFrom = '', ranTo = '';
 
-        function resetFilters() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate, #txtToDate').val(today);
-            $('.select2').val('').trigger('change');
-            updatePeriodLabel();
-        }
-    </script>
+    function columns() {
+        const six = $('#rdSixColumns').is(':checked');
+        return [
+            { key: 'PartyCode' },
+            { key: 'SupplierCustomer' },
+            { key: 'AccountCode', link: function (r) { AccF.openLedger(r.AccountId, null, null, r.SubReferenceId, 0); } },
+            { key: 'AccountTitle' },
+            { key: 'ODebit', caption: 'OpeningDebit', type: 'both', sum: true, visible: six },
+            { key: 'OCredit', caption: 'OpeningCredit', type: 'both', sum: true, visible: six },
+            { key: 'Opening', type: 'both', sum: true, visible: !six },
+            { key: 'CurrDebit', caption: 'Debit', type: 'both', sum: true },
+            { key: 'CurCredit', caption: 'Credit', type: 'both', sum: true },
+            { key: 'CDebit', caption: 'ClosingDebit', type: 'both', sum: true, visible: six },
+            { key: 'CCredit', caption: 'ClosingCredit', type: 'both', sum: true, visible: six },
+            { key: 'Closing', type: 'both', sum: true, visible: !six }
+        ];
+    }
+    function render() {
+        if (!rows.length) { $('#DataGridHistory').empty(); $('#lblStatus').text(''); return; }
+        AccF.renderGrid({ table: '#DataGridHistory', columns: columns(), rows: rows });
+        $('#lblStatus').text('Records: ' + rows.length);
+    }
+    async function getData() {
+        const acc = parseInt($('#cmbAccount').val() || QS.get('controlAccountId') || '0', 10) || 0;
+        if (acc <= 0) { rows = []; render(); return; }                 /* _Load: if (ControlAccountId > 0) GetData() */
+        const btn = $('#btnShow');
+        AccF.busy(btn, true);
+        try {
+            const q = new URLSearchParams({ fromDate: $('#fromDate').val(), toDate: $('#toDate').val(), controlAccountId: acc, partyTypeId: partyTypeId });
+            const r = await fetch('/api/accounts/subsidiary-payables?' + q, { headers: { Accept: 'application/json' } });
+            const data = await r.json().catch(function () { return null; });
+            if (!r.ok) throw new Error((data && data.message) || ('HTTP ' + r.status));
+            rows = data || []; ranFrom = $('#fromDate').val(); ranTo = $('#toDate').val();
+            render();
+        } catch (e) { rows = []; render(); alert(e.message); }
+        finally { AccF.busy(btn, false); }
+    }
+    /* btnPrint_Click: 375-GetSubsidiaryAccountFromVouchers.rpt, "No Record Found For Display" when empty. */
+    function printReport() {
+        if (!rows.length) { alert('No Record Found For Display'); return; }
+        window.print();
+    }
+    $('input[name="rdCols"]').on('change', render);                 /* rdSixColumns_CheckedChanged -> GrdSetting() */
+    $(document).on('keydown', function (e) {
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); printReport(); }
+    });
+
+    $(function () { (async function () {
+        try {
+            const ctx = await AccF.context();
+            partyTypeId = parseInt(QS.get('partyTypeId') || '1', 10) || 1;
+            if (partyTypeId === 2) $('#label1').text('Receivables Control Account Wise');
+            $('#fromDate').val(QS.get('fromDate') || (ctx.activeYear && ctx.activeYear.startPeriod) || AccF.today());
+            $('#toDate').val(QS.get('toDate') || AccF.today());
+            const r = await fetch('/api/accounts/payables-sub-bills/lookups', { headers: { Accept: 'application/json' } });
+            const lk = await r.json();
+            if (!r.ok) throw new Error(lk.message || ('HTTP ' + r.status));
+            const cls = partyTypeId === 2 ? 2 : 3, seen = {};
+            const accs = (lk.accounts || []).filter(function (a) {
+                const id = a.ChartOfAccountId;
+                if (Number(a.AccountTypeId) !== 3 || Number(a.AccountClass) !== cls || seen[id]) return false;
+                seen[id] = true; return true;
+            });
+            AccF.fillSelect('#cmbAccount', accs, 'ChartOfAccountId', 'AccountTitle', '');
+            if (QS.get('controlAccountId')) {
+                $('#cmbAccount').val(QS.get('controlAccountId'));
+                await getData();
+            }
+        } catch (e) { alert(e.message); }
+    })(); });
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

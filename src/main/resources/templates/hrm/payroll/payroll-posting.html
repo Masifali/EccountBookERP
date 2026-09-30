@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Payroll Posting - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <!-- Architecture.WinApp.HRM.PayRoll.frmPayrollPosting - ClientSize 1046 x 661 (Maximized), tabControl1 (tabs at the bottom): "Form" | "History".
+         Form: panel3 (30) toolstrip New | Save | Update (hidden) | Refresh | Print (drop-down: Reports\SalarySheet\*.rpt);
+           panel4 (139): panel6 (27) "PAYROLL POSTING";
+             Doc No txtDocNo (10,56) 91 ReadOnly | Doc Date txtDocDate (104,56) 134 dd-MMM-yyyy | Month cmbMonth (242,54) 96 | Year cmbYear (340,54) 96 | Debit Account CmbDebitAccount (439,54) 305;
+             Employee Category cmbEmployeeCategory (10,105) 200 + btnEmployeeCategory (212,105) | Employee Department cmbEmployeeDepartment (246,105) 195 + btnEmployee (442,105)
+             | Employee Name cmbEmployee (476,105) 268 | btnShowDetail "Show Detail" (747,105) 58x26;
+           panel8 (27) "Detail" + ctrlGrdBar2; grdDetails GridEX (0,196) 1032x433 (filter row, total row, record navigator).
+         History: panel17 toolStrip3 (hidden); panel5 (29) "HISTORY" + ctrlGrdBar1; DataGridHistory (Edit | Voucher buttons, 2 frozen);
+           panel7 (226) grdHistoryDetail (detail of the selected payroll). -> the History dialog here. -->
+    <style>
+        .pr-x-btn, .pr-mini-btn { border: 1px solid #8aa; background: #f4f4f4; font: 8pt Verdana, sans-serif; line-height: 1; padding: 2px 5px; cursor: pointer; }
+        .pr-x-btn { color: #b00; font-weight: bold; }
+        .pr-x-btn:hover, .pr-mini-btn:hover { background: #cce8ff; }
+        .pr-def-btn { width: 28px; height: 24px; padding: 0; border: 1px solid #7a9a9e; background: #f4f4f4; cursor: pointer; flex: 0 0 auto; }
+        .pr-inline { display: flex; align-items: center; gap: 4px; min-width: 0; }
+        .pr-inline > .pr-grow { flex: 1 1 0; min-width: 0; }
+        .pr-checks { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+        .pr-dd { position: relative; display: inline-block; }
+        .pr-dd-menu { display: none; position: absolute; left: 0; top: 100%%; z-index: 60; background: #fff; border: 1px solid #7a9a9e; min-width: 220px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+        .pr-dd.is-open .pr-dd-menu { display: block; }
+        .pr-dd-item { display: block; width: 100%%; text-align: left; border: 0; background: #fff; padding: 5px 10px; font: 9pt "Segoe UI", sans-serif; cursor: pointer; }
+        .pr-dd-item:hover { background: #cce8ff; }
+        .pr-dd-empty { padding: 6px 10px; font: 9pt "Segoe UI", sans-serif; color: #777; }
+        .pr-show-row { display: flex; align-items: end; }
+        .pr-hist-detail { margin-top: 6px; }
+    </style>
+</head>
+<body class="pd-body hrm-body" data-hrm="payroll-posting" data-screen="670">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmPayroll.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmPayroll.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="HrmPayroll.btnUpdate(this)"><i class="fa fa-pencil"></i> <span>Update</span></button>
+        <button type="button" id="toolStripButton1" class="win-btn-tool" onclick="HrmPayroll.toolStripButton1(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <div class="pr-dd">
+            <button type="button" id="tsDropDownPrint" class="win-btn-tool" onclick="HrmPayroll.togglePrint()"><i class="fa fa-print"></i> <span>Print</span> <i class="fa fa-caret-down"></i></button>
+            <div class="pr-dd-menu" id="tsDropDownPrintMenu"></div>
+        </div>
+    </div>
+    <div class="hrm-caption">PAYROLL POSTING</div>
+    <div class="hrm-entry hrm-cols-4">
+        <div class="hrm-field"><label for="txtDocNo">Doc No</label><input type="text" id="txtDocNo" class="win-textbox" readonly tabindex="-1"/></div>
+        <div class="hrm-field"><label for="txtDocDate">Doc Date</label><input type="date" id="txtDocDate" class="win-textbox"/></div>
+        <div class="hrm-field"><label for="cmbMonth">Month</label><select id="cmbMonth" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+        <div class="hrm-field"><label for="cmbYear">Year</label><select id="cmbYear" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+        <div class="hrm-field hrm-span-2"><label for="CmbDebitAccount">Debit Account</label><select id="CmbDebitAccount" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+        <div class="hrm-field hrm-span-2"><label for="cmbEmployee">Employee Name</label><select id="cmbEmployee" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+        <div class="hrm-field"><label for="cmbEmployeeCategory">Employee Category</label>
+            <div class="pr-inline"><div class="pr-grow"><select id="cmbEmployeeCategory" class="win-combo dtcombo" data-dtcombo="single"></select></div><button type="button" id="btnEmployeeCategory" class="pr-def-btn" tabindex="-1" title="Employee Category" onclick="HrmPayroll.btnEmployeeCategory(this)"><i class="fa fa-plus"></i></button></div></div>
+        <div class="hrm-field"><label for="cmbEmployeeDepartment">Employee Department</label>
+            <div class="pr-inline"><div class="pr-grow"><select id="cmbEmployeeDepartment" class="win-combo dtcombo" data-dtcombo="single"></select></div><button type="button" id="btnEmployee" class="pr-def-btn" tabindex="-1" title="Department" onclick="HrmPayroll.btnEmployee(this)"><i class="fa fa-plus"></i></button></div></div>
+        <div class="hrm-field hrm-span-2 pr-show-row"><span></span><button type="button" id="btnShowDetail" class="win-btn-action" style="white-space:nowrap;width:auto;padding:0 14px" onclick="HrmPayroll.btnShowDetail(this)">Show Detail</button></div>
+    </div>
+    <div class="hrm-grid-box" id="grdBox">
+        <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap" id="grdDetailsWrap"><table id="grdDetails"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_payroll.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>
