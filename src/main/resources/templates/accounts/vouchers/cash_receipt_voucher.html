@@ -38,6 +38,7 @@
         .win-tab-btn { background: #e5e7eb; border: 1px solid #9ca3af; border-bottom: none; border-radius: 3px 3px 0 0; padding: 4px 14px; font-size: 11px; font-weight: bold; color: #374151; cursor: pointer; }
         .win-tab-btn.active { background: #ffffff; color: #00796B; border-color: #b0bec5; border-bottom: 2px solid #ffffff; margin-bottom: -1px; }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body>
 
@@ -61,7 +62,7 @@
         <button type="button" class="win-btn">
             <i class="fa fa-paperclip text-info"></i> Attachment
         </button>
-        <button type="button" class="win-btn">
+        <button type="button" class="win-btn" onclick="printVoucher()">
             <i class="fa fa-print text-warning"></i> 102-Print
         </button>
         <button type="button" class="win-btn" onclick="$('#modalShortcuts').modal('show')">
@@ -80,160 +81,8 @@
     </div>
 
     <div id="tabFormContent" class="win-form-card">
-        <form id="formVoucher" onsubmit="event.preventDefault(); submitVoucher();">
-
-            <div class="win-section-header">Main</div>
-            <div style="padding: 10px;">
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Cost Center</label></div>
-                            <div class="col-md-8">
-                                <select id="cmbCostCenter" class="win-input">
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Voucher Type</label></div>
-                            <div class="col-md-8">
-                                <select id="cmbVoucherType" class="win-input" disabled>
-                                    <option value="3" selected>Cash Receipt Voucher</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Voucher No</label></div>
-                            <div class="col-md-3">
-                                <input type="text" id="txtVoucherNo" class="win-input" readonly style="font-weight: bold; background: #f8fafc;"/>
-                            </div>
-                            <div class="col-md-2" style="padding-left: 0;"><label class="win-label">Date</label></div>
-                            <div class="col-md-3" style="padding-left: 0;">
-                                <input type="date" id="dtpVoucherDate" class="win-input"/>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Debit Account (Cash)</label></div>
-                            <div class="col-md-8">
-                                <select id="cmbDebitAccount" class="win-input">
-                                    <option value="101001">CASH IN HAND GOLDEN ACE</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-7">
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-3"><label class="win-label">Ref / Manual Bill</label></div>
-                            <div class="col-md-9">
-                                <input type="text" id="txtRefBillNo" class="win-input" placeholder="Manual Receipt / Bill Ref No"/>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3"><label class="win-label">Remarks</label></div>
-                            <div class="col-md-9">
-                                <textarea id="txtHeaderRemarks" class="win-textarea" placeholder="Enter cash receipt main remarks..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="win-section-header">Detail</div>
-            <div style="padding: 10px;">
-                <div class="detail-entry-bar">
-                    <div class="row" style="margin-bottom: 6px;">
-                        <div class="col-md-2">
-                            <label class="win-label">Receipt Type</label>
-                            <select id="cmbPaymentType" class="win-input">
-                                <option value="1">Receipt</option>
-                                <option value="2">General</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-4" style="position: relative;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label class="win-label">Credit Acc</label>
-                                <div>
-                                    <label style="font-size: 10px; cursor: pointer; margin-right: 6px;"><input type="radio" name="rdSearch" id="rdSearchTitle" checked/> Title</label>
-                                    <label style="font-size: 10px; cursor: pointer;"><input type="radio" name="rdSearch" id="rdSearchCode"/> Code</label>
-                                </div>
-                            </div>
-                            <input type="text" id="txtDebitAccSearch" class="win-input" placeholder="Type to search credit account title or code..." autocomplete="off" onkeyup="onDebitAccSearch(event)" oninput="onDebitAccSearch(event)" onfocus="onDebitAccSearch(event)"/>
-                            <input type="hidden" id="hdnDebitAccId" value="0"/>
-                            <input type="hidden" id="hdnDebitAccCode" value=""/>
-                            <input type="hidden" id="hdnDebitAccTitle" value=""/>
-                            
-                            <div id="popAccounts" class="search-popup">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Account Title</th>
-                                            <th style="width: 100px;">AccountCode</th>
-                                            <th style="width: 130px;">ParentAccountTitle</th>
-                                            <th style="width: 90px;">AccountClass</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbodyPopAccounts"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="win-label">Job/Lot</label>
-                            <select id="cmbJobLot" class="win-input">
-                                <option value="1">General</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="win-label">Credit Amount</label>
-                            <input type="number" step="0.01" id="txtDebitAmount" class="win-input" placeholder="0.00" style="text-align: right; font-weight: bold;"/>
-                        </div>
-
-                        <div class="col-md-1" style="display: flex; align-items: flex-end;">
-                            <button type="button" id="btnAddRow" class="win-btn win-btn-teal" style="width: 100%; height: 25px; justify-content: center;" onclick="addDetailRow()">
-                                <i class="fa fa-plus"></i> + Add
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-11">
-                            <label class="win-label">Remarks</label>
-                            <input type="text" id="txtLineRemarks" class="win-input" placeholder="Enter line item remarks..."/>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="max-height: 300px; overflow-y: auto; margin-top: 8px;">
-                    <table class="win-grid-table" id="tblGrid">
-                        <thead>
-                            <tr>
-                                <th style="width: 30px; text-align: center;">X</th>
-                                <th style="width: 110px;">Receipt Type</th>
-                                <th style="width: 90px;">Account Code</th>
-                                <th>Account Title</th>
-                                <th style="width: 100px;">Job / Lot</th>
-                                <th>Remarks</th>
-                                <th style="width: 120px; text-align: right;">Credit Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyGrid">
-                            <tr id="trEmptyGrid">
-                                <td colspan="7" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="totals-bar">
-                    <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
-                    <div>Total Credit: <span id="lblTotalCredit">0.00</span></div>
-                    <div>Difference: <span id="lblDiff">0.00</span></div>
-                </div>
-            </div>
-
-        </form>
+        <!-- Form tab rendered by countx_payment_receipt_voucher.js - ditto ReceiptsVoucherNew (Architecture.WinApp.Account_Definition, the non-tax form), DocumentTypeId 3. -->
+        <div id="prvForm"></div>
     </div>
 
     <div id="tabHistoryContent" class="win-form-card" style="display: none;">
@@ -347,270 +196,17 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/build/js/countx_voucher_desktop_config.js?v=20260930a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260930a}"></script>
+    <script th:src="@{/build/js/countx_crystal_print.js?v=20260930a}"></script>
+    <script th:src="@{/build/js/countx_payment_receipt_voucher.js?v=20260930a}"></script>
     <script>
-        let gridItems = [];
-        let editingVoucherId = 0;
-
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#dtpVoucherDate').val(today);
-
-            // Fetch next numeric code from stored procedure
-            $.get('/accounts/api/vouchers/next-code?documentTypeId=3', function(res) {
-                if (res && res.nextCode) {
-                    $('#txtVoucherNo').val(res.nextCode);
-                }
-            });
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const paramVoucherCode = urlParams.get('voucherCode') || urlParams.get('VoucherCode') || urlParams.get('fromDocNo');
-            const paramId = urlParams.get('id') || urlParams.get('Id');
-
-            if (paramId) {
-                loadCrvVoucherForEdit(parseInt(paramId));
-            } else if (paramVoucherCode) {
-                $.get('/accounts/api/vouchers/by-code?documentTypeId=3&voucherCode=' + encodeURIComponent(paramVoucherCode), function(voucher) {
-                    if (voucher && voucher.header) {
-                        loadCrvVoucherForEdit(voucher.header.id);
-                    } else {
-                        $.get('/accounts/api/vouchers/crv/history?fromDocNo=' + encodeURIComponent(paramVoucherCode) + '&toDocNo=' + encodeURIComponent(paramVoucherCode) + '&approvedStatus=all', function(res) {
-                            if (res && res.rows && res.rows.length > 0) {
-                                loadCrvVoucherForEdit(res.rows[0].id);
-                            }
-                        });
-                    }
-                }).fail(function() {
-                    $.get('/accounts/api/vouchers/crv/history?fromDocNo=' + encodeURIComponent(paramVoucherCode) + '&toDocNo=' + encodeURIComponent(paramVoucherCode) + '&approvedStatus=all', function(res) {
-                        if (res && res.rows && res.rows.length > 0) {
-                            loadCrvVoucherForEdit(res.rows[0].id);
-                        }
-                    });
-                });
-            }
-        });
-
-        function onDebitAccSearch(e) {
-            const query = $('#txtDebitAccSearch').val().trim();
-            if (query.length < 1) {
-                $('#popAccounts').hide();
-                return;
-            }
-
-            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
-                let html = '';
-                if (data && data.length > 0) {
-                    data.forEach(acc => {
-                        const id = acc.id || acc.ChartOfAccountId || 0;
-                        const code = acc.accountCode || acc.AccountCode || '';
-                        const title = acc.accountTitle || acc.AccountTitle || '';
-                        const parent = acc.parentAccountTitle || acc.ParentAccountTitle || 'Detail';
-                        const clsName = acc.className || acc.AccountClass || 'Assets';
-
-                        html += `<tr onclick="selectDebitAcc(${id}, '${code}', '${escapeQuotes(title)}')">
-                                    <td><strong>${title}</strong></td>
-                                    <td>${code}</td>
-                                    <td>${parent}</td>
-                                    <td>${clsName}</td>
-                                 </tr>`;
-                    });
-                    $('#tbodyPopAccounts').html(html);
-                    $('#popAccounts').show();
-                } else {
-                    $('#tbodyPopAccounts').html('<tr><td colspan="4" style="text-align:center; color:#888; padding:8px;">No matching accounts found</td></tr>');
-                    $('#popAccounts').show();
-                }
-            });
-        }
-
-        function escapeQuotes(str) { return str.replace(/'/g, "\\'").replace(/"/g, "&quot;"); }
-
-        function selectDebitAcc(id, code, title) {
-            $('#hdnDebitAccId').val(id);
-            $('#hdnDebitAccCode').val(code);
-            $('#hdnDebitAccTitle').val(title);
-            $('#txtDebitAccSearch').val(`${title} [${code}]`);
-            $('#popAccounts').hide();
-            $('#txtDebitAmount').focus();
-        }
-
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('#txtDebitAccSearch, #popAccounts').length) {
-                $('#popAccounts').hide();
-            }
-        });
-
-        let editingIndex = -1;
-
-        function addDetailRow() {
-            const accId = parseInt($('#hdnDebitAccId').val()) || 0;
-            const accCode = $('#hdnDebitAccCode').val();
-            const accTitle = $('#hdnDebitAccTitle').val();
-            const pType = $('#cmbPaymentType option:selected').text();
-            /* The desktop reads this with Conversion.ToInt(cell), which is 0 when the
-               picker is unset — never 1 (ReceiptsVoucherNew.cs:702/698,
-               VoucherEntry.cs:1757). A || 1 default silently posted the line
-               against whatever row happens to hold id 1. */
-            const pTypeId = parseInt($('#cmbPaymentType').val()) || 0;
-            const jobLot = $('#cmbJobLot option:selected').text();
-            /* The desktop reads this with Conversion.ToInt(cell), which is 0 when the
-               picker is unset — never 1 (ReceiptsVoucherNew.cs:702/698,
-               VoucherEntry.cs:1757). A || 1 default silently posted the line
-               against whatever row happens to hold id 1. */
-            const jobLotId = parseInt($('#cmbJobLot').val()) || 0;
-            const remarks = $('#txtLineRemarks').val().trim();
-            const amount = parseFloat($('#txtDebitAmount').val()) || 0.0;
-
-            if (!accCode || !accTitle) {
-                alert('Please select a Credit Account from the search list.');
-                $('#txtDebitAccSearch').focus();
-                return;
-            }
-
-            if (amount <= 0) {
-                alert('Please enter a valid Credit Amount greater than 0.');
-                $('#txtDebitAmount').focus();
-                return;
-            }
-
-            const item = {
-                chartOfAccountId: accId,
-                accountCode: accCode,
-                accountTitle: accTitle,
-                paymentType: pType,
-                paymentTypeId: pTypeId,
-                jobLot: jobLot,
-                jobLotId: jobLotId,
-                remarks: remarks,
-                debitAmount: 0.0,
-                creditAmount: amount
-            };
-
-            if (editingIndex >= 0) {
-                gridItems[editingIndex] = item;
-                editingIndex = -1;
-                $('#btnAddRow').html('<i class="fa fa-plus"></i> + Add');
-            } else {
-                gridItems.push(item);
-            }
-            renderGrid();
-
-            $('#hdnDebitAccId').val('0');
-            $('#hdnDebitAccCode').val('');
-            $('#hdnDebitAccTitle').val('');
-            $('#txtDebitAccSearch').val('');
-            $('#txtLineRemarks').val('');
-            $('#txtDebitAmount').val('');
-            $('#txtDebitAccSearch').focus();
-        }
-
-        function editDetailRow(index) {
-            const item = gridItems[index];
-            if (!item) return;
-            editingIndex = index;
-            $('#hdnDebitAccId').val(item.chartOfAccountId);
-            $('#hdnDebitAccCode').val(item.accountCode);
-            $('#hdnDebitAccTitle').val(item.accountTitle);
-            $('#txtDebitAccSearch').val(`${item.accountTitle} [${item.accountCode}]`);
-            $('#txtLineRemarks').val(item.remarks);
-            $('#txtDebitAmount').val(item.creditAmount);
-            $('#btnAddRow').html('<i class="fa fa-pencil"></i> Update');
-            $('#txtDebitAmount').focus();
-        }
-
-        function removeGridItem(index) {
-            gridItems.splice(index, 1);
-            if (editingIndex === index) {
-                editingIndex = -1;
-                $('#btnAddRow').html('<i class="fa fa-plus"></i> + Add');
-            }
-            renderGrid();
-        }
-
-        function renderGrid() {
-            let html = '';
-            let totalCredit = 0.0;
-
-            if (gridItems.length > 0) {
-                gridItems.forEach((item, idx) => {
-                    totalCredit += item.creditAmount;
-                    html += `<tr ondblclick="editDetailRow(${idx})" title="Double-click to edit this row">
-                                <td style="text-align:center;">
-                                    <button type="button" class="btn btn-xs btn-primary" onclick="editDetailRow(${idx})" style="margin-right:2px;"><i class="fa fa-pencil"></i></button>
-                                    <button type="button" class="btn btn-xs btn-danger" onclick="removeGridItem(${idx})">&times;</button>
-                                </td>
-                                <td>${item.paymentType}</td>
-                                <td>${item.accountCode}</td>
-                                <td><strong>${item.accountTitle}</strong></td>
-                                <td>${item.jobLot}</td>
-                                <td>${item.remarks}</td>
-                                <td style="text-align:right; font-weight:bold;">${item.creditAmount.toFixed(2)}</td>
-                             </tr>`;
-                });
-            } else {
-                html = '<tr id="trEmptyGrid"><td colspan="7" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr>';
-            }
-
-            $('#tbodyGrid').html(html);
-            $('#lblTotalDebit').text(totalCredit.toFixed(2));
-            $('#lblTotalCredit').text(totalCredit.toFixed(2));
-            $('#lblDiff').text('0.00');
-        }
-
-        function submitVoucher() {
-            if (gridItems.length === 0) {
-                alert('Cannot save empty voucher. Please add at least one detail row to the grid.');
-                return;
-            }
-
-            // Field names below match VoucherRequestDto (id/documentTypeId/voucherCode/voucherDate/
-            // remarks/voucherAmount/refAccountId/details[].accountId/comments/debitAmount/creditAmount)
-            // exactly - the previous payload used unrelated names (voucherNo/creditAccountId/narration/
-            // totalAmount/chartOfAccountId/...) that do not exist on the DTO, so every save silently
-            // persisted a blank VoucherHead row with zero VoucherDetail rows.
-            const payload = {
-                id: editingVoucherId > 0 ? editingVoucherId : null,
-                documentTypeId: 3, // Cash Receipt Voucher
-                voucherCode: parseInt($('#txtVoucherNo').val()) || null,
-                voucherDate: $('#dtpVoucherDate').val(),
-                refAccountId: parseInt($('#cmbDebitAccount').val()) || null,
-                remarks: $('#txtHeaderRemarks').val().trim(),
-                voucherAmount: parseFloat($('#lblTotalCredit').text()) || 0.0,
-                details: gridItems.map(function(item) {
-                    return {
-                        accountId: item.chartOfAccountId,
-                        comments: item.remarks,
-                        debitAmount: item.debitAmount || 0.0,
-                        creditAmount: item.creditAmount || 0.0
-                    };
-                })
-            };
-
-            $.ajax({
-                url: '/accounts/api/vouchers/save',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(payload),
-                success: function(res) {
-                    alert(res.message || 'Cash Receipt Voucher saved successfully!');
-                    resetForm();
-                    if (typeof loadCrvHistory === 'function') loadCrvHistory();
-                },
-                error: function(err) {
-                    alert('Error saving voucher: ' + (err.responseJSON ? err.responseJSON.message : 'Server error'));
-                }
-            });
-        }
-
-        function resetForm() {
-            gridItems = [];
-            editingVoucherId = 0;
-            renderGrid();
-            window.location.reload();
-        }
-
-        function refreshPage() {
-            window.location.reload();
-        }
+        /* Form tab: countx_payment_receipt_voucher.js (PRV). History tab below is unchanged. */
+        PRV.init({ doc: 3 });
+        function submitVoucher() { PRV.save(); }
+        function resetForm() { PRV.reset(); }
+        function refreshPage() { window.location.reload(); }
+        function printVoucher() { PRV.print(); }
 
         function switchTab(tab) {
             if (tab === 'form') {
@@ -638,7 +234,7 @@
         let crvHistoryAccountsLoaded = false;
 
         function loadCrvHistoryAccounts() {
-            $.get('/accounts/api/vouchers/crv/history/accounts', function(accounts) {
+            $.get('/accounts/api/payment-receipt/3/history/accounts', function(accounts) {
                 const sel = $('#cmbAccountTitleCrv');
                 sel.find('option:not(:first)').remove();
                 (accounts || []).forEach(function(a) {
@@ -670,7 +266,7 @@
                 accountId: $('#cmbAccountTitleCrv').val(),
                 approvedStatus: $('#cmbApprovedStatusCrv').val()
             };
-            $.get('/accounts/api/vouchers/crv/history', params, function(res) {
+            $.get('/accounts/api/payment-receipt/3/history', params, function(res) {
                 const tbody = $('#tbodyCrvHistoryGrid');
                 tbody.empty();
                 const rows = (res && res.rows) || [];
@@ -713,43 +309,9 @@
         // Loads the complete real voucher (header + all detail rows) from GET /accounts/api/vouchers/{id}
         // (VoucherService.getVoucherById -> {header: VoucherHead, details: [...]})  and preserves its
         // real Id so the next Save updates this same voucher instead of creating a duplicate.
-        function loadCrvVoucherForEdit(id) {
-            $.get('/accounts/api/vouchers/' + id, function(voucher) {
-                if (!voucher || !voucher.header) return;
-                switchTab('form');
-                const header = voucher.header;
-                editingVoucherId = header.id || id;
-                $('#txtVoucherNo').val(header.voucherCode != null ? header.voucherCode : '');
-                if (header.voucherDate) $('#dtpVoucherDate').val(header.voucherDate);
-                $('#txtHeaderRemarks').val(header.remarks || '');
-                if (header.refAccountId) $('#cmbDebitAccount').val(header.refAccountId);
 
-                const details = voucher.details || [];
-                gridItems = details.map(function(d) {
-                    return {
-                        chartOfAccountId: d.accountId,
-                        accountCode: d.accountCode || '',
-                        accountTitle: d.accountTitle || '',
-                        paymentType: 'Receipt',
-                        paymentTypeId: 1,
-                        jobLot: 'General',
-                        jobLotId: 1,
-                        remarks: d.comments || '',
-                        debitAmount: parseFloat(d.debitAmount || 0),
-                        creditAmount: parseFloat(d.creditAmount || 0)
-                    };
-                });
-                renderGrid();
-            }).fail(function() {
-                alert('Could not load Cash Receipt Voucher #' + id);
-            });
-        }
-
-        $(document).on('keydown', function(e) {
-            if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); resetForm(); }
-            if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); submitVoucher(); }
-            if (e.ctrlKey && e.keyCode === 82) { e.preventDefault(); refreshPage(); }
-        });
+        // ReadById()
+        function loadCrvVoucherForEdit(id) { PRV.loadForEdit(id); }
     </script>
 <script th:src="@{/build/js/countx_cost_center.js?v=20260920a}"></script>
 </body>

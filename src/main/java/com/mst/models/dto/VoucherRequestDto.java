@@ -90,6 +90,17 @@ public class VoucherRequestDto {
 	// already-verified two-row behavior is unchanged.
 	private Boolean postSingleWhtDebitRow;
 
+	// Which desktop form's Insert() builds this voucher's remarks/cheque fields server-side
+	// ("PaymentVoucherNew", "ReceiptsVoucherNew", "ContraVoucher") - see VoucherService
+	// .applyDesktopRemarks(). Null for every other voucher: their behaviour is unchanged.
+	private String desktopForm;
+	// VoucherHead.CheqId - the cheque-book leaf picked in CmbCheqNo (ContraVoucher.cs:514).
+	private Integer cheqId;
+	public String getDesktopForm() { return desktopForm; }
+	public void setDesktopForm(String desktopForm) { this.desktopForm = desktopForm; }
+	public Integer getCheqId() { return cheqId; }
+	public void setCheqId(Integer cheqId) { this.cheqId = cheqId; }
+
 	private List<VoucherDetailRowDto> details = new ArrayList<>();
 
 	@Data
@@ -155,6 +166,17 @@ public class VoucherRequestDto {
 		// here would silently corrupt whichever value was set second. When present, takes priority
 		// over the header-level dto.againstAccountId fallback in saveVoucher()'s detail loop.
 		private Integer lineAgainstAccountId;
+		// WHT Challan Deposit (DocumentTypeId=25) - ditto frmWhtTaxChallanDeposit.cs btnsave_Click:
+		// detail.InvoiceNoRefId = the source voucher's VoucherHead.Id (grid column hId), and the BLL's
+		// VoucherHead.Save(25) stamps IsTaxable = "False" on every line. Both null for every other
+		// voucher, which never sends them.
+		private Integer invoiceNoRefId;
+		private String isTaxable;
+
+		public Integer getInvoiceNoRefId() { return invoiceNoRefId; }
+		public void setInvoiceNoRefId(Integer invoiceNoRefId) { this.invoiceNoRefId = invoiceNoRefId; }
+		public String getIsTaxable() { return isTaxable; }
+		public void setIsTaxable(String isTaxable) { this.isTaxable = isTaxable; }
 
 		public Integer getId() { return id; }
 		public void setId(Integer id) { this.id = id; }

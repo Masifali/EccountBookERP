@@ -19,18 +19,20 @@ public class PayablesAgingService {
     }
 
     public Map<String, Object> lookups() {
-        return repository.lookups(context.requireAccountingUser());
+        return repository.lookups(context.requireAccountingUser(), context.currentFinancialYearId());
     }
 
-    public Map<String, Object> load(LocalDate date, int days, int report, int parent, int account, int custom, int cost, String branches) {
-        if (date == null || days < 0 || !Set.of(0, 1, 2).contains(report) || parent < 0 || account < 0 || custom < 0 || cost < 0) {
+    /** PayablesAging_New.GridFill. Unlike Receivables_New, the payables form has no cost centre and
+     *  no "Cost Center Not Found" check. */
+    public Map<String, Object> load(LocalDate date, int days, int report, String controlAccounts, int account, int custom, String branches) {
+        if (date == null || days < 0 || !Set.of(0, 1, 2).contains(report) || account < 0 || custom < 0) {
             throw new IllegalArgumentException("Invalid aging filters");
         }
-        UserAccount u = context.requireAccountingUser();
-        if (Integer.valueOf(5).equals(u.getAppId()) && cost == 0) {
-            throw new IllegalArgumentException("Cost Center Not Found");
+        for (String ids : new String[] {controlAccounts, branches}) {
+            if (ids != null && !ids.isBlank() && !ids.matches("[0-9]+(,[0-9]+)*")) throw new IllegalArgumentException("Invalid selected accounts or branches");
         }
-        List<List<Map<String, Object>>> sets = repository.load(u, date, days, report, parent, account, custom, cost, branches);
+        UserAccount u = context.requireAccountingUser();
+        List<List<Map<String, Object>>> sets = repository.load(u, date, days, report, controlAccounts, account, custom, branches);
         if (sets.size() < 5) {
             throw new IllegalStateException("The desktop aging procedure must return five result sets");
         }

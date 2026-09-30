@@ -356,25 +356,9 @@ public class ConfigurationServiceImpl implements IConfigurationService {
 				result.add(out);
 			}
 
-			// If type filtering produced no results, populate all accounts from rows as fallback
-			if (result.isEmpty()) {
-				for (Map<String, Object> row : rows) {
-					Integer id = toInteger(row.get("ChartOfAccountId"));
-					if (id == null) {
-						id = toInteger(row.get("Id"));
-					}
-					if (id == null || !seenIds.add(id)) {
-						continue;
-					}
-					Map<String, Object> out = new LinkedHashMap<>();
-					out.put("Id", id);
-					out.put("AccountTitle", row.get("AccountTitle"));
-					out.put("AccountCode", row.get("AccountCode"));
-					out.put("ParentAccountTitle", row.get("ParentAccountTitle"));
-					out.put("AccountClassName", row.get("AccountClassName"));
-					result.add(out);
-				}
-			}
+			// No "all accounts" fallback: DatatableHelper.GetAccountsFromGlobalByTypeIds returns an
+			// empty table when nothing matches (e.g. CmbDayBookTemporaryAc's exact-title filter), and
+			// the desktop combo is then empty - it never widens to every account.
 		}
 		return result;
 	}

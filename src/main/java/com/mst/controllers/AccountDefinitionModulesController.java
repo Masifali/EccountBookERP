@@ -96,54 +96,73 @@ public class AccountDefinitionModulesController {
 	// 3. DEFINE SUPPLIER / CUSTOMER (/accounts/supplier)
 	// ==========================================
 
+	/* Screen 11 Define Supplier (supfrmDefineSupplier) - SupplierDesktopService makes the desktop's calls.
+	   The earlier page saved through JPA (own max(id)+1, own party code, no GL-account / tax-schedule
+	   procedures), listed every company's parties, and had a delete that also wiped bank details,
+	   ship-to addresses and multi-lingo names - the desktop form has no delete. */
+	@Autowired
+	private com.mst.services.SupplierDesktopService supplierDesktop;
+
 	@GetMapping({"/supplier", "/customer"})
-	public String viewSupplierCustomer(
-			@RequestParam(value = "customerTypeId", required = false) Integer customerTypeId,
-			Model model) {
-
-		List<SupplierCustomer> parties = supplierCustomerService.getByCustomerTypeId(customerTypeId);
-		List<SupplierCustomerType> types = supplierCustomerService.getAllTypes();
-		List<CustomerGroup> groups = supplierCustomerService.getAllGroups();
-		List<ChartofAccount> glAccounts = chartofAccountService.getAllAccounts();
-
+	public String viewSupplierCustomer(Model model) {
 		model.addAttribute("activeMenu", "accounts");
-		model.addAttribute("parties", parties != null ? parties : new ArrayList<>());
-		model.addAttribute("types", types != null ? types : new ArrayList<>());
-		model.addAttribute("groups", groups != null ? groups : new ArrayList<>());
-		model.addAttribute("glAccounts", glAccounts != null ? glAccounts : new ArrayList<>());
-		model.addAttribute("selCustomerTypeId", customerTypeId);
-		model.addAttribute("party", new SupplierCustomer());
-
-		return "accounts/supplier";
+		return "accounts/supplier_desktop";
 	}
 
-	@GetMapping("/supplier/edit/{id}")
-	public String editSupplierCustomer(@PathVariable("id") int id, Model model) {
-		SupplierCustomer party = supplierCustomerService.getById(id);
-		if (party == null) {
-			return "redirect:/accounts/supplier";
-		}
-		List<SupplierCustomer> parties = supplierCustomerService.getAll();
-		List<SupplierCustomerType> types = supplierCustomerService.getAllTypes();
-		List<CustomerGroup> groups = supplierCustomerService.getAllGroups();
-		List<ChartofAccount> glAccounts = chartofAccountService.getAllAccounts();
+	@GetMapping("/supplier/lookups")
+	@ResponseBody
+	public Map<String, Object> supplierLookups() {
+		return supplierDesktop.lookups();
+	}
 
-		model.addAttribute("activeMenu", "accounts");
-		model.addAttribute("parties", parties);
-		model.addAttribute("types", types);
-		model.addAttribute("groups", groups);
-		model.addAttribute("glAccounts", glAccounts);
-		model.addAttribute("party", party);
+	@GetMapping("/supplier/discount-policies")
+	@ResponseBody
+	public List<Map<String, Object>> supplierDiscountPolicies() {
+		return supplierDesktop.discountPolicies();
+	}
 
-		return "accounts/supplier";
+	@GetMapping("/supplier/party-type/{partyTypeId}")
+	@ResponseBody
+	public Map<String, Object> supplierByPartyType(@PathVariable("partyTypeId") int partyTypeId,
+			@RequestParam(value = "glRecId", required = false, defaultValue = "0") int glRecId) {
+		return supplierDesktop.byPartyType(partyTypeId, glRecId);
+	}
+
+	@GetMapping("/supplier/read/{id}")
+	@ResponseBody
+	public Map<String, Object> supplierReadById(@PathVariable("id") int id) {
+		Map<String, Object> res = new HashMap<>();
+		res.put("party", supplierDesktop.readById(id));
+		return res;
 	}
 
 	@PostMapping("/supplier/save")
-	public String saveSupplierCustomer(@ModelAttribute("party") SupplierCustomer party) {
-		supplierCustomerService.addOrUpdate(party);
-		return "redirect:/accounts/supplier";
+	@ResponseBody
+	public Map<String, Object> saveSupplierCustomer(@RequestBody Map<String, Object> body) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			res.put("message", supplierDesktop.save(body));
+			res.put("success", true);
+		} catch (Exception e) {
+			Throwable t = e;
+			while (t.getCause() != null && t.getCause() != t) t = t.getCause();
+			res.put("success", false);
+			res.put("message", t.getMessage() != null ? t.getMessage() : e.getMessage());
+		}
+		return res;
 	}
 
+	@GetMapping("/supplier/register")
+	@ResponseBody
+	public List<Map<String, Object>> supplierRegister(
+			@RequestParam(value = "partyTypeId", required = false, defaultValue = "0") int partyTypeId,
+			@RequestParam(value = "glAccountId", required = false, defaultValue = "0") int glAccountId,
+			@RequestParam(value = "customerGroupId", required = false, defaultValue = "0") int customerGroupId,
+			@RequestParam(value = "cityId", required = false, defaultValue = "0") int cityId) {
+		return supplierDesktop.register(partyTypeId, glAccountId, customerGroupId, cityId);
+	}
+
+	/** The desktop form has no delete; kept only so an old link does nothing. */
 	@GetMapping("/supplier/delete/{id}")
 	public String deleteSupplierCustomer(@PathVariable("id") int id) {
 		supplierCustomerService.delete(id);
@@ -153,283 +172,192 @@ public class AccountDefinitionModulesController {
 	// ==========================================
 	// 4. CHEQUE BOOK REGISTRATION (/accounts/cheque_book)
 	// ==========================================
-
-	@GetMapping("/cheque_book")
-	public String viewChequeBook(
-			@RequestParam(value = "headerId", required = false) Long headerId,
-			Model model) {
-
-		List<ChartofAccount> bankAccounts = cheqBookRegistrationService.getBankAccounts();
-		List<CheqBookHeader> registeredHeaders = cheqBookRegistrationService.getAllHeaders();
-		List<CheqBookDetail> selectedDetails = new ArrayList<>();
-
-		if (headerId != null && headerId > 0) {
-			selectedDetails = cheqBookRegistrationService.getDetailsByHeaderId(headerId);
-		} else if (!registeredHeaders.isEmpty()) {
-			headerId = registeredHeaders.get(0).getId();
-			selectedDetails = cheqBookRegistrationService.getDetailsByHeaderId(headerId);
-		}
-
-		CheqBookHeader chequeForm = new CheqBookHeader();
-		chequeForm.setDocNo(cheqBookRegistrationService.getNextDocNo());
-		chequeForm.setDocDate(LocalDate.now());
-
-		model.addAttribute("activeMenu", "accounts");
-		model.addAttribute("bankAccounts", bankAccounts != null ? bankAccounts : new ArrayList<>());
-		model.addAttribute("registeredHeaders", registeredHeaders != null ? registeredHeaders : new ArrayList<>());
-		model.addAttribute("selectedDetails", selectedDetails != null ? selectedDetails : new ArrayList<>());
-		model.addAttribute("selHeaderId", headerId);
-		model.addAttribute("chequeForm", chequeForm);
-
-		return "accounts/cheque_book";
-	}
-
-	@PostMapping("/cheque_book/save")
-	public String saveChequeBook(@ModelAttribute("chequeForm") CheqBookHeader chequeForm, Model model) {
-		String result = cheqBookRegistrationService.saveChequeBook(chequeForm);
-		if ("SUCCESS".equalsIgnoreCase(result)) {
-			return "redirect:/accounts/cheque_book";
-		}
-		model.addAttribute("errorMessage", result);
-		return viewChequeBook(null, model);
-	}
-
-	@GetMapping("/cheque_book/details/{headerId}")
-	@ResponseBody
-	public List<CheqBookDetail> getChequeBookDetails(@PathVariable("headerId") Long headerId) {
-		return cheqBookRegistrationService.getDetailsByHeaderId(headerId);
-	}
-
-	@PostMapping("/cheque_book/status")
-	@ResponseBody
-	public java.util.Map<String, Object> updateChequeStatus(
-			@RequestParam("detailId") Long detailId,
-			@RequestParam("status") String status,
-			@RequestParam(value = "remarks", required = false) String remarks) {
-		boolean updated = cheqBookRegistrationService.updateChequeStatus(detailId, status, remarks);
-		java.util.Map<String, Object> res = new java.util.HashMap<>();
-		res.put("success", updated);
-		return res;
-	}
+	/* Moved 2026-09-30 to ChequeBookRegistrationController (screen 42, AcfrmChequebookRegistration). */
 
 	// ==========================================
 	// 5. USER CHART OF ACCOUNT MANAGEMENT (/accounts/user-coa-management)
 	// ==========================================
 
+	/* Screen 14 User Chart Of Account Management (UserChartOfAccountManagement) - every call goes through
+	   UserCoaManagementDesktopService, i.e. the desktop's procedures. The earlier endpoints created tables
+	   at run time (UserChartOfAccount, CustomerGroupCOAAllocation) that do not exist in the desktop schema,
+	   edited the CustomerGroup master from this page, and built SQL by string concatenation. */
+	@Autowired
+	private com.mst.services.UserCoaManagementDesktopService userCoaDesktop;
+
 	@GetMapping("/user-coa-management")
-	public String viewUserCoaManagement(
-			@RequestParam(value = "userId", required = false, defaultValue = "0") Integer userId,
-			Model model) {
-
-		List<UserAccount> users = userAccountRepository.findAllByOrderByUserName();
-		List<ChartofAccount> allAccounts = chartofAccountService.getAllAccounts();
-		List<CustomerGroup> customerGroups = customerGroupRepository.findAllByOrderByDescription();
-		Set<String> allocatedAccountCodes = new HashSet<>();
-
-		if (userId != null && userId > 0) {
-			try {
-				List<String> codes = jdbcTemplate.queryForList(
-						"SELECT AccountCode FROM UserChartOfAccount WHERE UserId = ?", String.class, userId);
-				if (codes != null && !codes.isEmpty()) {
-					allocatedAccountCodes.addAll(codes);
-				}
-			} catch (Exception e) {
-				try {
-					jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserChartOfAccount') " +
-							"CREATE TABLE UserChartOfAccount (UserId INT, AccountCode VARCHAR(50), PRIMARY KEY (UserId, AccountCode))");
-					List<String> codes = jdbcTemplate.queryForList(
-							"SELECT AccountCode FROM UserChartOfAccount WHERE UserId = ?", String.class, userId);
-					if (codes != null && !codes.isEmpty()) {
-						allocatedAccountCodes.addAll(codes);
-					}
-				} catch (Exception ignored) {}
-			}
-		}
-
+	public String viewUserCoaManagement(Model model) {
 		model.addAttribute("activeMenu", "accounts");
-		model.addAttribute("users", users);
-		model.addAttribute("selUserId", userId);
-		model.addAttribute("allAccounts", allAccounts);
-		model.addAttribute("allocatedAccountCodes", allocatedAccountCodes);
-		model.addAttribute("customerGroups", customerGroups != null ? customerGroups : new ArrayList<>());
-
-		return "accounts/user_coa_management";
+		return "accounts/user_coa_management_desktop";
 	}
 
-	@PostMapping("/user-coa-management/save")
-	public String saveUserCoaManagement(
-			@RequestParam("userId") Integer userId,
-			@RequestParam(value = "allocatedAccountCodes", required = false) List<String> allocatedAccountCodes) {
+	@GetMapping("/user-coa-management/lookups")
+	@ResponseBody
+	public Map<String, Object> userCoaLookups() {
+		return userCoaDesktop.lookups();
+	}
 
-		if (userId != null && userId > 0) {
-			try {
-				jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserChartOfAccount') " +
-						"CREATE TABLE UserChartOfAccount (UserId INT, AccountCode VARCHAR(50), PRIMARY KEY (UserId, AccountCode))");
-				jdbcTemplate.update("DELETE FROM UserChartOfAccount WHERE UserId = ?", userId);
-				if (allocatedAccountCodes != null && !allocatedAccountCodes.isEmpty()) {
-					for (String code : allocatedAccountCodes) {
-						if (code != null && !code.isBlank()) {
-							jdbcTemplate.update("INSERT INTO UserChartOfAccount (UserId, AccountCode) VALUES (?, ?)", userId, code.trim());
-						}
+	@PostMapping("/user-coa-management/group/save")
+	@ResponseBody
+	public Map<String, Object> userCoaSaveGroup(@RequestBody Map<String, Object> body) {
+		return userCoaRun(() -> userCoaDesktop.saveGroup(intOf(body.get("recId")), body.get("groupName") == null ? "" : String.valueOf(body.get("groupName")),
+				Boolean.TRUE.equals(body.get("isActive"))));
+	}
+
+	@GetMapping("/user-coa-management/user-groups/{userId}")
+	@ResponseBody
+	public Map<String, Object> userCoaUserGroups(@PathVariable("userId") int userId) {
+		return userCoaDesktop.userGroups(userId);
+	}
+
+	@PostMapping("/user-coa-management/user-groups/{userId}/allocate")
+	@ResponseBody
+	public Map<String, Object> userCoaAllocateGroups(@PathVariable("userId") int userId, @RequestBody List<Integer> ids) {
+		return userCoaRun(() -> userCoaDesktop.allocateGroupsToUser(userId, ids));
+	}
+
+	@PostMapping("/user-coa-management/user-groups/{userId}/deallocate")
+	@ResponseBody
+	public Map<String, Object> userCoaDeallocateGroups(@PathVariable("userId") int userId, @RequestBody List<Integer> ids) {
+		return userCoaRun(() -> userCoaDesktop.deallocateGroupsFromUser(userId, ids));
+	}
+
+	@GetMapping("/user-coa-management/coa")
+	@ResponseBody
+	public Map<String, Object> userCoaShow(@RequestParam("customGroupId") int customGroupId,
+			@RequestParam(value = "thirdLevelAccountId", required = false, defaultValue = "0") int thirdLevelAccountId,
+			@RequestParam(value = "accountTypeId", required = false, defaultValue = "0") int accountTypeId,
+			@RequestParam(value = "coaCustomGroupId", required = false, defaultValue = "0") int coaCustomGroupId) {
+		return userCoaDesktop.coaShow(customGroupId, thirdLevelAccountId, accountTypeId, coaCustomGroupId);
+	}
+
+	@PostMapping("/user-coa-management/coa/{customGroupId}/allocate")
+	@ResponseBody
+	public Map<String, Object> userCoaAllocateCoa(@PathVariable("customGroupId") int customGroupId, @RequestBody List<Integer> ids) {
+		return userCoaRun(() -> userCoaDesktop.allocateCoa(customGroupId, ids));
+	}
+
+	@PostMapping("/user-coa-management/coa/{customGroupId}/deallocate")
+	@ResponseBody
+	public Map<String, Object> userCoaDeallocateCoa(@PathVariable("customGroupId") int customGroupId, @RequestBody List<Integer> ids) {
+		return userCoaRun(() -> userCoaDesktop.deallocateCoa(customGroupId, ids));
+	}
+
+	@GetMapping("/user-coa-management/history")
+	@ResponseBody
+	public List<Map<String, Object>> userCoaHistory(@RequestParam(value = "userId", required = false, defaultValue = "0") int userId) {
+		return userCoaDesktop.history(userId);
+	}
+
+	@PostMapping("/user-coa-management/account-status")
+	@ResponseBody
+	public Map<String, Object> userCoaAccountStatus(@RequestBody List<Map<String, Object>> rows) {
+		return userCoaRun(() -> { userCoaDesktop.saveAccountStatus(rows); return null; });
+	}
+
+	private interface UserCoaAction { String call(); }
+
+	private static Map<String, Object> userCoaRun(UserCoaAction a) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			res.put("message", a.call());
+			res.put("success", true);
+		} catch (Exception e) {
+			Throwable t = e;
+			while (t.getCause() != null && t.getCause() != t) t = t.getCause();
+			res.put("success", false);
+			res.put("message", t.getMessage() != null ? t.getMessage() : e.getMessage());
+		}
+		return res;
+	}
+
+	// ==========================================
+	// 6. ACCOUNT ALLOCATION (/accounts/allocation)
+	// ==========================================
+
+	/* Screen 2 Account Allocation (AcfrmAcAllocation) - AccountAllocationDesktopService makes the desktop's
+	   calls. The earlier save deleted every COAAllocation row of the company and re-inserted the ticked
+	   ones through JPA (bypassing the procedure's "referred in vouchers / opening / items" refusals and
+	   the SupplierCustomer + opening-balance rows the desktop creates). */
+	@Autowired
+	private com.mst.services.AccountAllocationDesktopService allocationDesktop;
+
+	@GetMapping("/allocation")
+	public String viewAccountAllocation(Model model) {
+		model.addAttribute("activeMenu", "accounts");
+		return "accounts/account_allocation";
+	}
+
+	/** companytofill + AccountTypeFill */
+	@GetMapping("/allocation/lookups")
+	@ResponseBody
+	public Map<String, Object> allocationLookups() {
+		Map<String, Object> res = new HashMap<>();
+		res.put("companies", allocationDesktop.companies());
+		res.put("currentCompanyId", allocationDesktop.currentCompanyId());
+		res.put("accountTypes", allocationDesktop.accountTypes());
+		return res;
+	}
+
+	/** cmbToCompany_Leave / btnShow_Click (financialYears only on Leave). */
+	@GetMapping("/allocation/show")
+	@ResponseBody
+	public Map<String, Object> allocationShow(@RequestParam("companyId") int companyId,
+			@RequestParam(value = "accountTypeIds", required = false) String accountTypeIds,
+			@RequestParam(value = "withYears", required = false, defaultValue = "false") boolean withYears) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			res.put("pending", allocationDesktop.accounts(companyId, accountTypeIds, 1));
+			res.put("allocated", allocationDesktop.accounts(companyId, accountTypeIds, 2));
+			if (withYears) res.put("years", allocationDesktop.financialYears(companyId));
+			res.put("success", true);
+		} catch (Exception e) {
+			res.put("success", false);
+			res.put("message", e.getMessage());
+		}
+		return res;
+	}
+
+	/** Body {companyId, companyText, financialYearId, financialYearText, rows:[{id, accountTitle}]}. */
+	@PostMapping("/allocation/save")
+	@ResponseBody
+	public Map<String, Object> saveAccountAllocation(@RequestBody Map<String, Object> body) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			List<Map<String, Object>> rows = new ArrayList<>();
+			if (body.get("rows") instanceof List) {
+				for (Object o : (List<?>) body.get("rows")) {
+					if (o instanceof Map) {
+						@SuppressWarnings("unchecked") Map<String, Object> m = (Map<String, Object>) o;
+						rows.add(m);
 					}
 				}
-			} catch (Exception e) {
-				org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class)
-						.error("Error saving user COA allocation: {}", e.getMessage());
 			}
-		}
-
-		return "redirect:/accounts/user-coa-management?userId=" + userId;
-	}
-
-	@GetMapping("/api/user-coa-management/allocated/{userId}")
-	@ResponseBody
-	public Map<String, Object> getAllocatedCoaForUser(@PathVariable("userId") Integer userId) {
-		Map<String, Object> res = new HashMap<>();
-		try {
-			jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserChartOfAccount') " +
-					"CREATE TABLE UserChartOfAccount (UserId INT, AccountCode VARCHAR(50), PRIMARY KEY (UserId, AccountCode))");
-			List<String> codes = jdbcTemplate.queryForList(
-					"SELECT AccountCode FROM UserChartOfAccount WHERE UserId = ?", String.class, userId);
+			res.put("message", allocationDesktop.allocate(intOf(body.get("companyId")), strOf(body.get("companyText")),
+					intOf(body.get("financialYearId")), strOf(body.get("financialYearText")), rows));
 			res.put("success", true);
-			res.put("allocatedAccountCodes", codes != null ? codes : new ArrayList<>());
 		} catch (Exception e) {
-			res.put("success", true);
-			res.put("allocatedAccountCodes", new ArrayList<>());
-		}
-		return res;
-	}
-
-	@PostMapping("/api/user-coa-management/allocate")
-	@ResponseBody
-	public Map<String, Object> allocateCoaToUser(
-			@RequestParam("userId") Integer userId,
-			@RequestBody List<String> accountCodes) {
-		Map<String, Object> res = new HashMap<>();
-		try {
-			jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserChartOfAccount') " +
-					"CREATE TABLE UserChartOfAccount (UserId INT, AccountCode VARCHAR(50), PRIMARY KEY (UserId, AccountCode))");
-			jdbcTemplate.update("DELETE FROM UserChartOfAccount WHERE UserId = ?", userId);
-			if (accountCodes != null && !accountCodes.isEmpty()) {
-				for (String code : accountCodes) {
-					if (code != null && !code.isBlank()) {
-						jdbcTemplate.update("INSERT INTO UserChartOfAccount (UserId, AccountCode) VALUES (?, ?)", userId, code.trim());
-					}
-				}
-			}
-			res.put("success", true);
-			res.put("message", "User Chart of Accounts Rights saved successfully!");
-		} catch (Exception e) {
+			Throwable t = e;
+			while (t.getCause() != null && t.getCause() != t) t = t.getCause();
 			res.put("success", false);
-			res.put("message", "Error saving User COA Rights: " + e.getMessage());
+			res.put("message", t.getMessage() != null ? t.getMessage() : e.getMessage());
 		}
 		return res;
 	}
 
-
-	@PostMapping("/api/customer-groups/save")
+	@PostMapping("/allocation/unallocate")
 	@ResponseBody
-	public Map<String, Object> saveCustomerGroup(
-			@RequestParam(value = "id", required = false) Integer id,
-			@RequestParam("code") String code,
-			@RequestParam("description") String description) {
+	public Map<String, Object> unallocateAccounts(@RequestParam(value = "companyId", required = false, defaultValue = "0") int companyId,
+			@RequestBody List<Integer> chartOfAccountIds) {
 		Map<String, Object> res = new HashMap<>();
 		try {
-			CustomerGroup group;
-			if (id != null && id > 0) {
-				group = customerGroupRepository.findById(id).orElse(new CustomerGroup());
-			} else {
-				group = new CustomerGroup();
-				group.setId(customerGroupRepository.findMaxId() + 1);
-			}
-			group.setCode(code != null ? code.trim() : "");
-			group.setDescription(description != null ? description.trim() : "");
-			customerGroupRepository.save(group);
+			res.put("message", allocationDesktop.unAllocate(companyId, chartOfAccountIds));
 			res.put("success", true);
-			res.put("message", "Customer Group saved successfully!");
-			res.put("group", group);
 		} catch (Exception e) {
+			Throwable t = e;
+			while (t.getCause() != null && t.getCause() != t) t = t.getCause();
 			res.put("success", false);
-			res.put("message", "Error saving Customer Group: " + e.getMessage());
-		}
-		return res;
-	}
-
-	@PostMapping("/api/customer-groups/delete/{id}")
-	@ResponseBody
-	public Map<String, Object> deleteCustomerGroup(@PathVariable("id") Integer id) {
-		Map<String, Object> res = new HashMap<>();
-		try {
-			customerGroupRepository.deleteById(id);
-			res.put("success", true);
-			res.put("message", "Customer Group deleted successfully!");
-		} catch (Exception e) {
-			res.put("success", false);
-			res.put("message", "Error deleting Customer Group: " + e.getMessage());
-		}
-		return res;
-	}
-
-	@PostMapping("/api/customer-groups/allocate")
-	@ResponseBody
-	public Map<String, Object> allocateCoaToCustomerGroup(
-			@RequestParam("customerGroupId") Integer customerGroupId,
-			@RequestBody List<String> accountCodes) {
-		Map<String, Object> res = new HashMap<>();
-		try {
-			jdbcTemplate.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'CustomerGroupCOAAllocation') " +
-					"CREATE TABLE CustomerGroupCOAAllocation (CustomerGroupId INT, AccountCode VARCHAR(50), PRIMARY KEY (CustomerGroupId, AccountCode))");
-			jdbcTemplate.update("DELETE FROM CustomerGroupCOAAllocation WHERE CustomerGroupId = ?", customerGroupId);
-			if (accountCodes != null && !accountCodes.isEmpty()) {
-				for (String code : accountCodes) {
-					if (code != null && !code.isBlank()) {
-						jdbcTemplate.update("INSERT INTO CustomerGroupCOAAllocation (CustomerGroupId, AccountCode) VALUES (?, ?)", customerGroupId, code.trim());
-					}
-				}
-			}
-			res.put("success", true);
-			res.put("message", "COA Accounts allocated to Customer Group successfully!");
-		} catch (Exception e) {
-			res.put("success", false);
-			res.put("message", "Error allocating COA to Customer Group: " + e.getMessage());
-		}
-		return res;
-	}
-
-	@GetMapping("/api/customer-groups/allocated/{customerGroupId}")
-	@ResponseBody
-	public Map<String, Object> getAllocatedCoaForCustomerGroup(@PathVariable("customerGroupId") Integer customerGroupId) {
-		Map<String, Object> res = new HashMap<>();
-		try {
-			List<String> codes = jdbcTemplate.queryForList(
-					"SELECT AccountCode FROM CustomerGroupCOAAllocation WHERE CustomerGroupId = ?", String.class, customerGroupId);
-			res.put("success", true);
-			res.put("allocatedAccountCodes", codes != null ? codes : new ArrayList<>());
-		} catch (Exception e) {
-			res.put("success", true);
-			res.put("allocatedAccountCodes", new ArrayList<>());
-		}
-		return res;
-	}
-
-	@GetMapping("/api/user-coa-management/history/{userId}")
-	@ResponseBody
-	public Map<String, Object> getUserCoaHistory(@PathVariable("userId") Integer userId) {
-		Map<String, Object> res = new HashMap<>();
-		try {
-			String sql = "SELECT u.UserName, u.FirstName + ' ' + u.LastName as FullName, " +
-					"coa.AccountCode, coa.AccountTitle, ucoa.UserId " +
-					"FROM UserChartOfAccount ucoa " +
-					"JOIN UserAccount u ON ucoa.UserId = u.ID " +
-					"JOIN ChartofAccount coa ON ucoa.AccountCode = coa.AccountCode " +
-					(userId > 0 ? "WHERE ucoa.UserId = " + userId + " " : "") +
-					"ORDER BY u.UserName, coa.AccountCode";
-			List<Map<String, Object>> history = jdbcTemplate.queryForList(sql);
-			res.put("success", true);
-			res.put("history", history);
-		} catch (Exception e) {
-			res.put("success", true);
-			res.put("history", new ArrayList<>());
+			res.put("message", t.getMessage() != null ? t.getMessage() : e.getMessage());
 		}
 		return res;
 	}
@@ -487,7 +415,14 @@ public class AccountDefinitionModulesController {
 
 		return "redirect:/accounts/allocation?companyId=" + companyId;
 	}
+	private static int intOf(Object o) {
+		if (o instanceof Number) return ((Number) o).intValue();
+		try { return o == null ? 0 : Integer.parseInt(String.valueOf(o).trim()); } catch (NumberFormatException e) { return 0; }
+	}
 
+	private static String strOf(Object o) {
+		return o == null ? "" : String.valueOf(o);
+	}
 	// ==========================================
 	// 7. ACCOUNT OPENING BALANCE (/accounts/opening_balance)
 	// ==========================================
@@ -495,6 +430,13 @@ public class AccountDefinitionModulesController {
 	// ==========================================
 	// 7. ACCOUNT OPENING BALANCE (/accounts/opening_balance)
 	// ==========================================
+
+	/* Screen 10 Account Opening Balance (AcfrmOpeningBalance) - OpeningBalanceDesktopService makes the
+	   desktop's calls: GetAll with the login financial year and @UserId (the year was hardcoded to 1
+	   and a raw-SQL fallback read every company's ChartofAccount), and Sp_AccountsOpeningBalances_Update
+	   for both updates (the raw UPDATEs also rewrote ChartofAccount.YearOb*, which the desktop never does). */
+	@Autowired
+	private com.mst.services.OpeningBalanceDesktopService openingBalanceDesktop;
 
 	@GetMapping("/opening_balance")
 	public String viewOpeningBalance(Model model) {
@@ -502,7 +444,7 @@ public class AccountDefinitionModulesController {
 		List<OpeningBalanceRow> rows = new ArrayList<>();
 		double totalDebit = 0.0;
 		double totalCredit = 0.0;
-
+		String loadError = null;
 		try {
 			int orgId = currentUserContext.currentOrganizationId();
 			int compId = currentUserContext.currentCompanyId();
@@ -546,82 +488,70 @@ public class AccountDefinitionModulesController {
 
 				row.setOpeningDebit(debit);
 				row.setOpeningCredit(credit);
-
 				totalDebit += debit;
 				totalCredit += credit;
-
 				rows.add(row);
 			}
 		} catch (Exception e) {
+			loadError = e.getMessage();
 			org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class).error("Error in viewOpeningBalance: {}", e.getMessage(), e);
 		}
-
 		form.setRows(rows);
 		form.setTotalDebit(totalDebit);
 		form.setTotalCredit(totalCredit);
 		model.addAttribute("activeMenu", "accounts");
 		model.addAttribute("form", form);
-
+		model.addAttribute("rights", openingBalanceDesktop.rights());
+		model.addAttribute("loadError", loadError);
 		return "accounts/opening_balance";
 	}
 
-	@PostMapping("/opening_balance/save")
-	public String saveOpeningBalance(@ModelAttribute("form") OpeningBalanceForm form) {
-		if (form != null && form.getRows() != null) {
-			int orgId = currentUserContext.currentOrganizationId();
-			int compId = currentUserContext.currentCompanyId();
-			int userId = currentUserContext.currentUserId();
-
-			for (OpeningBalanceRow r : form.getRows()) {
-				int chartOfAccountId = r.getChartOfAccountId() != null ? r.getChartOfAccountId() : 0;
-				if (chartOfAccountId > 0) {
-					double d = r.getOpeningDebitValue();
-					double c = r.getOpeningCreditValue();
-					int id = r.getId() != null ? r.getId() : 0;
-
-					if (id > 0) {
-						jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ?, ModifyDate = GETDATE(), ModifyUser = ? WHERE Id = ?", d, c, (d - c), userId, id);
-					} else {
-						jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ?, ModifyDate = GETDATE(), ModifyUser = ? WHERE ChartOfAccountId = ? AND OrganizationId = ? AND CompanyId = ?", d, c, (d - c), userId, chartOfAccountId, orgId, compId);
-					}
-					jdbcTemplate.update("UPDATE ChartofAccount SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE ID = ?", d, c, (d - c), chartOfAccountId);
-				}
-			}
-		}
-		return "redirect:/accounts/opening_balance";
+	/** cmbAccountTitle_Leave / dgvOpeningBalance_DoubleClick: AccountsOpeningBalances.GetById. */
+	@GetMapping("/opening_balance/by-id/{id}")
+	@ResponseBody
+	public Map<String, Object> openingBalanceById(@PathVariable("id") int id) {
+		Map<String, Object> res = new HashMap<>();
+		res.put("row", openingBalanceDesktop.getById(id));
+		return res;
 	}
 
+	/** BtnEdit "Update All" - body {comboText, rows:[{id, chartOfAccountId, origDebit, origCredit, debit, credit}]}. */
+	@PostMapping("/opening_balance/save")
+	@ResponseBody
+	public Map<String, Object> saveOpeningBalance(@RequestBody Map<String, Object> body) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			List<Map<String, Object>> rows = new ArrayList<>();
+			if (body.get("rows") instanceof List) {
+				for (Object o : (List<?>) body.get("rows")) {
+					if (o instanceof Map) {
+						@SuppressWarnings("unchecked") Map<String, Object> m = (Map<String, Object>) o;
+						rows.add(m);
+					}
+				}
+			}
+			res.put("message", openingBalanceDesktop.updateAll(rows, body.get("comboText") == null ? "" : String.valueOf(body.get("comboText"))));
+			res.put("success", true);
+		} catch (Exception e) {
+			res.put("success", false);
+			res.put("message", e.getMessage());
+		}
+		return res;
+	}
+
+	/** button1 "Update Single" (SingleRecordUpdate). */
 	@PostMapping("/opening_balance/update-single")
 	@ResponseBody
 	public java.util.Map<String, Object> updateSingleOpeningBalance(
+			@RequestParam(value = "comboValue", required = false, defaultValue = "0") Integer comboValue,
 			@RequestParam(value = "id", required = false, defaultValue = "0") Integer id,
 			@RequestParam(value = "chartOfAccountId", required = false, defaultValue = "0") Integer chartOfAccountId,
-			@RequestParam(value = "accountCode", required = false) String accountCode,
-			@RequestParam(value = "debitAmount", defaultValue = "0.0") Double debitAmount,
-			@RequestParam(value = "creditAmount", defaultValue = "0.0") Double creditAmount) {
+			@RequestParam(value = "comboText", required = false) String comboText,
+			@RequestParam(value = "debitAmount", required = false) String debitAmount,
+			@RequestParam(value = "creditAmount", required = false) String creditAmount) {
 		java.util.Map<String, Object> res = new java.util.HashMap<>();
 		try {
-			double d = debitAmount != null ? debitAmount : 0.0;
-			double c = creditAmount != null ? creditAmount : 0.0;
-			int orgId = currentUserContext.currentOrganizationId();
-			int compId = currentUserContext.currentCompanyId();
-			int userId = currentUserContext.currentUserId();
-
-			int coaId = chartOfAccountId;
-			if (coaId <= 0 && accountCode != null && !accountCode.isEmpty()) {
-				ChartofAccount coa = chartofAccountRepository.findByAccountCode(accountCode);
-				if (coa != null) coaId = coa.getId();
-			}
-
-			if (id != null && id > 0) {
-				jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ?, ModifyDate = GETDATE(), ModifyUser = ? WHERE Id = ?", d, c, (d - c), userId, id);
-			} else if (coaId > 0) {
-				jdbcTemplate.update("UPDATE AccountsOpeningBalances SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ?, ModifyDate = GETDATE(), ModifyUser = ? WHERE ChartOfAccountId = ? AND OrganizationId = ? AND CompanyId = ?", d, c, (d - c), userId, coaId, orgId, compId);
-			}
-			if (coaId > 0) {
-				jdbcTemplate.update("UPDATE ChartofAccount SET YearObDebit = ?, YearObCredit = ?, OpeningBalance = ? WHERE ID = ?", d, c, (d - c), coaId);
-			}
-
+			res.put("message", openingBalanceDesktop.updateSingle(comboValue, id, chartOfAccountId, comboText, debitAmount, creditAmount));
 			res.put("success", true);
 			res.put("message", "Update record Successfully");
 		} catch (Exception e) {
@@ -647,6 +577,13 @@ public class AccountDefinitionModulesController {
 		org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class);
 
 		try {
+			/* BtnPrint.Enabled = formrights.DoHavePrintRights */
+			if (!openingBalanceDesktop.hasPrintRight()) {
+				res.put("success", false);
+				res.put("resultCount", 0);
+				res.put("message", "You do not have the Print right for this screen.");
+				return res;
+			}
 			List<java.util.Map<String, Object>> data = accountOpeningBalanceRepository
 					.getOpeningBalanceReportData(organizationId, companyId, financialYearId);
 
@@ -817,34 +754,55 @@ public class AccountDefinitionModulesController {
 	// 8. ACCOUNT CUSTOM GROUP (/accounts/custom_group)
 	// ==========================================
 
+	/* Screen 1 Account Custom Group (frmAccountCustomGroup). Every call goes through
+	   AccountCustomGroupDesktopService, which reproduces the desktop's procedures and parameter sets.
+	   The earlier JPA/raw-SQL fallbacks (fabricated queries, AccountTypeId=0/ParentAccountId=0 sent
+	   as filters, a group delete the desktop does not have) are no longer reachable from this page. */
+	@Autowired
+	private com.mst.services.AccountCustomGroupDesktopService customGroupDesktop;
+
 	@GetMapping("/custom_group")
 	public String viewCustomGroup(Model model) {
-		List<AcLookUp> groups = accountCustomGroupService.getAllGroups();
 		model.addAttribute("activeMenu", "accounts");
-		model.addAttribute("groups", groups != null ? groups : new ArrayList<>());
-		model.addAttribute("accountTypes", accountCustomGroupService.getAccountTypes());
-		model.addAttribute("parentAccounts", accountCustomGroupService.getParentAccounts(0));
-		model.addAttribute("group", new AcLookUp());
 		return "accounts/custom_group";
+	}
+
+	/** Load / BtnRefresh: GridBind, LookUpBind, AccountTypeCombo, ThirdLevelAccountsDbCall. */
+	@GetMapping("/custom_group/lookups")
+	@ResponseBody
+	public Map<String, Object> customGroupLookups() {
+		Map<String, Object> res = new HashMap<>();
+		res.put("gridGroups", customGroupDesktop.gridGroups());
+		res.put("comboGroups", customGroupDesktop.comboGroups());
+		res.put("accountTypes", customGroupDesktop.accountTypes());
+		res.put("parentAccounts", customGroupDesktop.thirdLevelAccounts());
+		return res;
+	}
+
+	/** grdLookUp_DoubleClick: AcLookUps.GetById. */
+	@GetMapping("/custom_group/group/{id}")
+	@ResponseBody
+	public Map<String, Object> customGroupById(@PathVariable("id") int id) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			res.put("success", true);
+			res.put("group", customGroupDesktop.groupById(id));
+		} catch (Exception ex) {
+			res.put("success", false);
+			res.put("message", ex.getMessage());
+		}
+		return res;
 	}
 
 	@PostMapping("/custom_group/save")
 	@ResponseBody
 	public Map<String, Object> saveCustomGroup(@RequestParam(value = "id", required = false) Integer id,
-	                                           @RequestParam("acLookUpsDescription") String acLookUpsDescription) {
+	                                           @RequestParam(value = "acLookUpsDescription", required = false) String acLookUpsDescription) {
 		Map<String, Object> response = new HashMap<>();
 		try {
-			if (acLookUpsDescription == null || acLookUpsDescription.trim().isEmpty()) {
-				response.put("success", false);
-				response.put("message", "Group Name Required");
-				return response;
-			}
-			AcLookUp group = new AcLookUp();
-			group.setId(id != null && id > 0 ? id : null);
-			group.setAcLookUpsDescription(acLookUpsDescription.trim());
-			accountCustomGroupService.addOrUpdateGroup(group);
-			response.put("success", true);
-			response.put("message", id != null && id > 0 ? "Record Update Successfully" : "Record Saved Successfully");
+			String msg = customGroupDesktop.saveGroup(id != null ? id : 0, acLookUpsDescription);
+			response.put("success", msg != null);
+			response.put("message", msg);
 		} catch (Exception ex) {
 			response.put("success", false);
 			response.put("message", ex.getMessage());
@@ -852,43 +810,45 @@ public class AccountDefinitionModulesController {
 		return response;
 	}
 
+	/** The desktop form has no delete for a custom group (its only delete button un-allocates accounts). */
 	@PostMapping("/custom_group/delete-group/{id}")
 	@ResponseBody
 	public Map<String, Object> deleteCustomGroup(@PathVariable("id") int id) {
 		Map<String, Object> response = new HashMap<>();
-		try {
-			accountCustomGroupService.deleteGroup(id);
-			response.put("success", true);
-			response.put("message", "Group deleted successfully");
-		} catch (Exception ex) {
-			response.put("success", false);
-			response.put("message", ex.getMessage());
-		}
+		response.put("success", false);
+		response.put("message", "Deleting a custom group is not available on this screen.");
 		return response;
 	}
 
 	@GetMapping("/custom_group/show")
 	@ResponseBody
 	public Map<String, Object> showCustomGroupData(
-			@RequestParam("groupId") int groupId,
-			@RequestParam(value = "accountTypeId", required = false) Integer accountTypeId,
-			@RequestParam(value = "parentAccountId", required = false) Integer parentAccountId) {
+			@RequestParam(value = "groupId", required = false, defaultValue = "0") int groupId,
+			@RequestParam(value = "accountTypeId", required = false, defaultValue = "0") int accountTypeId,
+			@RequestParam(value = "parentAccountId", required = false, defaultValue = "0") int parentAccountId) {
 		Map<String, Object> result = new HashMap<>();
-		result.put("unallocated", accountCustomGroupService.getUnAllocatedData(groupId, accountTypeId, parentAccountId));
-		result.put("allocated", accountCustomGroupService.getAllocatedData(groupId, accountTypeId, parentAccountId));
+		try {
+			List<List<Map<String, Object>>> grids = customGroupDesktop.show(groupId, accountTypeId, parentAccountId);
+			result.put("unallocated", grids.get(0));
+			result.put("allocated", grids.get(1));
+			result.put("success", true);
+		} catch (Exception ex) {
+			result.put("success", false);
+			result.put("message", ex.getMessage());
+		}
 		return result;
 	}
 
 	@PostMapping("/custom_group/allocate")
 	@ResponseBody
 	public Map<String, Object> allocateAccounts(
-			@RequestParam("groupId") int groupId,
+			@RequestParam(value = "groupId", required = false, defaultValue = "0") int groupId,
 			@RequestBody List<Integer> chartOfAccountIds) {
 		Map<String, Object> response = new HashMap<>();
 		try {
-			accountCustomGroupService.allocateAccounts(groupId, chartOfAccountIds);
+			boolean ok = customGroupDesktop.allocate(groupId, chartOfAccountIds);
 			response.put("success", true);
-			response.put("message", "Saved Successfully");
+			response.put("message", ok ? "Saved Successfully" : null);
 		} catch (Exception ex) {
 			response.put("success", false);
 			response.put("message", ex.getMessage());
@@ -896,14 +856,13 @@ public class AccountDefinitionModulesController {
 		return response;
 	}
 
+	/** Body: [{acLookUpsId, chartOfAccountId}] - each checked row's own hidden Id and ChartOfAccountId. */
 	@PostMapping("/custom_group/unallocate")
 	@ResponseBody
-	public Map<String, Object> unallocateAccounts(
-			@RequestParam("groupId") int groupId,
-			@RequestBody List<Integer> chartOfAccountIds) {
+	public Map<String, Object> unallocateAccounts(@RequestBody List<Map<String, Object>> rows) {
 		Map<String, Object> response = new HashMap<>();
 		try {
-			accountCustomGroupService.unAllocateAccounts(groupId, chartOfAccountIds);
+			customGroupDesktop.unAllocate(rows);
 			response.put("success", true);
 			response.put("message", "Record Remove successfully");
 		} catch (Exception ex) {
@@ -915,8 +874,8 @@ public class AccountDefinitionModulesController {
 
 	@GetMapping("/custom_group/parent-accounts")
 	@ResponseBody
-	public List<ChartofAccount> getParentAccounts(@RequestParam(value = "accountTypeId", required = false) Integer accountTypeId) {
-		return accountCustomGroupService.getParentAccounts(accountTypeId);
+	public List<Map<String, Object>> getParentAccounts() {
+		return customGroupDesktop.thirdLevelAccounts();
 	}
 
 	// Form Helper Classes for Batch Opening Balance Submission

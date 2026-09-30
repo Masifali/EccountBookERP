@@ -313,24 +313,10 @@
                         <table class="acg-table" id="tblGroups">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">ID</th>
                                     <th>Description</th>
-                                    <th style="width: 50px; text-align: center;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyGroups">
-                                <tr th:each="g : ${groups}" th:data-id="${g.id}" th:data-name="${g.acLookUpsDescription}" onclick="selectGroupRow(this)" ondblclick="editGroupRow(this)">
-                                    <td th:text="${g.id}">1</td>
-                                    <td th:text="${g.acLookUpsDescription}">Group Description</td>
-                                    <td style="text-align: center;">
-                                        <button type="button" class="acg-icon-btn acg-icon-btn-danger" title="Delete" th:attr="onclick='deleteGroup(' + ${g.id} + ', event)'">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr th:if="${groups == null or groups.isEmpty()}" id="trNoGroups">
-                                    <td colspan="3" style="text-align:center; color:#888; padding: 15px;">No custom groups created yet</td>
-                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -354,9 +340,9 @@
                         <button type="button" class="acg-tb-btn" style="color: #dc3545;" onclick="doUnallocate()">
                             <i class="fa fa-trash"></i> Un-Allocate
                         </button>
-                        <a href="/accounts/supplier" class="acg-tb-btn" style="text-decoration: none;">
+                        <button type="button" class="acg-tb-btn" onclick="alert('Party Custom Group (frmPartyCustomGroup) is not available in the web application yet.')">
                             <i class="fa fa-users text-primary"></i> Party Custom Group
-                        </a>
+                        </button>
                     </div>
 
                     <!-- Filter Control Panel (panel6) -->
@@ -364,23 +350,20 @@
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
                             <div style="flex: 1 1 180px; min-width: 170px; display: flex; align-items: center; gap: 6px;">
                                 <label class="acg-form-label" style="min-width: 70px; margin: 0;">Group Name</label>
-                                <select id="cmbGroupName" class="acg-input select2-dropdown" style="flex: 1;" onchange="onGroupNameChange()">
-                                    <option value="0">-- Select Group --</option>
-                                    <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.acLookUpsDescription}"></option>
+                                <select id="cmbGroupName" class="acg-input select2-dropdown" style="flex: 1;">
+                                    <option value="0"></option>
                                 </select>
                             </div>
                             <div style="flex: 1 1 180px; min-width: 170px; display: flex; align-items: center; gap: 6px;">
                                 <label class="acg-form-label" style="min-width: 80px; margin: 0;">Account Types</label>
                                 <select id="cmbAccountTypes" class="acg-input select2-dropdown" style="flex: 1;" onchange="onAccountTypeChange()">
-                                    <option value="0">-- All Types --</option>
-                                    <option th:each="t : ${accountTypes}" th:value="${t.id}" th:text="${t.accountType}"></option>
+                                    <option value="0"></option>
                                 </select>
                             </div>
                             <div style="flex: 1.5 1 240px; min-width: 210px; display: flex; align-items: center; gap: 6px;">
                                 <label class="acg-form-label" style="min-width: 85px; margin: 0;">Parent Account</label>
                                 <select id="cmbParentAccount" class="acg-input select2-dropdown" style="flex: 1;">
-                                    <option value="0">-- All Parent Accounts --</option>
-                                    <option th:each="p : ${parentAccounts}" th:value="${p.id}" th:text="${p.accountTitle + ' (' + p.accountCode + ')'}"></option>
+                                    <option value="0"></option>
                                 </select>
                             </div>
                             <div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">
@@ -472,12 +455,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>Ctrl + S</code></td><td>Save Group Name</td></tr>
-                        <tr><td><code>Ctrl + U</code></td><td>Update Group Name</td></tr>
-                        <tr><td><code>Ctrl + A</code></td><td>Allocate Accounts</td></tr>
-                        <tr><td><code>Ctrl + Delete</code></td><td>Un-Allocate Accounts</td></tr>
-                        <tr><td><code>Ctrl + R</code></td><td>Refresh Form Data</td></tr>
-                        <tr><td><code>Ctrl + N</code></td><td>Reset Inputs / New</td></tr>
+                        <tr><td>Ctrl+S</td><td>For Save</td></tr>
+                        <tr><td>Ctrl+U</td><td>For Update</td></tr>
+                        <tr><td>Ctrl+A</td><td>For Allocate</td></tr>
+                        <tr><td>Ctrl+Delete</td><td>For UnAllocate</td></tr>
+                        <tr><td>Ctrl+E</td><td>For Close</td></tr>
+                        <tr><td>Ctrl+R</td><td>For Refresh</td></tr>
+                        <tr><td>Ctrl+N</td><td>For New</td></tr>
+                        <tr><td>Ctrl+F5</td><td>For Focus on CustomGroup</td></tr>
+                        <tr><td>Ctrl+alt</td><td>To Show ShortCut Keys Form</td></tr>
+                        <tr><td>Ctrl+ArrowDown</td><td>For Focus On Grid</td></tr>
+                        <tr><td>Ctrl+ArrowUp</td><td>For Focus On CustomGroup</td></tr>
+                        <tr><td>Ctrl+Enter</td><td>When Focus On Any Grid For Update Record</td></tr>
+                        <tr><td>Ctrl+Space</td><td>When Focus On Any Grid To Call Function's On Button Or Link</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -490,304 +480,228 @@
 <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
 <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
 <script>
-    let activeGroupId = 0;
+    /* frmAccountCustomGroup, reproduced. Every list comes from /accounts/custom_group/lookups or /show,
+       which call the desktop's own procedures (see AccountCustomGroupDesktopService). */
+    var cgRecId = 0;
+    var cgParentRows = [];
+
+    function cgVal(row, key) {
+        if (!row) return null;
+        if (row[key] !== undefined) return row[key];
+        var lk = key.toLowerCase();
+        for (var k in row) { if (k.toLowerCase() === lk) return row[k]; }
+        return null;
+    }
+    function cgEsc(v) {
+        return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     $(document).ready(function() {
         if ($.fn.select2) {
-            $('#cmbGroupName, #cmbAccountTypes, #cmbParentAccount').select2({
-                width: '100%'
-            });
+            $('#cmbGroupName, #cmbAccountTypes, #cmbParentAccount').select2({ width: '100%', allowClear: true, placeholder: '' });
         }
+        $('#cmbAccountTypes').on('change', function () { bindThirdLevelAccounts(parseInt($(this).val()) || 0); });
+        loadLookups(true);
     });
 
-    // Reset Left Form (btnClear_Click / Reset)
+    function bindCombo(sel, rows, idKey, textKey) {
+        var cur = $(sel).val();
+        var html = '<option value="0"></option>';
+        var found = false;
+        (rows || []).forEach(function (r) {
+            var id = cgVal(r, idKey);
+            if (String(id) === String(cur)) found = true;
+            html += '<option value="' + cgEsc(id) + '">' + cgEsc(cgVal(r, textKey)) + '</option>';
+        });
+        $(sel).html(html);
+        /* LookUpBind / AccountTypeCombo: keep the selection when it still exists, else clear */
+        $(sel).val(found ? cur : '0');
+        if ($.fn.select2) $(sel).trigger('change.select2');
+    }
+
+    /* GridBind + LookUpBind + AccountTypeCombo + ThirdLevelAccountsDbCall/BindThirdLevelAccounts */
+    function loadLookups(initial) {
+        $.get('/accounts/custom_group/lookups', function (res) {
+            var html = '';
+            (res.gridGroups || []).forEach(function (g) {
+                html += '<tr data-id="' + cgEsc(cgVal(g, 'Id')) + '" onclick="selectGroupRow(this)" ondblclick="editGroupRow(this)">'
+                     + '<td>' + cgEsc(cgVal(g, 'AcLookUpsDescription')) + '</td></tr>';
+            });
+            $('#tbodyGroups').html(html);
+            bindCombo('#cmbAccountTypes', res.accountTypes, 'Id', 'AccountType');
+            bindCombo('#cmbGroupName', res.comboGroups, 'Id', 'AcLookUpsDescription');
+            cgParentRows = res.parentAccounts || [];
+            bindThirdLevelAccounts(initial ? 0 : (parseInt($('#cmbAccountTypes').val()) || 0));
+        });
+    }
+
+    /* BindThirdLevelAccounts(AccountTypeId): client-side filter of the cached rows; when nothing
+       matches the desktop returns early and leaves the previous binding in place. */
+    function bindThirdLevelAccounts(accountTypeId) {
+        var rows = cgParentRows;
+        if (!rows || rows.length === 0) return;
+        if (accountTypeId > 0) rows = rows.filter(function (r) { return parseInt(cgVal(r, 'AccountTypeId')) === accountTypeId; });
+        if (rows.length === 0) return;
+        bindCombo('#cmbParentAccount', rows, 'Id', 'AccountTitle');
+    }
+
+    /* btnClear_Click / BtnResetGroup */
     function resetLeftForm() {
+        cgRecId = 0;
         $('#txtRecId').val('0');
         $('#txtGroupName').val('');
         $('#btnAdd').text('Add');
         $('#lblToolbarSave').text('Save');
         $('#tblGroups tbody tr').removeClass('selected');
-        $('#txtGroupName').focus();
+        loadLookups(false);
     }
 
-    // Submit Save/Update Group
+    /* btnAdd_Click: Add -> InsertLookUp, Update -> UpdateLookUp; then LookUpBind + BtnRefresh */
     function submitSaveGroup() {
-        const id = parseInt($('#txtRecId').val()) || 0;
-        const name = $('#txtGroupName').val().trim();
-        if (!name) {
+        var name = $('#txtGroupName').val();
+        if (!name || name.trim() === '') {
             alert('Group Name Required');
             $('#txtGroupName').focus();
             return;
         }
-
+        var id = $('#btnAdd').text() === 'Update' ? cgRecId : 0;
         $.ajax({
             url: '/accounts/custom_group/save',
             type: 'POST',
             data: { id: id, acLookUpsDescription: name },
             success: function (res) {
+                if (res.message) alert(res.message);
                 if (res.success) {
-                    alert(res.message);
-                    resetLeftForm();
-                    refreshAllData();
-                } else {
-                    alert(res.message || 'Error saving group');
+                    /* Reset(): clear the name, back to Add */
+                    cgRecId = 0;
+                    $('#txtRecId').val('0');
+                    $('#txtGroupName').val('');
+                    $('#btnAdd').text('Add');
+                    $('#lblToolbarSave').text('Save');
                 }
+                loadLookups(false);
             },
-            error: function () {
-                alert('Server error saving group.');
-            }
+            error: function () { alert('Server error saving group.'); }
         });
     }
 
-    // Double-click row on left grid to edit (grdLookUp_DoubleClick)
+    /* grdLookUp_DoubleClick: AcLookUps.GetById */
     function editGroupRow(tr) {
-        const id = $(tr).attr('data-id');
-        const name = $(tr).attr('data-name');
-        $('#txtRecId').val(id);
-        $('#txtGroupName').val(name);
-        $('#btnAdd').text('Update');
-        $('#lblToolbarSave').text('Update');
-        $('#txtGroupName').focus();
+        var id = parseInt($(tr).attr('data-id')) || 0;
+        $.get('/accounts/custom_group/group/' + id, function (res) {
+            if (!res.success) { alert(res.message); return; }
+            cgRecId = id;
+            $('#txtRecId').val(id);
+            $('#txtGroupName').val(cgVal(res.group, 'AcLookUpsDescription') || '');
+            $('#btnAdd').text('Update');
+            $('#lblToolbarSave').text('Update');
+        });
     }
 
-    // Click row on left grid
     function selectGroupRow(tr) {
         $('#tblGroups tbody tr').removeClass('selected');
         $(tr).addClass('selected');
-        const id = $(tr).attr('data-id');
-        if (id) {
-            if ($.fn.select2) {
-                $('#cmbGroupName').val(id).trigger('change');
-            } else {
-                $('#cmbGroupName').val(id);
-                onGroupNameChange();
-            }
-        }
     }
 
-    // Delete group
-    function deleteGroup(id, event) {
-        if (event) event.stopPropagation();
-        if (!confirm('Are you sure you want to delete this custom group?')) return;
-
-        $.ajax({
-            url: '/accounts/custom_group/delete-group/' + id,
-            type: 'POST',
-            success: function (res) {
-                if (res.success) {
-                    alert(res.message);
-                    resetLeftForm();
-                    refreshAllData();
-                } else {
-                    alert(res.message || 'Error deleting group');
-                }
-            },
-            error: function () {
-                alert('Server error deleting group.');
-            }
-        });
-    }
-
-    // Account Types change -> reload Parent Account dropdown
-    function onAccountTypeChange() {
-        const accountTypeId = parseInt($('#cmbAccountTypes').val()) || 0;
-        $.get('/accounts/custom_group/parent-accounts?accountTypeId=' + accountTypeId, function (parents) {
-            let html = '<option value="0">-- All Parent Accounts --</option>';
-            if (parents && parents.length > 0) {
-                parents.forEach(p => {
-                    html += `<option value="${p.id}">${p.accountTitle} (${p.accountCode})</option>`;
-                });
-            }
-            $('#cmbParentAccount').html(html);
-            if ($.fn.select2) {
-                $('#cmbParentAccount').trigger('change.select2');
-            }
-        });
-    }
-
-    // Group Name dropdown change
-    function onGroupNameChange() {
-        activeGroupId = parseInt($('#cmbGroupName').val()) || 0;
-        if (activeGroupId > 0) {
-            executeShow();
-        } else {
-            clearGrids();
-        }
-    }
-
-    // Execute Show Button Click (BtnShow_Click)
+    /* BtnShow_Click: UnAllocatedData -> left grid (grdAllocated), AllocatedData -> right grid (grdUnAllocated) */
     function executeShow() {
-        const groupId = parseInt($('#cmbGroupName').val()) || 0;
-        if (groupId === 0) {
-            alert('Please select a Group Name first.');
-            return;
-        }
-        activeGroupId = groupId;
-        const accountTypeId = parseInt($('#cmbAccountTypes').val()) || 0;
-        const parentAccountId = parseInt($('#cmbParentAccount').val()) || 0;
-
-        $('#tbodyUnalloc').html('<tr><td colspan="3" style="text-align:center; color:#888; padding:15px;"><i class="fa fa-spinner fa-spin"></i> Loading available accounts...</td></tr>');
-        $('#tbodyAlloc').html('<tr><td colspan="3" style="text-align:center; color:#888; padding:15px;"><i class="fa fa-spinner fa-spin"></i> Loading allocated accounts...</td></tr>');
-
-        $.get(`/accounts/custom_group/show?groupId=${groupId}&accountTypeId=${accountTypeId}&parentAccountId=${parentAccountId}`, function (res) {
-            renderUnallocGrid(res.unallocated || []);
-            renderAllocGrid(res.allocated || []);
+        var groupId = parseInt($('#cmbGroupName').val()) || 0;
+        var accountTypeId = parseInt($('#cmbAccountTypes').val()) || 0;
+        var parentAccountId = parseInt($('#cmbParentAccount').val()) || 0;
+        $.get('/accounts/custom_group/show?groupId=' + groupId + '&accountTypeId=' + accountTypeId + '&parentAccountId=' + parentAccountId, function (res) {
+            if (res.success === false) { alert(res.message); return; }
+            renderGrid('#tbodyUnalloc', '#chkSelectAllUnalloc', 'chk-unalloc', res.unallocated || []);
+            renderGrid('#tbodyAlloc', '#chkSelectAllAlloc', 'chk-alloc', res.allocated || []);
         });
     }
 
     function toggleRowCheckbox(tr, e) {
         if (e && e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'I')) return;
-        const chk = $(tr).find('input[type="checkbox"]');
-        if (chk.length) {
-            chk.prop('checked', !chk.prop('checked'));
-        }
+        var chk = $(tr).find('input[type="checkbox"]');
+        if (chk.length) chk.prop('checked', !chk.prop('checked'));
     }
 
-    function renderUnallocGrid(list) {
-        let html = '';
-        if (list && list.length > 0) {
-            list.forEach(item => {
-                const coaId = item.ChartOfAccountId || item.chartOfAccountId || item.CHART_OF_ACCOUNT_ID || item.Id || item.id || item.ID;
-                const code = item.AccountCode || item.accountCode || item.ACCOUNT_CODE || '';
-                const title = item.AccountTitle || item.accountTitle || item.ACCOUNT_TITLE || '';
-                html += `<tr onclick="toggleRowCheckbox(this, event)">
-                            <td style="text-align:center;"><input type="checkbox" class="chk-unalloc" value="${coaId}" onclick="event.stopPropagation()"/></td>
-                            <td>${code}</td>
-                            <td><strong>${title}</strong></td>
-                         </tr>`;
-            });
-        } else {
-            html = '<tr><td colspan="3" style="text-align:center; color:#888; padding:15px;">No unallocated accounts match</td></tr>';
-        }
-        $('#tbodyUnalloc').html(html);
-        $('#chkSelectAllUnalloc').prop('checked', false);
-    }
-
-    function renderAllocGrid(list) {
-        let html = '';
-        if (list && list.length > 0) {
-            list.forEach(item => {
-                const coaId = item.ChartOfAccountId || item.chartOfAccountId || item.CHART_OF_ACCOUNT_ID || item.Id || item.id || item.ID;
-                const code = item.AccountCode || item.accountCode || item.ACCOUNT_CODE || '';
-                const title = item.AccountTitle || item.accountTitle || item.ACCOUNT_TITLE || '';
-                html += `<tr onclick="toggleRowCheckbox(this, event)">
-                            <td style="text-align:center;"><input type="checkbox" class="chk-alloc" value="${coaId}" onclick="event.stopPropagation()"/></td>
-                            <td>${code}</td>
-                            <td><strong>${title}</strong></td>
-                         </tr>`;
-            });
-        } else {
-            html = '<tr><td colspan="3" style="text-align:center; color:#888; padding:15px;">No accounts allocated to this group</td></tr>';
-        }
-        $('#tbodyAlloc').html(html);
-        $('#chkSelectAllAlloc').prop('checked', false);
-    }
-
-    // Allocate Click (btnAddAc_Click)
-    function doAllocate() {
-        const groupId = parseInt($('#cmbGroupName').val()) || 0;
-        if (groupId === 0) {
-            alert('Please select a Group Name first.');
-            return;
-        }
-        const selectedIds = [];
-        $('.chk-unalloc:checked').each(function () {
-            selectedIds.push(parseInt($(this).val()));
+    /* grid columns: Select, AccountCode, AccountTitle (Id = AcLookUpsId and ChartOfAccountId hidden) */
+    function renderGrid(tbody, chkAll, cls, list) {
+        var html = '';
+        list.forEach(function (item) {
+            html += '<tr onclick="toggleRowCheckbox(this, event)">'
+                 + '<td style="text-align:center;"><input type="checkbox" class="' + cls + '" data-lookup="' + cgEsc(cgVal(item, 'AcLookUpsId'))
+                 + '" value="' + cgEsc(cgVal(item, 'ChartOfAccountId')) + '" onclick="event.stopPropagation()"/></td>'
+                 + '<td>' + cgEsc(cgVal(item, 'AccountCode')) + '</td>'
+                 + '<td>' + cgEsc(cgVal(item, 'AccountTitle')) + '</td></tr>';
         });
-        if (selectedIds.length === 0) {
-            alert('Checked row first');
-            return;
-        }
+        $(tbody).html(html);
+        $(chkAll).prop('checked', false);
+    }
 
+    /* btnAddAc_Click -> SaveAccountCustomGroup */
+    function doAllocate() {
+        var ids = [];
+        $('.chk-unalloc:checked').each(function () { ids.push(parseInt($(this).val()) || 0); });
+        if (ids.length === 0) { alert('Checked row first'); return; }
+        var groupId = parseInt($('#cmbGroupName').val()) || 0;
         $.ajax({
             url: '/accounts/custom_group/allocate?groupId=' + groupId,
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify(selectedIds),
+            data: JSON.stringify(ids),
             success: function (res) {
-                if (res.success) {
-                    alert(res.message || 'Saved Successfully');
-                    executeShow();
-                } else {
-                    alert(res.message || 'Error allocating accounts');
-                }
+                if (res.message) alert(res.message);
+                if (res.success) executeShow();
             },
-            error: function () {
-                alert('Server error during allocation.');
-            }
+            error: function () { alert('Server error during allocation.'); }
         });
     }
 
-    // Un-Allocate Click (btnDelete_Click)
+    /* btnDelete_Click / BtnDeAllocate: each row's own hidden Id (AcLookUpsId) and ChartOfAccountId */
     function doUnallocate() {
-        const groupId = parseInt($('#cmbGroupName').val()) || 0;
-        if (groupId === 0) {
-            alert('Please select a Group Name first.');
-            return;
-        }
-        const selectedIds = [];
+        var rows = [];
         $('.chk-alloc:checked').each(function () {
-            selectedIds.push(parseInt($(this).val()));
+            rows.push({ acLookUpsId: parseInt($(this).attr('data-lookup')) || 0, chartOfAccountId: parseInt($(this).val()) || 0 });
         });
-        if (selectedIds.length === 0) {
-            alert('Checked row first');
-            return;
-        }
-
+        if (rows.length === 0) { alert('Checked row first'); return; }
         $.ajax({
-            url: '/accounts/custom_group/unallocate?groupId=' + groupId,
+            url: '/accounts/custom_group/unallocate',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify(selectedIds),
+            data: JSON.stringify(rows),
             success: function (res) {
-                if (res.success) {
-                    alert(res.message || 'Record Remove successfully');
-                    executeShow();
-                } else {
-                    alert(res.message || 'Error removing allocation');
-                }
+                if (res.message) alert(res.message);
+                if (res.success) executeShow();
             },
-            error: function () {
-                alert('Server error during un-allocation.');
-            }
+            error: function () { alert('Server error during un-allocation.'); }
         });
     }
 
-    // Reset Right Filters (btnAcClear_Click)
+    /* btnAcClear_Click: clears Account Types and Group Name and both grids (Parent Account is kept) */
     function resetRightFilters() {
-        if ($.fn.select2) {
-            $('#cmbAccountTypes').val('0').trigger('change.select2');
-            $('#cmbGroupName').val('0').trigger('change.select2');
-            $('#cmbParentAccount').val('0').trigger('change.select2');
-        } else {
-            $('#cmbAccountTypes').val('0');
-            $('#cmbGroupName').val('0');
-            $('#cmbParentAccount').val('0');
-        }
+        $('#cmbAccountTypes').val('0');
+        $('#cmbGroupName').val('0');
+        if ($.fn.select2) { $('#cmbAccountTypes').trigger('change.select2'); $('#cmbGroupName').trigger('change.select2'); }
         clearGrids();
     }
 
     function clearGrids() {
-        $('#tbodyUnalloc').html('<tr><td colspan="3" style="text-align:center; color:#888; padding:20px;">Select Group Name and click Show</td></tr>');
-        $('#tbodyAlloc').html('<tr><td colspan="3" style="text-align:center; color:#888; padding:20px;">Select Group Name and click Show</td></tr>');
+        $('#tbodyUnalloc').html('');
+        $('#tbodyAlloc').html('');
         $('#chkSelectAllUnalloc').prop('checked', false);
         $('#chkSelectAllAlloc').prop('checked', false);
     }
 
-    // Refresh All (BtnRefresh_Click)
+    /* BtnRefresh_Click: AccountTypeCombo, LookUpBind, ThirdLevelAccountsDbCall, BindThirdLevelAccounts(type) */
     function refreshAllData() {
-        window.location.reload();
+        loadLookups(false);
     }
 
     function toggleSelectAll(tableId, checked) {
-        $(`#${tableId} tbody input[type="checkbox"]`).prop('checked', checked);
+        $('#' + tableId + ' tbody input[type="checkbox"]').prop('checked', checked);
     }
 
     function filterTable(tableId, query) {
-        const q = query.toLowerCase();
-        $(`#${tableId} tbody tr`).each(function () {
-            const text = $(this).text().toLowerCase();
-            $(this).toggle(text.indexOf(q) > -1);
+        var q = (query || '').toLowerCase();
+        $('#' + tableId + ' tbody tr').each(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(q) > -1);
         });
     }
 
@@ -799,32 +713,18 @@
         $('#modalShortcuts').modal('show');
     }
 
-    // Keyboard Shortcuts Listener
+    function cgGridsFocused() {
+        return $(document.activeElement).closest('.acg-twin-grids, .acg-right-panel .acg-form-box').length > 0;
+    }
+
+    /* frmAccountCustomGroup_KeyDown (Ctrl+A is listed in the help but has no handler on the desktop) */
     $(document).on('keydown', function (e) {
-        if (e.ctrlKey && e.keyCode === 83) { // Ctrl+S
-            e.preventDefault();
-            submitSaveGroup();
-        }
-        if (e.ctrlKey && e.keyCode === 85) { // Ctrl+U
-            e.preventDefault();
-            submitSaveGroup();
-        }
-        if (e.ctrlKey && e.keyCode === 65) { // Ctrl+A
-            e.preventDefault();
-            doAllocate();
-        }
-        if (e.ctrlKey && e.keyCode === 46) { // Ctrl+Delete
-            e.preventDefault();
-            doUnallocate();
-        }
-        if (e.ctrlKey && e.keyCode === 82) { // Ctrl+R
-            e.preventDefault();
-            refreshAllData();
-        }
-        if (e.ctrlKey && e.keyCode === 78) { // Ctrl+N
-            e.preventDefault();
-            resetLeftForm();
-        }
+        if (e.ctrlKey && e.altKey) { openShortcutsModal(); return; }
+        if (e.ctrlKey && (e.keyCode === 83 || e.keyCode === 85)) { e.preventDefault(); submitSaveGroup(); }
+        if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); if (cgGridsFocused()) resetRightFilters(); else resetLeftForm(); }
+        if (e.ctrlKey && e.keyCode === 116) { e.preventDefault(); if (cgGridsFocused()) $('#cmbGroupName').focus(); else $('#txtGroupName').focus(); }
+        if (e.ctrlKey && e.keyCode === 46) { e.preventDefault(); doUnallocate(); }
+        if (e.ctrlKey && e.keyCode === 82) { e.preventDefault(); refreshAllData(); }
     });
 </script>
 </body>

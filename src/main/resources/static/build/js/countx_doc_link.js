@@ -207,6 +207,14 @@
         'Account_Definition.VouchersWithTax.ReceiptsVoucherNew|frmCashReceiptVoucherTax': { q: '/accounts/vouchers/cash-receipt' },
         'Account_Definition.VouchersWithTax.ReceiptsVoucherNew|frmBankReceiptVoucherTax': { q: '/accounts/vouchers/bank-receipt' },
         'Account_Definition.JournalVoucher|JournalVoucher': { q: '/accounts/vouchers/journal' },
+        /* journal_voucher_entry.html / contra_voucher_desktop.html / expense_voucher_desktop.html read ?id=
+           after their lookups load (VoucherEntry.ReadById :1903, ContraVoucher.ReadById :1452,
+           ExpenseVoucher.ReadById :2334). */
+        'Account_Definition.VoucherEntry|VoucherEntry': { q: '/accounts/vouchers/voucher-entry' },
+        'Account_Definition.ContraVoucher|ContraVoucher': { q: '/accounts/vouchers/contra' },
+        /* contra_voucher_tax.html reads ?id= (VouchersWithTax.ContraVoucher.ReadById). */
+        'Account_Definition.VouchersWithTax.ContraVoucher|ContraVoucherTax': { q: '/accounts/vouchers/contra-tax' },
+        'Account_Definition.ExpenseVoucher|ExpenseVoucher': { q: '/accounts/vouchers/expense' },
 
         /* countx_store_opening_stock_store.js:595 - /[?&]id=(\d+)/ -> open(id) after lookups + history. */
         'Inventory_Definition.frmStoreOpeningStockBalancing|frmStoreOpeningStockBalancing': { q: '/store/opening-stock-store' },

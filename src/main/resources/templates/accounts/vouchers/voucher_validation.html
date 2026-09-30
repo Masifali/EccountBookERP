@@ -448,11 +448,12 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930f}"></script>
     <script>
+        /* VoucherValidation_Load: RdAll, fill the combos, fromdate = Now (todate keeps today) - nothing is shown until Show */
         $(document).ready(function() {
             $('#CmbAccountTitle, #cmbdoctype, #CmbCustomGroup, #CmbLanguage').select2({ width: '100%' });
             setWinFormsDefaultDates();
-            btnshow_Click();
         });
 
         // ditto VoucherValidation_KeyDown: Ctrl+L reveals the hidden Language combo
@@ -469,7 +470,7 @@
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
 
-            document.getElementById('fromdate').value = `${year}-${month}-01`;
+            document.getElementById('fromdate').value = `${year}-${month}-${day}`;
             document.getElementById('todate').value = `${year}-${month}-${day}`;
         }
 
@@ -613,22 +614,24 @@
             $('#txtTotalCredit').text(formatWinNumber(cred));
         }
 
+        /* VoucherValidation.reset(): doc-no range, Account Title and Custom Group cleared, RdAll; nothing re-run */
         function resetForm() {
             $('#txtdocnofrom').val('');
             $('#txtdocnoto').val('');
-            $('#txtManualNo').val('');
             $('#CmbAccountTitle').val('').trigger('change');
-            $('#cmbdoctype').val([]).trigger('change');
             $('#CmbCustomGroup').val('').trigger('change');
             $('#RdAll').prop('checked', true);
-            $('#rdDocFromToDate').prop('checked', true);
-            $('#chkSkipCgs').prop('checked', false);
-            setWinFormsDefaultDates();
-            btnshow_Click();
+            $('#cmbdoctype').focus();
         }
 
-        function refreshForm() {
-            btnshow_Click();
+        /* btnRefresh_Click: VouchertypeFill + GetAllDetailAccount + CustomeGroupsDefine + MultiLanguagesGetAll */
+        async function refreshForm() {
+            try {
+                AccF.fillSelect('#cmbdoctype', await AccF.lookup('document-types'), 'Id', 'DocumentTypeDescription', null).trigger('change');
+                AccF.fillSelect('#CmbAccountTitle', await AccF.lookup('detail-accounts'), 'Id', 'AccountTitle', '').trigger('change');
+                AccF.fillSelect('#CmbCustomGroup', await AccF.lookup('custom-groups'), 'Id', 'AcLookUpsDescription', '').trigger('change');
+                AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '').trigger('change');
+            } catch (e) { alert(e.message); }
         }
 
         function printReport(rptType) {

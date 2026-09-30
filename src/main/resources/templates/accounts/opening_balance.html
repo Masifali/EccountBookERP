@@ -257,10 +257,11 @@
     <!-- Toolbar Bar -->
     <div class="erp-toolbar">
         <button type="button" id="btnNew" class="btn-erp"><i class="fa fa-plus"></i> New</button>
-        <button type="button" id="btnRefresh" class="btn-erp" onclick="location.reload();"><i class="fa fa-refresh"></i> Refresh</button>
-        <button type="button" id="btnUpdateBatch" class="btn-erp btn-erp-save" onclick="$('#batchForm').submit();"><i class="fa fa-save"></i> Update</button>
-        <button type="button" id="btnPrint129" class="btn-erp" onclick="printOpeningBalance();"><i class="fa fa-print"></i> 129-Print</button>
-        <button type="button" class="btn-erp"><i class="fa fa-keyboard-o"></i> Shortcut Keys</button>
+        <button type="button" id="btnRefresh" class="btn-erp"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" id="btnUpdateBatch" class="btn-erp btn-erp-save" th:disabled="${rights == null or !rights['update']}"><i class="fa fa-save"></i> Update All</button>
+        <button type="button" id="btnPrint129" class="btn-erp" th:disabled="${rights == null or !rights['print']}" onclick="printOpeningBalance();"><i class="fa fa-print"></i> 129-Print</button>
+        <button type="button" id="btnShortCutKey" class="btn-erp"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+        <span th:if="${loadError != null}" style="color:#c62828; margin-left:10px;" th:text="${loadError}"></span>
     </div>
 
     <!-- Main Container -->
@@ -283,9 +284,10 @@
                     <select id="selAccountTitle" class="form-control-erp" style="width: 100%;"
                             data-dtcombo="single" data-dtcombo-caption="Account Title">
                         <option value="">(Select Account Title...)</option>
-                        <option th:each="r : ${form.rows}" 
-                                th:value="${r.chartOfAccountId}" 
+                        <option th:each="r : ${form.rows}"
+                                th:value="${r.id}"
                                 th:data-id="${r.id}"
+                                th:data-coa-id="${r.chartOfAccountId}"
                                 th:data-code="${r.accountCode}" 
                                 th:data-debit="${r.openingDebitValue}" 
                                 th:data-credit="${r.openingCreditValue}"
@@ -297,17 +299,18 @@
                 <!-- Debit Amount Input -->
                 <div class="form-item-custom">
                     <label for="txtDebitAmount">Debit Amount</label>
-                    <input type="number" step="0.01" id="txtDebitAmount" class="form-control-erp" style="width: 110px; text-align: right;" value="0"/>
+                    <input type="text" id="txtDebitAmount" class="form-control-erp" style="width: 110px; text-align: right;" value=""/>
                 </div>
 
                 <!-- Credit Amount Input -->
                 <div class="form-item-custom">
                     <label for="txtCreditAmount">Credit Amount</label>
-                    <input type="number" step="0.01" id="txtCreditAmount" class="form-control-erp" style="width: 110px; text-align: right;" value="0"/>
+                    <input type="text" id="txtCreditAmount" class="form-control-erp" style="width: 110px; text-align: right;" value=""/>
                 </div>
 
                 <!-- Update Single Button -->
-                <button type="button" id="btnUpdateSingle" class="btn-erp btn-erp-save" style="padding: 4px 18px; font-size: 12px;">
+                <input type="hidden" id="txtAcId" value="0"/>
+                <button type="button" id="btnUpdateSingle" class="btn-erp btn-erp-save" style="padding: 4px 18px; font-size: 12px;" th:disabled="${rights == null or !rights['update']}">
                     <i class="fa fa-pencil-square-o"></i> Update Single
                 </button>
             </div>
@@ -318,7 +321,7 @@
             <i class="fa fa-history"></i> History
         </div>
 
-        <form id="batchForm" th:action="@{/accounts/opening_balance/save}" th:object="${form}" method="post">
+        <form id="batchForm" th:object="${form}" onsubmit="return false;">
             <div class="table-wrap">
                 <table id="tblOpeningBalances" class="erp-table">
                     <thead>
@@ -384,180 +387,164 @@
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script>
         $(document).ready(function () {
-            /* select2 is not what enhances this control any more - countx_desktop_combo.js does,
-               and it is the same component the 43 Sale/Purchase screens use, so the picker looks
-               and filters the same everywhere. It keeps the native <select> as the source of
-               truth, so the change handler below is untouched and still fires on a pick. */
-
+            var RId = 0;
+            var original = {};   // getlist: the values loaded with the grid
+            $('#tblOpeningBalances tbody tr.row-ob').each(function () {
+                original[$(this).attr('data-id')] = {
+                    debit: parseFloat($(this).find('.input-debit').val() || 0),
+                    credit: parseFloat($(this).find('.input-credit').val() || 0)
+                };
+            });
+            function num(v) { var n = parseFloat(String(v == null ? '' : v).replace(/,/g, '')); return isNaN(n) ? 0 : n; }
             recalcTotals();
 
-            // Selecting Account Title populates Debit & Credit fields
-            $('#selAccountTitle').change(function () {
-                const $selected = $(this).find('option:selected');
-                const coaId = $selected.val();
-                if (coaId) {
-                    const debit = parseFloat($selected.attr('data-debit') || 0);
-                    const credit = parseFloat($selected.attr('data-credit') || 0);
-                    $('#txtDebitAmount').val(debit);
-                    $('#txtCreditAmount').val(credit);
-
-                    // Highlight corresponding row in table
-                    $('#tblOpeningBalances tbody tr').removeClass('selected-row');
-                    const $targetRow = $('#tblOpeningBalances tbody tr[data-coa-id="' + coaId + '"]');
-                    if ($targetRow.length > 0) {
-                        $targetRow.addClass('selected-row');
-                        $targetRow[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            /* cmbAccountTitle_Leave: AccountsOpeningBalances.GetById(Id = combo value) */
+            function accountTitleLeave() {
+                var id = parseInt($('#selAccountTitle').val() || 0);
+                $.get('/accounts/opening_balance/by-id/' + id, function (res) {
+                    var r = res.row;
+                    if (r) {
+                        RId = parseInt(r.Id || r.id || 0);
+                        $('#txtAcId').val(r.ChartOfAccountId != null ? r.ChartOfAccountId : 0);
+                        $('#txtCreditAmount').val(r.YearObCredit != null ? r.YearObCredit : '');
+                        $('#txtDebitAmount').val(r.YearObDebit != null ? r.YearObDebit : '');
+                    } else {
+                        RId = 0;
+                        $('#txtAcId').val('0');
+                        $('#txtCreditAmount').val('0');
+                        $('#txtDebitAmount').val('0');
                     }
-                } else {
-                    $('#txtDebitAmount').val('0');
-                    $('#txtCreditAmount').val('0');
-                    $('#tblOpeningBalances tbody tr').removeClass('selected-row');
-                }
+                });
+                $('#tblOpeningBalances tbody tr').removeClass('selected-row');
+                $('#tblOpeningBalances tbody tr[data-id="' + id + '"]').addClass('selected-row');
+            }
+            $('#selAccountTitle').change(accountTitleLeave);
+
+            /* dgvOpeningBalance_DoubleClick */
+            $('#tblOpeningBalances tbody').on('dblclick', 'tr.row-ob', function () {
+                var id = $(this).attr('data-id');
+                $.get('/accounts/opening_balance/by-id/' + id, function (res) {
+                    var r = res.row;
+                    if (r) {
+                        RId = parseInt(r.Id || 0);
+                        $('#selAccountTitle').val(String(r.Id));
+                        $('#txtAcId').val(r.ChartOfAccountId);
+                        $('#txtDebitAmount').val(r.YearObDebit);
+                        $('#txtCreditAmount').val(r.YearObCredit);
+                        $('#selAccountTitle').focus();
+                    } else {
+                        RId = 0;
+                        $('#selAccountTitle').val('');
+                        $('#txtDebitAmount').val('');
+                        $('#txtCreditAmount').val('');
+                    }
+                });
             });
 
-            // Mutual exclusivity for txtDebitAmount and txtCreditAmount
-            $('#txtDebitAmount').on('input keyup change', function() {
-                if (parseFloat($(this).val() || 0) > 0) {
-                    $('#txtCreditAmount').val(0);
-                }
-            });
-            $('#txtCreditAmount').on('input keyup change', function() {
-                if (parseFloat($(this).val() || 0) > 0) {
-                    $('#txtDebitAmount').val(0);
-                }
+            /* txtDebit_TextChanged / txtCredit_TextChanged: while the other side is > 0 this one is forced to "0" */
+            $('#txtDebitAmount').on('input', function () { if (num($('#txtCreditAmount').val()) > 0) $(this).val('0'); });
+            $('#txtCreditAmount').on('input', function () { if (num($('#txtDebitAmount').val()) > 0) $(this).val('0'); });
+            /* txtDebit_KeyPress / txtCredit_KeyPress: digits and control keys only */
+            $('#txtDebitAmount, #txtCreditAmount').on('keypress', function (e) {
+                if (e.which >= 32 && (e.which < 48 || e.which > 57)) e.preventDefault();
             });
 
-            // Mutual exclusivity for grid input cells + live totals recalculation
-            $('#tblOpeningBalances').on('input keyup change', '.input-debit', function() {
-                const val = parseFloat($(this).val() || 0);
-                if (val > 0) {
-                    $(this).closest('tr').find('.input-credit').val(0);
-                }
+            /* dgvOpeningBalance_CellUpdated */
+            $('#tblOpeningBalances').on('change', '.input-debit', function () {
+                if (num($(this).val()) > 0) $(this).closest('tr').find('.input-credit').val(0);
                 recalcTotals();
             });
-            $('#tblOpeningBalances').on('input keyup change', '.input-credit', function() {
-                const val = parseFloat($(this).val() || 0);
-                if (val > 0) {
-                    $(this).closest('tr').find('.input-debit').val(0);
-                }
+            $('#tblOpeningBalances').on('change', '.input-credit', function () {
+                if (num($(this).val()) > 0) $(this).closest('tr').find('.input-debit').val(0);
                 recalcTotals();
             });
+            $('#tblOpeningBalances').on('input', '.input-debit, .input-credit', recalcTotals);
 
             function recalcTotals() {
-                let sumDebit = 0;
-                let sumCredit = 0;
-                $('#tblOpeningBalances tbody tr.row-ob').each(function() {
-                    sumDebit += parseFloat($(this).find('.input-debit').val() || 0);
-                    sumCredit += parseFloat($(this).find('.input-credit').val() || 0);
+                var d = 0, c = 0;
+                $('#tblOpeningBalances tbody tr.row-ob').each(function () {
+                    d += num($(this).find('.input-debit').val());
+                    c += num($(this).find('.input-credit').val());
                 });
-                $('#lblTotalDebit').text(sumDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                $('#lblTotalCredit').text(sumCredit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $('#lblTotalDebit').text(d.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $('#lblTotalCredit').text(c.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
             }
 
-            // Clicking any row in the table selects it and populates top fields
-            $('#tblOpeningBalances tbody').on('click', 'tr.row-ob', function() {
-                const coaId = $(this).attr('data-coa-id');
-                if (coaId) {
-                    $('#selAccountTitle').val(coaId).trigger('change');
-                }
-            });
-
-            // Live Grid Column Filter Search
-            $('.col-filter').on('keyup change', function() {
-                filterGridRows();
-            });
-
+            $('.col-filter').on('keyup change', filterGridRows);
             function filterGridRows() {
-                const f0 = $('.col-filter[data-col="0"]').val().toLowerCase().trim();
-                const f1 = $('.col-filter[data-col="1"]').val().toLowerCase().trim();
-                const f2 = $('.col-filter[data-col="2"]').val().toLowerCase().trim();
-                const f3 = $('.col-filter[data-col="3"]').val().toLowerCase().trim();
-                const f4 = $('.col-filter[data-col="4"]').val().toLowerCase().trim();
-
-                $('#tblOpeningBalances tbody tr.row-ob').each(function() {
-                    const type = $(this).find('.td-type').text().toLowerCase();
-                    const parent = $(this).find('.td-parent').text().toLowerCase();
-                    const title = $(this).find('.td-title').text().toLowerCase();
-                    const debit = $(this).find('.input-debit').val().toLowerCase();
-                    const credit = $(this).find('.input-credit').val().toLowerCase();
-
-                    const match0 = !f0 || type.includes(f0);
-                    const match1 = !f1 || parent.includes(f1);
-                    const match2 = !f2 || title.includes(f2);
-                    const match3 = !f3 || debit.includes(f3);
-                    const match4 = !f4 || credit.includes(f4);
-
-                    if (match0 && match1 && match2 && match3 && match4) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
+                var f = [];
+                for (var k = 0; k < 5; k++) f.push(($('.col-filter[data-col="' + k + '"]').val() || '').toLowerCase().trim());
+                $('#tblOpeningBalances tbody tr.row-ob').each(function () {
+                    var vals = [$(this).find('.td-type').text(), $(this).find('.td-parent').text(), $(this).find('.td-title').text(),
+                                $(this).find('.input-debit').val(), $(this).find('.input-credit').val()];
+                    var ok = true;
+                    for (var k = 0; k < 5; k++) if (f[k] && String(vals[k]).toLowerCase().indexOf(f[k]) < 0) ok = false;
+                    $(this).toggle(ok);
                 });
             }
 
-            // Update Single Button Action
-            $('#btnUpdateSingle').click(function () {
-                const $opt = $('#selAccountTitle option:selected');
-                const coaId = parseInt($opt.val() || 0);
-                if (coaId <= 0) {
-                    alert('Please select an Account Title first.');
-                    return;
-                }
+            /* Reset(): RId = 0, clear the combo and both amounts, fillDataGrid */
+            function reset() { window.location.reload(); }
 
-                const obId = parseInt($opt.attr('data-id') || 0);
-                const accountCode = $opt.attr('data-code') || '';
-                const debitAmount = parseFloat($('#txtDebitAmount').val() || 0);
-                const creditAmount = parseFloat($('#txtCreditAmount').val() || 0);
-
+            /* button1 "Update Single" -> SingleRecordUpdate */
+            function updateSingle() {
+                if ($('#btnUpdateSingle').prop('disabled')) return;
+                var $opt = $('#selAccountTitle option:selected');
                 $.ajax({
                     url: '/accounts/opening_balance/update-single',
                     type: 'POST',
                     data: {
-                        id: obId,
-                        chartOfAccountId: coaId,
-                        accountCode: accountCode,
-                        debitAmount: debitAmount,
-                        creditAmount: creditAmount
+                        comboValue: parseInt($('#selAccountTitle').val() || 0),
+                        id: RId,
+                        chartOfAccountId: parseInt($('#txtAcId').val() || 0),
+                        comboText: $opt.val() ? $opt.text().trim() : '',
+                        debitAmount: $('#txtDebitAmount').val(),
+                        creditAmount: $('#txtCreditAmount').val()
                     },
                     success: function (res) {
-                        if (res && res.success) {
-                            // Update values in dropdown dataset
-                            $opt.attr('data-debit', debitAmount);
-                            $opt.attr('data-credit', creditAmount);
-
-                            // Update values in History table row
-                            const $row = $('#tblOpeningBalances tbody tr[data-coa-id="' + coaId + '"]');
-                            if ($row.length > 0) {
-                                $row.find('.input-debit').val(debitAmount);
-                                $row.find('.input-credit').val(creditAmount);
-                            }
-                            recalcTotals();
-                            alert(res.message || 'Update record Successfully');
-                        } else {
-                            alert('Error updating single account: ' + (res.message || 'Server error'));
-                        }
+                        alert(res.message);
+                        if (res.success) reset();
                     },
-                    error: function () {
-                        alert('Error submitting single update request.');
-                    }
+                    error: function () { alert('Error submitting single update request.'); }
                 });
-            });
+            }
+            $('#btnUpdateSingle').click(updateSingle);
 
-            $('#btnNew').click(function () {
-                $('#selAccountTitle').val('').trigger('change');
-                $('.col-filter').val('');
-                filterGridRows();
-            });
+            /* BtnEdit "Update All" -> AllRecordUpdate */
+            function updateAll() {
+                if ($('#btnUpdateBatch').prop('disabled')) return;
+                var rows = [];
+                $('#tblOpeningBalances tbody tr.row-ob').each(function () {
+                    var id = $(this).attr('data-id');
+                    var o = original[id] || { debit: 0, credit: 0 };
+                    rows.push({ id: parseInt(id), chartOfAccountId: parseInt($(this).attr('data-coa-id') || 0),
+                                origDebit: o.debit, origCredit: o.credit,
+                                debit: num($(this).find('.input-debit').val()), credit: num($(this).find('.input-credit').val()) });
+                });
+                var $opt = $('#selAccountTitle option:selected');
+                $.ajax({
+                    url: '/accounts/opening_balance/save',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ comboText: $opt.val() ? $opt.text().trim() : '', rows: rows }),
+                    success: function (res) {
+                        alert(res.message);
+                        if (res.success) reset();
+                    },
+                    error: function () { alert('Error submitting update request.'); }
+                });
+            }
+            $('#btnUpdateBatch').click(updateAll);
+
+            $('#btnNew').click(reset);
+            /* toolStripButton1 "Refresh" -> FindAccountTitle (the combo only) */
+            $('#btnRefresh').click(function () { window.location.reload(); });
 
             window.printOpeningBalance = function () {
+                if ($('#btnPrint129').prop('disabled')) return;
                 $.ajax({
                     url: '/accounts/opening_balance/print',
                     type: 'GET',
-                    data: {
-                        organizationId: 1,
-                        companyId: 1,
-                        financialYearId: 1
-                    },
                     success: function (res) {
                         if (res.success && res.printUrl) {
                             window.open(res.printUrl, '_blank', 'width=1100,height=750,scrollbars=yes,resizable=yes');
@@ -565,11 +552,30 @@
                             alert(res.message || 'Record Not Found For Display');
                         }
                     },
-                    error: function () {
-                        alert('Record Not Found For Display');
-                    }
+                    error: function () { alert('Record Not Found For Display'); }
                 });
             };
+
+            function showShortcuts() {
+                alert('Ctrl+N  For New\nCtrl+S  For Update Single\nCtrl+U  For Update All\nCtrl+E  For Close\nCtrl+R  For Refresh\nCtrl+F5  For Focus on Account Title\nCtrl+P  For Print\nCtrl+ArrowDown  For Focus On Grid\nCtrl+Enter  When Focus On Grid To Load The Record');
+            }
+            $('#btnShortCutKey').click(showShortcuts);
+
+            /* AcfrmOpeningBalance_KeyPress */
+            $(document).on('keydown', function (e) {
+                if (!e.ctrlKey) return;
+                if (e.altKey) { showShortcuts(); return; }
+                if (e.keyCode === 78) { e.preventDefault(); reset(); }
+                if (e.keyCode === 83) { e.preventDefault(); updateSingle(); }
+                if (e.keyCode === 85) { e.preventDefault(); updateAll(); }
+                if (e.keyCode === 82) { e.preventDefault(); window.location.reload(); }
+                if (e.keyCode === 116) { e.preventDefault(); $('#selAccountTitle').focus(); }
+                if (e.keyCode === 80) { e.preventDefault(); window.printOpeningBalance(); }
+                if (e.keyCode === 13) {
+                    var $tr = $(document.activeElement).closest('tr.row-ob');
+                    if ($tr.length) { e.preventDefault(); $tr.trigger('dblclick'); }
+                }
+            });
         });
     </script>
 </body>

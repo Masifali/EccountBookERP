@@ -99,12 +99,12 @@
                 <th>Account Code</th>
                 <th>Ac Level</th>
                 <th>Account Type</th>
-                <th style="text-align:right;">Opening</th>
+                <th style="text-align:right;" class="col-four-tbl">Opening</th>
                 <th style="text-align:right;" class="col-six-tbl">Opening Dr</th>
                 <th style="text-align:right;" class="col-six-tbl">Opening Cr</th>
                 <th style="text-align:right;">Debit</th>
                 <th style="text-align:right;">Credit</th>
-                <th style="text-align:right;">Closing</th>
+                <th style="text-align:right;" class="col-four-tbl">Closing</th>
                 <th style="text-align:right;" class="col-six-tbl">Closing Dr</th>
                 <th style="text-align:right;" class="col-six-tbl">Closing Cr</th>
             </tr>
@@ -115,12 +115,12 @@
             <tfoot>
             <tr class="grid-total-row">
                 <td colspan="4" style="text-align:right;">Total:</td>
-                <td style="text-align:right;" id="tblTotOpening">0</td>
+                <td style="text-align:right;" id="tblTotOpening" class="col-four-tbl">0</td>
                 <td style="text-align:right;" id="tblTotOpeningDr" class="col-six-tbl">0</td>
                 <td style="text-align:right;" id="tblTotOpeningCr" class="col-six-tbl">0</td>
                 <td style="text-align:right;" id="tblTotDebit">0</td>
                 <td style="text-align:right;" id="tblTotCredit">0</td>
-                <td style="text-align:right;" id="tblTotClosing">0</td>
+                <td style="text-align:right;" id="tblTotClosing" class="col-four-tbl">0</td>
                 <td style="text-align:right;" id="tblTotClosingDr" class="col-six-tbl">0</td>
                 <td style="text-align:right;" id="tblTotClosingCr" class="col-six-tbl">0</td>
             </tr>
@@ -131,6 +131,7 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930f}"></script>
     <script th:inline="javascript">
         function fmt(v) {
             const n = parseFloat(v);
@@ -232,13 +233,13 @@
         function btnshowClick() {
             $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;"><i class="fa fa-spinner fa-spin"></i> Loading Trial Balances All Level...</td></tr>');
             $.ajax({
-                url: '/accounts/api/reports/trial-balance-all-level',
+                url: '/accounts/api/reports-desktop/trial-balance-all-levels',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(buildTbRequest()),
                 success: function (res) {
                     if (res && res.success) {
-                        rawRows = normalizeRows(res.data || []);
+                        rawRows = res.data || [];
                         collapsedSet = new Set();
                         rebuildAndRender();
                     } else {
@@ -246,9 +247,10 @@
                         $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Trial Balances All Level.') + '</td></tr>');
                     }
                 },
-                error: function () {
+                error: function (xhr) {
                     rawRows = []; dtFinal = [];
-                    $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">Error executing Trial Balances All Level report.</td></tr>');
+                    $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;"></td></tr>');
+                    $('#tblTBLBody td').text((xhr && xhr.responseJSON && xhr.responseJSON.message) || 'Error executing Trial Balances All Level report.');
                 }
             });
         }
@@ -256,6 +258,7 @@
         function applyColumnModeTBL() {
             const six = $('#ChkSixColumns').is(':checked');
             $('.col-six-tbl').toggle(six);
+            $('.col-four-tbl').toggle(!six);
         }
 
         $('#ChkFourColumns').on('change', function () {
@@ -332,8 +335,7 @@
             const byId = new Map(dtFinal.map(r => [r.RowId, r]));
 
             dtFinal.forEach(r => {
-                const lvl = parseInt(r.AcLevel, 10);
-                if (lvl === 1) {
+                if (r.ParentId === null || r.ParentId === undefined) {
                     totOpening += parseFloat(r.Opening || 0);
                     totOpeningDr += parseFloat(r.OpeningDr || 0);
                     totOpeningCr += parseFloat(r.OpeningCr || 0);
@@ -361,12 +363,12 @@
                         <td>${$('<div>').text(r.AccountCode || '').html()}</td>
                         <td>${r.AcLevel != null ? r.AcLevel : ''}</td>
                         <td>${$('<div>').text(r.IsGroupDetail || '').html()}</td>
-                        <td style="text-align:right;">${fmt(opening)}</td>
+                        <td style="text-align:right;" class="col-four-tbl">${fmt(opening)}</td>
                         <td style="text-align:right;" class="col-six-tbl">${fmt(openingDr)}</td>
                         <td style="text-align:right;" class="col-six-tbl">${fmt(openingCr)}</td>
                         <td style="text-align:right;">${fmt(debit)}</td>
                         <td style="text-align:right;">${fmt(credit)}</td>
-                        <td style="text-align:right;">${fmt(closing)}</td>
+                        <td style="text-align:right;" class="col-four-tbl">${fmt(closing)}</td>
                         <td style="text-align:right;" class="col-six-tbl">${fmt(closingDr)}</td>
                         <td style="text-align:right;" class="col-six-tbl">${fmt(closingCr)}</td>
                     </tr>
@@ -391,24 +393,22 @@
             renderTree();
         });
 
-        $('#cmbViewOption').on('change', function () {
-            if (rawRows.length) rebuildAndRender();
-        });
 
+
+        let TBL_CTX = null;
         function resetTBL() {
-            $('#cmbViewOption').val('5').trigger('change');
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate, #txtToDate').val(today);
-            $('#SkipZero').prop('checked', false);
+            $('#cmbViewOption').val('1').trigger('change');
+            $('#txtFromDate').val((TBL_CTX && TBL_CTX.activeYear.startPeriod) || AccF.today());
+            $('#txtToDate').val(AccF.today());
             btnshowClick();
         }
 
-        $(document).ready(function () {
-            const today = new Date().toISOString().split('T')[0];
-            if (!$('#txtFromDate').val()) $('#txtFromDate').val(today);
-            if (!$('#txtToDate').val()) $('#txtToDate').val(today);
+        $(document).ready(async function () {
+            $('#txtToDate').val(AccF.today());
             $('.select2').select2({ width: '200px' });
             applyColumnModeTBL();
+            try { TBL_CTX = await AccF.context(); } catch (e) { alert(e.message); }
+            $('#txtFromDate').val((TBL_CTX && TBL_CTX.activeYear.startPeriod) || AccF.today());
             btnshowClick();
         });
     </script>

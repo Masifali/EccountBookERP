@@ -14,7 +14,12 @@ public class DesktopReceivablesController {
     @GetMapping({"/accounts/reports/receivables-by-due-dates","/reports/receivables-by-due-dates"})
     public String dueDates(Model model) { return page("receivables-by-due-dates",model); }
     @GetMapping({"/accounts/reports/receivables-receipt-schedule","/reports/receivables-receipt-schedule"})
-    public String schedule(Model model) { return page("receivables-receipt-schedule",model); }
+    public String schedule(Model model) {
+        /* Screen 71 = ReceivablesAndReceiptSchedule.cs, fully ported at /dashboard/receivables-and-receipt-schedule
+           (parent category, sale dates, the DueDateTo gating defect, no BalanceFrom/To). Serve that page here too. */
+        model.addAttribute("moduleTitle", "Receivables And Receipt Schedule");
+        return "dashboard/receivables_receipt_schedule";
+    }
     @GetMapping({"/accounts/reports/receivables-report","/reports/receivables-report"})
     public String receivables(Model model) { return page("receivables-report",model); }
     @GetMapping({"/accounts/reports/payables-report","/reports/payables-report"})

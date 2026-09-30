@@ -47,6 +47,15 @@ public class PartyPaymentRestController {
 
     @PostMapping("/save")
     public ResponseEntity<?> saveVoucher(@RequestBody PartyPaymentVoucherDto dto) {
+        /* Retired 2026-09-30: PartyPaymentVoucherService.saveVoucher writes raw INSERTs (IsApproved
+           hard-coded 1, no balance check / history / approval, no update path). Screen 16 now saves
+           through POST /accounts/api/desktop-vouchers/party/35/save (desktop VoucherHead.Save chain). */
+        if (dto != null) {
+            Map<String, Object> gone = new HashMap<>();
+            gone.put("success", false);
+            gone.put("message", "This endpoint is retired. Use /accounts/api/desktop-vouchers/party/35/save.");
+            return ResponseEntity.status(410).body(gone);
+        }
         Map<String, Object> res = partyPaymentVoucherService.saveVoucher(dto);
         if (Boolean.TRUE.equals(res.get("success"))) {
             return ResponseEntity.ok(res);

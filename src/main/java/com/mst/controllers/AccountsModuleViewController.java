@@ -27,6 +27,10 @@ public class AccountsModuleViewController {
 	@org.springframework.beans.factory.annotation.Autowired
 	private com.mst.services.AccountsReportService accountsReportService;
 
+	/* Account Reports recheck (group F): desktop-exact procedures for screens 79/49/51/81/82/53/83/52/69/73/74. */
+	@org.springframework.beans.factory.annotation.Autowired
+	private com.mst.services.AccountReportsDesktopService accountReportsDesktopService;
+
 	@org.springframework.beans.factory.annotation.Autowired
 	private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
@@ -77,11 +81,28 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Journal Voucher");
 				return "accounts/vouchers/journal_voucher";
 			case "contra":
+				/* Screen 22 - Account_Definition/ContraVoucher.cs (2026-09-30 recheck: the page is rebuilt on
+				   the desktop form and saves through /accounts/api/contra/save; contra_voucher.html is kept
+				   unreferenced for rollback). */
 				model.addAttribute("moduleTitle", "Contra Voucher");
-				return "accounts/vouchers/contra_voucher";
+				return "accounts/vouchers/contra_voucher_desktop";
+			case "voucher-entry":
+				/* Screen 19 "Jounal Voucher" - Account_Definition/VoucherEntry.cs (ScreenDefinition 19's
+				   TargetUrl). "journal" above stays the VouchersWithTax.JournalVoucher page (screen 860). */
+				model.addAttribute("moduleTitle", "Journal Voucher");
+				return "accounts/vouchers/journal_voucher_entry";
+			case "contra-tax":
+				/* Screen 855 "Contra Voucher New" - Account_Definition/VouchersWithTax/ContraVoucher.cs
+				   (ScreenDefinition 855 ContraVoucherTax; CommonServices.OpenDocument doc 10 base 3).
+				   Saves through /accounts/api/desktop-voucher/contra-tax/save. */
+				model.addAttribute("moduleTitle", "Contra Voucher New");
+				return "accounts/vouchers/contra_voucher_tax";
 			case "expense":
+				/* Screen 46 - Account_Definition/ExpenseVoucher.cs, the plain form ScreenDefinition 46 opens.
+				   expense_voucher.html was built from VouchersWithTax/ExpenseVoucherNew.cs (screen 862) and is
+				   kept unreferenced. */
 				model.addAttribute("moduleTitle", "Expense Voucher");
-				return "accounts/vouchers/expense_voucher";
+				return "accounts/vouchers/expense_voucher_desktop";
 			case "party-receipt":
 				model.addAttribute("moduleTitle", "Party Receipt Voucher");
 				return "accounts/vouchers/party_receipt_voucher";
@@ -100,8 +121,32 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Payment By Invoice Voucher");
 				return "accounts/vouchers/payment_by_invoice_voucher";
 			case "invoices-adjustment":
+				/* Screen 861 frmInvoicesAdjustmentVoucher (TransactionTypeId 1) - one template with
+				   screen 863 below; InvoicesAdjustmentVoucherController serves both. */
 				model.addAttribute("moduleTitle", "Payment Adjustment Voucher");
-				return "accounts/vouchers/invoices_adjustment_voucher";
+				model.addAttribute("adjKind", "payment");
+				model.addAttribute("adjTitle", "Payment Adjustment Voucher");
+				model.addAttribute("adjSlipCaption", "901-Print");
+				model.addAttribute("adjSlipName", "901_VoucherInvoicesAdjustment_Slip");
+				model.addAttribute("adjAutoCaption", "Auto Utilize Voucher Amount");
+				return "accounts/vouchers/adjustment_voucher";
+			case "receipt-invoices-adjustment":
+				/* Screen 863 frmReceiptInvoicesAdjustmentVoucher (TransactionTypeId 2). */
+				model.addAttribute("moduleTitle", "Receipt Adjustment Voucher");
+				model.addAttribute("adjKind", "receipt");
+				model.addAttribute("adjTitle", "Receipt Adjustment Voucher");
+				model.addAttribute("adjSlipCaption", "901_01-Print");
+				model.addAttribute("adjSlipName", "901_01_VoucherInvoicesAdjustment_Slip");
+				model.addAttribute("adjAutoCaption", "Auto Utilize");
+				return "accounts/vouchers/adjustment_voucher";
+			case "day-book":
+				/* Screen 15 DayBook.cs (DocumentTypeId 9) - DayBookVoucherController. */
+				model.addAttribute("moduleTitle", "Day Book");
+				return "accounts/vouchers/day_book_voucher";
+			case "day-book-offset":
+				/* Screen 24 frmDayBook.cs "Day Book (Off Set)" (DocumentTypeId 8). */
+				model.addAttribute("moduleTitle", "Day Book (Off Set)");
+				return "accounts/vouchers/day_book_offset";
 			case "freight":
 				model.addAttribute("moduleTitle", "Freight Voucher");
 				return "accounts/vouchers/freight_voucher";
@@ -163,6 +208,7 @@ public class AccountsModuleViewController {
 				model.addAttribute("accountsList", voucherValidationService.getAllDetailAccounts());
 				model.addAttribute("docTypesList", voucherValidationService.getDocumentTypes());
 				model.addAttribute("customGroupsList", voucherValidationService.getCustomGroups());
+				model.addAttribute("languagesList", accountReportsDesktopService.languages());
 				return "accounts/vouchers/voucher_validation";
 			default:
 				model.addAttribute("moduleTitle", formatTitle(voucherType) + " Voucher");
@@ -192,7 +238,56 @@ public class AccountsModuleViewController {
             model.addAttribute("moduleTitle", "General Ledger");
             model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
             model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
+            return "accounts/reports/general_ledger_desktop";
+        }
+        if (normalized.equals("general-ledger-multi")) {
+            model.addAttribute("moduleTitle", "General Ledger");
+            model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
+            model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
             return "accounts/reports/general_ledger";
+        }
+        /* group F: pages that load every lookup themselves from /accounts/api/reports-desktop */
+        switch (normalized) {
+            case "selected-trial-balance":
+                model.addAttribute("moduleTitle", "Trial Balance Selected");
+                return "accounts/reports/selected_trial_balance_desktop";
+            case "activity-summary":
+            case "accounts-activity-summary":
+                model.addAttribute("moduleTitle", "Accounts Activity Summary Report");
+                return "accounts/reports/activity_summary_desktop";
+            case "bank-balances":
+                model.addAttribute("moduleTitle", "Bank Balances Report");
+                return "accounts/reports/bank_balances_desktop";
+            case "cash-balances":
+            case "cash_balances":
+                model.addAttribute("moduleTitle", "Cash Balances Report");
+                return "accounts/reports/cash_balances_desktop";
+            case "chart-of-accounts-report":
+                model.addAttribute("moduleTitle", "Chart of Account");
+                return "accounts/reports/chart_of_accounts_desktop";
+            case "trial-balances-all-level":
+                model.addAttribute("moduleTitle", "Trial Balance All Levels");
+                return "accounts/reports/trial_balances_all_level";
+            case "customer-ledger":
+            case "customer_ledger":
+                model.addAttribute("moduleTitle", "Customer Ledger Report");
+                model.addAttribute("supplierCustomersList", accountReportsDesktopService.supplierCustomers());
+                model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
+                return "accounts/reports/customer_ledger";
+            case "trial-balance":
+                model.addAttribute("moduleTitle", "Trial Balance");
+                model.addAttribute("documentTypesList", accountReportsDesktopService.documentTypes());
+                model.addAttribute("accountGroupsList", accountReportsDesktopService.accountGroups());
+                model.addAttribute("customGroupsList", accountReportsDesktopService.customGroups());
+                return "accounts/reports/trial_balance";
+            case "voucher-report":
+                model.addAttribute("moduleTitle", "Voucher Report");
+                model.addAttribute("docTypesList", accountReportsDesktopService.documentTypes());
+                model.addAttribute("accountsList", accountReportsDesktopService.detailAccounts(null));
+                model.addAttribute("customGroupsList", accountReportsDesktopService.customGroups());
+                return "accounts/reports/voucher_report";
+            default:
+                break;
         }
 		model.addAttribute("accountsList", accountsReportService.getAllDetailAccounts());
 		model.addAttribute("customGroupsList", accountsReportService.getCustomGroups());
@@ -223,11 +318,10 @@ public class AccountsModuleViewController {
 				model.addAttribute("dateTypesList", accountsReportService.getDateTypes());
 				return "accounts/reports/customer_ledger";
 			case "day-book":
-				model.addAttribute("moduleTitle", "Day Book");
-				model.addAttribute("accountsList", accountsReportService.getBankAccounts());
-				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
-				model.addAttribute("costCentersList", accountsReportService.getCostCenters());
-				return "accounts/reports/day_book";
+				/* Screen 15 "Day Book" is the DayBook.cs voucher-entry form, not a report; the page
+				   this route used to render (reports/day_book.html over raw SQL) has no desktop
+				   counterpart. Old links land on the real screen. */
+				return "redirect:/accounts/vouchers/day-book";
 			case "balance-sheet":
 				model.addAttribute("moduleTitle", "Balance Sheet");
 				return "accounts/reports/balance_sheet";
@@ -257,7 +351,7 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Payables Aging");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
 				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
-				return "accounts/reports/payables_aging";
+				return "accounts/reports/payables_new"; /* PayablesAging_New (screen 47), group G 2026-09-30 */
 			case "receivables-aging":
 				model.addAttribute("moduleTitle", "Receivables Aging");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
@@ -300,7 +394,7 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Payables Aging New");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
 				model.addAttribute("branchesList", accountsReportService.getBranchesForReports());
-				return "accounts/reports/payables_aging";
+				return "accounts/reports/payables_new"; /* PayablesAging_New (screen 47), group G 2026-09-30 */
 			case "receivables-aging-new":
 				model.addAttribute("moduleTitle", "Receivables Aging New");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
@@ -308,7 +402,7 @@ public class AccountsModuleViewController {
 				return "accounts/reports/receivables_aging_new";
 			case "payables-report-invoice-wise":
 				model.addAttribute("moduleTitle", "Payables Report Invoice Wise");
-				return "accounts/reports/payables_report_invoice_wise";
+				return "accounts/reports/payables_invoice_wise"; /* frmPayablesReportInvoiceWise (screen 909), group G 2026-09-30 */
 			case "receivables-by-due-dates":
 				model.addAttribute("moduleTitle", "Receivables By Due Dates");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
@@ -318,7 +412,7 @@ public class AccountsModuleViewController {
 			case "payables-payment-schedule-new":
 				model.addAttribute("moduleTitle", "Payables And Payment Schedule");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
-				return "accounts/reports/payables-payment-schedule";
+				return "dashboard/payables_payment_schedule"; /* PayablesAndPaymentSchedule.cs port (screen 78), group G 2026-09-30 */
 			case "receivables-receipt-schedule":
 				model.addAttribute("moduleTitle", "Receivables And Receipt Schedule");
 				model.addAttribute("supplierCustomersList", accountsReportService.getSupplierCustomersForCombo());
@@ -356,6 +450,16 @@ public class AccountsModuleViewController {
 				/* The desktop's "Wages Report (With Activities)" menu opens frmEvaulationDetailWagesReports
 				   ("Wages Register"), already ported for screen 280 - one page for both entries. */
 				return "production/reports/evaluation_detail_wages";
+			/* Group H 2026-09-30 - desktop screens 958, 886, 911; each page loads its lists from its own API. */
+			case "monthly-profit-loss":
+				model.addAttribute("moduleTitle", "Monthly Profit Loss");
+				return "accounts/reports/monthly_profit_loss";
+			case "commission-agent-report":
+				model.addAttribute("moduleTitle", "Commission Agent Report");
+				return "accounts/reports/commission_agent_report";
+			case "freight-voucher-report":
+				model.addAttribute("moduleTitle", "Freight Voucher Report");
+				return "accounts/reports/freight_voucher_report";
 			default:
 				throw new org.springframework.web.server.ResponseStatusException(
 						org.springframework.http.HttpStatus.NOT_FOUND, "Report route is not implemented: " + reportType);
@@ -384,8 +488,9 @@ public class AccountsModuleViewController {
 
 		switch (normalized) {
 			case "bank-reconciliation":
+				/* Screen 885 frmBankReconciliationWithVouchers - BankReconciliationVouchersController. */
 				model.addAttribute("moduleTitle", "Bank Reconciliation With Vouchers");
-				return "accounts/banking/bank_reconciliation";
+				return "accounts/banking/bank_reconciliation_vouchers";
 			case "bank-detail-definition":
 				model.addAttribute("moduleTitle", "Bank Detail Definition");
 				return "accounts/banking/bank_detail_definition";

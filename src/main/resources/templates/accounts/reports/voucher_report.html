@@ -61,7 +61,7 @@
     
     <div class="erp-toolbar">
         <button type="button" class="btn-erp" onclick="resetFilters()"><i class="fa fa-undo" style="color: #0284c7;"></i> Reset</button>
-        <button type="button" class="btn-erp" onclick="executeVoucherReport()"><i class="fa fa-refresh" style="color: #16a34a;"></i> Refresh</button>
+        <button type="button" class="btn-erp" onclick="refreshLists()"><i class="fa fa-refresh" style="color: #16a34a;"></i> Refresh</button>
         <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print" style="color: #0284c7;"></i> 118-Print</button>
         <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print" style="color: #0284c7;"></i> 118A-Print</button>
         <button type="button" class="btn-erp" onclick="window.print()"><i class="fa fa-print" style="color: #0284c7;"></i> 102-Print</button>
@@ -105,7 +105,7 @@
                         <label class="form-label-erp" style="width: 80px;">Account Title</label>
                         <select class="form-control-erp" id="cmbAccountTitle">
                             <option value="">-- Select Account Title --</option>
-                            <option th:each="ac : ${accountsList}" th:value="${ac['Id']}" th:text="${ac['AccountTitle']} + ' (' + ${ac['AccountCode']} + ')'"></option>
+                            <option th:each="ac : ${accountsList}" th:value="${ac['Id']}" th:text="${ac['AccountTitle']}"></option>
                         </select>
                     </div>
                 </div>
@@ -126,9 +126,8 @@
                 <div class="col-md-3">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <label class="form-label-erp" style="width: 80px;">Document Type</label>
-                        <select class="form-control-erp" id="cmbDocumentType">
-                            <option value="">-- All Document Types --</option>
-                            <option th:each="dt : ${docTypesList}" th:value="${dt['id'] != null ? dt['id'] : dt['Id']}" th:text="${dt['documentTypeDescription'] != null ? dt['documentTypeDescription'] : dt['DocumentTypeDescription']}"></option>
+                        <select class="form-control-erp" id="cmbDocumentType" multiple="multiple">
+                            <option th:each="dt : ${docTypesList}" th:value="${dt['Id']}" th:text="${dt['DocumentTypeDescription']}"></option>
                         </select>
                     </div>
                 </div>
@@ -137,7 +136,7 @@
                         <label class="form-label-erp" style="width: 80px;">Custom Group</label>
                         <select class="form-control-erp" id="cmbCustomGroup">
                             <option value="">-- All Custom Groups --</option>
-                            <option th:each="cg : ${customGroupsList}" th:value="${cg['Id'] != null ? cg['Id'] : cg['id']}" th:text="${cg['Description'] != null ? cg['Description'] : cg['description']}"></option>
+                            <option th:each="cg : ${customGroupsList}" th:value="${cg['Id']}" th:text="${cg['AcLookUpsDescription']}"></option>
                         </select>
                     </div>
                 </div>
@@ -158,6 +157,12 @@
                         <input type="number" class="form-control-erp" id="txtDocNoFrom" placeholder="From Doc No" style="width: 120px;"/>
                         <span>-</span>
                         <input type="number" class="form-control-erp" id="txtDocNoTo" placeholder="To Doc No" style="width: 120px;"/>
+                    </div>
+                </div>
+                <div class="col-md-5 vr-lang" style="display:none;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label class="form-label-erp" style="width: 80px;">Language</label>
+                        <select class="form-control-erp" id="CmbLanguage"><option value=""></option></select>
                     </div>
                 </div>
             </div>
@@ -182,6 +187,7 @@
                         <th style="width: 110px; text-align: right;">Debit Amount</th>
                         <th style="width: 110px; text-align: right;">Credit Amount</th>
                         <th style="width: 90px;">Cheque No</th>
+                        <th style="width: 120px;" class="col-chqparty">Cheque Party Name</th>
                         <th style="width: 100px;">Manual Bill No</th>
                         <th style="width: 250px;">Comments</th>
                         <th style="width: 100px;">Entry User</th>
@@ -210,184 +216,137 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:src="@{/build/js/countx_doc_link.js?v=20260930f}"></script>
+    <script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930f}"></script>
     <script>
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            if (!$('#txtFromDate').val()) $('#txtFromDate').val(today);
-            if (!$('#txtToDate').val()) $('#txtToDate').val(today);
-            
+        /* Screen 53 Voucher Report - VoucherReport.cs. btnshow_Click -> VoucherReports.VoucherValidationReport
+           -> Sp_Accounts_VouchersValidation_Rpt through /accounts/api/reports-desktop/voucher-report. */
+        let VR_CTX = null;
+        $(document).ready(async function() {
+            // VoucherValidation_Load: RdAll checked, fromdate = Now (todate keeps its default, today)
+            $('#txtFromDate').val(AccF.today());
+            $('#txtToDate').val(AccF.today());
             $('#cmbAccountTitle, #cmbDocumentType, #cmbCustomGroup').select2({ width: '100%' });
-            executeVoucherReport();
+            try {
+                VR_CTX = await AccF.context();
+                AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '');
+            } catch (e) { alert(e.message); }
         });
 
-        function formatNum(val) {
-            const num = parseFloat(val) || 0;
-            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        }
+        $(document).on('keydown', function (e) {
+            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetFilters(); }
+            if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.vr-lang').show(); }
+        });
 
-        function formatDateStr(val) {
-            if (!val) return '';
-            if (typeof val === 'string' && val.includes('T')) {
-                val = val.split('T')[0];
-            }
-            const d = new Date(val);
-            if (isNaN(d.getTime())) return val;
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            return day + '/' + month + '/' + year;
-        }
+        function esc(v) { return $('<div>').text(v == null ? '' : v).html(); }
+
+        const FILTER_MAP = { docDate: 'doc', entryDate: 'entry', modifyDate: 'modify', approveDate: 'approved' };
 
         function executeVoucherReport() {
-            const fromDate = $('#txtFromDate').val();
-            const toDate = $('#txtToDate').val();
-            const filterType = $('input[name="rdFilterType"]:checked').val() || 'docDate';
-            const approvalStatus = $('input[name="rdApproved"]:checked').val() || 'all';
-            const docTypeId = $('#cmbDocumentType').val();
-            const customGroupId = $('#cmbCustomGroup').val();
-            const accountId = $('#cmbAccountTitle').val();
-            const manualNo = $('#txtManualNo').val();
-            const fromDocNo = $('#txtDocNoFrom').val();
-            const toDocNo = $('#txtDocNoTo').val();
-            const skipCgs = $('#chkSkipCgs').is(':checked');
-
-            $('#tbodyVoucherReport').html('<tr><td colspan="18" style="text-align: center; color: #00796B; padding: 20px;"><i class="fa fa-spinner fa-spin"></i> Loading Voucher Report Data...</td></tr>');
-
             const req = {
-                fromDate: fromDate || null,
-                toDate: toDate || null,
-                filterType: filterType,
-                approvalStatus: approvalStatus,
-                documentTypeId: docTypeId ? parseInt(docTypeId) : null,
-                customGroupId: customGroupId ? parseInt(customGroupId) : null,
-                accountId: accountId ? parseInt(accountId) : null,
-                manualNo: manualNo || null,
-                fromDocNo: fromDocNo ? parseInt(fromDocNo) : null,
-                toDocNo: toDocNo ? parseInt(toDocNo) : null,
-                skipCgs: skipCgs
+                dateFilter: FILTER_MAP[$('input[name="rdFilterType"]:checked').val()] || 'doc',
+                fromDate: $('#txtFromDate').val() || null,
+                toDate: $('#txtToDate').val() || null,
+                fromDocNo: $('#txtDocNoFrom').val() || null,
+                toDocNo: $('#txtDocNoTo').val() || null,
+                accountId: $('#cmbAccountTitle').val() || null,
+                customGroupId: $('#cmbCustomGroup').val() || null,
+                manualBillNo: $('#txtManualNo').val() || null,
+                approval: $('input[name="rdApproved"]:checked').val() || 'all',
+                skipCgs: $('#chkSkipCgs').is(':checked'),
+                languageId: $('#CmbLanguage').val() || null,
+                documentTypeIds: AccF.selectedIds('#cmbDocumentType') || null
             };
-
-            $.ajax({
-                url: '/accounts/api/reports/voucher-report',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(req),
-                success: function(res) {
-                    if (res && res.success && res.data && res.data.length > 0) {
-                        renderVoucherReportTable(res.data);
-                    } else {
-                        $('#tbodyVoucherReport').html('<tr><td colspan="18" style="text-align: center; color: #888; padding: 20px;">No records found for the selected criteria.</td></tr>');
-                        $('#summaryTotalRecords').text('Total Records: 0');
-                        $('#summaryTotalDebit').text('Total Debit: 0.00');
-                        $('#summaryTotalCredit').text('Total Credit: 0.00');
-                    }
-                },
-                error: function(err) {
-                    const msg = (err && err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'Error loading voucher report.';
-                    $('#tbodyVoucherReport').html('<tr><td colspan="18" style="text-align: center; color: red; padding: 20px;">' + $('<div>').text(msg).html() + '</td></tr>');
-                }
+            $('#tbodyVoucherReport').html('<tr><td colspan="19" style="text-align: center; color: #00796B; padding: 20px;"><i class="fa fa-spinner fa-spin"></i> Loading Voucher Report Data...</td></tr>');
+            AccF.post('/voucher-report', req).then(function (rows) {
+                renderVoucherReportTable(rows || []);
+            }).catch(function (e) {
+                $('#tbodyVoucherReport').html('<tr><td colspan="19" style="text-align: center; color: red; padding: 20px;">' + esc(e.message) + '</td></tr>');
             });
         }
 
+        /* GridSettings: grouped on VoucherCode (V.Code), Debit/Credit summed (stringFormatsingle), AccountCode ->
+           General Ledger, VoucherCode -> the voucher (AllowEditOnVoucherNoinReports), ChequePartyName shown only when set. */
         function renderVoucherReportTable(data) {
-            // Group rows by VoucherCode / V.Code
-            const groups = {};
+            const chqParty = data.length ? (data[data.length - 1].ChequePartyName || '') : '';
+            $('.col-chqparty').toggle(chqParty !== '');
+            if (!data.length) {
+                $('#tbodyVoucherReport').html('');
+                $('#summaryTotalRecords').text('Total Records: 0');
+                $('#summaryTotalDebit').text('Total Debit: ' + AccF.single(0));
+                $('#summaryTotalCredit').text('Total Credit: ' + AccF.single(0));
+                return;
+            }
+            const order = [], groups = {};
+            data.forEach(function (r) { const k = String(r.VoucherCode); if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(r); });
             let grandDebit = 0, grandCredit = 0;
-
-            data.forEach(function(row) {
-                const vCode = row.voucherCode || row.VoucherCode || row.VCode || row.vCode || 'Other';
-                if (!groups[vCode]) groups[vCode] = [];
-                groups[vCode].push(row);
-            });
-
-            let html = '';
-            let totalRowCount = data.length;
-
-            Object.keys(groups).forEach(function(vCode) {
+            const $tb = $('#tbodyVoucherReport').empty();
+            const voucherLink = VR_CTX && VR_CTX.allowEditOnVoucherNoinReports;
+            order.forEach(function (vCode) {
                 const rows = groups[vCode];
-                let groupDebit = 0, groupCredit = 0;
-
-                // Group Header
-                html += '<tr class="vcode-group-header">' +
-                    '<td colspan="18"><i class="fa fa-caret-down"></i> V.Code: ' + $('<div>').text(vCode).html() + '</td>' +
-                    '</tr>';
-
-                rows.forEach(function(r) {
-                    const docType = r.documentType || r.DocumentType || r.documentTypeDescription || '';
-                    const vDate = formatDateStr(r.voucherDate || r.VoucherDate || '');
-                    const acCode = r.accountCode || r.AccountCode || '';
-                    const acId = r.accountId || r.AccountId || '';
-                    const acTitle = r.accountTitle || r.AccountTitle || '';
-                    const offTitle = r.againstAccountTitle || r.AgainstAccountTitle || r.offsetAccount || r.OffsetAccount || '';
-                    const db = parseFloat(r.debitAmount || r.DebitAmount || r.debit || r.Debit || 0);
-                    const cr = parseFloat(r.creditAmount || r.CreditAmount || r.credit || r.Credit || 0);
-                    const chqNo = r.chequeNo || r.ChequeNo || r.cheqNoDetail || '';
-                    const manBill = r.manualBillNo || r.ManualBillNo || '';
-                    const comments = r.comments || r.Comments || '';
-                    const entryUser = r.entryUser || r.EntryUser || r.entryUserName || '';
-                    const entryDate = formatDateStr(r.entryDate || r.EntryDate || '');
-                    const modUser = r.modifyUser || r.ModifyUser || r.modifyUserName || '';
-                    const modDate = formatDateStr(r.modifyDate || r.ModifyDate || '');
-                    const appUser = r.approvedUser || r.ApprovedUser || r.approvedUserName || '';
-                    const appDate = formatDateStr(r.approvedDate || r.ApprovedDate || r.postDate || '');
-                    const attCount = r.noOfAttachments != null ? r.noOfAttachments : (r.NoOfAttachments != null ? r.NoOfAttachments : 0);
-
-                    groupDebit += db;
-                    groupCredit += cr;
-                    grandDebit += db;
-                    grandCredit += cr;
-
-                    const codeLink = acId ? '<a class="link-account" href="/accounts/reports/general-ledger?accountId=' + acId + '" target="_blank">' + $('<div>').text(acCode).html() + '</a>' : $('<div>').text(acCode).html();
-
-                    html += '<tr>' +
-                        '<td>' + $('<div>').text(docType).html() + '</td>' +
-                        '<td>' + $('<div>').text(vDate).html() + '</td>' +
-                        '<td>' + codeLink + '</td>' +
-                        '<td>' + $('<div>').text(acTitle).html() + '</td>' +
-                        '<td>' + $('<div>').text(offTitle).html() + '</td>' +
-                        '<td style="text-align: right;">' + (db > 0 ? formatNum(db) : '0') + '</td>' +
-                        '<td style="text-align: right;">' + (cr > 0 ? formatNum(cr) : '0') + '</td>' +
-                        '<td>' + $('<div>').text(chqNo).html() + '</td>' +
-                        '<td>' + $('<div>').text(manBill).html() + '</td>' +
-                        '<td>' + $('<div>').text(comments).html() + '</td>' +
-                        '<td>' + $('<div>').text(entryUser).html() + '</td>' +
-                        '<td>' + $('<div>').text(entryDate).html() + '</td>' +
-                        '<td>' + $('<div>').text(modUser).html() + '</td>' +
-                        '<td>' + $('<div>').text(modDate).html() + '</td>' +
-                        '<td>' + $('<div>').text(appUser).html() + '</td>' +
-                        '<td>' + $('<div>').text(appDate).html() + '</td>' +
-                        '<td style="text-align: center;"><a href="#" style="color: #0056b3; text-decoration: underline;">' + attCount + '</a></td>' +
-                        '<td style="text-align: center;"><a href="#" style="color: #0056b3; text-decoration: underline;">print</a></td>' +
-                        '</tr>';
+                const first = rows[0];
+                const $h = $('<tr class="vcode-group-header">').append($('<td colspan="19">'));
+                const $cap = $('<span>').text('V.Code: ');
+                if (voucherLink) {
+                    $cap.append($('<a href="#" style="color:#fff; text-decoration:underline;">').text(vCode).on('click', function (e) {
+                        e.preventDefault(); AccF.editLinked(first.DocumentTypeId, first.Id, first.DocumentTypeSrNo, 0);
+                    }));
+                } else { $cap.append(document.createTextNode(vCode)); }
+                $h.find('td').append('<i class="fa fa-caret-down"></i> ').append($cap);
+                $tb.append($h);
+                let gd = 0, gc = 0;
+                rows.forEach(function (r) {
+                    gd += AccF.num(r.DebitAmount); gc += AccF.num(r.CreditAmount);
+                    const $r = $('<tr>');
+                    $r.append($('<td>').text(r.DocumentType));
+                    $r.append($('<td>').text(AccF.dmy(r.VoucherDate)));
+                    $r.append($('<td>').append($('<a href="#" class="link-account">').text(r.AccountCode).on('click', function (e) {
+                        e.preventDefault(); AccF.openLedger(r.AccountId, $('#txtFromDate').val(), $('#txtToDate').val());
+                    })));
+                    $r.append($('<td>').text(r.AccountTitle));
+                    $r.append($('<td>').text(r.AgainstAccountTitle));
+                    $r.append($('<td style="text-align:right;">').text(AccF.single(r.DebitAmount)));
+                    $r.append($('<td style="text-align:right;">').text(AccF.single(r.CreditAmount)));
+                    $r.append($('<td>').text(r.ChequeNo));
+                    $r.append($('<td class="col-chqparty">').text(r.ChequePartyName).toggle(chqParty !== ''));
+                    $r.append($('<td>').text(r.ManualBillNo));
+                    $r.append($('<td style="white-space:normal;">').text(r.Comments));
+                    $r.append($('<td>').text(r.EntryUser));
+                    $r.append($('<td>').text(AccF.dmy(r.EntryDate)));
+                    $r.append($('<td>').text(r.ModifyUser));
+                    $r.append($('<td>').text(AccF.dmy(r.ModifyDate)));
+                    $r.append($('<td>').text(r.ApprovedUser));
+                    $r.append($('<td>').text(AccF.dmy(r.ApprovedDate)));
+                    $r.append($('<td style="text-align:center;">').text(r.NoOfAttachments));
+                    $r.append($('<td style="text-align:center;">').text('print'));
+                    $tb.append($r);
                 });
-
-                // Group Subtotal Row
-                html += '<tr class="vcode-group-subtotal">' +
-                    '<td colspan="5"></td>' +
-                    '<td style="text-align: right;">' + formatNum(groupDebit) + '</td>' +
-                    '<td style="text-align: right;">' + formatNum(groupCredit) + '</td>' +
-                    '<td colspan="11"></td>' +
-                    '</tr>';
+                grandDebit += gd; grandCredit += gc;
+                $tb.append('<tr class="vcode-group-subtotal"><td colspan="5"></td><td style="text-align:right;">' + esc(AccF.single(gd)) +
+                    '</td><td style="text-align:right;">' + esc(AccF.single(gc)) + '</td><td colspan="12"></td></tr>');
             });
-
-            $('#tbodyVoucherReport').html(html);
-            $('#summaryTotalRecords').text('Total Records: ' + totalRowCount);
-            $('#summaryTotalDebit').text('Total Debit: ' + formatNum(grandDebit));
-            $('#summaryTotalCredit').text('Total Credit: ' + formatNum(grandCredit));
+            $('#summaryTotalRecords').text('Total Records: ' + data.length);
+            $('#summaryTotalDebit').text('Total Debit: ' + AccF.single(grandDebit));
+            $('#summaryTotalCredit').text('Total Credit: ' + AccF.single(grandCredit));
         }
 
+        /* reset(): clear the doc-no range, All approvals, focus the document types */
         function resetFilters() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#txtFromDate').val(today);
-            $('#txtToDate').val(today);
-            $('#txtManualNo').val('');
             $('#txtDocNoFrom').val('');
             $('#txtDocNoTo').val('');
-            $('#chkSkipCgs').prop('checked', false);
             $('input[name="rdApproved"][value="all"]').prop('checked', true);
-            $('input[name="rdFilterType"][value="docDate"]').prop('checked', true);
-            $('#cmbAccountTitle, #cmbDocumentType, #cmbCustomGroup').val('').trigger('change');
-            executeVoucherReport();
+            $('#cmbDocumentType').focus();
+        }
+
+        async function refreshLists() {
+            try {
+                const docs = await AccF.lookup('document-types'), accs = await AccF.lookup('detail-accounts'),
+                      langs = await AccF.lookup('languages'), cgs = await AccF.lookup('custom-groups');
+                AccF.fillSelect('#cmbDocumentType', docs, 'Id', 'DocumentTypeDescription', null).trigger('change');
+                AccF.fillSelect('#cmbAccountTitle', accs, 'Id', 'AccountTitle', '-- Select Account Title --').trigger('change');
+                AccF.fillSelect('#CmbLanguage', langs, 'Id', 'LanguageDescription', '');
+                AccF.fillSelect('#cmbCustomGroup', cgs, 'Id', 'AcLookUpsDescription', '-- All Custom Groups --').trigger('change');
+            } catch (e) { alert(e.message); }
         }
 
         function exportToExcel() {

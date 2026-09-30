@@ -172,12 +172,17 @@ public class DashboardModuleService {
 
         /* Taxation, ModuleId 9 (App 13). 176 was built under Inventory; the other four were built for
            the Taxation hub on 29-Sep-2026. 172-175 and 177-180 confirmed against the ScreenDefinition
-           dump (ModuleId 9); 174, 175, 179, 180 have no page yet and show as not built. */
+           dump (ModuleId 9); all nine now have a page (174/175/179/180 added 30-Sep). */
         WEB_ROUTES_BY_SCREEN_ID.put(176, "/inventory/item-tax-schedules");               // InvDeffrmItemTaxSchdule
         WEB_ROUTES_BY_SCREEN_ID.put(178, "/taxation/add-tax-type");                      // InvfrmAddTaxType
         WEB_ROUTES_BY_SCREEN_ID.put(177, "/taxation/add-tax-schedule");                  // InvfrmAddTaxSchedule
         WEB_ROUTES_BY_SCREEN_ID.put(172, "/taxation/tax-notes-and-gl-maping");           // frmTaxNotesAndGLMaping
         WEB_ROUTES_BY_SCREEN_ID.put(173, "/taxation/supplier-customer-tax-exemption");   // frmSupplierCustomerExemptionSchedule
+        /* 30-Sep-2026: the remaining four. */
+        WEB_ROUTES_BY_SCREEN_ID.put(179, "/taxation/items-allocate-to-tax-item");        // RegularItemsAllocateToTaxItem
+        WEB_ROUTES_BY_SCREEN_ID.put(175, "/taxation/sale-tax-summary");                  // frmSaleTaxSummaryRpt
+        WEB_ROUTES_BY_SCREEN_ID.put(174, "/taxation/wht-challan-deposit");               // frmWhtTaxChallanDeposit (screen 37 under Accounts is the same form)
+        WEB_ROUTES_BY_SCREEN_ID.put(180, "/taxation/define-tax-item");                   // DefineTaxItem = InvDefrmAddItem page in taxable mode
 
         /* Export, App 8, ModuleId 11 - the two rows CompanyRights activates for company 78, built
            2026-09-29 (ExportModuleController); ids confirmed against the ScreenDefinition dump. */

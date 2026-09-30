@@ -126,7 +126,7 @@
                 <div class="win-label" style="line-height: 1.1;">Documents Not To Include</div>
                 <div style="grid-column: span 3;">
                     <select id="cmbDocumentTypeIds" class="win-input select2" multiple="multiple" style="width: 100%;">
-                        <option th:each="dt : ${documentTypesList}" th:value="${dt['id'] != null ? dt['id'] : (dt['Id'] != null ? dt['Id'] : '')}" th:text="${dt['documentTypeDescription'] != null ? dt['documentTypeDescription'] : (dt['DocumentTypeDescription'] != null ? dt['DocumentTypeDescription'] : (dt['description'] != null ? dt['description'] : (dt['Description'] != null ? dt['Description'] : '')))}"></option>
+                        <option th:each="dt : ${documentTypesList}" th:value="${dt['id'] != null ? dt['id'] : (dt['Id'] != null ? dt['Id'] : '')}" th:text="${dt['DocumentTypeDescription']}"></option>
                     </select>
                 </div>
                 <div><label class="win-label-chk"><input type="checkbox" id="chkSkipCGSAc"> Skip CGS Accounts</label></div>
@@ -136,7 +136,7 @@
                 <div style="grid-column: span 3;">
                     <select id="CmbGroupAccount" class="win-input select2" style="width: 100%;">
                         <option value="">-- Select Group Account --</option>
-                        <option th:each="ga : ${accountGroupsList}" th:value="${ga['id'] != null ? ga['id'] : (ga['Id'] != null ? ga['Id'] : '')}" th:text="${ga['accountGroup'] != null ? ga['accountGroup'] : (ga['AccountGroup'] != null ? ga['AccountGroup'] : (ga['accountTitle'] != null ? ga['accountTitle'] : (ga['AccountTitle'] != null ? ga['AccountTitle'] : '')))}"></option>
+                        <option th:each="ga : ${accountGroupsList}" th:value="${ga['id'] != null ? ga['id'] : (ga['Id'] != null ? ga['Id'] : '')}" th:text="${ga['AccountTitle']}"></option>
                     </select>
                 </div>
                 <div><label class="win-label-chk"><input type="checkbox" id="chkGroupOnParent" checked> Group On Parent Ac</label></div>
@@ -146,13 +146,21 @@
                 <div style="grid-column: span 3;">
                     <select id="CmbCustomeGroups" class="win-input select2" style="width: 100%;">
                         <option value="">-- Select Custom Group --</option>
-                        <option th:each="cg : ${customGroupsList}" th:value="${cg['id'] != null ? cg['id'] : (cg['Id'] != null ? cg['Id'] : '')}" th:text="${cg['description'] != null ? cg['description'] : (cg['Description'] != null ? cg['Description'] : (cg['name'] != null ? cg['name'] : (cg['Name'] != null ? cg['Name'] : '')))}"></option>
+                        <option th:each="cg : ${customGroupsList}" th:value="${cg['id'] != null ? cg['id'] : (cg['Id'] != null ? cg['Id'] : '')}" th:text="${cg['AcLookUpsDescription']}"></option>
                     </select>
                 </div>
                 <div>
                     <label class="win-label-chk" style="margin-right: 4px;"><input type="radio" name="rdColumns" id="rdFourColumns" checked> Four Columns</label>
                     <label class="win-label-chk"><input type="radio" name="rdColumns" id="rdSixColumns"> Six Columns</label>
                 </div>
+            </div>
+
+            <!-- Branches (GetERPFeatureById 17 / 18) and the hidden Language combo (Ctrl+L), TrialBalance.cs -->
+            <div style="display: grid; grid-template-columns: 85px 1fr 55px 1fr; gap: 3px 6px; align-items: center; font-size: 10px; margin-top: 3px;">
+                <div class="win-label tb-branch" style="display:none;">Branches</div>
+                <div class="tb-branch" style="display:none;"><select id="CmbBranches" class="win-input" style="width:100%;"></select></div>
+                <div class="win-label tb-lang" style="display:none;">Language</div>
+                <div class="tb-lang" style="display:none;"><select id="CmbLanguage" class="win-input" style="width:100%;"><option value="0">...Select Any Value...</option></select></div>
             </div>
 
             <!-- Show Button centered at bottom of Filters box -->
@@ -200,15 +208,16 @@
                 <thead>
                 <tr id="tbHeaderRow">
                     <th>Parent Title</th>
+                    <th class="col-branch" style="display:none;">Branch Name</th>
                     <th>Account Code</th>
                     <th>Account Title</th>
                     <th>Account Type</th>
-                    <th style="text-align:right;">Opening</th>
+                    <th style="text-align:right;" class="col-four">Opening</th>
                     <th style="text-align:right;" class="col-six">Opening Dr</th>
                     <th style="text-align:right;" class="col-six">Opening Cr</th>
                     <th style="text-align:right;">Debit</th>
                     <th style="text-align:right;">Credit</th>
-                    <th style="text-align:right;">Closing</th>
+                    <th style="text-align:right;" class="col-four">Closing</th>
                     <th style="text-align:right;" class="col-six">Closing Dr</th>
                     <th style="text-align:right;" class="col-six">Closing Cr</th>
                 </tr>
@@ -218,13 +227,13 @@
                 </tbody>
                 <tfoot>
                 <tr class="grid-total-row">
-                    <td colspan="4" style="text-align:right;">Total:</td>
-                    <td style="text-align:right;" id="totOpening">0</td>
+                    <td colspan="4" style="text-align:right;" id="tbTotalLabel">Total:</td>
+                    <td style="text-align:right;" id="totOpening" class="col-four">0</td>
                     <td style="text-align:right;" id="totOpeningDr" class="col-six">0</td>
                     <td style="text-align:right;" id="totOpeningCr" class="col-six">0</td>
                     <td style="text-align:right;" id="totDebit">0</td>
                     <td style="text-align:right;" id="totCredit">0</td>
-                    <td style="text-align:right;" id="totClosing">0</td>
+                    <td style="text-align:right;" id="totClosing" class="col-four">0</td>
                     <td style="text-align:right;" id="totClosingDr" class="col-six">0</td>
                     <td style="text-align:right;" id="totClosingCr" class="col-six">0</td>
                 </tr>
@@ -248,6 +257,7 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930f}"></script>
     <script th:inline="javascript">
         function fmt(v) {
             const n = parseFloat(v);
@@ -255,11 +265,12 @@
             return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         }
 
-        function onAccountCodeClick(accId, groupType) {
+        function onAccountCodeClick(accId, groupType, subsidiaryAccountId, branchesId) {
             const fd = $('#fromdate').val() || '';
             const td = $('#todate').val() || '';
-            if (groupType === 'Detail' || groupType === 'detail') {
-                window.location.href = `/accounts/reports/general-ledger?accountId=${accId}&fromDate=${fd}&toDate=${td}`;
+            if (groupType === 'Detail') {
+                window.location.href = `/accounts/reports/general-ledger?accountId=${accId}&fromDate=${fd}&toDate=${td}` +
+                    (subsidiaryAccountId ? `&subsidiaryAccountId=${subsidiaryAccountId}` : '') + (branchesId ? `&branchId=${branchesId}` : '');
             } else {
                 window.location.href = `/accounts/reports/selected-trial-balance?groupAccountId=${accId}&fromDate=${fd}&toDate=${td}`;
             }
@@ -273,42 +284,46 @@
             if ($('#chkStockGroupAccountShow').is(':checked')) accountTypeIds.push('4');
             if ($('#ChkSaleGroupAccountShow').is(':checked')) accountTypeIds.push('10');
             if ($('#ChkCGSGroupAccountShow').is(':checked')) accountTypeIds.push('12');
+            const br = $('#CmbBranches').val();
             return {
                 fromDate: $('#fromdate').val(),
                 toDate: $('#todate').val(),
-                skipZeroBalance: $('#SkipZero').is(':checked'),
-                closingDebitFilter: parseFloat($('#txtClosingDebit').val() || '0') || 0,
-                closingCreditFilter: parseFloat($('#txtClosingCredit').val() || '0') || 0,
+                skipZero: $('#SkipZero').is(':checked'),
+                clDebit: $('#txtClosingDebit').val() || '0',
+                clCredit: $('#txtClosingCredit').val() || '0',
                 includeUnposted: $('#ChkBoxPost').is(':checked'),
-                languageId: null,
+                languageId: $('#CmbLanguage').val() || 0,
                 documentTypeIds: docTypeIds.length ? docTypeIds.join(',') : null,
-                branchesIds: null,
+                branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null,
                 accountTypeIds: accountTypeIds.length ? accountTypeIds.join(',') : null,
                 customGroupId: $('#CmbCustomeGroups').val() || null,
                 groupAccountId: $('#CmbGroupAccount').val() || null,
-                skipCgsAccounts: $('#chkSkipCGSAc').is(':checked')
+                skipCgs: $('#chkSkipCGSAc').is(':checked')
             };
         }
 
         function executeTB() {
             $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#00796B;"><i class="fa fa-spinner fa-spin"></i> Executing Trial Balance query...</td></tr>');
             $.ajax({
-                url: '/accounts/api/reports/trial-balance',
+                url: '/accounts/api/reports-desktop/trial-balance',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(buildTbRequest()),
                 success: function (res) {
                     if (res && res.success) {
                         tbData = res.data || [];
+                        tbBranchShown = !!(TB_CTX && TB_CTX.branchFeature && $('#CmbBranches').val());
                         renderTb();
                     } else {
                         tbData = [];
                         $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Trial Balance.') + '</td></tr>');
                     }
                 },
-                error: function () {
+                error: function (xhr) {
                     tbData = [];
-                    $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">Error executing Trial Balance report.</td></tr>');
+                    const msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) || 'Error executing Trial Balance report.';
+                    $('#tbTbody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;"></td></tr>');
+                    $('#tbTbody td').text(msg);
                 }
             });
         }
@@ -320,9 +335,8 @@
             if ($('#chkClosingSorting').is(':checked')) cols.push('Closing');
 
             const dir = $('#rdAscending').is(':checked') ? 'ASC' : 'DESC';
-            const dynamicCols = cols.length > 0 ? cols : ['AccountCode'];
-            const dynamicSort = dynamicCols.map(c => c + ' ' + dir).join(', ');
-            const sortExpr = 'ParentAccountTitle ' + dir + ', ' + dynamicSort;
+            const dynamicSort = cols.map(c => c + ' ' + dir).join(', ');
+            const sortExpr = dynamicSort ? 'ParentAccountTitle ASC, ' + dynamicSort : 'ParentAccountTitle ASC';
             $('#lblSortingCritera').text('(' + sortExpr + ')');
             renderTb();
         }
@@ -332,17 +346,13 @@
             if ($('#chkAccountCodeSorting').is(':checked')) cols.push('AccountCode');
             if ($('#chkAccountTitleSorting').is(':checked')) cols.push('AccountTitle');
             if ($('#chkClosingSorting').is(':checked')) cols.push('Closing');
-            if (cols.length === 0) {
-                cols.push('AccountCode');
-            }
-
             const asc = $('#rdAscending').is(':checked');
             const rows = tbData.slice();
             rows.sort((a, b) => {
                 const pa = (a.ParentAccountTitle || '').toString();
                 const pb = (b.ParentAccountTitle || '').toString();
                 if (pa !== pb) {
-                    return asc ? pa.localeCompare(pb, undefined, {numeric: true}) : pb.localeCompare(pa, undefined, {numeric: true});
+                    return pa.localeCompare(pb, undefined, {numeric: true});
                 }
                 for (const c of cols) {
                     let va, vb;
@@ -368,6 +378,8 @@
         function applyColumnMode() {
             const six = $('#rdSixColumns').is(':checked');
             $('.col-six').toggle(six);
+            $('.col-four').toggle(!six);
+            $('.col-branch').toggle(tbBranchShown);
         }
 
         function renderTb() {
@@ -384,7 +396,7 @@
                 return;
             }
             const rows = sortedTbData();
-            const skipZero = $('#SkipZero').is(':checked');
+            const skipZero = false; /* @ZeroBalanceType is applied by Sp_TrialBalance_Rpt itself; the desktop grid does not filter again */
             let totOpening = 0, totOpeningDr = 0, totOpeningCr = 0, totDebit = 0, totCredit = 0, totClosing = 0, totClosingDr = 0, totClosingCr = 0;
             let lastParent = null;
             let displayedCount = 0;
@@ -416,15 +428,16 @@
                 tbody.append(`
                     <tr>
                         <td ${groupOnParent ? 'hidden' : ''}>${parentTitle}</td>
-                        <td style="color: #00796B; cursor: pointer; text-decoration: underline; font-weight: 600;" onclick="onAccountCodeClick(${r.AccountId || r.id || 0}, '${r.AccountGroup || ''}')">${r.AccountCode || ''}</td>
+                        <td class="col-branch" style="display:none;">${$('<div>').text(r.BranchName || '').html()}</td>
+                        <td style="color: #00796B; cursor: pointer; text-decoration: underline; font-weight: 600;" onclick="onAccountCodeClick(${r.AccountId || 0}, '${r.AccountGroup || ''}', ${r.SubsidiaryAccoutId || 0}, ${r.BranchesId || 0})">${r.AccountCode || ''}</td>
                         <td>${r.AccountTitle || ''}</td>
                         <td>${r.AccountType || ''}</td>
-                        <td style="text-align:right;">${fmt(opening)}</td>
+                        <td style="text-align:right;" class="col-four">${fmt(opening)}</td>
                         <td style="text-align:right;" class="col-six">${fmt(openingDr)}</td>
                         <td style="text-align:right;" class="col-six">${fmt(openingCr)}</td>
                         <td style="text-align:right;">${fmt(debit)}</td>
                         <td style="text-align:right;">${fmt(credit)}</td>
-                        <td style="text-align:right;">${fmt(closing)}</td>
+                        <td style="text-align:right;" class="col-four">${fmt(closing)}</td>
                         <td style="text-align:right;" class="col-six">${fmt(closingDr)}</td>
                         <td style="text-align:right;" class="col-six">${fmt(closingCr)}</td>
                     </tr>
@@ -448,25 +461,21 @@
             applyColumnMode();
         }
 
+        let TB_CTX = null, tbBranchShown = false;
+
+        /* TrialBalance.reset(): SkipZero.Checked = true; fromdate = ActiveYr.Start_Period */
         function resetTB() {
-            onDateTypeInit();
-            $('#txtClosingDebit, #txtClosingCredit').val('0');
-            $('#ChkBoxPost, #SkipZero').prop('checked', true);
-            $('#chkSkipCGSAc').prop('checked', false);
-            $('#chkGroupOnParent').prop('checked', true);
-            $('#cmbDocumentTypeIds').val([]).trigger('change');
-            $('#CmbGroupAccount, #CmbCustomeGroups').val('').trigger('change');
-            $('#chkStockGroupAccountShow, #ChkSaleGroupAccountShow, #ChkCGSGroupAccountShow').prop('checked', true);
-            $('#chkAccountCodeSorting, #chkAccountTitleSorting, #chkClosingSorting').prop('checked', false);
-            $('#rdAscending').prop('checked', true);
-            $('#rdFourColumns').prop('checked', true);
-            $('#lblSortingCritera').text('(ParentAccountTitle ASC)');
-            executeTB();
+            $('#SkipZero').prop('checked', true);
+            if (TB_CTX && TB_CTX.activeYear.startPeriod) $('#fromdate').val(TB_CTX.activeYear.startPeriod);
         }
 
+        /* TrialBalance_Load: fromdate = Start_Period; todate = End_Period when it is earlier than today, else today */
         function onDateTypeInit() {
-            $('#fromdate').val('2026-08-01');
-            $('#todate').val('2026-09-13');
+            const today = new Date(); const iso = d => d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+            const t = iso(today);
+            const ay = TB_CTX ? TB_CTX.activeYear : {};
+            $('#fromdate').val(ay.startPeriod || t);
+            $('#todate').val(ay.endPeriod && ay.endPeriod < t ? ay.endPeriod : t);
         }
 
         function firstRecord() { if (tbData.length > 0) $('#lblCurrentRecord').text('1'); }
@@ -478,11 +487,27 @@
         $('#chkGroupOnParent').on('change', renderTb);
         $('#rdAscending, #rdDescending, #chkAccountCodeSorting, #chkAccountTitleSorting, #chkClosingSorting').on('change', applySorting);
 
-        $(document).ready(function () {
+        $(document).on('keydown', function (e) {
+            if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.tb-lang').show(); }
+            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetTB(); }
+        });
+
+        $(document).ready(async function () {
             applyColumnMode();
-            onDateTypeInit();
             $('#CmbGroupAccount, #CmbCustomeGroups, #cmbDocumentTypeIds').select2({ width: '100%' });
-            executeTB();
+            try {
+                TB_CTX = await AccF.context();
+                onDateTypeInit();
+                (await AccF.lookup('languages')).forEach(l => $('#CmbLanguage').append($('<option>').val(l.Id).text(l.LanguageDescription)));
+                if (TB_CTX.branchFeature) {
+                    const brs = await AccF.lookup('branches');
+                    if (TB_CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
+                    else $('#CmbBranches').append($('<option>').val('').text(''));
+                    brs.forEach(b => $('#CmbBranches').append($('<option>').val(b.Id).text(b.BranchName)));
+                    $('#CmbBranches').val(TB_CTX.branchConsolidated ? [String(TB_CTX.userBranchId)] : String(TB_CTX.userBranchId));
+                    $('.tb-branch').show();
+                }
+            } catch (e) { alert(e.message); }
         });
     </script>
 </body>

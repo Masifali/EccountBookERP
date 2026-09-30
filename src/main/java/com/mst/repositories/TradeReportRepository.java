@@ -54,12 +54,8 @@ public class TradeReportRepository {
         result.put("partyGroups",execute("Sp_CustomerGroup_GetAllMethod",params(u,"Activity","ReadAll")));
         List<Map<String,Object>> branches = new ArrayList<>();
         try { branches = execute("USP_GetBranchesFromVouchersByAccountId",context(u)); } catch (Exception ignored) {}
-        if (branches.isEmpty()) {
-            try { branches = jdbc.queryForList("EXEC dbo.USP_GetBranchsAllocatedToUser @OrganizationId=?, @CompanyId=?, @UserId=?", u.getOrganizationId(), u.getCompanyId(), u.getId()); } catch (Exception ignored) {}
-        }
-        if (branches.isEmpty()) {
-            try { branches = jdbc.queryForList("SELECT ID as Id, BranchName FROM Branches"); } catch (Exception ignored) {}
-        }
+        /* BranchesFill(): VoucherHead.GetBranchesFromVouchersByAccountId(org, company, "", 0) only.
+           The desktop has no second or third source; an empty result leaves the combo empty. */
         for (Map<String, Object> map : branches) {
             Object id = map.get("Id") != null ? map.get("Id") : (map.get("id") != null ? map.get("id") : (map.get("BranchId") != null ? map.get("BranchId") : map.get("branchId")));
             Object name = map.get("BranchName") != null ? map.get("BranchName") : (map.get("branchName") != null ? map.get("branchName") : (map.get("Name") != null ? map.get("Name") : map.get("name")));

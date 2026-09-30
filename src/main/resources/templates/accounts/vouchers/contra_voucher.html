@@ -337,7 +337,10 @@
                         <div class="row" style="margin-bottom: 5px;">
                             <div class="col-md-4"><label class="win-label">Cheque No</label></div>
                             <div class="col-md-8">
-                                <input type="text" id="txtHeaderChequeNo" class="win-input"/>
+                                <!-- CmbCheqNo: ChequeBookBind() lists the credit bank's outstanding leaves
+                                     when "CheqBook Enabled"; the picked leaf is saved as CheqId/InvoiceNoRefId. -->
+                                <input type="text" id="txtHeaderChequeNo" class="win-input" list="dlContraChequeNo" autocomplete="off"/>
+                                <datalist id="dlContraChequeNo"></datalist>
                             </div>
                         </div>
                         <div class="row" style="margin-bottom: 5px;">
@@ -532,6 +535,7 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/build/js/countx_voucher_desktop_config.js?v=20260930a}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
 
     <script>
@@ -608,6 +612,12 @@
                 }
 
                 $('#cmbCreditAccount').html(creditOpt).trigger('change');
+                // CmbCreditAccount_Leave -> ChequeBookBind()
+                $('#cmbCreditAccount').off('change.vdcheque').on('change.vdcheque', function() {
+                    VoucherDesk.ready.then(function() {
+                        VoucherDesk.loadCheques(parseInt($('#cmbCreditAccount').val()) || 0, editingVoucherId, $('#txtHeaderChequeNo'));
+                    });
+                });
                 $('#cmbDetailAccount').html(detailOpt).trigger('change');
             });
         }
@@ -739,24 +749,29 @@
                 voucherCode: parseInt($('#txtVoucherNo').val()) || null,
                 voucherDate: $('#dtpVoucherDate').val(),
                 refAccountId: creditAccId,
+                // ContraVoucher.Insert(): the server builds the credit mirror line, the AutoRemarks*
+                // text on both lines, and CheqId/InvoiceNoRefId from the picked cheque leaf.
+                mirrorCreditToRefAccount: true,
+                desktopForm: 'ContraVoucher',
+                cheqId: VoucherDesk.chequeIdFor($('#txtHeaderChequeNo').val()) || null,
                 chequeNo: $('#txtHeaderChequeNo').val().trim(),
                 chequeDate: $('#dtpHeaderChequeDate').val(),
                 payTitle: $('#txtPayTitle').val().trim(),
                 remarks: $('#txtHeaderRemarks').val().trim(),
                 voucherAmount: totalDebit,
-                projectId: parseInt($('#cmbCostCenter').val()) || 1,
+                projectId: parseInt($('#cmbCostCenter').val()) || 0, // vh.ProjectId = Conversion.ToInt(CmbProjectId.Value)
                 details: gridItems.map(function(item) {
                     return {
                         accountId: item.chartOfAccountId,
                         comments: item.remarks,
                         debitAmount: item.debitAmount || 0.0,
                         creditAmount: 0.0,
-                        jobLotId: item.jobLotId || 1
+                        jobLotId: item.jobLotId || 0 // Insert(): vd.JobLotId = Conversion.ToInt(cell)
                     };
                 })
             };
 
-            $.ajax({
+            VoucherDesk.busy($('button[onclick="submitVoucher()"]').first(), function() { return $.ajax({
                 url: '/accounts/api/vouchers/save',
                 type: 'POST',
                 contentType: 'application/json',
@@ -769,7 +784,7 @@
                 error: function(err) {
                     alert('Error saving voucher: ' + (err.responseJSON ? err.responseJSON.message : 'Server error'));
                 }
-            });
+            }); });
         }
 
         function resetForm() {
@@ -867,7 +882,9 @@
             });
         }
 
-        function loadContraVoucherForEdit(id) {
+        // ReadById(): the remark text shown depends on AutoRemarksForPaymentThroughBank.
+        function loadContraVoucherForEdit(id) { VoucherDesk.ready.then(function() { loadContraVoucherForEditNow(id); }); }
+        function loadContraVoucherForEditNow(id) {
             $.get('/accounts/api/vouchers/' + id, function(voucher) {
                 if (!voucher || !voucher.header) return;
                 switchTab('form');
@@ -875,21 +892,22 @@
                 editingVoucherId = header.id || id;
                 $('#txtVoucherNo').val(header.voucherCode != null ? header.voucherCode : '');
                 if (header.voucherDate) $('#dtpVoucherDate').val(header.voucherDate);
-                $('#txtHeaderRemarks').val(header.remarks || '');
+                $('#txtHeaderRemarks').val(VoucherDesk.editHeaderRemarks('ContraVoucher', 10, header));
                 if (header.chequeNo) $('#txtHeaderChequeNo').val(header.chequeNo);
                 if (header.chequeDate) $('#dtpHeaderChequeDate').val(header.chequeDate);
                 if (header.payTitle) $('#txtPayTitle').val(header.payTitle);
                 if (header.refAccountId) $('#cmbCreditAccount').val(header.refAccountId).trigger('change');
 
-                const details = voucher.details || [];
+                // Grid rows are the debit lines; the credit mirror carries the credit account.
+                const details = (voucher.details || []).filter(function(d) { return (parseFloat(d.debitAmount) || 0) > 0; });
                 gridItems = details.map(function(d) {
                     return {
                         chartOfAccountId: d.accountId,
                         accountCode: d.accountCode || '',
                         accountTitle: d.accountTitle || '',
-                        jobLot: 'General',
-                        jobLotId: 1,
-                        remarks: d.comments || '',
+                        jobLot: $('#cmbJobLot option[value="' + (d.jobLotId || 0) + '"]').text() || '',
+                        jobLotId: d.jobLotId || 0,
+                        remarks: VoucherDesk.editRowRemarks('ContraVoucher', 10, d),
                         debitAmount: parseFloat(d.debitAmount || 0),
                         creditAmount: 0.0
                     };

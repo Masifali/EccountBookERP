@@ -11,6 +11,8 @@
     if (due) { el('controls').multiple = false; el('fromLabel').textContent = 'Due Date From'; el('toLabel').textContent = 'Due Date To'; }
     const common = [[payable?'ParentAccountTitle':'ParentAccount','Parent Account',120],['AccountCode','Account Code',95],['AccountTitle','Account Title',250],['AccountType','Account Type',65]];
     const columns = due ? [...common,['Opening','Opening',110],['Debit','Debit',110],['Credit','Credit',110],['Closing','Net Receivables',120],['NotYetDue','Not Yet Due',110],['OverDueReceivables','Over Due',110]] : [...common,['Opening','Opening',102],['CurrDebit','Debit',102],['CurrCredit','Credit',102],[schedule||payable?'Closing':'ClDebit','Closing',102],...(schedule ? [['DueBalance','Due Balance',102],['NotYetDue','Not Yet Due',102],['Short/Excess','Short / Excess',102],['SaleAmount','Sale Amount',102],['SaleQty','Sale Qty',90],['SaleWeight','Sale Weight',90],['OrderQty','Order Qty',90],['DispatchQty','Dispatched Qty',90],['BalQty','Balance Qty',90],['OrderWeight','Order Weight',90],['DispatchWeight','Dispatched Weight',90],['BalWeight','Balance Weight',90],['ReceiptsToday','Receive Today',102]] : [['CityName','City Name',120],['MobilePersonal','Mobile #',110]]),['LastBillDate','Last Bill Date',90],['LastBillsAmount','Last Bill Amount',102],[schedule?'LastReceiptDate':payable?'LastPaidDate':'LastRcvdDate',payable?'Last Paid Date':'Last Received Date',90],[schedule?'LastReceiptAmount':payable?'LastPidAmount':'LastRcvdAmount',payable?'Last Paid Amount':'Last Received Amount',102]];
+    /* Receivables.cs DataFill()/GridSettings() (screen 80): column order and captions of the desktop grid. */
+    if (kind === 'receivables-report') columns.splice(0, columns.length, ['ParentAccount','Parent Account',150],['AccountClass','Account Class',80],['AccountCode','Account Code',90],['AccountTitle','Account Title',160],['AccountType','Account Type',80],['Opening','Opening Balance',100],['CurrDebit','Debit',100],['CurrCredit','Credit',100],['ClDebit','Closing Balance',100],['LastBillDate','Last Bill Date',80],['LastBillsAmount','Last Bills Amount',90],['BillDays','Bill Days',60],['LastRcvdDate','Received Date',80],['LastRcvdAmount','Received Amount',90],['RcvdDays','Received Days',65],['CityName','City Name',120],['MobilePersonal','Mobile Personal',110],['Title','Title',120],['FollowupDate','Follow Up Date',85]);
     const numeric = new Set(['Opening','Debit','Credit','Closing','NotYetDue','OverDueReceivables','CurrDebit','CurrCredit','ClDebit','DueBalance','Short/Excess','SaleAmount','SaleQty','SaleWeight','OrderQty','DispatchQty','BalQty','OrderWeight','DispatchWeight','BalWeight','ReceiptsToday','LastBillsAmount','LastReceiptAmount','LastRcvdAmount','LastPidAmount']);
     const amount = value => ReportDecimal.format(value ?? '0', lookup.amountDecimals || 0, true);
     const date = value => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value ?? '')); return m ? m[3]+'-'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[2]-1]+'-'+m[1].slice(-2) : value ?? ''; };
@@ -54,7 +56,7 @@
     async function show(event) {
         if(event)event.preventDefault(); if(pending || !el('filters').reportValidity())return;
         pending=true;el('show').disabled=true;el('status').textContent='';rows=[];render();
-        try { rows=await api('/api/accounts/desktop-reports/'+kind+'?'+params());render();if(!rows.length)el('status').textContent='No records for the selected filters.'; }
+        try { rows=await api('/api/accounts/desktop-reports/'+kind+'?'+params());if(kind==='receivables-report'){const at=columns.findIndex(c=>c[0]==='BranchName');if(at>=0)columns.splice(at,1);if(lookup.branchFeature&&[$('#branches').val()].flat().filter(Boolean).length)columns.unshift(['BranchName','Branch Name',120]);}render();if(!rows.length)el('status').textContent='No records for the selected filters.'; }
         catch(error) { el('status').textContent=error.message; }
         finally { pending=false;el('show').disabled=false; }
     }
@@ -77,11 +79,11 @@
     (async()=>{
         try {
             lookup=await api('/api/accounts/trade-report/lookups');
-            bind('controls',lookup.controls.filter(row=>Number(row.AccountClass)===(payable?3:2)),'AccountTitle');
+            /* Receivables.cs AccountFill3rdLevel(): ReadAllAccountgroup with AccountClassIds "2,3" and no class filter. */bind('controls',kind==='receivables-report'?lookup.controls:lookup.controls.filter(row=>Number(row.AccountClass)===(payable?3:2)),'AccountTitle');
             bind('customGroupId',lookup.customGroups,'AcLookUpsDescription');bind('cityId',lookup.cities,'CityName');
             bind('groups',lookup.inventoryGroups,'Description');bind('partyGroupId',lookup.partyGroups||[],'Description');
             bind('branches',lookup.branches,'BranchName');
-            const features=new Set((lookup.features||[]).map(row=>Number(row.Id)));
+            const features=new Set((lookup.features||[]).map(row=>Number(row.Id)));lookup.branchFeature=features.has(17);
             el('branches').closest('label').hidden=due||!features.has(17);
             if(features.has(17)&&!features.has(18)) {
                 $('#branches').select2('destroy');el('branches').multiple=false;
@@ -90,6 +92,8 @@
             if(features.has(17)&&lookup.branchId)$('#branches').val(String(lookup.branchId));
             if(!due&&lookup.year?.Start_Period)el('fromDate').value=String(lookup.year.Start_Period).slice(0,10);
             $('select').trigger('change.select2');render();
+            /* Receivables_Load ends with DataFill(): the report is shown on open. */
+            if(kind==='receivables-report')await show();
         } catch(error) { el('status').textContent=error.message; }
     })();
 })();

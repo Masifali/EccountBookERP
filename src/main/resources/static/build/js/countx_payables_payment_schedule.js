@@ -192,6 +192,9 @@ function loadSetup() {
         ['From', 'To', 'DueFrom', 'DueUpto', 'PurchaseFrom', 'PurchaseTo'].forEach(applyDateEnabled);
 
         fillSelect('parentCategory',  d.parentCategories, 'Parent Category');
+        /* ParentCategoryFill(): BindDDL(..., ZeroIndex:false) then CmbParentCategory.Rows[0].Activate() -
+           the first parent category is selected on load, so @ParentCategoryId carries its Id. */
+        if (d.parentCategories && d.parentCategories.length && el('parentCategory')) el('parentCategory').value = String(d.parentCategories[0].id);
         fillSelect('controlAccounts', d.controlAccounts,  null);
         fillSelect('customGroup',     d.customGroups,     'Custom Group');
         fillSelect('customerGroup',   d.customerGroups,   'Customer Group');

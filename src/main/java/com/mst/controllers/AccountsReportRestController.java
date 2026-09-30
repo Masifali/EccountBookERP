@@ -277,22 +277,32 @@ public class AccountsReportRestController {
 
     @GetMapping("/selected-trial-balance/history")
     public ResponseEntity<?> getSelectedTrialBalanceHistory() {
-        return ResponseEntity.ok(accountsReportService.getReportHistory("SelectedTrialBalance"));
+        // SelectedTrialBalance.cs has no history; the rows came from raw SQL on VoucherHead (group F recheck).
+        return notADesktopFeature();
     }
 
     @PostMapping("/selected-trial-balance/save-row")
     public ResponseEntity<?> saveSelectedTrialBalanceRow(@RequestBody Map<String, Object> req) {
-        return ResponseEntity.ok(accountsReportService.saveSelectedTrialBalanceRow(req));
+        // SelectedTrialBalance.cs writes nothing (PARITY-AUDIT-08); this inserted ChartofAccount rows.
+        return notADesktopFeature();
     }
 
     @PostMapping("/selected-trial-balance/update-row")
     public ResponseEntity<?> updateSelectedTrialBalanceRow(@RequestBody Map<String, Object> req) {
-        return ResponseEntity.ok(accountsReportService.updateSelectedTrialBalanceRow(req));
+        return notADesktopFeature();
     }
 
     @DeleteMapping("/selected-trial-balance/delete-row/{id}")
     public ResponseEntity<?> deleteSelectedTrialBalanceRow(@PathVariable("id") Integer id) {
-        return ResponseEntity.ok(accountsReportService.deleteSelectedTrialBalanceRow(id));
+        return notADesktopFeature();
+    }
+
+    /** Account Reports recheck (group F): the report page on the desktop is read-only. */
+    private static ResponseEntity<?> notADesktopFeature() {
+        Map<String, Object> err = new HashMap<>();
+        err.put("success", false);
+        err.put("message", "Trial Balance Selected is a read-only report; chart of account rows are maintained on Define Accounts.");
+        return ResponseEntity.status(403).body(err);
     }
 
     @PostMapping("/trial-balance-all-level")

@@ -28,10 +28,13 @@ public class PayablesAgingController {
             @RequestParam(defaultValue = "30") int agingDays,
             @RequestParam(defaultValue = "1") int reportId,
             @RequestParam(defaultValue = "0") int parentId,
+            @RequestParam(defaultValue = "") String controlAccounts,
             @RequestParam(defaultValue = "0") int accountId,
             @RequestParam(defaultValue = "0") int customGroupId,
             @RequestParam(defaultValue = "0") int costCenterId,
             @RequestParam(defaultValue = "") String branches) {
-        return service.load(asOnDate, agingDays, reportId, parentId, accountId, customGroupId, costCenterId, branches);
+        /* costCenterId is still accepted from older pages but the desktop form never sends one. */
+        String controls = !controlAccounts.isBlank() ? controlAccounts : (parentId > 0 ? String.valueOf(parentId) : "");
+        return service.load(asOnDate, agingDays, reportId, controls, accountId, customGroupId, branches);
     }
 }

@@ -45,6 +45,8 @@ public class VoucherService implements IVoucherService {
 	private IChartofAccountRepository chartofAccountRepository;
 	@Autowired
 	private CurrentUserContext currentUserContext;
+	@Autowired
+	private VoucherDesktopConfigService voucherDesktopConfigService;
 
 	@Override
 	public int generateNextVoucherCode(int documentTypeId) {
@@ -115,6 +117,7 @@ public class VoucherService implements IVoucherService {
 			dMap.put("supplierCustomerId", detail.getSupplierCustomerId());
 			dMap.put("paymentType", detail.getPaymentType());
 			dMap.put("commentsOtherLingo", detail.getCommentsOtherLingo());
+			dMap.put("invoiceNoRefId", detail.getInvoiceNoRefId());
 			dMap.put("againstAccountId", detail.getAgainstAccountId());
 			dMap.put("locationTypeId", detail.getLocationTypeId());
 			// Payment By Invoice (DocumentTypeId=1/2 via this alternate entry screen) Edit-reload
@@ -136,6 +139,11 @@ public class VoucherService implements IVoucherService {
 			dMap.put("taxPrcnt", detail.getTaxPrcnt());
 			dMap.put("taxesTotalAmount", detail.getTaxesTotalAmount());
 			dMap.put("isTaxable", detail.getIsTaxable());
+			// Edit reload of the grid columns every voucher form writes (ReadById() rebuilds them).
+			dMap.put("paymentTypeId", detail.getPaymentTypeId());
+			dMap.put("instrumentTypeId", detail.getInstrumentTypeId());
+			dMap.put("chequeTypeId", detail.getChequeTypeId());
+			dMap.put("payeeTitle", detail.getPayeeTitle());
 			detailMaps.add(dMap);
 		}
 		result.put("details", detailMaps);
@@ -288,8 +296,15 @@ public class VoucherService implements IVoucherService {
 				: null;
 		mirrorCredit = mirrorCredit && refAccountCoa != null;
 
+		// Desktop Insert() remark / cheque rules driven by the Configuration screen's AutoRemarks*
+		// settings - only for the pages that name their form; null (no change) for all others.
+		List<DesktopLine> desktopLines = applyDesktopRemarks(dto, savedHead);
+		int rowIdx = -1;
+
 		if (dto.getDetails() != null) {
 			for (VoucherRequestDto.VoucherDetailRowDto dDto : dto.getDetails()) {
+				rowIdx++;
+				DesktopLine dl = desktopLines == null ? null : desktopLines.get(rowIdx);
 				if (dDto.getAccountId() == null || dDto.getAccountId() == 0) continue;
 				ChartofAccount coa = chartofAccountRepository.findById(dDto.getAccountId()).orElse(null);
 				if (coa == null) continue;
@@ -337,6 +352,11 @@ public class VoucherService implements IVoucherService {
 				if (dDto.getQtyOut() != null) vd.setQtyOut(dDto.getQtyOut());
 				if (dDto.getItemAmount() != null) vd.setItemAmount(dDto.getItemAmount());
 				if (dDto.getWhtHolding() != null) vd.setWhtHolding(dDto.getWhtHolding());
+				// WHT Challan Deposit (DocumentTypeId=25) - ditto frmWhtTaxChallanDeposit.cs btnsave_Click
+				// (detail.InvoiceNoRefId = source VoucherHead.Id) and VoucherHead.Save(25)'s IsTaxable =
+				// "False". Primary row only, as on the desktop; no-op for every other voucher.
+				if (dDto.getInvoiceNoRefId() != null) vd.setInvoiceNoRefId(dDto.getInvoiceNoRefId());
+				if (dDto.getIsTaxable() != null) vd.setIsTaxable(dDto.getIsTaxable());
 				if (mirrorCredit) {
 					vd.setAgainstAccountId(dto.getRefAccountId());
 				} else if (dDto.getLineAgainstAccountId() != null) {
@@ -353,6 +373,7 @@ public class VoucherService implements IVoucherService {
 					// CreditAccount - see AccountId above - so no second row is created here).
 					vd.setAgainstAccountId(dto.getAgainstAccountId());
 				}
+				if (dl != null) dl.applyTo(vd, false);
 				vd.setEntryDate(LocalDateTime.now());
 				voucherDetailRepository.save(vd);
 
@@ -366,6 +387,7 @@ public class VoucherService implements IVoucherService {
 					mirror.setCreditAmount(lineDebit);
 					mirror.setJobLotId(dDto.getJobLotId());
 					mirror.setCostCenterId(dDto.getCostCenterId());
+					if (dDto.getIsTaxable() != null) mirror.setIsTaxable(dDto.getIsTaxable());
 					if (dDto.getChequeNoDetail() != null) mirror.setCheqNoDetail(dDto.getChequeNoDetail());
 					if (dDto.getChequeDateDetail() != null) mirror.setDCheqDate(dDto.getChequeDateDetail());
 					if (dto.getLocationTypeId() != null) mirror.setLocationTypeId(dto.getLocationTypeId());
@@ -377,6 +399,11 @@ public class VoucherService implements IVoucherService {
 					if (dDto.getChequeTypeId() != null) mirror.setChequeTypeId(dDto.getChequeTypeId());
 					if (dDto.getPayeeTitle() != null) mirror.setPayeeTitle(dDto.getPayeeTitle());
 					if (dDto.getReferenceAccountId() != null) mirror.setReferenceAccountId(dDto.getReferenceAccountId());
+					// PaymentVoucherNew/ReceiptsVoucherNew/ContraVoucher Insert(): both rows of the pair
+					// carry the cheque leaf id (InvoiceNoRefId) - it is what marks the leaf as used in
+					// SP_CheqBookHeader_GetAllMethod 'OutstandingCheqNo'.
+					if (dDto.getInvoiceNoRefId() != null) mirror.setInvoiceNoRefId(dDto.getInvoiceNoRefId());
+					if (dl != null) dl.applyTo(mirror, true);
 					mirror.setEntryDate(LocalDateTime.now());
 					voucherDetailRepository.save(mirror);
 				}
@@ -439,6 +466,8 @@ public class VoucherService implements IVoucherService {
 				}
 			}
 		}
+
+		if (desktopLines != null) voucherHeadRepository.save(savedHead);
 
 		response.put("success", true);
 		response.put("voucherHeadId", savedHead.getId());
@@ -1181,9 +1210,252 @@ public class VoucherService implements IVoucherService {
 	// !canViewAllRecord) into USP_VoucherFormHistory, i.e. every filter parameter below is
 	// deliberately left null/"all" to reproduce that exact no-filter, show-everything-visible
 	// behaviour - this is NOT an oversight, it is ditto-copying desktop's own simpler History tab.
+	/**
+	 * WHT Challan Deposit (DocumentTypeId=25) - frmWhtTaxChallanDeposit.cs HistoryFill():
+	 * CommonServices.VoucherFormHistory(DoHaveCanViewAllRecordRights, "25") with no filter UI at all,
+	 * the same no-filter shape as PDC Payment above.
+	 */
+	@Override
+	public Map<String, Object> getWhtChallanDepositHistory() {
+		List<Map<String, Object>> raw = callVoucherFormHistory("25", null, null, null, null, null, null, "all");
+		return buildVoucherHistoryResponse(raw, HistoryColumns.PDC_PAYMENT);
+	}
+
 	@Override
 	public Map<String, Object> getPdcPaymentHistory() {
 		List<Map<String, Object>> raw = callVoucherFormHistory("24", null, null, null, null, null, null, "all");
 		return buildVoucherHistoryResponse(raw, HistoryColumns.PDC_PAYMENT);
 	}
+
+	// =====================================================================================
+	// Desktop Insert() remark rules (Configuration: AutoRemarks* / AutoRemarksForReceiptsThroughBank)
+	// =====================================================================================
+
+	/** Per grid row: what the desktop writes on the row's own line and on its mirror line. */
+	static final class DesktopLine {
+		String comments, commentsOther, mirrorComments, mirrorCommentsOther;
+		Integer invoiceNoRefId;
+		String cheqNo;
+		LocalDate cheqDate;
+		boolean setCheque;
+
+		void applyTo(VoucherDetail d, boolean mirror) {
+			d.setComments(mirror ? mirrorComments : comments);
+			d.setCommentsOtherLingo(mirror ? mirrorCommentsOther : commentsOther);
+			if (setCheque) {
+				d.setInvoiceNoRefId(invoiceNoRefId);
+				d.setCheqNoDetail(cheqNo);
+				d.setDCheqDate(cheqDate);
+			}
+		}
+	}
+
+	private static String nz(String s) { return s == null ? "" : s; }
+
+	/** DateTime.ToShortDateString() on the desktop's en-US culture: M/d/yyyy. */
+	private static String shortDate(LocalDate d) {
+		return d == null ? "None" : d.getMonthValue() + "/" + d.getDayOfMonth() + "/" + d.getYear();
+	}
+
+	private String accountTitle(Integer id) {
+		if (id == null || id == 0) return "";
+		ChartofAccount c = chartofAccountRepository.findById(id).orElse(null);
+		return c == null || c.getAccountTitle() == null ? "" : c.getAccountTitle();
+	}
+
+	/**
+	 * Returns one DesktopLine per dto detail row (aligned by index) and applies the header-level
+	 * side effects (Remarks / RemarksOtherLingo / cheque fields) to {@code head}; null when the page
+	 * did not name a desktop form.
+	 */
+	List<DesktopLine> applyDesktopRemarks(VoucherRequestDto dto, VoucherHead head) {
+		String form = dto.getDesktopForm();
+		if (form == null || dto.getDetails() == null) return null;
+		Map<String, Object> f = voucherDesktopConfigService.voucherFlags();
+		int count = dto.getDetails().size();
+		int doc = dto.getDocumentTypeId() == null ? 0 : dto.getDocumentTypeId();
+		String refTitle = accountTitle(dto.getRefAccountId());
+		List<DesktopLine> out = new ArrayList<>();
+		switch (form) {
+			case "PaymentVoucherNew": paymentVoucherNew(dto, head, f, count, doc, refTitle, out); break;
+			case "ReceiptsVoucherNew": receiptsVoucherNew(dto, head, f, count, doc, refTitle, out); break;
+			case "ContraVoucher": contraVoucher(dto, head, f, count, refTitle, out); break;
+			default: return null;
+		}
+		return out;
+	}
+
+	private static boolean flag(Map<String, Object> f, String k) { return Boolean.TRUE.equals(f.get(k)); }
+
+	/** PaymentVoucherNew.cs Insert():834-935 + BuildRemarks():1102. */
+	private void paymentVoucherNew(VoucherRequestDto dto, VoucherHead head, Map<String, Object> f, int count,
+			int doc, String creditText, List<DesktopLine> out) {
+		String vhRemarks = nz(dto.getRemarks());           // vh.Remarks = txtremarksmain.Text
+		for (VoucherRequestDto.VoucherDetailRowDto r : dto.getDetails()) {
+			DesktopLine dl = new DesktopLine();
+			String rowRemarks = nz(r.getComments());
+			String rowTitle = accountTitle(r.getAccountId());
+			if (doc == 2) {
+				String[] br = buildPaymentRemarks(f, vhRemarks, r, creditText);
+				if (count == 1) {                           // vh.CheqId/ChequeNo/ChequeDate/PayTitle from the row
+					head.setCheqId(r.getInvoiceNoRefId());
+					head.setChequeNo(r.getChequeNoDetail());
+					head.setChequeDate(r.getChequeDateDetail() == null ? null : r.getChequeDateDetail().atStartOfDay());
+					head.setPayTitle(r.getPayeeTitle());
+				}
+				dl.comments = br[0];
+				dl.commentsOther = rowRemarks;
+				if (count == 1 && vhRemarks.trim().isEmpty()) { head.setRemarksOtherLingo(null); vhRemarks = dl.comments; }
+				dl.mirrorComments = br[1] + " PAID TO: " + rowTitle;
+				dl.mirrorCommentsOther = rowRemarks;
+			} else {
+				dl.comments = rowRemarks;
+				if (count == 1 && vhRemarks.trim().isEmpty()) { head.setRemarksOtherLingo(null); vhRemarks = dl.comments; }
+				dl.mirrorComments = vhRemarks.trim().isEmpty() ? rowRemarks : vhRemarks.trim();
+			}
+			out.add(dl);
+		}
+		head.setRemarks(vhRemarks);
+	}
+
+	/** BuildRemarks(): {DebitRemarks, CreditRemarks}. */
+	private static String[] buildPaymentRemarks(Map<String, Object> f, String vhRemarks,
+			VoucherRequestDto.VoucherDetailRowDto r, String creditAccount) {
+		String chequeNo = r.getChequeNoDetail() == null || r.getChequeNoDetail().trim().isEmpty() ? "None" : r.getChequeNoDetail().trim();
+		String detail = nz(r.getComments()).trim();
+		if (!flag(f, "autoRemarksForPaymentThroughBank")) {
+			String o = !chequeNo.equals("None") ? ("CHEQUE: (" + chequeNo + "), " + detail).trim() : detail;
+			return new String[] { o, o };
+		}
+		String chequeDate = shortDate(r.getChequeDateDetail());
+		String payTitle = r.getPayeeTitle() == null || r.getPayeeTitle().trim().isEmpty() ? "None" : r.getPayeeTitle().trim();
+		String account = creditAccount == null || creditAccount.trim().isEmpty() ? "None" : creditAccount.trim();
+		List<String> d = new ArrayList<>(), c = new ArrayList<>();
+		if (flag(f, "autoRemarksIncludeChequeDateAndNumber")) {
+			String t = "CHEQUE: (" + chequeNo + ", " + chequeDate + ")"; d.add(t); c.add(t);
+		} else if (flag(f, "autoRemarksIncludeChequeNumber")) {
+			String t = "CHEQUE: (" + chequeNo + ")"; d.add(t); c.add(t);
+		}
+		if (flag(f, "autoRemarksIncludePayeeTitle")) {
+			String t = "PayTitle: (" + payTitle + ")"; d.add(t); c.add(t);
+		}
+		d.add("Credit Account: " + account);
+		String da = String.join(", ", d), ca = String.join(", ", c);
+		String header = vhRemarks.trim();
+		String hl = header.toLowerCase();
+		if (hl.contains("cheque:") || hl.contains("paytitle:") || hl.contains("credit account:")) header = "";
+		String debit = flag(f, "autoRemarksIncludeHeaderRemarks") ? (header + " " + da).trim() : da;
+		String credit = flag(f, "autoRemarksIncludeHeaderRemarks") ? (header + " " + ca).trim() : ca;
+		if (flag(f, "autoRemarksIncludeDetailRemarks") && !detail.isEmpty()) {
+			debit = (detail + " " + debit).trim();
+			credit = (detail + " " + credit).trim();
+		}
+		return new String[] { debit, credit };
+	}
+
+	/**
+	 * ReceiptsVoucherNew.cs Insert():626-735. The desktop "vd" is the cash/bank debit (our mirror)
+	 * and "vd2" the grid credit (our row).
+	 */
+	private void receiptsVoucherNew(VoucherRequestDto dto, VoucherHead head, Map<String, Object> f, int count,
+			int doc, String debitText, List<DesktopLine> out) {
+		String vhRemarks = nz(dto.getRemarks()).trim();
+		String chequeNo = nz(dto.getChequeNo());
+		boolean auto = doc == 4 && flag(f, "autoRemarksForReceiptsThroughBank");
+		for (VoucherRequestDto.VoucherDetailRowDto r : dto.getDetails()) {
+			DesktopLine dl = new DesktopLine();
+			String rowRemarks = nz(r.getComments());
+			String acTitle = accountTitle(r.getAccountId());
+			String deskVd;
+			String remarksAuto = "";
+			if (auto) {
+				remarksAuto = vhRemarks + "  CHEQUE NO: " + chequeNo + "   RECEIVED FROM   " + acTitle
+						+ "     DEPOSITED INTO   " + debitText.trim();
+				deskVd = remarksAuto;
+				if (count == 1) vhRemarks = remarksAuto;
+			} else {
+				deskVd = !vhRemarks.isEmpty() ? vhRemarks : rowRemarks;
+			}
+			if (count == 1 && vhRemarks.isEmpty()) vhRemarks = deskVd;
+			dl.mirrorComments = deskVd;
+			dl.comments = auto ? remarksAuto : rowRemarks;
+			dl.setCheque = true;                            // vd/vd2: InvoiceNoRefId = vh.CheqId, CheqNoDetail, DCheqDate
+			dl.invoiceNoRefId = dto.getCheqId() == null ? 0 : dto.getCheqId();
+			dl.cheqNo = chequeNo;
+			dl.cheqDate = dto.getChequeDate();
+			out.add(dl);
+		}
+		head.setRemarks(vhRemarks);
+		head.setRemarksOtherLingo("");                      // vh.RemarksOtherLingo = ""
+		head.setCheqId(dto.getCheqId() == null ? 0 : dto.getCheqId());
+	}
+
+	/** ContraVoucher.cs Insert():504-610 (desktop "vd" = grid debit row, "vd2" = credit mirror). */
+	private void contraVoucher(VoucherRequestDto dto, VoucherHead head, Map<String, Object> f, int count,
+			String creditText, List<DesktopLine> out) {
+		String vhRemarks = nz(dto.getRemarks()).trim();
+		String chequeNo = nz(dto.getChequeNo());
+		String payTitle = nz(dto.getPayTitle()).trim();
+		String chqDate = shortDate(dto.getChequeDate());
+		String credit = creditText.trim();
+		boolean auto = flag(f, "autoRemarksForPaymentThroughBank");
+		boolean dn = flag(f, "autoRemarksIncludeChequeDateAndNumber"), cn = flag(f, "autoRemarksIncludeChequeNumber");
+		boolean pt = flag(f, "autoRemarksIncludePayeeTitle"), hr = flag(f, "autoRemarksIncludeHeaderRemarks");
+		boolean dr = flag(f, "autoRemarksIncludeDetailRemarks");
+		String acTitle = "";
+		Integer lastAccount = null;
+		for (VoucherRequestDto.VoucherDetailRowDto r : dto.getDetails()) {
+			DesktopLine dl = new DesktopLine();
+			String row = nz(r.getComments());
+			String remarksAuto = "";
+			if (auto) {
+				acTitle = accountTitle(r.getAccountId());
+				String tail = " Credit Account: " + credit + " TRANSFER TO: " + acTitle;
+				if (dn && pt) remarksAuto = " CHEQUE DATE: " + chqDate + " CHEQUE NO: " + chequeNo + " PayTitle: " + payTitle + tail;
+				else if (dn) remarksAuto = " CHEQUE DATE: " + chqDate + " CHEQUE NO: " + chequeNo + tail;
+				else if (cn && pt) remarksAuto = " CHEQUE NO: " + chequeNo + " PayTitle: " + payTitle + tail;
+				else if (!pt) remarksAuto = tail;
+				else remarksAuto = " PayTitle: " + payTitle + tail;
+				boolean contains = vhRemarks.contains("CHEQUE DATE") || vhRemarks.contains("CHEQUE NO")
+						|| vhRemarks.contains("PayTitle") || vhRemarks.contains("Credit Account");
+				if (hr && dr) remarksAuto = (contains ? "" : vhRemarks) + " " + remarksAuto + " " + row;
+				else if (hr) remarksAuto = (contains ? "" : vhRemarks) + " " + remarksAuto;
+				else if (dr) remarksAuto = remarksAuto + " " + row;
+				dl.comments = remarksAuto;
+				dl.commentsOther = row;
+				if (count == 1) {
+					head.setRemarksOtherLingo(!vhRemarks.isEmpty() ? vhRemarks : null);
+					vhRemarks = remarksAuto;
+				}
+			} else if (!chequeNo.isEmpty()) {
+				dl.comments = "CHEQUE NO: " + chequeNo + ", " + row;
+				dl.commentsOther = row;
+			} else {
+				dl.comments = row;
+				dl.commentsOther = row;
+			}
+			if (auto) {
+				dl.mirrorComments = remarksAuto;
+				dl.mirrorCommentsOther = row;
+			} else if (count == 1 && !vhRemarks.trim().isEmpty()) {
+				dl.mirrorComments = vhRemarks.trim();
+				dl.mirrorCommentsOther = dl.commentsOther;
+			} else {
+				dl.mirrorComments = dl.comments;
+				dl.mirrorCommentsOther = row;
+			}
+			if (count == 1 && vhRemarks.isEmpty()) vhRemarks = dl.mirrorComments;
+			dl.setCheque = true;                            // InvoiceNoRefId = CmbCheqNo.Value on both rows
+			dl.invoiceNoRefId = dto.getCheqId() == null ? 0 : dto.getCheqId();
+			dl.cheqNo = chequeNo;
+			dl.cheqDate = dto.getChequeDate();
+			lastAccount = r.getAccountId();
+			out.add(dl);
+		}
+		head.setRemarks(vhRemarks);
+		head.setCheqId(dto.getCheqId() == null ? 0 : dto.getCheqId());
+		head.setPayTitle(payTitle);
+		if (lastAccount != null) head.setAgainstAccountId(lastAccount); // vh.AgainstAccountId = vd2.AgainstAccountId
+	}
+
 }

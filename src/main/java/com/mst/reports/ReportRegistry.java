@@ -585,13 +585,16 @@ public class ReportRegistry {
 
         /* CommonServices.SaleOrderReports273 (CommonServices.cs:8978) - the Sale Order "273-Print".
            Same procedure and sub-report as 273_01; the desktop only picks another .rpt.
-           The sub-report procedure's only parameter is @OrderId (procdure.sql), not @Id. */
+           The sub-report procedure's only parameter is @OrderId (procdure.sql), not @Id.
+           The DAL (SaleOrderReports.SaleOrderReports273, 0129_...SaleOrderReports.cs:34-40) sends
+           obj.Id as @OrderId - the procedure filters on @OrderId and never reads @Id, so sending
+           @Id returned EVERY order of the company. */
         add(new ReportDefinition("so-273", "273-InvRptSaleOrderSlip.rpt",
                 "Sp_SaleOrder_RiceSlip_Rpt",
                 "CommonServices.SaleOrderReports273 (CommonServices.cs:8978)",
                 ps(P("@OrganizationId","session:organizationId"),
                    P("@CompanyId","session:companyId"),
-                   P("@Id","arg:id")),
+                   P("@OrderId","arg:id")),
                 subs(new ReportDefinition.SubReport("SaleOrderCustomerExpense_SubReport.rpt",
                             "[dbo].[USP_SaleOrderCustomerExpense_SubReport]", ps(P("@OrderId","arg:id"))))));
 
@@ -601,7 +604,7 @@ public class ReportRegistry {
                 "CommonServices.BookOrderReports273A",
                 ps(P("@OrganizationId","session:organizationId"),
                    P("@CompanyId","session:companyId"),
-                   P("@Id","arg:id")),
+                   P("@OrderId","arg:id")),
                 Collections.emptyList()));
 
         // CommonServices.SaleOrderReports273_01 - Rice slip with two sub-reports
@@ -610,7 +613,7 @@ public class ReportRegistry {
                 "CommonServices.SaleOrderReports273_01 (CommonServices.cs:9091)",
                 ps(P("@OrganizationId","session:organizationId"),
                    P("@CompanyId","session:companyId"),
-                   P("@Id","arg:id")),
+                   P("@OrderId","arg:id")),
                 subs(new ReportDefinition.SubReport("SaleOrderCustomerExpense_SubReport.rpt",
                             "[dbo].[USP_SaleOrderCustomerExpense_SubReport]", ps(P("@OrderId","arg:id"))))));
 

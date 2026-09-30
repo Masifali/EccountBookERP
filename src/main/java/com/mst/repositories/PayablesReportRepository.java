@@ -34,6 +34,9 @@ public class PayablesReportRepository {
         result.put("parties",jdbc.queryForList("EXEC dbo.Usp_AllComboAgainstPurchaseInvoice @OrganizationId=?, @CompanyId=?",u.getOrganizationId(),u.getCompanyId()));
         result.put("parents",jdbc.queryForList("EXEC dbo.Sp_ChartofAccount_GetAllMethodFromCOA @OrganizationId=?, @CompanyId=?, @FinancialYearId=?, @Account_Level=3, @AccountTypeId=3, @AccountClassIds='2,3', @CoaType='ReadAllAccountGroup'",u.getOrganizationId(),u.getCompanyId(),year));
         result.put("groups",jdbc.queryForList("EXEC dbo.Sp_AcLookUps_GetAllMethod @OrganizationId=?, @CompanyId=?, @AcLookUpTypesId=1, @Activity='ReadAll'",u.getOrganizationId(),u.getCompanyId()));
+        /* DataGridHistory_LinkClicked: PartyName opens the ledger from ActiveYr.Start_Period when From Date is unticked. */
+        List<Map<String,Object>> years=jdbc.queryForList("EXEC dbo.Proc_FinancialYear_ReadActiveByOrganizationIdNCompanyId @OrganizationId=?, @CompanyId=?",u.getOrganizationId(),u.getCompanyId());
+        result.put("year",years.stream().filter(y->y.get("Id") instanceof Number && ((Number)y.get("Id")).intValue()==year).findFirst().orElse(years.isEmpty()?null:years.get(0)));
         return result;
     }
 

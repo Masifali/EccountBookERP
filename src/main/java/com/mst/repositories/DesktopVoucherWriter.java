@@ -114,6 +114,13 @@ public class DesktopVoucherWriter {
         /* Step 3 */
         BigDecimal limitAmount = BigDecimal.ZERO;
         for (ContraVoucherDto.Detail d : details) {
+            /* DAL 0586:69-79 - for a Journal Voucher (DocumentTypeId 5) every line is paired with
+               its neighbour: an even LineId gets SubNo = LineId - 1, an odd one SubNo = LineId + 1.
+               No other document type is touched, so Contra's behaviour is unchanged. */
+            if (head.DocumentTypeId != null && head.DocumentTypeId == 5) {
+                int lid = d.LineId == null ? 0 : d.LineId;
+                d.SubNo = (lid % 2 == 0) ? lid - 1 : lid + 1;
+            }
             d.VoucherHeadId = id;
             limitAmount = limitAmount.add(BigDecimal.valueOf(d.DebitAmount == null ? 0d : d.DebitAmount));
             Integer detailId = execReturningId(P_DET_INS, d);

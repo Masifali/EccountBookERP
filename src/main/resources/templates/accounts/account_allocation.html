@@ -109,81 +109,154 @@
 <body>
 
     <div class="erp-top-header">
-        <div class="header-item"><i class="fa fa-arrow-right" style="margin-right:8px;"></i> Golden Ace ERP</div>
-        <div class="header-item"><i class="fa fa-user" style="margin-right:6px;"></i> <span th:text="${#authentication != null ? #authentication.name : 'User'}">User</span></div>
+        <div class="header-item"><i class="fa fa-sitemap" style="margin-right:8px;"></i> Accounts Allocation</div>
         <div class="header-item" style="margin-left:auto; color:#ffeb3b;"><a th:href="@{/accounts/dashboard}" style="color:#ffeb3b; text-decoration:none;"><i class="fa fa-dashboard"></i> Back to Accounts Dashboard</a></div>
     </div>
 
     <div class="erp-sub-bar">
-        <i class="fa fa-window-maximize" style="margin-right: 6px;"></i>
-        <span>Screens &gt; Accounts &gt; <strong>Account Allocation</strong></span>
+        <button type="button" class="btn-erp" id="btnRefresh" style="padding:1px 10px;"><i class="fa fa-refresh"></i> Refresh</button>
     </div>
 
     <div class="erp-main-canvas">
         <div class="erp-panel">
-            <div class="erp-panel-header">
-                <span><i class="fa fa-sitemap"></i> Account Allocation to Locations / Branches</span>
-                <span style="font-size:12px; font-weight:normal; background:#004d40; padding:2px 8px; border-radius:2px;">Multi-Company Allocation</span>
+            <div class="erp-panel-header"><span>Accounts Allocation</span></div>
+
+            <div class="form-inline" style="margin-bottom:10px; background:#f5f5f5; padding:10px; border:1px solid #e0e0e0; display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+                <div><label style="display:block; font-weight:bold;">To Company</label>
+                    <select id="cmbToCompany" class="form-control" style="min-width:220px;"></select></div>
+                <div><label style="display:block; font-weight:bold;">Financial Year</label>
+                    <select id="CmbFinancialYear" class="form-control" style="min-width:140px;"></select></div>
+                <div><label style="display:block; font-weight:bold;">Account Type</label>
+                    <select id="CmbAccountType" class="form-control" style="min-width:200px;"></select></div>
+                <div><button type="button" class="btn-erp" id="btnShow">Show</button></div>
             </div>
 
-            <!-- Target Location Selector -->
-            <form method="get" th:action="@{/accounts/allocation}" class="form-inline" style="margin-bottom:15px; background:#f5f5f5; padding:10px; border:1px solid #e0e0e0;">
-                <label style="margin-right:8px; font-weight:bold;">Target Location / Company:</label>
-                <select name="companyId" class="form-control" onchange="this.form.submit()" style="min-width:240px; margin-right:15px;">
-                    <option value="0">-- Select Location --</option>
-                    <option th:each="c : ${companies}" th:value="${c.id}" th:selected="${c.id == selCompanyId}" th:text="${c.compName}"></option>
-                </select>
-
-                <button type="button" class="btn-erp" onclick="toggleCheckboxes(true)"><i class="fa fa-check-square-o"></i> Select All</button>
-                <button type="button" class="btn-erp" onclick="toggleCheckboxes(false)" style="margin-left:6px;"><i class="fa fa-square-o"></i> Unselect All</button>
-            </form>
-
-            <!-- Save Form -->
-            <form th:action="@{/accounts/allocation/save}" method="post">
-                <input type="hidden" name="companyId" th:value="${selCompanyId}"/>
-
-                <div style="overflow-x:auto; max-height:450px;">
-                    <table class="erp-table">
-                        <thead>
-                            <tr>
-                                <th style="width:40px; text-align:center;">Allocate</th>
-                                <th style="width:140px;">Account Code</th>
-                                <th>Account Title</th>
-                                <th>Account Group</th>
-                                <th>Account Level</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="acc : ${allAccounts}">
-                                <td style="text-align:center;">
-                                    <input type="checkbox" name="allocatedAccountIds" class="chk-account" th:value="${acc.id}" th:checked="${allocatedAccountIds != null and allocatedAccountIds.contains(acc.id)}"/>
-                                </td>
-                                <td style="font-weight:bold; color:#00796B;" th:text="${acc.accountCode}"></td>
-                                <td th:text="${acc.accountTitle}"></td>
-                                <td th:text="${acc.accountGroup}"></td>
-                                <td th:text="${acc.accountLevel}"></td>
-                            </tr>
-                            <tr th:if="${allAccounts == null or allAccounts.isEmpty()}">
-                                <td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">No accounts found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="row">
+                <div class="col-md-6">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#00796B; color:#fff; padding:4px 8px;">
+                        <strong>Pending Accounts For Allocation</strong>
+                        <button type="button" class="btn-erp" id="BtnAllocateAccounts" style="padding:1px 8px;"><i class="fa fa-arrow-right"></i> Allocate</button>
+                    </div>
+                    <div style="overflow:auto; max-height:460px;">
+                        <table class="erp-table" id="GridUnAllocatedAccounts">
+                            <thead><tr><th style="width:60px; text-align:center;"><input type="checkbox" class="chk-all" data-grid="GridUnAllocatedAccounts"/> Select</th><th style="width:90px;">AccountCode</th><th>AccountTitle</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
-
-                <div style="margin-top:15px;">
-                    <button type="submit" class="btn-erp" style="background:#00796B; color:white;"><i class="fa fa-save"></i> Save Allocation</button>
-                    <a th:href="@{/accounts/dashboard}" class="btn-erp" style="text-decoration:none;"><i class="fa fa-times"></i> Cancel</a>
+                <div class="col-md-6">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#00796B; color:#fff; padding:4px 8px;">
+                        <strong>Allocated Accounts</strong>
+                        <button type="button" class="btn-erp" id="btnDeAllocate" style="padding:1px 8px;"><i class="fa fa-arrow-left"></i> Un-Allocate</button>
+                    </div>
+                    <div style="overflow:auto; max-height:460px;">
+                        <table class="erp-table" id="GridAllocatedAccounts">
+                            <thead><tr><th style="width:60px; text-align:center;"><input type="checkbox" class="chk-all" data-grid="GridAllocatedAccounts"/> Select</th><th style="width:90px;">AccountCode</th><th>AccountTitle</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script>
-        function toggleCheckboxes(check) {
-            $('.chk-account').prop('checked', check);
-        }
+        /* AcfrmAcAllocation, event for event (see AccountAllocationDesktopService). */
+        (function () {
+            function v(r, k) { if (!r) return null; if (r[k] !== undefined) return r[k]; var l = k.toLowerCase(); for (var x in r) if (x.toLowerCase() === l) return r[x]; return null; }
+            function esc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+            function bind(sel, rows, idKey, textKey) {
+                var cur = $(sel).val(), html = '<option value=""></option>';
+                (rows || []).forEach(function (r) { html += '<option value="' + esc(v(r, idKey)) + '">' + esc(v(r, textKey)) + '</option>'; });
+                $(sel).html(html);
+                if (cur && $(sel).find('option[value="' + cur + '"]').length) $(sel).val(cur);
+            }
+            function selText(sel) { var o = $(sel).find('option:selected'); return o.length && o.val() !== '' ? o.text() : ''; }
+
+            function grid(id, rows) {
+                var html = '';
+                (rows || []).forEach(function (r) {
+                    html += '<tr><td style="text-align:center;"><input type="checkbox" class="chk-row" data-id="' + esc(v(r, 'Id')) + '" data-title="' + esc(v(r, 'AccountTitle')) + '"/></td><td>'
+                         + esc(v(r, 'AccountCode')) + '</td><td>' + esc(v(r, 'AccountTitle')) + '</td></tr>';
+                });
+                $('#' + id + ' tbody').html(html);
+                $('#' + id + ' .chk-all').prop('checked', false);
+            }
+            function clearAll() {
+                $('#CmbFinancialYear').html('<option value=""></option>');
+                $('#GridAllocatedAccounts tbody, #GridUnAllocatedAccounts tbody').html('');
+            }
+
+            /* companytofill + AccountTypeFill */
+            function load() {
+                $.get('/accounts/allocation/lookups', function (res) {
+                    $('#cmbToCompany').prop('disabled', false);
+                    bind('#cmbToCompany', res.companies, 'Id', 'CompName');
+                    bind('#CmbAccountType', res.accountTypes, 'Id', 'AccountType');
+                    var own = null;
+                    (res.companies || []).forEach(function (c) { if (String(v(c, 'Id')) === String(res.currentCompanyId)) own = c; });
+                    if (own && v(own, 'CompType') === 'Branch') {
+                        $('#cmbToCompany').val(String(res.currentCompanyId)).prop('disabled', true);
+                        if ($('#GridAllocatedAccounts tbody tr').length === 0 && $('#GridUnAllocatedAccounts tbody tr').length === 0) show(true);
+                    }
+                });
+            }
+
+            /* cmbToCompany_Leave (withYears) / btnShow_Click */
+            function show(withYears) {
+                var company = parseInt($('#cmbToCompany').val() || 0);
+                if (!company) { clearAll(); alert('Select Company First'); return; }
+                $.get('/accounts/allocation/show', { companyId: company, accountTypeIds: $('#CmbAccountType').val() || '', withYears: withYears }, function (res) {
+                    if (!res.success) { alert(res.message); return; }
+                    grid('GridUnAllocatedAccounts', res.pending);
+                    grid('GridAllocatedAccounts', res.allocated);
+                    if (withYears) { $('#CmbFinancialYear').html(''); bind('#CmbFinancialYear', res.years, 'Id', 'FinancialYearCode'); $('#CmbFinancialYear').val(''); }
+                });
+            }
+
+            function allocate() {
+                if (selText('#cmbToCompany').trim() === '') { alert('Select Company First'); $('#cmbToCompany').focus(); return; }
+                if (selText('#CmbFinancialYear').trim() === '') { alert('Select Financial Year First'); $('#CmbFinancialYear').focus(); return; }
+                var rows = [];
+                $('#GridUnAllocatedAccounts .chk-row:checked').each(function () { rows.push({ id: parseInt($(this).attr('data-id')), accountTitle: $(this).attr('data-title') }); });
+                if (rows.length === 0) { alert("Select Row's First To Allocate"); return; }
+                $.ajax({
+                    url: '/accounts/allocation/save', type: 'POST', contentType: 'application/json',
+                    data: JSON.stringify({ companyId: parseInt($('#cmbToCompany').val()), companyText: selText('#cmbToCompany'),
+                                           financialYearId: parseInt($('#CmbFinancialYear').val() || 0), financialYearText: selText('#CmbFinancialYear'), rows: rows }),
+                    success: function (res) { alert(res.message); if (res.success) show(false); },
+                    error: function () { alert('Server error while allocating.'); }
+                });
+            }
+
+            function unAllocate() {
+                var ids = [];
+                $('#GridAllocatedAccounts .chk-row:checked').each(function () { ids.push(parseInt($(this).attr('data-id'))); });
+                if (ids.length === 0) { alert("Checked Row's first To Un-Allocate Accounts"); return; }
+                var company = parseInt($('#cmbToCompany').val() || 0);
+                if (!(company > 0)) { alert('Select Company First To Un-Allocate Accounts'); return; }
+                if (!confirm('Are you sure to UnAllocate Accounts?')) return;
+                $.ajax({
+                    url: '/accounts/allocation/unallocate?companyId=' + company, type: 'POST', contentType: 'application/json',
+                    data: JSON.stringify(ids),
+                    success: function (res) { alert(res.message); if (res.success) show(false); },
+                    error: function () { alert('Server error while un-allocating.'); }
+                });
+            }
+
+            $(function () {
+                $('#cmbToCompany').on('change', function () { show(true); });
+                $('#btnShow').on('click', function () { show(false); });
+                $('#BtnAllocateAccounts').on('click', allocate);
+                $('#btnDeAllocate').on('click', unAllocate);
+                $('#btnRefresh').on('click', load);
+                $(document).on('change', '.chk-all', function () { $('#' + $(this).data('grid') + ' .chk-row').prop('checked', this.checked); });
+                $(document).on('keydown', function (e) { if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); load(); } });
+                load();
+            });
+        })();
     </script>
 </body>
 </html>

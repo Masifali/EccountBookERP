@@ -61,12 +61,8 @@ public class ReceivablesAgingRepository {
         data.put("costCenters", jdbc.queryForList("EXEC dbo.usp_getCostCenters @OrganizationId=?, @CompanyId=?, @UserId=?, @AppId=?", org, comp, u.getId(), u.getAppId()));
         List<Map<String, Object>> branches = new ArrayList<>();
         try { branches = jdbc.queryForList("EXEC dbo.USP_GetBranchesFromVouchersByAccountId @OrganizationId=?, @CompanyId=?", org, comp); } catch (Exception ignored) {}
-        if (branches.isEmpty()) {
-            try { branches = jdbc.queryForList("EXEC dbo.USP_GetBranchsAllocatedToUser @OrganizationId=?, @CompanyId=?, @UserId=?", org, comp, u.getId()); } catch (Exception ignored) {}
-        }
-        if (branches.isEmpty()) {
-            try { branches = jdbc.queryForList("SELECT ID as Id, BranchName FROM Branches"); } catch (Exception ignored) {}
-        }
+        /* BranchesFill(): VoucherHead.GetBranchesFromVouchersByAccountId(org, company, "", 0) only.
+           The desktop has no second or third source; an empty result leaves the combo empty. */
         for (Map<String, Object> map : branches) {
             Object id = map.get("Id") != null ? map.get("Id") : (map.get("id") != null ? map.get("id") : (map.get("BranchId") != null ? map.get("BranchId") : map.get("branchId")));
             Object name = map.get("BranchName") != null ? map.get("BranchName") : (map.get("branchName") != null ? map.get("branchName") : (map.get("Name") != null ? map.get("Name") : map.get("name")));
@@ -77,6 +73,9 @@ public class ReceivablesAgingRepository {
         data.put("features", jdbc.queryForList("EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?, @CompanyId=?", org, comp));
         data.put("branchId", u.getBranchesId());
         data.put("appId", u.getAppId());
+        /* grd_LinkClicked opens the ledger from clsGlobalVariables.ActiveYr.Start_Period. */
+        List<Map<String, Object>> years = jdbc.queryForList("EXEC dbo.Proc_FinancialYear_ReadActiveByOrganizationIdNCompanyId @OrganizationId=?, @CompanyId=?", org, comp);
+        data.put("year", years.isEmpty() ? null : years.get(0));
         return data;
     }
 

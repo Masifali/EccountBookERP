@@ -160,11 +160,21 @@ public class BankingManagementRestController {
 	// 3. BANK RECONCILIATION ENDPOINTS
 	// ==========================================
 
+	/* Screen 885 "Bank Reconciliation With Vouchers" now runs on the desktop's own procedures
+	   (BankReconciliationVouchersController, /accounts/api/bank-reconciliation-vouchers). These two
+	   endpoints were its fabricated backend - raw SQL over columns VoucherDetail does not have, no
+	   tenancy predicate, and inserts stamped OrganizationId/CompanyId/User 1 - and nothing calls
+	   them any more, so they refuse instead of reading or writing. */
+	private static final boolean RECONCILIATION_RETIRED = true;
+
 	@GetMapping("/reconciliation/vouchers")
 	public ResponseEntity<List<Map<String, Object>>> getReconciliationVouchers(
 			@RequestParam(value = "bankAccountId", required = false) Integer bankAccountId,
 			@RequestParam(value = "fromDate", required = false) String fromDate,
 			@RequestParam(value = "toDate", required = false) String toDate) {
+		if (RECONCILIATION_RETIRED) {
+			return ResponseEntity.status(org.springframework.http.HttpStatus.GONE).build();
+		}
 		
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT vh.Id as voucherHeadId, vh.VoucherNo as voucherNo, vh.VoucherDate as voucherDate, ")
@@ -203,6 +213,10 @@ public class BankingManagementRestController {
 
 	@PostMapping("/reconciliation/save")
 	public ResponseEntity<?> saveReconciliationBatch(@RequestBody List<Map<String, Object>> items) {
+		if (RECONCILIATION_RETIRED) {
+			return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+					.body("Retired: use /accounts/api/bank-reconciliation-vouchers (screen 885).");
+		}
 		try {
 			int count = 0;
 			for (Map<String, Object> item : items) {

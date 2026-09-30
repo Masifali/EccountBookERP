@@ -84,7 +84,9 @@ public class AccountsReportService {
         try {
             return jdbcTemplate.queryForList(sql.toString(), params.toArray());
         } catch (Exception e) {
-            return getGeneralLedgerFallback(accountId, fromDate, toDate, includeUnposted);
+            // Account Reports recheck (group F, 2026-09-30): no raw-SQL fallback - the fallback queried
+            // VoucherDetail/VoucherHead with no organization/company filter. The desktop shows the error.
+            throw new RuntimeException("Error loading General Ledger: " + e.getMessage(), e);
         }
     }
 

@@ -38,6 +38,7 @@
         .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
         .totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 8px; }
     </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body>
 
@@ -61,7 +62,7 @@
         <button type="button" class="win-btn">
             <i class="fa fa-paperclip text-info"></i> Attachment
         </button>
-        <button type="button" class="win-btn">
+        <button type="button" class="win-btn" onclick="printVoucher()">
             <i class="fa fa-print text-warning"></i> 102-Print
         </button>
         <button type="button" class="win-btn" onclick="$('#modalShortcuts').modal('show')">
@@ -79,166 +80,8 @@
     </div>
 
     <div id="tabFormContent" class="win-form-card">
-        <form id="formVoucher" onsubmit="event.preventDefault(); submitVoucher();">
-            
-            <div class="win-section-header">Main</div>
-            <div style="padding: 10px;">
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Cost Center</label></div>
-                            <div class="col-md-8">
-                                <select id="cmbCostCenter" class="win-input">
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Voucher Type</label></div>
-                            <div class="col-md-8">
-                                <select id="cmbVoucherType" class="win-input" disabled>
-                                    <option value="4" selected>Bank Receipt Voucher</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Voucher No</label></div>
-                            <div class="col-md-3">
-                                <input type="text" id="txtVoucherNo" class="win-input" readonly style="font-weight: bold; background: #f8fafc;"/>
-                            </div>
-                            <div class="col-md-2" style="padding-left: 0;"><label class="win-label">Date</label></div>
-                            <div class="col-md-3" style="padding-left: 0;">
-                                <input type="date" id="dtpVoucherDate" class="win-input"/>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-4"><label class="win-label">Debit Account (Bank)</label></div>
-                            <div class="col-md-8">
-                                <select id="cmbDebitAccount" class="win-input">
-                                    <!-- Populated dynamically via API -->
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-7">
-                        <div class="row" style="margin-bottom: 6px;">
-                            <div class="col-md-3"><label class="win-label">Cheque No</label></div>
-                            <div class="col-md-4">
-                                <input type="text" id="txtHeaderChequeNo" class="win-input" placeholder="Cheque No"/>
-                            </div>
-                            <div class="col-md-2"><label class="win-label">Cheque Date</label></div>
-                            <div class="col-md-3">
-                                <input type="date" id="dtpHeaderChequeDate" class="win-input"/>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3"><label class="win-label">Remarks</label></div>
-                            <div class="col-md-9">
-                                <textarea id="txtHeaderRemarks" class="win-textarea" placeholder="Enter bank receipt main remarks..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="win-section-header">Detail</div>
-            <div style="padding: 10px;">
-                <div class="detail-entry-bar">
-                    <div class="row" style="margin-bottom: 6px;">
-                        <div class="col-md-2">
-                            <label class="win-label">Receipt Type</label>
-                            <select id="cmbPaymentType" class="win-input">
-                                <option value="1">Receipt</option>
-                                <option value="2">General</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-4" style="position: relative;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label class="win-label">Credit Acc</label>
-                                <div>
-                                    <label style="font-size: 10px; cursor: pointer; margin-right: 6px;"><input type="radio" name="rdSearch" id="rdSearchTitle" checked/> Title</label>
-                                    <label style="font-size: 10px; cursor: pointer;"><input type="radio" name="rdSearch" id="rdSearchCode"/> Code</label>
-                                </div>
-                            </div>
-                            <input type="text" id="txtDebitAccSearch" class="win-input" placeholder="Type to search credit account title or code..." autocomplete="off" onkeyup="onDebitAccSearch(event)" oninput="onDebitAccSearch(event)" onfocus="onDebitAccSearch(event)"/>
-                            <input type="hidden" id="hdnDebitAccId" value="0"/>
-                            <input type="hidden" id="hdnDebitAccCode" value=""/>
-                            <input type="hidden" id="hdnDebitAccTitle" value=""/>
-                            
-                            <div id="popAccounts" class="search-popup">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Account Title</th>
-                                            <th style="width: 100px;">AccountCode</th>
-                                            <th style="width: 130px;">ParentAccountTitle</th>
-                                            <th style="width: 90px;">AccountClass</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbodyPopAccounts"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="win-label">Job/Lot</label>
-                            <select id="cmbJobLot" class="win-input">
-                                <option value="1">General</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="win-label">Credit Amount</label>
-                            <input type="number" step="0.01" id="txtDebitAmount" class="win-input" placeholder="0.00" style="text-align: right; font-weight: bold;"/>
-                        </div>
-
-                        <div class="col-md-1" style="display: flex; align-items: flex-end;">
-                            <button type="button" id="btnAddRow" class="win-btn win-btn-teal" style="width: 100%; height: 25px; justify-content: center;" onclick="addDetailRow()">
-                                <i class="fa fa-plus"></i> + Add
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-11">
-                            <label class="win-label">Remarks</label>
-                            <input type="text" id="txtLineRemarks" class="win-input" placeholder="Enter line item remarks..."/>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="max-height: 300px; overflow-y: auto; margin-top: 8px;">
-                    <table class="win-grid-table" id="tblGrid">
-                        <thead>
-                            <tr>
-                                <th style="width: 30px; text-align: center;">X</th>
-                                <th style="width: 110px;">Receipt Type</th>
-                                <th style="width: 90px;">Account Code</th>
-                                <th>Account Title</th>
-                                <th style="width: 100px;">Job / Lot</th>
-                                <th>Remarks</th>
-                                <th style="width: 120px; text-align: right;">Credit Amount</th>
-                                <th style="width: 90px;">Cheque Date</th>
-                                <th style="width: 90px;">Cheque No</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyGrid">
-                            <tr id="trEmptyGrid">
-                                <td colspan="9" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="totals-bar">
-                    <div>Total Debit: <span id="lblTotalDebit">0.00</span></div>
-                    <div>Total Credit: <span id="lblTotalCredit">0.00</span></div>
-                    <div>Difference: <span id="lblDiff">0.00</span></div>
-                </div>
-            </div>
-
-        </form>
+        <!-- Form tab rendered by countx_payment_receipt_voucher.js - ditto ReceiptsVoucherNew (Architecture.WinApp.Account_Definition, the non-tax form), DocumentTypeId 4. -->
+        <div id="prvForm"></div>
     </div>
 
     <div id="tabHistoryContent" class="win-form-card" style="display: none;">
@@ -353,297 +196,17 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/build/js/countx_voucher_desktop_config.js?v=20260930a}"></script>
+    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260930a}"></script>
+    <script th:src="@{/build/js/countx_crystal_print.js?v=20260930a}"></script>
+    <script th:src="@{/build/js/countx_payment_receipt_voucher.js?v=20260930a}"></script>
     <script>
-        let gridItems = [];
-
-        $(document).ready(function() {
-            const today = new Date().toISOString().split('T')[0];
-            $('#dtpVoucherDate').val(today);
-            $('#dtpHeaderChequeDate').val(today);
-
-            // Fetch Bank Accounts dynamically from DB API
-            $.get('/accounts/api/vouchers/cash-bank-accounts?type=bank', function(accounts) {
-                let opt = '<option value="0">...Select Any Value...</option>';
-                if (accounts && accounts.length > 0) {
-                    accounts.forEach((acc, idx) => {
-                        const id = acc.id || acc.Id;
-                        const title = acc.accountTitle || acc.AccountTitle || '';
-                        const selected = idx === 0 ? 'selected' : '';
-                        opt += `<option value="${id}" ${selected}>${title}</option>`;
-                    });
-                } else {
-                    opt += '<option value="102001" selected>MAIN BANK ACCOUNT - HBL</option>';
-                    opt += '<option value="102002">MEEZAN BANK LIMITED</option>';
-                }
-                $('#cmbDebitAccount').html(opt);
-            });
-
-            // Fetch next numeric code from stored procedure
-            $.get('/accounts/api/vouchers/next-code?documentTypeId=4', function(res) {
-                if (res && res.nextCode) {
-                    $('#txtVoucherNo').val(res.nextCode);
-                }
-            });
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const paramVoucherCode = urlParams.get('voucherCode') || urlParams.get('VoucherCode') || urlParams.get('fromDocNo');
-            const paramId = urlParams.get('id') || urlParams.get('Id');
-
-            if (paramId) {
-                loadBrvVoucherForEdit(parseInt(paramId));
-            } else if (paramVoucherCode) {
-                $.get('/accounts/api/vouchers/by-code?documentTypeId=4&voucherCode=' + encodeURIComponent(paramVoucherCode), function(voucher) {
-                    if (voucher && voucher.header) {
-                        loadBrvVoucherForEdit(voucher.header.id);
-                    } else {
-                        $.get('/accounts/api/vouchers/brv/history?fromDocNo=' + encodeURIComponent(paramVoucherCode) + '&toDocNo=' + encodeURIComponent(paramVoucherCode) + '&approvedStatus=all', function(res) {
-                            if (res && res.rows && res.rows.length > 0) {
-                                loadBrvVoucherForEdit(res.rows[0].id);
-                            }
-                        });
-                    }
-                }).fail(function() {
-                    $.get('/accounts/api/vouchers/brv/history?fromDocNo=' + encodeURIComponent(paramVoucherCode) + '&toDocNo=' + encodeURIComponent(paramVoucherCode) + '&approvedStatus=all', function(res) {
-                        if (res && res.rows && res.rows.length > 0) {
-                            loadBrvVoucherForEdit(res.rows[0].id);
-                        }
-                    });
-                });
-            }
-        });
-
-        function onDebitAccSearch(e) {
-            const query = $('#txtDebitAccSearch').val().trim();
-            if (query.length < 1) {
-                $('#popAccounts').hide();
-                return;
-            }
-
-            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
-                let html = '';
-                if (data && data.length > 0) {
-                    data.forEach(acc => {
-                        const id = acc.id || acc.ChartOfAccountId || 0;
-                        const code = acc.accountCode || acc.AccountCode || '';
-                        const title = acc.accountTitle || acc.AccountTitle || '';
-                        const parent = acc.parentAccountTitle || acc.ParentAccountTitle || 'Detail';
-                        const clsName = acc.className || acc.AccountClass || 'Assets';
-
-                        html += `<tr onclick="selectDebitAcc(${id}, '${code}', '${escapeQuotes(title)}')">
-                                    <td><strong>${title}</strong></td>
-                                    <td>${code}</td>
-                                    <td>${parent}</td>
-                                    <td>${clsName}</td>
-                                 </tr>`;
-                    });
-                    $('#tbodyPopAccounts').html(html);
-                    $('#popAccounts').show();
-                } else {
-                    $('#tbodyPopAccounts').html('<tr><td colspan="4" style="text-align:center; color:#888; padding:8px;">No matching accounts found</td></tr>');
-                    $('#popAccounts').show();
-                }
-            });
-        }
-
-        function escapeQuotes(str) { return str.replace(/'/g, "\\'").replace(/"/g, "&quot;"); }
-
-        function selectDebitAcc(id, code, title) {
-            $('#hdnDebitAccId').val(id);
-            $('#hdnDebitAccCode').val(code);
-            $('#hdnDebitAccTitle').val(title);
-            $('#txtDebitAccSearch').val(`${title} [${code}]`);
-            $('#popAccounts').hide();
-            $('#txtDebitAmount').focus();
-        }
-
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('#txtDebitAccSearch, #popAccounts').length) {
-                $('#popAccounts').hide();
-            }
-        });
-
-        let editingIndex = -1;
-
-        function addDetailRow() {
-            const accId = parseInt($('#hdnDebitAccId').val()) || 0;
-            const accCode = $('#hdnDebitAccCode').val();
-            const accTitle = $('#hdnDebitAccTitle').val();
-            const pType = $('#cmbPaymentType option:selected').text();
-            /* The desktop reads this with Conversion.ToInt(cell), which is 0 when the
-               picker is unset — never 1 (ReceiptsVoucherNew.cs:702/698,
-               VoucherEntry.cs:1757). A || 1 default silently posted the line
-               against whatever row happens to hold id 1. */
-            const pTypeId = parseInt($('#cmbPaymentType').val()) || 0;
-            const jobLot = $('#cmbJobLot option:selected').text();
-            /* The desktop reads this with Conversion.ToInt(cell), which is 0 when the
-               picker is unset — never 1 (ReceiptsVoucherNew.cs:702/698,
-               VoucherEntry.cs:1757). A || 1 default silently posted the line
-               against whatever row happens to hold id 1. */
-            const jobLotId = parseInt($('#cmbJobLot').val()) || 0;
-            const remarks = $('#txtLineRemarks').val().trim();
-            const amount = parseFloat($('#txtDebitAmount').val()) || 0.0;
-
-            if (!accCode || !accTitle) {
-                alert('Please select a Credit Account from the search list.');
-                $('#txtDebitAccSearch').focus();
-                return;
-            }
-
-            if (amount <= 0) {
-                alert('Please enter a valid Credit Amount greater than 0.');
-                $('#txtDebitAmount').focus();
-                return;
-            }
-
-            const item = {
-                chartOfAccountId: accId,
-                accountCode: accCode,
-                accountTitle: accTitle,
-                paymentType: pType,
-                paymentTypeId: pTypeId,
-                jobLot: jobLot,
-                jobLotId: jobLotId,
-                remarks: remarks,
-                debitAmount: 0.0,
-                creditAmount: amount,
-                chequeDate: $('#dtpHeaderChequeDate').val(),
-                chequeNo: $('#txtHeaderChequeNo').val().trim()
-            };
-
-            if (editingIndex >= 0) {
-                gridItems[editingIndex] = item;
-                editingIndex = -1;
-                $('#btnAddRow').html('<i class="fa fa-plus"></i> + Add');
-            } else {
-                gridItems.push(item);
-            }
-            renderGrid();
-
-            $('#hdnDebitAccId').val('0');
-            $('#hdnDebitAccCode').val('');
-            $('#hdnDebitAccTitle').val('');
-            $('#txtDebitAccSearch').val('');
-            $('#txtLineRemarks').val('');
-            $('#txtDebitAmount').val('');
-            $('#txtDebitAccSearch').focus();
-        }
-
-        function editDetailRow(index) {
-            const item = gridItems[index];
-            if (!item) return;
-            editingIndex = index;
-            $('#hdnDebitAccId').val(item.chartOfAccountId);
-            $('#hdnDebitAccCode').val(item.accountCode);
-            $('#hdnDebitAccTitle').val(item.accountTitle);
-            $('#txtDebitAccSearch').val(`${item.accountTitle} [${item.accountCode}]`);
-            $('#txtLineRemarks').val(item.remarks);
-            $('#txtDebitAmount').val(item.creditAmount);
-            $('#btnAddRow').html('<i class="fa fa-pencil"></i> Update');
-            $('#txtDebitAmount').focus();
-        }
-
-        function removeGridItem(index) {
-            gridItems.splice(index, 1);
-            if (editingIndex === index) {
-                editingIndex = -1;
-                $('#btnAddRow').html('<i class="fa fa-plus"></i> + Add');
-            }
-            renderGrid();
-        }
-
-        function renderGrid() {
-            let html = '';
-            let totalCredit = 0.0;
-
-            if (gridItems.length > 0) {
-                gridItems.forEach((item, idx) => {
-                    totalCredit += item.creditAmount;
-                    html += `<tr ondblclick="editDetailRow(${idx})" title="Double-click to edit this row">
-                                <td style="text-align:center;">
-                                    <button type="button" class="btn btn-xs btn-primary" onclick="editDetailRow(${idx})" style="margin-right:2px;"><i class="fa fa-pencil"></i></button>
-                                    <button type="button" class="btn btn-xs btn-danger" onclick="removeGridItem(${idx})">&times;</button>
-                                </td>
-                                <td>${item.paymentType}</td>
-                                <td>${item.accountCode}</td>
-                                <td><strong>${item.accountTitle}</strong></td>
-                                <td>${item.jobLot}</td>
-                                <td>${item.remarks}</td>
-                                <td style="text-align:right; font-weight:bold;">${item.creditAmount.toFixed(2)}</td>
-                                <td>${item.chequeDate || '-'}</td>
-                                <td>${item.chequeNo || '-'}</td>
-                             </tr>`;
-                });
-            } else {
-                html = '<tr id="trEmptyGrid"><td colspan="9" style="text-align: center; color: #888; padding: 20px;">No transaction detail items added yet</td></tr>';
-            }
-
-            $('#tbodyGrid').html(html);
-            $('#lblTotalDebit').text(totalCredit.toFixed(2));
-            $('#lblTotalCredit').text(totalCredit.toFixed(2));
-            $('#lblDiff').text('0.00');
-        }
-
-        let editingVoucherId = 0;
-
-        function submitVoucher() {
-            if (gridItems.length === 0) {
-                alert('Cannot save empty voucher. Please add at least one detail row to the grid.');
-                return;
-            }
-
-            // Field names below match VoucherRequestDto (id/documentTypeId/voucherCode/voucherDate/
-            // remarks/voucherAmount/refAccountId/chequeNo/chequeDate/details[].accountId/comments/
-            // debitAmount/creditAmount) exactly - the previous payload used unrelated names
-            // (voucherNo/creditAccountId/narration/totalAmount/chartOfAccountId/...) that do not exist
-            // on the DTO, so every save silently persisted a blank VoucherHead row with zero
-            // VoucherDetail rows.
-            const payload = {
-                id: editingVoucherId > 0 ? editingVoucherId : null,
-                documentTypeId: 4, // Bank Receipt Voucher
-                voucherCode: parseInt($('#txtVoucherNo').val()) || null,
-                voucherDate: $('#dtpVoucherDate').val(),
-                refAccountId: parseInt($('#cmbDebitAccount').val()) || null,
-                chequeNo: $('#txtHeaderChequeNo').val().trim(),
-                chequeDate: $('#dtpHeaderChequeDate').val(),
-                remarks: $('#txtHeaderRemarks').val().trim(),
-                voucherAmount: parseFloat($('#lblTotalCredit').text()) || 0.0,
-                details: gridItems.map(function(item) {
-                    return {
-                        accountId: item.chartOfAccountId,
-                        comments: item.remarks,
-                        debitAmount: item.debitAmount || 0.0,
-                        creditAmount: item.creditAmount || 0.0
-                    };
-                })
-            };
-
-            $.ajax({
-                url: '/accounts/api/vouchers/save',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(payload),
-                success: function(res) {
-                    alert(res.message || 'Bank Receipt Voucher saved successfully!');
-                    resetForm();
-                    if (typeof loadBrvHistory === 'function') loadBrvHistory();
-                },
-                error: function(err) {
-                    alert('Error saving voucher: ' + (err.responseJSON ? err.responseJSON.message : 'Server error'));
-                }
-            });
-        }
-
-        function resetForm() {
-            gridItems = [];
-            editingIndex = -1;
-            editingVoucherId = 0;
-            renderGrid();
-            window.location.reload();
-        }
-
-        function refreshPage() {
-            window.location.reload();
-        }
+        /* Form tab: countx_payment_receipt_voucher.js (PRV). History tab below is unchanged. */
+        PRV.init({ doc: 4 });
+        function submitVoucher() { PRV.save(); }
+        function resetForm() { PRV.reset(); }
+        function refreshPage() { window.location.reload(); }
+        function printVoucher() { PRV.print(); }
 
         function switchTab(tab) {
             if (tab === 'history') {
@@ -673,7 +236,7 @@
         let brvHistoryAccountsLoaded = false;
 
         function loadBrvHistoryAccounts() {
-            $.get('/accounts/api/vouchers/brv/history/accounts', function(accounts) {
+            $.get('/accounts/api/payment-receipt/4/history/accounts', function(accounts) {
                 const sel = $('#cmbAccountTitleBrv');
                 sel.find('option:not(:first)').remove();
                 (accounts || []).forEach(function(a) {
@@ -705,7 +268,7 @@
                 accountId: $('#cmbAccountTitleBrv').val(),
                 approvedStatus: $('#cmbApprovedStatusBrv').val()
             };
-            $.get('/accounts/api/vouchers/brv/history', params, function(res) {
+            $.get('/accounts/api/payment-receipt/4/history', params, function(res) {
                 const tbody = $('#tbodyBrvHistoryGrid');
                 tbody.empty();
                 const rows = (res && res.rows) || [];
@@ -748,47 +311,9 @@
 
         // Loads the complete real voucher (header + all detail rows) from GET /accounts/api/vouchers/{id}
         // and preserves its real Id so the next Save updates this same voucher instead of duplicating it.
-        function loadBrvVoucherForEdit(id) {
-            $.get('/accounts/api/vouchers/' + id, function(voucher) {
-                if (!voucher || !voucher.header) return;
-                switchTab('form');
-                const header = voucher.header;
-                editingVoucherId = header.id || id;
-                $('#txtVoucherNo').val(header.voucherCode != null ? header.voucherCode : '');
-                if (header.voucherDate) $('#dtpVoucherDate').val(header.voucherDate);
-                $('#txtHeaderRemarks').val(header.remarks || '');
-                if (header.chequeNo) $('#txtHeaderChequeNo').val(header.chequeNo);
-                if (header.chequeDate) $('#dtpHeaderChequeDate').val(header.chequeDate);
-                if (header.refAccountId) $('#cmbDebitAccount').val(header.refAccountId);
 
-                const details = voucher.details || [];
-                gridItems = details.map(function(d) {
-                    return {
-                        chartOfAccountId: d.accountId,
-                        accountCode: d.accountCode || '',
-                        accountTitle: d.accountTitle || '',
-                        paymentType: 'Receipt',
-                        paymentTypeId: 1,
-                        jobLot: 'General',
-                        jobLotId: 1,
-                        remarks: d.comments || '',
-                        debitAmount: parseFloat(d.debitAmount || 0),
-                        creditAmount: parseFloat(d.creditAmount || 0),
-                        chequeDate: '',
-                        chequeNo: ''
-                    };
-                });
-                renderGrid();
-            }).fail(function() {
-                alert('Could not load Bank Receipt Voucher #' + id);
-            });
-        }
-
-        $(document).on('keydown', function(e) {
-            if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); resetForm(); }
-            if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); submitVoucher(); }
-            if (e.ctrlKey && e.keyCode === 82) { e.preventDefault(); refreshPage(); }
-        });
+        // ReadById()
+        function loadBrvVoucherForEdit(id) { PRV.loadForEdit(id); }
     </script>
 <script th:src="@{/build/js/countx_cost_center.js?v=20260920a}"></script>
 </body>

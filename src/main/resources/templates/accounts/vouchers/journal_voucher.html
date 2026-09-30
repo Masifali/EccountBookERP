@@ -337,6 +337,7 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/build/js/countx_voucher_desktop_config.js?v=20260930a}"></script>
     <script>
         let gridItems = [];
         let editingIndex = -1;
@@ -371,7 +372,9 @@
                 return;
             }
 
-            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
+            // JournalVoucher.DebitAccountTitleFill() (screen 860): InventoryRelatedAccountsShowInVouchers
+            // off -> no Inventory(4)/Cost Of Sales(12) accounts and no PL-note-2 accounts.
+            $.get(VoucherDesk.detailAccountsUrl('journal', query), function(data) {
                 let html = '';
                 if (data && data.length > 0) {
                     data.forEach(acc => {
@@ -565,7 +568,7 @@
                 })
             };
 
-            $.ajax({
+            VoucherDesk.busy($('button[onclick="submitVoucher()"]').first(), function() { return $.ajax({
                 url: '/accounts/api/vouchers/save',
                 type: 'POST',
                 contentType: 'application/json',
@@ -578,7 +581,7 @@
                 error: function(err) {
                     alert('Error saving voucher: ' + (err.responseJSON ? err.responseJSON.message : 'Server error'));
                 }
-            });
+            }); });
         }
 
         function resetForm() {

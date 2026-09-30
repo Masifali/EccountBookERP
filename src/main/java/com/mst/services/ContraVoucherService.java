@@ -79,6 +79,9 @@ public class ContraVoucherService {
     @Autowired private DesktopVoucherWriter writer;
     @Autowired private CurrentUserContext currentUserContext;
     @Autowired private JdbcTemplate jdbcTemplate;
+    /* 2026-09-30 recheck: the credit-account list (dtcoalst) is needed server-side for the
+       auto-remarks text and the negative-balance message. */
+    @Autowired private DesktopVoucherScreenService screens;
 
     // =============================================================================== save
 
@@ -121,7 +124,8 @@ public class ContraVoucherService {
         head.ProjectId            = nz(dto.ProjectId);
         head.RefAccountId         = nz(dto.RefAccountId);
         head.ChequeDate           = isoDay(dto.ChequeDate);
-        head.ChequeNo             = dto.ChequeNo;
+        /* :513 - vh.ChequeNo = CmbCheqNo.Text, which is "" (never null) when nothing is chosen. */
+        head.ChequeNo             = dto.ChequeNo == null ? "" : dto.ChequeNo;
         head.CheqId               = nz(dto.CheqId);
         head.PayTitle             = dto.PayTitle;
         head.Remarks              = dto.Remarks == null ? "" : dto.Remarks.trim();
@@ -132,7 +136,9 @@ public class ContraVoucherService {
         head.IsApproved           = Boolean.FALSE;
         head.OrganizationId       = orgId;
         head.CompanyId            = compId;
-        head.BranchId             = branchId;
+        /* ContraVoucher.Insert() (:504-524) never assigns vh.BranchId, so the desktop stores 0.
+           It used to be the user's branch here. The detail lines still carry the branch (:596). */
+        head.BranchId             = 0;
         head.FinancialYearId      = yearId;
         head.EntryUser            = userId;
         head.ModifyUser           = userId;
@@ -153,27 +159,82 @@ public class ContraVoucherService {
         List<ContraVoucherDto.CostCentre> costCentres = new ArrayList<>();
         double voucherAmount = 0d;
         int lineId = 1;
+        int count = dto.rows.size();
 
-        for (int i = 0; i < dto.rows.size(); i++) {
+        /* DefaultConfigurations() :1857-1886 - the auto-remarks switches. For company 78 the dump
+           has AutoRemarksForPaymentThroughBank = True, so this branch is the one the desktop takes
+           there; it was not implemented before this recheck. */
+        boolean autoRemarks       = configFlag(orgId, compId, "AutoRemarksForPaymentThroughBank");
+        boolean autoHeaderRemarks = configFlag(orgId, compId, "AutoRemarksIncludeHeaderRemarks");
+        boolean autoChqDateAndNum = configFlag(orgId, compId, "AutoRemarksIncludeChequeDateAndNumber");
+        boolean autoChqNumber     = configFlag(orgId, compId, "AutoRemarksIncludeChequeNumber");
+        boolean autoPayeeTitle    = configFlag(orgId, compId, "AutoRemarksIncludePayeeTitle");
+        boolean autoDetailRemarks = configFlag(orgId, compId, "AutoRemarksIncludeDetailRemarks");
+        /* dtcoalst (AccountsComboBind :1107): CmbCreditAccount.Text is the chosen row's AccountTitle,
+           and AcTitle is looked up in the same list (:539-545). */
+        Map<Integer, String> titles = accountTitles();
+        String creditText = titles.getOrDefault(nz(dto.RefAccountId), "").trim();
+        /* Conversion.ToDateTime(vh.ChequeDate).ToShortDateString() - the desktop machines' short date
+           pattern is dd-MMM-yy (stored comments read "CHEQUE DATE: 05-Aug-26"). */
+        String chequeShort = shortDate(head.ChequeDate);
+        String acTitle = "";      // declared before the row loop (:528), so it carries over rows
+
+        for (int i = 0; i < count; i++) {
             ContraVoucherDto.Row r = dto.rows.get(i);
-            int sortNo = i + 1;                                // :546 / :601 — row index + 1
+            int sortNo = i + 1;                                // :548 / :602 - row index + 1
             double amount = nzd(r.Amount);
             String rowRemarks = r.Remarks == null ? "" : r.Remarks;
-
-            /* :576 — with a cheque number and auto-remarks off, the narration is prefixed. */
-            String comments = (head.ChequeNo != null && !head.ChequeNo.trim().isEmpty())
-                    ? "CHEQUE NO: " + head.ChequeNo + ", " + rowRemarks
-                    : rowRemarks;
+            String remarksAuto = "";
 
             ContraVoucherDto.Detail debit = new ContraVoucherDto.Detail();
-            debit.LineId                = lineId++;
+            if (autoRemarks && titles.containsKey(nz(r.AccountId))) {
+                acTitle = titles.get(nz(r.AccountId));
+            }
+            debit.LineId                = lineId;
             debit.SortNo                = sortNo;
             debit.AccountId             = nz(r.AccountId);
             debit.AgainstAccountId      = nz(dto.RefAccountId);
             debit.JobLotId              = nz(r.JobLotId);
-            debit.Comments              = comments;
-            debit.CommentsOtherLingo    = rowRemarks;
+            if (autoRemarks) {
+                /* :554-574 */
+                String tail = " Credit Account: " + creditText + " TRANSFER TO: " + acTitle;
+                if (autoChqDateAndNum && autoPayeeTitle) {
+                    remarksAuto = " CHEQUE DATE: " + chequeShort + " CHEQUE NO: " + head.ChequeNo + " PayTitle: " + head.PayTitle + tail;
+                } else if (autoChqDateAndNum) {
+                    remarksAuto = " CHEQUE DATE: " + chequeShort + " CHEQUE NO: " + head.ChequeNo + tail;
+                } else if (autoChqNumber && autoPayeeTitle) {
+                    remarksAuto = " CHEQUE NO: " + head.ChequeNo + " PayTitle: " + head.PayTitle + tail;
+                } else if (!autoPayeeTitle) {
+                    remarksAuto = tail;
+                } else {
+                    remarksAuto = " PayTitle: " + head.PayTitle + tail;
+                }
+                String hr = head.Remarks == null ? "" : head.Remarks;
+                boolean contains = hr.contains("CHEQUE DATE") || hr.contains("CHEQUE NO")
+                        || hr.contains("PayTitle") || hr.contains("Credit Account");
+                if (autoHeaderRemarks && autoDetailRemarks) {
+                    remarksAuto = (contains ? "" : hr) + " " + remarksAuto + " " + rowRemarks;
+                } else if (autoHeaderRemarks) {
+                    remarksAuto = (contains ? "" : hr) + " " + remarksAuto;
+                } else if (autoDetailRemarks) {
+                    remarksAuto = remarksAuto + " " + rowRemarks;
+                }
+                debit.Comments           = remarksAuto;
+                debit.CommentsOtherLingo = rowRemarks;
+                if (count == 1) {
+                    head.RemarksOtherLingo = !"".equals(hr) ? hr : null;
+                    head.Remarks = remarksAuto;
+                }
+            } else if (!"".equals(head.ChequeNo)) {
+                /* :576 - with a cheque number and auto-remarks off, the narration is prefixed. */
+                debit.Comments           = "CHEQUE NO: " + head.ChequeNo + ", " + rowRemarks;
+                debit.CommentsOtherLingo = rowRemarks;
+            } else {
+                debit.Comments           = rowRemarks;
+                debit.CommentsOtherLingo = rowRemarks;
+            }
             debit.DebitAmount           = amount;
+            voucherAmount += amount;
             debit.InvoiceNoRefId        = nz(dto.CheqId);
             debit.CheqNoDetail          = head.ChequeNo;
             debit.DCheqDate             = head.ChequeDate;
@@ -184,19 +245,27 @@ public class ContraVoucherService {
             debit.BranchesId            = branchFeature ? nz(r.BranchId) : branchId;
             debit.CostCenterId          = nz(r.CostCenterId);
             details.add(debit);
-            voucherAmount += amount;
+            lineId++;
 
             ContraVoucherDto.Detail credit = new ContraVoucherDto.Detail();
-            credit.LineId                = lineId++;
+            credit.LineId                = lineId;
             credit.SortNo                = sortNo;              // deliberately the SAME SortNo
             credit.AccountId             = nz(dto.RefAccountId);
             credit.AgainstAccountId      = nz(r.AccountId);
+            /* :605 - the header's AgainstAccountId follows the last row processed. */
+            head.AgainstAccountId        = nz(r.AccountId);
             credit.JobLotId              = nz(r.JobLotId);
-            /* :611 — with exactly one row and a non-empty header remarks, the credit line takes
-               the header's text; otherwise it copies the debit line's. */
-            credit.Comments              = (dto.rows.size() == 1 && !head.Remarks.isEmpty())
-                                            ? head.Remarks : debit.Comments;
-            credit.CommentsOtherLingo    = rowRemarks;
+            if (autoRemarks) {
+                credit.Comments           = remarksAuto;
+                credit.CommentsOtherLingo = rowRemarks;
+            } else if (count == 1 && !head.Remarks.trim().isEmpty()) {
+                /* :612 - one row and header remarks: the credit line takes the header's text. */
+                credit.Comments           = head.Remarks.trim();
+                credit.CommentsOtherLingo = debit.CommentsOtherLingo;
+            } else {
+                credit.Comments           = debit.Comments;
+                credit.CommentsOtherLingo = rowRemarks;
+            }
             credit.CreditAmount          = amount;
             credit.InvoiceNoRefId        = nz(dto.CheqId);
             credit.CheqNoDetail          = head.ChequeNo;
@@ -206,25 +275,26 @@ public class ContraVoucherService {
             credit.DExchangeCurrencyRate = nzd(dto.ExchangeCurrencyRate);
             credit.DCurrencyAmount       = nzd(r.FcyAmount);
             credit.BranchesId            = branchFeature ? nz(r.BranchId) : branchId;
-            /* :617 sets no CostCenterId on the credit line. */
-            details.add(credit);
-
-            /* :604 — the header's AgainstAccountId follows the last row processed. */
-            head.AgainstAccountId = nz(r.AccountId);
-
-            /* :630 — one row, empty header remarks: the header takes the detail's comments. */
-            if (dto.rows.size() == 1 && head.Remarks.isEmpty()) {
-                head.Remarks = debit.Comments;
+            /* :617-630 set no CostCenterId on the credit line. */
+            /* :631 - one row, empty header remarks: the header takes the credit line's comments. */
+            if (count == 1 && "".equals(head.Remarks)) {
+                head.Remarks = credit.Comments;
             }
+            details.add(credit);
+            lineId++;
+        }
 
-            /* §5 — a cost-centre line only for rows that name one. */
+        /* :638-663 - a cost-centre line (100%) for each grid row that names one, SortNo = the row's
+           index in the grid's DataTable + 1. */
+        for (int i = 0; i < count; i++) {
+            ContraVoucherDto.Row r = dto.rows.get(i);
             if (nz(r.CostCenterId) > 0) {
                 ContraVoucherDto.CostCentre c = new ContraVoucherDto.CostCentre();
                 c.Id           = 0;
-                c.SortNo       = sortNo;
+                c.SortNo       = i + 1;
                 c.CostCenterId = nz(r.CostCenterId);
-                c.costPrcent   = new BigDecimal("100");        // :673 — costPrcent = 100m
-                c.costAmount   = amount;
+                c.costPrcent   = new BigDecimal("100");
+                c.costAmount   = nzd(r.Amount);
                 costCentres.add(c);
             }
         }
@@ -234,7 +304,11 @@ public class ContraVoucherService {
         // ------------------------------------------------------- guards (§6 and §7 of the trace)
 
         negativeBalanceGuard(dto, head, voucherAmount, orgId, compId, yearId);
-        duplicateGuard(dto, details, head, orgId, compId, voucherDate, insert ? 1 : 2);
+        /* VoucherExistWithSameAmountInSameDate sends each debit line's own ActionId, which
+           ContraVoucher.Insert() never sets - so @ActionId = 0 and the procedure, by its own IF
+           branches, never returns a row: the desktop never shows this warning on Contra. It used to
+           be sent as 1/2 here, raising a question the desktop never asks. */
+        duplicateGuard(dto, details, head, orgId, compId, voucherDate, 0);
 
         // ------------------------------------------------------------------------------ write
 
@@ -290,13 +364,9 @@ public class ContraVoucherService {
                 throw new IllegalArgumentException("Please Select Account Title First");
             }
         }
-        /* Add_Click_1():413 — the desktop refuses these at row-add time, so a row that reaches
-           the server without them was not built by the screen. */
-        for (ContraVoucherDto.Row r : dto.rows) {
-            if (nz(r.AccountId) == 0)   throw new IllegalArgumentException("Debit Account Field Required");
-            if (nz(r.JobLotId) == 0)    throw new IllegalArgumentException("Job/Lot Field Required");
-            if (nzd(r.Amount) == 0d)    throw new IllegalArgumentException("Amount Field Required");
-        }
+        /* Add_Click_1():413's four checks run when a row is ADDED; the desktop grid stays editable
+           afterwards (grdSettings :1413 - Amount EditType 1, the combos EditType 4), and Insert()
+           does not repeat them. They are enforced on the page at add time, as on the desktop. */
     }
 
     // =============================================================================== guards
@@ -310,13 +380,17 @@ public class ContraVoucherService {
                                       double voucherAmount, int orgId, int compId, int yearId) {
         if (configFlag(orgId, compId, "DisableBothNegativeBalanceRestrictions")) return;
 
-        double closing = Math.round(writer.accountBalance(
+        /* Math.Round(double) is banker's rounding - Math.rint, not Math.round. */
+        double closing = Math.rint(writer.accountBalance(
                 orgId, compId, yearId, head.VoucherDate, nz(dto.RefAccountId)));
         if (voucherAmount <= closing) return;
 
+        /* :681 / :684 - the desktop's text names the credit account (CmbCreditAccount.Text) and
+           prints the two doubles with .NET's default formatting. */
         String message = "Debit Amount cannot be greater than Account Balance.\n"
-                + "Account Balance is " + trim(closing)
-                + " and Total Debit Amount is " + trim(voucherAmount) + ".";
+                + "Account '" + accountTitles().getOrDefault(nz(dto.RefAccountId), "").trim() + "' Balance is "
+                + ExpenseVoucherPlainService.net(closing)
+                + " and Total Debit Amount is " + ExpenseVoucherPlainService.net(voucherAmount) + ".";
 
         if (configFlag(orgId, compId, "is Minus balance Allowed")) {
             /* PreventNegativeBalanceEntry — an outright refusal, not a question. */
@@ -324,8 +398,7 @@ public class ContraVoucherService {
         }
         if (configFlag(orgId, compId, "DisplayWarningforNegativeBalance")
                 && !Boolean.TRUE.equals(dto.negativeBalanceAcknowledged)) {
-            throw new ConfirmationRequiredException(message + "\nDo you want to continue?",
-                                                    "negativeBalance");
+            throw new ConfirmationRequiredException(message, "negativeBalance");
         }
     }
 
@@ -363,6 +436,26 @@ public class ContraVoucherService {
     }
 
     // ============================================================================== helpers
+
+    /** Id -> AccountTitle of dtcoalst, the credit-account list (AccountsComboBind :1107). */
+    private Map<Integer, String> accountTitles() {
+        Map<Integer, String> m = new java.util.HashMap<>();
+        for (Map<String, Object> a : screens.contraAccounts()) {
+            m.put(DesktopVoucherScreenService.toInt(a.get("Id")), DesktopVoucherScreenService.str(a.get("AccountTitle")));
+        }
+        return m;
+    }
+
+    /** ToShortDateString() under the desktop's dd-MMM-yy short-date pattern. */
+    private static String shortDate(String isoDay) {
+        if (isoDay == null || isoDay.length() < 10) return "01-Jan-01";
+        try {
+            java.time.LocalDate d = java.time.LocalDate.parse(isoDay.substring(0, 10));
+            return d.format(java.time.format.DateTimeFormatter.ofPattern("dd-MMM-yy", Locale.ENGLISH));
+        } catch (Exception e) {
+            return isoDay;
+        }
+    }
 
     /** CommonServices.GenerateVoucherCode(10). */
     public int nextVoucherCode() {

@@ -14,12 +14,21 @@ public class DesktopInventoryItemRepository {
     private final JdbcTemplate jdbc;
     private final InventoryPosItemRepository items;
     public DesktopInventoryItemRepository(JdbcTemplate jdbc,InventoryPosItemRepository items){this.jdbc=jdbc;this.items=items;}
-    public Map<String,Object> lookups(UserAccount u){
+    public Map<String,Object> lookups(UserAccount u){return lookups(u,false);}
+    /** taxable = DefineTaxItem (screen 180): ItemCatagoryHistoryFill -> ItemCategory.Getall and CommonServices.GetItemTypeForComboServiceBind()
+     *  with NO parent filter, no parent-category history filter, no mother items, no party-processing flags. */
+    public Map<String,Object> lookups(UserAccount u,boolean taxable){
         var result=new LinkedHashMap<String,Object>();
+        if(taxable){
+            result.put("categories",jdbc.queryForList("EXEC dbo.Sp_ItemCategory_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),"ReadByOrganizationCompanyId"));
+            result.put("types",jdbc.queryForList("EXEC dbo.Sp_ItemType_GetAllMethod @OrganizationId=?, @CompanyId=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),"ReadByOrganizationCompanyId"));
+            result.put("parents",List.of());result.put("mothers",List.of());
+        }else{
         result.put("categories",jdbc.queryForList("EXEC dbo.Sp_ItemCategory_GetAllMethod @OrganizationId=?, @CompanyId=?, @Ids=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),PARENTS,"ReadByOrganizationCompanyId"));
         result.put("types",jdbc.queryForList("EXEC dbo.Sp_ItemType_GetAllMethod @OrganizationId=?, @CompanyId=?, @ParentCategoryIds=?, @Activity=?",u.getOrganizationId(),u.getCompanyId(),PARENTS,"ReadByOrganizationCompanyId"));
         result.put("parents",jdbc.queryForList("EXEC dbo.Sp_InventoryItemsOther_GetAllMethod @Activity=?","InventoryParentCategories").stream().filter(r->Set.of(1,2,3,4,6,10,11).contains(number(r.get("Id")))).toList());
         result.put("mothers",jdbc.queryForList("EXEC dbo.usp_getMotherItems @OrganizationId=?, @CompanyId=?",u.getOrganizationId(),u.getCompanyId()));
+        }
         result.put("classes",jdbc.queryForList("EXEC dbo.Sp_ItemClass_GetAllMethod @Activity=?","ReadAll").stream().filter(r->Set.of(1,6,7,8).contains(number(r.get("ClassId")))).toList());
         result.put("units",scoped(u,"Sp_UOM_GetAllMethod","ReadByOrganizationCompanyId"));
         result.put("groups",scoped(u,"Sp_ItemGroup_GetAllMethod","ReadAll"));
@@ -30,7 +39,7 @@ public class DesktopInventoryItemRepository {
         result.put("companies",jdbc.queryForList("EXEC dbo.Sp_Company_GetAllMethod @OrgCompanyTypeId=?, @Activity=?",u.getOrganizationId(),"ReadByOrganizationId"));
         var configs=new LinkedHashMap<String,Boolean>();
         for(String key:List.of("AutoCoaDefineByItemNameOnInsert","SameAccountForStockAndRevenue","ItemCodingEnable","All Account Allow on Item and Item Category"))configs.put(key,configuration(u,key));
-        result.put("configuration",configs);result.put("partyProcessing",new DesktopInventoryCategoryRepository(jdbc).feature(u,8));
+        result.put("configuration",configs);result.put("partyProcessing",!taxable&&new DesktopInventoryCategoryRepository(jdbc).feature(u,8));
         var accounts=scoped(u,"Sp_COAAllocation_GetAllMethod","COAAllocationSearch");
         boolean same=configs.get("AutoCoaDefineByItemNameOnInsert")&&configs.get("SameAccountForStockAndRevenue"),all=configs.get("All Account Allow on Item and Item Category");
         result.put("purchaseAccounts",accounts.stream().filter(r->number(r.get("AccountTypeId"))==4 || all&&!same&&number(r.get("AccountTypeId"))==10).toList());
@@ -38,7 +47,9 @@ public class DesktopInventoryItemRepository {
         result.put("cgsAccounts",accounts.stream().filter(r->number(r.get("AccountTypeId"))==12).toList());
         return result;
     }
-    public List<Map<String,Object>> history(UserAccount u,boolean allRecords,int count,int category,int type,int parent){
+    public List<Map<String,Object>> history(UserAccount u,boolean allRecords,int count,int category,int type,int parent){return history(u,allRecords,count,category,type,parent,false);}
+    /** taxable: DefineTaxItem HistoryGridFill - reports.IsTaxable = true, ScreenName "DefineTaxItem", no ParentIds. */
+    public List<Map<String,Object>> history(UserAccount u,boolean allRecords,int count,int category,int type,int parent,boolean taxable){
         // RPC mirrors SqlCommand(CommandType.StoredProcedure) used by the desktop.
         // The first 25 parameters are from the installed procedure signature;
         // omitted optional filters have its original NULL defaults.
@@ -47,9 +58,9 @@ public class DesktopInventoryItemRepository {
             statement.setInt(1,u.getOrganizationId());statement.setInt(2,u.getCompanyId());statement.setNString(3,"FormHistory");
             if(category>0)statement.setInt(4,category);if(count>0)statement.setInt(6,count);
             statement.setBoolean(7,allRecords);if(!allRecords)statement.setInt(8,u.getId());
-            if(type>0)statement.setInt(9,type);statement.setNString(10,SCREEN);
-            if(parent>0)statement.setInt(19,parent);else statement.setNString(25,PARENTS);
-            statement.setInt(23,0);
+            if(type>0)statement.setInt(9,type);statement.setNString(10,taxable?"DefineTaxItem":SCREEN);
+            if(parent>0)statement.setInt(19,parent);else if(!taxable)statement.setNString(25,PARENTS);
+            statement.setInt(23,taxable?1:0);
             try(var result=statement.executeQuery()){return new org.springframework.jdbc.core.RowMapperResultSetExtractor<Map<String,Object>>(new org.springframework.jdbc.core.ColumnMapRowMapper()).extractData(result);}
         });
     }

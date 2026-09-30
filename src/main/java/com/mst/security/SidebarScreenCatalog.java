@@ -97,13 +97,20 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Cash Receipt Voucher", "Accounts", "/accounts/vouchers/cash-receipt", "VOUCHER_CASH_RECEIPT", "ACCOUNTS", 30, 2));
         e.add(new Entry("Bank Receipt Voucher", "Accounts", "/accounts/vouchers/bank-receipt", "VOUCHER_BANK_RECEIPT", "ACCOUNTS", 31, 2));   // ModuleId 2 Accounts Transaction; 704 is the Banking Managment one
         e.add(new Entry("Journal Voucher", "Accounts", "/accounts/vouchers/journal", "VOUCHER_JOURNAL", "ACCOUNTS", 860, 2));
+        /* Screen 19 "Jounal Voucher" (ScreenAlias as in dbo.ScreenDefinition) - Account_Definition.VoucherEntry. */
+        e.add(new Entry("Jounal Voucher", "Accounts", "/accounts/vouchers/voucher-entry", "VOUCHER_JOURNAL_ENTRY", "ACCOUNTS", 19, 2));
         e.add(new Entry("Contra Voucher", "Accounts", "/accounts/vouchers/contra", "VOUCHER_CONTRA", "ACCOUNTS", 22, 2));
+        e.add(new Entry("Contra Voucher New", "Accounts", "/accounts/vouchers/contra-tax", "VOUCHER_CONTRA_TAX", "ACCOUNTS", 855, 2));
         e.add(new Entry("Expense Voucher", "Accounts", "/accounts/vouchers/expense", "VOUCHER_EXPENSE", "ACCOUNTS", 46, 2));
         e.add(new Entry("Party Receipt Voucher", "Accounts", "/accounts/vouchers/party-receipt", "VOUCHER_PARTY_RECEIPT", "ACCOUNTS", 17, 2));
         e.add(new Entry("Party Payment Voucher", "Accounts", "/accounts/vouchers/party-payment", "VOUCHER_PARTY_PAYMENT", "ACCOUNTS", 16, 2));
+        e.add(new Entry("Premature Receipts", "Accounts", "/accounts/vouchers/premature-receipts", "VOUCHER_PREMATURE_RECEIPTS", "ACCOUNTS", 25, 2));
+        e.add(new Entry("Bills Payable", "Accounts", "/accounts/vouchers/bills-payables", "VOUCHER_BILLS_PAYABLE", "ACCOUNTS", 38, 2));
+        e.add(new Entry("Bills Receivables", "Accounts", "/accounts/vouchers/bills-receivables", "VOUCHER_BILLS_RECEIVABLE", "ACCOUNTS", 39, 2));
         e.add(new Entry("Post Dated Cheque Payment Vouchers", "Accounts", "/accounts/vouchers/pdc-payment", "VOUCHER_PDC_PAYMENT", "ACCOUNTS", 34, 2));
         e.add(new Entry("Payment By Invoice Voucher", "Accounts", "/accounts/vouchers/payment-by-invoice", "VOUCHER_PAYMENT_INVOICE", "ACCOUNTS", 41, 2));
-        e.add(new Entry("Voucher Invoices Adjustment", "Accounts", "/accounts/vouchers/invoices-adjustment", "VOUCHER_INVOICES_ADJ", "ACCOUNTS", null, 2));
+        e.add(new Entry("Voucher Invoices Adjustment", "Accounts", "/accounts/vouchers/invoices-adjustment", "VOUCHER_INVOICES_ADJ", "ACCOUNTS", 861, 2));   // 861 frmInvoicesAdjustmentVoucher
+        e.add(new Entry("Receipt Invoices Adjustment Voucher", "Accounts", "/accounts/vouchers/receipt-invoices-adjustment", "VOUCHER_RECEIPT_INVOICES_ADJ", "ACCOUNTS", 863, 2));   // 863 frmReceiptInvoicesAdjustmentVoucher
         e.add(new Entry("Freight Voucher", "Accounts", "/accounts/vouchers/freight", "VOUCHER_FREIGHT", "ACCOUNTS", 26, 2));
         e.add(new Entry("Day Book Approval", "Accounts", "/accounts/vouchers/day-book-approval", "VOUCHER_DAYBOOK_APPROVAL", "ACCOUNTS", null, 2));
         e.add(new Entry("PDC Transaction Payment", "Accounts", "/accounts/vouchers/pdc-transaction-payment", "VOUCHER_PDC_TRANS_PAYMENT", "ACCOUNTS", null, 2));
@@ -114,7 +121,8 @@ public final class SidebarScreenCatalog {
         // 3. ACCOUNT REPORTS
         e.add(new Entry("General Ledger Statement", "Accounts", "/accounts/reports/general-ledger-statement", "RPT_GL_STATEMENT", "ACCOUNTS", 54, 3));
         e.add(new Entry("General Ledger", "Accounts", "/accounts/reports/general-ledger", "RPT_GENERAL_LEDGER", "ACCOUNTS", 79, 3));   // ModuleId 3 Account Reports; 706 is the Banking Managment one
-        e.add(new Entry("Day Book", "Accounts", "/accounts/reports/day-book", "RPT_DAY_BOOK", "ACCOUNTS", 15, 3));   // alias 'Day Book'; 24 is alias 'Day Book (Off Set)'
+        e.add(new Entry("Day Book", "Accounts", "/accounts/vouchers/day-book", "RPT_DAY_BOOK", "ACCOUNTS", 15, 2));   // alias 'Day Book' - ScreenDefinition 15 DayBook, ModuleId 2 (Accounts Transaction), a voucher-entry form
+        e.add(new Entry("Day Book (Off Set)", "Accounts", "/accounts/vouchers/day-book-offset", "VOUCHER_DAYBOOK_OFFSET", "ACCOUNTS", 24, 2));   // alias 'Day Book (Off Set)' - ScreenDefinition 24 frmDayBook, ModuleId 2
         e.add(new Entry("Balance Sheet", "Accounts", "/accounts/reports/balance-sheet", "RPT_BALANCE_SHEET", "ACCOUNTS", 62, 3));
         e.add(new Entry("Profit & Loss Statement", "Accounts", "/accounts/reports/profit-and-loss", "RPT_PROFIT_LOSS", "ACCOUNTS", null, 3));
         e.add(new Entry("Selected Trial Balance", "Accounts", "/accounts/reports/selected-trial-balance", "RPT_SELECTED_TRIAL_BAL", "ACCOUNTS", 81, 3));
@@ -134,7 +142,9 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Post Dated Cheque Register", "Accounts", "/accounts/reports/pdc-register", "RPT_PDC_REGISTER", "ACCOUNTS", 88, 3));
         e.add(new Entry("Post Dated Cheque Information", "Accounts", "/accounts/reports/pdc-information", "RPT_PDC_INFO", "ACCOUNTS", null, 3));
         e.add(new Entry("Payables Aging New", "Accounts", "/accounts/reports/payables-aging-new", "RPT_PAYABLES_AGING_NEW", "ACCOUNTS", 47, 3));
-        e.add(new Entry("Receivables Aging New", "Accounts", "/accounts/reports/receivables-aging-new", "RPT_RECEIVABLES_AGING_NEW", "ACCOUNTS", null, 3));
+        e.add(new Entry("Receivables Aging New", "Accounts", "/accounts/reports/receivables-aging-new", "RPT_RECEIVABLES_AGING_NEW", "ACCOUNTS", 872, 3));   // page = frmReceivableAgingDocumentWise (872 Customer Aging Report)
+        e.add(new Entry("Supplier Aging Report", "Accounts", "/accounts/reports/supplier-aging", "RPT_SUPPLIER_AGING_DOC", "ACCOUNTS", 873, 3));   // frmPayablesAgingDocumentWise
+        e.add(new Entry("Inventory Payables and Receivables", "Accounts", "/accounts/reports/inventory-payables-receivables", "RPT_INV_PAY_REC", "ACCOUNTS", 61, 3));   // InventoryPayablesandReceivables
         e.add(new Entry("Payables Report Invoice Wise", "Accounts", "/accounts/reports/payables-report-invoice-wise", "RPT_PAYABLES_INVOICE_WISE", "ACCOUNTS", 909, 3));
         e.add(new Entry("Receivables By Due Dates", "Accounts", "/accounts/reports/receivables-by-due-dates", "RPT_RECEIVABLES_DUE_DATES", "ACCOUNTS", 68, 3));
         e.add(new Entry("Payables And Payment Schedule", "Accounts", "/accounts/reports/payables-payment-schedule", "RPT_PAYABLES_PAY_SCHED", "ACCOUNTS", 78, 3));

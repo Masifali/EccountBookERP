@@ -17,8 +17,12 @@ public class TradeReportController {
     public String receivables(Model model) { model.addAttribute("accountClass",2); return "accounts/reports/trade_accounts"; }
     @GetMapping("/accounts/reports/all-payables")
     public String allPayables() { return "accounts/reports/all_payables"; }
-    @GetMapping({"/accounts/reports/supplier-aging", "/accounts/reports/payables-aging-new"})
-    public String supplierAging() { return "accounts/reports/payables_aging_new"; }
+    /** Screen 873 Supplier Aging Report = frmPayablesAgingDocumentWise. */
+    @GetMapping("/accounts/reports/supplier-aging")
+    public String supplierAging() { return "accounts/reports/payables_aging_document_wise"; }
+    /** "Payables Aging New" = PayablesAging_New (screen 47), the same page as /accounts/reports/payables-aging. */
+    @GetMapping("/accounts/reports/payables-aging-new")
+    public String payablesAgingNew() { return "accounts/reports/payables_new"; }
     @GetMapping({"/accounts/reports/customer-aging", "/accounts/reports/receivables-aging-new"})
     public String customerAging() { return "accounts/reports/receivables_aging_new"; }
     @GetMapping("/api/accounts/trade-report/lookups") @ResponseBody

@@ -14,12 +14,14 @@ public class DesktopInventoryItemWriter {
     private final JdbcTemplate jdbc;
     private final Map<String,List<String>> parameters=new ConcurrentHashMap<>();
     public DesktopInventoryItemWriter(JdbcTemplate jdbc){this.jdbc=jdbc;}
-    public int save(UserAccount u,Map<String,Object> year,InventoryGeneralItemRequest request,Map<String,Object> old,List<Map<String,Object>> images,java.math.BigDecimal equivalent){
+    public int save(UserAccount u,Map<String,Object> year,InventoryGeneralItemRequest request,Map<String,Object> old,List<Map<String,Object>> images,java.math.BigDecimal equivalent){return save(u,year,request,old,images,equivalent,false);}
+    /** taxable: DefineTaxItem.cs Insert()/Update() - items.IsTaxable = true; everything else identical. */
+    public int save(UserAccount u,Map<String,Object> year,InventoryGeneralItemRequest request,Map<String,Object> old,List<Map<String,Object>> images,java.math.BigDecimal equivalent,boolean taxable){
         boolean insert=request.Id==0;var p=InventoryPosDefaults.item();
         p.putAll(request.values(insert));
         p.replaceAll((key,value)->value instanceof String text?text.trim():value);
         p.put("OrganizationId",u.getOrganizationId());p.put("CompanyId",u.getCompanyId());p.put("BranchesId",u.getBranchesId());
-        p.put("IsTaxable",false);p.put("Equivalent",equivalent);p.put("ItemName",request.ItemName.trim());p.put("ItemCode",request.ItemCode.trim());p.put("ItemCodeNew",request.ItemCodeNew.trim());
+        p.put("IsTaxable",taxable);p.put("Equivalent",equivalent);p.put("ItemName",request.ItemName.trim());p.put("ItemCode",request.ItemCode.trim());p.put("ItemCodeNew",request.ItemCodeNew.trim());
         p.put("EntryDate",now());p.put("ModifyDate",now());p.put("PostDate",now());p.put("PostState",false);
         p.put("EntryUser",insert?u.getId():0);p.put("ModifyUser",insert?0:u.getId());
         if(!insert){p.put("CommOnPurchase",false);p.put("CommOnSale",false);}

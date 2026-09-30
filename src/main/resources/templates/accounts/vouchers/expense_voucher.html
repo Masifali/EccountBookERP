@@ -319,6 +319,7 @@
     <!-- Scripts -->
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
+    <script th:src="@{/build/js/countx_voucher_desktop_config.js?v=20260930a}"></script>
     <script>
         let gridItems = [];
         let editingVoucherId = 0;
@@ -440,12 +441,13 @@
             $('#popCreditAccounts').hide();
         }
 
-        // Debit (expense) account search - same real /accounts-search endpoint used by every other
-        // ported voucher's account lookup.
+        // Debit (expense) account search - ExpenseVoucherNew account fill (:824): only expense-type
+        // accounts {11,13,14,20,21,22,23}, plus Cost Of Sales (12) when
+        // InventoryRelatedAccountsShowInVouchers is on.
         function onDebitAccSearch(e) {
             const query = $('#txtDebitAccSearch').val().trim();
             if (query.length < 1) { $('#popAccounts').hide(); return; }
-            $.get('/accounts/api/vouchers/accounts-search?query=' + encodeURIComponent(query), function(data) {
+            $.get(VoucherDesk.detailAccountsUrl('expense', query), function(data) {
                 let html = '';
                 (data || []).forEach(function(acc) {
                     const id = acc.id || 0, code = acc.accountCode || '', title = acc.accountTitle || '', parent = acc.parentAccountTitle || 'Detail';
@@ -529,6 +531,13 @@
             if (fcAmount <= 0) { alert('Fcy Amount Field is Required'); return; }
 
             const totalAmount = parseFloat($('#lblTotalDebit').text()) || 0.0;
+            // Insert():2536 - AmountLimitForExpenseVoucher (0 = no limit).
+            const amountLimit = parseFloat(VoucherDesk.flags.amountLimitForExpenseVoucher) || 0;
+            const voucherAmount = gridItems.reduce(function(t, i) { return t + (parseFloat(i.debitAmount) || 0); }, 0);
+            if (amountLimit > 0 && voucherAmount > amountLimit) {
+                alert('Total VoucherAmount ' + voucherAmount + ' can not be grater than Amount Limit ' + amountLimit);
+                return;
+            }
 
             const payload = {
                 id: editingVoucherId > 0 ? editingVoucherId : null,
@@ -553,14 +562,14 @@
                 })
             };
 
-            $.ajax({
+            VoucherDesk.busy('#btnSaveUpdate', function() { return $.ajax({
                 url: '/accounts/api/vouchers/save', type: 'POST', contentType: 'application/json', data: JSON.stringify(payload),
                 success: function(res) {
                     alert(res.message || (editingVoucherId > 0 ? 'Voucher Update Successfully...[' + res.voucherCode + ']' : 'Voucher Save Successfully...[' + res.voucherCode + ']'));
                     resetForm();
                 },
                 error: function(err) { alert('Error saving voucher: ' + (err.responseJSON ? err.responseJSON.message : 'Server error')); }
-            });
+            }); });
         }
 
         function resetForm() { window.location.reload(); }

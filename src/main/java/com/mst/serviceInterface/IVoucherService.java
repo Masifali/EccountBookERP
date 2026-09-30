@@ -83,6 +83,9 @@ public interface IVoucherService {
 	// PDC Payment History has NO filter UI in desktop at all - always loads every visible record.
 	Map<String, Object> getPdcPaymentHistory();
 
+	/** WHT Challan Deposit (DocumentTypeId=25) history - frmWhtTaxChallanDeposit.cs HistoryFill(). */
+	Map<String, Object> getWhtChallanDepositHistory();
+
 	// CPV/BPV (PaymentVoucherNew.cs) real master-data lookups - see VoucherService for the exact
 	// procs (Payment Type/Financial Instrument/Cheque Type/Tax Type combos).
 	List<Map<String, Object>> getPaymentTypes();
