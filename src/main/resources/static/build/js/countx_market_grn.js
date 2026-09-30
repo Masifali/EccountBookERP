@@ -11,15 +11,17 @@
  *   grn.items         dtItem  (ItemId, ItemName, ItemCode, PoDetailId, ItemWbWeight, Moisture)
  *   grn.lab           CmbLabNo's single row, or null
  *   grn.previousData  dtPrevoiusDataOfSelectedGP
+ *   grn.pending       dtGatePassData (the pending gate pass list, also the loader dialog's data)
  */
 function escapeHtml(v) {
     return String(v === undefined || v === null ? '' : v)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-let lineItems = [], loadedHeader = {}, editLine = -1, lookupVersion = 0;
-const grn = { ref: 0, freightId: 0, gpId: 0, gpDate: '', gpQty: 0, purchaseOrderId: 0, purchaseOrderNo: 0, cfg: {}, items: [],
-              lab: null, previousData: [], poEmptyBags: [], preBills: [], chargeToParty: 0, subsidiary: false, wages: false };
+let lineItems = [], loadedHeader = {}, editLine = -1, lookupVersion = 0, historyRows = [], printContext = {};
+const grn = { ref: 0, freightId: 0, gpId: 0, gpNo: '', gpDate: '', gpQty: 0, purchaseOrderId: 0, purchaseOrderNo: 0, cfg: {}, items: [],
+              lab: null, labRows: [], previousData: [], poEmptyBags: [], preBills: [], chargeToParty: 0, subsidiary: false, wages: false,
+              pending: [], invoiceId: 0 };
 
 const cfgNum = name => Number(grn.cfg[name]) || 0;
 const cfgOn = name => { const v = String(grn.cfg[name] ?? '').trim().toLowerCase(); return v === '1' || v === 'true'; };
@@ -27,18 +29,21 @@ const round = (v, d) => { const f = Math.pow(10, d); return Math.round((Number(v
 /* C# ToString("#,##") / ("#,##.##") as written into a textbox that is read back as a number. */
 const fmt0 = v => String(Math.round(Number(v) || 0));
 const fmt2 = v => String(round(v, 2));
+/* C# double.ToString() in interpolated messages: 1200 not 1200.0 */
+const cs = v => String(Number(v) || 0);
 
+/* PackUomFromGlobalBind :1313 — the item's UOM schedule, keeping the previous UOM by its text. */
 function narrowUomToItem() {
     var itemId = parseInt($('#cmbItem').val() || '0', 10);
-    var sel = $('#cmbUom'), current = sel.val(), keptCurrent = false;
+    var sel = $('#cmbUom'), currentText = sel.find('option:selected').val() !== '0' ? sel.find('option:selected').text() : '', keep = null;
     sel.find('option').each(function () {
         var opt = $(this);
         if (!opt.attr('data-item-id')) return;
         var owns = parseInt(opt.attr('data-item-id'), 10) === itemId;
         opt.prop('hidden', !owns).prop('disabled', !owns);
-        if (owns && opt.val() === current) keptCurrent = true;
+        if (owns && keep === null && currentText && opt.text() === currentText) keep = opt.val();
     });
-    if (!keptCurrent) sel.val('0');
+    sel.val(keep || '0');
 }
 /* CmbPackUom.SelectedRow.Cells[2] — Equivalent. Null when missing: callers refuse, never assume 1. */
 function grnUomEquivalent() {
@@ -56,40 +61,64 @@ $(document).ready(async function () {
     $('#cmbUom').on('change', combpckuomLeave);
     $('#txtItemQty').on('input', txtqtyChanged).on('blur', () => { if (grn.ref === 105) markeetPurchaseFormula(); });
     $('#txtGrossWeight').on('input', () => { if (grn.ref === 105) ebCalculations(); total(); }).on('blur', txtgwtLeave);
-    $('#txtEbUnit').on('input', () => { ebCalculations('unit'); total(); });
+    $('#txtEbUnit').on('input', () => { ebCalculations('unit'); total(); });                 /* txtebu_TextChanged_1 */
+    $('#txtWtCut').on('input', () => { if (grn.ref === 105) ebCalculations(); total(); });   /* txtwtcut → txtebu_TextChanged */
     $('#txtEbTotal').on('input', () => { ebCalculations('total'); total(); });
     $('#txtEbUnitStock').on('input', () => { stockEbCalculations('unit'); total(); });
     $('#txtEbTotalStock').on('input', () => { stockEbCalculations('total'); total(); });
-    $('#txtWtCut,#txtAddLess').on('input', total);
+    $('#txtAddLess').on('input blur', total);
     $('#txtSupplierWeight,#txtFactoryWeight').on('input', supplierFactoryChanged);
     $('#cmbDeliveryTerm').on('change', txtDeliverTermChanged);
-    $('#txtBiltyFreight,#txtScaleCharges,#txtAdvParty,#txtAdvFactory,#txtOtherDeduct,#txtFreightDeduct').on('input', freightCalculations);
-    $('#txtPaidAmount').on('change', () => { freightCalculations(); if (grn.ref === 105) freightProportion(); renderItemsGrid(); });
+    /* designer :2277-2405 — only these four TextBoxes raise FreightCalculations */
+    $('#txtBiltyFreight,#txtAdvParty,#txtAdvFactory,#txtFreightDeduct').on('input', freightCalculations);
+    /* txtcarramount TextChanged + Leave → txtcarramount_Leave :5668 */
+    $('#txtPaidAmount').on('input change', txtcarramountLeave);
     $('#chkScaleDeduct,#chkSupplierDeduct').on('change', () => { totalEbPurchaseAgainstWeightUtilizeInGrid(); renderItemsGrid(); recalculateBreakupHeader(); });
-    $('#cmbSupplier').on('change', combsupplierLeave);
     $('#cmbPreBillNo').on('change', preBillLeave);
+    $('#cmbSupplier').on('change', combsupplierLeave);
     $('input[name="itemSearchMode"]').on('change', itemNameBind);
+    $('#grdItemsBody').on('dblclick', 'tr[data-line]', function () { grdDoubleClick(Number(this.dataset.line)); })
+                      .on('click', 'tr[data-line]', function () { $('#grdItemsBody tr').removeClass('selected'); $(this).addClass('selected'); });
+    $('#grdHistoryBody').on('click', 'tr[data-id]', function () { grdHistorySelectionChanged(this); })
+                        .on('dblclick', 'tr[data-id]', function () { loadRecord(Number(this.dataset.id)); });
+    document.addEventListener('keydown', onFormKeyDown);
+    /* the print button's own row/record, read by printRptArgs below */
+    document.addEventListener('mousedown', e => { const b = e.target.closest && e.target.closest('[data-rpt]'); if (b) printContext = Object.assign({}, b.dataset); }, true);
+    document.addEventListener('keydown', e => { const b = e.target.closest && e.target.closest('[data-rpt]'); if (b) printContext = Object.assign({}, b.dataset); }, true);
     narrowUomToItem();
     $('#txtDocDate').val(new Date().toLocaleDateString('en-CA'));
-    try { grn.cfg = await api('/api/purchase/market-grn/form/config'); } catch (e) { grn.cfg = {}; }
+    renderPendingHead(); renderItemsGrid();
+    try { grn.cfg = await api('/api/purchase/market-grn/form/config'); } catch (e) { grn.cfg = {}; alert(e.message); }
     grn.subsidiary = !!grn.cfg.SubsidiaryAccountAllownOnVouchers; grn.wages = !!grn.cfg.WagesActiveOrInActive;
     applyConfigToControls();
-    fillCountFromGpGrid();
+    historyDefaults();
+    historyComboBind();
+    refreshPendingGrid();
     const id = new URLSearchParams(window.location.search).get('id');
-    if (id) loadRecord(id); else { renderSupplements({}); applyConfigDefaults(); }
-    renderItemsGrid();
+    if (id) loadRecord(id); else { renderSupplements({}); applyConfigDefaults(); showShortageCheckBoxes(); applyGrnRights(); }
+    configZeroWarning();
 });
 
-/* InitializeComponentMethod :790-815 */
+/* InitializeComponentMethod :789-815 */
 function applyConfigToControls() {
+    $('#cmbSupplier').prop('disabled', true);
+    $('#txtSupplierWeight').prop('readonly', true);
     $('#txtEbUnit,#txtEbTotal').prop('disabled', !cfgOn('EmptyBagsWeightCutEditableOnGRN'));
     $('#txtAddLess').prop('disabled', !cfgOn('AddLessWeightCutEditableOnGRN'));
     $('#txtWtCut').prop('disabled', !cfgOn('WeightCutEditable'));
     $('#txtDocDate').prop('disabled', cfgOn('ValidateGrnAndInvoiceDateWithGpDate'));
-    if (cfgOn('ItemSearchWithNameOrCode')) $('input[name="itemSearchMode"][value="Code"]').prop('checked', true);
-    $('#txtSupplierWeight').prop('readonly', true);
-    $('#cmbDeliveryTerm').prop('disabled', true);
-    showWeightFields(false);
+    $('#btnEbWtByGross').toggle(cfgOn('EBWtAccordingToGrossWeight'));
+    $('.grn-excess').toggle(cfgOn('AcceptAccessWtVehiclesandHoldForSpecialApprovalOn1stWt'));
+    $('input[name="itemSearchMode"][value="' + (cfgOn('ItemSearchWithNameOrCode') ? 'Code' : 'Name') + '"]').prop('checked', true);
+    $('#panelBreakup').toggleClass('disabled-panel', grn.ref !== 105);
+}
+/* :863-879 */
+function configZeroWarning() {
+    const list = [];
+    if (cfgNum('WeightCutForJuteBagsStock') === 0) list.push('E.B WeightCut For JuteBags');
+    if (cfgNum('WeightCutForPPBagsStock') === 0) list.push('E.B WeightCut For PPBags');
+    if (cfgNum('WeightCutForOpenBulkStock') === 0) list.push('E.B WeightCut For OpenBulk');
+    if (list.length) alert('Warning: The following configurations Of StockWeight value(s) are set to 0:\n\n' + list.join('\n') + '\n\nPlease check and update them in the configuration.');
 }
 /* GetConfigurationsFromGlobalAndBindValuesInColumns :928 */
 function applyConfigDefaults() {
@@ -99,30 +128,48 @@ function applyConfigDefaults() {
     if (!grn.subsidiary) { const t = cfgNum('FreightInwardAc'); if (t) $('#cmbTransporter').val(String(t)); }
     transporterAccountDisable();
 }
+/* TransporterAccountDisable :980 */
 function transporterAccountDisable() {
     if (grn.subsidiary) return;
     $('#cmbTransporter').prop('disabled', grn.freightId > 0);
-    $('#txtPaidAmount').prop('readonly', grn.freightId > 0);
+    $('#txtPaidAmount').prop('disabled', grn.freightId > 0);
 }
-function showWeightFields(show) { $('.grn-105-only').toggle(!!show); }
+/* lblRecwt/txtReceivedWeight and lblBalwt/txtBalWeight ("GRN Weight") */
+function showRecWeight(show) { $('.grn-recwt').toggle(!!show); }
+function showBalWeight(show) { $('.grn-balwt').toggle(!!show); }
 /* ShowShortageCheckBoxes :2838 */
 function showShortageCheckBoxes() {
     $('#lblSupplierDeduct').toggle(grn.ref === 105);
     $('#lblScaleDeduct').toggle(grn.ref !== 106);
     $('#txtGrossWeight').prop('disabled', grn.ref === 105);
+    $('#panelBreakup').toggleClass('disabled-panel', grn.ref !== 105);
+    $('.bk-105').toggle(grn.ref === 105); $('.bk-not106').toggle(grn.ref !== 106);
 }
 
 function withButtonLoading(btn, asyncFn) { return PurchaseRequest.run(btn, asyncFn).catch(error => alert(error.message)).finally(applyGrnRights); }
 async function api(url, options) {
     return PurchaseRequest.track(async () => {
-        const response = await fetch(url, options); const data = await response.json();
+        const response = await fetch(url, options); const data = await response.json().catch(() => ({}));
         if (!response.ok || data?.success === false) throw new Error(data.message || data.detail || 'Request failed'); return data;
     });
 }
 function numeric(id) { return Number($('#' + id).val()) || 0; }
 function textValue(id) { return $('#' + id).val() || ''; }
 function selectedText(id) { const o = $('#' + id + ' option:selected'); return o.length && o.val() !== '0' && o.val() !== '' ? o.text() : ''; }
-function displayDate(value) { return String(value || '').slice(0, 10); }
+/* yyyy-MM-dd; a timestamp (epoch or ISO with a zone) is shown in the browser's local date. */
+function displayDate(value) {
+    if (value === null || value === undefined || value === '') return '';
+    if (typeof value === 'number' || /T.*([+-]\d{2}:?\d{2}|Z)$/.test(String(value))) {
+        const d = new Date(value); if (!isNaN(d)) return d.toLocaleDateString('en-CA');
+    }
+    return String(value).slice(0, 10);
+}
+function displayDateTime(value) {
+    if (!value) return '';
+    const d = new Date(value); if (isNaN(d)) return String(value);
+    const p = n => String(n).padStart(2, '0'), h = d.getHours() % 12 || 12;
+    return p(d.getDate()) + '-' + p(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + p(h) + ':' + p(d.getMinutes()) + ' ' + (d.getHours() < 12 ? 'AM' : 'PM');
+}
 function selectValue(id, value, label) {
     const select = document.getElementById(id); if (!select) return;
     if (value && !Array.from(select.options).some(option => String(option.value) === String(value))) select.add(new Option(label || String(value), value));
@@ -130,7 +177,7 @@ function selectValue(id, value, label) {
 }
 function selectByText(id, text) {
     const select = document.getElementById(id); if (!select) return;
-    const t = String(text || '').trim(); if (!t) { $(select).val('0'); return; }
+    const t = String(text || '').trim(); if (!t) { $(select).val(select.options.length ? select.options[0].value : ''); return; }
     let opt = Array.from(select.options).find(o => o.text.trim().toLowerCase() === t.toLowerCase());
     if (!opt) { opt = new Option(t, t); select.add(opt); }
     $(select).val(opt.value);
@@ -140,29 +187,28 @@ const breakupSum = key => (typeof purchaseBreakupRows !== 'undefined' ? purchase
 const breakupCount = () => (typeof purchaseBreakupRows !== 'undefined' ? purchaseBreakupRows.length : 0);
 
 /* ---------------- items / lab / pre-bill ---------------- */
+/* ItemNameBind :1239 (display member ItemName or ItemCode; an unmatched value activates the first row) */
 function itemNameBind() {
     const byCode = $('input[name="itemSearchMode"]:checked').val() === 'Code';
     const sel = $('#cmbItem'), current = sel.val();
     sel.empty().append(new Option('-- Select Item --', '0'));
-    for (const it of grn.items) {
-        const o = new Option(byCode ? (it.ItemCode || it.ItemName) : it.ItemName, it.ItemId);
-        sel.append(o);
-    }
-    sel.val(current && grn.items.some(i => String(i.ItemId) === String(current)) ? current : '0');
+    for (const it of grn.items) sel.append(new Option(byCode ? (it.ItemCode || '') : it.ItemName, it.ItemId));
+    if (current && current !== '0' && grn.items.some(i => String(i.ItemId) === String(current))) sel.val(current);
+    else sel.val(grn.items.length ? String(grn.items[0].ItemId) : '0');
     narrowUomToItem();
 }
 function selectedItem() { const id = numeric('cmbItem'); return grn.items.find(i => Number(i.ItemId) === id) || null; }
 
 /* combitem_Leave :1433 */
 async function combitemLeave() {
-    narrowUomToItem();
     $('#txtMoisture').val(0);
+    narrowUomToItem();
     await labNoFill(numeric('cmbItem'));
-    if (grn.purchaseOrderId > 0) { const it = selectedItem(); if (it) $('#txtMoisture').val(Number(it.Moisture) || 0); }
-    weightBusinessCalc();
+    if (grn.purchaseOrderId > 0) { const it = selectedItem(); if (it && numeric('cmbItem') > 0) $('#txtMoisture').val(Number(it.Moisture) || 0); }
+    await weightBusinessCalc();
     total();
 }
-/* LabNoFillWithGpIdAndItemId :1385 */
+/* LabNoFillWithGpIdAndItemId :1385 — only dt.Rows[0], activated. */
 async function labNoFill(itemId) {
     const sel = $('#cmbLabNo'); sel.empty(); grn.lab = null; grn.labRows = [];
     if (grn.gpId > 0 && itemId > 0) {
@@ -180,7 +226,6 @@ async function cmbLabNoLeave() {
     if (cfgOn('WeightCutEditable')) $('#txtWtCut').prop('disabled', false);
     $('#txtWtCutComp').val(0); $('#txtRateCutComp').val(0);
     $('#chkRateCutComp').prop('checked', false); $('#chkWtCutComp').prop('checked', false);
-    $('#labParamsBody').empty(); $('#labParamsPanel').hide();
     if (grn.lab && labId > 0) {
         const wtCut = Number(grn.lab.WtCut) || 0;
         $('#txtWtCut').val(wtCut); $('#txtWtCutOn').val(grn.lab.WtCutOn || '');
@@ -192,20 +237,21 @@ async function cmbLabNoLeave() {
             $('#chkRateCutComp').prop('checked', rateComp); $('#chkWtCutComp').prop('checked', wtComp);
             if (wtComp) $('#txtWtCut').prop('disabled', true); else if (cfgOn('WeightCutEditable')) $('#txtWtCut').prop('disabled', false);
             $('#labParamsBody').html(rows.map(r => '<tr><td>' + escapeHtml(r.AnalysisParameterDescription) + '</td><td class="text-end">' + escapeHtml(r.InAnalysisResult) + '</td></tr>').join(''));
+            $('#labParamsFoot').html('<tr><td></td><td class="text-end">' + cs(round(rows.reduce((s, r) => s + (Number(r.InAnalysisResult) || 0), 0), 3)) + '</td></tr>');
             $('#labParamsPanel').show();
-        }
-    } else { $('#txtWtCut').val(0); $('#txtWtCutOn').val(''); }
+        } else { $('#labParamsPanel').hide(); $('#labParamsBody,#labParamsFoot').empty(); }
+    } else { $('#txtWtCut').val(0); $('#txtWtCutOn').val(''); $('#labParamsPanel').hide(); $('#labParamsBody,#labParamsFoot').empty(); }
     if (grn.ref === 105) ebCalculations();
     total();
 }
 /* combsupplier_Leave :7074 / PreBillNoFill :884 */
 async function combsupplierLeave() {
-    const supplier = numeric('cmbSupplier'), sel = $('#cmbPreBillNo'), current = sel.val();
+    const supplier = numeric('cmbSupplier'), current = $('#cmbPreBillNo').val();
     if (supplier > 0 || grn.purchaseOrderId > 0) {
         try { grn.preBills = await api('/api/purchase/market-grn/form/pre-bills?supplierId=' + supplier + '&grnId=' + numeric('txtId') + '&gpId=' + grn.gpId + '&orderId=' + grn.purchaseOrderId); }
         catch (e) { alert(e.message); grn.preBills = []; }
-    } else grn.preBills = [];
-    fillPreBills(current);
+        fillPreBills(current);
+    } else { grn.preBills = []; $('#cmbPreBillNo').empty(); }
 }
 function fillPreBills(value) {
     const sel = $('#cmbPreBillNo'); sel.empty().append(new Option('', '0'));
@@ -286,16 +332,18 @@ function markeetPurchaseFormula() {
 function ebCalculations(source) {
     let unit = numeric('txtEbUnit'), tot = numeric('txtEbTotal'); const qty = numeric('txtItemQty');
     if (!(unit > 0 || tot > 0)) return;
-    if (source === 'unit') $('#txtEbTotal').val(round(unit * qty, 2));
-    else if (source === 'total') $('#txtEbUnit').val(round(qty > 0 ? tot / qty : 0, 3));
+    const active = document.activeElement && document.activeElement.id;
+    if (source === 'unit' && active === 'txtEbUnit') $('#txtEbTotal').val(round(unit * qty, 2));
+    else if (source === 'total' && active === 'txtEbTotal') $('#txtEbUnit').val(round(qty > 0 ? tot / qty : 0, 3));
     else $('#txtEbTotal').val(round(unit > 0 && qty > 0 ? unit * qty : 0, 2));
 }
 /* StockEbCalculations :4728 */
 function stockEbCalculations(source) {
     let unit = numeric('txtEbUnitStock'), tot = numeric('txtEbTotalStock'); const qty = numeric('txtItemQty');
     if (!(unit > 0 || tot > 0)) return;
-    if (source === 'unit') $('#txtEbTotalStock').val(round(unit * qty, 2));
-    else if (source === 'total') $('#txtEbUnitStock').val(round(qty > 0 ? tot / qty : 0, 3));
+    const active = document.activeElement && document.activeElement.id;
+    if (source === 'unit' && active === 'txtEbUnitStock') $('#txtEbTotalStock').val(round(unit * qty, 2));
+    else if (source === 'total' && active === 'txtEbTotalStock') $('#txtEbUnitStock').val(round(qty > 0 ? tot / qty : 0, 3));
     else $('#txtEbTotalStock').val(round(unit > 0 && qty > 0 ? unit * qty : 0, 2));
 }
 /* WtCutCalculations :4474 (isTaxBox = the entry box; skipIndex = the row being edited). */
@@ -343,7 +391,7 @@ function stockWeightFor(gross, stockEbTotal) {
 /* Total :4600 */
 function total() {
     const qty = numeric('txtItemQty'), gross = numeric('txtGrossWeight'), ebTotal = numeric('txtEbTotal');
-    $('#txtAvgWeight').val(qty > 0 ? round(gross / qty, 2) : 0);
+    $('#txtAvgWeight').val(qty > 0 ? fmt2(gross / qty) : '0');
     let wtCutTotal = 0;
     if (String($('#txtWtCut').val() ?? '').trim() !== '') {
         const lab = grn.lab && numeric('cmbLabNo') > 0 ? grn.lab : null;
@@ -363,7 +411,10 @@ async function weightBusinessCalc() {
     const sup = numeric('txtSupplierWeight'), fac = numeric('txtFactoryWeight'), received = numeric('txtReceivedWeight');
     const tol = cfgNum('BillWeightAndStockWeightDifferenceTolerance'), term = selectedText('cmbDeliveryTerm');
     const gridGross = gridSum(lineItems, 'grossWeight');
-    if (cfgOn('DeductionPolicyForGrnIsOn') && grn.ref === 41 && term === 'Ponch') { await deductionPolicyForGrn(gridGross); return; }
+    if (cfgOn('DeductionPolicyForGrnIsOn') && grn.ref === 41 && term === 'Ponch') {
+        try { await deductionPolicyForGrn(gridGross, true); } catch (e) { alert(e.message); }
+        return;
+    }
     if (grn.ref === 105) {
         $('#txtGrnWeight').val(fmt2(sup)); $('#txtBalWeight').val(fmt2(sup - received));
         const pu = packUom(); $('#txtGrossWeight').val(pu > 0 ? pu * numeric('txtItemQty') : 0);
@@ -386,7 +437,7 @@ async function weightBusinessCalc() {
     let itemTotal = grn.items.filter(i => Number(i.ItemId) === itemId).reduce((s, i) => s + (Number(i.ItemWbWeight) || 0), 0);
     if (totalGross === sup && fac) itemTotal = itemTotal / fac * sup;
     let grd = lineItems.reduce((s, r, i) => s + (Number(r.itemId) === itemId && i !== editLine ? Number(r.grossWeight) || 0 : 0), 0);
-    if (itemTotal === 0) { itemTotal = totalGross; grd = lineItems.reduce((s, r, i) => s + (i !== editLine ? Number(r.grossWeight) || 0 : 0), 0); }
+    if (itemTotal === 0) { itemTotal = totalGross; grd = lineItems.reduce((s, r) => s + (Number(r.grossWeight) || 0), 0); }
     $('#txtGrossWeight').val(fmt2(itemTotal - grd));
 }
 /* DeductionPolicyForGrn :3305 */
@@ -398,14 +449,15 @@ async function deductionPolicyForGrn(gridGross, refuse) {
         policy = Number(p.PolicyTypeId) || 0; if (policy) name = ' Policy is ' + (p.ConditionDescription || '');
     }
     const finalWt = policy === 2 ? fac - diff / 2 : policy === 3 ? sup : fac;
-    $('#txtBalWeight').val(finalWt); showWeightFields(true);
+    $('#txtBalWeight').val(finalWt);
     const grd = lineItems.reduce((s, r, i) => s + (i !== editLine ? Number(r.grossWeight) || 0 : 0), 0);
     $('#txtGrossWeight').val(finalWt - grd);
-    if (refuse && gridGross > 0 && gridGross !== finalWt) throw new Error('GrossWeight ' + gridGross + ' Should Equal To FinalWeight ' + finalWt + '...' + name);
+    if (refuse && gridGross > 0 && gridGross !== finalWt) throw new Error('GrossWeight ' + cs(gridGross) + ' Should Equal To FinalWeight ' + cs(finalWt) + '...' + name);
+    showBalWeight(true);
 }
 
 /* ---------------- header events ---------------- */
-/* TotalSupplierWeight :5311 then the shortage proportions (txtsuppwt/txtfctwt_TextChanged) */
+/* TotalSupplierWeight :5311 then the shortage proportions (txtsuppwt/txtfctwt_TextChanged :5342) */
 function supplierFactoryChanged() {
     const diff = numeric('txtSupplierWeight') - numeric('txtFactoryWeight');
     $('#txtDiffWeight').val(round(diff, 2));
@@ -414,9 +466,8 @@ function supplierFactoryChanged() {
     scaleShortageProportion(); supplierShortageProportion(); renderItemsGrid();
     recalculateBreakupHeader();
 }
-function calcWeights() { supplierFactoryChanged(); }
 /* txtDeliverTerm_ValueChanged :1460 */
-function txtDeliverTermChanged() { weightBusinessCalc(); total(); stockWeightCalculationInGrid(); renderItemsGrid(); }
+async function txtDeliverTermChanged() { await weightBusinessCalc(); total(); stockWeightCalculationInGrid(); renderItemsGrid(); }
 /* FreightCalculations :5704 */
 function freightCalculations() {
     const totalFreight = numeric('txtBiltyFreight') + numeric('txtScaleCharges') - (numeric('txtAdvParty') + numeric('txtAdvFactory')) - numeric('txtOtherDeduct');
@@ -424,7 +475,8 @@ function freightCalculations() {
     if (grn.freightId === 0) $('#txtPaidAmount').val(round(totalFreight - numeric('txtFreightDeduct'), 2));
     total(); stockWeightCalculationInGrid(); freightProportion(); renderItemsGrid();
 }
-function calcFreight() { freightCalculations(); }
+/* txtcarramount_Leave :5668 */
+function txtcarramountLeave() { freightCalculations(); if (grn.ref === 105) freightProportion(); renderItemsGrid(); }
 
 /* ---------------- grid-wide calculations ---------------- */
 /* ScaleShortageProportion :5570 */
@@ -453,6 +505,10 @@ function totalEbPurchaseAgainstWeightUtilizeInGrid() {
         remaining -= apply; if (remaining <= 0.0001) break;
     }
 }
+/* grdEmptyBags_CellUpdated :2410 — a Type or Purchase Qty edit re-spreads the purchase-against-weight qty. */
+function onEmptyBagChanged(key) {
+    if (key === 'purchaseqty' || key === 'typeid') { totalEbPurchaseAgainstWeightUtilizeInGrid(); renderItemsGrid(); }
+}
 /* StockWeightCalculationInGrid :5011 */
 function stockWeightCalculationInGrid() {
     for (const r of lineItems) {
@@ -462,6 +518,55 @@ function stockWeightCalculationInGrid() {
 }
 function afterGridChange() {
     scaleShortageProportion(); supplierShortageProportion(); totalEbPurchaseAgainstWeightUtilizeInGrid(); freightProportion(); renderItemsGrid();
+}
+/* UpdateEBTotalWithGrossWeight :6791 (toolbar "E.B Wt According To Gross Weight", config EBWtAccordingToGrossWeight). */
+function updateEbTotalWithGrossWeight() {
+    if (!cfgOn('EBWtAccordingToGrossWeight')) return;
+    /* r.Cells["UOM"] is the UOM code text; Conversion.ToDouble of a non-numeric code is 0. */
+    const uomNumber = r => { const n = Number(String(r.uom ?? '').trim()); return isNaN(n) ? 0 : n; };
+    let grossTotal = 0, qtyIntoWeight = 0;
+    for (const r of lineItems) { grossTotal += Number(r.grossWeight) || 0; qtyIntoWeight += (Number(r.itemQty) || 0) * uomNumber(r); }
+    if (!(grossTotal > qtyIntoWeight)) return;
+    const fac = numeric('txtFactoryWeight'), sup = numeric('txtSupplierWeight'), term = selectedText('cmbDeliveryTerm');
+    const diff = sup - (fac + cfgNum('BillWeightAndStockWeightDifferenceTolerance'));
+    let status = 0;
+    for (const r of lineItems) {
+        const ebUnit = Number(r.ebwPerUnit) || 0, gross = Number(r.grossWeight) || 0;
+        let ebTotal = Number(r.ebwTotal) || 0, addPurchase = 0;
+        if (ebUnit > 0 && (Number(r.purchaseOrderId) || 0) === 0) {
+            status = 0;
+            const grdQty = gridSum(lineItems, 'itemQty');
+            const purQty = emptyBagRows.filter(b => Number(b.typeid) === 2).reduce((s, b) => s + (Number(b.purchaseqty) || 0), 0);
+            if (purQty > 0) { status = 2; addPurchase = (Math.abs(purQty) - grdQty) * ebUnit; }
+        }
+        const wtCutTotal = Number(r.wtCutTotal) || 0, addLess = Number(r.adLsWeight) || 0;
+        let weight = 0;
+        if (grn.ref === 105) weight = gross - Math.abs(addLess);
+        else if (status === 2 && addPurchase > 0) weight = gross - wtCutTotal - ebTotal - Math.round(addLess) + addPurchase;
+        else if (status === 2) weight = gross - wtCutTotal - Math.round(addLess);
+        else weight = gross - ebTotal - wtCutTotal - Math.round(addLess);
+        r.netBillWeight = round(weight, 2);
+        if (sup > 0 && fac > 0 && gross > 0) {
+            if (cfgOn('DeductionPolicyForGrnIsOn')) r.stockWeight = fac;
+            else {
+                ebTotal = Number(r.stockEbTotal) || 0;
+                const bySup = () => round(fac * gross / sup - ebTotal, 2), byFac = () => round(fac * gross / fac - ebTotal, 2);
+                if (grn.freightId > 0) {
+                    if (diff >= 0) r.stockWeight = bySup();
+                    else {
+                        if (term === 'Load' || term === 'Load & PartyWeight' || term === 'Ponch & PartyWeight') r.stockWeight = bySup();
+                        if (term === 'Ponch') r.stockWeight = sup > fac ? byFac() : bySup();
+                        if (term === 'Ponch & FactoryWeight' || term === 'Load & FactoryWeight') r.stockWeight = byFac();
+                    }
+                } else {
+                    if (term === 'Load' || term === 'Load & PartyWeight' || term === 'Ponch & PartyWeight') r.stockWeight = bySup();
+                    if (term === 'Ponch') r.stockWeight = sup > fac ? byFac() : bySup();
+                    if (term === 'Ponch & FactoryWeight' || term === 'Load & FactoryWeight') r.stockWeight = byFac();
+                }
+            }
+        }
+    }
+    renderItemsGrid();
 }
 
 /* ---------------- detail rows ---------------- */
@@ -482,238 +587,478 @@ function formValidationDetail() {
     if (!numeric('cmbCity')) return 'City Field is Required';
     return '';
 }
-/* Add_Click :1872 / btnUpdateDetail_Click :1962 */
+function openBulkConfirmed() {
+    const eq = grnUomEquivalent();
+    return !(numeric('cmbPackingType') === 5 && numeric('cmbUom') > 0 && eq !== null && eq !== 65
+        && !confirm("Are you sure to Add Entry, because Packing type is 'OPEN BULK' and Pack Uom not 65?"));
+}
+function emptyBagsCaseTypeThree(ebTotal) {
+    if (grn.ref !== 105 && emptyBagRows.some(r => Number(r.typeid) === 3) && ebTotal === 0) {
+        $('#txtEbUnit').trigger('focus');
+        const typeName = $('#grnBagTypeOptions').prop('content')?.querySelector('option[value="3"]')?.textContent || '';
+        throw new Error('EmptyBags Weight is required when Empty Bags Case is ' + typeName);
+    }
+}
+/* Add_Click :1872 */
 function btnAddLine_Click() {
     try {
-        if (cfgOn('DeductionPolicyForGrnIsOn') && lineItems.length === 1 && editLine < 0) throw new Error('Adding multiple rows is not allowed while the deduction policy is active.');
+        if (cfgOn('DeductionPolicyForGrnIsOn') && lineItems.length === 1) throw new Error('Adding multiple rows is not allowed while the deduction policy is active.');
         if (grn.ref === 105 && breakupCount() > 0) {
             const pu = packUom();
             if (!purchaseBreakupRows.some(r => Number(r.netpacksize) === pu)) throw new Error('UOM ' + selectedText('cmbUom') + ' does not exist in BreakUp Grid');
         }
-        const invalid = formValidationDetail(); if (invalid) throw new Error(invalid);
-        if (grnUomEquivalent() === null) throw new Error('The selected item UOM has no valid weight factor.');
-        if (numeric('cmbPackingType') === 5 && grnUomEquivalent() !== 65 && !confirm("Are you sure to Add Entry, because Packing type is 'OPEN BULK' and Pack Uom not 65?")) return;
+        const invalid = formValidationDetail(); if (invalid) { alert(invalid); return; }
+        if (!openBulkConfirmed()) return;
         const net = numeric('txtBillWeight'), gross = numeric('txtGrossWeight');
         if (net > gross) throw new Error('NetBillWeight cannot be greater than Gross Weight. Please check.');
-        const it = selectedItem();
-        const lab = grn.lab && numeric('cmbLabNo') > 0 ? grn.lab : null;
-        if (lab && $('#chkWtCutComp').prop('checked') && numeric('txtWtCut') === 0 && !confirm('Weight Cut is compulsory but the value is zero. Do you want to continue?')) return;
+        const it = selectedItem(), lab = grn.lab && numeric('cmbLabNo') > 0 ? grn.lab : null;
+        if (grn.lab && $('#chkWtCutComp').prop('checked') && numeric('txtWtCut') === 0 && !confirm('Weight Cut is compulsory but the value is zero. Do you want to continue?')) return;
         let ebUnit = numeric('txtEbUnit'), ebTotal = numeric('txtEbTotal');
-        if (grn.ref !== 105 && emptyBagRows.some(r => Number(r.typeid) === 3) && ebTotal === 0) {
-            const typeName = $('#grnBagTypeOptions').prop('content')?.querySelector('option[value="3"]')?.textContent || '3';
-            throw new Error('EmptyBags Weight is required when Empty Bags Case is ' + typeName);
-        }
+        emptyBagsCaseTypeThree(ebTotal);
         const qty = numeric('txtItemQty');
         if (ebUnit > 0 && ebTotal === 0) { ebTotal = qty * ebUnit; $('#txtEbTotal').val(ebTotal); }
         else if (ebUnit === 0 && ebTotal > 0) { ebUnit = ebTotal / qty; $('#txtEbUnit').val(ebUnit); }
-        const line = {
-            ...(editLine >= 0 ? lineItems[editLine] : { id: 0 }),
-            purchaseOrderDetailId: grn.ref === 41 && it ? Number(it.PoDetailId) || 0 : 0, purchaseOrderId: grn.purchaseOrderId, purchaserOrderNo: grn.purchaseOrderNo,
-            warehouseId: numeric('cmbWarehouse'), whName: selectedText('cmbWarehouse'),
-            itemId: numeric('cmbItem'), itemCode: it ? it.ItemCode || '' : '', itemName: it ? it.ItemName : selectedText('cmbItem'),
-            cropYearId: numeric('cmbCropYear'), cropYear: selectedText('cmbCropYear'), jobLotId: numeric('cmbJobLot'), itemCategory: selectedText('cmbJobLot'),
-            packingTypeId: numeric('cmbPackingType'), packingType: selectedText('cmbPackingType'),
-            itemUomId: numeric('cmbUom'), uom: selectedText('cmbUom'), uomEquivalent: grnUomEquivalent(),
-            itemQty: qty, qty, grossWeight: gross, ebwPerUnit: ebUnit, ebwTotal: ebTotal, ebPurAgainstWeight: 0,
-            labId: lab ? Number(lab.Id) : 0, labReportRef: lab ? String(lab.LabNo ?? '') : '', qtyForWtCut: lab ? Number(lab.QtyForWtCut) || 0 : 0,
-            weightCutOnId: lab ? Number(lab.WtCutOnId) || 0 : 0, wtCutOn: lab ? lab.WtCutOn || '' : '', weightCutUom: lab ? Number(lab.WeightCutUom) || 0 : 0,
-            wtCut: numeric('txtWtCut'), wtCutTotal: numeric('txtWtCutTotal'), adLsWeight: numeric('txtAddLess'),
-            scaleShortWeight: 0, supplierShortWeight: 0, netBillWeight: net,
-            stockEbUnit: numeric('txtEbUnitStock'), stockEbTotal: numeric('txtEbTotalStock'), stockWeight: numeric('txtStockWeight'),
-            cityId: numeric('cmbCity'), areaCity: selectedText('cmbCity'), freightAmount: 0
-        };
-        if (editLine >= 0) lineItems[editLine] = line; else lineItems.push(line);
+        lineItems.push(Object.assign({ id: 0 }, lineFromEntryBox(it, lab, qty, gross, ebUnit, ebTotal, net), {
+            ebPurAgainstWeight: 0, scaleShortWeight: 0, supplierShortWeight: 0, freightAmount: 0,
+            /* Conversion.ToInt(CmbLabNo.Text): 0 when no lab row is chosen */
+            labReportRef: lab ? String(lab.LabNo ?? '') : '0' }));
         $('#txtVehicleNo').prop('disabled', false);
         resetDetail();
         afterGridChange();
     } catch (error) { alert(error.message); }
 }
-/* ResetDetial :4393 */
+function lineFromEntryBox(it, lab, qty, gross, ebUnit, ebTotal, net) {
+    return {
+        purchaseOrderDetailId: grn.ref === 41 && it ? Number(it.PoDetailId) || 0 : 0, purchaseOrderId: grn.purchaseOrderId,
+        /* the grid's "Order" column; FillGdnDetailListCommonForInsertAndDelete :4188 never copies it to PurchaserOrderNo */
+        orderNo: grn.purchaseOrderNo,
+        warehouseId: numeric('cmbWarehouse'), whName: selectedText('cmbWarehouse'),
+        itemId: numeric('cmbItem'), itemCode: it ? it.ItemCode || '' : '', itemName: it ? it.ItemName : selectedText('cmbItem'),
+        cropYearId: numeric('cmbCropYear'), cropYear: selectedText('cmbCropYear'), jobLotId: numeric('cmbJobLot'), itemCategory: selectedText('cmbJobLot'),
+        packingTypeId: numeric('cmbPackingType'), packingType: selectedText('cmbPackingType'),
+        itemUomId: numeric('cmbUom'), uom: selectedText('cmbUom'), uomEquivalent: grnUomEquivalent(),
+        itemQty: qty, qty, grossWeight: gross, ebwPerUnit: ebUnit, ebwTotal: ebTotal,
+        labId: numeric('cmbLabNo'), qtyForWtCut: lab ? Number(lab.QtyForWtCut) || 0 : 0,
+        weightCutOnId: lab ? Number(lab.WtCutOnId) || 0 : 0, wtCutOn: lab ? lab.WtCutOn || '' : '', weightCutUom: lab ? Number(lab.WeightCutUom) || 0 : 0,
+        wtCut: numeric('txtWtCut'), wtCutTotal: numeric('txtWtCutTotal'), adLsWeight: numeric('txtAddLess'), netBillWeight: net,
+        stockEbUnit: numeric('txtEbUnitStock'), stockEbTotal: numeric('txtEbTotalStock'), stockWeight: numeric('txtStockWeight'),
+        cityId: numeric('cmbCity'), areaCity: selectedText('cmbCity')
+    };
+}
+/* btnUpdateDetail_Click :1962 */
+function btnUpdateDetail_Click() {
+    try {
+        if (editLine < 0 || !lineItems[editLine]) return;
+        if (grn.ref === 105 && breakupCount() > 0 && !purchaseBreakupRows.some(r => Number(r.netpacksize) === packUom()))
+            throw new Error('Uom ' + selectedText('cmbUom') + ' does not exists in BreakUp Grid');
+        const invalid = formValidationDetail(); if (invalid) { alert(invalid); return; }
+        if (!openBulkConfirmed()) return;
+        const net = numeric('txtBillWeight'), gross = numeric('txtGrossWeight');
+        if (net > gross) throw new Error('NetBillWeight cannot greater than Gross Weight Please check');
+        const it = selectedItem(), lab = grn.lab && numeric('cmbLabNo') > 0 ? grn.lab : null, old = lineItems[editLine];
+        if (lab && $('#chkWtCutComp').prop('checked') && numeric('txtWtCut') === 0 && !confirm('Weight Cut is compulsory but the value is zero. Do you want to continue?')) return;
+        const ebUnit = numeric('txtEbUnit'), ebTotal = numeric('txtEbTotal');
+        emptyBagsCaseTypeThree(ebTotal);
+        if (ebUnit > 0 && ebTotal === 0) $('#txtEbTotal').val(numeric('txtItemQty') * ebUnit);
+        else if (ebUnit === 0 && ebTotal > 0) $('#txtEbUnit').val(ebTotal / numeric('txtItemQty'));
+        const line = lineFromEntryBox(it, lab, numeric('txtItemQty'), gross, numeric('txtEbUnit'), numeric('txtEbTotal'), net);
+        /* the desktop keeps the row's lab cut columns unless a lab row is chosen, and OrderDetailId unless PO */
+        if (!lab) { line.qtyForWtCut = old.qtyForWtCut; line.weightCutOnId = old.weightCutOnId; line.wtCutOn = old.wtCutOn; line.weightCutUom = old.weightCutUom; }
+        if (grn.ref !== 41) line.purchaseOrderDetailId = old.purchaseOrderDetailId;
+        line.labReportRef = $('#cmbLabNo option:selected').text() || '';
+        lineItems[editLine] = Object.assign({}, old, line);
+        resetDetail();
+        afterGridChange();
+    } catch (error) { alert(error.message); }
+}
+/* ResetDetial :4393 + the Add/Update/Cancel button swap */
 function resetDetail() {
-    editLine = -1; $('#btnAddLine').text('+ Add'); $('#btnCancelLine').hide();
-    for (const id of ['txtItemQty', 'txtGrossWeight', 'txtEbTotal', 'txtWtCut', 'txtWtCutTotal', 'txtAddLess', 'txtBillWeight', 'txtStockWeight', 'txtAvgWeight', 'txtEbTotalStock']) $('#' + id).val(0);
-    $('#cmbItem').val('0'); narrowUomToItem(); $('#cmbLabNo').empty(); grn.lab = null; grn.labRows = [];
+    editLine = -1; $('#btnAddLine').show(); $('#btnUpdateLine,#btnCancelLine').hide();
+    for (const id of ['txtItemQty', 'txtGrossWeight', 'txtEbUnit', 'txtEbTotal', 'txtAddLess', 'txtBillWeight', 'txtStockWeight']) $('#' + id).val('');
+    $('#txtWtCut').val(0); $('#txtWtCutOn').val('');
+    $('#cmbUom').val('0'); $('#cmbLabNo').val('0');
+    $('#labParamsPanel').hide(); $('#labParamsBody,#labParamsFoot').empty();
+    $('#cmbItem').trigger('focus');
 }
-function editItemLine(index) {
-    const line = lineItems[index]; if (!line) return; editLine = index;
-    for (const [field, key] of Object.entries({ cmbItem: 'itemId', cmbWarehouse: 'warehouseId', cmbCropYear: 'cropYearId', cmbJobLot: 'jobLotId', cmbPackingType: 'packingTypeId', cmbCity: 'cityId' })) selectValue(field, line[key]);
-    narrowUomToItem(); selectValue('cmbUom', line.itemUomId, line.uom);
-    for (const [field, key] of Object.entries({ txtItemQty: 'itemQty', txtGrossWeight: 'grossWeight', txtEbUnit: 'ebwPerUnit', txtEbTotal: 'ebwTotal', txtWtCut: 'wtCut', txtWtCutTotal: 'wtCutTotal', txtAddLess: 'adLsWeight', txtBillWeight: 'netBillWeight', txtEbUnitStock: 'stockEbUnit', txtEbTotalStock: 'stockEbTotal', txtStockWeight: 'stockWeight' })) $('#' + field).val(line[key] ?? 0);
-    grn.labRows = line.labId ? [{ Id: line.labId, LabNo: line.labReportRef, QtyForWtCut: line.qtyForWtCut, WtCut: line.wtCut, WtCutOnId: line.weightCutOnId, WtCutOn: line.wtCutOn, WeightCutUom: line.weightCutUom }] : [];
-    $('#cmbLabNo').empty().append(...(grn.labRows.length ? grn.labRows.map(r => new Option(String(r.LabNo), r.Id)) : [new Option('', '0')]));
-    $('#cmbLabNo').val(String(line.labId || 0)); grn.lab = grn.labRows[0] || null; $('#txtWtCutOn').val(line.wtCutOn || '');
-    $('#btnAddLine').text('Update row'); $('#btnCancelLine').show();
+/* grd_DoubleClick :2061 */
+async function grdDoubleClick(index) {
+    const line = lineItems[index]; if (!line) return;
+    editLine = index;
+    if (grn.ref === 41) { grn.purchaseOrderId = Number(line.purchaseOrderId) || 0; grn.purchaseOrderNo = Number(line.orderNo) || 0; }
+    selectValue('cmbItem', line.itemId, line.itemName);
+    await combitemLeave();
+    editLine = index;
+    for (const [field, key] of Object.entries({ cmbWarehouse: 'warehouseId', cmbCropYear: 'cropYearId', cmbJobLot: 'jobLotId', cmbPackingType: 'packingTypeId', cmbCity: 'cityId' })) selectValue(field, line[key]);
+    $('#txtItemQty').val(line.itemQty ?? 0);
+    selectValue('cmbUom', line.itemUomId, line.uom);
+    for (const [field, key] of Object.entries({ txtGrossWeight: 'grossWeight', txtEbUnit: 'ebwPerUnit', txtEbTotal: 'ebwTotal' })) $('#' + field).val(line[key] ?? 0);
+    if (line.labId && !(grn.labRows || []).some(r => Number(r.Id) === Number(line.labId))) {
+        grn.labRows = (grn.labRows || []).concat([{ Id: line.labId, LabNo: line.labReportRef, QtyForWtCut: line.qtyForWtCut, WtCut: line.wtCut, WtCutOnId: line.weightCutOnId, WtCutOn: line.wtCutOn, WeightCutUom: line.weightCutUom }]);
+        $('#cmbLabNo').append(new Option(String(line.labReportRef ?? ''), line.labId));
+    }
+    $('#cmbLabNo').val(String(line.labId || 0));
+    await cmbLabNoLeave();
+    $('#txtWtCutOn').val(line.wtCutOn || '');
+    for (const [field, key] of Object.entries({ txtWtCut: 'wtCut', txtWtCutTotal: 'wtCutTotal', txtAddLess: 'adLsWeight', txtBillWeight: 'netBillWeight', txtEbUnitStock: 'stockEbUnit', txtEbTotalStock: 'stockEbTotal', txtStockWeight: 'stockWeight' })) $('#' + field).val(line[key] ?? 0);
+    $('#btnAddLine').hide(); $('#btnUpdateLine,#btnCancelLine').show();
+    $('#cmbItem').trigger('focus');
 }
-function cancelEditLine() { resetDetail(); }
+/* btnCancelUpdateDetial_Click :2053 — only the buttons and the index; the boxes keep their values */
+function cancelEditLine() { editLine = -1; $('#btnAddLine').show(); $('#btnUpdateLine,#btnCancelLine').hide(); }
+/* DeleteRowInDetailGrid :2234 */
 function removeLine(idx) {
-    if (!confirm('Delete this detail row?')) return;
-    resetDetail(); lineItems.splice(idx, 1); afterGridChange();
+    if (editLine !== -1) { alert('Reset Detail first...'); return; }
+    const line = lineItems[idx]; if (!line) return;
+    if ((Number(line.id) || 0) > 0 && !confirm('Are you sure to Delete?')) return;
+    lineItems.splice(idx, 1);
+    scaleShortageProportion(); supplierShortageProportion(); freightProportion(); renderItemsGrid();
 }
 
+/* grdSettings :2109 + CommonDetailSettings :2129 — FreightAmount/SuppShortWt only for 105, ScaleShortWt hidden for 106 */
 const GRID_COLUMNS = [
-    ['whName', 'text'], ['itemCode', 'text'], ['itemName', 'text'], ['cropYear', 'text'], ['itemCategory', 'text'], ['packingType', 'text'], ['uom', 'text'],
+    ['whName', 'text'], ['itemName', 'text'], ['cropYear', 'text'], ['itemCategory', 'text'], ['packingType', 'text'], ['uom', 'text'],
     ['itemQty', 'sum'], ['grossWeight', 'sum'], ['ebwPerUnit', 'num'], ['ebwTotal', 'sum'], ['ebPurAgainstWeight', 'sum'], ['labReportRef', 'text'],
     ['qtyForWtCut', 'num'], ['wtCutOn', 'text'], ['weightCutUom', 'num'], ['wtCut', 'num'], ['wtCutTotal', 'sum'], ['adLsWeight', 'sum'],
-    ['scaleShortWeight', 'sum'], ['supplierShortWeight', 'sum'], ['netBillWeight', 'sum'], ['stockEbUnit', 'num'], ['stockEbTotal', 'sum'],
-    ['stockWeight', 'sum'], ['areaCity', 'text'], ['freightAmount', 'sum']];
+    ['scaleShortWeight', 'sum', 'gd-not106'], ['supplierShortWeight', 'sum', 'gd-105'], ['netBillWeight', 'sum'], ['stockEbUnit', 'num'], ['stockEbTotal', 'sum'],
+    ['stockWeight', 'sum'], ['areaCity', 'text'], ['freightAmount', 'sum', 'gd-105']];
 function cellNumber(v) { const n = Number(v) || 0; return String(round(n, 3)); }
+function colClass(c) { return c[2] ? ' ' + c[2] : ''; }
 function renderItemsGrid() {
     const tbody = $('#grdItemsBody'); tbody.empty();
-    const span = GRID_COLUMNS.length + 2;
-    if (!lineItems.length) tbody.html('<tr><td colspan="' + span + '" class="text-center text-muted py-2">No received items added yet.</td></tr>');
     lineItems.forEach((item, idx) => {
-        tbody.append('<tr><td class="text-center"><button class="btn btn-sm btn-danger py-0 px-1" onclick="removeLine(' + idx + ')">&times;</button><button class="tool-btn" onclick="editItemLine(' + idx + ')">Edit</button></td>'
-            + '<td>' + (item.purchaseOrderId ? '<a href="/purchase/purchase-order?id=' + Number(item.purchaseOrderId) + '">' + escapeHtml(item.purchaserOrderNo || 'Order') + '</a>' : '') + '</td>'
-            + GRID_COLUMNS.map(([k, t]) => t === 'text' ? '<td>' + escapeHtml(item[k]) + '</td>' : '<td class="text-end">' + cellNumber(item[k]) + '</td>').join('') + '</tr>');
+        tbody.append('<tr data-line="' + idx + '"><td class="text-center"><button type="button" class="tool-btn" style="height:17px;padding:0 4px" onclick="event.stopPropagation();removeLine(' + idx + ')">X</button></td>'
+            + '<td class="text-end">' + escapeHtml(item.orderNo || '') + '</td>'
+            + GRID_COLUMNS.map(c => '<td class="' + (c[1] === 'text' ? '' : 'text-end') + colClass(c) + '">' + (c[1] === 'text' ? escapeHtml(item[c[0]]) : cellNumber(item[c[0]])) + '</td>').join('') + '</tr>');
     });
-    $('#grdItemsFoot').html('<tr class="fw-bold bg-light"><td colspan="2" class="text-end">Summary:</td>' + GRID_COLUMNS.map(([k, t]) => t === 'sum' ? '<td class="text-end">' + cellNumber(gridSum(lineItems, k)) + '</td>' : '<td></td>').join('') + '</tr>');
+    $('#grdItemsFoot').html('<tr><td></td><td class="text-end">' + lineItems.length + '</td>' + GRID_COLUMNS.map(c => '<td class="text-end' + colClass(c) + '">' + (c[1] === 'sum' ? cellNumber(gridSum(lineItems, c[0])) : '') + '</td>').join('') + '</tr>');
+    $('.gd-105').toggle(grn.ref === 105); $('.gd-not106').toggle(grn.ref !== 106);
 }
 
-/* ---------------- pending gate passes ---------------- */
+/* ---------------- pending gate passes (GatepassGridFill :2490, GpGridSetting :2612) ---------------- */
+const PENDING_COLUMNS = [['GpSrNo', 'GpSrNo', 'link'], ['FVStatus', 'Freight Status'], ['GpDate', 'GpDate', 'date'], ['OrderType', 'OrderType'], ['SupplierName', 'SupplierName'],
+    ['VehicleNo', 'VehicleNo'], ['BiltyNo', 'BiltyNo'], ['VarietyName', 'ItemName'], ['Qty', 'Qty', 'num'], ['SupplierWeight', 'SupplierWeight', 'num'], ['FactoryWeight', 'FactoryWeight', 'num'],
+    ['ReceivedWeight', 'ReceivedWeight', 'num'], ['StockWeight', 'StockWeight', 'num'], ['PoAccessWeight', 'Po Excess Weight', 'excess'], ['VehicleType', 'VehicleType'], ['NetPaid', 'NetPaid', 'num'],
+    ['EntryDate', 'EntryDate', 'date'], ['EntryUser', 'EntryUser'], ['ModifyDate', 'ModifyDate', 'date'], ['ModifyUser', 'ModifyUser'], ['ScalCharges', 'ScalCharges', 'num'],
+    ['AdvanceByParty', 'AdvanceByParty', 'num'], ['AdvanceByFactory', 'AdvanceByFactory', 'num'], ['OtherDeduction', 'OtherDeduction', 'num'], ['TotalFreight', 'TotalFreight', 'num'],
+    ['ShortageAmount', 'ShortageAmount', 'num'], ['DiscountAmount', 'DiscountAmount', 'num'], ['RemainingAmount', 'RemainingAmount', 'num'], ['ChargeToPartyAmount', 'ChargeToPartyAmount', 'num'],
+    ['TotalDeductionAmount', 'TotalDeductionAmount', 'num'], ['TotalPaidAmount', 'TotalPaidAmount', 'num'], ['SupplierDispatchNo', 'SupplierDispatchNo'], ['FreightSpecialApprovalStatus', 'FreightSpecialApprovalStatus']];
+/* LoadPendingGatePassForGrn :126 — its own column list and "F.V Status" caption */
+const LOADER_COLUMNS = PENDING_COLUMNS.filter(c => !['ScalCharges', 'AdvanceByParty', 'AdvanceByFactory', 'OtherDeduction', 'TotalFreight', 'ShortageAmount', 'DiscountAmount', 'RemainingAmount',
+    'ChargeToPartyAmount', 'SupplierDispatchNo', 'FreightSpecialApprovalStatus'].includes(c[0])).map(c => c[0] === 'FVStatus' ? ['FVStatus', 'F.V Status'] : c);
+function renderPendingHead() {
+    $('#grdPendingHead').html('<th>Load</th>' + PENDING_COLUMNS.map(c => '<th>' + escapeHtml(c[1]) + '</th>').join(''));
+    $('#grdLoaderHead').html('<th>Load</th>' + LOADER_COLUMNS.map(c => '<th>' + escapeHtml(c[1]) + '</th>').join(''));
+}
+function pendingCell(g, c) {
+    const v = g[c[0]];
+    if (c[2] === 'link') return '<td><a data-gp-print="' + Number(g.Id) + '" data-detail-count="' + (Number(g.DetailIdsCount) || 0) + '">' + escapeHtml(v) + '</a></td>';
+    if (c[2] === 'date') return '<td>' + escapeHtml(displayDate(v)) + '</td>';
+    if (c[2] === 'excess') return '<td class="text-end ' + ((Number(v) || 0) > 0 ? 'excess-pos' : (Number(v) || 0) === 0 ? 'excess-zero' : '') + '">' + escapeHtml(v ?? '') + '</td>';
+    if (c[2] === 'num') return '<td class="text-end">' + escapeHtml(v ?? '') + '</td>';
+    return '<td>' + escapeHtml(v ?? '') + '</td>';
+}
+/* grouped by Status (grdGp.RootTable.Groups.Add("Status"), Status column hidden) */
+function pendingRowsHtml(rows, columns, fromLoader) {
+    const groups = [];
+    for (const g of rows) { let grp = groups.find(x => x.status === String(g.Status ?? '')); if (!grp) groups.push(grp = { status: String(g.Status ?? ''), rows: [] }); grp.rows.push(g); }
+    groups.sort((a, b) => a.status.localeCompare(b.status));
+    return groups.map(grp => '<tr class="group-row"><td colspan="' + (columns.length + 1) + '">Status: ' + escapeHtml(grp.status) + ' (' + grp.rows.length + ')</td></tr>'
+        + grp.rows.map(g => '<tr data-gp-status="' + escapeHtml(g.Status) + '"><td><button type="button" class="tool-btn" style="height:17px;padding:0 6px" data-gp-id="' + Number(g.Id) + '" onclick="withButtonLoading(this,()=>' + (fromLoader ? 'loaderLoad' : 'loadGatePass') + '(this.dataset.gpId))">Load</button></td>'
+            + columns.map(c => pendingCell(g, c)).join('') + '</tr>').join('')).join('');
+}
+/* FillCountFromGpGrid :2596 */
 function fillCountFromGpGrid() {
-    const statuses = Array.from(document.querySelectorAll('[data-gp-status]')).map(row => row.dataset.gpStatus);
-    $('#pendingGpCounts').text('Open Gp: ' + statuses.filter(s => s === 'Open').length + ' | Accepted Gp: ' + statuses.filter(s => s === 'Accepted').length);
+    const statuses = grn.pending.map(g => String(g.Status ?? ''));
+    $('#txtAcceptedGpTotal,#loaderAcceptedTotal').text(statuses.filter(s => s === 'Accepted').length);
+    $('#txtOpenGpTotal,#loaderOpenTotal').text(statuses.filter(s => s === 'Open').length);
 }
 async function refreshPendingGrid() {
     try {
-        const rows = await api('/api/purchase/market-grn/form/pending');
-        $('#grdPendingBody').html(rows.map(g => '<tr data-gp-status="' + escapeHtml(g.Status) + '"><td>' + escapeHtml(g.Status) + '</td><td><button class="tool-btn" data-gp-id="' + Number(g.Id) + '" onclick="withButtonLoading(this,()=>loadGatePass(this.dataset.gpId))">Load</button></td>'
-            + '<td><a href="/purchase/inward-gate-pass?id=' + Number(g.Id) + '">' + escapeHtml(g.GpSrNo) + '</a></td>'
-            + ['FVStatus', 'GpDate', 'OrderType', 'SupplierName', 'VehicleNo', 'BiltyNo', 'ItemName', 'Qty', 'SupplierWeight', 'FactoryWeight', 'ReceivedWeight', 'PoAccessWeight'].map(k => '<td>' + escapeHtml(k === 'GpDate' ? displayDate(g[k]) : g[k]) + '</td>').join('') + '</tr>').join(''));
-        const sel = $('#cmbGatePassNo'), cur = sel.val(); sel.empty().append(new Option('-- Select --', ''));
-        for (const g of rows) sel.append(new Option(String(g.GpSrNo), g.Id));
-        if (cur && rows.some(g => String(g.Id) === cur)) sel.val(cur);
-        fillCountFromGpGrid();
-    } catch (e) { /* the grid keeps its server-rendered rows */ }
+        grn.pending = await api('/api/purchase/market-grn/form/pending');
+    } catch (e) { alert(e.message); return; }
+    $('#grdPendingBody').html(pendingRowsHtml(grn.pending, PENDING_COLUMNS, false));
+    fillCountFromGpGrid();
+}
+/* grdGp_LinkClicked :2675 — 256 with detail rows, otherwise 251 */
+$(document).on('click', 'a[data-gp-print]', function () {
+    const id = Number(this.dataset.gpPrint);
+    openPrint(Number(this.dataset.detailCount) > 0 ? '256-GatePassInward_WithDetailSlip.rpt' : '251-InvRptInwardGatePassSlip.rpt', { id });
+});
+/* GrdHistory_LinkClicked OrderNo → PurchaseOrderSlipReport203 */
+$(document).on('click', 'a[data-po]', function () { openPrint('203-InvRptPurchaseOrderRiceSlip.rpt', { id: Number(this.dataset.po) }); });
+
+/* btnLoadGatePass_Click :3029 */
+function btnLoadGatePass_Click() {
+    if (numeric('txtId') > 0) { alert('Please Reset the form First...'); return; }
+    $('#grdLoaderBody').html(pendingRowsHtml(grn.pending, LOADER_COLUMNS, true));
+    fillCountFromGpGrid();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('loaderModal')).show();
+}
+/* LoadPendingGatePassForGrn.LoadGPByRow :341 then LoadGatePassByRowFromLoader :3048 */
+async function loaderLoad(id) {
+    const row = grn.pending.find(g => Number(g.Id) === Number(id)); if (!row) return;
+    if (String(row.Status) !== 'Accepted') throw new Error('Status Not Accepted Please check status');
+    if (!cfgOn('LabCompulsoryNotCheckingOnGRN') && (Number(row.LastLabId) || 0) <= 0) throw new Error('Lab is pending for this gate pass. Please do lab first then Load');
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('loaderModal')).hide();
+    await loadGatePass(id, true);
 }
 
-/* LoadGPByRow :2716 + combgatepass_Leave :2961 (GatePassRecordFill :2852, FillWeightsAndItems :2929) */
-async function loadGatePass(id) {
+/* LoadGPByRow :2716 (fromLoader: LoadGatePassByRowFromLoader :3048) + combgatepass_Leave :2961
+   (GatePassRecordFill :2852, FillWeightsAndItems :2929). */
+async function loadGatePass(id, fromLoader = false) {
     if (!Number(id)) return;
-    if (numeric('txtId') > 0) { alert('Please Reset the form First...'); return; }
-    if (lineItems.length && !confirm('Replace the selected gate pass and clear detail rows?')) return;
-    try {
-        const version = ++lookupVersion;
-        const data = await api('/api/purchase/market-grn/form/load/' + Number(id)); if (version !== lookupVersion) return;
-        const p = data.pending || {}, gp = data.gatePass;
-        loadedHeader = {}; lineItems = []; editLine = -1; $('#txtId').val(0); $('#btnSave').text('Save');
-        grn.ref = Number(data.refDocumentTypeId) || 0; grn.gpId = Number(id); grn.freightId = Number(p.FreightId) || 0;
-        grn.gpQty = Number(p.Qty) || 0; grn.gpDate = displayDate(p.GpDate); grn.chargeToParty = Number(p.ChargeToPartyAmount) || 0;
-        grn.previousData = data.previousData || []; grn.preBills = data.preBills || []; grn.items = data.items || [];
-        $('#grnTitle').text('Goods Receiving Notes (' + (p.OrderType || '') + ')');
-        renderSupplements(data); breakupDirty = grn.ref === 105 && !breakupLocked;
-        /* freight block from the pending row */
-        $('#txtBiltyFreight').val(p.NetPaid ?? 0); $('#txtScaleCharges').val(p.ScalCharges ?? 0);
-        $('#txtAdvParty').val(p.AdvanceByParty ?? 0); $('#txtAdvFactory').val(p.AdvanceByFactory ?? 0);
-        $('#txtOtherDeduct').val(p.OtherDeduction ?? 0); $('#txtTotalFreight').val(p.TotalFreight ?? 0);
-        $('#txtShortageAmt').val(p.ShortageAmount ?? 0); $('#txtDiscountAmt').val(p.DiscountAmount ?? 0);
-        $('#txtRemainingFreight').val(p.RemainingAmount ?? 0); $('#txtChargeToParty').val(p.ChargeToPartyAmount ?? 0);
-        $('#txtFreightDeduct').val(p.TotalDeductionAmount ?? 0); $('#txtPaidAmount').val(p.TotalPaidAmount ?? 0);
+    if (numeric('txtId') > 0) throw new Error('Please Reset the form First...');
+    const version = ++lookupVersion;
+    const data = await api('/api/purchase/market-grn/form/load/' + Number(id) + (fromLoader ? '?loader=true' : '')); if (version !== lookupVersion) return;
+    const p = data.pending || {}, gp = data.gatePass;
+    /* LoadGPByRow never clears dtdetail: rows already in the grid stay (see report, desktop quirks). */
+    loadedHeader = {}; editLine = -1; $('#txtId').val(0);
+    grn.ref = Number(data.refDocumentTypeId) || 0; grn.gpId = Number(id); grn.freightId = Number(p.FreightId) || 0; grn.gpNo = String(p.GpSrNo ?? '');
+    grn.gpQty = Number(p.Qty) || 0; grn.gpDate = displayDate(p.GpDate); grn.chargeToParty = Number(p.ChargeToPartyAmount) || 0;
+    grn.previousData = data.previousData || []; grn.preBills = data.preBills || []; grn.items = data.items || []; grn.invoiceId = 0;
+    $('#grnTitle').text('Goods Receiving Notes (' + (p.OrderType || '') + ')');
+    if (grn.ref === 106 && cfgOn('DeliveryTermEditableOnGrnForGatePurchase')) $('#cmbDeliveryTerm').prop('disabled', false);
+    renderSupplements(data); breakupDirty = grn.ref === 105 && !breakupLocked;
+    if (!fromLoader) {
+        /* the freight block from the pending row (LoadGPByRow :2750-2774) */
+        $('#txtBiltyFreight').val(p.NetPaid ?? ''); $('#txtScaleCharges').val(p.ScalCharges ?? '');
+        $('#txtAdvParty').val(p.AdvanceByParty ?? ''); $('#txtAdvFactory').val(p.AdvanceByFactory ?? '');
+        $('#txtOtherDeduct').val(p.OtherDeduction ?? ''); $('#txtTotalFreight').val(p.TotalFreight ?? '');
+        $('#txtShortageAmt').val(p.ShortageAmount ?? ''); $('#txtDiscountAmt').val(p.DiscountAmount ?? '');
+        $('#txtRemainingFreight').val(p.RemainingAmount ?? ''); $('#txtChargeToParty').val(p.ChargeToPartyAmount ?? '');
+        $('#txtFreightDeduct').val(p.TotalDeductionAmount ?? ''); $('#txtPaidAmount').val(p.TotalPaidAmount ?? '');
         $('#txtBiltyFreight,#txtAdvParty,#txtAdvFactory,#txtFreightDeduct').prop('disabled', grn.freightId !== 0);
         if (Number(p.FreightDebitAccountId) > 0) $('#cmbTransporter').val(String(p.FreightDebitAccountId));
-        $('#txtReceivedWeight').val(p.ReceivedWeight ?? 0); $('#txtAccessWeight').val(p.PoAccessWeight ?? 0);
-        $('#txtSupplierWeight').prop('readonly', grn.ref !== 105 || Number(p.ReceivedWeight) !== 0);
-        showWeightFields(grn.ref === 105);
-        $('#cmbDeliveryTerm').prop('disabled', !(grn.ref === 106 && cfgOn('DeliveryTermEditableOnGrnForGatePurchase')));
-        if (cfgOn('ValidateGrnAndInvoiceDateWithGpDate')) $('#txtDocDate').val(grn.gpDate);
-        selectValue('cmbGatePassNo', id, p.GpSrNo);
-        if (grn.freightId === 0 && grn.ref === 105) { $('#txtAdvFactory,#txtAdvParty').prop('disabled', true).val(0); }
-        /* GatePassRecordFill */
-        const locked = !!gp;
-        $('#cmbVehicleType').prop('disabled', locked); $('#txtVehicleNo,#txtBiltyNo').prop('disabled', locked);
-        if (gp) {
-            selectByText('cmbVehicleType', gp.VehicleType); $('#txtVehicleNo').val(gp.VehicleNo || ''); $('#txtBiltyNo').val(gp.BiltyNo || '');
-            $('#txtRemarks').val(gp.OtherRemarks || ''); $('#txtItemQty').val(gp.NoOfPackages ?? 0);
-            $('#txtSupplierWeight').val(gp.SupplierWeight ?? 0); $('#txtFactoryWeight').val(gp.FactoryWeight ?? 0); $('#txtDiffWeight').val(gp.DifferenceWeight ?? 0);
-            $('#txtAnalystName').val(gp.AnalystName || ''); $('#txtWbTickets').val(gp.TicketNos || '');
-            selectValue('cmbSupplier', gp.SupplierCustomerId, gp.CompanyName);
-            if (grn.ref === 41) {
-                grn.purchaseOrderId = Number(gp.PurchaseOrderId) || 0; grn.purchaseOrderNo = Number(gp.SupplierContractCode) || 0;
-                /* comborderno_Leave :1346 */
-                const po = data.purchaseOrder || {}; grn.poEmptyBags = po.emptyBags || [];
-                purchaseOrderEmptyBags();
-                const d = (po.detail || [])[0];
-                if (d) { selectByText('cmbCity', d.CityArea); selectByText('cmbDeliveryTerm', d.DeliveryTerm); selectValue('cmbUom', d.OrderItemUOMId); }
-            } else {
-                grn.purchaseOrderId = 0; grn.purchaseOrderNo = 0; grn.poEmptyBags = [];
-                /* FillWeightsAndItems :2929 */
-                const sup = numeric('txtSupplierWeight'), fac = numeric('txtFactoryWeight'), rec = numeric('txtReceivedWeight');
-                if (grn.ref === 105) { selectByText('cmbDeliveryTerm', 'Load'); $('#txtGrnWeight').val(sup); $('#txtBalWeight').val(sup - rec); $('#txtGrossWeight').val(sup - rec); }
-                else if (grn.ref === 106) { const b = sup > fac ? fac : sup; selectByText('cmbDeliveryTerm', 'Ponch'); $('#txtGrnWeight').val(b); $('#txtBalWeight').val(b); $('#txtGrossWeight').val(b); }
-            }
-        } else { grn.purchaseOrderId = 0; grn.purchaseOrderNo = 0; }
+    } else if (grn.freightId > 0) {
+        $('#txtPaidAmount').val(p.TotalPaidAmount ?? ''); $('#txtFreightDeduct').val(p.TotalDeductionAmount ?? '');
+    }
+    $('#txtReceivedWeight').val(p.ReceivedWeight ?? ''); $('#txtAccessWeight').val(p.PoAccessWeight ?? '');
+    $('#txtSupplierWeight').prop('readonly', grn.ref !== 105 || Number(p.ReceivedWeight) !== 0);
+    showRecWeight(grn.ref === 105); showBalWeight(grn.ref === 105);
+    if (cfgOn('ValidateGrnAndInvoiceDateWithGpDate')) $('#txtDocDate').val(grn.gpDate);
+    $('#cmbGatePassNo').val(grn.gpId); $('#txtGatePassNo').val(grn.gpNo);
+    if (!fromLoader && grn.freightId === 0 && grn.ref === 105) $('#txtAdvFactory,#txtAdvParty').prop('disabled', true).val(0);
+    showShortageCheckBoxes();
+    /* GatePassRecordFill :2852 (combgatepass.TextChanged) */
+    transporterAccountDisable();
+    const locked = !!gp;
+    $('#cmbVehicleType').prop('disabled', locked); $('#txtVehicleNo,#txtBiltyNo').prop('disabled', locked);
+    if (gp) {
+        selectByText('cmbVehicleType', gp.VehicleType); $('#txtVehicleNo').val(gp.VehicleNo || ''); $('#txtBiltyNo').val(gp.BiltyNo || '');
+        $('#txtRemarks').val(gp.OtherRemarks || ''); $('#txtItemQty').val(gp.NoOfPackages ?? '');
+        $('#txtSupplierWeight').val(gp.SupplierWeight ?? ''); $('#txtFactoryWeight').val(gp.FactoryWeight ?? ''); $('#txtDiffWeight').val(gp.DifferenceWeight ?? '');
+        $('#txtAnalystName').val(gp.AnalystName || ''); $('#txtWbTickets').val(gp.TicketNos || '');
+        selectValue('cmbSupplier', gp.SupplierCustomerId, gp.CompanyName);
         itemNameBind();
-        fillPreBills(gp ? gp.SupplierDispatchId : 0);
-        if (grn.ref === 41 && gp) $('#cmbPreBillNo').val(String(gp.SupplierDispatchId || 0));
-        transporterAccountDisable(); showShortageCheckBoxes();
-        const diff = numeric('txtSupplierWeight') - numeric('txtFactoryWeight'); $('#lblDiffWeight').text(diff > 0 ? 'Short' : diff < 0 ? 'Excess' : 'Equal');
-        total(); renderItemsGrid();
-        if (breakupDirty) await calculatePurchaseBreakups();
-        const next = await api('/api/purchase/market-grn/next-code'); if (version === lookupVersion) $('#txtDocNo').val(next.docNo);
-    } catch (error) { alert(error.message); }
+        if (grn.ref === 41) {
+            grn.purchaseOrderId = Number(gp.PurchaseOrderId) || 0; grn.purchaseOrderNo = Number(gp.SupplierContractCode) || 0;
+            /* comborderno_Leave :1346 */
+            const po = data.purchaseOrder || {}; grn.poEmptyBags = po.emptyBags || [];
+            purchaseOrderEmptyBags();
+            const d = (po.detail || [])[0];
+            if (d) { selectByText('cmbCity', d.CityArea); selectByText('cmbDeliveryTerm', d.DeliveryTerm); selectValue('cmbUom', d.OrderItemUOMId); }
+            fillPreBills(gp.SupplierDispatchId);
+            $('#cmbPreBillNo').val(String(gp.SupplierDispatchId || 0));
+        } else if (grn.ref === 105 || grn.ref === 106) {
+            /* FillWeightsAndItems :2929 */
+            const sup = numeric('txtSupplierWeight'), fac = numeric('txtFactoryWeight'), rec = numeric('txtReceivedWeight');
+            if (grn.ref === 105) { selectByText('cmbDeliveryTerm', 'Load'); $('#txtGrnWeight').val(sup); $('#txtBalWeight').val(sup - rec); $('#txtGrossWeight').val(sup - rec); }
+            else { const b = sup > fac ? fac : sup; selectByText('cmbDeliveryTerm', 'Ponch'); $('#txtGrnWeight').val(b); $('#txtBalWeight').val(b); $('#txtGrossWeight').val(b); }
+            $('#cmbSupplier').prop('disabled', false);
+            grn.purchaseOrderId = 0; grn.purchaseOrderNo = 0; grn.poEmptyBags = [];
+        }
+        total();
+        await combitemLeave();
+    } else { grn.purchaseOrderId = 0; grn.purchaseOrderNo = 0; }
+    if (grn.ref !== 41) await combsupplierLeave();   /* combgatepass_Leave :2973 */
+    const diff = numeric('txtSupplierWeight') - numeric('txtFactoryWeight'); $('#lblDiffWeight').text(diff > 0 ? 'Short' : diff < 0 ? 'Excess' : 'Equal');
+    renderItemsGrid();
+    if (breakupDirty) await calculatePurchaseBreakups();
+    $('#cmbWarehouse').trigger('focus');
+    applyGrnRights();
 }
 
 /* ---------------- save / load / reset ---------------- */
-async function onSaveRecord() {
-    const count = lineItems.length;
-    if (!count) { alert('Grid Record Not Found'); return; }
+/* FormValidation :1477 */
+function formValidation() {
+    if (!textValue('txtDocNo').trim() || textValue('txtDocNo').trim() === '0') return 'DocNo Field is Required';
+    if (!numeric('cmbSupplier')) return 'Supplier Field is Required';
+    if (!Number(textValue('txtGatePassNo').trim())) return 'Gate pass Field is Required';
+    if (numeric('txtSupplierWeight') === 0) return 'Supplier Weight Field is Required';
+    const term = selectedText('cmbDeliveryTerm').trim(); if (!term || term === '0') return 'DeliveryTerm Field is Required';
+    if (numeric('txtFactoryWeight') === 0) return 'Factory Weight Field is Required';
+    return '';
+}
+/* btnUpdate_Click :3956 */
+function onUpdateRecord() {
+    if (numeric('txtId') === 0) throw new Error('Record not update because Id not found');
+    return insert();
+}
+/* btnSave_Click :3943 */
+function onSaveRecord() { return insert(); }
+/* Insert :3553 — the confirmations and client-side refusals in the desktop's order; the server repeats every refusal. */
+async function insert() {
+    const updating = numeric('txtId') > 0;
+    if (updating && grn.invoiceId > 0) { alert("This Document is referred in invoice. So you can't update this record."); return; }
+    if (!lineItems.length) { alert('Grid Record Not Found'); return; }
+    if (cfgOn('DeductionPolicyForGrnIsOn') && lineItems.length > 1) throw new Error('Multiple rows is not allowed while the deduction policy is active.');
+    const invalid = formValidation(); if (invalid) { alert(invalid); return; }
+    if (!confirm(updating ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
     if (grn.ref === 105) {
         const scaleShort = gridSum(lineItems, 'scaleShortWeight');
         if (scaleShort > 0 && !$('#chkScaleDeduct').prop('checked') && !confirm('You have not Apply Scale_Short_Weight Deduction In bill Weight...Are you sure to Continue?')) return;
         if (scaleShort > 0 && !$('#chkSupplierDeduct').prop('checked') && !confirm('You have not Apply Supplier_Short_Weight Deduction In bill Weight...Are you sure to Continue?')) return;
     }
-    if (!confirm(numeric('txtId') > 0 ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
     stockWeightCalculationInGrid(); renderItemsGrid();
-    const payload = { ...await supplementPayload(), id: numeric('txtId'), docNo: numeric('txtDocNo'), docDate: textValue('txtDocDate'), supplierCustomerId: numeric('cmbSupplier'),
-        inwardGatePassId: grn.gpId || numeric('cmbGatePassNo'), gpNo: Number(selectedText('cmbGatePassNo')) || loadedHeader.GpNo || 0,
-        vehicleNo: textValue('txtVehicleNo'), vehicleType: selectedText('cmbVehicleType'), biltyNo: textValue('txtBiltyNo'), remarksHeader: textValue('txtRemarks'),
-        partyWeight: numeric('txtSupplierWeight'), factoryWeight: numeric('txtFactoryWeight'), deliveryTerm: selectedText('cmbDeliveryTerm'),
+    const supplements = await supplementPayload();
+    /* Insert() walks every empty-bag grid row (condition / quantity checks), not only the filled ones. */
+    if (typeof emptyBagsDirty !== 'undefined' && emptyBagsDirty) supplements.emptyBags = emptyBagRows.map(r => Object.assign({}, r));
+    const details = lineItems.map(l => { const d = Object.assign({}, l); delete d.orderNo; delete d.purchaserOrderNo; return d; });
+    const payload = { ...supplements, id: numeric('txtId'), docNo: numeric('txtDocNo'), docDate: textValue('txtDocDate'), supplierCustomerId: numeric('cmbSupplier'),
+        inwardGatePassId: grn.gpId, gpNo: Number(textValue('txtGatePassNo')) || 0,
+        vehicleNo: textValue('txtVehicleNo').trim(), vehicleType: selectedText('cmbVehicleType'), biltyNo: textValue('txtBiltyNo').trim(), remarksHeader: textValue('txtRemarks').trim(),
+        partyWeight: numeric('txtSupplierWeight'), factoryWeight: numeric('txtFactoryWeight'), deliveryTerm: selectedText('cmbDeliveryTerm').trim(),
         transporterId: numeric('cmbTransporter'), transporterSupCustId: grn.subsidiary ? Number($('#cmbTransporter option:selected').attr('data-party-id')) || 0 : 0,
         carriageAmount: numeric('txtPaidAmount'), biltyFreight: numeric('txtBiltyFreight'), freightDeduction: numeric('txtFreightDeduct'),
         advanceByPartyFreight: numeric('txtAdvParty'), advanceByFactoryFreight: numeric('txtAdvFactory'), supplierDispatchId: numeric('cmbPreBillNo'),
-        scaleCharges: numeric('txtScaleCharges'), otherFreightDeduction: numeric('txtOtherDeduct'), shortageAmountFV: numeric('txtShortageAmt'),
-        discountAmountFV: numeric('txtDiscountAmt'), chargeToPartyAmountFV: numeric('txtChargeToParty'),
-        scaleShortWeightApply: $('#chkScaleDeduct').prop('checked'), supplierShortWeightApply: $('#chkSupplierDeduct').prop('checked'), details: lineItems };
+        chargeToPartyAmountFV: numeric('txtChargeToParty'),
+        scaleShortWeightApply: $('#chkScaleDeduct').prop('checked'), supplierShortWeightApply: $('#chkSupplierDeduct').prop('checked'), details };
     const data = await api('/api/purchase/market-grn/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    alert((numeric('txtId') > 0 ? 'Record Update Successfully [' : 'Record Save Successfully [') + (data.docNo ?? payload.docNo) + ']');
-    /* After save: wages bill when ContractorWagesCompulsoryBeforeInvoices and GRN is active for wages (:3920). */
-    if (cfgOn('ContractorWagesCompulsoryBeforeInvoices') && grn.wages)
-        alert('Contractor Wages Bill is compulsory for this GRN (Id ' + data.id + '). Please enter it on the Labour Wages screen before the invoice.');
-    if ($('#chkPreviewAfterSave').prop('checked')) window.open('/purchase/reports/grn?id=' + Number(data.id), '_blank');
+    alert((updating ? 'Record Update Successfully [' : 'Record Save Successfully [') + (data.docNo ?? payload.docNo) + ']');
+    /* :3920 — frmwagesBillHeader for this GRN when ContractorWagesCompulsoryBeforeInvoices and wages are active for 46 */
+    if (cfgOn('ContractorWagesCompulsoryBeforeInvoices') && grn.wages) {
+        alert('Contractor Wages Bill is required for this GRN (Id ' + data.id + ', Gross Weight ' + cs(gridSum(lineItems, 'grossWeight')) + '). The Labour Wages screen opens in a new tab.');
+        window.open('/accounts/vouchers/labour-wages?refDocTypeId=46&refDocId=' + Number(data.id), '_blank');
+    }
+    const preview = $('#chkPreviewAfterSave').prop('checked');
     await onNewRecord(); refreshPendingGrid();
+    if (preview) openPrint('211-InvRptGoodsReceiptsNotesRiceSlip.rpt', { id: Number(data.id), documentTypeId: 46 });
+}
+/* btnDelete_Click :4230 */
+async function onDeleteRecord() {
+    const id = numeric('txtId');
+    if (id > 0 && grn.invoiceId > 0) { alert("This Document is referred in invoice. So you can't delete this record."); return; }
+    if (id <= 0) throw new Error('Record Not Found');
+    if (!confirm('Are you sure to Delete?')) return;
+    const data = await api('/api/purchase/market-grn/' + id, { method: 'DELETE' });
+    alert(data.message || 'Delete Record Successfully');
+    await onNewRecord(); refreshPendingGrid();
+}
+function onAttachment() {
+    alert('Attachments (DMS) for Goods Receipt Notes are not available on the web page yet.');
 }
 
 function resetGrnState() {
-    Object.assign(grn, { ref: 0, freightId: 0, gpId: 0, gpDate: '', gpQty: 0, purchaseOrderId: 0, purchaseOrderNo: 0, items: [], lab: null, labRows: [], previousData: [], poEmptyBags: [], preBills: [], chargeToParty: 0 });
+    Object.assign(grn, { ref: 0, freightId: 0, gpId: 0, gpNo: '', gpDate: '', gpQty: 0, purchaseOrderId: 0, purchaseOrderNo: 0, items: [], lab: null, labRows: [], previousData: [], poEmptyBags: [], preBills: [], chargeToParty: 0, invoiceId: 0 });
 }
+/* reset :4280 (+ btnNew_Click :4424 stock E.b boxes to 0) */
 async function onNewRecord() {
     lookupVersion++; loadedHeader = {}; lineItems = []; editLine = -1; resetGrnState(); renderSupplements({});
-    document.querySelectorAll('#viewForm input').forEach(input => { if (input.type === 'radio') return; if (input.type === 'checkbox') input.checked = false; else if (input.type === 'number' || input.id === 'txtId') input.value = 0; else input.value = ''; });
-    document.querySelectorAll('#viewForm select').forEach(select => { $(select).val('0'); });
+    document.querySelectorAll('#viewForm input').forEach(input => {
+        if (input.type === 'radio' || input.id === 'chkPreviewAfterSave') return;
+        if (input.type === 'checkbox') input.checked = false; else if (input.id === 'txtId' || input.id === 'cmbGatePassNo') input.value = 0; else input.value = '';
+    });
+    document.querySelectorAll('#viewForm select').forEach(select => { $(select).val(select.options.length ? select.options[0].value : ''); });
+    const vt = document.getElementById('cmbVehicleType'); if (vt && vt.options.length > 1) vt.selectedIndex = 1;   /* combvehtyp.Rows[1].Activate() */
     $('#cmbItem').empty().append(new Option('-- Select Item --', '0')); $('#cmbLabNo,#cmbPreBillNo').empty();
     $('#txtBiltyFreight,#txtAdvParty,#txtAdvFactory,#txtFreightDeduct,#txtVehicleNo,#txtBiltyNo,#cmbVehicleType').prop('disabled', false);
-    $('#labParamsPanel').hide(); $('#grnTitle').text('Goods Receiving Notes');
-    narrowUomToItem(); renderItemsGrid(); applyConfigToControls(); applyConfigDefaults(); showShortageCheckBoxes();
-    $('#txtDocDate').val(new Date().toLocaleDateString('en-CA')); $('#btnSave').text('Save'); $('#btnAddLine').text('+ Add'); $('#btnCancelLine').hide();
+    $('#cmbDeliveryTerm').prop('disabled', true);
+    $('#labParamsPanel').hide(); $('#labParamsBody,#labParamsFoot').empty(); $('#grnTitle').text('Goods Receiving Notes');
+    $('#txtWtCut').val(0); $('#txtEbUnitStock,#txtEbTotalStock').val(0);
+    showBalWeight(false);
+    narrowUomToItem(); applyConfigToControls(); applyConfigDefaults(); showShortageCheckBoxes(); cancelEditLine(); renderItemsGrid();
+    $('#txtDocDate').val(new Date().toLocaleDateString('en-CA'));
+    $('#btnSave').show(); $('#btnUpdate,#btnDelete').hide();
+    applyGrnRights();
+    window.history.replaceState(null, '', '/purchase/goods-receipt-notes');
     const next = await api('/api/purchase/market-grn/next-code'); $('#txtDocNo').val(next.docNo);
+    refreshPendingGrid();
 }
-function onRefreshForm() { return onNewRecord().then(refreshPendingGrid); }
+/* toolStripButton1_Click (Refresh) :4431 — reloads the lookups; the entered record stays. */
+async function onRefreshForm() {
+    try { grn.cfg = await api('/api/purchase/market-grn/form/config'); } catch (e) { alert(e.message); }
+    grn.subsidiary = !!grn.cfg.SubsidiaryAccountAllownOnVouchers; grn.wages = !!grn.cfg.WagesActiveOrInActive;
+    if (numeric('txtId') === 0 && !grn.gpId) applyConfigDefaults();
+    await refreshPendingGrid();
+}
 
+/* tabControl1 */
 function switchMode(mode) {
-    if (mode === 'History') {
-        $('#viewForm').hide(); $('#viewHistory').show(); $('#btnModeForm').removeClass('active'); $('#btnModeHistory').addClass('active');
-        return loadHistory();
-    }
-    $('#viewForm').show(); $('#viewHistory').hide(); $('#btnModeForm').addClass('active'); $('#btnModeHistory').removeClass('active');
+    const history = mode === 'History';
+    $('#viewForm').toggle(!history); $('#viewHistory').toggle(history);
+    $('#btnModeForm').toggleClass('active', !history); $('#btnModeHistory').toggleClass('active', history);
+    if (history) $('#txtHistoryFrom').trigger('focus'); else $('#txtDocDate').trigger('focus');
 }
-async function loadHistory() {
-    try {
-        const body = { fromDate: textValue('txtHistoryFrom') || null, toDate: textValue('txtHistoryTo') || null, supplierId: numeric('cmbHistorySupplier') || null,
-                       fromDocNo: numeric('txtHistoryFromNo') || null, toDocNo: numeric('txtHistoryToNo') || null };
-        const data = await api('/api/purchase/market-grn/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        $('#grdHistoryBody').html(data.map(row => '<tr><td><a href="/purchase/goods-receipt-notes?id=' + Number(row.id) + '" onclick="event.preventDefault();loadRecord(' + Number(row.id) + ')">' + escapeHtml(row.docNo) + '</a></td>' + ['docDate', 'supplierName', 'vehicleNo', 'biltyNo', 'remarks', 'entryDate'].map(key => '<td>' + escapeHtml(row[key]) + '</td>').join('') + '<td><button class="tool-btn" onclick="loadRecord(' + Number(row.id) + ')">Edit</button></td></tr>').join(''));
-    } catch (error) { alert(error.message); }
+
+/* ---------------- history ---------------- */
+function historyDefaults() {
+    const days = cfgNum('DefaultDaysToLessFromHistoryFromDate'), from = new Date();
+    from.setDate(from.getDate() - (days > 0 ? days : 3));
+    $('#txtHistoryFrom').val(from.toLocaleDateString('en-CA')); $('#txtHistoryTo').val(new Date().toLocaleDateString('en-CA'));
 }
+/* HistoryComboBind :903 */
+async function historyComboBind() {
+    let rows = [];
+    try { rows = await api('/api/purchase/market-grn/form/history-suppliers'); } catch (e) { alert(e.message); }
+    const sel = $('#cmbHistorySupplier'), cur = sel.val(); sel.empty().append(new Option('', '0'));
+    for (const r of rows) sel.append(new Option(String(r.name ?? ''), r.id));
+    sel.val(cur && rows.some(r => String(r.id) === cur) ? cur : '0');
+}
+/* btnNewHistory_Click :5762 */
+function btnNewHistory_Click() {
+    const today = new Date().toLocaleDateString('en-CA');
+    $('#txtHistoryFrom,#txtHistoryTo').val(today); $('#txtHistoryFromNo,#txtHistoryToNo').val(''); $('#cmbHistorySupplier').val('0');
+    historyRows = []; $('#grdHistoryBody,#grdHistoryDetailBody,#grdHistoryEbBody').empty(); $('#historyCount').text('');
+}
+/* btnRefreshHistory_Click :5780 */
+function btnRefreshHistory_Click() { return historyComboBind(); }
+/* btnshow_Click → HistoryGridFill :5804 */
+async function btnshow_Click() {
+    const useFrom = $('#chkHistoryFrom').prop('checked'), useTo = $('#chkHistoryTo').prop('checked');
+    const body = { fromDate: useFrom ? textValue('txtHistoryFrom') || null : null, toDate: useTo ? textValue('txtHistoryTo') || null : null,
+                   supplierId: numeric('cmbHistorySupplier') || null, fromDocNo: numeric('txtHistoryFromNo') || null, toDocNo: numeric('txtHistoryToNo') || null,
+                   dateType: $('input[name="histDateType"]:checked').val(), actionId: Number($('input[name="histRef"]:checked').val()) || null };
+    historyRows = await api('/api/purchase/market-grn/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const num = v => '<td class="text-end">' + escapeHtml(v ?? '') + '</td>', txt = v => '<td>' + escapeHtml(v ?? '') + '</td>';
+    $('#grdHistoryBody').html(historyRows.map(r => '<tr data-id="' + Number(r.Id) + '" data-ref="' + (Number(r.RefDocumentTypeId) || 0) + '">'
+        + '<td><button type="button" class="tool-btn" style="height:17px;padding:0 5px" onclick="event.stopPropagation();loadRecord(' + Number(r.Id) + ')">Edit</button></td>'
+        + '<td><button type="button" class="tool-btn" style="height:17px;padding:0 5px" data-rpt="211-InvRptGoodsReceiptsNotesRiceSlip.rpt" data-rpt-need="id" data-print-id="' + Number(r.Id) + '">Print</button></td>'
+        + txt(r.OrderType) + '<td>' + (Number(r.OrderId) > 0 ? '<a data-po="' + Number(r.OrderId) + '">' + escapeHtml(r.OrderNo) + '</a>' : escapeHtml(r.OrderNo ?? '')) + '</td>'
+        + num(r.InvoiceNo) + num(r.DocNo) + txt(displayDate(r.docDate ?? r.DocDate)) + txt(r.DeliveryTerm) + txt(r.SupplierName)
+        + '<td>' + (Number(r.InwardGatePassId) > 0 ? '<a data-gp-print="' + Number(r.InwardGatePassId) + '" data-detail-count="' + (Number(r.DetailIdsCount) || 0) + '">' + escapeHtml(r.GpNo) + '</a>' : escapeHtml(r.GpNo ?? '')) + '</td>'
+        + txt(r.VehicleNo) + txt(r.BiltyNo)
+        + '<td>' + (Number(r.WagesId) > 0 ? '<a data-wages="' + Number(r.WagesId) + '">' + escapeHtml(r.WagesNo) + '</a>' : escapeHtml(r.WagesNo ?? '')) + '</td>'
+        + num(r.FactoryWeight) + num(r.PartyWeight) + txt(r.Transporter) + num(r.CarriageAmount) + txt(r.RemarksHeader)
+        + txt(displayDateTime(r.EntryDate)) + txt(r.EntryUser) + txt(displayDateTime(r.ModifyDate)) + txt(r.ModifyUser) + txt(displayDateTime(r.PostDate)) + txt(r.ApprovedUser)
+        + num(r.NoOfAttachments) + '</tr>').join(''));
+    $('#historyCount').text(historyRows.length);
+    $('#grdHistoryDetailBody,#grdHistoryEbBody').empty();
+}
+/* WagesNo link → ContractorWagesBill_SlipandRegister_002 */
+$(document).on('click', 'a[data-wages]', function () { openPrint('002-ContractorWagesSlip.rpt', { id: Number(this.dataset.wages) }); });
+function historyDetailTab(tab) {
+    $('#histTabDetail').toggle(tab === 'Detail'); $('#histTabEb').toggle(tab !== 'Detail');
+    $('#btnHistTabDetail').toggleClass('active', tab === 'Detail'); $('#btnHistTabEb').toggleClass('active', tab !== 'Detail');
+}
+/* GrdHistory_SelectionChanged :6107 + grdHistoryDetailSettings :6147 */
+async function grdHistorySelectionChanged(tr) {
+    $('#grdHistoryBody tr').removeClass('selected'); $(tr).addClass('selected');
+    const id = Number(tr.dataset.id), ref = Number(tr.dataset.ref) || 0;
+    let data;
+    try { data = await api('/api/purchase/market-grn/' + id); } catch (e) { $('#grdHistoryDetailBody,#grdHistoryEbBody').empty(); return; }
+    const cols = [['PurchaserOrderNo', 'Order'], ['WareHouseName', 'WareHouseName'], ['Item', 'Item'], ['CropYear', 'CropYear'], ['JobLot', 'JobLot'], ['PackingType', 'PackingType'], ['UOMCode', 'UOM'],
+        ['ItemQty', 'Qty', 1], ['GrossWeight', 'Gross Weight', 1], ['EBWPerUnit', 'EbUnit', 1], ['EBWTotal', 'EbTotal', 1], ['LabNo', 'LabNo'], ['QtyForWtCut', 'QtyForWtCut', 1],
+        ['WeightCutOn', 'WtCutOn'], ['WeightCutUom', 'WeightCutUom', 1], ['WtCut', 'WtCut', 1], ['WtCutTotal', 'WtCutTotal', 1], ['AdLsWeight', 'Add Less', 1],
+        ['ScaleShortWeight', 'ScaleShortWt', 1, ref !== 106], ['SupplierShortWeight', 'SuppShortWt', 1, ref === 105], ['NetBillWeight', 'Bill Weight', 1], ['StockEbUnit', 'StockEbUnit', 1],
+        ['StockEbTotal', 'StockEbTotal', 1], ['StockWeight', 'StockWeight', 1], ['AreaCity', 'CityName'], ['FreightAmount', 'FreightAmount', 1, ref === 105]].filter(c => c[3] !== false);
+    const pick = (r, k) => r[k] ?? r[k.charAt(0).toLowerCase() + k.slice(1)] ?? (k === 'Item' ? r.ItemName : k === 'WareHouseName' ? r.WarehouseName : k === 'JobLot' ? r.JobLotDescription : k === 'PackingType' ? r.PackTypeDesc : k === 'AreaCity' ? r.CityName : k === 'WeightCutOn' ? r.WtCutOn : k === 'LabNo' ? r.LabReportRef : '');
+    $('#grdHistoryDetailHead').html(cols.map(c => '<th>' + escapeHtml(c[1]) + '</th>').join(''));
+    $('#grdHistoryDetailBody').html((data.details || []).map(r => '<tr>' + cols.map(c => '<td' + (c[2] ? ' class="text-end"' : '') + '>' + escapeHtml(pick(r, c[0])) + '</td>').join('') + '</tr>').join(''));
+    const optionText = (tpl, v) => document.getElementById(tpl)?.content?.querySelector('option[value="' + Number(v) + '"]')?.textContent || (v ?? '');
+    $('#grdHistoryEbBody').html((data.emptyBags || []).map(r => '<tr><td>' + escapeHtml(optionText('grnBagTypeOptions', r.TypeId)) + '</td><td>' + escapeHtml(optionText('grnBagItemOptions', r.ItemId)) + '</td><td>'
+        + escapeHtml(optionText('grnBagConditionOptions', r.BagsCondition)) + '</td><td class="text-end">' + escapeHtml(r.ReceivedQty) + '</td><td class="text-end">' + escapeHtml(r.PurchaseQty) + '</td><td>' + escapeHtml(r.Remarks) + '</td></tr>').join(''));
+}
+
 /* FilldtDetailFromListCommonForReadById :4161 — the stored row back into the grid's shape. */
 function normalizeLine(row) {
     const m = {}; for (const [k, v] of Object.entries(row)) m[k.charAt(0).toLowerCase() + k.slice(1)] = v;
@@ -721,50 +1066,126 @@ function normalizeLine(row) {
     return { ...m, id: n('Id'), itemId: n('ItemId'), warehouseId: n('WarehouseId'), itemUomId: n('ItemUomId'), cropYearId: n('CropYearId'), jobLotId: n('JobLotId'),
         packingTypeId: n('PackingTypeId'), cityId: n('CityId'), purchaseOrderId: n('PurchaseOrderId'), purchaseOrderDetailId: n('PurchaseOrderDetailId'),
         itemQty: n('ItemQty'), qty: n('ItemQty'), grossWeight: n('GrossWeight'), ebwPerUnit: n('EBWPerUnit'), ebwTotal: n('EBWTotal'), ebPurAgainstWeight: n('EbPurAgainstWeight'),
-        labId: n('LabId'), labReportRef: row.LabReportRef ?? m.labReportRef ?? '', qtyForWtCut: n('QtyForWtCut'), weightCutOnId: n('WeightCutOnId'),
-        wtCutOn: row.WtCutOn ?? row.WeightCutOn ?? '', weightCutUom: n('WeightCutUom'), wtCut: n('WtCut'), wtCutTotal: n('WtCutTotal'), adLsWeight: n('AdLsWeight'),
+        labId: n('LabId'), labReportRef: row.LabNo ?? row.LabReportRef ?? m.labReportRef ?? '', qtyForWtCut: n('QtyForWtCut'), weightCutOnId: n('WeightCutOnId'),
+        wtCutOn: row.WeightCutOn ?? row.WtCutOn ?? '', weightCutUom: n('WeightCutUom'), wtCut: n('WtCut'), wtCutTotal: n('WtCutTotal'), adLsWeight: n('AdLsWeight'),
         scaleShortWeight: n('ScaleShortWeight'), supplierShortWeight: n('SupplierShortWeight'), netBillWeight: n('NetBillWeight'),
         stockEbUnit: n('StockEbUnit'), stockEbTotal: n('StockEbTotal'), stockWeight: n('StockWeight'), freightAmount: n('FreightAmount'),
-        whName: row.WareHouseName ?? row.WarehouseName ?? '', itemCode: row.ItemCode ?? '', itemName: row.ItemName ?? '', cropYear: row.CropYear ?? '',
-        itemCategory: row.JobLotDescription ?? row.JobLot ?? '', packingType: row.PackingType ?? row.PackTypeDesc ?? '', uom: row.UOMCode ?? '',
-        uomEquivalent: n('UOMEquivalent') || n('UOM'), areaCity: row.AreaCity ?? row.CityName ?? '', purchaserOrderNo: row.PurchaserOrderNo ?? '' };
+        whName: row.WareHouseName ?? row.WarehouseName ?? '', itemCode: row.ItemCode ?? '', itemName: row.Item ?? row.ItemName ?? '', cropYear: row.CropYear ?? '',
+        itemCategory: row.JobLot ?? row.JobLotDescription ?? '', packingType: row.PackingType ?? row.PackTypeDesc ?? '', uom: row.UOMCode ?? '',
+        uomEquivalent: n('UOM') || n('UOMEquivalent'), areaCity: row.AreaCity ?? row.CityName ?? '', orderNo: row.PurchaserOrderNo ?? '' };
 }
 /* ReadById :3972 */
 async function loadRecord(id, propagate = false) {
     try {
         const version = ++lookupVersion; const data = await api('/api/purchase/market-grn/' + Number(id)); if (version !== lookupVersion) return;
-        resetGrnState();
+        resetGrnState(); cancelEditLine();
         grn.ref = Number(data.RefDocumentTypeId) || 0; grn.freightId = Number(data.FreightId) || 0; grn.gpId = Number(data.InwardGatePassId) || 0;
+        grn.invoiceId = Number(data.InvoiceId) || 0; grn.gpNo = String(data.GpNo ?? '');
         renderSupplements(data); loadedHeader = data; lineItems = (data.details || []).map(normalizeLine); editLine = -1;
         for (const [field, key] of Object.entries({ txtId: 'Id', txtDocNo: 'DocNo', txtVehicleNo: 'VehicleNo', txtBiltyNo: 'BiltyNo', txtRemarks: 'RemarksHeader', txtSupplierWeight: 'PartyWeight', txtFactoryWeight: 'FactoryWeight',
+            txtAccessWeight: 'AccessWeight', txtWbTickets: 'TicketNos',
             txtPaidAmount: 'CarriageAmount', txtBiltyFreight: 'BiltyFreight', txtFreightDeduct: 'FreightDeduction', txtAdvParty: 'AdvanceByPartyFreight', txtAdvFactory: 'AdvanceByFactoryFreight',
             txtScaleCharges: 'ScaleCharges', txtOtherDeduct: 'OtherFreightDeduction', txtShortageAmt: 'ShortageAmountFV', txtDiscountAmt: 'DiscountAmountFV', txtChargeToParty: 'ChargeToPartyAmountFV' }))
-            $('#' + field).val(data[key] ?? (field.startsWith('txtId') ? 0 : ''));
+            $('#' + field).val(data[key] ?? (field === 'txtId' ? 0 : ''));
         $('#txtRemainingFreight').val((Number(data.ShortageAmountFV) || 0) - (Number(data.DiscountAmountFV) || 0));
-        if (grn.ref === 105) $('#txtPaidAmount').val(data.OtherCharges ?? 0);
-        $('#txtDocDate').val(displayDate(data.DocDate)); selectValue('cmbSupplier', data.SupplierCustomerId, data.SupplierCustomer || data.SupplierName);
-        selectValue('cmbGatePassNo', data.InwardGatePassId, data.GpNo); selectByText('cmbVehicleType', data.VehicleType);
+        $('#cmbGatePassNo').val(grn.gpId); $('#txtGatePassNo').val(grn.gpNo);
+        $('#txtDocDate').val(displayDate(data.DocDate)); selectValue('cmbSupplier', data.SupplierCustomerId, data.CompanyName || data.SupplierName);
+        $('#cmbSupplier').prop('disabled', true);
+        selectByText('cmbVehicleType', data.VehicleType);
         selectValue('cmbTransporter', data.TransporterId, data.Transporter); selectByText('cmbDeliveryTerm', data.DeliveryTerm);
         $('#chkScaleDeduct').prop('checked', !!data.ScaleShortWeightApply); $('#chkSupplierDeduct').prop('checked', !!data.SupplierShortWeightApply);
+        await combsupplierLeave(); $('#cmbPreBillNo').val(String(data.SupplierDispatchId || 0));
+        transporterAccountDisable();
         $('#grnTitle').text('Goods Receiving Notes (' + (data.TransType || '') + ')');
         if (grn.freightId === 0 && grn.ref === 105) $('#txtAdvFactory,#txtAdvParty').prop('disabled', true).val(0);
         else if (grn.freightId > 0) $('#txtBiltyFreight,#txtAdvParty,#txtAdvFactory,#txtFreightDeduct').prop('disabled', true);
         if (grn.gpId > 0) { try { grn.items = await api('/api/purchase/market-grn/form/items/' + grn.gpId); } catch (e) { grn.items = []; } }
         for (const line of lineItems) if (!grn.items.some(i => Number(i.ItemId) === line.itemId)) grn.items.push({ ItemId: line.itemId, ItemName: line.itemName, ItemCode: line.itemCode });
         itemNameBind();
-        showWeightFields(grn.ref === 105);
-        if (grn.ref === 105 && grn.gpId > 0) {
-            try { const w = await api('/api/purchase/market-grn/form/received-weight/' + grn.gpId); $('#txtReceivedWeight').val(w.ReceivedWeight ?? 0); $('#txtBalWeight').val(w.BalanceWeight ?? 0); } catch (e) { }
+        const grossTotal = gridSum(lineItems, 'grossWeight');
+        if (grn.ref === 105) {
+            $('#txtPaidAmount').val(data.OtherCharges ?? 0);
+            showRecWeight(true); showBalWeight(true);
+            if (grn.gpId > 0) {
+                try {
+                    const w = await api('/api/purchase/market-grn/form/received-weight/' + grn.gpId);
+                    if (w && Object.keys(w).length) { $('#txtReceivedWeight').val((Number(w.ReceivedWeight) || 0) - grossTotal); $('#txtBalWeight').val((Number(w.BalanceWeight) || 0) + grossTotal); $('#cmbSupplier').prop('disabled', false); }
+                } catch (e) { alert(e.message); }
+            }
+        } else if (grn.ref === 106) {
+            $('#cmbSupplier').prop('disabled', false); $('#cmbDeliveryTerm').prop('disabled', false);
+        } else {
+            $('#txtReceivedWeight,#txtBalWeight').val(grossTotal);
+            /* ReadById :4080 — the first detail row's DeliveryTerm */
+            const firstTerm = (data.details || [])[0] ? ((data.details[0].DeliveryTerm ?? data.details[0].deliveryTerm) || '') : '';
+            if (firstTerm) selectByText('cmbDeliveryTerm', firstTerm);
         }
-        $('#cmbDeliveryTerm').prop('disabled', grn.ref !== 106);
+        $('#txtGrnWeight').val(grossTotal);
         if (grn.gpId > 0) { try { grn.previousData = await api('/api/purchase/market-grn/form/previous-data/' + grn.gpId + '?recId=' + Number(id)); } catch (e) { } }
-        await combsupplierLeave(); $('#cmbPreBillNo').val(String(data.SupplierDispatchId || 0));
-        transporterAccountDisable(); showShortageCheckBoxes();
+        scaleShortageProportion(); supplierShortageProportion(); showShortageCheckBoxes(); freightProportion();
         const diff = numeric('txtSupplierWeight') - numeric('txtFactoryWeight'); $('#txtDiffWeight').val(round(diff, 2)); $('#lblDiffWeight').text(diff > 0 ? 'Short' : diff < 0 ? 'Excess' : 'Equal');
         $('#txtTotalFreight').val(round(numeric('txtBiltyFreight') + numeric('txtScaleCharges') - numeric('txtAdvParty') - numeric('txtAdvFactory') - numeric('txtOtherDeduct'), 2));
-        renderItemsGrid(); $('#btnSave').text('Update'); applyGrnRights(); switchMode('Form');
+        renderItemsGrid();
+        $('#btnSave').hide(); $('#btnUpdate,#btnDelete').show(); applyGrnRights(); switchMode('Form');
         window.history.replaceState(null, '', '/purchase/goods-receipt-notes?id=' + Number(id));
     } catch (error) { if (propagate) throw error; alert(error.message); }
 }
 
-function applyGrnRights() { const button = document.getElementById("btnSave"); if (!button?.dataset) return; button.disabled = (numeric("txtId") > 0 ? button.dataset.canUpdate : button.dataset.canSave) === "false"; }
+/* rights: btnSave/btnUpdate/btnDelete/BtnPrint Enabled from formright (:775-778) */
+function applyGrnRights() {
+    const set = (id, attr) => { const b = document.getElementById(id); if (b && b.dataset[attr] !== undefined && !b.classList.contains('loading')) b.disabled = b.dataset[attr] === 'false'; };
+    set('btnSave', 'canSave'); set('btnUpdate', 'canUpdate'); set('btnDelete', 'canDelete');
+}
+
+/* ---------------- printing (print-rpt.js handles [data-rpt]; the arguments come from here) ---------------- */
+window.grnPrintRptArgs = window.printRptArgs = function (rpt, a) {
+    a = a || {};
+    if (/^211/.test(rpt)) { a.id = Number(printContext.printId) || numeric('txtId') || undefined; a.documentTypeId = 46; }
+    else if (/^257/.test(rpt)) { a.id = grn.gpId || undefined; }
+    printContext = {};
+    return a;
+};
+/* GrnSlipWithSubReports / grid links: the same by-template endpoint, opened directly. */
+function openPrint(rpt, args) {
+    const q = new URLSearchParams(); for (const [k, v] of Object.entries(args || {})) if (v !== undefined && v !== null && v !== '') q.set(k, v);
+    const w = window.open('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf?' + q.toString(), '_blank');
+    if (!w) alert('Allow pop-ups for this site to see the report.');
+}
+
+/* ---------------- keyboard (InvFrmGRN_KeyDown :6360, MakeShortCutKeys :6532) ---------------- */
+const SHORTCUTS = [['Ctrl+S', 'For Save'], ['Ctrl+U', 'For Update'], ['Ctrl+Shift+Delete', 'For Delete'], ['Ctrl+E', 'For Close'], ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'],
+    ['Ctrl+P', 'For Print'], ['Ctrl+H', 'For History Print'], ['Ctrl+F5', 'For Focus on Doc Date'], ['Ctrl+F10', 'For Open Attachments'], ['Ctrl+T', 'For Tab Transfer'],
+    ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowDown', 'For Focus On Detail Grid'], ['Ctrl+ArrowUp', 'For Focus On warehouse Combo in Detail Box'],
+    ['Ctrl+ArrowRight', 'For Focus From One Grid To Another'], ['Ctrl+Enter', 'For Update Record When Focus On Any Grid '], ['Ctrl+Space', "To Call Function's On Button Or Link When Focus On Any Grid "]];
+function showShortcutKeys() {
+    $('#shortcutBody').html(SHORTCUTS.map(s => '<tr><td>' + escapeHtml(s[0]) + '</td><td>' + escapeHtml(s[1]) + '</td></tr>').join(''));
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('shortcutModal')).show();
+}
+function clickIfEnabled(id) { const b = document.getElementById(id); if (b && !b.disabled && b.offsetParent !== null) b.click(); }
+function onFormKeyDown(e) {
+    if (!e.ctrlKey) return;
+    const k = e.key.toLowerCase(), history = $('#viewHistory').is(':visible');
+    let handled = true;
+    if (k === 't') switchMode(history ? 'Form' : 'History');
+    else if (k === 'e') window.location.href = '/purchase';
+    else if (history) {
+        if (k === 's') clickIfEnabled('btnHistoryShow');
+        else if (k === 'n') btnNewHistory_Click();
+        else if (k === 'r') clickIfEnabled('btnHistoryRefresh');
+        else if (k === 'p') { const tr = document.querySelector('#grdHistoryBody tr.selected'); if (tr) openPrint('211-InvRptGoodsReceiptsNotesRiceSlip.rpt', { id: Number(tr.dataset.id), documentTypeId: 46 }); }
+        else if (k === 'h') clickIfEnabled('btnGrnHistory');
+        else if (k === 'arrowup') $('#txtHistoryFrom').trigger('focus');
+        else handled = false;
+    } else {
+        if (k === 'n') clickIfEnabled('btnNew');
+        else if (k === 'p') clickIfEnabled('btnPrint211');
+        else if (k === 's') clickIfEnabled('btnSave');
+        else if (k === 'u') clickIfEnabled('btnUpdate');
+        else if (k === 'delete' && e.shiftKey) clickIfEnabled('btnDelete');
+        else if (k === 'arrowup') $('#cmbWarehouse').trigger('focus');
+        else if (k === 'f10') onAttachment();
+        else if (k === 'enter') { const tr = document.querySelector('#grdItemsBody tr.selected'); if (tr) grdDoubleClick(Number(tr.dataset.line)); else handled = false; }
+        else handled = false;
+    }
+    if (handled) e.preventDefault();
+}

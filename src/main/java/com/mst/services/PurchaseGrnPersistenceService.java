@@ -63,17 +63,20 @@ public class PurchaseGrnPersistenceService {
         }
 
         if(type==46) {
-            if(dto.emptyBags!=null) {
-                supplements.validateEmptyBagLookups(emptyBags);
-                PurchaseGrnGridRules.validateEmptyBags(emptyBags,details);
-                var state=records.breakupContext(gp,id);
-                boolean purchased=emptyBags.stream().anyMatch(row->number(row.get("TypeId"))==2);
-                boolean previouslyPurchased=updating&&writes.emptyBags(id).stream().anyMatch(row->number(row.get("TypeId"))==2);
-                if(purchased||previouslyPurchased)PurchaseGrnGridRules.applyPurchasedBagWeight(details,emptyBags,number(state.get("referenceType")),number(state.get("referenceType"))==41&&number(state.get("orderCategoryId"))==8);
-            }
             if(dto.purchaseBreakups!=null)breakups=supplements.prepareBreakups(header,breakups,id);
-            // InvFrmGRN.Insert refusals (weights, freight, detail rows, 105 qty vs breakup).
-            saveRules.apply(header,details,emptyBags,breakups,dto.header,id);
+            else if(!updating) {
+                // A new GRN on a Market Purchase gate pass that already has a GRN: the desktop grid holds
+                // that GRN's locked breakup rows (LoadGPByRow :2800) and Insert() sends them again.
+                var state=records.breakupContext(gp,0);
+                if(number(state.get("referenceType"))==105&&Boolean.TRUE.equals(state.get("breakupLocked")))
+                    breakups=supplements.prepareBreakups(header,List.of(),0);
+            }
+            // The grid state the desktop saves (TotalEbPurchaseAgainstWeightUtilizeInGrid :5080).
+            PurchaseGrnSaveRules.utilizePurchaseAgainstWeight(details,emptyBags);
+            // InvFrmGRN.Insert refusals in the desktop's order (weights, freight, detail rows, empty bags,
+            // 105 qty vs breakup); returns the empty-bag rows Insert() stores.
+            emptyBags=saveRules.apply(header,details,emptyBags,breakups,dto.header,id);
+            supplements.validateEmptyBagLookups(emptyBags);
         }
 
         // Sp_InvGrn_Update rebuilds children; capture all collections before invoking it.

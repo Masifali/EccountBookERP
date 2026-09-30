@@ -47,6 +47,9 @@ public class PurchaseGrnFormRepository {
     }
 
     private int org() { return context.currentOrganizationId(); }
+
+    /** View right on InvFrmGRN (tblUserRights) for the form-time lookups that do not check it themselves. */
+    public void requireView() { records.requireRight(46,"View"); }
     private int company() { return context.currentCompanyId(); }
 
     /** Raw ConfigKey strings, keyed by the desktop's exact ConfigDescription spelling. */
@@ -191,7 +194,14 @@ public class PurchaseGrnFormRepository {
      * The pending-grid row supplies the load rules and the freight block; ReadByGpNoForGRN supplies
      * the header, weights and PO link; the rest follows from RefDocumentTypeId.
      */
-    public Map<String,Object> load(int gpId,Map<String,String> cfg) {
+    public Map<String,Object> load(int gpId,Map<String,String> cfg) { return load(gpId,cfg,false); }
+
+    /**
+     * fromLoader: the "Load Gate Pass" dialog path (btnLoadGatePass_Click :3029 → LoadPendingGatePassForGrn
+     * → LoadGatePassByRowFromLoader :3048). That path repeats the Status and Lab refusals but has no
+     * Freight Voucher special-approval stop (only LoadGPByRow :2762 has it).
+     */
+    public Map<String,Object> load(int gpId,Map<String,String> cfg,boolean fromLoader) {
         records.requireRight(46,"View");
         if(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.GatePassInward WHERE Id=? AND OrganizationId=? AND CompanyId=? AND BranchesId=? AND FinancialYearId=? AND DocumentTypeId=51",Integer.class,
                 gpId,org(),company(),context.currentBranchId(),context.currentFinancialYearId())!=1)
@@ -201,7 +211,7 @@ public class PurchaseGrnFormRepository {
         if(!"Accepted".equals(Objects.toString(pending.get("Status"),"")))throw new IllegalArgumentException("Status Not Accepted Please check status");
         if(!flag(cfg.get("LabCompulsoryNotCheckingOnGRN")) && number(pending.get("LastLabId"))<=0)
             throw new IllegalArgumentException("Lab is pending for this gate pass. Please do lab first then Load");
-        if(number(pending.get("FreightSpecialApprovalStatusId"))==1)
+        if(!fromLoader && number(pending.get("FreightSpecialApprovalStatusId"))==1)
             throw new IllegalArgumentException("The shortage allowed on the Freight Voucher exceeds the configured discount policy.\r\nTherefore, approval from an authorized person is required.\r\nPlease complete the Freight Voucher approval before proceeding further");
         Map<String,Object> result=new LinkedHashMap<>();
         result.put("pending",pending);
@@ -223,6 +233,25 @@ public class PurchaseGrnFormRepository {
         }
         result.put("purchaseBreakups",breakups);
         result.put("referenceType",ref);
+        result.put("fromLoader",fromLoader);
+        return result;
+    }
+
+    /**
+     * History "Supplier Name" combo: HistoryComboBind :903 over InvGrn.GetDataForDropDownFromGrn(org, company,
+     * "46", null, BranchesId, 0) → USP_GetDataForDropDownFromGrn with @DocumentTypeIds='46', @BranchesIds and
+     * @FinancialYearId/@Activity omitted; only rows whose Activity is "Supplier" (Id, ReferenceName).
+     */
+    public List<Map<String,Object>> historySuppliers() {
+        records.requireRight(46,"View");
+        List<Map<String,Object>> result=new ArrayList<>();
+        for(var row:jdbc.queryForList("EXEC [dbo].[USP_GetDataForDropDownFromGrn] @OrganizationId=?,@CompanyId=?,@DocumentTypeIds=?,@BranchesIds=?",
+                org(),company(),"46",String.valueOf(context.currentBranchId()))) {
+            if(!"Supplier".equals(Objects.toString(row.get("Activity"),"")))continue;
+            Map<String,Object> m=new LinkedHashMap<>();
+            m.put("id",row.get("Id"));m.put("name",row.get("ReferenceName"));
+            result.add(m);
+        }
         return result;
     }
 }

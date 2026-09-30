@@ -48,14 +48,19 @@ public class PurchaseGrnRecordRepository {
     }
 
     public List<Map<String,Object>> history(int type,String fromDate,String toDate,Integer supplier,Integer fromNumber,Integer toNumber,String dateType) {
+        return history(type,fromDate,toDate,supplier,fromNumber,toNumber,dateType,null);
+    }
+
+    /** actionId: InvFrmGRN.HistoryGridFill :5868 — 1 Reffered, 2 Not Reffered, omitted (NULL) for All. */
+    public List<Map<String,Object>> history(int type,String fromDate,String toDate,Integer supplier,Integer fromNumber,Integer toNumber,String dateType,Integer actionId) {
         requireRight(type,"View");
         String mode=Objects.toString(dateType,"").toLowerCase(Locale.ROOT);
         String from="entrydate".equals(mode)?"EntryFromDate":"modifydate".equals(mode)?"ModifyFromDate":"approveddate".equals(mode)?"ApprovedFromDate":"fromDate";
         String to="entrydate".equals(mode)?"EntryToDate":"modifydate".equals(mode)?"ModifyToDate":"approveddate".equals(mode)?"ApprovedToDate":"toDate";
         boolean viewAll=canViewAll(type);
-        var rows=jdbc.queryForList("EXEC dbo.Sp_InvGrn_GetAllMethod @OrganizationId=?,@CompanyId=?,@BranchesId=?,@FinancialYearId=?,@DocumentTypeId=?,@CanViewAllRecord=?,@EntryUser=?,@"+from+"=?,@"+to+"=?,@GrnNoF=?,@GrnNoT=?,@SupplierCustomerId=?,@Activity='GRNFormHistory' WITH RECOMPILE",
+        var rows=jdbc.queryForList("EXEC dbo.Sp_InvGrn_GetAllMethod @OrganizationId=?,@CompanyId=?,@BranchesId=?,@FinancialYearId=?,@DocumentTypeId=?,@CanViewAllRecord=?,@EntryUser=?,@"+from+"=?,@"+to+"=?,@GrnNoF=?,@GrnNoT=?,@SupplierCustomerId=?,@ActionId=?,@Activity='GRNFormHistory' WITH RECOMPILE",
                 context.currentOrganizationId(),context.currentCompanyId(),context.currentBranchId(),context.currentFinancialYearId(),type,
-                viewAll,context.currentUserId(),date(fromDate),date(toDate),positive(fromNumber),positive(toNumber),positive(supplier));
+                viewAll,context.currentUserId(),date(fromDate),date(toDate),positive(fromNumber),positive(toNumber),positive(supplier),positive(actionId));
         List<Map<String,Object>> result=new ArrayList<>();
         for(var row:rows) {
             Map<String,Object> mapped=new LinkedHashMap<>(row);

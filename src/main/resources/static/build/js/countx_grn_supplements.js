@@ -18,8 +18,12 @@ function numberCell(value,handler,disabled=false) {
 }
 function drawPurchaseBreakups() {
     const editable=breakupEditable();
-    const columns=['grossweight','ebtotal','netpacksize','netweight','suppliershortweight','supplierrcvdweight','scaleshortage','billweight'];
-    $('#grdPurchaseBreakupsBody').html(purchaseBreakupRows.map((row,index)=>'<tr><td><button type="button" class="tool-btn" '+(!editable?'disabled':'')+' onclick="withButtonLoading(this,()=>deletePurchaseBreakup('+index+'))" aria-label="Delete breakup row">×</button></td><td><button type="button" class="tool-btn" '+(!editable?'disabled':'')+' onclick="withButtonLoading(this,addPurchaseBreakup)" aria-label="Add breakup row">+</button></td>'+['qty','uom','ebweight'].map(key=>'<td>'+numberCell(row[key],'changePurchaseBreakup('+index+',\''+key+'\',this.value)',!editable)+'</td>').join('')+columns.map(key=>'<td data-breakup-row="'+index+'" data-breakup-field="'+key+'">'+escapeHtml(row[key]??0)+'</td>').join('')+'</tr>').join(''));
+    /* InvFrmGRN dtPurchaseBreakup column order (:683-696); Qty, UOM and EbWeight are the editable cells
+       (grdPurchaseBreakUpSettings :1601). SuppShortWt/SupplierRcvdWeight show for 105 only, ScaleShortage/BillWeight
+       are hidden for 106. */
+    const columns=[['qty',1],['uom',1],['grossweight'],['ebweight',1],['ebtotal'],['netpacksize'],['netweight'],['suppliershortweight',0,'bk-105'],['supplierrcvdweight',0,'bk-105'],['scaleshortage',0,'bk-not106'],['billweight',0,'bk-not106']];
+    $('#grdPurchaseBreakupsBody').html(purchaseBreakupRows.map((row,index)=>'<tr><td><button type="button" class="tool-btn" '+(!editable?'disabled':'')+' onclick="withButtonLoading(this,()=>deletePurchaseBreakup('+index+'))" aria-label="Delete breakup row">×</button></td><td><button type="button" class="tool-btn" '+(!editable?'disabled':'')+' onclick="withButtonLoading(this,addPurchaseBreakup)" aria-label="Add breakup row">+</button></td>'+columns.map(([key,input,cls])=>input?'<td>'+numberCell(row[key],'changePurchaseBreakup('+index+',\''+key+'\',this.value)',!editable)+'</td>':'<td'+(cls?' class="'+cls+'"':'')+' data-breakup-row="'+index+'" data-breakup-field="'+key+'">'+escapeHtml(row[key]??0)+'</td>').join('')+'</tr>').join(''));
+    $('.bk-105').toggle(grnReferenceType===105);$('.bk-not106').toggle(grnReferenceType!==106);
     const button=document.getElementById('btnAddBreakup');if(button)button.disabled=!editable;
     $('#breakupState').text(breakupLocked?'Locked: this gate pass has another GRN':grnReferenceType===105?'':'Available for Market Purchase gate passes');
 }
@@ -28,7 +32,7 @@ async function addPurchaseBreakup() {
     purchaseBreakupRows.push({id:0,qty:0,uom:0,ebweight:0});breakupDirty=true;drawPurchaseBreakups();await calculatePurchaseBreakups();
 }
 async function deletePurchaseBreakup(index) {
-    if(!breakupEditable()||!confirm('Delete this purchase breakup row?'))return;
+    if(!breakupEditable()||!confirm('Are you sure to Delete?'))return;
     purchaseBreakupRows.splice(index,1);if(!purchaseBreakupRows.length)purchaseBreakupRows.push({id:0,qty:0,uom:0,ebweight:0});
     breakupDirty=true;drawPurchaseBreakups();await calculatePurchaseBreakups();
 }
@@ -75,12 +79,14 @@ function addEmptyBagRow(index) {
 function changeEmptyBag(index,key,value) {
     const row=emptyBagRows[index];if(!row)return;
     row[key]=key==='remarks'?value:gridNumber(value);emptyBagsDirty=true;
-    let message='';
-    if(row.receivedqty<0){row.receivedqty=0;message='Received quantity cannot be less than zero.';}
-    if(row.purchaseqty<0){row.purchaseqty=0;message='Purchase quantity cannot be less than zero.';}
-    if((row.typeid===4||row.typeid===5)&&row.purchaseqty){row.purchaseqty=0;message='Retained or returned bags cannot be purchased.';}
-    if(row.typeid===2&&row.receivedqty){row.receivedqty=0;message='Purchase Against Weight cannot have received quantity.';}
-    if(message){drawEmptyBags();alert(message);}
+    /* grdEmptyBags_CellUpdated (InvFrmGRN :2388), same checks, order and messages */
+    const messages=[];
+    if(row.purchaseqty<0){row.purchaseqty=0;messages.push('PurQty cannot be less than Zero');}
+    if(row.receivedqty<0){row.receivedqty=0;messages.push('RecQty cannot be less than Zero');}
+    if((row.typeid===4||row.typeid===5)&&key==='purchaseqty'){row.purchaseqty=0;messages.push('Retained or Returned Stock you cannot be purchase');}
+    if(row.typeid===2&&key==='receivedqty'){row.receivedqty=0;messages.push('You cannot be add value RecQty because EmptyBagsType is Purchase Against Weight');}
+    if(typeof onEmptyBagChanged==='function')onEmptyBagChanged(key);
+    if(messages.length){drawEmptyBags();messages.forEach(m=>alert(m));}
 }
 async function supplementPayload() {
     if(breakupDirty)await calculatePurchaseBreakups();

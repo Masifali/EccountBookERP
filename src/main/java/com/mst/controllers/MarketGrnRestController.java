@@ -29,13 +29,17 @@ public class MarketGrnRestController {
     public ResponseEntity<?> formConfig() { return ResponseEntity.ok(form.config()); }
 
     @GetMapping("/form/pending")
-    public ResponseEntity<?> formPending() { return ResponseEntity.ok(form.pendingRows()); }
+    public ResponseEntity<?> formPending() { form.requireView(); return ResponseEntity.ok(form.pendingRows()); }
 
     @GetMapping("/form/load/{gpId}")
-    public ResponseEntity<?> formLoad(@PathVariable int gpId) { return ResponseEntity.ok(form.load(gpId,form.configValues())); }
+    public ResponseEntity<?> formLoad(@PathVariable int gpId,@RequestParam(defaultValue="false") boolean loader) { return ResponseEntity.ok(form.load(gpId,form.configValues(),loader)); }
+
+    /* History "Supplier Name" combo — HistoryComboBind :903 (USP_GetDataForDropDownFromGrn, Activity = Supplier rows). */
+    @GetMapping("/form/history-suppliers")
+    public ResponseEntity<?> formHistorySuppliers() { return ResponseEntity.ok(form.historySuppliers()); }
 
     @GetMapping("/form/items/{gpId}")
-    public ResponseEntity<?> formItems(@PathVariable int gpId) { return ResponseEntity.ok(form.items(gpId)); }
+    public ResponseEntity<?> formItems(@PathVariable int gpId) { form.requireView(); return ResponseEntity.ok(form.items(gpId)); }
 
     @GetMapping("/form/lab")
     public ResponseEntity<?> formLab(@RequestParam int gpId,@RequestParam int itemId) { return ResponseEntity.ok(form.lab(gpId,itemId)); }
@@ -50,13 +54,13 @@ public class MarketGrnRestController {
     }
 
     @GetMapping("/form/purchase-order/{orderId}")
-    public ResponseEntity<?> formPurchaseOrder(@PathVariable int orderId) { return ResponseEntity.ok(form.purchaseOrder(orderId)); }
+    public ResponseEntity<?> formPurchaseOrder(@PathVariable int orderId) { form.requireView(); return ResponseEntity.ok(form.purchaseOrder(orderId)); }
 
     @GetMapping("/form/received-weight/{gpId}")
-    public ResponseEntity<?> formReceivedWeight(@PathVariable int gpId) { return ResponseEntity.ok(form.receivedWeight(gpId)); }
+    public ResponseEntity<?> formReceivedWeight(@PathVariable int gpId) { form.requireView(); return ResponseEntity.ok(form.receivedWeight(gpId)); }
 
     @GetMapping("/form/previous-data/{gpId}")
-    public ResponseEntity<?> formPreviousData(@PathVariable int gpId,@RequestParam(defaultValue="0") int recId) { return ResponseEntity.ok(form.previousData(gpId,recId)); }
+    public ResponseEntity<?> formPreviousData(@PathVariable int gpId,@RequestParam(defaultValue="0") int recId) { form.requireView(); return ResponseEntity.ok(form.previousData(gpId,recId)); }
 
     @GetMapping("/form/deduction-policy")
     public ResponseEntity<?> formDeductionPolicy(@RequestParam(required=false) String date,@RequestParam double difference) {
@@ -98,7 +102,8 @@ public class MarketGrnRestController {
                                          @RequestParam(required = false) Integer supplierId,
                                          @RequestParam(required = false) Integer fromDocNo,
                                          @RequestParam(required = false) Integer toDocNo,
-                                         @RequestParam(required = false) String dateType) {
+                                         @RequestParam(required = false) String dateType,
+                                         @RequestParam(required = false) Integer actionId) {
         int orgId = currentUserContext.currentOrganizationId();
         int compId = currentUserContext.currentCompanyId();
         int branchId = currentUserContext.currentBranchId();
@@ -111,9 +116,10 @@ public class MarketGrnRestController {
             if (fromDocNo == null && bodyParams.get("fromDocNo") != null) fromDocNo = ((Number) bodyParams.get("fromDocNo")).intValue();
             if (toDocNo == null && bodyParams.get("toDocNo") != null) toDocNo = ((Number) bodyParams.get("toDocNo")).intValue();
             if (dateType == null && bodyParams.get("dateType") != null) dateType = bodyParams.get("dateType").toString();
+            if (actionId == null && bodyParams.get("actionId") != null) actionId = ((Number) bodyParams.get("actionId")).intValue();
         }
 
-        List<Map<String, Object>> history = marketGrnService.getHistory(orgId, compId, branchId, yearId, fromDate, toDate, supplierId, fromDocNo, toDocNo, dateType);
+        List<Map<String, Object>> history = marketGrnService.getHistory(orgId, compId, branchId, yearId, fromDate, toDate, supplierId, fromDocNo, toDocNo, dateType, actionId);
         return ResponseEntity.ok(history);
     }
 
@@ -144,7 +150,7 @@ public class MarketGrnRestController {
         boolean ok = marketGrnService.deleteMarketGrn(id);
         Map<String, Object> res = new HashMap<>();
         res.put("success", ok);
-        res.put("message", ok ? "Deleted successfully" : "Failed to delete");
+        res.put("message", ok ? "Delete Record Successfully" : "Failed to delete");
         return ResponseEntity.ok(res);
     }
     @ExceptionHandler(org.springframework.dao.DataAccessException.class)

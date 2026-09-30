@@ -1,196 +1,157 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <title>Purchase Order Register - EccountBookERP</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; font-size: 12px; }
-        .top-banner { background-color: #00796B; color: #fff; padding: 8px 15px; font-size: 14px; font-weight: bold; }
-        .filter-panel { background: #fff; border: 1px solid #ddd; border-radius: 3px; padding: 12px; margin: 10px; }
-        .form-control-sm { height: 26px; padding: 2px 6px; font-size: 11px; }
-        .btn-erp { font-size: 11px; padding: 3px 12px; height: 26px; }
-        .table-responsive { max-height: 520px; overflow-y: auto; overflow-x: auto; }
-        .table-erp { font-size: 11px; width: 100%; border-collapse: collapse; }
-        .table-erp th { background-color: #00796B; color: #fff; position: sticky; top: 0; z-index: 10; padding: 5px; text-align: center; }
-        .table-erp td { padding: 4px 6px; border: 1px solid #e2e8f0; }
-        .table-erp tr:hover { background-color: #f0f7f7; }
-        .text-right { text-align: right; }
-        .total-row { font-weight: bold; background-color: #e2e8f0; }
-    </style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Order Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/purchase/purchase_reports.css?v=20260930h}">
 </head>
-<body>
-    <div class="top-banner">
-        <i class="fa fa-file-text-o"></i> Purchase Order Register / History
-        <a href="/purchase/reports" class="btn btn-sm btn-light pull-right" style="margin-top:-3px; font-size:11px;"><i class="fa fa-arrow-left"></i> Reports Menu</a>
-    </div>
+<!-- 479 Architecture.WinApp.InventoryReports.PurchaseOrderHistory "Purchase Order Report" (module 52). -->
+<body class="pr">
+<div id="prLoading" hidden role="status">Please wait...</div>
+<div class="pr-caption">Purchase Order Register <span class="pr-right"><a href="/purchase/reports" style="color:#fff" title="Ctrl+E / Esc">Exit</a></span></div>
+<nav class="pr-tabs" aria-label="Report views">
+    <button type="button" data-tab="detail" aria-selected="true" title="Ctrl+T">Detail Register</button>
+    <button type="button" data-tab="summary" aria-selected="false" title="Ctrl+T">Summary</button>
+</nav>
+<div id="prMessage" role="status" aria-live="polite"></div>
 
-    <div class="filter-panel">
-        <form id="filterForm">
-            <div class="row">
-                <div class="col-md-2">
-                    <label>From Date</label>
-                    <input type="date" id="fromDate" class="form-control form-control-sm">
-                </div>
-                <div class="col-md-2">
-                    <label>To Date</label>
-                    <input type="date" id="toDate" class="form-control form-control-sm">
-                </div>
-                <div class="col-md-3">
-                    <label>Supplier / Party</label>
-                    <select id="supplierId" class="form-control form-control-sm select2">
-                        <option value="">-- All Suppliers --</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label>Status</label>
-                    <select id="statusFilter" class="form-control form-control-sm">
-                        <option value="All">All Statuses</option>
-                        <option value="Open">Open</option>
-                        <option value="Complete">Complete</option>
-                        <option value="Cancel">Cancel</option>
-                    </select>
-                </div>
-                <div class="col-md-3" style="margin-top:18px;">
-                    <button type="button" id="btnShow" class="btn btn-primary btn-erp"><i class="fa fa-search"></i> Show Register</button>
-                    <button type="button" id="btnReset" class="btn btn-default btn-erp"><i class="fa fa-refresh"></i> Reset</button>
-                    <button type="button" id="btnPrint" class="btn btn-success btn-erp" data-rpt-grid="1863-PurchaseOrderRegister.rpt" data-grid="reportTable" data-title="Purchase Order Register"><i class="fa fa-print"></i> Print</button>
-                </div>
+<!-- tabPage1 "Detail Register" -->
+<section class="pr-panel" data-tab-panel="detail">
+    <nav class="pr-toolstrip" aria-label="Detail toolbar">
+        <button type="button" id="btnNew" title="Ctrl+N">Reset</button>
+        <button type="button" id="btnPurchsaeOrderDetail" title="Alt+1">206-PoDetail</button>
+        <button type="button" id="toolStripButton2" title="Alt+2">205-PoDetailRegister</button>
+        <button type="button" id="btnShortCutKeys">ShortCut Keys</button>
+        <button type="button" id="btnOpenOrders" class="is-hidden" title="Alt+3">Open</button>
+        <button type="button" id="btnCompleteOrders" class="is-hidden" title="Alt+4">Complete</button>
+        <button type="button" id="btnCancelOrders" class="is-hidden" title="Alt+5">Cancel</button>
+    </nav>
+    <div style="position:relative;height:133px">
+        <fieldset class="pr-filters pr-abs" style="left:4px;top:0;width:769px;height:126px">
+            <legend>Filters</legend>
+            <label class="pr-abs" style="left:5px;top:21px" for="cmbBranchName">Branch Name</label>
+            <details class="pr-check pr-abs" id="cmbBranchName" style="left:85px;top:15px;width:135px"></details>
+            <label class="pr-abs" style="left:5px;top:49px" for="datFromDate">From Date</label>
+            <div class="pr-abs pr-date" style="left:85px;top:45px;width:135px"><input type="checkbox" id="chkFromDate" aria-label="Use From Date"><input type="date" id="datFromDate"></div>
+            <label class="pr-abs" style="left:5px;top:76px" for="datToDate">To Date</label>
+            <div class="pr-abs pr-date" style="left:85px;top:72px;width:135px"><input type="checkbox" id="chkToDate" checked aria-label="Use To Date"><input type="date" id="datToDate"></div>
+            <label class="pr-abs" style="left:224px;top:21px" for="txtSrFrom">Po No From</label>
+            <div class="pr-abs" style="left:315px;top:17px;width:139px"><input type="text" id="txtSrFrom" inputmode="decimal"></div>
+            <label class="pr-abs" style="left:224px;top:49px" for="txtSrTo">Po No To</label>
+            <div class="pr-abs" style="left:315px;top:45px;width:139px"><input type="text" id="txtSrTo" inputmode="decimal"></div>
+            <label class="pr-abs" style="left:224px;top:76px" for="CmbParentCatgory">Parent Category</label>
+            <div class="pr-abs" style="left:315px;top:70px;width:139px"><select id="CmbParentCatgory" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select></div>
+            <label class="pr-abs" style="left:457px;top:21px" for="CmbItem">Item Name</label>
+            <div class="pr-abs" style="left:545px;top:15px;width:218px"><select id="CmbItem" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <label class="pr-abs" style="left:457px;top:49px" for="CmbSupplier">Supplier Name</label>
+            <div class="pr-abs" style="left:545px;top:43px;width:218px"><select id="CmbSupplier" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select></div>
+            <label class="pr-abs" style="left:457px;top:76px" for="CmbBookingPerson">Booking Person</label>
+            <div class="pr-abs" style="left:545px;top:70px;width:218px"><select id="CmbBookingPerson" data-dtcombo="single" data-dtcombo-caption="Booking Person"></select></div>
+            <div class="pr-abs pr-radios" style="left:460px;top:101px" role="radiogroup" aria-label="Approval">
+                <label><input type="radio" name="approvalDetail" value="All" id="radAllApprovedAndUnApprovedDetail"> All</label>
+                <label><input type="radio" name="approvalDetail" value="Approved" id="RadApprovedOnlyDetail" checked> Approved</label>
+                <label><input type="radio" name="approvalDetail" value="UnApproved" id="RadUnApprovedOnlyDetail"> Un Approved</label>
             </div>
-        </form>
-    </div>
-
-    <div style="margin:0 10px;">
-        <div class="table-responsive">
-            <table class="table table-bordered table-erp" id="reportTable">
-                <thead>
-                    <tr>
-                        <th>Sr#</th>
-                        <th>PO No</th>
-                        <th>PO Date</th>
-                        <th>Supplier Name</th>
-                        <th>Delivery Date</th>
-                        <th>Item Details</th>
-                        <th class="text-right">Total Qty</th>
-                        <th class="text-right">Total Amount</th>
-                        <th>Status</th>
-                        <th>Approval</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTbody">
-                    <tr><td colspan="10" class="text-center">Select filters and click "Show Register".</td></tr>
-                </tbody>
-                <tfoot>
-                    <tr class="total-row" id="totalRow" style="display:none;">
-                        <td colspan="6" class="text-right">Total:</td>
-                        <td class="text-right" id="lblTotalQty">0.00</td>
-                        <td class="text-right" id="lblTotalAmount">0.00</td>
-                        <td colspan="2"></td>
-                    </tr>
-                </tfoot>
-            </table>
+            <button type="button" class="pr-show pr-abs" id="btnshow" style="left:704px;top:98px;width:58px" title="Ctrl+S">Show</button>
+        </fieldset>
+        <div class="pr-abs pr-radios vertical" style="left:777px;top:10px" role="radiogroup" aria-label="Status">
+            <label><input type="radio" name="statusDetail" value="All" id="RadAllOpenCompCancelDetail"> All</label>
+            <label><input type="radio" name="statusDetail" value="Open" id="RadOpenDetail" checked> Open</label>
+            <label><input type="radio" name="statusDetail" value="Complete" id="RadCompleteDetail"> Complete</label>
+            <label><input type="radio" name="statusDetail" value="Cancel" id="RadCancelDetail"> Cancel</label>
         </div>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity="1" style="left:867px;top:5px;width:166px;height:54px">Outstanding &amp; Open<b id="txtOutstandingValue"></b></button>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity="2" style="left:867px;top:62px;width:166px;height:51px">Outstanding &amp; InProcess<b id="txtOutstandingInprocess"></b></button>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity="3" style="left:1036px;top:5px;width:210px;height:54px">InProcess &amp; Excess Received<b id="txtInProcessExcess"></b></button>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity="4" style="left:1036px;top:62px;width:210px;height:51px">Expiring Next 7 Days<b id="txtExpiringDays"></b></button>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity="5" style="left:1248px;top:5px;width:99px;height:54px">Canceled<b id="txtCanceled"></b></button>
     </div>
+    <section id="detailSection">
+        <div class="pr-grid-bar">Filtered Records <span id="lblCount"></span> <span id="label36" hidden></span>
+            <span style="margin-left:180px">Group By</span>
+            <label><input type="radio" name="groupBy" id="RdGroupByCategory" value="ItemCategory" checked> Item Category</label>
+            <label><input type="radio" name="groupBy" id="rdGroupByItemType" value="ItemType"> Item Type</label>
+            <span class="pr-right"><button type="button" id="btnGridPrint">Grid Print</button><button type="button" id="btnGridExport">Export</button><button type="button" id="btnFullscreen">Fullscreen</button></span>
+        </div>
+        <div class="pr-wrap" tabindex="0" id="gridWrap"><table class="pr-grid" id="grd"></table></div>
+    </section>
+</section>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            $('.select2').select2({ width: '100%' });
-            const today = new Date().toISOString().split('T')[0];
-            const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-            $('#fromDate').val(firstDay);
-            $('#toDate').val(today);
-            loadSuppliers();
-
-            $('#btnShow').click(fetchReport);
-            $('#btnReset').click(function() {
-                $('#fromDate').val(firstDay);
-                $('#toDate').val(today);
-                $('#supplierId').val(null).trigger('change');
-                $('#statusFilter').val('All');
-                $('#reportTbody').html('<tr><td colspan="10" class="text-center">Select filters and click "Show Register".</td></tr>');
-                $('#totalRow').hide();
-            });
-            $('#btnPrint').click(function() { window.print(); });
-        });
-
-        function loadSuppliers() {
-            /* /api/purchase-order/suppliers returns a bare array of
-               {id, companyName, partyCode, nickName, cityName, ...} - no {data:...} wrapper and
-               no accountTitle/name field. It is the same endpoint the Purchase Order form uses
-               (countx_purchase_order_full.js:462). */
-            $.get('/api/purchase-order/suppliers?mode=name', function(res) {
-                let html = '<option value="">-- All Suppliers --</option>';
-                (res || []).forEach(s => {
-                    const label = s.companyName || s.nickName || s.partyCode || ('#' + s.id);
-                    html += `<option value="${s.id}">${label}</option>`;
-                });
-                $('#supplierId').html(html);
-            });
-        }
-
-        function fetchReport() {
-            const btn = $('#btnShow');
-            btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
-            
-            const req = {
-                fromDate: $('#fromDate').val(),
-                toDate: $('#toDate').val(),
-                supplierId: $('#supplierId').val() ? parseInt($('#supplierId').val()) : null,
-                status: $('#statusFilter').val()
-            };
-
-            $.ajax({
-                url: '/purchase/api/reports/purchase-orders',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(req),
-                success: function(res) {
-                    if(res && res.success && res.data && res.data.length > 0) {
-                        let rowsHtml = '';
-                        let totQty = 0, totAmt = 0;
-                        res.data.forEach((r, idx) => {
-                            let qty = parseFloat(r.totalQty || r.qty || 0);
-                            let amt = parseFloat(r.totalAmount || r.amount || 0);
-                            totQty += qty; totAmt += amt;
-                            rowsHtml += `<tr>
-                                <td class="text-center">${idx + 1}</td>
-                                <td class="text-center"><a href="/purchase/purchase-order?id=${r.id}">${r.docNo || r.id}</a></td>
-                                <td class="text-center">${r.docDate ? r.docDate.substring(0,10) : ''}</td>
-                                <td>${r.supplierName || ''}</td>
-                                <td class="text-center">${r.deliveryDate ? r.deliveryDate.substring(0,10) : ''}</td>
-                                <td>${r.itemName || r.itemDetails || ''}</td>
-                                <td class="text-right">${qty.toFixed(2)}</td>
-                                <td class="text-right">${amt.toFixed(2)}</td>
-                                <td class="text-center"><span class="badge ${r.status==='Complete'?'badge-success':'badge-info'}">${r.status || 'Open'}</span></td>
-                                <td class="text-center">${r.isApproved ? 'Approved' : 'Pending'}</td>
-                            </tr>`;
-                        });
-                        $('#reportTbody').html(rowsHtml);
-                        $('#lblTotalQty').text(totQty.toFixed(2));
-                        $('#lblTotalAmount').text(totAmt.toFixed(2));
-                        $('#totalRow').show();
-                    } else {
-                        $('#reportTbody').html('<tr><td colspan="10" class="text-center text-muted">No records found matching criteria.</td></tr>');
-                        $('#totalRow').hide();
-                    }
-                },
-                error: function(err) {
-                    alert('Error loading PO register: ' + (err.responseJSON ? err.responseJSON.message : err.statusText));
-                },
-                complete: function() {
-                    btn.prop('disabled', false).html('<i class="fa fa-search"></i> Show Register');
-                }
-            });
-        }
-    </script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
-    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
-<script src="/js/print-rpt.js?v=20261001a"></script>
+<!-- tabPage2 "Summary" -->
+<section class="pr-panel" data-tab-panel="summary" hidden>
+    <nav class="pr-toolstrip" aria-label="Summary toolbar">
+        <button type="button" id="btnNewSummary">Reset</button>
+        <button type="button" id="btnRefreshSummar" title="Ctrl+R">Refresh</button>
+        <button type="button" id="btnSummaryPrint" title="Ctrl+P">Print</button>
+        <button type="button" id="btnShortCutKeySumamryTab">ShortCut Keys</button>
+    </nav>
+    <div style="position:relative;height:174px">
+        <fieldset class="pr-filters pr-abs" style="left:5px;top:0;width:900px;height:165px">
+            <legend>Filter Criteria</legend>
+            <label class="pr-abs" style="left:4px;top:22px" for="cmbBranchNameSumm">Branch Name</label>
+            <details class="pr-check pr-abs" id="cmbBranchNameSumm" style="left:106px;top:16px;width:263px"></details>
+            <label class="pr-abs" style="left:4px;top:50px" for="datFromDateSumm">From &amp; To Date</label>
+            <div class="pr-abs pr-date" style="left:106px;top:46px;width:131px"><input type="checkbox" id="chkFromDateSumm" checked aria-label="Use From Date"><input type="date" id="datFromDateSumm"></div>
+            <div class="pr-abs pr-date" style="left:238px;top:46px;width:131px"><input type="checkbox" id="chkToDateSumm" checked aria-label="Use To Date"><input type="date" id="datToDateSumm" aria-label="To Date"></div>
+            <label class="pr-abs" style="left:4px;top:78px" for="txtFromDocNoSumm">From &amp; To DocNo</label>
+            <div class="pr-abs" style="left:106px;top:74px;width:131px"><input type="text" id="txtFromDocNoSumm" inputmode="numeric"></div>
+            <div class="pr-abs" style="left:238px;top:74px;width:131px"><input type="text" id="txtToDocNoSumm" inputmode="numeric" aria-label="To DocNo"></div>
+            <label class="pr-abs" style="left:4px;top:106px" for="cmbParentcategorySumm">Parent Category</label>
+            <div class="pr-abs" style="left:106px;top:100px;width:263px"><select id="cmbParentcategorySumm" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select></div>
+            <label class="pr-abs" style="left:4px;top:134px" for="CmbCategorySumm">Item Category</label>
+            <div class="pr-abs" style="left:106px;top:128px;width:263px"><select id="CmbCategorySumm" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+            <label class="pr-abs" style="left:372px;top:22px" for="cmbItemtypeSumm">Item Type</label>
+            <div class="pr-abs" style="left:433px;top:16px;width:170px"><select id="cmbItemtypeSumm" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+            <label class="pr-abs" style="left:372px;top:50px" for="cmbCropSumm">Crop Year</label>
+            <div class="pr-abs" style="left:433px;top:44px;width:170px"><select id="cmbCropSumm" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+            <label class="pr-abs" style="left:372px;top:78px" for="cmbJobLotSumm">Job Lot</label>
+            <div class="pr-abs" style="left:433px;top:72px;width:170px"><select id="cmbJobLotSumm" data-dtcombo="single" data-dtcombo-caption="Job Lot"></select></div>
+            <label class="pr-abs" style="left:372px;top:106px" for="cmbDistrictSumm">District</label>
+            <div class="pr-abs" style="left:433px;top:100px;width:170px"><select id="cmbDistrictSumm" data-dtcombo="single" data-dtcombo-caption="District"></select></div>
+            <label class="pr-abs" style="left:372px;top:134px" for="cmbcitySumm">City Name</label>
+            <div class="pr-abs" style="left:433px;top:128px;width:170px"><select id="cmbcitySumm" data-dtcombo="single" data-dtcombo-caption="City"></select></div>
+            <label class="pr-abs" style="left:608px;top:22px" for="cmbItemNameSumm">Item Name</label>
+            <div class="pr-abs" style="left:698px;top:16px;width:196px"><select id="cmbItemNameSumm" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <label class="pr-abs" style="left:608px;top:50px" for="cmbCustomerSumm">Supplier Name</label>
+            <div class="pr-abs" style="left:698px;top:44px;width:196px"><select id="cmbCustomerSumm" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select></div>
+            <label class="pr-abs" style="left:608px;top:77px" for="cmbBookingPersonSumm">Booking Person</label>
+            <div class="pr-abs" style="left:698px;top:71px;width:196px"><select id="cmbBookingPersonSumm" data-dtcombo="single" data-dtcombo-caption="Booking Person"></select></div>
+            <label class="pr-abs" style="left:608px;top:104px" for="cmbActivitySumm">Report Type</label>
+            <div class="pr-abs" style="left:698px;top:98px;width:196px"><select id="cmbActivitySumm" data-dtcombo="single" data-dtcombo-caption="Report Type"></select></div>
+            <label class="pr-abs" style="left:609px;top:128px"><input type="checkbox" id="chkIncludePackUom"> PackUom</label>
+            <label class="pr-abs" style="left:685px;top:128px"><input type="checkbox" id="chkIncludeCity"> CityWise</label>
+            <label class="pr-abs" style="left:757px;top:128px"><input type="checkbox" id="chkSkipZero" checked> Skip Zero</label>
+            <button type="button" class="pr-show pr-abs" id="BtnShowSumm" style="left:838px;top:127px;width:57px" title="Ctrl+S">Show</button>
+            <div class="pr-abs pr-radios" style="left:608px;top:146px" role="radiogroup" aria-label="Approval">
+                <label><input type="radio" name="approvalSumm" value="All" id="radAllApprovedAndUnApprovedSumm" checked> All</label>
+                <label><input type="radio" name="approvalSumm" value="Approved" id="RadApprovedOnlySumm"> Approved</label>
+                <label><input type="radio" name="approvalSumm" value="UnApproved" id="RadUnApprovedOnlySumm"> Un Approved</label>
+            </div>
+        </fieldset>
+        <div class="pr-abs pr-radios vertical" style="left:910px;top:14px" role="radiogroup" aria-label="Status">
+            <label><input type="radio" name="statusSumm" value="All" id="RadAllOpenCompCancelSumm"> All</label>
+            <label><input type="radio" name="statusSumm" value="Open" id="RadOpenSumm" checked> Open</label>
+            <label><input type="radio" name="statusSumm" value="Complete" id="RadCompleteSumm"> Complete</label>
+            <label><input type="radio" name="statusSumm" value="Cancel" id="RadCancelSumm"> Cancel</label>
+        </div>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity-summ="1" style="left:995px;top:4px;width:204px;height:54px">Outstanding &amp; Open<b id="txtOustandingSummary"></b></button>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity-summ="2" style="left:995px;top:61px;width:204px;height:51px">Outstanding &amp; InProcess<b id="txtOustandingInProcessSummary"></b></button>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity-summ="3" style="left:995px;top:115px;width:204px;height:51px">InProcess &amp; Excess Received<b id="txtInProcessSummary"></b></button>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity-summ="4" style="left:1204px;top:4px;width:142px;height:54px">Expiring Next 7 Days<b id="txtExpiringDaysSummary"></b></button>
+        <button type="button" class="pr-panel-btn pr-abs is-hidden" data-activity-summ="5" style="left:1204px;top:61px;width:142px;height:51px">Canceled<b id="txtCanceledSummary"></b></button>
+    </div>
+    <section id="summarySection">
+        <div class="pr-grid-bar">Summary <span id="label15" hidden></span> <span id="lblCountSumm"></span>
+            <span class="pr-right"><button type="button" id="btnGridPrintSumm">Grid Print</button><button type="button" id="btnGridExportSumm">Export</button><button type="button" id="btnFullscreenSumm">Fullscreen</button></span>
+        </div>
+        <div class="pr-wrap" tabindex="0" id="gridWrapSumm"><table class="pr-grid" id="GridSummary"></table></div>
+    </section>
+</section>
+<script th:src="@{/build/js/sale/report_approval_history.js?v=20260926a}"></script>
+<script th:src="@{/build/js/purchase/reports/pr_common.js?v=20260930h}"></script>
+<script th:src="@{/build/js/purchase/reports/purchase_order_report.js?v=20260930h}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
 </body>
 </html>

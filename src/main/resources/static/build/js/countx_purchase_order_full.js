@@ -57,6 +57,25 @@ let otherItemsForExpense = [];
 let coaAccountsForCharge = [];
 let paymentTermsOptions = [];
 
+/* OrderDetailRemoveIds (:2686) - ",id,id" of saved lines removed while in Update mode. */
+let orderDetailRemoveIds = '';
+/* grdSupplierLoadingDetail rows of the loaded order (ReadByHeaderId_PurchaseOrderSupplierDispatchDetail). */
+let supplierDispatchRows = [];
+/* formright (:619) and the Load-time configuration (/api/purchase-order/screen-defaults). */
+let poRights = { save: false, update: false, print: false, delete: false, canViewAllRecord: false };
+let screenCfg = { multiCurrency: false, currencyId: 0, exchangeRate: 0, fcyDecimals: 2, amountDecimals: 0,
+                  warningNoExpense: false, itemSearchByCode: false, defaultDaysToLessFromHistoryFromDate: 0 };
+/* PurchsaeOrder_Load activates a default row in several combos (:811, :848, :961, :1103, :1131,
+   :1153-1154, :1173-1174). That happens ONCE, at form load - Reset() does not repeat it - so the
+   flag is cleared the first time each list is applied. */
+let loadDefaultsPending = { category: true, paymentTerm: true, deliveryTerm: true, locationType: true,
+                            commType: true, commUom: true };
+
+/* true while a record named in the URL (?id=) is being opened - the load-time combo defaults
+   must not race it. */
+let recordRequested = /^[1-9]\d*$/.test(new URLSearchParams(location.search).get('id') || '');
+function noRecordOnForm() { return !loadedHeaderSelection && !recordRequested && !currentPoMasterId; }
+
 $(document).ready(function() {
     initForm();
     bindKeyboardShortcuts();
@@ -66,6 +85,7 @@ $(document).ready(function() {
 
 function initForm() {
     setWinDefaultDates();
+    loadCurrencies();
     fetchNextDocNo();
     loadDropdowns();
     fetchComboDefaults();
@@ -256,6 +276,10 @@ function syncBrokerAccountSelection() {
 /* The desktop has no ValueChanged/Leave handler on the commission agent; it is read only at
    save (:3305). This keeps the hidden id and the commission total in step with the pick. */
 function syncCommissionAgentSelection() {
+    /* combsalesman_Leave :1654-1660 - the four commission controls become editable. */
+    ['#cmbCommType', '#txtCommRate', '#cmbCommUom', '#txtCommAmount'].forEach(sel => setFieldLocked(sel, false));
+    $('#txtCommAmount').prop('readonly', true);      /* txtcommamount.ReadOnly = true (designer :9591) */
+    bindFactorySampleOrStandard();                    /* the sample list is filtered by the agent too (:906) */
     const agentId = parseInt($('#cmbCommissionAgent').val() || '0');
     if (agentId > 0) {
         const agent = allCommAgents.find(a => a.id === agentId);
@@ -294,9 +318,11 @@ function setWinDefaultDates() {
     const isoDate = ymdLocal(today);
     
     $('#txtDocDate').val(isoDate);
-    $('#txtDeliveryStartDate').val(isoDate);
-    $('#txtHistoryFromDate').val(isoDate);
-    $('#txtHistoryToDate').val(isoDate);
+    $('#txtDeliveryStartDate').val(isoDate);          /* Reset() :3941 deliverystartdate = Now */
+    /* The History dates are NOT touched here: Reset() leaves them alone; they are set once at
+       load from DefaultDaysToLessFromHistoryFromDate (see applyScreenDefaults). */
+    if (!$('#txtHistoryFromDate').val()) $('#txtHistoryFromDate').val(isoDate);
+    if (!$('#txtHistoryToDate').val()) $('#txtHistoryToDate').val(isoDate);
     
     calculateExpiryDate();
     calculatePaymentDueDate();
@@ -345,20 +371,99 @@ function applyScreenDefaults() {
         type: 'GET',
         success: function (cfg) {
             if (!cfg) { return; }
+            screenCfg = Object.assign(screenCfg, cfg);
+            if (cfg.rights) { poRights = cfg.rights; applyRights(); }
+            if (typeof cfg.amountDecimals === 'number') historyMeta.amountDecimals = cfg.amountDecimals;
 
+            /* :804 / :3940 - txtdeliverydays = OrderDefaultDeliveryDays (Conversion.ToString of an int). */
             var days = parseInt(cfg.orderDefaultDeliveryDays || '0', 10);
-            if (!isNaN(days) && generation === poFormGeneration) { $('#txtDeliveryDays').val(days); }
+            if (generation === poFormGeneration && !currentPoMasterId) {
+                $('#txtDeliveryDays').val(isNaN(days) ? 0 : days);
+                calculateExpiryDate();
+            }
 
             var jute = parseFloat(cfg.weightCutForJuteBags || '0');
-            if (jute) { $('#txtJuteBagCut').val(fmtCut(jute)); }      /* :1642 - only when non-zero */
-
+            if (jute) { $('#txtJuteBagCut').val(fmtCut(jute)); }      /* :1639 - only when non-zero */
             var pp = parseFloat(cfg.weightCutForPPBags || '0');
-            if (pp) { $('#txtPPBagCut').val(fmtCut(pp)); }            /* :1647 */
-
+            if (pp) { $('#txtPPBagCut').val(fmtCut(pp)); }            /* :1644 */
             /* txtJuteBagCut.Enabled = false / txtPpBagCut.Enabled = false */
             $('#txtJuteBagCut, #txtPPBagCut').prop('readonly', true);
+
+            /* :636-643 - ItemSearchByCode chooses the item display (Code or Name). Load only. */
+            if (loadDefaultsPending.itemSearch !== false) {
+                $(cfg.itemSearchByCode ? '#radItemCode' : '#radItemName').prop('checked', true);
+                loadDefaultsPending.itemSearch = false;
+            }
+
+            /* multiCurrencyFeature() :4161-4193. */
+            $('#rowCurrency').toggle(!!cfg.multiCurrency);
+            if (!cfg.multiCurrency && generation === poFormGeneration && !currentPoMasterId) {
+                setCurrencyControls(cfg.currencyId || 0, cfg.exchangeRate || 0);
+            }
+
+            /* :813-817 - History From = today - DefaultDaysToLessFromHistoryFromDate (else 3 days). */
+            if (!historyDatesInitialised) {
+                const back = parseInt(cfg.defaultDaysToLessFromHistoryFromDate || '0', 10);
+                const f = new Date(); f.setDate(f.getDate() - (back > 0 ? back : 3));
+                $('#txtHistoryFromDate').val(ymdLocal(f));
+                $('#txtHistoryToDate').val(ymdLocal(new Date()));
+                historyDatesInitialised = true;
+            }
         }
     });
+}
+
+let historyDatesInitialised = false;
+
+/* formright: btnsave/btnUpdate/btnprint Enabled (:620-622). */
+function applyRights() {
+    $('#btnSave, #btnSaveAs').prop('disabled', !poRights.save);
+    $('#btnUpdate').prop('disabled', !poRights.update);
+    $('#btnPrint203, #btnPrint203A, #btnPrint203_01, #btnPrint203_02').prop('disabled', !poRights.print);
+}
+
+/* cmbCurrency.Value / txtExchangeRate.Text, then txtExchangeRate_TextChanged (:4103). */
+function setCurrencyControls(currencyId, rate) {
+    $('#cmbCurrency').val(String(currencyId || 0));
+    $('#txtExchangeRate').val(rate || 0);
+    onExchangeRateChange();
+}
+
+function loadCurrencies() {
+    $.get('/api/purchase-order/currencies', function (rows) {
+        const sel = $('#cmbCurrency');
+        const keep = sel.val();
+        sel.find('option:gt(0)').remove();
+        (rows || []).forEach(r => sel.append(`<option value="${r.id}">${escapeHtml(r.name)}</option>`));
+        if (keep) sel.val(keep);
+        if (!screenCfg.multiCurrency && !currentPoMasterId && screenCfg.currencyId) sel.val(String(screenCfg.currencyId));
+        if (loadedHeaderSelection && loadedHeaderSelection.currencyId) sel.val(String(loadedHeaderSelection.currencyId));
+    });
+}
+
+/* txtExchangeRate_TextChanged :4103-4133 - every line's FcyAmount = Amount / rate, rounded to
+   DefaultNoofDecimalPointsForFcyAmount; 0 when there is no rate. Then the totals. */
+function onExchangeRateChange() {
+    const rate = parseFloat($('#txtExchangeRate').val() || '0') || 0;
+    const dp = (typeof screenCfg.fcyDecimals === 'number') ? screenCfg.fcyDecimals : 2;
+    let total = 0;
+    lineItems.forEach(function (l) {
+        l.fcyAmount = rate > 0 ? roundHalfEven((parseFloat(l.itemAmount) || 0) / rate, dp) : 0;
+        total += l.fcyAmount;
+    });
+    $('#txtFcyAmount').val(lineItems.length ? total.toFixed(dp) : '0');
+}
+
+/* C# Math.Round(x, n) - midpoint to even. */
+function roundHalfEven(value, dp) {
+    const f = Math.pow(10, dp || 0);
+    const scaled = value * f;
+    const lower = Math.floor(scaled), frac = scaled - lower;
+    const tol = Number.EPSILON * Math.max(1, Math.abs(scaled)) * 4;
+    let r;
+    if (Math.abs(frac - 0.5) <= tol) r = (lower % 2 === 0) ? lower : lower + 1;
+    else r = Math.round(scaled);
+    return r / f;
 }
 
 /* "#,##0.###" - up to three decimals, trailing zeros dropped, thousands separated. */
@@ -408,49 +513,63 @@ function loadDropdowns() {
         applyComboDefaults();
     });
 
-    // Parent Categories
+    // Order Category - OrderCatagoryfill() :951: InvOrderCategory, Rows[2].Activate() at load (:961),
+    // i.e. the SECOND real row (row 0 is the "...Select Any Value..." row), then combordercat_Leave (:805).
     $.get('/api/purchase-order/parent-categories', function(data) {
         const sel = $('#cmbParentCategory');
         sel.find('option:gt(0)').remove();
         if (data) {
             data.forEach(c => sel.append(`<option value="${c.id}" data-code="${c.id}">${escapeHtml(c.description)}</option>`));
         }
-        if ($.fn.select2) sel.trigger('change.select2');
-        /* combordercat_Leave: generate the category serial whenever the category changes. */
+        /* combordercat_Leave: category serial + item list whenever the category changes. */
         sel.off('change.catsr').on('change.catsr', fetchNextCategorySrNo);
+        if (loadDefaultsPending.category && noRecordOnForm()) {
+            loadDefaultsPending.category = false;
+            activateRow(sel, 2);   /* the change event runs combordercat_Leave (cat no + items) */
+        }
         applyHeaderSelections();
     });
 
-
-    // Payment Terms
+    // Payment Terms - PaymentTerms() :1056 (globalPaymentTerm), Rows[2].Activate() at load (:811).
     $.get('/api/purchase-order/payment-terms', function(data) {
         paymentTermsOptions = data || [];
         const sel = $('#cmbPaymentTerm');
         sel.find('option:gt(0)').remove();
         if (data) {
-            data.forEach(t => sel.append(`<option value="${t.id}" data-days="${t.dueDays}" data-code="${t.dueDays ? t.dueDays + ' Days' : ''}">${escapeHtml(t.description)}</option>`));
+            data.forEach(t => sel.append(`<option value="${t.id}" data-days="${t.dueDays}">${escapeHtml(t.description)}</option>`));
         }
-        if ($.fn.select2) sel.trigger('change.select2');
+        if (loadDefaultsPending.paymentTerm && noRecordOnForm()) {
+            loadDefaultsPending.paymentTerm = false;
+            activateRow(sel, 2);   /* the change event runs combpttrm_Leave */
+        }
         applyHeaderSelections();
+        renderSchedGrid();
     });
 
-    // Location Types - LocationTypeFill() :840, usp_getLocationType (no parameters)
+    // Location Types - LocationTypeFill() :840, usp_getLocationType (no parameters), Rows[1] (:848).
     $.get('/api/purchase-order/location-types', function (data) {
         const sel = $('#cmbLocationType');
         sel.find('option:gt(0)').remove();
         (data || []).forEach(l => sel.append(`<option value="${l.id}">${escapeHtml(l.name)}</option>`));
-        if ($.fn.select2) sel.trigger('change.select2');
+        if (loadDefaultsPending.locationType && noRecordOnForm()) {
+            loadDefaultsPending.locationType = false;
+            activateRow(sel, 1);
+        }
         applyHeaderSelections();
     });
 
-    // Delivery Terms
+    // Delivery Terms - DeliveryTerm() :1093, Rows[2] (:1103). data-value carries ValueDescription,
+    // the hidden third column the desktop SAVES as po.DeliveryTerm (:3312 SelectedRow.Cells[2]).
     $.get('/api/purchase-order/delivery-terms', function(data) {
         const sel = $('#cmbDeliveryTerm');
         sel.find('option:gt(0)').remove();
         if (data) {
-            data.forEach(t => sel.append(`<option value="${t.id}" data-code="${t.id}">${escapeHtml(t.description || t.name)}</option>`));
+            data.forEach(t => sel.append(`<option value="${t.id}" data-value="${escapeHtml(t.valueDescription == null ? '' : t.valueDescription)}">${escapeHtml(t.description || t.name)}</option>`));
         }
-        if ($.fn.select2) sel.trigger('change.select2');
+        if (loadDefaultsPending.deliveryTerm && noRecordOnForm()) {
+            loadDefaultsPending.deliveryTerm = false;
+            activateRow(sel, 2);
+        }
         applyHeaderSelections();
     });
 
@@ -461,10 +580,16 @@ function loadDropdowns() {
         if (data) {
             data.forEach(j => sel.append(`<option value="${j.id}" data-code="${j.id}">${escapeHtml(j.description)}</option>`));
         }
-        if ($.fn.select2) sel.trigger('change.select2');
+        applyComboDefaults();          /* defaultConfiquration() :1621-1625 once the list exists */
     });
 
     loadCommissionUoms();          /* CommissionUOMFill(), :1162 */
+    /* CommissionTypeFill() :1153-1154 - Rows[1] (Flat) on both type combos, at load only. */
+    if (loadDefaultsPending.commType) {
+        loadDefaultsPending.commType = false;
+        $('#cmbCommType').val('Flat');
+        $('#cmbBrokeryType').val('Flat');
+    }
     loadEmptyBagDropdowns();
     loadSupplierExpenseDropdowns();
     loadChargeToProductDropdowns();
@@ -489,6 +614,17 @@ function loadDropdowns() {
  * The desktop also re-runs this whenever the History branch changes (the branch is a parameter
  * of the call), so the branch picker re-triggers it here too.
  * ============================================================================================ */
+/* UltraCombo Rows[n].Activate(): row 0 is the inserted "...Select Any Value..." row, so row n is
+   the n-th real option. Selecting it sets the combo's value (FormValidation reads ActiveRow). */
+function activateRow(sel, n) {
+    const opt = sel.find('option').eq(n);
+    if (!opt.length || !opt.val() || opt.val() === '0') return false;
+    sel.val(opt.val());
+    const el = sel[0];
+    if (el) el.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+}
+
 function loadHistoryParties() {
     /* The desktop passes the History tab's chosen branch; with none chosen the BLL omits the
        parameter, which the endpoint reproduces. No branch is not an error here. */
@@ -531,6 +667,12 @@ function fillHistoryPartySelect(selector, rows, placeholder) {
             $('#hidHistorySupplierId').val($(this).val() || '0');
         });
     }
+}
+
+/* btnRefreshHistory_Click :5208-5218 - re-reads the Branch and the Supplier / Booking Person lists. */
+function refreshHistoryLists() {
+    loadHistoryBranches();
+    loadHistoryParties();
 }
 
 function loadHistoryBranches() {
@@ -596,76 +738,46 @@ function ymdLocal(d) {
 }
 
 function bindItemUom(itemId, isNewRow) {
+    /* bindRateUomAndItemPackUom(detailId) :1365-1462.
+       - rows: ONLY the UOM schedule rows whose ItemId is the chosen item (:1387);
+       - the typed Pack UOM / Rate UOM TEXT survives when the new list has the same UOM (:1400-1415);
+       - new line (detailId == 0): the Rate UOM becomes the BaseRateUom row, else the Equivalent-40
+         row (:1420-1436); and then - the desktop's own rule - it is blanked unless its text is
+         "40KG"/"40" (:1437-1440). Reproduced as is (see the report's quirks list).
+       - no rows for the item: both combos cleared (:1442-1448). */
     const packSel = $('#cmbPackUom');
     const rateSel = $('#cmbRateUom');
-    packSel.empty();
-    rateSel.empty();
+    const prevPack = packSel.find('option:selected').text();
+    const prevRate = rateSel.find('option:selected').text();
+    packSel.empty().append('<option value="0">...Select Any Value...</option>');
+    rateSel.empty().append('<option value="0">...Select Any Value...</option>');
 
-    let rows = (uomScheduleList || []).filter(u => {
-        const uItem = parseInt(u.itemId || u.ItemId || 0);
-        return uItem === parseInt(itemId) || uItem === 0;
-    });
-
-    if (!rows || rows.length === 0) {
-        rows = uomScheduleList || [];
-    }
-
-    /* No invented UOM schedule. The desktop binds combitempck/combrateuom strictly from
-       the item's UOM schedule (CommonServices.GetUomScheduleByItemId); when that returns
-       nothing there is no factor, and CalculateWeight() then zeroes Qty and Weight
-       (:4262-4266) rather than assuming one. A hard-coded 40Kg/Kg/Bag/Ton list with
-       invented equivalents used to stand here and would silently produce plausible but
-       wrong weights and amounts. */
-    if (!rows || rows.length === 0) {
-        packSel.append('<option value="0">-- No UOM schedule for this item --</option>');
-        rateSel.append('<option value="0">-- No UOM schedule for this item --</option>');
-        if ($.fn.select2) { packSel.trigger('change.select2'); rateSel.trigger('change.select2'); }
-        showPoMessage('This item has no UOM schedule, so Qty, Weight and Amount cannot be calculated.', true);
-        return;
-    }
+    const id = parseInt(itemId || '0', 10);
+    const rows = id > 0 ? (uomScheduleList || []).filter(u => parseInt(u.itemId || 0, 10) === id) : [];
+    if (!rows.length) return;
 
     rows.forEach(u => {
-        const id = u.id || u.Id || 1;
-        /* The factor is the schedule's Equivalent column (combitempck.SelectedRow.Cells[2],
-           :4259). A row without one gets NO data-eq, so the calculation can tell
-           "no factor" apart from "a factor that happens to be 1". */
-        const rawEq = (u.equivalent !== undefined && u.equivalent !== null && u.equivalent !== '')
-            ? u.equivalent
-            : ((u.Equivalent !== undefined && u.Equivalent !== null && u.Equivalent !== '') ? u.Equivalent : null);
-        const eqNum = (rawEq === null) ? NaN : parseFloat(rawEq);
+        const eqNum = parseFloat(u.equivalent);
         const eqAttr = (isFinite(eqNum) && eqNum > 0) ? ` data-eq="${eqNum}"` : '';
-        const code = u.uomCode || u.UOMCode || u.UomCode || '';
-        /* data-base drives the BaseRateUom checkbox column - the second visible column of
-           dtUOM once Equivalent is hidden (:1396, :1398). Read as stored; a row without the
-           flag renders an unticked box rather than a guess. */
-        const baseRaw = (u.baseRateUom !== undefined) ? u.baseRateUom
-                      : ((u.BaseRateUom !== undefined) ? u.BaseRateUom : '');
-        const baseAttr = ` data-base="${escapeHtml(String(baseRaw === true ? 1 : baseRaw === false ? 0 : baseRaw))}"`;
-        packSel.append(`<option value="${id}"${eqAttr}${baseAttr}>${escapeHtml(code)}</option>`);
-        rateSel.append(`<option value="${id}"${eqAttr}${baseAttr}>${escapeHtml(code)}</option>`);
+        const base = (u.baseRateUom === true || u.baseRateUom === 1 || String(u.baseRateUom).toLowerCase() === 'true') ? 1 : 0;
+        const opt = `<option value="${u.id}"${eqAttr} data-base="${base}">${escapeHtml(u.uomCode || '')}</option>`;
+        packSel.append(opt);
+        rateSel.append(opt);
     });
 
-    if (isNewRow) {
-        let baseRateRow = rows.find(u => u.baseRateUom === true || u.baseRateUom === 1 || String(u.uomCode).toLowerCase().includes('40kg'));
-        if (!baseRateRow) {
-            baseRateRow = rows.find(u => parseFloat(u.equivalent || 1.0) === 40.0) || rows[0];
-        }
-        if (baseRateRow) {
-            rateSel.val(baseRateRow.id || baseRateRow.Id);
-        }
-        let basePackRow = rows.find(u => u.basePackUom === true || u.basePackUom === 1 || String(u.uomCode).toLowerCase().includes('bag'));
-        if (!basePackRow) {
-            basePackRow = rows[0];
-        }
-        if (basePackRow) {
-            packSel.val(basePackRow.id || basePackRow.Id);
-        }
-    }
+    const byText = (sel, text) => sel.find('option').filter(function () { return $(this).text() === text && this.value !== '0'; }).first();
+    const p = byText(packSel, prevPack); if (p.length) packSel.val(p.val());
+    const r = byText(rateSel, prevRate); if (r.length) rateSel.val(r.val());
 
-    if ($.fn.select2 && packSel.data('select2')) {
-        packSel.trigger('change.select2');
-        rateSel.trigger('change.select2');
+    if (!isNewRow) return;                                           /* :1416 detailId != 0 */
+    const baseRow = rows.find(u => u.baseRateUom === true || u.baseRateUom === 1 || String(u.baseRateUom).toLowerCase() === 'true');
+    if (baseRow) rateSel.val(String(baseRow.id));                    /* :1422-1426 */
+    else {
+        const forty = rows.find(u => parseFloat(u.equivalent) === 40.0);
+        if (forty) rateSel.val(String(forty.id));                    /* :1429-1434 */
     }
+    const t = (rateSel.find('option:selected').text() || '').toUpperCase();
+    if (t !== '40KG' && t !== '40') rateSel.val('0');                /* :1437-1440 */
 }
 
 /* ============================================================
@@ -795,7 +907,8 @@ function preloadSearchData() {
     });
 
     $.get('/api/purchase-order/cities', function(data) {
-        allCities = data || [];
+        allCities = (data || []).map(c => ({ id: c.id, name: (c.cityName || '').trim() })).filter(c => c.name.length > 0);
+        if (!loadedHeaderSelection && !(parseInt($('#hidLoadingCityId').val() || '0', 10) > 0)) applyCityDefault();
     });
 }
 
@@ -1035,19 +1148,20 @@ function toggleHistoryDatePickers() {
    It clears filters only - it does not fetch, matching the desktop, where the grid is
    refreshed by the Show button. */
 function resetHistoryFilters() {
-    $('#chkHistoryEnableFromDate').prop('checked', true);
-    $('#chkHistoryEnableToDate').prop('checked', true);
-    $('#txtHistoryFromDate').val('');
-    $('#txtHistoryToDate').val('');
+    /* btnNewHistory_Click :5189-5201 - both dates today, doc nos and supplier cleared, both grids
+       cleared, Doc Date radio. Branch and Booking Person are left as they are. */
+    $('#txtHistoryFromDate').val(ymdLocal(new Date()));
+    $('#txtHistoryToDate').val(ymdLocal(new Date()));
     $('#txtHistoryFromDocNo').val('');
     $('#txtHistoryToDocNo').val('');
-    $('#cmbHistoryBranch').val('0');
-    $('#cmbHistoryBookingPerson').val('0');
-    $('#cmbHistorySupplier').val('0');
     $('input[name="radHistoryDateType"][value="DocDate"]').prop('checked', true);
     clearHistorySupplier();
-    toggleHistoryDatePickers();
-    if ($.fn.select2) $('#cmbHistoryBranch, #cmbHistoryBookingPerson').trigger('change.select2');
+    currentHistoryRecords = [];
+    selectedHistoryRecordIdx = -1;
+    $('#tblHistoryThead, #tblHistoryTfoot, #tblHistoryDetailThead, #tblHistoryDetailTfoot').empty();
+    $('#tblHistoryTbody, #tblHistoryDetailTbody').empty();
+    updateHistoryNavDisplay();
+    updateHistoryDetailNavDisplay(0);
 }
 
 /* cmbSupplierNameHistory, bound by HistorySupplierComboFill() :4640-4688, which binds the
@@ -1270,21 +1384,68 @@ function selectBookingPerson(personId) {
  * 2. PAYMENT TERMS & DUE DATES DYNAMIC CALCULATIONS
  * ============================================================ */
 function onContractDateChange() {
+    /* DocDate_ValueChanged :4494-4499 - DueDaysCalculate, the Sample/Standard list (the standard
+       schedules depend on the date) and ResetStandardFromGrid. */
     calculatePaymentDueDate();
     calculateExpiryDate();
+    bindFactorySampleOrStandard();
+    resetStandardFromGrid();
+}
+
+/* ResetStandardFromGrid() :4501-4521 - lines that carry a Standard schedule lose it (id 0, text ""). */
+function resetStandardFromGrid() {
+    let changed = false;
+    lineItems.forEach(function (l) {
+        if (parseInt(l.labAnalysisStandardScheduleId || 0, 10) > 0) {
+            l.labAnalysisStandardScheduleId = 0;
+            l.labSampleNo = '';
+            changed = true;
+        }
+    });
+    if (changed) renderDetailGrid();
+}
+
+/* radFactorySample_CheckedChanged :1899 (fires for both radios). */
+function onFactorySampleChange() { bindFactorySampleOrStandard(); }
+
+/* FactorySampleOrStandardbind(FactorySampleOrStandardDbCall()) :874-949 - Sample: accepted lab
+   samples of this item for the supplier / commission agent (excluding ones used by other orders);
+   Standard: the standard schedules effective on the doc date. Retains the current selection when
+   it is still offered (BindAndRetainSelection). */
+let factoryListGeneration = 0;
+function bindFactorySampleOrStandard(selectId) {
+    const sample = $('#radSampleYes').is(':checked');
+    const gen = ++factoryListGeneration;
+    const q = $.param({
+        sample: sample,
+        itemId: parseInt($('#hidItemId').val() || '0', 10) || 0,
+        supplierId: parseInt($('#cmbSupplier').val() || '0', 10) || 0,
+        commissionAgentId: parseInt($('#cmbCommissionAgent').val() || '0', 10) || 0,
+        orderId: currentPoMasterId || 0,
+        docDate: $('#txtDocDate').val() || ''
+    });
+    return $.get('/api/purchase-order/lab-samples?' + q, function (rows) {
+        if (gen !== factoryListGeneration) return;
+        const sel = $('#cmbLabSampleNo');
+        const keep = selectId !== undefined ? String(selectId) : sel.val();
+        sel.empty().append('<option value="0">...Select Any Value...</option>');
+        (rows || []).forEach(r => sel.append(`<option value="${r.id}">${escapeHtml(r.description)}</option>`));
+        if (keep && sel.find(`option[value="${keep}"]`).length) sel.val(keep); else sel.val('0');
+    }).fail(function (xhr) { alert(PurchaseRequest.error(xhr)); });
 }
 
 function onPaymentTermChange() {
     const val = $('#cmbPaymentTerm').val();
     const dueDaysInput = $('#txtDueDays');
 
-    if (val === '1' || val === '3') { // Cash or Advance
-        dueDaysInput.val('0').prop('disabled', true);
-    } else {
-        dueDaysInput.prop('disabled', false);
-        if (parseFloat(dueDaysInput.val() || '0') === 0) {
-            dueDaysInput.val('2');
-        }
+    /* combpttrm_Leave :1766-1778 - terms 1 and 3: Due Days cleared and both boxes disabled;
+       any other term: both enabled. Nothing is defaulted (the "2" that used to be typed in
+       here is not the desktop's). */
+    dueDaysInput.prop('disabled', false);
+    $('#txtPaymentDueDate').prop('disabled', false);
+    if (val === '1' || val === '3') {
+        dueDaysInput.val('').prop('disabled', true);
+        $('#txtPaymentDueDate').prop('disabled', true);
     }
     calculatePaymentDueDate();
 }
@@ -1360,6 +1521,8 @@ function r4(n) { return Math.round((n + Number.EPSILON) * 10000) / 10000; }
 
 /* TotalCommissionAmount(), PurchsaeOrder.cs :4343-4373 */
 function calcCommission() {
+    /* :4347-4348 - "0" unless a commission agent is chosen. */
+    if (!(parseInt($('#cmbCommissionAgent').val() || '0', 10) > 0)) { $('#txtCommAmount').val('0'); return; }
     const type = $('#cmbCommType').val();
     const rate = parseFloat($('#txtCommRate').val() || '0');
     let commAmt = 0.0;
@@ -1378,6 +1541,8 @@ function calcCommission() {
 
 /* TotalBrokeryAmountCalculate(), PurchsaeOrder.cs :4376-4409 */
 function calcBrokery() {
+    /* :4380-4381 - "0" unless a broker account is chosen. */
+    if (!(parseInt($('#cmbBrokerAccount').val() || '0', 10) > 0)) { $('#txtBrokeryAmount').val('0'); return; }
     const type = $('#cmbBrokeryType').val();
     const rate = parseFloat($('#txtBrokeryRate').val() || '0');
     let brokeryAmt = 0.0;
@@ -1402,18 +1567,20 @@ function loadCommissionUoms() {
         const targets = ['cmbCommUom', 'cmbBrokeryRateUom'];
         targets.forEach(function (id) {
             const sel = $('#' + id);
-            sel.empty();
-            if (!rows.length) {
-                sel.append('<option value="0">-- No commission UOM configured --</option>');
-                return;
-            }
+            sel.empty().append('<option value="0">...Select Any Value...</option>');   /* BindDDLNew ZeroIndex */
             rows.forEach(function (r) {
                 const val = r.Id !== undefined ? r.Id : (r.id !== undefined ? r.id : 0);
                 const txt = (r.type !== undefined && r.type !== null) ? r.type : (r.Type || '');
                 sel.append(`<option value="${val}">${escapeHtml(String(txt))}</option>`);
             });
-            if ($.fn.select2) sel.trigger('change.select2');
+            /* :1173-1174 - Rows[1] (the first real row) at LOAD only; Reset() blanks them. */
+            if (loadDefaultsPending.commUom && noRecordOnForm()) sel.val(sel.find('option').eq(1).val() || '0');
         });
+        loadDefaultsPending.commUom = false;
+        if (loadedHeaderSelection) {
+            $('#cmbCommUom').val(String(loadedHeaderSelection.commissionRateUom || 0));
+            $('#cmbBrokeryRateUom').val(String(parseInt(loadedHeaderSelection.brokeryUom || 0, 10) || 0));
+        }
         calcCommission();
         calcBrokery();
     });
@@ -1462,6 +1629,7 @@ function fetchComboDefaults() {
             cityId:     parseInt((d && d.cityId)     || 0)
         };
         applyComboDefaults();
+        if (!loadedHeaderSelection && !(parseInt($('#hidLoadingCityId').val() || '0', 10) > 0)) applyCityDefault();
     });
 }
 
@@ -1562,8 +1730,9 @@ function rebuildItemCategoryList() {
         if (!seen.has(name)) seen.set(name, parseInt(i[idKey] || '0', 10));
     });
 
-    sel.empty().append('<option value="0">-- All --</option>');
-    Array.from(seen.keys()).sort(function (a, b) { return a.localeCompare(b); })
+    sel.empty().append('<option value="0">...Select Any Value...</option>');
+    /* Distinct in the items' own order (:1245-1266) - not re-sorted. */
+    Array.from(seen.keys())
         .forEach(function (name) {
             sel.append(`<option value="${seen.get(name)}">${escapeHtml(name)}</option>`);
         });
@@ -1669,9 +1838,11 @@ function selectItem(itemId) {
     // already-saved row, so editing an existing line never clobbers its saved UOM selection).
     bindItemUom(item.id, editingLineIdx < 0);
 
-    if (item.purchasePrice && parseFloat(item.purchasePrice) > 0) {
-        $('#txtRate').val(parseFloat(item.purchasePrice).toFixed(2));
-    }
+    /* combitem_Leave_1 :1729-1742 - the Job/Lot and Crop Year configuration defaults are put back
+       on every item pick, then the Sample/Standard list is re-read for this item. (There is no
+       purchase-price prefill on the desktop.) */
+    applyComboDefaults();
+    bindFactorySampleOrStandard();
     calcLineWeight();
     calcLineAmount();
 }
@@ -1709,7 +1880,7 @@ function calcLineWeight(source) {
         /* :4262-4266 - no factor, so neither figure can be trusted */
         $('#txtQty').val('0');
         $('#txtWeight').val('0');
-        calcLineAmount(source === 'uom');
+        calcLineAmount();
         return;
     }
 
@@ -1720,7 +1891,7 @@ function calcLineWeight(source) {
         const qty = parseFloat($('#txtQty').val() || '0');
         $('#txtWeight').val(qty > 0 ? r3(qty * uom) : 0);         /* :4269 */
     }
-    calcLineAmount(source === 'uom');
+    calcLineAmount();
 }
 
 /* Amount = Weight / RateUom.Equivalent x Rate.
@@ -1728,193 +1899,148 @@ function calcLineWeight(source) {
    With no factor there is no amount - it is left at 0 and the user is not shown a
    number that was computed from an assumption.
    On change of UOM (isUomChange=true), Amount will not change. */
-function calcLineAmount(isUomChange) {
-    if (isUomChange) {
-        return;
-    }
-    const weight = parseFloat($('#txtWeight').val() || '0');
-    const rate = parseFloat($('#txtRate').val() || '0');
+function calcLineAmount() {
+    /* TotalAmount() :4326-4336 - Amount = Math.Round(weight / RateUOM.Equivalent * rate), i.e. to a
+       WHOLE number with C#'s midpoint-to-even, on every Rate / Rate UOM / Weight change
+       (txtRate_TextChanged, combrateuom TextChanged, txtweight_TextChanged). No factor -> 0. */
+    const weight = parseFloat($('#txtWeight').val() || '0') || 0;
+    const rate = parseFloat($('#txtRate').val() || '0') || 0;
     const rateEq = uomFactor('cmbRateUom');
-
-    if (rateEq === null || !(weight > 0)) { $('#txtAmount').val('0'); return; }
-    $('#txtAmount').val(r3(weight / rateEq * rate));
+    const total = (rateEq !== null && rateEq > 0) ? (weight / rateEq * rate) : 0;
+    $('#txtAmount').val(roundHalfEven(total, 0));
 }
 
 /* ============================================================
  * 7. DETAIL GRID & ADD/EDIT/DELETE
  * ============================================================ */
-function btnAddDetailRow_Click() {
+function btnAddDetailRow_Click() { commitDetailRow(false); }
+
+/* btnplus_Click :2597-2652 (add) and btnUpdateDetail_Click :2768-2843 (update). */
+function commitDetailRow(isUpdate) {
     const itemId = parseInt($('#hidItemId').val() || '0');
     const itemDisplayText = $('#txtItemDisplay').val();
     const qty = parseFloat($('#txtQty').val() || '0');
     const weight = parseFloat($('#txtWeight').val() || '0');
     const rate = parseFloat($('#txtRate').val() || '0');
     const amount = parseFloat($('#txtAmount').val() || '0');
-    /* The desktop saves the combo's TEXT into Crop and its id into CropYearId (:3289). */
+    /* The desktop saves the combo's TEXT into Crop and its id into CropYearId (:3392-3393). */
     const cropYearId = parseInt($('#cmbCropYear').val() || '0');
     const cropYear = cropYearId > 0 ? $('#cmbCropYear option:selected').text() : '';
-    /* No '|| 1' fallback: FormDetailValidation treats 0 as "not chosen" and refuses the row.
-       Defaulting to 1 made the UOM checks below unreachable and could post a wrong factor. */
     const packUomId = parseInt($('#cmbPackUom').val() || '0');
-    const packUomCode = $('#cmbPackUom option:selected').text();
+    const packUomCode = packUomId > 0 ? $('#cmbPackUom option:selected').text() : '';
     const rateUomId = parseInt($('#cmbRateUom').val() || '0');
-    const rateUomCode = $('#cmbRateUom option:selected').text();
+    const rateUomCode = rateUomId > 0 ? $('#cmbRateUom option:selected').text() : '';
     const jobLotId = parseInt($('#cmbJobLot').val() || '0');
     const jobLotName = jobLotId > 0 ? $('#cmbJobLot option:selected').text() : '';
     const loadingCityId = parseInt($('#hidLoadingCityId').val() || '0');
     const loadingCityName = $('#txtLoadingCityDisplay').val() || '';
-    const moisture = parseFloat($('#txtMoisture').val() || '0');
-    const remarks = $('#txtLineRemarks').val() || '';
+    /* txtMoisture.Text.Trim() - saved as text (PurchaseOrderDetail.Moisture nvarchar). */
+    const moisture = String($('#txtMoisture').val() || '').trim();
+    const remarks = String($('#txtLineRemarks').val() || '').trim();
 
-    /* ------------------------------------------------------------------------------------
-     * FormDetailValidation() - PurchsaeOrder.cs:1999-2050.
-     *
-     * The desktop runs EIGHT checks, in this order, before btnplus_Click will add a row, and
-     * each one shows its own message and focuses its own control. The web had only three, worded
-     * differently, and was missing Crop Year, Job/Lot, Item Rate and Amount entirely - which is
-     * why a line could be added with Item Rate 0.00 and Amount 0.00, a row the desktop refuses.
-     *
-     * Messages are the desktop's own strings, not paraphrases, so the two apps say the same thing.
-     * Loading Location, Moisture and Remarks are deliberately NOT validated - the desktop does
-     * not validate them either.
-     * ------------------------------------------------------------------------------------ */
-    /* btnplus_Click :2603 - the FIRST thing the desktop refuses, before any field check:
-       once a supplier dispatch exists against this order, its lines came from that dispatch and
-       a manual row may not be added. ReadById already returns hasSupplierDispatch (:3779). */
-    if (loadedHeaderSelection && loadedHeaderSelection.hasSupplierDispatch) {
+    /* FormDetailValidation() :1999-2050 - eight checks, in this order, with these messages. */
+    if (itemId <= 0) { alert("Item Field is Required"); $('#txtItemDisplay').focus(); return; }
+    if (cropYearId <= 0) { alert("CropYear Field is Required"); $('#cmbCropYear').focus(); return; }
+    if (jobLotId <= 0) { alert("JobLot Field is Required"); $('#cmbJobLot').focus(); return; }
+    if (packUomId <= 0) { alert("UOM Field is Required"); $('#cmbPackUom').focus(); return; }
+    if (!(qty !== 0 && !isNaN(qty))) { alert("Item Qty Field is Required"); $('#txtQty').focus(); return; }
+    if (!(rate !== 0 && !isNaN(rate))) { alert("Item Rate Field is Required"); $('#txtRate').focus(); return; }
+    if (rateUomId <= 0) { alert("Rate UOM Field is Required"); $('#cmbRateUom').focus(); return; }
+    if (!(amount !== 0 && !isNaN(amount))) { alert("Amount Field is Required"); $('#txtAmount').focus(); return; }
+
+    /* :2605 - only the ADD button refuses a manual line once supplier-dispatch rows exist. */
+    if (!isUpdate && supplierDispatchRows.length > 0) {
         alert("You Can Not Add Manual Record. Because record against supplier dispatch already exist");
         return;
     }
 
-    if (itemId <= 0) {
-        alert("Item Field is Required");
-        $('#txtItemDisplay').focus();
-        return;
+    /* :2610-2619 add: every row; :2776-2788 update: only when the item was changed. */
+    const editing = isUpdate && editingLineIdx >= 0 ? lineItems[editingLineIdx] : null;
+    if (!editing || parseInt(editing.itemId, 10) !== itemId) {
+        if (lineItems.some(li => parseInt(li.itemId, 10) === itemId)) {
+            alert("Duplicate Item Not Add in Grid");
+            return;
+        }
     }
-    if (cropYearId <= 0) {
-        alert("CropYear Field is Required");
-        $('#cmbCropYear').focus();
-        return;
-    }
-    if (jobLotId <= 0) {
-        alert("JobLot Field is Required");
-        $('#cmbJobLot').focus();
-        return;
-    }
-    if (packUomId <= 0) {
-        alert("UOM Field is Required");
-        $('#cmbPackUom').focus();
-        return;
-    }
-    if (!(qty > 0)) {
-        alert("Item Qty Field is Required");
-        $('#txtQty').focus();
-        return;
-    }
-    if (!(rate > 0)) {
-        alert("Item Rate Field is Required");
-        $('#txtRate').focus();
-        return;
-    }
-    if (rateUomId <= 0) {
-        alert("Rate UOM Field is Required");
+
+    /* :2620 / :2789 - a Rate UOM whose Equivalent is not 40 asks first. */
+    if (uomFactor('cmbRateUom') !== 40 && !confirm("Are you sure to add record because your RateUom not 40Kg?")) {
         $('#cmbRateUom').focus();
         return;
     }
-    if (!(amount > 0)) {
-        alert("Amount Field is Required");
-        $('#txtAmount').focus();
-        return;
-    }
 
-    // Preserve the real, already-saved PurchaseOrderDetail.Id (round-tripped from
-    // getPurchaseOrderById()) when this Add/Update is actually editing an existing row - ditto
-    // desktop's btnsave_Click() reading the grid's own "Id" cell. A brand-new row keeps this at 0 so
-    // the backend inserts it instead of updating a row that doesn't belong to it.
-    const existingDetailId = (editingLineIdx >= 0 && lineItems[editingLineIdx]) ? (lineItems[editingLineIdx].purchaseOrderDetailId || 0) : 0;
-
+    /* :2625-2634 - the one combo holds either a Lab Sample id or a Standard schedule id. */
+    const labId = parseInt($('#cmbLabSampleNo').val() || '0', 10) || 0;
+    const sample = $('#radSampleYes').is(':checked');
     const line = {
-        purchaseOrderDetailId: existingDetailId,
+        purchaseOrderDetailId: editing ? (editing.purchaseOrderDetailId || 0) : 0,
         itemId: itemId,
-        /* The desktop reads these as two separate cells of the selected combo row -
-           combitem.SelectedRow.Cells["ItemCode"] and Cells["ItemName"], :2635 - so they are taken
-           from the item here too.
-
-           They used to be RE-PARSED out of the display textbox, which has two different shapes:
-               Code mode: "CODE - Name"      split(' - ') worked
-               Name mode: "Name (CODE)"      no " - " at all
-           so in Name mode - the default - split(' - ')[0] returned the WHOLE string and both grid
-           columns showed the same text: "B1 1509 White Process (732)" under Item Code as well as
-           Item Name. Even in Code mode an item name containing " - " split in the wrong place.
-
-           Falling back to the row being edited (not to the parse) keeps an existing line intact if
-           its item is no longer in the loaded list. */
         itemCode: selectedItemField(itemId, 'itemCode', itemDisplayText),
         itemName: selectedItemField(itemId, 'itemName', itemDisplayText),
-        cropYear: cropYear,
-        cropYearId: cropYearId,
-        packUomId: packUomId,
-        packUomCode: packUomCode,
-        itemQty: qty,
-        itemWeight: weight,
-        itemRate: rate,
-        rateUomId: rateUomId,
-        rateUomCode: rateUomCode,
+        cropYear: cropYear, cropYearId: cropYearId,
+        packUomId: packUomId, packUomCode: packUomCode, packUomEquivalent: uomFactor('cmbPackUom') || 0,
+        itemQty: qty, itemWeight: weight, itemRate: rate,
+        rateUomId: rateUomId, rateUomCode: rateUomCode, rateUomEquivalent: uomFactor('cmbRateUom') || 0,
         itemAmount: amount,
-        jobLotId: jobLotId,
-        jobLotName: jobLotName,
-        loadingLocationCityId: loadingCityId,
-        loadingLocationCityName: loadingCityName,
+        jobLotId: jobLotId, jobLotName: jobLotName,
+        loadingLocationCityId: loadingCityId, loadingLocationCityName: loadingCityName,
         moisturePercent: moisture,
-        remarks: remarks
+        labSampleId: sample ? labId : 0,
+        labAnalysisStandardScheduleId: sample ? 0 : labId,
+        labSampleNo: labId === 0 ? '' : String($('#cmbLabSampleNo option:selected').text() || '').trim(),
+        remarks: remarks,
+        fcyAmount: 0
     };
 
-    // Duplicate-item guard, ditto desktop's btnplus_Click() ("Duplicate Item Not Add in Grid") -
-    // only enforced when adding a brand-new row, not when editing the row that already holds this item.
-    const dup = lineItems.some((li, i) => i !== editingLineIdx && parseInt(li.itemId) === itemId);
-    if (dup) {
-        alert("Duplicate Item Not Add in Grid");
-        return;
-    }
-
-    /* btnplus_Click:2625 - when the chosen Rate UOM's Equivalent is not 40, the desktop asks
-       before adding. The factor is the schedule's Equivalent (combrateuom.SelectedRow.Cells[2]),
-       which is what data-eq carries. A row with no factor at all is not second-guessed here: the
-       desktop's test reads the cell and a missing one is not 40 either, so it asks too. */
-    const rateEqForConfirm = uomFactor('cmbRateUom');
-    if (rateEqForConfirm !== 40 &&
-        !confirm("Are you sure to add record because your RateUom not 40Kg?")) {
-        $('#cmbRateUom').focus();
-        return;
-    }
-
-    if (editingLineIdx >= 0) {
-        lineItems[editingLineIdx] = Object.assign({}, lineItems[editingLineIdx], line);
+    if (editing) {
+        lineItems[editingLineIdx] = Object.assign({}, editing, line);
         editingLineIdx = -1;
     } else {
         lineItems.push(line);
     }
 
-    renderDetailGrid();
-    clearItemInputs();
-    exitDetailEditMode();          /* :2812-2814 - btnplus back, Update/Cancel away */
-    loadLabDeductionForItem(itemId);   /* :2670 / :2821 GetLabDetailByItemId() */
-    calcCommission();
-    calcBrokery();
-    recalculatePaymentAmounts();   /* :2823 PaymentAmountReCalculate() */
+    exitDetailEditMode();
+    /* GetLabDetailByItemId(): btnplus runs it BEFORE ResetDetail (:2636-2640); btnUpdateDetail runs
+       it AFTER ResetDetail (:2830-2831), when combitem is already 0, so an updated line does not
+       re-read the lab policy. Both orders reproduced. */
+    if (!isUpdate) loadLabDeductionForItem(itemId);
+    clearItemInputs();                 /* ResetDetail() */
+    afterDetailGridChanged();
 }
 
-/* btnUpdateDetail_Click :2800 - commits the edit. The row-replacement logic already lives in
-   btnAddDetailRow_Click (it preserves purchaseOrderDetailId and excludes the edited row from the
-   duplicate check), and the desktop runs the same FormDetailValidation from both buttons, so
-   this delegates rather than duplicating it. */
-function btnUpdateDetail_Click() { btnAddDetailRow_Click(); }
+/* What btnplus / btnUpdateDetail / the X column run after the grid changes:
+   TotalCommissionAmount, TotalBrokeryAmountCalculate, CalculateTotalInformation,
+   txtExchangeRate_TextChanged, PartyDisableEnableOnLabAnalysis, PaymentAmountReCalculate. */
+function afterDetailGridChanged() {
+    onExchangeRateChange();
+    renderDetailGrid();
+    calcCommission();
+    calcBrokery();
+    partyDisableEnableOnLabAnalysis();
+    recalculatePaymentAmounts(false);
+    renderSchedGrid();
+}
 
-/* btnCancelUpdateDetial_Click - abandons the edit and restores the Add button. */
+/* PartyDisableEnableOnLabAnalysis() :2052-2083 - rows present: Category locked, and Supplier
+   locked only while some row carries a Lab Sample; no rows: both unlocked. */
+function partyDisableEnableOnLabAnalysis() {
+    if (lineItems.length > 0) {
+        const hasSample = lineItems.some(l => parseInt(l.labSampleId || 0, 10) > 0);
+        setFieldLocked('#cmbSupplier', hasSample);
+        setFieldLocked('#cmbParentCategory', true);
+    } else {
+        setFieldLocked('#cmbParentCategory', false);
+        setFieldLocked('#cmbSupplier', false);
+    }
+}
+
+function btnUpdateDetail_Click() { commitDetailRow(true); }
+
+/* btnCancelUpdateDetial_Click :3000-3006 */
 function btnCancelUpdateDetial_Click() {
     editingLineIdx = -1;
-    clearItemInputs();
     exitDetailEditMode();
+    clearItemInputs();
 }
 
 function exitDetailEditMode() {
@@ -1923,12 +2049,8 @@ function exitDetailEditMode() {
     $('#btnCancelUpdateDetial').hide();
 }
 
-/* GetLabDetailByItemId() - PurchsaeOrder.cs :2290.
- *
- * Called after a detail line is added or updated (:2670, :2821). It reads the standard deduction
- * policy for THAT item, removes any rows already held for the same item (:2311-2318), and appends
- * the new ones. Only the Deduction column is editable; LabGridSetting :2101-2107 sets EditType 0
- * on every other column. */
+/* GetLabDetailByItemId() :2115-2156 - the item's standard deduction policy replaces the rows held
+   for that item; nothing happens when the item has no policy. */
 function loadLabDeductionForItem(itemId) {
     if (!itemId) { renderLabGrid(); return; }
     $.get('/api/purchase-order/lab-deduction-standard?itemId=' + itemId, function (rows) {
@@ -1949,7 +2071,7 @@ function loadLabDeductionForItem(itemId) {
             deductionValue: r.deductionValue
         }));
         renderLabGrid();
-    }).fail(function () { renderLabGrid(); });
+    }).fail(function (xhr) { alert(PurchaseRequest.error(xhr)); renderLabGrid(); });
 }
 
 function renderLabGrid() {
@@ -1978,78 +2100,82 @@ function renderLabGrid() {
     $('#lblLabRecordInfo').text('1 Of ' + labDeductionItems.length);
 }
 
+/* ResetDetail() :4076-4091 - Pack UOM, Qty, Weight, Moisture, Rate UOM, Rate, Amount, Lab Sample,
+   Remarks and the item are cleared. Job/Lot, Crop Year and City stay (the item pick re-applies
+   the Job/Lot and Crop Year defaults). */
 function clearItemInputs() {
-    // Ditto desktop's ResetDetail(): Item / Pack UOM / Qty / Weight / Rate UOM / Rate / Amount /
-    // Remarks are cleared after each Add; Job/Lot, Crop Year and Loading City are deliberately left
-    // as-is since those tend to repeat across consecutive line items on the same Purchase Order.
     $('#hidItemId').val('0');
     $('#txtItemDisplay').val('');
     $('#txtQty').val('');
     $('#txtWeight').val('');
+    $('#txtMoisture').val('');
     $('#txtRate').val('');
     $('#txtAmount').val('');
     $('#txtLineRemarks').val('');
-    $('#cmbCropYear').val(String(comboDefaults.cropYearId || 0));
-    $('#cmbPackUom').empty().append('<option value="0">-- Select Item First --</option>');
-    $('#cmbRateUom').empty().append('<option value="0">-- Select Item First --</option>');
+    $('#cmbLabSampleNo').val('0');
+    $('#cmbPackUom').empty().append('<option value="0">...Select Any Value...</option>');
+    $('#cmbRateUom').empty().append('<option value="0">...Select Any Value...</option>');
 }
 
-/* grd_DoubleClick :2740 - opens a saved row for editing.
- *
- * The desktop's FIRST act is a guard the port did not have: a row whose
- * flagForSupplierDispatch is set came from a supplier dispatch and may NOT be edited at all.
- * ReadById already returns hasSupplierDispatch, so the same rule applies here.
- *
- * It then swaps the buttons - btnplus hidden, btnUpdateDetail and btnCancelUpdateDetial shown
- * (:2786-2788). Both buttons already existed in the template but had no handlers and were never
- * made visible, so they were dead markup and an edit could only be committed by pressing "+". */
+/* grd_DoubleClick :2708-2766 - opens a line for editing, except a supplier-dispatch line
+   (flagForSupplierDispatch) which cannot be edited at all. */
 function editDetailRow(idx) {
     const item = lineItems[idx];
     if (!item) return;
-
-    if (loadedHeaderSelection && loadedHeaderSelection.hasSupplierDispatch) {
-        alert("You Can Not Add Manual Record. Because record against supplier dispatch already exist");
-        return;
-    }
+    if (supplierDispatchRows.length > 0) return;
 
     editingLineIdx = idx;
+    $('#hidItemId').val(item.itemId);
+    const byCode = $('#radItemCode').is(':checked');
+    $('#txtItemDisplay').val(byCode ? `${item.itemCode} - ${item.itemName}` : `${item.itemName} (${item.itemCode || 'N/A'})`);
+    bindItemUom(item.itemId, false);                 /* bindRateUomAndItemPackUom(DetailPoId) */
+    applyComboDefaults();                             /* :2719-2730 config Job/Lot + Crop Year first */
+    const sampleId = parseInt(item.labSampleId || 0, 10);
+    const standardId = parseInt(item.labAnalysisStandardScheduleId || 0, 10);
+    $(sampleId > 0 ? '#radSampleYes' : '#radSampleNo').prop('checked', true);   /* :2733-2740 */
+    bindFactorySampleOrStandard(sampleId > 0 ? sampleId : standardId);          /* :2741, :2753 */
+    $('#cmbPackUom').val(String(item.packUomId || 0));
+    $('#txtQty').val(item.itemQty);
+    $('#txtWeight').val(item.itemWeight);
+    $('#cmbRateUom').val(String(item.rateUomId || 0));
+    $('#txtRate').val(item.itemRate);
+    $('#txtAmount').val(item.itemAmount);
+    $('#cmbJobLot').val(String(item.jobLotId || 0));
+    $('#hidLoadingCityId').val(item.loadingLocationCityId || 0);
+    $('#txtLoadingCityDisplay').val(item.loadingLocationCityName || '');
+    $('#cmbCropYear').val(String(item.cropYearId || 0));
+    if (parseInt(item.cropYearId || '0') <= 0 && item.cropYear) {
+        $('#cmbCropYear option').filter(function () { return $(this).text() === item.cropYear; }).prop('selected', true);
+    }
+    $('#txtMoisture').val(item.moisturePercent == null ? '' : item.moisturePercent);
+    $('#txtLineRemarks').val(item.remarks || '');
     $('#btnplus').hide();
     $('#btnUpdateDetail').show();
     $('#btnCancelUpdateDetial').show();
-    $('#hidItemId').val(item.itemId);
-    $('#txtItemDisplay').val(`${item.itemCode} - ${item.itemName}`);
-    $('#cmbCropYear').val(item.cropYearId || '0');
-    if (parseInt(item.cropYearId || '0') <= 0 && item.cropYear) {
-        /* An older row saved before the combo existed carries the text but no id. */
-        $('#cmbCropYear option').filter(function () { return $(this).text() === item.cropYear; }).prop('selected', true);
-    }
-
-    // Re-populate the real, item-specific UOM list before restoring the saved selection - ditto
-    // desktop's bindRateUomAndItemPackUom(detailId) called with a non-zero detailId when double-
-    // clicking an existing grid row to edit it, which skips the auto-default-to-40kg logic so the
-    // row's already-saved Rate UOM is preserved instead of being overwritten.
-    bindItemUom(item.itemId, false);
-    $('#cmbPackUom').val(item.packUomId);
-    $('#cmbRateUom').val(item.rateUomId);
-
-    $('#txtQty').val(item.itemQty);
-    $('#txtWeight').val(item.itemWeight);
-    $('#txtRate').val(item.itemRate);
-    $('#txtAmount').val(item.itemAmount);
-    $('#cmbJobLot').val(item.jobLotId || 0);
-    $('#hidLoadingCityId').val(item.loadingLocationCityId || 0);
-    $('#txtLoadingCityDisplay').val(item.loadingLocationCityName || '');
-    /* :2778 - the row's own Moisture, verbatim. The port defaulted an empty one to 14.0, a
-       value the desktop never supplies; a fabricated default silently becomes stored data. */
-    $('#txtMoisture').val(item.moisturePercent == null ? '' : item.moisturePercent);
-    $('#txtLineRemarks').val(item.remarks || '');
+    switchTab('tabDetail');
 }
 
+/* grd_ColumnButtonClick :2654-2706 - the X column.
+   Save mode: confirm, remove. Update mode: a saved line is removed only while another saved line
+   remains (its Id goes to OrderDetailRemoveIds); an unsaved line just goes. */
 function removeDetailRow(idx) {
+    const row = lineItems[idx];
+    if (!row) return;
+    const updateMode = currentPoMasterId > 0;
+    if (!confirm("Are you sure to Delete?")) return;
+    const id = parseInt(row.purchaseOrderDetailId || 0, 10);
+    if (updateMode && id > 0) {
+        const countIds = lineItems.filter(l => parseInt(l.purchaseOrderDetailId || 0, 10) > 0).length;
+        if (countIds > 1) {
+            orderDetailRemoveIds = orderDetailRemoveIds + ',' + id;
+        } else {
+            alert("All rows Can not be Deleted in Update Mode");
+            return;
+        }
+    }
     lineItems.splice(idx, 1);
-    renderDetailGrid();
-    calcCommission();
-    calcBrokery();
+    if (editingLineIdx === idx) btnCancelUpdateDetial_Click();
+    afterDetailGridChanged();
 }
 
 function renderDetailGrid() {
@@ -2057,43 +2183,66 @@ function renderDetailGrid() {
     tbody.empty();
 
     if (lineItems.length === 0) {
-        tbody.html('<tr><td colspan="14" style="text-align: center; padding: 15px; color: #777;">No transaction detail items added yet.</td></tr>');
+        tbody.html('<tr><td colspan="15" style="text-align: center; padding: 15px; color: #777;">No transaction detail items added yet.</td></tr>');
         updateDetailTotals(0, 0, 0);
         return;
     }
 
     let totQty = 0, totWt = 0, totAmt = 0;
+    const dp = (historyMeta && typeof historyMeta.amountDecimals === 'number') ? historyMeta.amountDecimals : 0;
+    const rdp = (historyMeta && typeof historyMeta.rateDecimals === 'number') ? historyMeta.rateDecimals : 2;
+    const dispatch = supplierDispatchRows.length > 0;
 
     lineItems.forEach((item, idx) => {
-        totQty += item.itemQty;
-        totWt += item.itemWeight;
-        totAmt += item.itemAmount;
-
+        totQty += parseFloat(item.itemQty) || 0;
+        totWt += parseFloat(item.itemWeight) || 0;
+        totAmt += parseFloat(item.itemAmount) || 0;
+        /* :3069 - the X column exists only when the lines are not supplier-dispatch lines. */
+        const x = dispatch ? '' : `<button type="button" class="btn btn-danger btn-xs" onclick="event.stopPropagation(); removeDetailRow(${idx})" style="padding: 0 4px; font-size: 10px;"><i class="fa fa-times"></i></button>`;
         tbody.append(`
-            <tr>
-                <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
-                <td><strong style="color: #008080;">${escapeHtml(item.itemCode)}</strong></td>
+            <tr ondblclick="editDetailRow(${idx})" style="cursor: pointer;">
+                <td style="text-align: center;">${x}</td>
+                <td>${escapeHtml(item.itemCode)}</td>
                 <td>${escapeHtml(item.itemName)}</td>
                 <td>${escapeHtml(item.cropYear)}</td>
-                <td style="text-align: right;">${item.itemQty.toFixed(2)}</td>
-                <td style="text-align: right;">${item.itemWeight.toFixed(2)}</td>
-                <td style="text-align: right;">${item.itemRate.toFixed(2)}</td>
+                <td>${escapeHtml(item.packUomCode)}</td>
+                <td style="text-align: right;">${fmtHistory(item.itemQty, 'num')}</td>
+                <td style="text-align: right;">${fmtHistory(item.itemWeight, 'num')}</td>
                 <td>${escapeHtml(item.rateUomCode)}</td>
-                <td style="text-align: right; font-weight: bold; color: #004d40;">${item.itemAmount.toFixed(2)}</td>
+                <td style="text-align: right;">${(parseFloat(item.itemRate) || 0).toLocaleString('en-US', { minimumFractionDigits: rdp, maximumFractionDigits: rdp })}</td>
+                <td style="text-align: right;">${(parseFloat(item.itemAmount) || 0).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp })}</td>
                 <td>${escapeHtml(item.jobLotName)}</td>
                 <td>${escapeHtml(item.loadingLocationCityName)}</td>
-                <td style="text-align: right;">${item.moisturePercent}%</td>
+                <td>${escapeHtml(item.moisturePercent == null ? '' : String(item.moisturePercent))}</td>
+                <td>${escapeHtml(item.labSampleNo || '')}</td>
                 <td>${escapeHtml(item.remarks)}</td>
-                <td style="text-align: center;">
-                    <button type="button" class="btn btn-warning btn-xs" onclick="editDetailRow(${idx})" style="padding: 0 4px; font-size: 10px;"><i class="fa fa-edit"></i></button>
-                    <button type="button" class="btn btn-danger btn-xs" onclick="removeDetailRow(${idx})" style="padding: 0 4px; font-size: 10px;"><i class="fa fa-times"></i></button>
-                </td>
             </tr>
         `);
     });
 
     updateDetailTotals(totQty, totWt, totAmt);
     renderSchedGrid();
+}
+
+/* grdSupplierLoadingDetail - read-only on the web (see the template). */
+function renderSupplierLoadingGrid() {
+    const body = $('#tblSupplierLoadingTbody');
+    body.empty();
+    $('#grdSupplierLoadingWrap').toggle(supplierDispatchRows.length > 0);
+    supplierDispatchRows.forEach(function (r) {
+        body.append(`<tr>
+            <td>${escapeHtml(String(hcol(r, 'SupplierDispatchNo') == null ? '' : hcol(r, 'SupplierDispatchNo')))}</td>
+            <td>${escapeHtml(hcol(r, 'ItemName') || '')}</td>
+            <td>${escapeHtml(hcol(r, 'CropYear') || '')}</td>
+            <td>${escapeHtml(hcol(r, 'ItemUomCode') || '')}</td>
+            <td>${escapeHtml(hcol(r, 'PackingType') || '')}</td>
+            <td style="text-align:right;">${fmtHistory(hcol(r, 'ItemQty'), 'num')}</td>
+            <td style="text-align:right;">${fmtHistory(hcol(r, 'NetWeight'), 'num')}</td>
+            <td>${escapeHtml(hcol(r, 'RateUomCode') || '')}</td>
+            <td style="text-align:right;">${fmtHistory(hcol(r, 'ItemRate'), 'rate')}</td>
+            <td style="text-align:right;">${fmtHistory(hcol(r, 'Amount'), 'amt')}</td>
+        </tr>`);
+    });
 }
 
 /* CalculateTotalInformation() - PurchsaeOrder.cs :4200-4222, called after every change to the
@@ -2537,7 +2686,7 @@ function renderExpGrid() {
     const tbody = $('#tblExpTbody');
     tbody.empty();
     if (!expenseItems || expenseItems.length === 0) {
-        tbody.html('<tr><td colspan="7" style="text-align: center; padding: 15px; color: #777;">No supplier expenses recorded.</td></tr>');
+        tbody.html('<tr><td colspan="6" style="text-align: center; padding: 15px; color: #777;">No supplier expenses recorded.</td></tr>');
         return;
     }
     expenseItems.forEach((row, idx) => {
@@ -2550,9 +2699,8 @@ function renderExpGrid() {
                 <td><select class="win-combo" onchange="onExpItemChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.qty}" onchange="onExpQtyRateChange(${idx}, 'qty', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.rate}" onchange="onExpQtyRateChange(${idx}, 'rate', this.value)"/></td>
-                <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${(row.amount || 0).toFixed(2)}" onchange="onExpAmountChange(${idx}, this.value)"/></td>
+                <td><input type="number" step="any" class="win-textbox" style="text-align: right;" value="${row.amount || 0}" onchange="onExpAmountChange(${idx}, this.value)"/></td>
                 <td><input type="text" class="win-textbox" value="${escapeHtml(row.remarks || '')}" onchange="expenseItems[${idx}].remarks = this.value;"/></td>
-                <td style="text-align: center;"><button type="button" class="btn btn-danger btn-xs" onclick="removeExpRow(${idx})">&times;</button></td>
             </tr>
         `);
     });
@@ -2565,30 +2713,39 @@ function onExpItemChange(idx, val) {
     expenseItems[idx].otherItemName = found ? found.OtherItemName : '';
 }
 
+/* grdInvExp_UpdatingCell :2277 - "Please Type Only Numeric Value" for a negative/non-numeric entry. */
+function expNumeric(val) {
+    const n = parseFloat(val);
+    if (String(val).trim() !== '' && (isNaN(n) || n < 0)) { alert("Please Type Only Numeric Value"); return null; }
+    return isNaN(n) ? 0 : n;
+}
+
+/* Math.Round(x, DefaultNoofDecimalPointsForAmount, MidpointRounding.AwayFromZero). */
+function roundAwayAmount(n) {
+    const dp = (historyMeta && typeof historyMeta.amountDecimals === 'number') ? historyMeta.amountDecimals : 0;
+    const f = Math.pow(10, dp);
+    return Math.sign(n) * Math.round(Math.abs(n) * f + Number.EPSILON) / f;
+}
+
+/* grdInvExp_CellUpdated :2292-2325 - Qty/Rate: Amount = round(Qty x Rate) when both > 0, else 0;
+   Amount typed: Qty and Rate become 0 and Amount is rounded. */
 function onExpQtyRateChange(idx, field, val) {
-    const num = parseFloat(val || '0') || 0;
+    const num = expNumeric(val);
+    if (num === null) { renderExpGrid(); return; }
     expenseItems[idx][field] = num;
     const qty = expenseItems[idx].qty || 0;
     const rate = expenseItems[idx].rate || 0;
-    expenseItems[idx].amount = (qty > 0 && rate > 0) ? Math.round(qty * rate * 100) / 100 : 0;
+    expenseItems[idx].amount = (qty > 0 && rate > 0) ? roundAwayAmount(qty * rate) : 0;
     renderExpGrid();
 }
 
 function onExpAmountChange(idx, val) {
-    const num = parseFloat(val || '0') || 0;
-    expenseItems[idx].amount = Math.round(num * 100) / 100;
+    if (String(val).trim() === '') return;
+    const num = expNumeric(val);
+    if (num === null) { renderExpGrid(); return; }
     expenseItems[idx].qty = 0;
     expenseItems[idx].rate = 0;
-    renderExpGrid();
-}
-
-function removeExpRow(idx) {
-    expenseItems.splice(idx, 1);
-    renderExpGrid();
-}
-
-function btnAddExpenseRow_Click() {
-    expenseItems.push({ invRevExpItemId: 0, otherItemName: '', qty: 0, rate: 0, amount: 0, remarks: '' });
+    expenseItems[idx].amount = roundAwayAmount(num);
     renderExpGrid();
 }
 
@@ -2959,6 +3116,7 @@ function onSchedDueDateChange(idx, val) {
 }
 
 function onSchedPercentChange(idx, val) {
+    if (!lineItems.length) { paymentTermsDetailItems[idx].prcntOfTotal = parseFloat(val || '0') || 0; return; }   /* :2464 */
     paymentByPercent = true;
     let pct = parseFloat(val || '0') || 0;
     if (pct > 100) {
@@ -2972,6 +3130,7 @@ function onSchedPercentChange(idx, val) {
 }
 
 function onSchedAmountChange(idx, val) {
+    if (!lineItems.length) { paymentTermsDetailItems[idx].amount = parseFloat(val || '0') || 0; return; }   /* :2464 */
     paymentByPercent = false;
     let amt = parseFloat(val || '0') || 0;
     const totalOrderAmt = calculateGrandTotalLineAmount();
@@ -3013,121 +3172,60 @@ function switchTab(tabId) {
  * ============================================================ */
 function buildPayload() {
     recalculatePaymentAmounts(true);
+    onExchangeRateChange();
+    const delOpt = $('#cmbDeliveryTerm option:selected');
     return {
         paymentByPercent: paymentByPercent,
         purchaseOrderMasterId: currentPoMasterId,
-        documentTypeId: 41,          /* PurchsaeOrder.cs:3295 - NOT 1052 (Commission Trading) */
-        currencyId: loadedHeaderSelection?.currencyId || 0,
-        exchangeRate: loadedHeaderSelection?.exchangeRate || 0,
-        fcyAmount: lineItems.reduce((sum, line) => sum + (parseFloat(line.fcyAmount) || 0), 0),
+        documentTypeId: 41,                                    /* :3295 */
+        /* cmbCurrency / txtExchangeRate (:3318-3319) - hidden but populated when feature 6 is off. */
+        currencyId: parseInt($('#cmbCurrency').val() || '0', 10) || 0,
+        exchangeRate: parseFloat($('#txtExchangeRate').val() || '0') || 0,
         docNo: parseInt($('#txtDocNo').val() || '0'),
         docDate: $('#txtDocDate').val(),
-        supplierId: parseInt($('#hidSupplierId').val() || '0'),
-        bookingPersonId: parseInt($('#hidBookingPersonId').val() || '0'),
+        supplierId: parseInt($('#cmbSupplier').val() || $('#hidSupplierId').val() || '0'),
+        bookingPersonId: parseInt($('#cmbBookingPerson').val() || $('#hidBookingPersonId').val() || '0'),
         deliveryStartDate: $('#txtDeliveryStartDate').val(),
         deliveryDays: parseInt($('#txtDeliveryDays').val() || '0'),
-        /* po.OrderExpiryDate = DateTime.Now (:3310) - the desktop has no expiry control on
-           this form, so it stamps the current date. There is no #txtExpiryDate here either,
-           and reading it sent undefined. */
-        expiryDate: ymdLocal(new Date()),
         paymentTermId: parseInt($('#cmbPaymentTerm').val() || '0'),
-        dueDays: parseInt($('#txtDueDays').val() || '0'),
+        dueDays: parseInt($('#txtDueDays').val() || '0') || 0,
         paymentDueDate: $('#txtPaymentDueDate').val(),
-        commissionAgentId: parseInt($('#hidCommissionAgentId').val() || '0'),
-        /* The DTO field is commissionTypeName (a String), matching po.CommissionType, which the
-           desktop sets from the combo's TEXT - :3324. Sent as "commType" this was an unknown
-           property and Jackson dropped it silently. */
-        commissionTypeName: $('#cmbCommType option:selected').text(),
-        commRate: parseFloat($('#txtCommRate').val() || '0'),
-        commUomId: parseInt($('#cmbCommUom').val() || '1'),
-        commAmount: parseFloat($('#txtCommAmount').val() || '0'),
-        brokerAccountId: parseInt($('#hidBrokerAccountId').val() || '0'),
-        /* Likewise brokeryTypeName <- po.BrokeryType, also the combo's TEXT - :3332. */
-        brokeryTypeName: $('#cmbBrokeryType option:selected').text(),
-        brokeryRate: parseFloat($('#txtBrokeryRate').val() || '0'),
-        brokeryRateUomId: parseInt($('#cmbBrokeryRateUom').val() || '1'),
-        brokeryAmount: parseFloat($('#txtBrokeryAmount').val() || '0'),
-        juteBagCut: parseFloat($('#txtJuteBagCut').val() || '0'),
-        ppBagCut: parseFloat($('#txtPPBagCut').val() || '0'),
-        /* CashFreight and CreditFreight are BOOLEANS driven by the rdFreightCash /
-           rdFreightCredit radio pair (PurchsaeOrder.cs :3337-3344) - exactly one is true.
-           This used to send the freight AMOUNT as cashFreight and a constant 0 as
-           creditFreight (its control does not exist), so the freight type was never
-           saved and the amount landed in the wrong column. */
+        commissionAgentId: parseInt($('#cmbCommissionAgent').val() || $('#hidCommissionAgentId').val() || '0'),
+        /* po.CommissionType / po.BrokeryType are the combo TEXT (:3324, :3332); the option values
+           are the texts themselves ("" for the blank row). */
+        commissionTypeName: $('#cmbCommType').val() || '',
+        commRate: parseFloat($('#txtCommRate').val() || '0') || 0,
+        /* UomScheduleIdCmRate = ToInt(combruom.Text) (:3326); GetCommissionUom's Id IS that number. */
+        commUomId: parseInt($('#cmbCommUom').val() || '0', 10) || 0,
+        commAmount: parseFloat($('#txtCommAmount').val() || '0') || 0,
+        brokerAccountId: parseInt($('#cmbBrokerAccount').val() || $('#hidBrokerAccountId').val() || '0'),
+        brokeryTypeName: $('#cmbBrokeryType').val() || '',
+        brokeryRate: parseFloat($('#txtBrokeryRate').val() || '0') || 0,
+        brokeryRateUomId: parseInt($('#cmbBrokeryRateUom').val() || '0', 10) || 0,
+        brokeryAmount: parseFloat($('#txtBrokeryAmount').val() || '0') || 0,
         cashFreight:   $('#radCashFreight').is(':checked'),
         creditFreight: $('#radCreditFreight').is(':checked'),
-        /* freightAmount has NO desktop counterpart: Architecture.Model.FeedMill.Purchase.PurchaseOrder
-           declares only the two booleans above, and PurchsaeOrder.cs has no freight-amount control
-           at all - just rdFreightCash / rdFreightCredit. It is not a DTO field either, so it was
-           being dropped by Jackson. Still sent so the screen's value is not silently invented into
-           some other column; it is recorded as an open question rather than mapped by guesswork. */
-        freightAmount: parseFloat($('#txtCashFreight').val() || '0'),
-        /* ------------------------------------------------------------------------------
-           Header fields the DESKTOP writes that this payload never sent, so they were lost
-           on every save. PurchsaeOrder.cs:3300-3353.
-
-           Two are mandatory in the procedure itself: Sp_PurchaseOrder_Insert raises
-           "DeliveryTerm Field Required" and "OrderStatus Field Required" on an empty value.
-           Both come from the combo's TEXT on the desktop, not its id (:3312, :3352).
-           ------------------------------------------------------------------------------ */
-        branchNo:         parseInt($('#txtBranchNo').val() || '0'),
-        supplierRefNo:    $('#txtSupplierRefNo').val(),
-        /* comboText(): the desktop sends the combo's TEXT (:3312, :3352) and the procedure
-           RAISERRORs on an empty one. These selects are driven by the shared dtcombo component,
-           so read the selected option, then fall back to the select's own value - never send an
-           empty string just because the option element was not the source of truth. */
-        orderStatus:      comboText('#cmbOrderStatus'),
-        /* :3311-3312 - the desktop writes BOTH: DeliveryTermId from the combo's VALUE and
-           DeliveryTerm from its TEXT. Only the name was being sent, so the DTO's
-           deliveryTermId stayed null, zero() turned it into 0, and every Purchase Order saved
-           from this page stored DeliveryTermId = 0 - which is why the History grid's Delivery
-           Term column is blank for web-created orders, and why Edit could not re-select it. */
+        branchNo:         parseInt($('#txtBranchNo').val() || '0') || 0,
+        supplierRefNo:    $('#txtSupplierRefNo').val() || '',
+        orderStatus:      $('#cmbOrderStatus').val() || '',          /* CmbStatus.Text (:3352) */
         deliveryTermId:   parseInt($('#cmbDeliveryTerm').val() || '0'),
-        deliveryTermName: comboText('#cmbDeliveryTerm'),
+        /* po.DeliveryTerm = SelectedRow.Cells[2] - the hidden ValueDescription column (:3312). */
+        deliveryTermName: delOpt.length && delOpt.val() !== '0' ? (delOpt.attr('data-value') || '') : '',
         orderCategoryId:  parseInt($('#cmbParentCategory').val() || '0'),
-        categorySrNo:     parseInt($('#txtCategoryNo').val() || '0'),
-        /* Summed from the lines, NOT parsed back out of the display boxes. Those boxes are
-           formatted for reading ("7,000.00"), and parseFloat("7,000.00") is 7 - which would
-           have turned a display fix into a far worse data defect than the zeros it replaced.
-           The server recomputes these from the detail rows anyway; this keeps the posted
-           document self-consistent. */
-        orderQty:         lineItems.reduce((a, l) => a + (parseFloat(l.itemQty)    || 0), 0),
-        orderWeight:      lineItems.reduce((a, l) => a + (parseFloat(l.itemWeight) || 0), 0),
-        orderAmount:      lineItems.reduce((a, l) => a + (parseFloat(l.itemAmount) || 0), 0),
-        /* LocationTypeId has no control on this page. The desktop reads cmbLocationType; the
-           procedure defaults a 0 to 1 itself, so 0 is sent rather than a guessed value. */
-        /* Was read off the LOADED record, so a NEW order always posted 0 - and
-           FormValidation :1906 requires it whenever the list has rows. Now the control. */
+        categorySrNo:     parseInt($('#txtCategoryNo').val() || '0') || 0,
         locationTypeId:   parseInt($('#cmbLocationType').val() || '0'),
         remarksHeader: $('#txtRemarksHeader').val(),
+        orderDetailRemoveIds: orderDetailRemoveIds,
+        supplierDispatchDetail: supplierDispatchRows,
         lineItems: lineItems,
         emptyBags: emptyBagItems.map(function(b) {
-            return {
-                type: b.type,
-                itemId: b.itemId,
-                packingTypeId: b.packingTypeId,
-                rate: b.rate,
-                weightCut: b.weightCut
-            };
+            return { type: b.type, itemId: b.itemId, packingTypeId: b.packingTypeId, rate: b.rate, weightCut: b.weightCut };
         }),
         supplierExpenses: expenseItems.map(function(e) {
-            return {
-                invRevExpItemId: e.invRevExpItemId,
-                qty: e.qty,
-                rate: e.rate,
-                amount: e.amount,
-                remarks: e.remarks
-            };
+            return { invRevExpItemId: e.invRevExpItemId, otherItemName: e.otherItemName, qty: e.qty, rate: e.rate, amount: e.amount, remarks: e.remarks };
         }),
         expensesChargeToProduct: chargeToProductItems.map(function(c) {
-            return {
-                accountId: c.accountId,
-                percentage: c.percentage,
-                qty: c.qty,
-                rate: c.rate,
-                amount: c.amount,
-                remarks: c.remarks
-            };
+            return { accountId: c.accountId, percentage: c.percentage, qty: c.qty, rate: c.rate, amount: c.amount, remarks: c.remarks };
         }),
         labDeductions: labDeductionItems.map(function (l) {
             return {
@@ -3140,160 +3238,181 @@ function buildPayload() {
             };
         }),
         paymentTermsDetail: paymentTermsDetailItems.map(function(p) {
-            return {
-                paymentTermId: p.paymentTermId,
-                dueDays: p.dueDays,
-                dueDate: p.dueDate,
-                prcntOfTotal: p.prcntOfTotal,
-                amount: p.amount,
-                paymentRemarks: p.remarks
-            };
+            return { paymentTermId: p.paymentTermId, dueDays: p.dueDays, dueDate: p.dueDate,
+                     prcntOfTotal: p.prcntOfTotal, amount: p.amount, paymentRemarks: p.remarks };
         })
     };
 }
 
-async function btnSave_Click() {
+/* btnsave_Click :3669-3688 -> Insert(). */
+function btnSave_Click() {
+    const st = $('#cmbOrderStatus').val() || '';
+    if (st === 'Complete' || st === 'Cancel') {
+        alert("Order Status Should not Be Complete Or Cancel In Save Mode");
+        $('#cmbOrderStatus').focus();
+        return;
+    }
+    return insertOrder('save');
+}
+
+/* btnSaveAs_Click :3885-3896 - RecId = 0; Insert(). The lines were already zeroed by the History
+   SaveAs load (:5095-5103). */
+function btnSaveAs_Click() { return insertOrder('saveas'); }
+
+/* btnUpdate_Click_1 :3690-3704. */
+function btnUpdate_Click() {
+    if (!(currentPoMasterId > 0)) { alert("Record not update because Id not found"); return; }
+    return insertOrder('update');
+}
+
+/* Insert() :3196-3667 - the confirmation, the optional no-expense warning, the save, the
+   success message, Reset() and the Preview prints. FormValidation and every other refusal are
+   enforced by the server with the desktop's own messages. */
+async function insertOrder(mode) {
     if (poSaving) return;
+    const update = (mode === 'update');
+    if (!confirm(update ? "Are you sure to Update?" : "Are you sure to Save?")) return;       /* :3230 / :3252 */
+
     const payload = buildPayload();
+    if (!update) payload.purchaseOrderMasterId = 0;
+    /* :3544-3557 - WarningMessageOnPurchaseOrderForExpenseGridIsOn: no expense row with an amount. */
+    if (screenCfg.warningNoExpense && !payload.supplierExpenses.some(e => (parseInt(e.invRevExpItemId, 10) || 0) !== 0 && (parseFloat(e.amount) || 0) > 0)) {
+        if (!confirm(update ? "Are you sure to Update? There is No Expense Added" : "Are you sure to Save? There is No Expense Added")) return;
+    }
     payload.attachments = { files: poAttachmentFiles, removeAttachmentIds: poRemovedAttachmentIds };
-    
-    if (!payload.supplierId || payload.supplierId <= 0) {
-        alert("Please select a Supplier / Party.");
-        openSupplierSearchModal();
-        return;
-    }
-    if (!payload.lineItems || payload.lineItems.length === 0) {
-        alert("At least one purchase order detail item is required.");
-        return;
-    }
 
     poSaving = true;
-    try { await PurchaseRequest.run(document.getElementById(currentPoMasterId > 0 ? 'btnUpdate' : 'btnSave'), async function () {
-    await $.ajax({
-        url: '/api/purchase-order/save',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(payload),
-        success: function(res) {
-            if (res && (res.success || res.voucherHeadId)) {
-                alert(res.message || "Purchase Order saved successfully.");
-                btnNew_Click(true);
-                loadPurchaseOrderHistory();
-            } else {
-                alert("Error saving Purchase Order: " + (res.message || "Unknown error"));
-            }
-        },
-        error: function(xhr) {
-            let errMsg = "Error saving Purchase Order";
-            try {
-                const res = JSON.parse(xhr.responseText);
-                if (res && res.message) errMsg += ": " + res.message;
-            } catch(e) {}
-            alert(errMsg);
-        }
-    });
-    }); } catch (_) { /* The AJAX error handler shows the server message. */ }
-    finally { poSaving = false; }
-}
-
-/* :5085-5104 - by the time this is reachable, applyEditModeState(po,'saveas') has already
-   zeroed every detail Id and currentPoMasterId, so the ordinary save path inserts a new
-   document. That is what SaveAs means on the desktop: a copy, not an update. */
-function btnSaveAs_Click() {
-    if (currentPoMasterId > 0) {
-        alert('Save As expects a copied order. Reload it from History with Save As.');
-        return;
+    try {
+        await PurchaseRequest.run(document.getElementById(update ? 'btnUpdate' : (mode === 'saveas' ? 'btnSaveAs' : 'btnSave')), async function () {
+            const res = await $.ajax({
+                url: update ? '/api/purchase-order/update' : '/api/purchase-order/save',
+                type: update ? 'PUT' : 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload)
+            });
+            alert(res.message);                                                       /* :3638 / :3643 */
+            const savedId = res.id;
+            btnNew_Click(true);                                                       /* Reset() :3645 */
+            /* :3646-3661 - the Preview check boxes print the saved order. */
+            if ($('#chkPreview203').is(':checked'))    printPurchaseOrder('203', savedId);
+            if ($('#chkPreview203A').is(':checked'))   printPurchaseOrder('203A', savedId);
+            if ($('#chkPreview203_01').is(':checked')) printPurchaseOrder('203_01', savedId);
+            if ($('#chkPreview203_02').is(':checked')) printPurchaseOrder('203_02', savedId);
+        });
+    } catch (xhr) {
+        alert(PurchaseRequest.error(xhr));
+    } finally {
+        poSaving = false;
     }
-    btnSave_Click();
 }
 
-function btnUpdate_Click() {
-    if (currentPoMasterId <= 0) {
-        alert("No existing Purchase Order loaded for update. Use Load Order first.");
-        openLoadOrderModal();
-        return;
-    }
-    btnSave_Click();
-}
-
+/* btnnew_Click :3898 -> Reset() :3922-4015. What Reset does NOT touch stays: Contract Date,
+   Category, Booking Person, Payment Term, Delivery Term, Location Type, currency, the freight
+   radios and the Preview boxes. */
 function btnNew_Click(afterSave) {
     if (poSaving && afterSave !== true) return;
     poFormGeneration++;
     poAttachmentRows = []; poAttachmentFiles = []; poRemovedAttachmentIds = [];
     $('#fileAttach').val('');
     renderPurchaseOrderAttachments();
-    loadedHeaderSelection = null;   /* Reset() - nothing left to re-apply */
-    labDeductionItems = [];  renderLabGrid();     /* Reset() :4000 dtlab.Rows.Clear() */
-    clearEditModeState();      /* Reset() :3962-3972 - Save back, Update gone, locks cleared */
+    loadedHeaderSelection = null;
+    orderDetailRemoveIds = '';
+    supplierDispatchRows = [];
+    renderSupplierLoadingGrid();
     currentPoMasterId = 0;
-    lineItems = [];
-    expenseItems = [];
-    chargeToProductItems = [];
-    paymentTermsDetailItems = [];
-    editingEbIdx = -1;
-    clearEmptyBagInputs();
+    editingLineIdx = -1;
+    exitDetailEditMode();
+    clearEditModeState();
 
-    renderDetailGrid();
-    renderExpGrid();
-    renderChargeGrid();
-    renderSchedGrid();
-
+    setComboValueOrZero('#cmbSupplier', 0);                 /* combsuppname.Text = "" */
     $('#hidSupplierId').val('0');
-    $('#hidBrokerAccountId').val('0');
+    $('#txtSupplierRefNo').val('');
+    $('#txtDueDays').val('');
+    calculatePaymentDueDate();                               /* DueDaysCalculate -> Now */
+    setFieldLocked('#cmbDeliveryTerm', false);
+    $('#txtDeliveryStartDate').val(ymdLocal(new Date()));
+    setComboValueOrZero('#cmbCommissionAgent', 0);
     $('#hidCommissionAgentId').val('0');
-    $('#hidBookingPersonId').val('0');
+    $('#cmbCommType').val('');
+    $('#cmbCommUom').val('0');
+    $('#txtCommRate').val('');
+    $('#txtCommAmount').val('');
+    setComboValueOrZero('#cmbBrokerAccount', 0);
+    $('#hidBrokerAccountId').val('0');
+    $('#cmbBrokeryType').val('');
+    $('#cmbBrokeryRateUom').val('0');
+    $('#txtBrokeryRate').val('');
+    $('#txtBrokeryAmount').val('');
     $('#txtRemarksHeader').val('');
+    $('#hidLoadingCityId').val('0');
+    $('#txtLoadingCityDisplay').val('');
+    clearItemInputs();
 
-    fetchNextDocNo();
-    setWinDefaultDates();
+    lineItems = [];
+    labDeductionItems = []; renderLabGrid();
+    renderDetailGrid();
+    onExchangeRateChange();
 
-    // Ditto of desktop AddRowInvEmptyBagsGrid(): a brand-new Purchase Order always seeds two
-    // Empty Bags rows (Jute Bags / PP Bags, Type=Normal) with real config-driven Weight Cut defaults.
+    /* :4012-4013 - Status back to Open and disabled. */
+    $('#cmbOrderStatus').val('Open');
+    setFieldLocked('#cmbOrderStatus', true);
+
+    fetchNextDocNo();                                        /* DocumentNoFill + BranchSrNoFill (+ config) */
+    applyComboDefaults();                                    /* defaultConfiquration() :3983 */
+    applyCityDefault();
     loadDefaultEmptyBagRows();
-
-    // Ditto of desktop's grid-seeding for the other three real-data tabs (see initForm()).
     loadDefaultExpenseRows();
     loadDefaultChargeRows();
     loadDefaultPaymentRows();
+    switchTab('tabDetail');
+    fetchNextCategorySrNo();                                 /* combordercat_Leave :4008 */
+    onParentCategoryChange();
+    $('#cmbLabSampleNo').empty().append('<option value="0">...Select Any Value...</option>');
+    partyDisableEnableOnLabAnalysis();
 }
 
+function setComboValueOrZero(selector, v) {
+    const el = $(selector);
+    if (!el.length) return;
+    el.val(String(v || 0));
+}
+
+/* defaultConfiquration() :1631-1635 - City Area configuration on the City Name control. */
+function applyCityDefault() {
+    const id = parseInt(comboDefaults.cityId || 0, 10);
+    if (!(id > 0)) return;
+    const city = (allCities || []).find(c => parseInt(c.id, 10) === id);
+    if (city) {
+        $('#hidLoadingCityId').val(city.id);
+        $('#txtLoadingCityDisplay').val((city.name || city.cityName || '').trim());
+    }
+}
+
+/* toolStripButton1_Click (Refresh) :4022-4062 - re-reads the configuration and the lists; it
+   does NOT clear the document. */
 function btnRefresh_Click() {
-    btnNew_Click();
+    applyScreenDefaults();
+    loadDropdowns();
+    preloadSearchData();
+    loadCurrencies();
 }
 
-async function openLoadOrderModal() {
-    try {
-        const branches = await $.get('/api/purchase-order/branches');
-        const branchIds = branches.map(branch => branch.id).filter(id => id > 0).join(',');
-        const data = branchIds ? await $.get('/api/purchase-order/history', {branchIds: branchIds}) : [];
-        const tbody = $('#tblLoadOrderTbody');
-        tbody.empty();
-        if (!data || data.length === 0) {
-            tbody.html('<tr><td colspan="5" style="text-align: center; padding: 20px;">No orders found.</td></tr>');
-            $('#modalLoadOrder').modal('show');
-            return;
-        }
-        data.forEach(po => {
-            const id = Number(hcol(po, 'Id'));
-            const docCode = hcol(po, 'DocNo');
-            const partyName = hcol(po, 'SupplierName');
-            const orderDate = fmtHistory(hcol(po, 'DocDate'), 'date');
-            tbody.append(`
-                <tr>
-                    <td><a href="/purchase/purchase-order?id=${id}">${escapeHtml(String(docCode))}</a></td>
-                    <td>${escapeHtml(orderDate)}</td>
-                    <td>${escapeHtml(partyName || '')}</td>
-                    <td>${escapeHtml(hcol(po, 'RemarksHeader') || '')}</td>
-                    <td style="text-align: center;">
-                        <button type="button" class="win-btn-action" onclick="loadSelectedOrder(${id}, 'edit')">Load</button>
-                    </td>
-                </tr>
-            `);
-        });
-        $('#modalLoadOrder').modal('show');
-    } catch (error) { alert(PurchaseRequest.error(error)); }
+/* BtnLoadOrder_Click :5921-5962 - loads PENDING SUPPLIER DISPATCH (LoadPendingSupplierDispatchForPO)
+   into the order. The guards are ported; the dialog itself is not in the recovered desktop source,
+   so it cannot be ported and nothing is invented in its place. Existing orders open from History. */
+function openLoadOrderModal() {
+    if (!(parseInt($('#cmbParentCategory').val() || '0', 10) > 0)) {
+        alert("Please Select Category First...");
+        return;
+    }
+    if (lineItems.length > 0 && supplierDispatchRows.length === 0) {
+        alert("You cannot load Supplier Dispatch because a record exists without Supplier Dispatch in the grid");
+        return;
+    }
+    alert("Loading pending Supplier Dispatch (LoadPendingSupplierDispatchForPO) is not available on the web yet.");
 }
 
+/* ReadById(ID) :3706-3875. */
 function loadSelectedOrder(poId, mode) {
     if (poSaving) return;
     const generation = ++poFormGeneration;
@@ -3301,23 +3420,23 @@ function loadSelectedOrder(poId, mode) {
         if (!po || generation !== poFormGeneration) return;
 
         currentPoMasterId = po.purchaseOrderMasterId;
+        orderDetailRemoveIds = '';
         poAttachmentRows = []; poAttachmentFiles = []; poRemovedAttachmentIds = [];
         renderPurchaseOrderAttachments();
         $('#txtDocNo').val(po.docNo);
-        $('#lblDocNoDisplay').text(po.displayCode || ('PO-' + po.docNo));
+        $('#lblDocNoDisplay').text(' PO-' + po.docNo);                                   /* :3720 */
         $('#txtDocDate').val(po.docDate);
-        /* The record is remembered so the selections can be re-applied as each option list
-           finishes loading - see applyHeaderSelections. The previous code here wrote to
-           #txtSupplierDisplay / #txtBrokerAcDisplay / #txtCommAgentDisplay /
-           #txtBookingPersonDisplay, none of which exist in this template, and never set the
-           <select> elements at all. */
+
+        /* :3814-3818 - the saved lab rows are re-read with HeaderId 0 and DetailId 0, and that is
+           what the next Update writes back as InvLabAnalysisStandardDeductionPolicyHeaderId.
+           Reproduced (desktop quirk). */
         labDeductionItems = (po.labDeductions || []).map(function (l) {
             return {
-                invLabAnalysisStandardDeductionPolicyHeaderId: l.InvLabAnalysisStandardDeductionPolicyHeaderId,
-                itemId: l.ItemId, analysisParameterId: l.AnalysisParameterId,
-                itemName: l.ItemName, analysisItem: l.AnalysisItem,
-                rangeFrom: l.RangeFrom, rangeTo: l.RangeTo, deductFrom: l.DeductFrom,
-                weightKgs: l.WeightKgs, standardValue: l.StandardValue, deductionValue: l.DeductionValue
+                invLabAnalysisStandardDeductionPolicyHeaderId: 0,
+                itemId: hcol(l, 'ItemId'), analysisParameterId: hcol(l, 'AnalysisParameterId'),
+                itemName: hcol(l, 'ItemName'), analysisItem: hcol(l, 'AnalysisItem'),
+                rangeFrom: hcol(l, 'RangeFrom'), rangeTo: hcol(l, 'RangeTo'), deductFrom: hcol(l, 'DeductFrom'),
+                weightKgs: hcol(l, 'WeightKgs'), standardValue: hcol(l, 'StandardValue'), deductionValue: hcol(l, 'DeductionValue')
             };
         });
         renderLabGrid();
@@ -3327,157 +3446,122 @@ function loadSelectedOrder(poId, mode) {
 
         $('#txtRemarksHeader').val(po.remarksHeader);
 
-        lineItems = po.lineItems || [];
-        renderDetailGrid();
+        supplierDispatchRows = po.supplierDispatchDetail || [];
+        renderSupplierLoadingGrid();
 
-        // Packing Material (Empty Bags) - real rows returned by Sp_PurchaseOrder_GetAllMethod
-        // (@Activity='ReadPurchaseOrderEmptyBagsDetailByHeaderId'), same order as the desktop query.
+        lineItems = (po.lineItems || []).map(function (l) {
+            l.itemQty = parseFloat(l.itemQty) || 0;
+            l.itemWeight = parseFloat(l.itemWeight) || 0;
+            l.itemRate = parseFloat(l.itemRate) || 0;
+            l.itemAmount = parseFloat(l.itemAmount) || 0;
+            return l;
+        });
+
         editingEbIdx = -1;
-        clearEmptyBagInputs();
         emptyBagItems = (po.emptyBags || []).map(function(b) {
             return {
-                type: b.Type,
-                typeName: b.EmptyBagsType,
-                itemId: b.ItemId,
-                itemName: b.ItemName,
-                packingTypeId: b.PackingTypeId,
-                packingTypeName: b.PackTypeDesc,
-                rate: b.Rate,
-                weightCut: b.WeightCut
+                type: hcol(b, 'Type'), typeName: hcol(b, 'EmptyBagsType'),
+                itemId: hcol(b, 'ItemId'), itemName: hcol(b, 'ItemName'),
+                packingTypeId: hcol(b, 'PackingTypeId'), packingTypeName: hcol(b, 'PackTypeDesc'),
+                rate: hcol(b, 'Rate'), weightCut: hcol(b, 'WeightCut')
             };
         });
-        renderEbGrid();
+        if (emptyBagItems.length === 0) loadDefaultEmptyBagRows(); else renderEbGrid();   /* :3839-3842 */
 
-        // Supplier Expense - real rows returned by Sp_PurchaseOrder_GetAllMethod
-        // (@Activity='ReadPurchaseOrderSupplierExpenseByHeaderId').
-        expenseItems = (po.supplierExpenses || []).map(function(e) {
-            return {
-                invRevExpItemId: e.InvRevExpItemId,
-                otherItemName: e.OtherItemName,
-                qty: e.Qty,
-                rate: e.Rate,
-                amount: e.Amount,
-                remarks: e.Remarks
-            };
-        });
-        if (expenseItems.length === 0) {
-            loadDefaultExpenseRows();
-        } else {
+        /* :3822-3835 - every Other Item row, with the saved values merged in by ItemId. */
+        const savedExp = po.supplierExpenses || [];
+        const mergeExp = function () {
+            expenseItems = otherItemsForExpense.map(function (it) {
+                const hit = savedExp.find(e => parseInt(hcol(e, 'InvRevExpItemId'), 10) === parseInt(it.Id, 10));
+                return hit
+                    ? { invRevExpItemId: it.Id, otherItemName: it.OtherItemName, qty: hcol(hit, 'Qty'), rate: hcol(hit, 'Rate'), amount: hcol(hit, 'Amount'), remarks: hcol(hit, 'Remarks') }
+                    : { invRevExpItemId: it.Id, otherItemName: it.OtherItemName, qty: 0, rate: 0, amount: 0, remarks: '' };
+            });
             renderExpGrid();
-        }
+        };
+        if (otherItemsForExpense.length) mergeExp();
+        else $.get('/api/purchase-order/supplier-expense/other-items', function (data) { otherItemsForExpense = data || []; mergeExp(); });
 
-        // Account Credit _Charge to Product - real rows returned by Sp_PurchaseOrder_GetAllMethod
-        // (@Activity='ReadPurchaseOrderExpensesChargeToProductDetailByHeaderId').
         chargeToProductItems = (po.expensesChargeToProduct || []).map(function(c) {
+            /* :3809 - the AccountId cell holds SupplierCustomerId with feature 4 on, else AccountId. */
+            const subsidiary = coaAccountsForCharge.length && acol(coaAccountsForCharge[0], 'bindOn') === 'SupplierCustomerId';
             return {
-                accountId: c.AccountId,
-                accountTitle: c.AccountTitle,
-                percentage: c.Percentage !== undefined ? c.Percentage : c.percentage,
-                /* The table's columns are Qty/Rate; the desktop's in-memory grid calls the same
-                   two ItemQty/ItemRate. Accept either so a rename on the procedure side cannot
-                   silently load them as 0. */
-                qty: (c.Qty !== undefined ? c.Qty : (c.ItemQty !== undefined ? c.ItemQty : 0)),
-                rate: (c.Rate !== undefined ? c.Rate : (c.ItemRate !== undefined ? c.ItemRate : 0)),
-                amount: c.Amount,
-                remarks: c.Remarks
+                accountId: subsidiary ? hcol(c, 'SupplierCustomerId') : hcol(c, 'AccountId'),
+                accountTitle: hcol(c, 'AccountTitle'),
+                percentage: hcol(c, 'Percentage'),
+                qty: hcol(c, 'Qty'), rate: hcol(c, 'Rate'),
+                amount: hcol(c, 'Amount'), remarks: hcol(c, 'Remarks')
             };
         });
-        if (chargeToProductItems.length === 0) {
-            loadDefaultChargeRows();
-        } else {
-            renderChargeGrid();
-        }
+        if (chargeToProductItems.length === 0) loadDefaultChargeRows(); else renderChargeGrid();
 
-        // Payment Detail - real rows returned by Sp_PurchaseOrder_GetAllMethod
-        // (@Activity='PurchaseOrderPaymentTermDetailByHeaderId').
+        paymentByPercent = false;
         paymentTermsDetailItems = (po.paymentTermsDetail || []).map(function(p) {
             return {
-                paymentTermId: p.PaymentTermId,
-                paymentTerm: p.PaymentTerm,
-                dueDays: p.DueDays,
-                dueDate: p.DueDate ? String(p.DueDate).split('T')[0] : '',
-                prcntOfTotal: p.PrcntOfTotal,
-                amount: p.Amount,
-                remarks: p.PaymentRemarks
+                paymentTermId: hcol(p, 'PaymentTermId'), paymentTerm: hcol(p, 'PaymentTerm'),
+                dueDays: hcol(p, 'DueDays'),
+                dueDate: hcol(p, 'DueDate') ? String(hcol(p, 'DueDate')).split('T')[0] : '',
+                prcntOfTotal: hcol(p, 'PrcntOfTotal'), amount: hcol(p, 'Amount'), remarks: hcol(p, 'PaymentRemarks')
             };
         });
-        if (paymentTermsDetailItems.length === 0) {
-            loadDefaultPaymentRows();
-        } else {
-            renderSchedGrid();
-        }
+        if (paymentTermsDetailItems.length === 0) loadDefaultPaymentRows();
 
-        /* ReadById :3721-3757 - the header fields the port was not filling at all.
-           Every id below was checked to exist in purchase_order.html; writing to a selector
-           that matches nothing is a silent no-op, which is how a field stays blank and looks
-           like missing data. The desktop fields with NO web control yet are listed at the end
-           of this function rather than quietly skipped. */
         $('#txtBranchNo').val(po.branchSrNo);
         $('#txtCategoryNo').val(po.categorySrNo);
+        /* :3866 combordercat_Leave(null, null) - ReadById ends by re-generating the category serial
+           (GenerateOrderCategoryCodebyId), so an Update saves the NEXT Cat No, not the stored one.
+           Desktop quirk, reproduced (listed in the report). */
+        if (parseInt(po.orderCategoryId || 0, 10) > 0) {
+            $.get('/api/purchase-order/next-category-sr-no?categoryId=' + po.orderCategoryId, function (res) {
+                if (res && res.categorySrNo && generation === poFormGeneration) $('#txtCategoryNo').val(res.categorySrNo);
+            });
+        }
         $('#txtSupplierRefNo').val(po.supplierRefNo || '');
         $('#txtDueDays').val(po.orderDueDays);
         $('#txtPaymentDueDate').val(po.orderDueDate || '');
         $('#txtDeliveryStartDate').val(po.deliveryStartDate || '');
         $('#txtDeliveryDays').val(po.deliveryDays);
-        $('#cmbCommType').val(po.commissionType || '');             /* combcommtype :3746 */
-        $('#cmbCommUom').val(po.commissionRateUom || 0);            /* combruom     :3747 */
+        $('#cmbCommType').val(po.commissionType || '');                   /* combcommtype.Text :3748 */
+        $('#cmbCommUom').val(String(po.commissionRateUom || 0));           /* combruom.Text :3749 */
         $('#txtCommRate').val(po.commRate);
         $('#txtCommAmount').val(po.commAmount);
         $('#cmbBrokeryType').val(po.brokeryType || '');
         $('#txtBrokeryRate').val(po.brokeryRate);
-        $('#cmbBrokeryRateUom').val(po.brokeryUom || 0);
+        $('#cmbBrokeryRateUom').val(String(parseInt(po.brokeryUom || 0, 10) || 0));
         $('#txtBrokeryAmount').val(po.brokeryAmount);
-        $('#cmbOrderStatus').val(po.orderStatus || '');             /* CmbStatus :3755 */
-        $('#radCashFreight').prop('checked', !!po.cashFreight);
-        $('#radCreditFreight').prop('checked', !!po.creditFreight);
-        if ($.fn.select2) {
-            $('#cmbParentCategory, #cmbPaymentTerm, #cmbDeliveryTerm, #cmbCommType, #cmbCommUom, '
-            + '#cmbBrokeryType, #cmbBrokeryRateUom, #cmbOrderStatus').trigger('change.select2');
-        }
+        $('#cmbOrderStatus').val(po.orderStatus || '');                    /* CmbStatus.Text :3757 */
+        /* :3759-3771 - neither freight flag set: Cash for delivery terms 1/3/4, else Credit. */
+        let cash = !!po.cashFreight, credit = !!po.creditFreight;
+        if (!cash && !credit) { const dt = parseInt(po.deliveryTermId || 0, 10); cash = (dt === 1 || dt === 3 || dt === 4); credit = !cash; }
+        $('#radCashFreight').prop('checked', cash);
+        $('#radCreditFreight').prop('checked', credit);
+        /* :3737-3743 - the loaded currency; with none, multiCurrencyFeature() supplies the defaults. */
+        if (parseInt(po.currencyId || 0, 10) > 0) setCurrencyControls(po.currencyId, po.exchangeRate);
+        else if (!screenCfg.multiCurrency) setCurrencyControls(screenCfg.currencyId || 0, screenCfg.exchangeRate || 0);
 
-        /* NOT FILLED, because this page has no control for them yet - the desktop sets all six
-           in ReadById. Recorded so they are not mistaken for working:
-             cmbCurrency (:3736)   txtExchangeRate (:3737)  txtFcyAmount (:3738)
-             OrderExpiryDate       CommissionRemarks        cmbLocationType (:3774) */
+        renderDetailGrid();
+        onExchangeRateChange();
+        calcCommission();
+        calcBrokery();
+        recalculatePaymentAmounts(false);
+        renderSchedGrid();
 
         applyEditModeState(po, mode || 'edit');
-
         $('#modalLoadOrder').modal('hide');
-    });
+    }).fail(function (xhr) { alert(PurchaseRequest.error(xhr)); });
 }
 
-/* ============================================================
- * The control states an existing record puts the form into.
- *
- * grdhistory_ColumnButtonClick :5076-5083 - Edit is Reset(), then ReadById(id), then
- * btnsave.Visible = false / btnSaveAs.Visible = false / btnUpdate.Visible = true.
- * ReadById :3860-3865 repeats that and enables CmbStatus.
- *
- * WHICH FIELDS LOCK IS A PROPERTY OF THE RECORD, NOT OF "being in edit mode", so the three
- * flags are computed on the server from the record's own rows and simply applied here:
- *
- *   lockOrderCategory  the order has lines                    (:2076, always when rows exist)
- *   lockSupplier       a line carries a Lab Sample            (:2070)
- *   lockDeliveryTerm   a supplier dispatch exists             (:3783)
- *
- * The desktop disables Supplier at :3781 when a dispatch exists and then RE-ENABLES it at
- * :2074 when no line has a lab sample. That looks like an oversight; it is reproduced, because
- * this is a parity port and inventing a stricter rule would be a different application.
- *
- * Nothing else is locked. In particular Doc No, Doc Date and the detail grid stay editable -
- * the desktop does not touch them here, and locking them "because it is an edit" would be a
- * rule this application does not have.
- * ============================================================ */
+/* grdhistory_ColumnButtonClick :5075-5104 and ReadById :3860-3868. */
 function applyEditModeState(po, mode) {
     isEditMode = true;
     const saveAs = (mode === 'saveas');
 
-    /* :5080-5082 Edit -> Update only. :5088-5091 SaveAs -> SaveAs only. */
     $('#btnSave').hide();
     $('#btnUpdate').toggle(!saveAs);
     $('#btnSaveAs').toggle(saveAs);
 
-    /* :3865 / :5094 - CmbStatus.Enabled = btnUpdate.Visible, so SaveAs leaves it locked. */
+    /* :3865 / :5092-5093 - CmbStatus enabled only when Update is visible; SaveAs resets it to Open. */
+    if (saveAs) $('#cmbOrderStatus').val('Open');
     setFieldLocked('#cmbOrderStatus', saveAs);
 
     /* :5095-5103 - SaveAs writes the lines as NEW rows. */
@@ -3487,40 +3571,26 @@ function applyEditModeState(po, mode) {
         renderDetailGrid();
     }
 
-    setFieldLocked('#cmbParentCategory', !!po.lockOrderCategory);   /* combordercat */
-    setFieldLocked('#cmbSupplier',       !!po.lockSupplier);        /* combsuppname */
-    setFieldLocked('#cmbDeliveryTerm',   !!po.lockDeliveryTerm);    /* combdeliverytrm */
+    /* :3779-3785 then PartyDisableEnableOnLabAnalysis :3864 (which re-enables the supplier when no
+       line has a lab sample - reproduced). */
+    setFieldLocked('#cmbDeliveryTerm', !!po.lockDeliveryTerm);
+    partyDisableEnableOnLabAnalysis();
 
-    /* :3969-3972 Reset() disables these four; combsalesman_Leave :1654 is the only thing that
-       enables them, so they are live exactly when a commission agent is set. */
+    /* :3969-3972 / :1654 - the commission controls are live when an agent is set. */
     const commOn = !!po.commissionFieldsEnabled;
-    ['#cmbCommType', '#txtCommRate', '#cmbCommUom', '#txtCommAmount']
-        .forEach(sel => setFieldLocked(sel, !commOn));
-
-    /* GAP, not silently skipped: :3784 makes the Supplier Loading Detail grid visible once a
-       dispatch exists, and THIS PAGE HAS NO SUCH GRID. po.supplierDispatchDetail carries the
-       rows and po.hasSupplierDispatch the flag, so building it is a UI job only. Until then
-       the operator can see that Delivery Term is locked but not what dispatched against the
-       order. Logged rather than shown, so it does not look like an error to the operator. */
-    if (po.hasSupplierDispatch) {
-        console.info('[PO] This order has supplier dispatch rows (' +
-            (po.supplierDispatchDetail || []).length + '). Delivery Term is locked; the ' +
-            'Supplier Loading Detail grid is not implemented on the web form yet.');
-    }
+    ['#cmbCommType', '#txtCommRate', '#cmbCommUom', '#txtCommAmount'].forEach(sel => setFieldLocked(sel, !commOn));
+    applyRights();
 }
 
-/* Back to a blank form: btnnew_Click -> Reset() :3922-3999. */
+/* Back to a blank form: Reset() :3963-3972. */
 function clearEditModeState() {
     isEditMode = false;
     $('#btnSave').show();
     $('#btnUpdate').hide();
     $('#btnSaveAs').hide();
-    setFieldLocked('#cmbParentCategory', false);
-    setFieldLocked('#cmbSupplier', false);
     setFieldLocked('#cmbDeliveryTerm', false);   /* :3939 combdeliverytrm.Enabled = true */
-    /* :3969-3972 - Reset leaves the commission four DISABLED until an agent is picked. */
-    ['#cmbCommType', '#txtCommRate', '#cmbCommUom', '#txtCommAmount']
-        .forEach(sel => setFieldLocked(sel, true));
+    ['#cmbCommType', '#txtCommRate', '#cmbCommUom', '#txtCommAmount'].forEach(sel => setFieldLocked(sel, true));
+    applyRights();
 }
 
 /* A <select> cannot be made read-only, only disabled - and a disabled control is not posted,
@@ -3547,9 +3617,38 @@ function setFieldLocked(selector, locked) {
     el.attr('title', locked ? 'Locked on this Purchase Order — see the record\'s own state' : '');
 }
 
+/* btnprint / BtnPrintNew / BtnPrintII / BtnPrintWithLabSample (:5274-5320) print RecId through
+   CommonServices.PurchaseOrderSlipReport203 / SupplierDispatchSubReport_203A /
+   PurchaseOrderSlipReport203_01 / PurchaseOrderSlipReport203_02 - here the typed print endpoints
+   (PurchasePrintController, Sp_PurchaseOrderSlip_Rpt, @OrderId = id). */
+const PO_PRINTS = {
+    '203':    '/reports/print/203-purchase-order-rice-slip',
+    '203A':   '/reports/print/203a-purchase-order-slip',
+    '203_01': '/reports/print/203-01-purchase-order-rice-slip',
+    '203_02': '/reports/print/203-02-purchase-order-rice-slip'
+};
 function btnPrintReport(reportType) {
-    if (!currentPoMasterId) { alert('Load or save an order before printing.'); return; }
-    alert('Printing is unavailable because the original report renderer could not be loaded.');
+    if (!poRights.print) return;
+    printPurchaseOrder(reportType, currentPoMasterId);
+}
+function printPurchaseOrder(reportType, id) {
+    const url = PO_PRINTS[reportType];
+    if (!url) return;
+    let win = null;
+    try { win = window.open('', '_blank'); if (win) win.document.write('<p style="font:13px Segoe UI,sans-serif;padding:16px">Preparing report...</p>'); } catch (e) { win = null; }
+    const h = { 'Content-Type': 'application/json', 'Accept': 'application/pdf, text/plain' };
+    const t = document.querySelector('meta[name="_csrf"]'), n = document.querySelector('meta[name="_csrf_header"]');
+    if (t && n && t.getAttribute('content') && n.getAttribute('content')) h[n.getAttribute('content')] = t.getAttribute('content');
+    fetch(url, { method: 'POST', credentials: 'same-origin', headers: h, body: JSON.stringify({ id: id || 0 }) })
+        .then(function (r) {
+            const type = r.headers.get('Content-Type') || '';
+            if (r.ok && type.indexOf('application/pdf') >= 0) return r.blob().then(function (b) {
+                const u = URL.createObjectURL(b);
+                if (win) win.location.href = u; else window.open(u, '_blank');
+            });
+            return r.text().then(function (x) { throw new Error(x || ('Request failed (' + r.status + ')')); });
+        })
+        .catch(function (e) { try { if (win) win.close(); } catch (x) { } alert(e.message); });
 }
 
 async function openAttachmentsModal() {
@@ -3608,20 +3707,43 @@ async function addPurchaseOrderAttachments(button) {
 /* ============================================================
  * 12. KEYBOARD SHORTCUTS & HELPERS
  * ============================================================ */
+/* PurchsaeOrder_KeyDown :5669-5822 (KeyPreview). Ctrl+N / Ctrl+T / Ctrl+E are taken by the
+   browser before the page sees them; the rest behave as on the desktop. */
 function bindKeyboardShortcuts() {
+    const TAB_ORDER = ['tabDetail', 'tabEmptyBags', 'tabExpenses', 'tabAccountCharges', 'tabLabDeductions'];
     $(document).keydown(function(e) {
-        if (e.altKey && e.keyCode === 78) { // Alt + N
+        const onHistory = $('#mainViewHistory').is(':visible');
+        const key = e.key;
+        if (e.ctrlKey && e.altKey && (key === 'Control' || key === 'Alt')) { $('#modalShortcuts').modal('show'); return; }
+        if (!e.ctrlKey) {
+            /* :5674 - Enter moves to the next control (SendKeys {TAB}). */
+            if (key === 'Enter' && $(e.target).is('input:not([type=button]):not([type=checkbox]):not([type=radio]), select')) {
+                e.preventDefault();
+                const f = $('input:visible:enabled:not([readonly]), select:visible:enabled, textarea:visible:enabled, button:visible:enabled');
+                const i = f.index(e.target);
+                if (i >= 0 && i + 1 < f.length) f.eq(i + 1).focus();
+            }
+            return;
+        }
+        const k = (key || '').toLowerCase();
+        if (k === 's') { e.preventDefault(); if (onHistory) loadPurchaseOrderHistory(); else if ($('#btnSave').is(':visible') && !$('#btnSave').prop('disabled')) btnSave_Click(); }
+        else if (k === 'u') { if (!onHistory && $('#btnUpdate').is(':visible') && !$('#btnUpdate').prop('disabled')) { e.preventDefault(); btnUpdate_Click(); } }
+        else if (k === 'n') { e.preventDefault(); if (onHistory) resetHistoryFilters(); else btnNew_Click(); }
+        else if (k === 't') { e.preventDefault(); switchMainView(onHistory ? 'form' : 'history'); }
+        else if (k === 'p') { e.preventDefault(); if (!onHistory && poRights.print) printPurchaseOrder('203', currentPoMasterId); }
+        else if (key === 'F5') { e.preventDefault(); $('#txtDocDate').focus(); }
+        else if (key === 'F10') { e.preventDefault(); openAttachmentsModal(); }
+        else if (key === 'Enter' && onHistory && selectedHistoryRecordIdx >= 0) {
             e.preventDefault();
-            btnNew_Click();
-        } else if (e.altKey && e.keyCode === 83) { // Alt + S
+            loadSelectedOrderFromHistory(parseInt(hcol(currentHistoryRecords[selectedHistoryRecordIdx], 'Id') || 0, 10), 'edit');
+        }
+        else if (key === 'ArrowDown') { e.preventDefault(); (onHistory ? $('#grdHistoryTable') : $('#tblItemsTbody')).find('tr:first').attr('tabindex', '-1').focus(); }
+        else if (key === 'ArrowUp') { e.preventDefault(); if (onHistory) $('#txtHistoryFromDate').focus(); else $('#txtItemDisplay').focus(); }
+        else if (key === 'ArrowLeft') { e.preventDefault(); switchTab('tabDetail'); $('#txtItemDisplay').focus(); }
+        else if (key === 'ArrowRight') {
             e.preventDefault();
-            btnSave_Click();
-        } else if (e.altKey && e.keyCode === 85) { // Alt + U
-            e.preventDefault();
-            btnUpdate_Click();
-        } else if (e.altKey && e.keyCode === 65) { // Alt + A
-            e.preventDefault();
-            btnAddDetailRow_Click();
+            const cur = TAB_ORDER.findIndex(t => $('#' + t).is(':visible'));
+            switchTab(TAB_ORDER[(cur + 1) % TAB_ORDER.length]);
         }
     });
 }
@@ -3905,9 +4027,13 @@ function renderHistoryMasterGrid() {
             return `<td style="text-align:${c.align || 'left'};">${escapeHtml(String(text))}</td>`;
         }).join('');
 
+        /* :4909-4959 - Edit needs the Update right, SaveAs the Save right, the four prints Print. */
+        const allowed = { 'Edit': poRights.update, 'SaveAs': poRights.save };
         const buttons = HISTORY_BUTTONS.map(b => `<td style="text-align:center;" class="action-col">`
-            + `<button type="button" class="win-btn-action" onclick="event.stopPropagation(); onHistoryButtonClick('${b.key}', ${poId})">`
-            + `${escapeHtml(b.label)}</button></td>`).join('');
+            + ((allowed[b.key] !== undefined ? allowed[b.key] : poRights.print)
+                ? `<button type="button" class="win-btn-action" onclick="event.stopPropagation(); onHistoryButtonClick('${b.key}', ${poId})">${escapeHtml(b.label)}</button>`
+                : '')
+            + `</td>`).join('');
 
         const isSelected = (idx === selectedHistoryRecordIdx);
         tbody.append(`
@@ -3944,7 +4070,9 @@ function onHistoryButtonClick(key, poId) {
         if (request) request.done(openAttachmentsModal).fail(e => alert(PurchaseRequest.error(e)));
         return;
     }
-    alert('Printing is unavailable because the original report renderer could not be loaded.');
+    /* :5105-5120 - Print 203, Print-A 203A, PrintII 203_01, PrintIII 203_02 of that row. */
+    const map = { 'Print': '203', 'Print-A': '203A', 'PrintII': '203_01', 'PrintIII': '203_02' };
+    if (map[key] && poRights.print) printPurchaseOrder(map[key], poId);
 }
 
 function onHistoryRowClick(idx) {
@@ -4082,7 +4210,16 @@ function loadSelectedOrderFromHistory(poId, mode) {
 /* ============================================================
  * DEFINE LOOKUP PARTIES MODAL & PERSISTENCE
  * ============================================================ */
+/* btnDefineBookingPerson_Click :6312 opens DefineReferenceParties; its Party Type list comes from
+   the database (ReadAllReferencePartyType), not from four literals. */
 function openDefineLookUpPartiesModal() {
+    $.get('/api/purchase-order/lookup-party-types', function (rows) {
+        const sel = $('#cmbLookupPartyType');
+        const keep = sel.val() || '5';
+        sel.empty();
+        (rows || []).forEach(r => sel.append(`<option value="${r.id}">${escapeHtml(r.description || '')}</option>`));
+        if (sel.find(`option[value="${keep}"]`).length) sel.val(keep);
+    }).fail(function (xhr) { alert(PurchaseRequest.error(xhr)); });
     loadLookupPartiesGrid();
     $('#modalDefineLookUpParties').modal('show');
     setTimeout(() => $('#txtLookupPartyName').focus(), 300);

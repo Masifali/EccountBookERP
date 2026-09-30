@@ -128,10 +128,12 @@
 
         .grid-3col {
             display: grid;
-            grid-template-columns: 370px 320px 1fr;
+            grid-template-columns: 370px 320px minmax(400px,1fr);
             gap: 8px;
         }
-        .entry-layout { display:grid; grid-template-columns:minmax(1052px,2fr) minmax(360px,1fr); gap:6px; }
+        .entry-layout { display:grid; grid-template-columns:minmax(1106px,2fr) minmax(360px,1fr); gap:6px; }
+        .grid-3col > .section-box { min-width:0; }
+        #txtintime, #txtouttime { flex:1 1 150px; min-width:150px; }
         .entry-layout > * { min-width:0; }
         .breakup-panel { border:1px solid #999; background:white; }
         .breakup-title { height:26px; padding:5px 3px; color:teal; font: bold 12px Verdana,sans-serif; }
@@ -141,7 +143,7 @@
         .breakup-panel .tool-btn { width:20px; padding:0; justify-content:center; }
         .breakup-panel .data-grid td { padding:1px; }
         .breakup-panel tfoot { position:sticky; bottom:0; background:#f0f0f0; font-weight:bold; text-align:right; }
-        @media(max-width:1450px) { .entry-layout { display:block; } .breakup-panel { margin:6px 0; } }
+        @media(max-width:1500px) { .entry-layout { display:block; } .breakup-panel { margin:6px 0; } }
         @media(max-width:1080px) { .grid-3col { grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); } .section-box { min-width:0; overflow-x:auto; } }
 
         .form-row {
@@ -384,13 +386,16 @@
             <label><input type="radio" name="formMode" value="WeightBridge">
                 <a href="#" onclick="return igpOpenLinkedForm('WeightBridge');"
                    class="igp-link" title="Open Weigh Bridge">Weight Bridge Form</a></label>
-            <label><input type="radio" name="formMode" value="Grn">
+            <label><input type="radio" name="formMode" value="Grn" id="RadGrnFormToOpenOnInsert" style="display:none;">
                 <a href="#" onclick="return igpOpenLinkedForm('Grn');"
                    class="igp-link" title="Open GRN">Grn Form</a></label>
             <label><input type="radio" name="formMode" value="FreightVoucher">
                 <a href="#" onclick="return igpOpenLinkedForm('FreightVoucher');"
                    class="igp-link" title="Open Freight Voucher">Freight Voucher</a></label>
-            <label style="margin-left: auto;"><input type="checkbox" id="chkPreview" checked> Preview</label>
+            <!-- ChkIsApproved "Is Approve": checked on Load, visible only with the Approve right (InwardGatePass_Load :653/:668) -->
+            <label id="lblIsApproved" style="margin-left: auto; display:none;"><input type="checkbox" id="ChkIsApproved" checked> Is Approve</label>
+            <!-- ChkBox "Preview": after a successful Save/Update the desktop prints 251 for the saved gate pass -->
+            <label style="margin-left: 8px;"><input type="checkbox" id="chkPreview" checked> Preview</label>
         </div>
 
         <!-- Main Form Body -->
@@ -417,7 +422,7 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Purchase Type<span class="req-star">*</span></div>
-                        <select id="CmbOrderType" class="form-control" style="width: 120px;" data-dtcombo="single" data-dtcombo-caption="Purchase Type">
+                        <select id="CmbOrderType" class="form-control" style="width: 120px;" onchange="onOrderTypeChange()" data-dtcombo="single" data-dtcombo-caption="Purchase Type">
                             <option value="">-- Select --</option>
                             <option th:each="o : ${orderTypes}" th:value="${o['id']}" th:text="${o['name']}"></option>
                         </select>
@@ -425,9 +430,8 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Supplier Name<span class="req-star">*</span></div>
-                        <select id="cmbsupp" class="form-control" style="width: 204px;" onchange="loadTransitVehicles().catch(showRequestError)" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
+                        <select id="cmbsupp" class="form-control" style="width: 204px;" onchange="onSupplierChange()" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
                             <option value="">-- Select Supplier --</option>
-                            <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
                         </select>
                     </div>
                     <div class="form-row">
@@ -448,7 +452,7 @@
                         <div class="form-label" style="width: 100px;">Item Qty<span class="req-star">*</span></div>
                         <input type="number" id="txtqty" class="form-control" style="width: 65px;" value="0" oninput="calculateWeight()"  data-guard="decimal"/>
                         <span class="form-label" style="width: 60px;">Pack Unit</span>
-                        <input type="number" id="txtPackUnit" class="form-control" style="width: 65px;" value="60" oninput="calculateWeight()"  data-guard="decimal"/>
+                        <input type="number" id="txtPackUnit" class="form-control" style="width: 65px;" value="" oninput="calculateWeight()"  data-guard="decimal"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 100px;">Weight<span class="req-star">*</span></div>
@@ -468,11 +472,11 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Vehicle No<span class="req-star">*</span></div>
-                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. OKB-1254"  data-guard="vehicle"/>
+                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. OKB-1254" oninput="onVehicleNoInput(this)" onblur="onVehicleNoLeave()" data-guard="vehicle"/>
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty No</div>
-                        <input type="text" id="txtbiltyno" class="form-control" style="width: 170px;" value="*" />
+                        <input type="text" id="txtbiltyno" class="form-control" style="width: 170px;" value="" />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Bilty Date</div>
@@ -501,6 +505,11 @@
                     <div class="form-row">
                         <div class="form-label" style="width: 110px;">Remarks Header</div>
                         <input type="text" id="txtremarks" class="form-control" style="width: 170px;" />
+                    </div>
+                    <!-- lblDiffRemarks / txtWeightDiffRemarks: hidden (designer), shown by btnupdate_Click when factory > supplier weight -->
+                    <div class="form-row" id="rowWeightDiffRemarks" style="display:none;">
+                        <div class="form-label" style="width: 110px;">Wt Diff Remarks</div>
+                        <input type="text" id="txtWeightDiffRemarks" class="form-control" style="width: 170px;" />
                     </div>
                 </div>
 
@@ -542,7 +551,7 @@
                         <div class="form-label" style="width: 90px;">W.B Slip No<span class="req-star">*</span></div>
                         <input type="text" id="txtWeighBridgeSlipNo" class="form-control" style="width: 70px;" value="0" readonly />
                         <span class="form-label" style="width: 50px;">In Time</span>
-                        <input type="datetime-local" id="txtintime" class="form-control" style="width: 150px;" />
+                        <input type="datetime-local" id="txtintime" class="form-control" style="width: 150px;" disabled />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">W.B Status<span class="req-star">*</span></div>
@@ -551,7 +560,7 @@
                             <option th:each="w : ${weighBridges}" th:value="${w['id']}" th:text="${w['name']}"></option>
                         </select>
                         <span class="form-label" style="width: 50px;">Out Time</span>
-                        <input type="datetime-local" id="txtouttime" class="form-control" style="width: 150px;" />
+                        <input type="datetime-local" id="txtouttime" class="form-control" style="width: 150px;" disabled />
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">G.P Status<span class="req-star">*</span></div>
@@ -568,7 +577,7 @@
                     </div>
                     <div class="form-row">
                         <div class="form-label" style="width: 90px;">P.O Excess Wt</div>
-                        <input type="number" id="txtAccessWeight" class="form-control" style="width: 70px;" value="0" />
+                        <input type="number" id="txtAccessWeight" class="form-control" style="width: 70px;" value="0" readonly />
                         <span class="form-label" style="width: 70px;">Transit Vehicle</span>
                         <select id="cmbTransitVehicle" class="form-control" style="width: 130px;" onchange="onTransitVehicleChange()" data-dtcombo="single" data-dtcombo-caption="Transit Vehicle">
                             <option value="">-- Select --</option>
@@ -583,11 +592,11 @@
                 <!-- Lab Info -->
                 <div class="section-box">
                     <div class="section-title">Lab Info</div>
-                    <div style="display: flex; gap: 6px;">
-                        <input type="text" id="txtAnaylstName" class="form-control" placeholder="Analyst Name" style="width: 120px;" />
-                        <input type="text" id="txtLabReportNo" class="form-control" placeholder="Report No" style="width: 100px;" />
-                        <input type="text" id="txtReportStatus" class="form-control" placeholder="Report Status" style="width: 110px;" />
-                        <input type="text" id="txtLabRemarks" class="form-control" placeholder="Remarks" style="flex: 1;" />
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <label class="form-label">Analyst Name <input type="text" id="txtAnaylstName" class="form-control" style="width: 120px;" readonly /></label>
+                        <label class="form-label">Report No <input type="text" id="txtLabReportNo" class="form-control" style="width: 90px;" readonly /></label>
+                        <label class="form-label">Report Status <input type="text" id="txtReportStatus" class="form-control" style="width: 100px;" readonly /></label>
+                        <label class="form-label" style="flex: 1;">Remarks <input type="text" id="txtLabRemarks" class="form-control" style="width: 100%;" readonly /></label>
                     </div>
                 </div>
 
@@ -610,7 +619,7 @@
             </div>
 
             </div>
-            <section class="breakup-panel" aria-label="Purchase BreakUp">
+            <section class="breakup-panel" id="PanelBreakup" aria-label="Purchase BreakUp" style="display:none;">
                 <div class="breakup-title">Purchase BreakUp</div>
                 <div class="grid-wrap"><table class="data-grid">
                     <thead><tr><th>+</th><th>X</th><th>Qty</th><th>UOM</th><th>Gross Weight</th><th>Eb Weight</th><th>EB Total</th><th>Net Weight</th></tr></thead>
@@ -623,7 +632,7 @@
             <div class="tab-container">
                 <div class="tab-buttons">
                     <div class="tab-btn active" onclick="switchMainSubTab('tabGridHistory')">GatePass History Open Status</div>
-                    <div class="tab-btn" onclick="switchMainSubTab('tabPoInfo')">Purchase Order Information</div>
+                    <div class="tab-btn" id="tabBtnPoInfo" style="display:none;" onclick="switchMainSubTab('tabPoInfo')">Purchase Order Information</div>
                 </div>
 
                 <!-- Tab 1: GatePass History Grid -->
@@ -658,6 +667,11 @@
                                 <th>Net Paid</th>
                                 <th>Item Name</th>
                                 <th>City Name</th>
+                                <th>In Time</th>
+                                <th>No Of Attachments</th>
+                                <th>Other Remarks</th>
+                                <th>Approval Status</th>
+                                <th>Status</th>
                             </tr>
                             </thead>
                             <tbody id="grdMainHistoryBody"></tbody>
@@ -697,7 +711,6 @@
                                     <span class="form-label" style="width: 95px;">Supplier Name</span>
                                     <select id="cmbSupplierNamePoInfo" class="form-control" style="width: 200px;" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
                                         <option value="">-- Select Supplier --</option>
-                                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
                                     </select>
                                 </div>
                                 <div class="form-row">
@@ -763,8 +776,8 @@
     <div id="viewHistory" style="display: none;">
         <!-- History Toolbar -->
         <div class="toolbar">
-            <button class="tool-btn" onclick="onSwitchToFormNew()">+ New</button>
-            <button id="btnHistRefresh" class="tool-btn" onclick="withButtonLoading(this, executeFullHistorySearch)">Refresh</button>
+            <button id="btnNewHistory" class="tool-btn" onclick="onHistoryNew()">+ New</button>
+            <button id="btnHistRefresh" class="tool-btn" onclick="withButtonLoading(this, onHistoryRefresh)">Refresh</button>
         </div>
 
         <!-- History Teal Status Strip -->
@@ -796,7 +809,6 @@
                     <span class="form-label">Supplier</span><br/>
                     <select id="cmbHistSupplier" class="form-control" style="width: 220px;" data-dtcombo="single" data-dtcombo-caption="Supplier">
                         <option value="">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['supplierName']} ?: ${s['name']}"></option>
                     </select>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
@@ -877,14 +889,20 @@
 </div>
 
 <script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
-<script th:src="@{/build/js/countx_inward_gate_pass.js?v=20260924h}"></script>
+<script th:src="@{/build/js/countx_inward_gate_pass.js?v=20261001c}"></script>
 
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 <script>
 /* 653: the desktop passes the gate pass id as @Id (traced as "history") */
-window.printRptArgs = function (rpt, a) { if (/^653/.test(rpt) && a.history === undefined) { var q = new URLSearchParams(location.search).get('id'); if (a.id || q) a.history = a.id || q; } return a; };
+window.printRptArgs = function (rpt, a) {
+    /* 251 / 257: CommonServices.GatePassInwardSlipAndRegisterReport(RecId) / InwardGatePassWithWbAndLabSlip(RecId) - the open gate pass */
+    var cur = Number((document.getElementById('txtId') || {}).value) || 0;
+    if (/^25[17]/.test(rpt) && !a.id && cur > 0) a.id = cur;
+    if (/^653/.test(rpt) && a.history === undefined) { var q = new URLSearchParams(location.search).get('id'); if (a.id || q || cur) a.history = a.id || cur || q; }
+    return a;
+};
 </script>
 </body>
 </html>

@@ -45,18 +45,38 @@ public class InwardGatePassRestController {
     }
 
     @GetMapping("/order-party-items")
-    public List<Map<String,Object>> getOrderPartyItems(@RequestParam int number,@RequestParam String date,@RequestParam(defaultValue="0") int gatePassId) {
-        return service.getOrderPartyItems(number,date,gatePassId);
+    public List<Map<String,Object>> getOrderPartyItems(@RequestParam(defaultValue="41") int documentTypeId,@RequestParam int number,@RequestParam(required=false) String date,@RequestParam(defaultValue="0") int gatePassId) {
+        return service.getOrderPartyItems(documentTypeId,number,date,gatePassId);
     }
+
+    @GetMapping("/lab-data/{id}")
+    public Map<String,Object> getLabData(@PathVariable int id) {
+        Map<String,Object> row=service.getLabData(id);
+        return row==null?Map.of():row;
+    }
+
+    @GetMapping("/history-suppliers")
+    public List<Map<String,Object>> getHistorySuppliers() { return service.getHistorySuppliers(); }
+
+    @GetMapping("/po-info-combos")
+    public Map<String,Object> getPoInfoCombos(@RequestParam(defaultValue="41") int documentTypeId) { return service.getPoInfoCombos(documentTypeId); }
 
     @GetMapping("/transit-vehicles")
     public List<Map<String,Object>> getTransitVehicles(@RequestParam(defaultValue="0") int supplierId,@RequestParam(defaultValue="0") int orderId,@RequestParam(defaultValue="0") int gatePassId) {
         return service.getTransitVehicles(supplierId,orderId,gatePassId);
     }
 
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
+    /** Body = the gate pass fields plus `confirmed` (confirmation keys the operator accepted) and `isApprovedChecked`. */
     @PostMapping("/save")
-    public Map<String, Object> saveRecord(@RequestBody InwardGatePass obj) {
-        return service.saveRecord(obj);
+    public Map<String, Object> saveRecord(@RequestBody Map<String,Object> body) {
+        Set<String> confirmed=new HashSet<>();
+        if (body.get("confirmed") instanceof Collection) for (Object key:(Collection<?>)body.get("confirmed")) confirmed.add(String.valueOf(key));
+        boolean approved=Boolean.TRUE.equals(body.get("isApprovedChecked"));
+        InwardGatePass obj=objectMapper.copy().configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false).convertValue(body,InwardGatePass.class);
+        return service.saveRecord(obj,confirmed,approved);
     }
 
     @PostMapping("/delete/{id}")

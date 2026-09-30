@@ -1,171 +1,152 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <title>Purchase Register - EccountBookERP</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; font-size: 12px; }
-        .top-banner { background-color: #00796B; color: #fff; padding: 8px 15px; font-size: 14px; font-weight: bold; }
-        .filter-panel { background: #fff; border: 1px solid #ddd; border-radius: 3px; padding: 12px; margin: 10px; }
-        .form-control-sm { height: 26px; padding: 2px 6px; font-size: 11px; }
-        .btn-erp { font-size: 11px; padding: 3px 12px; height: 26px; }
-        .table-responsive { max-height: 520px; overflow-y: auto; overflow-x: auto; }
-        .table-erp { font-size: 11px; width: 100%; border-collapse: collapse; }
-        .table-erp th { background-color: #00796B; color: #fff; position: sticky; top: 0; z-index: 10; padding: 5px; text-align: center; }
-        .table-erp td { padding: 4px 6px; border: 1px solid #e2e8f0; }
-        .table-erp tr:hover { background-color: #f0f7f7; }
-        .text-right { text-align: right; }
-        .total-row { font-weight: bold; background-color: #e2e8f0; }
-    </style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Report (With Activites) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/purchase/purchase_reports.css?v=20260930h}">
 </head>
-<body>
-    <div class="top-banner">
-        <i class="fa fa-calculator"></i> Purchase Register / Invoice History
-        <a href="/purchase/reports" class="btn btn-sm btn-light pull-right" style="margin-top:-3px; font-size:11px;"><i class="fa fa-arrow-left"></i> Reports Menu</a>
-    </div>
+<!-- 480 Architecture.WinApp.Inventory_Reports.PurchaseRegisterNew "Purchase Report (With Activites)" (module 52).
+     This route used to show the Supplier Aging (frmPayablesAgingDocumentWise) list; it is now PurchaseRegisterNew. -->
+<body class="pr">
+<div id="prLoading" hidden role="status">Please wait...</div>
+<nav class="pr-tabs" aria-label="Report views">
+    <button type="button" data-tab="detail" aria-selected="true">Detail Register</button>
+    <button type="button" data-tab="summary" aria-selected="false">Summary Register</button>
+    <a href="/purchase/reports" style="margin-left:auto;padding:3px 10px" title="Ctrl+E / Esc">Exit</a>
+</nav>
+<div id="prMessage" role="status" aria-live="polite"></div>
 
-    <div class="filter-panel">
-        <form id="filterForm">
-            <div class="row">
-                <div class="col-md-2">
-                    <label>As On Date / To Date</label>
-                    <input type="date" id="asOnDate" class="form-control form-control-sm">
-                </div>
-                <div class="col-md-2">
-                    <label>Aging Days</label>
-                    <input type="number" id="agingDays" class="form-control form-control-sm" value="30">
-                </div>
-                <div class="col-md-3">
-                    <label>Supplier / Account</label>
-                    <select id="accountId" class="form-control form-control-sm select2">
-                        <option value="">-- All Accounts --</option>
-                    </select>
-                </div>
-                <div class="col-md-5" style="margin-top:18px;">
-                    <button type="button" id="btnShow" class="btn btn-primary btn-erp"><i class="fa fa-search"></i> Show Register</button>
-                    <button type="button" id="btnReset" class="btn btn-default btn-erp"><i class="fa fa-refresh"></i> Reset</button>
-                    <button type="button" id="btnPrint" class="btn btn-success btn-erp" data-rpt-grid="1506-PurchaseInvoiceRegister.rpt" data-grid="reportTable" data-title="Purchase Invoice Register"><i class="fa fa-print"></i> Print</button>
-                </div>
-            </div>
-        </form>
-    </div>
+<!-- TabPage "Detail" -->
+<section class="pr-panel" data-tab-panel="detail">
+    <nav class="pr-toolstrip" aria-label="Detail toolbar">
+        <button type="button" id="btnNew" title="Ctrl+N">New</button>
+        <button type="button" id="BtnReferesh">Refresh</button>
+        <button type="button" id="btnPrint" title="Prints the grid rows (the desktop lists the .rpt files of its PurchaseRegister folder here)">Print</button>
+        <button type="button" id="btnShortcutKeys">ShortCut Keys</button>
+    </nav>
+    <div class="pr-caption"><span id="label17">Purchase Invoice Register</span></div>
+    <div class="pr-filters" style="position:relative;width:1170px;height:144px;border:0">
+        <label class="pr-abs" style="left:5px;top:10px" for="cmbBranchName">Branch Name</label>
+        <details class="pr-check pr-abs" id="cmbBranchName" style="left:82px;top:4px;width:216px"></details>
+        <label class="pr-abs" style="left:5px;top:37px" for="txtDateFrom">From Date</label>
+        <div class="pr-abs" style="left:82px;top:33px;width:216px"><input type="date" id="txtDateFrom"></div>
+        <label class="pr-abs" style="left:5px;top:64px" for="txtToDate">To Date</label>
+        <div class="pr-abs" style="left:82px;top:60px;width:216px"><input type="date" id="txtToDate"></div>
+        <label class="pr-abs" style="left:5px;top:91px" for="txtFromDocNo">No From,To</label>
+        <div class="pr-abs" style="left:82px;top:87px;width:107px"><input type="text" id="txtFromDocNo" inputmode="numeric"></div>
+        <div class="pr-abs" style="left:191px;top:87px;width:107px"><input type="text" id="txtToDocNo" inputmode="numeric" aria-label="No To"></div>
+        <label class="pr-abs" style="left:5px;top:118px" for="cmbItemClass">Item Class</label>
+        <div class="pr-abs" style="left:82px;top:112px;width:216px"><select id="cmbItemClass" data-dtcombo="single" data-dtcombo-caption="Item Class"></select></div>
 
-    <div style="margin:0 10px;">
-        <div class="table-responsive">
-            <table class="table table-bordered table-erp" id="reportTable">
-                <thead>
-                    <tr>
-                        <th>Sr#</th>
-                        <th>Invoice / Voucher No</th>
-                        <th>Invoice Date</th>
-                        <th>Due Date</th>
-                        <th>Account Code</th>
-                        <th>Supplier / Party Name</th>
-                        <th class="text-right">Due Amount</th>
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTbody">
-                    <tr><td colspan="8" class="text-center">Select filters and click "Show Register".</td></tr>
-                </tbody>
-                <tfoot>
-                    <tr class="total-row" id="totalRow" style="display:none;">
-                        <td colspan="6" class="text-right">Total Due:</td>
-                        <td class="text-right" id="lblTotalDue">0.00</td>
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
+        <label class="pr-abs" style="left:302px;top:10px" for="cmbparentcategoryCombo">Parent category</label>
+        <details class="pr-check pr-abs" id="cmbparentcategoryCombo" style="left:391px;top:4px;width:161px"></details>
+        <label class="pr-abs" style="left:302px;top:37px" for="cmbItemCategory">Item Category</label>
+        <div class="pr-abs" style="left:391px;top:31px;width:161px"><select id="cmbItemCategory" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+        <label class="pr-abs" style="left:302px;top:64px" for="cmbItemtype">Item Type</label>
+        <div class="pr-abs" style="left:391px;top:58px;width:161px"><select id="cmbItemtype" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+        <label class="pr-abs" style="left:302px;top:91px" for="cmbCropYear">Crop Year</label>
+        <div class="pr-abs" style="left:391px;top:85px;width:161px"><select id="cmbCropYear" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+        <label class="pr-abs" style="left:302px;top:118px" for="cmbPackingtype">Packing Type</label>
+        <div class="pr-abs" style="left:391px;top:112px;width:161px"><select id="cmbPackingtype" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select></div>
+
+        <label class="pr-abs" style="left:555px;top:10px" for="cmbjoblot">Job Lot</label>
+        <div class="pr-abs" style="left:632px;top:4px;width:196px"><select id="cmbjoblot" data-dtcombo="single" data-dtcombo-caption="Job Lot"></select></div>
+        <label class="pr-abs" style="left:555px;top:37px" for="cmbwarehouse">Warehouse</label>
+        <div class="pr-abs" style="left:632px;top:31px;width:196px"><select id="cmbwarehouse" data-dtcombo="single" data-dtcombo-caption="Warehouse Name"></select></div>
+        <label class="pr-abs" style="left:555px;top:64px" for="cmbItemName">Item Name</label>
+        <div class="pr-abs" style="left:632px;top:58px;width:196px"><select id="cmbItemName" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        <label class="pr-abs" style="left:555px;top:91px" for="cmbsupplier">Party Name</label>
+        <div class="pr-abs" style="left:632px;top:85px;width:196px"><select id="cmbsupplier" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+        <label class="pr-abs" style="left:555px;top:118px" for="cmbcommagent">Comm Agent</label>
+        <div class="pr-abs" style="left:632px;top:112px;width:196px"><select id="cmbcommagent" data-dtcombo="single" data-dtcombo-caption="Commission Agent"></select></div>
+
+        <label class="pr-abs" style="left:831px;top:10px" for="CmbDocumentType">Transaction Type</label>
+        <div class="pr-abs" style="left:927px;top:4px;width:240px"><select id="CmbDocumentType" data-dtcombo="single" data-dtcombo-caption="Transaction Type"></select></div>
+        <label class="pr-abs" style="left:831px;top:37px" for="CmbCustomGroup">Custom Group</label>
+        <details class="pr-check pr-abs" id="CmbCustomGroup" style="left:927px;top:31px;width:240px"></details>
+        <label class="pr-abs" style="left:831px;top:66px" for="CmbStockAccount">Stock Account</label>
+        <div class="pr-abs" style="left:927px;top:60px;width:240px"><select id="CmbStockAccount" data-dtcombo="single" data-dtcombo-caption="Stock Account"></select></div>
+        <label class="pr-abs" style="left:831px;top:95px" for="cmbActivity">Report Type</label>
+        <div class="pr-abs" style="left:927px;top:89px;width:187px"><select id="cmbActivity" data-dtcombo="single" data-dtcombo-caption="Activity"></select></div>
+        <button type="button" class="pr-show pr-abs" id="btnShow" style="left:1114px;top:89px;width:51px" title="Ctrl+S">Show</button>
+    </div>
+    <section id="detailSection">
+        <div class="pr-grid-bar">Filtered Records <span id="lblCount"></span>
+            <span class="pr-right"><button type="button" id="btnGridPrint">Grid Print</button><button type="button" id="btnGridExport">Export</button><button type="button" id="btnFullscreen">Fullscreen</button></span>
         </div>
-    </div>
+        <div class="pr-wrap" tabindex="0" id="gridWrap"><table class="pr-grid" id="DataGridHistory"></table></div>
+    </section>
+</section>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            $('.select2').select2({ width: '100%' });
-            const today = new Date().toISOString().split('T')[0];
-            $('#asOnDate').val(today);
-            loadAccounts();
+<!-- TabPage "Summary" -->
+<section class="pr-panel" data-tab-panel="summary" hidden>
+    <nav class="pr-toolstrip" aria-label="Summary toolbar">
+        <button type="button" id="BtnNewSummary" title="Ctrl+N">New</button>
+        <button type="button" id="btnRefreshSummary" title="Ctrl+R">Refresh</button>
+        <button type="button" id="btnPrintSumm" title="Ctrl+P">Print</button>
+        <button type="button" id="BtnShortCutKeysSumm">ShortCut Keys</button>
+    </nav>
+    <fieldset class="pr-filters" style="width:1161px;height:157px">
+        <legend>Filter Criteria's</legend>
+        <label class="pr-abs" style="left:2px;top:24px" for="CmbBranchNameSumm">Branch Name</label>
+        <details class="pr-check pr-abs" id="CmbBranchNameSumm" style="left:93px;top:18px;width:225px"></details>
+        <label class="pr-abs" style="left:2px;top:51px" for="CmbDateTypeSumm">Date Type</label>
+        <div class="pr-abs" style="left:93px;top:45px;width:225px"><select id="CmbDateTypeSumm" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+        <label class="pr-abs" style="left:2px;top:78px" for="txtFromDateSumm">From &amp; To Date</label>
+        <div class="pr-abs" style="left:93px;top:74px;width:112px"><input type="date" id="txtFromDateSumm"></div>
+        <div class="pr-abs" style="left:206px;top:74px;width:112px"><input type="date" id="txtToDateSumm" aria-label="To Date"></div>
+        <label class="pr-abs" style="left:2px;top:105px" for="txtFromDocNoSumm">From &amp; To No</label>
+        <div class="pr-abs" style="left:93px;top:101px;width:112px"><input type="text" id="txtFromDocNoSumm" inputmode="numeric"></div>
+        <div class="pr-abs" style="left:206px;top:101px;width:112px"><input type="text" id="txtToDocNoSumm" inputmode="numeric" aria-label="To No"></div>
+        <label class="pr-abs" style="left:2px;top:132px" for="cmbParentcategorySumm">Parent Category</label>
+        <details class="pr-check pr-abs" id="cmbParentcategorySumm" style="left:93px;top:126px;width:225px"></details>
 
-            $('#btnShow').click(fetchReport);
-            $('#btnReset').click(function() {
-                $('#asOnDate').val(today);
-                $('#agingDays').val(30);
-                $('#accountId').val(null).trigger('change');
-                $('#reportTbody').html('<tr><td colspan="8" class="text-center">Select filters and click "Show Register".</td></tr>');
-                $('#totalRow').hide();
-            });
-            $('#btnPrint').click(function() { window.print(); });
-        });
+        <label class="pr-abs" style="left:324px;top:24px" for="CmbItemClassSumm">Item Class</label>
+        <div class="pr-abs" style="left:392px;top:18px;width:177px"><select id="CmbItemClassSumm" data-dtcombo="single" data-dtcombo-caption="Item Class"></select></div>
+        <label class="pr-abs" style="left:324px;top:51px" for="CmbCategorySumm">Category</label>
+        <div class="pr-abs" style="left:392px;top:45px;width:177px"><select id="CmbCategorySumm" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+        <label class="pr-abs" style="left:324px;top:78px" for="cmbItemtypeSumm">Type</label>
+        <div class="pr-abs" style="left:392px;top:72px;width:177px"><select id="cmbItemtypeSumm" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+        <label class="pr-abs" style="left:324px;top:105px" for="cmbItemNameSumm">Item</label>
+        <div class="pr-abs" style="left:392px;top:99px;width:177px"><select id="cmbItemNameSumm" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        <label class="pr-abs" style="left:324px;top:132px" for="cmbJobLotSumm">Job Lot</label>
+        <div class="pr-abs" style="left:392px;top:126px;width:177px"><select id="cmbJobLotSumm" data-dtcombo="single" data-dtcombo-caption="Job Lot"></select></div>
 
-        function loadAccounts() {
-            $.get('/api/inward-gate-pass/dropdowns', function(res) {
-                let html = '<option value="">-- All Accounts --</option>';
-                if(res && res.suppliers) {
-                    res.suppliers.forEach(s => { html += `<option value="${s.id}">${s.referenceName || s.name}</option>`; });
-                }
-                $('#accountId').html(html);
-            });
-        }
+        <label class="pr-abs" style="left:573px;top:24px" for="CmbWareHouseSumm">WareHouse</label>
+        <div class="pr-abs" style="left:653px;top:18px;width:200px"><select id="CmbWareHouseSumm" data-dtcombo="single" data-dtcombo-caption="Warehouse Name"></select></div>
+        <label class="pr-abs" style="left:573px;top:51px" for="CmbCropYearSumm">Crop Year</label>
+        <div class="pr-abs" style="left:653px;top:45px;width:200px"><select id="CmbCropYearSumm" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+        <label class="pr-abs" style="left:573px;top:78px" for="CmbPackingTypeSumm">Packing Type</label>
+        <div class="pr-abs" style="left:653px;top:72px;width:200px"><select id="CmbPackingTypeSumm" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select></div>
+        <label class="pr-abs" style="left:573px;top:105px" for="cmbDistrictSumm">District</label>
+        <div class="pr-abs" style="left:653px;top:99px;width:200px"><select id="cmbDistrictSumm" data-dtcombo="single" data-dtcombo-caption="Distict"></select></div>
+        <label class="pr-abs" style="left:573px;top:132px" for="cmbcitySumm">City</label>
+        <div class="pr-abs" style="left:653px;top:126px;width:200px"><select id="cmbcitySumm" data-dtcombo="single" data-dtcombo-caption="City"></select></div>
 
-        function fetchReport() {
-            const btn = $('#btnShow');
-            btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
-            
-            const req = {
-                asOnDate: $('#asOnDate').val(),
-                agingDays: $('#agingDays').val() ? parseInt($('#agingDays').val()) : 30,
-                accountId: $('#accountId').val() ? parseInt($('#accountId').val()) : null
-            };
-
-            $.ajax({
-                url: '/purchase/api/reports/supplier-aging',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(req),
-                success: function(res) {
-                    if(res && res.success && res.data && res.data.length > 0) {
-                        let rowsHtml = '';
-                        let totDue = 0;
-                        res.data.forEach((r, idx) => {
-                            let due = parseFloat(r.dueAmount || r.DueAmount || r.amount || 0);
-                            totDue += due;
-                            rowsHtml += `<tr>
-                                <td class="text-center">${idx + 1}</td>
-                                <td class="text-center"><a href="/purchase/purchase-invoice?id=${r.id}">${r.invoiceNo || r.InvoiceNo || r.voucherCode || r.id}</a></td>
-                                <td class="text-center">${r.invoiceDate || r.InvoiceDate ? String(r.invoiceDate || r.InvoiceDate).substring(0,10) : ''}</td>
-                                <td class="text-center">${r.invoiceDueDate || r.InvoiceDueDate ? String(r.invoiceDueDate || r.InvoiceDueDate).substring(0,10) : ''}</td>
-                                <td class="text-center">${r.accountCode || r.AccountCode || ''}</td>
-                                <td>${r.partyName || r.PartyName || r.supplierName || ''}</td>
-                                <td class="text-right">${due.toFixed(2)}</td>
-                                <td>${r.remarks || r.Remarks || ''}</td>
-                            </tr>`;
-                        });
-                        $('#reportTbody').html(rowsHtml);
-                        $('#lblTotalDue').text(totDue.toFixed(2));
-                        $('#totalRow').show();
-                    } else {
-                        $('#reportTbody').html('<tr><td colspan="8" class="text-center text-muted">No records found matching criteria.</td></tr>');
-                        $('#totalRow').hide();
-                    }
-                },
-                error: function(err) {
-                    alert('Error loading Purchase register: ' + (err.responseJSON ? err.responseJSON.message : err.statusText));
-                },
-                complete: function() {
-                    btn.prop('disabled', false).html('<i class="fa fa-search"></i> Show Register');
-                }
-            });
-        }
-    </script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
-    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
-<script src="/js/print-rpt.js?v=20261001a"></script>
+        <label class="pr-abs" style="left:856px;top:24px" for="cmbSupplierSumm">Supplier</label>
+        <div class="pr-abs" style="left:933px;top:18px;width:222px"><select id="cmbSupplierSumm" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+        <label class="pr-abs" style="left:856px;top:45px;line-height:13px" for="CmbCustomGroupSummary">Custom<br>Group</label>
+        <details class="pr-check pr-abs" id="CmbCustomGroupSummary" style="left:933px;top:45px;width:222px"></details>
+        <label class="pr-abs" style="left:856px;top:78px" for="cmbReportTypeSummary">Report Type</label>
+        <div class="pr-abs" style="left:933px;top:72px;width:222px"><select id="cmbReportTypeSummary" data-dtcombo="single" data-dtcombo-caption="Report Type"></select></div>
+        <label class="pr-abs" style="left:856px;top:105px" for="CmbStockAccountSummary">Stock A/C</label>
+        <div class="pr-abs" style="left:933px;top:99px;width:221px"><select id="CmbStockAccountSummary" data-dtcombo="single" data-dtcombo-caption="Stock A/c"></select></div>
+        <label class="pr-abs" style="left:935px;top:130px"><input type="checkbox" id="chkCity"> City Wise</label>
+        <label class="pr-abs" style="left:1007px;top:130px"><input type="checkbox" id="chkPackUom"> Pack Uom</label>
+        <button type="button" class="pr-show pr-abs" id="BtnShowSumm" style="left:1098px;top:126px;width:55px" title="Ctrl+S">Show</button>
+    </fieldset>
+    <section id="summarySection">
+        <div class="pr-grid-bar"><span id="lblSummaryName"></span> <span id="lblCountSumm"></span>
+            <span class="pr-right"><button type="button" id="btnGridPrintSumm">Grid Print</button><button type="button" id="btnGridExportSumm">Export</button><button type="button" id="btnFullscreenSumm">Fullscreen</button></span>
+        </div>
+        <div class="pr-wrap" tabindex="0" id="gridWrapSumm"><table class="pr-grid" id="GridSummary"></table></div>
+    </section>
+</section>
+<script th:src="@{/build/js/sale/report_approval_history.js?v=20260926a}"></script>
+<script th:src="@{/build/js/purchase/reports/pr_common.js?v=20260930h}"></script>
+<script th:src="@{/build/js/purchase/reports/purchase_register_report.js?v=20260930h}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
 </body>
 </html>

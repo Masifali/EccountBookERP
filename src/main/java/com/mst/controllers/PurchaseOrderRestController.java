@@ -54,7 +54,7 @@ public class PurchaseOrderRestController {
            series simply by appending ?companyId=. So the parameter is gone, not merely
            defaulted differently.
            ------------------------------------------------------------------------------------ */
-        int docNo = purchaseOrderService.generateNextDocNo(docType);
+        int docNo = purchaseOrderService.generateNextDocNo(41);   /* this form numbers type 41 only (:1187) */
         String formattedCode = String.format("PO-%d", docNo);
         Map<String, Object> res = new HashMap<>();
         res.put("docNo", docNo);
@@ -136,7 +136,7 @@ public class PurchaseOrderRestController {
 
     @GetMapping("/payment-terms")
     public ResponseEntity<List<Map<String, Object>>> getPaymentTerms() {
-        return ResponseEntity.ok(purchaseOrderService.getPaymentTerms());
+        return ResponseEntity.ok(purchaseOrderService.getPaymentTermsForPurchaseOrder());
     }
 
     @GetMapping("/delivery-terms")
@@ -219,14 +219,10 @@ public class PurchaseOrderRestController {
         return ResponseEntity.ok(purchaseOrderService.getDefaultEmptyBagRows());
     }
 
-    /** Standalone persist for an EXISTING, already-saved Purchase Order Id - independent of the
-     *  header Save/Update flow below, so Empty Bags can be tested/updated directly against a real Id. */
-    @PutMapping("/{id}/empty-bags")
-    public ResponseEntity<Map<String, Object>> saveEmptyBags(
-            @PathVariable Integer id,
-            @RequestBody List<PurchaseOrderFullDto.PurchaseOrderEmptyBagDto> rows) {
-        return ResponseEntity.ok(purchaseOrderService.saveEmptyBags(id, rows));
-    }
+    /* The standalone PUT /{id}/empty-bags, /{id}/supplier-expense, /{id}/charge-to-product and
+       /{id}/payment-terms-detail endpoints were removed: the desktop has no tab-by-tab save (every
+       collection is written by PurchaseOrder.Save in one transaction) and they relied on raw
+       DELETE statements. */
 
     // ==========================================================================================
     // Supplier Expense / Account Credit _Charge to Product / Payment Detail - real dropdown and
@@ -238,31 +234,12 @@ public class PurchaseOrderRestController {
         return ResponseEntity.ok(purchaseOrderService.getOtherItemsForSupplierExpense());
     }
 
-    @PutMapping("/{id}/supplier-expense")
-    public ResponseEntity<Map<String, Object>> saveSupplierExpense(
-            @PathVariable Integer id,
-            @RequestBody List<PurchaseOrderFullDto.PurchaseOrderSupplierExpenseDto> rows) {
-        return ResponseEntity.ok(purchaseOrderService.saveSupplierExpense(id, rows));
-    }
 
     @GetMapping("/charge-to-product/accounts")
     public ResponseEntity<List<Map<String, Object>>> getAccountsForChargeToProduct() {
         return ResponseEntity.ok(purchaseOrderService.getAccountsForChargeToProduct());
     }
 
-    @PutMapping("/{id}/charge-to-product")
-    public ResponseEntity<Map<String, Object>> saveChargeToProduct(
-            @PathVariable Integer id,
-            @RequestBody List<PurchaseOrderFullDto.PurchaseOrderExpensesChargeToProductDto> rows) {
-        return ResponseEntity.ok(purchaseOrderService.saveChargeToProduct(id, rows));
-    }
-
-    @PutMapping("/{id}/payment-terms-detail")
-    public ResponseEntity<Map<String, Object>> savePaymentTermsDetail(
-            @PathVariable Integer id,
-            @RequestBody List<PurchaseOrderFullDto.PurchaseOrderPaymentTermsDetailDto> rows) {
-        return ResponseEntity.ok(purchaseOrderService.savePaymentTermsDetail(id, rows));
-    }
 
     /**
      * Header/Detail save - real columns only (fixed: previously targeted a fabricated schema -
@@ -278,11 +255,17 @@ public class PurchaseOrderRestController {
      */
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> savePurchaseOrder(@RequestBody PurchaseOrderFullDto dto) {
+        /* btnsave_Click :3673 / btnSaveAs_Click :3889 - RecId = 0 before Insert(): Save always inserts. */
+        dto.setPurchaseOrderMasterId(0);
         return ResponseEntity.ok(purchaseOrderService.savePurchaseOrder(dto, null));
     }
 
     @PutMapping("/update")
     public ResponseEntity<Map<String, Object>> updatePurchaseOrder(@RequestBody PurchaseOrderFullDto dto) {
+        /* btnUpdate_Click_1 :3694 */
+        if (dto.getPurchaseOrderMasterId() == null || dto.getPurchaseOrderMasterId() <= 0) {
+            throw new IllegalArgumentException("Record not update because Id not found");
+        }
         return ResponseEntity.ok(purchaseOrderService.savePurchaseOrder(dto, null));
     }
 
@@ -377,12 +360,7 @@ public class PurchaseOrderRestController {
     public java.util.Map<String, Object> nextBranchSrNo(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "41") int docType) {
         java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
-        try {
-            r.put("branchSrNo", purchaseOrderService.generateNextBranchSrNo(docType));
-        } catch (Exception e) {
-            r.put("branchSrNo", 0);
-            r.put("message", e.getMessage());
-        }
+        r.put("branchSrNo", purchaseOrderService.generateNextBranchSrNo(41));   /* :1216 DocumentTypeId = 41 */
         return r;
     }
 
@@ -395,12 +373,7 @@ public class PurchaseOrderRestController {
     public java.util.Map<String, Object> nextCategorySrNo(
             @org.springframework.web.bind.annotation.RequestParam int categoryId) {
         java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
-        try {
-            r.put("categorySrNo", purchaseOrderService.generateNextCategorySrNo(categoryId));
-        } catch (Exception e) {
-            r.put("categorySrNo", 0);
-            r.put("message", e.getMessage());
-        }
+        r.put("categorySrNo", purchaseOrderService.generateNextCategorySrNo(categoryId));
         return r;
     }
 
@@ -408,13 +381,25 @@ public class PurchaseOrderRestController {
     @org.springframework.web.bind.annotation.GetMapping("/screen-defaults")
     @org.springframework.web.bind.annotation.ResponseBody
     public java.util.Map<String, Object> screenDefaults() {
-        try {
-            return purchaseOrderService.screenDefaults();
-        } catch (Exception e) {
-            java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
-            r.put("message", e.getMessage());
-            return r;
-        }
+        return purchaseOrderService.screenDefaults();
+    }
+
+    /** formright - Save / Update / Print / Delete / CanView AllRecord for "PurchsaeOrder" (:619). */
+    @GetMapping("/rights")
+    public Map<String, Object> rights() {
+        return purchaseOrderService.rights();
+    }
+
+    /** CmbLabSampleNo - FactorySampleOrStandardDbCall() :874 (Sample list or Standard schedule list). */
+    @GetMapping("/lab-samples")
+    public List<Map<String, Object>> labSamples(
+            @RequestParam(defaultValue = "true") boolean sample,
+            @RequestParam(defaultValue = "0") int itemId,
+            @RequestParam(defaultValue = "0") int supplierId,
+            @RequestParam(defaultValue = "0") int commissionAgentId,
+            @RequestParam(defaultValue = "0") int orderId,
+            @RequestParam(required = false) String docDate) {
+        return purchaseOrderService.labSampleOrStandard(sample, itemId, supplierId, commissionAgentId, orderId, docDate);
     }
 
     /**
@@ -425,12 +410,6 @@ public class PurchaseOrderRestController {
     @org.springframework.web.bind.annotation.ResponseBody
     public java.util.Map<String, Object> docNoContext(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "41") int docType) {
-        try {
-            return purchaseOrderService.docNoContext(docType);
-        } catch (Exception e) {
-            java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
-            r.put("message", e.getMessage());
-            return r;
-        }
+        return purchaseOrderService.docNoContext(docType);
     }
 }

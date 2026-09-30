@@ -15,8 +15,9 @@ public class InwardGatePassRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    // Exact non-virtual fields of desktop model 1015. Preserve fields not exposed by this form.
-    public Integer saveHeader(InwardGatePass obj) {
+    // Exact non-virtual fields of desktop model 1015. Values in `exact` are sent as given (null = parameter
+    // not supplied, as ADO.NET AddWithValue(null) does); fields the desktop form never sets keep the stored value.
+    public Integer saveHeader(InwardGatePass obj, Map<String,Object> exact) {
         boolean updating=obj.getId()!=null && obj.getId()>0;
         Map<String,Object> values=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         values.put("IsApproved", false);
@@ -67,7 +68,8 @@ public class InwardGatePassRepository {
         int parameterIndex=0;
         List<String> parameters=new ArrayList<>(); List<Object> arguments=new ArrayList<>();
         for (String field:fields) {
-            if (properties.containsKey(field)) {
+            if (exact.containsKey(field)) values.put(field,exact.get(field));
+            else if (properties.containsKey(field)) {
                 Object supplied=bean.getPropertyValue(properties.get(field));
                 if (supplied!=null || !values.containsKey(field)) values.put(field,supplied);
             }
@@ -81,6 +83,7 @@ public class InwardGatePassRepository {
         return id;
     }
 
+    // DAL 0421 SetData: EntryDate/ModifyDate/ApprovedDate come from the header's EntryDate/ModifyDate/PostDate.
     public Integer saveDriverBio(InwardGatePass obj) {
         return com.mst.repositories.support.ProcExec.call(jdbcTemplate,
                 "EXEC dbo.USP_DriverBiodata_InsertIfNotExists @driverName=?,@cnicNo=?,@cellNo=?,@whatsappNo=?,@alternateCellNo=?,@fatherName=?,@fatherCnicNo=?,@OrganizationId=?,@CompanyId=?,@EntryUserId=?,@EntryDate=?,@BranchId=?,@ModifyDate=?,@ApprovedDate=?",
@@ -131,11 +134,15 @@ public class InwardGatePassRepository {
         return jdbcTemplate.queryForList(sql, id);
     }
 
+    // BLL 0567 GenerategpCode / GenerateGPTypeCode: first row's GpSrNo / GpTypeSrNo, 0 when no row.
     public Integer generateGpCode(Integer orgId,Integer compId,Integer branchId,Integer yearId,Integer docTypeId) {
-        return ((Number)jdbcTemplate.queryForMap("EXEC dbo.Sp_GatePassInward_GetAllMethod @OrganizationId=?,@CompanyId=?,@BranchesId=?,@FinancialYearId=?,@DocumentTypeId=?,@Activity='GenerategpCode'",orgId,compId,branchId,yearId,docTypeId).get("GpSrNo")).intValue();
+        return firstInt(jdbcTemplate.queryForList("EXEC dbo.Sp_GatePassInward_GetAllMethod @OrganizationId=?,@CompanyId=?,@BranchesId=?,@FinancialYearId=?,@DocumentTypeId=?,@Activity='GenerategpCode'",orgId,compId,branchId,yearId,docTypeId),"GpSrNo");
     }
     public Integer generateGpTypeCode(Integer orgId,Integer compId,Integer branchId,Integer yearId,String type) {
-        return ((Number)jdbcTemplate.queryForMap("EXEC dbo.Sp_GatePassInward_GetAllMethod @OrganizationId=?,@CompanyId=?,@BranchesId=?,@FinancialYearId=?,@GatepassType=?,@Activity='GenerateGPTypeCode'",orgId,compId,branchId,yearId,type).get("GpTypeSrNo")).intValue();
+        return firstInt(jdbcTemplate.queryForList("EXEC dbo.Sp_GatePassInward_GetAllMethod @OrganizationId=?,@CompanyId=?,@BranchesId=?,@FinancialYearId=?,@GatepassType=?,@Activity='GenerateGPTypeCode'",orgId,compId,branchId,yearId,type),"GpTypeSrNo");
+    }
+    private static int firstInt(List<Map<String,Object>> rows,String key) {
+        return rows.isEmpty() || !(rows.get(0).get(key) instanceof Number)?0:((Number)rows.get(0).get(key)).intValue();
     }
 
     // BLL GatepassHistory: bind dates and apply the user's visibility, branch and year.
@@ -152,7 +159,7 @@ public class InwardGatePassRepository {
                 orgId,compId,branchId,yearId,docTypeId,
                 new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(fromDate)),
                 new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(toDate)),
-                positive(fromDocNo),positive(toDocNo),positive(supplierId),canViewAll,userId);
+                positive(fromDocNo),positive(toDocNo),positive(supplierId),canViewAll,canViewAll?null:userId);
     }
     private static Object positive(Number v) { return new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.INTEGER,v!=null && v.doubleValue()>0?v.intValue():null); }
     private static java.sql.Date date(String v) { return v==null || v.isBlank()?null:java.sql.Date.valueOf(v); }
@@ -234,32 +241,76 @@ public class InwardGatePassRepository {
         return null;
     }
 
-    public List<Map<String,Object>> getDocumentTypes(Integer orgId, Integer compId) {
-        List<Map<String,Object>> list = new ArrayList<>();
-        try {
-            List<Map<String,Object>> rows = jdbcTemplate.queryForList(
-                    "EXEC dbo.USP_GetDataForDropDownFromPurchaseOrder @OrganizationId=?, @CompanyId=?", orgId, compId);
-            for (Map<String,Object> row : rows) {
-                Object activity = row.get("Activity");
-                if (activity != null && "DocumentType".equalsIgnoreCase(activity.toString().trim())) {
-                    list.add(Map.of("id", row.get("Id"), "name", row.get("ReferenceName")));
-                }
-            }
-        } catch (Exception e) {
-            try {
-                List<Map<String,Object>> rows = jdbcTemplate.queryForList(
-                        "EXEC dbo.Sp_DocumentType_GetAllMethod @Activity='GetAll'");
-                for (Map<String,Object> row : rows) {
-                    list.add(Map.of("id", row.get("Id"), "name", row.get("Description") != null ? row.get("Description") : row.get("DocumentTypeName")));
-                }
-            } catch (Exception ignored) {}
+    /**
+     * InwardGatePass.OrderInformationComboFill(41): PurchaseOrder.GetDataForDropDownFromPurchaseOrder(Org, Company)
+     * -> USP_GetDataForDropDownFromPurchaseOrder; rows with Activity "DocumentType" feed CmbDocumentTypePoInfo and
+     * rows with Activity "Supplier" feed cmbSupplierNamePoInfo. For 1500 the desktop calls the Steel overload with
+     * (OrganizationId, OrganizationId) - reproduced.
+     */
+    public Map<String,List<Map<String,Object>>> getPoInfoCombos(int org,int company,int poInfoDocumentTypeId) {
+        Map<String,List<Map<String,Object>>> result=new HashMap<>();
+        List<Map<String,Object>> types=new ArrayList<>(), suppliers=new ArrayList<>();
+        result.put("documentTypes",types); result.put("suppliers",suppliers);
+        if (poInfoDocumentTypeId!=41 && poInfoDocumentTypeId!=1500) return result;
+        int companyArg=poInfoDocumentTypeId==1500?org:company;
+        for (Map<String,Object> row:jdbcTemplate.queryForList("EXEC dbo.USP_GetDataForDropDownFromPurchaseOrder @OrganizationId=?,@CompanyId=?",org,companyArg)) {
+            String activity=Objects.toString(row.get("Activity"),"");
+            Map<String,Object> option=new LinkedHashMap<>(); option.put("id",row.get("Id")); option.put("name",row.get("ReferenceName"));
+            if ("DocumentType".equals(activity)) types.add(option);
+            if ("Supplier".equals(activity)) suppliers.add(option);
         }
-        if (list.isEmpty()) {
-            list.add(Map.of("id", 41, "name", "Purchase Order"));
-            list.add(Map.of("id", 700, "name", "Market Purchase Order"));
-            list.add(Map.of("id", 1500, "name", "Purchase Order (Steel)"));
+        return result;
+    }
+
+    /** InwardGatePass.HistoryComboFill: GetDataForDropDownFromGPI(OrganizationId, CompanyId, "Supplier", BranchesId) - the
+     *  BLL signature is (CompanyId, OrganizationId, ...), so the desktop binds them swapped; reproduced. */
+    public List<Map<String,Object>> getHistorySuppliers(int org,int company,int branch) {
+        return options(jdbcTemplate.queryForList("EXEC dbo.USP_GetDataForDropDownFromGPI @OrganizationId=?,@CompanyId=?,@Activity='Supplier',@BranchesIds=?",
+                company,org,String.valueOf(branch)),"Id","ReferenceName");
+    }
+
+    /** BindAllSupplierCustomer: clsGlobalVariables.globalAllSupplierCustomer (USP_GetVendorsAndCustomersWithCityName) where !IsSubSupCust. */
+    public List<Map<String,Object>> getAllSupplierCustomers(int org,int company) {
+        List<Map<String,Object>> result=new ArrayList<>();
+        for (Map<String,Object> row:jdbcTemplate.queryForList("EXEC dbo.USP_GetVendorsAndCustomersWithCityName @OrganizationId=?,@CompanyId=?",org,company)) {
+            Object sub=row.get("IsSubSupCust");
+            if (Boolean.TRUE.equals(sub) || "1".equals(Objects.toString(sub,""))) continue;
+            result.add(Map.of("id",row.get("Id"),"name",Objects.toString(row.get("CompanyName"),"")));
         }
-        return list;
+        return result;
+    }
+
+    /** BindSaleInvoiceSupplierCustomer: InvSaleInvoice.GetPartiesFromSaleInvoiceWithGlAccount(Org, Company, "95,99,186"). */
+    public List<Map<String,Object>> getSaleInvoiceParties(int org,int company) {
+        return options(jdbcTemplate.queryForList("EXEC dbo.USP_GetPartiesFromSaleInvoiceWithGlAccount @OrganizationId=?,@CompanyId=?,@DocumentTypeIds=?",org,company,"95,99,186"),"Id","CompanyName");
+    }
+
+    /** LabDataGetByGpId: GatePassInward.GetDataByGpId -> Sp_GatePassInward_GetAllMethod @Activity='GetDataByGpId'. */
+    public Map<String,Object> getLabData(int org,int company,int branch,int gatePassId) {
+        String sql="EXEC dbo.Sp_GatePassInward_GetAllMethod @OrganizationId=?,@CompanyId=?,@Id=?,@Activity='GetDataByGpId'";
+        List<Object> args=new ArrayList<>(List.of(org,company,gatePassId));
+        if (branch!=0) { sql+=",@BranchesId=?"; args.add(branch); }
+        List<Map<String,Object>> rows=jdbcTemplate.queryForList(sql,args.toArray());
+        return rows.isEmpty()?null:rows.get(0);
+    }
+
+    /** GatePassInward.GetAccessWeightByWeightComparedToPoWtAndGpId -> USP_GatePassInward_GetPoAccessWeightByGpId (GpId only when > 0). */
+    public Map<String,Object> getPoAccessWeight(int org,int company,String gatepassType,int purchaseOrderId,int refDocumentTypeId,double weightCompared,double compareWeight,int gatePassId) {
+        String sql="EXEC dbo.USP_GatePassInward_GetPoAccessWeightByGpId @OrganizationId=?,@CompanyId=?,@GatepassType=?,@PurchaseOrderId=?,@RefDocumentTypeId=?,@WeightComparedToPoWt=?,@FactoryWeight=?";
+        List<Object> args=new ArrayList<>(List.of(org,company));
+        args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.NVARCHAR,gatepassType));
+        args.addAll(List.of(purchaseOrderId,refDocumentTypeId,weightCompared,compareWeight));
+        if (gatePassId>0) { sql+=",@GpId=?"; args.add(gatePassId); }
+        List<Map<String,Object>> rows=jdbcTemplate.queryForList(sql,args.toArray());
+        return rows.isEmpty()?null:rows.get(0);
+    }
+
+    /** CmbOrderno_Leave for 1500: PurchaseOrder.GetPurchaseOrderForGatePassInwardByOrderId -> [ST].[USP_GetPurchaseOrderForGPIByOrderId]. */
+    public List<Map<String,Object>> getSteelOrderPartyItems(int org,int company,int year,int number,String date) {
+        String sql="EXEC [ST].[USP_GetPurchaseOrderForGPIByOrderId] @OrganizationId=?,@CompanyId=?,@DocumentTypeId=1500,@OrderNo=?,@FinancialYearId=?";
+        List<Object> args=new ArrayList<>(List.of(org,company,number,year));
+        if (date!=null && !date.isBlank()) { sql+=",@GpDate=?"; args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(date))); }
+        return jdbcTemplate.queryForList(sql,args.toArray());
     }
 
     public List<Map<String,Object>> getPoInfoGrid(Integer orgId, Integer compId, Integer branchId, Integer yearId,
@@ -311,8 +362,20 @@ public class InwardGatePassRepository {
         return jdbcTemplate.queryForList(sql.toString(), args.toArray());
     }
 
-    public List<Map<String,Object>> getOrderPartyItems(int org,int company,int branch,int year,int number,String date,int gatePassId) {
-        return jdbcTemplate.queryForList("EXEC dbo.Sp_SupplierCustomer_GetAllMethod @OrganizationId=?,@CompanyId=?,@BranchesId=?,@FinancialYearId=?,@PurchaseOrderId=?,@DocumentTypeId=41,@GpDate=?,@GpId=?,@Activity='SupplierByPurchaseOrderNo'",
-                org,company,branch,year,number,new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(date)),positive(gatePassId));
+    /** SupplierCustomer.GetSupplierByPurchaseOrderNo (BLL 0600): Sp_SupplierCustomer_GetAllMethod @Activity='SupplierByPurchaseOrderNo'. */
+    public List<Map<String,Object>> getOrderPartyItems(int org,int company,int branch,int year,int documentTypeId,int number,String date,int gatePassId) {
+        String sql="EXEC dbo.Sp_SupplierCustomer_GetAllMethod @PurchaseOrderId=?,@OrganizationId=?,@CompanyId=?,@DocumentTypeId=?";
+        List<Object> args=new ArrayList<>(List.of(number,org,company,documentTypeId));
+        if (year!=0) { sql+=",@FinancialYearId=?"; args.add(year); }
+        if (branch!=0) { sql+=",@BranchesId=?"; args.add(branch); }
+        if (gatePassId!=0) { sql+=",@GpId=?"; args.add(gatePassId); }
+        if (date!=null && !date.isBlank()) { sql+=",@GpDate=?"; args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(date))); }
+        return jdbcTemplate.queryForList(sql+",@Activity='SupplierByPurchaseOrderNo'",args.toArray());
+    }
+
+    /** clsGlobalVariables.configrationsAllocation lookup by ConfigDescription (ConfigKey, "" when not allocated). */
+    public String config(int org,int company,String description) {
+        List<Map<String,Object>> rows=jdbcTemplate.queryForList("EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?,@CompanyId=?,@ConfigDescription=?,@Activity='GetConfigurationByOrgCompandConfigDescription'",org,company,description);
+        return rows.isEmpty() || rows.get(0).get("ConfigKey")==null?"":String.valueOf(rows.get(0).get("ConfigKey")).trim();
     }
 }

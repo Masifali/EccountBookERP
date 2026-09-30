@@ -57,32 +57,26 @@ public class PurchaseInvoiceFullRestController {
     @PostMapping("/supplement-row")
     public Map<String,Object> supplementRow(@RequestBody Map<String,Object> body){return purchaseInvoiceFullService.supplementRow(body);}
 
-    @RequestMapping(value = "/history", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<?> getHistory(@RequestBody(required = false) Map<String, Object> bodyParams,
-                                         @RequestParam(required = false, defaultValue = "56") int docTypeId,
-                                         @RequestParam(required = false) String fromDate,
-                                         @RequestParam(required = false) String toDate,
-                                         @RequestParam(required = false) Integer supplierId,
-                                         @RequestParam(required = false) Integer fromDocNo,
-                                         @RequestParam(required = false) Integer toDocNo,
-                                         @RequestParam(required = false) String dateType) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int branchId = currentUserContext.currentBranchId();
-        int yearId = currentUserContext.currentFinancialYearId();
+    /** History tab "Show" (GetAll:4932): branches from the Branch Name combo, dates by the Doc/Entry/Modify/Approved radio. */
+    @GetMapping("/history")
+    public ResponseEntity<?> getHistory(@RequestParam(required = false) String branchIds,
+                                        @RequestParam(required = false) String fromDate,
+                                        @RequestParam(required = false) String toDate,
+                                        @RequestParam(required = false) Integer supplierId,
+                                        @RequestParam(required = false) Integer fromDocNo,
+                                        @RequestParam(required = false) Integer toDocNo,
+                                        @RequestParam(required = false) String dateType) {
+        return ResponseEntity.ok(purchaseInvoiceFullService.history(branchIds, fromDate, toDate, supplierId, fromDocNo, toDocNo, dateType));
+    }
 
-        if (bodyParams != null) {
-            if (bodyParams.get("docTypeId") != null) docTypeId = ((Number) bodyParams.get("docTypeId")).intValue();
-            if (fromDate == null && bodyParams.get("fromDate") != null) fromDate = bodyParams.get("fromDate").toString();
-            if (toDate == null && bodyParams.get("toDate") != null) toDate = bodyParams.get("toDate").toString();
-            if (supplierId == null && bodyParams.get("supplierId") != null) supplierId = ((Number) bodyParams.get("supplierId")).intValue();
-            if (fromDocNo == null && bodyParams.get("fromDocNo") != null) fromDocNo = ((Number) bodyParams.get("fromDocNo")).intValue();
-            if (toDocNo == null && bodyParams.get("toDocNo") != null) toDocNo = ((Number) bodyParams.get("toDocNo")).intValue();
-            if (dateType == null && bodyParams.get("dateType") != null) dateType = bodyParams.get("dateType").toString();
-        }
+    @GetMapping("/history-detail/{id}")
+    public List<Map<String, Object>> historyDetail(@PathVariable("id") int id, @RequestParam(required = false) String branchIds) {
+        return purchaseInvoiceFullService.historyDetail(id, branchIds);
+    }
 
-        List<Map<String, Object>> history = purchaseInvoiceFullService.getHistory(orgId, compId, branchId, yearId, docTypeId, fromDate, toDate, supplierId, fromDocNo, toDocNo, dateType);
-        return ResponseEntity.ok(history);
+    @GetMapping("/history-suppliers")
+    public List<Map<String, Object>> historySuppliers(@RequestParam(required = false) String branchIds) {
+        return purchaseInvoiceFullService.historySuppliers(branchIds);
     }
 
     @GetMapping("/{id}")
@@ -112,7 +106,7 @@ public class PurchaseInvoiceFullRestController {
         boolean ok = purchaseInvoiceFullService.deletePurchaseInvoice(id);
         Map<String, Object> res = new HashMap<>();
         res.put("success", ok);
-        res.put("message", ok ? "Deleted successfully" : "Failed to delete");
+        res.put("message", ok ? "Delete Record Successfully" : "Failed to delete");
         return ResponseEntity.ok(res);
     }
 }

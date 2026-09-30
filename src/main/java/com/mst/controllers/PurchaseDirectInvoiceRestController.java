@@ -96,7 +96,7 @@ public class PurchaseDirectInvoiceRestController {
         boolean ok = purchaseDirectInvoiceService.deleteDirectInvoice(id);
         Map<String, Object> res = new HashMap<>();
         res.put("success", ok);
-        res.put("message", ok ? "Deleted successfully" : "Failed to delete");
+        res.put("message", "Delete Voucher Successfully"); // btnDelete_Click :3726
         return ResponseEntity.ok(res);
     }
 }

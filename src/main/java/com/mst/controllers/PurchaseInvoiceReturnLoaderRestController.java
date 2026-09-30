@@ -1,46 +1,38 @@
 package com.mst.controllers;
 
-import com.mst.security.CurrentUserContext;
-
-import com.mst.services.PurchaseInvoiceReturnLoaderService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.mst.services.PurchaseInvoiceReturnService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * frmLoadPurchaseInvoiceForReturn (the Purchase Invoice Return loader) under its older route. The page uses
+ * /api/purchase/purchase-invoice-return/loader/*; this route delegates to the same service so both answer identically
+ * (the previous implementation built SQL by string concatenation and fell back to raw table reads on failure).
+ */
 @RestController
 @RequestMapping("/api/purchase-invoice-return-loader")
 public class PurchaseInvoiceReturnLoaderRestController {
 
-    @Autowired
-    private PurchaseInvoiceReturnLoaderService service;
+    private final PurchaseInvoiceReturnService service;
 
-    @Autowired
-    private CurrentUserContext currentUserContext;
+    public PurchaseInvoiceReturnLoaderRestController(PurchaseInvoiceReturnService service) { this.service = service; }
 
     @GetMapping("/branches")
-    public List<Map<String, Object>> getUserBranches() {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int userId = currentUserContext.currentUserId();
-        return service.getUserBranches(orgId, compId, userId);
+    public ResponseEntity<?> branches() {
+        try { return ResponseEntity.ok(service.loaderInit().get("branches")); } catch (IllegalArgumentException e) { return fail(e); }
     }
 
     @GetMapping("/pending")
-    public List<Map<String, Object>> getPendingInvoices(
-            @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate,
-            @RequestParam(required = false) String branchIds) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int yearId = currentUserContext.currentFinancialYearId();
-        return service.getPendingInvoicesForReturn(orgId, compId, yearId, fromDate, toDate, branchIds);
+    public ResponseEntity<?> pending(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
+                                     @RequestParam(required = false) String branchIds) {
+        try { return ResponseEntity.ok(service.pending(fromDate, toDate, branchIds)); } catch (IllegalArgumentException e) { return fail(e); }
     }
 
-    @PostMapping("/validate-selection")
-    public Map<String, Object> validateSelection(
-            @RequestBody List<Map<String, Object>> selectedRows,
-            @RequestParam(defaultValue = "false") Boolean branchImplemented) {
-        return service.validateAndSelectInvoices(selectedRows, branchImplemented);
+    private static ResponseEntity<?> fail(IllegalArgumentException e) {
+        Map<String, Object> m = new LinkedHashMap<>(); m.put("success", false); m.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(m);
     }
 }

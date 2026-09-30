@@ -36,8 +36,10 @@ public class AccountsModuleViewController {
 
 	@GetMapping({"", "/", "/dashboard"})
 	public String accountsDashboard(Model model) {
-		model.addAttribute("activeMenu", "accounts");
-		return "accounts/accounts_dashboard";
+		/* dbo.App 2 "Accounts" through the generic App/Module/Screen renderer (AppMenuController), the same
+		   page every other hub uses: module cards and counts from the user's rights rows, as frmMenue builds
+		   them. The old accounts/accounts_dashboard.html had invented counts and lists. ?module=N is kept. */
+		return "forward:/app/Accounts";
 	}
 
 	@GetMapping("/bank-reconciliation-upload-excel")

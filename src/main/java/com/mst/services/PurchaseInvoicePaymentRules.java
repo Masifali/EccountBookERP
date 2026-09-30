@@ -17,12 +17,16 @@ public final class PurchaseInvoicePaymentRules {
         for(var entry:groups.entrySet()){
             int order=entry.getKey();var items=entry.getValue();double itemTotal=items.stream().mapToDouble(d->n(d,"ItemAmount")).sum(),ratio=total>0?itemTotal/total:0;
             double expense=items.stream().mapToDouble(d->n(d,"ExpenseAmount")).sum();double bill=itemTotal+(expense>0?expense:expenses*ratio)+other*ratio;
+            // Desktop Divide(value,orderAmount,total) per part (CalculateOrderWiseAmountForPaymentDetail:2986-3001), shown in the grid.
+            var parts=new LinkedHashMap<String,Double>();
+            for(var p:Map.of("Freight","PaymentFreight","PartyAddLessAmount","PaymentJournal","EmptyBagAmount","PaymentEmptyBags","FreightDeduction","PaymentFreightDeduction","Commission","PaymentCommission","BrokeryAmount","PaymentBrokery").entrySet())parts.put(p.getKey(),n(h,p.getValue())*ratio);
+            if(h.containsKey("PaymentFreight"))bill=itemTotal+(expense>0?expense:expenses*ratio)+parts.get("PartyAddLessAmount")+parts.get("Freight")+parts.get("Commission")+parts.get("EmptyBagAmount")-parts.get("BrokeryAmount")-parts.get("FreightDeduction");
             var rows=new ArrayList<>(existing.stream().map(PurchaseInvoiceFinancialRules::copy).filter(r->i(r,"PurchaseOrderId")==order).toList());
             if(rows.isEmpty()){var row=copy(null);row.put("PurchaseOrderId",order);row.put("PurchaseOrderNo",items.get(0).get("PurchaseOrder"));row.put("PaymentTermId",h.get("PaymentTermsId"));row.put("DueDays",h.get("DueDays"));rows.add(row);}
             boolean automatic=rows.stream().allMatch(r->n(r,"Amount")<=0&&n(r,"PrcntOfTotal")<=0);
             if(automatic){var row=copy(rows.get(0));row.put("PrcntOfTotal",100);row.put("Amount",bill);row.put("DueDays",Math.max(0,i(h,"DueDays")));row.put("DueDate",date(h.get("DocDate")).plusDays(i(row,"DueDays")).toString());row.put("SystemGeneratedRow",true);rows=new ArrayList<>(List.of(row));}
             for(var row:rows){
-                row.put("NetBillAmount",bill);row.put("ItemAmount",itemTotal);row.put("Expense",expense);
+                row.put("NetBillAmount",bill);row.put("ItemAmount",itemTotal);row.put("Expense",expense>0?expense:expenses*ratio);row.putAll(parts);
                 if(!row.containsKey("PaymentTermId"))row.put("PaymentTermId",row.getOrDefault("PaymentTermsId",h.get("PaymentTermsId")));
                 if(byPercent||rows.size()==1)row.put("Amount",round(Math.max(0,n(row,"PrcntOfTotal"))*bill/100,4));
                 if(row.get("DueDate")==null||s(row,"DueDate").isBlank())row.put("DueDate",date(h.get("DocDate")).plusDays(i(row,"DueDays")).toString());
@@ -38,10 +42,10 @@ public final class PurchaseInvoicePaymentRules {
         if(index<0||index>=rows.size())throw new IllegalArgumentException("Select a payment row");var row=copy(rows.get(index));double otherPercent=0,otherAmount=0;
         for(int j=0;j<rows.size();j++){var other=copy(rows.get(j));if(j!=index&&(i(row,"PurchaseOrderId")==0||i(row,"PurchaseOrderId")==i(other,"PurchaseOrderId"))){otherPercent+=n(other,"PrcntOfTotal");otherAmount+=n(other,"Amount");}}
         double net=n(row,"NetBillAmount");
-        if("PrcntOfTotal".equals(changed)){if(otherPercent+n(row,"PrcntOfTotal")>100.01)throw new IllegalArgumentException("Total percentage cannot exceed 100");row.put("Amount",PurchaseDirectInvoiceCalculations.round(net*n(row,"PrcntOfTotal")/100,4,RoundingMode.HALF_EVEN));}
+        if("PrcntOfTotal".equals(changed)){if(otherPercent+n(row,"PrcntOfTotal")>100.01)throw new IllegalArgumentException("Total % cannot exceed 100");row.put("Amount",PurchaseDirectInvoiceCalculations.round(net*n(row,"PrcntOfTotal")/100,4,RoundingMode.HALF_EVEN));}
         if("Amount".equals(changed)){double value=Math.min(n(row,"Amount"),Math.max(0,net-otherAmount));row.put("Amount",value);row.put("PrcntOfTotal",PurchaseDirectInvoiceCalculations.round(value*100/(net==0?1:net),8,RoundingMode.HALF_EVEN));}
         if("DueDays".equals(changed))row.put("DueDate",docDate.plusDays(i(row,"DueDays")).toString());
-        if("DueDate".equals(changed)){LocalDate due=date(row.get("DueDate"));if(due.isBefore(docDate))throw new IllegalArgumentException("Due Date cannot be before Doc Date");row.put("DueDays",java.time.temporal.ChronoUnit.DAYS.between(docDate,due));}
+        if("DueDate".equals(changed)){LocalDate due=date(row.get("DueDate"));if(due.isBefore(docDate))throw new IllegalArgumentException("Due Date can't be less than Doc Date");row.put("DueDays",java.time.temporal.ChronoUnit.DAYS.between(docDate,due));}
         return row;
     }
 }

@@ -201,11 +201,20 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Purchase Order", "Purchase", "/purchase/purchase-order", "PURCHASE_ORDER", "PURCHASE", 120, 5));
         e.add(new Entry("Inward Gate Pass", "Purchase", "/purchase/inward-gate-pass", "INWARD_GATE_PASS", "PURCHASE", 134, 5));
         e.add(new Entry("Goods Receipt Notes", "Purchase", "/purchase/goods-receipt-notes", "GOODS_RECEIPT_NOTES", "PURCHASE", 121, 5));
-        e.add(new Entry("GRN (Sale Return)", "Purchase", "/purchase/grn-sale-return", "GRN_SALE_RETURN", "PURCHASE", 37, 5));
+        e.add(new Entry("Goods Receipt Notes Direct", "Purchase", "/purchase/grn-direct", "GOODS_RECEIPT_NOTES_DIRECT", "PURCHASE", 129, 5));
+        /* Was 37 - that is GRN's old web DocumentTypeId, not a screen; the real ScreenDefinition row is 866. */
+        e.add(new Entry("GRN (Sale Return)", "Purchase", "/purchase/grn-sale-return", "GRN_SALE_RETURN", "PURCHASE", 866, 5));
+        e.add(new Entry("Stock In Transit", "Purchase", "/purchase/stock-in-transit", "STOCK_IN_TRANSIT", "PURCHASE", 868, 5));
         e.add(new Entry("Purchase Invoice", "Purchase", "/purchase/purchase-invoice", "PURCHASE_INVOICE", "PURCHASE", 122, 5));
         e.add(new Entry("Purchase Invoice Again GRN Direct", "Purchase", "/purchase/purchase-invoice-again-grn-direct", "PURCHASE_INVOICE_GRN_DIRECT", "PURCHASE", 131, 5));
         e.add(new Entry("Purchase Invoice Direct", "Purchase", "/purchase/purchase-invoice-direct", "PURCHASE_INVOICE_DIRECT", "PURCHASE", 117, 5));
         e.add(new Entry("Purchase Invoice Return", "Purchase", "/purchase/purchase-invoice-return", "PURCHASE_INVOICE_RETURN", "PURCHASE", 125, 5));
+        // Purchase Reports, module 52 (were not in the catalog)
+        e.add(new Entry("Purchase Order Report", "Purchase", "/purchase/reports/purchase-order-register", "PURCHASE_ORDER_REPORT", "PURCHASE", 479, 52));
+        e.add(new Entry("Gate Pass Report", "Purchase", "/purchase/reports/inward-gate-pass-register", "PURCHASE_GATE_PASS_REPORT", "PURCHASE", 478, 52));
+        e.add(new Entry("Grn Report", "Purchase", "/purchase/reports/grn-register", "PURCHASE_GRN_REPORT", "PURCHASE", 477, 52));
+        e.add(new Entry("Purchase Report (With Activites)", "Purchase", "/purchase/reports/purchase-invoice-register", "PURCHASE_REPORT_WITH_ACTIVITIES", "PURCHASE", 480, 52));
+        e.add(new Entry("Stock In Transit Report", "Purchase", "/purchase/reports/stock-in-transit", "STOCK_IN_TRANSIT_REPORT", "PURCHASE", 869, 52));
 
         // 6. PRODUCTION (module 18)
         // Ids confirmed from migration/user-rights/reconciliation-input.json, the live dump of

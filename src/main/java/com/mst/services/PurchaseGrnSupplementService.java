@@ -43,9 +43,10 @@ public class PurchaseGrnSupplementService {
             return id>0?writes.breakups(id):jdbc.queryForList("EXEC dbo.Sp_InvGrn_GetAllMethod @Id=?,@Activity='ReadByGPId_InvGrnPurchaseBreakup'",gp);
         }
         var rows=calculateBreakups(supplied,value(header,"PartyWeight"),value(header,"FactoryWeight"),flag(header,"SupplierShortWeightApply"),flag(header,"ScaleShortWeightApply"));
-        if(rows.isEmpty())throw new IllegalArgumentException("Purchase breakup is required for Market Purchase");
+        // InvFrmGRN.Insert :3875-3893, in the desktop's words.
+        if(rows.isEmpty())throw new IllegalArgumentException("Purchase BreakUp Required When Doing Market Purchase Entry");
         for(var row:rows) {
-            if(value(row,"Qty")<=0||value(row,"UOM")<=0)throw new IllegalArgumentException("Quantity and gross pack size are required in purchase breakup");
+            if(value(row,"GrossWeight")==0)throw new IllegalArgumentException("GrossWeight not found in Empty Bags Weight Breakup grid.");
             row.put("InwardGatePassId",gp);
             int inwardRow=number(row.get("InwardBreakupId"));
             if(inwardRow>0&&jdbc.queryForObject("SELECT COUNT(*) FROM dbo.GatePassInwardPurchaseBreakUp WHERE Id=? AND InwardGatePassId=?",Integer.class,inwardRow,gp)!=1)

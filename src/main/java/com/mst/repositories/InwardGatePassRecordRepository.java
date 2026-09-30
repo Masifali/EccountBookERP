@@ -27,13 +27,24 @@ public class InwardGatePassRecordRepository {
     }
 
     public boolean canViewAll() {
+        return hasRight("CanView AllRecord");
+    }
+
+    /** CommonServices.SetRightsValueInRightsObject("InwardGatePass"): tblUserRights rows of this screen. */
+    public boolean hasRight(String right) {
         String role=context.currentRoleName();
-        if ("Admin".equalsIgnoreCase(role)||"Administrator".equalsIgnoreCase(role)) return true;
+        boolean admin="Admin".equalsIgnoreCase(role)||"Administrator".equalsIgnoreCase(role);
+        if (admin && !"Delete".equals(right) && !"View".equals(right)) return true;
         return jdbc.queryForList("EXEC dbo.Sp_tblUserRights_GetAllMethod @UserId=?,@ScreenName=?,"
                 + "@RightName=?,@CompanyId=?,@Activity=?",context.currentUserId(),"InwardGatePass",
                 role==null?"":role,context.currentCompanyId(),"GetByUserId").stream()
-                .anyMatch(r->"CanView AllRecord".equalsIgnoreCase(Objects.toString(r.get("RightName"),"").trim())
+                .anyMatch(r->right.equalsIgnoreCase(Objects.toString(r.get("RightName"),"").trim())
                         && (Boolean.TRUE.equals(r.get("Value"))||"1".equals(Objects.toString(r.get("Value"),""))));
+    }
+
+    /** InwardGatePass_Load: btnsave.Enabled = DoHaveSaveRight, btnupdate.Enabled = DoHaveUpdateRights. */
+    public void requireRight(String right) {
+        if (!hasRight(right)) throw new org.springframework.security.access.AccessDeniedException("You do not have "+right+" permission for Inward Gate Pass");
     }
     private static int number(Object v) { return v instanceof Number?((Number)v).intValue():0; }
     private static ResponseStatusException missing() { return new ResponseStatusException(NOT_FOUND,"Inward Gate Pass not found in your accessible records"); }

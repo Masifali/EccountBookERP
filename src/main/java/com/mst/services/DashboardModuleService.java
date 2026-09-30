@@ -154,6 +154,24 @@ public class DashboardModuleService {
      */
     private static final Map<Integer, String> WEB_ROUTES_BY_SCREEN_ID = new LinkedHashMap<>();
     static {
+        /* Purchase, App 3. Module 5 Supplier Purchases and module 52 Purchase Reports; ids and TargetUrls from
+           dbo.ScreenDefinition. Rechecked / ported 2026-09-30 (129, 868 and 869 are new pages). */
+        WEB_ROUTES_BY_SCREEN_ID.put(120, "/purchase/purchase-order");                  // PurchsaeOrder (41)
+        WEB_ROUTES_BY_SCREEN_ID.put(134, "/purchase/inward-gate-pass");                // InwardGatePass (51)
+        WEB_ROUTES_BY_SCREEN_ID.put(121, "/purchase/goods-receipt-notes");             // InvFrmGRN (46)
+        WEB_ROUTES_BY_SCREEN_ID.put(129, "/purchase/grn-direct");                      // InvFrmGRNDirect (137)
+        WEB_ROUTES_BY_SCREEN_ID.put(866, "/purchase/grn-sale-return");                 // SaleReturnGrn (143)
+        WEB_ROUTES_BY_SCREEN_ID.put(122, "/purchase/purchase-invoice");                // InvfrmPurchaseInvoice (56)
+        WEB_ROUTES_BY_SCREEN_ID.put(131, "/purchase/purchase-invoice-again-grn-direct"); // frmPurchaseInvoiceAgaintGrnDirect (138)
+        WEB_ROUTES_BY_SCREEN_ID.put(117, "/purchase/purchase-invoice-direct");         // InvfrmPurchasedirectInvoice (57)
+        WEB_ROUTES_BY_SCREEN_ID.put(125, "/purchase/purchase-invoice-return");         // InvfrmInvPurchaseInvoiceReturn (59)
+        WEB_ROUTES_BY_SCREEN_ID.put(868, "/purchase/stock-in-transit");                // frmSupplierDispatchPreBill (251)
+        WEB_ROUTES_BY_SCREEN_ID.put(479, "/purchase/reports/purchase-order-register"); // InventoryReports.PurchaseOrderHistory
+        WEB_ROUTES_BY_SCREEN_ID.put(478, "/purchase/reports/inward-gate-pass-register"); // Inventory_Reports.frmGatePassReport
+        WEB_ROUTES_BY_SCREEN_ID.put(477, "/purchase/reports/grn-register");            // Inventory_Reports.frmGRNHistory
+        WEB_ROUTES_BY_SCREEN_ID.put(480, "/purchase/reports/purchase-invoice-register"); // Inventory_Reports.PurchaseRegisterNew
+        WEB_ROUTES_BY_SCREEN_ID.put(869, "/purchase/reports/stock-in-transit");        // SupplierPortal.Reports.frmSupplierDispatchPreBillReport
+
         /* Production, ModuleId 18 */
         WEB_ROUTES_BY_SCREEN_ID.put(281, "/production/job-order");            // frmProductionJobOrderMain
         WEB_ROUTES_BY_SCREEN_ID.put(276, "/production/stock-conversion");     // invfrmStockConversionProduction

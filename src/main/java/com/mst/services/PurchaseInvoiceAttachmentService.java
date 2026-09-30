@@ -20,7 +20,7 @@ public class PurchaseInvoiceAttachmentService {
     private final JdbcTemplate jdbc;private final CurrentUserContext context;
     private final DesktopAttachmentStore store;private final PurchaseInvoiceRecordRepository records;
     public PurchaseInvoiceAttachmentService(JdbcTemplate jdbc,CurrentUserContext context,DesktopAttachmentStore store,PurchaseInvoiceRecordRepository records){this.jdbc=jdbc;this.context=context;this.store=store;this.records=records;}
-    private String screen(int type){return switch(type){case 56->"InvfrmPurchaseInvoice";case 57->"InvfrmPurchasedirectInvoice";case 98->"InvfrmSaleInvoiceReturn";default->throw new IllegalArgumentException("Unsupported invoice attachment form");};}
+    private String screen(int type){return switch(type){case 56->"InvfrmPurchaseInvoice";case 57->"InvfrmPurchasedirectInvoice";case 98->"InvfrmSaleInvoiceReturn";case 59->"InvfrmInvPurchaseInvoiceReturn";case 138->"frmPurchaseInvoiceAgaintGrnDirect";default->throw new IllegalArgumentException("Unsupported invoice attachment form");};}
     public List<Map<String,Object>> list(int id,int type){
         String name=screen(type);records.require(id,type);
         return jdbc.queryForList("EXEC dbo.Sp_DMSAttachments_GetAllMethod @ScreenName=?,@Id=?,@Activity='ReadById'",name,id).stream().map(PurchaseInvoiceFinancialRules::copy)

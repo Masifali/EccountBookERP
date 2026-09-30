@@ -32,7 +32,11 @@ public class PurchaseDirectInvoiceService {
     }
 
     public Map<String, Object> getById(int id) {
-        return records.load(id,57);
+        var result=records.load(id,57);
+        // VoucherHeadIdGet :1240 -> CommonServices.VoucherHeadIdGet(RecId,57), used by btnPrint (118)
+        var v=jdbcTemplate.queryForList("EXEC dbo.Sp_Vouchers_GetMethods @Activity='GetVoucherHeadIdByReferenceDocumentTypeIdandRefEntryId',@OrganizationId=?,@CompanyId=?,@DocumentTypeId=?,@DocumentTypeSrNo=?",currentUser.currentOrganizationId(),currentUser.currentCompanyId(),57,id);
+        result.put("voucherHeadId",v.isEmpty()?0:PurchaseInvoiceFinancialRules.i(PurchaseInvoiceFinancialRules.copy(v.get(0)),"Id"));
+        return result;
     }
 
     @Autowired private PurchaseInvoicePersistenceService persistence;
@@ -54,6 +58,7 @@ public class PurchaseDirectInvoiceService {
         var party=jdbcTemplate.queryForList("SELECT GlAccountId FROM dbo.SupplierCustomer WHERE Id=? AND OrganizationId=? AND CompanyId=?",supplier,header.get("OrganizationId"),header.get("CompanyId"));
         // New documents obtain context in the controller; existing records are scoped above.
         int gl=party.isEmpty()?0:PurchaseInvoiceFinancialRules.i(PurchaseInvoiceFinancialRules.copy(party.get(0)),"GlAccountId");
+        PurchaseDirectInvoiceDesktopRules.journalSupplier(collections.get("journal"),gl);
         PurchaseDirectInvoiceCalculations.bill(header,details,collections.get("expenses"),collections.get("freight"),collections.get("journal"),collections.get("emptyBags"),gl,Boolean.parseBoolean(directLookups.configuration("DebitAmountChargetoExpenseAcFreightGridPurchase")),directLookups.amountDigits());
         return Map.of("billAmount",header.get("BillAmount"),"commAmount",header.get("CommAmount"),"brokeryAmount",header.get("BrokeryAmount"),"details",details);
     }
@@ -66,12 +71,41 @@ public class PurchaseDirectInvoiceService {
         return PurchaseDirectInvoiceCalculations.line(row,Objects.toString(input.get("changed"),""),Boolean.TRUE.equals(input.get("newInvoice")),Boolean.TRUE.equals(input.get("bagsAgainstWeight")),directLookups.equivalent(PurchaseInvoiceFinancialRules.i(row,"ItemUOMId"),item),directLookups.equivalent(PurchaseInvoiceFinancialRules.i(row,"UomScheduleIdRate"),item),directLookups.amountDigits());
     }
 
+    /**
+     * Insert (:3075) / btnUpdate_Click (:3530): the desktop refusals in its order and words (PurchaseDirectInvoiceDesktopRules),
+     * then the shared 56/57 save. Messages as :3472/:3480.
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
     public Map<String, Object> saveDirectInvoice(Map<String, Object> payload) {
-        return persistence.save(payload,57);
+        int id=PurchaseInvoiceFinancialRules.i(payload,"Id");
+        var stored=id>0?records.require(id,57):null;
+        if(stored!=null&&PurchaseDirectInvoiceDesktopRules.approved(stored))throw new IllegalArgumentException("Record Not Update because Record has approved");
+        var h=PurchaseInvoiceFinancialRules.copy(stored);h.putAll(payload);
+        var lists=new HashMap<String,List<Map<String,Object>>>();
+        for(String key:List.of("details","freight","journal","expenses","emptyBags"))
+            lists.put(key,payload.get(key) instanceof List<?> l?((List<Map<String,Object>>)l).stream().map(PurchaseInvoiceFinancialRules::copy).toList():id>0?invoiceWrites.collection(id,key):List.of());
+        boolean freightToExpenses=Boolean.parseBoolean(directLookups.configuration("DebitAmountChargetoExpenseAcFreightGridPurchase"));
+        PurchaseDirectInvoiceDesktopRules.validate(h,lists.get("details"),lists.get("freight"),lists.get("journal"),lists.get("expenses"),lists.get("emptyBags"),freightToExpenses);
+        PurchaseDirectInvoiceDesktopRules.journalSupplier(lists.get("journal"),supplierGl(PurchaseInvoiceFinancialRules.i(h,"SupplierCustomerId")));
+        // :3197 SupplierInvoiceDate = DateTime.Now on save and on update
+        payload.put("SupplierInvoiceDate",new java.sql.Timestamp(System.currentTimeMillis()));
+        var result=new LinkedHashMap<String,Object>(persistence.save(payload,57));
+        result.put("message",id>0?"Record Update Successfully":"Record Saved Successfully");
+        return result;
     }
 
+    private int supplierGl(int supplier){
+        var party=jdbcTemplate.queryForList("SELECT GlAccountId FROM dbo.SupplierCustomer WHERE Id=? AND OrganizationId=? AND CompanyId=?",supplier,currentUser.currentOrganizationId(),currentUser.currentCompanyId());
+        return party.isEmpty()?0:PurchaseInvoiceFinancialRules.i(PurchaseInvoiceFinancialRules.copy(party.get(0)),"GlAccountId");
+    }
+
+    @Autowired private com.mst.security.CurrentUserContext currentUser;
+
+    /** btnDelete_Click :3699 - approved records are refused; RemoveByID -> Sp_InvoicesVouchersandStocksDelete. */
     @Transactional
     public boolean deleteDirectInvoice(int id) {
+        if(PurchaseDirectInvoiceDesktopRules.approved(records.require(id,57)))throw new IllegalArgumentException("Record Not Delete because Record has approved");
         records.delete(id,57);
         return true;
     }

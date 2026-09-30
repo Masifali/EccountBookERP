@@ -1,7 +1,10 @@
-
+    /* Inward Gate Pass (screen 134, DocumentTypeId 51) - Architecture.WinApp.Purchase/InwardGatePass.cs.
+       Line references below are to that file. */
     const context = { documentTypeId: 51 };
-    let loadedHeader={}, loadedDetails=[], loadedBreakups=[], lookupData={}, driverBioId=0, formGeneration=0, orderGeneration=0;
+    let loadedHeader={}, loadedBreakups=[], lookupData={}, driverBioId=0, formGeneration=0, orderGeneration=0;
     let breakupLocked=false, netPaidEdited=false, driverGeneration=0, transitGeneration=0, transitRows=[];
+    let poId=0;                 // POId
+    let actionIdForSpecialApproval=0;
     const field=id=>document.getElementById(id);
     const numeric=id=>Number(field(id).value)||0;
     const caption=id=>field(id).selectedOptions[0]?.textContent.trim()||'';
@@ -26,624 +29,724 @@
         try {
             setDefaultDates(); await loadDropdowns();
             const id=Number(new URLSearchParams(location.search).get('id'));
-            if(id>0) await loadRecordAndEdit(id); else await onNewRecord();
+            if(id>0) await loadRecordAndEdit(id); else { await onNewRecord(); field('cmbWeighBridge').disabled=true; /* designer: Enabled=false until Reset */ }
             await loadMainHistoryGrid();
         } catch(error) { showRequestError(error); }
     });
 
     function setDefaultDates() {
         const today = localStamp().split('T')[0];
-        document.getElementById('txtgpdate').value = today;
-        document.getElementById('txtBiltyDate').value = today;
-        document.getElementById('txtFromPoDate').value = today;
-        document.getElementById('txtToPoDate').value = today;
-
-        const threeDaysAgo = new Date();
-        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        field('txtgpdate').value = today;
+        field('txtBiltyDate').value = today;
+        field('txtToPoDate').value = today;
+        const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
         const threeDaysAgoIso = localStamp(threeDaysAgo).split('T')[0];
-        document.getElementById('txtHistFromDate').value = threeDaysAgoIso;
-        document.getElementById('txtHistToDate').value = today;
-
+        field('txtHistFromDate').value = threeDaysAgoIso;   // txtFromDateHistory = Now - 3 days
+        field('txtHistToDate').value = today;
+        field('txtFromPoDate').value = threeDaysAgoIso;     // FromDateHistoryPoInfo = Now - 3 days (OrderTypeFill)
         const nowIso = localStamp().slice(0, 16);
-        document.getElementById('txtintime').value = nowIso;
-        document.getElementById('txtouttime').value = nowIso;
+        field('txtintime').value = nowIso;
+        field('txtouttime').value = nowIso;
     }
 
     function loadDropdowns() {
-        const selected=Object.fromEntries(['cmbsupp','cmbcity','cmbvehicletype','cmbgptype','CmbVariety','cmbWeighBridge','CmbPackingType','CmbOrderType','CmbStatus'].map(id=>[id,field(id).value]));
+        const selected=Object.fromEntries(['cmbcity','cmbvehicletype','cmbgptype','cmbWeighBridge','CmbPackingType','CmbOrderType','CmbStatus'].map(id=>[id,field(id).value]));
         return igpFetch('/api/inward-gate-pass/dropdowns')
             .then(res => res.json())
             .then(data => {
                 lookupData=data;
                 bindSelect('CmbOrderType',data.orderTypes,'id','name');
-                bindSelect('cmbsupp', data.suppliers, 'id', 'name');
                 bindSelect('cmbcity', data.cities, 'id', 'name');
                 bindSelect('cmbvehicletype', data.vehicleTypes, 'id', 'name');
                 bindSelect('cmbgptype', data.gatePassTypes, 'id', 'name');
-                bindSelect('CmbVariety', data.items, 'id', 'name');
                 bindSelect('cmbWeighBridge', data.weighBridges, 'id', 'name');
                 bindSelect('CmbPackingType', data.packingTypes, 'id', 'name');
                 bindSelect('CmbStatus', data.statuses, 'id', 'name');
                 bindSelect('cmbTransitVehicle', data.transitVehicles, 'id', 'name');
-                bindSelect('cmbHistSupplier', data.suppliers, 'id', 'name');
-                bindSelect('cmbSupplierNamePoInfo', data.suppliers, 'id', 'name');
+                bindSelect('cmbHistSupplier', data.historySuppliers, 'id', 'name');        // HistoryComboFill
+                bindSelect('cmbSupplierNamePoInfo', data.poSuppliers, 'id', 'name');      // OrderInformationComboFill
                 bindSelect('CmbDocumentTypePoInfo', data.documentTypes, 'id', 'name');
+                field('tabBtnPoInfo').style.display=data.poInfoDocumentTypeId?'':'none';  // tabPage4 only for 41/1500
+                field('PanelBreakup').style.display=data.showPurchaseBreakup?'':'none';   // PanelBreakup only for 105
+                field('lblIsApproved').style.display=data.canApprove?'':'none';          // ChkIsApproved.Visible
+                field('btnsave').disabled=!data.canSave; field('btnupdate').disabled=!data.canUpdate; field('btnPrint').disabled=!data.canPrint;
 
-                if(field('cmbgptype').options.length>2) field('cmbgptype').selectedIndex=2;
-                if(field('cmbcity').options.length>1) field('cmbcity').selectedIndex=1;
+                if(field('cmbgptype').options.length>2) field('cmbgptype').selectedIndex=2;          // gatepasstype(): Rows[2]
+                if(field('cmbcity').options.length>1) field('cmbcity').selectedIndex=1;              // CityFill(): Rows[1]
+                if(Number(data.defaultCityId)>0) field('cmbcity').value=String(data.defaultCityId);  // config "City Area"
                 if(field('cmbvehicletype').options.length>1) field('cmbvehicletype').selectedIndex=1;
-                // Desktop OrderTypeFill activates row 1 after its blank row, preserving procedure order.
-        if(field('CmbOrderType').options.length>1) field('CmbOrderType').selectedIndex=1;
-                selectDefaultByText('CmbStatus', ['Open']);
-                selectDefaultByText('cmbWeighBridge', ['Auto']);
+                if(field('CmbOrderType').options.length>1) field('CmbOrderType').selectedIndex=1;    // OrderTypeFill(): Rows[1]
+                if(field('CmbStatus').options.length) field('CmbStatus').value='Open';
+                if(field('cmbWeighBridge').options.length>1) field('cmbWeighBridge').selectedIndex=1;
                 for(const [id,value] of Object.entries(selected)) if(value && Array.from(field(id).options).some(o=>o.value===value)) field(id).value=value;
             });
     }
 
     function bindSelect(elemId, list, valKey, textKey) {
-        const sel = document.getElementById(elemId);
+        const sel = field(elemId);
         if (!sel) return;
         sel.innerHTML = '<option value="">-- Select --</option>';
-        if (list) {
-            list.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item[valKey];
-                opt.textContent = item[textKey];
-                sel.appendChild(opt);
-            });
-        }
+        (list||[]).forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item[valKey];
+            opt.textContent = item[textKey];
+            sel.appendChild(opt);
+        });
     }
 
     function switchViewMode(mode) {
-        const viewForm = document.getElementById('viewForm');
-        const viewHistory = document.getElementById('viewHistory');
-        const btnForm = document.getElementById('btnModeForm');
-        const btnHist = document.getElementById('btnModeHistory');
-        const lblTitle = document.getElementById('lblFormHeaderTitle');
-
-        if (mode === 'History') {
-            viewForm.style.display = 'none';
-            viewHistory.style.display = 'block';
-            btnForm.classList.remove('active');
-            btnHist.classList.add('active');
-            lblTitle.textContent = 'Inward Gate Pass History';
-            executeFullHistorySearch();
-        } else {
-            viewForm.style.display = 'block';
-            viewHistory.style.display = 'none';
-            btnForm.classList.add('active');
-            btnHist.classList.remove('active');
-            lblTitle.textContent = 'Inward Gate Pass';
-        }
+        const history = mode === 'History';
+        field('viewForm').style.display = history ? 'none' : 'block';
+        field('viewHistory').style.display = history ? 'block' : 'none';
+        field('btnModeForm').classList.toggle('active', !history);
+        field('btnModeHistory').classList.toggle('active', history);
+        field('lblFormHeaderTitle').textContent = history ? 'Inward Gate Pass History' : 'Inward Gate Pass';
+        if (history) field('txtHistFromDate').focus();   // tabControl1_SelectedIndexChanged: focus only, no search
     }
 
-    function onSwitchToFormNew() {
-        switchViewMode('Form');
-        onNewRecord();
-    }
+    function onSwitchToFormNew() { switchViewMode('Form'); return onNewRecord(); }
 
-    function selectDefaultByText(elemId, targetTexts) {
-        const sel = document.getElementById(elemId);
-        if (!sel || sel.options.length <= 1) return;
-        for (let text of targetTexts) {
-            for (let i = 0; i < sel.options.length; i++) {
-                if (sel.options[i].text.toLowerCase().includes(text.toLowerCase())) {
-                    sel.selectedIndex = i;
-                    return;
-                }
-            }
-        }
-        if (sel.options.length > 1) sel.selectedIndex = 1;
-    }
-
+    /* Reset() :2900 */
     function onNewRecord() {
         const generation=++formGeneration; ++orderGeneration;
-        loadedHeader={}; loadedDetails=[]; loadedBreakups=[emptyBreakup()]; driverBioId=0; breakupLocked=false; netPaidEdited=false;
-        renderBreakups(); bindSelect('cmbTransitVehicle',[],'id','name');
+        loadedHeader={}; loadedBreakups=[emptyBreakup()]; driverBioId=0; breakupLocked=false; netPaidEdited=false; poId=0; actionIdForSpecialApproval=0;
+        renderBreakups(); bindSelect('cmbTransitVehicle',[],'id','name'); transitRows=[];
         document.querySelectorAll('#viewForm input:not([type="radio"]):not([type="checkbox"])').forEach(input=>input.value=input.defaultValue||'');
         setDefaultDates();
-        bindSelect('cmbsupp',lookupData.suppliers,'id','name'); bindSelect('CmbVariety',lookupData.items,'id','name');
-        document.getElementById('txtId').value = '0';
-        document.getElementById('cmbsupp').value = '';
-        document.getElementById('CmbVariety').value = '';
-        document.getElementById('txtvehicleno').value = '';
-        document.getElementById('txtqty').value = '0';
-        document.getElementById('txtPackUnit').value = '60';
-        document.getElementById('txtWeight').value = '0';
-        document.getElementById('txtfreight').value = '0';
-        document.getElementById('txtAdvanceByParty').value = '0';
-        document.getElementById('txtAdvanceByFactory').value = '0';
-        document.getElementById('txtTotalPayablesFreight').value = '0';
-        document.getElementById('txtNetPaid').value = '0';
-        document.getElementById('txtFactoryWeight').value = '0';
-        document.getElementById('txtSupplierFirstWeight').value = '0';
-        document.getElementById('txtsecondWeight').value = '0';
-        document.getElementById('txtSupplierSecondWeight').value = '0';
-
+        field('txtId').value='0';
+        for (const id of ['txtqty','txtPackUnit','txtfreight','txtAdvanceByParty','txtAdvanceByFactory','txtTotalPayablesFreight','txtNetPaid',
+                          'txtSupplierNetWeight','txtSupplierFirstWeight','txtSupplierSecondWeight','txtFactoryWeight','txtsecondWeight','txtFactoryNetWeight',
+                          'txtDifferenceWeight','txtWeighBridgeSlipNo','txtremarks','txtAccessWeight','txtvehicleno','txtbiltyno','txtWeightDiffRemarks']) field(id).value='';
+        field('txtWeight').value='0';
+        field('rowWeightDiffRemarks').style.display='none';
+        for (const id of ['txtSupplierNetWeight','txtfreight','txtNetPaid','txtAdvanceByFactory','txtAdvanceByParty','CmbOrderType','txtPackUnit','CmbOrderno','cmbWeighBridge','txtvehicleno','txtSupplierFirstWeight','txtSupplierSecondWeight']) field(id).disabled=false;
+        field('cmbTransitVehicle').disabled=true;
+        field('RadGrnFormToOpenOnInsert').style.display='none';
+        if (field('RadGrnFormToOpenOnInsert').checked) document.querySelector('input[name="formMode"][value="None"]').checked=true;
+        field('ChkIsApproved').checked=true; field('ChkIsApproved').disabled=false;
         resetDriverInfoFields();
-        field('cmbWeighBridge').disabled=false;
-
-        if(field('cmbgptype').options.length>2) field('cmbgptype').selectedIndex=2;
-        if(field('cmbcity').options.length>1) field('cmbcity').selectedIndex=1;
-        if(field('cmbvehicletype').options.length>1) field('cmbvehicletype').selectedIndex=1;
-        // Desktop OrderTypeFill activates row 1 after its blank row, preserving procedure order.
         if(field('CmbOrderType').options.length>1) field('CmbOrderType').selectedIndex=1;
-        selectDefaultByText('CmbStatus', ['Open']);
-        selectDefaultByText('cmbWeighBridge', ['Auto']);
-
-        calculateNetWeights();
-        calculateFreight();
-
-        document.getElementById('btnsave').style.display = 'inline-flex';
-        document.getElementById('btnupdate').style.display = 'none';
-
-        return igpFetch('/api/inward-gate-pass/generate-no?gatepassType='+encodeURIComponent(caption('cmbgptype')))
-            .then(res => res.json())
-            .then(data => {
+        if(field('CmbStatus').options.length) field('CmbStatus').value='Open';
+        if(field('cmbWeighBridge').options.length>1) field('cmbWeighBridge').selectedIndex=1;
+        field('CmbPackingType').value='';
+        field('btnsave').style.display='inline-flex';
+        field('btnupdate').style.display='none';
+        applyOrderType(true);               // the operator tabs through CmbOrderType -> CmbOrderType_Leave
+        field('CmbOrderno').value='0';      // Reset: CmbOrderno.Text = "0" (after the Rows[1] activation)
+        if ([105,106,98,52,241,204].includes(numeric('CmbOrderType'))) field('CmbOrderno').value=field('txtgpno').value;
+        calculateWeight(); calculateNetWeights(); calculateFreight();
+        return Promise.all([
+            igpFetch('/api/inward-gate-pass/generate-no?gatepassType='+encodeURIComponent(caption('cmbgptype'))).then(res=>res.json()).then(data=>{
                 if(generation!==formGeneration) return;
-                document.getElementById('txtgpno').value = data.gpSrNo ?? ''; 
-                document.getElementById('txtgptypeno').value = data.gpTypeSrNo ?? '';
-            });
+                field('txtgpno').value = data.gpSrNo || '';
+                field('txtgptypeno').value = data.gpTypeSrNo || '';
+                if ([105,106,98,52,241,204].includes(numeric('CmbOrderType'))) { field('CmbOrderno').value=field('txtgpno').value; poId=numeric('txtgpno'); }
+                if ([175,700].includes(numeric('CmbOrderType'))) poId=numeric('txtgpno');
+            })
+        ]).then(()=>{ field('txtgpdate').focus(); });
     }
 
+    /* WeightComparedPoWtCalculation :4106 */
     function calculateWeight() {
-        const qty = parseFloat(document.getElementById('txtqty').value) || 0;
-        const packUnit = parseFloat(document.getElementById('txtPackUnit').value) || 0;
-        document.getElementById('txtWeight').value = (qty * packUnit).toFixed(2);
+        const qty = parseFloat(field('txtqty').value) || 0;
+        const packUnit = parseFloat(field('txtPackUnit').value) || 0;
+        field('txtWeight').value = qty>0 && packUnit>0 ? String(qty * packUnit) : '0';
     }
 
+    /* FreightCalculations :4210 */
     function calculateFreight() {
-        const biltyFreight = parseFloat(document.getElementById('txtfreight').value) || 0;
-        const advParty = parseFloat(document.getElementById('txtAdvanceByParty').value) || 0;
-        const advFactory = parseFloat(document.getElementById('txtAdvanceByFactory').value) || 0;
-        const totalPayable = biltyFreight - advParty - advFactory;
-        document.getElementById('txtTotalPayablesFreight').value = totalPayable.toFixed(2);
-        if(!netPaidEdited) document.getElementById('txtNetPaid').value = totalPayable.toFixed(2);
+        const totalPayable = (parseFloat(field('txtfreight').value) || 0) - (parseFloat(field('txtAdvanceByParty').value) || 0) - (parseFloat(field('txtAdvanceByFactory').value) || 0);
+        field('txtTotalPayablesFreight').value = String(totalPayable);
+        if(!netPaidEdited) field('txtNetPaid').value = String(totalPayable);
     }
 
+    /* CalculateSupplierNetWeight :5438 and CalculateDifferenceWeights :5503 */
     function calculateNetWeights() {
-        const factLoad = parseFloat(document.getElementById('txtFactoryWeight').value) || 0;
-        const factTare = parseFloat(document.getElementById('txtsecondWeight').value) || 0;
-        const supLoad = parseFloat(document.getElementById('txtSupplierFirstWeight').value) || 0;
-        const supTare = parseFloat(document.getElementById('txtSupplierSecondWeight').value) || 0;
-        if(supLoad>0 || supTare>0) field('txtSupplierNetWeight').value=Math.abs(supLoad-supTare).toFixed(3);
+        const factLoad = parseFloat(field('txtFactoryWeight').value) || 0;
+        const factTare = parseFloat(field('txtsecondWeight').value) || 0;
+        const supLoad = parseFloat(field('txtSupplierFirstWeight').value) || 0;
+        const supTare = parseFloat(field('txtSupplierSecondWeight').value) || 0;
+        if(supLoad>0 || supTare>0) field('txtSupplierNetWeight').value=String(Math.round(Math.abs(supLoad-supTare)*1000)/1000);
         const supNet=numeric('txtSupplierNetWeight'), factNet=numeric('txtFactoryNetWeight');
-        field('txtFirstWtDifference').value=Math.abs(supLoad-factLoad).toFixed(3);
-        field('txtSecondWtDifference').value=Math.abs(supTare-factTare).toFixed(3);
-        field('txtDifferenceWeight').value=Math.abs(supNet-factNet).toFixed(3);
+        field('txtFirstWtDifference').value=String(Math.abs(factLoad-supLoad));
+        field('txtSecondWtDifference').value=String(Math.abs(factTare-supTare));
+        field('txtDifferenceWeight').value=String(Math.abs(factNet-supNet));
     }
 
+    /* txtSupplierWeight_TextChanged :4071 - typing the supplier net weight zeroes the load/tare weights */
     function onSupplierNetInput() {
         field('txtSupplierFirstWeight').value=0; field('txtSupplierSecondWeight').value=0;
         calculateNetWeights();
     }
 
+    /* txtvehicleno_TextChanged (upper case) and txtvehicleno_Leave (insert the dash after the leading letters) */
+    function onVehicleNoInput(input) { const pos=input.selectionStart; input.value=input.value.toUpperCase(); try { input.setSelectionRange(pos,pos); } catch(_) {} }
+    function onVehicleNoLeave() {
+        let text=field('txtvehicleno').value.trim().toUpperCase(); if(!text) return;
+        if(!text.includes('-')) { const letters=(text.match(/^[A-Z]*/)||[''])[0].length; if(letters>=1 && letters<=6) text=text.slice(0,letters)+'-'+text.slice(letters); }
+        field('txtvehicleno').value=text;
+    }
+
     const driverFields=['txtCNIC','txtDriverCellNo','txtWhatsAppNo','txtAlternateCellNo','txtDriverName','txtFatherName','txtFatherCNIC'];
     function setDriverLocked(locked) { driverFields.forEach(id=>field(id).disabled=locked); }
+    /* txtCNIC_Leave :5671 / txtDriverCellNo_Leave :5698 */
     async function lookupDriver(kind,control) {
         const value=field(control).value.trim(), generation=++driverGeneration, form=formGeneration;
-        if(!value) { driverBioId=0; setDriverLocked(false); return; }
+        if(!value) { setDriverLocked(false); return; }
         try {
             const bio=await (await igpFetch('/api/inward-gate-pass/driver-bio/'+kind+'?'+new URLSearchParams({[kind]:value}))).json();
             if(generation!==driverGeneration || form!==formGeneration || field(control).value.trim()!==value) return;
-            driverBioId=Number(bio?.Id)||0; setDriverLocked(driverBioId>0);
-            if(!bio) return;
+            if(!bio || !Number(bio.Id)) { setDriverLocked(false); return; }
+            driverBioId=Number(bio.Id); setDriverLocked(true);
             const map={txtCNIC:'CnicNo',txtDriverCellNo:'DriverCellNo',txtWhatsAppNo:'WhatsappNo',txtAlternateCellNo:'AlternateCellNo',txtDriverName:'DriverName',txtFatherName:'FatherName',txtFatherCNIC:'FatherCnicNo'};
             for(const [id,key] of Object.entries(map)) field(id).value=bio[key]||'';
         } catch(error) { showRequestError(error); }
     }
-
     function lookupDriverByCnic() { return lookupDriver('cnic','txtCNIC'); }
     function lookupDriverByCell() { return lookupDriver('cell','txtDriverCellNo'); }
 
+    /* btnResetDriverInfo_Click :5725 -> ResetDriverFields + DriverFieldsDisableOrEnable(true) */
     function resetDriverInfoFields() {
         driverBioId=0; ++driverGeneration; setDriverLocked(false);
-        document.getElementById('txtCNIC').value = '';
-        document.getElementById('txtDriverCellNo').value = '';
-        document.getElementById('txtWhatsAppNo').value = '';
-        document.getElementById('txtAlternateCellNo').value = '';
-        document.getElementById('txtDriverName').value = '';
-        document.getElementById('txtFatherName').value = '';
-        document.getElementById('txtFatherCNIC').value = '';
+        driverFields.forEach(id=>field(id).value='');
     }
 
+    /* ---------------- Purchase type / gate-pass type / order number ---------------- */
 
-    /* ==================================================================================
-       The four linked screens on the status strip - InwardGatePass.cs.
+    /* cmbgptype_Leave :1647 - every item (ReadAllItemsIncludedPM) unless the type is 41 or 700 (then the order's items stay). */
+    function bindAllItems() {
+        if ([700,41].includes(numeric('CmbOrderType'))) return;
+        const keep=field('CmbVariety').value;
+        bindSelect('CmbVariety',lookupData.items,'id','name');
+        if (keep && Array.from(field('CmbVariety').options).some(o=>o.value===keep)) field('CmbVariety').value=keep; else field('CmbVariety').value='';
+    }
 
-       Each desktop handler wraps the open in FormHelper.CanOpenForm("<ScreenName>", ...), a
-       per-user screen-rights check. Navigating here hits the web route, whose own controller and
-       security apply, so the check is not duplicated client-side - a client-side one would be
-       decoration anyway.
+    /* CmbOrderType_Leave :1583 */
+    function applyOrderType(fromReset) {
+        const type=numeric('CmbOrderType'), keepSupplier=field('cmbsupp').value;
+        field('txtSupplierNetWeight').disabled=false;
+        field('cmbTransitVehicle').disabled=true;
+        field('CmbOrderno').value=''; field('CmbOrderno').disabled=false;
+        poId=0;
+        bindSelect('cmbsupp',[],'id','name');
+        const bindParties=list=>{ bindSelect('cmbsupp',list,'id','name'); if(keepSupplier && Array.from(field('cmbsupp').options).some(o=>o.value===keepSupplier)) field('cmbsupp').value=keepSupplier; };
+        if ([105,106,98,52].includes(type)) {
+            poId=numeric('txtgpno'); field('CmbOrderno').value=field('txtgpno').value.trim(); field('CmbOrderno').disabled=true;
+            bindParties(type!==98?lookupData.suppliers:lookupData.saleInvoiceParties);   // BindLocalSupplierCustomer / BindCustomerAgainstSaleInvoice
+            bindAllItems();
+        }
+        if ([241,204].includes(type)) {
+            poId=numeric('txtgpno'); field('CmbOrderno').value=field('txtgpno').value.trim(); field('CmbOrderno').disabled=true;
+            bindParties(lookupData.allSupplierCustomers);                                  // BindAllSupplierCustomer
+            bindAllItems();
+        }
+        if ([175,700].includes(type)) { poId=numeric('txtgpno'); bindParties(lookupData.suppliers); }
+        if (type!==105) { field('txtAdvanceByFactory').disabled=false; field('txtAdvanceByParty').disabled=false; }
+        else { field('txtAdvanceByFactory').value='0'; field('txtAdvanceByParty').value='0'; field('txtAdvanceByFactory').disabled=true; field('txtAdvanceByParty').disabled=true; calculateFreight(); }
+        if (type===41) field('cmbTransitVehicle').disabled=false;
+        if (!fromReset) loadTransitVehicles().catch(showRequestError);
+    }
+    function onOrderTypeChange() { ++orderGeneration; applyOrderType(false); }
 
-       Grn Form is conditional on the desktop (:3843-3863):
-           CmbOrderType.Text == "Purchase_Order_PM"  ->  GrnPackingMaterial
-           otherwise                                  ->  InvFrmGRN
-       The web has no Packing Material GRN screen yet, so that branch says so rather than opening
-       the wrong GRN.
-       ================================================================================== */
+    /* cmbgptype.ValueChanged -> cmbgptype_Leave_1 :809 (next number of the type, also while editing) and Leave -> cmbgptype_Leave */
+    function onGpTypeChange() {
+        const generation=formGeneration, type=caption('cmbgptype');
+        bindAllItems();
+        if(!type) return Promise.resolve();
+        return igpFetch('/api/inward-gate-pass/generate-no?gatepassType='+encodeURIComponent(type)).then(r=>r.json()).then(data=>{
+            if(generation!==formGeneration || type!==caption('cmbgptype')) return;
+            if(Number(data.gpTypeSrNo)>0) field('txtgptypeno').value=data.gpTypeSrNo; else alert('Please GatePass Type Select');
+        }).catch(showRequestError);
+    }
+    function onItemChange() { }
+
+    /* CmbOrderno_Leave :1099 */
+    function onOrderNumberLeave() {
+        const generation=++orderGeneration, number=parseInt(field('CmbOrderno').value,10)||0, type=numeric('CmbOrderType'), gpType=caption('cmbgptype');
+        if (gpType==='Export Return' || field('CmbOrderno').disabled) return Promise.resolve();
+        if (![41,700,1500].includes(type)) {
+            if ([175,104,232,236].includes(type)) alert('The '+caption('CmbOrderType')+' order lookup of the desktop form (stock receiving / supply / import contract) has not been ported to this page.');
+            return Promise.resolve();
+        }
+        if (gpType==='Export' || gpType==='Import') return Promise.resolve();
+        const clear=()=>{ poId=0; bindSelect('cmbsupp',[],'id','name'); field('CmbOrderno').value=''; bindSelect('CmbVariety',[],'id','name'); };
+        return igpFetch('/api/inward-gate-pass/order-party-items?'+new URLSearchParams({documentTypeId:type,number,date:field('txtgpdate').value,gatePassId:numeric('txtId')})).then(r=>r.json()).then(async rows=>{
+            if(generation!==orderGeneration) return;
+            if(!rows.length) clear();
+            else {
+                poId=Number(rows[0].PurchaseOrderId)||0;
+                if (type!==700 && rows[0].OrderCategoryName) { setCaption('cmbgptype',rows[0].OrderCategoryName); onGpTypeChange(); }
+                bindSelect('cmbsupp',rows,'Id','CompanyName'); field('cmbsupp').selectedIndex=1;
+                bindSelect('CmbVariety',rows,type===1500?'ItemId':'ItemId','ItemName'); field('CmbVariety').selectedIndex=1;
+                if (type===1500) field('cmbcity').value=String(rows[0].CityId??''); else setCaption('cmbcity',rows[0].CityArea);
+            }
+            if (type===41) { field('cmbTransitVehicle').disabled=false; await loadTransitVehicles(); }   // PreBillNoFill(supplier, POId)
+        }).catch(error=>{ clear(); showRequestError(error); });
+    }
+
+    /* cmbsupp_Leave :5407 */
+    function onSupplierChange() {
+        if (numeric('cmbsupp')>0 || poId>0) return loadTransitVehicles().catch(showRequestError);
+        transitRows=[]; bindSelect('cmbTransitVehicle',[],'id','name'); return Promise.resolve();
+    }
+
+    /* PreBillNoFill :726 - SupplierDispatch_GetNoForGpandGrn(org, company, PartyId, 0, RecId, 0, OrderId) */
+    async function loadTransitVehicles(selectedId=numeric('cmbTransitVehicle')) {
+        const generation=++transitGeneration, form=formGeneration;
+        const supplierId=numeric('cmbsupp'), orderId=poId;
+        if(!supplierId && !orderId) { transitRows=[]; bindSelect('cmbTransitVehicle',[],'id','name'); return; }
+        const rows=await (await igpFetch('/api/inward-gate-pass/transit-vehicles?'+new URLSearchParams({supplierId,orderId,gatePassId:numeric('txtId')}))).json();
+        if(generation!==transitGeneration || form!==formGeneration) return;
+        transitRows=rows; bindSelect('cmbTransitVehicle',rows,'id','name'); field('cmbTransitVehicle').value=selectedId||'';
+        if (rows.length) onTransitVehicleChange();
+    }
+    /* CmbSupplierDispatchedPreBillNo_Leave :5366 */
+    function onTransitVehicleChange() {
+        const row=transitRows.find(r=>Number(r.id)===numeric('cmbTransitVehicle')); if(!row)return;
+        if(String(row.VehicleNo||'').trim()) field('txtvehicleno').value=row.VehicleNo;
+        if(String(row.BiltyNo||'').trim()) field('txtbiltyno').value=row.BiltyNo;
+        if(Number(row.CityId)>0) field('cmbcity').value=row.CityId;
+        if(Number(row.Freight)>0) { field('txtfreight').value=Math.round(Number(row.Freight)); if(Number(row.AdvanceFreight)>0) field('txtAdvanceByParty').value=Math.round(Number(row.AdvanceFreight)); }
+        calculateFreight();
+    }
+
+    /* ---------------- linked screens (status strip) ---------------- */
     var IGP_LINKED_FORMS = {
-        /* InvLabPurchaseAnalysis  (RadPurchaseLabFormToOpenOnInsert_Click, :3816) */
-        LabAnalysis:    { url: '/quality/purchase-analysis', label: 'Lab Purchase Analysis' },
-        /* frmWeightbridge         (RadWBFormToOpenOnInsert_Click, :3827) */
-        WeightBridge:   { url: '/weighbridge/weight-bridge', label: 'Weigh Bridge' },   /* screen 411 page; '/weighbridge' is now the application hub */
-        /* InvFrmGRN               (RadGrnFormToOpenOnInsert_Click, :3843) */
-        Grn:            { url: '/purchase/goods-receipt-notes', label: 'GRN' },
-        /* FreightVoucher          (FreightVoucherFormToOpen_Click, :3865) */
-        FreightVoucher: { url: '/accounts/vouchers/freight', label: 'Freight Voucher' }
+        LabAnalysis:    { url: '/quality/purchase-analysis', label: 'Lab Purchase Analysis' },   /* InvLabPurchaseAnalysis :3816 */
+        WeightBridge:   { url: '/weighbridge/weight-bridge', label: 'Weigh Bridge' },            /* frmWeightbridge :3826 */
+        Grn:            { url: '/purchase/goods-receipt-notes', label: 'GRN' },                  /* InvFrmGRN :3843 */
+        FreightVoucher: { url: '/accounts/vouchers/freight', label: 'Freight Voucher' }          /* FreightVoucher :3865 */
     };
-
-    /* Opens the target screen in a new tab, the way the desktop opens a second form rather than
-       replacing the one you are on - the gate pass you are entering is not lost. */
     function igpOpenLinkedForm(key, gatePassId) {
         var target = IGP_LINKED_FORMS[key];
         if (!target) return false;
-
-        if (key === 'Grn') {
-            var ot = document.getElementById('CmbOrderType');
-            var otText = ot && ot.selectedOptions && ot.selectedOptions.length
-                       ? ot.selectedOptions[0].textContent.trim() : '';
-            if (otText === 'Purchase_Order_PM') {
-                alert('Order Type is Purchase_Order_PM, which opens the Packing Material GRN on the '
-                    + 'desktop (GrnPackingMaterial). That screen has not been built yet, so the '
-                    + 'ordinary GRN was NOT opened in its place.');
-                return false;
-            }
+        if (key === 'Grn' && caption('CmbOrderType') === 'Purchase_Order_PM') {
+            alert('Order Type is Purchase_Order_PM, which opens the Packing Material GRN on the desktop (GrnPackingMaterial). That screen has not been built yet, so the ordinary GRN was NOT opened in its place.');
+            return false;
         }
-
         var url = target.url;
-        /* OpenLinkformOnInsert passes the new GatePassId to the target so it opens already
-           filtered to this gate pass. Only sent when there is one. */
-        if (gatePassId) {
-            url += (url.indexOf('?') >= 0 ? '&' : '?') + 'gatePassId=' + encodeURIComponent(gatePassId);
-        }
+        if (gatePassId) url += (url.indexOf('?') >= 0 ? '&' : '?') + 'gatePassId=' + encodeURIComponent(gatePassId);
         window.open(url, '_blank', 'noopener');
         return false;
     }
-
-    /* OpenLinkformOnInsert(GatePassId, Status) - :3897-3915. Called after a SUCCESSFUL save.
-       Note the Grn branch alone also requires Status == "Accepted", and that after opening the
-       Grn form the desktop resets the selection to None (:3796-3799). Both reproduced. */
+    /* OpenLinkformOnInsert(GatePassId, Status) :4027 - the Grn branch also needs Status == "Accepted" */
     function igpOpenLinkedFormAfterSave(gatePassId, status) {
         var sel = document.querySelector('input[name="formMode"]:checked');
         var mode = sel ? sel.value : 'None';
         if (mode === 'None') return;
         if (mode === 'Grn' && String(status || '').trim() !== 'Accepted') return;
         igpOpenLinkedForm(mode, gatePassId);
-        if (mode === 'Grn') {
-            var none = document.querySelector('input[name="formMode"][value="None"]');
-            if (none) none.checked = true;
-        }
     }
 
-    function onSaveRecord() {
+    /* ---------------- Save / Update ---------------- */
+    async function onSaveRecord() {
+        const updating=numeric('txtId')>0;
+        if (field(updating?'btnupdate':'btnsave').disabled) return;
+        if (updating && [204,241].includes(numeric('CmbOrderType')) && !numeric('CmbVariety')) { alert('Please select Variety First'); return; }
+        // formvalidation(): the one MessageBox question in it (short vehicle number, :1725); the rest is checked by the server.
+        const vehicle=field('txtvehicleno').value.trim().toUpperCase();
+        const parts=/^[A-Z]{1,6}-\d{1,6}$/.test(vehicle)?vehicle.split('-'):null;
+        if (parts && (parts[0].length<=2 || parts[1].length<=2) && !confirm('The vehicle number is unusually short (letters or digits ≤ 2).\nAre you sure you want to proceed?')) { field('txtvehicleno').focus(); return; }
+        if (updating) {   // btnupdate_Click :3627 shows the remarks box whenever factory weight exceeds supplier weight
+            if (numeric('txtFactoryNetWeight')>numeric('txtSupplierNetWeight')) field('rowWeightDiffRemarks').style.display='';
+        }
         const payload = {
-            ...loadedHeader,
-            id: parseInt(document.getElementById('txtId').value) || 0,
+            id: numeric('txtId'),
             documentTypeId: context.documentTypeId,
-            gpDate: document.getElementById('txtgpdate').value,
-            gpSrNo: parseInt(document.getElementById('txtgpno').value) || 0,
-            gpTypeSrNo: parseInt(document.getElementById('txtgptypeno').value) || 0,
+            gpDate: field('txtgpdate').value,
+            gpSrNo: parseInt(field('txtgpno').value,10) || 0,
+            gpTypeSrNo: parseInt(field('txtgptypeno').value,10) || 0,
             gatepassType: caption('cmbgptype'),
-            supplierCustomerId: parseInt(document.getElementById('cmbsupp').value) || 0,
-            cityId: parseInt(document.getElementById('cmbcity').value) || 0,
-            itemId: parseInt(document.getElementById('CmbVariety').value) || 0,
-            vehicleNo: document.getElementById('txtvehicleno').value,
+            supplierCustomerId: numeric('cmbsupp'),
+            cityId: numeric('cmbcity'),
+            itemId: numeric('CmbVariety'),
+            varietyName: caption('CmbVariety'),
+            vehicleNo: field('txtvehicleno').value,
             vehicleType: caption('cmbvehicletype'),
-            biltyNo: document.getElementById('txtbiltyno').value,
-            biltyDate: document.getElementById('txtBiltyDate').value,
-            freight: parseFloat(document.getElementById('txtfreight').value) || 0,
-            advanceByParty: parseFloat(document.getElementById('txtAdvanceByParty').value) || 0,
-            advanceByFactory: parseFloat(document.getElementById('txtAdvanceByFactory').value) || 0,
-            netPaid: parseFloat(document.getElementById('txtNetPaid').value) || 0,
-            supplierFirstWeight: parseFloat(document.getElementById('txtSupplierFirstWeight').value) || 0,
-            supplierSecondWeight: parseFloat(document.getElementById('txtSupplierSecondWeight').value) || 0,
-            supplierWeight: parseFloat(document.getElementById('txtSupplierNetWeight').value) || 0,
-            factoryWeight: parseFloat(document.getElementById('txtFactoryNetWeight').value) || 0,
-            differenceWeight: parseFloat(document.getElementById('txtDifferenceWeight').value) || 0,
-            status: document.getElementById('CmbStatus').value || 'Open',
-            packingTypeId: parseInt(document.getElementById('CmbPackingType').value) || 0,
-            packUnit: parseFloat(document.getElementById('txtPackUnit').value) || 60,
-            noOfPackages: parseInt(document.getElementById('txtqty').value) || 0,
-            driverName: document.getElementById('txtDriverName').value,
-            driverCNICNO: document.getElementById('txtCNIC').value,
-            driverMobileNo: document.getElementById('txtDriverCellNo').value,
-            whatsappNo: document.getElementById('txtWhatsAppNo').value,
-            alternateCellNo: document.getElementById('txtAlternateCellNo').value,
-            fatherName: document.getElementById('txtFatherName').value,
-            fatherCnicNo: document.getElementById('txtFatherCNIC').value,
+            biltyNo: field('txtbiltyno').value,
+            biltyDate: field('txtBiltyDate').value,
+            freight: parseFloat(field('txtfreight').value) || 0,
+            advanceByParty: parseFloat(field('txtAdvanceByParty').value) || 0,
+            advanceByFactory: parseFloat(field('txtAdvanceByFactory').value) || 0,
+            netPaid: parseFloat(field('txtNetPaid').value) || 0,
+            supplierFirstWeight: parseFloat(field('txtSupplierFirstWeight').value) || 0,
+            supplierSecondWeight: parseFloat(field('txtSupplierSecondWeight').value) || 0,
+            supplierWeight: parseFloat(field('txtSupplierNetWeight').value) || 0,
+            status: caption('CmbStatus'),
+            packingTypeId: numeric('CmbPackingType'),
+            packUnit: parseFloat(field('txtPackUnit').value) || 0,
+            noOfPackages: parseInt(field('txtqty').value,10) || 0,
+            weightComparedToPoWt: numeric('txtWeight'),
             docAttachment: caption('cmbWeighBridge'),
-            weighBridgeId: Number(loadedHeader.weighBridgeId)||0,
-            inDateTimeStamp: field('txtintime').value||null,
-            outDateTimeStamp: field('txtouttime').value||null,
             supplierDispatchId: numeric('cmbTransitVehicle'),
             otherRemarks: field('txtremarks').value,
             otherSupCust: caption('CmbOrderType'),
             refDocumentTypeId: numeric('CmbOrderType'),
             supplierContractCode: field('CmbOrderno').value,
-            varietyName: caption('CmbVariety'),
-            weightComparedToPoWt: numeric('txtWeight'),
-            accessWeight: numeric('txtAccessWeight'),
+            purchaseOrderId: poId,
+            weightDiffComments: field('txtWeightDiffRemarks').value,
+            container: '', container1: '',
             driverBioDataId: driverBioId,
-            gatePassInwardPurchaseBreakUpList: loadedBreakups.filter(row=>Number(row.qty)>0),
-            // The desktop main item is a header field, not a fabricated detail-grid row.
-            gatePassInwardDetails: loadedDetails
+            driverName: field('txtDriverName').value,
+            driverCNICNO: field('txtCNIC').value,
+            driverMobileNo: field('txtDriverCellNo').value,
+            whatsappNo: field('txtWhatsAppNo').value,
+            alternateCellNo: field('txtAlternateCellNo').value,
+            fatherName: field('txtFatherName').value,
+            fatherCnicNo: field('txtFatherCNIC').value,
+            isApprovedChecked: field('ChkIsApproved').checked,
+            gatePassInwardPurchaseBreakUpList: loadedBreakups.map(row=>({qty:Number(row.qty)||0,uom:Number(row.uom)||0,ebWeight:Number(row.ebWeight)||0})),
+            confirmed: []
         };
-
-        return igpFetch('/api/inward-gate-pass/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    document.getElementById('txtId').value = data.igpId;
-                    document.getElementById('btnsave').style.display = 'none';
-                    document.getElementById('btnupdate').style.display = 'inline-flex';
-                    field('txtgpno').value=data.gpSrNo; field('txtgptypeno').value=data.gpTypeSrNo;
-                    /* OpenLinkformOnInsert(success, status) - :3791 */
-                    var st = document.getElementById('CmbStatus');
-                    igpOpenLinkedFormAfterSave(data.igpId,
-                        st && st.selectedOptions && st.selectedOptions.length
-                            ? st.selectedOptions[0].textContent.trim() : '');
-                    return loadRecordAndEdit(data.igpId).then(loadMainHistoryGrid);
-                } else {
-                    alert(data.message);
+        if (!confirm(updating?'Are you sure to Update?':'Are you sure to Save?')) return;
+        if (payload.status==='Rejected' && !confirm('Are you sure to Reject GatePass?')) return;
+        let data;
+        try {
+            for (;;) {
+                data = await (await igpFetch('/api/inward-gate-pass/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })).json();
+                if (data && !data.success && data.confirmKey) {
+                    if (!confirm(data.message)) return;
+                    payload.confirmed.push(data.confirmKey);
+                    continue;
                 }
-            });
+                break;
+            }
+        } catch (error) {
+            if (updating) { field('rowWeightDiffRemarks').style.display=''; field('txtWeightDiffRemarks').focus(); }   // btnupdate_Click catch
+            if (payload.refDocumentTypeId===105 && /Market Purchase Advance/.test(error.message||'')) { field('txtAdvanceByParty').value='0'; field('txtAdvanceByFactory').value='0'; calculateFreight(); }
+            throw error;
+        }
+        if (!data.success) { alert(data.message); return; }
+        alert(data.message);
+        const status=payload.status;
+        await onNewRecord();                                    // Reset()
+        await loadMainHistoryGrid();
+        igpOpenLinkedFormAfterSave(data.igpId, updating?status:'');   // btnsave passes "" as status
+        if (field('chkPreview').checked) printSlip251(data.igpId);    // ChkBox.Checked -> GatePassInwardSlipAndRegisterReport(success)
     }
 
+    /* ---------------- grids ---------------- */
+    const pad = n => String(n).padStart(2, '0');
+    function fmtDateTime(v) { if (!v) return ''; const d = new Date(String(v).replace(' ', 'T')); if (isNaN(d)) return escapeHtml(v);
+        let h = d.getHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+        return pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + pad(h) + ':' + pad(d.getMinutes()) + ' ' + ap; }
+    function fmtTime(v) { if (!v) return ''; const d = new Date(String(v).replace(' ', 'T')); if (isNaN(d)) return escapeHtml(v);
+        let h = d.getHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return pad(h) + ':' + pad(d.getMinutes()) + ' ' + ap; }
+    function fmtDay(v) { if (!v) return ''; const d = new Date(String(v).replace(' ', 'T')); return isNaN(d) ? escapeHtml(v) : pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear(); }
+    const accessColor = v => Number(v) === 0 ? 'green' : (Number(v) > 0 ? 'red' : '');                       // grd_FormattingRow
+    const approvalColor = v => v === 'Not Approved' ? 'red' : (v === 'Approved' ? 'green' : '');
+
+    /* grdfrmfill :2053 - ReadByGPDate, "Vehicles Present In The Factory" */
     function loadMainHistoryGrid() {
         return igpFetch('/api/inward-gate-pass/open-records')
             .then(res => res.json())
             .then(data => {
-                const tbody = document.getElementById('grdMainHistoryBody');
+                const tbody = field('grdMainHistoryBody');
                 tbody.innerHTML = '';
                 let totalQty = 0, totalSupWt = 0, totalDiff = 0;
-
+                const num = v => '<td style="text-align:right;">' + escapeHtml(v ?? '') + '</td>';
+                const txt = v => '<td>' + escapeHtml(v ?? '') + '</td>';
                 data.forEach(row => {
                     totalQty += parseFloat(row.ItemQty) || 0;
                     totalSupWt += parseFloat(row.SupplierWeight) || 0;
                     totalDiff += parseFloat(row.DifferenceWeight) || 0;
-
+                    const id = Number(row.Id);
                     const tr = document.createElement('tr');
-                    tr.ondblclick = function() { loadRecordAndEdit(row.Id); };
-                    tr.innerHTML = `
-                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="onPrintReport(${row.Id})">Print</button></td>
-                    <td><button class="tool-btn" style="padding:1px 4px;" onclick="loadRecordAndEdit(${row.Id})">Edit</button></td>
-                    <td><span class="code-link" onclick="loadRecordAndEdit(${row.Id})">${row.GpSrNo || ''}</span></td>
-                    <td>${row.GpDate ? row.GpDate.split('T')[0] : ''}</td>
-                    <td>${escapeHtml(row.GatepassType || '')}</td>
-                    <td>${escapeHtml(row.OrderType || '')}</td>
-                    <td>${escapeHtml(row.SupplierName || row.CompanyName || '')}</td>
-                    <td>${escapeHtml(row.OrderNo || '')}</td>
-                    <td>${escapeHtml(row.VehicleType || '')}</td>
-                    <td>${escapeHtml(row.VehicleNo || '')}</td>
-                    <td>${escapeHtml(row.BiltyNo || '')}</td>
-                    <td style="text-align:right;">${row.ItemQty || 0}</td>
-                    <td style="text-align:right;">${row.PackUnit || 0}</td>
-                    <td style="text-align:right;">${row.WeightComparedToPoWt || 0}</td>
-                    <td style="text-align:right;">${row.SupplierFirstWeight || 0}</td>
-                    <td style="text-align:right;">${row.SupplierSecondWeight || 0}</td>
-                    <td style="text-align:right;">${row.SupplierWeight || 0}</td>
-                    <td style="text-align:right;">${row.FactoryWeight || 0}</td>
-                    <td style="text-align:right; color:red;">${row.DifferenceWeight || 0}</td>
-                    <td style="text-align:right;">${row.AccessWeight || 0}</td>
-                    <td style="text-align:right;">${row.NetPaid || 0}</td>
-                    <td>${escapeHtml(row.VarietyName || row.ItemName || '')}</td>
-                    <td>${escapeHtml(row.CityName || row.Description || '')}</td>
-                `;
+                    tr.ondblclick = function() { withButtonLoading(null, () => loadRecordAndEdit(id)); };
+                    tr.innerHTML =
+                        `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();onPrintReport(${id})">Print</button></td>`
+                      + `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();withButtonLoading(this,()=>loadRecordAndEdit(${id}))">Edit</button></td>`
+                      + num(row.GpSrNo) + `<td>${fmtDay(row.GpDate)}</td>` + txt(row.GatepassType) + txt(row.OrderType) + txt(row.SupplierName)
+                      + txt(row.OrderNo) + txt(row.VehicleType) + txt(row.VehicleNo) + txt(row.BiltyNo)
+                      + num(row.ItemQty) + num(row.PackUnit) + num(row.WeightComparedToPoWt) + num(row.SupplierFirstWeight) + num(row.SupplierSecondWeight)
+                      + num(row.SupplierWeight) + num(row.FactoryWeight) + num(row.DifferenceWeight)
+                      + `<td style="text-align:right; color:${accessColor(row.AccessWeight)};">${escapeHtml(row.AccessWeight ?? '')}</td>`
+                      + num(row.NetPaid) + txt(row.VarietyName) + txt(row.CityName) + `<td>${fmtTime(row.InTime)}</td>`
+                      + num(row.NoOfAttachments) + txt(row.OtherRemarks)
+                      + `<td style="color:${approvalColor(row.ApprovalStatus)};">${escapeHtml(row.ApprovalStatus ?? '')}</td>` + txt(row.Status);
                     tbody.appendChild(tr);
                 });
-
-                document.getElementById('lblRecordCount').textContent = data.length;
-                document.getElementById('lblSumQty').textContent = totalQty.toFixed(2);
-                document.getElementById('lblSumSupWt').textContent = totalSupWt.toFixed(2);
-                document.getElementById('lblSumDiff').textContent = totalDiff.toFixed(2);
+                field('lblRecordCount').textContent = data.length;
+                field('lblSumQty').textContent = totalQty.toFixed(2);
+                field('lblSumSupWt').textContent = totalSupWt.toFixed(2);
+                field('lblSumDiff').textContent = totalDiff.toFixed(2);
             });
     }
 
+    /* gridhistory :4402 - GatepassHistory */
     function executeFullHistorySearch() {
         const payload = {
             documentTypeId: 51,
             dateField: document.querySelector('input[name="histDateFilter"]:checked')?.value||'docDate',
-            fromDate: document.getElementById('txtHistFromDate').value,
-            toDate: document.getElementById('txtHistToDate').value,
-            fromDocNo: document.getElementById('txtHistFromDoc').value,
-            toDocNo: document.getElementById('txtHistToDoc').value,
-            supplierId: document.getElementById('cmbHistSupplier').value
+            fromDate: field('txtHistFromDate').value,
+            toDate: field('txtHistToDate').value,
+            fromDocNo: field('txtHistFromDoc').value,
+            toDocNo: field('txtHistToDoc').value,
+            supplierId: field('cmbHistSupplier').value
         };
-
-        return igpFetch('/api/inward-gate-pass/history', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
+        return igpFetch('/api/inward-gate-pass/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
-                const tbody = document.getElementById('grdFullHistoryBody');
+                const tbody = field('grdFullHistoryBody');
                 tbody.innerHTML = '';
-
-                /* InwardGatePass.cs gridhistory() :4455 — every dtcol column, in the desktop's order, from the
-                   proc's own column names (CompanyName, Description, UserName, ModifyUserName, OtherRemarks).
-                   GpDate is ToShortDateString; In/Out/Entry/Modify use "dd-MM-yyyy hh:mm tt". */
-                const pad = n => String(n).padStart(2, '0');
-                const dt = v => { if (!v) return ''; const d = new Date(String(v).replace(' ', 'T')); if (isNaN(d)) return escapeHtml(v);
-                    let h = d.getHours(); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
-                    return pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + pad(h) + ':' + pad(d.getMinutes()) + ' ' + ap; };
-                const day = v => { if (!v) return ''; const d = new Date(String(v).replace(' ', 'T')); return isNaN(d) ? escapeHtml(v) : pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear(); };
                 const num = v => '<td style="text-align:right;">' + (v === null || v === undefined ? '' : escapeHtml(v)) + '</td>';
                 const txt = v => '<td>' + escapeHtml(v ?? '') + '</td>';
                 data.forEach(row => {
+                    const id = Number(row.Id);
                     const tr = document.createElement('tr');
-                    tr.ondblclick = function() { loadRecordAndEdit(row.Id); };
-                    const approved = row.ApprovalStatus === 'Approved';
+                    tr.ondblclick = function() { withButtonLoading(null, () => loadRecordAndEdit(id)); };
                     tr.innerHTML =
-                        `<td><button class="tool-btn" style="padding:1px 4px;" onclick="onPrintReport(${Number(row.Id)})">Print</button></td>`
-                      + `<td><button class="tool-btn" style="padding:1px 4px;" onclick="loadRecordAndEdit(${Number(row.Id)})">Edit</button></td>`
-                      + `<td>${escapeHtml(row.GpSrNo ?? '')}</td>`
-                      + `<td>${day(row.GpDate)}</td>`
+                        `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();onPrintReport(${id})">Print</button></td>`
+                      + `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();withButtonLoading(this,()=>loadRecordAndEdit(${id}))">Edit</button></td>`
+                      + `<td>${escapeHtml(row.GpSrNo ?? '')}</td>` + `<td>${fmtDay(row.GpDate)}</td>`
                       + txt(row.GatepassType) + txt(row.OrderType) + num(row.OrderNo) + txt(row.CompanyName) + txt(row.Description)
-                      + txt(row.VehicleType) + txt(row.VehicleNo) + `<td>${day(row.BiltyDate)}</td>` + txt(row.BiltyNo) + txt(row.VarietyName)
+                      + txt(row.VehicleType) + txt(row.VehicleNo) + `<td>${fmtDay(row.BiltyDate)}</td>` + txt(row.BiltyNo) + txt(row.VarietyName)
                       + num(row.ItemQty) + num(row.PackUnit) + num(row.WeightComparedToPoWt) + num(row.SupplierFirstWeight) + num(row.SupplierSecondWeight)
-                      + num(row.SupplierWeight) + num(row.FactoryWeight) + `<td style="text-align:right; color:red;">${escapeHtml(row.DifferenceWeight ?? '')}</td>`
+                      + num(row.SupplierWeight) + num(row.FactoryWeight) + num(row.DifferenceWeight)
                       + num(row.Freight) + num(row.AdvanceByParty) + num(row.AdvanceByFactory) + num(row.TotalPayableFreight) + num(row.NetPaid)
-                      + `<td>${dt(row.InTime)}</td><td>${dt(row.OutTime)}</td>` + txt(row.Status) + txt(row.UserName) + `<td>${dt(row.EntryDate)}</td>`
-                      + txt(row.ModifyUserName) + `<td>${dt(row.ModifyDate)}</td>`
-                      + `<td style="text-align:right;"><a href="#" onclick="event.preventDefault();loadRecordAndEdit(${Number(row.Id)})">${escapeHtml(row.NoOfAttachments ?? 0)}</a></td>`
-                      + txt(row.OtherRemarks) + `<td style="color:${approved ? 'green' : 'red'};">${escapeHtml(row.ApprovalStatus ?? '')}</td>`
-                      + `<td style="text-align:right; color:${Number(row.AccessWeight) > 0 ? 'red' : 'green'};">${escapeHtml(row.AccessWeight ?? 0)}</td>`
+                      + `<td>${fmtDateTime(row.InTime)}</td><td>${fmtDateTime(row.OutTime)}</td>` + txt(row.Status) + txt(row.UserName) + `<td>${fmtDateTime(row.EntryDate)}</td>`
+                      + txt(row.ModifyUserName) + `<td>${fmtDateTime(row.ModifyDate)}</td>`
+                      + num(row.NoOfAttachments)
+                      + txt(row.OtherRemarks) + `<td style="color:${approvalColor(row.ApprovalStatus)};">${escapeHtml(row.ApprovalStatus ?? '')}</td>`
+                      + `<td style="text-align:right; color:${accessColor(row.AccessWeight)};">${escapeHtml(row.AccessWeight ?? '')}</td>`
                       + txt(row.PackingType);
                     tbody.appendChild(tr);
                 });
             });
     }
-
-    function resetPoInfoFilters() {
-        const today = localStamp().split('T')[0];
-        if (field('txtFromPoDate')) field('txtFromPoDate').value = today;
-        if (field('txtToPoDate')) field('txtToPoDate').value = today;
-        if (field('chkFromPoDate')) { field('chkFromPoDate').checked = true; field('txtFromPoDate').disabled = false; }
-        if (field('chkToPoDate')) { field('chkToPoDate').checked = true; field('txtToPoDate').disabled = false; }
-        if (field('txtFromDocNoPoInfo')) field('txtFromDocNoPoInfo').value = '';
-        if (field('txtToDocNoPoInfo')) field('txtToDocNoPoInfo').value = '';
-        if (field('cmbSupplierNamePoInfo')) field('cmbSupplierNamePoInfo').value = '';
-        if (field('CmbDocumentTypePoInfo')) field('CmbDocumentTypePoInfo').value = '';
-        if (field('txtExpiryDaysPoInfo')) field('txtExpiryDaysPoInfo').value = '7';
-        const docRadio = document.querySelector('input[name="poDateFilter"][value="docDate"]');
-        if (docRadio) docRadio.checked = true;
+    /* btnNewHistory_Click :4679 */
+    function onHistoryNew() {
+        const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        field('txtHistFromDate').value = localStamp(threeDaysAgo).split('T')[0];
+        field('txtHistToDate').value = localStamp().split('T')[0];
+        field('txtHistFromDoc').value = ''; field('txtHistToDoc').value = ''; field('cmbHistSupplier').value = '';
+        field('grdFullHistoryBody').innerHTML = '';
+        field('txtHistFromDate').focus();
+    }
+    /* btnRefreshHistory_Click :4712 -> HistoryComboFill */
+    function onHistoryRefresh() {
+        const keep = field('cmbHistSupplier').value;
+        return igpFetch('/api/inward-gate-pass/history-suppliers').then(r => r.json()).then(rows => {
+            bindSelect('cmbHistSupplier', rows, 'id', 'name');
+            if (keep && Array.from(field('cmbHistSupplier').options).some(o => o.value === keep)) field('cmbHistSupplier').value = keep;
+        });
     }
 
+    /* BtnResetOrderInfo_Click :2881 - dates to today, doc numbers and supplier cleared, grid cleared, combos refilled.
+       The desktop sets drdocdate (the History tab's radio) here, not the PO tab's; the PO radio is left as it was. */
+    function resetPoInfoFilters() {
+        const today = localStamp().split('T')[0];
+        field('txtFromPoDate').value = today;
+        field('txtToPoDate').value = today;
+        field('txtFromDocNoPoInfo').value = '';
+        field('txtToDocNoPoInfo').value = '';
+        field('cmbSupplierNamePoInfo').value = '';
+        field('grdPoInfoBody').innerHTML = '';
+        const hist = document.querySelector('input[name="histDateFilter"][value="docDate"]'); if (hist) hist.checked = true;
+        const type = Number(lookupData.poInfoDocumentTypeId) || 0;
+        if (!type) return Promise.resolve();
+        const keepType = field('CmbDocumentTypePoInfo').value;
+        return igpFetch('/api/inward-gate-pass/po-info-combos?documentTypeId=' + type).then(r => r.json()).then(d => {
+            bindSelect('cmbSupplierNamePoInfo', d.suppliers, 'id', 'name');
+            bindSelect('CmbDocumentTypePoInfo', d.documentTypes, 'id', 'name');
+            if (keepType && Array.from(field('CmbDocumentTypePoInfo').options).some(o => o.value === keepType)) field('CmbDocumentTypePoInfo').value = keepType;
+        }).catch(showRequestError);
+    }
+
+    /* btnshow_Click :2786 -> PurchaseOrderInformationForGatePassInward (41). The Steel variant (1500) is not ported. */
     function loadPoInfoGrid() {
+        if (Number(lookupData.poInfoDocumentTypeId) === 1500) { alert('Purchase Order information for Steel orders (1500) has not been ported to this page.'); return Promise.resolve(); }
+        if (Number(lookupData.poInfoDocumentTypeId) !== 41) return Promise.resolve();
         const payload = {
             fromDate: field('chkFromPoDate')?.checked ? field('txtFromPoDate').value : '',
             toDate: field('chkToPoDate')?.checked ? field('txtToPoDate').value : '',
-            fromDocNo: field('txtFromDocNoPoInfo')?.value || 0,
-            toDocNo: field('txtToDocNoPoInfo')?.value || 0,
-            supplierId: field('cmbSupplierNamePoInfo')?.value || 0,
-            documentTypeId: field('CmbDocumentTypePoInfo')?.value || 0,
-            expiryDays: field('txtExpiryDaysPoInfo')?.value || 7,
+            fromDocNo: field('txtFromDocNoPoInfo').value || 0,
+            toDocNo: field('txtToDocNoPoInfo').value || 0,
+            supplierId: field('cmbSupplierNamePoInfo').value || 0,
+            documentTypeId: field('CmbDocumentTypePoInfo').value || 0,
+            expiryDays: parseInt(field('txtExpiryDaysPoInfo').value, 10) || 0,
             dateField: document.querySelector('input[name="poDateFilter"]:checked')?.value || 'docDate'
         };
-        return igpFetch('/api/inward-gate-pass/po-info', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
+        return igpFetch('/api/inward-gate-pass/po-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
-                const tbody = document.getElementById('grdPoInfoBody');
+                const tbody = field('grdPoInfoBody');
                 tbody.innerHTML = '';
+                const numCols = new Set(['OrderQty','OrderWeight','ReceivedQty','ReceivedWeight','BalQty','BalWeight','GrnReceivedQty','GrnReceivedWeight','BalQtyByGrn','BalWeightByGrn']);
                 data.forEach(row => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = ['BranchName','DocumentTypeDescription','OrderNo','SupplierName','ItemName','PackUom','OrderQty','OrderWeight','ReceivedQty','ReceivedWeight','BalQty','BalWeight','GrnReceivedQty','GrnReceivedWeight','BalQtyByGrn','BalWeightByGrn','RemarksHeader','ApprovedStatus','OrderStatus','OrderExpiryDate']
-                        .map(key=>'<td>'+escapeHtml(key==='OrderExpiryDate'?String(row[key]||'').slice(0,10):(row[key]??''))+'</td>').join('');
+                        .map(key => {
+                            if (key === 'OrderExpiryDate') return '<td>' + fmtDay(row[key]) + '</td>';
+                            if (numCols.has(key)) { const v = Number(row[key]); return '<td style="text-align:right;">' + (row[key] == null ? '' : escapeHtml(Math.round(v).toLocaleString('en-US'))) + '</td>'; }   // "#,##0"
+                            return '<td>' + escapeHtml(row[key] ?? '') + '</td>';
+                        }).join('');
                     tbody.appendChild(tr);
                 });
             });
     }
 
+    /* grd_ColumnButtonClick "Edit" / grd_DoubleClick / grdhistory Edit -> LabDataGetByGpId(RecId) + ReadById(RecId) :3047 */
     function loadRecordAndEdit(id) {
         const generation=++formGeneration; ++orderGeneration;
         switchViewMode('Form');
-        return igpFetch('/api/inward-gate-pass/'+Number(id)).then(res=>res.json()).then(res=>{
+        return igpFetch('/api/inward-gate-pass/'+Number(id)).then(res=>res.json()).then(async res=>{
             if(generation!==formGeneration) return;
             if(!res.success||!res.header) throw Error(res.message||'Record not found');
             const h=res.header; loadedHeader=lowerKeys(h);
-            loadedDetails=(res.details||[]).map(lowerKeys); loadedBreakups=(res.purchaseBreakUps||[]).map(lowerKeys);
-            breakupLocked=loadedBreakups.length>0; if(!loadedBreakups.length) loadedBreakups=[emptyBreakup()]; renderBreakups();
-            driverBioId=Number(h.driverBioDataId)||0;
-            setDriverLocked(driverBioId>0);
-            const map={txtId:'Id',txtgpno:'GpSrNo',txtgptypeno:'GpTypeSrNo',cmbsupp:'SupplierCustomerId',cmbcity:'CityId',CmbVariety:'ItemId',txtvehicleno:'VehicleNo',txtbiltyno:'BiltyNo',txtfreight:'Freight',txtAdvanceByParty:'AdvanceByParty',txtAdvanceByFactory:'AdvanceByFactory',txtNetPaid:'NetPaid',txtSupplierFirstWeight:'SupplierFirstWeight',txtSupplierSecondWeight:'SupplierSecondWeight',txtFactoryWeight:'FactoryWeight',txtSupplierNetWeight:'SupplierWeight',txtDriverName:'DriverName',txtCNIC:'DriverCNICNO',txtDriverCellNo:'DriverMobileNo',txtWhatsAppNo:'whatsappNo',txtAlternateCellNo:'AlternateCellNo',txtFatherName:'FatherName',txtFatherCNIC:'fatherCnicNo',txtremarks:'OtherRemarks',CmbPackingType:'PackingTypeId',txtAccessWeight:'AccessWeight',txtWeighBridgeSlipNo:'WeighBridgeId',CmbOrderno:'SupplierContractCode',CmbOrderType:'RefDocumentTypeId',CmbStatus:'Status',txtqty:'NoOfPackages',txtPackUnit:'PackUnit'};
-            for(const [control,key] of Object.entries(map)) field(control).value=h[key]??'';
-            setCaption('cmbgptype',h.GatepassType); setCaption('cmbvehicletype',h.VehicleType); setCaption('cmbWeighBridge',h.DocAttachment);
-            for(const [control,key] of [['txtgpdate','GpDate'],['txtBiltyDate','BiltyDate']]) field(control).value=String(h[key]||'').slice(0,10);
-            for(const [control,key] of [['txtintime','InDateTimeStamp'],['txtouttime','OutDateTimeStamp']]) field(control).value=h[key]?localStamp(new Date(h[key])).slice(0,16):'';
-            const wb=res.weighBridgeWeights||[], sum=key=>wb.reduce((total,row)=>total+(Number(row[key])||0),0);
-            field('txtFactoryWeight').value=sum('FirstWeight'); field('txtsecondWeight').value=sum('SecondWeight');
-            field('txtFactoryNetWeight').value=wb.length?sum('NetWbWeight'):Number(h.FactoryWeight)||0;
-            field('txtWeighBridgeSlipNo').value=wb.map(row=>row.TicketNo).join(', ');
-            field('cmbWeighBridge').disabled=wb.length>0 && sum('NetWbWeight')!==0;
-            calculateWeight(); calculateNetWeights();
-            field('txtTotalPayablesFreight').value=(Number(h.Freight||0)-Number(h.AdvanceByParty||0)-Number(h.AdvanceByFactory||0)).toFixed(2);
-            field('txtNetPaid').value=h.NetPaid??0;
-            netPaidEdited=Number(h.NetPaid)!==0;
             field('btnsave').style.display='none'; field('btnupdate').style.display='inline-flex';
-            return loadTransitVehicles(Number(h.SupplierDispatchId)||0);
+            field('RadGrnFormToOpenOnInsert').style.display='';
+            field('txtId').value=h.Id;
+            // Lab info (LabDataGetByGpId)
+            const lab=res.lab||{};
+            field('txtAnaylstName').value=lab.AnalystName??''; field('txtLabReportNo').value=lab.DocNo??'';
+            field('txtReportStatus').value=lab.LabStatus??''; field('txtLabRemarks').value=lab.RemarksHeader??'';
+            setCaption('cmbgptype',h.GatepassType); bindAllItems();
+            setCaption('cmbWeighBridge',h.DocAttachment);
+            field('txtgpdate').value=String(h.GpDate||'').slice(0,10);
+            field('txtBiltyDate').value=String(h.BiltyDate||'').slice(0,10);
+            field('txtgpno').value=h.GpSrNo??''; field('txtgptypeno').value=h.GpTypeSrNo??'';
+            field('cmbcity').value=h.CityId??'';
+            field('txtbiltyno').value=h.BiltyNo??''; field('txtfreight').value=h.Freight??'';
+            field('CmbPackingType').value=h.PackingTypeId??'';
+            field('txtqty').value=h.NoOfPackages??'';
+            field('txtPackUnit').value=h.PackUnit==null?'':String(Math.round(Number(h.PackUnit)*100)/100); field('txtPackUnit').disabled=true;
+            field('txtWeight').value=h.WeightComparedToPoWt??'0';
+            field('txtAccessWeight').value=h.AccessWeight??'';
+            field('ChkIsApproved').checked=h.IsApproved===true||h.IsApproved===1;
+            field('ChkIsApproved').disabled=Number(h.AccessWeight)>0 && !!lookupData.holdAccessWeightForApproval;   // txtAccessWeight_TextChanged
+            actionIdForSpecialApproval=Number(h.ActionIdForSpecialApproval)||0;
+            field('txtremarks').value=h.OtherRemarks??'';
+            for(const [control,key] of [['txtintime','InDateTimeStamp'],['txtouttime','OutDateTimeStamp']]) if(h[key]) field(control).value=localStamp(new Date(h[key])).slice(0,16);
+            field('txtSupplierNetWeight').value=h.SupplierWeight??'';
+            field('txtSupplierFirstWeight').value=h.SupplierFirstWeight??''; field('txtSupplierSecondWeight').value=h.SupplierSecondWeight??'';
+            field('CmbOrderno').value=h.SupplierContractCode??'';
+            field('txtvehicleno').value=h.VehicleNo??''; onVehicleNoLeave();
+            setCaption('cmbvehicletype',h.VehicleType);
+            // GetWeighBridgeWeightAndTicketNos(RecId)
+            const wb=res.weighBridgeWeights||[], sum=key=>wb.reduce((total,row)=>total+(Number(row[key])||0),0);
+            if (wb.length) {
+                field('txtWeighBridgeSlipNo').value=wb.map(row=>','+row.TicketNo).join('');
+                field('txtFactoryWeight').value=sum('FirstWeight'); field('txtsecondWeight').value=sum('SecondWeight'); field('txtFactoryNetWeight').value=sum('NetWbWeight');
+            } else { field('txtWeighBridgeSlipNo').value='0'; field('txtFactoryWeight').value='0'; field('txtsecondWeight').value='0'; field('txtFactoryNetWeight').value='0'; }
+            // order type specific rebinding
+            const ref=Number(h.RefDocumentTypeId)||0;
+            field('CmbOrderType').value=String(ref); if(!field('CmbOrderType').value) setCaption('CmbOrderType',h.OtherSupCust);
+            field('CmbOrderno').disabled=false; field('cmbTransitVehicle').disabled=true;
+            poId=0;
+            const suppliers=list=>bindSelect('cmbsupp',list,'id','name');
+            if ((ref===41||ref===700||ref===1500) && h.GatepassType!=='Import') {
+                const rows=await (await igpFetch('/api/inward-gate-pass/order-party-items?'+new URLSearchParams({documentTypeId:ref,number:parseInt(h.SupplierContractCode,10)||0,gatePassId:ref===1500?0:h.Id}))).json();
+                if(generation!==formGeneration) return;
+                if (rows.length) { poId=Number(rows[0].PurchaseOrderId)||0; bindSelect('cmbsupp',rows,'Id','CompanyName'); bindSelect('CmbVariety',rows,ref===1500?'Id':'ItemId','ItemName'); }
+                if (ref===41) field('cmbTransitVehicle').disabled=false;
+            } else if ([105,106,98,52].includes(ref)) { suppliers(lookupData.suppliers); field('CmbOrderno').disabled=true; }   // BindLocalSupplierCustomer (98 too, :3180)
+            else if ([241,204].includes(ref)) { suppliers(lookupData.allSupplierCustomers); field('CmbOrderno').disabled=true; }
+            else if (ref===175) { poId=Number(h.PurchaseOrderId)||0; suppliers(lookupData.suppliers); }
+            else suppliers(lookupData.suppliers);
+            field('cmbsupp').value=h.SupplierCustomerId??'';
+            // Status: saved text; Rejected stays Rejected; an Open pass with factory weight shows Accepted
+            field('CmbStatus').value=h.Status??'';
+            if (h.Status!=='Rejected' && numeric('txtFactoryNetWeight')>0 && h.Status==='Open') field('CmbStatus').value='Accepted';
+            field('txtAdvanceByParty').value=Number(h.AdvanceByParty)>0?h.AdvanceByParty:'0';
+            field('txtAdvanceByFactory').value=Number(h.AdvanceByFactory)>0?h.AdvanceByFactory:'0';
+            field('txtNetPaid').value=h.NetPaid??''; netPaidEdited=true;
+            setCaption('CmbVariety',h.VarietyName); if(!field('CmbVariety').value && h.ItemId) field('CmbVariety').value=h.ItemId;
+            field('cmbWeighBridge').disabled=!!(numeric('txtFactoryNetWeight'));
+            calculateNetWeights();
+            field('txtTotalPayablesFreight').value=String((Number(h.Freight)||0)-(Number(h.AdvanceByParty)||0)-(Number(h.AdvanceByFactory)||0));
+            const freightLocked=Number(h.freightVoucherId)>0;
+            if (freightLocked && !Number(h.SupplierWeight)) field('txtSupplierNetWeight').value=field('txtFactoryNetWeight').value;
+            for (const id of ['txtSupplierFirstWeight','txtSupplierSecondWeight','txtfreight','txtNetPaid']) field(id).disabled=freightLocked;
+            if (!freightLocked) field('txtSupplierNetWeight').disabled=false;
+            // driver
+            driverBioId=Number(h.driverBioDataId)||0;
+            resetDriverInfoFields(); driverBioId=Number(h.driverBioDataId)||0;
+            if (driverBioId>0) {
+                const map={txtCNIC:'DriverCNICNO',txtDriverCellNo:'DriverMobileNo',txtWhatsAppNo:'whatsappNo',txtAlternateCellNo:'AlternateCellNo',txtDriverName:'DriverName',txtFatherName:'FatherName',txtFatherCNIC:'fatherCnicNo'};
+                for(const [control,key] of Object.entries(map)) field(control).value=h[key]??'';
+                setDriverLocked(true);
+            }
+            // purchase breakup: a saved list is read-only
+            loadedBreakups=(res.purchaseBreakUps||[]).map(lowerKeys);
+            breakupLocked=loadedBreakups.length>0; if(!loadedBreakups.length) loadedBreakups=[emptyBreakup()]; renderBreakups();
+            if (ref!==105) { field('txtAdvanceByFactory').disabled=false; field('txtAdvanceByParty').disabled=false; }
+            else { field('txtAdvanceByFactory').value='0'; field('txtAdvanceByParty').value='0'; field('txtAdvanceByFactory').disabled=true; field('txtAdvanceByParty').disabled=true; }
+            if (h.RefferedInWbOrLab===true||h.RefferedInWbOrLab===1) { field('CmbOrderType').disabled=true; field('CmbOrderno').disabled=true; }
+            else field('CmbOrderType').disabled=false;
+            await loadTransitVehicles(Number(h.SupplierDispatchId)||0);
+            field('rowWeightDiffRemarks').style.display='none'; field('txtWeightDiffRemarks').value='';
+            field('cmbsupp').focus();
         }).catch(error=>{showRequestError(error);throw error;});
     }
 
     function switchMainSubTab(tabId) {
         document.querySelectorAll('.tab-container .tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-container .tab-content').forEach(c => c.classList.remove('active'));
-
         if (tabId === 'tabGridHistory') {
             document.querySelectorAll('.tab-container .tab-btn')[0].classList.add('active');
-            document.getElementById('tabGridHistory').classList.add('active');
+            field('tabGridHistory').classList.add('active');
         } else {
-            document.querySelectorAll('.tab-container .tab-btn')[1].classList.add('active');
-            document.getElementById('tabPoInfo').classList.add('active');
-            loadPoInfoGrid();
+            field('tabBtnPoInfo').classList.add('active');
+            field('tabPoInfo').classList.add('active');
+            field('txtFromPoDate').focus();   // tabControl2_SelectedIndexChanged: focus only
         }
     }
 
-    function onRefreshForm() { return loadDropdowns().then(loadMainHistoryGrid); }
-    function onDefineCity() { alert('Define City form dialog placeholder'); }
-    function onDefineVehicle() { alert('Define Vehicle form dialog placeholder'); }
-    function onOpenDriverForm() { alert('Driver Biodata form dialog placeholder'); }
-    function onOpenAttachments() { alert('Attachments dialog placeholder'); }
-    function onPrintReport(id) { window.print(); }
-    function onPrintSlip() { window.print(); }
-    function onLabReport() { alert('Printing Lab Report 653-LabReport...'); }
-    function onShowShortcuts() { alert('Shortcuts:\nF2: New\nF5: Refresh\nCtrl+S: Save / Update\nCtrl+U: Update\nPurchase Breakup: Ctrl+D adds a row; Ctrl+Delete removes a row; Ctrl+Space activates the selected row button.'); }
+    /* btnRefresh_Click :3017 - reload the global lists and rebind items, packing types, gate-pass types, vehicle types, cities */
+    function onRefreshForm() { return loadDropdowns().then(()=>{ bindAllItems(); applySupplierListForType(); }); }
+    function applySupplierListForType() {
+        const type=numeric('CmbOrderType'), keep=field('cmbsupp').value;
+        if ([41,700,1500].includes(type)) return;
+        const list=[241,204].includes(type)?lookupData.allSupplierCustomers:(type===98?lookupData.saleInvoiceParties:lookupData.suppliers);
+        bindSelect('cmbsupp',list,'id','name'); field('cmbsupp').value=keep;
+    }
+    function onDefineCity() { alert('The Define City form (DefineCity) has not been ported to the web yet.'); }
+    function onDefineVehicle() { alert('The Vehicle Type definition form (VehicleType) has not been ported to the web yet.'); }
+    function onOpenDriverForm() { alert('The Driver Bio form (frmDriverBio, screen frmDriverBioForInWard) has not been ported to the web yet.'); }
+    function onOpenAttachments() { alert('Gate pass attachments (DMS attachments of InwardGatePass) have not been ported to this page yet.'); }
 
-    function onGpTypeChange() {
-        const generation=formGeneration, type=caption('cmbgptype');
-        if(numeric('txtId')>0) return Promise.resolve();
-        return igpFetch('/api/inward-gate-pass/generate-no?gatepassType='+encodeURIComponent(type)).then(r=>r.json()).then(data=>{
-            if(generation===formGeneration && type===caption('cmbgptype')) field('txtgptypeno').value=data.gpTypeSrNo;
-        }).catch(showRequestError);
+    /* ---------------- printing: the same .rpt through the shared print runtime ---------------- */
+    function igpPrint(rpt, args) {
+        if (window.printRpt) return window.printRpt(rpt, args);
+        alert('The print runtime is not loaded on this page.');
     }
-    function onItemChange() { calculateWeight(); }
-    function onOrderNumberLeave() {
-        const generation=++orderGeneration, number=numeric('CmbOrderno');
-        if(numeric('CmbOrderType')!==41 || !number) return Promise.resolve();
-        return igpFetch('/api/inward-gate-pass/order-party-items?'+new URLSearchParams({number,date:field('txtgpdate').value,gatePassId:numeric('txtId')})).then(r=>r.json()).then(rows=>{
-            if(generation!==orderGeneration)return;
-            if(!rows.length){loadedHeader.purchaseOrderId=0;bindSelect('cmbsupp',[],'id','name');bindSelect('CmbVariety',[],'id','name');return;}
-            loadedHeader.purchaseOrderId=rows[0].PurchaseOrderId;
-            bindSelect('cmbsupp',rows,'Id','CompanyName'); bindSelect('CmbVariety',rows,'ItemId','ItemName');
-            field('cmbsupp').selectedIndex=1;field('CmbVariety').selectedIndex=1;
-            setCaption('cmbgptype',rows[0].OrderCategoryName);setCaption('cmbcity',rows[0].CityArea);
-            return loadTransitVehicles();
-        }).catch(showRequestError);
+    /* grd / grdhistory "Print" column and ChkBox preview: CommonServices.GatePassInwardSlipAndRegisterReport(Id) */
+    function printSlip251(id) { return igpPrint('251-InvRptInwardGatePassSlip.rpt', { id: Number(id) }); }
+    /* btnPrint_Click -> GenerateReport() with RecId (0 on a new form, as the desktop) */
+    function onPrintReport(id) { if (id) return printSlip251(id); if (field('btnPrint').disabled) return; return printSlip251(numeric('txtId')); }
+    function onPrintSlip() { return igpPrint('257-InwardGatePassWithWbAndLabSlip.rpt', { id: numeric('txtId') }); }
+    function onLabReport() { return igpPrint('653-RptInvLabPurchaseAnalysisSlip.rpt', { history: numeric('txtId') }); }
+
+    /* MakeShortCutKeys :5273 */
+    function onShowShortcuts() {
+        alert(['Ctrl+E  For Close','Ctrl+N  For New','Ctrl+R  For Refresh','Ctrl+S  For Save','Ctrl+U  For Update','Alt+P  For Print',
+               'Ctrl+F5  For Focus on gp Date','Ctrl+F10  For Open Attachments','Ctrl+T  For Tab Transfer','Ctrl+alt  To Show ShortCut Keys Form',
+               'Ctrl+ArrowDown  For Focus On Detail Grid','Ctrl+ArrowRight  For Change Focus from one Grid To another Grid',
+               'Ctrl+ArrowLeft  For Change Focus from one Grid To another Grid','Ctrl+Space  When Focus On Any Grid To Call Function\'s On Button Or Link'].join('\n'));
     }
+
+    /* InwardGatePass_KeyDown :4971 */
     document.addEventListener('keydown',event=>{
-        if(event.ctrlKey && event.key.toLowerCase()==='s'){event.preventDefault();withButtonLoading(field(numeric('txtId')>0?'btnupdate':'btnsave'),onSaveRecord);}
-        if(event.key==='F5'){event.preventDefault();withButtonLoading(null,onRefreshForm);}
-        if(event.key==='F2'){event.preventDefault();withButtonLoading(null,onNewRecord);}
-        if(event.ctrlKey && event.key.toLowerCase()==='u' && numeric('txtId')>0){event.preventDefault();withButtonLoading(field('btnupdate'),onSaveRecord);}
+        const key=event.key.toLowerCase(), history=field('viewHistory').style.display!=='none';
+        if(event.ctrlKey && event.altKey && (key==='control'||key==='alt')) { onShowShortcuts(); return; }
+        if(event.ctrlKey && key==='t'){ event.preventDefault(); if(history){switchViewMode('Form');field('txtgpdate').focus();} else switchViewMode('History'); return; }
+        if(!history) {
+            if(event.ctrlKey && key==='s'){ event.preventDefault(); if(field('btnsave').style.display!=='none' && !field('btnsave').disabled) withButtonLoading(field('btnsave'),onSaveRecord); }
+            if(event.ctrlKey && key==='u'){ event.preventDefault(); if(field('btnupdate').style.display!=='none' && !field('btnupdate').disabled) withButtonLoading(field('btnupdate'),onSaveRecord); }
+            if(event.ctrlKey && key==='p'){ event.preventDefault(); if(!field('btnPrint').disabled) onPrintReport(); }
+            if(event.ctrlKey && key==='n'){ event.preventDefault(); withButtonLoading(field('btnnew'),onNewRecord); }
+            if(event.ctrlKey && event.key==='F5'){ event.preventDefault(); field('txtgpdate').focus(); }
+            if(event.altKey && key==='r'){ event.preventDefault(); withButtonLoading(field('btnRefresh'),onRefreshForm); }
+        } else {
+            if(event.ctrlKey && key==='s'){ event.preventDefault(); withButtonLoading(field('btnHistShow'),executeFullHistorySearch); }
+            if(event.ctrlKey && key==='n'){ event.preventDefault(); onHistoryNew(); }
+            if(event.ctrlKey && event.key==='F5'){ event.preventDefault(); field('txtHistFromDate').focus(); }
+            if(event.altKey && key==='r'){ event.preventDefault(); withButtonLoading(field('btnHistRefresh'),onHistoryRefresh); }
+        }
     });
 
-    async function loadTransitVehicles(selectedId=numeric('cmbTransitVehicle')) {
-        const generation=++transitGeneration, form=formGeneration;
-        const supplierId=numeric('cmbsupp'), orderId=Number(loadedHeader.purchaseOrderId)||0;
-        if(!supplierId && !orderId) { transitRows=[]; bindSelect('cmbTransitVehicle',[],'id','name'); return; }
-        const rows=await (await igpFetch('/api/inward-gate-pass/transit-vehicles?'+new URLSearchParams({supplierId,orderId,gatePassId:numeric('txtId')}))).json();
-        if(generation!==transitGeneration || form!==formGeneration) return;
-        transitRows=rows; bindSelect('cmbTransitVehicle',rows,'id','name'); field('cmbTransitVehicle').value=selectedId||'';
-    }
-    function onTransitVehicleChange() {
-        const row=transitRows.find(r=>Number(r.id)===numeric('cmbTransitVehicle')); if(!row)return;
-        if(row.VehicleNo) field('txtvehicleno').value=row.VehicleNo;
-        if(row.BiltyNo) field('txtbiltyno').value=row.BiltyNo;
-        if(Number(row.CityId)>0) field('cmbcity').value=row.CityId;
-        if(Number(row.Freight)>0) { field('txtfreight').value=row.Freight; if(Number(row.AdvanceFreight)>0)field('txtAdvanceByParty').value=row.AdvanceFreight; }
-        calculateFreight();
-    }
-
+    /* ---------------- Purchase BreakUp (grdPurchaseBrakup) ---------------- */
     function emptyBreakup() { return {id:0,qty:0,uom:0,grossWeight:0,ebWeight:0,ebTotal:0,netWeight:0}; }
     function breakupTotals() { return loadedBreakups.reduce((sum,row)=>{for(const key of ['qty','grossWeight','ebWeight','ebTotal','netWeight'])sum[key]=(sum[key]||0)+(Number(row[key])||0);return sum;},{}); }
     function renderBreakups() {
@@ -656,20 +759,22 @@
         updateBreakupTotals();
     }
     function updateBreakupTotals() { const totals=breakupTotals(); for(const [key,value] of Object.entries(totals))if(field('breakupTotal-'+key))field('breakupTotal-'+key).textContent=value.toFixed(2); }
+    /* grdPurchaseBrakup_CellUpdated :1958 - Gross = Qty*UOM, EBTotal = Qty*EbWeight, Net = Gross + EBTotal (as the desktop adds it) */
     function updateBreakupCell(input) {
         if(breakupLocked)return;
         const index=Number(input.dataset.row),row=loadedBreakups[index],key=input.dataset.key;
         if(!row||!['qty','uom','ebWeight'].includes(key))return;
         row[key]=Number(input.value)||0; row.grossWeight=row.qty*row.uom; row.ebTotal=row.qty*row.ebWeight;
-        row.netWeight=row.grossWeight+row.ebTotal; // Desktop deliberately adds empty-bag weight.
+        row.netWeight=row.grossWeight+row.ebTotal;
         for(const totalKey of ['grossWeight','ebTotal','netWeight']) { const target=document.querySelector('#grdBreakupBody input[data-row="'+index+'"][data-key="'+totalKey+'"]'); if(target)target.value=row[totalKey]; }
         updateBreakupTotals();
     }
     function addBreakupRow() { if(breakupLocked)return; loadedBreakups.push(emptyBreakup()); renderBreakups(); }
     function deleteBreakupRow(index) { if(breakupLocked)return; loadedBreakups.splice(index,1); if(!loadedBreakups.length)loadedBreakups.push(emptyBreakup()); renderBreakups(); }
+    /* grdPurchaseBrakup_KeyDown :5111 */
     function breakupKeyDown(event,index) {
         if(!event.ctrlKey||breakupLocked)return;
         if(event.key.toLowerCase()==='d'){event.preventDefault();addBreakupRow();}
         if(event.key==='Delete'){event.preventDefault();if(confirm('Are you sure to Delete?'))deleteBreakupRow(index);}
-        if(event.key===' ' && event.target.tagName==='BUTTON'){event.preventDefault();event.target.click();}
+        if(event.key===' ' && event.target.tagName==='BUTTON'){event.preventDefault(); if(event.target.textContent.trim()==='X'){ if(confirm('Are you sure to Delete?')) deleteBreakupRow(index); } else event.target.click();}
     }

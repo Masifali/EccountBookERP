@@ -1,73 +1,59 @@
 package com.mst.controllers;
 
-import com.mst.security.CurrentUserContext;
-
 import com.mst.services.PurchaseInvoiceAgainstGrnDirectService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * Purchase Invoice Against GRN Direct (screen 131, DocumentTypeId 138). Organization, company, branch,
+ * financial year and user always come from the session inside the service; rights come from tblUserRights
+ * for ScreenName "PurchaseInvoiceAgainstGrnDirect".
+ */
 @RestController
 @RequestMapping("/api/purchase-invoice-against-grn-direct")
 public class PurchaseInvoiceAgainstGrnDirectRestController {
 
-    @Autowired
-    private PurchaseInvoiceAgainstGrnDirectService service;
+    private final PurchaseInvoiceAgainstGrnDirectService service;
 
-    @Autowired
-    private CurrentUserContext currentUserContext;
+    public PurchaseInvoiceAgainstGrnDirectRestController(PurchaseInvoiceAgainstGrnDirectService service) { this.service = service; }
 
-    @GetMapping("/dropdowns")
-    public Map<String, Object> getDropdowns() {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        return service.getDropdowns(orgId, compId);
+    /** Form Load: rights, lookups, configuration and the next document number. */
+    @GetMapping("/init")
+    public Map<String, Object> init() { return service.init(); }
+
+    /** Toolbar Refresh (btnFrmRefresh_Click). */
+    @GetMapping("/refresh")
+    public Map<String, Object> refresh() { return service.refresh(); }
+
+    @GetMapping("/next-code")
+    public Map<String, Object> nextCode() { return Map.of("docNo", service.nextDocNo()); }
+
+    @GetMapping("/last-exchange-rate")
+    public Map<String, Object> lastExchangeRate(@RequestParam int currencyId) { return service.lastExchangeRate(currencyId); }
+
+    @GetMapping("/history-suppliers")
+    public List<Map<String, Object>> historySuppliers() { return service.historySuppliers(); }
+
+    /** Load GRN -> LoadInGridDetail. */
+    @PostMapping("/load-grns")
+    public Map<String, Object> loadGrns(@RequestBody Map<String, Object> body) { return service.loadGrns(body); }
+
+    @PostMapping("/history")
+    public List<Map<String, Object>> history(@RequestBody(required = false) Map<String, Object> body) {
+        return service.history(body == null ? Map.of() : body);
     }
 
-    @GetMapping("/load-grn")
-    public List<Map<String, Object>> loadGrnDirectForInvoice(@RequestParam String gdnIds) {
-        return service.loadGrnDirectForInvoice(gdnIds);
-    }
-
-    @GetMapping("/empty-bags")
-    public List<Map<String, Object>> getEmptyBagsFromGrn(@RequestParam String gdnIds, @RequestParam(required = false) Integer orderId) {
-        return service.getEmptyBagsFromGrn(gdnIds, orderId);
-    }
+    @GetMapping("/{id}/detail")
+    public List<Map<String, Object>> historyDetail(@PathVariable int id) { return service.historyDetail(id); }
 
     @GetMapping("/{id}")
-    public Map<String, Object> getById(@PathVariable Integer id) {
-        return service.getById(id);
-    }
+    public Map<String, Object> getById(@PathVariable int id) { return service.getById(id); }
 
-    @RequestMapping(value = "/history", method = {RequestMethod.GET, RequestMethod.POST})
-    public List<Map<String, Object>> getHistory(
-            @RequestBody(required = false) Map<String, Object> payload,
-            @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate,
-            @RequestParam(required = false) Double fromDocNo,
-            @RequestParam(required = false) Double toDocNo,
-            @RequestParam(required = false) Integer supplierId) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-
-        Integer docTypeId = 138;
-        if (payload != null) {
-            if (payload.get("documentTypeId") != null) docTypeId = Integer.parseInt(payload.get("documentTypeId").toString());
-            if (payload.get("fromDate") != null) fromDate = payload.get("fromDate").toString();
-            if (payload.get("toDate") != null) toDate = payload.get("toDate").toString();
-            if (payload.get("fromDocNo") != null && !payload.get("fromDocNo").toString().isEmpty()) fromDocNo = Double.parseDouble(payload.get("fromDocNo").toString());
-            if (payload.get("toDocNo") != null && !payload.get("toDocNo").toString().isEmpty()) toDocNo = Double.parseDouble(payload.get("toDocNo").toString());
-            if (payload.get("supplierId") != null && !payload.get("supplierId").toString().isEmpty()) supplierId = Integer.parseInt(payload.get("supplierId").toString());
-        }
-
-        return service.getHistory(orgId, compId, docTypeId, fromDate, toDate, fromDocNo, toDocNo, supplierId);
-    }
+    /** Save (id 0) and Update (id &gt; 0). */
+    @PostMapping("/save")
+    public Map<String, Object> save(@RequestBody Map<String, Object> body) { return service.save(body); }
 
     @PostMapping("/delete/{id}")
-    public Map<String, Object> deleteRecord(@PathVariable Integer id) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        return service.deleteRecord(id, orgId, compId);
-    }
+    public Map<String, Object> delete(@PathVariable int id) { return service.delete(id); }
 }

@@ -30,10 +30,10 @@ public final class PurchaseInvoiceCalculations {
             case "emptyBags"->{if("Rate".equals(changed))r.put("Amount",amount(n(r,"PurchaseQty")*n(r,"Rate"),digits));}
             case "freight","journal"->{
                 boolean journal=grid.equals("journal"),grn=i(r,"InvGrnId")>0;String qty=journal?"JvQty":"FrQty",rate=journal?"JvRate":"FrRate",percentage=journal?"JvPrcnt":"Percentage",credit=journal?"JvCredit":"FreightAmount",debit=journal?"JvDebit":"Debit";
-                if(changed.equals(percentage)){if(Math.abs(n(r,percentage))>100)throw new IllegalArgumentException("Percentage must not exceed 100");if(grn)throw new IllegalArgumentException("You cannot change credit amount against a GRN");double result=itemTotal/100*n(r,percentage);if(journal){r.put(credit,result>0?amount(result,digits):0);r.put(debit,result<=0?amount(Math.abs(result),digits):0);}else if(result>0)r.put(credit,amount(result,digits));r.put(qty,0);r.put(rate,0);}
-                if(changed.equals(qty)||changed.equals(rate)){if(grn&&(!journal||i(r,"RowType")!=1))throw new IllegalArgumentException("You cannot change credit amount against a GRN");r.put(credit,amount(n(r,qty)*n(r,rate),digits));r.put(percentage,0);if(journal)r.put(debit,0);}
-                if(changed.equals(credit)){if(grn&&(journal||i(r,"FreightId")>0))throw new IllegalArgumentException("You cannot change credit amount against a GRN");r.put(credit,amount(n(r,credit),digits));if((journal||freightToExpense)&&n(r,debit)>0)throw new IllegalArgumentException("Debit side is already added");}
-                if(changed.equals(debit)){r.put(debit,amount(n(r,debit),digits));if((journal||freightToExpense)&&n(r,credit)>0)throw new IllegalArgumentException("Credit side is already added");}
+                if(changed.equals(percentage)){if(Math.abs(n(r,percentage))>100)throw new IllegalArgumentException("Percentage mustbe less than 100");if(grn)throw new IllegalArgumentException("you cannot change CreditAmount against Grn");double result=itemTotal/100*n(r,percentage);if(journal){r.put(credit,result>0?amount(result,digits):0);r.put(debit,result<=0?amount(Math.abs(result),digits):0);}else if(result>0)r.put(credit,amount(result,digits));r.put(qty,0);r.put(rate,0);}
+                if(changed.equals(qty)||changed.equals(rate)){if(grn&&(!journal||i(r,"RowType")!=1))throw new IllegalArgumentException("you cannot change CreditAmount against Grn");r.put(credit,amount(n(r,qty)*n(r,rate),digits));r.put(percentage,0);if(journal)r.put(debit,0);}
+                if(changed.equals(credit)){if(grn&&(journal||i(r,"FreightId")>0))throw new IllegalArgumentException("you cannot change CreditAmount against Grn");r.put(credit,amount(n(r,credit),digits));if((journal||freightToExpense)&&n(r,debit)>0)throw new IllegalArgumentException("Debit Side is aleady added");}
+                if(changed.equals(debit)){r.put(debit,amount(n(r,debit),digits));if((journal||freightToExpense)&&n(r,credit)>0)throw new IllegalArgumentException("Credit Side is aleady added");}
             }
             default->throw new IllegalArgumentException("Unsupported invoice grid");
         }
@@ -60,6 +60,14 @@ public final class PurchaseInvoiceCalculations {
         if(i(h,"SupplierCustomerId")==i(h,"CommissionAgentId"))bill+=commission;bill-=brokery;
         if(config.subsidiary()?i(h,"TransporterCreditPartyId")==i(h,"SupplierCustomerId"):i(h,"TransportAccountId")==supplierGl)bill-=n(h,"FreightAmount");
         h.put("BillAmount",amount(bill,config.digits()));
+        // CalculateOrderWiseAmountForPaymentDetail:2934-3035 / GetFreightAmounts..GetCommission:3079-3151 - the parts shown per order in the Payment Schedule grid.
+        double jvDiff=0,frDiff=0,bagType1=0;
+        for(var raw:journal){var j=copy(raw);if(i(j,"ChartofAccountId")>0||i(j,"SupplierCustomerId")>0)jvDiff+=n(j,"JvDebit")-n(j,"JvCredit");}
+        for(var raw:freight){var f=copy(raw);if(config.subsidiary()?i(f,"SupplierCustomerId")==i(h,"SupplierCustomerId"):i(f,"TansporterId")==supplierGl)frDiff+=n(f,"FreightAmount")-n(f,"Debit");}
+        for(var raw:bags){var b=copy(raw);if(i(b,"TypeId")==1&&n(b,"Amount")>0)bagType1+=n(b,"Amount");}
+        h.put("PaymentJournal",jvDiff);h.put("PaymentFreight",frDiff);h.put("PaymentEmptyBags",bagType1);h.put("PaymentBrokery",brokery>0?brokery:0);
+        h.put("PaymentCommission",i(h,"CommissionAgentId")>0&&i(h,"CommissionAgentId")==i(h,"SupplierCustomerId")?commission:0);
+        h.put("PaymentFreightDeduction",(config.subsidiary()?i(h,"TransporterCreditPartyId")==i(h,"SupplierCustomerId"):i(h,"TransportAccountId")==supplierGl)?n(h,"FreightAmount"):0);
         double bagAmount=0,bagQty=0;boolean externalBagCredit=false;
         for(var raw:bags){var b=copy(raw);if(Set.of(2,3).contains(i(b,"TypeId"))){bagAmount+=n(b,"Amount");bagQty+=n(b,"PurchaseQty");externalBagCredit|=i(b,"CreditAccountId")>0;}}
         double remainingQty=externalBagCredit?0:bagQty,bagRate=bagQty>0&&bagAmount>0?bagAmount/bagQty:0;

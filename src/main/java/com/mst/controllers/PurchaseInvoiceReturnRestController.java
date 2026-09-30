@@ -1,97 +1,102 @@
 package com.mst.controllers;
 
-import com.mst.security.CurrentUserContext;
-
 import com.mst.services.PurchaseInvoiceReturnService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * Purchase Invoice Return (InvfrmInvPurchaseInvoiceReturn, screen 125, DocumentTypeId 59) JSON API.
+ * Business refusals come back as 400 with the desktop's message. There is no DELETE: the desktop form's Delete button is
+ * hidden and has no handler (InvfrmInvPurchaseInvoiceReturn.cs designer, btnDelete.Visible = false).
+ */
 @RestController
 @RequestMapping("/api/purchase/purchase-invoice-return")
 public class PurchaseInvoiceReturnRestController {
 
-    @Autowired
-    private PurchaseInvoiceReturnService purchaseInvoiceReturnService;
+    private final PurchaseInvoiceReturnService service;
 
-    @Autowired
-    private CurrentUserContext currentUserContext;
+    public PurchaseInvoiceReturnRestController(PurchaseInvoiceReturnService service) { this.service = service; }
 
-    @GetMapping("/dropdowns")
-    public ResponseEntity<?> getDropdowns() {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        return ResponseEntity.ok(purchaseInvoiceReturnService.getDropdowns(orgId, compId));
-    }
+    /** Load event: rights, configuration flags, every lookup, document numbers, history branches. */
+    @GetMapping("/init")
+    public ResponseEntity<?> init() { return run(service::init); }
 
     @GetMapping("/next-code")
-    public ResponseEntity<?> getNextCode() {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int branchId = currentUserContext.currentBranchId();
-        int yearId = currentUserContext.currentFinancialYearId();
-        int nextNo = purchaseInvoiceReturnService.generateNextDocNo(orgId, compId, branchId, yearId);
-        Map<String, Object> res = new HashMap<>();
-        res.put("docNo", nextNo);
-        return ResponseEntity.ok(res);
+    public ResponseEntity<?> numbers() { return run(service::numbers); }
+
+    /** comItem_Leave -> UomFromGlobalBind. */
+    @GetMapping("/uoms")
+    public ResponseEntity<?> uoms(@RequestParam("itemId") int itemId) { return run(() -> service.uoms(itemId)); }
+
+    /** AvailableStockGetByItem -> lblBalance. */
+    @GetMapping("/stock")
+    public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int warehouseId, @RequestParam(defaultValue = "0") int itemId, @RequestParam(defaultValue = "0") int jobLotId,
+                                   @RequestParam(required = false) String cropYear, @RequestParam(required = false) String docDate,
+                                   @RequestParam(defaultValue = "0") int packingTypeId, @RequestParam(defaultValue = "0") int packUomId) {
+        return run(() -> Map.of("balance", service.currentStock(warehouseId, itemId, jobLotId, cropYear, docDate, packingTypeId, packUomId)));
     }
 
-    @RequestMapping(value = "/history", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<?> getHistory(@RequestBody(required = false) Map<String, Object> bodyParams,
-                                         @RequestParam(required = false) String fromDate,
-                                         @RequestParam(required = false) String toDate,
-                                         @RequestParam(required = false) Integer supplierId,
-                                         @RequestParam(required = false) Integer fromDocNo,
-                                         @RequestParam(required = false) Integer toDocNo,
-                                         @RequestParam(required = false) String dateType) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int branchId = currentUserContext.currentBranchId();
-        int yearId = currentUserContext.currentFinancialYearId();
+    @GetMapping("/history-branches")
+    public ResponseEntity<?> historyBranches() { return run(service::historyBranches); }
 
-        if (bodyParams != null) {
-            if (fromDate == null && bodyParams.get("fromDate") != null) fromDate = bodyParams.get("fromDate").toString();
-            if (toDate == null && bodyParams.get("toDate") != null) toDate = bodyParams.get("toDate").toString();
-            if (supplierId == null && bodyParams.get("supplierId") != null) supplierId = ((Number) bodyParams.get("supplierId")).intValue();
-            if (fromDocNo == null && bodyParams.get("fromDocNo") != null) fromDocNo = ((Number) bodyParams.get("fromDocNo")).intValue();
-            if (toDocNo == null && bodyParams.get("toDocNo") != null) toDocNo = ((Number) bodyParams.get("toDocNo")).intValue();
-            if (dateType == null && bodyParams.get("dateType") != null) dateType = bodyParams.get("dateType").toString();
-        }
+    /** HistoryComboFill: suppliers of the ticked branches (leading-comma list, as the desktop builds it). */
+    @GetMapping("/history-suppliers")
+    public ResponseEntity<?> historySuppliers(@RequestParam(value = "branchesIds", required = false) String branchesIds) { return run(() -> service.historySuppliers(branchesIds)); }
 
-        List<Map<String, Object>> history = purchaseInvoiceReturnService.getHistory(orgId, compId, branchId, yearId, fromDate, toDate, supplierId, fromDocNo, toDocNo, dateType);
-        return ResponseEntity.ok(history);
+    @GetMapping("/history")
+    public ResponseEntity<?> history(@RequestParam(value = "dateMode", required = false) String dateMode,
+                                     @RequestParam(value = "fromDate", required = false) String fromDate,
+                                     @RequestParam(value = "toDate", required = false) String toDate,
+                                     @RequestParam(value = "fromDocNo", defaultValue = "0") int fromDocNo,
+                                     @RequestParam(value = "toDocNo", defaultValue = "0") int toDocNo,
+                                     @RequestParam(value = "supplierId", defaultValue = "0") int supplierId) {
+        return run(() -> service.history(dateMode, fromDate, toDate, fromDocNo, toDocNo, supplierId));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable("id") int id) {
-        Map<String, Object> data = purchaseInvoiceReturnService.getById(id);
-        if (data != null) return ResponseEntity.ok(data);
-        return ResponseEntity.notFound().build();
-    }
+    @GetMapping("/{id:[0-9]+}")
+    public ResponseEntity<?> read(@PathVariable("id") int id) { return run(() -> service.read(id)); }
 
     @PostMapping("/save")
-    public ResponseEntity<?> save(@RequestBody Map<String, Object> payload) {
-        payload.put("organizationId", currentUserContext.currentOrganizationId());
-        payload.put("companyId", currentUserContext.currentCompanyId());
-        payload.put("branchesId", currentUserContext.currentBranchId());
-        payload.put("financialYearId", currentUserContext.currentFinancialYearId());
+    public ResponseEntity<?> save(@RequestBody Map<String, Object> payload) { return run(() -> service.save(payload)); }
 
-        Map<String, Object> res = purchaseInvoiceReturnService.savePurchaseReturn(payload);
-        if (Boolean.TRUE.equals(res.get("success"))) {
-            return ResponseEntity.ok(res);
-        } else {
-            return ResponseEntity.status(400).body(res);
-        }
+    // ------------------------------------------------------------------ Load Purchase Invoice dialog
+    @GetMapping("/loader/init")
+    public ResponseEntity<?> loaderInit() { return run(service::loaderInit); }
+
+    @GetMapping("/loader/pending")
+    public ResponseEntity<?> pending(@RequestParam("fromDate") String fromDate, @RequestParam("toDate") String toDate,
+                                     @RequestParam(value = "branchesIds", required = false) String branchesIds) {
+        return run(() -> service.pending(fromDate, toDate, branchesIds));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") int id) {
-        boolean ok = purchaseInvoiceReturnService.deletePurchaseReturn(id);
-        Map<String, Object> res = new HashMap<>();
-        res.put("success", ok);
-        res.put("message", ok ? "Deleted successfully" : "Failed to delete");
-        return ResponseEntity.ok(res);
+    @SuppressWarnings("unchecked")
+    @PostMapping("/loader/load")
+    public ResponseEntity<?> load(@RequestBody Map<String, Object> body) {
+        return run(() -> {
+            List<Map<String, Object>> checked = new ArrayList<>();
+            if (body.get("checked") instanceof List<?> l) for (Object o : l) if (o instanceof Map<?, ?> m) checked.add((Map<String, Object>) m);
+            return service.load(checked, String.valueOf(body.get("fromDate")), String.valueOf(body.get("toDate")), body.get("branchesIds") == null ? "" : String.valueOf(body.get("branchesIds")));
+        });
+    }
+
+    private interface Work { Object get(); }
+    private static ResponseEntity<?> run(Work work) {
+        try { return ResponseEntity.ok(work.get()); }
+        catch (IllegalArgumentException e) { return fail(HttpStatus.BAD_REQUEST, e.getMessage()); }
+        catch (org.springframework.dao.DataAccessException e) {
+            // a procedure's RAISERROR (USP_InventoryValidation, USP_VoucherBalanceCheck, ...) reaches the user in its own words, as the desktop MessageBox
+            Throwable cause = e.getMostSpecificCause();
+            if (cause instanceof java.sql.SQLException sql && sql.getErrorCode() >= 50000) return fail(HttpStatus.BAD_REQUEST, sql.getMessage());
+            org.slf4j.LoggerFactory.getLogger(PurchaseInvoiceReturnRestController.class).error("Purchase Invoice Return database operation failed", e);
+            return fail(HttpStatus.INTERNAL_SERVER_ERROR, "The database request failed. No partial changes were saved.");
+        }
+        catch (IllegalStateException e) { return fail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()); }
+    }
+    private static ResponseEntity<?> fail(HttpStatus status, String message) {
+        Map<String, Object> m = new LinkedHashMap<>(); m.put("success", false); m.put("message", message == null || message.isBlank() ? "Request failed." : message);
+        return ResponseEntity.status(status).body(m);
     }
 }

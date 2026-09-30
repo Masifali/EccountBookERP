@@ -54,24 +54,24 @@ public class PurchaseModuleViewController {
                 currentUserContext.currentFinancialYearId(), type);
     }
 
+    /* dbo.App 3 "Purchase" through the generic App/Module/Screen renderer (AppMenuController), like the
+       Accounts, Production, HRM and Taxation hubs: module cards (5 Supplier Purchases, 52 Purchase Reports)
+       and their counts come from the user's CompanyRights + ScreenRights rows, as the desktop frmMenue
+       builds them. The old purchase_dashboard.html / supplier_purchases.html / purchase_reports_dashboard.html
+       had typed counts (8 / 4), invented tile titles and no tiles for 129, 868 and 869. ?module=N is kept. */
     @GetMapping({"", "/", "/dashboard"})
-    public String purchaseDashboard(Model model) {
-        model.addAttribute("activeMenu", "purchase");
-        return "purchase/purchase_dashboard";
+    public String purchaseDashboard() {
+        return "forward:/app/Purchase";
     }
 
     @GetMapping("/supplier")
-    public String supplierPurchases(Model model) {
-        model.addAttribute("activeMenu", "purchase");
-        model.addAttribute("moduleTitle", "Supplier Purchases");
-        return "purchase/supplier_purchases";
+    public String supplierPurchases() {
+        return "forward:/app/Purchase?module=5";
     }
 
     @GetMapping("/reports")
-    public String purchaseReports(Model model) {
-        model.addAttribute("activeMenu", "purchase");
-        model.addAttribute("moduleTitle", "Purchase Reports");
-        return "purchase/purchase_reports_dashboard";
+    public String purchaseReports() {
+        return "forward:/app/Purchase?module=52";
     }
 
     @GetMapping("/reports/purchase-order-register")
@@ -102,16 +102,25 @@ public class PurchaseModuleViewController {
         return "purchase/reports/purchase_invoice_report";
     }
 
+    /* 869 SupplierPortal.Reports.frmSupplierDispatchPreBillReport "Stock In Transit Report" (module 52);
+       data from PurchaseReportRestController /purchase/api/reports/stock-in-transit. */
+    @GetMapping("/reports/stock-in-transit")
+    public String stockInTransitReport(Model model) {
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "Stock In Transit Report");
+        return "purchase/reports/stock_in_transit_report";
+    }
+
     @GetMapping("/purchase-order")
     public String purchaseOrder(Model model) {
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Purchase Order");
         model.addAttribute("documentTypeId", 41);
         model.addAttribute("nextDocNo", purchaseOrderFullService.generateNextDocNo(41));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
+        /* suppliers / items / warehouses / jobLots from PurchaseService were put here but
+           purchase_order.html reads none of them (it has no th: expressions) and they are not
+           the desktop's lists (PurchsaeOrder.cs has no warehouse at all); the page fills every
+           combo from /api/purchase-order/*. Removed - four unused queries per page load. */
         return "purchase/purchase_order";
     }
 
@@ -123,8 +132,11 @@ public class PurchaseModuleViewController {
         int yearId = currentUserContext.currentFinancialYearId();
 
         Map<String, Object> dropdowns = inwardGatePassService.getDropdowns(orgId, compId);
-        Map<String, Object> nextNums = inwardGatePassService.generateNextNumbers(orgId, compId, branchId, yearId, 51, "Paddy");
-        List<Map<String, Object>> historyList = inwardGatePassService.getOpenGatePasses();
+        // InwardGatePass_Load: gpnofill() then cmbgptype_Leave_1 with the row gatepasstype() activates (Rows[2] after the
+        // blank row = second returned type). The open-vehicle grid (grdfrmfill) is loaded by the page from /open-records.
+        List<?> gpTypes = (List<?>) dropdowns.get("gatePassTypes");
+        String defaultGpType = gpTypes != null && gpTypes.size() > 1 ? String.valueOf(((Map<?, ?>) gpTypes.get(1)).get("name")) : "";
+        Map<String, Object> nextNums = inwardGatePassService.generateNextNumbers(orgId, compId, branchId, yearId, 51, defaultGpType);
 
         model.addAttribute("activeMenu", "purchase");
         model.addAttribute("moduleTitle", "Inward Gate Pass");
@@ -142,8 +154,6 @@ public class PurchaseModuleViewController {
         model.addAttribute("weighBridges", dropdowns.get("weighBridges"));
         model.addAttribute("packingTypes", dropdowns.get("packingTypes"));
         model.addAttribute("documentTypes", dropdowns.get("documentTypes"));
-        model.addAttribute("historyList", historyList);
-
         return "purchase/inward_gate_pass";
     }
 
@@ -187,14 +197,9 @@ public class PurchaseModuleViewController {
            distinct document types into one: one shared numbering sequence, and history or
            search on any of them returning all three. */
         model.addAttribute("documentTypeId", 138);
-        model.addAttribute("nextDocNo", invoiceNumber(138));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
-        /* Payment Term is a database list on the desktop too - PaymentTermBind binds
-           "Id" / "TermsDescription" from InvDueTerms (InvfrmPurchasedirectInvoice.cs). */
-        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
+        /* The page reads rights, its original scoped lookups and the next number from
+           /api/purchase-invoice-against-grn-direct/init (the form has no item/warehouse/job-lot
+           combos - every detail row comes from a GRN Direct). */
         return "purchase/purchase_invoice_again_grn_direct";
     }
 
@@ -214,14 +219,7 @@ public class PurchaseModuleViewController {
            distinct document types into one: one shared numbering sequence, and history or
            search on any of them returning all three. */
         model.addAttribute("documentTypeId", 59);
-        model.addAttribute("nextDocNo", invoiceNumber(59));
-        model.addAttribute("suppliers", purchaseService.getSuppliers(""));
-        model.addAttribute("items", purchaseService.getItems(""));
-        model.addAttribute("warehouses", purchaseService.getWarehouses());
-        model.addAttribute("jobLots", purchaseService.getJobLots());
-        /* Payment Term is a database list on the desktop too - PaymentTermBind binds
-           "Id" / "TermsDescription" from InvDueTerms (InvfrmPurchasedirectInvoice.cs). */
-        model.addAttribute("paymentTerms", purchaseOrderFullService.getPaymentTerms());
+        // Every lookup, the numbers and the rights come from /api/purchase/purchase-invoice-return/init (the desktop's own sources).
         return "purchase/purchase_invoice_return";
     }
 

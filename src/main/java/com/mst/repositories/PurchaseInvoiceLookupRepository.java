@@ -15,7 +15,25 @@ public class PurchaseInvoiceLookupRepository {
     public String configuration(String name){return writes.configuration(context.currentOrganizationId(),context.currentCompanyId(),name);}
     public boolean enabled(String name){return Boolean.parseBoolean(configuration(name));}
     public int amountDigits(){String v=configuration("Default NoofDecimal Points For Amount");int digits=v.isBlank()?0:Integer.parseInt(v);if(digits<0||digits>15)throw new IllegalStateException("Invalid amount decimal configuration");return digits;}
-    public boolean subsidiary(){return jdbc.queryForList("EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?,@CompanyId=?",context.currentOrganizationId(),context.currentCompanyId()).stream().anyMatch(r->i(copy(r),"Id")==4);}
+    public boolean subsidiary(){return feature(4);}
+    /** CommonServices.GetERPFeatureById (DAL 0243:218-236). 4 = subsidiary accounts, 11 = branch feature. */
+    public boolean feature(int id){return jdbc.queryForList("EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?,@CompanyId=?",context.currentOrganizationId(),context.currentCompanyId()).stream().anyMatch(r->i(copy(r),"Id")==id);}
+    /** InvfrmPurchaseInvoice.HistoryCombosBranchDbCall:803-826 - own branch when PurchaseInvoiceBranchWise, else BLL 0581:3121. */
+    public List<Map<String,Object>> historyBranches(){
+        int org=context.currentOrganizationId(),company=context.currentCompanyId();
+        if(enabled("PurchaseInvoiceBranchWise"))return jdbc.queryForList("SELECT Id AS BranchId,BranchName FROM dbo.Branches WHERE Id=? AND OrganizationId=? AND CompanyId=?",context.currentBranchId(),org,company);
+        return jdbc.queryForList("EXEC dbo.USP_GetBranchsAllocatedToUserFromPurchaseInvoice @OrganizationId=?,@CompanyId=?,@UserId=?,@DocumentTypeId=?",org,company,context.currentUserId(),56);
+    }
+    /** HistoryComboDbCall:855-904 -> BLL 0581:2172 Usp_AllComboAgainstPurchaseInvoice, Activity "Supplier" (Id, ReferenceName). */
+    public List<Map<String,Object>> historySuppliers(String branchIds){
+        return jdbc.queryForList("EXEC dbo.Usp_AllComboAgainstPurchaseInvoice @OrganizationId=?,@CompanyId=?,@DocumentTypeIds=?,@Activity=?,@BranchesIds=?",context.currentOrganizationId(),context.currentCompanyId(),"56","Supplier",branchIds);
+    }
+    /** Conversion.ToInt: a blank or non-numeric configuration value reads as 0. */
+    private static int toInt(String v){try{return v==null||v.isBlank()?0:(int)Math.rint(Double.parseDouble(v.trim()));}catch(NumberFormatException notNumeric){return 0;}}
+    private String financialYearStart(){
+        for(var r:jdbc.queryForList("EXEC dbo.Proc_FinancialYear_ReadActiveByOrganizationIdNCompanyId @OrganizationId=?,@CompanyId=?",context.currentOrganizationId(),context.currentCompanyId())){var c=copy(r);if(i(c,"Id")==context.currentFinancialYearId()&&c.get("Start_Period")!=null)return c.get("Start_Period").toString().substring(0,10);}
+        return "";
+    }
     public Map<Integer,List<Map<String,Object>>> rateUoms(List<Map<String,Object>> details){
         records.requireRight(56,"View");var result=new LinkedHashMap<Integer,List<Map<String,Object>>>();
         for(var raw:details){int item=i(copy(raw),"ItemId");result.computeIfAbsent(item,key->jdbc.queryForList("EXEC dbo.Sp_UOMSchedule_GetAllMethod @OrganizationId=?,@CompanyId=?,@ItemId=?,@Activity='ReadByItemID'",context.currentOrganizationId(),context.currentCompanyId(),key));}
@@ -42,6 +60,13 @@ public class PurchaseInvoiceLookupRepository {
             result.put("freightAccounts",unique.values().stream().filter(r->!Set.of(2,15,22).contains(i(copy(r),"AccountTypeId"))).toList());
         }
         var flags=new LinkedHashMap<String,Boolean>();for(String name:List.of("ContractWagesChargetoProduct","WagesAmountCalculateOnQty","DebitAmountChargetoExpenseAcFreightGridPurchase","RateEditableOnPurchaseInvoice_InGatePurchase","WeightAddLessOnPurchaseInvoice","PurchaseInvoiceBranchWise","ValidateGrnAndInvoiceDateWithGpDate"))flags.put(name,enabled(name));
-        result.put("configuration",flags);result.put("subsidiary",subsidiary);result.put("amountDigits",amountDigits());return result;
+        result.put("configuration",flags);result.put("subsidiary",subsidiary);result.put("amountDigits",amountDigits());
+        // ImplementConfiguration:947-958, frmLoadGRN_Load:107, InitializeComponentMethod:743 (history From date).
+        result.put("branchFeature",feature(11));result.put("currentBranchId",context.currentBranchId());result.put("financialYearStart",financialYearStart());
+        result.put("historyFromDays",toInt(configuration("DefaultDaysToLessFromHistoryFromDate")));
+        var branches=historyBranches();result.put("historyBranches",branches);
+        // At load the branch combo is still empty, so HistoryComboDbCall(ValidateBranch:false) sends the user's branch (:890).
+        result.put("historySuppliers",historySuppliers(String.valueOf(context.currentBranchId())));
+        return result;
     }
 }

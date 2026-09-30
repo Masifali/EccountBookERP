@@ -1,457 +1,209 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Purchase Invoice Against GRN Direct - WinForms Replica</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <style>
-        body { font-family: "Verdana", Tahoma, Arial, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000000; margin: 0; padding: 0; }
-        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999999; height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; }
-        .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font-family: "Verdana", sans-serif; font-size: 11px; color: #000000; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 22px; border-radius: 2px; }
-        .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
-        .win-btn-tool-save { font-weight: bold; color: #004d40; }
-        .win-teal-header { background-color: #008080; color: #ffffff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
-        .win-teal-header-title { font-family: "Tahoma", sans-serif; font-size: 12pt; font-weight: bold; }
-        .win-form-body { background-color: #ffffff; padding: 6px; }
-        .win-group-box { border: 1px solid #d0d0d0; border-radius: 3px; padding: 8px 10px; margin-bottom: 6px; background-color: #ffffff; }
-        .win-group-box legend { font-family: "Tahoma", sans-serif; font-size: 9.75pt; font-weight: bold; color: #000000; width: auto; padding: 0 4px; margin-bottom: 4px; border: none; }
-        .win-label { font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-size: 9pt; font-weight: 600; color: #000000; white-space: nowrap; }
-        .win-textbox, .win-combo, .win-datepicker { font-family: "Verdana", sans-serif; font-size: 9.75pt; height: 25px; border: 1px solid #7a9a9e; padding: 2px 5px; box-sizing: border-box; background-color: #ffffff; color: #000000; border-radius: 0; width: 100%; }
-        .win-textbox:focus, .win-combo:focus, .win-datepicker:focus { border-color: #008080; outline: none; }
-        .win-btn-action { background-color: #008080; color: #ffffff; font-family: "Verdana", sans-serif; font-size: 9.75pt; font-weight: bold; border: none; height: 25px; padding: 0 14px; cursor: pointer; }
-        .win-btn-action:hover { background-color: #005959; }
-        .win-grid-container { border: 1px solid #7a9a9e; background-color: #ffffff; margin-top: 4px; }
-        .win-grid-scroll { max-height: 280px; overflow-x: auto; overflow-y: auto; }
-        .win-grid { width: 100%; border-collapse: collapse; font-family: "Verdana", sans-serif; font-size: 8.25pt; background-color: #ffffff; min-width: 950px; }
-        .win-grid th { background-color: #ece9d8; color: #000000; font-weight: normal; border: 1px solid #aca899; padding: 4px 6px; text-align: left; position: sticky; top: 0; z-index: 5; }
-        .win-grid td { border: 1px solid #e0e0e0; padding: 3px 6px; color: #000000; vertical-align: middle; }
-        .win-totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 11px; padding: 6px 12px; border: 1px solid #008080; border-radius: 2px; display: flex; justify-content: space-between; margin-top: 6px; }
-    </style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Purchase Invoice Against GRN Direct</title>
+<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+<link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260930a}">
+<link rel="stylesheet" th:href="@{/build/css/countx_direct_invoice.css?v=20260930a}">
+<!-- frmPurchaseInvoiceAgaintGrnDirect (ScreenDefinition 131, DocumentTypeId 138). Geometry follows InitializeComponent:
+     toolStrip1 / panel4 strip / groupBox1 "Main Information" (1264x124) / "Detail" grid / Other Expense (619) + Empty Bag (647) grids,
+     TabControl with Form and History pages aligned to the bottom. -->
+<style>
+    .pigd-strip{display:flex;align-items:center;gap:8px;min-height:27px;padding:0 4px;background:#fff;border-bottom:1px solid #ccc;flex-wrap:wrap}
+    .pigd-strip .title{font:bold 15px Tahoma,serif;color:#006b6b;margin-right:16px}
+    .pigd-strip label{display:flex;align-items:center;gap:4px;font:12px 'Segoe UI',Verdana,sans-serif}
+    .pigd-strip .push{margin-left:auto}
+    .pigd-strip select,.pigd-strip input[type=text]{height:24px;border:1px solid #888;font:12px Verdana}
+    fieldset.pigd-main{border:1px solid #bbb;background:#fff;margin:3px;padding:4px 6px 6px;min-width:0;overflow-x:auto}
+    fieldset.pigd-main legend{font:bold 13px Tahoma;padding:0 4px;width:auto;margin:0}
+    .pigd-grid{display:grid;grid-template-columns:85px 190px 84px 55px 110px 82px 181px 81px 42px 116px 86px 16px 127px;column-gap:4px;row-gap:3px;align-items:center;min-width:1255px}
+    .pigd-grid label{font:12px 'Segoe UI',Verdana,sans-serif;white-space:nowrap}
+    .pigd-grid input,.pigd-grid select{height:23px;border:1px solid #888;font:12px Verdana;padding:1px 3px;width:100%;min-width:0;background:#fff}
+    .pigd-grid input[readonly],.pigd-grid input:disabled{background:#f0f0f0}
+    .pigd-grid .num,.pigd-grid input.num{text-align:right}
+    .pigd-grid .dtcombo-wrap{width:100%}
+    .span2{grid-column:span 2}.span4{grid-column:span 4}
+    .pigd-sec{display:flex;justify-content:space-between;align-items:center;background:#f0f0f0;padding:2px 5px;font:bold 13px Tahoma;border-top:1px solid #ccc}
+    .pigd-wrap{overflow:auto;max-height:260px;background:#fff;border:1px solid #ccc}
+    .pigd-wrap:focus{outline:1px solid #008080}
+    .pigd-wrap table{font:12px Verdana}
+    .pigd-wrap td input{width:90px;height:21px;border:1px solid #9ab;text-align:right;font:12px Verdana}
+    .pigd-wrap td input[data-key=Remarks]{width:150px;text-align:left}
+    .pigd-wrap td select{width:180px;height:22px}
+    .pigd-wrap tfoot td{background:#f7f7f7}
+    .pigd-bottom{display:grid;grid-template-columns:minmax(0,619fr) minmax(0,647fr);gap:4px}
+    @media (max-width:900px){.pigd-bottom{grid-template-columns:minmax(0,1fr)}}
+    .pigd-tabs{display:flex;gap:2px;padding:2px 4px;background:#e8e8e8;border-top:1px solid #aaa}
+    .pigd-tabs button[aria-selected=true]{background:#fff;font-weight:bold;border-bottom-color:#fff}
+    fieldset.pigd-filters{border:1px solid #bbb;background:#fff;margin:3px;padding:4px 6px;display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end}
+    fieldset.pigd-filters legend{font:bold 13px Tahoma;width:auto;margin:0;padding:0 4px}
+    fieldset.pigd-filters label{display:flex;flex-direction:column;font:12px 'Segoe UI',Verdana}
+    fieldset.pigd-filters input,fieldset.pigd-filters select{height:23px;border:1px solid #888;font:12px Verdana}
+    .pigd-radios{display:grid;grid-template-columns:auto auto;gap:0 8px}
+    .pigd-radios label{flex-direction:row!important;gap:3px;align-items:center}
+    #histBody tr.sel td{background:#fff3c4}
+    .pigd-dialog{position:fixed;inset:5%;z-index:15000;background:#f0f0f0;border:1px solid #777;box-shadow:0 8px 40px #0004;display:flex;flex-direction:column;padding:6px;gap:4px}
+    .pigd-dialog h2{display:flex;justify-content:space-between;align-items:center}
+    .pigd-dialog .pigd-wrap{flex:1;max-height:none}
+    #ldrBranches{display:flex;gap:8px;flex-wrap:wrap;max-width:420px}
+    #keysDialog{inset:15% 25%}
+</style>
 </head>
 <body>
+<!-- toolStrip1 :Designer AddRange(11) -->
+<nav class="invoice-tools" aria-label="Purchase invoice toolbar">
+    <button type="button" id="btnNew">New</button>
+    <button type="button" id="btnRefresh">Refresh</button>
+    <button type="button" id="btnUpdate" hidden>Update</button>
+    <button type="button" id="btnSave">Save</button>
+    <button type="button" id="btnDelete" hidden>Delete</button>
+    <button type="button" id="btnAttachment">Attachment</button>
+    <button type="button" id="btnLoadGrn">Load GRN</button>
+    <button type="button" id="btnPrint103">103-Voucher</button>
+    <button type="button" id="btn220A">220A-Party Slip</button>
+    <button type="button" id="btn220B">220B-Summary</button>
+    <button type="button" id="btnShortcutKeys" title="Ctrl+Alt shows the shortcut keys">ShortCut Keys</button>
+    <a href="/purchase">Purchase</a>
+</nav>
 
-    <div class="win-tool-strip">
-        <button type="button" class="win-btn-tool" onclick="btnNew_Click()"><i class="fa fa-file-o"></i> &New</button>
-        <button type="button" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> &Save</button>
-        <button type="button" class="win-btn-tool" onclick="btnSave_Click()"><i class="fa fa-pencil"></i> &Update</button>
-        <button type="button" class="win-btn-tool" onclick="btnRefresh_Click()"><i class="fa fa-refresh"></i> &Refresh</button>
-        <button type="button" class="win-btn-tool" onclick="window.print()" data-rpt="225-InvRepPurchaseBillDirectWithoutPo.rpt"><i class="fa fa-print"></i> &Print</button>
-        <div style="margin-left: auto;">
-            <a href="/purchase" style="color: #000; text-decoration: none; font-weight: bold; font-size: 10px;">
-                <i class="fa fa-arrow-left"></i> Back to Purchase Dashboard
-            </a>
+<main>
+<section id="tabForm" role="tabpanel" aria-labelledby="tabBtnForm">
+    <!-- panel4 -->
+    <div class="pigd-strip">
+        <span class="title">Purchase Invoice Against GRN</span>
+        <label>Location Type <select id="cmbLocationType" data-dtcombo="single" data-dtcombo-caption="Location Type" style="width:212px"></select></label>
+        <span class="push"></span>
+        <label>Item Rate <input type="text" id="txtHeaderItemRate" inputmode="decimal" style="width:97px;text-align:right"></label>
+        <label><input type="checkbox" id="chkSlipPrint" checked> Slip Print</label>
+        <label><input type="checkbox" id="chkVoucherPrint" checked> Voucher Print</label>
+    </div>
+
+    <!-- groupBox1 "Main Information" -->
+    <fieldset class="pigd-main">
+        <legend>Main Information</legend>
+        <div class="pigd-grid">
+            <!-- row 1 -->
+            <label for="txtDocNo">Doc No,Date</label>
+            <div style="display:grid;grid-template-columns:81px 1fr;gap:2px"><input type="text" id="txtDocNo" readonly tabindex="-1"><input type="date" id="dtDocDate" aria-label="Doc Date"></div>
+            <label for="cmbPaymentTerm">Payment Term</label>
+            <select id="cmbPaymentTerm" class="span2" data-dtcombo="single" data-dtcombo-caption="Payment Term"></select>
+            <label for="cmbCommAgent">Comm Agent</label>
+            <select id="cmbCommAgent" data-dtcombo="single" data-dtcombo-caption="Commission Agent Name"></select>
+            <label for="txtCommRate">Comm %</label>
+            <input type="text" id="txtCommRate" class="num" inputmode="decimal">
+            <input type="text" id="txtCommAmount" class="num" tabindex="-1" aria-label="Commission Amount">
+            <label for="cmbCurrency">Fcy Code</label>
+            <select id="cmbCurrency" class="span2" data-dtcombo="single" data-dtcombo-caption="Currency"></select>
+            <!-- row 2 -->
+            <label for="cmbSupplier">Supplier Name</label>
+            <select id="cmbSupplier" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select>
+            <label for="txtDueDays">Due Days,Date</label>
+            <input type="text" id="txtDueDays" inputmode="numeric">
+            <input type="date" id="dtDueDate" disabled aria-label="Due Date">
+            <label for="cmbBroker">Brokery Agent</label>
+            <select id="cmbBroker" data-dtcombo="single" data-dtcombo-caption="Broker Ac" title="If Brokery Greater than 0 then Brokery Debit to product Else debit to Supplier And Selected Account Always Credit"></select>
+            <label for="txtBrokeryRate">Brokery %</label>
+            <input type="text" id="txtBrokeryRate" class="num" inputmode="decimal">
+            <input type="text" id="txtBrokeryAmount" class="num" readonly tabindex="-1" aria-label="Brokery Amount">
+            <label for="txtExchangeRate">Exchange Rate</label>
+            <input type="text" id="txtExchangeRate" class="num span2" inputmode="decimal">
+            <!-- row 3 -->
+            <label for="txtManualBillNo">Manual Bill No</label>
+            <input type="text" id="txtManualBillNo">
+            <label for="txtDeliveryTerm">Delivery Term</label>
+            <input type="text" id="txtDeliveryTerm" class="span2" readonly tabindex="-1">
+            <label for="cmbFreightAc" title="if Delivery Term Load Then Debit To Prodoct Else If Delivery term Ponch Then Debit to Supplier And Selected Account Always Credit">Freight Ac</label>
+            <select id="cmbFreightAc" data-dtcombo="single" data-dtcombo-caption="AccountTitle"></select>
+            <span></span><span></span>
+            <input type="text" id="txtFreightAmount" class="num" inputmode="numeric" aria-label="Freight Amount">
+            <label for="txtFcyAmount">Fcy Amount</label>
+            <input type="checkbox" id="chkFcyEnable" style="width:14px;height:14px" title="When 'FCY Amount' is unchecked, it will be automatically calculated whenever you change the item amount in the details. If it's checked, you can manually enter the FCY Amount and it won't be updated automatically." aria-label="Enable Fcy amount">
+            <input type="text" id="txtFcyAmount" class="num" inputmode="decimal" disabled>
+            <!-- row 4 -->
+            <label for="txtRemarks">Remarks</label>
+            <input type="text" id="txtRemarks" class="span4">
+            <label for="txtWagesAmount">Wages Amt</label>
+            <input type="text" id="txtWagesAmount" class="num" disabled>
+            <label for="txtBillAmount">Bill Amount</label>
+            <input type="text" id="txtBillAmount" class="num span2" readonly tabindex="-1" style="font-weight:bold">
+            <label for="txtLcyAmount">Lcy Amount</label>
+            <span></span>
+            <input type="text" id="txtLcyAmount" class="num" disabled>
+        </div>
+    </fieldset>
+
+    <div class="pigd-sec"><span>Detail</span><span id="lblRecords" style="font-weight:normal"></span></div>
+    <div class="pigd-wrap" id="grdWrap" tabindex="0" aria-label="Detail grid"><table><thead id="grdHead"></thead><tbody id="grdBody"></tbody><tfoot id="grdFoot"></tfoot></table></div>
+
+    <div class="pigd-bottom">
+        <div>
+            <div class="pigd-sec"><span>Other Expense (Credit To Supplier &amp; Debit To Product)</span></div>
+            <div class="pigd-wrap" id="expWrap" tabindex="0" style="max-height:170px" aria-label="Other Expense grid"><table style="width:100%"><thead><tr><th>Item Name</th><th>Remarks</th><th>Amount</th></tr></thead><tbody id="expBody"></tbody><tfoot id="expFoot"></tfoot></table></div>
+        </div>
+        <div>
+            <div class="pigd-sec"><span>Empty Bag Purchase (Debit to P.M Item)</span></div>
+            <div class="pigd-wrap" id="bagWrap" tabindex="0" style="max-height:170px" aria-label="Empty Bag grid"><table><thead><tr><th>Type</th><th>Item Name</th><th>Purchase Qty</th><th>Rate</th><th>Amount</th><th>Remarks</th><th>Credit account</th></tr></thead><tbody id="bagBody"></tbody><tfoot id="bagFoot"></tfoot></table></div>
         </div>
     </div>
+</section>
 
-    <div class="win-teal-header">
-        <div class="win-teal-header-title">Purchase Invoice Against GRN Direct</div>
-        <div id="lblVoucherDisplayHeader" style="font-weight: bold; font-size: 11pt; color: #ffeb3b;" th:text="'PI-GRN-2026-' + ${nextDocNo}">PI-GRN-2026-0001</div>
-    </div>
-
-    <div class="win-form-body">
-        <fieldset class="win-group-box">
-            <legend>Invoice Header & GRN Reference</legend>
-            <div class="row">
-                <div class="col-md-2">
-                    <label class="win-label">Doc No</label>
-                    <input type="text" id="txtDocNo" class="win-textbox" th:value="${nextDocNo}" readonly style="background-color: #f0f0f0; font-weight: bold;"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Invoice Date</label>
-                    <input type="date" id="txtDocDate" class="win-datepicker"/>
-                </div>
-                <div class="col-md-4">
-                    <label class="win-label">Supplier / Party</label>
-                    <select id="cmbSupplier" class="win-combo">
-                        <option value="0">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s.supplierCode + ' - ' + s.supplierName}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">GRN Reference No</label>
-                    <input type="text" id="txtGrnNo" class="win-textbox" placeholder="GRN Ref #"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">GRN Date</label>
-                    <input type="date" id="txtGrnDate" class="win-datepicker"/>
-                </div>
-            </div>
-
-            <div class="row" style="margin-top: 6px;">
-                <div class="col-md-12">
-                    <label class="win-label">Remarks / Description</label>
-                    <input type="text" id="txtRemarks" class="win-textbox" placeholder="Enter GRN invoice details..."/>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset class="win-group-box">
-            <legend>GRN Invoiced Items Entry</legend>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="win-label">Item</label>
-                    <select id="cmbItem" class="win-combo" onchange="onItemChange(this.value)">
-                        <option value="0">-- Select Item --</option>
-                        <option th:each="i : ${items}" th:value="${i['id']}" th:data-price="${i.purchasePrice}" th:text="${i.itemCode + ' - ' + i.itemName}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Warehouse</label>
-                    <select id="cmbWarehouse" class="win-combo">
-                        <option value="0">-- Select Warehouse --</option>
-                        <option th:each="w : ${warehouses}" th:value="${w['id']}" th:text="${w['warehouseName']}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Job / Lot</label>
-                    <select id="cmbJobLot" class="win-combo">
-                        <option value="0">-- Select Job/Lot --</option>
-                        <option th:each="j : ${jobLots}" th:value="${j['id']}" th:text="${j['description']}"></option>
-                    </select>
-                </div>
-                <div class="col-md-1">
-                    <label class="win-label">GRN Qty</label>
-                    <input type="number" step="0.01" id="txtQty" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Rate</label>
-                    <input type="number" step="0.01" id="txtRate" class="win-textbox" placeholder="0.00" oninput="calcLineAmount()"/>
-                </div>
-                <div class="col-md-2">
-                    <label class="win-label">Amount</label>
-                    <input type="number" step="0.01" id="txtAmount" class="win-textbox" placeholder="0.00" readonly style="background-color: #f0f0f0; font-weight: bold; text-align: right; color: #008080;"/>
-                </div>
-            </div>
-
-            <div class="row" style="margin-top: 6px; align-items: center;">
-                <div class="col-md-10">
-                    <label class="win-label">Line Remarks</label>
-                    <input type="text" id="txtLineRemarks" class="win-textbox" placeholder="Line item remarks..."/>
-                </div>
-                <div class="col-md-2" style="margin-top: 16px; text-align: right;">
-                    <button type="button" class="win-btn-action" style="width: 100%;" onclick="btnAddRow_Click()"><i class="fa fa-plus"></i> + Add Item</button>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset class="win-group-box">
-            <legend>Invoiced Items Grid</legend>
-            <div class="win-grid-container">
-                <div class="win-grid-scroll">
-                    <table class="win-grid">
-                        <thead>
-                            <tr>
-                                <th style="width: 45px; text-align: center;">Sr #</th>
-                                <th style="width: 120px;">Item Code</th>
-                                <th style="width: 240px;">Item Name</th>
-                                <th style="width: 90px; text-align: right;">GRN Qty</th>
-                                <th style="width: 90px; text-align: right;">Rate</th>
-                                <th style="width: 110px; text-align: right;">Amount</th>
-                                <th style="width: 130px;">Warehouse</th>
-                                <th style="width: 110px;">Job / Lot</th>
-                                <th>Line Remarks</th>
-                                <th style="width: 50px; text-align: center;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="grdDetailTbody">
-                            <tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No items added yet. Select an item and click + Add Item.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="row" style="margin-top: 8px;">
-                <div class="col-md-3">
-                    <label class="win-label">Freight Charges</label>
-                    <input type="number" step="0.01" id="txtFreight" class="win-textbox" value="0.00" oninput="calcNetInvoiceTotal()"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Discount</label>
-                    <input type="number" step="0.01" id="txtDiscount" class="win-textbox" value="0.00" oninput="calcNetInvoiceTotal()"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Sales Tax Amount</label>
-                    <input type="number" step="0.01" id="txtSalesTax" class="win-textbox" value="0.00" oninput="calcNetInvoiceTotal()"/>
-                </div>
-                <div class="col-md-3">
-                    <label class="win-label">Net Payable Amount</label>
-                    <input type="number" step="0.01" id="txtNetPayable" class="win-textbox" value="0.00" readonly style="background-color: #e0f2f1; font-weight: bold; text-align: right; color: #004d40; font-size: 11pt;"/>
-                </div>
-            </div>
-
-            <div class="win-totals-bar">
-                <div>Total Qty: <span id="lblTotalQty">0.00</span></div>
-                <div>Gross Total Amount: <span id="lblGrossTotal">0.00</span></div>
-            </div>
-        </fieldset>
-    </div>
-
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script>
-        let lineItems = [];
-
-        $(document).ready(function() {
-            setWinDefaultDate();
-        });
-
-        function setWinDefaultDate() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('txtDocDate').value = `${year}-${month}-${day}`;
-            document.getElementById('txtGrnDate').value = `${year}-${month}-${day}`;
-        }
-
-        function onItemChange(val) {
-            const opt = $('#cmbItem option:selected');
-            const price = parseFloat(opt.attr('data-price') || '0');
-            if (price > 0) {
-                $('#txtRate').val(price.toFixed(2));
-            }
-            calcLineAmount();
-        }
-
-        function calcLineAmount() {
-            const qty = parseFloat($('#txtQty').val() || '0');
-            const rate = parseFloat($('#txtRate').val() || '0');
-            const amt = qty * rate;
-            $('#txtAmount').val(amt.toFixed(2));
-        }
-
-        function btnAddRow_Click() {
-            const itemId = parseInt($('#cmbItem').val() || '0');
-            const itemCodeText = $('#cmbItem option:selected').text();
-            const parts = itemCodeText.split(' - ');
-            const itemCode = parts[0] || '';
-            const itemName = parts[1] || itemCodeText;
-            const qty = parseFloat($('#txtQty').val() || '0');
-            const rate = parseFloat($('#txtRate').val() || '0');
-            const amount = parseFloat($('#txtAmount').val() || '0');
-            const remarks = $('#txtLineRemarks').val() || '';
-            const whId = parseInt($('#cmbWarehouse').val() || '0');
-            const whName = whId > 0 ? $('#cmbWarehouse option:selected').text() : '';
-            const jobLotId = parseInt($('#cmbJobLot').val() || '0');
-            const jobLotCode = jobLotId > 0 ? $('#cmbJobLot option:selected').text() : '';
-
-            if (itemId <= 0) {
-                alert("Please select a valid Item.");
-                $('#cmbItem').focus();
-                return;
-            }
-            if (qty <= 0) {
-                alert("GRN Quantity must be greater than zero.");
-                $('#txtQty').focus();
-                return;
-            }
-
-            const item = {
-                lineId: lineItems.length + 1,
-                itemId: itemId,
-                itemCode: itemCode,
-                itemName: itemName,
-                quantity: qty,
-                itemRate: rate,
-                amount: amount,
-                warehouseId: whId,
-                warehouseName: whName,
-                jobLotId: jobLotId,
-                jobLotCode: jobLotCode,
-                remarks: remarks
-            };
-
-            lineItems.push(item);
-            renderGrid();
-
-            $('#cmbItem').val('0');
-            $('#txtQty').val('');
-            $('#txtRate').val('');
-            $('#txtAmount').val('');
-            $('#txtLineRemarks').val('');
-        }
-
-        function removeLineItem(idx) {
-            lineItems.splice(idx, 1);
-            lineItems.forEach((item, i) => item.lineId = i + 1);
-            renderGrid();
-        }
-
-        function renderGrid() {
-            const tbody = $('#grdDetailTbody');
-            tbody.empty();
-
-            if (lineItems.length === 0) {
-                tbody.html('<tr><td colspan="10" style="text-align:center; padding: 15px; color: #777;">No items added yet. Select an item and click + Add Item.</td></tr>');
-                updateTotals(0, 0);
-                return;
-            }
-
-            let grandQty = 0;
-            let grandTotal = 0;
-
-            lineItems.forEach((item, idx) => {
-                grandQty += item.quantity;
-                grandTotal += item.amount;
-
-                tbody.append(`
-                    <tr>
-                        <td style="text-align: center; font-weight: bold;">${item.lineId}</td>
-                        <td><strong style="color: #008080;">${escapeHtml(item.itemCode)}</strong></td>
-                        <td>${escapeHtml(item.itemName)}</td>
-                        <td style="text-align: right;">${item.quantity.toFixed(2)}</td>
-                        <td style="text-align: right;">${item.itemRate.toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: bold;">${item.amount.toFixed(2)}</td>
-                        <td>${escapeHtml(item.warehouseName)}</td>
-                        <td>${escapeHtml(item.jobLotCode)}</td>
-                        <td>${escapeHtml(item.remarks)}</td>
-                        <td style="text-align: center;">
-                            <button type="button" class="btn btn-danger btn-xs" style="padding: 0 5px; font-size: 10px;" onclick="removeLineItem(${idx})">&times;</button>
-                        </td>
-                    </tr>
-                `);
-            });
-
-            updateTotals(grandQty, grandTotal);
-        }
-
-        function updateTotals(qty, total) {
-            $('#lblTotalQty').text(qty.toFixed(2));
-            $('#lblGrossTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            calcNetInvoiceTotal();
-        }
-
-        function calcNetInvoiceTotal() {
-            let gross = 0;
-            lineItems.forEach(i => gross += i.amount);
-            const freight = parseFloat($('#txtFreight').val() || '0');
-            const discount = parseFloat($('#txtDiscount').val() || '0');
-            const salesTax = parseFloat($('#txtSalesTax').val() || '0');
-            const net = Math.max(0, gross + freight + salesTax - discount);
-            $('#txtNetPayable').val(net.toFixed(2));
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
-
-        function btnSave_Click() {
-            const suppId = parseInt($('#cmbSupplier').val() || '0');
-            if (suppId <= 0) {
-                alert("Please select a valid Supplier.");
-                $('#cmbSupplier').focus();
-                return;
-            }
-            if (lineItems.length === 0) {
-                alert("At least one item is required before saving.");
-                return;
-            }
-
-            const dto = {
-                documentTypeId: 18,
-                docNo: parseInt($('#txtDocNo').val() || '0'),
-                docDate: $('#txtDocDate').val(),
-                supplierId: suppId,
-                remarks: $('#txtRemarks').val() + ($('#txtGrnNo').val() ? ' [GRN Ref: ' + $('#txtGrnNo').val() + ']' : ''),
-                lineItems: lineItems
-            };
-
-            $.ajax({
-                url: '/api/purchase/save',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(dto),
-                success: function(res) {
-                    if (res && res.success) {
-                        alert(res.message || "Purchase Invoice Against GRN Direct saved successfully.");
-                        btnNew_Click();
-                    } else {
-                        alert("Error saving transaction: " + (res.message || "Unknown error"));
-                    }
-                },
-                error: function(xhr) {
-                    alert("Error saving transaction.");
-                }
-            });
-        }
-
-        function btnNew_Click() {
-            lineItems = [];
-            renderGrid();
-            $('#txtRemarks').val('');
-            $('#txtGrnNo').val('');
-            $('#txtFreight').val('0.00');
-            $('#txtDiscount').val('0.00');
-            $('#txtSalesTax').val('0.00');
-            $('#txtNetPayable').val('0.00');
-            $('#cmbSupplier').val('0');
-            setWinDefaultDate();
-            $.ajax({
-                url: '/api/purchase/next-code?docType=18',
-                type: 'GET',
-                success: function(res) {
-                    if (res && res.docNo) {
-                        $('#txtDocNo').val(res.docNo);
-                        $('#lblVoucherDisplayHeader').text("PI-GRN-2026-" + String(res.docNo).padStart(4, '0'));
-                    }
-                }
-            });
-        }
-
-        function btnRefresh_Click() { btnNew_Click(); }
-    </script>
-
-    <!-- ==================================================================================
-         Form History. The desktop form carries a grdHistory grid (132 references) and this
-         screen had none, so a saved document could not be found again.
-
-         Four mutually exclusive date radios, each end optional - an unticked end is OMITTED
-         rather than defaulted to today (InvfrmPurchaseInvoice.cs:4948-4975). Footer-right,
-         where the desktop puts it.
-
-         There is no user or "view all records" control here on purpose: the desktop derives
-         both from the signed-in user and the screen's grant grid, and so does the endpoint.
-         ================================================================================== -->
-    <div id="invoiceHistoryPanel" style="margin-top:10px;border:1px solid #b9b9b9;background:#f7f7f7;padding:8px;">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <strong style="font-size:11px;">History</strong>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="doc" checked/> Doc Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="entry"/> Entry Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="modify"/> Modify Date</label>
-            <label style="font-size:11px;"><input type="radio" name="ihDateMode" value="approved"/> Approved Date</label>
-            <span style="font-size:11px;">From</span><input type="date" id="ihFromDate" style="font-size:11px;"/>
-            <span style="font-size:11px;">To</span><input type="date" id="ihToDate" style="font-size:11px;"/>
-            <span style="font-size:11px;">Doc No</span>
-            <input type="number" id="ihFromDocNo" style="width:70px;font-size:11px;" placeholder="From"/>
-            <input type="number" id="ihToDocNo" style="width:70px;font-size:11px;" placeholder="To"/>
-            <span style="font-size:11px;">Supplier</span>
-            <select id="ihParty" style="font-size:11px;min-width:130px;" data-dtcombo="single" data-dtcombo-caption="Supplier Name"><option value="0">-- All --</option></select>
-            <span style="font-size:11px;">Rows</span>
-            <input type="number" id="ihNoOfRecords" style="width:60px;font-size:11px;" placeholder="All"/>
-            <input type="hidden" id="ihBranches"/>
-            <!-- Footer right, as on the desktop. -->
-            <button type="button" id="ihSearchBtn" class="win-btn-action" style="margin-left:auto;">
-                <i class="fa fa-search"></i> Search
-            </button>
+<section id="tabHistory" role="tabpanel" aria-labelledby="tabBtnHistory" hidden>
+    <!-- toolStrip2: Reset, Refresh (no Click handler on the desktop), LoadAll (Visible=false) -->
+    <nav class="invoice-tools"><button type="button" id="btnHistReset">Reset</button><button type="button" id="btnHistRefresh">Refresh</button></nav>
+    <div class="pigd-sec"><span>Purchase Invoice History</span></div>
+    <fieldset class="pigd-filters">
+        <legend>Filters</legend>
+        <label>From Date<span><input type="checkbox" id="chkHistFrom" checked aria-label="Use From Date"> <input type="date" id="dtHistoryFrom"></span></label>
+        <label>To Date<span><input type="checkbox" id="chkHistTo" checked aria-label="Use To Date"> <input type="date" id="dtHistoryTo"></span></label>
+        <label>From Doc No<input type="text" id="txtHistFromNo" inputmode="numeric" style="width:100px"></label>
+        <label>To Doc No<input type="text" id="txtHistToNo" inputmode="numeric" style="width:100px"></label>
+        <label>Supplier Name<select id="cmbHistorySupplier" data-dtcombo="single" data-dtcombo-caption="Supplier Name" style="width:240px"></select></label>
+        <button type="button" id="btnShow">Show</button>
+        <div class="pigd-radios">
+            <label><input type="radio" name="histDate" value="doc" checked> Doc Date</label>
+            <label><input type="radio" name="histDate" value="modify"> Modify Date</label>
+            <label><input type="radio" name="histDate" value="entry"> Entry Date</label>
+            <label><input type="radio" name="histDate" value="approved"> Approved Date</label>
         </div>
-        <div id="ihMessage" style="font-size:11px;min-height:14px;margin:4px 0;"></div>
-        <!-- Full page width; the TABLE scrolls, never the page. -->
-        <div style="overflow:auto;max-height:260px;border:1px solid #d0d0d0;background:#fff;min-width:0;">
-            <table style="width:max-content;min-width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap;">
-                <thead id="ihHead" style="position:sticky;top:0;background:#e8e8e8;"></thead>
-                <tbody id="ihBody"></tbody>
-            </table>
-        </div>
+    </fieldset>
+    <div class="pigd-wrap" id="histWrap" tabindex="0" style="max-height:282px" aria-label="History grid"><table><thead id="histHead"></thead><tbody id="histBody"></tbody><tfoot id="histFoot"></tfoot></table></div>
+    <div class="pigd-sec"><span>Detail Info of Above selected row</span></div>
+    <div class="pigd-wrap" style="max-height:180px"><table><thead id="detHead"></thead><tbody id="detBody"></tbody></table></div>
+</section>
+</main>
+
+<!-- tabControl1.Alignment = Bottom -->
+<div class="pigd-tabs" role="tablist">
+    <button type="button" id="tabBtnForm" role="tab" aria-selected="true">Form</button>
+    <button type="button" id="tabBtnHistory" role="tab" aria-selected="false">History</button>
+</div>
+
+<!-- frmLoadGRN (DocumentTypeId 137) -->
+<section id="grnLoader" class="pigd-dialog" hidden role="dialog" aria-label="Load GRN">
+    <h2>Load GRN <button type="button" id="ldrClose">Close</button></h2>
+    <div class="invoice-fields">
+        <label class="invoice-field" style="width:130px">From Date<input type="date" id="ldrFrom"></label>
+        <label class="invoice-field" style="width:130px">To Date<input type="date" id="ldrTo"></label>
+        <div class="invoice-field">Branch Name<div id="ldrBranches"></div></div>
+        <button type="button" id="ldrShow">Show</button>
+        <button type="button" id="ldrLoad">Load on Invoice</button>
+        <button type="button" id="ldrReset">Reset</button>
     </div>
-    <script>window.INVOICE_HISTORY_SCREEN = "purchase-invoice-grn-direct";</script>
-    <script th:src="@{/build/js/countx_invoice_history.js?v=20260920a}"></script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
-    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
-<script src="/js/print-rpt.js?v=20261001a"></script>
+    <div class="pigd-wrap"><table><thead id="ldrHead"></thead><tbody id="ldrBody"></tbody></table></div>
+    <div class="pigd-wrap" style="max-height:160px;flex:none"><table><thead id="ldrDetailHead"></thead><tbody id="ldrDetailBody"></tbody></table></div>
+</section>
+
+<!-- ShortCutKeyPopUp -->
+<section id="keysDialog" class="pigd-dialog" hidden role="dialog" aria-label="Shortcut keys">
+    <h2>ShortCut Keys <button type="button" id="keysClose">Close</button></h2>
+    <div class="pigd-wrap"><table style="width:100%"><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="keysBody"></tbody></table></div>
+</section>
+
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+<script th:src="@{/build/js/countx_purchase_request.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_invoice_attachments.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_pi_grn_direct.js?v=20260930a}"></script>
 </body>
 </html>

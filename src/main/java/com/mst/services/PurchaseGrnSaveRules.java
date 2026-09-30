@@ -36,7 +36,11 @@ public class PurchaseGrnSaveRules {
     }
     private static boolean differs(double a,double b){return Math.abs(a-b)>0.0001;}
 
-    public void apply(Map<String,Object> header,List<Map<String,Object>> details,List<Map<String,Object>> emptyBags,
+    /**
+     * Returns the empty-bag rows Insert() puts in InvgrnDetailEmptyBagslist (:3821-3839): Type and Item
+     * chosen and Received or Purchase Qty above zero. Every other row is validated but not stored.
+     */
+    public List<Map<String,Object>> apply(Map<String,Object> header,List<Map<String,Object>> details,List<Map<String,Object>> emptyBags,
                       List<Map<String,Object>> breakups,Map<String,Object> incoming,int id) {
         var cfg=form.configValues();
         int gpId=number(header.get("InwardGatePassId"));
@@ -63,7 +67,9 @@ public class PurchaseGrnSaveRules {
             if(pending==null)throw new Refusal("This gate pass is not pending for GRN.");
             if(!"Accepted".equals(Objects.toString(pending.get("Status"),"")))throw new Refusal("Status Not Accepted Please check status");
             if(!flag(cfg.get("LabCompulsoryNotCheckingOnGRN"))&&number(pending.get("LastLabId"))<=0)throw new Refusal("Lab is pending for this gate pass. Please do lab first then Load");
-            if(number(pending.get("FreightSpecialApprovalStatusId"))==1)throw new Refusal("Please complete the Freight Voucher approval before proceeding further");
+            // No Freight Voucher special-approval stop here: Insert() has none, and the "Load Gate Pass"
+            // dialog path (LoadGatePassByRowFromLoader :3048) lets such a gate pass through; the insert
+            // procedure performs its own freight-voucher checks.
             ref=number(pending.get("RefDocumentTypeId"));freightId=number(pending.get("FreightId"));
             receivedWeight=dbl(pending.get("ReceivedWeight"));
             Object d=pending.get("GpDate");
@@ -108,7 +114,8 @@ public class PurchaseGrnSaveRules {
             if(carriage<=0&&freightId==0)throw new Refusal("Freight Amount field required");
         }
         boolean existsFOC=emptyBags.stream().anyMatch(r->number(r.get("TypeId"))==3);
-        double gross=0,bill=0,stock=0,freightFromGrid=0;
+        double gross=0,bill=0,stock=0,freightFromGrid=0,grnQty=0;
+        boolean otherThanOpenBulk=false;
         int rowNo=0;
         for(var d:details) {
             rowNo++;
@@ -125,13 +132,64 @@ public class PurchaseGrnSaveRules {
             if(dbl(d.get("NetBillWeight"))>dbl(d.get("GrossWeight")))throw new Refusal("NetBillWeight cannot be greater than Gross Weight. Please check.");
             if(ref!=105&&existsFOC&&dbl(d.get("EBWTotal"))==0)
                 throw new Refusal("EmptyBags Weight cannot be greater than 0 when Empty Bags Case is [Purchase Against Weight] in Detail Grid And row No: "+rowNo);
+            if(number(d.get("PackingTypeId"))!=5) { otherThanOpenBulk=true; grnQty+=dbl(d.get("ItemQty")); }
             gross+=dbl(d.get("GrossWeight"));bill+=dbl(d.get("NetBillWeight"));stock+=dbl(d.get("StockWeight"));freightFromGrid+=dbl(d.get("FreightAmount"));
         }
         if(ref==105) { header.put("OtherCharges",carriage); header.put("CarriageAmount",freightFromGrid); }
         weightBusinessValidations(gross,ref,freightId,term,sup,fac,tolerance,exclude,deductionPolicyOn,
                 deduction+chargeToParty,sup-receivedWeight,Objects.toString(header.get("DocDate"),""));
+        var storedBags=emptyBags(emptyBags,grnQty,otherThanOpenBulk,flag(cfg.get("EmptyBagsInofrmationCompulsoryOnGRN")));
         if(ref==105&&breakups.isEmpty())throw new Refusal("Purchase BreakUp Required When Doing Market Purchase Entry");
         for(var b:breakups)if(ref==105&&dbl(b.get("GrossWeight"))==0)throw new Refusal("GrossWeight not found in Empty Bags Weight Breakup grid.");
+        return storedBags;
+    }
+
+    /**
+     * Insert() :3785-3871. The desktop grid always holds at least one (blank) row, so the
+     * EmptyBagsInofrmationCompulsoryOnGRN comparison runs even when no bag row was filled in.
+     * Only rows with both Type and Item chosen are summed, checked and stored.
+     */
+    List<Map<String,Object>> emptyBags(List<Map<String,Object>> bags,double grnQty,boolean otherThanOpenBulk,boolean compulsory) {
+        double received=0,purchased=0;
+        for(var b:bags) {
+            if(number(b.get("TypeId"))>0&&number(b.get("ItemId"))>0) {
+                if(number(b.get("BagsCondition"))==0)throw new Refusal("Please Select Bags_Condition First in Empty Bag Detail");
+                received+=dbl(b.get("ReceivedQty"));purchased+=dbl(b.get("PurchaseQty"));
+            }
+        }
+        if(compulsory&&otherThanOpenBulk&&differs(grnQty,received+purchased))
+            throw new Refusal("Empty Bags Qty must be equal to GrnQty\nGrn Qty is "+f(grnQty)+" (Without OpenBulk) and Empty Bags Qty is "+f(received+purchased));
+        List<Map<String,Object>> stored=new ArrayList<>();
+        for(var b:bags) {
+            int type=number(b.get("TypeId"));
+            if(number(b.get("ItemId"))<=0||type<=0)continue;
+            if(dbl(b.get("ReceivedQty"))>0||dbl(b.get("PurchaseQty"))>0)stored.add(b);
+            if(type==1&&received==0&&purchased==0)throw new Refusal("Received Qty Or Purchase Qty Required in EmptyBags Detail");
+            if((type==2||type==3)&&purchased==0)throw new Refusal("Purchase Qty Required in EmptyBags Detail");
+            if((type==4||type==5)&&received==0)throw new Refusal("Received Qty Required in EmptyBags Detail");
+            if(differs(grnQty,received+purchased))throw new Refusal("Empty Bags Quantity must be equal to GrnQty");
+        }
+        return stored;
+    }
+
+    /**
+     * TotalEbPurchaseAgainstWeightUtilizeInGrid :5080 — the grid state Insert() saves. Σ Purchase Qty of
+     * "Purchase Against Weight" (type 2) bag rows is spread over the detail rows in grid order; each
+     * touched row gets EbPurAgainstWeight = applied qty × E.b/Unit and Bill Weight = Gross − E.b Total −
+     * Wt Cut Total − Add/Less + that weight. Nothing is touched when there is no such purchase qty.
+     */
+    static void utilizePurchaseAgainstWeight(List<Map<String,Object>> details,List<Map<String,Object>> bags) {
+        double remaining=0,gridQty=0;
+        for(var b:bags)if(number(b.get("TypeId"))==2)remaining+=dbl(b.get("PurchaseQty"));
+        for(var d:details)gridQty+=dbl(d.get("ItemQty"));
+        if(remaining<=0||gridQty<=0)return;
+        for(var d:details) {
+            double applied=Math.min(remaining,dbl(d.get("ItemQty"))),weight=applied*dbl(d.get("EBWPerUnit"));
+            d.put("EbPurAgainstWeight",weight);
+            d.put("NetBillWeight",dbl(d.get("GrossWeight"))-dbl(d.get("EBWTotal"))-dbl(d.get("WtCutTotal"))-dbl(d.get("AdLsWeight"))+weight);
+            remaining-=applied;
+            if(remaining<=0.0001)break;
+        }
     }
 
     /** ValidationforQty :3251 — detail qty per pack size (plus other GRNs of the gate pass) against the breakup. */

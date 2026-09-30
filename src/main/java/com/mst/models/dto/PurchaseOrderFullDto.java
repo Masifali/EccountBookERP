@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 public class PurchaseOrderFullDto {
     private Integer purchaseOrderMasterId = 0;
-    private Integer documentTypeId = 1052;
+    private Integer documentTypeId = 41;      // po.DocumentTypeId = 41 (:3295); the service forces it anyway
     private Integer docNo;
     private Integer branchNo;
     private String docDate;
@@ -223,6 +223,20 @@ public class PurchaseOrderFullDto {
     private Integer currencyId = 0;
     private Double exchangeRate = 0.0;
 
+    /* grdPaymentDetail's calculation mode (PCalculateByPercent :2478 / :2492). */
+    private Boolean paymentByPercent = false;
+    /* OrderDetailRemoveIds (:2686) - ",id,id" of saved lines removed in update mode. */
+    private String orderDetailRemoveIds;
+    /* grdSupplierLoadingDetail rows (:3405-3423), as ReadByHeaderId_PurchaseOrderSupplierDispatchDetail returned them. */
+    private List<java.util.Map<String, Object>> supplierDispatchDetail = new ArrayList<>();
+
+    public Boolean getPaymentByPercent() { return paymentByPercent; }
+    public void setPaymentByPercent(Boolean v) { this.paymentByPercent = v; }
+    public String getOrderDetailRemoveIds() { return orderDetailRemoveIds; }
+    public void setOrderDetailRemoveIds(String v) { this.orderDetailRemoveIds = v; }
+    public List<java.util.Map<String, Object>> getSupplierDispatchDetail() { return supplierDispatchDetail; }
+    public void setSupplierDispatchDetail(List<java.util.Map<String, Object>> v) { this.supplierDispatchDetail = v; }
+
     public Integer getCurrencyId() { return currencyId; }
     public void setCurrencyId(Integer currencyId) { this.currencyId = currencyId; }
     public Double getExchangeRate() { return exchangeRate; }
@@ -264,7 +278,8 @@ public class PurchaseOrderFullDto {
         private String jobLotName;
         private Integer loadingLocationCityId;
         private String loadingLocationCityName;
-        private Double moisturePercent = 0.0;
+        /* txtMoisture.Text -> PurchaseOrderDetail.Moisture nvarchar(50) (:3398): the typed text, not a number. */
+        private String moisturePercent;
         private String factoryType = "Standard"; // Sample or Standard
         private String remarks;
 
@@ -331,8 +346,8 @@ public class PurchaseOrderFullDto {
         public void setLoadingLocationCityId(Integer loadingLocationCityId) { this.loadingLocationCityId = loadingLocationCityId; }
         public String getLoadingLocationCityName() { return loadingLocationCityName; }
         public void setLoadingLocationCityName(String loadingLocationCityName) { this.loadingLocationCityName = loadingLocationCityName; }
-        public Double getMoisturePercent() { return moisturePercent; }
-        public void setMoisturePercent(Double moisturePercent) { this.moisturePercent = moisturePercent; }
+        public String getMoisturePercent() { return moisturePercent; }
+        public void setMoisturePercent(String moisturePercent) { this.moisturePercent = moisturePercent; }
         public String getFactoryType() { return factoryType; }
         public void setFactoryType(String factoryType) { this.factoryType = factoryType; }
         public String getRemarks() { return remarks; }

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
 /** Keep deliberate Purchase permission/validation reasons visible to the form. */
-@RestControllerAdvice(assignableTypes={PurchaseDirectInvoiceRestController.class,PurchaseInvoiceFullRestController.class,GrnLoaderRestController.class,PurchaseInvoiceAttachmentController.class})
+@RestControllerAdvice(assignableTypes={PurchaseDirectInvoiceRestController.class,PurchaseInvoiceFullRestController.class,GrnLoaderRestController.class,PurchaseInvoiceAttachmentController.class,PurchaseInvoiceAgainstGrnDirectRestController.class})
 public class PurchaseRefusalAdvice {
     @ExceptionHandler(org.springframework.dao.DataAccessException.class)
     public ResponseEntity<Map<String,Object>> database(org.springframework.dao.DataAccessException error){
