@@ -71,7 +71,7 @@ public class PurchaseInvoiceWriteRepository {
         ProcExec.run(jdbc,"EXEC dbo.USP_VoucherBalanceCheck @OrganizationId=?,@CompanyId=?,@Id=?",org,company,voucherId);
         int historyId=execute("Sp_VoucherHead_H_Insert",vh);
         for(var row:voucher.details()){row.put("DocumentTypeIdRef",historyId);execute("Sp_VoucherDetail_H_Insert",row);}
-        if(type==57)ProcExec.run(jdbc,"EXEC dbo.Sp_InventoryTransactions_GetALLMethod @OrganizationId=?,@CompanyId=?,@RefDocumentTypeId=?,@RefDocIdNo=?",org,company,type,id);
+        if(type==57||type==98)ProcExec.run(jdbc,"EXEC dbo.Sp_InventoryTransactions_GetALLMethod @OrganizationId=?,@CompanyId=?,@RefDocumentTypeId=?,@RefDocIdNo=?",org,company,type,id);
         ProcExec.run(jdbc,"EXEC DAW.USp_DocumentApprovalDetail_Insert @OrganizationId=?,@CompanyId=?,@DocumentTypeId=?,@Id=?,@LimitAmount=?",org,company,type,id,n(h,"BillAmount"));
     }
 }

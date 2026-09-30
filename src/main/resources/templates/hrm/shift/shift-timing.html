@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Shift Timing - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        /* frmGenShiftTiming: groups Main / Duty Timing / In Time / OutTime on the left (668), WeekDays (257) on the right. */
+        .st-body { display: flex; gap: 0; flex-wrap: wrap; align-items: flex-start; min-width: 0; }
+        .st-left { flex: 1 1 560px; min-width: 0; }
+        .st-right { flex: 0 1 280px; min-width: 0; }
+        .st-pair { display: flex; flex-wrap: wrap; min-width: 0; }
+        .st-pair > .hrm-group { flex: 1 1 260px; }
+        .st-right .hrm-grid-wrap { max-height: 420px; min-height: 120px; }
+        .hrm-cell-btn { height: 18px; min-width: 44px; padding: 0 4px; font-size: 8pt; }
+        @media (max-width: 700px) { .st-right { flex: 1 1 100%; } }
+    </style>
+</head>
+<!-- Architecture.WinApp.HRM.AttendanceManagement.frmGenShiftTiming - ClientSize 961 x 552, KeyPreview; tabControl1 (bottom): "Form" | "History".
+     toolStrip1: New | Save | SaveAs (hidden) | Update (hidden) | Print (hidden, no handler) | Refresh | Duty Roaster (-> frmDutyRoasterNew, "DutyRoaster" View right).
+     label11 "Shift Timing Define". groupBox1 "Main" (16,6 668x101): Shift CmbShift (+ brnShift -> frmGenShift; Leave -> BindShiftLocation),
+       Shift Location CmbShiftLocation (+ btnShiftLocation -> frmShiftLocation), Start Date / End Date (Short), Description, Next Day Closed.
+     groupBox3 "Duty Timing" (16,109 668x121): Start Time (Leave), Start Break Time, End Break Time, End Time (Leave), Shift Hours (ro),
+       In Hours / Out Hours (TextChanged), Total Hours (ro), Total Days Hours (ro). All pickers "hh:mm tt", designer Value 18:41.
+     groupBox4 "In Time" (16,236 325x220): Late Start / Late End, Short Leave Start / End, Half Day Start / End, Absent After In Time.
+     groupBox5 "OutTime" (353,236 331x220): Absent Before Out Time, Half Day Start / End, Short Leave Start / End, Departure Start / End.
+     groupBox2 "WeekDays" (688,6 257x450): grd - Wds selector (header selector), ProfileId hidden, "Day Name" 150.
+     History tab: grdShift - Edit / SaveAs button columns (frozen), Id, LoacationName, ShiftName ... AbsentBeforeOutTime; DoubleClick = Edit. -->
+<body class="pd-body hrm-body" data-hrm="shift-timing" data-screen="654">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmShift.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmShift.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnSaveAs" class="win-btn-tool is-hidden" onclick="HrmShift.btnSaveAs(this)"><i class="fa fa-copy"></i> <span>SaveAs</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="HrmShift.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="toolStripButton1" class="win-btn-tool" onclick="HrmShift.toolStripButton1(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btnDutyRoasterForm" class="win-btn-tool" onclick="HrmShift.btnDutyRoasterForm(this)"><i class="fa fa-calendar"></i> <span>Duty Roaster</span></button>
+    </div>
+    <div class="hrm-caption">Shift Timing Define</div>
+    <div class="st-body">
+    <div class="st-left">
+    <fieldset class="hrm-group"><legend>Main</legend>
+      <div class="hrm-entry hrm-cols-2">
+        <div class="hrm-field"><label for="CmbShift">Shift</label>
+            <div class="hrm-inline"><div class="hrm-grow"><select id="CmbShift" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <button type="button" id="brnShift" class="win-btn-action" title="Define Shift" onclick="HrmShift.brnShift()" style="min-width:28px;width:28px;padding:0"><i class="fa fa-plus"></i></button></div></div>
+        <div class="hrm-field"><label for="datStartDate">Start Date</label><input type="date" id="datStartDate" class="win-textbox"/></div>
+        <div class="hrm-field"><label for="CmbShiftLocation">Shift Location</label>
+            <div class="hrm-inline"><div class="hrm-grow"><select id="CmbShiftLocation" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <button type="button" id="btnShiftLocation" class="win-btn-action" title="Define Shift Location" onclick="HrmShift.btnShiftLocation()" style="min-width:28px;width:28px;padding:0"><i class="fa fa-plus"></i></button></div></div>
+        <div class="hrm-field"><label for="datEndDate">End Date</label><input type="date" id="datEndDate" class="win-textbox"/></div>
+        <div class="hrm-field"><label for="txtDescription">Description</label><input type="text" id="txtDescription" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+        <div class="hrm-field"><span class="hrm-lbl"></span><label class="hrm-check"><input type="checkbox" id="ChkBoxIsClosedNextDay"/> Next Day Closed</label></div>
+      </div>
+    </fieldset>
+    <fieldset class="hrm-group"><legend>Duty Timing</legend>
+      <div class="hrm-entry hrm-cols-4">
+        <div class="hrm-field hrm-stack"><label for="datStartTime">Start Time</label><input type="time" id="datStartTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datStartBreakTime">Start Break Time</label><input type="time" id="datStartBreakTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datEndBreakTime">End Break Time</label><input type="time" id="datEndBreakTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datEndTime">End Time</label><input type="time" id="datEndTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="txtTotalShiftHours">Shift Hours</label><input type="text" id="txtTotalShiftHours" class="win-textbox" readonly/></div>
+        <div class="hrm-field hrm-stack"><label for="txtInHours">In Hours</label><input type="text" id="txtInHours" class="win-textbox" autocomplete="off"/></div>
+        <div class="hrm-field hrm-stack"><label for="txtOutHours">Out Hours</label><input type="text" id="txtOutHours" class="win-textbox" autocomplete="off"/></div>
+        <div class="hrm-field hrm-stack"><label for="txtTotalHours">Total Hours</label><input type="text" id="txtTotalHours" class="win-textbox" readonly/></div>
+        <div class="hrm-field hrm-stack hrm-span-2"><label for="txtTotalDaysHours">Total Days Hours</label><input type="text" id="txtTotalDaysHours" class="win-textbox" readonly/></div>
+      </div>
+    </fieldset>
+    <div class="st-pair">
+    <fieldset class="hrm-group"><legend>In Time</legend>
+      <div class="hrm-entry hrm-cols-2">
+        <div class="hrm-field hrm-stack"><label for="datLateStartTime">Late Start Time</label><input type="time" id="datLateStartTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datLateEndTime">Late End Time</label><input type="time" id="datLateEndTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datShortLeaveInStartTime">Short Leave Start Time</label><input type="time" id="datShortLeaveInStartTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datShortLeaveInEndTime">Short Leave End Time</label><input type="time" id="datShortLeaveInEndTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datHalfDayInStartTime">Half Day Start Time</label><input type="time" id="datHalfDayInStartTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datHalfDayInEndTime">Half Day End Time</label><input type="time" id="datHalfDayInEndTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datAbsentAfterInTime">Absent After In Time</label><input type="time" id="datAbsentAfterInTime" class="win-textbox"/></div>
+      </div>
+    </fieldset>
+    <fieldset class="hrm-group"><legend>OutTime</legend>
+      <div class="hrm-entry hrm-cols-2">
+        <div class="hrm-field hrm-stack"><label for="datAbsentBeforeOutTime">Absent Before Out Time</label><input type="time" id="datAbsentBeforeOutTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"></div>
+        <div class="hrm-field hrm-stack"><label for="datHalfDayOutStartTime">Half Day Start Time</label><input type="time" id="datHalfDayOutStartTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datHalfDayOutEndTime">Half Day End Time</label><input type="time" id="datHalfDayOutEndTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datShortLeaveOutStartTime">Short Leave Start Time</label><input type="time" id="datShortLeaveOutStartTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datShortLeaveOutEndTime">Short Leave End Time</label><input type="time" id="datShortLeaveOutEndTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datDepartureStarTime">Departure Start Time</label><input type="time" id="datDepartureStarTime" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="datDepartureEndTime">Departure End Time</label><input type="time" id="datDepartureEndTime" class="win-textbox"/></div>
+      </div>
+    </fieldset>
+    </div>
+    </div>
+    <div class="st-right">
+    <fieldset class="hrm-group"><legend>WeekDays</legend>
+        <div class="hrm-grid-box">
+            <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+            <div class="hrm-grid-wrap"><table id="grd"></table></div>
+        </div>
+    </fieldset>
+    </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_shift.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Post Dated Cheques Information</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+</head>
+<!--
+  Architecture.WinApp.Account_Reports.PostDatedCheqInformation (R2, 2026-09-30; replaces the reports/pdc_information.html mock-up).
+  No ScreenDefinition row: the desktop opens it as a dialog from GeneralLedger.ValuePostDatedNoOfCheqs_Click with
+  AccountId = cmbAccountTitle.Value and ToDate = txtToDate.Value (ToDate defaults to DateTime.Now).
+  Load -> GetData -> VoucherHead.getPostDatedCheqByAccountId -> usp_getPostDatedCheqByAccountId (@OrganizationId, @CompanyId, @AccountId, @ToDate).
+  Grid: AccountId hidden, AccountCode, AccountTitle, ChequeNo, CheqDate, CheqAmount (Sum, stringFormatboth, right-aligned).
+  The toolbar's "Reset" has no Click handler on the desktop.
+  Web only: because the page is also reached from the hub (not only as the ledger's dialog), the account and date the dialog
+  receives are shown as an "Account / To Date" strip; ?accountId=&toDate= fill it and load the grid at once, as the dialog's Load does.
+-->
+<body class="accf">
+<div class="win-title-bar">
+    <span><i class="fa fa-info-circle"></i> PostDatedCheqBreakUp</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn"><i class="fa fa-plus text-success"></i> Reset</button>
+</div>
+<div class="win-header-panel"><span>Post Dated Cheques Information</span></div>
+
+<div class="filters">
+    <div class="gb" style="width:640px;">
+        <span class="gb-title">Ledger</span>
+        <div class="fgrid" style="grid-template-columns: 80px 1fr 50px 120px 70px;">
+            <span class="lbl">Account Title</span><select id="cmbAccountTitle" class="inp" data-dtcombo="single" data-dtcombo-caption="Account Title"></select>
+            <span class="lbl">To Date</span><input type="date" id="txtToDate" class="inp">
+            <button type="button" id="btnshow" class="win-btn-show" onclick="pdcShow()">Show</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-caption"><span>Post Dated Cheques</span><span id="lblStatus"></span></div>
+<div class="grid-wrap"><table class="wg" id="grd"></table></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script>
+    const QS = new URLSearchParams(window.location.search);
+
+    function comboInit() { if (window.DesktopCombo) window.DesktopCombo.init('select[data-dtcombo]'); }
+    function comboFocus(sel) { const $i = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); ($i.length ? $i : $(sel)).focus(); }
+
+    function render(rows) {
+        AccF.renderGrid({ table: '#grd', rows: rows, emptyText: '', columns: [
+            { key: 'AccountId', visible: false },
+            { key: 'AccountCode' },
+            { key: 'AccountTitle' },
+            { key: 'ChequeNo' },
+            { key: 'CheqDate', type: 'date' },
+            { key: 'CheqAmount', type: 'both', sum: true }
+        ] });
+        $('#lblStatus').text('Records: ' + rows.length);
+    }
+    function post(body) {
+        return new Promise(function (resolve, reject) {
+            $.ajax({ url: '/accounts/api/reports-pdc/post-dated-cheq-information', type: 'POST', contentType: 'application/json',
+                data: JSON.stringify(body), dataType: 'json' })
+                .done(function (r) { if (r && r.success === false) reject(new Error(r.message || 'Error')); else resolve((r && r.data) || []); })
+                .fail(function (x) { reject(new Error((x.responseJSON && x.responseJSON.message) || ('HTTP ' + x.status))); });
+        });
+    }
+    /* GetData: the grid is only bound when rows come back (dt.Rows.Count > 0) */
+    async function pdcShow() {
+        const btn = $('#btnshow');
+        AccF.busy(btn, true);
+        try {
+            const rows = await post({ accountId: $('#cmbAccountTitle').val() || 0, toDate: $('#txtToDate').val() });
+            if (rows.length) render(rows); else { $('#grd').empty(); $('#lblStatus').text(''); }
+        } catch (e) { alert(e.message); }
+        finally { AccF.busy(btn, false); }
+    }
+
+    $(function () {
+        comboInit();
+        (async function () {
+            try {
+                await AccF.context();
+                /* the ledger's cmbAccountTitle list: CommonServices.GetAllDetailAccount -> lookups/detail-accounts */
+                AccF.fillSelect('#cmbAccountTitle', await AccF.lookup('detail-accounts', { costCenterId: '' }), 'Id', 'AccountTitle', '');
+                $('#txtToDate').val(QS.get('toDate') || AccF.today());
+                if (QS.get('accountId')) {
+                    $('#cmbAccountTitle').val(QS.get('accountId'));
+                    await pdcShow();
+                }
+                comboFocus('#cmbAccountTitle');
+            } catch (e) { alert(e.message); }
+        })();
+    });
+</script>
+</body>
+</html>

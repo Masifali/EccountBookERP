@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Duty Roaster - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <!-- Architecture.WinApp.HRM.AttendanceManagement.frmDutyRoasterNew - ClientSize 964 x 661, tabControl1 (tabs at the bottom): "Form" | "History".
+         Form tab: toolStrip1 New | SaveAs (hidden) | Save | Update (hidden) | Print (hidden, no handler) | Refresh | Shift Timing;
+         panel13 (teal 29) "Duty Roaster"; panel14 (227): groupBox2 "Main" (8,3 517x70) From Date / To Date (Short) / Description (multiline 257x49);
+         groupBox1 "Employees Filters For duty Roaster" (8,74 517x112) Category [+] | Location [+] / Department (checked list) [+] | Emp Name [+employee] /
+         Section [+] | Load; groupBox3 "Apply Group" (531,3 422x167) label10 + grdGroup; Apply (875,175); label13 + Apply all (2,191).
+         panel16 (fill): panel17 (left 264) "Employee Days" grdDutyDate | panel18 (fill) lblDutyDate + grdEmployee.
+         History tab: filters From/To (with check boxes), Roaster From/To, radios Duter Roaster Dates / Entry Date / Modify Date, Show;
+         datagridHistory (Edit | SaveAs buttons) + datagridhistoryDetail. -->
+    <style>
+        .ro-top { display: flex; flex-wrap: wrap; gap: 0 6px; align-items: flex-start; padding: 2px 4px; }
+        .ro-left { flex: 1 1 520px; min-width: 0; max-width: 640px; }
+        .ro-left .hrm-group { margin: 4px 4px; }
+        .ro-apply { flex: 1 1 400px; min-width: 0; margin: 4px; }
+        .ro-apply .hrm-grid-box { min-height: 150px; }
+        .ro-apply .hrm-grid-wrap { min-height: 120px; max-height: 190px; }
+        .ro-note { font: 9pt "Segoe UI", sans-serif; color: #333; margin: 2px 0 4px 0; }
+        .ro-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; padding: 0 10px 4px 10px; }
+        .ro-bar .hrm-inline span { font: 9pt "Segoe UI", sans-serif; max-width: 190px; }
+        .ro-bar .win-btn-action, .ro-left .win-btn-action { width: auto; min-width: 60px; padding: 0 10px; }
+        .ro-plus { width: 28px; min-width: 28px; height: 26px; padding: 0; border: 1px solid #9ab; background: #f4f4f4; cursor: pointer; }
+        .ro-plus:hover { background: #cce8ff; }
+        .ro-filter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; }
+        .ro-filter .hrm-field { grid-template-columns: 78px minmax(0, 1fr) 28px; }
+        .ro-main { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr); gap: 4px 12px; }
+        .ro-main .hrm-field { grid-template-columns: 70px minmax(0, 1fr); }
+        .ro-bottom { display: flex; gap: 4px; flex: 1 1 auto; min-height: 320px; padding: 0 4px 4px 4px; min-width: 0; }
+        .ro-days { flex: 0 0 264px; min-width: 0; }
+        .ro-emp { flex: 1 1 auto; min-width: 0; }
+        .ro-bottom .hrm-grid-wrap { max-height: calc(100vh - 150px); }
+        .ro-check-combo { position: relative; min-width: 0; }
+        .ro-check-combo .win-textbox { width: 100%; cursor: pointer; background: #fff; padding-right: 18px; text-overflow: ellipsis; }
+        .ro-cc-caret { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 10px; color: #444; }
+        .ro-cc-pop { position: absolute; left: 0; top: 100%; z-index: 60; background: #fff; border: 1px solid #7a9a9e; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+            min-width: 100%; width: 260px; max-width: 90vw; padding: 3px; }
+        .ro-cc-head { display: flex; align-items: center; gap: 6px; padding: 2px 4px; border-bottom: 1px solid #ddd; font: bold 9pt "Segoe UI", sans-serif; }
+        .ro-cc-pop input[type=text] { width: 100%; height: 22px; margin: 3px 0; border: 1px solid #ccc; font-size: 9pt; padding: 0 4px; }
+        .ro-cc-list { max-height: 220px; overflow: auto; }
+        .ro-cc-item { display: flex; align-items: center; gap: 6px; margin: 0; padding: 2px 4px; font: 9pt "Segoe UI", sans-serif; cursor: pointer; white-space: nowrap; }
+        .ro-cc-item:hover { background: #eef7ff; }
+        .ro-cc-empty { color: #777; font-style: italic; padding: 4px; font-size: 9pt; }
+        .ro-cell-btn { height: 18px; line-height: 16px; padding: 0 6px; font-size: 8pt; border: 1px solid #7a9a9e; background: #eef; cursor: pointer; }
+        .ro-radios { display: inline-flex; gap: 10px; flex-wrap: wrap; }
+        .ro-hist .hrm-grid-box-modal { min-height: 180px; }
+        .ro-hist .hrm-grid-box-modal .hrm-grid-wrap { max-height: 32vh; min-height: 120px; }
+        #lblDutyDate { font-weight: bold; margin-left: 8px; }
+        @media (max-width: 760px) {
+            .ro-bottom { flex-direction: column; }
+            .ro-days { flex: 0 0 auto; }
+            .ro-filter, .ro-main { grid-template-columns: 1fr; }
+            .ro-left { flex-basis: 100%; }
+        }
+    </style>
+</head>
+<body class="pd-body hrm-body" data-hrm="duty-roaster" data-screen="656">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmRoster.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnSaveAs" class="win-btn-tool is-hidden" onclick="HrmRoster.btnSaveAs(this)"><i class="fa fa-files-o"></i> <span><u>S</u>aveAs</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmRoster.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="HrmRoster.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmRoster.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnShifttimingorm" class="win-btn-tool" onclick="HrmRoster.btnShifttimingorm(this)"><i class="fa fa-clock-o"></i> <span>Shift Timing</span></button>
+    </div>
+    <div class="hrm-caption">Duty Roaster</div>
+
+    <div class="ro-top">
+        <div class="ro-left">
+            <fieldset class="hrm-group">
+                <legend>Main</legend>
+                <div class="ro-main">
+                    <div>
+                        <div class="hrm-field"><label for="txtFromDate">From Date</label><input type="date" id="txtFromDate" class="win-textbox"/></div>
+                        <div class="hrm-field" style="margin-top:4px"><label for="txtTodate">To Date</label><input type="date" id="txtTodate" class="win-textbox"/></div>
+                    </div>
+                    <div class="hrm-field"><label for="txtDescription">Description</label><textarea id="txtDescription" class="win-textbox" rows="2" maxlength="250"></textarea></div>
+                </div>
+            </fieldset>
+            <fieldset class="hrm-group">
+                <legend>Employees Filters For duty Roaster</legend>
+                <div class="ro-filter">
+                    <div class="hrm-field"><label for="cmbEmployeeCategory">Category</label>
+                        <select id="cmbEmployeeCategory" class="win-combo dtcombo" data-dtcombo="single"></select>
+                        <button type="button" id="btnEmployeeCategory" class="ro-plus" title="Employee Category" onclick="HrmRoster.btnEmployeeCategory(this)"><i class="fa fa-plus"></i></button></div>
+                    <div class="hrm-field"><label for="CmbLocation">Location</label>
+                        <select id="CmbLocation" class="win-combo dtcombo" data-dtcombo="single"></select>
+                        <button type="button" id="btnLocation" class="ro-plus" title="Location" onclick="HrmRoster.btnLocation(this)"><i class="fa fa-plus"></i></button></div>
+                    <div class="hrm-field"><label for="cmbDepartmentText">Department</label>
+                        <div class="ro-check-combo" id="cmbDepartment">
+                            <input type="text" id="cmbDepartmentText" class="win-textbox" readonly autocomplete="off" title="Department"/>
+                            <span class="ro-cc-caret"><i class="fa fa-caret-down"></i></span>
+                            <div class="ro-cc-pop is-hidden" id="cmbDepartmentPop">
+                                <label class="ro-cc-head"><input type="checkbox" id="cmbDepartmentAll"> Department</label>
+                                <input type="text" id="cmbDepartmentFind" placeholder="Search..." autocomplete="off"/>
+                                <div class="ro-cc-list" id="cmbDepartmentList"></div>
+                            </div>
+                        </div>
+                        <button type="button" id="btnDepartment" class="ro-plus" title="Department" onclick="HrmRoster.btnDepartment(this)"><i class="fa fa-plus"></i></button></div>
+                    <div class="hrm-field"><label for="CmbEmployeeName">Emp Name</label>
+                        <select id="CmbEmployeeName" class="win-combo dtcombo" data-dtcombo="single"></select>
+                        <button type="button" id="btnEmployeeDefine" class="ro-plus" title="Employee Registration" onclick="HrmRoster.btnEmployeeDefine(this)"><i class="fa fa-user-plus"></i></button></div>
+                    <div class="hrm-field"><label for="cmbSection">Section</label>
+                        <select id="cmbSection" class="win-combo dtcombo" data-dtcombo="single"></select>
+                        <button type="button" id="btnSection" class="ro-plus" title="Section" onclick="HrmRoster.btnSection(this)"><i class="fa fa-plus"></i></button></div>
+                    <div class="hrm-inline" style="justify-content:flex-end"><button type="button" id="btnLoad" class="win-btn-action" onclick="HrmRoster.btnLoad(this)">Load</button></div>
+                </div>
+            </fieldset>
+        </div>
+        <fieldset class="hrm-group ro-apply">
+            <legend>Apply Group</legend>
+            <div class="ro-note">Users can change the shift &amp; rest day of an employee in the selected group.</div>
+            <div class="hrm-grid-box">
+                <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button>
+                <div class="hrm-grid-wrap"><table id="grdGroup"></table></div>
+            </div>
+        </fieldset>
+    </div>
+    <div class="ro-bar">
+        <div class="hrm-inline"><span>Click to apply Shift Select of of Current Date to all Date</span>
+            <button type="button" id="btnApplyAll" class="win-btn-action" onclick="HrmRoster.btnApplyAll(this)">Apply all</button></div>
+        <button type="button" id="btnApply" class="win-btn-action" onclick="HrmRoster.btnApply(this)">Apply</button>
+    </div>
+
+    <div class="ro-bottom">
+        <div class="hrm-grid-box ro-days">
+            <div class="hrm-subcaption"><span>Employee Days</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap" id="wrapDutyDate"><table id="grdDutyDate"></table></div>
+        </div>
+        <div class="hrm-grid-box ro-emp">
+            <div class="hrm-subcaption"><span id="lblDutyDate"></span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap" id="wrapEmployee"><table id="grdEmployee"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_roster.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

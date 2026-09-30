@@ -366,8 +366,12 @@ window.omPopupLink = function (kind, i) {
 window.omSlip = function (i) {
     var row = OM_POPUP.rows[i];
     if (!row) return;
-    var report = (OM_POPUP.invoiceType === 1) ? '203 (Purchase Order Slip)' : '273 (Sale Order Slip)';
-    msg('Slip ' + report + ' for order Id ' + num(f(row, 'Id')) + ' is not ported yet.', false);
+    /* Slip203 for purchase, Slip273 for sale - their Jasper templates, the order's Id */
+    var id = num(f(row, 'Id'));
+    if (!(id > 0)) { msg('No Record Found For Display', false); return; }
+    window.open(OM_POPUP.invoiceType === 1
+        ? '/api/print/by-template/203-InvRptPurchaseOrderRiceSlip.rpt/pdf?id=' + id
+        : '/api/print/so-273/pdf?id=' + id, '_blank');
 };
 
 window.omCloseModal = function () {

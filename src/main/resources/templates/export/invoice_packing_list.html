@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Invoice Packing List - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+</head>
+<!-- frmExportInvoicePackingList.cs (Architecture.WinApp.Export), screen 882 "Export Invoice Packing List",
+     ClientSize 1189 x 761, ScreenName frmExportInvoicePackingList, DocumentTypeId 204.
+     tabControl1: "Form" | "History".
+     Form: toolStrip4 New / Refresh / Save / Delete(hidden) / Update(hidden) / Print-529A / Print-529B / Print-529C / ShortCut Keys;
+       panel10: "Export Invoice Packing List", Export Company (ERP feature 9), Preview-A (checked) / Preview-B / Preview-C;
+       HeaderGropBox "Main Header" (1163 x 365) - every box disabled, filled from USP_ExImInvoice_ReadByIdForPackingList:
+         col 1 Invoice No (cmbInvoiceNo, the only enabled control), Doc No + Date, Documentory Credit No & Date, Customer Name,
+               Consignee Name, Sales Contract Nos, Sales Contract Dates, Notify Party 1/2/3, Importer Bank, Exporter Bank;
+         col 2 Lot Reference, G.D No, G.D Date, Loading Port, Destination Port, Carrier Type, Delivery Term, Remarks, TCP REG No,
+               Continent, Origin, Importer Country;
+         col 3 Delivery Place, Fcy Code, Exchange Rate, Fcy-Amount, Add Less Amt, Ad/Ls Comments, Total Fcy Amount, Local Amount,
+               No.Of Container, Gross MTon's, Net MTon's;
+         col 4 Certificate -1, Certificate Of Origin, groupBox3 "Custom Values" (Fcy-Amount, Add Less Amt, Total Fcy Amount, Local Amount);
+         Remarks 1, Remarks 2 across the bottom.
+       grdPackListDetail (AllowEdit): X column, then the DO rows; Commodity Detail, Pm Detail, Package Date, Expiry Date, Lot No,
+         Gross Weight and Remarks edit in the grid (panelDetail is Visible = false on the desktop); F1 on Commodity / Pm Detail
+         opens the CommodityDetailItemCustomerWise picker. panel17: Other Remarks 1 / 2.
+     History: toolStrip3 New / Refresh; "Export Invoice Packing List History"; groupBox2 "Filters" (From/To Date, From/To Doc No,
+       Customer, Invoice#, Show, Doc/Entry/Modify Date radios, All / Referred / Not Referred(default)); "Filtered Records" +
+       ctrlDataGridHistory; DataGridHistory (Edit / Slip / SlipB / SlipC / AddAttachment buttons, two frozen columns);
+       "Packing List Detail of the selected above row"; grdPackListHistory. -->
+<body class="pd-body" data-export-page="pl">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="pl">
+        <button type="button" class="win-tab is-active" data-tab="plForm">Form</button>
+        <button type="button" class="win-tab" data-tab="plHistory">History</button>
+    </div>
+
+    <!-- ===================================================== tabPage1 Form -->
+    <div class="win-tab-panel is-active" id="plForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportPl.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportPl.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportPl.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="BtnDelete" class="win-btn-tool is-hidden" onclick="ExportPl.btnDelete(this)"><i class="fa fa-trash"></i> <span>Delete</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportPl.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportPl.print('A', this)" data-rpt="529A_ExportInvoiceSlipPackingList.rpt"><i class="fa fa-print"></i> <span>Print-529A</span></button>
+            <button type="button" id="btnPrint529B" class="win-btn-tool" onclick="ExportPl.print('B', this)" data-rpt="529B_ExportInvoiceSlipPackingList.rpt"><i class="fa fa-print"></i> <span>Print-529B</span></button>
+            <button type="button" id="btnPrint529C" class="win-btn-tool" onclick="ExportPl.print('C', this)" data-rpt="529C_ExportInvoiceSlipPackingList.rpt"><i class="fa fa-print"></i> <span>Print-529C</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportPl.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="ex-pl-top">
+            <span class="pd-title">Export Invoice Packing List</span>
+            <span class="ex-field ex-inline is-hidden" id="exportCompanyWrap"><label for="CmbExportCompany">Export Company</label><input type="text" id="CmbExportCompany" class="win-textbox" style="width:235px;" disabled/></span>
+            <label class="ex-check"><input type="checkbox" id="ChkPrintPreview" checked/> Preview-A</label>
+            <label class="ex-check"><input type="checkbox" id="ChkSlipB"/> Preview-B</label>
+            <label class="ex-check"><input type="checkbox" id="chkSlipC"/> Preview-C</label>
+        </div>
+        <fieldset class="ex-groupbox">
+            <legend>Main Header</legend>
+            <div class="ex-pl-header">
+                <!-- column 1 -->
+                <div class="ex-col">
+                    <div class="ex-field"><label class="ex-req" for="cmbInvoiceNo">Invoice No</label>
+                        <select id="cmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="InvoiceNo"></select></div>
+                    <div class="ex-field"><label class="ex-req" for="txtdocno">Doc No</label>
+                        <div class="ex-pair"><input type="text" id="txtdocno" class="win-textbox" disabled readonly/><input type="date" id="txtDocDate" class="win-date" disabled/></div></div>
+                    <div class="ex-field"><label class="ex-req" for="txtDocumentaryCreditNo">Documentory Credit No &amp; Date</label>
+                        <div class="ex-pair"><input type="text" id="txtDocumentaryCreditNo" class="win-textbox" disabled/><input type="date" id="txtDocumentaryCreditNoDate" class="win-date" disabled/></div></div>
+                    <div class="ex-field"><label class="ex-req" for="txtCustomer">Customer Name</label><input type="text" id="txtCustomer" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtConsignee">Consignee Name</label><input type="text" id="txtConsignee" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtCustomerContractsNos">Sales Contract Nos</label><input type="text" id="txtCustomerContractsNos" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtCustomerContractsDates">Sales Contract Dates</label><input type="text" id="txtCustomerContractsDates" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtNotifyParty1">Notify Party 1</label><input type="text" id="txtNotifyParty1" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtNotifyParty2">Notify Party 2</label><input type="text" id="txtNotifyParty2" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtNotifyParty3">Notify Party 3</label><input type="text" id="txtNotifyParty3" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtImporterBank">Importer Bank</label><input type="text" id="txtImporterBank" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtExporterBank">Exporter Bank</label><input type="text" id="txtExporterBank" class="win-textbox" disabled/></div>
+                </div>
+                <!-- column 2 -->
+                <div class="ex-col">
+                    <div class="ex-field"><label for="txtLotRefHeader">Lot Reference</label><input type="text" id="txtLotRefHeader" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtGdNo">G.D No</label><input type="text" id="txtGdNo" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtGdDate">G.D Date</label><input type="date" id="txtGdDate" class="win-date" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtLoadingPort">Loading Port</label><input type="text" id="txtLoadingPort" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtDestinationPort">Destination Port</label><input type="text" id="txtDestinationPort" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtCareierType">Carrier Type</label><input type="text" id="txtCareierType" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtDeliveryTerm">Delivery Term</label><input type="text" id="txtDeliveryTerm" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtDeliveryRemarks">Remarks</label><input type="text" id="txtDeliveryRemarks" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtTcpRegNo">TCP REG No</label><input type="text" id="txtTcpRegNo" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label for="txtContinent">Continent</label><input type="text" id="txtContinent" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtOriginCountry">Origin</label><input type="text" id="txtOriginCountry" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtImporterCountry">Importer Country</label><input type="text" id="txtImporterCountry" class="win-textbox" disabled/></div>
+                </div>
+                <!-- column 3 -->
+                <div class="ex-col">
+                    <div class="ex-field"><label class="ex-req" for="txtPlaceOfDelivery">Delivery Place</label><input type="text" id="txtPlaceOfDelivery" class="win-textbox" value="0" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="CmbFcyCode">Fcy Code</label><input type="text" id="CmbFcyCode" class="win-textbox" value="0" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtExRate">Exchange Rate</label><input type="text" id="txtExRate" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label for="txtFcyAmount">Fcy-Amount</label><input type="text" id="txtFcyAmount" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label for="txtaddlessamount">Add Less Amt</label><input type="text" id="txtaddlessamount" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label for="txtaddlesscommnets">Ad/Ls Comments</label><textarea id="txtaddlesscommnets" class="win-textbox" rows="2" disabled></textarea></div>
+                    <div class="ex-field"><label class="ex-req" for="txtTotalNetAmount">Total Fcy Amount</label><input type="text" id="txtTotalNetAmount" class="win-textbox num" value="0" disabled readonly/></div>
+                    <div class="ex-field"><label for="txtLocalAmt">Local Amount</label><input type="text" id="txtLocalAmt" class="win-textbox num" value="0" disabled readonly/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtNoOfContainer">No.Of Container</label><input type="text" id="txtNoOfContainer" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtGrossWeight">Gross MTon's</label><input type="text" id="txtGrossWeight" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtNetWeight">Net MTon's</label><input type="text" id="txtNetWeight" class="win-textbox num" value="0" disabled/></div>
+                </div>
+                <!-- column 4 -->
+                <div class="ex-col">
+                    <div class="ex-field" style="flex-direction:column;align-items:stretch;"><label for="txtCertificate1" style="width:auto;flex:none;">Certificate -1</label><textarea id="txtCertificate1" class="win-textbox" rows="4" disabled></textarea></div>
+                    <div class="ex-field" style="flex-direction:column;align-items:stretch;"><label for="txtCertificateOfOrigion" style="width:auto;flex:none;">Certificate Of Origin</label><textarea id="txtCertificateOfOrigion" class="win-textbox" rows="3" disabled></textarea></div>
+                    <fieldset class="ex-custom-values">
+                        <legend>Custom Values</legend>
+                        <div class="ex-field"><label for="txtFcyAmountHeaderCustom">Fcy-Amount</label><input type="text" id="txtFcyAmountHeaderCustom" class="win-textbox num" value="0" disabled/></div>
+                        <div class="ex-field"><label for="txtAddLessHeaderCustom">Add Less Amt</label><input type="text" id="txtAddLessHeaderCustom" class="win-textbox num" value="0" disabled/></div>
+                        <div class="ex-field"><label for="txtTotalFcyAmountHeaderCustom">Total Fcy Amount</label><input type="text" id="txtTotalFcyAmountHeaderCustom" class="win-textbox num" value="0" disabled/></div>
+                        <div class="ex-field"><label for="txtLocalAmountHeaderCustom">Local Amount</label><input type="text" id="txtLocalAmountHeaderCustom" class="win-textbox num" value="0" disabled/></div>
+                    </fieldset>
+                </div>
+                <div class="ex-pl-wide"><div class="ex-field"><label for="txtRemarks1">Remarks 1</label><input type="text" id="txtRemarks1" class="win-textbox" disabled/></div></div>
+                <div class="ex-pl-wide"><div class="ex-field"><label for="txtRemarks2">Remarks 2</label><input type="text" id="txtRemarks2" class="win-textbox" disabled/></div></div>
+            </div>
+        </fieldset>
+
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Packing List Detail</span>
+            <span class="ex-bar-right"><span style="font:8pt 'Segoe UI',sans-serif;">F1 on Commodity / Pm Detail = picker &nbsp; Ctrl+Space on X = delete</span>
+                <button type="button" class="ex-fs-btn" data-fullscreen="grdPackListDetailBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountPl" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdPackListDetailBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="grdPackListDetail" data-gridbar="frmExportInvoicePackingList:grdPackListDetail" data-gridbar-mount="#gridBarMountPl" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th class="ctr" title="Delete">X</th>
+                        <th data-col="ContainerNo">Container No</th><th data-col="ItemCode">Item Code</th><th data-col="ItemName">Item Name</th>
+                        <th data-col="ItemCommodityDetail">Item Commodity Detail</th><th data-col="ItemPmDetail">Item Pm Detail</th>
+                        <th data-col="PackageDate">Package Date</th><th data-col="ExpiryDate">Expiry Date</th><th data-col="LotNo">Lot No</th>
+                        <th data-col="ThirdPartyAnalysisNo">Inspection No</th><th data-col="ThirdPartyAnalysisSubNo">Inspection Sub Lot No</th>
+                        <th class="num" data-col="OuterQty">Outer Qty</th><th data-col="OuterUom">Outer Uom</th>
+                        <th class="num" data-col="InnerQty">Inner Qty</th><th data-col="InnerUom">Inner Uom</th>
+                        <th class="num" data-col="NetWeight">Net Weight</th><th class="num" data-col="GrossWeight">Gross Weight</th>
+                        <th data-col="Remarks" style="min-width:350px;">Remarks</th>
+                    </tr></thead>
+                    <tbody id="plBody"></tbody>
+                    <tfoot id="plFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="ex-other-remarks">
+            <div class="ex-field"><label for="txtOtherRemarks1">Other Remarks 1</label><input type="text" id="txtOtherRemarks1" class="win-textbox" disabled/></div>
+            <div class="ex-field"><label for="txtOtherRemarks2">Other Remarks 2</label><input type="text" id="txtOtherRemarks2" class="win-textbox" disabled/></div>
+        </div>
+    </div>
+
+    <!-- ===================================================== tabPage2 History -->
+    <div class="win-tab-panel" id="plHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportPl.historyReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ExportPl.historyRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:24px;">Export Invoice Packing List History</div>
+        <fieldset class="ex-groupbox">
+            <legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:190px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:120px;"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:280px;"><label for="CmbCustomerHistory">Customer</label>
+                    <select id="CmbCustomerHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                <div class="ex-radios" id="dateByRadios">
+                    <label class="ex-check"><input type="radio" name="dateBy" value="doc" checked/> Doc Date</label>
+                    <label class="ex-check"><input type="radio" name="dateBy" value="entry"/> Entry Date</label>
+                    <label class="ex-check"><input type="radio" name="dateBy" value="modify"/> Modify Date</label>
+                    <label class="ex-check is-hidden"><input type="radio" name="dateBy" value="approved"/> Approved Date</label>
+                </div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="referred" value="all"/> All</label>
+                    <label class="ex-check"><input type="radio" name="referred" value="referred"/> Referred</label>
+                    <label class="ex-check"><input type="radio" name="referred" value="not" checked/> Not Referred</label>
+                </div>
+                <div style="flex-basis:100%;height:0;"></div>
+                <div class="ex-field" style="width:190px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:120px;"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:280px;"><label for="CmbInvoiceNoHistory">Invoice#</label>
+                    <select id="CmbInvoiceNoHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small" style="width:62px;height:26px;" onclick="ExportPl.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountPlH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="frmExportInvoicePackingList:DataGridHistory" data-gridbar-mount="#gridBarMountPlH" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th id="plHistEditTh">Edit</th><th id="plHistSlipTh" colspan="3">Print</th>
+                        <th data-col="InvoiceNo">Invoice No</th><th class="num" data-col="DocCode">Doc Code</th><th data-col="DocDate">Doc Date</th><th data-col="CustomerName">Customer Name</th>
+                        <th class="num" data-col="NoOfContainers">No Of Containers</th><th class="num" data-col="GrossWeight">Gross Weight</th><th class="num" data-col="NetWeight">Net Weight</th>
+                        <th class="num" data-col="FcyAmount">Fcy Amount</th><th class="num" data-col="AddLess">Add/Less</th><th class="num" data-col="TotalAmount">Total Amount</th>
+                        <th data-col="LoadingPort">Loading Port</th><th data-col="DestinationPort">Destination Port</th>
+                        <th data-col="EntryUser">Entry User</th><th data-col="EntryDate">Entry Date</th><th data-col="ModifyUser">Modify User</th><th data-col="ModifyDate">Modify Date</th>
+                        <th class="num" data-col="NoOfAttachments">No Of Attachments</th>
+                    </tr></thead>
+                    <tbody id="plHistBody"></tbody>
+                    <tfoot id="plHistFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="plHistEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption" style="background:#fff;color:#000;height:25px;font:9pt 'Segoe UI',sans-serif;border-top:1px solid #ddd;">Packing List Detail of the selected above row</div>
+        <div class="ex-grid-box" id="grdPackListHistoryBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdPackListHistory">
+                    <thead><tr>
+                        <th data-col="ContainerNo">Container No</th><th data-col="ItemCode">Item Code</th><th data-col="ItemName">Item Name</th>
+                        <th data-col="ItemCommodityDetail">Item Commodity Detail</th><th data-col="ItemPmDetail">Item Pm Detail</th>
+                        <th data-col="PackageDate">Package Date</th><th data-col="ExpiryDate">Expiry Date</th><th data-col="LotNo">Lot No</th>
+                        <th data-col="ThirdPartyAnalysisNo">Inspection No</th><th data-col="ThirdPartyAnalysisSubNo">Inspection Sub Lot No</th>
+                        <th class="num" data-col="OuterQty">Outer Qty</th><th data-col="OuterUom">Outer Uom</th>
+                        <th class="num" data-col="InnerQty">Inner Qty</th><th data-col="InnerUom">Inner Uom</th>
+                        <th class="num" data-col="NetWeight">Net Weight</th><th class="num" data-col="GrossWeight">Gross Weight</th>
+                        <th data-col="Remarks" style="min-width:350px;">Remarks</th>
+                    </tr></thead>
+                    <tbody id="plHistDetailBody"></tbody>
+                    <tfoot id="plHistDetailFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="plFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnPlFooterHistory" onclick="ExportPl.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<!-- GrdPopUp - the F1 picker for Commodity Detail / Pm Detail (CommodityDetailItemCustomerWise.GetRemarks) -->
+<div id="plPicker" class="is-hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9000;display:flex;align-items:center;justify-content:center;">
+    <div style="background:#fff;border:1px solid #666;width:min(720px,96vw);max-height:80vh;display:flex;flex-direction:column;">
+        <div class="pd-caption pd-caption-teal" style="height:28px;justify-content:space-between;"><span id="plPickerTitle">Select</span><button type="button" class="ex-fs-btn" onclick="ExportPl.pickerClose()">&times;</button></div>
+        <div style="padding:6px;"><input type="text" id="plPickerSearch" class="win-textbox" placeholder="Search..." autocomplete="off"/></div>
+        <div class="ex-grid-scroll" style="max-height:52vh;">
+            <table class="win-grid" id="plPickerGrid"><thead><tr><th data-col="Remarks">Remarks</th><th data-col="HSCode">HS Code</th></tr></thead><tbody id="plPickerBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_packing_list.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

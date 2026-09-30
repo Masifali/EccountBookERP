@@ -118,6 +118,9 @@ public class AccountsModuleViewController {
 				model.addAttribute("moduleTitle", "Post Dated Cheque Payment Vouchers");
 				return "accounts/vouchers/pdc_payment_voucher";
 			case "payment-by-invoice":
+				/* Screen 41 PaymentByInvoiceVoucherNew (+ popup LoadPendingInvoicesByPayment) - a standalone
+				   ditto page; its API is controllers.pbi.PbiVoucherController (/api/accounts/payment-by-invoice/*),
+				   script countx_pbi.js. */
 				model.addAttribute("moduleTitle", "Payment By Invoice Voucher");
 				return "accounts/vouchers/payment_by_invoice_voucher";
 			case "invoices-adjustment":

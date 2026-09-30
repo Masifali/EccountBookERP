@@ -2114,7 +2114,8 @@ function soAttachments() {
 
 function soPrint() {
     if (!intOf('purchaseOrderMasterId')) { message('No Data found to display', true); return; }
-    window.print();
+    /* OpenSlip -> 1051_SupplierOfferSlip.rpt through Jasper */
+    window.open('/api/print/by-template/1051_SupplierOfferSlip.rpt/pdf?id=' + intOf('purchaseOrderMasterId'), '_blank');
 }
 
 /* BtnAddShiptoAddress_Click (:4801-4811) opens SupfrmShipToAddress as a dialog; the desktop does
@@ -2382,6 +2383,7 @@ function soHistSaveAs(id) {
 
 /* grdHistory Print column -> OpenSlip(Id): the 1051 slip is not ported; load it and use the page print. */
 function soHistPrint(id) {
+    if (id) { window.open('/api/print/by-template/1051_SupplierOfferSlip.rpt/pdf?id=' + id, '_blank'); return; }
     soLoad(id).then(function () { if (intOf('purchaseOrderMasterId')) soPrint(); });
 }
 

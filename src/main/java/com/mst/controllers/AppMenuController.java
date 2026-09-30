@@ -156,6 +156,39 @@ public class AppMenuController {
         return renderApp("HRM", moduleId, model);
     }
 
+    /**
+     * The five desktop applications that had no Java port before 30-Sep-2026 (dbo.App rows):
+     *   9 Fixed Assets (AppModules 2032), 23 Upload documents, 14 Logistics Management,
+     *   15 Import, 16 Party Processing.
+     * Each is rendered by the generic App/Module/Screen renderer, so the cards come from the
+     * signed-in user's rights rows exactly as the desktop's frmMenue builds them. Every screen row
+     * is mapped in DashboardModuleService.WEB_ROUTES_BY_SCREEN_ID to its own page.
+     */
+    @GetMapping("/fixed-assets")
+    public String fixedAssets(@RequestParam(value = "module", required = false) Integer moduleId, Model model) {
+        return renderApp("Fixed Assets", moduleId, model);
+    }
+
+    @GetMapping("/upload-documents")
+    public String uploadDocuments(@RequestParam(value = "module", required = false) Integer moduleId, Model model) {
+        return renderApp("Upload documents", moduleId, model);
+    }
+
+    @GetMapping("/logistics")
+    public String logistics(@RequestParam(value = "module", required = false) Integer moduleId, Model model) {
+        return renderApp("Logistics Management", moduleId, model);
+    }
+
+    @GetMapping("/import")
+    public String importApp(@RequestParam(value = "module", required = false) Integer moduleId, Model model) {
+        return renderApp("Import", moduleId, model);
+    }
+
+    @GetMapping("/party-processing")
+    public String partyProcessing(@RequestParam(value = "module", required = false) Integer moduleId, Model model) {
+        return renderApp("Party Processing", moduleId, model);
+    }
+
     /*
      * "Admin Panel" and "System Utilities" USED to be routed from here, as if they were rows in
      * the App table. They are not. They are contextMenuStrip3 on DashboardNew - a fixed menu

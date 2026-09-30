@@ -166,7 +166,7 @@ public class SaleModuleViewController {
         return "sale/sale_invoice_direct";
     }
 
-    @GetMapping("/sale-invoice-return")
+   /* @GetMapping("/sale-invoice-return")
     public String saleInvoiceReturn(Model model) {
         model.addAttribute("activeMenu", "sale");
         model.addAttribute("moduleTitle", "Sale Invoice Return");
@@ -177,5 +177,5 @@ public class SaleModuleViewController {
         model.addAttribute("warehouses", purchaseService.getWarehouses());
         model.addAttribute("jobLots", purchaseService.getJobLots());
         return "sale/sale_invoice_return";
-    }
+    }*/
 }

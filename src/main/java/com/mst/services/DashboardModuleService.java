@@ -310,6 +310,66 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(497, "/packing-material/item-pm-map"); // frmItemAndPMItemMap (Architecture.WinApp.PackingMaterial_Store)
 
         /* Packing Material Reports, ModuleId 2031 */
+        /* 30-Sep-2026: the five applications that had no Java port. Ids and TargetUrls from the
+           ScreenDefinition rows of GoldenAceDb(0509)t.sql; each page names its desktop form. */
+        /* Fixed Assets - dbo.App 9 */
+        WEB_ROUTES_BY_SCREEN_ID.put(353, "/fixed-assets/assets-register");        // AssetSchema.frmAssetsRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(356, "/fixed-assets/define-assets");          // FixedAsset.frmDefineAssets
+        WEB_ROUTES_BY_SCREEN_ID.put(918, "/fixed-assets/fixed-asset-purchase");   // Account_Definition.frmFixedAssetPurchase
+        /* Upload documents - dbo.App 23 */
+        WEB_ROUTES_BY_SCREEN_ID.put(473, "/upload-documents/folder-structure");   // DMS_FolderHierarchy.CreateFolderStructure
+        /* Logistics Management - dbo.App 14 */
+        WEB_ROUTES_BY_SCREEN_ID.put(233, "/logistics/service-bill-direct");        // Service.ExImClearingAgentBillDirect
+        WEB_ROUTES_BY_SCREEN_ID.put(234, "/logistics/define-services-item");       // Service.EximServicesDefine
+        WEB_ROUTES_BY_SCREEN_ID.put(937, "/logistics/rate-negotiation");           // lgstcm.frmLogisticRateNegotiation
+        WEB_ROUTES_BY_SCREEN_ID.put(939, "/logistics/agreement");                  // lgstcm.frmLogisticAgreement
+        WEB_ROUTES_BY_SCREEN_ID.put(941, "/logistics/rate-negotiation-transporter"); // lgstcm.frmLogisticRateNegotiationTransporter
+        WEB_ROUTES_BY_SCREEN_ID.put(949, "/logistics/purchase-order");             // lgstcm.frmLogisticPurchaseOrder
+        WEB_ROUTES_BY_SCREEN_ID.put(955, "/logistics/services-bill");              // lgstcm.frmLogisticPurchaseServicesBill
+        WEB_ROUTES_BY_SCREEN_ID.put(965, "/logistics/freight-voucher-export");     // lgstcm.frmFreightVoucherExport
+        WEB_ROUTES_BY_SCREEN_ID.put(967, "/logistics/freight-voucher-export-multi"); // lgstcm.frmFreightVoucherExportMultiVehicles
+        /* Import - dbo.App 15 */
+        WEB_ROUTES_BY_SCREEN_ID.put(221, "/import/commercial-invoice");            // Import.ImCommercialInvoice
+        WEB_ROUTES_BY_SCREEN_ID.put(525, "/import/lc-order");                      // Import.ImLcOrder
+        WEB_ROUTES_BY_SCREEN_ID.put(526, "/import/lc-order-schedule");             // Import.ImLcOrderSchedule
+        WEB_ROUTES_BY_SCREEN_ID.put(392, "/import/reports/invoice-register");      // ImportReports.ImportInvoiceRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(393, "/import/reports/contract-register");     // ImportReports.ImportContractRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(394, "/import/reports/grn-register");          // ImportReports.ImportGrnRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(395, "/import/reports/purchase-register");     // ImportReports.ImportPurchaseRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(782, "/import/proforma-invoice");              // Import.frmProformaInvoice
+        WEB_ROUTES_BY_SCREEN_ID.put(783, "/import/import-invoice");                // Import.frmImportInvoice
+        WEB_ROUTES_BY_SCREEN_ID.put(784, "/import/invoice-packing-detail");        // Import.Transactions.frmInvoicePackingDetail
+        WEB_ROUTES_BY_SCREEN_ID.put(785, "/import/shipment-booking");              // Import.Transactions.frmShipmentBooking
+        /* Party Processing - dbo.App 16. 679/680, 681/682, 687/688, 692/693 are two rows for one
+           desktop form each (GRN / GDN mode); each row opens its own mode through ?mode=. */
+        WEB_ROUTES_BY_SCREEN_ID.put(683, "/party-processing/define-item");         // DefineItemPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(684, "/party-processing/stock-party-define");  // frmPartyProcessingDefineSupplier
+        WEB_ROUTES_BY_SCREEN_ID.put(685, "/party-processing/item-category");       // DefItemCatagoryPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(686, "/party-processing/item-type");           // DefPartyProcessingItemType
+        WEB_ROUTES_BY_SCREEN_ID.put(689, "/party-processing/reference-parties");   // DefineReferenceParties
+        WEB_ROUTES_BY_SCREEN_ID.put(678, "/party-processing/stock-opening-balance"); // StockOpeningBalancePartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(690, "/party-processing/reports/grn-info");    // frmPartyProcessingGrnInfo
+        WEB_ROUTES_BY_SCREEN_ID.put(691, "/party-processing/reports/gate-pass");   // frmGatePassPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(692, "/party-processing/reports/grn-register?mode=grn"); // frmGRNGDNPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(693, "/party-processing/reports/grn-register?mode=gdn"); // frmGRNGDNPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(694, "/party-processing/reports/stock-report"); // frmStockReportPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(613, "/party-processing/grn-purchase");        // GRNForPurchaseFromPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(615, "/party-processing/gdn-sale");            // GDNForSaleToPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(679, "/party-processing/grn-gdn-store?mode=grn"); // frmGrnGdnStorePartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(680, "/party-processing/grn-gdn-store?mode=gdn"); // frmGrnGdnStorePartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(681, "/party-processing/gate-pass?mode=inward");  // GatePassInwardPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(682, "/party-processing/gate-pass?mode=outward"); // GatePassInwardPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(687, "/party-processing/grn-gdn?mode=grn");    // PartyProGrnAndGdn
+        WEB_ROUTES_BY_SCREEN_ID.put(688, "/party-processing/grn-gdn?mode=gdn");    // PartyProGrnAndGdn
+        WEB_ROUTES_BY_SCREEN_ID.put(875, "/party-processing/advance-delivery-order"); // AdvanceDeliveryOrderPP
+        WEB_ROUTES_BY_SCREEN_ID.put(602, "/party-processing/stock-conversion");    // invfrmStockConversionPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(603, "/party-processing/stock-transfer");      // PartyProcessing.StockTransfer
+        WEB_ROUTES_BY_SCREEN_ID.put(604, "/party-processing/stock-adjustment");    // PartyProcessing.StockAdjustment
+        WEB_ROUTES_BY_SCREEN_ID.put(614, "/party-processing/wages-bill");          // frmWagesBillPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(675, "/party-processing/processing-bill");     // ProductionPartyProcessingBill
+        WEB_ROUTES_BY_SCREEN_ID.put(676, "/party-processing/production-job-order"); // ProductionJobOrderPartyProcessing
+        WEB_ROUTES_BY_SCREEN_ID.put(677, "/party-processing/production");          // frmProductionPartyProcessing
+
         WEB_ROUTES_BY_SCREEN_ID.put(697, "/packing-material/reports/grn-register");
         WEB_ROUTES_BY_SCREEN_ID.put(699, "/packing-material/reports/requirement-planning-detail");
         WEB_ROUTES_BY_SCREEN_ID.put(778, "/packing-material/reports/purchase-order-register");

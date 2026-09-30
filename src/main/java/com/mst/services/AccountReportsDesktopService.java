@@ -431,7 +431,10 @@ public class AccountReportsDesktopService {
         for (Map<String, Object> it : items) {
             int id = toInt(it.get("detailId"));
             if (id <= 0) continue;
-            if (allowedDetailIds == null || !allowedDetailIds.contains(id))
+            /* Web-only tenancy guard (the desktop has none). The session copy of the last ledger's rows is lost on
+               a restart / new session / second tab, so a row not in it is checked against the database instead:
+               it must be a VoucherDetail of a VoucherHead of this organisation and company. */
+            if ((allowedDetailIds == null || !allowedDetailIds.contains(id)) && !detailBelongsToCompany(id))
                 throw new SecurityException("Row " + id + " is not part of the ledger that was shown.");
             boolean checked = Boolean.parseBoolean(String.valueOf(it.get("checked")));
             Object remarks = it.get("bookmarkRemarks");
@@ -440,6 +443,14 @@ public class AccountReportsDesktopService {
             n++;
         }
         return n;
+    }
+
+    private boolean detailBelongsToCompany(int detailId) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(1) FROM VoucherDetail d INNER JOIN VoucherHead h ON h.Id = d.VoucherHeadId"
+                        + " WHERE d.Id = ? AND h.OrganizationId = ? AND h.CompanyId = ?",
+                Integer.class, detailId, org(), comp());
+        return n != null && n > 0;
     }
 
     // ------------------------------------------------------------------ 51 Trial Balance

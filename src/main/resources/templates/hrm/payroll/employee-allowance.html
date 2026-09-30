@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Employee Allowance - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <!-- Architecture.WinApp.HRM.PayRoll.frmEmployeeAllowance - ClientSize 784 x 569 (Maximized), one tab "Form".
+         panel3 (30) toolstrip New | Save | Update (hidden) | Refresh; panel4 (26) "Employee Allowance";
+         panel5 (114): Employee cmbEmployee (17,33) 208 + btnEmployee (228,33) | Employee Benefit cmbEmployeeBenefit (261,33) 181 + btnBenifits (444,33)
+           | Applied On txtAppliedOn (476,35) 146 dd-MMM-yyyy | Total Amount txtTotalAmount (624,35) 131 (decimal keys);
+           Remarks txtRemarks (17,81) 455 | IsForPayroll "Is For Payroll" (476,83) | btnplus "+" (582,81) | btnUpdateDetail "Update" (617,81, hidden) | btnCancelUpdateDetial "Cancel" (688,81, hidden);
+         panel6 (26) "Detail"; grdDetails GridEX (770x341, AllowEdit False): X (frozen) | Employee | EmployeeBenefit | AppliedOn | TotalAmount "0,0" (Sum) | IsForPayroll (check) | Remarks. -->
+    <style>
+        .pr-x-btn, .pr-mini-btn { border: 1px solid #8aa; background: #f4f4f4; font: 8pt Verdana, sans-serif; line-height: 1; padding: 2px 5px; cursor: pointer; }
+        .pr-x-btn { color: #b00; font-weight: bold; }
+        .pr-x-btn:hover, .pr-mini-btn:hover { background: #cce8ff; }
+        .pr-def-btn { width: 28px; height: 24px; padding: 0; border: 1px solid #7a9a9e; background: #f4f4f4; cursor: pointer; flex: 0 0 auto; }
+        .pr-inline { display: flex; align-items: center; gap: 4px; min-width: 0; }
+        .pr-inline > .pr-grow { flex: 1 1 0; min-width: 0; }
+        .pr-checks { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+
+    </style>
+</head>
+<body class="pd-body hrm-body" data-hrm="employee-allowance" data-screen="671">
+<div class="hrm-form hrm-medium">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="HrmPayroll.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="HrmPayroll.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="HrmPayroll.btnUpdate(this)"><i class="fa fa-pencil"></i> <span>Update</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="HrmPayroll.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+    </div>
+    <div class="hrm-caption">Employee Allowance</div>
+    <div class="hrm-entry hrm-cols-4">
+        <div class="hrm-field hrm-stack"><label for="cmbEmployee">Employee</label>
+            <div class="pr-inline"><div class="pr-grow"><select id="cmbEmployee" class="win-combo dtcombo" data-dtcombo="single"></select></div><button type="button" id="btnEmployee" class="pr-def-btn" tabindex="-1" title="Employee Registration" onclick="HrmPayroll.btnEmployee(this)"><i class="fa fa-user-plus"></i></button></div></div>
+        <div class="hrm-field hrm-stack"><label for="cmbEmployeeBenefit">Employee Benefit</label>
+            <div class="pr-inline"><div class="pr-grow"><select id="cmbEmployeeBenefit" class="win-combo dtcombo" data-dtcombo="single"></select></div><button type="button" id="btnBenifits" class="pr-def-btn" tabindex="-1" title="Benefit" onclick="HrmPayroll.btnBenifits(this)"><i class="fa fa-plus"></i></button></div></div>
+        <div class="hrm-field hrm-stack"><label for="txtAppliedOn">Applied On</label><input type="date" id="txtAppliedOn" class="win-textbox"/></div>
+        <div class="hrm-field hrm-stack"><label for="txtTotalAmount">Total Amount</label><input type="text" id="txtTotalAmount" class="win-textbox" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+        <div class="hrm-field hrm-stack hrm-span-2"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" autocomplete="off"/></div>
+        <div class="hrm-field hrm-span-2 pr-checks" style="grid-template-columns:none;align-self:end">
+            <label class="hrm-check"><input type="checkbox" id="IsForPayroll"/> Is For Payroll</label>
+            <button type="button" id="btnplus" class="win-btn-action" style="width:33px;min-width:33px" onclick="HrmPayroll.btnplus(this)">+</button>
+            <button type="button" id="btnUpdateDetail" class="win-btn-action is-hidden" onclick="HrmPayroll.btnUpdateDetail(this)">Update</button>
+            <button type="button" id="btnCancelUpdateDetial" class="win-btn-action is-hidden" onclick="HrmPayroll.btnCancelUpdateDetial(this)">Cancel</button>
+        </div>
+    </div>
+    <div class="hrm-grid-box" id="grdBox">
+        <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="grdDetails"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_hrm_payroll.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

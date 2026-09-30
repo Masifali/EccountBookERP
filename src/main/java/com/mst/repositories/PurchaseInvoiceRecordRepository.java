@@ -12,8 +12,8 @@ import static org.springframework.http.HttpStatus.*;
 /** InvPurchaseInvoice BLL 0581 FormHistory/GetByID and DAL 0434 GetDate. */
 @Repository
 public class PurchaseInvoiceRecordRepository {
-    private static final Map<Integer,String> SCREENS=Map.of(56,"InvfrmPurchaseInvoice",57,"InvfrmPurchasedirectInvoice",59,"InvfrmInvPurchaseInvoiceReturn",61,"frmPurchaseInvoiceDirectStore",138,"frmPurchaseInvoiceAgaintGrnDirect");
-    private static final Map<Integer,String> ROUTES=Map.of(56,"/purchase/purchase-invoice",57,"/purchase/purchase-invoice-direct",59,"/purchase/purchase-invoice-return",61,"/purchase/purchase-invoice-store-management",138,"/purchase/purchase-invoice-again-grn-direct");
+    private static final Map<Integer,String> SCREENS=Map.of(56,"InvfrmPurchaseInvoice",57,"InvfrmPurchasedirectInvoice",59,"InvfrmInvPurchaseInvoiceReturn",61,"frmPurchaseInvoiceDirectStore",138,"frmPurchaseInvoiceAgaintGrnDirect",98,"InvfrmSaleInvoiceReturn");
+    private static final Map<Integer,String> ROUTES=Map.of(56,"/purchase/purchase-invoice",57,"/purchase/purchase-invoice-direct",59,"/purchase/purchase-invoice-return",61,"/purchase/purchase-invoice-store-management",138,"/purchase/purchase-invoice-again-grn-direct",98,"/sale/sale-invoice-return");
     private final JdbcTemplate jdbc;
     private final CurrentUserContext context;
     public PurchaseInvoiceRecordRepository(JdbcTemplate jdbc,CurrentUserContext context) {this.jdbc=jdbc;this.context=context;}

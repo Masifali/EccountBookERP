@@ -16,7 +16,7 @@ class PayablesDesktopProcedureContractTest {
     @Test void emptySupplierAgingDoesNotSwitchToReceivablesOrInventBuckets(){
         JdbcTemplate jdbc=mock(JdbcTemplate.class);List<List<Map<String,Object>>> sets=List.of(List.of(),List.of(),List.of(),List.of(),List.of());
         doReturn(sets).when(jdbc).execute(anyString(),any(PreparedStatementCallback.class));
-        assertSame(sets,new PayablesAgingRepository(jdbc).load(user(),LocalDate.of(2026,9,15),30,0,0,0,0,0,""));
+        assertSame(sets,new PayablesAgingRepository(jdbc).load(user(),LocalDate.of(2026,9,15),30,0,"",0,0,""));
         verify(jdbc).execute(eq("EXEC dbo.UPS_PayablesAging_New @OrganizationId=?, @CompanyId=?, @AsOnDate=?, @AgingDays=?, @UserId=?, @AccouuntClassId=?, @Activity=?"),any(PreparedStatementCallback.class));verifyNoMoreInteractions(jdbc);
     }
     @Test void paymentScheduleUsesDesktopProcedureAndOptionalDateParameters(){
@@ -26,7 +26,7 @@ class PayablesDesktopProcedureContractTest {
     }
     @Test void supplierFailurePropagates(){
         JdbcTemplate jdbc=mock(JdbcTemplate.class);doThrow(new DataAccessResourceFailureException("offline")).when(jdbc).execute(anyString(),any(PreparedStatementCallback.class));
-        assertThrows(DataAccessResourceFailureException.class,()->new PayablesAgingRepository(jdbc).load(user(),LocalDate.of(2026,9,15),30,0,0,0,0,0,""));
+        assertThrows(DataAccessResourceFailureException.class,()->new PayablesAgingRepository(jdbc).load(user(),LocalDate.of(2026,9,15),30,0,"",0,0,""));
         verify(jdbc).execute(anyString(),any(PreparedStatementCallback.class));verifyNoMoreInteractions(jdbc);
     }
 }

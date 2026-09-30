@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1005 Accounts Payables Aging</title>
+<link rel="stylesheet" href="/vendors/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_f.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_acc_rpt_pay.css?v=20260930s">
+<link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script>
+</head>
+<!--
+  Screen 47 "Payables Aging" - Architecture.WinApp.Account_Reports.PayablesAging_New (routes /accounts/reports/payables-aging
+  and /payables-aging-new). Read-only. Load: EndDate = today (designer), txtAgingDays "30", Over Due ticked, sort on Account Title.
+  Lists (GET /api/accounts/payables-aging/lookups): Control Account = ChartofAccount.ReadAllAccountgroup (level 3, type 3, class 3,
+  multi-select), Account Title = AllAccountsWithCustomGroupId (type 3, class 3, within the checked control accounts),
+  Custom Group = CustomeGroupsDefine(1), Branches = GetBranchesFromVouchersByAccountId (feature 17; checked list with 18).
+  GridFill -> UPS_PayablesAging_New. Page logic: /js/aging-new.js (shared with Receivables_New, body data-kind).
+  R3 2026-09-30: Account Reports look (countx_acc_rpt_f.css) and searchable combos (countx_prod_combo.js); select2 removed.
+-->
+<body class="accf" data-kind="payable">
+<div class="win-title-bar">
+    <span><i class="fa fa-hourglass-half"></i> Accounts Payables Aging</span>
+    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+</div>
+<div class="win-toolbar">
+    <button type="button" class="win-btn" id="new"><i class="fa fa-plus text-success"></i> New</button>
+    <button type="button" class="win-btn" id="refresh" hidden><i class="fa fa-refresh"></i> Refresh</button>
+    <button type="button" class="win-btn" id="print" data-rpt="124_Payables_New.rpt"><i class="fa fa-print"></i> 124-Print</button>
+    <button type="button" class="win-btn" id="help"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    <a class="win-btn" href="/accounts/dashboard"><i class="fa fa-times"></i> Close</a>
+</div>
+<div class="win-header-panel"><span class="heading">Accounts Payables Aging</span></div>
+
+<div class="filters" id="top">
+    <div class="gb" style="width:390px;">
+        <span class="gb-title">Filters</span>
+        <div class="fgrid" style="grid-template-columns: 120px 1fr 60px;">
+            <span class="lbl">End Date &amp; Aging Days</span><input type="date" id="date" class="inp"><input id="days" type="number" min="0" value="30" class="inp">
+            <span class="lbl">Control Account</span><div style="grid-column: span 2;"><select id="control" class="inp" multiple></select></div>
+            <span class="lbl">Account Title</span><div style="grid-column: span 2;"><select id="account" class="inp" data-dtcombo="single" data-dtcombo-caption="Account Title"></select></div>
+            <span class="lbl">Custom Group</span><div style="grid-column: span 2;"><select id="custom" class="inp" data-dtcombo="single" data-dtcombo-caption="Custom Group"></select></div>
+            <span class="lbl" id="branchLabel">Branches</span><select id="branches" class="inp" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select>
+            <button type="button" id="show" class="win-btn-show"><i class="fa fa-eye"></i> Show</button>
+        </div>
+    </div>
+    <div class="gb" id="mode" style="width:150px;">
+        <span class="gb-title">Report</span>
+        <div class="radios">
+            <label class="chk"><input name="mode" type="radio" value="0"> Net Payables</label>
+            <label class="chk"><input name="mode" type="radio" value="2"> Not Yet Due</label>
+            <label class="chk"><input name="mode" type="radio" value="1" checked> Over Due</label>
+        </div>
+        <div id="period" hidden style="margin-top:4px;">
+            <span class="lbl">Period Filtered Records</span>
+            <div class="fgrid" style="grid-template-columns: 50px 1fr;">
+                <span class="lbl">From Date</span><input type="date" id="periodFrom" class="inp" disabled>
+                <span class="lbl">To Date</span><input type="date" id="periodTo" class="inp" disabled>
+            </div>
+        </div>
+    </div>
+    <div class="kpi">
+        <div class="kpi" id="cards" hidden></div>
+        <div class="totals" id="totals" hidden><h2>Totals of Payables</h2>
+            <p>Curr Balance <output id="CurrentBalance"></output></p><p>Over Due <output id="OverDue"></output></p><p>Not Yet Due <output id="NotYetDue"></output></p></div>
+    </div>
+</div>
+
+<div class="grid-caption">
+    <span>Filtered Records</span>
+    <span>
+        <label><input class="sort" type="checkbox" value="AccountCode"> Account Code</label>
+        <label><input class="sort" type="checkbox" value="AccountTitle" checked> Account Title</label>
+        <label><input class="sort" type="checkbox" value="CurrentBalance"> Current Balance</label>
+        <label><input name="sortDirection" type="radio" value="1" checked> Ascending</label>
+        <label><input name="sortDirection" type="radio" value="-1"> Descending</label>
+        <button type="button" class="win-btn" id="sort">Apply Sorting</button>
+        <span id="sortCriteria"></span>
+        <input id="search" placeholder="Filter records" aria-label="Filter records">
+    </span>
+</div>
+<div class="grid-wrap fill"><table class="wg auto" id="grid"><thead></thead><tbody></tbody></table></div>
+<div class="status-bar" id="status" role="status"></div>
+
+<dialog id="popup" style="width:800px;max-width:95vw;">
+    <div class="dlg-title"><span id="popupTitle"></span></div>
+    <div class="grid-wrap"><table class="wg auto" id="popupGrid"><thead></thead><tbody></tbody></table></div>
+    <button type="button" class="win-btn dlg-close" id="closePopup">Close</button>
+</dialog>
+<dialog id="shortcutDialog" style="width:420px;">
+    <h2>Shortcut Keys</h2>
+    <p>Ctrl+S: Show<br>Ctrl+N: New<br>Ctrl+R: Refresh<br>Ctrl+P: Print<br>Ctrl+E / Escape: Close<br>Ctrl+F5 / Ctrl+ArrowUp: End Date<br>Ctrl+ArrowDown: Grid<br>Ctrl+Space: Open the selected account ledger</p>
+    <button type="button" class="win-btn" id="closeShortcuts">Close</button>
+</dialog>
+
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<script src="/build/js/countx_prod_combo.js?v=20260930s"></script>
+<script src="/js/report-decimal.js"></script>
+<script src="/js/aging-new.js?v=20260930s"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

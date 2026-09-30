@@ -1337,7 +1337,9 @@ function showHistoryTab() {
 // =========================================================
 // 7. STOCK REPORT MODALS
 // =========================================================
+/* btnStockReport_Click (SaleOrder.cs:4809): the desktop opens frmStockReport - the ported screen at /inventory/stock-report. */
 function openStockReport() {
+    window.open('/inventory/stock-report', '_blank'); return;
     var itemId = $('#lineItem').val() || '';
     $.get('/sale/sale-order/api/stock-report?itemId=' + itemId, function (data) {
         var tbody = $('#tblStockReportModal tbody').empty();

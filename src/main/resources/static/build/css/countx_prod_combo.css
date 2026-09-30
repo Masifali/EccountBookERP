@@ -1,0 +1,123 @@
+/* ============================================================================================
+ * Production dropdowns in the STORE design (the Transporter combo on /store/grn-store).
+ * Pairs with build/js/countx_prod_combo.js; loaded AFTER countx_desktop_combo.css, which still
+ * supplies the hidden-native-select and wrapper rules.
+ *
+ * The popup rules are countx_store.css .cx-combo-* (lines 115-130) scoped to .pcx-pop, with
+ * !important on the few properties a production page's own "panel input { ... }" or
+ * "table td { ... }" rules could otherwise override, because here the popup sits inside the page's
+ * panels (see the JS header for why).
+ * ============================================================================================ */
+
+/* ------------------------------------------------------------------ the field: a combo box */
+/* The wrap copies the select's classes (jo-in, pr-f, g, p1, ...) so it keeps the select's place and
+   width; any border/padding/background those classes carry would draw a SECOND box around the
+   field (Production Job Order). Only the field draws a border - as the store page's single select. */
+.dtcombo-wrap.pcx-wrap {
+    border: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+/* The field fills the height the page gave the select (jo-in 25px, ctl 26px, ...). */
+.pcx-wrap > .dtcombo-input.pcx-field { height: 100%; min-height: 22px; }
+.pcx-wrap .dtcombo-input.pcx-field {
+    cursor: default;
+    font-family: Verdana, sans-serif;
+    font-size: 9pt;
+    color: #000;
+    background-color: #fff;
+    border: 1px solid #7a9a9e;
+    padding-right: 20px;
+    caret-color: transparent;
+}
+.pcx-wrap .dtcombo-input.pcx-field:focus { border-color: #008080; outline: 1px solid #008080; outline-offset: -2px; }
+.pcx-wrap.dtcombo-disabled .dtcombo-input.pcx-field { background-color: #f0f0f0; color: #6d6d6d; cursor: default; }
+
+/* The select's drop arrow (a chevron, as the browser draws it on the store page). */
+.pcx-wrap .pcx-caret {
+    position: absolute;
+    top: 1px; bottom: 1px; right: 1px;
+    width: 18px;
+    font-size: 0;
+    cursor: default;
+    background: transparent url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23333' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat center;
+}
+.pcx-wrap.dtcombo-disabled .pcx-caret { opacity: .45; }
+
+/* ------------------------------------------------------------------ the popup (store design) */
+.dtcombo-pop.pcx-pop {
+    position: fixed;
+    z-index: 20000;
+    background: #fff;
+    border: 1px solid #7a9cc6;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .25);
+    font: 9pt Tahoma, 'Segoe UI', sans-serif;
+    max-width: 520px;
+    box-sizing: border-box;
+    text-align: left;
+    padding: 0;
+    margin: 0;
+    height: auto;
+}
+.pcx-pop input.cx-combo-search {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #c9d6e8 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 4px 6px !important;
+    font: inherit !important;
+    color: #000 !important;
+    outline: none !important;
+    background: #fffde7 !important;
+    caret-color: auto;
+    cursor: text;
+}
+.pcx-pop .cx-combo-list { max-height: 260px; overflow-y: auto; }
+.pcx-pop .cx-combo-item { padding: 3px 6px; white-space: nowrap; cursor: pointer; color: #000; }
+.pcx-pop .cx-combo-item:hover { background: #e8f0fb; }
+.pcx-pop .cx-combo-item.is-active { background: #008080; color: #fff; }
+.pcx-pop .cx-combo-item.is-disabled { color: #9a9a9a; cursor: default; }
+.pcx-pop .cx-combo-empty { padding: 4px 6px; color: #888; font-style: italic; }
+
+.dtcombo-pop.pcx-pop.is-cols { max-width: min(96vw, 1200px); }
+.pcx-pop.is-cols .cx-combo-list { overflow-x: auto; }
+.pcx-pop table.cx-combo-table { border-collapse: collapse !important; width: 100% !important; font: inherit !important; margin: 0 !important; table-layout: auto !important; }
+.pcx-pop .cx-combo-table th {
+    position: sticky; top: 0; z-index: 1;
+    background: #eef3fa !important;
+    border: 1px solid #c9d6e8 !important;
+    padding: 2px 6px !important;
+    text-align: left;
+    font-weight: normal !important;
+    color: #1d3f6e !important;
+    white-space: nowrap;
+    height: auto !important;
+}
+.pcx-pop .cx-combo-table td {
+    border: 0 !important;
+    border-bottom: 1px dotted #d5dde8 !important;
+    border-right: 1px solid #e3e9f1 !important;
+    padding: 2px 6px !important;
+    white-space: nowrap;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: auto !important;
+    background: transparent;
+    color: inherit;
+}
+.pcx-pop .cx-combo-table tr.cx-combo-item { padding: 0; }
+.pcx-pop .cx-combo-table tr.cx-combo-item:hover td { background: #e8f0fb; }
+.pcx-pop .cx-combo-table tr.is-active td,
+.pcx-pop .cx-combo-table tr.is-active:hover td { background: #008080 !important; color: #fff !important; }
+.pcx-pop .cx-combo-table .pcx-num { text-align: right; }
+.pcx-pop .cx-combo-table td.pcx-check { text-align: center; }
+.pcx-pop .cx-combo-table td.pcx-check input { margin: 0; vertical-align: middle; width: auto !important; height: auto !important; }

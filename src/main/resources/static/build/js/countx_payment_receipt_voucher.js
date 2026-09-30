@@ -142,7 +142,9 @@
         h += '</div></div>';
         h += '<div class="totals-bar"><div>Amount: <span id="prvValue">0</span></div><div>Tax Amount: <span id="prvTaxAmount">0</span></div>' +
              '<div>Total Amount: <span id="prvTotalAmount">0</span></div>' +
-             '<div><label style="font-weight:normal;cursor:pointer;"><input type="checkbox" id="prvChkPrint1" checked/> Print Preview</label></div></div>';
+             '<div><label style="font-weight:normal;cursor:pointer;"><input type="checkbox" id="prvChkPrint1" checked/> Print Preview</label>' +
+             ' <label style="font-weight:normal;cursor:pointer;margin-left:10px;"><input type="checkbox" id="prvChkPrint2"/> ' + (pay ? 'Preview Format II' : 'Print Preview II') + '</label>' +
+             ' <label style="font-weight:normal;cursor:pointer;margin-left:10px;"><input type="checkbox" id="prvChkPrint3"/> ' + (pay ? 'Preview Format II' : 'Print Preview III') + '</label></div></div>';
         h += '</div>';
         h += '<style>.prv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 10px;}' +
              '.prv-f .win-textarea{height:25px;}#prvGrid td.num,#prvGrid th.num{text-align:right;}</style>';
@@ -583,6 +585,8 @@
         var ack = [];
         var printCheque = S.pay && S.F.chequePrintingEnable && $('#cbPrintOnSave').is(':checked');
         var printSlip = $('#prvChkPrint1').is(':checked');
+        /* Special rights (SpecialRightsImplement): ChkPrint2 -> slip format II, ChkPrint3 -> voucher format. ChkPrint1 wins. */
+        var printFmt = printSlip ? 0 : ($('#prvChkPrint2').is(':checked') ? 2 : ($('#prvChkPrint3').is(':checked') ? 3 : 0));
         var slipWin = printSlip && w.CrystalPrint ? w.CrystalPrint.reserve() : null;
         S.busy = true; $saveBtn().prop('disabled', true);
         (function post() {
@@ -593,6 +597,8 @@
                     alert(res.message);
                     if (printSlip && w.CrystalPrint) w.CrystalPrint.open('hrm-102', { id: res.id }, null, slipWin);
                     else if (slipWin) w.CrystalPrint.release(slipWin);
+                    if (printFmt && w.printRpt) w.printRpt(printFmt === 2 ? '102-AcRptPaymentReceiptsVoucherSlip.rpt'
+                        : '102-' + ({1: 'CashPayment', 2: 'BankPayment', 3: 'CashReceipt', 4: 'BankReceipt'})[S.doc] + 'Voucher.rpt', { id: res.id });
                     if (printCheque) w.open('/accounts/banking/cheque-printing', '_blank');
                     reset(false);
                 })
@@ -609,6 +615,22 @@
                 });
         }());
     }
+
+    /* SpecialRightsImplement (Load / Refresh): RightId 2 -> ChkPrint1, 8 -> ChkPrint2, 9 -> ChkPrint3, Checked = IsActive. */
+    function specialRights() {
+        $('#prvChkPrint1').prop('checked', true);
+        if (!w.SpecialRights) return;
+        w.SpecialRights.mine(({1: 28, 2: 29, 3: 30, 4: 31})[S.doc]).then(function (rows) {
+            $.each(rows || [], function (i, r) {
+                var rid = int(r.RightId != null ? r.RightId : r.rightId);
+                var a = r.IsActive != null ? r.IsActive : r.isActive;
+                a = a === true || a === 1 || a === '1' || String(a).toLowerCase() === 'true';
+                var id = ({2: '#prvChkPrint1', 8: '#prvChkPrint2', 9: '#prvChkPrint3'})[rid];
+                if (id) $(id).prop('checked', a);
+            });
+        }, function (x) { alert((x.responseJSON && x.responseJSON.message) || 'Could not load special rights.'); });
+    }
+    w.PRVSpecialRights = specialRights;
 
     function print() {
         if (!(S.recId > 0)) { alert('VoucherId Not Found'); return; }   // ANewAcRptPaymentReceiptsVoucherSlip_102
@@ -665,6 +687,7 @@
             var id = int(q.get('id') || q.get('Id'));
             var code = q.get('voucherCode') || q.get('VoucherCode') || q.get('fromDocNo');
             ready.then(function () {
+                specialRights();
                 if (id > 0) loadForEdit(id);
                 else if (code) {
                     $.getJSON('/accounts/api/vouchers/by-code', { documentTypeId: S.doc, voucherCode: code }).then(function (v) {

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Item And PM Item Map - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f5; font-size: 12px; }
+        .win-card { background: #fff; border: 1px solid #7a9a9e; border-radius: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .win-header { background: #005f73; color: #fff; padding: 8px 15px; font-weight: 600; font-size: 14px; }
+        .win-body { padding: 15px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { font-weight: 600; color: #333; margin-bottom: 3px; font-size: 11px; }
+        .form-control, .form-select { border-radius: 0; border: 1px solid #7a9a9e; padding: 3px 6px; height: 28px; font-size: 12px; }
+        .form-control:focus, .form-select:focus { border-color: #005f73; box-shadow: none; }
+        .btn-win { border-radius: 0; font-size: 12px; font-weight: 600; padding: 4px 12px; }
+        .btn-win-primary { background-color: #005f73; color: #fff; border: 1px solid #005f73; }
+        .btn-win-primary:hover { background-color: #0a9396; color: #fff; }
+        .btn-win-success { background-color: #2a9d8f; color: #fff; border: 1px solid #2a9d8f; }
+        .btn-win-danger { background-color: #ae2012; color: #fff; border: 1px solid #ae2012; }
+        .btn-win-secondary { background-color: #6c757d; color: #fff; border: 1px solid #6c757d; }
+        .table-win { width: 100%; border-collapse: collapse; background: #fff; font-size: 12px; }
+        .table-win th { background: #e9ecef; color: #333; font-weight: 600; border: 1px solid #ced4da; padding: 6px; text-align: left; }
+        .table-win td { border: 1px solid #ced4da; padding: 5px 6px; vertical-align: middle; }
+        .table-container { overflow-x: auto; max-width: 100%; border: 1px solid #7a9a9e; }
+        .spinner-inline { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spinner-border .75s linear infinite; }
+        .footer-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+<div class="container-fluid py-3">
+    <div class="win-card">
+        <div class="win-header d-flex justify-content-between align-items-center">
+            <span><i class="fa fa-map-signs me-2"></i>Item And PM Item Map</span>
+            <span class="badge bg-light text-dark" id="lblDocStatus">NEW</span>
+        </div>
+        <div class="win-body">
+            <form id="frmMap">
+                <input type="hidden" id="mapId" value="0">
+                
+                <div class="row g-2 mb-3">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="cmbMainItem">Master Item <span class="text-danger">*</span></label>
+                            <select id="cmbMainItem" class="form-select win-combo" required>
+                                <option value="">-- Select Master Item --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="cmbMainUom">Base UOM <span class="text-danger">*</span></label>
+                            <select id="cmbMainUom" class="form-select win-combo" required>
+                                <option value="">-- Select Base UOM --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="txtRemarks">Remarks</label>
+                            <input type="text" id="txtRemarks" class="form-control" placeholder="Remarks...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Section -->
+                <div class="card mb-3 border-secondary">
+                    <div class="card-header bg-light py-2 font-weight-bold" style="font-size: 12px;">Add Packing Material Item Detail</div>
+                    <div class="card-body p-2">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label for="cmbPmItem">PM Item Name <span class="text-danger">*</span></label>
+                                <select id="cmbPmItem" class="form-select win-combo">
+                                    <option value="">-- Select PM Item --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="cmbPmUom">Base UOM <span class="text-danger">*</span></label>
+                                <select id="cmbPmUom" class="form-select win-combo">
+                                    <option value="">-- Select UOM --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="txtPmQty">PM Qty <span class="text-danger">*</span></label>
+                                <input type="number" step="0.0001" id="txtPmQty" class="form-control" placeholder="0.00">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="txtWeightCapacity">Weight Capacity <span class="text-danger">*</span></label>
+                                <input type="number" step="0.0001" id="txtWeightCapacity" class="form-control" placeholder="0.00">
+                            </div>
+                            <div class="col-md-2 d-flex gap-1">
+                                <button type="button" id="btnAddDetail" class="btn btn-win btn-win-success flex-grow-1"><i class="fa fa-plus me-1"></i>Add</button>
+                                <button type="button" id="btnCancelDetail" class="btn btn-win btn-win-secondary d-none">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details Table -->
+                <div class="table-container mb-3">
+                    <table class="table-win" id="tblDetails">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">Action</th>
+                                <th>PM Item Code</th>
+                                <th>PM Item Name</th>
+                                <th>Base UOM</th>
+                                <th class="text-end">PM Qty</th>
+                                <th class="text-end">Weight Capacity</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-3">No detail records added yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Action Footer -->
+                <div class="footer-bar">
+                    <div>
+                        <button type="button" id="btnSave" class="btn btn-win btn-win-primary me-1"><i class="fa fa-save me-1"></i>Save</button>
+                        <button type="button" id="btnDelete" class="btn btn-win btn-win-danger me-1 d-none"><i class="fa fa-trash me-1"></i>Delete</button>
+                        <button type="button" id="btnClear" class="btn btn-win btn-win-secondary"><i class="fa fa-eraser me-1"></i>Clear</button>
+                    </div>
+                    <div>
+                        <button type="button" id="btnHistoryToggle" class="btn btn-win btn-win-secondary"><i class="fa fa-history me-1"></i>History</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- History Panel -->
+    <div class="win-card d-none" id="historyPanel">
+        <div class="win-header bg-secondary">
+            <span><i class="fa fa-list me-2"></i>Map History</span>
+        </div>
+        <div class="win-body">
+            <div class="row g-2 mb-2 align-items-end">
+                <div class="col-md-3">
+                    <label>From Date</label>
+                    <input type="date" id="histFromDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label>To Date</label>
+                    <input type="date" id="histToDate" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label>Filter Item</label>
+                    <select id="histFilterItem" class="form-select">
+                        <option value="">-- All Items --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" id="btnSearchHistory" class="btn btn-win btn-win-primary w-100"><i class="fa fa-search me-1"></i>Search</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="table-win table-hover" id="tblHistory">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Item Code</th>
+                            <th>Master Item Name</th>
+                            <th>Base UOM</th>
+                            <th>Remarks</th>
+                            <th>Active</th>
+                            <th>Entry Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="text-center py-2">Click search to load history.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/jquery.min.js}"></script>
+<script th:src="@{/build/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js}"></script>
+<script>
+    const API = '/api/packing-material/item-pm-map';
+    let detailsList = [];
+    let editingIndex = -1;
+
+    $(document).ready(function() {
+        loadLookups();
+
+        // Default dates
+        const now = new Date();
+        const past = new Date();
+        past.setDate(now.getDate() - 30);
+        $('#histToDate').val(now.toISOString().split('T')[0]);
+        $('#histFromDate').val(past.toISOString().split('T')[0]);
+
+        $('#cmbMainItem').on('change', function() {
+            const itemId = $(this).val();
+            if (itemId) loadMainUoms(itemId);
+        });
+
+        $('#cmbPmItem').on('change', function() {
+            const itemId = $(this).val();
+            if (itemId) loadPmUoms(itemId);
+        });
+
+        $('#btnAddDetail').on('click', addOrUpdateDetail);
+        $('#btnCancelDetail').on('click', resetDetailInputs);
+        $('#btnSave').on('click', saveRecord);
+        $('#btnDelete').on('click', deleteRecord);
+        $('#btnClear').on('click', resetForm);
+        $('#btnHistoryToggle').on('click', function() { $('#historyPanel').toggleClass('d-none'); });
+        $('#btnSearchHistory').on('click', loadHistory);
+    });
+
+    function loadLookups() {
+        $.get(API + '/lookups', function(res) {
+            if (res.mainItems) {
+                let html = '<option value="">-- Select Master Item --</option>';
+                res.mainItems.forEach(i => { html += `<option value="${i.Id}">${i.ItemCode} - ${i.ItemName}</option>`; });
+                $('#cmbMainItem').html(html);
+                $('#histFilterItem').html(html);
+            }
+            if (res.pmItems) {
+                let html = '<option value="">-- Select PM Item --</option>';
+                res.pmItems.forEach(i => { html += `<option value="${i.Id}">${i.ItemCode} - ${i.ItemName}</option>`; });
+                $('#cmbPmItem').html(html);
+            }
+        });
+    }
+
+    function loadMainUoms(itemId) {
+        $.get(API + '/uoms?itemId=' + itemId, function(list) {
+            let html = '<option value="">-- Select Base UOM --</option>';
+            list.forEach(u => { html += `<option value="${u.Id}">${u.UOMCode}</option>`; });
+            $('#cmbMainUom').html(html);
+        });
+    }
+
+    function loadPmUoms(itemId) {
+        $.get(API + '/uoms?itemId=' + itemId, function(list) {
+            let html = '<option value="">-- Select UOM --</option>';
+            list.forEach(u => { html += `<option value="${u.Id}">${u.UOMCode}</option>`; });
+            $('#cmbPmUom').html(html);
+        });
+    }
+
+    function addOrUpdateDetail() {
+        const pmItemId = $('#cmbPmItem').val();
+        const pmItemText = $('#cmbPmItem option:selected').text();
+        const baseUomId = $('#cmbPmUom').val();
+        const baseUomText = $('#cmbPmUom option:selected').text();
+        const pmQty = parseFloat($('#txtPmQty').val()) || 0;
+        const weightCapacity = parseFloat($('#txtWeightCapacity').val()) || 0;
+        const remarks = $('#txtRemarks').val() || '';
+
+        if (!pmItemId) { alert('PM Item field is required'); return; }
+        if (!baseUomId) { alert('Base UOM field is required'); return; }
+        if (pmQty <= 0) { alert('PM Qty field is required'); return; }
+        if (weightCapacity <= 0) { alert('Weight Capacity field is required'); return; }
+
+        const detail = {
+            pmItemId: parseInt(pmItemId),
+            pmItemCode: pmItemText.split(' - ')[0] || '',
+            pmItemName: pmItemText.split(' - ')[1] || pmItemText,
+            baseUomId: parseInt(baseUomId),
+            baseUom: baseUomText,
+            pmQty: pmQty,
+            weightCapacity: weightCapacity,
+            remarks: remarks
+        };
+
+        if (editingIndex >= 0) {
+            detailsList[editingIndex] = detail;
+        } else {
+            detailsList.push(detail);
+        }
+
+        renderDetails();
+        resetDetailInputs();
+    }
+
+    function renderDetails() {
+        const tbody = $('#tblDetails tbody');
+        if (detailsList.length === 0) {
+            tbody.html('<tr><td colspan="7" class="text-center text-muted py-3">No detail records added yet.</td></tr>');
+            return;
+        }
+        let html = '';
+        detailsList.forEach((d, idx) => {
+            html += `<tr>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1 me-1" onclick="editDetail(${idx})"><i class="fa fa-edit"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" onclick="deleteDetail(${idx})"><i class="fa fa-times"></i></button>
+                </td>
+                <td>${d.pmItemCode}</td>
+                <td>${d.pmItemName}</td>
+                <td>${d.baseUom}</td>
+                <td class="text-end">${d.pmQty.toFixed(4)}</td>
+                <td class="text-end">${d.weightCapacity.toFixed(4)}</td>
+                <td>${d.remarks || ''}</td>
+            </tr>`;
+        });
+        tbody.html(html);
+    }
+
+    function editDetail(idx) {
+        editingIndex = idx;
+        const d = detailsList[idx];
+        $('#cmbPmItem').val(d.pmItemId).trigger('change');
+        setTimeout(() => $('#cmbPmUom').val(d.baseUomId), 100);
+        $('#txtPmQty').val(d.pmQty);
+        $('#txtWeightCapacity').val(d.weightCapacity);
+        $('#btnAddDetail').html('<i class="fa fa-check me-1"></i>Update');
+        $('#btnCancelDetail').removeClass('d-none');
+    }
+
+    function deleteDetail(idx) {
+        detailsList.splice(idx, 1);
+        renderDetails();
+    }
+
+    function resetDetailInputs() {
+        editingIndex = -1;
+        $('#cmbPmItem').val('');
+        $('#cmbPmUom').html('<option value="">-- Select UOM --</option>');
+        $('#txtPmQty').val('');
+        $('#txtWeightCapacity').val('');
+        $('#btnAddDetail').html('<i class="fa fa-plus me-1"></i>Add');
+        $('#btnCancelDetail').addClass('d-none');
+    }
+
+    function setBtnLoading(btn, loading) {
+        if (loading) {
+            btn.prop('disabled', true).data('orig-text', btn.html()).html('<span class="spinner-inline me-1"></span> Processing...');
+        } else {
+            btn.prop('disabled', false).html(btn.data('orig-text'));
+        }
+    }
+
+    function saveRecord() {
+        const itemId = $('#cmbMainItem').val();
+        const baseUomId = $('#cmbMainUom').val();
+        if (!itemId) { alert('Master Item is required'); return; }
+        if (!baseUomId) { alert('Base UOM is required'); return; }
+        if (detailsList.length === 0) { alert('At least one PM item detail row is required'); return; }
+
+        const payload = {
+            id: parseInt($('#mapId').val()) || 0,
+            itemId: parseInt(itemId),
+            baseUomId: parseInt(baseUomId),
+            remarks: $('#txtRemarks').val(),
+            details: detailsList
+        };
+
+        const btn = $('#btnSave');
+        setBtnLoading(btn, true);
+
+        $.ajax({
+            url: API + '/save',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(res) {
+                setBtnLoading(btn, false);
+                alert(res.message || 'Saved successfully');
+                resetForm();
+            },
+            error: function(err) {
+                setBtnLoading(btn, false);
+                alert(err.responseJSON ? err.responseJSON.message : 'Save failed');
+            }
+        });
+    }
+
+    function deleteRecord() {
+        const id = $('#mapId').val();
+        if (!id || id == '0') return;
+        if (!confirm('Are you sure you want to delete this map?')) return;
+
+        const btn = $('#btnDelete');
+        setBtnLoading(btn, true);
+
+        $.ajax({
+            url: API + '/' + id,
+            type: 'DELETE',
+            success: function(res) {
+                setBtnLoading(btn, false);
+                alert(res.message || 'Deleted successfully');
+                resetForm();
+            },
+            error: function(err) {
+                setBtnLoading(btn, false);
+                alert(err.responseJSON ? err.responseJSON.message : 'Delete failed');
+            }
+        });
+    }
+
+    function resetForm() {
+        $('#mapId').val('0');
+        $('#cmbMainItem').val('');
+        $('#cmbMainUom').html('<option value="">-- Select Base UOM --</option>');
+        $('#txtRemarks').val('');
+        $('#lblDocStatus').text('NEW').removeClass('bg-info').addClass('bg-light text-dark');
+        $('#btnDelete').addClass('d-none');
+        detailsList = [];
+        renderDetails();
+        resetDetailInputs();
+    }
+
+    function loadHistory() {
+        const fromDate = $('#histFromDate').val();
+        const toDate = $('#histToDate').val();
+        const itemId = $('#histFilterItem').val();
+
+        $.get(API + `/history?fromDate=${fromDate}&toDate=${toDate}&itemId=${itemId || ''}`, function(list) {
+            const tbody = $('#tblHistory tbody');
+            if (!list || list.length === 0) {
+                tbody.html('<tr><td colspan="7" class="text-center py-2 text-muted">No history records found.</td></tr>');
+                return;
+            }
+            let html = '';
+            list.forEach(r => {
+                const id = r.Id || r.id;
+                html += `<tr style="cursor:pointer;" onclick="loadRecord(${id})">
+                    <td>${id}</td>
+                    <td>${r.ItemCode || ''}</td>
+                    <td><strong>${r.ItemName || ''}</strong></td>
+                    <td>${r.BaseUom || ''}</td>
+                    <td>${r.Remarks || ''}</td>
+                    <td>${r.IsActive ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-danger">No</span>'}</td>
+                    <td>${r.EntryDate ? new Date(r.EntryDate).toLocaleDateString() : ''}</td>
+                </tr>`;
+            });
+            tbody.html(html);
+        });
+    }
+
+    function loadRecord(id) {
+        $.get(API + '/' + id, function(res) {
+            if (!res) return;
+            $('#mapId').val(res.Id || res.id);
+            $('#cmbMainItem').val(res.ItemId || res.itemId).trigger('change');
+            setTimeout(() => $('#cmbMainUom').val(res.BaseUomId || res.baseUomId), 150);
+            $('#txtRemarks').val(res.Remarks || res.remarks || '');
+            $('#lblDocStatus').text('EDIT (ID: ' + id + ')').removeClass('bg-light text-dark').addClass('bg-info text-white');
+            $('#btnDelete').removeClass('d-none');
+
+            detailsList = (res.details || []).map(d => ({
+                id: d.Id || d.id,
+                pmItemId: d.PmItemId || d.pmItemId,
+                pmItemCode: d.PmItemCode || d.pmItemCode || '',
+                pmItemName: d.PmItem || d.pmItemName || '',
+                baseUomId: d.BaseUomId || d.baseUomId,
+                baseUom: d.BaseUom || d.baseUom || '',
+                pmQty: d.PmQty || d.pmQty || 0,
+                weightCapacity: d.WeightCapacity || d.weightCapacity || 0,
+                remarks: d.Remarks || d.remarks || ''
+            }));
+            renderDetails();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+</script>
+</body>
+</html>
